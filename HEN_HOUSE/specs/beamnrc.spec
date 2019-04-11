@@ -81,11 +81,11 @@ SOURCES = $(EGS_SOURCEDIR)egsnrc.macros \
           $(BEAM_HOME)beamnrc_user_macros.mortran \
           $(EGS_UTILS)phsp_macros.mortran $(IAEA_PHSP_MACROS)\
           $(BEAM_CODE)_macros.mortran \
-          $(EGS_SOURCEDIR)egs_utilities.mortran \
           $(BEAM_HOME)beam_main.mortran\
           $(BEAM_HOME)beamnrc.mortran \
           $(EGS_UTILS)xvgrplot.mortran \
           $(BEAM_CODE)_cm.mortran \
+          $(EGS_SOURCEDIR)egs_utilities.mortran \
           $(EGS_SOURCEDIR)get_inputs.mortran \
           $(EGS_SOURCEDIR)get_media_inputs.mortran \
           $(RANDOM).mortran \

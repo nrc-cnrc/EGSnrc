@@ -60,13 +60,14 @@ win32 {
     QMAKE_CXXFLAGS += -fpermissive
     ####################################################
     CONFIG  += qt thread warn_off release windows
+    greaterThan(QT_MAJOR_VERSION, 4): LIBS += -lz -lole32 -luuid
     DESTDIR = ../../pieces/windows
     RC_FILE = egs_beam_install.rc
 }
 
 unix {
     CONFIG  += qt thread warn_on debug_and_release $$my_build
-    #LIBS    += -lz  #Needed if not using Qt own zlib
+    LIBS    += -lz  #Needed if not using Qt own zlib, in QT5 using Qtzlibh is not recommended according to documentation
     #message("CONFIG = $$CONFIG")
     contains( CONFIG, shared ):message( "Dynamic build..." )
     contains( CONFIG, static ){
@@ -91,3 +92,5 @@ RESOURCES = egs_beam_install.qrc # resource collection file to store images in t
 TEMPLATE  = app
 LANGUAGE  = C++
 QT += xml
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+

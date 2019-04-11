@@ -53,10 +53,10 @@ const QSizePolicy preferred(QSizePolicy::Preferred,QSizePolicy::Preferred);
 using namespace Qt;
 
 EGS_CompilePage::EGS_CompilePage(QWidget *parent, const char *name,
-    WFlags f) : EGS_GUI_Widget(parent,name,f) { make(); }
+    WindowFlags f) : EGS_GUI_Widget(parent,name,f) { make(); }
 
 EGS_CompilePage::EGS_CompilePage(EGS_ConfigReader *cr, QWidget *parent,
-    const char *name, WFlags f) : EGS_GUI_Widget(cr,parent,name,f) { make(); }
+    const char *name, WindowFlags f) : EGS_GUI_Widget(cr,parent,name,f) { make(); }
 
 void EGS_CompilePage::make() {
 
@@ -163,7 +163,9 @@ void EGS_CompilePage::startCompilation() {
   if( !checkExeDir() )
     qFatal("Failed to create executable directory for %s",myMachine().toLatin1().data());
 
-  QStringList args;
+  QString egs_compiler = makeProgram();
+  QStringList args = egs_compiler.split(" ");
+
   //c_process->clearArguments();
   //c_process->addArgument(makeProgram());
 #ifdef IK_DEBUG
@@ -216,9 +218,9 @@ void EGS_CompilePage::startCompilation() {
   c_text->setText("");
 
   //c_process->start();
-  c_process->start(makeProgram(),args);
+  c_process->start(args.first(),args.mid(1));
   if(c_process->error()==QProcess::FailedToStart) {
-    c_text->insertPlainText(tr("Failed to execute: ")+ makeProgram() + args.join(" ") + tr("!!!"));
+    c_text->insertPlainText(tr("Failed to execute: ")+ args.join(" ") + tr("!!!"));
   }
   else{
    is_running = true; killed = false;

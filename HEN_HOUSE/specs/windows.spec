@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2003
 #
-#  Contributors:
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 #
@@ -100,8 +100,5 @@ CREATE_LIB1 = lib $(the_objects) -out:$(the_library)
 endif
 
 # The make utility used to build the GUI's
-# This is only relevant at NRC. For now we are using the
-# nmake-msvc qt configuration => gui_make must be set to nmake.
 #
-gui_make = nmake /NOLOGO
-#gui_make = nmake
+gui_make = $(make_prog)

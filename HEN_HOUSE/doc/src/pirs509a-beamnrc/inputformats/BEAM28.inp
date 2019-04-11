@@ -14,13 +14,13 @@
                          to NRC, then use NRC pair production cross-sections
                          (in file $HEN_HOUSE/data/pair_nrc1.data).  Only
                          of interest at low energies, where the NRC cross-
-                         sections take into account the assymmetry in the
+                         sections take into account the asymmetry in the
                          positron-electron energy distribution.
                          [ pair_nrc ]
-        Photoelectron angular sampling= Off or On (Default is Off)
+        Photoelectron angular sampling= Off or On (Default is On)
                          If Off, photo-electrons get the direction of the
                          `mother' photon, with On, Sauter's furmula is
-                         used (which is, striktly speaking, valid only for
+                         used (which is, strictly speaking, valid only for
                          K-shell photo-absorption).
                          If the user has a better approach, replace the macro
                              $SELECT-PHOTOELECTRON-DIRECTION;
@@ -31,27 +31,45 @@
                          in a low energy photon beam.
                          [ IPHTER ]
         Rayleigh scattering= Off, On, custom
-                        If On, turned on coherent (Rayleigh) scattering.
-                         Default is Off. Should be turned on for low energy
-                         applications. Not set to On by default because
-                         On requires a special PEGS4 data set.  If set to
-                         custom, then media for which custom form factors
-                         are to be specified are listed in the input:
-                         ff media names=
-                         and the corresponding files containing custom data
-                         are listed in:
-                         ff file names=
+                         If On, turn on coherent (Rayleigh) scattering.
+                         Default is On. Should be turned on for low energy
+                         applications.
+                         If custom, user must provide media names and form
+                         factor files for each desired medium. For the rest
+                         of the media, default atomic FF are used.
                          [ IRAYLR ]
-        Atomic relaxations= Off, On (Default is Off)
-                         The effect of using On is twofold:
+        ff media names = A list of media names (must match media found in
+                         PEGS4 data file) for which the user is going to
+                         provide custom Rayleigh form factor data.
+                         [ iray_ff_media($MXMED) ]
+        ff file names = A list of names of files containing the Rayleigh
+                        form factor data for the media specified by
+                        the ff media names = input above.  Full directory
+                        paths must be given for all files, and for each medium
+                        specified, iray_ff_media(i), there must be a
+                        corresponding file name, iray_ff_file(i).  For
+                        example files, see the directory
+                        $HEN_HOUSE/data/molecular_form_factors.
+                        [ iray_ff_file($MXMED) ]
+        Atomic relaxations= Off, On, eadl, simple
+                         Default is eadl.  On defaults to eadl.
+                         When simulating atomic relaxations:
                          - In photo-electric absorption events, the element
                            (if material is mixture) and the shell the photon
                            is interacting with are sampled from the
-                           appropriate cross seections
-                         - Shell vacancies created in photo-absorption events
+                           appropriate cross sections
+                         - Shell vacancies created in photoelectric,
+                           compton and electron impact ionization events
                            are relaxed via emission of fluorescent X-Rays,
                            Auger and Koster-Cronig electrons.
-                          Make sure to turn this option on for low energy
+                          The eadl option features a more accurate treatment
+                          of relaxation events and uses binding energies
+                          consistent with those in of the photon cross
+                          sections used in the simulation.  If using
+                          mcdf-xcom or mcdf-epdl photon cross sections, you
+                          cannot use the simple option and this will
+                          automatically get reset to eadl.
+                          Make sure to use eadl or simple for low energy
                           applications.
                           [ IEDGFL ]
 \end{verbatim}

@@ -65,7 +65,7 @@ using namespace std;
 #define zapM(x)  cout<<"deleting "<< string(x->metaObject()->className())<< endl;if(x){delete(x);x=0;}
 
 inputRZImpl::inputRZImpl( QWidget* parent, const char* name,
-             bool modal, Qt::WFlags f )
+             bool modal, Qt::WindowFlags f )
              : QWidget(parent)
 {
 
@@ -78,15 +78,6 @@ inputRZImpl::inputRZImpl( QWidget* parent, const char* name,
 
 inputRZImpl::~inputRZImpl()
 {
-  zapM( srcTip );
-  zapM( ifullTip );
-  zapM( iwatchTip );
-  zapM( irestartTip );
-  zapM( etransportTip );
-  zapM( outputTip );
-  zapM( mediaTip );
-  zapM( imodeTip );
-  zapM( iprimaryTip );
   zap( mediaTable );
 }
 
@@ -97,9 +88,13 @@ void inputRZImpl::compile_userCode()
 {
     //qt3to4
     //char s = QDir::separator();
-    char s = QDir::separator().toAscii();
+    char s = QDir::separator().toLatin1();
     QString egs_compiler = readVarFromConf("make_prog");
     if ( egs_compiler.isEmpty() ) egs_compiler = "make";// default is GNU make
+
+    // If the make command contains an argument already (e.g. -j12) we need to
+    // separate the actual make command in the QStringList
+    QStringList args = egs_compiler.split(" ");
 
    QString code_generation = "opt"; // default
    if ( DebugradioButton->isChecked() )
@@ -114,8 +109,6 @@ void inputRZImpl::compile_userCode()
 
    QDir::setCurrent( ironIt( EGS_HOME + QDir::separator() + usercodename) );
 
-   QStringList args;
-   args.push_back(egs_compiler);
    args += code_generation;
 //   if ( code_generation.toLower() != "clean"){
    QString dummy =  (QString)"EGS_CONFIG=" +
@@ -143,7 +136,7 @@ void inputRZImpl::run_userCode()
      QString inpf  = EGSfileName;
      //qt3to4 -- BW
      //char s = QDir::separator();
-     char s = QDir::separator().toAscii();
+     char s = QDir::separator().toLatin1();
      QString the_user_code_area = ironIt( EGS_HOME+s+usercodename+s );
 
      if ( EGSdir != the_user_code_area  ){
@@ -406,7 +399,7 @@ void inputRZImpl::checkCompilationAbility(){
 
   //qt3to4 -- BW
   //char s = QDir::separator();
-  char s = QDir::separator().toAscii();
+  char s = QDir::separator().toLatin1();
 
   QString missing_files = QString();
 
@@ -517,7 +510,7 @@ void inputRZImpl::SetInpfileName( QString inp_name )
     QString tmpDir = EGSdir;
     //qt3to4 -- BW
     //char s         = QDir::separator();
-     char s = QDir::separator().toAscii();
+     char s = QDir::separator().toLatin1();
     if ( !inp_name.isEmpty() ) {
        EGSfileName = ironIt( inp_name ); // may be a full path name
        QFileInfo fi( EGSfileName );
@@ -561,7 +554,7 @@ void inputRZImpl::OpenEGSInpFile()
     QString tmpDir = EGSdir;
     //qt3to4 -- BW
     //char s = QDir::separator();
-    char s = QDir::separator().toAscii();
+    char s = QDir::separator().toLatin1();
     QDir d(tmpDir);
     if ( !d.exists() ) {
        tmpDir = GetCurrentDir( usercodename, EGS_HOME, HEN_HOUSE );
@@ -729,7 +722,7 @@ void inputRZImpl::customFFTable_singleclicked( int row, int col) {
 void inputRZImpl::GetMDfile()
 {
    QString tmpDir;
-   char s = QDir::separator().toAscii();
+   char s = QDir::separator().toLatin1();
    //try EGS_HOME/pegs4/data, then HEN_HOUSE/pegs4/data then $HOME/pegs4/data
    tmpDir = GetCurrentDir( "pegs4/data", EGS_HOME, HEN_HOUSE );
    QDir d(tmpDir);
@@ -746,7 +739,7 @@ void inputRZImpl::GetMDfile()
 void inputRZImpl::GetDFfile()
 {
    QString start_dir;
-   char s = QDir::separator().toAscii();
+   char s = QDir::separator().toLatin1();
    if(DFSearchComboBox->currentText() == "HEN_HOUSE")
      start_dir = ironIt(HEN_HOUSE + s + "pegs4" + s + "density_corrections" + s);
    else start_dir = ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s);
@@ -973,7 +966,7 @@ void inputRZImpl::GetPEGSfile()
     QString tmpDir = PEGSdir;
     //qt3to4 -- BW
     //char s = QDir::separator();
-    char s = QDir::separator().toAscii();
+    char s = QDir::separator().toLatin1();
     QDir d(tmpDir);
     if ( !d.exists() ) {
        tmpDir = GetCurrentDir( "pegs4/data", EGS_HOME, HEN_HOUSE );
@@ -1036,7 +1029,9 @@ void inputRZImpl::GetSPECfile()
     //qt3to4 -- BW
     //Q3FileDialog* fd = new Q3FileDialog(SPECdir, QString::null, this);
     QFileDialog* fd = new QFileDialog(this,"",SPECdir, QString());
-    fd->setFilter( "SPEC files (*.spectrum *.ensrc)" );
+    QStringList filters;
+    filters << "*.spectrum" << "*.ensrc";
+    fd->setNameFilters( filters );
     QString f;
     QStringList flst;
     if ( fd->exec() == QDialog::Accepted )

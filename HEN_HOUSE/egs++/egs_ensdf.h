@@ -163,8 +163,10 @@ public:
 protected:
     double recordToDouble(int startPos, int endPos);
     string recordToString(int startPos, int endPos);
-    double getTag(string searchString);
+    double getTag(string searchString, string notAfter);
     double parseHalfLife(int startPos, int endPos);
+    double parseStdUncertainty(string value, string stdUncertainty);
+    string getStringAfter(string searchString, size_t len);
 
     // All the lines corresponding to this record type
     vector<string> lines;
@@ -238,10 +240,11 @@ public:
 };
 
 // Level Record
-class LevelRecord : public Record, public Branch<Leaf<LevelRecord> > {
+class EGS_EXPORT LevelRecord : public Record, public Branch<Leaf<LevelRecord> > {
 public:
     LevelRecord();
     LevelRecord(vector<string> ensdf);
+    void resetDisintegrationIntensity();
     void cumulDisintegrationIntensity(double disintIntensity);
     double getDisintegrationIntensity() const;
     void setLevelCanDecay(bool canDecay);
@@ -266,7 +269,7 @@ public:
 };
 
 // Generic beta record
-class BetaRecordLeaf : public Record, public ParentRecordLeaf, public
+class EGS_EXPORT BetaRecordLeaf : public Record, public ParentRecordLeaf, public
     NormalizationRecordLeaf, public LevelRecordLeaf {
 public:
     BetaRecordLeaf(vector<string> ensdf, ParentRecord *myParent,
@@ -307,21 +310,23 @@ protected:
 };
 
 // Beta- record
-class BetaMinusRecord : public BetaRecordLeaf {
+class EGS_EXPORT BetaMinusRecord : public BetaRecordLeaf {
 public:
     BetaMinusRecord(vector<string> ensdf, ParentRecord *myParent,
                     NormalizationRecord *myNormalization, LevelRecord *myLevel);
 
     double getFinalEnergy() const;
     double getBetaIntensity() const;
+    double getBetaIntensityUnc() const;
     void setBetaIntensity(double newIntensity);
 
 private:
     void processEnsdf();
+    double betaIntensityUnc;
 };
 
 // Beta+ Record (and Electron Capture)
-class BetaPlusRecord : public BetaRecordLeaf {
+class EGS_EXPORT BetaPlusRecord : public BetaRecordLeaf {
 public:
     BetaPlusRecord(vector<string> ensdf, ParentRecord *myParent,
                    NormalizationRecord *myNormalization, LevelRecord *myLevel);
@@ -329,9 +334,10 @@ public:
     double getFinalEnergy() const;
     double getBetaIntensity() const;
     double getPositronIntensity() const;
-    double getECIntensity() const;
+    double getPositronIntensityUnc() const;
+    double getECIntensityUnc() const;
     void setBetaIntensity(double newIntensity);
-    void setECIntensity(double newIntensity);
+    void setPositronIntensity(double newIntensity);
     void relax(int shell,
                EGS_Float ecut, EGS_Float pcut,
                EGS_RandomGenerator *rndm, double &edep,
@@ -339,14 +345,16 @@ public:
 
 protected:
     double  ecIntensity,
-            positronIntensity;
+            positronIntensity,
+            ecIntensityUnc,
+            positronIntensityUnc;
 
 private:
     void processEnsdf();
 };
 
 // Gamma record
-class GammaRecord : public Record, public ParentRecordLeaf,
+class EGS_EXPORT GammaRecord : public Record, public ParentRecordLeaf,
     public NormalizationRecordLeaf, public LevelRecordLeaf {
 public:
     GammaRecord(vector<string> ensdf, ParentRecord *myParent,
@@ -357,8 +365,14 @@ public:
     double getDecayEnergy() const;
     double getTransitionIntensity() const;
     double getGammaIntensity() const;
+    double getGammaIntensityUnc() const;
+    double getICIntensity() const;
+    double getICIntensityUnc() const;
+    double getIPIntensity() const;
+    double getIPIntensityUnc() const;
     void setTransitionIntensity(double newIntensity);
     void setGammaIntensity(double newIntensity);
+    void setICIntensity(double newIntensity);
     double getMultiTransitionProb() const;
     void setMultiTransitionProb(double newIntensity);
     int getCharge() const;
@@ -366,8 +380,10 @@ public:
     void setFinalLevel(LevelRecord *newLevel);
     void incrGammaSampled();
     void incrICSampled();
+    void incrIPSampled();
     EGS_I64 getGammaSampled() const;
     EGS_I64 getICSampled() const;
+    EGS_I64 getIPSampled() const;
     vector<double> icIntensity;
     double getBindingEnergy(int shell) const;
     void relax(int shell,
@@ -376,10 +392,16 @@ public:
                EGS_SimpleContainer<EGS_RelaxationParticle> &particles);
 
 protected:
-    EGS_I64 numGammaSampled, numICSampled;
-    double decayEnergy;
-    double transitionIntensity, gammaIntensity, multipleTransitionProb;
-    double icTotal;
+    EGS_I64 numGammaSampled, numICSampled, numIPSampled;
+    double  decayEnergy;
+    double  transitionIntensity,
+            multipleTransitionProb,
+            gammaIntensity,
+            gammaIntensityUnc,
+            icCoeff,
+            icCoeffUnc,
+            ipCoeff,
+            ipCoeffUnc;
     int q;
     LevelRecord *finalLevel;
 
@@ -388,7 +410,7 @@ private:
 };
 
 // Alpha record
-class AlphaRecord : public Record, public ParentRecordLeaf, public
+class EGS_EXPORT AlphaRecord : public Record, public ParentRecordLeaf, public
     NormalizationRecordLeaf, public LevelRecordLeaf {
 public:
     AlphaRecord(vector<string> ensdf, ParentRecord *myParent,
@@ -396,6 +418,7 @@ public:
 
     double getFinalEnergy() const;
     double getAlphaIntensity() const;
+    double getAlphaIntensityUnc() const;
     int getCharge() const;
     void setAlphaIntensity(double newIntensity);
     void incrNumSampled();
@@ -403,8 +426,9 @@ public:
 
 protected:
     EGS_I64 numSampled;
-    double finalEnergy;
-    double alphaIntensity;
+    double  finalEnergy,
+            alphaIntensity,
+            alphaIntensityUnc;
     int q;
 
 private:
@@ -436,7 +460,7 @@ words, the relaxation emissions are not correlated with specific disintegration
 events. If you are coincidence counting, use
 '<code>atomic relaxations = eadl</code>'.
 
-There are a few nuances to the data interpretation.
+There are a few nuances to the data interpretation with '<code>atomic relaxations = ensdf</code>'.
 If a single emission intensity value is present for a combination of lines (where
 multiple energies are provided), then the average energy of the lines is used.
 For example, in the
@@ -473,7 +497,7 @@ public:
      *
      */
     EGS_Ensdf(const string nuclide, const string ensdf_filename="",
-              const string relaxType="yes", int verbosity=1);
+              const string relaxType="eadl", const bool allowMultiTrans=false, int verbosity=1);
 
     /*! \brief Destructor. */
     ~EGS_Ensdf();
@@ -485,6 +509,7 @@ public:
     vector<AlphaRecord * > getAlphaRecords() const;
     vector<GammaRecord * > getGammaRecords() const;
     vector<GammaRecord * > getMetastableGammaRecords() const;
+    vector<GammaRecord * > getUncorrelatedGammaRecords() const;
     vector<double > getXRayIntensities() const;
     vector<double > getXRayEnergies() const;
     vector<double > getAugerIntensities() const;
@@ -494,6 +519,8 @@ public:
     int verbose;
     string relaxationType;
     unsigned short int Z;
+    double decayDiscrepancy;
+    bool allowMultiTransition;
 
     void normalizeIntensities();
 
@@ -519,6 +546,7 @@ protected:
     vector<AlphaRecord * > myAlphaRecords;
     vector<GammaRecord * > myGammaRecords;
     vector<GammaRecord * > myMetastableGammaRecords;
+    vector<GammaRecord * > myUncorrelatedGammaRecords;
 
 private:
 

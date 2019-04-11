@@ -915,6 +915,10 @@ ExIN=$ExDEF;EyIN=$EyDEF;EzIN=$EzDEF;
 BxIN=$BxDEF;ByIN=$ByDEF;BzIN=$BzDEF; EMLMTIN=$EMLMTDEF;
 Bx=BxIN;    By=ByIN;    Bz=BzIN;
 Bx_new=Bx;  By_new=By;  Bz_new=Bz;
+emfield_on=.false.;
+IF( ExIN**2+EyIN**2+EzIN**2 + BxIN**2+ByIN**2+BzIN**2 > 0 ) [
+    emfield_on=.true.
+]
 
 DO i=1,$MXMED [
     iraylm(i) = 0; "Rayleigh data available?"

@@ -9,6 +9,6 @@
    Next record (If ISOURC=31)
    ***********
       SPCNAM        FILENAME (with EXT) contains information on beam model
-                    (maximum of 80 characters)
+                    (maximum of 256 characters)
    --------------------------------------------------------------------------
 \end{verbatim}

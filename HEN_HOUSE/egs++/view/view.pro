@@ -32,6 +32,8 @@ LANGUAGE	= C++
 
 INCLUDEPATH	+= . .. ../../lib/$$my_machine
 
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
 HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
                  clippingplanes.h viewcontrol.h geometryview.ui.h \
                  saveimage.h egs_user_color.h egs_track_view.h \
@@ -91,6 +93,7 @@ unix {
 #QMAKE_CXXFLAGS+="-ggdb3"
 #QMAKE_LFLAGS+="-fsanitize=address"
 
+QMAKE_CXXFLAGS+=-std=c++11
 UI_DIR = .ui/$$my_machine
 MOC_DIR = .moc/$$my_machine
 OBJECTS_DIR = .obj/$$my_machine

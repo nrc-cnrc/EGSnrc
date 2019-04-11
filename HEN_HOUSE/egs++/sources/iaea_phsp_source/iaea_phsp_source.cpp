@@ -176,11 +176,24 @@ void IAEA_PhspSource::openFile(const string &phsp_file) {
         return;
     }
     mode2=false;
+    i_zlast = -1;
     for (int i=0; i< n_extra_floats; i++) {
         if (extrafloat_types[i]==3) {
             mode2=true;
             i_zlast=i;
             break;
+        }
+    }
+    //now see if mu index is stored in the file
+    //assume it is the first variable stored in extra_float
+    //after zlast
+    i_mu=-1;
+    mu_stored=false;
+    if (n_extra_floats > i_zlast+1) {
+        if (extrafloat_types[i_zlast+1] == 0) {
+            i_mu=i_zlast+1;
+            mu_stored=true;
+            egsInformation("IAEA_PhspSource::openFile: Mu index included in data in %s.IAEAphsp\n",phsp_file.c_str());
         }
     }
 
@@ -327,6 +340,9 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         if (mode2) {
             p.zlast = extrafloattemp[i_zlast];
         }
+        if (mu_stored) {
+            p.mu = extrafloattemp[i_mu];
+        }
         if (swap_bytes) {
             egsSwapBytes(&p.q);
             egsSwapBytes(&nstat);
@@ -340,6 +356,7 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
             egsSwapBytes(&p.u);
             egsSwapBytes(&p.v);
             egsSwapBytes(&p.w);
+            egsSwapBytes(&p.mu);
         }
         //do check here because we need the swapped version of nstat
         if (nstat<0) {

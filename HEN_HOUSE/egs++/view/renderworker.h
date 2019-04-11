@@ -52,8 +52,20 @@ struct RenderParameters {
     int nyr;
     // Clipping planes
     vector<EGS_ClippingPlane> clipping_planes;
-    // material colors
+    // Material colors
     vector<EGS_MaterialColor> material_colors;
+    // Regions to show/hide
+    vector<bool> show_regions;
+    // Whether or not to allow show_regions to be used
+    bool allowRegionSelection;
+    // Transparency of dose
+    EGS_Float doseTransparency;
+
+    // Unordered map is much more efficient when there is not
+    // dose in every region
+    unordered_map<size_t, EGS_Float> score;
+    unordered_map<size_t, EGS_Vector> scoreColor;
+
     // lights
     vector<EGS_Light> lights;
     EGS_Vector global_ambient_light;
@@ -62,7 +74,7 @@ struct RenderParameters {
     bool show_photons;
     bool show_electrons;
     bool show_positrons;
-    bool show_other;
+    vector<size_t> trackIndices;
     // viewport
     EGS_Vector camera;
     EGS_Vector camera_v1;
@@ -78,6 +90,16 @@ struct RenderParameters {
     EGS_Float size;
     // Purpose of request
     RenderRequestType requestType;
+
+    // Various display colors
+    // 0 - background
+    // 1 - text
+    // 2 - axis
+    // 3 - photons
+    // 4 - electrons
+    // 5 - positrons
+    vector<EGS_Vector> displayColors;
+    bool energyScaling;
 };
 
 struct RenderResults {
@@ -113,6 +135,7 @@ signals:
 
     void aborted();
     void rendered(struct RenderResults, struct RenderParameters params);
+    void tracksLoaded(vector<size_t> ntracks);
 
 private:
     void drawAxes(const struct RenderParameters &);

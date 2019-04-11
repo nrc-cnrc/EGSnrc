@@ -26,6 +26,22 @@
 #  Contributors:
 #
 ###############################################################################
+#
+#  Build GUIs statically linked to Qt library for distribution. If no static
+#  Qt library available, one can use dynamically linked Qt as long as EGSnrc
+#  is installed on an identical system with the same Qt version.
+#
+#  BEWARE:
+#  Change variable qt4 below to point to the desired Qt library. The current
+#  implementation is motivated by the fact that normally at NRC we use a
+#  dynamically built Qt library. However, for distribution we want to use a
+#  static version.
+#
+#  NOTE:
+#  If QTDIR is set to the desired Qt library version in the user's environment,
+#  one could get rid of the qt4 variable or set it to $QTDIR.
+#
+################################################################################
 
 
 #machine=$(shell echo linux-static`getconf LONG_BIT`)
@@ -52,9 +68,9 @@ egs_view: egspp
 	@echo "Building egs_view statically ..."
 	@cd ../../egs++/view && export QTDIR=$(qt4)  && export QMAKESPEC=$(qmake4) && export EGS_CONFIG=$(egs_config) && make static
 
-egspp: iaea_phsp
+egspp:
 	@echo "Building egspp ..."
-	cd ../../egs++ && export EGS_CONFIG=$(egs_config) && make
+	cd ../../egs++ && export EGS_CONFIG=$(egs_config) && make glibs && make aobjects && make shapes
 
 viewclean:
 	cd ../../egs++/view && export QTDIR=$(qt4) && export EGS_CONFIG=$(egs_config) && make realclean
@@ -62,12 +78,8 @@ viewclean:
 egs_configure:
 	cd ../../gui/egs_configure && export QTDIR=$(qt4) && export QMAKESPEC=$(qmake4) && export EGS_CONFIG=$(egs_config) && make
 
-iaea_phsp:
-	@echo "Building iaea_phsp ..."
-	cd ../../iaea_phsp && export EGS_CONFIG=$(egs_config) && make
-
 clean: viewclean
-	cd ../../egs++ && export EGS_CONFIG=$(egs_config) && make clean
+	cd ../../egs++ && export EGS_CONFIG=$(egs_config) && make realclean
 	cd ../../gui/egs_inprz && export QTDIR=$(qt4) && export QMAKESPEC=$(qmake4) && export EGS_CONFIG=$(egs_config) && make realclean
 	cd ../../gui/egs_gui && export QTDIR=$(qt4) && export QMAKESPEC=$(qmake4) && export EGS_CONFIG=$(egs_config) && make realclean
 	cd ../../gui/egs_configure && export QTDIR=$(qt4) && export QMAKESPEC=$(qmake4) && export EGS_CONFIG=$(egs_config) && make realclean

@@ -133,7 +133,7 @@ public:
         int j = 0, iloop = 0;
         while (nnow > 0) {
             if (geoms[j]->deref() == -1) {
-                delete geoms[j];
+                removeGeometry(geoms[j]);
             }
             else {
                 geoms[j++]->ref();
@@ -141,9 +141,19 @@ public:
             if (j >= nnow && nnow) {
                 j = 0;
                 ++iloop;
-                if (iloop > 20) egsWarning("~EGS_GeometryPrivate(): failed "
-                                               "to delete all geometries after 20 loops!\n");
-                break;
+
+                for (int i=0; i<nnow; ++i) {
+                    if (!geoms[i]->deref()) {
+                        removeGeometry(geoms[i]);
+                    }
+                }
+
+                if (iloop > 20) {
+//                     egsWarning("~EGS_GeometryPrivate(): failed "
+//                                "to delete all geometries after 20 loops!\n");
+
+                    break;
+                }
             }
         }
     };
@@ -178,12 +188,19 @@ public:
     };
 
     void removeGeometry(EGS_BaseGeometry *g) {
+        ntot--;
+        EGS_BaseGeometry **tmp = new EGS_BaseGeometry* [ntot];
+        int i=0;
         for (int j=0; j<nnow; j++) {
-            if (geoms[j] == g) {
-                geoms[j] = geoms[--nnow];
-                break;
+            if (geoms[j] != g) {
+                tmp[i++] = geoms[j];
             }
         }
+        if (geoms) {
+            delete [] geoms;
+        }
+        nnow--;
+        geoms = tmp;
     };
 
     EGS_BaseGeometry *getGeometry(const string &name) {
@@ -414,6 +431,8 @@ EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
     has_B_scaling(false), has_Ref_rho(false), bfactor(0), rhoRef(1.0),
     nref(0), debug(false), is_convex(true), bproperty(0), bp_array(0),
     boundaryTolerance(epsilon) {
+
+    halfBoundaryTolerance = boundaryTolerance/2.;
     if (!egs_geometries.size()) {
         egs_geometries.addList(new EGS_GeometryPrivate);
     }
@@ -422,7 +441,7 @@ EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
     }
     if (egs_geometries[active_glist].addGeometry(this) < 0)
         egsFatal("EGS_BaseGeometry::EGS_BaseGeometry:\n"
-                 "  a geometry with name %s alread exists\n",name.c_str());
+                 "  a geometry with name %s already exists\n",name.c_str());
 }
 
 EGS_BaseGeometry::~EGS_BaseGeometry() {
@@ -448,6 +467,14 @@ void EGS_BaseGeometry::clearGeometries() {
 
 EGS_BaseGeometry *EGS_BaseGeometry::getGeometry(const string &Name) {
     return egs_geometries[active_glist].getGeometry(Name);
+}
+
+EGS_BaseGeometry **EGS_BaseGeometry::getGeometries() {
+    return egs_geometries[active_glist].geoms;
+}
+
+int EGS_BaseGeometry::getNGeometries() {
+    return egs_geometries[active_glist].nnow;
 }
 
 void EGS_BaseGeometry::setMedium(const string &Name) {
@@ -691,7 +718,9 @@ void EGS_BaseGeometry::setBoundaryTolerance(EGS_Input *i) {
     int err = i->getInput("boundary tolerance", boundaryTolerance);
     if (err > 0) {
         egsWarning("EGS_BaseGeometry::setBoundaryTolerance(): error while reading 'boundary tolerance' input\n");
+        return;
     }
+    halfBoundaryTolerance = boundaryTolerance/2.;
 }
 
 void EGS_BaseGeometry::printInfo() const {

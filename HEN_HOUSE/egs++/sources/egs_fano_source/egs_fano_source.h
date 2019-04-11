@@ -167,7 +167,7 @@ public:
         while (!okfano);
         u.z = buf_1 - rndm->getUniform()*(buf_1 - buf_2);
         EGS_Float sinz = 1-u.z*u.z;
-        if ( sinz > epsilon ) {
+        if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi, sphi;
             EGS_Float phi = min_phi + (max_phi - min_phi)*rndm->getUniform();

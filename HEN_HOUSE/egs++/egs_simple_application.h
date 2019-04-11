@@ -363,20 +363,16 @@ protected:
     \until };
     and completes the implementation of the Tutor2_Application class.
 
+    The main program of the tutor2pp application is very simple, if fact we
+    use the defined macros APP_MAIN or APP_LIB, from
+    \ref EGS_SimpleApplication.
+    APP_MAIN creates the application object, runs a simulation, outputs
+    results and finishes. APP_LIB just creates and returns the application
+    object.
+    \skipline #ifdef BUILD_APP_LIB
+    \until #endif
 
-    The main program of the tutor2pp application is very simple:
-    we simple construct an instance of the Tutor2_Application class,
-    passing the command line arguments to it,
-    \skipline int main
-    \skipline Tutor2_Application app
-    call its inherited shower loop function,
-    \skipline app.run
-    report the results using our \c reportResults function,
-    \skipline app.report
-    and finish the simulation colling the inherited \c finish method
-    \skipline app.finish
-    \until }
-    That's all. With 32 lines of code (excluding comments and blank lines)
+    That's all. With 35 lines of code (excluding comments and blank lines)
     we have implemented a complete EGSnrc C++ application, which provides
     much more functionality than the original \c tutor2 mortran application
     (97 lines of code excluding comments and blank lines).

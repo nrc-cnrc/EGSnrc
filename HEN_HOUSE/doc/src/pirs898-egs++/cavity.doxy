@@ -38,7 +38,7 @@
 
 <ul>
 <li> \ref cavity_intro </li>
-<li> \ref common_geom_source_rco </li>
+<li> \ref common_intro </li>
 <li> \ref cavity_options </li>
   <ul>
   <li> \ref cavity_fac </li>
@@ -614,12 +614,13 @@ one can force
 \c cavity to use a simple RCO instead of a JCF-RCO in parallel runs
 specified with <b><code>-P N -j i</code></b>, where <b>\c N</b>
 is the number of parallel
-jobs and <b>\c i</b> the job index. Not that one Unix-type systems it
+jobs and <b>\c i</b> the job index. Note that on Unix-type systems it
 is easier to use the <b>\c exb</b> command to submit parallel jobs
 \verbatim
 exb cavity input_file pegs_file [p=N] [batch=pbs]
 \endverbatim
 where the <b>\c batch</b> option specifies the queuing system to be used.
+For pegsless mode, simply type in the string pegsless instead of pegs_file.
 The EGSnrc GUI can of course be also used, see
 see PIRS-877 for more details on running EGSnrc applications.
 

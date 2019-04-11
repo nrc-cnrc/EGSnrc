@@ -40,7 +40,6 @@
 #include "datainp.h"
 #include "inputs.h"
 #include "eventfilter.h"
-#include "comboboxtooltip.h"
 #include "beamsrcdlg.h"
 #include <qtooltip.h>
 #include <qdialog.h>
@@ -83,7 +82,7 @@ class inputRZImpl : public QWidget, public Ui::InputRZForm
 public:
 
 inputRZImpl( QWidget* parent, const char* name,
-             bool modal, Qt::WFlags f );
+             bool modal, Qt::WindowFlags f );
 
 ~inputRZImpl();
 
@@ -126,19 +125,6 @@ QString queue;
 
 //public access stuff for PEGSless inputs
 PEGSLESSInputs* Ppgls;
-
-//  my own tool tips  for Combo Box list items
-
-ComboBoxToolTip* srcTip;
-ComboBoxToolTip* ifullTip;
-ComboBoxToolTip* iwatchTip;
-ComboBoxToolTip* irestartTip;
-ComboBoxToolTip* etransportTip;
-ComboBoxToolTip* outputTip;
-ComboBoxToolTip* mediaTip;
-ComboBoxToolTip* imodeTip;
-ComboBoxToolTip* iprimaryTip;
-ComboBoxToolTip* compilationTip;
 
 // a push button for the beam source
 

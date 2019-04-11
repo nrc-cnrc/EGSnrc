@@ -47,9 +47,9 @@ class EGS_ConfigurationPage : public EGS_GUI_Widget {
 
 public:
 
-  EGS_ConfigurationPage(QWidget *parent=0, const char *name=0, Qt::WFlags f=0);
+  EGS_ConfigurationPage(QWidget *parent=0, const char *name=0, Qt::WindowFlags f=0);
   EGS_ConfigurationPage(EGS_ConfigReader *cr,
-          QWidget *parent=0, const char *name=0, Qt::WFlags f=0);
+          QWidget *parent=0, const char *name=0, Qt::WindowFlags f=0);
   ~EGS_ConfigurationPage(){}
 public slots:
 

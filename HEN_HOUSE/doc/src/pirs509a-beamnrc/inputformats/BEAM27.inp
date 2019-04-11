@@ -10,12 +10,12 @@
         Spin effects=    Off, On, (default is On)
                          Turns off/on spin effects for electron elastic
                          scattering. Spin On is ABSOLUTELY necessary for
-                         good backscattering calculations. Will make a
+                         good back-scattering calculations. Will make a
                          difference even in `well conditioned' situations
                          (e.g. depth dose curves for RTP energy range
                          electrons).
                          [ spin_effects ]
-        Brems angular sampling= Simple, KM, (default is Simple)
+        Brems angular sampling= Simple, KM, (default is KM)
                          If Simple, use only the leading term of the Koch-Motz
                          distribution to determine the emission angle of
                          bremsstrahlung photons. If KM, complete
@@ -31,20 +31,27 @@
                          cross section data base (which is the basis for
                          the ICRU radiative stopping powers) will be employed.
                          Differences are negligible for E > ,say, 10 MeV,
-                         but signifficant in the keV energy range.  If NRC is
+                         but significant in the keV energy range.  If NRC is
                          selected, NIST data including corrections for
                          electron-electron brems will be used (typically only
                          significant for low values of the atomic number Z
                          and for k/T < 0.005).
-        Bound Compton scattering=  On, Off or Norej (Default is Off)
+        Triplet production= On or Off (default).  Turns on/off simulation
+                         of triplet production.  If On, then Borsellino's
+                         first Born approximation is used to sample triplet
+                         events based on the triplet cross-section data.
+                         [ itriplet ]
+        Bound Compton scattering=  On, Off, Simple or norej (default)
                          If Off, Compton scattering will be treated with
                          Klein-Nishina, with On Compton scattering is
                          treated in the Impulse approximation.
-                         Make sure to turn on for low energy applications,
-                         not necessary above, say, 1 MeV.  Option Norej
-                         uses full bound Compton cross section data
-                         supplied in input below and does not reject
-                         interactions.
+                         With Simple, the impulse approximation incoherent
+                         scattering function will be used (i.e., no Doppler
+                         broadening). With norej the actual total bound
+                         Compton cross section is used and there are no
+                         rejections at run time.
+                         Make sure to use for low energy applications,
+                         not necessary above, say, 1 MeV.
                          [ IBCMP ]
         Compton cross sections= Bound Compton cross-section data.  User-
                          supplied bound Compton cross-sections in the file

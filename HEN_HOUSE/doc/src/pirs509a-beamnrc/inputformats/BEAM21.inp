@@ -20,7 +20,7 @@
    ***********
        SPCNAM       FILENAME (with EXT) containing description of the radial
                     intensity distribution of the incident particles
-                                                (maximum 80 characters)
+                                                (maximum 256 characters)
               _______________________________________________________
               FILE FORMAT for SPCNAM:
                 NRDIST

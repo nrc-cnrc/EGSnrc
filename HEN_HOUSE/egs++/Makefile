@@ -56,15 +56,16 @@ geometry_libs = egs_planes egs_cd_geometry egs_gtransformed egs_nd_geometry \
 source_libs = egs_collimated_source egs_isotropic_source egs_parallel_beam \
               egs_point_source egs_source_collection egs_transformed_source \
               egs_beam_source egs_phsp_source egs_angular_spread \
-              iaea_phsp_source egs_radionuclide_source
+              iaea_phsp_source egs_radionuclide_source egs_dynamic_source
 
 shape_libs = egs_circle egs_ellipse egs_extended_shape egs_gaussian_shape \
              egs_line_shape egs_polygon_shape egs_rectangle egs_shape_collection \
              egs_voxelized_shape
 
-aobject_libs = egs_track_scoring egs_dose_scoring
+aobject_libs = egs_track_scoring egs_dose_scoring egs_radiative_splitting egs_phsp_scoring
 
 all_libs = $(geometry_libs) $(source_libs) $(shape_libs) $(aobject_libs)
+lib_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(all_libs)))
 
 #******************************************************************************
 
@@ -118,10 +119,13 @@ $(DSO1)egs_object_factory.$(obje): egs_object_factory.cpp egs_object_factory.h \
 
 $(DSO1)egs_spectra.$(obje): egs_spectra.cpp egs_base_source.h $(config1h) \
     egs_rndm.h egs_object_factory.h egs_alias_table.h egs_vector.h \
-    egs_input.h egs_math.h
+    egs_input.h egs_math.h egs_ensdf.h
 
 $(DSO1)egs_base_source.$(obje): egs_base_source.cpp egs_base_source.h \
     egs_vector.h $(config1h) egs_object_factory.h egs_input.h
+
+$(DSO1)egs_ensdf.$(obje): egs_ensdf.cpp egs_ensdf.h \
+    $(config1h) egs_functions.h egs_math.h egs_alias_table.h egs_atomic_relaxations.h
 
 $(DSO1)egs_geometry_tester.$(obje): egs_geometry_tester.cpp \
     egs_geometry_tester.h egs_input.h egs_vector.h egs_base_geometry.h \
@@ -200,5 +204,8 @@ check:
 clean:
 	$(REMOVE) $(egspp_objects) $(DSO1)test.exe
 
+realclean:
+	$(REMOVE) $(egspp_objects) $(lib_objects) $(DSO1)egspp.$(obje) $(DSO1)test.exe
+	$(REMOVE) $(DSO1)egs_envelope_geometry.$(obje) $(DSO1)egs_stack_geometry.$(obje) $(DSO1)egs_union_geometry.$(obje) $(DSO1)egs_angular_spread_source.$(obje)
 
-.PHONY: libs $(all_libs) clean
+.PHONY: libs $(all_libs) clean realclean

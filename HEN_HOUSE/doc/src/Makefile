@@ -28,6 +28,7 @@
 ###############################################################################
 
 docs = $(sort $(wildcard pirs*))
+docs += getting-started
 
 .PHONY: pirs*
 

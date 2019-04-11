@@ -35,6 +35,9 @@
 #include "egs_vector.h"
 #include "egs_math.h"
 #include "stddef.h"
+#include <vector>
+#include <QColor>
+#include <unordered_map>
 
 class EGS_Light;
 class EGS_MaterialColor;
@@ -85,7 +88,7 @@ public:
     EGS_GeometryVisualizer();
     ~EGS_GeometryVisualizer();
 
-    void loadTracksData(const char *fname);
+    vector<size_t> loadTracksData(const char *fname);
 
     void setProjection(const EGS_Vector &camera_pos,
                        const EGS_Vector &camera_look_at, EGS_Float distance,
@@ -108,13 +111,21 @@ public:
     void setMaterialColor(int imed, const EGS_MaterialColor &Mat);
     void setMaterialColor(int imed, const EGS_Vector &d_color,
                           EGS_Float Alpha=1);
+    void setShowRegions(const vector<bool> &show_regions);
+    void setAllowRegionSelection(bool allow);
+    void setScoreColors(const unordered_map<size_t, EGS_Vector> &scoreColor);
+    void setDoseTransparency(EGS_Float doseTransparency);
+    void setTrackIndices(const vector<size_t> &trackIndices);
 
     //EGS_Vector *renderImage(EGS_BaseGeometry *, int xsize, int ysize);
     bool renderImage(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
-    bool renderTracks(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
-    EGS_Vector getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float axis_distance, const EGS_Float track_alpha, const bool track_clip);
-    void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg);
+    bool renderTracks(int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
+    EGS_Vector getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float axis_distance, const EGS_Float track_alpha);
+    void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg, EGS_Vector &hitCoord, const unordered_map<size_t, EGS_Float> &score, EGS_Float &hitScore);
+    void getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g, EGS_Vector &hitCoord);
 
+    void setDisplayColors(const vector<EGS_Vector> &displayColors);
+    void setEnergyScaling(const bool &scaling);
 
 
     // region picking

@@ -1,0 +1,118 @@
+
+###############################################################################
+#
+#  EGSnrc additional Fish shell definitions for EGSnrc
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:    Marc-Andre Renaud
+#
+###############################################################################
+#
+#  Adapted from egsnrc_bashrc_additions
+#
+#  Source this file from your .config/fish/.config file if a Fish shell flavor
+#  is your default shell. You may put additional definitions and aliases into
+#  this file but be aware that changes will be lost if you rerun the
+#  installation. It is therefore better to put additional system wide
+#  definitions in:
+#
+#  $HEN_HOUSE/scripts/local_fishrc_additions
+#
+###############################################################################
+
+
+#  Environment variables
+#
+set -x my_machine (cat $EGS_CONFIG | grep "my_machine =" | sed "s/my_machine = //")
+set -x HEN_HOUSE (cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed "s/HEN_HOUSE = //")
+set -x OMEGA_HOME {$HEN_HOUSE}omega
+
+# Add HEN_HOUSE bin area to the path
+#
+set -x PATH $PATH {$HEN_HOUSE}bin/$my_machine
+
+# Now check for EGS_HOME.
+# If EGS_HOME is not empty and exists, check for $EGS_HOME/bin and
+# $EGS_HOME/bin/$my_machine and create them if they don't exist.
+# Then add $EGS_HOME/bin/$my_machine to the search path.
+#
+if test ! "x$EGS_HOME" = x; and test -d $EGS_HOME;
+    test -d {$EGS_HOME}bin; or mkdir {$EGS_HOME}bin
+    test -d {$EGS_HOME}bin/$my_machine; or mkdir {$EGS_HOME}bin/$my_machine
+    set -x PATH $PATH {$EGS_HOME}bin/$my_machine
+end
+#  Aliases
+#
+alias mf='eval $HEN_HOUSE/scripts/compile_user_code mf'
+alias  f='eval $HEN_HOUSE/scripts/compile_user_code mf'
+alias  m='eval $HEN_HOUSE/scripts/compile_user_code m'
+alias ex='eval $HEN_HOUSE/scripts/run_user_code'
+alias exb='eval $HEN_HOUSE/scripts/run_user_code_batch'
+alias p4='eval $HEN_HOUSE/bin/$my_machine/pegs4.exe'
+alias egsgui='eval $HEN_HOUSE/bin/$my_machine/egs_gui'
+alias egsinprz='eval $HEN_HOUSE/bin/$my_machine/egs_inprz'
+alias mor='eval $HEN_HOUSE/scripts/mortran_compile'
+alias switch_config='eval \. $HEN_HOUSE/scripts/switch_config_bashrc'
+alias show_data='eval $HEN_HOUSE/pegs4/data/show_data'
+alias previewRZ='eval $HEN_HOUSE/previewRZ/previewRZ.tcl'
+alias clean_after_parallel='eval $HEN_HOUSE/scripts/clean_after_parallel'
+alias test_BEAMnrc='eval $HEN_HOUSE/scripts/test_BEAMnrc'
+alias beamnrc_gui='eval $OMEGA_HOME/progs/gui/beamnrc/beamnrc_gui.tcl'
+alias beam_gui='eval $OMEGA_HOME/progs/gui/beamnrc/beamnrc_gui.tcl'
+alias dosxyznrc_gui='eval $OMEGA_HOME/progs/gui/dosxyznrc/dosxyznrc_gui.tcl'
+alias dosxyz_gui='eval $OMEGA_HOME/progs/gui/dosxyznrc/dosxyznrc_gui.tcl'
+alias beamdp_gui='eval $OMEGA_HOME/progs/gui/beamdp/beamdp_gui.tcl'
+alias pprocess='eval $HEN_HOUSE/scripts/pprocess'
+#
+# Alias needed by egs_view pre-compiled for release without
+# hard-coded run-time search path (no -rpath)
+#
+if test -d $HEN_HOUSE/egs++/dso/linux-static;
+   alias egs_view='eval LD_LIBRARY_PATH={$HEN_HOUSE}egs++/dso/linux-static/ {$HEN_HOUSE}pieces/linux/egs_view_64'
+end
+# OS X specific settings
+set -x canonical_system ( cat $EGS_CONFIG | grep "canonical_system =" | sed 's/canonical_system = //' )
+set is_darwin (echo $canonical_system | grep -i darwin)
+if test ! "x$is_darwin" = x;
+    set -x DYLD_LIBRARY_PATH $DYLD_LIBRARY_PATH {$HEN_HOUSE}egs++/dso/$my_machine
+    launchctl setenv EGS_HOME $EGS_HOME
+    launchctl setenv EGS_CONFIG $EGS_CONFIG
+    alias egsgui='open -a egs_gui'
+    alias egsinprz='open -a egs_inprz'
+end
+
+# the following is for testing the distribution.
+alias test_distribution='eval $HEN_HOUSE/scripts/test_egsnrcmp_distribution'
+
+# Now check for local system wide sh additions
+#
+if test -f $HEN_HOUSE/scripts/local_fishrc_additions;
+    source $HEN_HOUSE/scripts/local_fishrc_additions
+end
+
+# Every individual user may customize their settings by creating a
+# .egsnrc_fishrc_additions file in their HOME directory.
+# Source this file if available
+#
+if test -f $HOME/.egsnrc_fishrc_additions;
+    source $HOME/.egsnrc_fishrc_additions
+end

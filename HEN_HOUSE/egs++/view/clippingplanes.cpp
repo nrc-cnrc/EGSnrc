@@ -28,6 +28,7 @@
 ###############################################################################
 */
 
+#include <QtGlobal>
 #include "clippingplanes.h"
 
 #include "egs_libconfig.h"
@@ -43,26 +44,29 @@ ClippingPlanesWidget::ClippingPlanesWidget(QWidget *parent, const char *name)
     : QWidget(parent) {
     setObjectName(name);
     setupUi(this);
-    planeTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+
+    planeTable->setColumnWidth(0,60);
+    planeTable->setColumnWidth(1,60);
+    planeTable->setColumnWidth(2,60);
+    planeTable->setColumnWidth(3,60);
+    planeTable->setColumnWidth(4,28);
 }
 
 ClippingPlanesWidget::~ClippingPlanesWidget() {
 }
 
-void ClippingPlanesWidget::applyClicked() {
+void ClippingPlanesWidget::applyClipping() {
     emit clippingPlanesChanged();
-}
-
-
-void ClippingPlanesWidget::helpClicked() {
-#ifdef VIEW_DEBUG
-    egsWarning("In ClippingPlanesWidget::helpClicked()\n");
-#endif
 }
 
 
 int ClippingPlanesWidget::numPlanes() {
     return planeTable->rowCount();
+}
+
+QTableWidgetItem *ClippingPlanesWidget::getItem(int i, int j) {
+    QTableWidgetItem *item = planeTable->item(i,j);
+    return item;
 }
 
 
@@ -71,12 +75,17 @@ bool ClippingPlanesWidget::getPlane(int j, EGS_Vector &a, EGS_Float &d) {
     QTableWidgetItem *itemAx = planeTable->item(j,0),
                       *itemAy = planeTable->item(j,1),
                        *itemAz = planeTable->item(j,2),
-                        *itemD = planeTable->item(j,3);
-    if (!itemAx || !itemAy || !itemAz  || !itemD) {
+                        *itemD = planeTable->item(j,3),
+                         *itemApplied = planeTable->item(j,4);
+
+    // Make sure all parameters for a plane exist
+    if (!itemAx || !itemAy || !itemAz  || !itemD || !itemApplied) {
         return false;
     }
-    if (!itemAx->isSelected() || !itemAy->isSelected() ||
-            !itemAz->isSelected() || !itemD->isSelected()) {
+
+    // See if the checkbox in the 4th column is checked
+    // Only use the plane if it is checked
+    if (itemApplied->checkState() == Qt::Unchecked) {
         return false;
     }
 
@@ -107,3 +116,32 @@ bool ClippingPlanesWidget::getPlane(int j, EGS_Vector &a, EGS_Float &d) {
     return true;
 }
 
+void ClippingPlanesWidget::setCell(int i, int j, EGS_Float val) {
+    QTableWidgetItem *item = planeTable->item(i,j);
+
+    if (!item) {
+        item = new QTableWidgetItem();
+        planeTable->setItem(i,j,item);
+    }
+
+    item->setText(QString::number(val));
+}
+
+void ClippingPlanesWidget::setCell(int i, int j, Qt::CheckState checked) {
+    QTableWidgetItem *item = planeTable->item(i,j);
+
+    if (!item) {
+        item = new QTableWidgetItem();
+        planeTable->setItem(i,j,item);
+    }
+
+    item->setCheckState(checked);
+}
+
+void ClippingPlanesWidget::clearCell(int i, int j) {
+    QTableWidgetItem *item = planeTable->item(i,j);
+
+    if (item) {
+        delete item;
+    }
+}

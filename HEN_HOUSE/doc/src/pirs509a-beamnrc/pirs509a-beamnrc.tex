@@ -180,21 +180,18 @@ BEAMnrc is a Monte Carlo simulation system (Med. Phys. {\bf 22},1995,503 --
 sources which was developed as part of the OMEGA project to develop 3-D
 treatment planning for radiotherapy
 (with the University of Wisconsin).  BEAMnrc is built on the
-EGSnrc Code System\cite{KR03}.  Until 2004, BEAMnrc could only
-be run on Unix/Linux systems.  However, with the recent port
-of BEAMnrc to the EGSnrcMP system\cite{Ka03}, BEAMnrc can also
-run on Windows-based systems.
+EGSnrc Code System\cite{KR03} and, as of 2004\cite{Ka03}, can run on Unix/Linux,
+Windows and macOS systems.
 The purpose of this manual is to be a reference/guide to someone
 using the BEAMnrc system.
 
 This user's manual covers general BEAMnrc inputs and component module (CM)
-geometries and inputs. It discusses how to use the various variance
-reduction techniques which are part of the system, most importantly,
-range rejection, bremsstrahlung splitting, photon forcing in a specific
-region and Russian Roulette.
-It also covers the structure of the directory system used for the
-BEAMnrc system, the utility codes available (readphsp, addphsp, checkCM8 \etc),
-the installation procedure, the phase space file definition and it
+geometries and inputs. It discusses how to use the variance reduction techniques
+which are part of the system; specifically, range rejection, bremsstrahlung
+splitting, photon forcing and Russian Roulette. It also covers the directory
+structure within which the BEAMnrc system resides, the utility codes available
+(readphsp, addphsp, checkCM8 \etc), the installation procedure, the phase space
+file definition, and it
 has cross references to all related BEAMnrc documentation.
 Appendix A gives a specification for writing new component
 modules.
@@ -232,9 +229,9 @@ code system was ported to using EGSnrc in 2001, used at the course in
 October 2001 and generally released in Feb 2002. In spring 2004 a version
 of the code was released to course participants with Directed Brem
 Splitting available. In fall 2004 this version of the code was made
-available generally with a port to the EGSnrcMP system which allows the
-code system to be run on Windows systems as well as the traditional
-Unix/Linux systems. There is a `new version'
+available generally with a port to the multi-platform version of EGSnrc
+(originally dubbed EGSnrcMP) which allows the code system to be run on Windows
+as well as Unix/Linux and MacOS. There is a `new version'
 of this manual with each release of the code (usually with the annual
 course) and there have been five major
 revisions\cite{Ro95b,Ro97,Ro98a,Ro01b,Ro04} with changes in authorship to
@@ -289,7 +286,7 @@ There are several other documents which describe associated subjects.
 
 \index{BEAMnrc GUI} \index{GUI}
 \item [BEAMnrc, DOSXYZnrc and BEAMDP GUI User's Manual:] Describes how to
-install and use these graphical user interfaces to BEAMnrc and
+install and use the graphical user interfaces for BEAMnrc and
 related codes\cite{Tr04}.
 
 \index{BEAMDP}
@@ -305,7 +302,7 @@ Options and Source Routines. This 100 page document is for internal use
 at NRC but describes the extensive QA program carried out on component
 modules, variance reduction
 options and source routines. It also describes
-the automated system for on-going QA\cite{WR95a}.
+the automated system for ongoing QA\cite{WR95a}.
 
 \index{DOSXYZnrc}
 \item [DOSXYZnrc User's Manual:] DOSXYZnrc is an associated code for doing dose
@@ -324,11 +321,11 @@ display tool for EGS histories and BEAMnrc geometries\cite{TR99a}.
 \index{EGS\_Windows\_4.0}
 
 \item[The EGSnrc Code System Manual- PIRS-701:] Complete manual describing
-the use of the EGSnrc simulation system\cite{KR03}.
+the EGSnrc simulation system including the physics and inputs for Monte Carlo
+simulation parameters\cite{KR03}.
 
 \item[EGSnrcMP: the multi-platform environment for EGSnrc- PIRS-877:] Manual
-describing the EGSnrcMP system\cite{Ka03}.  Essential reading to understand
-how the current version of BEAMnrc is compiled and run.
+describing the EGSnrcMP system\cite{Ka03}.
 
 \item[History by history statistical estimators in the BEAM code system:]
 Med Phys {\bf 29} (2002) 2745--2752: In-depth description of the method used
@@ -380,8 +377,10 @@ These all reside on the user's {\tt \$EGS\_HOME} area described below.
 \end{figure}
 
 {\tt \$OMEGA\_HOME} resides (as directory {\tt omega})
-within the {\tt \$HEN\_HOUSE}, which contains the EGSnrcMP system.
-This is shown in more detail in fig~\ref{fig_hen_house}.
+within the {\tt \$HEN\_HOUSE}, which contains the EGSnrc system.
+This is shown in more detail in fig~\ref{fig_hen_house}.  By default,
+{\tt \$HEN\_HOUSE} is sudirectory {\tt EGSnrc/HEN\_HOUSE} off the
+directory into which you downloaded/cloned the EGSnrc distribution.
 \index{examin}
 \index{directory structure!HEN\_HOUSE}
 \begin{figure}[hbp]
@@ -390,33 +389,27 @@ This is shown in more detail in fig~\ref{fig_hen_house}.
 \mbox{}
 \hspace*{-1cm}
 \includegraphics[width=19cm]{figures/hen_house}
-\caption[Structure of EGSnrcMP directory, {\em i.e~} the {\tt \$HEN\_HOUSE}.]
+\caption[Structure of EGSnrc directory, {\em i.e.~} the {\tt \$HEN\_HOUSE}.]
 {The structure of the
 EGSnrc system. Note that the {\tt \$OMEGA\_HOME} subsystem shown in
 fig~\ref{fig_omega_home} is included in this structure.
 }
-\index{HEN\_HOUSE} \index{NRC EGSnrcMP system}
+\index{HEN\_HOUSE} \index{NRC EGSnrc system}
 \label{fig_hen_house}
 \end{center}
 \end{figure}
 \index{HEN\_HOUSE}
 Originally, EGSnrc was a Unix-based script system developed primarily by
-Alex Bielajew and Dave Rogers at NRC.  With the advent of EGSnrcMP\cite{Ka03}
-and the
-requirement for compiling on Windows-based systems in addition to Unix-based
-systems, we have largely eliminated the scripts and, in the case of
-compilation, replaced them with the GNU {\tt make} utility.
-For more detail about the EGSnrcMP system and how it works, see the
-EGSnrcMP manual~\cite{Ka03}.  For users of the previous BEAM/BEAMnrc
-systems, note that in the past the {\tt \$HEN\_HOUSE} was a component of
-{\tt \$OMEGA\_HOME} since the EGS system was distributed as a component of
-BEAM whereas in the EGSnrcMP system, BEAMnrc is  a special subcomponent of
-{\tt \$HEN\_HOUSE} and DOSXYZnrc is treated as just another user-code.
+Alex Bielajew and Dave Rogers at NRC.  With the advent of the multi-platform
+EGSnrc system (EGSnrcMP\cite{Ka03}) and the requirement for compiling on
+Windows-based systems in addition to Unix-based systems, we have largely
+eliminated the scripts and, in the case of compilation, replaced them with the
+GNU {\tt make} utility.
 
-The final component of the OMEGA/BEAM structure is the user's area which
+The final component of the EGSnrc directory structure is the user's area which
 is shown in fig~\ref{fig_users_area}.  This is known as {\tt \$EGS\_HOME}
-and is usually the subdirectory {\tt \$HOME/egsnrc\_mp}.  The BEAM
-installation will set
+and is subdirectory {\tt EGSnrc/egs\_home} off the directory in which you
+downloaded/cloned the EGSnrc installation.
 \index{directory structure!users area}
 \index{user's area}
 \begin{figure}[hbpt]
@@ -427,7 +420,7 @@ installation will set
 \includegraphics[width=17cm]{figures/nrc_users_area}
 \index{user's area}
   \caption[The user's \$EGS\_HOME area.]{The user's {\tt \$EGS\_HOME}
-  area (usually {\tt \$HOME/egsnrc\_mp}).  A $*$ indicates an executable
+  area.  A $*$ indicates an executable
   file. In the example shown, the user has 3 accelerator models and the
   disk system is being used with three different configurations, \eg, gcc,
   pgf77 and Windows.  The complete directory contents are only shown
@@ -436,11 +429,10 @@ installation will set
 \label{fig_users_area}
 \end{center}
 \end{figure}
-up much of this automatically if it is not in place.
 One of the main complications is that the
-EGSnrcMP and BEAMnrcMP systems are
+EGSnrc system is
 set up to use one disk system to support multiple configurations and
-their associated compilers.
+associated compilers.
 \index{multiple configurations}
 \index{script!egsnrc}
 Thus, all execute modules and various compiler options
@@ -448,7 +440,6 @@ Thus, all execute modules and various compiler options
 Within the \verb+bin+ area, the modules within
 each subdirectory apply only to the configuration shown.
 
-\clearpage
 \subsection{Overview of running BEAMnrc}
 
 \index{overview}
@@ -463,7 +454,7 @@ together the source code and make an execute module.  At this stage, only a
 \begin{center}
 \leavevmode
 \mbox{}\hspace{0cm}
-\includegraphics[width=15cm]{figures/flow}
+\includegraphics[width=12cm]{figures/flow}
 \index{building accelerators}\index{specifying accelerators}
 \caption[Steps involved in using the BEAMnrc code]
 {The steps involved in using the BEAMnrc system, from ref~\cite{Ro95}.}
@@ -482,14 +473,14 @@ see section~\ref{CSDP}) or read from data files such as
 which specifies
 all the details about the particular accelerator (\eg, there are 4 scattering
 foils located at specified distances from the vacuum exit window,
-made of certain materials and of particular thickness).  Also the user
+made of certain materials and of particular thickness).  In addition, the user
 must specify all the parameters controlling the radiation transport
 modelling and must also select and control the various variance
 reduction techniques being used.
 
 The final stage of the simulation is the analysis of the outputs which
-consist of raw phase space files (measured in tens if not hundreds of
-Mbytes), an output listing and optionally a 3D graphics file to be displayed
+consist of raw phase space files (which may be on the order of GBytes),
+an output listing and optionally a 3D graphics file to be displayed
 by {\tt EGS\_Windows}\cite{TR99a}.
 \index{EGS\_Windows}
 
@@ -511,8 +502,8 @@ following statements:
 \index{EGS\_HOME}
 \index{EGS\_CONFIG}
 \begin{verbatim}
-setenv EGS_HOME /full directory path to $HOME/egsnrc_mp/
-(or export EGS_HOME=/full directory path to $HOME/egsnrc_mp for .bashrc)
+setenv EGS_HOME /full directory path to $EGS_HOME/
+(or export EGS_HOME=/full directory path to $EGS_HOME/ .bashrc)
 setenv EGS_CONFIG /full directory path to $HEN_HOUSE/specs/config.conf/
 (or export EGS_CONFIG=/full directory path to $HEN_HOUSE/specs/config.conf/
                                                               for .bashrc)
@@ -521,29 +512,18 @@ source /full directory path to $HEN_HOUSE/scripts/egsnrc_cshrc_additions
                                                               for .bashrc)
 \end{verbatim}
 where {\tt config} is the name of the particular configuration
-(eg {\tt gcc}, {\tt pgf77}) that you have installed BEAMnrc on.  The
-first three statements are required for the
-EGSnrcMP system (see the EGSnrcMP Users Manual\cite{Ka03}), while
-{\tt \$HEN\_HOUSE/scripts/egsnrc\_cshrc\_additions}
-(or {\tt \$HEN\_HOUSE/scripts/egsnrc\_cshrc\_additions}) define aliases
-for the OMEGA/BEAM system.  Once you have added these statements you
-must source the {\tt .cshrc}
-(or {\tt .bashrc}) file to bring them into effect.
+(eg {\tt gcc}, {\tt pgf77}) that you have installed BEAMnrc on.
+Once you have added these statements you must source the {\tt .cshrc}
+(or {\tt .bashrc}) file or start a new terminal window to bring them into effect.
 
 Instructions for adding these statements are given explicitly at the
-end of the EGSnrcMP and BEAMnrc installations (see section~\ref{installbeam})
+end of the EGSnrc/BEAMnrc installation (see section~\ref{installbeam}).
 
 No such additions are required when installing BEAMnrc on a Windows system.
 
-Previous to the current version of BEAM (BEAMnrcMP), the user had the
-option to specify, build, compile and run a BEAM simulation
-from within a Linux/Unix script, called {\tt beamnrc}. \index{beamnrc script}
-This script was eliminated with the advent of BEAMnrcMP as it was seen to
-be of limited use for a system that is also required to work on
-Windows (which does not support scripts).  However, you will note
-in the descriptions that follow that all of the functions of the
-{\tt beamnrc} script can be performed (in a much more user-friendly
-manner) from within the BEAM GUI.
+The following subsections define the processes of specifying, building and
+compiling an accelerator.  In general, these are carried out via the BEAM GUI.
+However, command-line options are also given.
 
 \subsection{``Specifying'' Accelerators}
 \index{specifying accelerators}
@@ -576,7 +556,7 @@ executable code will have the name {\tt BEAM\_myaccel}, so
 it is useful to have {\tt myaccel} indicate the machine you are
 modeling.
 
-The {\tt myaccel.module} file created from scratch using the
+The {\tt myaccel.module} file can created from scratch using the
 BEAM GUI (just select ``Specify a new accelerator" from the ``File"
 menu), or you can copy an existing {\tt .module} file (eg one of the
 examples included with the distribution) into {\tt myaccel.module}
@@ -604,9 +584,9 @@ Note that the name of the subdirectory and the file names themselves
 \index{prefix} \index{BEAM\_}
 are just the name of the specification module with the prefix \verb+BEAM_+.
 
-If you are modifying the code at all, an accelerator must be re-built
-every time any of the  \verb+CMs+ are modified, but not when the main
-\verb+beamnrc.mortran+ code is modified.
+An accelerator must be re-built any time one of its component source files
+({\em e.g.}, the code for one of its CMs, or {\tt beamnrc.mortran}) is
+modified.
 
 An accelerator is built using the MORTRAN code {\tt beam\_build.mortran}.
 The command for running this code to build the accelerator specified
@@ -631,9 +611,8 @@ More details
 are given in section~\ref{makefilesect}, on
 page~\pageref{makefilesect}, below.
 
-If the {\tt beam\_build} utility has not already been compiled for your particular
-configuration (this may be the case if you have switched configurations
-after installing BEAMnrc), then before typing the above command line, go into
+If the {\tt beam\_build} utility should be compiled when configuring your
+system.  However, if it has not, then before typing the above command line, go into
 {\tt \$HEN\_HOUSE/omega/beamnrc/tools/beam\_build} and type {\tt make}.  This
 will put a copy of the {\tt beam\_build.exe} executable in the appropriate
 subdirectory of {\tt \$HEN\_HOUSE/bin}.
@@ -649,11 +628,8 @@ the EGSnrc system) followed by the \verb+FORTRAN+ compiler.
 \index{Fortran}
 
 \index{make}
-In previous versions of BEAM, compiling of accelerators was completely
-driven by Unix scripts.  However, with the necessity to run on non-Unix
-platforms, EGSnrcMP now uses the GNU
-{\tt make} utility.  For more detailed information on {\tt make}, see
-the EGSnrcMP manual~\cite{Ka03}.
+Compilation of BEAMnrc (and all other EGSnrc codes) uses the GNU
+{\tt make} utility.
 
 To compile an accelerator, go into the {\tt BEAM\_myaccel}
 subdirectory and type:
@@ -665,7 +641,7 @@ The options for {\tt make} are:
 \index{make!options}
 \begin{verbatim}
 make              Compile the accelerator executable with default optimization
-make opt          turned on.  Default optimization is level 3 (-O3).
+make opt          turned on.  Default optimization is level 2 (-O2).
 
 make noopt        Compile the accelerator executable with optimization
                   turned off.
@@ -680,7 +656,7 @@ make clean        Remove the fortran file, mortjob file, mortlst file
 \end{verbatim}
 
 Upon typing {\tt make} you will see output to the screen indicating files
-that are being concatenated together to create the final .mortran code
+that are being concatenated together to create the final MORTRAN code
 that is then compiled.
 
 After compiling an accelerator, the following files will be left behind:
@@ -756,16 +732,6 @@ is the name of your configuration.
 The BEAM shared library is archived as the file {\tt libBEAM\_myaccel.so} (for
 unix/Linux machines) or {\tt BEAM\_myaccel.dll} (for Windows machines) in
 directory {\tt \$EGS\_HOME/bin/config}.
-
-Note that previous versions of BEAMnrc required
-\index{libg2c.a}
-the static g2c library, {\tt libg2c.a}, when compiling shared
-libraries on Unix/Linux machines.  Use of this library prevented
-confusion of I/O units between BEAM and the code using BEAM as a source
-(the ``driving'' code).
-In the current version of BEAMnrc, however, the opening of I/O units
-has been recoded so that only those units not already being used by
-the driving code are available to BEAMnrc.
 
 When using the BEAM shared library as a source, you must also supply
 a working input file and the pegs data for the BEAM simulation.  The input
@@ -891,11 +857,14 @@ of all the options available through the input file.
 
 \index{PEGS4}
 \index{cross section data}
-In order to run an accelerator, you also have to enter the name
-of the {\tt .peg4dat} file containing the cross section data for the
-materials in the model.  Note that all of the material names used
-in the input file must exist in the {\tt .pegs4dat} file used.
-There is more information in section~\ref{CSDP}
+In order to run an accelerator, the code must have access to electron stopping
+power and interaction cross section data.  This can be supplied either vi a
+separate {\tt .peg4dat} file or, if running in ``pegsless'' mode, it can be
+calculated on the fly based on media inputs in the {\tt .egsinp} file. Note that
+all media used in a simulation must be defined, either in the {\tt. pegs4dat}
+file or in the {\tt media definition} section of the {\tt .egsinp} file.
+
+There is more information on PEGS4 files in section~\ref{CSDP}
 but basically
 the files \verb+700icru.pegs4dat+ and \verb+521icru.pegs4dat+
 \index{.pegs4dat}\index{700icru.pegs4dat}\index{521icru.pegs4dat}
@@ -909,6 +878,9 @@ both cases.  These data sets are on the distribution on area
 files using the program PEGS4,
 these files can be put either on that area, or on the user's pegs4
 area, \viz\ \verb+$EGS_HOME/pegs4/data+.
+
+For more information on pegsless runs, the user is referred to
+section~\ref{pegsless_sect} in this manual.
 
 \subsubsection{Batch Runs}
 \label{batchsect}
@@ -933,7 +905,7 @@ on parallel jobs).
 Submitting a batch job uses the {\tt exb} command, which is aliased
 \index{egs\_batch\_run}
 to the Unix script {\tt \$HEN\_HOUSE/scripts/run\_user\_code\_batch}.  The
-syntax of the {\tt exb} command is:
+basic syntax of the {\tt exb} command is:
 \begin{verbatim}
 exb BEAM_myaccel inputfile pegsdata [short|medium|long] [batch=batch_system] [p=N]
 \end{verbatim}
@@ -952,18 +924,29 @@ determines the name of the queuing system to use.  The
 the batch submission commands for the particular queuing system chosen
 and may redefine the names of the queues available on that system
 (this means that the queue names {\tt short|medium|long} are not
-necessarily general).  Currently, {\tt batch\_system} can be set to
+necessarily general).  Currently, {\tt batch\_system} can be set to:
+\begin{itemize}
 \index{at}
 \index{PBS}
 \index{NQS}
-{\tt at} (the standard Unix batch command), {\tt pbs} (for the
-PBS queuing system) or {\tt nqs} (for the NQS queuing system).
+\index{PBSDSH}
+\index{KEG}
+\item {\tt at} (the standard Unix batch command)
+\item {\tt pbs} (for the
+PBS queuing system)
+\item {\tt nqs} (for the NQS queuing system)
+\item {\tt pbsdsh} (PBS in distributed shell mode)
+\item {\tt keg} (SUN SGE scheduler)
+\end{itemize}
 This means that the files
 \index{batch\_options.at}
 \index{batch\_options.pbs}
 \index{atch\_options.nqs}
-{\tt batch\_options.at}, {\tt batch\_options.pbs} and
-{\tt batch\_options.nqs} are included with the EGSnrcMP distribution.  However,
+\index{atch\_options.pbsdsh}
+\index{atch\_options.keg}
+{\tt batch\_options.at}, {\tt batch\_options.pbs},
+{\tt batch\_options.nqs}, {\tt batch\_options.pbsdsh}, and
+{\tt batch\_options.keg} are included with the EGSnrc distribution.  However,
 the batch submission commands in these files are for our system at the NRC
 and you may have to make some changes for your system.  The default
 value for {\tt batch\_system} is {\tt at}, unless you have the environment
@@ -988,8 +971,6 @@ OCCURRED}.  The {\tt .eo} file contains messages from the queuing system.  If,
 for some reason, a job did not get submitted properly, then this file may
 contain clues to the problem.  More information on BEAM output files is given
 in section~\ref{outputfilessect}, page~\pageref{outputfilessect} below.
-
-For more information on submitting batch jobs, see the EGSnrcMP manual~\cite{Ka03}.
 
 \subsection{Running BEAMnrc using the GUI}
 \index{running BEAMnrc!with the GUI}
@@ -1125,16 +1106,20 @@ first particle, are printed in this section.
 \index{scoring plane!average energy}
 \index{scoring plane!average angle}
 This section summaries the results for all scoring planes in
-the geometry.  BEAMnrc outputs a summary of each scoring plane, including
+the geometry.  For the purpose of {\tt .egslst} output, each
+scoring plane is divided into a user specified number of
+square or annular scoring zones with the zone half-widths
+(square) or radii (annular) also specified by the user.
+BEAMnrc outputs a summary of each scoring plane, including
 the plane's Z-position, the number of particles that crossed it, and the
-radii (half-widths) of the scoring zones, followed by the actual fluence
-results for the plane.  The fluence is taken as the weighted
+radii or half-widths of the scoring zones, followed by the actual fluence
+results for the scoring zones.  The fluence is taken as the weighted
 sum of 1/cos$\theta$
 \index{fluence}
 where $\theta$ is the angle of the particle with respect to the z-axis.
 The number averaged energy and number averaged angle are also output.
 Scoring zones are numbered in order of
-increasing radius (half-width).  Note that the fluence results may be
+increasing radius or half-width.  Note that the fluence results may be
 output for one more scoring zone than the number of scoring zones input
 by the user.  This ``extra'' scoring zone represents the area of the
 scoring plane not covered by the scoring zones.  Fluence results for
@@ -1157,23 +1142,21 @@ or not.
 
 \item [Dose Results]
 The first table shows the total dose and total energy deposited in each
-of the dose scoring zones set up in the accelerator.
+of the dose scoring zones that the user set up in the accelerator.
 \index{dose scoring zones}
 Note that each dose scoring zone may include several geometric regions.
 The second table (if contaminant dose calculations are asked for)
 shows the dose in each region
 due to the contaminant particles which are defined as the
-charge state selected by the user as the particles cross a certain
-planar boundary.  This was designed for calculation of dose in a phantom
+charge state selected by the user as the particles cross a user-defined
+planar boundary.  This option was originally designed for calculation of dose in a phantom
 but is applied in general.
 Finally, the doses in each region with bit filters applied are given.
-Note that these dose components are
+These are called ``dose components'' and are numbered to correspond to the order
+of the bit filters in the {\tt .egsinp} file.  For more information about bit filters
+and dose components see section~\ref{dosecompsect} below.
 \index{dose components}
 \index{bit filters}
-not exclusive; that is, dose components from particles that have
-been in a specified scraper include contributions from particles that
-have been in other scrapers before and/or after passing
-through/interacting in the specified scraper.
 
 \end{description}
 
@@ -1195,9 +1178,9 @@ and that no run-time errors, such as endless loops, or negative
 \verb+USTEP+\index{negative USTEP errors}
 errors, occurred.  When using a phase space file for the source,
 the log file contains a warning
-line every time the particles in the phase space source are
-all used and the source file is reused from  the beginning.
-\index{phase space files!when reused}
+line every time all particles in the phase space source have been
+used, necessitating a restart of the source from the beginning.
+\index{phase space sources!when restarted}
 
 \item [.egsdat]
 This file contains all of the information required to restart a run and
@@ -1236,9 +1219,10 @@ Section~\ref{parallelcalc} about parallel runs.
 This file contains the complete state of the random number generator
 at the start the current batch
 (\verb+ISTORE=0+) or current history (\verb+ISTORE=1+) in a simulation.
-This is only used for debugging problems which occur.
+This is only used for debugging when problems occur.
 These data are used to restart the run with this RNG
-when \verb+ISTORE+ is set to -1.
+when \verb+ISTORE+ is set to -1.  Note that running with \verb+ISTORE=1+ slows
+down a simulation significantly.
 \index{ISTORE}
 \index{random number generator}
 \index{batches}
@@ -1247,7 +1231,7 @@ when \verb+ISTORE+ is set to -1.
 \index{.egsplot}
 This file contains dose {\em vs} depth for all dose components when a
 CHAMBER CM is used as a depth dose phantom.  The format of the file is suitable
-for plotting with {\tt xmgr} or {\tt xmgrace}.  Note that the output
+for plotting with {\tt xmgrace}.  Note that the output
 of the file only makes sense for doses scored in a CHAMBER depth dose
 phantom.  \index{xmgr} \index{xmgrace}
 
@@ -1282,6 +1266,12 @@ the EGSnrc transport parameter inputs in BEAM (and other user codes).
 \index{.eo}
 \item [.eo] Contains output from the network queuing system (batch job
 submissions only).
+
+\index{.mederr}
+\item [.mederr] Output from pegsless routines including errors, warnings and
+information regarding where the medium composition and density are being read
+from ({\em i.e.}, a density correction file or the {\tt .egsinp} file itself).
+This file is only output for pegsless runs (see section~\ref{pegsless_sect}).
 
 \end{description}
 
@@ -1331,7 +1321,7 @@ Some of these parameters are obviously correlated, so \eg\ the
 \verb+Max stack+ should have a value at least 4 times greater than
 \verb+Max bremsstrahlung split+. Nonetheless, the user should feel free
 to vary these parameters if they need to. The default settings should be OK
-using directional bremsstrahlung splitting.
+using directional bremsstrahlung splitting in an MV photon beam.
 
 Once any of the parameters in {\tt beamnrc\_user\_macros.mortran} have
 been changed, the accelerator must be recompiled to make the changes
@@ -1383,8 +1373,6 @@ and are not closed until the simulation has completed.  Moreover, the files
 specified here are ALWAYS opened (ie there are no conditions on whether
 the file is created or not), so if no quantity is written an empty
 file will be created.
-For more information about {\tt .io} files, see the EGSnrcMP
-Manual~\cite{Ka03}.
 
 \subsubsection{What's in {\tt BEAM\_myaccel\_macros.mortran} and
 {\tt BEAM\_myaccel\_cm.mortran}}
@@ -1450,10 +1438,9 @@ are copied from {\tt \$OMEGA\_HOME/beamnrc/CMs}.
 \label{makefilesect}
 
 The {\tt make} command uses several different files to direct the
-concatenation and compilation of the final MORTRAN code.  This section
+concatenation and compilation of the final MORTRAN code.  This section describes
 those files, along with their functions, which are likely to be relevant
-to BEAM users.  For a more complete description of the files involved in
-the {\tt make} command, see the EGSnrcMP manual~\cite{Ka03}.
+to BEAM users.
 
 \begin{description}
 \index{Makefile}
@@ -1533,7 +1520,7 @@ Windows.
 \index{all\_common.spec}
 \item [{\tt all\_common.spec}] Contains definitions common to all systems.
 This including the mortran sources and macros required to compile a
-generic EGSnrcMP user code.  This file also defines the variable
+generic EGSnrc user code.  This file also defines the variable
 {\tt RANDOM}, for the random number generator, but the definition
 of {\tt RANDOM} in {\tt beamnrc.spec} (see below) overrides this one.
 \index{beamnrc.spec}
@@ -1547,7 +1534,8 @@ output by the MORTRAN compiler.  Currently, {\tt FEXT = F}, which instructs
 \index{C preprocessor}
 \index{Fortran extension}
 the compiler to use the C-preprocessor before compiling the code.  This is
-necessary for the new implementation of parallel processing in BEAM.  If, for some reason, you do not have a C compiler on your system, then the installation
+necessary for the implementation of parallel processing in BEAM.  If,
+for some reason, you do not have a C compiler on your system, then the installation
 will set {\tt FEXT = f}.  In addition, the variable {\tt SOURCES} in
 {\tt beamnrc.spec} defines all the MORTRAN macros and codes
 \index{mortjob.mortran}
@@ -1573,7 +1561,7 @@ Finally, {\tt beamnrc.spec} defines the variable
 \index{random number generators}
 {\tt RANDOM}, which determines the random number generator to be used
 in the simulation.  Two random number generators, {\tt RANLUX} and
-{\tt RANMAR} are included in the EGSnrcMP system.  Currently,
+{\tt RANMAR} are included in the EGSnrc system.  Currently,
 {\tt RANMAR} is the default random
 number generator.  See section~\ref{rngsect} for more information about
 the random number generators and how to switch from the default RANMAR
@@ -1602,7 +1590,6 @@ is a list of the MORTRAN codes\\
 the accelerator.  It is through the {\tt modules.make} file that
 {\tt beam\_makefile} has access to the individual CM macros and MORTRAN codes
 and can, thus, rebuild the accelerator if any of the CM coding changes.
-The user should not modify this file since it
 \index{sources.make}
 \item[{\tt sources.make}] Located in {\tt \$EGS\_HOME/BEAM\_myaccel} and
 created by {\tt beam\_build} when the accelerator is built.  This file
@@ -1654,7 +1641,7 @@ of macro files.
 \index{egsnrc.mortran}
 \index{MORTRAN}
 \index{mortjob.mortran}
-\includegraphics{figures/mortjob-mortran}
+\includegraphics[width=12cm]{figures/mortjob-mortran}
 \caption[Files making up the complete BEAM source code.]
 {Files concatenated to form the complete BEAM source code,
 {\tt mortjob.mortran}, where {\tt BEAM\_myaccel\_cm.mortran}
@@ -1692,8 +1679,7 @@ space data cannot be handled.
 \item [{\tt machine.macros}] Machine/compiler-dependent macros.
 Defines {\tt \$LONG\_INT} as {\tt integer*8} if it is available
 on this machine, the record length factor ({\tt \$RECL-FACTOR}) for
-a 4-byte record in a phase space file, etc.  See the EGSnrcMP Manual\cite{Ka03}
-for more details.
+a 4-byte record in a phase space file, etc.
 \index{ranmar.macros}
 \index{ranlux.macros}
 \item [{\tt ranmar.macros} (or {\tt ranlux.macros})] Macros used by
@@ -1705,6 +1691,15 @@ initialize the random number generator.
 define text patterns searched for in the EGSnrc input section of
 a BEAMnrc input file (see section~\ref{egsnrc_inputs}).
 \index{beamnrc\_user\_macros.mortran}
+\item{pegs4\_macros.mortran}
+\item{pegsless mode}
+\item [{\tt pegs4\_macros.mortran}] Macros required for running in pegsless
+mode.  This file contains common block definitions of variables used to
+calculate and store electron stopping powers and interaction cross sections as
+well as definitions of the macros, {\tt \$INIT-PEGS4-VARIABLES} and {\tt
+\$GET-PEGSLESS-XSECTIONS}, used in the {\tt HATCH} subroutine to initialize data
+arrays and compute stopping powers and cross sections, respectively.  For more
+information on pegsless mode, see section~\ref{pegsless_sect}.
 \item[{\tt beamnrc\_user\_macros.mortran}] Macros defining many
 default BEAMnrc parameters such as the maximum number of dose/fluence
 scoring zones, the maximum stack depth, etc.  These parameters often need to be
@@ -1752,9 +1747,12 @@ CMs comprising {\tt myaccel} concatenated together by {\tt beam\_build}
 with CM names replaced by their identifiers as specified in
 {\tt myaccel.module}.  See section~\ref{beambuildsect} for more details.
 \index{get\_inputs.mortran}
-\item [{\tt get\_inputs.mortran}] Coding for reading EGSnrc inputs from
+\item [{\tt get\_inputs.mortran}] Coding for reading Monte Carlo transport parameters from
 the BEAMnrc input file.  See section~\ref{egsnrc_inputs} for more about these
 inputs.
+\index{get\_media\_inputs.mortran}
+\item[{\tt get\_media\_inputs.mortran}]  Coding for reading media definitions from the
+{\tt .egsinp} file when running in pegsless mode.
 \index{ranmar.mortran}
 \index{ranlux.mortran}
 \item [{\tt ranmar.mortran} (or {\tt ranlux.mortran})] Subroutines used
@@ -1775,12 +1773,16 @@ on {\tt IWATCH}).
 \index{machine.mortran}
 \item [{\tt machine.mortran}]  Machine/configuration-dependent routines
 such as date/time routines and system calls.  This file is created during
-EGSnrcMP installation.  See the EGSnrc Users Manual\cite{KR03} and
-EGSnrcMP Users Manual\cite{Ka03} for more info.
+EGSnrc installation.
 \index{egs\_parallel.mortran}
 \item [{\tt egs\_parallel.mortran}] Subroutines for creating, opening,
 reading from and writing to the job control ({\tt .lock}) file
 during a parallel run (see section~\ref{parallelcalc}).
+\item [{\tt pegs4\_routines.mortran}] Subroutines for calculating electron
+stopping powers and cross sections when running in pegsless mode.  With the
+exception of some variable definitions, these routines have been copied verbatim
+from their counterparts in {\tt pegs4.mortran}.  See section~\ref{pegsless_sect}
+for more information on running in pegsless mode.
 \index{egsnrc.mortran}
 \item [{\tt egsnrc.mortran}] EGSnrc subroutines.  See the EGSnrc
 Manual\cite{KR03} for more details.
@@ -1988,6 +1990,8 @@ in the GUI mostly duplicate what is below.
 \index{comp\_xsections}
 \index{radiative Compton corrections}
 \index{radc\_flag}
+\index{triplet production}
+\index{itriplet}
 \input{./inputformats/BEAM27.inp}
 \index{pair angular sampling}
 \index{IPRDST}
@@ -2007,8 +2011,14 @@ in the GUI mostly duplicate what is below.
 \index{photon cross-sections!EPDL}
 \index{photon cross-sections!XCOM}
 \index{photon cross-sections!Storm-Israel}
+\index{photon cross-sections!PEGS}
+\index{photon cross-sections!Sabbatucci \& Salvat's photoelectric cross sections}
 \index{photon cross-sections output}
 \index{xsec\_out}
+\index{photonuclear effect}
+\index{photonuclear cross sections}
+\index{iphotonucr}
+\index{photonuc\_xsections}
 \input{./inputformats/BEAM29.inp}
 \index{rejection plane inputs}
 \index{USE\_REJPLN}
@@ -2054,14 +2064,14 @@ copy the relevant files to them so that the user may execute BEAMnrc
 immediately (but the script only works on Linux/Unix and there is
 no corresponding replacement for Windows).
 \index{test\_BEAMnrc}
-\clearpage
+
 \section{Source Routines}
 
 \index{source!general remarks}
 In general, the incident particles move in the direction of the z-axis.  With
 the exception of ISOURC=3 (internal isotropic source), =10 and 13 (x-ray
-tube sources)  or =21 and 31 (phase space
-inputs), the particles start being transported on the \verb+Z_min_CM(1)+
+tube sources)  or =21, 23, 24, 31 (phase space source, BEAMnrc simulation source, or
+source model), the particles start being transported on the \verb+Z_min_CM(1)+
 plane.  Conceptually, some of them originate at a point outside the accelerator
 model and are essentially transported through vacuum to the accelerator
 which starts at the \verb+Z_min_CM(1)+ plane.
@@ -2112,7 +2122,7 @@ The following subsections describe the source routines available in BEAMnrc.
 \item [ISOURC=31] Beam characterization Model
 
 \end{description}
-
+\clearpage
 \subsection{ISOURC=0: Parallel Circular Beam}
 \cen{IQIN, 0, RBEAM, UINC, VINC, WINC}
 \index{UINC} \index{VINC} \index{WINC}
@@ -2275,6 +2285,14 @@ adjacent CMs.}
 \label{fig_src3}
 \end{center}
 \end{figure}
+
+\index{Directional Source Biasing}
+Source 3 also has an option to split photons that are emitted into a user
+specified treatment field. This option, called directional source biasing (DSB),
+can increase the efficiency of Cobalt-60 treatment head simulations by factors
+on the order of 100 and, in general, can be used to increase the efficiency of
+any photon beam with an isotropically emitting source.  A detailed explanation
+of DSB is given in section~\ref{DSB}.
 
 \clearpage
 \subsection{ISOURC=5: NRC Swept BEAM}
@@ -2659,7 +2677,8 @@ where:
                   by bin area before sampling.
 \end{description}
 %\vspace{-3mm}
-Some sample radial intensity distribution files are found in {\tt \$OMEGA\_HOME/beamnrc/radial\_source\_distributions}.
+Some sample radial intensity distribution files are found in\\
+ {\tt \$OMEGA\_HOME/beamnrc/radial\_source\_distributions}.
 \end{description}
 The radial position of an incident particle, RIN, is chosen based on
 the radial intensity distribution.  The divergence angle, {\tt THETAI}, of the
@@ -3204,8 +3223,8 @@ subdirectory and rename it as {\tt sources.make}.
 \section{Monoenergetic vs Energy Spectrum Sources}
 \index{source!monoenergetic}  \index{source!energy spectrum}
 
-In any of the above sources, with the exception of the phase space source
-(ISOURC=21), incident beam energy can be either monoenergetic or described by an energy
+In any of the above sources, with the exception of the phase space and beam simulation
+sources (ISOURC=21,23,24), incident beam energy can be either monoenergetic or described by an energy
 spectrum.  Inputs associated with incident beam energy are:
 
 \begin{description}
@@ -3250,9 +3269,9 @@ need not be normalized)
 The code randomly distributes incident particle energies equally across
 each energy bin.
 
-On \verb+$HEN_HOUSE/ensrc_spectra+ there are a collection of spectra
-developed at NRC over the years in various situations.  We intend to
-augment this collection with time, and will happily add any other
+In \verb+$HEN_HOUSE/spectra/egsnrc/+ there are a collection of spectra
+developed at NRC over the years for various applications.  We will
+happily add any other
 spectra sent to us in the correct format, and with some semi-adequate
 documentation.
 \index{ensrc\_spectra}
@@ -3274,10 +3293,12 @@ original BEAM paper \cite{Ro95}.
 
 This section contains a brief description of how range rejection
 is performed and describes the input variables used to control range
-rejection.
+rejection.  Range rejection is used to save computing time, in the process
+introducing approximations in the simulation (see below).  Thus, it really falls
+under the category of an ``approximate efficiency improvement technique'' (AEIT)
+as opposed to being a true variance reduction technique (VRT).
 
-Range rejection is used to save computing time during simulations.  The
-basic method is to calculate the range of a charged particle and
+The basic method for range rejection is to calculate the range of a charged particle and
 terminate its history (depositing all of its energy at that point)
 if it cannot leave the current region with
 energy $>$ {\tt ECUTRR}.  {\tt ECUTRR} is the range
@@ -3317,11 +3338,12 @@ the simulation.  Similar to {\tt IREJCT\_GLOBAL=2}, if the range to
 boundary, the
 particle is terminated and energy deposited in the current region.
 \verb+IREJCT_GLOBAL=1+ can save more time than
-\verb+IREJCT_GLOBAL=2+ but can only be used if
-there is only 1 scoring plane and it is at the very bottom of the
-accelerator.  One can approximate \verb+IREJCT_GLOBAL=1+ for other
-situations by using \verb+IREJCT_GLOBAL=2+ and carefully selecting
-\verb+ECUT+ for different regions throughout the accelerator.
+\verb+IREJCT_GLOBAL=2+ but is generally only useful for the case where the user
+is only interested in phase space data at the bottom of the accelerator, since
+the higher values of \verb+ECUTRR+ higher up in the accelerator may lead to
+inaccuracies in scored quanties ({\em e.g.}, dose) in these regions.
+Note, one can increase the time saved by \verb+IREJCT_GLOBAL=2+ by
+judicious setting of \verb+ECUT+ in different regions throughout the accelerator.
 
 \index{range rejection}
 Range rejection introduces an approximation because, in
@@ -3343,11 +3365,12 @@ individual values to each region (via \verb+ESAVEIN+,
 this is because this CM is used for
 bremsstrahlung targets and we thought we might need more control).
 
-The actual rejection of particles based on range to {\tt ECUTRR}
-is performed in a BEAMnrc macro and does
-not make use of the internal range rejection macro available in EGSnrc.
-This is because the EGSnrc macro only performs range rejection based on
-range to {\tt AE}.
+Rejection of particles based on range to {\tt ECUTRR}, as described above, is
+defined in the BEAMnrc macro, {\tt \$USER-RANGE-DISCARD}.  This is implemented
+immediately after EGSnrc's intrinsic range rejection routine, which is based on
+particle range to {\tt AE}, the lower energy limit for cross section and
+stopping power data, and which, in general, is not as stringent a rejection
+criterion.
 \index{ESAVE}
 \index{ESAVE!ESAVEIN}
 
@@ -3368,11 +3391,9 @@ contaminant electrons in a photon beam.
 Briefly, a photon forced to interact in a CM is ``split'' into a
 scattered photon whose weight is equal to the probability of interaction
 and an unscattered photon carrying the remaining weight.  The unscattered
-photon proceeds as if an interaction did not take place, and it cannot be
-forced to interact any more within the specified forcing zone, which can
-consist of one or several component modules.  However, once the
-unscattered photon gets out of the forcing zone, it may interact again
-depending on the sampled pathlength. The scattered photon can be forced
+photon proceeds as if an interaction did not take place and is transported
+directly through the forcing zones with no further interaction.
+The scattered photon can be forced
 again in the forcing zone depending on how many interactions are allowed
 to be forced.
 
@@ -3397,23 +3418,35 @@ to the \# of  \verb+CMs+ in the accelerator)
 \end{description}
 \index{forcing} \index{photon forcing}
 
-Photon forcing parameters are passed onto secondary photons, so that
-if the parent particle has not yet been forced to interact {\tt NFMAX}
-times, each secondary photon is forced to interact the remaining number
-of times (\ie\ {\tt NFMAX} - \# of times parent particle forced) as long
-as it is within the forcing CMs.  Forcing of secondary photons does not
-affect the number of times the parent particle is forced to interact
-if it is a photon as well.  The feature of passing forcing parameters
-to secondary photons is particularly useful to get good statistics for
-bremsstrahlung photon interactions.  The incident electron creating the
-photons will not be forced at all, so each bremsstrahlung photon will be
-forced to interact {\tt NFMAX} times.  This feature makes Photon Forcing
+Briefly, a photon forced to interact in a CM is ``split'' into a scattered
+photon whose weight is equal to the probability of interaction and an
+unscattered photon carrying the remaining weight.  The unscattered photon
+proceeds as if an interaction did not take place and is transported directly
+through the forcing zone ({\em i.e.}, the forcing CMs) with no further
+interaction.  This process is repeated along the path of the scattered photon
+(and its descendants) until a total of {\tt NFMAX} interactions have been
+forced.  In each case, the weight of the scattered photon is equal to the weight
+of the parent photon times the probability of interaction, and the weight of the
+unscattered photon is equal to the weight of the parent photon times (1 - the
+probability of interaction).  Note that, depending on the setting of {\tt
+NFMAX}, this can lead to a broad distribution of particle weights at the bottom
+of the forcing zone.
+
+The number of times interactions have been forced is passed onto higher-order
+photons arising from non-forced events ({\em e.g.}, bremsstrahlung, positron
+annihilation).  Thus, if the parent photon has not yet undergone {\tt NFMAX}
+forced interactions, or if the parent is a charged particle, these higher-order
+photons will be forced to interact the remaining number of times (\ie\ {\tt
+NFMAX} - \# of times parent particle forced) as long as they are within the
+forcing zone.  This does not affect any remaining forced interactions of the
+parent photon.  This feature is useful for getting good statistics on
+bremsstrahlung photon interactions and makes Photon Forcing
 a powerful tool for improving statistics when used in conjunction with
 bremsstrahlung splitting (see next section).
 
-Note that forcing in restricted regions with low mass can lead to a few
-electrons created outside the forcing region having much larger weights than
-those created inside the forcing region and thereby distorting results
+Note that forcing in regions with low mass can lead to a few secondary electrons
+created outside the forcing region having much larger weights than those created
+inside the forcing region and thereby distort results
 which are sensitive to these weight variations.
 
 \subsection[Brem Splitting and Russian Roulette]
@@ -3456,22 +3489,22 @@ equal to $\frac{1}{{\tt NBRSPL}}$ times the weight of the electron that
 underwent the bremsstrahlung event.  The energies and directions of each
 photon are sampled individually according to the relevant probability
 distributions.  The energy of the primary electron is decremented by
-the energy of just one of the photons.  This must be done in order to
-preserve the effects on energy straggling but it does mean that energy is
-not conserved on a given history (the energy would have to be decremented
-by the average energy of the photons created) but it is conserved ``on
+the energy of just one of these photons.  This must be done in order to preserve
+energy straggling and means that, while energy is not conserved for a single
+history (the energy would have to be decremented by the average energy of the
+photons created to achieve this), it is conserved ``on
 average'' over many histories.
 
-The splitting number, {\tt NBRSPL}, is not applied to higher-order
+The splitting number, {\tt NBRSPL}, is not applied to
 higher-order bremsstrahlung and annihilation photons unless
 Russian Roulette is turned on (see section~\ref{rusrousect}
 below).  This prevents wasting simulation time by tracking many
 higher-order photons of vanishing weight.
 
-Uniform bremsstrahlung splitting in BEAMnrc is now handled by the EGSnrc
-system using a more efficient internal bremsstrahlung splitting feature.
-So, other than input, there is no longer any coding in BEAMnrc related
-to this except for the feature which turns it off for higher orders.
+Uniform bremsstrahlung splitting in BEAMnrc is handled by the EGSnrc
+system using an efficient internal bremsstrahlung splitting algorithm.
+So, other than input, the only coding in BEAMnrc related
+to UBS involves turning off splitting for higher-order events.
 
 \subsubsection{Selective Bremsstrahlung Splitting}
 \label{sbssect}
@@ -3979,6 +4012,28 @@ the splitting field, defined by {\tt FS} and {\tt SSD}, so BEAMnrc employs an al
 generates only those photons that are directed into the splitting field plus one fat photon representing the
 statistics of photons directed away from the field.
 
+\index{directional source biasing!schematic}
+\begin{figure}[ht]
+\begin{center}
+\includegraphics[width=10cm]{figures/dsb}
+\end{center}
+\caption[Schematic of DSB]
+{A schematic of directional source biasing (DSB) in a Co-60 treatment head
+simulation. The splitting field is defined by the user inputs, {\tt FS} and {\tt
+SSD} and contains the treatment field.  If there is radial symmetry above CM
+number {\tt splitcm\_dsb}, the number of primary photons tracked in this region
+can be reduced by dividing the splitting field into {\tt nbin} radial bins. The
+number of split primary photons directed into bin i, defined by minimum radius,
+r$_i$, is reduced by a factor of i and the weight of each photon is i/{\tt
+NBRSPL}.  Upon entering {\tt splitcm\_dsb}, photons are split i times and
+radially redistributed about the beam central axis, and their weight is
+decreased by a factor of i to become 1/{\tt NBRSPL}. The individual r$_i$ are
+determined by the user input, {\tt dsb\_delta}, defining the minimum linear
+distance between radially redistributed photons ({\em i.e.} for photons directed
+exactly at r$_i$).}
+\label{dsb_fig}
+\end{figure}
+
 \index{directional source biasing!use of radial symmetry}
 \index{directional source biasing!r$_i$}
 \index{directional source biasing!splitcm\_dsb}
@@ -4015,29 +4070,6 @@ However, {\tt NBRSPL} is usually very large ($\sim$ 20,000), and a more practica
 {\tt dsb\_delta} is imposed by the maximum number of bins, {\tt \$DSB\_MAX\_BIN}, defined in
 {\tt \$OMEGA\_HOME/beamnrc/beamnrc\_user\_macros.mortran}.  Currently, {\tt \$DSB\_MAX\_BIN} is set to
 1000.
-
-\clearpage
-\index{directional source biasing!schematic}
-\begin{figure}[H]
-\begin{center}
-\includegraphics[width=9cm]{figures/dsb}
-\end{center}
-\caption[Schematic of DSB]
-{A schematic of directional source biasing (DSB) in a Co-60 treatment head simulation.
-The splitting field is
-defined by the user inputs, {\tt FS} and
-{\tt SSD} and contains the treatment field.  If there is radial symmetry
-above CM number {\tt splitcm\_dsb}, the number of primary photons tracked in
-this region can be reduced by dividing the splitting field into {\tt nbin} radial bins.
-The number of split primary photons directed into bin i, defined by minimum radius, r$_i$, is
-reduced by a factor of i and the weight of each photon is i/{\tt NBRSPL}.  Upon
-entering {\tt splitcm\_dsb}, photons are split i times and radially redistributed about the
-beam central axis, and their weight is decreased by a factor of i to become 1/{\tt NBRSPL}.
-The individual r$_i$ are determined by the user input, {\tt dsb\_delta}, defining
-the minimum linear distance between radially redistributed photons ({\em i.e.} for
-photons directed exactly at r$_i$).}
-\label{dsb_fig}
-\end{figure}
 
 \index{directional source biasing!dsb\_delta}
 Since {\tt dsb\_delta} defines the minimum linear distance, projected to {\tt SSD}, between split, radially-redistributed photons, the actual linear distance between redistributed photons directed towards radius, r, in bin i is
@@ -4369,20 +4401,16 @@ dealing with this variable below.  \index{IO\_OPT}
 \index{binary format -phase space}
 \index{byte order}
 \index{byte swapping}
-The phase space files are binary files and thus suffer from the problem of
-being being one of two types which depend on which machine they were
-written on (little-endians and big-endians).  The utility program
-\verb+readphsp+ can be used to convert between these formats. Files from
-DEC alpha and PC Linux machines have the same byte order as each other and
-may be interchanged.  Files from SUNs, SGIs, RS6000s, and HP9000s are the
-same and can be interchanged.  We have also slightly compressed the files
-to save space.
+The phase space files are binary and, thus, byte order (big endian or little
+endian) will depend on which type of architecture they were written on.  The
+utility program \verb+readphsp+ can be used to swap bytes between these two
+formats.
 \index{readphsp}
 \index{phase space files!binary format}
 \index{binary format -phase space}
 
 \index{MODE}
-The first record in a file is different from the others and contains
+The first record in a phase space file is different from the others and contains
 the following information.
 \begin{description}
 \item [MODE\_RW] The file mode: it can be either 'MODE0' or 'MODE2' depending
@@ -4415,28 +4443,28 @@ where \verb+IHSTRY+ is the number of histories run,
 because they were multiple passers, {\tt NFAT\_ph\_sp} is the number
 of fat photons rejected from the source (only if directional bremsstrahlung
 is used--see section~\ref{dbssect}), and {\tt NRCYCL} is the number
-of times each particle in the source is recycled (see section~\ref{phspsrcsect}).  The value of
-\verb+NINCPHSP+ is stored
-in any phase space files generated by the phase space source
-and is also used to normalize doses and fluences resulting from the phase
-space source.
-Thus, \verb+NINCPHSP+, doses and fluences are traceable back to
-the original source. For example, consider a model of a $^{60}Co$ unit
+of times each particle in the source is recycled (see
+section~\ref{phspsrcsect}).  Thus, regardless of the number of upstream phase
+space sources, the value of \verb+NINCPHSP+ in a phase space file is always
+traceable back to the number of histories from the primary, non-phase space
+source.   Since quantities scored during a simulation that uses a phase space
+source are normalized by \verb+NINCPHSP+, they, too, are traceable back to the
+original, primary source. For example, consider a model of a $^{60}Co$ unit
 which is broken into 2 components. In the first part, the source capsule
 is modelled and a phase space file created with all the particles
 leaving the surface of the capsule.  Here all outputs are normalized
-per photon from the $^{60}Co$.  In the second stage, the phase
+per photon from the $^{60}Co$ capsule.  In the second stage, the phase
 space file from the first part is used as input to a model of the
 collimator system.  Here again the outputs are normalized per photon
-from the $^{60}Co$, thus automatically maintaining the
+from the $^{60}Co$ capsule, thus automatically maintaining the
 ``natural'' normalization.
 \index{normalization!of dose and fluence when using ISOURC=21}
 \index{dose!normalization when using ISOURC=21}
 \index{fluence!normalization when using ISOURC=21}
 
 Each record in a phase space file contains the following information
-about a particle (in this order):\\
-\verb+LATCH, E, X, Y, U, V, WT, (ZLAST)+\\
+about the particle scored (in this order):\\
+\verb+LATCH, E, X, Y, U, V, WT, [ZLAST]+\\
 where:
 \vspace*{-4mm}
 \index{LATCH!in phase space}
@@ -4447,27 +4475,27 @@ where:
 the particle has crossed the scoring plane, \verb+NPASS+, and information
 \index{NPASS}
 which allows the particle's history to be traced (see section~\ref{LATCH}
-below).  The value of \verb+LATCH+ in the phase space file is not the
-same as that internal to BEAMnrc or other analysis codes
-because of the compression used.
+below).  Note that because it is also used to store IQ and {\tt NPASS},
+the value of \verb+LATCH+ written to the phase space file is not the
+same as that during transport.
 \index{LATCH!in phase space}
-\item [E] is the particle total energy (kinetic and rest mass, single
-precision).  This is set negative if this is the first particle scored
-from a new primary (ie from a non-phase space source) history.
-\item [X] is the particle X-position (cm)
-\item [Y] is the particle Y-position (cm)
-\item [U] is the X-direction cosine
-\item [V] is the Y-direction cosine
+\item [E] is the particle total energy (kinetic plus rest mass) in single
+precision.  This is set negative if this is the first particle scored
+from a new primary (ie non-phase space source) history.
+\item [X] is the particle X-position (cm).
+\item [Y] is the particle Y-position (cm).
+\item [U] is the X-direction cosine.
+\item [V] is the Y-direction cosine.
 \item [WT] is the particle's weight; WT also carries the
-sign of W, the Z-direction cosine
-\item [ZLAST] is the Z-position of last interaction for photons and is
-the Z-position of where an electron or its ancestor was set in motion by
-a photon (i.e. it does not flag the creation site of delta rays. This
-variable is in brackets because its inclusion in the phase space file
+sign of W, the Z-direction cosine, W.
+\item [ZLAST] For scored photons, this is the Z-position of last interaction;
+for charged particles, it is the Z-position where the charged particle or its
+ancestor was set in motion by a photon ({\em i.e.}, it does not flag the
+creation site of delta rays).  If a particle does not interact, then {\tt ZLAST}
+stores Z-position on entering the simulation ({\em i.e.}, {\tt ZIN}). This
+quantity is in brackets because its inclusion in the phase space file
 depends upon the setting of the input variable
-\verb+IZLAST+ (see section~\ref{IZLAST} on \verb+IZLAST+).  If a
-particle does not interact, ZLAST is the value it had as it entered the
-simulation ({\tt ZIN}).
+\verb+IZLAST+ (see section~\ref{IZLAST} on \verb+IZLAST+).
 \index{ZLAST} \index{IZLAST}
 \index{phase space files!description}
 
@@ -4497,25 +4525,24 @@ If you are using an old phase space file without negative
 {\tt E} markers as a source, scored quantities will be grouped according
 to incident particle instead of primary history.  BEAMnrc will output
 a warning that uncertainties may be underestimated because correlations
-between incident particles cannot be accounted for.  However, we have
-shown that in most cases the underestimates in uncertainty caused by
-not taking correlations into account are
-not significant~\cite{Wa02a}.
+between incident particles cannot be accounted for. The underestimates in
+uncertainty caused by not taking correlations into account may be significant in
+cases where variance reduction techniques result in many correlated particles
+scoring quantities in the same volume (dose) or area (fluence)~\cite{Wa02a}. An
+example of a case where this could happen is when directional bremsstrahlung
+splitting is used with a large splitting number (see section~\ref{dbssect}).
 
 When BEAMnrc writes a phase space file, it opens the file using\\
 \verb+ACCESS = 'direct', FORM = 'unformatted', RECL = 'length'+.\\
-The \verb+FORM='unformatted'+ statement ensures that
-the file will be stored in a
-compressed format, requiring less disk space.  The record length,
-'length', depends on the machine being used to run BEAMnrc; on SUN
-stations and Linux PC's, 'length' is the number of bytes/record
-(28 or 32 [with {\tt ZLAST}]);
-on SGI and DEC alpha
-machines, 'length' is the number of variables stored in a
-record (7 or 8 [with {\tt ZLAST}]).   Internally `length' is determined as
-7*\verb+$RECL_FACTOR+ or 8*\verb+$RECL_FACTOR+ (with {\tt ZLAST}),
-where the value of the macro is 1 or 4 and is defined in
-\verb+$HEN_HOUSE/lib/${my_machine}/machine.mortran+.
+The \verb+FORM='unformatted'+ statement ensures that the file will be stored in
+binary format.  Specification of the record length, 'length', depends on the
+machine being used.  For most architectures, 'length' is the number of
+bytes/record ({\em i.e.}, 28 or 32 with {\tt ZLAST}).  However, given that some
+architectures specify record length in 4-byte units, 'length' is represented
+internally as 7*\verb+$RECL_FACTOR+ or 8*\verb+$RECL_FACTOR+ (with {\tt ZLAST}),
+where \verb+$RECL_FACTOR+ is 4 or 1, depending on architecture. Note that
+\verb+$RECL_FACTOR+ is defined in\\
+\verb+$HEN_HOUSE/lib/${my_machine}/machine.macros+.
 \index{machine.mortran}
 
 \index{ZLAST}
@@ -4527,18 +4554,7 @@ The format of phase space files opened with \\
 \verb+ZLAST+ is not
 scored and 'MODE2' if
 \verb+ZLAST+ is scored.  The 'MODE0' or 'MODE2'
-designation appears in the first record of a phase space file along
-with the total number of particles contained in the file, the number
-of photons, maximum kinetic energy of any particle in the file,
-minimum kinetic energy of electrons, and the number of particles incident
-from the original source.
-
-An older version of BEAM opened files in compressed format but with\\
-\verb+ACCESS='sequential'+.  These older files are designated 'MODE1' without
-\verb+ZLAST+ and\\ 'MODE3' with \verb+ZLAST+.  The current version of BEAM requires
-conversion of files in the older format to access='direct' format before adding
-new phase space data to them.  The \verb+readphsp+ program described below
-performs this conversion.
+identifier is the first quantity written to the first record of a phase space file.
 
 \index{.egsphsp1}
 Phase space files have extension \verb+.egsphsp#+ where \verb+#+
@@ -4556,13 +4572,12 @@ been found to save network time.  Certainly, there are other read/write
 optimisations that could be made, however, in a normal accelerator simulation,
 only a small fraction of the simulation time is taken up reading from and
 writing to phase space files.
-The source for these macros is kept separately so that users may
-utilise them in their own codes to read or write phase space files.
-The same macros are used uniformly throughout the
-BEAMnrc system (DOSXYZnrc, BEAMDP, BEAMnrc \etc).
-\index{phsp\_macros.mortran}
+The source for these macros is kept separately to preserve commonality between
+the methods used by all Mortran applications (BEAMnrc, DOSXYZnrc, BEAMDP, etc)
+to access phase space files.  In addition, they may be used in the user's own
+applications. \index{phsp\_macros.mortran}
 
-\subsection{Maximum size of Phase Space Files}
+\subsection{Maximum Size of Phase Space Files}
 \index{Phase space files!maximum size}
 Note that the variable written to header storing the number of particles
 in a phase space file, {\tt NPPHSP}, is a 4-byte integer.  This puts a
@@ -4682,9 +4697,10 @@ sure that there are no errors in the file.
 \item {\tt \$RECORD\_CONTENTS}: A block indicating the data that is stored in
 the {\tt .IAEAphsp} file.  A ``1'' beside a variable indicates that this is stored
 in the {\tt .IAEAphsp} file.  This block also indicates how many extra long integers
-and extra floating point variables are stored.  In the case of BEAMnrc, two extra long integers,
-{\tt LATCH} and the number of primary histories between this particle and the last
-particle scored, are always stored.  In addition, if the input {\tt IZLAST=1}
+and extra floating point variables are stored.  In the case of an IAEA-format
+phase space file written by BEAMnrc, {\tt LATCH} is always stored as an extra
+long integer variable. In addition, if the input {\tt IZLAST=1}
+
 (See Section~\ref{IZLAST}) then {\tt ZLAST}, the Z of the last interaction site for
 photons and the creation site for secondary charged particles, is stored as an
 extra floating point variable.
@@ -4780,10 +4796,10 @@ indicating this to the user).  Note that the header file is assumed to be in the
 same directory as the phase space data file.
 
 As with BEAMnrc format phase space sources, the Z-direction cosine, {\tt W} is
-calculated from $\sqrt{{\tt U}^2+{\tt V}^2}$.  The sign of {\tt type} is then
-applied to {\tt W}.  On reading a negative
-energy value, the primary history counter in BEAMnrc is incremented by one, and {\tt E} is set
-to its absolute value before being used in a simulation.
+calculated from $\sqrt{{\tt U}^2+{\tt V}^2}$.  The sign of {\tt W} is determined
+from {\tt type}, the {\tt CHAR*1} variable storing particle type.  First, {\tt type}
+is converted to {\tt INTEGER*2}, and then its sign is applied to {\tt W}, after which
+the integer form of {\tt type} is set to its absolute value.
 
 Note that BEAMnrc automatically handles 3-D IAEA format phase space sources in which the (X,Y,Z) position
 of each particle is stored and 4-D phase space data in which fractional monitor unit index ({\tt MU}) is stored.
@@ -4820,18 +4836,18 @@ that the necessary libraries are present (see below).
 space files generated on another type of machine become compatible with
 the type of machine that \verb+readphsp+ is being run on.
 
-The \verb+readphsp+ program also allows selection of a particular charge
-from a phase space file, or a subset of a file can be extracted.
+The \verb+readphsp+ program also allows extraction of a subset of
+phase space data from a file based on charge and/or maximum number
+of particles.
 
 \index{phase space files!binary format}
 \index{binary format -phase space}
 Before converting phase space files \verb+readphsp+ prints a summary of
-the file contents.  If this is nonsense, then very likely the file has
-the wrong binary format  (\ie\ was generated on a machine which uses a
-different binary format). The user should use the option of
+the file contents.  If this is nonsense, then it is very likely the file
+was generated on a machine with a different byte order. The user should use the option of
 \verb+readphsp+ to swap the bytes of the phase space data to make it
-compatible with the current machine before otherwise converting the phase
-space data to its new form.  When using  \verb+readphsp+ for byte
+compatible with the current machine before otherwise manipulating phase
+space data.  When using  \verb+readphsp+ for byte
 swapping, the name of the output file can be the same as that of the input
 file however the swapped data will overwrite the original data.
 \index{readphsp}
@@ -4900,15 +4916,14 @@ from a phase-space file please see the report
 The \verb+LATCH+ variable, associated with each particle in a simulation, is a
 32-bit variable used to track the particle's history. In the input files
 there is an opportunity to define a mapping from geometric regions to
-bits (\ie\ bit regions)
+bits (\ie\ define bit regions)
 using the \verb+IREGION_to_BIT+ variable.  Thus, \eg\ it is
 possible that bit 5 corresponds to geometric region 3, and more
 importantly, one bit, say 3, can correspond to multiple geometric
-regions, \eg\ 1,5,8.  Thus, although the JAWS may consist of 6 different
-geometric regions, they can all be associated with a single bit or bit
-region.  All regions which are not associated with a bit/bit region by the
-user are associated with bit region 23 by default.
-Each bit is designated as follows:
+regions, \eg\ 1,5,8.  This is convenient for accelerator structures comprising
+multiple regions.  All regions which are not explicitly associated with a bit
+number by the user are assigned bit number 23 by default. Each bit of the {\tt
+LATCH} variable is designated as follows:
 \index{bit region}
 \index{IREGION\_to\_BIT}
 \begin{description}
@@ -4922,10 +4937,10 @@ event occurs in the history; 0 otherwise(not used for \verb+LATCH_OPTION+ = 1).
 \item [bit 1-23] Used to record the bit region where a particle has been and/or
 has interacted (Note that the bit set for a region is determined by
 \verb+IREGION_TO_BIT+ for that region)
-\item [bit 24-28] Stores the bit region number (as opposed to geometric
-region) in which a secondary particle
-is created; if these bits are all 0, the particle is a primary
-particle (not for \verb+LATCH_OPTION+ = 1).
+\item [bit 24-28] When downshifted by 24 bits (see paragraph below), these store the bit
+region in which a secondary particle
+is created; if no bit number is stored, the particle is a primary
+particle.  Note these bits are not used if \verb+LATCH_OPTION+ = 1.
 \item [bit 29-30] Store the charge of a particle when \verb+LATCH+ is output
 to a phase space file (see section~\ref{PSF} on phase space files).
 During a simulation, bit 30 is used to identify  a contaminant particle
@@ -4933,16 +4948,14 @@ but this information is not output to the phase space file. Set to 1 if
 the particle is a contaminant particle; 0 otherwise. Note that if
 \verb+LATCH+ is not inherited (\ie\ when \verb+LATCH_OPTION+ = 1), bit 30
 loses its meaning.
-
-
 \item [bit 31] Set to 1 if a particle has crossed a scoring plane
 more than once when \verb+LATCH+ is output to a phase space file
 (see section~\ref{PSF} on phase space files above)
 \end{description}
 
-For secondary particles, recording the region number in which they were
-created in bits 24-28 is equivalent to multiplying the region number by
-2$^{24}$, or 16777216.  Thus, to retrieve the region of origin of a
+For secondary particles, recording the bit region in which they were
+created in bits 24-28 is equivalent to multiplying the bit region number by
+2$^{24}$, or 16777216.  Thus, to retrieve the bit region of origin of a
 secondary particles, the \verb+LATCH+ value of the particle must be divided by
 16777216 (\ie\ taking the value \verb+INT(LATCH/16777216))+.
 
@@ -4954,41 +4967,40 @@ input variable.  The possible settings of
 \begin{description}
 
 \item [LATCH\_OPTION = 1 (Non-Inherited LATCH Setting):]
-secondaries do not inherit \verb+LATCH+
-values from the primaries that created them;
+{\tt LATCH} bits 1-23 store bit regions where a particle
+has been.  Secondaries do not inherit \verb+LATCH+
+values from the primaries that created them ({\em i.e.},
 bits 1-23 of a secondary particle carry no information about the
-regions its primary parent(s) has(ve) been.  This option must NOT be
+the transport history of its ancestors).  This option must NOT be
 used if \verb+ICM_CONTAM+ is non-zero since the \verb+ICM_CONTAM+ option
 needs bit 30. \index{ICM\_CONTAM}
 \item [LATCH\_OPTION = 2 (Comprehensive LATCH Setting --default):]
-\verb+LATCH+ values\\ are passed on to
-secondary particles from the primaries that created them; bits 1-23
-for a secondary particle include all regions in which the secondary
+Bits 1-23 store bit regions where a particle
+has been.  \verb+LATCH+ values are passed on to
+secondary particles from the primaries that created them.  Thus, bits 1-23
+for a secondary particle include all bit regions in which the secondary
 particle has been plus those in which its ancestors have been
-up to the point where the secondary was created;  uses
-bits 24-28 to record the bit region
-where secondary particles are created and bit 0 to
-record whether or not a bremsstrahlung photon was involved in a
+up to the point where the secondary was created.  Bits
+24-28 are used to record the bit region
+where a secondary particle is created. Bit 0
+is set if a bremsstrahlung photon is involved in a
 \index{LATCH!LATCH\_OPTION}
 \index{bremsstrahlung!bit 0 flag} \index{bremsstrahlung!testing for}
 particle's history.
 \item [LATCH\_OPTION = 3 (Comprehensive LATCH Setting 2):]
-similar to 2, but for\\ photons
-bits 1-23 record the regions in which the particles have interacted,
-rather than simply the regions in which they have been. After a Compton,
-pair or photo-electric event, the charged particles, and in the latter
-case, also the fluorescent photons, have the bits 1--23 set for the region
-in which they are created to treat the case in which they are created
-below cutoff in a manner similar to being created above cutoff (where the
-bits would be set on the first step).
+Similar to {\tt LATCH\_OPTION}=2, but, for a photon,
+bits 1-23 record the bit regions in which the particle has interacted,
+rather than simply where it has been.  Secondary particles
+resulting from these interactions have bits 1-23 set for the
+bit regions in which they were created.
 \end{description}
 
 To clarify further the setting of \verb+LATCH+ bits under various
 \verb+LATCH_OPTION+ values, fig~\ref{fig_latch} and table~\ref{table_latch}
 \index{LATCH!LATCH\_OPTION}
-summarise the situation for a simple photon accelerator.  Two electrons
-enter the simulation and produce bremsstrahlung photons in the target,
-bit (and geometric) region 1. One photon goes all the way to the scoring
+summarize the situation for a simple photon accelerator.  Two electrons
+enter the simulation and produce bremsstrahlung photons in the target (bit region 1).
+One photon goes all the way to the scoring
 plane without interacting and the second undergoes a pair production
 event in the flattening filter (bit region 3). The electron escapes from
 the flattening filter an gets to the scoring plane and the positron
@@ -4999,7 +5011,40 @@ contamination scoring plane just above the JAWS ( \ie\
 \index{ICM\_CONTAM} \index{IQ\_CONTAM}
 \verb+IQ_CONTAM=-1+).
 
-\clearpage
+For {\tt LATCH\_OPTION}=1 (non-inherited), bits 1-23 are set for bit regions
+where a particle has been.  Note that all particles have bit 23 set because they
+have all been in air, which defaults to bit region 23 unless the user explicitly
+sets it to some other bit region number.  Bits 24-28 store nothing because the
+bit regions where secondary particles are created are not recorded.  Contaminant
+particles are not marked, so bit 30 is not used, and bremsstrahlung events are
+not recorded in bit 0.
+
+For {\tt LATCH\_OPTION}=2 (comprehensive inherited where been), bits 1-23 for a
+particle are set for bit regions where it and all of its ancestors have been.
+Thus, all particles have bit 1 set since they are all descendants of the
+bremsstrahlung interaction in bit region 1. Particles 2 and 3 both have bit 3
+set since they are descendants of the pair event in bit region 3.  Again, bit 23
+is set for all particles because they (and their ancestors) all pass through
+air.  In addition, bit 0 is set for all particles because they (or their
+ancestors) are products of a bremsstrahlung event (in bit region 1).  Bits
+24-28, when downshifted by 24 bits, store the bit region where secondary
+particles were created.  Thus, these bits store the number "3" for particles 2
+and 3 and the number "1" for particle 1.  Finally, bit 30 is used to identify
+contaminant particles and their descendants, where, in this example, contaminant
+particles are defined as any charged particle crossing the contaminant plane
+shown.  Thus, bit 30 for particle 3, an electron reaching the scoring plane from
+above the contaminant plane, is set.
+
+{\tt LATCH\_OPTION}=3 (comprehensive inherited where interacted) is similar to
+{\tt LATCH\_OPTION}=2 except that bits 1-23 are set for bit regions in which
+photons (and ancestral photons) have interacted, as opposed to regions they have
+simply passed through.  Note that charged particles interact at every step
+(although only a small fraction of these interactions are explicitly simulated!)
+and so they can be treated the same as with {\tt LATCH\_OPTION}=2.  In the
+example shown, the only difference in bit settings between {\tt LATCH\_OPTION}=2
+and {\tt LATCH\_OPTION}=3 is that bit 23 is not set for particles 1 and 2,
+because these photons have not interacted in air, nor are they descendants of
+photons that have interacted in air.
 
 \begin{figure}[H]
 \vspace*{-0.3cm}
@@ -5013,7 +5058,8 @@ contamination scoring plane just above the JAWS ( \ie\
 the phase space file after 2 electrons are incident.  Contamination is
 defined as charged particles crossing the contamination plane.
 Table~\ref{table_latch} shows the bit settings in {\tt LATCH} as the particles
-reach the scoring plane. The bit region numbers are shown in circles.}
+reach the scoring plane. The bit numbers associated with the geometric regions
+(bit regions) are shown in circles.}
 \label{fig_latch}
 \end{center}
 \end{figure}
@@ -5021,7 +5067,8 @@ reach the scoring plane. The bit region numbers are shown in circles.}
 \vspace*{-1cm}
 \begin{center}
 \caption{Bit settings in LATCH for the simple example shown in
-fig~\ref{fig_latch}.}
+fig~\ref{fig_latch}.  In the
+case of bits 24-28, the table gives the numbers stored after downshifting by 24 bits.}
 \label{table_latch}
 \begin{tabular}{|r|c|ccccccc|c|c|}
 \hline
@@ -5062,8 +5109,8 @@ The ability to trace a particle's history using \verb+LATCH+ also allows doses
 to be broken down into their components.  In any dose zone, BEAMnrc is able
 to break dose down in 2 ways:
 dose from contaminant particles (identified on
-the basis of their charge only); or dose including only and/or excluding
-only contributions arising from particles with certain user-specified
+the basis of their charge only); dose
+arising only from particles with a certain user-specified combination of
 \verb+LATCH+ bit settings (this is called ``bit filtering'').
 
 \index{ITDOSE\_ON}
@@ -5081,30 +5128,25 @@ The following variables are associated with contaminant dose calculation
 and are only required if  \verb+ITDOSE_ON = 1+.
 \begin{description}
 \item [ICM\_CONTAM] contaminant particles are identified upon entering
-the top of \verb+CM+ number \verb+ICM_CONTAM+ if 1 $\leq$ \verb+ICM_CONTAM+
-$\leq$ total number of \verb+CM+s (previously, this range was restricted to
-1 $<$ \verb+ICM_CONTAM+ $\leq$ total number of \verb+CM+s);
-if it is set to 0, no contaminant dose will be calculated.
+the top of \verb+CM+ number \verb+ICM_CONTAM+, where 1 $\leq$ \verb+ICM_CONTAM+
+$\leq$ total number of \verb+CM+s.  If \verb+ICM_CONTAM+
+is set to 0, no contaminant dose will be calculated.
 \index{LATCH!LATCH\_OPTION}
 \item [IQ\_CONTAM] The charge of the contaminant particles (0 for photons
 and 1 for charged particles); all particles
 with this charge will be marked as contaminant particles (by setting
-\verb+LATCH+ bit  30 of the particles to 1)
+\verb+LATCH+ bit 30)
 upon entering the front of \verb+CM+ number \verb+ICM_CONTAM+.
 \end{description}
-Contaminant dose is scored in every dose zone.  However it is traced back only
-to those particles identified as having contaminant charge upon entering CM
-number \verb+ICM_CONTAM+. For example, if \verb+IQ_CONTAM+ = 1, all the charged
-particles entering CM number \verb+ICM_CONTAM+ will be marked as contaminant
-particles and this mark will be passed onto their descendants via
-\verb+LATCH+ bit 30. The dose
-contributed by the contaminant particles and their descendants is then scored
-as the contaminant dose.  Note that if \verb+LATCH_OPTION = 1+
+Contaminant dose is scored in every dose zone and is the dose due to particles
+having the contaminant charge entering CM number \verb+ICM_CONTAM+ and their
+descendants. For example, if \verb+IQ_CONTAM+ = 1, all the charged particles
+entering CM number \verb+ICM_CONTAM+ and their descendants will contribute to
+contaminant dose. Note that if \verb+LATCH_OPTION = 1+
 \verb+LATCH+ values are not transferred to descendants (secondaries),
 and contaminant dose calculations will be
 meaningless.  Thus, the contaminant dose option is automatically
-turned off if \verb+LATCH_OPTION = 1+. Note also that prior to Sept 2002,
-contamination was defined as it entered the CM from the front or the back.
+turned off if \verb+LATCH_OPTION = 1+.
 
 The following variables are associated with bit filtering of dose and
 are only required if \verb+ITDOSE_ON+ = 1:
@@ -5115,47 +5157,34 @@ are only required if \verb+ITDOSE_ON+ = 1:
 \index{LNINC}
 \index{L\_N\_INC}
 \begin{description}
-\item [LNEXC] number of dose components that
-exclude contributions from particles with user-specified \verb+LATCH+ bits
-set (bit filters). \verb+LNEXC+ = 0 is allowed. \verb+LNEXC <= $MAXIT - 3+
+\item [LNEXC] number of dose components using an exclusive {\tt LATCH} bit
+filter. Note that\\
+\verb+0 <= LNEXC <= $MAXIT - 3+,
 where \verb+$MAXIT+ can be changed from its default value of 12
 (as described in section~\ref{ctd}).
-\item [L\_N\_EXC(I,31) (I = 1,2,...,LNEXC)] Bit filter for determining
-which particles to exclude
-from dose component I; each of the LNEXC components requires input of a
-separate bit filter; a bit filter consists of a sequence of up to 31
-\verb+LATCH+
-bit numbers on a single record (range 1-31), separated by commas;
-particles with any of the listed bits  set
-are excluded from dose component I.
-\item [LNINC] number of dose components with contributions only from
-particles with user specified bit filters which are a combination of
-inclusive and possibly exclusive patterns.  \verb+LNINC+ = 0 is allowed.
-\verb+LNINC <= $MAXIT - LNEXC - 3+.
-%For example, if the inputs for \verb+L\_N\_EXC(I,31)+ are 2,3,5,0,...,
-%then the dose component I will exclude the contributions from the
-%particles with any of the LATCH bits 2,3,5 set high (=1)
-
-\item [L\_N\_INC(I,31) (I = 1,2,...,LNINC)] Bit filter for determining
-which particles to include in dose component I; each of the LNINC
-components requires input of a separate bit filter which consists of 2 groups
-of \verb+LATCH+ bit numbers (range 1-31) separated by a 0;
-contributions from the particles with any of the \verb+LATCH+ bits in the
-first group of \verb+L_N_INC(I,31)+ set and none of those in the second
-group set are included in dose component I.
-
-For example, if the inputs for
-\verb+L_N_INC(I,31)+ are 2,3,5,0,1,4,0,..., then dose component I will
-include the contributions from the particles with {\bf any} of the \verb+LATCH+
-bits 2, 3 or 5 set (=1) {\bf and} both \verb+LATCH+ bits 1 and 4 not set (=0);
-the status of other \verb+LATCH+ bits will have no effect on this
-dose component.
+\item [L\_N\_EXC(I,31) (I = 1,2,...,LNEXC)] Exclusive bit filter for dose
+component I. An exclusive bit filter consists of a sequence of up to 31 bit
+numbers (range 1-31) on a single record separated by commas. Particles with any
+of the bits set are excluded from dose component I.
+\item [LNINC] number of dose components using an inclusive/exclusive {\tt LATCH}
+bit filter. Note \verb+0 <= LNINC <= $MAXIT - LNEXC - 3+. \item [L\_N\_INC(I,31)
+(I = 1,2,...,LNINC)] Inclusive/exclusive bit filter for dose component I+LNEXC
+(inclusive/exclusive components are listed after exclusive components).  An
+inclusive/exclusive bit filter consists of up to 31 bit numbers (range 1-31)
+split into 2 groups input on one record. Bit numbers are separated by commas,
+with ",0," denoting the end of the first (inclusive) group and the beginning of
+the second (exclusive) group. Dose component I+LNEXC then includes contributions
+from particles with \verb+LATCH+ having any of the bits in the first group set
+and none of those in the second group set. For example, if the input for
+\verb+L_N_INC(I,31)+ is 2,3,5,0,1,4, then dose component I will include the
+contributions from the particles with {\bf any} of \verb+LATCH+ bits 2, 3 or 5
+set {\bf and} neither of bits 1 and 4 set. The status of other \verb+LATCH+ bits
+will have no effect on this dose component.
 If the inputs are 1,2,3,0,0,...,(equivalently 1,2,3,)
 the dose component  will include
-the contributions from the particles with any of the \verb+LATCH+
+the contributions from the particles with any of \verb+LATCH+
 bits 1, 2 or 3
-set (=1). Note that no dose will be scored if one inputs 0,2,3,5,0,...
-
+set, and there are no exclusive bit settings.
 
 \end{description}
 
@@ -5166,10 +5195,15 @@ component calculations.
 Bit filtering of dose provides a particularly powerful tool for
 determining dose contributions.  In view of the information stored in
 \verb+LATCH+ (see section above), dose contributions can be separated
-according to what regions particles have passed through/interacted in,
-whether the particle is a primary or secondary, if the particle is a
-secondary then where it was created, whether or not the particle is a
-contaminant, and any combination of these.
+according to:
+\begin{enumerate}
+\item What regions particles have passed through/interacted in
+\item Whether the particle is a primary or secondary
+\item Where a secondary was created
+\item Whether or not the particle is a
+contaminant
+\item Any combination of the above
+\end{enumerate}
 
 \index{fat particles}
 It should be noted that if directional bremsstrahlung splitting (DBS)
@@ -5344,23 +5378,23 @@ The possible settings of \verb+IZLAST+ are:
 \item [= 0] (default) BEAMnrc does not score
 \verb+ZLAST+
 in phase space files; this means that phase space files are read and
-written in compressed ``mode0''
+written in compressed ``MODE0''
 \item [= 1] BEAMnrc scores the Z position of last interaction in phase
-space files; phase space files are read and written in compressed ``mode2'';
-``mode2'' files are approximately 14\% larger than ``mode0'' files; when
+space files; phase space files are read and written in compressed ``MODE2.''
+``MODE2'' files are approximately 14\% larger than ``MODE0'' files; when
 plotting phase space data with paw,
 \verb+ZLAST+ replaces the radial position
 of a photon (r)
-\item [= 2] Same as option 1 and in Addison, BEAMnrc writes the X-Y-Z positions
+\item [= 2] Same as option 1 and, in addition, BEAMnrc writes the X-Y-Z positions
 of the last site of interaction for photons into the \verb+.egsgph+ file.
 These last sites of interaction can be viewed in 3-D using
-{\tt EGS\_Windows}\cite{TR99a}. {\tt IWATCH}=4
-must not be turned on at the same time since it also writes to the
+{\tt EGS\_Windows}\cite{TR99a}. Note that {\tt IWATCH}=4 must not be turned on
+at the same time since particle tracks are also written to the
 \verb+.egsgph+ file.
 \index{EGS\_Windows}
 
 \end{description}
-Note that the utility BEAMDP has an option to present graphs of {\tt ZLAST}
+Note that the utility BEAMDP has an option to plot graphs of {\tt ZLAST}
 in 2-D.
 
 \subsection{NCASE}
@@ -5424,12 +5458,12 @@ During restarts
 of the previous run is read from the {\tt .egsdat} file and is used at the
 beginning of the restart.  Thus, a restarted run with a total of, eg,
 10000+10000 histories should generate results identical to a single run
-of the same simulation with 20000 histories.  Also note that
-when running parallel
-simulations with BEAMnrc (see section~\ref{parallelcalc}), {\tt JXXIN} must have
-a different value for each of the individual jobs that make up the simulation.
-A property of the random number generators being used is that this simple
-change guarantees random number sequences which are independent.
+of the same simulation with 20000 histories.  Also note that when running
+parallel simulations with BEAMnrc (see section~\ref{parallelcalc}), {\tt IXXIN}
+and/or {\tt JXXIN} must have different values for each of the individual jobs
+that make up the simulation. A property of the random number generators being
+used is that this simple change guarantees random number sequences which are
+independent.
 
 \index{random number generator!changing from RANMAR to RANLUX}
 To switch from the default RANMAR to RANLUX in your BEAM code, either go into
@@ -5515,6 +5549,10 @@ This ensures energy is transported and deposited in the correct region
 although for electrons which are moving isotropically, this can be a
 very conservative requirement.
 
+If the global value of \verb+ECUT+ is left blank or set to 0, then it defaults
+to \verb+AE+ of the default medium, unless the default is VACUUM, in which
+case it defaults to the maximum \verb+AE+ of all media in the accelerator.
+
 \subsection{ PCUTIN} \index{PCUTIN} \label{PCUTIN} \index{PCUT}
 
 {\tt PCUT} is the photon equivalent of {\tt ECUT}.  As soon as a
@@ -5536,6 +5574,10 @@ The exact value of \verb+PCUT+ is not critical in the sense
 that low values do not take much more time. A value of 0.01 MeV should
 generally be used.
 
+The global value of \verb+PCUT+ defaults to \verb+AP+ of the default
+medium, unless this is VACUUM, in which case it defaults to the maximum
+\verb+AP+ of all media in the accelerator.
+
 \subsection{ ESTEPIN, SMAX, IDORAY, IFLUOR}
 \label{dummyinputs}
 \index{ESTEPIN}
@@ -5550,7 +5592,7 @@ a switch for turning on Rayleigh scattering
 ({\tt IDORAY}), and a switch to turn on K-shell X-ray fluorescence
 ({\tt IFLUOR}).  Now all of these transport parameters are
 handled in the EGSnrc inputs (see section~\ref{egsnrc_inputs}), however,
-the dummy inputs are retained for compatibility with older EGS4 BEAM
+the dummy inputs are retained for compatibility with older BEAM
 input files.
 
 \subsection{ ICM\_SPLIT, NSPLIT\_PHOT, NSPLIT\_ELEC}
@@ -5559,25 +5601,22 @@ input files.
 \index{NSPLIT\_PHOT}
 \index{NSPLIT\_ELEC}
 
-{\tt ICM\_SPLIT} is used to split photons and electrons at an arbitrary
-plane within an accelerator.  To use this option, the user sets
-{\tt ICM\_SPLIT} equal to the CM \# at the top of which the photons and electrons
-are to be split.  When {\tt ICM\_SPLIT}$>$0, then the user must
-input {\tt NSPLIT\_PHOT} and {\tt NSPLIT\_ELEC}, the splitting number for
-photons
-and electrons, respectively, upon entering the CM.  If
-{\tt NSPLIT\_PHOT} or {\tt NSPLIT\_ELEC} is $\leq$1, then the relevant
-particle type is not split at all.  Once a particle
-has been split, the resultant particles carry weight
-1/{\tt NSPLIT\_PHOT} or 1/{\tt NSPLIT\_ELEC}.  A particle is only split
-upon entering the user-specified CM from the top (\ie\ {\tt W(NP) > 0})
-and if it has not been split by this option before.
+These inputs are used to split photons and electrons by an arbitrary splitting
+number upon entering a CM.  The CM number is specified by {\tt ICM\_SPLIT}, with
+the restriction\\
+1$<${\tt ICM\_SPLIT}$\leq${\tt MAX\_CMs}, and {\tt NSPLIT\_PHOT} and {\tt
+NSPLIT\_ELEC} are the splitting numbers for photons and electrons, respectively.
+If the splitting number is $\leq$1 then particles are not split. Once a particle
+has been split, the resultant particles carry weight 1/{\tt NSPLIT\_PHOT} or
+1/{\tt NSPLIT\_ELEC}.  A particle is only split upon entering the user-specified
+CM from the top (\ie\ {\tt W(NP) > 0}) and if it has not been split by this
+option before.
 
 Splitting at an
 arbitrary plane was designed primarily for improving statistics in
 dose calculations in a phantom,
-in which case particles (usually photons) would be split upon entering a
-phantom at the bottom of the accelerator.  Use of this option near the
+in which case particles are split upon entering the CM modeling
+the phantom.  Use of this option near the
 top of an accelerator may produce undesirable correlations, without much
 gain in efficiency.
 
@@ -5587,49 +5626,32 @@ bremsstrahlung splitting and photon forcing.  In the case where
 to the plane at which photon forcing is to begin), the photons are split
 BEFORE they are forced to interact.
 
-Currently, if {\tt ICM\_SPLIT}=1, then the
-option is turned on, but no splitting will occur.  We  hope to remove this
-restriction, but if you wish to split particles in CM 1, you can
-get around the problem, by inserting a dummy CM 1 and setting
-{\tt ICM\_SPLIT}=2.
-
-\section{EGSnrc inputs}
+\section{EGSnrc Monte Carlo Transport Parameters}
 \label{egsnrc_inputs}
 \index{EGSnrc inputs}
 
-The use of EGSnrc to simulate charged particle and photon transport
-in BEAMnrc allows the user a greater degree of control over the
-transport physics
-than was previously available in EGS4 versions of BEAM.  For most
-accelerator applications, the default settings in the BEAMnrc code for the EGSnrc
-parameters should be adequate (these are not the same as the EGSnrc
-standard defaults).   However, there are some cases, such
-as low energy applications, in which the user will want to vary
-the EGSnrc transport parameters using the EGSnrc inputs.
+EGSnrc allows the user extensive control over the Monte Carlo (MC) parameters
+governing transport physics in BEAMnrc.  The default settings of these
+parameters in BEAMnrc are currently identical to those for EGSnrc applications
+in general and will result in accurate simulations at both high (MV) and low
+(kV) energies. However, if the user is interested only in MV simulations, then
+CPU time can be saved by adjusting some of these parameters without sacrificing
+accuracy.  These parameters and their recommended settings for MV applications
+will be noted in the subsections below.
 
-EGSnrc inputs appear at the end of a BEAMnrc input file using the new
-format used with the general purpose user EGSnrc user codes.  The input
-occurs between the
+EGSnrc inputs generally appear at the end of a BEAMnrc input file
+between the
 delimiters {\tt :start mc transport parameter:} and
-{\tt :stop mc transport parameter:}.
+{\tt :stop mc transport parameter:} and have the format:\\
+{\tt PARAMETER NAME = parameter value}\\
+If you are using the BEAMnrc GUI, then the EGSnrc parameters
+(including defaults) are written to the input file when you save it.
 
-In general, EGSnrc inputs must appear in the input file in
-the format:\\
-{\tt PARAMETER NAME= parameter value}\\
-Note that there is a space between the ``='' sign and the parameter value
-but not before the ``='' sign.
-If you are using the BEAMnrc GUI to set the EGSnrc inputs, then
-the above format is written to the input file automatically when you save
-the input parameters.
+If an MC transport parameter does not appear in the input file,
+then its default value is used.
 
-If any or all of the EGSnrc input parameters is missing, then the default
-setting will be used. This feature allows BEAM input files to be used
-directly with BEAMnrc. A better approach is to read the old BEAM input
-file into the {\tt beamnrc\_gui} and then save it since this will explicitly
-add the required EGSnrc inputs to the file.
-
-The following sections describe the EGSnrc inputs required in
-BEAMnrc.  For more information, see the EGSnrc manual\cite{KR03}. The
+The following subsections describe each EGSnrc MC transport parameter.
+For more information, see the EGSnrc manual\cite{KR03}. The
 actual internal variable name associated with each input appears in brackets.
 
 \subsection{ {\tt Global ECUT} ({\tt ECUT})}
@@ -5741,8 +5763,7 @@ If {\tt Boundary crossing algorithm= PRESTA-I}, then
 (in elastic mean free paths) from the boundary
 at which lateral pathlength corrections are turned off and the particle
 is transported in a straight line until it reaches the boundary.
-By default the distance at which to switch off
-lateral corrections is a fixed value calculated by EGSnrc to be
+In this case, the default is a fixed value calculated by EGSnrc to be
 the same as that used in the original implementation of PRESTA in EGS4
 and depends on the value of {\tt ECUT}.
 
@@ -5766,7 +5787,7 @@ then the entire simulation will be done in single scattering mode.
 This input determines the algorithm used to calculate lateral and
 longitudinal corrections to account for elastic scattering in a condensed
 history electron step.  There are 2 possible settings: {\tt PRESTA-II}
-(the default) and {\tt PRESTA-I}.  {\tt PRESTA-II}  is the new,
+(the default) and {\tt PRESTA-I}.  {\tt PRESTA-II}  is the newer,
 more accurate, algorithm developed for use with EGSnrc\cite{KR03}.
 {\tt PRESTA-I} is the original PRESTA algorithm with some
 modifications\cite{BR87}.  The original {\tt PRESTA-I} is known
@@ -5780,7 +5801,7 @@ scattering is weak), it is not recommended for low energy applications.
 \index{spin effects}
 \index{spin\_effects}
 
-If {\tt Spin effects= on} (the default), then elastic scattering
+If {\tt Spin effects= On} (the default), then elastic scattering
 cross-sections that take into account relativistic spin effects are used
 in electron transport.  If {\tt Spin effects= off},  then
 screened Rutherford cross-sections (similar to EGS4) are used for elastic
@@ -5799,18 +5820,19 @@ materials it is the reverse and backscatter also increases.
 \label{bremssect}
 
 This input determines the type of angular sampling that is done when
-a bremsstrahlung photon is created.   If {\tt Brems angular sampling= Simple}
-(the default) then bremsstrahlung angles are sampled using only the leading
+a bremsstrahlung photon is created.  The possible settings for
+{\tt Brems angular sampling} are {\tt Simple} and {\tt KM} (the default).
+If {\tt Simple} is used, then bremsstrahlung angles are sampled using only the leading
 term of modified equation 2BS of Koch and Motz\cite{Bi89,KM59}. If
 {\tt Brems angular sampling= KM}, then the bremsstrahlung angles are sampled
-using the entire modified equation.
+using the entire modified equation.  Note that {\tt Brems angular sampling= KM}
+is similar to the bremsstrahlung angular sampling scheme used by the latest
+version of EGS4/BEAM, with some modifications.
+
 {\tt Brems angular sampling= Simple} is adequate at high energies,
 however, there is little increase in simulation time associated with using
-the entire modified 2BS equation and the entire equation is recommended
+the entire modified 2BS equation, and the entire equation is recommended
 at low energies.
-Note that {\tt Brems angular sampling= KM} is similar to the bremsstrahlung
-angular sampling scheme used by the latest version of EGS4/BEAM, with some
-modifications.
 
 \subsection{ {\tt Brems cross sections} ({\tt IBR\_NIST})}
 \index{bremsstrahlung cross sections}
@@ -5840,8 +5862,9 @@ significant for low values of the atomic number Z and for k/T < 0.005).
 
 The {\tt Bound Compton scattering} input is used to determine whether
 binding effects and Doppler broadening are simulated in Compton
-(incoherent) scattering events.  If this input is set to {\tt Off}
-(the default), then the Klein-Nishina formula\cite{KN29} is used to
+(incoherent) scattering events.  It has four possible settings: {\tt Off}, {\tt
+On}, {\tt Simple} and {\tt Norej} (the default). If this input is set to {\tt
+Off}, then the Klein-Nishina formula\cite{KN29} is used to
 determine differential cross-sections for Compton scattering.  This is
 similar to the treatment of Compton scattering in EGS4/BEAM.  If {\tt
 Bound Compton scattering= On}, then the original Klein-Nishina formula is
@@ -5849,13 +5872,19 @@ augmented with the impulse approximation\cite{Ri75} to simulate binding
 effects and Doppler broadening.  Simulation of binding effects and Doppler
 broadening takes extra time and is only important below 1 MeV and/or if
 Rayleigh scattering is being simulated (see section~\ref{rayleighsect}).
-A third option, {\tt Bound Compton scattering= Norej}, is provided which
-uses the total bound Compton cross sections ({em i.e.} no impulse
-approximation) and does not reject any Compton interactions at run
-time.
+The {\tt Simple} setting uses the impulse approximation to simulate binding
+effects but neglects doppler broadening.  Finally, the default {\tt Norej}
+option uses the total bound Compton cross sections ({em i.e.} no impulse
+approximation) resulting in no rejected Compton interactions at run time.
 
-Bound Compton scattering may also be turned on in selected regions
-(off everywhere else) using
+For MV applications, {\tt Bound Compton scattering} can be set to {\tt Off} with
+little impact on simulation accuracy but with a potentially significant decrease
+in CPU time.  Directional bremsstrahlung splitting (see section~\ref{dbssect}),
+in particular, makes use of a more efficient Compton splitting routine if {\tt
+Bound Compton scattering} is {\tt Off}.
+
+Bound Compton scattering may also be turned {\tt On} in selected regions
+({\tt Off} everywhere else) using
 {\tt  Bound Compton scattering= On in regions} together with
 the inputs {\tt Bound Compton start region} and {\tt Bound Compton stop region}
 to define the region ranges for which bound Compton is to be turned on.
@@ -5872,7 +5901,7 @@ used on a region-by-region basis.
 \index{Compton cross section data}
 \index{comp\_xsections}
 
-If the {\tt Bound Compton scattering= Norej} option is selected (see above), then
+If the {\tt Bound Compton scattering= Simple} option is selected (see above), then
 the user also has the option of
 specifying their own Compton cross section data
 using the {\tt Compton cross sections} input.  Cross section data must exist
@@ -5886,14 +5915,15 @@ Compton cross sections= x
 \end{verbatim}
 Default Compton cross section
 \index{Compton cross section data!default}
-data is contained in the file {\tt compton\_sigma.data} and is included with
-the EGSnrc system.
+data is contained in the file {\tt compton\_sigma.data} included with
+the EGSnrc system. Note that this default data is also used
+if {\tt Bound Compton scattering} is not set to {\tt Simple}.
 
 \subsection{{\tt Radiative Compton corrections} ({\tt radc\_flag})}
 \index{radiative Compton corrections}
 \index{radc\_flag}
 
-If set to {\tt Radiative Compton corrections= On}, then radiative
+If set to {\tt On}, then radiative
 corrections for Compton scattering based on the equations
 of Brown and Feynman (Phys. Rev. 85, p 231--1952) are used.
 If set to {\tt Off} (the default) no corrections are done.
@@ -5908,17 +5938,16 @@ before {\tt \$(EGS\_SOURCEDIR)get\_inputs.mortran}.
 
 This input determines the method used to sample the positron/electron emission
 angles (relative to the incoming photon) in a pair production event.  There
-are three possible settings of this input: {\tt Off}, {\tt Simple} and {\tt KM}.
+are three possible settings: {\tt Off}, {\tt Simple} (the default) and {\tt KM}.
 If it is set to {\tt Off}, then the positron and electron created by pair
 production have fixed polar angles, $\theta_{\pm}$, given by
 $\theta_{\pm}=\frac{m}{E_{\gamma}}$, where m is the electron rest energy
 and $E_{\gamma}$
- is the energy of the original photon.  This is similar to method used to determine
-positron/electron emission angles in the original version of EGS4.
+is the energy of the original photon.
 If {\tt Pair angular sampling= KM}, then equation 3D-2003 in an article
 by Motz et al\cite{Mo69} is used to determine the positron/electron emission
-angles.  This option is similar to the sampling technique used by the current
-version of EGS4/BEAM.  Finally if {\tt Pair angular sampling= Simple} (the default), then only
+angles.  This option is similar to the sampling technique used by
+EGS4/BEAM.  Finally if {\tt Pair angular sampling= Simple} (the default), then only
 the first term in the the Motz et al equation 3D-2003 is used.  The {\tt KM} option
 becomes less efficient with increasing accelerator energies and, moreover, involves
 assumptions that are questionable at low energy.  For these reasons, the default
@@ -5942,12 +5971,12 @@ energy distribution.
 
 The {\tt Photoelectron angular sampling} input determines the sampling method
 used by EGSnrc to determine the angle of emission of photoelectrons.
-If {\tt Photoelectron angular sampling= Off} (the default), then
- photoelectrons inherit the direction of the incident photon.  If
-{\tt Photoelectron angular sampling= On}, then Sauter's formula
+If {\tt Photoelectron angular sampling= Off}, then
+photoelectrons inherit the direction of the incident photon.  If\\
+{\tt Photoelectron angular sampling= On} (the default), then Sauter's formula
 \cite{Sa31} is used to determine the angle of the photoelectron.  Note
 that, in most applications, we have not observed any difference between
-the ``Off" and ``On" settings of this parameters.  Also note that,
+the {\tt Off} and {\tt On} settings of this parameters.  Also note that,
 strictly speaking, Sauter's formula is only valid for K-shell photo-absorption
 and is also derived from extreme relativistic approximations.  Thus, if
 the user has a better approach, they can insert it in the
@@ -5961,126 +5990,84 @@ everywhere else) by setting
 {\tt Photoelectron angular sampling= Off in regions} together with
 the inputs {\tt PE sampling start region} and
 {\tt PE sampling stop region} to define the region ranges for which
-photoelectron angular sampling is to be turned on or off.
+photoelectron angular sampling is to be turned {\tt On} or {\tt Off}.
 
 \subsection{ {\tt Rayleigh scattering} ({\tt IRAYLR})}
 \index{Rayleigh scattering}
 \index{IRAYLR}
 \label{rayleighsect}
 
-This input determines whether Rayleigh (coherent) scattering is
-simulated or not.  Note that this replaces the {\tt IDORAY} input
+This input determines the simulation of Rayleigh (coherent) scattering.
+Its possible settings are {\tt On} (the default), {\tt Off} and {\tt Custom}.
+Note that this replaces the {\tt IDORAY} input
 in the BEAM main inputs (see section~\ref{dummyinputs}).
-If {\tt Rayleigh scattering= On}, then Rayleigh events are simulated
+If {\tt Rayleigh scattering= On} (the default), then Rayleigh events are simulated
 using the total coherent cross-sections from Storm and
 Israel\cite{SI70} and atomic form factors from Hubbell and {\O}verb{\o}\cite{HO79}.
-This data must be included in the PEGS4 material data set.
-If {\tt Rayleigh scattering= Off} (the default), then Rayleigh
-events are not simulated.  Rayleigh scattering is only recommended for
-low energy ($<$ 1 MeV) simulations.  Also, for proper simulation
-with Rayleigh events included, bound Compton scattering (see section~\ref{bcsect} above)
-should also be turned on.
 
-Rayleigh scattering can be turned on or off in selected regions
+If {\tt Rayleigh scattering= Off}, then Rayleigh events are not simulated.  The
+{\tt Custom} setting \index{custom Rayleigh form factors} allows the user to
+specify custom Rayleigh form factors for specified media.  To do this, the user
+must specify the list of media in additional input {\tt ff media names= } and
+the list of files containing custom form factors for each medium in the
+additional input {\tt ff file names= }.  For media not included in {\tt ff media
+names}, Rayleigh scattering is turned {\tt On} and uses default atomic form
+factors.
+
+Rayleigh scattering is recommended for low energy ($<$ 1 MeV) simulations.
+Also, for proper simulation of Rayleigh events, bound Compton scattering (see
+section~\ref{bcsect} above) should also be simulated.
+
+Rayleigh scattering can be turned {\tt Off} for MV applications with little to
+no effect on simulation accuracy.
+
+Note that if Rayleigh scattering is turned {\tt On} and PEGS4 photon cross
+sections are used (see section~\ref{photxsectsect} below) then the option to
+include Rayleigh data must have been turned on when generating the PEGS4 data.
+
+Rayleigh scattering can be turned {\tt On} or {\tt Off} in selected regions
 (with the opposite setting everywhere else) using
 {\tt Rayleigh scattering= On in regions} or {\tt Rayleigh scattering= Off
 in regions} and the inputs
 {\tt Relaxations start region} and {\tt Relaxations stop region} to
 define the region ranges for turning Rayleigh scattering on or off.
 
-\index{custom Rayleigh form factors}
-EGSnrc also allows the user to specify custom Rayleigh form factors for
-specified media.  To do this, the user must
-set {\tt Rayleigh scattering= custom} and then specify the list of
-PEGS4 media in additional input {\tt ff media names= } and the list of
-files containing custom form factors for each specified
-medium in the additional input {\tt ff file names= }.
-
-\subsection{ {\tt Atomic Relaxations} ({\tt IEDGFL})}
-\index{atomic relaxations}
-\index{IEDGFL}
-
-This input determines whether or not the relaxation of atoms to their
-ground state after Compton and photoelectric events is simulated.
-If {\tt Atomic Relaxations= On}, then relaxation after
-Compton and photoelectric events is simulated via the
-emission of any combination of K-, L-, M- and N-shell fluorescent photons, Auger electrons
-and Coster-Kronig electrons.  The lower energy limit for relaxation processes
-is 1 keV.  Thus, only relaxation in shells with binding energy $>$ 1 keV is
-simulated.
-If {\tt Atomic Relaxations= Off} (the default), then atomic relaxations
-are not simulated.  In this case, when there is a
-photoelectric event, EGSnrc transfers all of the photon energy to the
-photoelectron.  This is different from EGS4/BEAM, where the binding energy
-of the electron is subtracted and deposited on the spot.  Both approaches
-are approximations, but the EGSnrc approach is more accurate.
-{\tt Atomic Relaxations= On} is only recommended for low energy applications.
-Note that
-the {\tt Atomic Relaxations} option supersedes the {\tt IFLUOR} option
-in EGS4/BEAM (see section~\ref{dummyinputs}), which only simulates
-emission of
-K-shell fluorescent photons after photoelectric events.
-
-Similar to bound Compton, photoelectric angular sampling and
-Rayleigh scattering, atomic relaxations can be turned on/off in
-selected regions (with the opposite setting everywhere else) using
-{\tt Atomic Relaxations= On in regions} or
-{\tt Atomic Relaxations= Off in regions} and the inputs
-{\tt Relaxations start region} and {\tt Relaxations stop region} to define
-the region ranges for which relaxations are to be turned on/off.
-
-\subsection{ {\tt Electron impact ionization} ({\tt eii\_flag})}
-\index{electron impact ionization}
-\index{eii\_flag}
-
-This input determines what, if any, theory is used to simulate
-electron impact ionization.  The possible values are
-\index{Casnati}
-\index{Kolbenstvedt}
-\index{Gryzinski}
-``off'' (the default), ``on'', ``Casnati'', ``Kolbenstvedt'',
-and ``Gryzinski''.  When ``on'' is selected, Kawrakow's electron
-impact ionization theory\cite{Ka02b} is used.  For the other selections,
-the theory associated with the name given is used.  See
-the EGSnrc Manual\cite{KR03} for more details.
-
-Since the details of electron impact ionization are only relevant
-at keV X-Ray energies, the default ``off'' setting should be used
-in most linac simulations.
-
-\subsection{ {\tt Photon cross sections} ({\tt photon\_xsections})}
+\subsection{{\tt Photon cross sections} ({\tt photon\_xsections})}
+\label{photxsectsect}
 \index{photon cross-sections}
 \index{photon\_xsections}
 
-This selects the photon interaction cross-sections to use in
-the simulation.  Cross-sections included with the BEAMnrc/DOSXYZnrc
-distribution (and, thus, the possible settings of
-{\tt photon\_xsections} immediately after installation are):
 \index{photon cross-sections!Storm-Israel}
 \index{photon cross-sections!EPDL}
 \index{photon cross-sections!XCOM}
-``Storm-Israel'' (the default), ``epdl'' and ``xcom''.
-The Storm-Israel cross-sections are the standard PEGS4 cross-sections.
-The ``epdl'' setting will use cross-sections from
-the evaluated photon data library (EPDL) from Lawrence Livermore\cite{Cu90}.
-The ``xcom'' setting will use the XCOM
-photon cross-sections from Burger and Hubbell\cite{BH87}.  Note that
-the EGSnrc transport parameter input routine is coded in such a way that,
-if you are editing the {\tt .egsinp} file directly instead of using
-the BEAMnrc GUI, the default Storm-Israel cross-sections can only be
-specified by leaving out the {\tt Photon cross sections} input line
-altogether.  This is taken care of automatically if you are using the
-GUI to set this parameter.
+This input determines the photon cross section data used. Current possible
+settings (and the data source used) are: {\tt xcom} (XCOM), {\tt si}
+(Storm-Israel), {\tt epdl} (Evaluated Photon Data Library), {\tt pegs4} (PEGS4),
+{\tt mcdf-xcom}, and {\tt mcdf-epdl}.  The current default is {\tt xcom}.
+However, this can be changed using the {\tt \$XDATA\_DEFAULT} macro in {\tt
+\$HEN\_HOUSE/src/egsnrc.macros}. Note that if {\tt PEGS4} cross sections are
+either supplied by a PEGS4 data file or are calculated on the fly in pegsless
+mode.
 
-\index{photon cross-sections!customized}
-You can also use your own customized photon cross-section data.  To do this,
-you must create the files {\tt x\_pair.data}, {\tt x\_photo.data}, {\tt x\_rayleigh.data} and
-{\tt x\_triplet.data} (where ``x'' is the name of your cross-section data)
-which contain cross-sections for  pair production, photoelectric events, rayleigh scattering and triplet production, respectively.  These files must be in
-your {\tt \$HEN\_HOUSE/data} directory.  Once these files are in place, then
-``x'' will appear in the pull-down menu in the GUI where photon
-cross-sections are specified.  Alternatively, if you are editing the
-{\tt .egsinp} file directly, you can enter the line:
+\index{Sabbatucci \& Salvat!renormalized photoelectric cross sections} The
+inputs, {\tt mcdf-xcom} and {\tt mcdf-epdl}, instruct the code to use Sabbatucci
+\& Salvat's renormalized cross sections when simulating photoelectric events,
+with either the XCOM ({\tt mcdf-xcom}) or Evaluated Photon Data Library ({\tt
+mcdf-epdl}) used for all other cross sections.  The more accurate modeling of
+photoelectric events allowed by the the Sabbatucci \& Salvat cross sections does
+incur a CPU time penalty (up to 6\% for a 30 kV beam) and so this option is only
+of interest for low energy simulations. Use of these renormalized cross sections
+is necessary for agreement with PENELOPE results in ICRU90\cite{ICRU90}.
+
+If the user has their own photon cross section data, {\tt x}, then this can be
+used as an input for {\tt Photon cross sections} provided that the files: {\tt
+x\_photo.data} (photoelectric cross sections), {\tt x\_pair.data} (pair
+production event cross sections), {\tt x\_triplet.data} (triplet event cross
+sections) and {\tt x\_rayleigh.data} (rayleigh cross sections) exist in the {\tt
+\$HEN\_HOUSE/data} directory. Once these files are in place, then ``x'' will
+appear in the pull-down menu in the GUI where photon cross-sections are
+specified.  Alternatively, if you are editing the {\tt .egsinp} file directly,
+you can enter the line:
 \begin{verbatim}
 Photon cross sections= x
 \end{verbatim}
@@ -6090,11 +6077,136 @@ inside the block of EGSnrc transport parameter inputs.
 \index{Photon cross-sections output}
 \index{xsec\_out}
 
-The input {\tt Photon cross-sections output} can be set to {\tt On} to
-output the file\\
- {\tt \$EGS\_HOME/BEAM\_accelname/inputfile.xsections} which
-contains the photon cross section data used in the simulation.  Default
-is {\tt Off}.
+The input {\tt Photon cross-sections output} can be set to {\tt Off} (the
+default) or {\tt On}. If set to {\tt On}, then the simulation outputs the file
+{\tt \$EGS\_HOME/BEAM\_accelname/inputfile.xsections} which contains the photon
+cross section data used in the simulation.
+
+\subsection{ {\tt Atomic Relaxations} ({\tt IEDGFL})}
+\index{atomic relaxations}
+\index{IEDGFL}
+
+This input determines how the relaxation of atoms to their ground state after
+Compton, photoelectric and electron impact ionization events is simulated.
+Possible settings are {\tt Off}, {\tt On}, {\tt eadl} (the default) and {\tt
+simple}. The {\tt On} option defaults to {\tt eadl}.
+
+If set to {\tt Off} then relaxations are not simulated.  In this case, when
+there is a photoelectric event, EGSnrc transfers all of the photon energy to the
+photoelectron.  This is different from EGS4/BEAM, where the binding energy of
+the electron is subtracted and deposited on the spot.  Both approaches are
+approximations, but the EGSnrc approach is more accurate.
+
+If set to {\tt simple} then a simplified relaxation scheme based on the
+transition probabilities in the Evaluated Atomic Data Library (EADL) is used.
+Relaxation after Compton, electron impact ionization and photoelectric events is
+simulated via the emission of K-, L-, M- and N-shell fluorescent photons, Auger
+electrons and Coster-Kronig electrons.  In this option, the EADL is also used as
+a ``one size fits all'' library of binding energies, independent of the photon
+cross sections used (see section~\ref{photxsectsect} above).  This can result in
+a mismatch between the energies of the fluorescent photons emitted and the
+binding energies used for interactions.  Note that this was the only relaxation
+scheme implemented until the 2018 release of EGSnrc/BEAMnrc.
+
+If set to {\tt eadl} then a more detailed relaxation scheme, also based on the
+EADL transition probabilities, is used.  This differs from the {\tt simple}
+relaxation scheme in that: 1) initial $\langle$M$\rangle$ shell vacancies are
+not considered; 2) for final vacancies, exact M- and N-shells replace
+$\langle$M$\rangle$ and $\langle$N$\rangle$.  Moreover, the {\tt eadl}
+relaxation algorithm uses binding energies consistent with the photon cross
+sections selected (see section~\ref{photxsectsect} above), eliminating the
+mismatch between the energies of fluorescent photons and these binding energies.
+If the user has opted to use Sabbatucci \& Salvat's renormalized photoelectric
+cross sections ({\tt Photon cross sections = mcdf-xcom} or {\tt mcdf-epdl}--see
+section~\ref{photxsectsect} above)--then {\tt simple} relaxation cannot be used,
+and the code will automatically default to {\tt eadl} relaxation.
+
+The lower energy limit for relaxation processes
+is 1 keV.  Thus, only relaxation in shells with binding energy $>$ 1 keV is
+simulated.
+
+Simulation of atomic relaxations is essential for accurate transport in low
+energy (kV) applications.  However, it can be turned {\tt Off} for MV
+applications to reduce simulation time at no significant reduction in accuracy.
+
+Note that
+the {\tt Atomic Relaxations} option supersedes the {\tt IFLUOR} option
+in EGS4/BEAM (see section~\ref{dummyinputs}), which only simulates
+emission of
+K-shell fluorescent photons after photoelectric events.
+
+Atomic relaxations can be turned {\tt On}/{\tt Off} in
+selected regions (with the opposite setting everywhere else) using
+{\tt Atomic Relaxations= On in regions} or
+{\tt Atomic Relaxations= Off in regions} and the inputs
+{\tt Relaxations start region} and {\tt Relaxations stop region} to define
+the region ranges for which relaxations are to be turned {\tt On}/{\tt Off}.
+Since the {\tt On} setting defaults to {\tt eadl}, the detailed {\tt eadl}
+relaxation algorithm will be used in regions where atomic relaxations are set
+{\tt On}.
+
+\subsection{ {\tt Electron impact ionization} ({\tt eii\_flag})}
+\index{electron impact ionization}
+\index{eii\_flag}
+
+This input determines the cross sections used to simulate electron impact
+ionization (EII). The possible values of {\tt Electron impact ionization} are:
+{\tt Off} (the default), {\tt On}, {\tt ik}, {\tt casnati}, {\tt gryzinski},
+{\tt kolbenstvedt}, and {\tt penelope}.
+\index{Casnati}
+\index{Kolbenstvedt}
+\index{Gryzinski}
+\index{Penelope}
+
+If set to {\tt Off} EII is not simulated. If set to {\tt On}, then it defaults
+to {\tt ik}, and cross sections from Kawrakow's electron impact ionization
+theory\cite{Ka02b} are used.  The selections, {\tt casnati}, {\tt gryzinski},
+and {\tt kolbenstvedt}, use EII cross sections derived from the theories
+associated with the respective names, and {\tt penelope} uses the cross sections
+identical to those used to simulate EII in the Penelope code. See the EGSnrc
+Manual\cite{KR03} for more details.
+
+EII cross section data is stored in the files \verb+$HEN_HOUSE/data/eii_x.data+,
+where \verb+x+ specifies the theory/source of the data and is identical to the
+{\tt Electron impact ionization} input (Note: inputs are case sensitive).  Thus,
+it is possible for the user to use their own EII cross section data provided it
+is in the supplied in a file having the same format as those already included
+with the distribution.
+
+EII is only of interest for low energy X-ray applications.
+
+\subsection{ {\tt Triplet production} ({\tt itriplet})}
+\index{triplet production}
+\index{itriplet}
+
+This input turns on/off the simulation of triplet production. Possible values of
+{\tt Triplet production} are {\tt Off} (the default) and {\tt On}.  If set to
+{\tt On} then Borsellino's first Born approximation\cite{Mo69} is used to sample
+triplet events based on the triplet cross section data in
+\verb+$HEN_HOUSE/data/triplet.data+.
+
+\subsection{ {\tt Photonuclear attenuation} ({\tt iphotonucr}) and\\
+{\tt Photonuclear cross sections} ({\tt photonuc\_xsections})}
+\index{photonuclear attenuation}
+\index{photonuclear cross sections}
+
+First implemented in EGSnrc 2012\cite{AR12}, inclusion of the photonuclear
+effect in simulations been found to have a significant effect on transmitted
+photon spectra in the MV energy range.  Though it is not necessary for most
+applications, it should be included in the high-accuracy simulations used in
+standards work.
+
+The input, {\tt Photonuclear attenuation}, determines whether the photonuclear
+effect is included in the simulation.  Possible settings are {\tt Off} (the
+default) and {\tt On}.  If set to {\tt On} then, if present, the input {\tt
+Photonuclear cross sections} specifies the cross sections used.
+
+Cross sections must exist in the file \verb+$HEN_HOUSE/data/x_photonuc.data+,
+where \verb+x+ is the name of the cross section database and corresponds to the
+input for {\tt Photonuclear cross sections}.  The distribution includes the
+default photonuclear cross sections,\\
+\verb+iaea_photonuc.data+, which are used in the absence of any input for {\tt
+Photonuclear cross sections}.
 
 \section{Custom user inputs}
 \label{custom_inputs}
@@ -6137,9 +6249,9 @@ their custom input parameters.
 
 A BEAMnrc simulation can be split into smaller jobs which can then be run
 on different processors in parallel to reduce the elapsed time required
-for a simulation.  Parallel processing requires that you be running
-in Unix/Linux and that you have a network queuing system such as PBS or
-NQS.
+for a simulation.  In general, parallel processing requires that you be running
+on a system that supports a job queuing utility, such as {\tt at}, or, if
+sending jobs to multiple cores over a network, PBS or NQS.
 
 \index{pprocess}
 \index{pprocess!limitations}
@@ -6151,10 +6263,10 @@ seeds to a different values in each input file and the phase space
 source inputs, {\tt IPARALLEL} and {\tt PARNUM}).  This method
 of parallel processing had a major limitation, though, in that each
 job consisted of the same number of histories, making the total
-simulation time dependent on the slowest CPU.
+simulation time dependent on the slowest computing core.
 
 In the current version of BEAMnrc, parallel processing
-is accomplished much more efficiently using a built-in
+is accomplished more efficiently using a built-in
 parallel processing functionality.
 
 \index{exb}
@@ -6163,10 +6275,18 @@ To submit a parallel job, use the batch submission command,
 {\tt exb} (discussed in
 detail in section~\ref{batchsect}).  The command syntax for a parallel job is:
 \begin{verbatim}
-exb BEAM_myaccel inputfile pegsdata [short|medium|long] [batch=batch_system] p=N
+exb BEAM_myaccel inputfile pegsdata [short|medium|long] [batch=batch_system] ...
+       ... [start=first_job] p=N (or stop=last_job) [fresh=yes/no]
 \end{verbatim}
-where {\tt N} is the number of parallel jobs to submit (see
-Section~\ref{batchsect} for a detailed discussion of the other inputs).
+
+{\tt first\_job} is the number of the first parallel job minus 1 ({\tt
+first\_job} defaults to 0), {\tt N} is the number of parallel jobs, and {\tt
+last\_job} is the number of the last job (only used if {\tt N} is not input).
+Note that the numbering convention of {\tt first\_job} is historical and may be
+changed in future releases. The input {\tt fresh} can be used to specify whether
+this is an independent batch of parallel jobs ({\tt yes}--the default) or
+whether they are to be added to parallel jobs currently running ({\tt no}). The
+other batch inputs above are covered in more detail in section~\ref{batchsect}.
 
 Once this command is entered, the script
 \index{exb}
@@ -6175,35 +6295,51 @@ Once this command is entered, the script
 aliased) enters a loop which submits BEAM\_myaccel to the batch queue
 {\tt N} times.  Each submission has the form:
 \begin{verbatim}
-BEAM_myaccel -i inputfile -p pegsdata -P n_parallel -j i_parallel
+BEAM_myaccel -i inputfile -p pegsdata -P n_parallel -j i_parallel [-f first_job+1]
 \end{verbatim}
 \index{i\_parallel}
 \index{n\_parallel}
-where {\tt n\_parallel}={\tt N} and {\tt i\_parallel} takes on values 1,2,...,
-{\tt n\_parallel}, depending on which job is being submitted.
+where {\tt n\_parallel}={\tt N}, {\tt i\_parallel} takes on values 1,2,...,
+{\tt n\_parallel}, depending on which job is being submitted, and
+{\tt first\_job}+1 is the number of the first parallel job.  The last argument
+is omitted if the batch submission script is run with {\tt fresh=no}.
 For each parallel job, BEAMnrc will create a temporary working directory
 (see section~\ref{twdsect} for more on
 temporary working directories), and the output files from the
 {\tt i\_parallel}th run will have the naming scheme
-{\tt inputfile\_w[i\_parallel].egslog}, {\tt inputfile\_w[i\_parallel].egslst},
-{\tt inputfile\_w[i\_parallel].egsphsp1}, \\
+{\tt inputfile\_w[i\_parallel].egslog}, {\tt inputfile\_w[i\_parallel].egslst},\\
+{\tt inputfile\_w[i\_parallel].egsphsp1},
 {\tt inputfile\_w[i\_parallel].egsdat},
 etc.  Note that {\tt N} different input files are not created, and that all
 parallel runs make use of the original input file.
 
 \index{.lock file}
 \index{job control file}
-On submission of the first job ({\tt i\_parallel}=1) BEAMnrc will create
+The first job submitted ({\tt first\_job}+1) creates
 a file, {\tt inputfile.lock}, in the {\tt BEAM\_myaccel} directory.  The
 {\tt .lock} file, or job control file, is accessed and updated by all parallel
-jobs and contains
+jobs and contains:
 \index{n\_left}
 \index{n\_job}
-the number of histories remaining to be run, {\tt n\_left}, and the total
-number of jobs running, {\tt n\_job}, among other quantities.
+\index{n\_tot}
+\begin{itemize}
+\item {\tt n\_left}: The number of histories remaining to be run after the current
+job is submitted.
+\item {\tt n\_tot}: The total number of histories already completed
+\item {\tt n\_job}: The number of jobs currently running
+\item {\tt sum} and {\tt sum2}: Scored quantity of interest and (quantity of
+interest)$^2$ from all previous runs ({\em i.e.}, runs completed before
+submitting the current parallel run) \item {\tt res} and {\tt dres}: scored
+quantity of interest and relative uncertainty on quantity of interest (\%) after
+the completion of {\tt n\_tot} histories in the current parallel run plus all
+previous runs.
+\end{itemize}
 
-Before
-beginning a run, a parallel job opens the {\tt .lock} file and
+Note that the {\tt .lock} file created by BEAMnrc during parallel runs currently
+does not keep track of any quantity of interest, and
+{\tt res}=0.0 and {\tt dres}=99.9\%.
+
+Before running any history, a parallel job opens the {\tt .lock} file and
 reads {\tt n\_left} (the file cannot be read by more than one job at
 a time).  If {\tt n\_left}$>$0, then there are still histories
 to run, and the job begins execution.
@@ -6226,8 +6362,8 @@ back to the beginning of the simulation, read the contents of the
 chunk of histories needs to be run.
 
 Doing parallel simulations in chunks like this prevents jobs that are
-running on slower CPU's from tying up large portions of the simulation
-and, hence, dominating the total elapsed time required.
+running on slower cores from tying up large portions of the simulation
+and, hence, determining the total elapsed time required.
 
 \index{lock file} \index{.lock file}
 If, on opening the {\tt .lock} file, a parallel job finds that
@@ -6238,7 +6374,7 @@ files out of its temporary working directory, deletes this directory,
 and decrements {\tt n\_job}.  If, after decrementing {\tt n\_job},
 {\tt n\_job}=0, then this is the last job to stop running, and it
 \index{egs\_combine\_runs}
-automatically calls the EGSnrcMP subroutine {\tt egs\_combine\_runs}
+automatically calls the subroutine {\tt egs\_combine\_runs}
 to combine the results from all parallel jobs
 (see section~\ref{recombinesect} below).
 
@@ -6308,7 +6444,7 @@ is restarted at its first particle
 \index{combining results\\ from parallel runs}
 
 The last parallel job to finish running automatically combines
-the results of all parallel runs by calling the EGSnrcMP subroutine
+the results of all parallel runs by calling the EGSnrc subroutine
 \index{egs\_combine\_runs}
 {\tt egs\_combine\_runs}.  This subroutine loops through
 {\tt i\_parallel}=1,...,{\tt n\_parallel} and, for each value
@@ -6350,7 +6486,7 @@ Parallel runs can be combined manually by re-running your accelerator
 with the input variable {\tt IRESTART}=4 (in the GUI, this is equivalent
 to setting the Run option to ``analyze parallel jobs") after all parallel
 jobs have finished.  Use of {\tt IRESTART}=4 is generally not necessary
-now that the last job automatically combines parallel results, however,
+since the last job automatically combines parallel results, however,
 it may be useful if, for some reason, all of the {\tt .egsdat} files were
 not moved out of their temporary working directories or if you wish to
 add more {\tt .egsdat} files from a separate group of parallel runs.
@@ -6384,12 +6520,12 @@ where {\tt inputfile} is the name of the original input file
 for the concatenated phase space data (a {\tt .egsphsp[iscore]} extension
 is added automatically), {\tt ipar} is the number of parallel jobs being
 added, {\tt istart} is the job number at which adding begins
-(ie the first value of {\tt i\_parallel})--defaults to 1,
+(ie the first value of {\tt i\_parallel}--defaults to 1),
 {\tt iscore} is the scoring plane number
 for which you are combining phase space files (\ie\ are
-you adding {\tt .egsphsp1}, {\tt .egsphsp2} or {\tt .egsphsp3} files?)--defaults
-to 1, and {\tt i\_iaea} is set to 1 if you are adding IAEA-format phase
-space files--default is 0.
+you adding {\tt .egsphsp1}, {\tt .egsphsp2} or {\tt .egsphsp3} files?--defaults
+to 1), and {\tt i\_iaea} is set to 1 if you are adding IAEA-format phase
+space files (default is 0 for EGSnrc-format phase space files).
 
 {\tt addphsp} then concatenates the phase space files
 {\tt inputfile\_w[istart].egsphsp[iscore]},
@@ -6862,8 +6998,6 @@ outer boundary of this CM is a square of half-width {\tt RMAX\_CM}.}
 \end{center}
 \end{figure}
 
-\clearpage
-
 The input format for SLABS, and an example of the input file are given as
 follows.
 
@@ -6882,7 +7016,7 @@ follows.
 %}
 %\markboth{CONS3R Users Manual}{~~~~last edited 2004/11/19 20:21:18
 %~~~~printed \today}
-
+\clearpage
 %\vspace*{1.5cm}
 \subsubsection{CONS3R}
 \renewcommand{\rightmark}{CONS3R CM}
@@ -6979,8 +7113,6 @@ of cones, the following restrictions apply: {\tt RMAX(i)} $\geq$ {\tt RMIN(i)}, 
 \end{center}
 \end{figure}
 
-\clearpage
-
 The input format for CONESTAK, and an example of input file are given as follows.
 
 \begin{small}
@@ -7026,8 +7158,6 @@ medium is required for the region between the outermost cone and
 \end{figure}
 
 
-\clearpage
-
 \begin{small}
 \index{FLATFILT!inputs}
 \input{./inputformats/FLATFILT.inp}
@@ -7040,6 +7170,8 @@ medium is required for the region between the outermost cone and
 %}
 %\markboth{CHAMBER Users Manual}{~~~~last edited 2004/11/19 20:21:18
 %~~~~printed \today}
+
+\clearpage
 
 \subsubsection{CHAMBER}
 \label{chamber_cm}
@@ -7440,6 +7572,8 @@ The input format for CIRCAPP, and an example of input file are given as follows.
 %\markboth{PYRAMIDS Users Manual}{~~~~last edited 2004/11/19 20:21:18
 %~~~~printed \today}
 
+\clearpage
+
 \subsubsection{PYRAMIDS}
 \renewcommand{\rightmark}{PYRAMIDS CM}
 \index{PYRAMIDS}
@@ -7455,13 +7589,11 @@ PYRAMIDS is useful for modelling rectangular collimators and beam blocks.
 This CM has a square outer boundary centered on
 the beam axis.
 
-\newpage
-
-\begin{figure}[tp]
+\begin{figure}[htp]
 \htmlimage{scale=1.5}
 \leavevmode
 \hfill
-\includegraphics[height=10.5cm]{figures/pyramidsd}
+\includegraphics[height=10cm]{figures/pyramidsd}
 \vspace{0.1cm}
 \includegraphics[height=6.0cm]{figures/pyramidstop}
 \caption[PYRAMIDS CM geometry]
@@ -7498,7 +7630,7 @@ The input format for PYRAMIDS and an example input are given below.
 
 %\setlength{\textheight}{10.1in}
 
-%\clearpage
+\clearpage
 
 %\markboth{BLOCK Users Manual}{~~~~last edited 2004/11/19 20:21:18
 %~~~~printed \today}
@@ -7530,8 +7662,7 @@ BLOCK in BEAM99 (see {\tt CHANGES\_from\_BEAM99.for.BEAM00}).  This
 is because John Antolak of the M.D. Anderson Cancer Center found and
 corrected some serious errors in this CM.
 
-\newpage
-\begin{figure}[tp]
+\begin{figure}[htp]
 \begin{center}
 \leavevmode
 \begin{latexonly}
@@ -7577,7 +7708,7 @@ The input format for BLOCK and an example input are given below.
 
 %\setlength{\textheight}{10.0in}
 
-%\clearpage
+\clearpage
 
 %\markboth{MLC Users Manual}{~~~~last edited 2004/11/19 20:21:18
 %~~~~printed \today}
@@ -7651,7 +7782,7 @@ The input format for MLC and an example input are given below.
 
 %\setlength{\textheight}{10.0in}
 
-%\clearpage
+\clearpage
 
 %\markboth{MLCQ Users Manual}{~~~~last edited 2004/11/19 20:21:18
 %~~~~printed \today}
@@ -7714,7 +7845,7 @@ The input format for MLCQ and an example input are given below.
 
 %\setlength{\textheight}{10.0in}
 
-%\clearpage
+\clearpage
 
 %\markboth{VARMLC Users Manual}{~~~~last edited 2004/11/19 20:21:18
 %~~~~printed \today}
@@ -8397,9 +8528,9 @@ of adjacent leaves all having the same type.  Since HALF TARGET/HALF ISOCENTER l
 QUARTER TARGET/QUARTER ISOCENTER leaves must always occur in pairs, there are really
 only three types to choose from.  This also means there must be an even number of
 HALF or QUARTER TARGET/ISOCENTER leaves.  Also note that, even though the user
-must specify cross-sections for all leaf types, they need not use all types
-in a given MLC simulation.  Thus, there may be no FULL leaves, HALF TARGET/ISOCENTER pairs,
-or QUARTER TARGET/ISOCENTER pairs in the simulation.
+must specify cross-sections for all leaf types, they need not use all types in a
+given MLC simulation.  Thus, there may be no FULL leaves, HALF TARGET/ISOCENTER
+pairs, or QUARTER TARGET/ISOCENTER pairs in the simulation.
 
 Similar to DYNVMLC and SYNCVMLC, leaf ends can be straight, focused ({\tt ENDTYPE}=1) or cylindrical
 ({\tt ENDTYPE}=0).  For straight, focused ends, the user must specify the Z-position of the
@@ -8745,6 +8876,8 @@ The input format for ARCCHM and a sample input are given below.
 %\markboth{BEAMnrc Users Manual}{~~~~~~last edited 2004/11/19 20:21:18
 %~~~~printed \today}
 
+\clearpage
+
 \renewcommand{\rightmark}{Cross-section data-PEGS4}
 \section{Cross-Section Data -- PEGS4}
 \label{CSDP}
@@ -8833,15 +8966,12 @@ directory it is being run from.
 An much easier way to create PEGS4 data is to run PEGS4 from
 the {\tt egs\_gui} (invoked simply by typing ``{\tt egs\_gui}'').  A screen
 shot of the PEGS4 option in the {\tt egs\_gui} is shown in
-Figure~\ref{fig_pegs4_screen}.  For more information on {\tt egs\_gui}
-see the EGSnrcMP Manual\cite{Ka03}.
+Figure~\ref{fig_pegs4_screen}.
 
 Note that {\tt egs\_gui} offers an option to append newly-created
 PEGS4 data to an existing {\tt .pegs4dat} file.
 
-\clearpage
-
-\begin{figure}[ht]
+\begin{figure}[htb]
    \htmlimage{scale=2.5}
    \leavevmode
    \begin{center}
@@ -8914,6 +9044,7 @@ references~\cite{Ro84,RB90}.}
 \end{figure}
 
 \subsection{Pegsless Mode}
+\label{pegsless_sect}
 \index{pegsless mode}
 As of 2013, the user has the option of running BEAMnrc (and other EGSnrc user codes) in pegsless
 mode, thus obviating the requirement for a-priori calculation of cross-section data and generation
@@ -9103,7 +9234,7 @@ For up-to-date installation instructions, see the online documentation
 available on the github page:
 \htmladdnormallink{{\tt https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview}}{https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview}
 
-In order to install and run EGSnrcMP and OMEGA/BEAM, your system must have:
+In order to install and run EGSnrc and BEAMnrc, your system must have:
 \index{system requirements}
 \begin{enumerate}
 \index{Fortran compiler}
@@ -9135,8 +9266,8 @@ Tcl/Tk.
 \index{Qt}
 \index{Qt!how to get it}
 \item The Qt4 development tools. This is necessary for
-compiling the GUIs for the EGSnrcMP user codes and is, thus,
-not strictly necessary for the OMEGA/BEAM codes or if you can use the
+compiling the GUIs for the EGSnrc user codes and is, thus,
+not strictly necessary for BEAMnrc codes or if you can use the
 pre-compiled versions provided online. Pre-compiled versions of
 the Qt GUIs are available on the EGSnrc release page.
 Note that many current Linux distributions
@@ -9210,11 +9341,11 @@ Linux distributions and there is a Windows version called QtGrace.
 % the distribution website before installation.   Note that ``Method 1'' and
 % ``Method 2'' for
 % EGSnrc installation are
-% not available for the Mac OSX.
+% not available for the MacOS.
 %
 % The third method, ``Method 3'', of installing EGSnrcMP is for
 % \index{EGSnrcMP!installation script}
-% Unix/Linux systems and Mac OSX systems and uses the installation script
+% Unix/Linux systems and MacOS systems and uses the installation script
 % {\tt install\_egs}.  In addition to the script, you must also download
 % \index{EGSnrcMP!.tar files}
 % the {\tt tar} files (which may be in compressed format)
@@ -9230,7 +9361,7 @@ Linux distributions and there is a Windows version called QtGrace.
 % directory before running the {\tt install\_egs} script.  This method
 % of installation may be necessary if your Linux/Unix system cannot
 % run the installation wizard and is currently the only way of
-% installing EGSnrcMP on Mac OSX.  Note that when you use this
+% installing EGSnrcMP on MacOS.  Note that when you use this
 % method of installation, you must
 % run the script {\tt \$HEN\_HOUSE/scripts/finalize\_egs\_foruser}
 % at the end ({\tt install\_egs} gives you an option to do this
@@ -9250,7 +9381,7 @@ Linux distributions and there is a Windows version called QtGrace.
 % also be asked to define the Fortran compiler that
 % you want to use (defaults are suggested if found on your system).
 % \index{installation!C compiler}.
-% On Unix/Linux/Mac OSX systems, if you wish to use functionality that requires a C compiler such
+% On Unix/Linux/MacOS systems, if you wish to use functionality that requires a C compiler such
 % as the built-in parallel processing functionality
 % (see Section~\ref{parallelcalc}) or BEAMnrc shared
 % library sources (see Section~\ref{sharedlibsect}),
@@ -9286,7 +9417,7 @@ Linux distributions and there is a Windows version called QtGrace.
 % EGSnrc C++ class library, egspp (see the egspp Manual\cite{Ka05a} for more
 % details).
 %
-% Note that, on Unix/Linux/Mac OSX machines, if you supply a working C compiler
+% Note that, on Unix/Linux/MacOS machines, if you supply a working C compiler
 % during EGSnrcMP installation
 % and the C routines for built-in parallel processing and/or BEAM shared
 % library sources are compiled successfully, then the installation automatically
@@ -9308,7 +9439,7 @@ Linux distributions and there is a Windows version called QtGrace.
 % {\tt config} is the prefix you have chosen for
 % the {\tt .conf} file).  It is recommended that
 % you do this to avoid having to add them manually.  When installing
-% on Unix/Linux/Mac OSX, on the other hand, you do not have the option to set
+% on Unix/Linux/MacOS, on the other hand, you do not have the option to set
 % these variables automatically.  Instead, you will be directed to
 % add the statements:
 % \index{.cshrc}
@@ -9344,7 +9475,7 @@ Linux distributions and there is a Windows version called QtGrace.
 %
 % If you wish to use a second compiler or operating system, you can either
 % run the installation wizard (self-extracting or stand-alone) and
-% select the ``Configure existing EGSnrc'' option or, if on a Unix/Linux/Mac OSX
+% select the ``Configure existing EGSnrc'' option or, if on a Unix/Linux/MacOS
 % system, you can run the
 % script\\
 %  {\tt \$HEN\_HOUSE/scripts/configure} from the {\tt
@@ -9388,7 +9519,7 @@ Linux distributions and there is a Windows version called QtGrace.
 % Similar to EGSnrcMP, there are 3 methods for installing the OMEGA/BEAM system:
 % using the self-extracting installation wizard (Linux/Unix and Windows),
 % using the installation wizard with files downloaded separately
-% (Linux/Unix and Windows) and using an installation script (Linux/Unix and Mac OSX).
+% (Linux/Unix and Windows) and using an installation script (Linux/Unix and MacOS).
 %
 % \subsubsection{Using the Self-extracting Wizard}
 % \index{installing!with self-extracting wizard}
@@ -9485,7 +9616,7 @@ Linux distributions and there is a Windows version called QtGrace.
 % If setting up on Windows, then {\tt \$OMEGA\_HOME}
 % will automatically be set (to \\
 % {\tt /full\_directory\_path\_to\_\$HEN\_HOUSE/omega}).
-% If set up is on  Unix/Linux/Mac OSX, {\tt \$OMEGA\_HOME} will not automatically be
+% If set up is on  Unix/Linux/MacOS, {\tt \$OMEGA\_HOME} will not automatically be
 % set, but you will be instructed (in the installation wizard display window)
 % to add the statement:
 % \index{beamnrc\_cshrc\_additions}
@@ -10108,7 +10239,8 @@ distributions can be summarised as follows:
 
 \begin{itemize}
 
-\item Ported the entire set of codes to work with the EGSnrcMP system.
+\item Ported the entire set of codes to work with the new multi-platform
+EGSnrc system (EGSnrcMP).
 
 \item Electron impact ionization added to the EGSnrc system.
 
@@ -10362,4 +10494,3 @@ explicitly mention the contributions of many others.
 \typeout{ add page throws if needed                                  }
 \typeout{************************************************************}
 \end{document}
-

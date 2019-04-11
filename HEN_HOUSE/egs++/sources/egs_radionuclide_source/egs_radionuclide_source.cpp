@@ -40,10 +40,12 @@
 #include "egs_application.h"
 
 EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
-        EGS_ObjectFactory *f) : EGS_BaseSource(input,f), shape(0),
+        EGS_ObjectFactory *f) : EGS_BaseSource(input,f),
+    sourceType(""), shape(0),
     geom(0), regions(0), nrs(0), min_theta(0), max_theta(M_PI),
-    min_phi(0), max_phi(2*M_PI), gc(IncludeAll), q_allowed(0), decays(0),
-    activity(0) {
+    min_phi(0), max_phi(2*M_PI), gc(IncludeAll),
+    source_shape(0), target_shape(0), ctry(0), dist(1),
+    q_allowed(0), decays(0), activity(1) {
 
     int err;
     vector<int> tmp_q;
@@ -77,14 +79,17 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     disintegrationOccurred = true;
     ishower = -1;
     time = 0;
+    lastDisintTime = 0;
     while (input->getInputItem("spectrum")) {
 
         egsInformation("**********************************************\n");
 
-        decays.push_back(EGS_BaseSpectrum::createSpectrum(input));
+        decays.push_back(static_cast<EGS_RadionuclideSpectrum *>(EGS_BaseSpectrum::createSpectrum(input)));
 
         // If spectrum creation failed skip to the next spectrum block
-        if (!decays[i]) {
+        // We check the getShowerIndex function to ensure this cast to a
+        // radionuclide spectrum succeeded. Other spectra will fail!
+        if (!decays[i] || decays[i]->getShowerIndex() != -1) {
             decays.pop_back();
             continue;
         }
@@ -99,7 +104,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
         ++i;
     }
     if (decays.size() < 1) {
-        egsWarning("EGS_RadionuclideSource: Error: No spectrum was defined\n");
+        egsWarning("\nEGS_RadionuclideSource: Error: No spectrum of type EGS_RadionuclideSpectrum was defined.\n\n");
         return;
     }
 
@@ -128,84 +133,179 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     egsInformation("EGS_RadionuclideSource: Activity [disintegrations/s]: %e\n",
                    activity);
 
+    // Get the experiment time
+    // This puts a limit on emission times - particles beyond the
+    // limit are discarded
+    err = input->getInput("experiment time", experimentTime);
+    if (err) {
+        experimentTime = 0.;
+    }
+
+    if (experimentTime > 0.) {
+        egsInformation("EGS_RadionuclideSource: Experiment time [s]: %e\n",
+                       experimentTime);
+    }
+    else {
+        egsInformation("EGS_RadionuclideSource: Experiment time will not limit the simulation.\n");
+    }
+
     // Get the active application
     app = EGS_Application::activeApplication();
 
-    // Create the shape for source emissions
-    vector<EGS_Float> pos;
-    EGS_Input *ishape = input->takeInputItem("shape");
-    if (ishape) {
-        shape = EGS_BaseShape::createShape(ishape);
-        delete ishape;
-    }
-    if (!shape) {
-        string sname;
-        err = input->getInput("shape name",sname);
-        if (err)
-            egsWarning("EGS_RadionuclideSource: missing/wrong inline shape "
-                       "definition and missing wrong 'shape name' input\n");
-        else {
-            shape = EGS_BaseShape::getShape(sname);
-            if (!shape) egsWarning("EGS_RadionuclideSource: a shape named %s"
-                                       " does not exist\n");
+    // ==========================
+    // Source type = isotropic
+    // ==========================
+
+    err = input->getInput("source type",sourceType);
+    if (err || input->compare(sourceType,"isotropic")) {
+        sourceType = "isotropic";
+
+        egsInformation("EGS_RadionuclideSource: Source type: %s\n",sourceType.c_str());
+
+        // Create the shape for source emissions
+        vector<EGS_Float> pos;
+        EGS_Input *ishape = input->takeInputItem("shape");
+        if (ishape) {
+            shape = EGS_BaseShape::createShape(ishape);
+            delete ishape;
         }
-    }
-    string geom_name;
-    err = input->getInput("geometry",geom_name);
-    if (!err) {
-        geom = EGS_BaseGeometry::getGeometry(geom_name);
-        if (!geom) egsWarning("EGS_RadionuclideSource: no geometry named %s\n",
-                                  geom_name.c_str());
-        else {
-            vector<string> reg_options;
-            reg_options.push_back("IncludeAll");
-            reg_options.push_back("ExcludeAll");
-            reg_options.push_back("IncludeSelected");
-            reg_options.push_back("ExcludeSelected");
-            gc = (GeometryConfinement) input->getInput("region "
-                    "selection",reg_options,0);
-            if (gc == IncludeSelected || gc == ExcludeSelected) {
-                vector<int> regs;
-                err = input->getInput("selected regions",regs);
-                if (err || regs.size() < 1) {
-                    egsWarning("EGS_RadionuclideSource: region selection %d "
-                               "used  but no 'selected regions' input "
-                               "found\n",gc);
-                    gc = gc == IncludeSelected ? IncludeAll : ExcludeAll;
-                    egsWarning(" using %d\n",gc);
-                }
-                nrs = regs.size();
-                regions = new int [nrs];
-                for (int j=0; j<nrs; j++) {
-                    regions[j] = regs[j];
+        if (!shape) {
+            string sname;
+            err = input->getInput("shape name",sname);
+            if (err)
+                egsWarning("EGS_RadionuclideSource: missing/wrong inline shape "
+                           "definition and missing wrong 'shape name' input\n");
+            else {
+                shape = EGS_BaseShape::getShape(sname);
+                if (!shape) egsWarning("EGS_RadionuclideSource: a shape named %s"
+                                           " does not exist\n");
+            }
+        }
+        string geom_name;
+        err = input->getInput("geometry",geom_name);
+        if (!err) {
+            geom = EGS_BaseGeometry::getGeometry(geom_name);
+            if (!geom) egsWarning("EGS_RadionuclideSource: no geometry named %s\n",
+                                      geom_name.c_str());
+            else {
+                vector<string> reg_options;
+                reg_options.push_back("IncludeAll");
+                reg_options.push_back("ExcludeAll");
+                reg_options.push_back("IncludeSelected");
+                reg_options.push_back("ExcludeSelected");
+                gc = (GeometryConfinement) input->getInput("region "
+                        "selection",reg_options,0);
+                if (gc == IncludeSelected || gc == ExcludeSelected) {
+                    vector<int> regs;
+                    err = input->getInput("selected regions",regs);
+                    if (err || regs.size() < 1) {
+                        egsWarning("EGS_RadionuclideSource: region selection %d "
+                                   "used  but no 'selected regions' input "
+                                   "found\n",gc);
+                        gc = gc == IncludeSelected ? IncludeAll : ExcludeAll;
+                        egsWarning(" using %d\n",gc);
+                    }
+                    nrs = regs.size();
+                    regions = new int [nrs];
+                    for (int j=0; j<nrs; j++) {
+                        regions[j] = regs[j];
+                    }
                 }
             }
         }
-    }
-    EGS_Float tmp_theta;
-    err = input->getInput("min theta", tmp_theta);
-    if (!err) {
-        min_theta = tmp_theta/180.0*M_PI;
+        EGS_Float tmp_theta;
+        err = input->getInput("min theta", tmp_theta);
+        if (!err) {
+            min_theta = tmp_theta/180.0*M_PI;
+        }
+
+        err = input->getInput("max theta", tmp_theta);
+        if (!err) {
+            max_theta = tmp_theta/180.0*M_PI;
+        }
+
+        err = input->getInput("min phi", tmp_theta);
+        if (!err) {
+            min_phi = tmp_theta/180.0*M_PI;
+        }
+
+        err = input->getInput("max phi", tmp_theta);
+        if (!err) {
+            max_phi = tmp_theta/180.0*M_PI;
+        }
+
+        buf_1 = cos(min_theta);
+        buf_2 = cos(max_theta);
     }
 
-    err = input->getInput("max theta", tmp_theta);
-    if (!err) {
-        max_theta = tmp_theta/180.0*M_PI;
+    // ==========================
+    // Source type = collimated
+    // ==========================
+
+    else if (input->compare(sourceType,"collimated")) {
+        sourceType = "collimated";
+
+        egsInformation("EGS_RadionuclideSource: Source type: %s\n",sourceType.c_str());
+
+        EGS_Input *ishape = input->takeInputItem("source shape");
+        if (ishape) {
+            source_shape = EGS_BaseShape::createShape(ishape);
+            delete ishape;
+        }
+        if (!source_shape) {
+            string sname;
+            int err = input->getInput("source shape name",sname);
+            if (err)
+                egsWarning("EGS_RadionuclideSource: missing/wrong inline source "
+                           "shape definition and missing/wrong 'source shape name' input\n");
+            else {
+                source_shape = EGS_BaseShape::getShape(sname);
+                if (!source_shape)
+                    egsWarning("EGS_RadionuclideSource: a shape named %s"
+                               " does not exist\n",sname.c_str());
+            }
+        }
+        ishape = input->takeInputItem("target shape");
+        if (ishape) {
+            target_shape = EGS_BaseShape::createShape(ishape);
+            delete ishape;
+        }
+        if (!target_shape) {
+            string sname;
+            int err = input->getInput("target shape name",sname);
+            if (err)
+                egsWarning("EGS_RadionuclideSource: missing/wrong inline target"
+                           "shape definition and missing/wrong 'target shape name' input\n");
+            else {
+                target_shape = EGS_BaseShape::getShape(sname);
+                if (!target_shape)
+                    egsWarning("EGS_RadionuclideSource: a shape named %s"
+                               " does not exist\n",sname.c_str());
+            }
+        }
+        if (target_shape) {
+            if (!target_shape->supportsDirectionMethod())
+                egsWarning("EGS_RadionuclideSource: the target shape %s, which is"
+                           " of type %s, does not support the getPointSourceDirection()"
+                           " method\n",target_shape->getObjectName().c_str(),
+                           target_shape->getObjectType().c_str());
+        }
+        EGS_Float auxd;
+        int errd = input->getInput("distance",auxd);
+        if (!errd) {
+            dist = auxd;
+        }
+
+    }
+    else {
+        egsFatal("EGS_RadionuclideSource: a source type named %s"
+                 " does not exist\n",sourceType.c_str());
     }
 
-    err = input->getInput("min phi", tmp_theta);
-    if (!err) {
-        min_phi = tmp_theta/180.0*M_PI;
-    }
+    // Initialize emission type to signify nothing has happened yet
+    emissionType = 99;
 
-    err = input->getInput("max phi", tmp_theta);
-    if (!err) {
-        max_phi = tmp_theta/180.0*M_PI;
-    }
-
-    buf_1 = cos(min_theta);
-    buf_2 = cos(max_theta);
-
+    // Finish
     setUp();
 }
 
@@ -226,45 +326,40 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         }
     }
 
+    // Check if the emission time is within the experiment time limit
+    if (experimentTime <= 0. || time < experimentTime) {
+        // Keep this particle
+    }
+    else {
+        // If the particle was emitted outside the
+        // experiment time window, just set the energy to zero to discard
+        E = 0;
+        return ++count;
+    }
+
     EGS_I64 ishowerOld = decays[i]->getShowerIndex();
 
-    for (EGS_I64 j=0; j<=1e6; ++j) {
-
-        E = decays[i]->sampleEnergy(rndm);
-
-        // Skip zero energy particles
-        if (E < epsilon) {
-            continue;
-        }
-
-        q = decays[i]->getCharge();
-
-        // Check if the charge is allowed
-        // If so, break out of the loop and keep the particle
-        // Otherwise the loop will continue generating particles until
-        // one matches the q_allowed criteria
-        if (q_allowAll || std::find(q_allowed.begin(), q_allowed.end(), q) != q_allowed.end()) {
-            break;
-        }
-
-        if (j == 1e6) {
-            egsWarning("EGS_RadionuclideSource::getNextParticle: Error: Could not generate a particle after 1e6 tries. Spectrum will be wrong.\n");
-            E = 0;
-        }
-    }
+    E = decays[i]->sampleEnergy(rndm);
 
     EGS_I64 ishowerNew = decays[i]->getShowerIndex();
     if (ishowerNew > ishowerOld) {
         disintegrationOccurred = true;
+        time = lastDisintTime + -log(1.-rndm->getUniform()) / activity * (ishowerNew - ishowerOld);
 
-        time += -log(1.-rndm->getUniform()) / activity * (ishowerNew - ishowerOld);
+        lastDisintTime = time;
         ishower += (ishowerNew - ishowerOld);
     }
     else {
         disintegrationOccurred = false;
-
+        // The time returned from the spectrum is just the time
+        // since the last disintegration event, so this is only
+        // non-zero for internal transitions. This is why the
+        // times are added here - each transition occurs only after
+        // the delay of the previous.
         time += decays[i]->getTime();
     }
+
+    q = decays[i]->getCharge();
 
     getPositionDirection(rndm,x,u,wt);
     latch = 0;
@@ -286,61 +381,99 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         app->userScoring(3, ireg);
     }
 
+    // Check if the charge is allowed
+    if (q_allowAll || std::find(q_allowed.begin(), q_allowed.end(), q) != q_allowed.end()) {
+        // Keep the particle
+    }
+    else {
+        // Don't transport the particle
+        E = 0;
+    }
+
+    // If the energy is zero, also set the weight to zero
+    // If you don't do this, electrons will still be given their rest
+    // mass energy in shower()
+    if (E < epsilon) {
+        wt = 0;
+    }
+
     return ++count;
 }
 
 void EGS_RadionuclideSource::getPositionDirection(EGS_RandomGenerator *rndm,
         EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) {
 
-    bool ok = true;
-    do {
-        x = shape->getRandomPoint(rndm);
-        if (geom) {
-            if (gc == IncludeAll) {
-                ok = geom->isInside(x);
-            }
-            else if (gc == ExcludeAll) {
-                ok = !geom->isInside(x);
-            }
-            else if (gc == IncludeSelected) {
-                ok = false;
-                int ireg = geom->isWhere(x);
-                for (int j=0; j<nrs; ++j) {
-                    if (ireg == regions[j]) {
-                        ok = true;
-                        break;
+    if (sourceType == "isotropic") {
+        bool ok = true;
+        do {
+            x = shape->getRandomPoint(rndm);
+            if (geom) {
+                if (gc == IncludeAll) {
+                    ok = geom->isInside(x);
+                }
+                else if (gc == ExcludeAll) {
+                    ok = !geom->isInside(x);
+                }
+                else if (gc == IncludeSelected) {
+                    ok = false;
+                    int ireg = geom->isWhere(x);
+                    for (int j=0; j<nrs; ++j) {
+                        if (ireg == regions[j]) {
+                            ok = true;
+                            break;
+                        }
                     }
                 }
-            }
-            else {
-                ok = true;
-                int ireg = geom->isWhere(x);
-                for (int j=0; j<nrs; ++j) {
-                    if (ireg == regions[j]) {
-                        ok = false;
-                        break;
+                else {
+                    ok = true;
+                    int ireg = geom->isWhere(x);
+                    for (int j=0; j<nrs; ++j) {
+                        if (ireg == regions[j]) {
+                            ok = false;
+                            break;
+                        }
                     }
                 }
             }
         }
+        while (!ok);
+        u.z = buf_1 - rndm->getUniform()*(buf_1 - buf_2);
+        EGS_Float sinz = 1-u.z*u.z;
+        if (sinz > epsilon) {
+            sinz = sqrt(sinz);
+            EGS_Float cphi, sphi;
+            EGS_Float phi = min_phi +(max_phi - min_phi)*rndm->getUniform();
+            cphi = cos(phi);
+            sphi = sin(phi);
+            u.x = sinz*cphi;
+            u.y = sinz*sphi;
+        }
+        else {
+            u.x = 0;
+            u.y = 0;
+        }
+        wt = 1;
     }
-    while (!ok);
-    u.z = buf_1 - rndm->getUniform()*(buf_1 - buf_2);
-    EGS_Float sinz = 1-u.z*u.z;
-    if (sinz > epsilon) {
-        sinz = sqrt(sinz);
-        EGS_Float cphi, sphi;
-        EGS_Float phi = min_phi +(max_phi - min_phi)*rndm->getUniform();
-        cphi = cos(phi);
-        sphi = sin(phi);
-        u.x = sinz*cphi;
-        u.y = sinz*sphi;
+    else if (sourceType == "collimated") {
+        x = source_shape->getRandomPoint(rndm);
+        int ntry = 0;
+        do {
+            target_shape->getPointSourceDirection(x,rndm,u,wt);
+            ntry++;
+            if (ntry > 10000) {
+                egsFatal("EGS_RadionuclideSource::getPositionDirection:\n"
+                         "  my target shape %s, which is of type %s, failed to\n"
+                         "  return a positive weight after 10000 attempts\n",
+                         target_shape->getObjectName().c_str(),
+                         target_shape->getObjectType().c_str());
+            }
+        }
+        while (wt <= 0);
+
+        if (disintegrationOccurred) {
+            ctry += ntry-1;
+        }
     }
-    else {
-        u.x = 0;
-        u.y = 0;
-    }
-    wt = 1;
 }
 
 void EGS_RadionuclideSource::setUp() {
@@ -349,8 +482,22 @@ void EGS_RadionuclideSource::setUp() {
         description = "Invalid radionuclide source";
     }
     else {
-        description = "Radionuclide source from a shape of type ";
-        description += shape->getObjectType();
+        description = "Radionuclide source of type ";
+
+        if (sourceType == "isotropic") {
+            description += sourceType;
+            description += " and a shape of type ";
+            description += shape->getObjectType();
+
+        }
+        else if (sourceType == "collimated") {
+            description += sourceType;
+            description += " from a shape of type ";
+            description += source_shape->getObjectType();
+            description += " onto a shape of type ";
+            description += target_shape->getObjectType();
+        }
+
         description += " with:";
         if (std::find(q_allowed.begin(), q_allowed.end(), -1) !=
                 q_allowed.end()) {
@@ -366,8 +513,10 @@ void EGS_RadionuclideSource::setUp() {
             description += " alphas";
         }
 
-        if (geom) {
-            geom->ref();
+        if (sourceType == "isotropic") {
+            if (geom) {
+                geom->ref();
+            }
         }
     }
 }
@@ -378,6 +527,9 @@ bool EGS_RadionuclideSource::storeState(ostream &data_out) const {
             return false;
         }
     }
+    egsStoreI64(data_out,count);
+    egsStoreI64(data_out,ctry);
+
     return true;
 }
 
@@ -388,6 +540,12 @@ bool EGS_RadionuclideSource::addState(istream &data) {
         }
         ishower += decays[i]->getShowerIndex();
     }
+    EGS_I64 tmp_val;
+    egsGetI64(data,tmp_val);
+    count = tmp_val;
+    egsGetI64(data,tmp_val);
+    ctry = tmp_val;
+
     return true;
 }
 
@@ -397,6 +555,7 @@ void EGS_RadionuclideSource::resetCounter() {
     }
     ishower = 0;
     count = 0;
+    ctry = 0;
 }
 
 bool EGS_RadionuclideSource::setState(istream &data) {
@@ -405,6 +564,9 @@ bool EGS_RadionuclideSource::setState(istream &data) {
             return false;
         }
     }
+    egsGetI64(data,count);
+    egsGetI64(data,ctry);
+
     return true;
 }
 

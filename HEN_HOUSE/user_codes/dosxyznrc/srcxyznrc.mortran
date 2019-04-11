@@ -1993,7 +1993,8 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
     WHILE(INDEX(the_beam_code,' ')=1) [
-      IF(len(the_beam_code)>=2)[
+      ilen = lnblnk1(the_beam_code) - 1;
+      IF(ilen>=2)[
         the_beam_code=the_beam_code(2:);
       ]
       ELSE [
@@ -2007,7 +2008,8 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
     WHILE(INDEX(the_input_file,' ')=1) [
-      IF(len(the_input_file)>=2) [
+      ilen = lnblnk1(the_input_file) - 1;
+      IF(ilen>=2) [
         the_input_file=the_input_file(2:);
       ]
       ELSE [
@@ -2019,17 +2021,17 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
 
     the_pegs_file=FILNAM(:lnblnk1(FILNAM));
     "strip leading blanks"
-    IF(len($cstring(the_pegs_file))=0)the_pegs_file='pegsless';
     WHILE(INDEX(the_pegs_file,' ')=1) [
-      IF(len(the_pegs_file)>=2) [
+      ilen = lnblnk1(the_pegs_file) - 1;
+      IF(ilen>=2) [
         the_pegs_file=the_pegs_file(2:);
       ]
       ELSE [
+        "blank input"
+        the_pegs_file='pegsless';
         EXIT;
       ]
     ]
-
-    IF(the_pegs_file=' ')the_pegs_file='pegsless';
 
     OUTPUT $cstring(the_beam_code),$cstring(the_input_file),
              $cstring(the_pegs_file);
@@ -2052,10 +2054,13 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
     WHILE(INDEX(the_shared_lib,' ')=1) [
-      IF(len(the_shared_lib)>=2)[
+      ilen = lnblnk1(the_shared_lib) - 1;
+      IF(ilen>=2)[
         the_shared_lib=the_shared_lib(2:);
       ]
       ELSE [
+        "blank input"
+        the_shared_lib='0';
         EXIT;
       ]
     ]
@@ -2066,7 +2071,8 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
     WHILE(INDEX(the_phsp_file,' ')=1) [
-      IF(len(the_phsp_file)>=2) [
+      ilen = lnblnk1(the_phsp_file) - 1;
+      IF(ilen >=2) [
         the_phsp_file=the_phsp_file(2:);
       ]
       ELSE [
@@ -2155,7 +2161,8 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     the_input_file=FILNAM(:lnblnk1(FILNAM));
     "strip leading blanks"
     WHILE(INDEX(the_input_file,' ')=1) [
-         IF(len(the_input_file)>=2) [
+         ilen = lnblnk1(the_input_file) - 1;
+         IF(ilen>=2) [
            the_input_file=the_input_file(2:);
          ]
          ELSE [
@@ -2202,7 +2209,8 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
     WHILE(INDEX(the_beam_code,' ')=1) [
-      IF(len(the_beam_code)>=2)[
+      ilen = lnblnk1(the_beam_code) - 1;
+      IF(ilen>=2)[
         the_beam_code=the_beam_code(2:);
       ]
       ELSE [
@@ -2216,7 +2224,8 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
     WHILE(INDEX(the_input_file,' ')=1) [
-      IF(len(the_input_file)>=2) [
+      ilen = lnblnk1(the_input_file) - 1;
+      IF(ilen>=2) [
        the_input_file=the_input_file(2:);
       ]
       ELSE [
@@ -2228,28 +2237,33 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
 
 
     the_pegs_file=FILNAM(:INDEX(FILNAM,',')-1);
-    IF(len($cstring(the_pegs_file))=0)the_pegs_file='pegsless';
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
     WHILE(INDEX(the_pegs_file,' ')=1) [
-      IF(len($cstring(the_pegs_file))>=2) [
+      ilen = lnblnk1(the_pegs_file) - 1;
+      IF(ilen>=2) [
         the_pegs_file=the_pegs_file(2:);
       ]
       ELSE [
+        "blank input"
+        the_pegs_file='pegsless';
         EXIT;
       ]
     ]
 
-    IF(the_pegs_file=' ')the_pegs_file='pegsless';
+    the_pegs_file = the_pegs_file(:lnblnk1(the_pegs_file));
 
     the_vcu_code=FILNAM(:INDEX(FILNAM,',')-1);
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
     WHILE(INDEX(the_vcu_code,' ')=1) [
-      IF(len(the_vcu_code)>=2)[
+      ilen = lnblnk1(the_vcu_code) - 1;
+      IF(ilen>=2)[
         the_vcu_code=the_vcu_code(2:);
       ]
       ELSE [
+        "blank input"
+        the_vcu_code='0';
         EXIT;
       ]
     ]
@@ -2268,7 +2282,8 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     the_vcu_input_file=FILNAM(:lnblnk1(FILNAM));
     "strip leading blanks"
     WHILE(INDEX(the_vcu_input_file,' ')=1) [
-      IF(len(the_vcu_input_file)>=2) [
+      ilen = lnblnk1(the_vcu_input_file) - 1;
+      IF(ilen>=2) [
         the_vcu_input_file=the_vcu_input_file(2:);
       ]
       ELSE [
@@ -2682,7 +2697,7 @@ ELSEIF(isource = 9 | isource=10)["Full BEAM treatment head simulation"
 "------------------------------------------------------------------------"
    dsource = -dsource;
    OUTPUT 'About to call init_beamsource';(//a);
-   call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
+   call init_beamsource(i_parallel,n_parallel,i_log,$CONFIGURATION_NAME,
                          hen_house,egs_home,the_beam_code,
                          the_pegs_file,the_input_file);
 ]
@@ -2702,7 +2717,7 @@ ELSEIF(isource = 20)["Phase Space Incident from multiple settings and "
      ]
      ELSE[
        OUTPUT 'About to initialise BEAM code..';(//a);
-       call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
+       call init_beamsource(i_parallel,n_parallel,i_log,$CONFIGURATION_NAME,
                          hen_house,egs_home,the_shared_lib,
                          the_pegs_file,the_input_file);
      ]
@@ -2733,7 +2748,7 @@ ELSEIF(isource = 21)["Full BEAM sim. incident from multiple settings and "
 "------------------------------------------------------------------------"
    dsource = -dsource;
    OUTPUT 'About to call init_beamsource';(//a);
-   call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
+   call init_beamsource(i_parallel,n_parallel,i_log,$CONFIGURATION_NAME,
                          hen_house,egs_home,the_beam_code,
                          the_pegs_file,the_input_file);
    OUTPUT 'Done initialization';(//a);
@@ -3992,7 +4007,7 @@ ELSEIF( isource = 20 ) [ "Phase Space Incident from multiple settings"
        "particleDmlc and so will be -dsource from the beginning of srchst"
             zsrc = zsrcold;
        ]
-	        call sample_vcusource(einsrc,xsrc,ysrc,zsrc,usrc,
+	        call sample_vcusource(einsrc,xsrc,ysrc,zsrcdum,usrc,
 			  vsrc,wsrc,weight,iqin,latchi,n_hist_dum,
 			  more_in_cont,frMU_indx);
  ] ELSEIF(SHLflag=1 & MLCflag=0) [" if there is a BEAM shared library"
@@ -4461,10 +4476,10 @@ $HAVE_LOAD_DSO(#);
 
 #ifndef HAVE_LOAD_DSO;
 
-subroutine init_beamsource(i_parallel,i_log,conf_name,
+subroutine init_beamsource(i_parallel,n_parallel,i_log,conf_name,
                          hen_house,egs_home,the_beam_code,
                          the_pegs_file,the_input_file);
-$INTEGER i_parallel,i_log;
+$INTEGER i_parallel,n_parallel,i_log;
 character*(*) conf_name;
 character*(*) hen_house,egs_home,the_beam_code,the_pegs_file,the_input_file;
 write(6,*) 'You need a working C compiler to use source 9!';

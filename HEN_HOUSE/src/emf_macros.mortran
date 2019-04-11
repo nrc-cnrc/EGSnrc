@@ -134,6 +134,7 @@ REPLACE {$EMMLMT} WITH {0.20}
 "IF THE FIELDS ARE WEAK ENOUGH THEY SHOULDN'T AFFECT THE TRANSPORT.           "
 "                                                                             "
 REPLACE {$SET-TUSTEP-EM-FIELD;} WITH {;
+IF (emfield_on) [
 TUSTP0=TUSTEP;
 X0=X(NP);Y0=Y(NP);Z0=Z(NP);
 $GET-EM-FIELD(E,B,X0,Y0,Z0);
@@ -163,6 +164,7 @@ $SET-TUSTEP-DIRECTION-VECTOR-CHANGE-EM-FIELD;
 $SET-TUSTEP-ENERGY-CHANGE-EM-FIELD;
 $SET-TUSTEP-CHANGE-OF-EM-FIELD;
 $SET-TUSTEP-DIRECTION-VECTOR-CHANGE-BY-MULTIPLE-SCATTERING;
+]
 }
 ;
 "                                                                             "
@@ -240,6 +242,7 @@ REPLACE {$SET-USTEP-EM-FIELD;} WITH {;}
 "                                                                             "
 "THIS MACRO SETS THE NEW DIRECTION COSINES IN THE PRESENCE OF THE EM FIELD"
 REPLACE {$SET-ANGLES-EM-FIELD;} WITH {;
+IF (emfield_on) [
 IF(TVSTEP.NE.0.0)[
     IF(BPERP2.NE.0.0)[
 
@@ -272,6 +275,7 @@ IF(TVSTEP.NE.0.0)[
         W(NP)=(W(NP)+TVSTEP*DPERPZ)/FNORM;
         ]
     ]
+]
 }
 ;
 "                                                                             "
@@ -286,21 +290,12 @@ REPLACE {$SET-TVSTEP-EM-FIELD;} WITH {;}
 "*****************************************************************************"
 "                                                                             "
 "THIS MACRO IS USED TO SET THE ANGLES AND PATHLENGTH CORRECTION IN VACUUM     "
-REPLACE {$VACUUM-TRANSPORT-EM-FIELD;} WITH {;
-IF(MEDIUM.EQ.0)[
-"$SET-TVSTEP-EM-FIELD;--this is for higher order corrections"
-"do first order corrections for now--BW"
-IF(ExIN~=0.0 | EyIN~=0.0 | EzIN~=0.0 | BxIN~=0.0 | ByIN~=0.0 | BzIN~=0)[
+REPLACE {$VACUUM-ADD-WORK-EM-FIELD;} WITH {;
+IF (emfield_on) [
 DE=0.0;
 $ADD-WORK-EM-FIELD;
 PEIE=PEIE-DE;EIE=PEIE;E(NP)=PEIE;
 "done first order corrections"
-]
-ELSE[
-BPERP2=0.0;
-DPERP2=0.0;
-"so we do not change direction cosines to nonsense"
-]
 ]
 }
 ;
@@ -309,11 +304,13 @@ DPERP2=0.0;
 "                                                                             "
 "THIS MACRO ADJUSTS DE TO INCORPORATE THE POTENTIAL CHANGE IN THE E FIELD     "
 REPLACE {$ADD-WORK-EM-FIELD;} WITH {;
+IF (emfield_on) [
 $GET-POTENTIAL(POT1,X0,Y0,Z0);
 X1=X0+USTEP*U(NP);Y1=Y0+USTEP*V(NP);Z1=Z0+USTEP*W(NP);
 $GET-POTENTIAL(POT2,X1,Y1,Z1);
 POTDIF=POT2-POT1;
 DE=DE+POTDIF;
+]
 }
 ;
 "                                                                             "

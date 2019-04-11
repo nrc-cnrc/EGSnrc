@@ -176,6 +176,12 @@ REPLACE {$BEAMMODEL_SRCOUT} WITH {;}
 REPLACE {$BEAMMODEL_PASSING_VARIABLES} WITH {;}
 ;
 
+"If this is a beam shared library source that uses a phase space"
+"source and it is running in parallel, then the following macro"
+"gets replaced by code that specifies the portion of the phase"
+"space source to use"
+REPLACE {$SET_INPHSP_BEAM_SOURCE_PARALLEL;} WITH {;}
+
 ;
 
 "****************************************

@@ -30,7 +30,12 @@
 
 
 #include "main_widget.h"
-#include <QtGui>
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+    #include <QtWidgets>
+#else
+    #include <QWidget>
+#endif
 #include <QMainWindow>
 
 #include <qapplication.h>

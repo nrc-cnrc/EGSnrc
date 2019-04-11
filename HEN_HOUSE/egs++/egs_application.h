@@ -522,7 +522,7 @@ public:
         PegsCut = 2,             //!< energy below AE or AP
         UserDiscard = 3,         //!< user requested discard
         ExtraEnergy = 4,         /*!< initiated when part of the energy is not
-                               transfered to particles (e.g. binding energy)*/
+                               transferred to particles (e.g. binding energy)*/
         AfterTransport = 5,      //!< after the step
         BeforeBrems = 6,         //!< before a bremsstrahlung interaction
         AfterBrems = 7,          //!< after a bremsstrahlung interaction
@@ -548,9 +548,13 @@ public:
         FluorescentEvent = 25,   //!< a fluorescent transition just occured
         CosterKronigEvent = 26,  //!< a Coster-Kronig transition just occured
         AugerEvent = 27,         //!< an Auger transition just occured
-        BeforePhotoNuc = 29,      //!< before a photonuclear event
-        AfterPhotoNuc = 30,       //!< after a photonuclear event
-        UnknownCall = 31         //!< last element in the enumeration
+        BeforePhotoNuc = 29,     //!< before a photonuclear event
+        AfterPhotoNuc = 30,      //!< after a photonuclear event
+        BeforeEII = 31,          //!< before electron impact ionization
+        AfterEII = 32,           //!< after electron impact ionization
+        AfterSubPhoton = 33,     //!< after sub-threshold photon energy deposition
+        AfterSubElectron = 34,   //!< after sub-threshold electron energy deposition
+        UnknownCall = 35         //!< last element in the enumeration
     };
 
     /*! \brief Turns on or off a call to the user scoring function ausgab.
@@ -668,6 +672,18 @@ public:
      */
     void getLabelRegions(const string &str, vector<int> &regs) {
         geometry->getLabelRegions(str, regs);
+    }
+
+    /*! \brief Returns the value of the \a mu synchronization parameter
+
+      The parameter, \a mu, is a random number on \a [0,1) associated with each
+      primary history and is retrieved from \a source.  It can be used to
+      synchronize geometric parameters throughout a simulation.  If \a mu is
+      not available in \a source (i.e., the \a getMu function has not been
+      reimplemented in \a source), then this returns -1.
+     */
+    EGS_Float getMU() {
+        return source->getMu();
     }
 
     /*! \brief User scoring function for accumulation of results and VRT implementation
@@ -1111,6 +1127,13 @@ public:
     virtual EGS_Float getRM() {
         return -1.0;
     };
+    virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
+
+    //************************************************************
+    // Utility function for ausgab phase space scoring objects
+    //************************************************************
+    virtual void setLatch(int latch) {};
+
 };
 
 #define APP_MAIN(app_name) \

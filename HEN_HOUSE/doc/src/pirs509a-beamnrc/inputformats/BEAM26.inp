@@ -2,7 +2,7 @@
         ESTEPE=          Maximum fractional energy loss per step.
                          Note that this is a global option only, no
                          region-by-region setting is possible. If missing,
-                         the defualt is 0.25 (25%).
+                         the default is 0.25 (25%).
                          [ ESTEPE ]
         XImax=           Maximum first elastic scattering moment per step.
                          Default is 0.5, NEVER use value greater than 1 as
@@ -25,24 +25,18 @@
                          increase CPU time in most accelerators.
                          [ bca_algorithm, exact_bca ]
         Skin depth for BCA=
-                         If Boundary crossing algorithm= PRESTA-I
-                         then this is the distance from the boundary (in
-                         elastic MFP) at which lateral correlations will be
-                         switched off.  The default in this case is to
-                         calculate a value based on the scattering power at
-                         ECUT (same as PRESTA with EGS4).  If
-                         Boundary crossing algorithm= EXACT (default) then
-                         this is the distance from the boundary (in elastic
+                         Determines the distance from a boundary (in elastic
                          MFP) at which the algorithm will go into single
-                         scattering mode and defaults to 3 mfp.
-                         Note that if you choose EXACT boundary crossing and
-                         set Skin depth for BCA to a very large number (e.g.
-                         1e10), the entire calculation will be in SS mode.
-                         If you choose PRESTA-I boundary crossing and make
-                         Skin depth for BCA large, you will get default EGS4
-                         behaviour (no PRESTA).
+                         scattering mode (if EXACT boundary crossing) or
+                         switch off lateral correlations (if PRESTA-I boundary
+                         crossing). Default value is 3 for EXACT or
+                         exp(BLCMIN)/BLCMIN for PRESTA-I (see the PRESTA paper
+                         for a definition of BLCMIN). Note that if you choose
+                         EXACT boundary crossing and set Skin depth for BCA
+                         to a very large number (e.g. 1e10), the entire
+                         calculation will be in SS mode. If you choose
+                         PRESTA-I boundary crossing and make Skin depth for
+                         BCA large, you will get default EGS4 behaviours
+                         (no PRESTA)
                          [ skindepth_for_bca ]
-
-             The new transport mechanics of EGSnrc are maintained away from
-             boundaries.
 \end{verbatim}

@@ -46,7 +46,7 @@ clean: Makefile_$(my_machine)
 	$(gui_make) -f Makefile_$(my_machine) my_machine=$(my_machine) clean hhouse=$(HEN_HOUSE)
 
 realclean: clean
-	rm Makefile_*$(my_machine)
+	$(REMOVE) Makefile_$(my_machine)*
 
 .PHONY: all clean
 

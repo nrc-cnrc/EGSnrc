@@ -47,7 +47,7 @@ class QThread;
 class QProgressDialog;
 
 // Maximum number of regions displayed
-#define N_REG_MAX 30
+#define N_REG_MAX 100
 
 class ImageWindow : public QWidget {
 
@@ -81,6 +81,7 @@ protected:
     void resizeEvent(QResizeEvent *e);
     void paintEvent(QPaintEvent *);
 
+    void mouseDoubleClickEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
@@ -89,6 +90,7 @@ protected:
 protected slots:
 
     void drawResults(RenderResults,RenderParameters);
+    void trackResults(vector<size_t>);
     void handleAbort();
 
 signals:
@@ -102,7 +104,9 @@ signals:
     void cameraHomeDefining();
     void putCameraOnAxis(char axis);
     void leftMouseClick(int x, int y);
+    void leftDoubleClick(EGS_Vector hitCoord);
     void saveComplete();
+    void tracksLoaded(vector<size_t>);
 
     // for render thread
     void requestRender(EGS_BaseGeometry *,RenderParameters);

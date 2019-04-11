@@ -236,8 +236,8 @@ public:
         }
         if (t1 < t) {
             EGS_Float y1 = xp.y + up.y*t1, z1 = xp.z + up.z*t1;
-            if (2*y1 + ay >= 0 && 2*y1 - ay <= 0 &&
-                    2*z1 + az >= 0 && 2*z1 - az <= 0) {
+            if (2*y1 + ay > 0 && 2*y1 - ay < 0 &&
+                    2*z1 + az > 0 && 2*z1 - az < 0) {
                 t = t1;
                 if (newmed) {
                     *newmed = med;
@@ -273,8 +273,8 @@ public:
         }
         if (t1 < t) {
             EGS_Float x1 = xp.x + up.x*t1, z1 = xp.z + up.z*t1;
-            if (2*x1 + ax >= 0 && 2*x1 - ax <= 0 &&
-                    2*z1 + az >= 0 && 2*z1 - az <= 0) {
+            if (2*x1 + ax > 0 && 2*x1 - ax < 0 &&
+                    2*z1 + az > 0 && 2*z1 - az < 0) {
                 t = t1;
                 if (newmed) {
                     *newmed = med;
@@ -310,8 +310,8 @@ public:
         }
         if (t1 < t) {
             EGS_Float x1 = xp.x + up.x*t1, y1 = xp.y + up.y*t1;
-            if (2*x1 + ax >= 0 && 2*x1 - ax <= 0 &&
-                    2*y1 + ay >= 0 && 2*y1 - ay <= 0) {
+            if (2*x1 + ax > 0 && 2*x1 - ax < 0 &&
+                    2*y1 + ay > 0 && 2*y1 - ay < 0) {
                 t = t1;
                 if (newmed) {
                     *newmed = med;

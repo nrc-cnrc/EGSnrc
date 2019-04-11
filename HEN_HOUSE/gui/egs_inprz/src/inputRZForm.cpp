@@ -30,7 +30,7 @@
 ###############################################################################
 */
 
-
+#include <QtGlobal>
 #include "tooltips.h"
 #include "inputRZImpl.h"
 #include "errordlg.h"
@@ -84,6 +84,7 @@ void inputRZImpl::Initialize()
 
  the_year = (QDate::currentDate()).toString("yyyy");
 
+ this->setStyleSheet("QToolTip { color: black; background-color: #feffcd }");
 
 //  usercode     = cavrznrc;
   usercode     = dosrznrc;
@@ -288,23 +289,7 @@ geoErrors    =  "";
  sloteFluTable->setWhatsThis(TOP_BIN_FLU );
  sloteFluTable->setToolTip(TOP_BIN_FLU );
 
-outputTip = new ComboBoxToolTip( outoptComboBox, 0, out_dos,
-                                 sizeof out_dos / sizeof(char *) );
-
-iprimaryTip = new ComboBoxToolTip( IPRIMARYComboBox, 0, spectrum_type,
-                                 sizeof spectrum_type / sizeof(char *) );
-etransportTip = new ComboBoxToolTip( etransportComboBox, 0, electron_transport,
-                                 sizeof electron_transport / sizeof(char *) );
-irestartTip = new ComboBoxToolTip( irestartComboBox, 0, irestart,
-                                 sizeof irestart / sizeof(char *) );
-iwatchTip = new ComboBoxToolTip( iwatchComboBox, 0, iwatch,
-                                 sizeof iwatch / sizeof(char *) );
-
-
 // Tool tips for MC input Tab
-
-ifullTip = new ComboBoxToolTip( ifullComboBox, 0, ifull_dos,
-                                sizeof ifull_dos / sizeof(char *) );
 maxCPUEdit->setWhatsThis(CPU_TIME  );
  maxCPULabel->setWhatsThis(CPU_TIME  );
 
@@ -360,23 +345,14 @@ cavityRadioButton->setToolTip(CAVITY  );
 
 CavityInfoLabel->hide();
 
-mediaTip = new ComboBoxToolTip( mediaComboBox, 0,
-        media_regions, sizeof media_regions / sizeof(char *) );
-
 // Tool tips for source input Tab
 
   //tool tip for source number combo box
   sourceComboBox->setToolTip("select source number"  );
 
-srcTip = new ComboBoxToolTip( sourceComboBox, 0,
-         sources, sizeof sources / sizeof(char *) );
-
 imodeComboBox->addItem( tr( "No ZLAST" ) );
 imodeComboBox->addItem( tr( "With ZLAST" ) );
 imodeComboBox->hide();
-
-imodeTip = new ComboBoxToolTip( imodeComboBox, 0,
-           imode, sizeof imode / sizeof(char *) );
 
 localRadioButton->setWhatsThis( RAD_DIS_LOCAL);
 externalRadioButton->setWhatsThis(RAD_DIS_EXTERNAL);
@@ -584,19 +560,19 @@ void inputRZImpl::UpDateInputRZForm( const MInputRZ* Input )
 
    	switch ( usercode ) {
      	case cavrznrc:
-                cavrzRadioButton->setChecked( TRUE );
+                cavrzRadioButton->setChecked( true );
                 usercodename   = "cavrznrc";
 	      	break;
      	case dosrznrc:
-       	        dosrzRadioButton->setChecked( TRUE );
+       	        dosrzRadioButton->setChecked( true );
 	        usercodename   = "dosrznrc";
        	        break;
      	case sprrznrc:
-	        sprrzRadioButton->setChecked( TRUE );
+	        sprrzRadioButton->setChecked( true );
 	        usercodename   = "sprrznrc";
 	        break;
      	case flurznrc:
-	        flurzRadioButton->setChecked( TRUE );
+	        flurzRadioButton->setChecked( true );
 	        usercodename   = "flurznrc";
 	        break;
 	}
@@ -2570,14 +2546,9 @@ void inputRZImpl::update_usercode()
        ifullComboBox->addItem( tr( "Ap" ) );
        ifullComboBox->addItem( tr( "Afl and <s>g/w" ) );
 
-       ifullTip->setTips(ifull_cav, sizeof ifull_cav / sizeof(char *));
-
        outoptComboBox->clear();
        outoptComboBox->addItem( tr( "short" ) );
        outoptComboBox->addItem( tr( "cavity details" ) );
-
-       outputTip->setTips( out_cav, sizeof out_cav / sizeof(char *));
-
 
 
        TabWidgetRZ->setTabEnabled(TabWidgetRZ->indexOf(CItab), true );
@@ -2630,16 +2601,12 @@ void inputRZImpl::update_usercode()
        ifullComboBox->addItem( tr( "pulse height distribution" ) );
        ifullComboBox->addItem( tr( "scatter fraction" ) );
 
-       ifullTip->setTips(ifull_dos, sizeof ifull_dos / sizeof(char *));
-
        outoptComboBox->clear();
        outoptComboBox->addItem( tr( "short" ) );
        outoptComboBox->addItem( tr( "dose summary" ) );
        outoptComboBox->addItem( tr( "material summary" ) );
        outoptComboBox->addItem( tr( "material and dose summary" ) );
        outoptComboBox->addItem( tr( "long" ) );
-
-       outputTip->setTips( out_dos, sizeof out_dos / sizeof(char *));
 
        //Q3WhatsThis::add( CSEnhancementGroupBox, CS_ENHANCEMENT_DOSRZNRC  );
        CSEnhancementGroupBox->setWhatsThis(CS_ENHANCEMENT_DOSRZNRC  );
@@ -2848,7 +2815,7 @@ void inputRZImpl::set_data_area()
   QString tmpDir;
    //qt3to4 -- BW
    //char s = QDir::separator();
-   char s = QDir::separator().toAscii();
+   char s = QDir::separator().toLatin1();
 
    if ( HOMEPegsRadioButton->isChecked() )
        tmpDir  = ironIt( EGS_HOME + s + "pegs4" + s + "data" + s);
@@ -3346,7 +3313,7 @@ QString inputRZImpl::getExecutable()
 
     //qt3to4 -- BW
     //char s = QDir::separator();
-   char s = QDir::separator().toAscii();
+   char s = QDir::separator().toLatin1();
 
    QString executable = usercodename;
    if ( DebugradioButton->isChecked() )
@@ -3690,7 +3657,11 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QStringList& s)
     t->setHorizontalHeaderLabels(s);
     t->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
     t->installEventFilter(this);}
 
 //qt3to4 -- BW
@@ -3731,7 +3702,11 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QString& s0, const QSt
     t->setHorizontalHeaderItem(1,new QTableWidgetItem(s1));
     t->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
 
     t->installEventFilter(this);
 }
@@ -3749,7 +3724,11 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QString& s0,
     t->setHorizontalHeaderItem(2, new QTableWidgetItem(s2) );
     t->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
 
     t->installEventFilter(this);
 }
@@ -3765,7 +3744,11 @@ void inputRZImpl::InitializeTwoColumnTable( QTableWidget* table)
     table->setHorizontalHeaderItem(1, new QTableWidgetItem("stop"));
     table->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
 
     table->installEventFilter(this);
 }
@@ -3781,7 +3764,11 @@ void inputRZImpl::InitializeThreeColumnTable( QTableWidget* table, const QString
     table->setHorizontalHeaderItem(2, new QTableWidgetItem("stop"));
     table->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
 
     table->installEventFilter(this);
 }
@@ -3961,8 +3948,8 @@ bool inputRZImpl::eventFilter(QObject *o, QEvent *e){
             return true;
          }
      }
-     return to->eventFilter(o, e) ;
-     //return false;
+     //return to->eventFilter(o, e) ;
+     return false;
    }
    else{
      return false;
