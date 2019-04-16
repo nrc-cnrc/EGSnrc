@@ -3002,7 +3002,7 @@ IF(IPARALLEL>1 | n_parallel>0)[
    "this file is written directly into the user code directory"
    parname=$cstring(egs_home) // $cstring(user_code) // $file_sep //
              $cstring(work_dir) // $cstring(output_file);
-   IF(n_parallel>0)[
+   IF(i_parallel>0)[
       "have to add _w[iparallel] if not controlled by script"
       parname=$cstring(parname)//'_w';
       call egs_itostring(parname,i_parallel,.false.);
