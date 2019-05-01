@@ -146,7 +146,7 @@ DO ibr = 1,nbr_split [  "nbr_split > 1 means we want splitting for any"
     E(NP)=PESG1; IQ(NP)=0;
     IF( ibr = 1 ) [ ip = npold; ] ELSE [ ip = np-1; ]
     $TRANSFER PROPERTIES TO (np) FROM (ip);
-    COSTHE=MIN(1.0,(ESG1-RM)*POT/ESG1);
+    COSTHE=MAX(-1.0,MIN(1.0,(ESG1-RM)*POT/ESG1));
     SINTHE=SQRT(1.0-COSTHE*COSTHE);
     $SELECT-AZIMUTHAL-ANGLE(cphi,sphi);
     IF( sinpsi >= 1e-10 ) [
@@ -162,7 +162,7 @@ DO ibr = 1,nbr_split [  "nbr_split > 1 means we want splitting for any"
     PESG2=PAVIP-PESG1; esg2 = pesg2;
     e(np) = pesg2; iq(np) = 0;
     $TRANSFER PROPERTIES TO (np) FROM (np-1);
-    COSTHE=MIN(1.0,(ESG2-RM)*POT/ESG2);
+    COSTHE=MAX(-1.0,MIN(1.0,(ESG2-RM)*POT/ESG2));
     SINTHE=-SQRT(1.0-COSTHE*COSTHE);
     IF( sinpsi >= 1e-10 ) [
         us = sinthe*cphi; vs = sinthe*sphi;
