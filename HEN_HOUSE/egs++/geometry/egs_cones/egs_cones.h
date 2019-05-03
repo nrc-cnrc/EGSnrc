@@ -1554,12 +1554,6 @@ public:
                 t = tp;                             // set t = distance to plane
             }
 
-            // If we are right on a plane, return -1
-            if(tp < boundaryTolerance) {
-                t = 0;
-                return -1;
-            }
-
             // distance to outer cone
             int ir = ireg - il*nmax;                // cone index in current layer
             bool hitc = false;                      // assume we don't hit the cone
