@@ -359,7 +359,7 @@ proc edit_parameters {} {
     enable_dflag $isource
 
     # now 13 to 18 on right
-    foreach j { 13 14 15 18 16 17 } {
+    foreach j { 13 14 15 18 16 } {
 	frame $w2.inp$j -bd 4
 	button $w2.inp$j.help -text "?"	-command "help $j"
 	label $w2.inp$j.label -text $names($j) -anchor w
@@ -476,11 +476,6 @@ proc set_value {io iopt w} {
             .main_w.main.sim.right.inp16.inp configure -state disabled
             .main_w.main.sim.right.inp16.label configure -fg grey
 	}
-    } elseif {$io==17} {
-	# iparallel - if running in parallel, get ncpu and parnum
-        set values($io) $options($io,$iopt)
-        $w configure -text $values($io)
-	set_parallel $iopt
     } elseif {$io==14} {
 	# range rejection on/off
         set values($io) $options($io,$iopt)
@@ -563,60 +558,6 @@ proc set_value {io iopt w} {
         $w configure -text $values($io)
     }
 }
-
-proc set_parallel { opt } {
-  global ncpu parnum helvfont ypad
-
-  if {$opt==0} {
-    set parnum 0
-    set ncpu 0
-  } elseif {$opt==1} {
-    set top .main_w.parallel
-    toplevel $top
-    wm title $top "Run in parallel"
-    set text {
-Enter the number of machines you will be distributing\
-	the job among (NCPU).  The section of the phase\
-	space source that will be used for this one of the series\
-	of input files (for the same total simulation) is given by
-
-(PARNUM-1)*(nshist/NCPU) < nnphsp <= PARNUM*(nshist/NCPU)
-
-where nshist is the total number of particles in the phase space\
-	file and nnphsp is the number of the particle chosen for the\
-	simulation.  Thus, PARNUM should cover the range 1<=PARNUM<=NCPU.
-
-Note that if you are using NRC's pprocess script (along with NQS) to submit\
-        parallel jobs, then NCPU and PARNUM (and IPARALLEL) are automatically\
-        set and so need not be adjusted here.
-}
-    message $top.mess -text $text -font $helvfont -width 500
-    pack $top.mess -pady $ypad
-    frame $top.frm -bd 4
-    frame $top.frm.ncpu
-    label $top.frm.ncpu.lab -text "NCPU"
-    entry $top.frm.ncpu.inp -bg white -textvariable ncpu
-    pack $top.frm.ncpu.lab -side left -anchor w -padx 5
-    pack $top.frm.ncpu.inp -side right -anchor e -fill x -expand true
-
-    frame $top.frm.par
-    label $top.frm.par.lab -text "PARNUM"
-    entry $top.frm.par.inp -bg white -textvariable parnum
-    pack $top.frm.par.lab -side left -anchor w -padx 5
-    pack $top.frm.par.inp -side right -anchor e -fill x -expand true
-
-    pack $top.frm.ncpu $top.frm.par -pady $ypad -fill x
-    pack $top.frm -padx 10
-
-    #put in the "Done" button:
-    frame $top.button
-    button $top.button.b -text "Done" -command "destroy $top"\
-	    -relief groove -bd 8
-    pack $top.button.b
-    pack $top.button -side top -pady [expr 2*$ypad]
-  }
-}
-
 
 proc enable_dflag { iopt } {
     if [string compare $iopt {}]==0 {
