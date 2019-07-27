@@ -478,23 +478,6 @@ wrong charge and/or LATCH value.
 Note that the total number of histories is still limited by NCASE even if\
 you are recycling.
 }
-set names(17) "Run job in parallel"
-set numopts(17) 2
-set options(17,0) "no"
-set options(17,1) "yes"
-set help_text(17) {
-Run job in parallel, IPARALLEL:
-
-Set this parameter to 'yes' if you are distributing the job among more than\
-	one machine.  You will be asked to enter the\
-	number of machines that you intend to use.  This will generate a binary\
-	.pardose file for each job which will contain the doses in all voxels\
-	WITHOUT UNCERTAINTIES.  IPARALLEL defaults to 0.
-
-Note that IPARALLEL is automatically set to 1 by NRC's pprocess script.  So\
-        if you are using the pprocess script (with NQS), you do not have\
-        to set this parameter before submitting parallel jobs.
-}
 
 set names(18) "Photon splitting number"
 set numopts(18) 0
