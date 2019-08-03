@@ -41,11 +41,15 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
                  clippingplanes.h viewcontrol.h geometryview.ui.h \
                  saveimage.h egs_user_color.h egs_track_view.h \
-                 renderworker.h
+                 renderworker.h \
+    egs_highlighter.h \
+    egs_editor.h
 
 SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp \
                  saveimage.cpp clippingplanes.cpp viewcontrol.cpp \
-                 renderworker.cpp image_window.cpp
+                 renderworker.cpp image_window.cpp \
+    egs_highlighter.cpp \
+    egs_editor.cpp
 
 FORMS           = saveimage.ui clippingplanes.ui viewcontrol.ui
 
@@ -54,7 +58,7 @@ win32 {
     DEFINES += WIN32
     DEFINES += VDEBUG
     RC_FILE = egs_view.rc
-    LIBS	+= ../dso/$$my_machine/egspp.lib
+    LIBS	+= ../dso/$$my_machine/egspp.lib ../dso/$$my_machine/egs_input_struct.lib
     DESTDIR = ../dso/$$my_machine
     TARGET = egs_view
 }
@@ -62,7 +66,7 @@ win32 {
 unix {
     CONFIG    += qt warn_on release $$my_build
     macx {
-        LIBS  += -L../dso/$$my_machine -legspp
+        LIBS  += -L../dso/$$my_machine -legspp -legs_input_struct
         TARGET = ../../bin/$$my_machine/egs_view
     }
     !macx {
@@ -70,13 +74,13 @@ unix {
        !contains( CONFIG, static ){
          message( "Dynamic build..." )
          TARGET = egs_view
-         LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp
+         LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp -legs_input_struct
         }
         contains( CONFIG, static ){
             message( "Static build ..." )
             DESTDIR = ../../pieces/linux
             #LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp # Fixes path to library
-            LIBS += -L$$hhouse/egs++/dso/$$my_machine -legspp                                 # Relies on LD_LIBRARY_PATH
+            LIBS += -L$$hhouse/egs++/dso/$$my_machine -legspp -legs_input_struct                                # Relies on LD_LIBRARY_PATH
             UNAME = $$system(getconf LONG_BIT)
             contains( UNAME, 64 ){
                message( "-> 64 bit ($$SNAME)" )
