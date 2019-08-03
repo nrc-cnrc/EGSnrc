@@ -2,16 +2,13 @@
 #include <QtWidgets>
 
 #include "egs_editor.h"
-#include "egs_functions.h"
 
-EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
+EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent)
+{
     this->setFrameShape(QFrame::NoFrame);
 
     installEventFilter(this);
     viewport()->installEventFilter(this);
-
-    const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-    this->setFont(fixedFont);
 
     lineNumberArea = new LineNumberArea(this);
 
@@ -24,19 +21,10 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
     highlightCurrentLine();
 }
 
-EGS_Editor::~EGS_Editor() {
-    if(lineNumberArea) {
-        delete lineNumberArea;
-    }
-}
 
-void EGS_Editor::setInputStruct(shared_ptr<EGS_InputStruct> inp) {
-    cout << "test EGS_Editor::setInputStruct" << endl;
-    inputStruct = *inp;
-    shared_ptr<EGS_BlockInput> libraryBlock = inputStruct.getLibraryBlock("","");
-}
 
-int EGS_Editor::lineNumberAreaWidth() {
+int EGS_Editor::lineNumberAreaWidth()
+{
     int digits = 1;
     int max = qMax(1, blockCount());
     while (max >= 10) {
@@ -51,28 +39,28 @@ int EGS_Editor::lineNumberAreaWidth() {
 
 
 
-void EGS_Editor::updateLineNumberAreaWidth(int /* newBlockCount */) {
+void EGS_Editor::updateLineNumberAreaWidth(int /* newBlockCount */)
+{
     setViewportMargins(lineNumberAreaWidth()+5, 0, 0, 0);
 }
 
 
 
-void EGS_Editor::updateLineNumberArea(const QRect &rect, int dy) {
-    if (dy) {
+void EGS_Editor::updateLineNumberArea(const QRect &rect, int dy)
+{
+    if (dy)
         lineNumberArea->scroll(0, dy);
-    }
-    else {
+    else
         lineNumberArea->update(0, rect.y(), lineNumberArea->width(), rect.height());
-    }
 
-    if (rect.contains(viewport()->rect())) {
+    if (rect.contains(viewport()->rect()))
         updateLineNumberAreaWidth(0);
-    }
 }
 
 
 
-void EGS_Editor::resizeEvent(QResizeEvent *e) {
+void EGS_Editor::resizeEvent(QResizeEvent *e)
+{
     QPlainTextEdit::resizeEvent(e);
 
     QRect cr = contentsRect();
@@ -81,7 +69,8 @@ void EGS_Editor::resizeEvent(QResizeEvent *e) {
 
 
 
-void EGS_Editor::highlightCurrentLine() {
+void EGS_Editor::highlightCurrentLine()
+{
     QList<QTextEdit::ExtraSelection> extraSelections;
 
     if (!isReadOnly()) {
@@ -101,17 +90,18 @@ void EGS_Editor::highlightCurrentLine() {
 
 
 
-void EGS_Editor::autoComplete() {
-    // Get the input structure
-    EGS_BlockInput inp = getBlockInput();
+void EGS_Editor::autoComplete()
+{
+    QTextCursor cursor = textCursor();
+    int clickedPosition = cursor.position();
 
     // Get the text of the current line
-    QTextCursor cursor = textCursor();
     cursor.movePosition(QTextCursor::StartOfBlock);
     cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
     QString selectedText = cursor.selectedText();
 
-    if (selectedText.simplified() == "library = ") {
+    if(selectedText.simplified() == "library =") {
+        //insertPlainText(selectedText);
 
         // Init popup
         QListView *popup = new QListView;
@@ -119,19 +109,21 @@ void EGS_Editor::autoComplete() {
         popup->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         popup->setSelectionBehavior(QAbstractItemView::SelectRows);
         popup->setSelectionMode(QAbstractItemView::SingleSelection);
-        popup->setParent(nullptr);
-        popup->setFocusPolicy(Qt::NoFocus);
-        popup->installEventFilter(this);
+        //popup->setModelColumn(d->column);
 
-        // The Qt::Popup option seems to take control of mouse + key inputs
+        popup->setParent(nullptr);
+        // This option seems to take control of mouse + key inputs
         // essentially locking up the computer, beware!
         //popup->setWindowFlag(Qt::Popup);
         popup->setWindowFlag(Qt::ToolTip);
+        popup->setFocusPolicy(Qt::NoFocus);
+
+        popup->installEventFilter(this);
 
         QObject::connect(popup, SIGNAL(clicked(QModelIndex)),
-                         this, SLOT(insertCompletion(QModelIndex)));
+                        this, SLOT(insertCompletion(QModelIndex)));
         QObject::connect(this, SIGNAL(cursorPositionChanged()),
-                         popup, SLOT(hide()));
+                        popup, SLOT(hide()));
 //
 //         QObject::connect(popup->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
 //                         this, SLOT(_q_completionSelected(QItemSelection)));
@@ -141,43 +133,57 @@ void EGS_Editor::autoComplete() {
         model = new QStringListModel(this);
 
         // Make data
-        QStringList itemList;
-        itemList << "egs_box" << "egs_cd_geometry" << "egs_cones" << "eii_iii";
-        model->setStringList(itemList);
+        QStringList List;
+        List << "egs_box" << "egs_cd_geometry" << "egs_cones";
+        model->setStringList(List);
 
         popup->setModel(model);
-        popup->setFont(this->font());
-
-        // Get max string length
-        int strLength = 0;
-        for (auto &item: itemList) {
-            if (item.size() > strLength) {
-                strLength = item.size();
-            }
-        }
 
         // Create a selection popup
+        QRect rect; //tmp rect
         int maxVisibleItems = 6;
         const QRect screen = this->frameRect();
+        Qt::LayoutDirection dir = this->layoutDirection();
         QPoint pos;
         int rh, w;
         int h = (popup->sizeHintForRow(0) * qMin(maxVisibleItems, popup->model()->rowCount()) + 3) + 3;
         QScrollBar *hsb = popup->horizontalScrollBar();
-        if (hsb && hsb->isVisible()) {
+        if (hsb && hsb->isVisible())
             h += popup->horizontalScrollBar()->sizeHint().height();
+
+        if (rect.isValid()) {
+            rh = rect.height();
+            w = rect.width();
+            pos = this->mapToGlobal(dir == Qt::RightToLeft ? rect.bottomRight() : rect.bottomLeft());
+        } else {
+            rh = this->height();
+            pos = this->mapToGlobal(QPoint(0, this->height() - 2));
+            w = this->width();
         }
 
-        rh = this->height();
-        pos = this->viewport()->mapToGlobal(this->cursorRect().bottomRight());
-        QFontMetrics fm(popup->font());
-        w = 20 + strLength * fm.horizontalAdvance('9');
+        // Constrain the box size to the window
+        if (w > screen.width())
+            w = screen.width();
+        if ((pos.x() + w) > (screen.x() + screen.width()))
+            pos.setX(screen.x() + screen.width() - w);
+        if (pos.x() < screen.x())
+            pos.setX(screen.x());
+
+        int top = pos.y() - rh - screen.top() + 2;
+        int bottom = screen.bottom() - pos.y();
+        h = qMax(h, popup->minimumHeight());
+        if (h > bottom) {
+            h = qMin(qMax(top, bottom), h);
+
+            if (top > bottom)
+                pos.setY(pos.y() - h - rh + 2);
+        }
 
         popup->setGeometry(pos.x(), pos.y(), w, h);
 
         // Show the popup
-        if (!popup->isVisible()) {
+        if (!popup->isVisible())
             popup->show();
-        }
     }
 }
 
@@ -186,76 +192,10 @@ void EGS_Editor::insertCompletion(QModelIndex index) {
     //insertPlainText(index);
 }
 
-// TODO: on clicking a new position in doc
-// - get nearest :start, load inputstruct (for geom/src, get library first)
-EGS_BlockInput EGS_Editor::getBlockInput() {
-    cout << "test getBlockInput " << endl;
-    shared_ptr<EGS_BlockInput> libraryBlock = inputStruct.getLibraryBlock("","");
-
-    QString library, blockTitle;
-    vector<QString> stopList;
-    for(QTextBlock block = textCursor().block(); block.isValid(); block = block.previous()) {
-        QString line = block.text().simplified();
-
-        // Get block library for input blocks based on a shared library
-        // e.g. geometries and sources
-        int pos = line.lastIndexOf("library =");
-        if(pos >= 0) {
-            pos += 9;
-            library = line.mid(pos, line.size()-pos).simplified();
-            cout << "test1 " << library.toLatin1().data() << endl;
-        }
-
-        // Get block title
-        pos = line.lastIndexOf(":start ");
-        if(pos >= 0) {
-            pos += 7;
-            int endPos = line.indexOf(":",pos);
-            if(endPos > 0) {
-                blockTitle = line.mid(pos, endPos-pos);
-                //cout << "test2 " << blockTitle.toLatin1().data() << endl;
-                if(stopList.size() > 0 && blockTitle == stopList.back()) {
-                    stopList.pop_back();
-                    blockTitle.clear();
-                } else {
-                    break;
-                }
-            }
-        }
-
-        // Save a vector of blocks that have already been closed
-        // This means both a matching :start and :stop are above the cursor
-        // so we're not inside the block
-        pos = line.lastIndexOf(":stop ");
-        if(pos >= 0) {
-            pos += 6;
-            int endPos = line.indexOf(":",pos);
-            if(endPos > 0) {
-                QString stopTitle = line.mid(pos, endPos-pos);
-                stopList.push_back(stopTitle);
-            }
-        }
-    }
-
-    // If we got the library tag, we can directly look up this input block structure
-    shared_ptr<EGS_BlockInput> inputBlock;
-    cout << "test4a " << blockTitle.toLatin1().data() << endl;
-
-//     if(library.size() > 0) {
-//         cout << "test3a " << endl;
-//         inputBlock = inputStruct->getLibraryBlock(blockTitle.toStdString(), library.toStdString());
-//         cout << "test3b " << endl;
-//         if(inputBlock) {
-//             cout << "test3 " << inputBlock->getTitle().c_str() << endl;
-//         }
-//     }
-    cout << "test4b " << endl;
 
 
-    return EGS_BlockInput();
-}
-
-void EGS_Editor::lineNumberAreaPaintEvent(QPaintEvent *event) {
+void EGS_Editor::lineNumberAreaPaintEvent(QPaintEvent *event)
+{
     QPainter painter(lineNumberArea);
     //painter.fillRect(event->rect(), QColor(Qt::lightGray).lighter(110));
 
@@ -287,8 +227,8 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
 
         // track `Ctrl + Click` in the text edit
         if ((obj == this->viewport()) &&
-                (mouseEvent->button() == Qt::LeftButton) &&
-                (QGuiApplication::keyboardModifiers() == Qt::ControlModifier)) {
+            (mouseEvent->button() == Qt::LeftButton) &&
+            (QGuiApplication::keyboardModifiers() == Qt::ControlModifier)) {
             // open the link (if any) at the current position
             //openLinkAtCursorPosition();
             return true;

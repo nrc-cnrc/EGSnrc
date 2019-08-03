@@ -42,32 +42,6 @@ EGS_InputStruct::EGS_InputStruct() {}
 
 EGS_InputStruct::~EGS_InputStruct() {}
 
-void EGS_InputStruct::addBlockInput(shared_ptr<EGS_BlockInput> block) {
-    blockInputs.push_back(block);
-}
-
-void EGS_InputStruct::addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks) {
-    egsInformation("testA EGS_InputStruct::addBlockInputs\n");
-    blockInputs.insert(blockInputs.end(), blocks.begin(), blocks.end());
-}
-
-shared_ptr<EGS_BlockInput> EGS_InputStruct::getLibraryBlock(string blockTitle, string libraryName) {
-    // Loop through each input block in the structure to find the library with
-    // the matching name
-    egsInformation("testA EGS_InputStruct::getLibraryBlock\n");
-    //shared_ptr<EGS_BlockInput> libraryBlock;
-    //shared_ptr<EGS_BlockInput> libraryBlock = make_shared<EGS_BlockInput>("geometry");
-    //auto libraryBlock = make_shared<EGS_BlockInput>();
-//     for(auto& block : blockInputs) {
-//         libraryBlock = block->getLibraryBlock(blockTitle, libraryName);
-//         egsInformation("testB EGS_InputStruct::getLibraryBlock\n");
-//         if(libraryBlock) {
-//             break;
-//         }
-//     }
-    return nullptr;
-}
-
 EGS_BlockInput::EGS_BlockInput() {}
 
 EGS_BlockInput::EGS_BlockInput(string blockTit, bool isReq, shared_ptr<EGS_BlockInput> par) {
@@ -123,35 +97,6 @@ void EGS_BlockInput::setParent(shared_ptr<EGS_BlockInput> par) {
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::getParent() {
     return parent;
-}
-
-shared_ptr<EGS_BlockInput> EGS_BlockInput::getLibraryBlock(string blockTitle, string libraryName) {
-    egsInformation("test EGS_BlockInput::getLibraryBlock\n");
-    //shared_ptr<EGS_BlockInput> libraryBlock(new EGS_BlockInput);
-    auto libraryBlock = make_shared<EGS_BlockInput>();
-
-
-//     // First search the singleInputs for the library name
-//     // only if the block title matches (e.g. it's a geometry, or a source)
-//     if(this->getTitle() == blockTitle) {
-//         egsInformation("test2 EGS_BlockInput::getLibraryBlock\n");
-//         for(auto& inp : singleInputs) {
-//             if(inp.getAttribute() == libraryName) {
-//                 egsInformation("test3 EGS_BlockInput::getLibraryBlock\n");
-//                 return shared_ptr<EGS_BlockInput>(this);
-//             }
-//         }
-//     }
-//
-//     // If not found, go through input blocks
-//     for(auto& block : blockInputs) {
-//         libraryBlock = block->getLibraryBlock(blockTitle, libraryName);
-//         if(libraryBlock) {
-//             egsInformation("test4 EGS_BlockInput::getLibraryBlock\n");
-//             return libraryBlock;
-//         }
-//     }
-    return libraryBlock;
 }
 
 EGS_SingleInput::EGS_SingleInput() {}
