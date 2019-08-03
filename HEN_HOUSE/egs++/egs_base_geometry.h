@@ -46,10 +46,12 @@
 
 #include "egs_vector.h"
 #include "egs_rndm.h"
+#include "egs_input_struct.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 using std::string;
 using std::vector;
@@ -73,6 +75,14 @@ public:
     string      name;
     vector<int> regions;
 };
+
+static shared_ptr<EGS_BlockInput> blockInput = make_shared<EGS_BlockInput>("geometry");
+static void setBaseGeometryInputs() {
+    blockInput->addSingleInput("name", true, "The user-declared unique name of this geometry.");
+    shared_ptr<EGS_BlockInput> mediaBlock = blockInput->addBlockInput("media input");
+    mediaBlock->addSingleInput("media", true, "A list of media that are used in this geometry.");
+    mediaBlock->addSingleInput("set medium", false, "TODO");
+}
 
 /*! \brief Base geometry class. Every geometry class must be derived from
   EGS_BaseGeometry.
@@ -793,6 +803,7 @@ protected:
      */
     int med;
 
+
     /*! \brief Does this geometry have relative mass density scvaling?
 
      */
@@ -1145,6 +1156,7 @@ struct EGS_GeometryIntersections {
     \until make_depend
     That's all.
 
+
     Here is the complete source code of the EGS_Box class.<br>
     The header file:
     \include geometry/egs_box/egs_box.h
@@ -1152,6 +1164,7 @@ struct EGS_GeometryIntersections {
     \include geometry/egs_box/egs_box.cpp
     The Makefile:
     \include geometry/egs_box/Makefile
+
 */
 
 /* \example geometry/example1/geometry_example1.cpp

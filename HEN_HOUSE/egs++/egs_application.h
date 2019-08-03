@@ -45,7 +45,9 @@
 #include "egs_base_source.h"
 #include "egs_simple_container.h"
 #include "egs_interpolator.h"
+#include "egs_input_struct.h"
 
+#include <memory>
 #include <string>
 #include <iostream>
 using namespace std;
@@ -1204,6 +1206,8 @@ public:
     // Utility function for ausgab phase space scoring objects
     //************************************************************
     virtual void setLatch(int latch) {};
+
+    static unique_ptr<EGS_InputStruct> inputStructure;
 
     bool containsDynamic() {
         bool hasDynamic = false;

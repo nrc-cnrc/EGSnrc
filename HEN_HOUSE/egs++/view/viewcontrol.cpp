@@ -47,6 +47,8 @@
 #include "egs_ausgab_object.h"
 #include "ausgab_objects/egs_dose_scoring/egs_dose_scoring.h"
 #include "egs_particle_track.h"
+#include "egs_library.h"
+#include "egs_input_struct.h"
 
 #include <qmessagebox.h>
 #include <qapplication.h>
@@ -73,6 +75,25 @@ using namespace std;
 
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
+#endif
+
+typedef EGS_Application *(*createAppFunction)(int argc, char **argv);
+typedef EGS_BaseGeometry *(*createGeomFunction)();
+typedef EGS_BaseSource *(*isSourceFunction)();
+typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
+
+#ifdef WIN32
+    #ifdef CYGWIN
+        const char fs = '/';
+    #else
+        const char fs = '\\';
+    #endif
+    string lib_prefix = "";
+    string lib_suffix = ".dll";
+#else
+    const char fs = '/';
+    string lib_prefix = "lib";
+    string lib_suffix = ".so";
 #endif
 
 static unsigned char standard_red[] = {
@@ -132,6 +153,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     if (showPhotonTracks || showElectronTracks || showPositronTracks) {
         showTracks = true;
     }
+
     // camera orientation vectors (same as the screen vectors)
     camera_v1 = screen_v1;
     camera_v2 = screen_v2;
@@ -184,8 +206,141 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // Add the clipping planes widget to the designated layout
     clipLayout->addWidget(cplanes);
 
-    // set the widget to show near the left-upper corner of the screen
-    move(QPoint(25,25));
+    // Initialize the editor and syntax highlighter
+    egsinpEdit = new EGS_Editor();
+    editorLayout->addWidget(egsinpEdit);
+    highlighter = new EGS_Highlighter(egsinpEdit->document());
+
+    // Load an egs++ application to parse the input file
+    string app_name;
+    int appc = 5;
+    char *appv[] = { "egspp", "-a", "tutor7pp", "-i", "tracks1.egsinp", "-p", "tutor_data"};
+
+    // Appv: %s -a application [-p pegs_file] [-i input_file] [-o output_file] [-b] [-P number_of_parallel_jobs] [-j job_index]
+    if (!EGS_Application::getArgument(appc,appv,"-a","--application",app_name)) {
+        egsFatal("test fail\n\n");
+    }
+
+    string lib_dir;
+    EGS_Application::checkEnvironmentVar(appc,appv,"-e","--egs-home","EGS_HOME",lib_dir);
+    lib_dir += "bin";
+    lib_dir += fs;
+    lib_dir += CONFIG_NAME;
+    lib_dir += fs;
+
+    EGS_Library egs_lib(app_name.c_str(),lib_dir.c_str());
+    if (!egs_lib.load()) egsFatal("\n%s: Failed to load the %s application library from %s\n\n",
+                                      appv[0],app_name.c_str(),lib_dir.c_str());
+
+    createAppFunction createApp = (createAppFunction) egs_lib.resolve("createApplication");
+    if (!createApp) egsFatal("\n%s: Failed to resolve the address of the 'createApplication' function"
+                                 " in the application library %s\n\n",appv[0],egs_lib.libraryFile());
+
+    EGS_Application *app = createApp(appc,appv);
+    if (!app) {
+        egsFatal("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
+    }
+    egsInformation("Testapp %f\n",app->getRM());
+
+    // Get a list of all the libraries in the dso directory
+    string dso_dir;
+    EGS_Application::checkEnvironmentVar(appc,appv,"-H","--hen-house","HEN_HOUSE",dso_dir);
+    dso_dir += "egs++";
+    dso_dir += fs;
+    dso_dir += "dso";
+    dso_dir += fs;
+    dso_dir += CONFIG_NAME;
+    dso_dir += fs;
+
+    QDir directory(dso_dir.c_str());
+    QStringList libraries = directory.entryList(QStringList() << (lib_prefix+"*"+lib_suffix).c_str(), QDir::Files);
+    QStringList geomLibs, sourceLibs;
+
+    shared_ptr<EGS_InputStruct> inputStruct(new EGS_InputStruct);
+
+    // For each library, try to load it and determine if it is geometry or source
+    for (const auto &lib : libraries) {
+        // Remove the extension
+        QString libName = lib.left(lib.lastIndexOf("."));
+        // Remove the prefix (EGS_Library adds it automatically)
+        libName = libName.right(libName.length() - lib_prefix.length());
+
+        egsInformation("testlib trying %s\n", libName.toLatin1().data());
+
+        EGS_Library egs_lib(libName.toLatin1().data(),dso_dir.c_str());
+        if (!egs_lib.load()) {
+            continue;
+        }
+
+        createGeomFunction createGeom = (createGeomFunction) egs_lib.resolve("createGeometry");
+        if (createGeom) {
+            /*EGS_BaseGeometry *geom = createGeom();
+            EGS_BlockInput *inputBlock = geom->getInputBlock();
+
+            geomLibs.append(libName);
+
+            egsInformation("test1a\n");
+            vector<EGS_SingleInput> singleInputs = inputBlock->getSingleInputs();
+            egsInformation("test1\n");
+            for(auto& inp : singleInputs) {
+                const vector<string> vals = inp.getValues();
+                egsInformation("test %s\n", inp.getAttribute().c_str());
+                for(auto&& val : vals) {
+                    egsInformation("      %s\n", val.c_str());
+                }
+            }
+            delete inputBlock;
+            delete geom;*/
+
+            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+            egsInformation(" testgeom %s\n",libName.toLatin1().data());
+            if (getInputs) {
+
+                shared_ptr<EGS_BlockInput> geom = getInputs();
+                if (geom) {
+                    // Only add geometries to the list that have a function
+                    // to get the input template
+                    geomLibs.append(libName);
+
+                    geomTemplates.push_back(geom);
+
+                    vector<EGS_SingleInput> singleInputs = geom->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp.getValues();
+                        egsInformation("  single %s\n", inp.getAttribute().c_str());
+                        for (auto&& val : vals) {
+                            egsInformation("      %s\n", val.c_str());
+                        }
+                    }
+
+                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = geom->getBlockInputs();
+                    for (auto &block : inputBlocks) {
+                        egsInformation("  block %s\n", block->getTitle().c_str());
+                        vector<EGS_SingleInput> singleInputs = block->getSingleInputs();
+                        for (auto &inp : singleInputs) {
+                            const vector<string> vals = inp.getValues();
+                            egsInformation("   single %s\n", inp.getAttribute().c_str());
+                            for (auto&& val : vals) {
+                                egsInformation("      %s\n", val.c_str());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        bool isSource = (bool) egs_lib.resolve("createSource");
+        if (isSource) {
+            sourceLibs.append(libName);
+        }
+    }
+
+    inputStruct->addBlockInputs(geomTemplates);
+    egsinpEdit->setInputStruct(inputStruct);
+
+    // Populate the geometry and simulation template lists
+    comboBox_geomTemplate->addItems(geomLibs);
+    comboBox_simTemplate->addItems(sourceLibs);
 
     //set the play button active boolean to false
     isPlaying=false;
@@ -206,6 +361,9 @@ GeometryViewControl::~GeometryViewControl() {
         for (int i=0; i<nobj; ++i) {
             delete EGS_AusgabObject::getObject(i);
         }
+    }
+    if(highlighter) {
+        delete highlighter;
     }
 }
 
@@ -233,20 +391,24 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
 #ifdef VIEW_DEBUG
     egsWarning("In loadInput(), reloading is %d\n",reloading);
 #endif
+
     // check that the file (still) exists
     QFile file(filename);
     if (!file.exists()) {
-        egsWarning("\nFile %s does not exist anymore!\n\n",filename.toUtf8().constData());
+        egsWarning("\nInput file %s does not exist!\n\n",filename.toUtf8().constData());
         return false;
     }
 
     QFileInfo fileInfo = QFileInfo(file);
+
     // Set the title of the viewer
     this->setProperty("windowTitle", "View Controls ("+fileInfo.baseName()+")");
     gview->setProperty("windowTitle", "egs_view ("+fileInfo.baseName()+")");
+
     // Clear the current geometry
     gview->stopWorker();
     qApp->processEvents();
+
     // Delete any previous geometry
     if (!simGeom) {
 #ifdef VIEW_DEBUG
@@ -273,12 +435,14 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
             }
         }
     }
+
     // Read the input file
 #ifdef VIEW_DEBUG
     egsInformation("GeometryViewControl::loadInput: Reading input file...\n");
 #endif
     EGS_Input input;
     input.setContentFromFile(filename.toUtf8().constData());
+
     // Load the new geometry
 #ifdef VIEW_DEBUG
     egsInformation("GeometryViewControl::loadInput: Creating the geometry...\n");
@@ -315,6 +479,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     else {
         newGeom = simGeom;
     }
+
     // restart from scratch (copied from main.cpp)
     EGS_Float xmin = -50, xmax = 50;
     EGS_Float ymin = -50, ymax = 50;
@@ -366,6 +531,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         }
         delete vc;
     }
+
     // Only allow region selection for up to 1k regions
     int nreg = newGeom->regions();
     if (nreg < 1001) {
@@ -378,11 +544,14 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         egsInformation("Region selection tab has been disabled due to >1000 regions (for performance reasons)\n");
     }
     tabWidget->setTabEnabled(2,allowRegionSelection);
+
     // Get the rendering parameters
     RenderParameters &rp = gview->pars;
     rp.allowRegionSelection = allowRegionSelection;
     rp.trackIndices.assign(6,1);
+
     gview->restartWorker();
+
     if (!simGeom) {
         setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
         origSimGeom = g;
@@ -396,12 +565,14 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     if (allowRegionSelection) {
         updateRegionTable();
     }
+
     // Set the simulation geometry combobox
     comboBox_simGeom->clear();
     for (unsigned int i=0; i<geometryNames.size(); ++i) {
         comboBox_simGeom->addItem((geometryNames[i] + " (" + g->getGeometry(geometryNames[i])->getType() + ")").c_str(), geometryNames[i].c_str());
     }
     comboBox_simGeom->setCurrentIndex(comboBox_simGeom->findData(g->getName().c_str()));
+
     // Load ausgab objects from the input file
     if (!simGeom) {
 #ifdef VIEW_DEBUG
@@ -413,6 +584,11 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     updateAusgabObjects();
     // See if any of the dose checkboxes are checked
     doseCheckbox_toggled();
+
+    // Load the egsinp file into the editor
+    if (file.open(QFile::ReadOnly | QFile::Text)) {
+        egsinpEdit->setPlainText(file.readAll());
+    }
 
     return true;
 }
@@ -1075,6 +1251,26 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     delete input;
 
     updateView(true);
+}
+
+void GeometryViewControl::saveEgsinp() {
+#ifdef VIEW_DEBUG
+    egsWarning("In saveEgsinp()\n");
+#endif
+
+    // Prompt the user for a filename and open the file for writing
+    QString newFilename = QFileDialog::getSaveFileName(this, "Save input file as...", filename);
+    QFile egsinpFile(newFilename);
+    if (!egsinpFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return;
+    }
+    QTextStream out(&egsinpFile);
+
+    // Write the text from the editor window
+    out << egsinpEdit->toPlainText() << flush;
+
+    // Reload the input so that the changes are recognized
+    reloadInput();
 }
 
 void GeometryViewControl::setFilename(QString str) {
@@ -2440,7 +2636,6 @@ int GeometryViewControl::setGeometry(
 
 void GeometryViewControl::updateView(bool transform) {
     RenderParameters &rp = gview->pars;
-
     rp.axesmax = axesmax;
     rp.camera = camera;
     rp.camera_v1 = camera_v1;
@@ -3258,6 +3453,8 @@ void GeometryViewControl::enlargeFont() {
     controlsText->selectAll();
     controlsText->setFontPointSize(controlsFont.pointSize() + 1);
     controlsText->setTextCursor(cursor);
+
+    egsinpEdit->zoomIn();
 }
 
 void GeometryViewControl::shrinkFont() {
@@ -3272,6 +3469,8 @@ void GeometryViewControl::shrinkFont() {
     controlsText->selectAll();
     controlsText->setFontPointSize(controlsFont.pointSize() - 1);
     controlsText->setTextCursor(cursor);
+
+    egsinpEdit->zoomOut();
 }
 
 void GeometryViewControl::setFontSize(int size) {
@@ -3288,6 +3487,19 @@ void GeometryViewControl::setFontSize(int size) {
     controlsText->setTextCursor(cursor);
 }
 
+void GeometryViewControl::insertGeomTemplate(int ind) {
+    QString selection = comboBox_geomTemplate->itemText(ind);
+
+    QTextCursor cursor(egsinpEdit->textCursor());
+    egsinpEdit->insertPlainText(selection);
+}
+
+void GeometryViewControl::insertSimTemplate(int ind) {
+    QString selection = comboBox_simTemplate->itemText(ind);
+
+    QTextCursor cursor(egsinpEdit->textCursor());
+    egsinpEdit->insertPlainText(selection);
+}
 
 bool GeometryViewControl::hasValidTime() {
     // This function is used to determine whether the time index elements should be shown in the case that no dynamic geometry is present
