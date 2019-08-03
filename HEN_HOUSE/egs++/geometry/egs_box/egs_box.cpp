@@ -37,6 +37,7 @@
 
 #include "egs_box.h"
 #include "egs_input.h"
+#include "egs_base_geometry.h"
 
 void EGS_Box::printInfo() const {
     EGS_BaseGeometry::printInfo();
@@ -44,7 +45,8 @@ void EGS_Box::printInfo() const {
     egsInformation("=======================================================\n");
 }
 
-string EGS_Box::type("EGS_Box");
+static string EGS_BOX_LOCAL typeStr("EGS_Box");
+string EGS_Box::type(typeStr);
 
 static char EGS_BOX_LOCAL ebox_message1[] = "createGeometry(box): %s\n";
 static char EGS_BOX_LOCAL ebox_message2[] = "null input?";
@@ -53,19 +55,56 @@ static char EGS_BOX_LOCAL ebox_message4[] =
     "expecting 1 or 3 float inputs for 'box size'";
 static char EGS_BOX_LOCAL ebox_key1[] = "box size";
 
+static bool inputSet = false;
+
+struct EGS_BOX_LOCAL BoxInputs {
+    vector<EGS_Float> boxSize;
+};
+BoxInputs inp;
+
+// TODO was going to add this function in addition to the blockinput stuff
+EGS_BOX_LOCAL int loadInputs(EGS_Input *input) {
+    int err = input->getInput(ebox_key1,inp.boxSize);
+    if(err && blockInput->getSingleInput(ebox_key1).getRequired()) {
+        egsWarning(ebox_message1,ebox_message3);
+        return 0;
+    }
+
+    return 1;
+}
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs();
+
+        blockInput->addSingleInput("library", true, "The type of geometry.", vector<string>(1, typeStr));
+        blockInput->addSingleInput("box size", true, "1 or 3 numbers defining the box size");
+    }
+
+    EGS_BOX_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return blockInput;
+    }
 
     EGS_BOX_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
             egsWarning(ebox_message1,ebox_message2);
             return 0;
         }
-        vector<EGS_Float> s;
-        int err = input->getInput(ebox_key1,s);
-        if (err) {
-            egsWarning(ebox_message1,ebox_message3);
+
+        if(!loadInputs(input)) {
+            egsWarning("Failed to load the inputs for %s.\n", typeStr.c_str());
             return 0;
         }
+
+        vector<EGS_Float> s;
+        s = inp.boxSize;
+
         EGS_AffineTransform *t = EGS_AffineTransform::getTransformation(input);
         EGS_Box *result;
         if (s.size() == 1) {
@@ -90,5 +129,4 @@ extern "C" {
         result->setLabels(input);
         return result;
     }
-
 }
