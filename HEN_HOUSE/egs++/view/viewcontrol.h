@@ -38,6 +38,9 @@
 #include <vector>
 #include "egs_user_color.h"
 #include "egs_vector.h"
+#include "egs_highlighter.h"
+#include "egs_editor.h"
+#include "egs_advanced_application.h"
 
 #include <QMainWindow>
 
@@ -84,6 +87,7 @@ public slots:
     virtual void loadDose();
     virtual void loadConfig();
     virtual void saveConfig();
+    virtual void saveEgsinp();
     virtual void updateSimulationGeometry(int ind);
     virtual void checkboxAxes(bool toggle);
     virtual void checkboxAxesLabels(bool toggle);
@@ -143,6 +147,8 @@ public slots:
     virtual void changeTrackMaxE(int t);
     virtual void changeTrackMaxPo(int t);
     virtual void updateTracks(vector<size_t> ntracks);
+    virtual void insertGeomTemplate(int ind);
+    virtual void insertSimTemplate(int ind);
 
 private:
 
@@ -199,7 +205,11 @@ private:
             energyScaling;
     vector<vector<EGS_Float>> scoreArrays;
     vector<string> geometryNames;
+    vector<shared_ptr<EGS_BlockInput>> geomTemplates;
     EGS_BaseGeometry *origSimGeom;
+    EGS_Editor *egsinpEdit;
+    EGS_Highlighter *highlighter;
+    EGS_AdvancedApplication *egsApp;
 
 protected slots:
 

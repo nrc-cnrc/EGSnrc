@@ -97,6 +97,8 @@ static EGS_LOCAL EGS_Application *active_egs_application = 0;
 
 int EGS_Application::n_apps = 0;
 
+unique_ptr<EGS_InputStruct> EGS_Application::inputStructure = unique_ptr<EGS_InputStruct>();
+
 EGS_EXPORT EGS_Application *EGS_Application::activeApplication() {
     return active_egs_application;
 }
