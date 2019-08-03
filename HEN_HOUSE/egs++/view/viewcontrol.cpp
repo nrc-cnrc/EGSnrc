@@ -204,7 +204,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // Load an egs++ application to parse the input file
     string app_name;
     int appc = 5;
-    char *appv[] = { "egspp", "-a", "tutor7pp", "-i", "tracks1.egsinp", "-p", "tutor_data"};
+    char* appv[] = { "egspp", "-a", "tutor7pp", "-i", "tracks1.egsinp", "-p", "tutor_data"};
 
     // Appv: %s -a application [-p pegs_file] [-i input_file] [-o output_file] [-b] [-P number_of_parallel_jobs] [-j job_index]
     if (!EGS_Application::getArgument(appc,appv,"-a","--application",app_name)) {
@@ -246,10 +246,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QStringList libraries = directory.entryList(QStringList() << (lib_prefix+"*"+lib_suffix).c_str(), QDir::Files);
     QStringList geomLibs, sourceLibs;
 
-    inputStruct = make_shared<EGS_InputStruct>();
-
     // For each library, try to load it and determine if it is geometry or source
-    for (const auto &lib : libraries) {
+    for(const auto& lib : libraries) {
         // Remove the extension
         QString libName = lib.left(lib.lastIndexOf("."));
         // Remove the prefix (EGS_Library adds it automatically)
@@ -284,10 +282,10 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
             getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
             egsInformation(" testgeom %s\n",libName.toLatin1().data());
-            if (getInputs) {
+            if(getInputs) {
 
                 shared_ptr<EGS_BlockInput> geom = getInputs();
-                if (geom) {
+                if(geom) {
                     // Only add geometries to the list that have a function
                     // to get the input template
                     geomLibs.append(libName);
@@ -295,22 +293,22 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     geomTemplates.push_back(geom);
 
                     vector<EGS_SingleInput> singleInputs = geom->getSingleInputs();
-                    for (auto &inp : singleInputs) {
+                    for(auto& inp : singleInputs) {
                         const vector<string> vals = inp.getValues();
                         egsInformation("  single %s\n", inp.getAttribute().c_str());
-                        for (auto&& val : vals) {
+                        for(auto&& val : vals) {
                             egsInformation("      %s\n", val.c_str());
                         }
                     }
 
                     vector<shared_ptr<EGS_BlockInput>> inputBlocks = geom->getBlockInputs();
-                    for (auto &block : inputBlocks) {
+                    for(auto& block : inputBlocks) {
                         egsInformation("  block %s\n", block->getTitle().c_str());
                         vector<EGS_SingleInput> singleInputs = block->getSingleInputs();
-                        for (auto &inp : singleInputs) {
+                        for(auto& inp : singleInputs) {
                             const vector<string> vals = inp.getValues();
                             egsInformation("   single %s\n", inp.getAttribute().c_str());
-                            for (auto&& val : vals) {
+                            for(auto&& val : vals) {
                                 egsInformation("      %s\n", val.c_str());
                             }
                         }
@@ -325,12 +323,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         }
     }
 
-    inputStruct->addBlockInputs(geomTemplates);
-    egsinpEdit->setInputStruct(inputStruct);
-
     // Populate the geometry and simulation template lists
     comboBox_geomTemplate->addItems(geomLibs);
     comboBox_simTemplate->addItems(sourceLibs);
+
+    // set the widget to show near the left-upper corner of the screen
+    move(QPoint(25,25));
 }
 
 GeometryViewControl::~GeometryViewControl() {
