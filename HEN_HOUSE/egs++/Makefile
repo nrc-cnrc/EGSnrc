@@ -42,7 +42,7 @@ egspp_files = egs_input egs_base_geometry egs_library egs_transformations \
              egs_base_source egs_functions egs_application egs_run_control \
              egs_scoring egs_interpolator egs_atomic_relaxations \
              egs_ausgab_object egs_particle_track egs_fortran_geometry \
-             egs_ensdf
+             egs_ensdf egs_input_struct
 
 egspp_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(egspp_files)))
 config1h = $(IEGS1)$(DSEP)egs_config1.h egs_libconfig.h egs_functions.h
@@ -71,7 +71,7 @@ lib_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(all_libs)))
 
 #******************************************************************************
 
-all: $(EGS_BINDIR)egspp$(EXE) $(ABS_DSO)$(libpre)egspp$(libext) glibs slibs shapes aobjects gtest
+all: $(EGS_BINDIR)egspp$(EXE) $(ABS_DSO)$(libpre)egspp$(libext) $(ABS_DSO)$(libpre)egs_input_struct$(libext) glibs slibs shapes aobjects gtest
 
 $(EGS_BINDIR)egspp$(EXE): $(dso) $(DSO1)egspp.$(obje) $(ABS_DSO)$(libpre)egspp$(libext)
 	$(CXX) $(INC1) $(DEF1) $(opt) $(EOUT)$@ $(DSO1)egspp.$(obje) $(lib_link1) $(link2_prefix)egspp$(link2_suffix)
@@ -82,6 +82,9 @@ $(ABS_DSO)$(libpre)egspp$(libext): $(dso) $(egspp_objects)
 $(DSO1)egspp.$(obje): egspp.cpp egs_application.h egs_base_geometry.h egs_vector.h \
 	               egs_math.h egs_library.h $(config1h)
 	$(CXX) $(INC1) $(DEF1) $(opt) -c $(COUT)$@ $(notdir $(basename $@)).cpp
+
+$(ABS_DSO)$(libpre)egs_input_struct$(libext): $(dso) $(DSO1)egs_input_struct.$(obje)
+	$(CXX) $(INC1) $(DEFS) $(opt) $(shared) $(DSO1)egs_input_struct.$(obje) $(extra)
 
 $(DSO1)egs_interpolator.$(obje): egs_interpolator.cpp egs_interpolator.h \
                                  $(config1h)
@@ -128,6 +131,9 @@ $(DSO1)egs_base_source.$(obje): egs_base_source.cpp egs_base_source.h \
 
 $(DSO1)egs_ensdf.$(obje): egs_ensdf.cpp egs_ensdf.h \
     $(config1h) egs_functions.h egs_math.h egs_alias_table.h egs_atomic_relaxations.h
+
+$(DSO1)egs_input_struct.$(obje): egs_input_struct.cpp egs_input_struct.h \
+    $(config1h)
 
 $(DSO1)egs_geometry_tester.$(obje): egs_geometry_tester.cpp \
     egs_geometry_tester.h egs_input.h egs_vector.h egs_base_geometry.h \

@@ -43,10 +43,12 @@
 #define EGS_BASE_GEOMETRY_
 
 #include "egs_vector.h"
+#include "egs_input_struct.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 using std::string;
 using std::vector;
@@ -70,6 +72,14 @@ public:
     string      name;
     vector<int> regions;
 };
+
+static shared_ptr<EGS_BlockInput> blockInput = make_shared<EGS_BlockInput>("geometry");
+static void setBaseGeometryInputs() {
+    blockInput->addSingleInput("name", true, "The user-declared unique name of this geometry.");
+    shared_ptr<EGS_BlockInput> mediaBlock = blockInput->addBlockInput("media input");
+    mediaBlock->addSingleInput("media", true, "A list of media that are used in this geometry.");
+    mediaBlock->addSingleInput("set medium", false, "TODO");
+}
 
 /*! \brief Base geometry class. Every geometry class must be derived from
   EGS_BaseGeometry.
