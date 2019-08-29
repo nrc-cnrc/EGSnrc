@@ -87,7 +87,7 @@
 "
 REPLACE {$STAT}    WITH {10}  "Number of batches to use in calcn of statistics"
                               "It works with $STAT = 1 but gives no stats"
-REPLACE {$MXMED}   WITH {7}   "Maximum number of media
+REPLACE {$MXMED}   WITH {20}   "Maximum number of media
 REPLACE {$MXSTACK} WITH {10000}  "Maximum particle stack size
 REPLACE {$IMAX}    WITH {128} "Maximum number of x cells
 REPLACE {$JMAX}    WITH {128} "Maximum number of y cells
