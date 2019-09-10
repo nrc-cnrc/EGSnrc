@@ -1143,6 +1143,21 @@ CHARACTER*80 MLC_TITLE; "T> title line in mlc_file
 $REAL INDEXTMP; "T>temporary input variable for field indices in dynamic and
                 "  step-and-shoot simulations
 $LOGICAL check_full_qtr;
+
+"a flag indicating whether a sector of a given leaf cross-section has"
+"an alternative definition to that specified in the BEAMnrc Manual"
+"indexing: LEAFTYPE, 1 (Y bound) or 2 (Z bound), boundary no.
+$INTEGER I_LEAF_ALT_DEF(5,2,10);
+$REAL YTMP;
+
+DO I=1,5[
+  DO J=1,2[
+   DO K=1,10[
+     I_LEAF_ALT_DEF(I,J,K)=0;
+   ]
+  ]
+]
+
 " **************************************************************** "
 
 "                 STEP I : INITIALIZE PARAMETERS
@@ -1590,16 +1605,19 @@ IF(NUM_HLF>0) [
  ]
  IF(WRAILBOT_$SYNCHDMLC(2) > WGROOVE_$SYNCHDMLC(2)+WTIP_$SYNCHDMLC(2))[
    OUTPUT ICM_$SYNCHDMLC;
-   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+   (//' ***WARNING IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
       ' WRAILBOT_$SYNCHDMLC(2) > WGROOVE_$SYNCHDMLC(2)+WTIP_$SYNCHDMLC(2).'/
-      ' Lower rail too wide.'//);
-         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+      ' Leaf cross-section differs from that specified in the BEAMnrc'/
+      ' Manual.'//);
+   I_LEAF_ALT_DEF(2,1,4) = 1;
  ]
  IF(WRAILTOP_$SYNCHDMLC(2)>WRAILBOT_$SYNCHDMLC(2))[
    OUTPUT ICM_$SYNCHDMLC;
-   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
-      ' WRAILTOP_$SYNCHDMLC(2)>WRAILBOT_$SYNCHDMLC(2).  Top rail too wide.'//);
-         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   (//' ***WARNING IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(2) > WRAILBOT_$SYNCHDMLC(2).'/
+      ' This differs from the cross-section specified in the BEAMnrc'/
+      ' Manual.'//);
+   I_LEAF_ALT_DEF(2,1,6) = 1;
  ]
  IF(WRAILTOP_$SYNCHDMLC(2)<WRAILBOT_$SYNCHDMLC(2)-WGROOVE_$SYNCHDMLC(2))[
    OUTPUT ICM_$SYNCHDMLC;
@@ -1693,9 +1711,10 @@ IF(NUM_HLF>0) [
  ]
  IF(WRAILBOT_$SYNCHDMLC(3)>WRAILTOP_$SYNCHDMLC(3))[
    OUTPUT ICM_$SYNCHDMLC;
-   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
-' WRAILBOT_$SYNCHDMLC(3)>WRAILTOP_$SYNCHDMLC(3).  Bottom of rail too wide.'//);
-         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   (//' ***WARNING IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+' WRAILBOT_$SYNCHDMLC(3) > WRAILTOP_$SYNCHDMLC(3).'/
+' This differs from the cross-section specified in the BEAMnrc Manual.'//);
+         I_LEAF_ALT_DEF(3,1,1) = 1;
  ]
  IF(WRAILBOT_$SYNCHDMLC(3)<WRAILTOP_$SYNCHDMLC(3)-WTONGUE_$SYNCHDMLC(3))[
    OUTPUT ICM_$SYNCHDMLC;
@@ -1809,23 +1828,32 @@ IF(NUM_QTR>0) [
  ]
  IF(WRAILBOT_$SYNCHDMLC(4)>WGROOVE_$SYNCHDMLC(4)+WTIP_$SYNCHDMLC(4))[
    OUTPUT ICM_$SYNCHDMLC;
-   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
-      ' WRAILBOT_$SYNCHDMLC(4)>WGROOVE_$SYNCHDMLC(4)+WTIP_$SYNCHDMLC(4).'/
-      ' Lower rail too wide.'//);
-         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   (//' ***WARNING IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' WRAILBOT_$SYNCHDMLC(4) > WGROOVE_$SYNCHDMLC(4)+WTIP_$SYNCHDMLC(4).'/
+      ' This differs from the cross-section specified in the BEAMnrc'/
+      ' Manual.'//);
+        I_LEAF_ALT_DEF(4,1,4) = 1;
  ]
  IF(WRAILTOP_$SYNCHDMLC(4)>WRAILBOT_$SYNCHDMLC(4))[
    OUTPUT ICM_$SYNCHDMLC;
-   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
-      ' WRAILTOP_$SYNCHDMLC(4)>WRAILBOT_$SYNCHDMLC(4).  Top rail too wide.'//);
-         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   (//' ***WARNING IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+   ' WRAILTOP_$SYNCHDMLC(4) > WRAILBOT_$SYNCHDMLC(4).'/
+   ' This differs from the cross-section specified in the BEAMnrc Manual.'//);
+       I_LEAF_ALT_DEF(4,1,6) = 1;
  ]
  IF(WRAILTOP_$SYNCHDMLC(4)<WRAILBOT_$SYNCHDMLC(4)-WGROOVE_$SYNCHDMLC(4))[
    OUTPUT ICM_$SYNCHDMLC;
-   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
-      ' WRAILTOP_$SYNCHDMLC(4)<WRAILBOT_$SYNCHDMLC(4)-WGROOVE_$SYNCHDMLC(4).'/
-      ' Top rail too narrow.'//);
-        IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   (//' ***WARNING IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+   ' WRAILTOP_$SYNCHDMLC(4) < WRAILBOT_$SYNCHDMLC(4)-WGROOVE_$SYNCHDMLC(4).'/
+   ' This differs from the cross-section defined in the BEAMnrc Manual.'//);
+       I_LEAF_ALT_DEF(4,1,5) = 1;
+   IF(I_LEAF_ALT_DEF(4,1,4) = 1 & WRAILTOP_$SYNCHDMLC(4) <
+       WRAILBOT_$SYNCHDMLC(4) - WGROOVE_$SYNCHDMLC(4) - WTIP_$SYNCHDMLC(4))[
+       OUTPUT ICM_$SYNCHDMLC;
+       (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+          ' WRAILTOP must still extend beyond the start of leaf tip.'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   ]
  ]
  IF(ZRAILTOP_$SYNCHDMLC(4)<ZMIN_$SYNCHDMLC)[
    OUTPUT ICM_$SYNCHDMLC;
@@ -1918,10 +1946,17 @@ IF(NUM_QTR>0) [
  ]
  IF(WRAILBOT_$SYNCHDMLC(5)<WRAILTOP_$SYNCHDMLC(5)-WTONGUE_$SYNCHDMLC(5))[
    OUTPUT ICM_$SYNCHDMLC;
-   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
-      ' WRAILBOT_$SYNCHDMLC(5)<WRAILTOP_$SYNCHDMLC(5)-WTONGUE_$SYNCHDMLC(5).'/
-      ' Bottom of rail too narrow.'//);
-         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   (//' ***WARNING IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+   ' WRAILBOT_$SYNCHDMLC(5) < WRAILTOP_$SYNCHDMLC(5)-WTONGUE_$SYNCHDMLC(5).'/
+   ' Cross-section definition differs from BEAMnrc Manual.'//);
+         I_LEAF_ALT_DEF(5,1,2) = 1;
+   IF(WRAILBOT_$SYNCHDMLC(5)<WRAILTOP_$SYNCHDMLC(5)-WTONGUE_$SYNCHDMLC(5)-
+      WTIP_$SYNCHDMLC(5))[
+      OUTPUT ICM_$SYNCHDMLC;
+      (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+         ' WRAILBOT still has to extend past leaf tip.'//);
+      IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   ]
  ]
  IF(ZTIP_$SYNCHDMLC(5)<ZMIN_$SYNCHDMLC)[
    OUTPUT ICM_$SYNCHDMLC;
@@ -1943,9 +1978,10 @@ IF(NUM_QTR>0) [
  ]
  IF(ZGROOVE_$SYNCHDMLC(5)>ZTONGUE_$SYNCHDMLC(5))[
    OUTPUT ICM_$SYNCHDMLC;
-   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
-      ' ZGROOVE_$SYNCHDMLC(5)>ZTONGUE_$SYNCHDMLC(5).'//);
-         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   (//' ***WARNING IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+   ' ZGROOVE_$SYNCHDMLC(5) > ZTONGUE_$SYNCHDMLC(5).'/
+   ' This differs from the cross-section specified in the BEAMnrc Manual.'//);
+         I_LEAF_ALT_DEF(5,2,4) = 1;
  ]
  IF(ZHOLETOP_$SYNCHDMLC(5)<ZGROOVE_$SYNCHDMLC(5))[
    OUTPUT ICM_$SYNCHDMLC;
@@ -2366,8 +2402,14 @@ DO J=1,NGROUP_$SYNCHDMLC[
     ELSE ["qtr isocenter"
       ZREG_$SYNCHDMLC(I,2)=ZTIP_$SYNCHDMLC(5);
       ZREG_$SYNCHDMLC(I,3)=ZLEAF_$SYNCHDMLC(5);
-      ZREG_$SYNCHDMLC(I,4)=ZGROOVE_$SYNCHDMLC(5);
-      ZREG_$SYNCHDMLC(I,5)=ZTONGUE_$SYNCHDMLC(5);
+      IF(I_LEAF_ALT_DEF(5,2,4)=1)[
+         ZREG_$SYNCHDMLC(I,5)=ZGROOVE_$SYNCHDMLC(5);
+         ZREG_$SYNCHDMLC(I,4)=ZTONGUE_$SYNCHDMLC(5);
+      ]
+      ELSE[
+         ZREG_$SYNCHDMLC(I,4)=ZGROOVE_$SYNCHDMLC(5);
+         ZREG_$SYNCHDMLC(I,5)=ZTONGUE_$SYNCHDMLC(5);
+      ]
       ZREG_$SYNCHDMLC(I,6)=ZHOLETOP_$SYNCHDMLC(5);
       ZREG_$SYNCHDMLC(I,7)=ZHOLEBOT_$SYNCHDMLC(5);
       ZREG_$SYNCHDMLC(I,8)=ZRAILTOP_$SYNCHDMLC(5);
@@ -2426,46 +2468,90 @@ IF(TOT_LEAF_$SYNCHDMLC>0) [
      ]
      ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=2)["half target leaf"
        YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(2);
-       YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2)-
-                            WGROOVE_$SYNCHDMLC(2)-WTIP_$SYNCHDMLC(2);
-       YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2)-
-                          WRAILBOT_$SYNCHDMLC(2);
-       YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2)-
-                            WGROOVE_$SYNCHDMLC(2);
-       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,4)+WRAILTOP_$SYNCHDMLC(2);
        YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2);
-
+       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,7)-
+                            ABS(WRAILBOT_$SYNCHDMLC(2)-WRAILTOP_$SYNCHDMLC(2));
+       IF(I_LEAF_ALT_DEF(2,1,6)=1)[
+          YTMP = YREG_$SYNCHDMLC(I,6);
+       ]
+       ELSE[
+          YTMP = YREG_$SYNCHDMLC(I,7);
+       ]
+       IF(I_LEAF_ALT_DEF(2,1,4)=1)[
+          YREG_$SYNCHDMLC(I,4)=YTMP-WGROOVE_$SYNCHDMLC(2)-WTIP_$SYNCHDMLC(2);
+          YREG_$SYNCHDMLC(I,3)=YTMP-WRAILBOT_$SYNCHDMLC(2);
+       ]
+       ELSE[
+          YREG_$SYNCHDMLC(I,3)=YTMP-WGROOVE_$SYNCHDMLC(2)-WTIP_$SYNCHDMLC(2);
+          YREG_$SYNCHDMLC(I,4)=YTMP-WRAILBOT_$SYNCHDMLC(2);
+       ]
+       YREG_$SYNCHDMLC(I,5)=YTMP-WGROOVE_$SYNCHDMLC(2);
      ]
      ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=3)["half isocenter leaf"
-       YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(3)-
-                          WRAILBOT_$SYNCHDMLC(3);
+       YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+ABS(WRAILTOP_$SYNCHDMLC(3)-
+                          WRAILBOT_$SYNCHDMLC(3));
        YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(3);
        YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,3)+WTIP_$SYNCHDMLC(3);
-       YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(3);
+       IF(I_LEAF_ALT_DEF(3,1,1)=1)[
+          YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,1)+WRAILBOT_$SYNCHDMLC(3);
+       ]
+       ELSE[
+          YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(3);
+       ]
        YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,3)+LEAFWIDTH_$SYNCHDMLC(3)-
                           WGROOVE_$SYNCHDMLC(3);
        YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,3)+LEAFWIDTH_$SYNCHDMLC(3);
      ]
      ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=4)["qtr target leaf"
        YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(4);
-       YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4)-
-                            WGROOVE_$SYNCHDMLC(4)-WTIP_$SYNCHDMLC(4);
-       YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4)-
-                          WRAILBOT_$SYNCHDMLC(4);
-       YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4)-
-                            WGROOVE_$SYNCHDMLC(4);
-       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,4)+WRAILTOP_$SYNCHDMLC(4);
        YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4);
+       IF(I_LEAF_ALT_DEF(4,1,5)=1)[
+          YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,7)-WGROOVE_$SYNCHDMLC(4);
+       ]
+       ELSE[
+          YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,7)-
+                            ABS(WRAILBOT_$SYNCHDMLC(4)-WRAILTOP_$SYNCHDMLC(4));
+       ]
+       IF(I_LEAF_ALT_DEF(4,1,6)=1)[
+          YTMP = YREG_$SYNCHDMLC(I,6);
+       ]
+       ELSE[
+          YTMP = YREG_$SYNCHDMLC(I,7);
+       ]
+       IF(I_LEAF_ALT_DEF(4,1,4)=1)[
+          YREG_$SYNCHDMLC(I,4)=YTMP-WGROOVE_$SYNCHDMLC(4)-WTIP_$SYNCHDMLC(4);
+          YREG_$SYNCHDMLC(I,3)=YTMP-WRAILBOT_$SYNCHDMLC(4);
+       ]
+       ELSE[
+          YREG_$SYNCHDMLC(I,3)=YTMP-WGROOVE_$SYNCHDMLC(4)-WTIP_$SYNCHDMLC(4);
+          YREG_$SYNCHDMLC(I,4)=YTMP-WRAILBOT_$SYNCHDMLC(4);
+       ]
+       IF(I_LEAF_ALT_DEF(4,1,5)=1)[
+          YREG_$SYNCHDMLC(I,5)=YTMP-WRAILBOT_$SYNCHDMLC(4)+
+                               WRAILTOP_$SYNCHDMLC(4);
+       ]
+       ELSE[
+          YREG_$SYNCHDMLC(I,5)=YTMP-WGROOVE_$SYNCHDMLC(4);
+       ]
      ]
      ELSE ["qtr isocenter leaf"
-       YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(5)-
+       IF(I_LEAF_ALT_DEF(5,1,2)=1)[
+          YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(5)-
                           WRAILBOT_$SYNCHDMLC(5);
-       YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(5);
-       YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,3)+WTIP_$SYNCHDMLC(5);
+          YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(5);
+          YTMP=YREG_$SYNCHDMLC(I,2);
+       ]
+       ELSE[
+          YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(5)-
+                          WRAILBOT_$SYNCHDMLC(5);
+          YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(5);
+          YTMP=YREG_$SYNCHDMLC(I,3);
+       ]
+       YREG_$SYNCHDMLC(I,4)=YTMP+WTIP_$SYNCHDMLC(5);
        YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(5);
-       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,3)+LEAFWIDTH_$SYNCHDMLC(5)-
+       YREG_$SYNCHDMLC(I,6)=YTMP+LEAFWIDTH_$SYNCHDMLC(5)-
                           WGROOVE_$SYNCHDMLC(5);
-       YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,3)+LEAFWIDTH_$SYNCHDMLC(5);
+       YREG_$SYNCHDMLC(I,7)=YTMP+LEAFWIDTH_$SYNCHDMLC(5);
      ]
 
      DO J = 1, 7 [
@@ -2810,25 +2896,36 @@ DO L=1,TOT_LEAF_$SYNCHDMLC[
       SUBINDEX_$SYNCHDMLC(L,I,2,6)=2;
       SUBINDEX_$SYNCHDMLC(L,I,2,7)=2;
       SUBINDEX_$SYNCHDMLC(L,I,3,1)=2;
-      SUBINDEX_$SYNCHDMLC(L,I,3,2)=2;
+      IF(I_LEAF_ALT_DEF(LEAFTYPE_$SYNCHDMLC(L),1,4)~=1)[
+         SUBINDEX_$SYNCHDMLC(L,I,3,2)=2;
+      ]
       SUBINDEX_$SYNCHDMLC(L,I,3,3)=2;
       SUBINDEX_$SYNCHDMLC(L,I,3,5)=2;
       SUBINDEX_$SYNCHDMLC(L,I,3,6)=2;
       SUBINDEX_$SYNCHDMLC(L,I,3,7)=2;
-      SUBINDEX_$SYNCHDMLC(L,I,3,8)=2;
+      IF(I_LEAF_ALT_DEF(LEAFTYPE_$SYNCHDMLC(L),1,4)~=1)[
+         SUBINDEX_$SYNCHDMLC(L,I,3,8)=2;
+      ]
       SUBINDEX_$SYNCHDMLC(L,I,4,1)=2;
       SUBINDEX_$SYNCHDMLC(L,I,4,3)=2;
       SUBINDEX_$SYNCHDMLC(L,I,4,5)=2;
       SUBINDEX_$SYNCHDMLC(L,I,4,6)=2;
       SUBINDEX_$SYNCHDMLC(L,I,4,7)=2;
       SUBINDEX_$SYNCHDMLC(L,I,4,8)=2;
-      SUBINDEX_$SYNCHDMLC(L,I,5,1)=2;
+      IF(I_LEAF_ALT_DEF(LEAFTYPE_$SYNCHDMLC(L),1,5)~=1)[
+         SUBINDEX_$SYNCHDMLC(L,I,5,1)=2;
+      ]
       SUBINDEX_$SYNCHDMLC(L,I,5,3)=2;
       SUBINDEX_$SYNCHDMLC(L,I,5,5)=2;
       SUBINDEX_$SYNCHDMLC(L,I,5,6)=2;
-      SUBINDEX_$SYNCHDMLC(L,I,6,3)=2;
-      SUBINDEX_$SYNCHDMLC(L,I,6,5)=2;
-      SUBINDEX_$SYNCHDMLC(L,I,6,6)=2;
+      IF(I_LEAF_ALT_DEF(LEAFTYPE_$SYNCHDMLC(L),1,6)=1)[
+         SUBINDEX_$SYNCHDMLC(L,I,6,1)=2;
+      ]
+      ELSE[
+         SUBINDEX_$SYNCHDMLC(L,I,6,3)=2;
+         SUBINDEX_$SYNCHDMLC(L,I,6,5)=2;
+         SUBINDEX_$SYNCHDMLC(L,I,6,6)=2;
+      ]
     ]
    ELSEIF(LEAFTYPE_$SYNCHDMLC(L)=1) [
       "Full Leaf"
@@ -2866,11 +2963,28 @@ DO L=1,TOT_LEAF_$SYNCHDMLC[
     ] ELSE [
       "This is an Half or Quarter Isocenter Leaf"
       "Common to both Half and Quarter"
-      SUBINDEX_$SYNCHDMLC(L,I,1,5)=2;
-      SUBINDEX_$SYNCHDMLC(L,I,1,7)=2;
+      IF(I_LEAF_ALT_DEF(LEAFTYPE_$SYNCHDMLC(L),1,1)=1)[
+        SUBINDEX_$SYNCHDMLC(L,I,1,9)=2;
+      ]
+      ELSE[
+        IF (LEAFTYPE_$SYNCHDMLC(L)=3 |
+            I_LEAF_ALT_DEF(LEAFTYPE_$SYNCHDMLC(L),2,4)=1) [
+          "either 1) half isocentre or 2) quarter isocentre with zg>zt"
+          SUBINDEX_$SYNCHDMLC(L,I,1,4)=2;
+        ]
+        SUBINDEX_$SYNCHDMLC(L,I,1,5)=2;
+        SUBINDEX_$SYNCHDMLC(L,I,1,7)=2;
+      ]
+      IF(LEAFTYPE_$SYNCHDMLC(L)=3 |
+          I_LEAF_ALT_DEF(LEAFTYPE_$SYNCHDMLC(L),2,4)=1)[
+         "either 1) half isocentre or 2) quarter isocentre with zg>zt"
+         SUBINDEX_$SYNCHDMLC(L,I,2,4)=2;
+      ]
       SUBINDEX_$SYNCHDMLC(L,I,2,5)=2;
       SUBINDEX_$SYNCHDMLC(L,I,2,7)=2;
-      SUBINDEX_$SYNCHDMLC(L,I,2,9)=2;
+      IF(I_LEAF_ALT_DEF(LEAFTYPE_$SYNCHDMLC(L),1,2)~=1)[
+         SUBINDEX_$SYNCHDMLC(L,I,2,9)=2;
+      ]
       SUBINDEX_$SYNCHDMLC(L,I,3,2)=2;
       SUBINDEX_$SYNCHDMLC(L,I,3,3)=2;
       SUBINDEX_$SYNCHDMLC(L,I,3,4)=2;
@@ -2893,14 +3007,8 @@ DO L=1,TOT_LEAF_$SYNCHDMLC[
       SUBINDEX_$SYNCHDMLC(L,I,6,8)=2;
       SUBINDEX_$SYNCHDMLC(L,I,6,9)=2;
 
-      IF (LEAFTYPE_$SYNCHDMLC(L)=3) [
-        "Half Isocenter"
-        SUBINDEX_$SYNCHDMLC(L,I,1,4)=2;
-        SUBINDEX_$SYNCHDMLC(L,I,2,4)=2;
-      ]
-
-      IF(LEAFTYPE_$SYNCHDMLC(L)=5) [
-        "Quarter Isocenter"
+      IF(I_LEAF_ALT_DEF(LEAFTYPE_$SYNCHDMLC(L),2,4)~=1) [
+        "Quarter Isocenter with zg<zt"
         SUBINDEX_$SYNCHDMLC(L,I,6,4)=2;
       ];
      ];
