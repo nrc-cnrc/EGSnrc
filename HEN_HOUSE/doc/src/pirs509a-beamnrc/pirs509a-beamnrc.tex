@@ -8507,6 +8507,48 @@ are used closer to middle of the mlc, and, while their Z-dimensions are similar 
 are significantly thinner in the X- ({\tt ORIENT}=0) or Y- ({\tt ORIENT}=1)
 dimension.
 
+\index{SYNCHDMLC!Relaxation of leaf cross-section input restrictions}
+In general, SYNCHDMLC is similar to DYNVMLC and SYNCVMLC in that leaf cross-section dimensions must be defined so that
+the grid lines shown in Figure~\ref{synchdmlc_fig}, defining the cross-section regions, remain in the same order
+shown in the figure.  This should allow modeling of the HD120 based on manufacturer specifications assuming either
+non-divergent leaves ({\em i.e.,} leaves in which the vertical cross-section boundaries are parallel as opposed
+to intersecting at some value of Z$<${\tt ZMIN}), as shown in
+Figure~\ref{synchdmlc_fig}, or else minimal divergence.  Leaves may diverge to a significant extent, however,
+and it has
+come to our attention that, in an effort to more accurately model this, users may project manufacturer-specified
+cross-section widths ({\em e.g.,} {\tt wtip}, {\tt wts}, {\tt wbs}, etc) from the Z values at which they are defined
+back to {\tt ZMIN}.  This results in a change in order in some of the vertical cross-section boundaries.  In an effort
+to accommodate this in SYNCHDMLC, we have recently introduced the following relaxations of prior input restrictions:
+\begin{enumerate}
+\item {\bf For HALF TARGET and QUARTER TARGET leaves}: The bottom of the support rail can extend to the left of the
+leaf tip ({\tt wbs} $>$ {\tt wg} + {\tt wtip}), changing the
+order of the 3rd and 4th (counting from the right) vertical cross-section boundaries shown in Figure~\ref{synchdmlc_fig}.
+\item {\bf For HALF TARGET and QUARTER TARGET leaves}: The top of the support rail can extend past the right edge
+of the leaf ({\tt wts} $>$ {\tt wbs}), changing the order of the
+6th and 7th vertical cross-section boundaries.
+\item {\bf For QUARTER TARGET leaves}: The top of the support rail need not extend past the beginning (left edge)
+of the groove ({\tt wts} $<$ {\tt wbs} - {\tt wg}),
+effectively changing the order of vertical boundries 5 and
+6, provided that, if relaxation 1 above is in effect, it does extend past the left edge of the leaf tip.
+\item {\bf For HALF ISOCENTER leaves}: The bottom of the support rail can extend past the left edge of the leaf
+({\tt wbs} $>$ {\tt wts}), changing the order of the 1st and 2nd vertical cross-section boundaries.
+\item {\bf For QUARTER ISOCENTER leaves}: The bottom of the support rail need not extend (to the right) as far as
+the right edge of the tongue ({\tt wbs} $<$ {\tt wts} - {\tt wt}), changing
+the order of the 2nd and 3rd vertical cross-section boundaries, provided that it still extends past the
+right edge of the leaf tip.
+\item {\bf For QUARTER ISOCENTER leaves}: The Z-position of the groove, {\tt zg}, can be greater than that of the tongue,
+{\tt zt}, allowing for duelling interpretations of manufacturer specifications for this leaf type in which the
+relative Z-positions of these structures are not entirely clear.
+\end{enumerate}
+If user input dimensions require any of the above relaxations, a warning message will be output stating which restriction
+is being relaxed and indicating that the input cross-section differs from that shown in this manual.
+It is important to note that, while these relaxations in boundary ordering may allow the user to input
+accurate dimensions consistent with divergent MLC leaves, leaves are still modeled as if they are non-divergent,
+with all side surfaces focused at {\tt ZFOCUS(1)}, and, thus, the geometry remains an approximation.
+Many thanks to Dr. Jarkko Ojala at Tampere University
+Hospital, Finland, who, through detailed examination of manufacturer specifications and measurement of MLC leaves,
+determined which restrictions needed to be relaxed and who helped test the modified code.
+
 \index{SYNCHDMLC!restrictions on leaf dimensions}
 Similar to DYNVMLC, leaf cross-section dimensions must be defined so that the Z and X ({\tt ORIENT}=0) or Y ({\tt ORIENT}=1) grid lines
 shown on the cross-sections at the top of Figure~\ref{synchdmlc_fig} do not change order.
@@ -8522,6 +8564,8 @@ QUARTER TARGET/QUARTER ISOCENTER ({\tt zg}$_{QUARTER~TARGET}$ $\leq$ {\tt zt}$_{
 QUARTER ISOCENTER/QUARTER TARGET ({\tt zg}$_{QUARTER~ISOCENTER}$ $\geq$ {\tt zt}$_{QUARTER~TARGET}$)\\
 QUARTER ISOCENTER/HALF TARGET ({\tt zg}$_{QUARTER~ISOCENTER}$ $\geq$ {\tt zt}$_{HALF~TARGET}$)\\
 and HALF ISOCENTER/FULL (ie {\tt zg}$_{HALF~ISOCENTER}$ $\geq$ {\tt zt}$_{FULL}$).
+
+
 
 As in DYNVMLC and SYNCVMLC, rather than specifying the type of each leaf in the MLC, the user is able to specify groups
 of adjacent leaves of the same type.  Since TARGET leaves always alternate with ISOCENTER leaves within a group,
