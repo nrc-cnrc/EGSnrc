@@ -104,6 +104,9 @@
     <tr>
         <td> \ref egs_cbct "egs_cbct" <em>An application for CBCT/CT scanner simulations</em></td>
     </tr>
+    <tr>
+        <td> \ref egs_kerma "egs_kerma" <em>An application for volumetric kerma calculations </em></td>
+    </tr>
 
     <tr class='egsRowTitle'>
         <td> <h3>How to write an egs++ application</h3> </td>

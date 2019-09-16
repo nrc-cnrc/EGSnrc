@@ -1,0 +1,224 @@
+###############################################################################
+#
+#  A simple example input file for the egs_kerma C++ application.
+#
+#  Simulates a 40 keV isotropic photon source in a room with
+#  concrete walls. Kerma and fluence inside a 5 cm radius air sphere
+#  are calculated using a forced-detection technique (FD) and a track-length
+#  estimator. Air sphere is in the centre of the room and the source at
+#  1 m from the sphere.
+#
+#  NOTE 1: Material data is generated in pegsless mode. If source energy changed,
+#          make sure to adjust energy cut-offs (AE, UE, AP, UP) below!
+#
+#  NOTE 2: Two geometries used here for ilustration purposes. Most likely
+#          only one geometry is needed for kerma and fluence calculations
+#
+###############################################################################
+#
+#  Author:        Ernesto Mainegra-Hing, 2016
+#
+#  Contributors:
+#
+###############################################################################
+
+:start geometry definition:
+
+    ##########################
+    # A 5 cm radius air cavity
+    ##########################
+    :start geometry:
+        library   = egs_spheres
+        midpoint  = 0 0 0
+        radii     = 5.0
+        name      = cavity
+        :start media input:
+            media = air
+        :stop media input:
+    :stop geometry:
+    ##########################
+    # A 8 m X 8 m X 8 m air box
+    ##########################
+    :start geometry:
+     library  = egs_box
+     box size = 800
+     name    = air
+     :start media input:
+        media = air
+     :stop media input:
+    :stop geometry:
+    ##########################
+    # with 1 m thick concrete walls
+    ##########################
+    :start geometry:
+     library  = egs_box
+     box size = 900
+     name    = walls
+     :start media input:
+        media = concrete
+     :stop media input:
+    :stop geometry:
+    ##########################
+    # A room with concrete walls
+    ##########################
+    :start geometry:
+        library = egs_genvelope
+        name = room
+        base geometry = walls
+        inscribed geometries = air
+    :stop geometry:
+    ##########################################################
+    # Geometries below are identical.
+    #
+    # The purpose is to account for wall contributions
+    # to the air sphere. There are several ways of
+    # accomplishing this. One could just have used the same
+    # geometry for both calculations, with and
+    # without the sensitive regions, or have one geometry with
+    # and another without the walls.
+    #
+    #########################################################
+    # An air sphere in a room with concrete walls
+    # Wall contribution not included during the
+    # simulations. See block 'scoring options'
+    # for more detail.
+    ##########################
+    :start geometry:
+        library = egs_genvelope
+        name = cavity_in_room_no_wall
+        base geometry = room
+        inscribed geometries = cavity
+    :stop geometry:
+    ##########################
+    # An air sphere in a room with concrete walls
+    # Wall contribution included during the
+    # simulations. See block 'scoring options'
+    # for more detail.
+    ##########################
+    :start geometry:
+        library = egs_genvelope
+        name = cavity_in_room_all
+        base geometry = room
+        inscribed geometries = cavity
+    :stop geometry:
+
+    simulation geometry = cavity_in_room_no_wall
+
+:stop geometry definition:
+
+:start source definition:
+########################################### define the source:
+   :start source:
+     library = egs_isotropic_source
+     name = the_source
+     :start shape:
+       type = point
+       position = 0, 0, -100
+     :stop shape:
+     :start spectrum:
+       type = monoenergetic
+       energy = .04
+     :stop spectrum:
+     charge = 0
+   :stop source:
+
+   simulation source = the_source
+
+:stop source definition:
+
+##################################### Run control
+:start run control:
+
+    ncase = 1000000
+    #calculation = combine
+
+:stop run control:
+
+##################################### Scoring options
+:start scoring options:
+
+    ###############################################
+    # Using same geometry under two diff. names for
+    # easier bookeeping.
+    ###############################################
+    :start calculation geometry:
+        geometry name = cavity_in_room_no_wall
+        cavity regions = 2
+        excluded regions = 0 # exclude particles passing through these regions
+        cavity mass = 0.630831804841 # 5 cm radius air sphere
+    :stop calculation geometry:
+    :start calculation geometry:
+        geometry name = cavity_in_room_all
+        cavity regions = 2
+        #excluded regions = 0 # exclude particles passing through these regions
+        cavity mass = 0.630831804841 # 5 cm radius air sphere
+    :stop calculation geometry:
+
+    # Ratio estimates wall contribution to air sphere
+    correlated geometries = cavity_in_room_all cavity_in_room_no_wall
+
+    ############################################
+    # Fluence scoring requested in this block
+    # Common to all calculation geometries
+    ############################################
+    :start fluence scoring:
+       minimum energy = 0.0
+       maximum energy = 0.040
+       number of bins = 400
+       scale          = linear
+    :stop fluence scoring:
+
+    ######################################
+    # E*muen file, it could also be E*mutr
+    #
+    # Replace $EGS_HOME with the actual path!
+    ######################################
+    emuen file = $EGS_HOME/egs_kerma/emuen_icru90_1.5MeV.data
+
+    ########################################################
+    # Geometry for forced-detection, if omitted, an analog
+    # scoring used.
+    ########################################################
+    cavity geometry = cavity # For forced detection
+
+:stop scoring options:
+
+###################################### Transport parameters
+:start MC transport parameter:
+      # You can include here any of the transport parameter options
+      # understood by EGSnrc
+
+  Global ECUT= 2000. # No electron transport
+  Photon cross sections = mcdf-xcom # XCOM with renormalized PE xsections
+
+:stop MC transport parameter:
+
+#####################
+# Pegsless operation.
+#####################
+:start media definition:
+
+    ### energy transport cutoffs
+    ae = 0.512
+    ue = 0.555
+    ap = 0.001
+    up = 0.045
+
+    :start air:
+        rho                         = 0.00120479
+        elements                    = C, N, O, AR
+        mass fractions              = 0.000124, 0.755267, 0.231781, 0.012827
+        density correction file     = air_dry_nearsealevel
+        gas pressure                = 1.0
+        bremsstrahlung correction   = NRC
+    :stop air:
+
+    :start concrete:
+        rho                         = 2.3
+        elements                    = H, C, O, NA, MG, AL, SI, K, CA, FE
+        mass fractions              = 0.022099,0.002484,0.574930,0.015208,0.001266,0.019953,0.304627,0.010045 ,0.042952,0.006435
+        density correction file     = concrete_ordinary
+        bremsstrahlung correction   = NRC
+    :stop concrete:
+
+:stop media definition:

@@ -748,6 +748,7 @@ INPUT                  = main.doxy \
                          egs_cbct.doxy \
                          egs_chamber.doxy \
                          egs_fac.doxy \
+                         egs_kerma.doxy \
                          ../../../egs++ \
                          ../../../interface/egs_interface2.h
 
