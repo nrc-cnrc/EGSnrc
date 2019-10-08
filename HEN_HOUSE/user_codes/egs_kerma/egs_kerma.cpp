@@ -44,18 +44,18 @@
 #  Required: E*muen or E*mutr file for scoring either collision or total kerma
 #  --------  for the cavity medium
 #
-#  Calculations for multiple geometries
+#  Calculations for multiple geometries.
 #
-#  Kerma ratios can be calculated using a correlated scoring technique
+#  Kerma ratios can be calculated using a correlated scoring technique.
 #
-#  Exclusion of user specified regions
+#  Exclusion of user specified regions.
 #
-#  Scoring volume regions must be provided (consider using labels)
+#  Scoring volume regions must be provided (consider using labels).
 #
-#  Fluence scoring must be specifically requested
+#  Fluence scoring must be specifically requested.
 #
-#  Dose calculation in the cavity can be done using a dose scoring AO.
-#  This could be useful to check the validity of the kerma-approximation.
+#  Dose calculation in the cavity can be done using a dose scoring ausgab
+#  object.This is useful to check the validity of the kerma-approximation.
 #
 #  NOTE 1 : Dose calculation with very high ECUT produces an estimate of
 #           total kerma, not collision kerma.
