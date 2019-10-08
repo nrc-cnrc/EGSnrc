@@ -27,6 +27,7 @@
 #
 ###############################################################################
 
+
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp1.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf

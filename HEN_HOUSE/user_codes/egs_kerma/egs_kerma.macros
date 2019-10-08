@@ -1,7 +1,7 @@
 %C80
 "#############################################################################"
 "                                                                             "
-"  EGSnrc egs++ egs_kerma application mortran macros                            "
+"  EGSnrc egs++ egs_kerma application mortran macros                          "
 "  Copyright (C) 2016 National Research Council Canada                        "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
@@ -21,11 +21,12 @@
 "                                                                             "
 "#############################################################################"
 "                                                                             "
-"  Author:          Ernesto Mainegra-Hing, 2016                                       "
+"  Author:          Ernesto Mainegra-Hing, 2016                               "
 "                                                                             "
 "  Contributors:                                                              "
 "                                                                             "
 "#############################################################################"
+
 
 REPLACE {$MXGE} WITH {2000};
 REPLACE {$MXEKE} WITH {500};
