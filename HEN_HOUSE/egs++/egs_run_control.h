@@ -61,7 +61,7 @@ class EGS_Input;
 
   <p>Terminology
      - Simulations are split into 'chunks'. For simple simulations
-       (no parallel runs, etc.) there is a single simulatioin chunk
+       (no parallel runs, etc.) there is a single simulation chunk
        with the number of histories specified in the input file.
      - Each simulation chunk is split into 'batches'. The batches are
        not required for statistical analysis (by using the provided
@@ -72,7 +72,7 @@ class EGS_Input;
        completion of a batch and the current results can be stored into a
        data file. By default there are 10 batches per simulation chunk
 
-  <p>Two RCO's are provided with egspp:
+  <p>Three RCO's are provided with egspp:
    - A 'simple' RCO implemented in EGS_RunControl. This RCO is used by default
      for single job control. This RCO provides the ability to run simulations
      with a user specified number of particles and up to a user specified
@@ -81,9 +81,14 @@ class EGS_Input;
      simulations or to simply analyze the results of a previous run or to
      combine the results of previously performed parallel runs.
    - A \link EGS_JCFControl 'job control file' (JCF) RCO \endlink.
-     This RCO is used by default for parallel
-     runs. It has all the functionality of the 'simple' RCO plus additional
-     methods to contyrol parallel execution via a 'job control file'.
+     This RCO is used by default for parallel runs. It has all the functionality
+     of the 'simple' RCO plus additional methods to control parallel execution
+     via a 'job control file'.
+   - A \link EGS_UniformRunControl uniform RCO \endlink.
+     This RCO distributes the histories uniformly among all jobs.
+     It can be an alternative to the JCF RCO when a JCF cannot be used. This can
+     happen when jobs do not start sequentially. In such cases the JCF may not be
+     available if job number 1 is not started first.
 */
 class EGS_EXPORT EGS_RunControl {
 
@@ -161,7 +166,7 @@ public:
         return getNcase() - ndone;
     };
 
-    /*! Finish the simulation.
+    /*! \brief Finish the simulation.
 
      This function is called from within the finishSimulation() method
      of EGS_Application and should return 1 of the follwoing 3 exit codes:
@@ -200,14 +205,24 @@ public:
     virtual EGS_I64 getNdone() const {
         return ndone;
     };
+
     virtual void    setNdone(EGS_I64 Ndone) {
         ndone = Ndone;
     };
+
     virtual void    incrementNdone() {
         ++ndone;
     };
+
     virtual EGS_Float getCPUTime() const {
         return cpu_time+previous_cpu_time;
+    };
+
+    /*! \brief Define RCO types */
+    enum RCOType {
+        simple,   //!< single job or multiple independent jobs
+        uniform,  //!< parallel jobs with same numbe of histories
+        balanced  //!< parallel jobs with balanced load via JCF
     };
 
     static EGS_RunControl *getRunControlObject(EGS_Application *);
@@ -230,6 +245,8 @@ protected:
     // =3 => combine parallel run
     int             nchunk; // number of simulation "chunks"
 
+    RCOType         rco_type; //!< RCO type to use
+
     EGS_Timer       timer;
     EGS_Float       cpu_time;
     EGS_Float       previous_cpu_time;
@@ -248,7 +265,7 @@ class EGS_FileLocking;
    parallel job and contains information such as the number of particles
    remaining to be simulated, number of jobs running, combined result of
    all parallel jobs, etc. This RCO objects requires that file locking
-   works on the file system containing the \c EGS_HOME directory becuase
+   works on the file system containing the \c EGS_HOME directory because
    the JCF is locked prior to being modified by one of the jobs to prevent
    multiply jobs modifying the file at the same time. For more details
    see PIRS-877.
@@ -301,5 +318,81 @@ protected:
 
 };
 
+/*! \brief A job control object for homogeneous computing environments (HCE).
+
+   \ingroup egspp_main
+
+   The uniform RCO is used for controlling parallel job execution
+   in computing environments (CE) with identical hardware, software
+   and communication layer (aka homogeneous CE):
+
+   - Number of histories 'ncase' split equally among all jobs.
+
+   - Assume last job finishes last and then cycles 5 times by default
+     ('check_intervals' variable) for a period of time defined to
+     be 1 s by default ('milliseconds' variable). Defaults can be changed
+     via the 'run control' input block using:
+
+       interval wait time  = time in ms (default 1 s)
+       number of intervals = an_integer_value (default 5)
+
+   - The last job combines the parallel runs by default. Since the last job
+     could finish before some of the other jobs, users can set another
+     job or several jobs to be 'watcher' jobs. In principle it is enough to
+     define one 'watcher' job that waits long enough for all jobs to complete.
+     To change the default, use the following key:
+
+     watcher jobs = job_i,..., job_j
+
+   - If requested, a run-completion check can be made every cycle
+     by checking that the number of *.egsdat files equals the number
+     of parallel jobs submitted. This could speed things up by not having
+     to wait for all checking cycles. However, it could also be the case
+     that some jobs might have failed, in which case, after the checking
+     cycles complete, only the available *.egsdat files will be combined.
+
+     This option can be set via the 'run control' input block using:
+
+     check jobs completed = yes|no # default is 'no'
+
+     When this option is enabled, each job erases at the beginning of the run
+     its corresponding *.egsdat file if it exists.
+
+*/
+
+class EGS_EXPORT EGS_UniformRunControl : public EGS_RunControl {
+
+public:
+
+    EGS_UniformRunControl(EGS_Application *app);
+    ~EGS_UniformRunControl() {};
+
+    int  startSimulation();
+
+    /*!  \brief Uses 'watcher' jobs to determine if the simulation has finished.
+
+    If the current job is a 'watcher' job, it waits for some time before issuing
+    the signal to recombine all available parallel jobs. These 'watcher' jobs
+    can also produce intermediate results while waiting. If all jobs complete while
+    waiting, the 'watcher' job combines all results and exits.
+
+    */
+    int  finishSimulation();
+
+protected:
+
+    int milliseconds;   // time interval for checking
+    // if all jobs finished (default 1000 ms)
+
+    int check_intervals;// Number of intervals to check
+    // if all jobs done (default 5)
+
+    int    njob;
+    int    npar;
+    int    ipar;
+    int    ifirst;
+    bool   check_egsdat;// If true, and a 'watcher' job, produce intermediate results
+    bool   watcher_job; // If true, job is a 'watcher'
+};
 
 #endif
