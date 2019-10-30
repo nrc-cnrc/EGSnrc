@@ -1,3 +1,13 @@
+/*
+###############################################################################
+#
+# EGSnrc egs++ auto envelope geometry
+# Copyright (C) 2019 Martin Martinov
+#
+# This file is part of EGSnrc.
+#
+###############################################################################
+*/
 #ifndef EGS_HEXAGONAL_LATTICE_
 #define EGS_HEXAGONAL_LATTICE_
 
