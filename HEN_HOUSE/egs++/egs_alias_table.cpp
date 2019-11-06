@@ -305,7 +305,7 @@ EGS_SimpleAliasTable::EGS_SimpleAliasTable(int N, const EGS_Float *f) : n(0) {
     int jh_old = 0, jl_old = 0;
     for (i=0; i<n-1; ++i) {
         for (jh=jh_old; jh<n-1; jh++) {
-            if (bins[jh] > n && fcum[jh] > sum) {
+            if (bins[jh] > n && fcum[jh] >= sum) {
                 break;
             }
         }
