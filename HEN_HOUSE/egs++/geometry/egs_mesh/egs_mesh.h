@@ -286,16 +286,14 @@ public:
       mediaIndices[i] = mediaType[i];
 
     	// Calculate attribute values for vectors between nodes and normals
-  		// Use > to calculate vector from a to b
+		// Use (b - a) to calculate vector from a to b
   		// aN1N2 - from Node 1 to Node 2, etc.
-  		aN1N2[i] = (aN1[i] > aN2[i]);
-  		aN1N3[i] = (aN1[i] > aN3[i]);
-  		aN1N4[i] = (aN1[i] > aN4[i]);
-  		// aN2N3 - from Node 2 to Node 3, etc.
-  		aN2N3[i] = (aN2[i] > aN3[i]);
-  		aN2N4[i] = (aN2[i] > aN4[i]);
-  		// aN3N4 - from Node 3 to Node 4
-  		aN3N4[i] = (aN3[i] > aN4[i]);
+  		aN1N2[i] = aN2[i] - aN1[i];  
+  		aN1N3[i] = aN3[i] - aN1[i];  
+  		aN1N4[i] = aN4[i] - aN1[i]; 
+  		aN2N3[i] = aN3[i] - aN2[i];
+  		aN2N4[i] = aN4[i] - aN2[i]; 
+  		aN3N4[i] = aN4[i] - aN3[i]; 
 
   		// Compute normals of each face of the tet
   		// Faces omit node with same number as face
@@ -460,14 +458,12 @@ public:
         // Calculate attribute values for vectors between nodes and normals
         // Use > to calculate vector from a to b
         // aN1N2 - from Node 1 to Node 2, etc.
-        aN1N2[i] = (aN1[i]>aN2[i]);
-        aN1N3[i] = (aN1[i]>aN3[i]);
-        aN1N4[i] = (aN1[i]>aN4[i]);
-        // aN2N3 - from Node 2 to Node 3, etc.
-        aN2N3[i] = (aN2[i]>aN3[i]);
-        aN2N4[i] = (aN2[i]>aN4[i]);
-        // aN3N4 - from Node 3 to Node 4
-        aN3N4[i] = (aN3[i]>aN4[i]);
+  	aN1N2[i] = aN2[i] - aN1[i];  
+  	aN1N3[i] = aN3[i] - aN1[i];  
+  	aN1N4[i] = aN4[i] - aN1[i]; 
+  	aN2N3[i] = aN3[i] - aN2[i];
+  	aN2N4[i] = aN4[i] - aN2[i]; 
+  	aN3N4[i] = aN4[i] - aN3[i]; 
 
         // Compute normals of each face of the tet
         // Faces omit node with same number as face
@@ -546,7 +542,7 @@ public:
 		EGS_Vector iNM = nm;
 		EGS_Vector iMP;
 
-		EGS_Vector iNP = iN>iP; //Vector from iN to iP
+		EGS_Vector iNP = iP - iN; //Vector from iN to iP
 
 		EGS_Float w1;
 		w1 = ((iNP*iNM) / (iNM*iNM));
@@ -563,13 +559,13 @@ public:
 		}
 		if (w1 > 1) {
 			// Projection is outside the endpoints of the edge with Node 4 as the closest
-			iMP = (iM>iP);
+			iMP = iP - iM;
 			iDist = iMP.length();
 
 			return iDist;
 		}
 		// Projection is within the endpoints of the edge
-		iDist = ((iP>POI).length());
+		iDist = (POI - iP).length();
 
 		return iDist;
 	};
@@ -592,7 +588,7 @@ public:
   		EGS_Vector iNO = no;
   		EGS_Vector iMO = mo;
   		EGS_Vector iNorm = norm;
-  		EGS_Vector iPN = (iP>iN); //Vector from iP to iN
+  		EGS_Vector iPN = iN - iP; //Vector from iP to iN
   		EGS_Float iDist;
   		EGS_Vector POI; //Vector to Point of Intersection
   		iDist = iPN*iNorm;
@@ -600,7 +596,7 @@ public:
   		POI.y = iDist * iNorm.y + iP.y;
   		POI.z = iDist * iNorm.z + iP.z;
 
-  		EGS_Vector NPOI = (iN > POI); //Vector from iN to POI
+  		EGS_Vector NPOI = POI - iN; //Vector from iN to POI
 
   		EGS_Float w1;
   		EGS_Float w2;
@@ -643,7 +639,7 @@ public:
         for (int i=0; i<nreg; i++) {
 
 	        // Face 1:
-	        aNP = (aN2[i]>aP); //compute vector from node 2 to point
+	        aNP = aP - aN2[i]; //compute vector from node 2 to point
 
 			    // If vector from plane to particle has the same general direction as the inward normal,
         	// the particle is inside the plane and MAY be inside the tet,
@@ -653,17 +649,17 @@ public:
 	        	 continue;
 	        }
 	        // Face 2:
-	        aNP = (aN1[i]>aP);
+	        aNP = aP - aN1[i];
 	        if ((aNorm2[i]*aNP) < 0) {
 	        	continue;
 	        }
 	        // Face 3:
-	        aNP = (aN1[i]>aP);
+	        aNP = aP - aN1[i];
 	        if ((aNorm3[i]*aNP) < 0) {
 	            continue;
 	        }
 	        // Face 4:
-	        aNP = (aN1[i]>aP);
+	        aNP = aP - aN1[i];
 	        if ((aNorm4[i]*aNP) < 0) {
 	            continue;
 	        }
@@ -762,7 +758,7 @@ public:
 
             // Face 1
             if ((aDir_unitized*aNorm1[ireg]) < 0) { // < 0 indicates that the trajectory loosely points at the plane
-                aPN = (aP>aN2[ireg]); //Computer vector from aP to aN2[]
+                aPN = aN2[ireg] - aP; //Computer vector from aP to aN2[]
                 dist = (aPN*aNorm1[ireg]) / (aDir_unitized*aNorm1[ireg]); //calculated distance to the face.
 
                 if (dist < t) { //If the calculated distance to the face is shorter than the proposed step length
@@ -775,7 +771,7 @@ public:
             // Face 2
             dist = 1e30;
             if ((aDir_unitized*aNorm2[ireg]) < 0) {
-                aPN = (aP>aN1[ireg]);
+                aPN = aN1[ireg]- aP;
                 dist = (aPN*aNorm2[ireg]) / (aDir_unitized*aNorm2[ireg]);
 
                 if (dist < t) {
@@ -788,7 +784,7 @@ public:
             // Face 3
             dist = 1e30;
             if ((aDir_unitized*aNorm3[ireg]) < 0) {
-                aPN = (aP>aN1[ireg]);
+                aPN = aN1[ireg]- aP;
                 dist = (aPN*aNorm3[ireg]) / (aDir_unitized*aNorm3[ireg]);
                 if (dist < t) {
                     t = dist;
@@ -800,7 +796,7 @@ public:
             // Face 4
             dist = 1e30;
             if ((aDir_unitized*aNorm4[ireg]) < 0) {
-                aPN = (aP>aN1[ireg]);
+                aPN = aN1[ireg]- aP;
                 dist = (aPN*aNorm4[ireg]) / (aDir_unitized*aNorm4[ireg]);
                 if (dist < t) {
                     t = dist;
@@ -848,14 +844,14 @@ public:
         		if (n1[i] == -1) { //Check if face 1 is an outside face (indicated by -1)
         			// check face 1
         			if ((aDir_unitized*aNorm1[i]) > 0) { // Plane faces same general direction as particle (particle has to cross inwards)
-	            		aPN = (aP>aN2[i]); // Vector from particle to node N2,
+	            		aPN = aN2[i] - aP; // Vector from particle to node N2,
 	            		dist = (aPN*aNorm1[i]) / (aDir_unitized*aNorm1[i]); // distance along up to plane from aP
 		            	if ((dist < t) && (dist >= 0)) { // distance smaller than intended step
 		                	POI.x = dist * aDir_unitized.x + aP.x; // Point of Intersection = dist * aDir_unitized + aP
 		                	POI.y = dist * aDir_unitized.y + aP.y;
 		                	POI.z = dist * aDir_unitized.z + aP.z;
 			                // Check if POI is within tet face not just on the plane
-			                NPOI = (aN2[i]>POI);
+			                NPOI = POI - aN2[i];
 			                EGS_Float invDenom = 1.0 / ((aN2N4[i]*aN2N4[i]) * (aN2N3[i]*aN2N3[i]) - (aN2N3[i]*aN2N4[i]) * (aN2N3[i]*aN2N4[i]));
 							w1 = ((aN2N3[i]*aN2N3[i]) * (aN2N4[i]*NPOI) - (aN2N3[i]*aN2N4[i]) * (aN2N3[i]*NPOI)) * invDenom;
 							w2 = ((aN2N4[i]*aN2N4[i]) * (aN2N3[i]*NPOI) - (aN2N3[i]*aN2N4[i]) * (aN2N4[i]*NPOI)) * invDenom;
@@ -872,7 +868,7 @@ public:
         		if (n2[i] == -1) {
         			// check face 2
         			if ((aDir_unitized*aNorm2[i]) > 0) { // Plane faces same general direction as particle (particle has to cross inwards)
-			            aPN = (aP>aN1[i]); // Vector from particle to node
+				    aPN = aN1[i] - aP; // Vector from particle to node N1,
 			            dist = (aPN*aNorm2[i]) / (aDir_unitized*aNorm2[i]); // distance along up to plane from aP
 
 			            if ((dist < t) && (dist >= 0)) { // distance smaller than intended step
@@ -880,7 +876,7 @@ public:
 			                POI.y = dist * aDir_unitized.y + aP.y;
 			                POI.z = dist * aDir_unitized.z + aP.z;
 			                // Check if POI is within tet face not just on the plane
-			                NPOI = (aN1[i]>POI);
+			                NPOI = POI - aN1[i];
 			                EGS_Float invDenom = 1.0 / ((aN1N4[i]*aN1N4[i]) * (aN1N3[i]*aN1N3[i]) - (aN1N3[i]*aN1N4[i]) * (aN1N3[i]*aN1N4[i]));
 							w1 = ((aN1N3[i]*aN1N3[i]) * (aN1N4[i]*NPOI) - (aN1N3[i]*aN1N4[i]) * (aN1N3[i]*NPOI)) * invDenom;
 							w2 = ((aN1N4[i]*aN1N4[i]) * (aN1N3[i]*NPOI) - (aN1N3[i]*aN1N4[i]) * (aN1N4[i]*NPOI)) * invDenom;
@@ -897,14 +893,14 @@ public:
         		if (n3[i] == -1) {
         			// check face 3
         			if ((aDir_unitized*aNorm3[i]) > 0) { // Plane faces same general direction as particle (particle has to cross inwards)
-			            aPN = (aP>aN1[i]); // Vector from particle to node
+			            aPN = aN1[i] - aP; // Vector from particle to node
 			            dist = (aPN*aNorm3[i]) / (aDir_unitized*aNorm3[i]); // distance along up to plane from aP
 			            if ((dist < t) && (dist >= 0)) { // distance smaller than intended step
 			                POI.x = dist * aDir_unitized.x + aP.x; // Point of Intersection = dist * aDir_unitized + aP
 			                POI.y = dist * aDir_unitized.y + aP.y;
 			                POI.z = dist * aDir_unitized.z + aP.z;
 			                // Check if POI is within tet face not just on the plane
-			                NPOI = (aN1[i]>POI);
+			                NPOI = POI - aN1[i];
 			                EGS_Float invDenom = 1.0 / ((aN1N4[i]*aN1N4[i]) * (aN1N2[i]*aN1N2[i]) - (aN1N2[i]*aN1N4[i]) * (aN1N2[i]*aN1N4[i]));
 							w1 = ((aN1N2[i]*aN1N2[i]) * (aN1N4[i]*NPOI) - (aN1N2[i]*aN1N4[i]) * (aN1N2[i]*NPOI)) * invDenom;
 							w2 = ((aN1N4[i]*aN1N4[i]) * (aN1N2[i]*NPOI) - (aN1N2[i]*aN1N4[i]) * (aN1N4[i]*NPOI)) * invDenom;
@@ -920,7 +916,7 @@ public:
         		if (n4[i] == -1) {
         			// check face 4
         			if ((aDir_unitized*aNorm4[i]) > 0) { // Plane faces same general direction as particle (particle has to cross inwards)
-			            aPN = (aP>aN1[i]); // Vector from particle to node
+			            aPN = aN1[i] - aP; // Vector from particle to node
 			            dist = (aPN*aNorm4[i]) / (aDir_unitized*aNorm4[i]); // distance along up to plane from aP
 
 			            if ((dist < t) && (dist >= 0)) { // distance smaller than intended step
@@ -928,7 +924,7 @@ public:
 			                POI.y = dist * aDir_unitized.y + aP.y;
 			                POI.z = dist * aDir_unitized.z + aP.z;
 			                // Check if POI is within tet face not just on the plane
-			                NPOI = (aN1[i]>POI);
+			                NPOI = POI - aN1[i];
 			                EGS_Float invDenom = 1.0 / ((aN1N3[i]*aN1N3[i]) * (aN1N2[i]*aN1N2[i]) - (aN1N2[i]*aN1N3[i]) * (aN1N2[i]*aN1N3[i]));
 							w1 = ((aN1N2[i]*aN1N2[i]) * (aN1N3[i]*NPOI) - (aN1N2[i]*aN1N3[i]) * (aN1N2[i]*NPOI)) * invDenom;
 							w2 = ((aN1N3[i]*aN1N3[i]) * (aN1N2[i]*NPOI) - (aN1N2[i]*aN1N3[i]) * (aN1N3[i]*NPOI)) * invDenom;
@@ -978,14 +974,14 @@ public:
         	EGS_Float tmin = 1e30;
 
         	//Check face 1 normal distance
-            aNP = (aN2[ireg]>aP); //Compute vector from node 2 to the current particle position
+            aNP = aP - aN2[ireg]; //Compute vector from node 2 to the current particle position
             dist = (aNP*aNorm1[ireg]); // Direction is normal -> denominator (dir dot norm) = 1 and is implied
 
             if (dist < tmin) { //if the distance to face 1 is less than tmin, update tmin.
                 tmin = dist;
             }
             // Face 2
-            aNP = (aN1[ireg]>aP);
+            aNP = aP - aN1[ireg];
             dist = (aNP*aNorm2[ireg]); // Direction is normal -> denominator (dir dot norm) = 1 and is implied
 
             if (dist < tmin) {
@@ -1045,7 +1041,7 @@ public:
         		if (n1[i] == -1) { //if the neighbour of face 1 is -1, this face is an outside face.
 
         			// check face 1
-        			aPN = (aP>aN2[i]); //compute vector from particle position to a node on face 1.
+        			aPN = aN2[i] - aP; //compute vector from particle position to a node on face 1.
 			        if ((aNorm1[i]*aPN) > 0) { //If dot product of face normal and the vector is positive
 			        	face1 = true; // then we can see face 1.  Update the flag
 			        	nFaces = nFaces + 1; //increment the number of faces the particle can see.
@@ -1054,7 +1050,7 @@ public:
         		if (n2[i] == -1) {
 
         			// check face 2
-        			aPN = (aP>aN1[i]);
+        			aPN = aN1[i] - aP;
 			        if ((aNorm2[i]*aPN) > 0) {
 			        	face2 = true;
 			        	nFaces = nFaces + 1;
