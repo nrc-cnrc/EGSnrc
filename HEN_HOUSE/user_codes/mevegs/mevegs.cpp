@@ -108,7 +108,7 @@ public:
     Mevegs_Application(int argc, char **argv, bool _usingMeshObj):
     // std::unique_ptr<onelab::remoteNetworkClient> _client) :
     // onelab::remoteNetworkClient* _client) :
-        EGS_AdvancedApplication(argc,argv,false), usingMeshObj(_usingMeshObj),
+        EGS_AdvancedApplication(argc,argv), usingMeshObj(_usingMeshObj),
         score(0), eflu(0), gflu(0), pheight(0), nreg(0), nph(0), Etot(0), rr_flag(0),
         current_weight(1), deflect_brems(false), fsplit(1), fspliti(1) {
 
