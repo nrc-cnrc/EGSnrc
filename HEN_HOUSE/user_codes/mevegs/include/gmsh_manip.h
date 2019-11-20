@@ -388,11 +388,11 @@ Mesh createMesh(std::string fileName){
 		// loop over entities of this pgroup and get their elements
 		// @arg 3 -> only care about 3d elts
 		// tet_type is 4
-		std::vector<int> elTags, ndTags; // reset each time
+		std::vector<std::size_t> elTags, ndTags; // reset each time
 		for (auto const & ceTag : currEntityTags){
 			std::cout << "Current Entity Tag: " << ceTag << std::endl;
       //port to new gmsh 4.0 API
-      std::vector<std::vector<int>> dummyElTags, dummyNdTags;
+      std::vector<std::vector<std::size_t>> dummyElTags, dummyNdTags;
       gmsh::model::mesh::getElements(tet_type, dummyElTags, dummyNdTags, 3, ceTag);
       //always want the first vector of vectors
       elTags = dummyElTags.front();
@@ -448,7 +448,7 @@ Mesh createMesh(std::string fileName){
     basicElts[allElts[i]] = baseElt{allMedia[i], allRhor[i], nodesOfElt};
 	}
 
-	std::vector<int> sortedElts, nodesOfSortedElts, mediaOfSortedElts;
+	std::vector<std::size_t> sortedElts, nodesOfSortedElts, mediaOfSortedElts;
   std::vector<double> rhorOfSortedElts;
 
 	sortedElts.reserve(allElts.size());
@@ -475,7 +475,7 @@ Mesh createMesh(std::string fileName){
 
 	//get number of unique nodes
 	//@ arg paraCoord -> not used rn
-	std::vector<int> unique_nodes;
+	std::vector<std::size_t> unique_nodes;
 	std::vector<double> coords, paraCoord; // matchedCoords matched coords is one to one std::vector for each
 	gmsh::model::mesh::getNodes(unique_nodes, coords, paraCoord);
 	auto num_unique_nodes = unique_nodes.size();
@@ -499,12 +499,12 @@ Mesh createMesh(std::string fileName){
   }
 
 	// dumb init -> changed within neighbours.h
-	std::vector<int> eltNeighbours(1);
+	std::vector<std::size_t> eltNeighbours(1);
 	//smart init - roughly this size - TODO get right size from the start
-	std::vector<int> indices(num_unique_nodes + 1);
+	std::vector<std::size_t> indices(num_unique_nodes + 1);
 
 	std::map<int, int> adjustment = renumberNodes(nodesOfSortedElts);
-	std::vector<int> nodesNoSkip(nodesOfSortedElts);
+	std::vector<std::size_t> nodesNoSkip(nodesOfSortedElts);
 
 	for (auto & nns : nodesNoSkip){
 		nns = nns - adjustment[nns];
@@ -515,7 +515,7 @@ Mesh createMesh(std::string fileName){
 	// eltMask -> [1, 2, 3, 4, 5,  6]
 	// elts    -> [2, 5, 6, 7, 29, 59]
 	// the elt corresponding to eltMask is elts[i] for loop starting from i = 0
-	std::vector<int> eltMask;
+	std::vector<std::size_t> eltMask;
 	eltMask.reserve(sortedElts.size());
 	//kinda dumb - std::vector with value of idx + 1;
 	//compiler can likely optimize out
