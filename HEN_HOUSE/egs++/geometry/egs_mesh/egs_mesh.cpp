@@ -1,7 +1,11 @@
 /*
 ###############################################################################
 #
-#  EGSnrc egs++ mevex tet collection geometry
+#  EGSnrc egs++ mesh geometry library implementation.
+#
+#  Copyright (C) 2019 Mevex Corporation
+#
+#  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
 #  the terms of the GNU Affero General Public License as published by the
@@ -18,13 +22,14 @@
 #
 ###############################################################################
 #
-#  Author:          MJR, 2018
-#
-# Contributors: DMM, MXO
+#  Authors:          Dave Macrillo,
+#                    Matt Ronan,
+#                    Nigel Vezeau,
+#                    Lou Thompson,
+#                    Max Orok
 #
 ###############################################################################
 */
-
 
 /*! \file egs_Mevex_tet_collection.cpp
  *  \brief A mevex tet collection geometry: implementation

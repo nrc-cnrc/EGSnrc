@@ -1,6 +1,10 @@
 ###############################################################################
 #
-#  EGSnrc egs++ makefile to build mevex tet collection geometry
+#  EGSnrc egs++ makefile to build the mesh geometry library
+#
+#  Copyright (C) 2019 Mevex Corporation
+#
+#  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
 #  the terms of the GNU Affero General Public License as published by the
@@ -16,13 +20,6 @@
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-#
-#  Author:          MJR, 2018
-#
-# Contributors: DMM
-#
-###############################################################################
-
 
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec

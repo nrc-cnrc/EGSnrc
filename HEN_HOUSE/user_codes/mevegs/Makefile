@@ -1,10 +1,8 @@
 ###############################################################################
 #
-#  makefile to build the mevegs application
-#  Modified tutor7pp makefile by MXO
-#  License presented as it was:
+#  Makefile to build the mevegs application, based on the tutor7pp makefile
 #
-#  Copyright (C) 2015 National Research Council Canada
+#  Copyright (C) 2019 Mevex Corporation
 #
 #  This file is part of EGSnrc.
 #
@@ -22,20 +20,6 @@
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-#
-#  Author:          Iwan Kawrakow, 2005
-#
-#  Contributors:
-#
-###############################################################################
-#
-#  As long as your own application is derived from EGS_AdvancedApplication and
-#  there is a single C++ source file named $(USER_CODE).cpp, you can simply
-#  use this Makefile by copying it into the application directory and changing
-#  the USER_CODE variable below to the name of your application.
-#
-###############################################################################
-
 
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp1.spec

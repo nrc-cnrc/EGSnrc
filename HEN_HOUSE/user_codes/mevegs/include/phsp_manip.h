@@ -1,15 +1,44 @@
-//////////////////////////////////////////////////////////////////////////////
-// MevEGS - (C) 2018 Mevex Corp.
-//
-// obtain phase space file data
-//
-// MXO
-//
-// because we changed the way geometry input works for tet collections,
-// we can't specify phase space scoring in input files the usual way
-// instead, we trick the phase space ausgab object initialization function
-// by making a second input file formatted how EGS is expecting
-//////////////////////////////////////////////////////////////////////////////
+/*
+###############################################################################
+#
+#  EGSnrc mevegs application phase space handling.
+#
+#  Copyright (C) 2019 Mevex Corporation
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Authors:          Dave Macrillo,
+#                    Matt Ronan,
+#                    Nigel Vezeau,
+#                    Lou Thompson,
+#                    Max Orok
+#
+###############################################################################
+#
+#  Handle phase space files.
+#
+#  Because we changed the way geometry input works for tet collections,
+#  we can't specify phase space scoring in input files the usual way
+#  instead, we trick the phase space ausgab object initialization function
+#  by making a second input file formatted how EGS is expecting.
+#
+###############################################################################
+*/
 
 #ifndef PHSP_MANIP
 #define PHSP_MANIP
