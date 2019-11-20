@@ -69,8 +69,9 @@ VENDOR = $(HEN_HOUSE)user_codes$(DSEP)$(USER_CODE)$(DSEP)vendor
 INCL += -I$(VENDOR)
 
 # add our required libraries
-fortran_libs += -lws2_32 -fopenmp -lshlwapi -lgmsh \
-        -legs_mesh -legs_planes -liaea_phsp
+fortran_libs += -lgmsh -legs_mesh -legs_planes -liaea_phsp
+
+# windows only -lws2_32 -lshlwapi
 
 #test_sources:
 #	@echo "$(C_SOURCES)"

@@ -1,0 +1,29 @@
+:start source definition:
+	:start source:
+		:start shape:
+			type = cylinder
+			radius   = 0.25
+			height   = 0.1
+			axis     = 0 0 1
+			midpoint = 0.5
+		:stop shape:
+		:start spectrum:
+			type = monoenergetic
+			energy = 10
+		:stop spectrum:
+		library = egs_parallel_beam
+		name = CST_source
+		direction = 0 0 -1
+		charge = 0
+	:stop source:
+:stop source definition:
+:start MC transport parameter:
+	Global ECUT = 0.611000
+	Global PCUT = 0.100000
+:stop MC transport parameter:
+:start run control:
+	ncase = 10000
+:stop run control:
+:start mevegs:
+	scaling = 10.000000
+:stop mevegs:

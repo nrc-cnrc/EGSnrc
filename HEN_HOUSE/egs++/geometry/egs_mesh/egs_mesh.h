@@ -1300,7 +1300,9 @@ public:
         return type;
     };
 
-    void printInfo() const override ;
+    void printInfo() const override;
+
+	void setMeshMedia(const Mesh& m);
 
     //create a mesh using a new mesh class
     //static fn mirrors similar EGS_BaseGeometry createGeometry fn
@@ -1327,8 +1329,27 @@ public:
     // }
 };
 
+void EGS_Mevex_tet_collection::setMeshMedia(const Mesh& mesh) {
+    std::vector<std::string> names;
 
- EGS_BaseGeometry* createMeshGeometry(EGS_Input *input, const double scaling, const Mesh& m){
+    names.reserve(mesh.getMediaMap().size());
+
+    for (const auto& pair : mesh.getMediaMap()) {
+        names.emplace_back(pair.second);
+    }
+
+    std::vector<int> mind;
+    mind.reserve(mesh.getMediaMap().size());
+    for (auto pair : mesh.getMediaMap()) {
+        mind[pair.first] = EGS_BaseGeometry::addMedium(pair.second);
+    }
+
+    for (int i = 0; i<nreg; i++) {
+        EGS_BaseGeometry::setMedium(i,i,mind[mesh.getMedia()[i]]);
+    }
+}
+
+  EGS_BaseGeometry* createMeshGeometry(EGS_Input *input, const double scaling, const Mesh& m) {
 
   egsInformation("It works!\n");
 
@@ -1338,8 +1359,7 @@ public:
 
   result->setBoundaryTolerance(input);
 
-  //overloaded for meshes
-  result->setTetMedia(m);
+  result->setMeshMedia(m);
 
   result->setLabels(input);
 

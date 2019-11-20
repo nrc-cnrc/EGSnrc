@@ -178,7 +178,7 @@ EGS_BaseGeometry *createGeometry(EGS_Input *input) {
           Y2, Z2, X3, Y3, Z3, X4, Y4, Z4, N1, N2, N3, N4, bT, mediaIndexes);
         result->setName(input);
         result->setBoundaryTolerance(input);
-        result->setTetMedia(input, mediaIndexes);
+        // result->setTetMedia(input, mediaIndexes);
         result->setLabels(input);
         return result;
     }
