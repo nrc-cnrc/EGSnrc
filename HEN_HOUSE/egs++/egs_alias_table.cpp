@@ -304,28 +304,45 @@ EGS_SimpleAliasTable::EGS_SimpleAliasTable(int N, const EGS_Float *f) : n(0) {
     //egsInformation("n=%d sum=%g\n",n,sum);
     int jh_old = 0, jl_old = 0;
     for (i=0; i<n-1; ++i) {
-        for (jh=jh_old; jh<n-1; jh++) {
-            if (bins[jh] > n && fcum[jh] >= sum) {
+
+        // find the next "high" bin (above average)
+        int high_bin = -1;
+        for (jh=jh_old; jh<n; jh++) {
+            if (bins[jh] > n && fcum[jh] > sum) {
+                high_bin = jh;
                 break;
             }
         }
+        if (high_bin < 0) {
+            break;
+        }
+
+        // find the next "low" bin (below average)
+        int low_bin = -1;
         if (fcum[jh_old] < sum && jh_old < jl_old) {
-            jl = jh_old;
+            jl = jh_old; // trap over-aliased previous high bin, below the previous low bin
+            low_bin = jl;
         }
         else {
-            for (jl=jl_old; jl<n-1; jl++) {
+            for (jl=jl_old; jl<n; jl++) {
                 if (bins[jl] > n && fcum[jl] < sum) {
+                    low_bin = jl;
                     break;
                 }
             }
-            jl_old = jl;
         }
-        double aux = sum - fcum[jl];
-        fcum[jh] -= aux;
-        wi[jl] = fcum[jl]/sum;
-        bins[jl] = jh;
-        //egsInformation("i=%d jh=%d jl=%d w=%g\n",i,jh,jl,wi[jl]);
-        jh_old = jh; //jl_old = jl;
+        if (low_bin < 0) {
+            egsInformation("EGS_SimpleAliasTable: found a high bin, but no low bin; this is abnormal.");
+            break;
+        }
+
+        double aux = sum - fcum[low_bin];
+        fcum[high_bin] -= aux;
+        wi[low_bin] = fcum[low_bin]/sum;
+        bins[low_bin] = high_bin;
+        //egsInformation("i=%d high_bin=%d low_bin=%d w=%g\n",i,high_bin,low_bin,wi[low_bin]);
+        jh_old = high_bin;
+        jl_old = low_bin;
     }
     for (i=0; i<n; ++i) {
         if (bins[i] > n) {
