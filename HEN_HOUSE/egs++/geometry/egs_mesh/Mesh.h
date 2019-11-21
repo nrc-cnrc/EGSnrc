@@ -52,7 +52,32 @@
 #include <sstream>
 #include <cassert>
 
-class Mesh{
+class Mesh {
+
+public:
+
+    // read only data
+    const std::vector<int> nodes;
+    const std::map<int, std::tuple<double, double, double>> coordMap;
+    const std::vector<int> elts;
+    const std::vector<int> eltNeighbours;
+    const std::vector<int> media;
+    const std::map<int, std::string> mediaMap;
+    const std::vector<int> boundaryTet;
+    const std::vector<double> rhor;
+
+private:
+
+  // only handles tetrahedrons for now
+  const int neighbours_per_elt = 4;
+  const int coords_per_elt = 12;
+  const int nodes_per_elt = 4;
+
+  std::string fileName;
+
+  //TODO watch this -> could have errors for 64 bit ints
+  std::pair<std::vector<std::string>, std::vector<std::vector<std::vector<double>>>> eltData;
+
 
 public:
 
@@ -71,21 +96,24 @@ public:
    nodes(_nodes), coordMap(_coordMap), elts(_elts), eltNeighbours(_neighbours),
    media(_media), mediaMap(_mediaMap), rhor(_rhor) {
 
-     Mesh::empty = false;
-
 	  //find neighbours TODO actually implement it here instead of in gmsh_manip
     findNeighbours();
 
     //inititalize boundary tet vector with information from neighbours
-    boundaryTet.reserve(elts.size());
+    std::vector<int> tempBoundary;
+    tempBoundary.reserve(elts.size());
+    // boundaryTet.reserve(elts.size());
     bool boundaryFlag = false; //zero for non boundary, 1 for boundary
     for (std::size_t i = 0; i < elts.size(); ++i){
       boundaryFlag =  (eltNeighbours[neighbours_per_elt*i]   == -1) ||
                       (eltNeighbours[neighbours_per_elt*i+1] == -1) ||
                       (eltNeighbours[neighbours_per_elt*i+2] == -1) ||
                       (eltNeighbours[neighbours_per_elt*i+3] == -1); // if any neighbours are -1
-      boundaryTet.emplace_back(boundaryFlag); // implicit conversion to int here
+      tempBoundary.emplace_back(boundaryFlag); // implicit conversion to int here
       }
+
+      const_cast <std::vector<int>&> (this->boundaryTet) = std::move(tempBoundary);
+
       //check that input data is well formed
       assert(boundaryTet.size() == elts.size());
 	 }
@@ -183,7 +211,6 @@ public:
   const std::vector<int>& getBoundaryTet() const {return boundaryTet;}
   const std::vector<int>& getMedia() const {return media;}
   const std::map<int, std::string>& getMediaMap() const {return mediaMap;}
-  bool isEmpty() const {return empty;}
 
   // convert signed element tags to unsigned size tags like gmsh expects
   std::vector<std::size_t> getUnsignedElements() const {
@@ -234,32 +261,6 @@ public:
   const std::vector<double> getRhor() const{
     return rhor;
   }
-
-private:
-
-  bool empty = true; //used to check for file opening errors
-
-  // const int mask; // used to rebase for gmsh representation (they count lines etc as elts)
-                     // should be equal to first elt tag -
-  const unsigned int neighbours_per_elt = 4; // only handles tets for now
-  const unsigned int coords_per_elt = 12;    // ditto
-  const unsigned int nodes_per_elt = 4;      // ditto
-
-  std::string fileName;
-
-  std::vector<int> nodes;             //passed into cstor
-  std::map<int, std::tuple<double, double, double>> coordMap; //passed into cstor
-  std::vector<int> elts;              //passed into cstor
-  std::vector<int> eltNeighbours;     //found by cstor
-  std::vector<int> media;             //passed into cstor
-  std::map<int, std::string> mediaMap;//passed into cstor
-  //std::vector<double> matchedCoords;  //found by cstor
-  std::vector<int> boundaryTet;       //found by cstor
-                                      // TODO fix with actual knowledge if boundary or not
-  std::vector<double> rhor;            //found by cstor
-  // std::vector<std::pair<std::string, std::vector<int>>> eltIntData; // may not be just ints, need to think about
-  //TODO watch this -> could have errors for 64 bit ints
-  std::pair<std::vector<std::string>, std::vector<std::vector<std::vector<double>>>> eltData;
 
 };
 
