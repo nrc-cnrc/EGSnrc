@@ -80,8 +80,6 @@
 
 #include <cstdlib>
 
-// #define doRayleigh F77_OBJ_(do_rayleigh,DO_RAYLEIGH)
-
 extern __extc__ void F77_OBJ_(do_rayleigh,DO_RAYLEIGH)();
 extern __extc__ void F77_OBJ(pair,PAIR)();
 extern __extc__ void F77_OBJ(compt,COMPT)();
@@ -117,16 +115,6 @@ class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
     bool  deflect_brems;
     static string revision;    // revision number
 
-    EGS_Float       fsplit;       // photon splitting number
-    EGS_Float       fspliti;      // inverse fsplit
-    std::vector<int> split_media; // which media indices to split inside
-
-    /*! Range interpolators for photon splitting in different mediums*/
-    std::vector<EGS_Interpolator> rr_erange;
-    std::vector<EGS_Interpolator> rr_prange;
-
-
-
 public:
 
     /*! Constructor
@@ -139,7 +127,7 @@ public:
     // onelab::remoteNetworkClient* _client) :
         EGS_AdvancedApplication(argc,argv), usingMeshObj(_usingMeshObj),
         score(0), eflu(0), gflu(0), pheight(0), nreg(0), nph(0), Etot(0), rr_flag(0),
-        current_weight(1), deflect_brems(false), fsplit(1), fspliti(1) {
+        current_weight(1), deflect_brems(false) {
 
         std::cout << "Successfully constructed MevEGS Application" << std::endl;
     };
@@ -249,11 +237,6 @@ public:
     void getCurrentResult(double &sum, double &sum2, double &norm,
             double &count);
 
-    /*! Select photon mean-free-path
-     *  used to implement photon splitting variance reduction
-     */
-    void selectPhotonMFP(EGS_Float &dpmfp);
-
     //send out our result vectors into the world to possibly be put in a gmsh pos or mesh file
     void getResultVectors(std::vector<double>& _doses,
                           std::vector<double>& _uncerts) const {
@@ -328,337 +311,10 @@ private:
     inline void aggregateResults();
 };
 
-// mevegs revision 0.1
 string Mevegs_Application::revision = "1.0";
 
 extern "C" void F77_OBJ_(egs_scale_xcc,EGS_SCALE_XCC)(const int *,const EGS_Float *);
 extern "C" void F77_OBJ_(egs_scale_bc,EGS_SCALE_BC)(const int *,const EGS_Float *);
-
-// add photon splitting (adapted from egs_chamber)
-extern __extc__ void
-F77_OBJ_(select_photon_mfp, SELECT_PHOTON_MFP)(EGS_Float *dpmfp) {
-
-    EGS_Application *a = EGS_Application::activeApplication();
-    Mevegs_Application *app = dynamic_cast<Mevegs_Application *>(a);
-    if (!app) {
-       egsFatal("select_photon_mfp called with active application "
-              "not of type Mevegs_Application!\n");
-    }
-    app->selectPhotonMFP(*dpmfp);
-
-}
-
-// Find the photon mean-free-path
-// -- adapted from egs_chamber.cpp
-//
-// If photon splitting is turned on, the entire photon transport
-// chain happens here.
-//
-// After photon splitting, @arg dummy_mfp is set to -1 and flags an early exit
-// for PHOTON (since transport was already done here)
-//
-// If photon splitting wasn't requested, @dummy_mfp returns a typical mean free
-// path value and PHOTON continues as normal.
-
-void Mevegs_Application::selectPhotonMFP(EGS_Float &dummy_mfp) {
-
-    // go from Fortran 1-based indexing to 0-based indexing
-    int np = the_stack->np-1;
-
-    // error checks before splitting
-
-    // fail if not called with a photon -> iq is the integer particle charge
-    if (the_stack->iq[np]) {
-        egsFatal("selectPhotonMFP called with a "
-                 "particle of charge %d\n", the_stack->iq[np]);
-    }
-
-    // no photon splitting, return a typical mean-free-path
-    if (this->fsplit <= 1) {
-        dummy_mfp = -log(1 - rndm->getUniform());
-        return;
-    }
-
-    // check whether splitting was requested in this medium
-    int ireg = the_stack->ir[np]-2;    // current region
-    int imed = geometry->medium(ireg); // media of region
-
-    // this media wasn't requested for splitting, return a typical mfp
-    if (this->split_media.end() == std::find(this->split_media.begin(), this->split_media.end(), imed)) {
-        dummy_mfp = -log(1 - rndm->getUniform());
-        return;
-    }
-
-    // otherwise, get ready for photon splitting
-
-    EGS_Float wt_o = the_stack->wt[np];
-    EGS_Float E    = the_stack->E[np];
-    int latch      = the_stack->latch[np];
-    int latch1     = latch;
-
-    EGS_Float split_num, inv_split_num;
-    // why is latch the determinant here?
-    if (latch < 2) {
-        split_num  = this->fsplit;
-        inv_split_num = this->fspliti;
-    }
-    else { // use range rejection heuristic
-        split_num  = rr_flag;
-        inv_split_num = 1/split_num;
-        latch1   = latch - rr_flag;
-        the_stack->latch[np] = latch1;
-    }
-    // adjust statistical weight by the number of photons split
-    the_stack->wt[np] = wt_o * inv_split_num;
-
-
-    // relative gamma mean free path (like rhor = relative rho)
-    EGS_Float gmfpr = 1e15;
-    // coherent scattering factor
-    EGS_Float cohfac = 1;
-    // natural log of photon energy
-    EGS_Float gle = the_epcont->gle;
-
-    if (imed >= 0) { // if it's not in vacuum
-        gmfpr = EGS_AdvancedApplication::i_gmfp[imed].interpolateFast(gle);
-        // iraylr is a flag for turning on coherent (Rayleigh) scattering
-        if (the_xoptions->iraylr) {
-            cohfac = EGS_AdvancedApplication::i_cohe[imed].interpolateFast(gle);
-            // adjust relative gamma MFP by coherent scattering factor
-            gmfpr *= cohfac;
-        }
-    }
-
-    // get position
-    EGS_Vector x(the_stack->x[np], the_stack->y[np], the_stack->z[np]);
-    // get velocity
-    EGS_Vector u(the_stack->u[np], the_stack->v[np], the_stack->w[np]);
-    // get relative density
-    EGS_Float rhor = the_useful->rhor;
-
-    // calculate gamma mean free path
-    EGS_Float gmfp = gmfpr/rhor;
-
-    // how many photons survive (0 to split_num)
-    // this means sometimes no photons are split
-    int i_survive = static_cast<int> (split_num * rndm->getUniform());
-
-    // loop variables
-    EGS_Float mfp_old = 0;
-    EGS_Float eta_prime = 1 + rndm->getUniform() * inv_split_num;
-    dummy_mfp = -1;
-    int isplit = 0;
-
-    while(1) {
-        // eta_prime is some sort of energy store ?
-        // guaranteed to pass this check at least once since eta_prime initialized to
-        // a larger number.
-        eta_prime -= inv_split_num;
-        if( eta_prime <= 0 ) {
-            --the_stack->np;
-            // early exit
-            return;
-        }
-
-        // find the mean free path of this iteration's photon
-        EGS_Float mfp = -log(eta_prime) - mfp_old;
-        mfp_old = mfp_old + mfp;
-
-        // EGS_Float xp , up, t;
-        // double ttot = 0;
-
-        while(1) {
-
-            EGS_Float tstep = mfp*gmfp; // mfp * gmfp : [time] ???
-            int newmed;
-            int inew = geometry->howfar(ireg,x,u,tstep,&newmed);
-            if( inew < 0 ) {
-               --the_stack->np;
-               return;
-            }
-
-            // distance += velocity * time
-            x += u * tstep;
-            if( inew == ireg ) {
-                break;
-            }
-
-            mfp -= tstep/gmfp;
-
-            if( geometry->hasRhoScaling() ) {
-                rhor = geometry->getRelativeRho(inew);
-            }
-            else {
-                rhor = 1;
-            }
-            // go to new region
-            ireg = inew;
-            // change material data if the new region is a different medium
-            //
-            // Note: if the particle reaches a new medium, split there even if
-            // splitting wasn't requested. This simplifies splitting setup in initScoring
-            if( newmed != imed ) {
-                imed = newmed;
-                the_useful->medium = imed+1;
-                if( imed >= 0 ) {
-                    gmfpr = EGS_AdvancedApplication::i_gmfp[imed].interpolateFast(gle);
-                    if( the_xoptions->iraylr ) {
-                        cohfac = EGS_AdvancedApplication::i_cohe[imed].interpolateFast(gle);
-                        gmfpr *= cohfac;
-                    }
-                }
-                else {
-                    gmfpr=1e15, cohfac=1;
-                }
-            }
-            gmfp = gmfpr/rhor;
-        }
-
-        // update stack particle data after step
-        the_stack->x[np]=x.x;
-        the_stack->y[np]=x.y;
-        the_stack->z[np]=x.z;
-        the_stack->ir[np] = ireg+2;
-        // optional distance to next boundary
-        the_stack->dnear[np] = 0;
-
-        // finally ready to interact
-
-        // Rayleigh interaction?
-        bool is_rayleigh = false;
-        if( the_xoptions->iraylr ) {
-            if( rndm->getUniform() < 1 - cohfac ) {
-                is_rayleigh = true;
-                if( isplit != i_survive ) {
-                    --np;
-                    --the_stack->np;
-                }
-                else {
-                 the_stack->wt[np] = wt_o;
-                 F77_OBJ_(do_rayleigh,DO_RAYLEIGH)();
-                 the_stack->latch[np] = latch < 2 ?
-                        1 : (rr_flag+1);
-                }
-            }
-        }
-
-        // not Rayleigh, check the other interaction types
-        if( !is_rayleigh ) {
-
-            EGS_Float gbr1, gbr2;
-            gbr1 = EGS_AdvancedApplication::i_gbr1[imed].interpolateFast(gle);
-            gbr2 = EGS_AdvancedApplication::i_gbr2[imed].interpolateFast(gle);
-            EGS_Float eta = rndm->getUniform();
-
-            // pair production
-            if( E > the_thresh->rmt2 && eta < gbr1 ) {
-                F77_OBJ(pair,PAIR)();
-            }
-
-            // Compton scattering
-            else if( eta < gbr2 ) {
-                F77_OBJ(compt,COMPT)();
-            }
-
-            // photo-electric absorption
-            else {
-                F77_OBJ(photo,PHOTO)();
-            }
-
-            np = the_stack->np-1;
-            int ip = the_stack->npold-1;
-
-            // old way checked against a list of cavity geometries
-            //
-            bool do_rr = (rr_flag > 0); // && !is_cavity[ig][ireg]);
-            // if( do_rr && cgeoms[ig] ) {
-            //    if( !cgeoms[ig]->isInside(x) ) cperp = cgeoms[ig]->hownear(-1,x);
-            //    else do_rr = false;
-            // } else do_rr = false;
-
-            do {
-                if( !the_stack->iq[ip] ) {
-                    if( isplit == i_survive ) {
-                      the_stack->wt[ip] = wt_o;
-                      the_stack->latch[ip++] = latch < 2 ?
-                            1 : (rr_flag+1);
-                    }
-                    else {
-                    if( ip < np ) {
-                            the_stack->E[ip] = the_stack->E[np];
-                            the_stack->iq[ip] = the_stack->iq[np];
-                            the_stack->latch[ip] = the_stack->latch[np];
-                            the_stack->u[ip] = the_stack->u[np];
-                            the_stack->v[ip] = the_stack->v[np];
-                            the_stack->w[ip] = the_stack->w[np];
-                    }
-                    --np; --the_stack->np;
-                    }
-                }
-                else {
-                    bool keep = true;
-                    if( do_rr ) {
-                        EGS_Float crange = 0;
-
-                        // check the particle's energy
-                        EGS_Float e = the_stack->E[ip] - the_useful->rm;
-                        if( e > 0 ) {
-                            // elke is misleading: can also refer to a photon's energy
-                            EGS_Float elke=log(e); // ln of electron kinetic energy
-                            crange = (the_stack->iq[ip] == -1)
-                                ? rr_erange[imed].interpolate(elke) // electron
-                                : rr_prange[imed].interpolate(elke);  // photon
-                        }
-
-                        EGS_Float cperp=1e30;
-                        if( crange < cperp ) {
-                            if( rr_flag == 1 ) {
-                                keep = false;
-                            }
-                            else {
-                                if( rndm->getUniform()*rr_flag < 1 ) {
-                                    the_stack->wt[ip] *= rr_flag;
-                                    the_stack->latch[ip] += rr_flag;
-                                } else keep = false;
-                            }
-                        }
-                    }
-                    if( keep ) ++ip;
-                    else {
-                        if( ip < np ) {
-                            the_stack->E[ip] = the_stack->E[np];
-                            the_stack->iq[ip] = the_stack->iq[np];
-                            the_stack->latch[ip] = the_stack->latch[np];
-                            the_stack->u[ip] = the_stack->u[np];
-                            the_stack->v[ip] = the_stack->v[np];
-                            the_stack->w[ip] = the_stack->w[np];
-                        }
-                        --np; --the_stack->np;
-                    }
-                }
-            } while (ip <= np);
-        }
-
-        // split a new photon
-        ++isplit;
-        ++np;            // increment particle number
-        ++the_stack->np; // increment stack particle number
-        // initialize the new particle
-        the_stack->E[np] = E;
-        the_stack->wt[np] = wt_o*inv_split_num;
-        the_stack->iq[np] = 0;
-        the_stack->latch[np] = latch1;
-        the_stack->ir[np] = ireg+2;
-        the_stack->u[np]=u.x; the_stack->v[np]=u.y; the_stack->w[np]=u.z;
-        the_stack->x[np]=x.x; the_stack->y[np]=x.y; the_stack->z[np]=x.z;
-        the_stack->dnear[np] = 0;
-    }
-}
-
-//MXO
-//try to expose WATCH subroutine in nrcaux.mortran to our code
-//experimental
-extern "C" void F77_OBJ_(watch, WATCH)(int iarg, int iwatch);
 
 //Prints some text before the simulation. Gets called by EGS.
 void Mevegs_Application::describeUserCode() const {
@@ -693,69 +349,6 @@ int Mevegs_Application::initScoring() {
   if( vr ) {
 
     egsInformation("Variance reduction options\n==========================\n");
-
-    // Photon splitting
-    EGS_Float tmp = 1;
-
-    if ((! vr->getInput("photon splitting", tmp) && tmp > 1)) {
-        egsInformation("Photon splitting:");
-
-        if (! this->usingMeshObj) {
-            egsFatal("\nphoton splitting in Mevegs requires a mesh object, aborting");
-        }
-
-        egsWarning("\nWarning: photon splitting support is experimental");
-        this->fsplit = tmp;
-        this->fspliti = 1 / tmp;
-        egsInformation("\n => initScoring: splitting photons %g times", this->fsplit);
-
-        // check which media we want to split with
-        std::map<int, string> mesh_media = this->pmesh->getMediaMap();
-        // flip map to initialize the right indices based on medium strings
-        std::map<string, int> rev_mesh_media;
-        for (auto media: mesh_media) {
-            rev_mesh_media.insert(std::make_pair(media.second, media.first));
-        }
-
-        std::vector<string> splitting_media;
-        if (! vr->getInput("splitting media", splitting_media)) {
-            egsInformation("\n => initScoring: splitting media specified in input file");
-            // check input media names against the mesh names
-            for (auto media_name: splitting_media) {
-                auto media_iter = rev_mesh_media.find(media_name);
-                // quit for unknown media names
-                if (media_iter == rev_mesh_media.end()) {
-                    egsFatal("\n => initScoring: unknown splitting media name: %s\n aborting\n", media_name.c_str());
-                }
-                // found it
-                int media_num = rev_mesh_media.at(media_name);
-                this->split_media.push_back(media_num);
-            }
-        }
-
-        // no splitting media set, default to all media
-        else {
-            egsInformation("\n => initScoring: no splitting media specified, defaulting to all media");
-            for (auto& media_pair : rev_mesh_media) {
-                // add media index to split list
-                this->split_media.push_back(media_pair.second);
-            }
-        }
-
-        // initialize interpolators for photon splitting loop
-        this->prepare_rr_interpolators();
-
-        // print in order
-        std::sort(split_media.begin(), split_media.end());
-        // print media we're splitting inside
-        for (auto split_media_num: split_media) {
-           egsInformation("\n => initScoring: splitting in %s, medium number %d", mesh_media.at(split_media_num).c_str(), split_media_num);
-        }
-
-    }
-    else {
-        egsInformation("\n => initScoring: photon splitting off");
-    }
 
     //Radiative Splitting (brems)
     int csplit=1;
@@ -967,78 +560,6 @@ int Mevegs_Application::initScoring() {
            egsInformation("\nNo phase space input was found for this file\n");
          }
   return 0;
-}
-
-
-// Prepare interpolators for the photon splitting loop
-// we handle every medium to simplify setup and implementation
-//
-// Interpolator setup code is taken from egs_chamber.cpp's initScoring method
-void Mevegs_Application::prepare_rr_interpolators() {
-
-    int nmed = this->geometry->nMedia();
-    // reserve vector space (and initialize vector)
-    this->rr_erange.reserve(nmed);
-    this->rr_prange.reserve(nmed);
-
-    // some magic number of bins
-    int nbin = 512;
-
-    // i is media index, used to access media data
-    for (int i = 0; i < nmed; ++i) {
-
-        EGS_Float log_emin = this->i_ededx[i].getXmin();
-        EGS_Float log_emax = this->i_ededx[i].getXmax();
-
-        // derivative of energy logarithm
-        EGS_Float dloge = (log_emax - log_emin) / nbin;
-
-        // new range lookup tables (maybe a memory leak if not deleted in interpolator)
-        EGS_Float *erange = new EGS_Float [nbin];
-        EGS_Float *prange = new EGS_Float [nbin];
-        // start at zero
-        erange[0] = 0;
-        prange[0] = 0;
-
-        // loop energy variables
-        EGS_Float ededx_old = EGS_AdvancedApplication::i_ededx[i].interpolate(log_emin);
-        EGS_Float pdedx_old = EGS_AdvancedApplication::i_pdedx[i].interpolate(log_emin);
-        EGS_Float Eold = exp(log_emin);
-        EGS_Float efak = exp(dloge);
-
-        // populate lookup tables
-        for (int j = 1; j < nbin; ++j) {
-            EGS_Float elke = log_emin + dloge * j; // ln of electron's kinetic energy
-            EGS_Float E = Eold * efak;
-
-            EGS_Float ededx = i_ededx[i].interpolate(elke);
-            EGS_Float pdedx = i_pdedx[i].interpolate(elke);
-
-            EGS_Float E_del = E - Eold;
-
-            // 1.02???
-            if (ededx < ededx_old) {
-                erange[j] = erange[j-1] + 1.02 * E_del / ededx;
-            } else {
-                erange[j] = erange[j-1] + 1.02 * E_del / ededx_old;
-            }
-
-            if (pdedx < pdedx_old) {
-                prange[j] = prange[j-1] + 1.02 * E_del / pdedx;
-            } else {
-                prange[j] = prange[j-1] + 1.02 * E_del / pdedx_old;
-            }
-
-            Eold = E;
-            ededx_old = ededx;
-            pdedx_old = pdedx;
-        }
-
-       // add to internal list of interpolators
-       this->rr_erange.push_back(EGS_Interpolator(nbin, log_emin, log_emax, erange));
-       this->rr_prange.push_back(EGS_Interpolator(nbin, log_emin, log_emax, prange));
-    }
-    return;
 }
 
 

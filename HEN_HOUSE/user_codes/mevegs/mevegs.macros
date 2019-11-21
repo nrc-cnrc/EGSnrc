@@ -22,28 +22,6 @@
 "                                                                             "
 "#############################################################################"
 
-/*
-   Turn on photon splitting
-*/
-REPLACE {$SELECT-PHOTON-MFP;} WITH {;
-    call select_photon_mfp(dpmfp);
-    IF( dpmfp < 0 ) return;
-};
-
-/*
-  do_rayleigh taken from egs_chamber.macros
-  to resolve a linking error with selectPhotonMFP
-*/
-subroutine do_rayleigh;
-implicit none;
-$declare_max_medium;
-;
-;COMIN/PHOTIN,USEFUL,EPCONT,STACK,RANDOM,UPHIOT,THRESH/;
-$INTEGER lgle;
-gle = log(E(NP)); LGLE=GE1(MEDIUM)*GLE+GE0(MEDIUM);
-call egs_rayleigh_sampling(medium,e(np),gle,lgle,costhe,sinthe);
-return; end;
-;
 
 /*
    Range rejection/Russian roulette
