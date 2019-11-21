@@ -271,8 +271,8 @@ Mesh createMesh(std::string fileName){
   // assert (models.size() == 1);
 
   if (models[0] == std::string{""}){
-    std::cout << "mesh file doesn't exist" << std::endl;
-    return Mesh();
+    std::cerr << "gmsh couldn't read mesh file, exiting\n";
+    exit(1);
   }
 
   //change element numbering and node numbering to continuous sequence

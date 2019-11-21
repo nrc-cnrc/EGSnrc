@@ -55,10 +55,11 @@
 class Mesh{
 
 public:
+
+    Mesh() = delete; // there's only one way to make a Mesh
+
   //NB coords is 3 times length of unique number of nodes, need to match coords before calling MEVEGS
   //nodes are matched to elts i.e. there are duplicates in nodes
-  Mesh() = default; // default cstor to not complain with runs that don't use it in Mevegs_Application
-
   Mesh(const std::vector<int>& _nodes,
      const std::map<int, std::tuple<double, double, double>>& _coordMap,
      const std::vector<int>& _elts,
@@ -88,13 +89,6 @@ public:
       //check that input data is well formed
       assert(boundaryTet.size() == elts.size());
 	 }
-
-
-  Mesh(const Mesh&) = default; //need to change?
-  Mesh(Mesh&&) = default;
-  Mesh& operator=(const Mesh&) = default;
-  Mesh& operator=(Mesh&&) = default;
-  ~Mesh() = default;
 
 
   //TODO merge mvx_test1 neighbours calls into this fn
