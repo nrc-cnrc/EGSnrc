@@ -29,7 +29,7 @@ DEFS = $(DEF1) -DBUILD_MEVEX_TET_COLLECTION_DLL
 
 library = egs_mesh
 lib_files = egs_mesh
-my_deps = egs_transformations.h
+my_deps = egs_transformations.h geometry$(DSEP)$(library)$(DSEP)Mesh.h
 extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
 include $(SPEC_DIR)egspp_libs.spec
