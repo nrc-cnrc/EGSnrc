@@ -88,10 +88,7 @@ extern __extc__ void F77_OBJ(photo,PHOTO)();
 //All EGS++ user codes extend the EGS_AdvancedApplication class.
 class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
 
- //mesh object if mesh is read in
- //if usingMeshObj is false, don't use overloaded initGeometry fn
  Mesh* pmesh;
- bool usingMeshObj = false;
 
  std::string commentBlob; //comment blob to save inside mesh file after the run is done
                           //this information was typically printed to the console
@@ -122,10 +119,8 @@ public:
      contructor, which determines the input file, the pegs file, if the
      simulation is a parallel run, etc.
     */
-    Mevegs_Application(int argc, char **argv, bool _usingMeshObj):
-    // std::unique_ptr<onelab::remoteNetworkClient> _client) :
-    // onelab::remoteNetworkClient* _client) :
-        EGS_AdvancedApplication(argc,argv), usingMeshObj(_usingMeshObj),
+    Mevegs_Application(int argc, char **argv):
+        EGS_AdvancedApplication(argc,argv),
         score(0), eflu(0), gflu(0), pheight(0), nreg(0), nph(0), Etot(0), rr_flag(0),
         current_weight(1), deflect_brems(false) {
 
@@ -567,8 +562,6 @@ int Mevegs_Application::initScoring() {
 //mesh class or from a tet file
 int Mevegs_Application::initGeometry(){
 
-  if (Mevegs_Application::usingMeshObj){
-
     EGS_BaseGeometry::setActiveGeometryList(app_index);
 
     //Read in scaling factor
@@ -599,21 +592,6 @@ int Mevegs_Application::initGeometry(){
       }
       geometry->ref();
       return 0;
-
-  }
-
-  else {
-
-  int initErr = EGS_Application::initGeometry();
-
-  egsInformation("\nTET DATA FILE\n");
-  egsInformation("nregions: %d \n", geometry->regions());
-  egsInformation("nmedia: %d \n", geometry->nMedia());
-  egsInformation("label count: %d \n", geometry->getLabelCount());
-  EGS_BaseGeometry::describeGeometries();
-
-  return initErr;
-  }
 }
 
 //output scoring quantities to an ausgab object
@@ -963,21 +941,23 @@ int main (int argc, char** argv){
     }
   }
 
-  // will be OK if strArg is bad
   Mesh mesh = gmsh_manip::createMesh(meshFilePath);
-  mesh_flag = !mesh.isEmpty();
+  if (mesh.isEmpty()) {
+      std::cout << "Mesh object was empty, exiting\n";
+      exit(1);
+  }
 
   ////////////////////////
   //RUN SIMULATION
   ///////////////////////
 
   //make an application
-  Mevegs_Application app(new_argc, new_argv, mesh_flag);
+  Mevegs_Application app(new_argc, new_argv);
   //make a movie from the application as well
 
-  if(mesh_flag){
+  //if(mesh_flag){
     app.setMeshPtr(&mesh);
-  }
+  //}
 
   //2/4: initialize simulation
     int initErr = app.initSimulation();
