@@ -41,6 +41,7 @@
 #ifndef MESH
 #define MESH
 
+#include <algorithm>
 #include <vector>
 #include <tuple>
 #include <map>
@@ -189,6 +190,15 @@ public:
   const std::vector<int>& getMedia() const {return media;}
   const std::map<int, std::string>& getMediaMap() const {return mediaMap;}
   bool isEmpty() const {return empty;}
+
+  // convert signed element tags to unsigned size tags like gmsh expects
+  std::vector<std::size_t> getUnsignedElements() const {
+      std::vector<std::size_t> unsignedElts;
+      std::transform(elts.cbegin(), elts.cend(),
+                     std::back_inserter(unsignedElts),
+                     [](int tag) -> std::size_t { return static_cast<std::size_t>(tag);});
+      return unsignedElts;
+  }
 
   template<typename T>
   std::vector<T> getDataByMedia(std::vector<T> input,

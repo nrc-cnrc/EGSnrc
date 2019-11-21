@@ -38,6 +38,8 @@
 #ifndef GMSH_MANIP
 #define GMSH_MANIP
 
+#include <algorithm>
+#include <limits>
 #include <map>
 #include <chrono>
 
@@ -192,7 +194,7 @@ int saveMeshOutput(const Mesh& mesh,
     auto dataVec = dataIt->second;
     gmsh::view::addModelData(vt, frame, modelName,
                              eltDataToken,
-                             mesh.getDataByMedia(mesh.getElements(), mediaNames),
+                             mesh.getDataByMedia(mesh.getUnsignedElements(), mediaNames),
                              format_data(mesh.getDataByMedia(dataVec, mediaNames)),
                              time_step);
 
@@ -242,6 +244,14 @@ int saveMeshOutput(const Mesh& mesh,
 	gmsh::finalize();
   return 0;
 }
+
+// patch converter function after gmsh switched to size_t for tags
+auto checked_tag_convert = [](std::size_t tag) -> int {
+    if (tag > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+        throw std::runtime_error("size_t tag too large for int");
+    }
+    return static_cast<int>(tag);
+};
 
 //given a path to a mesh file, this function loads it into program memory
 //as a data structure and does the parsing of physical groups etc. into
@@ -392,11 +402,24 @@ Mesh createMesh(std::string fileName){
 		for (auto const & ceTag : currEntityTags){
 			std::cout << "Current Entity Tag: " << ceTag << std::endl;
       //port to new gmsh 4.0 API
-      std::vector<std::vector<int>> dummyElTags, dummyNdTags;
+      std::vector<std::vector<std::size_t>> dummyElTags, dummyNdTags;
       gmsh::model::mesh::getElements(tet_type, dummyElTags, dummyNdTags, 3, ceTag);
+
+
       //always want the first vector of vectors
-      elTags = dummyElTags.front();
-      ndTags = dummyNdTags.front();
+      std::transform(dummyElTags.front().begin(),
+                     dummyElTags.front().end(),
+                     std::back_inserter(elTags),
+                     checked_tag_convert);
+
+      std::transform(dummyNdTags.front().begin(),
+                     dummyNdTags.front().end(),
+                     std::back_inserter(ndTags),
+                     checked_tag_convert);
+
+
+      // elTags = dummyElTags.front();
+      // ndTags = dummyNdTags.front();
 
       std::cout << "num elts added" << elTags.size() << std::endl;
 			//gmsh::model::mesh::getElementsByType(tet_type, elTags, ndTags, 3, ceTag);
@@ -475,7 +498,7 @@ Mesh createMesh(std::string fileName){
 
 	//get number of unique nodes
 	//@ arg paraCoord -> not used rn
-	std::vector<int> unique_nodes;
+	std::vector<std::size_t> unique_nodes;
 	std::vector<double> coords, paraCoord; // matchedCoords matched coords is one to one std::vector for each
 	gmsh::model::mesh::getNodes(unique_nodes, coords, paraCoord);
 	auto num_unique_nodes = unique_nodes.size();
@@ -492,7 +515,7 @@ Mesh createMesh(std::string fileName){
 	//   // [x,y,z,x,y,z]  //coords
 	//   // [0,1,2,3,4,5]  //coords array indices we want to calculate
 	for (std::size_t ni = 0; ni < num_unique_nodes; ++ni){
-		int nd = unique_nodes[ni];
+		int nd = checked_tag_convert(unique_nodes[ni]);
 		coordmap[nd] = std::make_tuple(	coords[3*ni+0],   // x
 								                    coords[3*ni+1],   // y
 								                    coords[3*ni+2]);  // z
