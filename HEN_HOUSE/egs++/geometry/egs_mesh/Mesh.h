@@ -58,11 +58,11 @@ public:
   //nodes are matched to elts i.e. there are duplicates in nodes
   Mesh() = default; // default cstor to not complain with runs that don't use it in Mevegs_Application
 
-  Mesh(const std::vector<std::size_t>& _nodes,
+  Mesh(const std::vector<int>& _nodes,
      const std::map<int, std::tuple<double, double, double>>& _coordMap,
-     const std::vector<std::size_t>& _elts,
-     const std::vector<std::size_t>& _neighbours,
-     const std::vector<std::size_t>& _media,
+     const std::vector<int>& _elts,
+     const std::vector<int>& _neighbours,
+     const std::vector<int>& _media,
      const std::map<int, std::string> _mediaMap,
      const std::vector<double>& _rhor):
    // nodes(_nodes), coords(_coords), elts(_elts), eltNeighbours(_neighbours) {
@@ -183,10 +183,10 @@ public:
   }
 
   const std::string& getFileName() const {return fileName;}
-  const std::vector<std::size_t>& getElements() const {return elts;}
-  const std::vector<std::size_t>& getNeighbours() const {return eltNeighbours;}
+  const std::vector<int>& getElements() const {return elts;}
+  const std::vector<int>& getNeighbours() const {return eltNeighbours;}
   const std::vector<int>& getBoundaryTet() const {return boundaryTet;}
-  const std::vector<std::size_t>& getMedia() const {return media;}
+  const std::vector<int>& getMedia() const {return media;}
   const std::map<int, std::string>& getMediaMap() const {return mediaMap;}
   bool isEmpty() const {return empty;}
 
@@ -243,11 +243,11 @@ private:
 
   std::string fileName;
 
-  std::vector<std::size_t> nodes;             //passed into cstor
+  std::vector<int> nodes;             //passed into cstor
   std::map<int, std::tuple<double, double, double>> coordMap; //passed into cstor
-  std::vector<std::size_t> elts;              //passed into cstor
-  std::vector<std::size_t> eltNeighbours;     //found by cstor
-  std::vector<std::size_t> media;             //passed into cstor
+  std::vector<int> elts;              //passed into cstor
+  std::vector<int> eltNeighbours;     //found by cstor
+  std::vector<int> media;             //passed into cstor
   std::map<int, std::string> mediaMap;//passed into cstor
   //std::vector<double> matchedCoords;  //found by cstor
   std::vector<int> boundaryTet;       //found by cstor

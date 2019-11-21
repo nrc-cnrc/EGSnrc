@@ -46,7 +46,7 @@
 
 //the neighbour-finding algo needs a continuous series of nodes, this function provides that
 //deprecated now since the gmsh API supports it from v4.0 onward.
-inline std::map<int,int> renumberNodes(std::vector<std::size_t> nodes){
+inline std::map<int,int> renumberNodes(std::vector<int> nodes){
   std::map<int, int> adjustment; // adjustment[idx] has number you need to
                                  // subtract from node with original num idx
   std::sort(nodes.begin(), nodes.end());
@@ -73,10 +73,10 @@ inline std::map<int,int> renumberNodes(std::vector<std::size_t> nodes){
 // are contained in eltList[indices[n]] to eltList[indices[n+1]]
 // n.b. that if indices[n] = indices [n+1] there are no elts containing a given node
 // shouldn't occur in regular runs but may be useful for debugging
-inline void elts_around_points(const std::vector<std::size_t>& elts,
-                               const std::vector<std::size_t>& nodes,
-                               std::vector<std::size_t>& eltList,
-                               std::vector<std::size_t>& indices){
+inline void elts_around_points(const std::vector<int>& elts,
+                              const std::vector<int>& nodes,
+                               std::vector<int>& eltList,
+                               std::vector<int>& indices){
 
   auto begin = std::chrono::steady_clock::now();
 
@@ -114,7 +114,7 @@ inline void elts_around_points(const std::vector<std::size_t>& elts,
   //second pass - store in new array
   //we know size of array is last elt of indices array
   //innerEltList is just mask var for eltList ref passed in the fn call
-  std::vector<std::size_t> innerEltList(indices[indices.size()-1], 0);
+  std::vector<int> innerEltList(indices[indices.size()-1], 0);
   for (std::size_t i = 0; i < elts_size; ++i){
     for (std::size_t j = 0; j < nodes_per_elt; ++j){
         // node idx for list of indices
@@ -144,15 +144,15 @@ inline void elts_around_points(const std::vector<std::size_t>& elts,
 //find all neighbouring elements, element value -1 by EGS convention if there is no neighbour
 //indices is the numbering of those elts
 //c.f. section 2.2.3 Lohner
-inline void elts_around_elts(const std::vector<std::size_t>& elts,
-                              const std::vector<std::size_t>& nodes,
-                              std::vector<std::size_t>& eltNeighbours,
-                              std::vector<std::size_t>& indices){
+inline void elts_around_elts(const std::vector<int>& elts,
+                              const std::vector<int>& nodes,
+                              std::vector<int>& eltNeighbours,
+                              std::vector<int>& indices){
   // start timer
   auto begin = std::chrono::steady_clock::now();
 
   // declare and initialize as len 1 to avoid BUG with just declaring it
-  std::vector<std::size_t> eltList(1);
+  std::vector<int> eltList(1);
 
   // get elts around each point -> now stored in eltList and indices
   // indices[node_num-1] is start of that node's elts in eltList
@@ -169,7 +169,7 @@ inline void elts_around_elts(const std::vector<std::size_t>& elts,
   int nodes_per_face = 3;
   //initialize vector to -1 -> egs uses this value as a boundary
   //if an elt has no neighbours on a face, that face is a boundary
-  std::vector<std::size_t> eltNbrsTmp(num_faces*elts.size(), -1);
+  std::vector<int> eltNbrsTmp(num_faces*elts.size(), -1);
 
 
   ////////////////

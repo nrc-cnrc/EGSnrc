@@ -190,10 +190,10 @@ public:
     std::vector<double> coordinates;
     coordinates = mesh.getCoords();
 
-    std::vector<std::size_t> neighbours;
+    std::vector<int> neighbours;
     neighbours = mesh.getNeighbours();
 
-    std::vector<std::size_t> mediaType;
+    std::vector<int> mediaType;
     mediaType = mesh.getMedia();
 
     std::vector<int> isBoundaryTet;
