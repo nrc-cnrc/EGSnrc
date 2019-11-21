@@ -190,14 +190,9 @@ public:
     std::vector<double> coordinates;
     coordinates = mesh.getCoords();
 
-    std::vector<int> neighbours;
-    neighbours = mesh.getNeighbours();
-
-    std::vector<int> mediaType;
-    mediaType = mesh.getMedia();
-
-    std::vector<int> isBoundaryTet;
-    isBoundaryTet = mesh.getBoundaryTet();
+    auto neighbours = mesh.eltNeighbours;
+    auto mediaType = mesh.media;
+    auto isBoundaryTet = mesh.boundaryTet;
 
     int nt = mediaType.size();
 
@@ -1332,20 +1327,20 @@ public:
 void EGS_Mevex_tet_collection::setMeshMedia(const Mesh& mesh) {
     std::vector<std::string> names;
 
-    names.reserve(mesh.getMediaMap().size());
+    names.reserve(mesh.mediaMap.size());
 
-    for (const auto& pair : mesh.getMediaMap()) {
+    for (const auto& pair : mesh.mediaMap) {
         names.emplace_back(pair.second);
     }
 
     std::vector<int> mind;
-    mind.reserve(mesh.getMediaMap().size());
-    for (auto pair : mesh.getMediaMap()) {
+    mind.reserve(mesh.mediaMap.size());
+    for (auto pair : mesh.mediaMap) {
         mind[pair.first] = EGS_BaseGeometry::addMedium(pair.second);
     }
 
     for (int i = 0; i<nreg; i++) {
-        EGS_BaseGeometry::setMedium(i,i,mind[mesh.getMedia()[i]]);
+        EGS_BaseGeometry::setMedium(i,i,mind[mesh.media[i]]);
     }
 }
 

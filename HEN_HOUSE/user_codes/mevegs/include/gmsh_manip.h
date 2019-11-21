@@ -123,7 +123,7 @@ int saveMeshOutput(const Mesh& mesh,
                    const std::string& comments){
 
   auto begin = std::chrono::steady_clock::now();
-  auto fName = mesh.getFileName();
+  auto fName = mesh.fileName;
 
   std::cout << "input mesh file: " << fName << std::endl;
 
@@ -163,7 +163,7 @@ int saveMeshOutput(const Mesh& mesh,
   //TODO replace hardcoded mediaNames with user input from gui/cli. Currently we just add all media names,
   //But by only adding some we can exclude certain media (e.g. Air) from the .pos file output
   std::vector<std::string> mediaNames;
-  for(auto const & group : mesh.getMediaMap()) {
+  for(auto const & group : mesh.mediaMap) {
       mediaNames.emplace_back(group.second);
   }
 
@@ -548,7 +548,7 @@ Mesh createMesh(std::string fileName){
 
 	elts_around_elts(eltMask, nodesNoSkip, eltNeighbours, indices);
 
-	Mesh mesh(nodesOfSortedElts, coordmap, sortedElts,
+	Mesh mesh(fileName, nodesOfSortedElts, coordmap, sortedElts,
 		eltNeighbours, mediaOfSortedElts, mediamap, rhorOfSortedElts);
 
   //DEBUG
@@ -558,7 +558,7 @@ Mesh createMesh(std::string fileName){
   }
 
   //set name of the mesh TODO put inside?
-  mesh.setFileName(fileName);
+  //mesh.setFileName(fileName);
 
 	//end gmsh run
 	gmsh::finalize();

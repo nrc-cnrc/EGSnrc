@@ -878,7 +878,7 @@ dosemath::namedResults Mevegs_Application::calculateResults(const Mesh& mesh){
 
   //then find quantites used for other quantites up front
   std::vector<double> tetVols = dosemath::getTetVols(mesh.getCoords());
-  std::vector<double> tetDensities = dosemath::getTetDensities(mesh.getRhor(), getDensities(),
+  std::vector<double> tetDensities = dosemath::getTetDensities(mesh.rhor, getDensities(),
                                                                getGeometry()->getMediaIndices(), getNReg());
   std::vector<double> tetMasses     = dosemath::getTetMasses(tetVols, tetDensities);
 
@@ -916,10 +916,6 @@ int main(int argc, char** argv) {
 
     // make a mesh or die trying
     Mesh mesh = gmsh_manip::createMesh(meshFilePath);
-    if (mesh.isEmpty()) {
-        std::cout << "Mesh object was empty, exiting\n";
-        exit(1);
-    }
 
     Mevegs_Application app(argc, argv);
     app.setMeshPtr(&mesh);
@@ -930,9 +926,8 @@ int main(int argc, char** argv) {
 
     // FIXME (do in constructor)
     // set mesh relative densities
-    std::vector<double> rhor = mesh.getRhor();
-    for (std::size_t i = 0; i < rhor.size(); i++) {
-      app.getGeometry()->setRelativeRho(i, rhor[i]);
+    for (std::size_t i = 0; i < mesh.rhor.size(); i++) {
+      app.getGeometry()->setRelativeRho(i, mesh.rhor[i]);
     }
 
     //3/4: run simulation if there weren't any initErrs

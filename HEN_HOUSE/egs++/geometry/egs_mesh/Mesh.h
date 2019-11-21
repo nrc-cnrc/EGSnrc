@@ -57,6 +57,7 @@ class Mesh {
 public:
 
     // read only data
+    const std::string fileName;
     const std::vector<int> nodes;
     const std::map<int, std::tuple<double, double, double>> coordMap;
     const std::vector<int> elts;
@@ -73,7 +74,6 @@ private:
   const int coords_per_elt = 12;
   const int nodes_per_elt = 4;
 
-  std::string fileName;
 
   //TODO watch this -> could have errors for 64 bit ints
   std::pair<std::vector<std::string>, std::vector<std::vector<std::vector<double>>>> eltData;
@@ -85,15 +85,15 @@ public:
 
   //NB coords is 3 times length of unique number of nodes, need to match coords before calling MEVEGS
   //nodes are matched to elts i.e. there are duplicates in nodes
-  Mesh(const std::vector<int>& _nodes,
+  Mesh(const std::string _fileName,
+     const std::vector<int>& _nodes,
      const std::map<int, std::tuple<double, double, double>>& _coordMap,
      const std::vector<int>& _elts,
      const std::vector<int>& _neighbours,
      const std::vector<int>& _media,
      const std::map<int, std::string> _mediaMap,
      const std::vector<double>& _rhor):
-   // nodes(_nodes), coords(_coords), elts(_elts), eltNeighbours(_neighbours) {
-   nodes(_nodes), coordMap(_coordMap), elts(_elts), eltNeighbours(_neighbours),
+   fileName(_fileName), nodes(_nodes), coordMap(_coordMap), elts(_elts), eltNeighbours(_neighbours),
    media(_media), mediaMap(_mediaMap), rhor(_rhor) {
 
 	  //find neighbours TODO actually implement it here instead of in gmsh_manip
@@ -167,21 +167,6 @@ public:
   }
   outf.close();
   }
-  //for debugging
-  // void print() const;
-
-  //cereal serialization method
-  //kept in just in case Mesh objects ever need to be saved to disc
-  //e.g. save a history of which Mesh's were run
-  //not const method since can read in from this method as well
-  //if changed to private, need friend line below
-  //friend class cereal::access;
-
-  template<class Archive>
-    void serialize(Archive & archive)
-    {
-      archive(nodes, coordMap, elts); // serialize things by passing them to the archive
-    }
 
   //expand the map of unique coords to a vector of all coords used by egs
   const std::vector<double> getCoords() const{
@@ -204,13 +189,6 @@ public:
 
   return coordList;
   }
-
-  const std::string& getFileName() const {return fileName;}
-  const std::vector<int>& getElements() const {return elts;}
-  const std::vector<int>& getNeighbours() const {return eltNeighbours;}
-  const std::vector<int>& getBoundaryTet() const {return boundaryTet;}
-  const std::vector<int>& getMedia() const {return media;}
-  const std::map<int, std::string>& getMediaMap() const {return mediaMap;}
 
   // convert signed element tags to unsigned size tags like gmsh expects
   std::vector<std::size_t> getUnsignedElements() const {
@@ -237,29 +215,6 @@ public:
         ++i;
     }
     return result;
-  }
-
-  void setFileName(const std::string& _fileName){
-    fileName = _fileName;
-  }
-
-  //add data values to Mesh obj
-  // void addData(const std::string label, std::vector<std::vector<double>> data){
-	//   eltData.first.emplace_back(label); //push label onto label string vec
-	//   eltData.second.emplace_back(data); // same for data on double vec
-  // };
-
-  //return reference of data for plotting in gmsh
-  //maybe caller modifies at later time... not const?
-  //intent is spelled out here tho
-  // void getAllData(std::vector<std::string>& labels, std::vector<std::vector<std::vector<double>>>& data) const {
-  //   labels = eltData.first;
-  //   data   = eltData.second;
-  // }
-
-  //return relative densities vector
-  const std::vector<double> getRhor() const{
-    return rhor;
   }
 
 };
