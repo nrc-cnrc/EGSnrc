@@ -899,55 +899,56 @@ dosemath::namedResults Mevegs_Application::calculateResults(const Mesh& mesh){
 // MevEGS main function
 int main(int argc, char** argv) {
 
-  // check for mesh file
-  std::string meshFilePath = "";
-  for(int i = 0; i < argc; i++){
-    auto strArg = std::string(argv[i]);
-    if((strArg.size() > 3) && (strArg.compare(strArg.size()-4, 4, ".msh")) == 0){
-        meshFilePath = strArg;
+    // check for mesh file
+    std::string meshFilePath = "";
+    for (int i = 0; i < argc; i++) {
+      auto strArg = std::string(argv[i]);
+      if ((strArg.size() > 3) &&
+          (strArg.compare(strArg.size()-4, 4, ".msh")) == 0) {
+              meshFilePath = strArg;
+      }
     }
-  }
 
-  if (meshFilePath == "") {
-      std::cerr << "no msh file given, exiting\n";
-      exit(1);
-  }
+    if (meshFilePath == "") {
+        std::cerr << "no msh file given, exiting\n";
+        exit(1);
+    }
 
-  // make a mesh or die trying
-  Mesh mesh = gmsh_manip::createMesh(meshFilePath);
-  if (mesh.isEmpty()) {
-      std::cout << "Mesh object was empty, exiting\n";
-      exit(1);
-  }
+    // make a mesh or die trying
+    Mesh mesh = gmsh_manip::createMesh(meshFilePath);
+    if (mesh.isEmpty()) {
+        std::cout << "Mesh object was empty, exiting\n";
+        exit(1);
+    }
 
-  Mevegs_Application app(argc, argv);
-  app.setMeshPtr(&mesh);
+    Mevegs_Application app(argc, argv);
+    app.setMeshPtr(&mesh);
 
-  //2/4: initialize simulation
     int initErr = app.initSimulation();
-    if( initErr ) return initErr;
+    if (initErr)
+        return initErr;
 
-      //set tet relative densities
-      std::vector<double> rhor = mesh.getRhor();
-      for(std::size_t i = 0; i < rhor.size(); i++) {
-        //std::cout << "Index: " << i << " RhoR: " << rhor[i] << std::endl;
-        app.getGeometry()->setRelativeRho(i, rhor[i]);
-        //std::cout << app.getGeometry()->getRelativeRho(i) << std::endl;
+    // FIXME (do in constructor)
+    // set mesh relative densities
+    std::vector<double> rhor = mesh.getRhor();
+    for (std::size_t i = 0; i < rhor.size(); i++) {
+      app.getGeometry()->setRelativeRho(i, rhor[i]);
     }
 
-  //3/4: run simulation if there weren't any initErrs
+    //3/4: run simulation if there weren't any initErrs
     int runErr = app.runSimulation();
-    if( runErr < 0) return runErr;
+    if (runErr < 0)
+        return runErr;
 
-  //4/4: finish simulation and return error value
+    //4/4: finish simulation and return error value
     int finishErr = app.finishSimulation();
 
-    //if not parallel run, save to output file
-    //OR if it's the last job of a parallel run
+    // if serial run, or last job of a parallel run, save to output file
     if (app.getNparallel() == 0 || app.isLastJob()){
-      //calculate all results using the dosemath methods as a member function of the app
       dosemath::namedResults allRes = app.calculateResults(mesh);
-      gmsh_manip::saveMeshOutput(mesh, allRes, app.getInputFileName(), app.getRunComments());
+      gmsh_manip::saveMeshOutput(mesh, allRes,
+        app.getInputFileName(), app.getRunComments());
     }
+
     return finishErr;
-  }
+}
