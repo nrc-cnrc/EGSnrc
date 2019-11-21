@@ -896,74 +896,37 @@ dosemath::namedResults Mevegs_Application::calculateResults(const Mesh& mesh){
   return allRes;
 }
 
-//this is the main logic of the entire MevEGS system.
-int main (int argc, char** argv){
+// MevEGS main function
+int main(int argc, char** argv) {
 
-  //flag for using the Mesh class internally to make the geometry
-  bool mesh_flag = false;
+  // check for mesh file
   std::string meshFilePath = "";
-
-  //if mesh is specified on cmd line, want to pass everything but to application cstor
-  //NB WILL BREAK if more than one .msh is fed in
-
-  int new_argc = argc;
-  char** new_argv = argv;
-  int dotMeshPos;
-
-  /////////////////////
-  //CHECK FOR MESH FILE
-  //loop over cmd line args to see if .msh file is in there
   for(int i = 0; i < argc; i++){
     auto strArg = std::string(argv[i]);
     if((strArg.size() > 3) && (strArg.compare(strArg.size()-4, 4, ".msh")) == 0){
-      //try and make Mesh object from input file
-      //can return empty Mesh or full one, check using isEmpty()
-      meshFilePath = strArg;
-      // Mesh inputMesh = gmsh_manip::generateMeshObject(strArg);
-      mesh_flag = true; //yes being called
-      dotMeshPos = i;
+        meshFilePath = strArg;
     }
   }
 
-  //if using mesh, loop over args and get rid of the one that was .msh filename
-  // we flag it with dotMeshPos
-  if (mesh_flag){
-    int ni = 0;
-    for(int i = 0; i < argc; i
-      ++){
-      if(i == dotMeshPos){
-        new_argc--; // subtract from new_argc
-      }
-      //only increment if not the dotMeshPos
-      else {
-        new_argv[ni++] = argv[i];
-      }
-    }
+  if (meshFilePath == "") {
+      std::cerr << "no msh file given, exiting\n";
+      exit(1);
   }
 
+  // make a mesh or die trying
   Mesh mesh = gmsh_manip::createMesh(meshFilePath);
   if (mesh.isEmpty()) {
       std::cout << "Mesh object was empty, exiting\n";
       exit(1);
   }
 
-  ////////////////////////
-  //RUN SIMULATION
-  ///////////////////////
-
-  //make an application
-  Mevegs_Application app(new_argc, new_argv);
-  //make a movie from the application as well
-
-  //if(mesh_flag){
-    app.setMeshPtr(&mesh);
-  //}
+  Mevegs_Application app(argc, argv);
+  app.setMeshPtr(&mesh);
 
   //2/4: initialize simulation
     int initErr = app.initSimulation();
     if( initErr ) return initErr;
 
-    if(mesh_flag){
       //set tet relative densities
       std::vector<double> rhor = mesh.getRhor();
       for(std::size_t i = 0; i < rhor.size(); i++) {
@@ -971,7 +934,7 @@ int main (int argc, char** argv){
         app.getGeometry()->setRelativeRho(i, rhor[i]);
         //std::cout << app.getGeometry()->getRelativeRho(i) << std::endl;
     }
-  }
+
   //3/4: run simulation if there weren't any initErrs
     int runErr = app.runSimulation();
     if( runErr < 0) return runErr;
