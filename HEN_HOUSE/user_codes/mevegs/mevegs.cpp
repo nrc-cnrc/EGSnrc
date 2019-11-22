@@ -134,12 +134,6 @@ public:
       return EGS_AdvancedApplication::final_job;
     }
 
-    //default move and copy cstors and operator=
-    Mevegs_Application(const Mevegs_Application&) = default;
-    Mevegs_Application(Mevegs_Application&&) = default;
-    Mevegs_Application& operator=(const Mevegs_Application&) = default;
-    Mevegs_Application& operator=(Mevegs_Application&&) = default;
-
     /*! Destructor.
      Deallocate memory
      */
