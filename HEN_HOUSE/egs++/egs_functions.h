@@ -49,9 +49,41 @@ using namespace std;
  *
  * The epsilon constant is a small number that can be used
  * when comparing two floating point numbers that may be close
- * in value.
+ * in value. It is set to 4 times the machine epsilon (2 bits away),
+ * to allow for some leeway in floating point error accumulation.
+ * It is meant to be used as a float guard for comparisons
+ * involving numbers that are of order 1.0; typically used to
+ * test if a float x vanishes, as in fabs(x) < epsilon.
  */
-const EGS_Float epsilon = 1e-10;
+#ifdef SINGLE
+    const EGS_Float epsilon = 1.0/(1<<21);
+#else
+    const EGS_Float epsilon = 1.0/(1ULL<<50);
+#endif
+
+/*! \brief The distanceEpsilon constant for physical distance
+/* comparisons
+ *
+ * \ingroup egspp_main
+ *
+ * The distanceEpsilon constant is a small number that can be used
+ * when comparing distances in the egs++ geometry library. It is
+ * independent from the machine epsilon defined above. In double
+ * precision it is set to 1.0/(1<<32), i.e., about 2.3283e-10, which
+ * in centimetres (default units) is smaller than any atomic radius.
+ * In single precision it is ~ 4.7684e-7 cm, in which case the
+ * geometrical precision limit is then roughly 5 nm.
+ *
+ * The distanceEpsilon constant is used as default value for the
+ * boundaryTolerance in the egs++ geometries. It is meant to be used
+ * as a float guard for comparisons involving distances that are on
+ * the order of 1.0 cm.
+ */
+#ifdef SINGLE
+    const EGS_Float distanceEpsilon = 1.0/(1<<21);
+#else
+    const EGS_Float distanceEpsilon = 1.0/(1ULL<<32);
+#endif
 
 /*! \brief The maximum number of iterations for near-infinite loops
  *
