@@ -25,5 +25,5 @@
 	ncase = 10000
 :stop run control:
 :start mevegs:
-	scaling = 10.000000
+	scaling = 1.000000
 :stop mevegs:
