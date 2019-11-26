@@ -128,12 +128,10 @@ void EGS_AliasTable::make() {
         else {
             fcum[i] = 0.5*(fi[i]+fi[i+1])*(xi[i+1]-xi[i]);
         }
-        //egsWarning("i=%d fcum=%g x=%g f=%g\n",i,fcum[i],xi[i],fi[i]);
         sum += fcum[i];
         wi[i] = 1;
         bin[i] = 0;
         not_done[i] = true;
-        wi[i] = 1;
         if (type == 0) {
             sum1 += fcum[i]*xi[i];
         }
@@ -144,6 +142,7 @@ void EGS_AliasTable::make() {
                                   fi[i+1]*(xi[i]+2*xi[i+1]))/(3*(fi[i]+fi[i+1]));
     }
     average = sum1/sum;
+
     for (i=0; i<np; i++) {
         fi[i] /= sum;
     }
@@ -151,26 +150,41 @@ void EGS_AliasTable::make() {
         fi[np] /= sum;
     }
     sum /= np;
+
     int jh, jl;
-    //egsWarning("np = %d sum = %g average = %g\n",np,sum,average);
     for (i=0; i<np-1; i++) {
-        for (jh=0; jh<np-1; jh++) {
+
+        // find the next "high" bin (above average)
+        int high_bin = -1;
+        for (jh=0; jh<np; jh++) {
             if (not_done[jh] && fcum[jh] > sum) {
+                high_bin = jh;
                 break;
             }
         }
-        for (jl=0; jl<np-1; jl++) {
+        if (high_bin < 0) {
+            break;
+        }
+
+        // find the next "low" bin (below average)
+        int low_bin = -1;
+        for (jl=0; jl<np; jl++) {
             if (not_done[jl] && fcum[jl] < sum) {
+                low_bin = jl;
                 break;
             }
         }
-        //egsWarning(" fcum[%d] = %g fcum[%d] = %g\n",jh,fcum[jh],jl,fcum[jl]);
-        EGS_Float aux = sum - fcum[jl];
-        fcum[jh] -= aux;
+        if (low_bin < 0) {
+            egsWarning("EGS_AliasTable::make(): found a high bin, but no low bin; this is abnormal.");
+            break;
+        }
+
+        // alias the high bin from the low bin
+        EGS_Float aux = sum - fcum[low_bin];
+        fcum[high_bin] -= aux;
         not_done[jl] = false;
-        wi[jl] = fcum[jl]/sum;
-        bin[jl] = jh;
-        //egsWarning(" for %d wi = %g jh = %d\n",jl,wi[jl],bin[jl]);
+        wi[low_bin] = fcum[low_bin]/sum;
+        bin[low_bin] = high_bin;
     }
     delete [] fcum;
     delete [] not_done;
@@ -336,6 +350,7 @@ EGS_SimpleAliasTable::EGS_SimpleAliasTable(int N, const EGS_Float *f) : n(0) {
             break;
         }
 
+        // alias the high bin from the low bin
         double aux = sum - fcum[low_bin];
         fcum[high_bin] -= aux;
         wi[low_bin] = fcum[low_bin]/sum;
