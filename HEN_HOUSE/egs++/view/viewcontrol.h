@@ -211,6 +211,7 @@ private:
     EGS_Editor *egsinpEdit;
     EGS_Highlighter *highlighter;
     EGS_AdvancedApplication *egsApp;
+    shared_ptr<EGS_InputStruct> inputStruct;
 
 protected slots:
 
