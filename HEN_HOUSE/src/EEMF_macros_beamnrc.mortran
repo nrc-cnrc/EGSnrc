@@ -82,10 +82,8 @@ REPLACE{$EMInternalOutput}WITH{.false.};
 "******************************** CONSTANTS ***********************************"
 REPLACE{$EM_MACROS_ACTIVE}WITH{.true.};
 REPLACE{$SL}WITH{299792458.0}; "speed of light"
-REPLACE{$SL2}WITH{89875517873681764.};
 REPLACE{$ERM}WITH{0.510998910}; "electron rest energy in MeV"
 REPLACE{$ERMJ}WITH{8.18710506E-14}
-REPLACE{$PI_em}WITH{3.14159265}; "Pi"
 REPLACE{$ERM_kg}WITH{9.10938356D-31}; "electron mass in kg"
 REPLACE{$EC_em}WITH{1.60217662E-19}; "electron charge"
 REPLACE{$ERM_kg2}WITH{8.298085698e-61}
@@ -2403,7 +2401,7 @@ REPLACE{$EF_timeRootFinder(#,#);}WITH{;
    OUTPUT x(np), y(np), z(np);(3(1PE13.4));
    OUTPUT u(np), v(np), w(np);(3(1PE13.4));
    OUTPUT E(np), distanceTravelled, EF_pPrll, EF_pPerp;(4(1PE13.4));
-   OUTPUT 1000000.*EIN/(ofr_cas); (1(1PE13.4));
+   OUTPUT 1000000.*EIN; (1(1PE13.4));
    CALL SLEEP(10);
  ];
  EF_currentTime=EF_futureTime;
