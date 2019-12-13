@@ -91,8 +91,7 @@ EGS_Highlighter::EGS_Highlighter(QTextDocument *parent) : QSyntaxHighlighter(par
     //commentEndExpression = QRegularExpression("\\*/");
 }
 
-void EGS_Highlighter::highlightBlock(const QString &text)
-{
+void EGS_Highlighter::highlightBlock(const QString &text) {
     foreach (const HighlightingRule &rule, highlightingRules) {
         QRegularExpressionMatchIterator matchIterator = rule.pattern.globalMatch(text);
         while (matchIterator.hasNext()) {
