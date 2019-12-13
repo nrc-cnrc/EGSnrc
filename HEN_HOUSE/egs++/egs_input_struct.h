@@ -90,6 +90,7 @@ public:
     EGS_SingleInput getSingleInput(string attr);
     void setParent(shared_ptr<EGS_BlockInput> par);
     shared_ptr<EGS_BlockInput> getParent();
+    shared_ptr<EGS_BlockInput> getLibraryBlock(string blockTitle, string libraryName);
 
 
 private:
@@ -107,7 +108,14 @@ public:
     EGS_InputStruct();
     ~EGS_InputStruct();
 
-    void addBlockInput(EGS_InputStruct *parent, string blockTit, bool isReq);
+    void addBlockInput(shared_ptr<EGS_BlockInput> block);
+    //void addBlockInput(string blockTit, bool isReq);
+    void addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks);
+    shared_ptr<EGS_BlockInput> getLibraryBlock(string blockTitle, string libraryName);
+
+private:
+
+    vector<shared_ptr<EGS_BlockInput>> blockInputs;
 };
 
 
