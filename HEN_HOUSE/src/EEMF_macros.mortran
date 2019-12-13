@@ -2,7 +2,7 @@
 "#############################################################################"
 "                                                                             "
 "  EGSnrc enhanced electromagnetic field transport macros                     "
-"  Copyright (C) 2016 National Research Council Canada                        "
+"  Copyright (C) 2016 Victor N. Malkov, D. W. O. Rogers                       "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
 "                                                                             "
@@ -23,9 +23,15 @@
 "                                                                             "
 "  Author:          Victor Malkov, 2016                                       "
 "                                                                             "
-"  Contributors:                                                              "
+"  Contributors:    Dave Rogers                                               "
 "                                                                             "
 "#############################################################################"
+#                                                                             "
+#  When using EEMF macros for publications, please cite our paper:            "
+#  VN Malkov, DWO Rogers. Charged particle transport in magnetic fields in    "
+#  EGSnrc. Medical Physics 43, pp. 4447-4458 (2016).                          "
+#                                                                             "
+##############################################################################"
 
 
 "******************************************************************************"
@@ -83,7 +89,6 @@ REPLACE{$EMInternalOutput}WITH{.false.};
 REPLACE{$EM_MACROS_ACTIVE}WITH{.true.};
 REPLACE{$SL}WITH{299792458.0}; "speed of light"
 REPLACE{$ERM}WITH{0.510998910}; "electron rest energy in MeV"
-REPLACE{$PI_em}WITH{3.14159265}; "Pi"
 REPLACE{$ERM_kg}WITH{9.10938356E-31}; "electron mass in kg"
 REPLACE{$EC_em}WITH{1.60217662E-19}; "electron charge"
 "parameter for rounding errors"
