@@ -37,8 +37,7 @@
 
 class QTextDocument;
 
-class EGS_Highlighter : public QSyntaxHighlighter
-{
+class EGS_Highlighter : public QSyntaxHighlighter {
     Q_OBJECT
 public:
     explicit EGS_Highlighter(QTextDocument *parent = nullptr);
@@ -47,8 +46,7 @@ protected:
     void highlightBlock(const QString &text) override;
 
 private:
-    struct HighlightingRule
-    {
+    struct HighlightingRule {
         QRegularExpression pattern;
         QTextCharFormat format;
     };
