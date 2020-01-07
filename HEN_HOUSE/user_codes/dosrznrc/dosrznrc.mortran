@@ -2084,7 +2084,7 @@ SCKERMA_TMP($MAXZREG,$MAXRADII,$MAXIT),
 SCKERMA_TMPOLD($MAXZREG,$MAXRADII,$MAXIT),
 SCSTP_TMP,SCDSTP_TMP,
 MXNP,IFULL,ISTORE,IKERMA, IWATCH,IOOPTN,IOUTSP,
-IPHR($MXREG),MAXBIN,NCOMPT,BEFORE_PHOTO,BEFORE_EII;
+IPHR($MXREG),MAXBIN,NCOMPT,during_pe_compt,during_eii;
 real*8 SCDOSE,SCDOSE2,SCKERMA,SCKERMA2,SCDOSEtoKERMA2,SCPDST,SCPDST2,
        SCPCUM,SCPCUM2,SCPTOT,SCPTOT2,SCPHEN,SCPHEN2,
        SCDFBK,SCDFBK2,SCDFEP,SCDFEP2,SCDFDIFF,SCDFDIFF2,
@@ -2095,7 +2095,7 @@ $REAL DFEN, PHENER,WT1OLD,BINTOP,SLOTE,DELTAE,
       SCDOSE_TMP,SCKERMA_TMP,SCKERMA_TMPOLD,SCSTP_TMP,SCDSTP_TMP;
 $INTEGER MXNP,IFULL,ISTORE,IKERMA,
           IWATCH,IOOPTN,IOUTSP,
-          IPHR,MAXBIN,NCOMPT,BEFORE_PHOTO,BEFORE_EII;
+          IPHR,MAXBIN,NCOMPT,during_pe_compt,during_eii;
 }
 "
 "SCDOSE(2)       accumulates energy deposited (energy deposited^2),
@@ -3792,22 +3792,22 @@ IF (IKERMA = 1) ["want to score KERMA"
     "event, or EII. This lets us use edep_local to account for kerma"
     "contributions below threshold energies depending on the interaction type."
     IF( iarg = 19 | iarg = 17 ) [
-        before_photo = 1;
+        during_pe_compt = 1;
         return;
     ]
     IF( iarg = 20 | iarg = 18 ) [
-        before_photo = 0;
+        during_pe_compt = 0;
     ]
     IF( iarg = 31 ) [
-        before_eii = 1;
+        during_eii = 1;
         return;
     ]
     IF( iarg = 32 ) [
-        before_eii = 0;
+        during_eii = 0;
         return;
     ]
 
-   IF (IARG = 4 & ~BTEST(LATCH(NP),8) & before_eii = 0 & before_photo = 0)[
+   IF (IARG = 4 & ~BTEST(LATCH(NP),8) & during_eii = 0 & during_pe_compt = 0)[
       "local energy deposition"
       "include deposited energy as kerma"
       " I am not sure why the BTEST was there??? Currently bit 8 is"
@@ -3821,7 +3821,7 @@ IF (IKERMA = 1) ["want to score KERMA"
     "depositing sub-threshold energy for PE & Compton"
     "Auger only"
     IF( iarg = 34 ) [
-        IF( before_photo = 1 ) [
+        IF( during_pe_compt = 1 ) [
             $SCOREDK(SCKERMA,(IZD,IXD,1):WT(NP)*edep_local);
             IF(IFULL=3 & (BTEST(LATCH(NP),6) | BTEST(LATCH(NP),7)))[
                 $SCOREDK(SCKERMA,(IZD,IXD,2):WT(NP)*edep_local);
@@ -4717,8 +4717,8 @@ TIMMAX=VALUE(NUM_MXTIME,1);
 IFULL=VALUE(NUM_IFULL,1);
 STATLM=VALUE(NUM_STATLM,1);
 IKERMA=VALUE(NUM_SCKERMA,1);
-BEFORE_PHOTO=0;
-BEFORE_EII=0;
+during_pe_compt=0;
+during_eii=0;
 
 IF(IWATCH=0 & NCASE < $NCASEMIN)[NCASE=$NCASEMIN;]
 
