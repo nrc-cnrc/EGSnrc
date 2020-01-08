@@ -82,36 +82,36 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
     // Slurp file
     char *tmp_buffer = 0;
     const char *func_name = "EGS_TrackView()";
-    {
-        ifstream data(filename, ios::binary | ios::ate);
-        if (data.fail() || !data.good()) {
-            egsWarning("%s: Unable to open track space file '%s'! No tracks loaded\n",
-                       func_name, filename);
-            return;
-        }
-        streamsize size = data.tellg();
-        data.seekg(0, ios::beg);
-
-        data.read((char *)&tot_tracks, sizeof(int));
-        // very conservative sanity check to avoid a huge allocation
-        if (tot_tracks * sizeof(Vert) > size - sizeof(int)) {
-            egsInformation("%s: No tracks loaded: %d tracks can't fit in %d-byte file '%s'\n",
-                           func_name, tot_tracks, size, filename);
-            m_failed = true;
-            return;
-        }
-        egsInformation("%s: Reading %d tracks from '%s' ...\n", func_name, tot_tracks, filename);
-
-        tmp_buffer = new char[size-sizeof(int)];
-        // May want to look into memory mapping, but only if access patterns/OS sets matter
-        if (!data.read((char *)tmp_buffer, size-sizeof(int))) {
-            egsWarning("%s: Unable to read %d bytes into memory! No tracks loaded\n",
-                       func_name, size);
-            m_failed = true;
-            return;
-        }
-        egsInformation("%s: Original size   : %d\n", func_name, size-sizeof(int));
+    
+    ifstream data(filename, ios::binary | ios::ate);
+    if (data.fail() || !data.good()) {
+        egsWarning("%s: Unable to open track space file '%s'! No tracks loaded\n",
+                   func_name, filename);
+        return;
     }
+    streamsize size = data.tellg();
+    data.seekg(0, ios::beg);
+
+    data.read((char *)&tot_tracks, sizeof(int));
+    // very conservative sanity check to avoid a huge allocation
+    if (tot_tracks * sizeof(Vert) > size - sizeof(int)) {
+        egsInformation("%s: No tracks loaded: %d tracks can't fit in %d-byte file '%s'\n",
+                       func_name, tot_tracks, size, filename);
+        m_failed = true;
+        return;
+    }
+    egsInformation("%s: Reading %d tracks from '%s' ...\n", func_name, tot_tracks, filename);
+
+    tmp_buffer = new char[size-sizeof(int)];
+
+    // May want to look into memory mapping, but only if access patterns/OS sets matter
+    if (!data.read((char *)tmp_buffer, size-sizeof(int))) {
+        egsWarning("%s: Unable to read %d bytes into memory! No tracks loaded\n",
+                   func_name, size);
+        m_failed = true;
+        return;
+    }
+    egsInformation("%s: Original size   : %d\n", func_name, size-sizeof(int));
 
 
     char **tmp_index = new char *[tot_tracks];
@@ -175,11 +175,11 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
 
     // Compression routine!
     for (int i=0; i<tot_tracks; i++) {
-        char *loc = (char *)tmp_index[i];
-        int nverts = *((int *)loc);
+        char *ind = (char *)tmp_index[i];
+        int nverts = *((int *)ind);
         PInfo pInfo =
-            *(PInfo *)(loc+sizeof(int));
-        char *start = loc+sizeof(int)+sizeof(PInfo);
+            *(PInfo *)(ind+sizeof(int));
+        char *start = ind+sizeof(int)+sizeof(PInfo);
 
         int type = particleType(pInfo);
         int m_off = mem_rcnt[type];
@@ -213,6 +213,7 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
         }
     }
     // Sentinel at the end; get lengths
+    ntracks.clear();
     for (int i=0; i<3; i++) {
         m_index[i][ind_rcnt[i]] = mem_rcnt[i];
         m_tracks[i] = size_t(ind_rcnt[i]);
@@ -241,17 +242,7 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
     m_failed = false;
 }
 
-EGS_TrackView::~EGS_TrackView() {
-    // cleanup allocations to avoid memory leaks
-    for (int i=0; i<3; i++) {
-        if (m_index[i]) {
-            delete[] m_index[i];
-        }
-        if (m_points[i]) {
-            delete[] m_points[i];
-        }
-    }
-}
+EGS_TrackView::~EGS_TrackView() {}
 
 bool EGS_TrackView::renderTracks(int nx, int ny, EGS_Vector *image,
                                  EGS_ClippingPlane **planes, const int ext_planes,
