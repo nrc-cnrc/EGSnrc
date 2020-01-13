@@ -114,13 +114,17 @@ $(FORTRAN_FILE).$(FEXT): $(SOURCES) sources.make
 	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(SOURCES) -o7 $@ \
 	       -o8 $(FORTRAN_FILE).mortlst
 
+#*******************************************************************************
+# #PARALLEL_EGS -   Disable PJOB functionality for BEAMnrc libraries due to  
+#                   locking problems when used from dosxyznrc parallel execution
+#*******************************************************************************
 library: $(LIB_FILE)
 
 $(LIB_FILE): $(LIB_FORTRAN_FILE).$(FOBJE)
-	$(F77_LINK) $(SHLIB_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FOBJE) $(BEAM_EXTRA_OBJECTS) $(FLIBS) $(SHLIB_LIBS)
+	$(F77_LINK) $(SHLIB_FLAGS) $(FCFLAGS) -D_NOPJOB $(OPTLEVEL_F) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FOBJE) $(BEAM_EXTRA_OBJECTS) $(FLIBS) $(SHLIB_LIBS)
 
 $(LIB_FORTRAN_FILE).$(FOBJE): $(LIB_FORTRAN_FILE).$(FEXT)
-	$(F77) -c $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FEXT)
+	$(F77) -c $(FCFLAGS) -D_NOPJOB $(OPTLEVEL_F) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FEXT)
 
 $(LIB_FORTRAN_FILE).$(FEXT): $(LIB_SOURCES) sources.make
 	@echo "Mortran compilation for $@"
@@ -154,15 +158,22 @@ noopt:
 debug:
 	@$(MAKE) WHAT=_debug OPTLEVEL_F="$(FDEBUG)" OPTLEVEL_C="$(CDEBUG)"
 
+#*******************************************************************************
+# #PARALLEL_EGS -   Build a optimized user code with MPI support
+#*******************************************************************************
+mpi:
+	@$(MAKE) -s WHAT=_mpi F77=mpif90 FCFLAGS="$(FCFLAGS) -D_MPI"
+
 clean:
 	@echo "$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst"
 	@$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst
 	@$(MAKE) -s WHAT=_debug execlean
 	@$(MAKE) -s WHAT=_noopt execlean
+	@$(MAKE) -s WHAT=_mpi execlean
 	@$(MAKE) -s WHAT= execlean
 
 execlean:
 	@echo "$(REMOVE) $(EXE_FILE)"
 	$(REMOVE) $(EXE_FILE)
 
-.PHONY: opt noopt debug clean execlean
+.PHONY: opt noopt debug mpi clean execlean

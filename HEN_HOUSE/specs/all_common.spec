@@ -127,7 +127,7 @@ EGS_COMPILE = $(EGS_BINDIR)egs_compile$(EXE)
 
 # The fortran file extension
 #
-FEXT = f
+FEXT = F
 
 #******************************************************************************
 # The following set of definitions is for interfacing EGSnrc to C/C++
