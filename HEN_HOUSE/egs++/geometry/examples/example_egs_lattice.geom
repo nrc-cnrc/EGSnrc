@@ -1,3 +1,44 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ lattice geometry
+#  Copyright (C) 2019 Rowan Thomson and Martin Martinov
+#
+#  This file is part of EGSnrc.
+#
+#  egs_lattice is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the Free
+#  Software Foundation, either version 3 of the License, or (at your option)
+#  any later version.
+#
+#  egs_lattice is distributed in the hope that it will be useful, but WITHOUT
+#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+#  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License
+#  for more details.
+#
+#  To see the GNU Affero General Public License at:
+# <http://www.gnu.org/licenses/>.
+#
+################################################################################
+#
+#  When egs_lattice is used for publications, please cite the following paper:
+#  Manuscript submission underway, to be replaced with title after publication
+#
+###############################################################################
+#
+#  Author:          Martin Martinov, 2019
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An example geometry of three different lattices (Bravais lattice of lead
+#  spheres, cubic lattice of gold spheres, and hexagonal lattice of silver
+#  spheres) set up in three different regions in a large cube of water.
+#
+###############################################################################
+*/
+
 :start geometry definition:		
 	:start geometry:
 		library  = egs_spheres
