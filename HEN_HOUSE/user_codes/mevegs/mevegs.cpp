@@ -859,33 +859,15 @@ dosemath::namedResults Mevegs_Application::calculateResults(const Mesh& mesh){
 
   dosemath::namedResults allRes;
 
-  const double Ea = dosemath::getEA(getNParticles(), getETot());
-
-  //NB dosePerC is actual dose, not this number
   std::vector<double> energyFrac, uncertRes;
-  //get independent results from the simulation
   getResultVectors(energyFrac, uncertRes);
 
-  //put independent results into result vector first
   allRes.emplace_back(std::make_pair("Energy Fraction", energyFrac));
   allRes.emplace_back(std::make_pair("Absolute uncertainty", uncertRes));
 
   //then find quantites used for other quantites up front
   std::vector<double> tetVols = dosemath::getTetVols(mesh.getCoords());
-  std::vector<double> tetDensities = dosemath::getTetDensities(mesh.rhor, getDensities(),
-                                                               getGeometry()->getMediaIndices(), getNReg());
-  std::vector<double> tetMasses     = dosemath::getTetMasses(tetVols, tetDensities);
-
-  //put results into namedResults vector
-  //take coords right from the mesh
   allRes.emplace_back(std::make_pair("Tet Volumes [cm^3]", tetVols));
-  allRes.emplace_back(std::make_pair("Tet Densities [g/cm^3]", tetDensities));
-
-  allRes.emplace_back(std::make_pair("Energy Density per Coulomb [J/cm^3 C]",
-                                      dosemath::getEDensities(energyFrac, Ea, tetVols)));
-
-  allRes.emplace_back(std::make_pair("Dose per Coulomb [kGy/C]", dosemath::getDoses(energyFrac, Ea, tetMasses)));
-  allRes.emplace_back(std::make_pair("Uncertainty Percentage [%]", dosemath::getUncertaintyPercentages(uncertRes, energyFrac)));
 
   return allRes;
 }
