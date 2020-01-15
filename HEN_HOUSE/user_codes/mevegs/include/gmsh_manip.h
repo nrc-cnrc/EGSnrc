@@ -89,38 +89,11 @@ inline std::vector<double> tetCentroid(std::vector<double> xyz){
   return centroid;
 }
 
-//paste relevant egslog data into mesh file using $EGSInfo / $EndEGSInfo delimiters
-//NB can be called anything...
-//gmsh ignores any $X $EndX pairs that it doesn't know
-//we assume here that the commentBlob is formatted without an extra line break at the end
-void addCommentSection(const std::string& meshFileName, const std::string& commentBlob){
-  constexpr auto startComment = "$EGSInfo";
-  constexpr auto endComment = "$EndEGSInfo";
-
-  //start building up our new file contents
-  std::stringstream fileBuffer;
-  //add comments section
-  fileBuffer << startComment << std::endl;
-  fileBuffer << commentBlob << std::endl;
-  fileBuffer << endComment << std::endl;
-
-  std::ofstream meshFileOut(meshFileName, std::ios::out | std::ios::app);
-  //if open worked...
-  if (meshFileOut){
-      meshFileOut << fileBuffer.str();
-      meshFileOut.close();
-  }
-  else {
-    throw std::runtime_error("couldn't open mesh file to add comments");
-  }
-}
-
 //save a mesh object to a pos or .msh file
 //return 0 if good
 int saveMeshOutput(const Mesh& mesh,
                    const dosemath::namedResults& allResults,
-                   const std::string& egsinpFileN,
-                   const std::string& comments){
+                   const std::string& egsinpFileN){
 
   auto begin = std::chrono::steady_clock::now();
   auto fName = mesh.fileName;
@@ -229,9 +202,6 @@ int saveMeshOutput(const Mesh& mesh,
   //gmsh::view::write(ktag, outputFile, true);
 
   //\DEBUG
-
-  //add egs run data to mesh file in $EGSinfo section
-  // addCommentSection(outputFile, comments);
 
   //create .opt file so only view 5 is visible
   makeMeshOptFile(outputFile, optFileContents);

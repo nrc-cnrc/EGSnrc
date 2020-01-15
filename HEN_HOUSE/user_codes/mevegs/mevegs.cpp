@@ -80,9 +80,6 @@ class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
 
  Mesh* pmesh;
 
- string commentBlob; //comment blob to save inside mesh file after the run is done
-                          //this information was typically printed to the console
-
  //result vectors built up by aggregateResults
  vector<double> allDoses, allUncerts;
 
@@ -211,18 +208,6 @@ public:
 
     const string getInputFileName() const {
       return EGS_Application::input_file;
-    }
-
-    //overloaded information functions from EGS_Application, c.f. lines 1016-1038
-    void appInformation(const char *msg) override {
-      //put into comment blob for saving out to files
-      Mevegs_Application::commentBlob += string(msg);
-      //also print to screen
-      EGS_Application::appInformation(msg);
-    }
-
-    const string& getRunComments() const {
-      return Mevegs_Application::commentBlob;
     }
 
     //returns the total energy of the simulation.
@@ -669,8 +654,7 @@ int main(int argc, char** argv) {
     // if serial run, or last job of a parallel run, save to output file
     if (app.getNparallel() == 0 || app.isLastJob()){
       dosemath::namedResults allRes = app.calculateResults(mesh);
-      gmsh_manip::saveMeshOutput(mesh, allRes,
-        app.getInputFileName(), app.getRunComments());
+      gmsh_manip::saveMeshOutput(mesh, allRes, app.getInputFileName());
     }
 
     return finishErr;
