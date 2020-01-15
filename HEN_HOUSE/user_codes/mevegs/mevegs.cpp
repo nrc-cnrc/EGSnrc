@@ -50,8 +50,6 @@
 
 // functions for mevegs setup from gmsh
 #include "gmsh_manip.h" 	  // functions for mevegs setup from gmsh MXO
-// EGSnrc or IAEA phase space file output
-#include "phsp_manip.h"
 // output quantities calculation
 #include "dosemath.h"
 // Use the mesh geometry
@@ -71,9 +69,6 @@
 //! To get the maximum source energy
 #include "egs_base_source.h"
 #include "egs_rndm.h"
-
-//We need to make our own ausgab object for phase space output
-#include "egs_ausgab_object.h"
 
 // Interpolators for photon splitting
 #include "egs_interpolator.h"
@@ -471,86 +466,6 @@ int Mevegs_Application::initScoring() {
       delete options;
     }
 
-  // add phase space options here
-     // MXO 5-Aug-2018
-     // the user wants a phsp space output (dear god they're insatiable)
-     // find out where the scoring plane is (only handle x,y,z planes rn)
-     EGS_Input *phsp = input->takeInputItem("phase space definition");
-     if( phsp ) {
-         //phase space geometry options
-         constexpr auto phspKey = "phase space geometry";
-         constexpr auto posKey  = "position";
-
-         const auto geometry_opt = phsp_manip::geo_opt_strs;
-
-         string phspGeometryVal;
-         double phspPos;
-         if( !phsp->getInput(phspKey, phspGeometryVal)){
-            if(phsp->getInput(posKey, phspPos)) {
-              egsWarning("\n => You must specify a position with your phase space plane...");
-            }
-            else {
-              egsInformation("\n=> found phase space geometry definition %s ", phspGeometryVal.c_str());
-
-              string phspOpt; // for printing out options on failure
-              bool allowableOpt = false;
-              for (const auto & opt : geometry_opt){
-                if (phspGeometryVal == opt){
-                  egsInformation("\n  => creating slice using %s geometry at position %f \n", phspGeometryVal.c_str(), phspPos);
-                  allowableOpt = true;
-                  break;
-                }
-                else {
-                  phspOpt += opt + "\n";
-                }
-              }
-              //fail if the option is bad
-              if (!allowableOpt){
-                egsWarning("\n => That geometry is not an option, please change it to one of the following: \n\n%s ", phspOpt.c_str());
-              }
-              //success! make a fake input file for the ausgab definition
-              else {
-
-                //default format to egsnrc
-                string phsp_format_str = "EGSnrc";
-                egsInformation("default phsp output format is %s\n", phsp_format_str.c_str());
-
-                constexpr auto phsp_format_key  = "format";
-                //check for IAEA format
-                string format_temp;
-                if(!phsp->getInput(phsp_format_key, format_temp)){
-                  if (format_temp == "IAEA") {
-                    phsp_format_str = format_temp;
-                  }
-                }
-
-                egsInformation("using: %s output format\n", phsp_format_str.c_str());
-
-                auto phsp_type = make_pair(phspGeometryVal, phspPos);
-                egsInformation("\nphsp geometry type: %s", phspGeometryVal.c_str());
-                egsInformation("\nphsp position: %f", phspPos);
-
-                //default to EGSnrc for now
-                //make internal egsinp to avoid geometry problems in egsinp
-                EGS_Input phsp_input = phsp_manip::get_egsinp(phsp_format_str, phsp_type);
-
-                EGS_BaseGeometry::describeGeometries();
-                //register the scoring plane to the internal list of active geometries
-                EGS_BaseGeometry::createGeometry(&phsp_input);
-                //make a phase space scoring object manually
-                EGS_AusgabObject::createAusgabObjects(&phsp_input);
-              }
-            }
-         }
-          else {
-            egsWarning("\n Warning: no geometry type found for phase space file output...");
-          }
-         delete phsp;
-        }
-         // notify if phase space definition wasn't found
-         else {
-           egsInformation("\nNo phase space input was found for this file\n");
-         }
   return 0;
 }
 
