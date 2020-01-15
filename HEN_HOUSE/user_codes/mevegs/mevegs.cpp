@@ -93,8 +93,6 @@ class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
 
     // data variables
     EGS_ScoringArray *score;    // scoring array with energies deposited
-    EGS_ScoringArray *eflu;     // scoring array for electron fluence at back of geometry
-    EGS_ScoringArray *gflu;     // scoring array for photon fluence at back of geometry
     EGS_ScoringArray **pheight; // pulse height distributions.
     EGS_Float        *ph_de;    // bin widths if the pulse height distributions.
     int              *ph_regions; // region indices of the ph-distributions
@@ -115,7 +113,7 @@ public:
     */
     Mevegs_Application(int argc, char **argv):
         EGS_AdvancedApplication(argc,argv),
-        score(0), eflu(0), gflu(0), pheight(0), nreg(0), nph(0), Etot(0), rr_flag(0),
+        score(0), pheight(0), nreg(0), nph(0), Etot(0), rr_flag(0),
         current_weight(1) {
 
         std::cout << "Successfully constructed MevEGS Application" << std::endl;
@@ -133,8 +131,6 @@ public:
      */
     ~Mevegs_Application() override {
         if( score ) delete score;
-        if( eflu ) delete eflu;
-        if( gflu ) delete gflu;
         if( nph > 0 ) {
             for(int j=0; j<nph; j++) delete pheight[j];
             delete [] pheight; delete [] ph_regions; delete [] ph_de;
@@ -316,7 +312,6 @@ int Mevegs_Application::initScoring() {
 
   this->score = new EGS_ScoringArray(nreg+2);
    //i.e. we always score energy fractions
-  this->eflu = new EGS_ScoringArray(200); this->gflu = new EGS_ScoringArray(200);
 
     //try setting the WATCH
     //"this is for the watch"
@@ -503,20 +498,6 @@ int Mevegs_Application::ausgab(int iarg) {
         if(aux > 0) {
             score->score(ir,aux);
         }
-
-        // if( the_stack->iq[np] ) score->score(ir,the_epcont->edep*the_stack->wt[np]);
-        if( ir == nreg+1 ) {
-            EGS_ScoringArray *flu = the_stack->iq[np] ? eflu : gflu;
-            EGS_Float r2 = the_stack->x[np]*the_stack->x[np] + the_stack->y[np]*the_stack->y[np];
-            if( r2 < 400 ) {
-                int bin = (int) (sqrt(r2)*10.);
-
-                aux = the_stack->wt[np]/the_stack->w[np];
-                if(aux > 0) {
-                    flu->score(bin,aux);
-                }
-            }
-        }
         return 0;
     }
     int np = the_stack->np-1;
@@ -557,8 +538,6 @@ int Mevegs_Application::outputData() {
     for(int j=0; j<nph; j++) {
         if( !pheight[j]->storeState(*data_out) ) return 102+j;
     }
-    if( !eflu->storeState(*data_out) ) return 301;
-    if( !gflu->storeState(*data_out) ) return 302;
     return 0;
 }
 
@@ -581,8 +560,6 @@ int Mevegs_Application::readData() {
     for(int j=0; j<nph; j++) {
         if( !pheight[j]->setState(*data_in) ) return 102+j;
     }
-    if( !eflu->setState(*data_in) ) return 301;
-    if( !gflu->setState(*data_in) ) return 302;
     return 0;
 }
 
@@ -595,7 +572,6 @@ void Mevegs_Application::resetCounter() {
     // Reset our own data to zero.
     score->reset(); Etot = 0;
     for(int j=0; j<nph; j++) pheight[j]->reset();
-    eflu->reset(); gflu->reset();
 }
 
 //this code gets called from combineResults() when combining parallel jobs.
@@ -616,11 +592,6 @@ int Mevegs_Application::addState(istream &data) {
         if( !tmpj.setState(data) ) return 102 + j;
         (*pheight[j]) += tmpj;
     }
-    EGS_ScoringArray tmp1(200);
-    if( !tmp1.setState(data) ) return 301;
-    (*eflu) += tmp1;
-    if( !tmp1.setState(data) ) return 302;
-    (*gflu) += tmp1;
     return 0;
 }
 
@@ -732,8 +703,6 @@ int Mevegs_Application::startNewShower() {
             }
         }
         score->setHistory(current_case);
-        eflu->setHistory(current_case);
-        gflu->setHistory(current_case);
         last_case = current_case;
     }
     current_weight = p.wt;
