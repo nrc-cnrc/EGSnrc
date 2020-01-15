@@ -80,6 +80,9 @@
 
 #include <cstdlib>
 
+using std::vector;
+using std::string;
+
 extern __extc__ void F77_OBJ_(do_rayleigh,DO_RAYLEIGH)();
 extern __extc__ void F77_OBJ(pair,PAIR)();
 extern __extc__ void F77_OBJ(compt,COMPT)();
@@ -90,11 +93,11 @@ class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
 
  Mesh* pmesh;
 
- std::string commentBlob; //comment blob to save inside mesh file after the run is done
+ string commentBlob; //comment blob to save inside mesh file after the run is done
                           //this information was typically printed to the console
 
  //result vectors built up by aggregateResults
- std::vector<double> allDoses, allUncerts;
+ vector<double> allDoses, allUncerts;
 
     // data variables
     EGS_ScoringArray *score;    // scoring array with energies deposited
@@ -227,25 +230,25 @@ public:
             double &count);
 
     //send out our result vectors into the world to possibly be put in a gmsh pos or mesh file
-    void getResultVectors(std::vector<double>& _doses,
-                          std::vector<double>& _uncerts) const {
+    void getResultVectors(vector<double>& _doses,
+                          vector<double>& _uncerts) const {
         _doses   = allDoses;
         _uncerts = allUncerts;
     }
 
-    const std::string getInputFileName() const {
+    const string getInputFileName() const {
       return EGS_Application::input_file;
     }
 
     //overloaded information functions from EGS_Application, c.f. lines 1016-1038
     void appInformation(const char *msg) override {
       //put into comment blob for saving out to files
-      Mevegs_Application::commentBlob += std::string(msg);
+      Mevegs_Application::commentBlob += string(msg);
       //also print to screen
       EGS_Application::appInformation(msg);
     }
 
-    const std::string& getRunComments() const {
+    const string& getRunComments() const {
       return Mevegs_Application::commentBlob;
     }
 
@@ -397,7 +400,7 @@ int Mevegs_Application::initScoring() {
           delete scale;
       }
 
-      std::vector<string> choices; choices.push_back("no"); choices.push_back("yes");
+      vector<string> choices; choices.push_back("no"); choices.push_back("yes");
       deflect_brems = options->getInput("deflect electron after brems",choices,0);
       if( deflect_brems ) {
           egsInformation("\n *** Using electron deflection in brems events\n\n");
@@ -480,7 +483,7 @@ int Mevegs_Application::initScoring() {
 
          const auto geometry_opt = phsp_manip::geo_opt_strs;
 
-         std::string phspGeometryVal;
+         string phspGeometryVal;
          double phspPos;
          if( !phsp->getInput(phspKey, phspGeometryVal)){
             if(phsp->getInput(posKey, phspPos)) {
@@ -489,7 +492,7 @@ int Mevegs_Application::initScoring() {
             else {
               egsInformation("\n=> found phase space geometry definition %s ", phspGeometryVal.c_str());
 
-              std::string phspOpt; // for printing out options on failure
+              string phspOpt; // for printing out options on failure
               bool allowableOpt = false;
               for (const auto & opt : geometry_opt){
                 if (phspGeometryVal == opt){
@@ -509,12 +512,12 @@ int Mevegs_Application::initScoring() {
               else {
 
                 //default format to egsnrc
-                std::string phsp_format_str = "EGSnrc";
+                string phsp_format_str = "EGSnrc";
                 egsInformation("default phsp output format is %s\n", phsp_format_str.c_str());
 
                 constexpr auto phsp_format_key  = "format";
                 //check for IAEA format
-                std::string format_temp;
+                string format_temp;
                 if(!phsp->getInput(phsp_format_key, format_temp)){
                   if (format_temp == "IAEA") {
                     phsp_format_str = format_temp;
@@ -748,7 +751,7 @@ void Mevegs_Application::aggregateResults(){
   // go over score array and load up dose and uncertainty vectors
   // the score array is size nreg + 2, first elt is reflected, last is transmitted
   // start at 1 to skip energy reflected, stop 1 before end to skip transmitted
-  std::vector<double> _doses, _uncerts; //result vectors
+  vector<double> _doses, _uncerts; //result vectors
   for (int i = 1; i < Mevegs_Application::nreg + 1; ++i){
     double _dose, _uncert;
     currScore->currentResult(i, _dose, _uncert);
@@ -856,18 +859,19 @@ int Mevegs_Application::startNewShower() {
 //natural place is of course in dosemath but need the Mevegs_Application
 //ptr to app and don't want to make a header just to include in the dosemath file
 dosemath::namedResults Mevegs_Application::calculateResults(const Mesh& mesh){
+  using std::make_pair;
 
   dosemath::namedResults allRes;
 
-  std::vector<double> energyFrac, uncertRes;
+  vector<double> energyFrac, uncertRes;
   getResultVectors(energyFrac, uncertRes);
 
-  allRes.emplace_back(std::make_pair("Energy Fraction", energyFrac));
-  allRes.emplace_back(std::make_pair("Absolute uncertainty", uncertRes));
+  allRes.emplace_back(make_pair("Energy Fraction", energyFrac));
+  allRes.emplace_back(make_pair("Absolute uncertainty", uncertRes));
 
   //then find quantites used for other quantites up front
-  std::vector<double> tetVols = dosemath::getTetVols(mesh.getCoords());
-  allRes.emplace_back(std::make_pair("Tet Volumes [cm^3]", tetVols));
+  vector<double> tetVols = dosemath::getTetVols(mesh.getCoords());
+  allRes.emplace_back(make_pair("Tet Volumes [cm^3]", tetVols));
 
   return allRes;
 }
@@ -876,9 +880,9 @@ dosemath::namedResults Mevegs_Application::calculateResults(const Mesh& mesh){
 int main(int argc, char** argv) {
 
     // check for mesh file
-    std::string meshFilePath = "";
+    string meshFilePath = "";
     for (int i = 0; i < argc; i++) {
-      auto strArg = std::string(argv[i]);
+      auto strArg = string(argv[i]);
       if ((strArg.size() > 3) &&
           (strArg.compare(strArg.size()-4, 4, ".msh")) == 0) {
               meshFilePath = strArg;
