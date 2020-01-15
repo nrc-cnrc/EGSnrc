@@ -78,7 +78,7 @@ using std::string;
 //All EGS++ user codes extend the EGS_AdvancedApplication class.
 class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
 
- Mesh* pmesh;
+ const Mesh &mesh;
 
  //result vectors built up by aggregateResults
  vector<double> allDoses, allUncerts;
@@ -99,15 +99,13 @@ public:
      contructor, which determines the input file, the pegs file, if the
      simulation is a parallel run, etc.
     */
-    Mevegs_Application(int argc, char **argv):
-        EGS_AdvancedApplication(argc,argv),
+    Mevegs_Application(int argc, char **argv, const Mesh &_mesh):
+        EGS_AdvancedApplication(argc,argv), mesh(_mesh),
         score(0), nreg(0), Etot(0), rr_flag(0),
         current_weight(1) {
 
         std::cout << "Successfully constructed MevEGS Application" << std::endl;
     };
-
-    void setMeshPtr(Mesh* _pmesh){pmesh = _pmesh;};
 
     //returns whether this job is the last one of a parallel run using a batch script or similar
     bool isLastJob(){
@@ -239,8 +237,8 @@ public:
       return the_media->rho;
     }
 
-    //get all the results for the simulation with a given mesh object
-    dosemath::namedResults calculateResults(const Mesh& mesh);
+    //get all the results for the simulation
+    dosemath::namedResults calculateResults();
 
 protected: // called by the base class
 
@@ -392,7 +390,7 @@ int Mevegs_Application::initGeometry(){
       scaling = 10;
     }
 
-    geometry = createMeshGeometry(input, scaling, *pmesh);
+    geometry = createMeshGeometry(input, scaling, this->mesh);
 
     egsInformation("\nMesh class\n");
     egsInformation("nregions: %d \n", geometry->regions());
@@ -591,7 +589,7 @@ int Mevegs_Application::startNewShower() {
 //namedResults is alias for result type in dosemath
 //natural place is of course in dosemath but need the Mevegs_Application
 //ptr to app and don't want to make a header just to include in the dosemath file
-dosemath::namedResults Mevegs_Application::calculateResults(const Mesh& mesh){
+dosemath::namedResults Mevegs_Application::calculateResults(){
   using std::make_pair;
 
   dosemath::namedResults allRes;
@@ -603,7 +601,7 @@ dosemath::namedResults Mevegs_Application::calculateResults(const Mesh& mesh){
   allRes.emplace_back(make_pair("Absolute uncertainty", uncertRes));
 
   //then find quantites used for other quantites up front
-  vector<double> tetVols = dosemath::getTetVols(mesh.getCoords());
+  vector<double> tetVols = dosemath::getTetVols(this->mesh.getCoords());
   allRes.emplace_back(make_pair("Tet Volumes [cm^3]", tetVols));
 
   return allRes;
@@ -629,9 +627,7 @@ int main(int argc, char** argv) {
 
     // make a mesh or die trying
     Mesh mesh = gmsh_manip::createMesh(meshFilePath);
-
-    Mevegs_Application app(argc, argv);
-    app.setMeshPtr(&mesh);
+    Mevegs_Application app(argc, argv, mesh);
 
     int initErr = app.initSimulation();
     if (initErr)
@@ -653,7 +649,7 @@ int main(int argc, char** argv) {
 
     // if serial run, or last job of a parallel run, save to output file
     if (app.getNparallel() == 0 || app.isLastJob()){
-      dosemath::namedResults allRes = app.calculateResults(mesh);
+      dosemath::namedResults allRes = app.calculateResults();
       gmsh_manip::saveMeshOutput(mesh, allRes, app.getInputFileName());
     }
 
