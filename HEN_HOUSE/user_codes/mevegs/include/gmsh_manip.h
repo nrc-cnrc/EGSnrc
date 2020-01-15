@@ -41,7 +41,6 @@
 #include <chrono>
 
 #include "gmsh.h"
-#include "dosemath.h"
 #include "Mesh.h"
 #include "neighbour.h"
 
@@ -89,7 +88,7 @@ inline std::vector<double> tetCentroid(std::vector<double> xyz){
 //save a mesh object to a pos or .msh file
 //return 0 if good
 int saveMeshOutput(const Mesh& mesh,
-                   const dosemath::namedResults& allResults,
+                   const std::vector<std::pair<std::string, std::vector<double>>>& allResults,
                    const std::string& egsinpFileN){
 
   auto begin = std::chrono::steady_clock::now();
