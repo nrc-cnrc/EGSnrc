@@ -58,33 +58,6 @@ inline std::vector<std::vector<double>> format_data(std::vector<double> data){
   return vectorizedData;
 }
 
-//generates a gmsh options file from a contents string and a file name
-inline void makeMeshOptFile(const std::string& outputMeshFile, const std::string& contents){
-  constexpr auto fileExt = ".opt";
-  std::ofstream ofs(outputMeshFile + fileExt);
-  if (ofs){
-    ofs << contents;
-    ofs.close();
-  }
-}
-
-// assume only called inside initialize -> finalize section
-std::string turnOffViewString(int viewNum){
-  const int notVisible = 0;
-  return "View[" + std::to_string(viewNum) + "].Visible = " + std::to_string(notVisible) + ";\n";
-}
-
-//tet centroid calculator
-//assume xyz is 12 long, x y z x y z x y z x y z
-inline std::vector<double> tetCentroid(std::vector<double> xyz){
-  assert(xyz.size() == 12);
-  std::vector<double> centroid;
-  for (std::size_t i; i < 3; ++i){
-    centroid.push_back(0.25*(xyz[i] + xyz[i+3] + xyz[i+6] + xyz[i+9]));
-  }
-  return centroid;
-}
-
 //save a mesh object to a pos or .msh file
 //return 0 if good
 int saveMeshOutput(const Mesh& mesh,
@@ -151,10 +124,6 @@ int saveMeshOutput(const Mesh& mesh,
   //dataIt->first is string, name of data
   //dataIt->second is a vector of doubles, actually the data
 
-
-  std::string optFileContents; //for turning off all views except dose per C
-  constexpr auto dpcName = "Dose per Coulomb [kGy/C]";
-
   //loop over result vector, adding to mesh file
   auto dataIt = allResults.cbegin();
   for (const auto & vt : viewTags){
@@ -175,32 +144,9 @@ int saveMeshOutput(const Mesh& mesh,
     //for the first, clear the old results out, overwriteResults = true
     gmsh::view::write(vt, outputFile, appendToResults);
 
-    if (dataIt->first != dpcName){
-      optFileContents += turnOffViewString(vt);
-    }
     //move to next data
     dataIt++;
   }
-
-  ////DEBUG add k means data
-
-  //int ktag = gmsh::view::add("KMEANS");
-  //std::vector<int> clusters;
-  //std::vector<double> means;
-  //kmeans::mesh_kmeans(clusters, means, mesh);
-  //std::cout << "gmsh_manip: adding kmeans data" << std::endl;
-  //std::cout << "gmsh_manip: mesh.getElements() size: " << mesh.getDataByMedia(mesh.getElements(), mediaNames).size() << std::endl;
-  //gmsh::view::addModelData(ktag, 0, modelName, eltDataToken,
-  //  mesh.getDataByMedia(mesh.getElements(), mediaNames),
-  //  format_data(std::vector<double>(clusters.begin(), clusters.end())),
-  //  time_step);
-  //std::cout << "gmsh_manip: writing kmeans data" << std::endl;
-  //gmsh::view::write(ktag, outputFile, true);
-
-  //\DEBUG
-
-  //create .opt file so only view 5 is visible
-  makeMeshOptFile(outputFile, optFileContents);
 
   auto end = std::chrono::steady_clock::now();
   std::cout << "Output data time (milliseconds): " <<
