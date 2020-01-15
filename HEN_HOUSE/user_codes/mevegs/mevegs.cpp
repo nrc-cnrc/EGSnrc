@@ -70,9 +70,6 @@
 #include "egs_base_source.h"
 #include "egs_rndm.h"
 
-// Interpolators for photon splitting
-#include "egs_interpolator.h"
-
 #include <cstdlib>
 
 using std::vector;
@@ -289,9 +286,6 @@ protected: // called by the base class
     int startNewShower();
 
 private:
-
-    // prepare interpolators for photon splitting
-    void prepare_rr_interpolators();
 
     //MXO -> save results to internal result vectors
     inline void aggregateResults();
