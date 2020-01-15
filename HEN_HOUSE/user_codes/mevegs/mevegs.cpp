@@ -93,11 +93,7 @@ class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
 
     // data variables
     EGS_ScoringArray *score;    // scoring array with energies deposited
-    EGS_ScoringArray **pheight; // pulse height distributions.
-    EGS_Float        *ph_de;    // bin widths if the pulse height distributions.
-    int              *ph_regions; // region indices of the ph-distributions
     int              nreg;      // number of regions in the geometry
-    int              nph;       // number of pulse height objects.
     double           Etot;      // total energy that has entered the geometry
     int              rr_flag;   // used for RR and radiative splitting
     EGS_Float        current_weight; // the weight of the initial particle that
@@ -113,7 +109,7 @@ public:
     */
     Mevegs_Application(int argc, char **argv):
         EGS_AdvancedApplication(argc,argv),
-        score(0), pheight(0), nreg(0), nph(0), Etot(0), rr_flag(0),
+        score(0), nreg(0), Etot(0), rr_flag(0),
         current_weight(1) {
 
         std::cout << "Successfully constructed MevEGS Application" << std::endl;
@@ -131,11 +127,6 @@ public:
      */
     ~Mevegs_Application() override {
         if( score ) delete score;
-        if( nph > 0 ) {
-            for(int j=0; j<nph; j++) delete pheight[j];
-            delete [] pheight; delete [] ph_regions; delete [] ph_de;
-        }
-
     };
 
     /*! Describe the application.
@@ -395,58 +386,7 @@ int Mevegs_Application::initScoring() {
           //setAusgabCall(FluorescentEvent,true);
           egsInformation("\nUsing Russian Roulette with survival probability 1/%d\n",n_rr);
       }
-
-      // The user has provided scoring options input.
-      // See where she/he wants to score a pulse height distribution
-      // and how many bins to use for each pulse height distribution
-      vector<int> regions;
-      int err = options->getInput("pulse height regions",regions);
-      vector<int> nbins;
-      int err1 = options->getInput("pulse height bins",nbins);
-      if( !err && !err1 ) {
-          if( regions.size() != nbins.size() && nbins.size() != 1 )
-                  egsWarning("initScoring(): you must input the same "
-              "number of 'regions' and 'bins' inputs or a single 'bins'"
-              " input\n");
-          else {
-              EGS_ScoringArray **tmp = new EGS_ScoringArray* [nreg+2];
-              for(int i=0; i<nreg+2; i++) tmp[i] = 0;
-
-              for(std::size_t j=0; j<regions.size(); j++) {
-                  int nb = nbins.size() == 1 ? nbins[0] : nbins[j];
-                  if( nb < 1 )
-                      egsWarning("zero bins for region %d?\n",regions[j]);
-                  if( regions[j] < 0 || regions[j] > nreg+1 )
-                      egsWarning("invalid region index %d\n",regions[j]);
-                  if( nb > 0 && regions[j] >= 0 && regions[j] < nreg+2 ){
-                      int ij = regions[j];
-                      if( tmp[ij] ) egsInformation("There is already a "
-                "PHD object in region %d => ignoring it\n",ij);
-                      else { tmp[ij] = new EGS_ScoringArray(nb); ++nph; }
-                  }
-              }
-              if( nph > 0 ) {
-                  pheight = new EGS_ScoringArray* [nph];
-                  ph_regions = new int [nph];
-                  ph_de = new EGS_Float [nph];
-                  EGS_Float Emax = source->getEmax();
-                  int iph = 0;
-                  for(int j=0; j<nreg+2; j++) {
-                      if( tmp[j] ) {
-                          pheight[iph] = tmp[j];
-                          ph_regions[iph] = j;
-                          int nbin = pheight[iph]->bins();
-                          ph_de[iph++] = Emax/nbin;
-                      }
-                  }
-              }
-              delete [] tmp;
-          }
-      } else egsWarning("initScoring(): you must provide both, 'regions'"
-                 " and 'bins' input\n");
-      delete options;
-    }
-
+  }
   return 0;
 }
 
@@ -535,9 +475,6 @@ int Mevegs_Application::outputData() {
     // in the base class.
     (*data_out) << " " << Etot << endl;
     if( !score->storeState(*data_out) ) return 101;
-    for(int j=0; j<nph; j++) {
-        if( !pheight[j]->storeState(*data_out) ) return 102+j;
-    }
     return 0;
 }
 
@@ -557,9 +494,6 @@ int Mevegs_Application::readData() {
     // by the base class.
     (*data_in) >> Etot;
     if( !score->setState(*data_in) ) return 101;
-    for(int j=0; j<nph; j++) {
-        if( !pheight[j]->setState(*data_in) ) return 102+j;
-    }
     return 0;
 }
 
@@ -571,7 +505,6 @@ void Mevegs_Application::resetCounter() {
     EGS_AdvancedApplication::resetCounter();
     // Reset our own data to zero.
     score->reset(); Etot = 0;
-    for(int j=0; j<nph; j++) pheight[j]->reset();
 }
 
 //this code gets called from combineResults() when combining parallel jobs.
@@ -587,11 +520,6 @@ int Mevegs_Application::addState(istream &data) {
     EGS_ScoringArray tmp(nreg+2);
     if( !tmp.setState(data) ) return 101;
     (*score) += tmp;
-    for(int j=0; j<nph; j++) {
-        EGS_ScoringArray tmpj(pheight[j]->bins());
-        if( !tmpj.setState(data) ) return 102 + j;
-        (*pheight[j]) += tmpj;
-    }
     return 0;
 }
 
@@ -651,23 +579,6 @@ void Mevegs_Application::outputResults() {
     // score->reportResults(norm,
     //         "Reflected/deposited/transmitted energy fraction",false,
     //         "  %d  %12.6e +/- %12.6e %c\n");
-    // if( nph > 0 ) {
-    //     if( nph > 1 ) egsInformation("\n\n Pulse height distributions\n"
-    //             "==========================\n\n");
-    //     else egsInformation("\n\n Pulse height distribution in region %d\n"
-    //             "==========================================\n\n",
-    //             ph_regions[0]);
-    //     for(int j=0; j<nph; j++) {
-    //         if( nph > 1 ) egsInformation("Region %d\n"
-    //                 "----------------\n\n",ph_regions[j]);
-    //         double f,df;
-    //         for(int i=0; i<pheight[j]->bins(); i++) {
-    //             pheight[j]->currentResult(i,f,df);
-    //             egsInformation("%g   %g   %g\n",ph_de[j]*(0.5+i),
-    //                     f/ph_de[j],df/ph_de[j]);
-    //         }
-    //     }
-    // }
     // EGS_Float Rmax = 20; EGS_Float dr = Rmax/200;
 }
 
@@ -689,19 +600,6 @@ int Mevegs_Application::startNewShower() {
     int res = EGS_Application::startNewShower();
     if( res ) return res;
     if( current_case != last_case ) {
-        if( nph > 0 ) {
-            for(int j=0; j<nph; j++) {
-                 pheight[j]->setHistory(current_case);
-                int ireg = ph_regions[j];
-                EGS_Float edep = score->currentScore(ireg);
-                if( edep > 0 ) {
-                    int ibin = min( (int)(edep/(current_weight*ph_de[j])), pheight[j]->bins()-1 );
-                    if( ibin >= 0 && ibin < pheight[j]->bins() )
-                        pheight[j]->score(ibin,1);
-
-                }
-            }
-        }
         score->setHistory(current_case);
         last_case = current_case;
     }
