@@ -75,11 +75,6 @@
 using std::vector;
 using std::string;
 
-extern __extc__ void F77_OBJ_(do_rayleigh,DO_RAYLEIGH)();
-extern __extc__ void F77_OBJ(pair,PAIR)();
-extern __extc__ void F77_OBJ(compt,COMPT)();
-extern __extc__ void F77_OBJ(photo,PHOTO)();
-
 //All EGS++ user codes extend the EGS_AdvancedApplication class.
 class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
 
