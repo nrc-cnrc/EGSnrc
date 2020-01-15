@@ -309,53 +309,6 @@ int Mevegs_Application::initScoring() {
      }
    delete vr;
   }
-
-  EGS_Input *options = input->takeInputItem("scoring options");
-  if( options ) {
-
-      EGS_Input *scale;
-      while( (scale = options->takeInputItem("scale xcc")) ) {
-          vector<string> tmp;
-          int err = scale->getInput("scale xcc",tmp);
-          //egsInformation("Found 'scale xcc', err=%d tmp.size()=%d\n",err,tmp.size());
-          if( !err && tmp.size() == 2 ) {
-              int imed = EGS_BaseGeometry::getMediumIndex(tmp[0]) + 1;
-              if( imed > 0 ) {
-                  EGS_Float fac = atof(tmp[1].c_str());
-                  egsInformation("\n ***** Scaling xcc of medium %d with %g\n",imed,fac);
-                  F77_OBJ_(egs_scale_xcc,EGS_SCALE_XCC)(&imed,&fac);
-              }
-          }
-          delete scale;
-      }
-      while( (scale = options->takeInputItem("scale bc")) ) {
-          vector<string> tmp;
-          int err = scale->getInput("scale bc",tmp);
-          //egsInformation("Found 'scale xcc', err=%d tmp.size()=%d\n",err,tmp.size());
-          if( !err && tmp.size() == 2 ) {
-              int imed = EGS_BaseGeometry::getMediumIndex(tmp[0]) + 1;
-              if( imed > 0 ) {
-                  EGS_Float fac = atof(tmp[1].c_str());
-                  egsInformation("\n ***** Scaling bc of medium %d with %g\n",imed,fac);
-                  F77_OBJ_(egs_scale_bc,EGS_SCALE_BC)(&imed,&fac);
-              }
-          }
-          delete scale;
-      }
-
-      int n_rr;
-      if( !options->getInput("Russian Roulette",n_rr) && n_rr > 1 ) {
-          the_egsvr->i_do_rr = n_rr;
-          setAusgabCall(BeforeBrems,true);
-          setAusgabCall(AfterBrems,true);
-          setAusgabCall(BeforeAnnihFlight,true);
-          setAusgabCall(AfterAnnihFlight,true);
-          setAusgabCall(BeforeAnnihRest,true);
-          setAusgabCall(AfterAnnihRest,true);
-          //setAusgabCall(FluorescentEvent,true);
-          egsInformation("\nUsing Russian Roulette with survival probability 1/%d\n",n_rr);
-      }
-  }
   return 0;
 }
 
