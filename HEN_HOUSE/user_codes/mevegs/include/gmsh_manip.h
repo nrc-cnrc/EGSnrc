@@ -38,14 +38,11 @@
 #ifndef GMSH_MANIP
 #define GMSH_MANIP
 
-#include <algorithm>
-#include <limits>
-#include <map>
 #include <chrono>
 
 #include "gmsh.h"
 #include "dosemath.h"
-#include "../../egs++/geometry/egs_mesh/Mesh.h"
+#include "Mesh.h"
 #include "neighbour.h"
 
 namespace gmsh_manip{

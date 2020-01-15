@@ -40,10 +40,6 @@
 #ifndef NEIGHBOUR
 #define NEIGHBOUR
 
-#include <algorithm>
-#include <map>
-#include <exception>
-
 //the neighbour-finding algo needs a continuous series of nodes, this function provides that
 //deprecated now since the gmsh API supports it from v4.0 onward.
 inline std::map<int,int> renumberNodes(std::vector<int> nodes){

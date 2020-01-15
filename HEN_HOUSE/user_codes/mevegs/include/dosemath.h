@@ -38,10 +38,7 @@
 #ifndef DOSEMATH
 #define DOSEMATH
 
-#include "../../egs++/egs_vector.h"
-#include <vector>
-#include <cassert>
-#include <stdlib.h>
+#include "egs_vector.h"
 
 //contains pretty much everything related to calculating MevEGS's output quantities.
 namespace dosemath {
@@ -51,10 +48,7 @@ namespace dosemath {
 
   //calculate volume of a tet defined by four vectors.
   inline double getTetVolume(EGS_Vector a, EGS_Vector b, EGS_Vector c, EGS_Vector d) {
-    auto vol = std::abs(((a - d) * ((b - d) % (c - d))) / 6.0);
-    //assert(std::abs(((a - d) * ((b - d) % (c - d))) / 6) > 0);
-    //assert (vol > 0);
-    return vol;
+    return std::abs(((a - d) * ((b - d) % (c - d))) / 6.0);
   }
 
   //Given all the tets for a mesh, calculates the volume of each tet.

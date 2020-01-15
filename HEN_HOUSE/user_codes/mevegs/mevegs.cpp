@@ -41,36 +41,18 @@
                                 ░
 */
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <functional>
-#include <memory>
-
 // functions for mevegs setup from gmsh
-#include "gmsh_manip.h" 	  // functions for mevegs setup from gmsh MXO
+#include "gmsh_manip.h"
 // output quantities calculation
 #include "dosemath.h"
 // Use the mesh geometry
 #include "egs_mesh.h"
 
-// NRC included files
-//! We derive from EGS_AdvancedApplication => need the header file.
 #include "egs_advanced_application.h"
-//! We use scoring objects provided by egspp => need the header file.
 #include "egs_scoring.h"
-//! Every C++ EGSnrc application needs this header file
 #include "egs_interface2.h"
-//! We use egsInformation() => need the egs_functions.h header file.
 #include "egs_functions.h"
-//! We use the EGS_Input class
 #include "egs_input.h"
-//! To get the maximum source energy
-#include "egs_base_source.h"
-#include "egs_rndm.h"
-
-#include <cstdlib>
 
 using std::vector;
 using std::string;
