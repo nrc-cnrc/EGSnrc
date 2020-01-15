@@ -84,11 +84,11 @@ class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
  vector<double> allDoses, allUncerts;
 
     // data variables
-    EGS_ScoringArray *score;    // scoring array with energies deposited
-    int              nreg;      // number of regions in the geometry
-    double           Etot;      // total energy that has entered the geometry
-    int              rr_flag;   // used for RR and radiative splitting
-    EGS_Float        current_weight; // the weight of the initial particle that
+    EGS_ScoringArray *score = nullptr;    // scoring array with energies deposited
+    int              nreg = 0;      // number of regions in the geometry
+    double           Etot = 0.0;      // total energy that has entered the geometry
+    int              rr_flag = 0;   // used for RR and radiative splitting
+    EGS_Float        current_weight = 1.0; // the weight of the initial particle that
                                      // is currently being simulated
     static string revision;    // revision number
 
@@ -100,10 +100,8 @@ public:
      simulation is a parallel run, etc.
     */
     Mevegs_Application(int argc, char **argv, const Mesh &_mesh):
-        EGS_AdvancedApplication(argc,argv), mesh(_mesh),
-        score(0), nreg(0), Etot(0), rr_flag(0),
-        current_weight(1) {
-
+        EGS_AdvancedApplication(argc,argv),
+        mesh(_mesh) {
         std::cout << "Successfully constructed MevEGS Application" << std::endl;
     };
 
