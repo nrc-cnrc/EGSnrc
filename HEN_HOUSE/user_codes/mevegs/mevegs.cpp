@@ -107,7 +107,6 @@ class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
     int              rr_flag;   // used for RR and radiative splitting
     EGS_Float        current_weight; // the weight of the initial particle that
                                      // is currently being simulated
-    bool  deflect_brems;
     static string revision;    // revision number
 
 public:
@@ -120,7 +119,7 @@ public:
     Mevegs_Application(int argc, char **argv):
         EGS_AdvancedApplication(argc,argv),
         score(0), eflu(0), gflu(0), pheight(0), nreg(0), nph(0), Etot(0), rr_flag(0),
-        current_weight(1), deflect_brems(false) {
+        current_weight(1) {
 
         std::cout << "Successfully constructed MevEGS Application" << std::endl;
     };
@@ -395,13 +394,6 @@ int Mevegs_Application::initScoring() {
           delete scale;
       }
 
-      vector<string> choices; choices.push_back("no"); choices.push_back("yes");
-      deflect_brems = options->getInput("deflect electron after brems",choices,0);
-      if( deflect_brems ) {
-          egsInformation("\n *** Using electron deflection in brems events\n\n");
-          setAusgabCall(AfterBrems,true);
-      }
-
       int n_rr;
       if( !options->getInput("Russian Roulette",n_rr) && n_rr > 1 ) {
           the_egsvr->i_do_rr = n_rr;
@@ -541,21 +533,6 @@ int Mevegs_Application::ausgab(int iarg) {
         //russian roulette and brems splitting to the same constant
         //the_egsvr->nbr_split = the_egsvr->i_do_rr;
         return 0;
-    }
-    if( iarg == AfterBrems && deflect_brems ) {
-        EGS_Vector u(the_stack->u[np-1],the_stack->v[np-1],the_stack->w[np-1]);
-        EGS_Float tau = the_stack->E[np-1]/the_useful->rm - 1;
-        EGS_Float beta = sqrt(tau*(tau+2))/(tau+1);
-        EGS_Float eta = 2*rndm->getUniform()-1;
-        EGS_Float cost = (beta + eta)/(1 + beta*eta);
-        EGS_Float sint = 1 - cost*cost;
-        if( sint > 0 ) {
-            sint = sqrt(sint); EGS_Float cphi, sphi;
-            rndm->getAzimuth(cphi,sphi); u.rotate(cost,sint,cphi,sphi);
-            the_stack->u[np-1] = u.x;
-            the_stack->v[np-1] = u.y;
-            the_stack->w[np-1] = u.z;
-        }
     }
 
     if( iarg == AfterBrems || iarg == AfterAnnihRest || iarg == AfterAnnihFlight ) {
