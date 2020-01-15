@@ -195,13 +195,6 @@ public:
     void getCurrentResult(double &sum, double &sum2, double &norm,
             double &count);
 
-    //send out our result vectors into the world to possibly be put in a gmsh pos or mesh file
-    void getResultVectors(vector<double>& _doses,
-                          vector<double>& _uncerts) const {
-        _doses   = allDoses;
-        _uncerts = allUncerts;
-    }
-
     const string getInputFileName() const {
       return EGS_Application::input_file;
     }
@@ -592,11 +585,8 @@ dosemath::namedResults Mevegs_Application::calculateResults(){
 
   dosemath::namedResults allRes;
 
-  vector<double> energyFrac, uncertRes;
-  getResultVectors(energyFrac, uncertRes);
-
-  allRes.emplace_back(make_pair("Energy Fraction", energyFrac));
-  allRes.emplace_back(make_pair("Absolute uncertainty", uncertRes));
+  allRes.emplace_back(make_pair("Energy Fraction", this->allDoses));
+  allRes.emplace_back(make_pair("Absolute uncertainty", this->allUncerts));
 
   //then find quantites used for other quantites up front
   vector<double> tetVols = dosemath::getTetVols(this->mesh.getCoords());
@@ -647,8 +637,7 @@ int main(int argc, char** argv) {
 
     // if serial run, or last job of a parallel run, save to output file
     if (app.getNparallel() == 0 || app.isLastJob()){
-      dosemath::namedResults allRes = app.calculateResults();
-      gmsh_manip::saveMeshOutput(mesh, allRes, app.getInputFileName());
+      gmsh_manip::saveMeshOutput(mesh, app.calculateResults(), app.getInputFileName());
     }
 
     return finishErr;
