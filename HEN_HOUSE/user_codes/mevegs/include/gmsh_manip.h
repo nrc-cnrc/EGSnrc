@@ -433,8 +433,6 @@ Mesh createMesh(std::string fileName){
 								                    coords[3*ni+2]);  // z
   }
 
-	// dumb init -> changed within neighbours.h
-	std::vector<int> eltNeighbours(1);
 	//smart init - roughly this size - TODO get right size from the start
 	std::vector<int> indices(num_unique_nodes + 1);
 
@@ -451,7 +449,7 @@ Mesh createMesh(std::string fileName){
 		eltMask.emplace_back(j + 1);
 	}
 
-	elts_around_elts(eltMask, nodesNoSkip, eltNeighbours, indices);
+	auto eltNeighbours = elts_around_elts(eltMask, nodesOfSortedElts, indices);
 
 	Mesh mesh(fileName, nodesOfSortedElts, coordmap, sortedElts,
 		eltNeighbours, mediaOfSortedElts, mediamap, rhorOfSortedElts);

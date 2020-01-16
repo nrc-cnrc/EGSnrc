@@ -48,7 +48,7 @@
 // are contained in eltList[indices[n]] to eltList[indices[n+1]]
 // n.b. that if indices[n] = indices [n+1] there are no elts containing a given node
 // shouldn't occur in regular runs but may be useful for debugging
-inline void elts_around_points(const std::vector<int>& elts,
+void elts_around_points(const std::vector<int>& elts,
                               const std::vector<int>& nodes,
                                std::vector<int>& eltList,
                                std::vector<int>& indices){
@@ -112,22 +112,20 @@ inline void elts_around_points(const std::vector<int>& elts,
 
   // profiling
   auto end = std::chrono::steady_clock::now();
-  std::cout << "Elts around points [not wall clock] Total Time (milliseconds): " <<
-  std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << std::endl;
+  std::cout << "Elts around points took: " <<
+  std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() <<  "ms" << std::endl;
 }
 
 //find all neighbouring elements, element value -1 by EGS convention if there is no neighbour
 //indices is the numbering of those elts
 //c.f. section 2.2.3 Lohner
-inline void elts_around_elts(const std::vector<int>& elts,
+std::vector<int> elts_around_elts(const std::vector<int>& elts,
                               const std::vector<int>& nodes,
-                              std::vector<int>& eltNeighbours,
                               std::vector<int>& indices){
   // start timer
   auto begin = std::chrono::steady_clock::now();
 
-  // declare and initialize as len 1 to avoid BUG with just declaring it
-  std::vector<int> eltList(1);
+  std::vector<int> eltList {};
 
   // get elts around each point -> now stored in eltList and indices
   // indices[node_num-1] is start of that node's elts in eltList
@@ -210,14 +208,12 @@ inline void elts_around_elts(const std::vector<int>& elts,
     } // loop over faces of e
   } // loop over all elements
 
-  //assign result to calling context
-  eltNeighbours = eltNbrsTmp;
-
   // profiling
   auto end = std::chrono::steady_clock::now();
-  std::cout << "Elts around elts [not wall clock] Total Time (milliseconds): " <<
-  std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << std::endl;
+  std::cout << "Elts around elts took: " <<
+  std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms\n";
 
+  return eltNbrsTmp;
 }
 
 #endif
