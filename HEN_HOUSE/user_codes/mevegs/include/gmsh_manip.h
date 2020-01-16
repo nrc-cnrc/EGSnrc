@@ -438,13 +438,6 @@ Mesh createMesh(std::string fileName){
 	//smart init - roughly this size - TODO get right size from the start
 	std::vector<int> indices(num_unique_nodes + 1);
 
-	std::map<int, int> adjustment = renumberNodes(nodesOfSortedElts);
-	std::vector<int> nodesNoSkip(nodesOfSortedElts);
-
-	for (auto & nns : nodesNoSkip){
-		nns = nns - adjustment[nns];
-	}
-
 	//eltMask is used because our neighbours algo needs elts w/o skips
 	//and is expecting a std::vector
 	// eltMask -> [1, 2, 3, 4, 5,  6]

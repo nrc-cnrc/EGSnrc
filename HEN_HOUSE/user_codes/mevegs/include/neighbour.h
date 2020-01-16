@@ -40,27 +40,6 @@
 #ifndef NEIGHBOUR
 #define NEIGHBOUR
 
-//the neighbour-finding algo needs a continuous series of nodes, this function provides that
-//deprecated now since the gmsh API supports it from v4.0 onward.
-inline std::map<int,int> renumberNodes(std::vector<int> nodes){
-  std::map<int, int> adjustment; // adjustment[idx] has number you need to
-                                 // subtract from node with original num idx
-  std::sort(nodes.begin(), nodes.end());
-
-  int cumulativeSkip = nodes[0] - 1;
-  adjustment[nodes[0]] = cumulativeSkip;
-  //start at one to compare against elt before it
-  for (std::size_t i = 1; i < nodes.size(); ++i){
-    //only care if elts are different
-    if (nodes[i] != nodes[i-1]){
-      //only adds to the cumulativeSkip if difference is more than 1
-      cumulativeSkip += nodes[i] - nodes[i-1] - 1;
-    }
-    adjustment[nodes[i]] = cumulativeSkip;
-  }
-  return adjustment;
-}
-
 //c.f. section 2.2.1 Lohner
 // can only handle tets! will throw exception if not the case
 // eltList is a list of all elts (with duplicates)
