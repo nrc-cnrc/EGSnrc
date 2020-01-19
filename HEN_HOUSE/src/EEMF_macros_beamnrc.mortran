@@ -1,31 +1,33 @@
 %C80
-"#############################################################################"
-"                                                                             "
-"  EGSnrc enhanced electromagnetic field transport macros (for BEAMnrc)       "
-"  Copyright (C) 2016 National Research Council Canada                        "
-"                                                                             "
-"  This file is part of EGSnrc.                                               "
-"                                                                             "
-"  EGSnrc is free software: you can redistribute it and/or modify it under    "
-"  the terms of the GNU Affero General Public License as published by the     "
-"  Free Software Foundation, either version 3 of the License, or (at your     "
-"  option) any later version.                                                 "
-"                                                                             "
-"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
-"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
-"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
-"  more details.                                                              "
-"                                                                             "
-"  You should have received a copy of the GNU Affero General Public License   "
-"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
-"                                                                             "
-"#############################################################################"
-"                                                                             "
-"  Author:          Victor Malkov, 2016                                       "
-"                                                                             "
-"  Contributors:                                                              "
-"                                                                             "
-"#############################################################################"
+################################################################################         
+#                                                                            
+#  EEMF_macros EEMF_macros_beamnrc                                                
+#  Copyright (C) 2016 Victor N. Malkov, David W.O. Rogers                            
+#                                                                                         
+#  This file is part of the EEMF macros                                                       
+#                                                                                         
+#  The EEMF macros are a free software: you can redistribute it and/or modify it  
+#  under the terms of the GNU Affero General Public License as published     
+#  by the Free Software Foundation, either version 3 of the License, or      
+#  (at your option) any later version.                                                   
+#                                                                             
+#  The EEMF macros are distributed in the hope that they will be useful, but           
+#  WITHOUT ANY WARRANTY; without even the implied warranty of                             
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU                     
+#  Affero General Public License for more details:                                       
+#  <http://www.gnu.org/licenses/>.                                                       
+#                                                                                         
+################################################################################  
+#                                                                                         
+#  When the EEMF macros are used for publications, please cite our paper:             
+#  Malkov, V.N. and Rogers, D.W.O., 2016. Charged particle transport
+#  in magnetic fields in EGSnrc. Medical Physics, 43(7), pp.4447-4458.  
+#                                                                                     
+################################################################################     
+#                                                                                         
+#  Author:        Victor N. Malkov, 2016                                         
+#                                                                                  
+#  Contributors:  David W.O. Rogers      
 
 
 "******************************************************************************"
