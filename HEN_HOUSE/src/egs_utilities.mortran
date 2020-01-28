@@ -430,7 +430,9 @@ IF( lnblnk1(tmp_string) > lnblnk1(pegs_file) ) [
 ]
 pos2 = min(pos2,80-lnblnk1(tmp_string));
 pos2 = min(pos2,80-lnblnk1(host_name));
-pos2 = min(pos2,80-lnblnk1($GIT_BRANCH));
+#ifdef GIT_BRANCH;
+    pos2 = min(pos2,80-lnblnk1(GIT_BRANCH));
+#endif;
 pos2 = min(pos2,80-lnblnk1($CONFIG_TIME));
 IF( have_input ) pos2 = min(pos2,80-lnblnk1(input_file));
 pos2 = min(pos2,80-lnblnk1(output_file));
@@ -438,9 +440,12 @@ IF( pos2 < pos1+2 ) pos2 = pos1 + 2;
 
 $write_description('configuration'); $egs_info('(a)',$CONFIGURATION_NAME);
 $write_description('configuration time'); $egs_info('(a)',$CONFIG_TIME);
-$write_description('git commit hash'); $egs_info('(a)',$GIT_HASH);
-$write_description('git branch'); $egs_info('(a)',$GIT_BRANCH);
-$write_description('user code'); $egs_info('(a)',$cstring(user_code));
+$write_description('app compile time'); $egs_info('(a)',COMPILE_TIME);
+#ifdef GIT_BRANCH;
+    $write_description('git commit hash'); $egs_info('(a)',GIT_HASH);
+    $write_description('git branch'); $egs_info('(a)',GIT_BRANCH);
+#endif;
+$write_description('application'); $egs_info('(a)',$cstring(user_code));
 $write_description('pegs file'); $egs_info('(a)',$cstring(tmp_string));
 $write_description('using host'); $egs_info('(a)',$cstring(host_name));
 IF( have_input ) [

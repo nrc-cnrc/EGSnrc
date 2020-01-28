@@ -214,55 +214,6 @@ private:
   //void printProgress( const QString& message );
   void printProgress( const QString& message, bool new_line = true );
 
-
-// Return the git hash
-QString git_hash(){
-    QProcess proc;
-    QString answer = " ";
-
-    proc.start("git rev-parse --is-inside-work-tree");
-    if (!proc.waitForStarted()) return answer;
-    proc.closeWriteChannel();
-    if (!proc.waitForFinished()) return answer;
-    QString inGitRep = QString(proc.readAll());
-    if (inGitRep.endsWith("\n")) inGitRep.chop(1);
-
-    if (inGitRep.compare("true",Qt::CaseInsensitive) == 0) {
-        proc.start("git rev-parse --short=7 HEAD");
-        if (!proc.waitForStarted()) return answer;
-        proc.closeWriteChannel();
-        if (!proc.waitForFinished()) return answer;
-        answer = QString(proc.readAll());
-        if (answer.endsWith("\n")) answer.chop(1);
-    }
-
-    return answer;
-}
-
-// Return the git branch
-QString git_branch(){
-    QProcess proc;
-    QString answer = " ";
-
-    proc.start("git rev-parse --is-inside-work-tree");
-    if (!proc.waitForStarted()) return answer;
-    proc.closeWriteChannel();
-    if (!proc.waitForFinished()) return answer;
-    QString inGitRep = QString(proc.readAll());
-    if (inGitRep.endsWith("\n")) inGitRep.chop(1);
-
-    if (inGitRep.compare("true",Qt::CaseInsensitive) == 0) {
-        proc.start("git rev-parse --abbrev-ref HEAD");
-        if (!proc.waitForStarted()) return answer;
-        proc.closeWriteChannel();
-        if (!proc.waitForFinished()) return answer;
-        answer = QString(proc.readAll());
-        if (answer.endsWith("\n")) answer.chop(1);
-    }
-
-    return answer;
-}
-
 //************************************************************************
 
 /* Creates a log file to store useful information about

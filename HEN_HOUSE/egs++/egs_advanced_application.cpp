@@ -58,9 +58,6 @@
 #include <cstdlib>
 #include <cstring>
 
-#define XSTR(x) #x
-#define STR(x) XSTR(x)
-
 using namespace std;
 
 #ifdef DEBUG_APPLICATION
@@ -210,13 +207,6 @@ int EGS_AdvancedApplication::initEGSnrcBackEnd() {
     }
     */
     io_flag = 1;
-
-    // Output compilation information
-#ifdef COMPILE_TIME
-    string compileTime = STR(COMPILE_TIME);
-    egsInformation("\nApplication compile time: %s\n",compileTime.c_str());
-#endif
-
     return 0;
 }
 

@@ -173,14 +173,6 @@ case $CXX in
 
 esac
 
-VERSION_FLAGS=
-if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-    GIT_HASH=`git rev-parse --short=7 HEAD`
-    CONFIG_TIME=`date -u +'%Y-%m-%d %H:%M:%S UTC'`
-    GIT_BRANCH=`git rev-parse --abbrev-ref HEAD`
-    VERSION_FLAGS="-DGIT_HASH=\"$GIT_HASH\" -DCONFIG_TIME=\"$CONFIG_TIME\" -DGIT_BRANCH=\"$GIT_BRANCH\""
-fi
-
 is_osx=no
 libpre=lib
 libext=.so
@@ -254,8 +246,6 @@ case $canonical_system in
         shared="-G -Wl,-brtl"; lib_link1="-L\$(abs_dso) -Wl,-brtl,-bexpall";;
     *) echo Unsupported architecture $canonical_system; fpic="-fPIC";;
 esac
-
-defines="$defines $VERSION_FLAGS"
 
 #
 # Try to determine fortran_libs
