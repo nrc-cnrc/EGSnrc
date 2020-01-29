@@ -39,6 +39,7 @@
 
 #include "egs_libconfig.h"
 #include "egs_rndm.h"
+#include <vector>
 
 typedef EGS_Float(*EGS_AtFunction)(EGS_Float,void *);
 

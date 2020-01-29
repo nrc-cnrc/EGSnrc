@@ -128,12 +128,10 @@ void EGS_AliasTable::make() {
         else {
             fcum[i] = 0.5*(fi[i]+fi[i+1])*(xi[i+1]-xi[i]);
         }
-        //egsWarning("i=%d fcum=%g x=%g f=%g\n",i,fcum[i],xi[i],fi[i]);
         sum += fcum[i];
         wi[i] = 1;
         bin[i] = 0;
         not_done[i] = true;
-        wi[i] = 1;
         if (type == 0) {
             sum1 += fcum[i]*xi[i];
         }
@@ -144,6 +142,7 @@ void EGS_AliasTable::make() {
                                   fi[i+1]*(xi[i]+2*xi[i+1]))/(3*(fi[i]+fi[i+1]));
     }
     average = sum1/sum;
+
     for (i=0; i<np; i++) {
         fi[i] /= sum;
     }
@@ -151,26 +150,41 @@ void EGS_AliasTable::make() {
         fi[np] /= sum;
     }
     sum /= np;
+
     int jh, jl;
-    //egsWarning("np = %d sum = %g average = %g\n",np,sum,average);
     for (i=0; i<np-1; i++) {
-        for (jh=0; jh<np-1; jh++) {
+
+        // find the next "high" bin (above average)
+        int high_bin = -1;
+        for (jh=0; jh<np; jh++) {
             if (not_done[jh] && fcum[jh] > sum) {
+                high_bin = jh;
                 break;
             }
         }
-        for (jl=0; jl<np-1; jl++) {
+        if (high_bin < 0) {
+            break;
+        }
+
+        // find the next "low" bin (below average)
+        int low_bin = -1;
+        for (jl=0; jl<np; jl++) {
             if (not_done[jl] && fcum[jl] < sum) {
+                low_bin = jl;
                 break;
             }
         }
-        //egsWarning(" fcum[%d] = %g fcum[%d] = %g\n",jh,fcum[jh],jl,fcum[jl]);
-        EGS_Float aux = sum - fcum[jl];
-        fcum[jh] -= aux;
+        if (low_bin < 0) {
+            egsWarning("EGS_AliasTable::make(): found a high bin, but no low bin; this is abnormal.");
+            break;
+        }
+
+        // alias the high bin from the low bin
+        EGS_Float aux = sum - fcum[low_bin];
+        fcum[high_bin] -= aux;
         not_done[jl] = false;
-        wi[jl] = fcum[jl]/sum;
-        bin[jl] = jh;
-        //egsWarning(" for %d wi = %g jh = %d\n",jl,wi[jl],bin[jl]);
+        wi[low_bin] = fcum[low_bin]/sum;
+        bin[low_bin] = high_bin;
     }
     delete [] fcum;
     delete [] not_done;
@@ -284,58 +298,80 @@ EGS_Float EGS_AliasTable::sample(EGS_RandomGenerator *rndm) const {
     return res;
 }
 
+
 EGS_SimpleAliasTable::EGS_SimpleAliasTable(int N, const EGS_Float *f) : n(0) {
+
     if (N < 1) {
         return;
     }
+
+    // initialize data members
     n = N;
     wi = new EGS_Float [n];
     bins = new int [n];
+
+    // local variables
     int i;
     double sum = 0;
-    double *fcum = new double [n];
-    for (i=0; i<n; ++i) {
-        fcum[i] = f[i];
-        sum += fcum[i];
-        bins[i] = n+1;
+    double *p = new EGS_Float [n];
+
+    // initialize distribution and bin aliases, and compute histogram sum
+    for (i=0; i<n; i++) {
+        bins[i] = i;
+        p[i] = f[i];
+        sum += p[i];
     }
-    sum /= n;
-    int jh, jl;
-    //egsInformation("n=%d sum=%g\n",n,sum);
-    int jh_old = 0, jl_old = 0;
-    for (i=0; i<n-1; ++i) {
-        for (jh=jh_old; jh<n-1; jh++) {
-            if (bins[jh] > n && fcum[jh] > sum) {
-                break;
-            }
+
+    // normalize distribution
+    if (sum <= 0) {
+        egsFatal("Error: %s, line %d: degenerate distribution, histogram sum <= 0", __FILE__, __LINE__);
+    }
+    else {
+        for (i=0; i<n; i++) {
+            p[i] /= sum;
         }
-        if (fcum[jh_old] < sum && jh_old < jl_old) {
-            jl = jh_old;
+    }
+
+    // sort bins into "big" and "small" lists
+    vector<int> big_list;               // bins above average
+    vector<int> small_list;             // bins below average
+    for (i=0; i<n; i++) {
+        wi[i] = p[i]*n;
+        if (wi[i] <= 1.0) {
+            small_list.push_back(i);
         }
         else {
-            for (jl=jl_old; jl<n-1; jl++) {
-                if (bins[jl] > n && fcum[jl] < sum) {
-                    break;
-                }
-            }
-            jl_old = jl;
+            big_list.push_back(i);
         }
-        double aux = sum - fcum[jl];
-        fcum[jh] -= aux;
-        wi[jl] = fcum[jl]/sum;
-        bins[jl] = jh;
-        //egsInformation("i=%d jh=%d jl=%d w=%g\n",i,jh,jl,wi[jl]);
-        jh_old = jh; //jl_old = jl;
     }
-    for (i=0; i<n; ++i) {
-        if (bins[i] > n) {
-            bins[i] = i;
-            wi[i] = 1;
+
+    // alias
+    int loopCount=0;
+    while (big_list.size() > 0 && small_list.size() > 0 && loopCount++ <= loopMax) {
+
+        // get a pair of big and small bins
+        int big = big_list.back();
+        int small = small_list.back();
+
+        // alias: fill small bin
+        bins[small] = big;              // alias small to big
+        wi[big] -= (1.0 - wi[small]);   // remove aliased portion from big bin
+        small_list.pop_back();          // small bin is now filled
+
+        // check if big bin is now small
+        if (wi[big] < 1.0 + epsilon) {
+            big_list.pop_back();
+            small_list.push_back(big);
         }
-        //egsInformation("alias table: %d %d %g\n",i,bins[i],wi[i]);
     }
-    delete [] fcum;
+    if (big_list.size() > 0) {
+        egsWarning("Warning: %s, line %d: table aliasing may be incomplete", __FILE__, __LINE__);
+    }
+
+    // delete local arrays
+    delete [] p;
 }
+
 
 EGS_SimpleAliasTable::~EGS_SimpleAliasTable() {
     if (n > 0) {
@@ -343,4 +379,3 @@ EGS_SimpleAliasTable::~EGS_SimpleAliasTable() {
         delete [] bins;
     }
 }
-
