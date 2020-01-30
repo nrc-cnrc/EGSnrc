@@ -1,8 +1,9 @@
 
 ###############################################################################
 #
-#  EGSnrc egs++ makefile to build nd geometry
-#  Copyright (C) 2015 National Research Council Canada
+#  EGSnrc egs++ makefile to build rz geometry
+#  Copyright (C) 2016 Randle E. P. Taylor, Rowan M. Thomson,
+#  Marc J. P. Chamberland, D. W. O. Rogers
 #
 #  This file is part of EGSnrc.
 #
@@ -21,9 +22,11 @@
 #
 ###############################################################################
 #
-#  Author:          Iwan Kawrakow, 2005
+#  Author:          Randle Taylor, 2016
 #
-#  Contributors:    Randle Taylor
+#  Contributors:    Marc Chamberland
+#                   Rowan Thomson
+#                   Dave Rogers
 #
 ###############################################################################
 
@@ -32,26 +35,31 @@ include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
-GZSTREAM =
-GZSTREAM_DEF =
-GZSTREAM_H =
-GZSTREAM_LIB =
-ifneq ("$(wildcard gzstream.cpp)","")
-GZSTREAM = gzstream
-GZSTREAM_DEF = -DBUILD_GZSTREAM -DHAS_GZSTREAM
-GZSTREAM_H = gzstream.h
-GZSTREAM_LIB = z
-endif
+DEFS = $(DEF1) -Wall
 
-DEFS = $(DEF1) -DBUILD_NDG_DLL -DEXPLICIT_XYZ $(GZSTREAM_DEF)
+library = egs_rz
+lib_files = egs_rz
+link2_libs = egspp egs_planes egs_cylinders egs_ndgeometry
 
-library = egs_ndgeometry
-lib_files = egs_nd_geometry $(GZSTREAM)
-
-link2_libs = egspp egs_planes $(GZSTREAM_LIB)
+.PHONY: ndgeom cyls planes clean
 
 include $(SPEC_DIR)egspp_libs.spec
 
 $(make_depend)
 
-$(DSO2)egs_nd_geometry.$(obje): ..$(DSEP)egs_planes$(DSEP)egs_planes.h $(GZSTREAM_H)
+$(DSO2)$(library).$(obje): ndgeom cyls planes
+
+$(ABS_DSO)$(libpre)$(library)$(libext): ndgeom cyls planes
+
+ndgeom:
+	cd ..$(DSEP)egs_nd_geometry && make
+
+cyls:
+	cd ..$(DSEP)egs_cylinders && make
+
+planes:
+	cd ..$(DSEP)egs_planes && make
+
+clean:
+	rm -f $(ABS_DSO)$(libpre)$(library)$(libext)
+	rm -f $(DSO2)$(library).$(obje)

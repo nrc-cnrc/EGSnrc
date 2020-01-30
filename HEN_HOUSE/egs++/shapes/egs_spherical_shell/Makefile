@@ -1,8 +1,9 @@
 
 ###############################################################################
 #
-#  EGSnrc egs++ makefile to build nd geometry
-#  Copyright (C) 2015 National Research Council Canada
+#  EGSnrc egs++ makefile to build spherical shell shape
+#  Copyright (C) 2016 Randle E. P. Taylor, Rowan M. Thomson,
+#  Marc J. P. Chamberland, D. W. O. Rogers
 #
 #  This file is part of EGSnrc.
 #
@@ -21,9 +22,11 @@
 #
 ###############################################################################
 #
-#  Author:          Iwan Kawrakow, 2005
+#  Author:          Randle Taylor, 2016
 #
-#  Contributors:    Randle Taylor
+#  Contributors:    Marc Chamberland
+#                   Rowan Thomson
+#                   Dave Rogers
 #
 ###############################################################################
 
@@ -32,26 +35,17 @@ include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
-GZSTREAM =
-GZSTREAM_DEF =
-GZSTREAM_H =
-GZSTREAM_LIB =
-ifneq ("$(wildcard gzstream.cpp)","")
-GZSTREAM = gzstream
-GZSTREAM_DEF = -DBUILD_GZSTREAM -DHAS_GZSTREAM
-GZSTREAM_H = gzstream.h
-GZSTREAM_LIB = z
-endif
+DEFS = $(DEF1) -DBUILD_SPHERICAL_SHELL_DLL
 
-DEFS = $(DEF1) -DBUILD_NDG_DLL -DEXPLICIT_XYZ $(GZSTREAM_DEF)
-
-library = egs_ndgeometry
-lib_files = egs_nd_geometry $(GZSTREAM)
-
-link2_libs = egspp egs_planes $(GZSTREAM_LIB)
+library = egs_spherical_shell
+lib_files = egs_spherical_shell
+my_deps = $(common_shape_deps)
+extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
 include $(SPEC_DIR)egspp_libs.spec
 
 $(make_depend)
 
-$(DSO2)egs_nd_geometry.$(obje): ..$(DSEP)egs_planes$(DSEP)egs_planes.h $(GZSTREAM_H)
+test:
+	@echo "common_h2: $(common_h2)"
+	@echo "extra_dep: $(extra_dep)"

@@ -27,6 +27,7 @@
 #                   Reid Townson
 #                   Ernesto Mainegra-Hing
 #                   Hubert Ho
+#                   Randle Taylor
 #
 ###############################################################################
 */
@@ -41,6 +42,10 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 #include "egs_transformations.h"
+
+#ifdef HAS_GZSTREAM
+    #include "gzstream.h"
+#endif
 
 #include <vector>
 #include <fstream>
@@ -589,23 +594,49 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         }
     }
     else {
-        ifstream data(dens_file);
-        if (!data) {
+
+        ifstream tempf(dens_file, ios::binary);
+        istream *data;
+        ifstream textf;
+#ifdef HAS_GZSTREAM
+        igzstream binf;
+#endif
+
+        if (!tempf) {
             egsWarning("%s: failed to open .egsphant file %s\n",func,dens_file);
             return 0;
         }
+
+        bool is_gzip = (tempf.get() == 0x1f && tempf.get() == 0x8b);
+        tempf.close();
+
+        if (is_gzip) {
+#ifdef HAS_GZSTREAM
+            binf.open(dens_file);
+            data = &binf;
+#else
+            egsWarning("Tried to read gzipped egsphant but egs_ndgeometry was not compiled with gzip support\n");
+            return 0;
+#endif
+        }
+        else {
+            textf.open(dens_file);
+            data = &textf;
+        }
+
+
         int nmed;
-        data >> nmed;
-        if (data.fail()) {
+        (*data) >> nmed;
+        if ((*data).fail()) {
             egsWarning("%s: failed reading number of media\n",func);
             return 0;
         }
         char buf [1024];
         int imed;
-        data.getline(buf,1023);
+        (*data).getline(buf,1023);
         for (imed=0; imed<nmed; ++imed) {
-            data.getline(buf,1023);
-            if (data.fail()) {
+            (*data).getline(buf,1023);
+            if ((*data).fail()) {
                 egsWarning("%s: failed reading medium name for %d'th medium\n",func,imed+1);
             }
             //egsInformation("Got line <%s>\n",buf);
@@ -613,10 +644,10 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         // ignore estepe
         EGS_Float dum;
         for (imed=0; imed<nmed; ++imed) {
-            data >> dum;
+            (*data) >> dum;
         }
-        data >> Nx >> Ny >> Nz;
-        if (data.fail()) {
+        (*data) >> Nx >> Ny >> Nz;
+        if ((*data).fail()) {
             egsWarning("%s: failed reading number of voxels\n",func);
             return 0;
         }
@@ -625,9 +656,9 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         zz = new EGS_Float [Nz+1];
         int j;
         for (j=0; j<=Nx; ++j) {
-            data >> xx[j];
+            (*data) >> xx[j];
         }
-        if (data.fail()) {
+        if ((*data).fail()) {
             egsWarning("%s: failed reading x-planes\n",func);
             delete [] xx;
             delete [] yy;
@@ -635,9 +666,9 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             return 0;
         }
         for (j=0; j<=Ny; ++j) {
-            data >> yy[j];
+            (*data) >> yy[j];
         }
-        if (data.fail()) {
+        if ((*data).fail()) {
             egsWarning("%s: failed reading y-planes\n",func);
             delete [] xx;
             delete [] yy;
@@ -645,9 +676,9 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             return 0;
         }
         for (j=0; j<=Nz; ++j) {
-            data >> zz[j];
+            (*data) >> zz[j];
         }
-        if (data.fail()) {
+        if ((*data).fail()) {
             egsWarning("%s: failed reading z-planes\n",func);
             delete [] xx;
             delete [] yy;
@@ -657,14 +688,14 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         int nr = Nx*Ny*Nz;
         //int med;
         //for(j=0; j<nr; ++j) data >> med;
-        data.getline(buf,1023);
+        (*data).getline(buf,1023);
         for (int iz=0; iz<Nz; ++iz) {
             for (int iy=0; iy<Ny; ++iy) {
-                data.getline(buf,1023);
+                (*data).getline(buf,1023);
             }
-            data.getline(buf,1023);
+            (*data).getline(buf,1023);
         }
-        if (data.fail()) {
+        if ((*data).fail()) {
             egsWarning("%s: failed reading media indeces matrix\n",func);
             delete [] xx;
             delete [] yy;
@@ -673,9 +704,9 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         }
         rho = new float [nr];
         for (j=0; j<nr; ++j) {
-            data >> rho[j];
+            (*data) >> rho[j];
         }
-        if (data.fail()) {
+        if ((*data).fail()) {
             egsWarning("%s: failed reading mass density matrix\n",func);
             delete [] xx;
             delete [] yy;
@@ -1154,9 +1185,13 @@ extern "C" {
                 }
                 EGS_XYZGeometry *result =
                     EGS_XYZGeometry::constructGeometry(dens_file.c_str(),ramp_file.c_str(),dens_or_egsphant_or_interfile);
-                result->setName(input);
-                result->setBoundaryTolerance(input);
-                result->setBScaling(input);
+
+                if (result) {
+                    result->setName(input);
+                    result->setBoundaryTolerance(input);
+                    result->setBScaling(input);
+                }
+
                 return result;
             }
             vector<EGS_Float> xpos, ypos, zpos, xslab, yslab, zslab;

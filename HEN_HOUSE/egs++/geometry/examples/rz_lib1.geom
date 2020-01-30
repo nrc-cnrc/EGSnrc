@@ -1,8 +1,9 @@
 
 ###############################################################################
 #
-#  EGSnrc egs++ makefile to build nd geometry
-#  Copyright (C) 2015 National Research Council Canada
+#  EGSnrc egs++ sample nd geometry
+#  Copyright (C) 2016 Randle E. P. Taylor, Rowan M. Thomson,
+#  Marc J. P. Chamberland, D. W. O. Rogers
 #
 #  This file is part of EGSnrc.
 #
@@ -21,37 +22,37 @@
 #
 ###############################################################################
 #
-#  Author:          Iwan Kawrakow, 2005
+#  Author:          Randle Taylor, 2016
 #
-#  Contributors:    Randle Taylor
+#  Contributors:    Marc Chamberland
+#                   Rowan Thomson
+#                   Dave Rogers
+#
+###############################################################################
+#
+#  An example geometry input file for the egs++ geometry package.
+#
+#  This input file defines the same geometry as rz.geom but using the egs_rz
+#  library rather than directly using an nd geometry.
 #
 ###############################################################################
 
 
-include $(EGS_CONFIG)
-include $(SPEC_DIR)egspp.spec
-include $(SPEC_DIR)egspp_$(my_machine).conf
+:start geometry definition:
 
-GZSTREAM =
-GZSTREAM_DEF =
-GZSTREAM_H =
-GZSTREAM_LIB =
-ifneq ("$(wildcard gzstream.cpp)","")
-GZSTREAM = gzstream
-GZSTREAM_DEF = -DBUILD_GZSTREAM -DHAS_GZSTREAM
-GZSTREAM_H = gzstream.h
-GZSTREAM_LIB = z
-endif
+    :start geometry:
+        library   = egs_rz
+        name      = rz
+        radii     = 1 1.3
+        z-planes  = 0  0.3  0.5  0.8
 
-DEFS = $(DEF1) -DBUILD_NDG_DLL -DEXPLICIT_XYZ $(GZSTREAM_DEF)
+        :start media input:
+            media = 170C521ICRU AIR521ICRU
+            set medium = 1 1
+        :stop media input:
 
-library = egs_ndgeometry
-lib_files = egs_nd_geometry $(GZSTREAM)
+    :stop geometry:
 
-link2_libs = egspp egs_planes $(GZSTREAM_LIB)
+    simulation geometry = rz
 
-include $(SPEC_DIR)egspp_libs.spec
-
-$(make_depend)
-
-$(DSO2)egs_nd_geometry.$(obje): ..$(DSEP)egs_planes$(DSEP)egs_planes.h $(GZSTREAM_H)
+:stop geometry definition:
