@@ -52,8 +52,8 @@ $(DSO2)$(library).$(obje): ndgeom
 $(ABS_DSO)$(libpre)$(library)$(libext): ndgeom
 
 ndgeom:
-	cd ..$(DSEP)egs_nd_geometry && make
+	cd ..$(DSEP)egs_nd_geometry && $(MAKE)
 
 clean:
-	rm -f $(ABS_DSO)$(libpre)$(library)$(libext)
-	rm -f $(DSO2)$(library).$(obje)
+	$(REMOVE) $(ABS_DSO)$(libpre)$(library)$(libext) $(DSO2)$(library).$(obje)
+

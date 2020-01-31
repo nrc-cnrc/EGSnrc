@@ -76,9 +76,9 @@ $(ABS_DSO)$(libpre)egs_autoenvelope$(libext): volcor.h $(GZSTREAM_H) \
 						..$(DSEP)egs_gtransformed$(DSEP)egs_gtransformed.h
 
 clean:
-	rm -f $(ABS_DSO)$(libpre)egs_autoenvelope$(libext) $(ABS_DSO)$(libpre)egs_sobol$(libext) $(ABS_DSO)$(libpre)sobol$(libext) \
+	$(REMOVE) $(ABS_DSO)$(libpre)egs_autoenvelope$(libext) $(ABS_DSO)$(libpre)egs_sobol$(libext) $(ABS_DSO)$(libpre)sobol$(libext) \
 		$(ABS_DSO)$(libpre)gzstream$(libext) $(ABS_DSO)$(libpre)gzstream$(libext)
-	rm -f $(DSO2)autoenvelope.$(obje) $(DSO2)sobol.$(obje) $(DSO2)egs_sobol.$(obje) \
+	$(REMOVE) $(DSO2)autoenvelope.$(obje) $(DSO2)sobol.$(obje) $(DSO2)egs_sobol.$(obje) \
 		$(DSO2)gzstream.$(obje) $(DSO2)gzstream.$(obje) \
 
 touchup:

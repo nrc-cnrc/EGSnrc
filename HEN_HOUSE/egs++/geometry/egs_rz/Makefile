@@ -52,14 +52,13 @@ $(DSO2)$(library).$(obje): ndgeom cyls planes
 $(ABS_DSO)$(libpre)$(library)$(libext): ndgeom cyls planes
 
 ndgeom:
-	cd ..$(DSEP)egs_nd_geometry && make
+	cd ..$(DSEP)egs_nd_geometry && $(MAKE)
 
 cyls:
-	cd ..$(DSEP)egs_cylinders && make
+	cd ..$(DSEP)egs_cylinders && $(MAKE)
 
 planes:
-	cd ..$(DSEP)egs_planes && make
+	cd ..$(DSEP)egs_planes && $(MAKE)
 
 clean:
-	rm -f $(ABS_DSO)$(libpre)$(library)$(libext)
-	rm -f $(DSO2)$(library).$(obje)
+	$(REMOVE) $(ABS_DSO)$(libpre)$(library)$(libext) $(DSO2)$(library).$(obje)
