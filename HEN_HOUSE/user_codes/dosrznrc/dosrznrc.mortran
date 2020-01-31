@@ -3842,7 +3842,7 @@ IF (IKERMA = 1) ["want to score KERMA"
 
     "depositing sub-threshold energy for PE & Compton"
     "Auger only"
-    IF( iarg = 33 | iarg = 34 ) [  
+    IF( iarg = 33 | iarg = 34 ) [
         "33=>sub-threshold fluorescence being deposited"
         "34=>sub-threshold Auger being deposited"
         "if as a result of pe or compt this is k.e. transferred to e-"
