@@ -202,7 +202,6 @@ proc reset_parameters { } {
     for {set i 15} {$i<=16} {incr i} {
 	set values($i) {}
     }
-    set values(17) $options(17,0)
     set values(18) 1
 
     #EGSnrc default values

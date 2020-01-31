@@ -14,9 +14,8 @@
              NGROUP_$SYNCHDMLC = number of groups of adjacent leaves where
                                all leaves in a group are:
                                1. FULL leaves
-                               2. HALF TARGET/ISOCENTER pairs with TARGET leaf
-                                  on the -X (ORIENT=0) or -Y (ORIENT=1) side
-                               3. QUARTER TARGET/ISOCENTER pairs
+                               2. HALF TARGET/ISOCENTER leaves
+                               3. QUARTER TARGET/ISOCENTER leaves
                                NGROUP_$SYNCHDMLC defaults to 3 if set <=0
              MODE_$SYNCHCMLC = 0 for single setting of leaf openings (static
                              field)
@@ -135,7 +134,7 @@
                   leaf on +X [ORIENT=0] or +Y [ORIENT=1] side of ISOCENTER
                   leaf only) ZTONGUE_$SYNCHDMLC(1)<=ZGROOVE_$SYNCHDMLC(3)
 
-        Note: If there are no HALF leaf pairs in your model, you can input
+        Note: If there are no HALF leaves in your model, you can input
               blanks, zeroes, or arbitrary floating-point numbers for these
               cross section dimensions.
 
@@ -206,15 +205,22 @@
          NUM_LEAF_$SYNCHDMLC(I): Number of adjacent leaves in group I
               LEAFTYPE: Type of leaf in group I.
                         Set to: 1 for FULL leaves
-                                2 for HALF TARGET/ISOCENTER pair with
-                                  TARGET leaf on the -X (ORIENT=0)
-                                  or -Y (ORIENT=1) side
-                                3 for QUARTER TARGET/ISOCENTER pair with
-                                  TARGET leaf on the -X (ORIENT=0)
-                                  or -Y (ORIENT=1) side
+                                2 for HALF TARGET/ISOCENTER leaves.
+                                  Starting leaf on -X (ORIENT=0) or -Y
+                                  (ORIENT=1) side depends on adjacent leaf:
+                                  If adjacecent leaf is a HALF or QUARTER
+                                  TARGET, then it will be HALF ISOCENTER.
+                                  Otherwise, it will be HALF TARGET.
+                                3 for QUARTER TARGET/ISOCENTER leaves.
+                                  Starting leaf on -X (ORIENT=0) or -Y
+                                  (ORIENT=1) side will depend on the
+                                  adjacent leaf: If it is a HALF or
+                                  QUARTER TARGET leaf, then the starting
+                                  leaf will be QUARTER ISOCENTER.
+                                  Otherwise, it will be QUARTER TARGET.
 
-          Note: If LEAFTYPE is 2 or 3, then you must have an even number
-                of leaves in the group.
+    Restrictions: 1. Cannot have a HALF or QUARTER TARGET leaf on the -ve
+                     side of a FULL leaf.
 
     9  START_$SYNCHDMLC (F15.0) : the start position (cm) wrt the CAX of
                         leaf 1 as projected to ZMIN_$SYNCHDMLC.
@@ -379,7 +385,7 @@
     The collimator starts at Z=47.0 cm, is 7 cm thick and has 80 tungsten
     leaves opening in the X direction. Leaves 1-10 and 71-80 are FULL
     (type 1), leaves 11-24 and 57-70 are HALF TARGET/HALF ISOCENTER
-    pairs, and leaves 25-56 are QUARTER TARGET/QUARTER ISOCENTER pairs.
+    leaves, and leaves 25-56 are QUARTER TARGET/QUARTER ISOCENTER leaves.
     The Z focus of the leaf sides is at Z=0 cm which is the position of the
     source. The leaf ends are straight and also focused at Z=0 cm.
     In this example, the mlc is being run in step-and-shoot mode
@@ -402,9 +408,9 @@
   0.11, 0.04, 0.04, 0.035, 0.08, 0.065, 47.2, 47.3, 50.53, 50.52, 52.9, 53.1,
     1.7, 53.6, 53.9,  QUARTER ISOCENTER cross-section
   10, 1, FULL leaves
-  14, 2, HALF TARGET/ISOCENTER pairs
-  32, 3, QUARTER TARGET/ISOCENTER pairs
-  14, 2, HALF TARGET/ISOCENTER pairs
+  14, 2, HALF TARGET/ISOCENTER leaves
+  32, 3, QUARTER TARGET/ISOCENTER leaves
+  14, 2, HALF TARGET/ISOCENTER leaves
   10, 1, FULL leaves
   -10.5, START
   0.005, LEAFGAP

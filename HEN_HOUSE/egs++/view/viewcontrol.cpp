@@ -286,7 +286,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         while ((ij = gDef->takeInputItem("geometry")) != 0) {
             string gname;
             int err = ij->getInput("name",gname);
-            if(!err) {
+            if (!err) {
                 geometryNames.push_back(gname);
             }
         }
@@ -381,7 +381,8 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     if (!simGeom) {
         setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
         origSimGeom = g;
-    } else {
+    }
+    else {
         // If we have selected a different simulation geometry set the
         // reloading flag to false so that it resets the camera properly
         setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,false);
@@ -1888,7 +1889,6 @@ void GeometryViewControl::loadTracksDialog() {
 #ifdef VIEW_DEBUG
     egsWarning("In loadTracksDialog()\n");
 #endif
-
     QFileInfo inputFileInfo = QFileInfo(filename);
     filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*.ptracks");
 
@@ -2449,12 +2449,42 @@ void GeometryViewControl::updateView(bool transform) {
     rp.show_regions = show_regions;
     rp.doseTransparency = doseTransparency;
 
-    rp.trackIndices[0] = spin_tminp->value()-1;
-    rp.trackIndices[1] = spin_tmaxp->value()-1;
-    rp.trackIndices[2] = spin_tmine->value()-1;
-    rp.trackIndices[3] = spin_tmaxe->value()-1;
-    rp.trackIndices[4] = spin_tminpo->value()-1;
-    rp.trackIndices[5] = spin_tmaxpo->value()-1;
+    if (spin_tminp->value() > 0) {
+        rp.trackIndices[0] = spin_tminp->value()-1;
+    }
+    else {
+        rp.trackIndices[0] = 1;
+    }
+    if (spin_tmaxp->value() > 0) {
+        rp.trackIndices[1] = spin_tmaxp->value()-1;
+    }
+    else {
+        rp.trackIndices[1] = 1;
+    }
+    if (spin_tmine->value() > 0) {
+        rp.trackIndices[2] = spin_tmine->value()-1;
+    }
+    else {
+        rp.trackIndices[2] = 1;
+    }
+    if (spin_tmaxe->value() > 0) {
+        rp.trackIndices[3] = spin_tmaxe->value()-1;
+    }
+    else {
+        rp.trackIndices[3] = 1;
+    }
+    if (spin_tminpo->value() > 0) {
+        rp.trackIndices[4] = spin_tminpo->value()-1;
+    }
+    else {
+        rp.trackIndices[4] = 1;
+    }
+    if (spin_tmaxpo->value() > 0) {
+        rp.trackIndices[5] = spin_tmaxpo->value()-1;
+    }
+    else {
+        rp.trackIndices[5] = 1;
+    }
 
     gview->render(g, transform);
 }

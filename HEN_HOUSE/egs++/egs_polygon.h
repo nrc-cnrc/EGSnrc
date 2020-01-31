@@ -251,7 +251,12 @@ public:
                         if (tt <= t+epsilon) {
                             EGS_Float lam = uj[j]*(x-p[j]+u*tt);
                             if (lam >= 0 && lam < uj[j].length2()) {
-                                t = tt;
+                                if (tt < 0) {
+                                    t = 0;
+                                }
+                                else {
+                                    t = tt;
+                                }
                                 res = true;
                                 jhit = j;
                                 //if( normal ) *normal = a[j]*(-1);
@@ -437,7 +442,7 @@ public:
     /*! \brief Will the line defined by position \a x and direction \a u
       intersect the polygon plane at a position inside the polygon ?
 
-      The interprtation of the return value and the value of \a in and
+      The interpretation of the return value and the value of \a in and
       \a t is the same as in EGS_2DPolygon::howfar()
       */
     inline bool howfar(bool in, const EGS_Vector &x, const EGS_Vector &u,

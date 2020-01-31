@@ -146,7 +146,7 @@ DO ibr = 1,nbr_split [  "nbr_split > 1 means we want splitting for any"
     E(NP)=PESG1; IQ(NP)=0;
     IF( ibr = 1 ) [ ip = npold; ] ELSE [ ip = np-1; ]
     $TRANSFER PROPERTIES TO (np) FROM (ip);
-    COSTHE=MIN(1.0,(ESG1-RM)*POT/ESG1);
+    COSTHE=MAX(-1.0,MIN(1.0,(ESG1-RM)*POT/ESG1));
     SINTHE=SQRT(1.0-COSTHE*COSTHE);
     $SELECT-AZIMUTHAL-ANGLE(cphi,sphi);
     IF( sinpsi >= 1e-10 ) [
@@ -162,7 +162,7 @@ DO ibr = 1,nbr_split [  "nbr_split > 1 means we want splitting for any"
     PESG2=PAVIP-PESG1; esg2 = pesg2;
     e(np) = pesg2; iq(np) = 0;
     $TRANSFER PROPERTIES TO (np) FROM (np-1);
-    COSTHE=MIN(1.0,(ESG2-RM)*POT/ESG2);
+    COSTHE=MAX(-1.0,MIN(1.0,(ESG2-RM)*POT/ESG2));
     SINTHE=-SQRT(1.0-COSTHE*COSTHE);
     IF( sinpsi >= 1e-10 ) [
         us = sinthe*cphi; vs = sinthe*sphi;
@@ -6149,23 +6149,22 @@ LOOP [ "from here to end of routine over all vacancies created"
     ]
     ELSE[
         new_state = relax_state(relax_first(vac)+new_state-1);
-     IF( new_state <= 64 ) [ "It was a radiative transition, i.e. fluorescence"
-        iqf = 0;
-        new_state += vac - shell_num(vac);
-        Ef = shell_be(new_state);
-        Nvac += 1;
-        vacs(Nvac) = new_state;
-        Ecc = Pc;
-     ] "end of fluorescence block"
-
-     ELSE [ "It was a non-radiative transition (Auger or Coster-Kronig)"
-        iqf = -1; new1 = new_state/64; new2 = new_state - 64*new1;
-        new1 += vac - shell_num(vac); new2 += vac - shell_num(vac);
-        Ef1 = shell_be(new1); Ef2 = shell_be(new2);
-        Nvac += 1; vacs(Nvac) = new1;
-        Nvac += 1; vacs(Nvac) = new2;
-        Ef = Ef1 + Ef2; Ecc = Ec;
-     ] "end Auger or Coster-Kronig block"
+        IF( new_state <= 64 ) [ "It was a radiative transition (fluorescence)"
+          iqf = 0;
+          new_state += vac - shell_num(vac);
+          Ef = shell_be(new_state);
+          Nvac += 1;
+          vacs(Nvac) = new_state;
+          Ecc = Pc;
+        ] "end of fluorescence block"
+        ELSE [ "It was a non-radiative transition (Auger or Coster-Kronig)"
+          iqf = -1; new1 = new_state/64; new2 = new_state - 64*new1;
+          new1 += vac - shell_num(vac); new2 += vac - shell_num(vac);
+          Ef1 = shell_be(new1); Ef2 = shell_be(new2);
+          Nvac += 1; vacs(Nvac) = new1;
+          Nvac += 1; vacs(Nvac) = new2;
+          Ef = Ef1 + Ef2; Ecc = Ec;
+        ] "end Auger or Coster-Kronig block"
     ]
     Ex = Evac - Ef;
     edep_local = 0;

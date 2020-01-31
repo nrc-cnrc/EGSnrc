@@ -245,6 +245,12 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     //
     if (!getArgument(argc,argv,"-a","--application",app_name)) {
         app_name = egsStripPath(argv[0]);
+
+        // In Windows PowerShell, we need to remove a .exe extension
+        size_t exePos = app_name.rfind(".exe");
+        if (exePos != string::npos) {
+            app_name = app_name.substr(0, exePos);
+        }
     }
     if (!app_name.size()) egsFatal("%s\n   failed to determine application "
                                        "name from %s or command line arguments\n",__egs_app_msg1,argv[0]);

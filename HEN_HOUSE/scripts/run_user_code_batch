@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #                   Blake Walters
+#                   Marc-Andre Renaud
 #
 ###############################################################################
 #
@@ -446,7 +447,18 @@ if test $n_parallel -gt 0; then
         echo "Executing $the_command using $batch_command"
         echo "batch options: $batch_options $queue $other_args"
     else
-        echo "$the_command" | $batch_command $batch_options $queue $other_args
+        if test $egs_batch_system = "slurm"; then
+            ${batch_command} <<EOF
+#!/bin/sh
+#SBATCH ${generic_bo}
+#SBATCH ${output_bo} ${input_file}_w${job}.eo
+#SBATCH ${rname_bo} j${rname}
+#SBATCH ${queue}
+${the_command}
+EOF
+        else
+            echo "$the_command" | $batch_command $batch_options $queue $other_args
+        fi
     fi
     if test "x$batch_sleep_time" != x; then
         sleep $batch_sleep_time
@@ -472,7 +484,18 @@ else
       echo "Executing $command using $batch_command"
       echo "batch options: $batch_options $queue $other_args"
   else
-      echo "$command" | $batch_command $batch_options $queue $other_args
+      if test $egs_batch_system = "slurm"; then
+          ${batch_command} <<EOF
+#!/bin/sh
+#SBATCH ${generic_bo}
+#SBATCH ${output_bo} ${input_file}.eo
+#SBATCH ${rname_bo} j${rname}
+#SBATCH ${queue}
+${command}
+EOF
+      else
+          echo "$command" | $batch_command $batch_options $queue $other_args
+      fi
   fi
 fi
 exit 0

@@ -3702,8 +3702,7 @@ IF(IO_OPT = 0  | IO_OPT >= 3) ["requested phase space files be output"
   I_MU_PHSP=0; "default to not store fractional MU index"
   "loop through CMs and determine if there are any synchronized ones"
   DO I=1,MAX_CMs[
-    IF(CMTYPE(I)='SYNCJAWS' | CMTYPE(I)='SYNCVMLC' |
-       CMTYPE(I)='SYNCMLCE' | CMTYPE(I)='SYNCHDMLC')[
+    IF(CMTYPE(I)(1:4)='SYNC')[
       "store fractional MU index in IAEA phsp files"
       I_MU_PHSP=1;
       EXIT;
