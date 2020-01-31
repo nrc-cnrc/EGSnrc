@@ -89,17 +89,20 @@ unix:pieces/linux/egs_view_64
 
 # egs++ library for egs_view
 
+unix:egs++/dso/linux-static/libegs_autoenvelope.so
 unix:egs++/dso/linux-static/libegs_box.so
 unix:egs++/dso/linux-static/libegs_cdgeometry.so
 unix:egs++/dso/linux-static/libegs_circle.so
 unix:egs++/dso/linux-static/libegs_cones.so
 unix:egs++/dso/linux-static/libegs_conez.so
+unix:egs++/dso/linux-static/libegs_conical_shell.so
 unix:egs++/dso/linux-static/libegs_cylinders.so
 unix:egs++/dso/linux-static/libegs_ellipse.so
 unix:egs++/dso/linux-static/libegs_elliptic_cylinders.so
 unix:egs++/dso/linux-static/libegs_extended_shape.so
 unix:egs++/dso/linux-static/libegs_gaussian_shape.so
 unix:egs++/dso/linux-static/libegs_genvelope.so
+unix:egs++/dso/linux-static/libegs_glib.so
 unix:egs++/dso/linux-static/libegs_gstack.so
 unix:egs++/dso/linux-static/libegs_gtransformed.so
 unix:egs++/dso/linux-static/libegs_gunion.so
@@ -114,10 +117,12 @@ unix:egs++/dso/linux-static/libegs_prism.so
 unix:egs++/dso/linux-static/libegs_pyramid.so
 unix:egs++/dso/linux-static/libegs_rectangle.so
 unix:egs++/dso/linux-static/libegs_roundrect_cylinders.so
+unix:egs++/dso/linux-static/libegs_rz.so
 unix:egs++/dso/linux-static/libegs_shape_collection.so
 unix:egs++/dso/linux-static/libegs_smart_envelope.so
 unix:egs++/dso/linux-static/libegs_space.so
 unix:egs++/dso/linux-static/libegs_spheres.so
+unix:egs++/dso/linux-static/libegs_spherical_shell.so
 unix:egs++/dso/linux-static/libegs_track_scoring.so
 unix:egs++/dso/linux-static/libegs_vhp_geometry.so
 unix:egs++/dso/linux-static/libegs_voxelized_shape.so
@@ -132,17 +137,20 @@ win:pieces/windows/egs_inprz.exe
 
 # egs++ library for egs_view
 
+win:egs++/dso/win-static/egs_autoenvelope.dll
 win:egs++/dso/win-static/egs_box.dll
 win:egs++/dso/win-static/egs_cdgeometry.dll
 win:egs++/dso/win-static/egs_circle.dll
 win:egs++/dso/win-static/egs_cones.dll
 win:egs++/dso/win-static/egs_conez.dll
+win:egs++/dso/win-static/egs_conical_shell.dll
 win:egs++/dso/win-static/egs_cylinders.dll
 win:egs++/dso/win-static/egs_ellipse.dll
 win:egs++/dso/win-static/egs_elliptic_cylinders.dll
 win:egs++/dso/win-static/egs_extended_shape.dll
 win:egs++/dso/win-static/egs_gaussian_shape.dll
 win:egs++/dso/win-static/egs_genvelope.dll
+win:egs++/dso/win-static/egs_glib.dll
 win:egs++/dso/win-static/egs_gstack.dll
 win:egs++/dso/win-static/egs_gtransformed.dll
 win:egs++/dso/win-static/egs_gunion.dll
@@ -155,10 +163,13 @@ win:egs++/dso/win-static/egs_polygon_shape.dll
 win:egs++/dso/win-static/egs_prism.dll
 win:egs++/dso/win-static/egs_pyramid.dll
 win:egs++/dso/win-static/egs_rectangle.dll
+win:egs++/dso/win-static/egs_roundrect_cylinders.dll
+win:egs++/dso/win-static/egs_rz.dll
 win:egs++/dso/win-static/egs_shape_collection.dll
 win:egs++/dso/win-static/egs_smart_envelope.dll
 win:egs++/dso/win-static/egs_space.dll
 win:egs++/dso/win-static/egs_spheres.dll
+win:egs++/dso/win-static/egs_spherical_shell.dll
 win:egs++/dso/win-static/egs_track_scoring.dll
 win:egs++/dso/win-static/egs_vhp_geometry.dll
 win:egs++/dso/win-static/egs_voxelized_shape.dll
