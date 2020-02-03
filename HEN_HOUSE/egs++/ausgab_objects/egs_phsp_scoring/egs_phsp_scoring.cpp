@@ -322,7 +322,6 @@ void EGS_PhspScoring::openPhspFile() const {
         }
     }
     else if (oformat == 1) {  //IAEA format
-        int rwmode;
         int iaea_iostat;
         iaea_id = 1; //numerical index indicating this is the 1st file associated with this object scored
         //hard coded to 1
@@ -525,7 +524,7 @@ extern "C" {
         int stype = 0; //default is to use scoring geom
         int phspouttype;
         int ptype;
-        int sdir;
+        int sdir=0;
         int imuscore = 0;
         float xyzconst[3];
         bool xyzisconst[3] = {false, false, false};

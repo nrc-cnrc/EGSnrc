@@ -28,6 +28,7 @@
 "                   Blake Walters                                             "
 "                   Frederic Tessier                                          "
 "                   Reid Townson                                              "
+"                   Victor Malkov                                             "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -145,7 +146,7 @@ DO ibr = 1,nbr_split [  "nbr_split > 1 means we want splitting for any"
     E(NP)=PESG1; IQ(NP)=0;
     IF( ibr = 1 ) [ ip = npold; ] ELSE [ ip = np-1; ]
     $TRANSFER PROPERTIES TO (np) FROM (ip);
-    COSTHE=MIN(1.0,(ESG1-RM)*POT/ESG1);
+    COSTHE=MAX(-1.0,MIN(1.0,(ESG1-RM)*POT/ESG1));
     SINTHE=SQRT(1.0-COSTHE*COSTHE);
     $SELECT-AZIMUTHAL-ANGLE(cphi,sphi);
     IF( sinpsi >= 1e-10 ) [
@@ -161,7 +162,7 @@ DO ibr = 1,nbr_split [  "nbr_split > 1 means we want splitting for any"
     PESG2=PAVIP-PESG1; esg2 = pesg2;
     e(np) = pesg2; iq(np) = 0;
     $TRANSFER PROPERTIES TO (np) FROM (np-1);
-    COSTHE=MIN(1.0,(ESG2-RM)*POT/ESG2);
+    COSTHE=MAX(-1.0,MIN(1.0,(ESG2-RM)*POT/ESG2));
     SINTHE=-SQRT(1.0-COSTHE*COSTHE);
     IF( sinpsi >= 1e-10 ) [
         us = sinthe*cphi; vs = sinthe*sphi;
@@ -1001,7 +1002,7 @@ $COMIN-ELECTR; "default replacement produces the following:
                         "ET-Control,MEDIA,MISC,STACK,THRESH,UPHIIN,"
                         "UPHIOT,USEFUL,USER,RANDOM/;"
 ;COMIN/EII-DATA/;
-
+;COMIN/EM/;
 $REAL lambda_max, sigratio, u_tmp, v_tmp, w_tmp;
 LOGICAL random_tustep;
 
@@ -1100,6 +1101,7 @@ $start_new_particle;
             IF(medium = 0)
             [
                     "vacuum
+                    $EMFIELD_INITIATE_SET_TUSTEP;
                     tstep = vacdst; ustep = tstep; tustep = ustep;
                     callhowfar = .true.; "Always call HOWFAR for vacuum steps!"
 
@@ -1197,7 +1199,7 @@ $start_new_particle;
                   "decisions about the maximum acceptable approximated CH step"
 
                 tustep = min(tustep,max(tperp,skindepth));
-
+                $EMFIELD_INITIATE_SET_TUSTEP;
                 "The transport logic below is determined by the logical
                 "variables callhhowfar, domultiple and dosingle
                 "
@@ -1361,30 +1363,41 @@ $start_new_particle;
 
             IF(ustep = 0 | medium = 0)
             [
-                "Do fast step
+                "Do fast step in vacuum
                 IF(ustep ~= 0)
                 [
-                    "Step in vacuum
-                    vstep  = ustep;
-                    tvstep = vstep;
-                    "( vstep is ustep truncated (possibly) by howfar
-                    " tvstep is the total curved path associated with vstep)
-                    edep = pzero; "no energy loss in vacuum
-                    $VACUUM-ADD-WORK-EM-FIELD;
-                        "additional vacuum transport in em field
-                    e_range = vacdst;
-                    $AUSCALL($TRANAUSB);
-                    "Transport the particle
-                    x(np) = x(np) + u(np)*vstep;
-                    y(np) = y(np) + v(np)*vstep;
-                    z(np) = z(np) + w(np)*vstep;
-                    dnear(np) = dnear(np) - vstep;
-                        "(dnear is distance to the nearest boundary
-                        " that goes along with particle stack and
-                        " which the user's howfar can supply (option)
-                    $SET-ANGLES-EM-FIELD;
-                        "default for $SET-ANGLES-EM-FIELD; is ; (null)
-                         "(allows for EM field deflection
+                    IF $EM_MACROS_ACTIVE
+                    [
+                        edep = pzero; "no energy loss in vacuum
+                        "transport in EMF in vacuum:"
+                        "only a B or and E field can be active"
+                        "(not both at the same time)"
+                        $EMFieldInVacuum;
+                    ]
+                    ELSE
+                    [
+                        "Step in vacuum
+                        vstep  = ustep;
+                        tvstep = vstep;
+                        "( vstep is ustep truncated (possibly) by howfar
+                        " tvstep is the total curved path associated with vstep)
+                        edep = pzero; "no energy loss in vacuum
+                        $VACUUM-ADD-WORK-EM-FIELD;
+                            "additional vacuum transport in em field
+                        e_range = vacdst;
+                        $AUSCALL($TRANAUSB);
+                        "Transport the particle
+                        x(np) = x(np) + u(np)*vstep;
+                        y(np) = y(np) + v(np)*vstep;
+                        z(np) = z(np) + w(np)*vstep;
+                        dnear(np) = dnear(np) - vstep;
+                            "(dnear is distance to the nearest boundary
+                            " that goes along with particle stack and
+                            " which the user's howfar can supply (option)
+                        $SET-ANGLES-EM-FIELD;
+                            "default for $SET-ANGLES-EM-FIELD; is ; (null)
+                             "(allows for EM field deflection
+                    ] "end of EM_MACROS_ACTIVE block"
                 ] "end of vacuum step
 
                 IF(irnew ~= irold) [ $electron_region_change; ];
@@ -1397,7 +1410,7 @@ $start_new_particle;
             ] "Go try another big step in (possibly) new medium
 
             vstep = ustep;
-
+            $EM_FIELD_SS;
             IF(callhowfar)
             [
                 IF(exact_bca)
@@ -1453,6 +1466,7 @@ $start_new_particle;
                 "default for $DE-FLUCTUATION; is ; (null)
             edep = de; "energy deposition variable for user
             $ADD-WORK-EM-FIELD;  "e-loss or gain in em field
+            $ADD_WORK_EM_FIELD;  "EEMF implementation"
                 "Default for $ADD-WORK-EM-FIELD; is ; (null)
             ekef = eke - de;  "(final kinetic energy)
             eold = eie;       "save old value
@@ -1538,9 +1552,13 @@ $start_new_particle;
             ]
             ELSE
             [
-                x_final = x(np) + u(np)*vstep;
-                y_final = y(np) + v(np)*vstep;
-                z_final = z(np) + w(np)*vstep;
+                IF ~($EM_MACROS_ACTIVE)
+                [
+                    x_final = x(np) + u(np)*vstep;
+                    y_final = y(np) + v(np)*vstep;
+                    z_final = z(np) + w(np)*vstep;
+                ]
+
                 IF ( domultiple | dosingle )
                 [
                     u_tmp = u(np); v_tmp = v(np); w_tmp = w(np);
@@ -4136,8 +4154,8 @@ $INTEGER
    lelke
 ;
 $declare_max_medium;
-;COMIN/ELECIN,THRESH,UPHIOT,RANDOM,CH-Steps,USEFUL/;
-
+;COMIN/ELECIN,THRESH,UPHIOT,RANDOM,CH-Steps,USEFUL,EMF-INPUTS/;
+;COMIN/EM/;
 medium  = med;
 
 count_pII_steps = count_pII_steps + 1;
@@ -4264,6 +4282,7 @@ IF (sint02 > 1e-20)
 ]
 ELSE [ wt = w0*wt; ws = w0*ws; ]
 
+$EMFIELD_PII;
 "Transport
 xf = x0 + tustep*ut;
 yf = y0 + tustep*vt;
@@ -4379,8 +4398,8 @@ $INTEGER
    lelke
 ;
 $declare_max_medium;
-;COMIN/ELECIN,THRESH,UPHIOT,RANDOM/;
-
+;COMIN/ELECIN,THRESH,UPHIOT,RANDOM,EMF-INPUTS/;
+;COMIN/EM/;
 blccc   = blcc(medium);
 xcccc   = xcc(medium);
 
@@ -4481,6 +4500,7 @@ IF (sint02 > 1e-20)
 ]
 ELSE [ wt = w0*wt; ws = w0*ws; ]
 
+$EMFIELD_PI;
 "Transport
 xf = x0 + tustep*ut;
 yf = y0 + tustep*vt;
@@ -6129,23 +6149,22 @@ LOOP [ "from here to end of routine over all vacancies created"
     ]
     ELSE[
         new_state = relax_state(relax_first(vac)+new_state-1);
-     IF( new_state <= 64 ) [ "It was a radiative transition, i.e. fluorescence"
-        iqf = 0;
-        new_state += vac - shell_num(vac);
-        Ef = shell_be(new_state);
-        Nvac += 1;
-        vacs(Nvac) = new_state;
-        Ecc = Pc;
-     ] "end of fluorescence block"
-
-     ELSE [ "It was a non-radiative transition (Auger or Coster-Kronig)"
-        iqf = -1; new1 = new_state/64; new2 = new_state - 64*new1;
-        new1 += vac - shell_num(vac); new2 += vac - shell_num(vac);
-        Ef1 = shell_be(new1); Ef2 = shell_be(new2);
-        Nvac += 1; vacs(Nvac) = new1;
-        Nvac += 1; vacs(Nvac) = new2;
-        Ef = Ef1 + Ef2; Ecc = Ec;
-     ] "end Auger or Coster-Kronig block"
+        IF( new_state <= 64 ) [ "It was a radiative transition (fluorescence)"
+          iqf = 0;
+          new_state += vac - shell_num(vac);
+          Ef = shell_be(new_state);
+          Nvac += 1;
+          vacs(Nvac) = new_state;
+          Ecc = Pc;
+        ] "end of fluorescence block"
+        ELSE [ "It was a non-radiative transition (Auger or Coster-Kronig)"
+          iqf = -1; new1 = new_state/64; new2 = new_state - 64*new1;
+          new1 += vac - shell_num(vac); new2 += vac - shell_num(vac);
+          Ef1 = shell_be(new1); Ef2 = shell_be(new2);
+          Nvac += 1; vacs(Nvac) = new1;
+          Nvac += 1; vacs(Nvac) = new2;
+          Ef = Ef1 + Ef2; Ecc = Ec;
+        ] "end Auger or Coster-Kronig block"
     ]
     Ex = Evac - Ef;
     edep_local = 0;

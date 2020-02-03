@@ -28,6 +28,7 @@
 "                   Ernesto Mainegra-Hing                                     "
 "                   Frederic Tessier                                          "
 "                   Reid Townson                                              "
+"                   Victor Malkov                                             "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -670,11 +671,11 @@ REPLACE {;COMIN/RELAX-USER/;} WITH {;
 "the i'th shell of element Z in the long shell list.                       "
 "***************************************************************************"
 
-REPLACE {$MXESHLL} WITH {30}  "max. number of shells for an element"
-REPLACE {$MAXSHELL} WITH {3000}"max. number of shells"
-REPLACE {$MAXRELAX} WITH {10000}"max. number of relaxations channels"
-REPLACE {$MAXVAC} WITH {100}   "max. number of vacancies"
-REPLACE {$MAXTRANS} WITH {300}  "max. number of transitions per element"
+REPLACE {$MXESHLL} WITH {30}     "max. number of shells for an element"
+REPLACE {$MAXSHELL} WITH {3000}  "max. number of shells"
+REPLACE {$MAXRELAX} WITH {10000} "max. number of relaxations channels"
+REPLACE {$MAXVAC} WITH {100}     "max. number of vacancies"
+REPLACE {$MAXTRANS} WITH {300}   "max. number of transitions per element"
 "============================================================"
 " Set input key 'Atomic relaxations' to 'simple' to recover original
 " implementation which allows photoelectric interactions with <M> and
@@ -1394,8 +1395,8 @@ REPLACE {$ENEPS} WITH {0.0001}
             "DIFFERENCE BETWEEN ECUT AND END POINT ENERGY FOR"
             "RANGE CALCULATION"
 
-REPLACE {$EPSEMFP} WITH {1.E-5}  "SMALLEST ELECTRON MFP VALUE"
-REPLACE {$EPSGMFP} WITH {1.E-5}  "SMALLEST GAMMA MFP VALUE"
+REPLACE {$EPSEMFP} WITH {1.E-8}  "SMALLEST ELECTRON MFP VALUE"
+REPLACE {$EPSGMFP} WITH {1.E-8}  "SMALLEST GAMMA MFP VALUE"
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
 "THE FOLLOWING ARE UTILITY AND OTHER MACROS FOR THE USER"
@@ -1640,7 +1641,14 @@ REPLACE {$VACUUM-ADD-WORK-EM-FIELD;} WITH {;}
 REPLACE {$SET-ANGLES-EM-FIELD;} WITH {;}
 REPLACE {$SET-TVSTEP-EM-FIELD;} WITH {;}
 REPLACE {$ADD-WORK-EM-FIELD;} WITH {;}
-
+REPLACE {$EMFIELD_INITIATE_SET_TUSTEP;} WITH {;}
+REPLACE {;COMIN/EM/;} WITH {;}
+REPLACE {$EMFIELD_PII;} WITH {;}
+REPLACE{$EMFIELD_PI;}WITH{;}
+REPLACE{$EM_FIELD_SS;}WITH{;}
+REPLACE{$ADD_WORK_EM_FIELD;}WITH{;}
+REPLACE{$EMFieldInVacuum;}WITH{;}
+REPLACE{$EM_MACROS_ACTIVE}WITH{.false.}
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
 "------------------------------------------------------------------"

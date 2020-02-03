@@ -2632,12 +2632,42 @@ void GeometryViewControl::updateView(bool transform) {
     rp.show_regions = show_regions;
     rp.doseTransparency = doseTransparency;
 
-    rp.trackIndices[0] = spin_tminp->value()-1;
-    rp.trackIndices[1] = spin_tmaxp->value()-1;
-    rp.trackIndices[2] = spin_tmine->value()-1;
-    rp.trackIndices[3] = spin_tmaxe->value()-1;
-    rp.trackIndices[4] = spin_tminpo->value()-1;
-    rp.trackIndices[5] = spin_tmaxpo->value()-1;
+    if (spin_tminp->value() > 0) {
+        rp.trackIndices[0] = spin_tminp->value()-1;
+    }
+    else {
+        rp.trackIndices[0] = 1;
+    }
+    if (spin_tmaxp->value() > 0) {
+        rp.trackIndices[1] = spin_tmaxp->value()-1;
+    }
+    else {
+        rp.trackIndices[1] = 1;
+    }
+    if (spin_tmine->value() > 0) {
+        rp.trackIndices[2] = spin_tmine->value()-1;
+    }
+    else {
+        rp.trackIndices[2] = 1;
+    }
+    if (spin_tmaxe->value() > 0) {
+        rp.trackIndices[3] = spin_tmaxe->value()-1;
+    }
+    else {
+        rp.trackIndices[3] = 1;
+    }
+    if (spin_tminpo->value() > 0) {
+        rp.trackIndices[4] = spin_tminpo->value()-1;
+    }
+    else {
+        rp.trackIndices[4] = 1;
+    }
+    if (spin_tmaxpo->value() > 0) {
+        rp.trackIndices[5] = spin_tmaxpo->value()-1;
+    }
+    else {
+        rp.trackIndices[5] = 1;
+    }
 
     gview->render(g, transform);
 }

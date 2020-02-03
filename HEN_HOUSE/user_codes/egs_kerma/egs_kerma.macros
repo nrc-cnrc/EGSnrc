@@ -1,0 +1,86 @@
+%C80
+"#############################################################################"
+"                                                                             "
+"  EGSnrc egs++ egs_kerma application mortran macros                          "
+"  Copyright (C) 2016 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Ernesto Mainegra-Hing, 2016                               "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$MXGE} WITH {2000};
+REPLACE {$MXEKE} WITH {500};
+
+/*
+   We want to use the photon forced detection technique
+   introduced by Mainegra-Hing & Kawrakow [Ref needed]
+   implemented via the $SELECT-PHOTON-MFP macro.
+ */
+REPLACE {$SELECT-PHOTON-MFP;} WITH {;
+    call select_photon_mfp(dpmfp);
+    IF( dpmfp < 0 ) return;
+};
+
+subroutine calculate_photon_mfp(gmfp,cohfac);
+implicit none;
+$REAL gmfp,cohfac;
+$declare_max_medium;
+;
+COMIN/PHOTIN,USEFUL,EPCONT,X-OPTIONS/;
+$INTEGER lgle;
+$REAL    GMFPR0;
+
+$SET INTERVAL GLE,GE;
+$EVALUATE GMFPR0 USING GMFP(GLE);
+$SET-RHOF;
+GMFP=GMFPR0/RHOF;
+$RAYLEIGH-CORRECTION;
+return; end;
+;
+
+subroutine calculate_photon_branching(gbr1,gbr2);
+implicit none;
+$REAL gbr1,gbr2;
+$declare_max_medium;
+;COMIN/PHOTIN,USEFUL,EPCONT/;
+$INTEGER lgle;
+
+$SET INTERVAL GLE,GE;
+$EVALUATE GBR1 USING GBR1(GLE);
+$EVALUATE GBR2 USING GBR2(GLE);
+return; end;
+;
+
+subroutine do_rayleigh;
+"subroutine do_new_rayleigh;"
+implicit none;
+$declare_max_medium;
+;
+;COMIN/PHOTIN,USEFUL,EPCONT,STACK,RANDOM,UPHIOT,THRESH/;
+$INTEGER lgle;
+$REAL log_e;
+LGLE=GE1(MEDIUM)*GLE+GE0(MEDIUM);
+call egs_rayleigh_sampling(medium,e(np),gle,lgle,costhe,sinthe);
+CALL UPHI(2,1);
+return; end;
+;

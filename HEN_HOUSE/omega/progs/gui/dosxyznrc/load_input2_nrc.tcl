@@ -744,14 +744,10 @@ proc read_input {} {
     # 16, NRCYCL
     set data [get_val $data values $i]
 
-    # for 17, iparallel, ncpu is the value and 17 is on/off
+    # ncpu and parnum
+    # these inputs are no longer available through the GUI
     set data [get_val $data arr 0]
     set ncpu $arr(0)
-    if $ncpu>1 {
-	set values(17) $options(17,1)
-    } else {
-	set values(17) $options(17,0)
-    }
     # now for parnum
     set data [get_val $data arr 0]
     set parnum $arr(0)

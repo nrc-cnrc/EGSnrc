@@ -60,7 +60,7 @@
 
 
 proc init_SYNCHDMLC { id } {
-    global cmval ngroups nleaf sync_file nfull nhlf nqtr
+    global cmval ngroups nleaf sync_file nfull nhlf nqtr check_full_qtr
 
     set cmval($id,0) {}
     set cmval($id,1) {}
@@ -113,11 +113,13 @@ proc init_SYNCHDMLC { id } {
     set nhlf 0
     # no. of groups of QUARTER leaf pairs
     set nqtr 0
+    # set below 1 to do a dim. check between QUARTER and FULL leaves
+    set check_full_qtr 0
     set sync_file($id) {}
 }
 
 proc read_SYNCHDMLC { fileid id } {
-    global cmval GUI_DIR ngroups cm_ident nleaf sync_file nfull nhlf nqtr
+    global cmval GUI_DIR ngroups cm_ident nleaf sync_file nfull nhlf nqtr check_full_qtr
 
     # read a trash line
     gets $fileid data
@@ -210,12 +212,17 @@ proc read_SYNCHDMLC { fileid id } {
       } elseif {$cmval($id,8,1,$i)==3} {
          incr nqtr
       }
+      if {$i > 1} {
+          if { ($cmval($id,8,1,$i)==1 && $cmval($id,8,1,[expr $i-1])==3) ||
+              ($cmval($id,8,1,$i)==3 && $cmval($id,8,1,[expr $i-1])==1) } {
+             set check_full_qtr 1
+          }
+      }
     }
 
     # read start 9
     gets $fileid data
     set data [get_val $data cmval $id,9]
-
     # read leafgap 10
     gets $fileid data
     set data [get_val $data cmval $id,10]
@@ -659,9 +666,8 @@ proc define_synchdmlc_types { id } {
     set w $top.f
 
     message $w.message -text "Specify leaf types: FULL or HALF TARGET/ISOCENTER or \
-            QUARTER TARGET/ISOCENTER pairs.\
-            Note that for TARGET/ISOCENTER pairs, the number of\
-            leaves must be even.  Add a row to start a \
+            QUARTER TARGET/ISOCENTER leaves.\
+            Add a row to start a\
             new group.  When a new row is added the next leaf in the order will\
             automatically appear in the 'from leaf' box."\
             -width 400 -font $helvfont
@@ -671,8 +677,8 @@ proc define_synchdmlc_types { id } {
     label $w.grid.l0 -text "from leaf"
     label $w.grid.l1 -text "to leaf"
     label $w.grid.l2 -text "FULL"
-    label $w.grid.l3 -text "HALF TARGET/ISOCENTER pairs"
-    label $w.grid.l4 -text "QUARTER TARGET/ISOCENTER pairs"
+    label $w.grid.l3 -text "HALF TARGET/ISOCENTER"
+    label $w.grid.l4 -text "QUARTER TARGET/ISOCENTER"
 
     grid configure $w.grid.l0 -row 0 -column 0
     grid configure $w.grid.l1 -row 0 -column 1 -padx 5
@@ -713,6 +719,7 @@ proc define_synchdmlc_types { id } {
     pack $top.b.addb $top.b.delb $top.b.okb $top.b.helpb -side left -padx 10
     pack $top.b -pady 10
 }
+
 proc define_synchdmlc_leaves { id } {
 # defines the cross-section dimensions for FULL, ISOCENTER and TARGET HALF, ISOCENTER and TARGET QUARTER
 # leaf types
@@ -1064,7 +1071,7 @@ proc define_synchdmlc_leaves { id } {
 }
 
 proc check_dimensions_synchdmlc { id } {
-    global cmval helvfont dimtext totprob
+    global cmval helvfont dimtext totprob check_full_qtr
 
 #checks dimensions of all leaf types, within the leaf and against leaves
 #that it must fit together with
@@ -1177,20 +1184,20 @@ For HALF TARGET leaf:
           incr totprob
         }
     }
-    if {"$cmval($id,6,1)"!="" && "$cmval($id,6,3)"!="" &&\
-         "$cmval($id,6,0)"!=""} {
-        if {$cmval($id,6,3)>[expr $cmval($id,6,0)-$cmval($id,6,1)]} {
+    if {"$cmval($id,6,3)"!="" &&\
+         "$cmval($id,6,0)"!="" && "$cmval($id,6,2)"!=""} {
+        if {$cmval($id,6,3)>[expr $cmval($id,6,0)-$cmval($id,6,2)]} {
           set dimtext "$dimtext
-- tip width ($cmval($id,6,3) cm) must be <= leaf - tongue width \
-([expr $cmval($id,6,0)-$cmval($id,6,1)] cm)"
+- tip width ($cmval($id,6,3) cm) must be <= leaf - groove width \
+([expr $cmval($id,6,0)-$cmval($id,6,2)] cm)"
           incr totprob
         }
     }
-    if {"$cmval($id,6,0)"!="" && "$cmval($id,6,5)"!=""} {
-        if {$cmval($id,6,5)>$cmval($id,6,0)} {
+    if {"$cmval($id,6,5)"!="" && "$cmval($id,6,2)"!=""} {
+        if {$cmval($id,6,5)<$cmval($id,6,2)} {
           set dimtext "$dimtext
 - width of bottom support rail ($cmval($id,6,5) cm) must be \
-<= leaf width ($cmval($id,6,0) cm)"
+>= groove width ($cmval($id,6,2) cm)"
           incr totprob
         }
     }
@@ -1330,19 +1337,19 @@ For QUARTER TARGET leaf:
           incr totprob
         }
     }
-    if {"$cmval($id,30,1)"!="" && "$cmval($id,30,3)"!="" &&\
-         "$cmval($id,30,0)"!=""} {
-        if {$cmval($id,30,3)>[expr $cmval($id,30,0)-$cmval($id,30,1)]} {
+    if {"$cmval($id,30,3)"!="" &&\
+         "$cmval($id,30,0)"!="" && "$cmval($id,30,2)"!=""} {
+        if {$cmval($id,30,3)>[expr $cmval($id,30,0)-$cmval($id,30,2)]} {
           set dimtext "$dimtext
-- tip width ($cmval($id,30,3) cm) must be <= leaf - tongue width \
-([expr $cmval($id,30,0)-$cmval($id,30,1)] cm)"
+- tip width ($cmval($id,30,3) cm) must be <= leaf - groove width \
+([expr $cmval($id,30,0)-$cmval($id,30,2)] cm)"
           incr totprob
         }
     }
-    if {"$cmval($id,30,0)"!="" && "$cmval($id,30,5)"!=""} {
-        if {$cmval($id,30,5)>$cmval($id,30,0)} {
+    if {"$cmval($id,30,2)"!="" && "$cmval($id,30,5)"!=""} {
+        if {$cmval($id,30,5)<$cmval($id,30,2)} {
           set dimtext "$dimtext
-- width of bottom support rail ($cmval($id,30,5) cm) must be <= leaf width ($cmval($id,30,0) cm)"
+- width of bottom support rail ($cmval($id,30,5) cm) must be >= groove width ($cmval($id,30,2) cm)"
           incr totprob
         }
     }
@@ -1350,7 +1357,7 @@ For QUARTER TARGET leaf:
         "$cmval($id,30,3)"!=""} {
         if {$cmval($id,30,5)>[expr $cmval($id,30,2)+$cmval($id,30,3)]} {
           set dimtext "$dimtext
-- width of bottom support rail ($cmval($id,30,5) cm)must be <= groove + tip width\
+- width of bottom support rail ($cmval($id,30,5) cm) must be <= groove + tip width\
 ([expr $cmval($id,30,2)+$cmval($id,30,3)] cm)"
           incr totprob
         }
@@ -1537,6 +1544,23 @@ of bottom of tongue of HALF TARGET ($cmval($id,6,11) cm)"
           set dimtext "$dimtext
 - Z of bottom of tongue of QUARTER TARGET ($cmval($id,30,11) cm) must be < Z \
 of bottom of groove of HALF ISOCENTER ($cmval($id,7,9) cm)"
+          incr totprob
+        }
+    }
+#AND BETWEEN QUARTER AND FULL LEAVES--could happen
+    if {check_full_qtr == 1 && "$cmval($id,31,9)"!="" && "$cmval($id,5,8)"!=""} {
+        if {$cmval($id,31,9)<=$cmval($id,5,8)} {
+          set dimtext "$dimtext
+- Z of bottom of groove of QUARTER ISOCENTER ($cmval($id,31,9) cm) must be > Z \
+of bottom of tongue of FULL ($cmval($id,5,8) cm)"
+          incr totprob
+        }
+    }
+    if {check_full_qtr == 1 && "$cmval($id,30,11)"!="" && "$cmval($id,5,9)"!=""} {
+        if {$cmval($id,30,11)>=$cmval($id,5,9)} {
+          set dimtext "$dimtext
+- Z of bottom of tongue of QUARTER TARGET ($cmval($id,30,11) cm) must be < Z \
+of bottom of groove of FULL ($cmval($id,5,9) cm)"
           incr totprob
         }
     }
@@ -2007,7 +2031,7 @@ proc save_synchdmlc { id } {
 }
 
 proc save_synchdmlc_type { id } {
-    global cmval fromw tow nleaf nhlf nfull nqtr
+    global cmval fromw tow nleaf nhlf nfull nqtr check_full_qtr
 
     if {$tow($cmval($id,2,1))>$nleaf($id)} {
        tk_dialog .toomanytypegroups "Too many leaves" "You have specified too many\
@@ -2022,27 +2046,13 @@ proc save_synchdmlc_type { id } {
     set nhlf 0
     set nqtr 0
     set nfull 0
+    set check_full_qtr 0
     for {set j 1} {$j<=$cmval($id,2,1)} {incr j} {
         if {[catch {set cmval($id,8,0,$j) [expr $tow($j)-$fromw($j)+1]}]==1} {
            tk_dialog .nope "No no no" "The leaf types for group $j\
                     have been improperly set or not set at all.\
                     Go back and fix them." warning 0 OK
-        } elseif {[expr fmod($cmval($id,8,0,$j),2)]!=0 && \
-		      $cmval($id,8,1,$j)==2 } {
-            tk_dialog .oddpairnum "Odd no. of pairs" "Leaf group $j\
-          (leaves $fromw($j)-$tow($j)) has an odd number of leaves yet is\
-          specified as HALF TARGET/ISOCENTER pairs.  Groups of this type must\
-          have an even number of leaves." warning 0 OK
-	return
-
-	} elseif {[expr fmod($cmval($id,8,0,$j),2)]!=0 && \
-		      $cmval($id,8,1,$j)==3 } {
-            tk_dialog .oddpairnum "Odd no. of pairs" "Leaf group $j\
-          (leaves $fromw($j)-$tow($j)) has an odd number of leaves yet is\
-         specified as QUARTER TARGET/ISOCENTER pairs.  Groups of this type must\
-          have an even number of leaves." warning 0 OK
-        return
-	}
+        }
 
         if {$cmval($id,8,1,$j)==1} {
             incr nfull
@@ -2050,6 +2060,12 @@ proc save_synchdmlc_type { id } {
             incr nhlf
         } elseif {$cmval($id,8,1,$j)==3} {
             incr nqtr
+        }
+        if {$j > 1} {
+          if {($cmval($id,8,1,$j)==1 && $cmval($id,8,1,[expr $j-1])==3) ||
+              ($cmval($id,8,1,$j)==3 && $cmval($id,8,1,[expr $j-1])==1)} {
+             set check_full_qtr 1
+          }
         }
     }
 
@@ -2299,7 +2315,7 @@ proc draw_SYNCHDMLC { id } {
 
     # put the canvas up
     set ncan 3
-    set width 300.0
+    set width 200.0
     set canwidth [expr $width+150.0]
     set scrlheight [expr 2*$canwidth]
     set scrlwidth [expr 2*$canwidth]
@@ -2516,16 +2532,16 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
           if {$cmval($id,8,1,$i)==1} {
              set type($k) 1
           } elseif {$cmval($id,8,1,$i)==2} {
-             if {[expr fmod($j,2)] != 0} {
-               set type($k) 2
-             } else {
+             if {$k > 1 && ($type([expr $k-1])==4 || $type([expr $k-1])==2)} {
                set type($k) 3
+             } else {
+               set type($k) 2
              }
           } elseif {$cmval($id,8,1,$i)==3} {
-	     if {[expr fmod($j,2)] != 0} {
-               set type($k) 4
-	     } else {
+             if {$k > 1 && ($type([expr $k-1])==4 || $type([expr $k-1])==2)} {
                set type($k) 5
+             } else {
+               set type($k) 4
              }
           }
         }
@@ -2731,16 +2747,16 @@ proc add_SYNCHDMLC_ends {id xscale zscale xmin zmin zmax l m parent_w} {
           if {$cmval($id,8,1,$i)==1} {
              set type($k) 1
           } elseif {$cmval($id,8,1,$i)==2} {
-             if {[expr fmod($j,2)] != 0} {
-               set type($k) 2
-             } else {
+             if {$k > 1 && ($type([expr $k-1])==4 || $type([expr $k-1])==2)} {
                set type($k) 3
+             } else {
+               set type($k) 2
              }
           } elseif {$cmval($id,8,1,$i)==3} {
-	     if {[expr fmod($j,2)] != 0} {
-               set type($k) 4
-	     } else {
+	     if {$k > 1 && ($type([expr $k-1])==4 || $type([expr $k-1])==2)} {
                set type($k) 5
+	     } else {
+               set type($k) 4
              }
           }
         }
@@ -3163,16 +3179,16 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
           if {$cmval($id,8,1,$i)==1} {
              set type($k) 1
           } elseif {$cmval($id,8,1,$i)==2} {
-             if {[expr fmod($j,2)] != 0} {
-               set type($k) 2
-             } else {
+             if {$k > 1 && ($type([expr $k-1])==4 || $type([expr $k-1])==2)} {
                set type($k) 3
+             } else {
+               set type($k) 2
              }
           } elseif {$cmval($id,8,1,$i)==3} {
-             if {[expr fmod($j,2)] != 0} {
-               set type($k) 4
-             } else {
+             if {$k > 1 && ($type([expr $k-1])==4 || $type([expr $k-1])==2)} {
                set type($k) 5
+             } else {
+               set type($k) 4
              }
           }
         }

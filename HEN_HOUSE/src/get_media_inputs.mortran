@@ -48,9 +48,9 @@ CHARACTER*$STRING256 TEXT;      "Used to read in each line of the input file   "
 CHARACTER*$STRING256 KEEPTEXT;  "Used to keep an old line of TEXT              "
 CHARACTER*$STRING256 ORIGTEXT;  "The text without conversion to upper case     "
 CHARACTER*$STRING256 TEXTPIECE; "Used to read a piece of TEXT                  "
-CHARACTER*$STRING40  DELIM_START;"Start of the delimeter                       "
-CHARACTER*$STRING40  DELIM_END;  "End of the delimeter                         "
-CHARACTER*$STRING40  ENDSTRING;  "string at which to terminate search          "
+CHARACTER*$STRING80  DELIM_START;"Start of the delimeter                       "
+CHARACTER*$STRING80  DELIM_END;  "End of the delimeter                         "
+CHARACTER*$STRING80  ENDSTRING;  "string at which to terminate search          "
 CHARACTER*$STRING32  VNAME;      "The name of the variable being extracted.    "
 CHARACTER*$STRING32  VNAME1;     "The name of the variable being extracted.    "
 $INTEGER       CURSOR;          "Used to read one of the TEXT letters          "
@@ -702,7 +702,7 @@ character*24 medium_name,med_tmp,sterncid_tmp;
 character*256 density_file,material_file,tmp_string,
               spoutput_file($MXMED);
 character*80 text_string, text_save, title;
-character*40 delim_start,delim_end;
+character*80 delim_start,delim_end;
 character*1 blank;
 character*512 toUpper;
 
