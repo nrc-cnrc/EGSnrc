@@ -58,6 +58,7 @@ public:
     bool getRequired();
     ~EGS_SingleInput();
     const vector<string> getValues();
+    string getDescription();
 
 protected:
 
@@ -85,17 +86,18 @@ public:
     string getTitle();
     void addSingleInput(string attr, bool isReq, const string desc, const vector<string> vals = vector<string>());
     shared_ptr<EGS_BlockInput> addBlockInput(string blockTit, bool isReq = false);
-    vector<EGS_SingleInput> getSingleInputs();
+    vector<shared_ptr<EGS_SingleInput>> getSingleInputs();
     vector<shared_ptr<EGS_BlockInput>> getBlockInputs();
-    EGS_SingleInput getSingleInput(string attr);
+    shared_ptr<EGS_SingleInput> getSingleInput(string attr);
     void setParent(shared_ptr<EGS_BlockInput> par);
     shared_ptr<EGS_BlockInput> getParent();
     shared_ptr<EGS_BlockInput> getLibraryBlock(string blockTitle, string libraryName);
+    bool contains(string inputTag);
 
 
 private:
 
-    vector<EGS_SingleInput> singleInputs;
+    vector<shared_ptr<EGS_SingleInput>> singleInputs;
     vector<shared_ptr<EGS_BlockInput>> blockInputs;
     shared_ptr<EGS_BlockInput> parent;
     string blockTitle;
@@ -111,7 +113,9 @@ public:
     void addBlockInput(shared_ptr<EGS_BlockInput> block);
     //void addBlockInput(string blockTit, bool isReq);
     void addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks);
+    vector<shared_ptr<EGS_BlockInput>> getBlockInputs();
     shared_ptr<EGS_BlockInput> getLibraryBlock(string blockTitle, string libraryName);
+    vector<string> getLibraryOptions(string blockTitle);
 
 private:
 

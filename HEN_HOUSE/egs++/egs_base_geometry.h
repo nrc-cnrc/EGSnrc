@@ -76,9 +76,9 @@ public:
 
 static shared_ptr<EGS_BlockInput> blockInput = make_shared<EGS_BlockInput>("geometry");
 static void setBaseGeometryInputs() {
-    blockInput->addSingleInput("name", true, "The user-declared unique name of this geometry.");
+    blockInput->addSingleInput("name", true, "The user-declared unique name of this geometry. This is the name you may refer to elsewhere in the input file");
     shared_ptr<EGS_BlockInput> mediaBlock = blockInput->addBlockInput("media input");
-    mediaBlock->addSingleInput("media", true, "A list of media that are used in this geometry.");
+    mediaBlock->addSingleInput("media", true, "A list of media that are used in this geometry");
     mediaBlock->addSingleInput("set medium", false, "TODO");
 }
 
