@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QEvent>
 #include <QModelIndex>
+#include <QtWidgets>
 
 #include "egs_input_struct.h"
 
@@ -38,10 +39,15 @@ private slots:
     void updateLineNumberArea(const QRect &, int);
 
 private:
-    EGS_BlockInput getBlockInput();
+    shared_ptr<EGS_BlockInput> getBlockInput(QString &blockTitle);
+    int countStartingWhitespace(const QString &s);
 
     QWidget *lineNumberArea;
     shared_ptr<EGS_InputStruct> inputStruct;
+    QListView *popup;
+    QStringListModel *model;
+    QTextCharFormat normalFormat,
+                    invalidFormat;
 };
 
 

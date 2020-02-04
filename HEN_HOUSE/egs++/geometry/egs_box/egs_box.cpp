@@ -54,17 +54,17 @@ static char EGS_BOX_LOCAL ebox_message4[] =
     "expecting 1 or 3 float inputs for 'box size'";
 static char EGS_BOX_LOCAL ebox_key1[] = "box size";
 
-static bool inputSet = false;
+static bool EGS_BOX_LOCAL inputSet = false;
 
-struct EGS_BOX_LOCAL BoxInputs {
+struct EGS_BOX_LOCAL InputOptions {
     vector<EGS_Float> boxSize;
 };
-BoxInputs inp;
+InputOptions inp;
 
-// TODO was going to add this function in addition to the blockinput stuff
-EGS_BOX_LOCAL int loadInputs(EGS_Input *input) {
+// Process inputs from the egsinp file
+EGS_BOX_LOCAL int processInputs(EGS_Input *input) {
     int err = input->getInput(ebox_key1,inp.boxSize);
-    if(err && blockInput->getSingleInput(ebox_key1).getRequired()) {
+    if(err && blockInput->getSingleInput(ebox_key1)->getRequired()) {
         egsWarning(ebox_message1,ebox_message3);
         return 0;
     }
@@ -79,8 +79,24 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        blockInput->addSingleInput("library", true, "The type of geometry.", vector<string>(1, typeStr));
-        blockInput->addSingleInput("box size", true, "1 or 3 numbers defining the box size");
+        // Format: name, isRequired, description, vector string of allowed values
+        blockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso", vector<string>(1, typeStr));
+        blockInput->addSingleInput("box size", true, "1 number defining the side-length of a cube, or 3 numbers defining the x, y, and z side-lengths");
+    }
+
+    EGS_BOX_EXPORT string getExample() {
+        string example
+{R"(
+    :start geometry:
+        library     = EGS_Box
+        name        = my_box
+        box size    = 1 2 3
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
     }
 
     EGS_BOX_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
@@ -96,8 +112,8 @@ extern "C" {
             return 0;
         }
 
-        if(!loadInputs(input)) {
-            egsWarning("Failed to load the inputs for %s.\n", typeStr.c_str());
+        if(!processInputs(input)) {
+            egsWarning("Failed to process the inputs for %s.\n", typeStr.c_str());
             return 0;
         }
 

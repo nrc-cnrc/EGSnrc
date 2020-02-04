@@ -205,6 +205,7 @@ private:
             energyScaling;
     vector<vector<EGS_Float>> scoreArrays;
     vector<string> geometryNames;
+    vector<string> geomExamples;
     vector<shared_ptr<EGS_BlockInput>> geomTemplates;
     EGS_BaseGeometry *origSimGeom;
     EGS_Editor *egsinpEdit;
