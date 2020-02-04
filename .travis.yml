@@ -12,6 +12,11 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y grace
   - sudo apt-get install -y libmotif-dev
+  - wget http://gmsh.info/bin/Linux/gmsh-4.4.1-Linux64-sdk.tgz -O /tmp/gmsh-sdk.tar.gz
+  - tar -xvf /tmp/gmsh-sdk.tar.gz
+  - export CPATH=$CPATH:$PWD/gmsh-4.4.1-Linux64-sdk/include/
+  - export LIBRARY_PATH=$LIBRARY_PATH:$PWD/gmsh-4.4.1-Linux64-sdk/lib/
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/gmsh-4.4.1-Linux64-sdk/lib/
 
 install:
   - HEN_HOUSE/scripts/configure.expect linux.conf | tee configure.log
