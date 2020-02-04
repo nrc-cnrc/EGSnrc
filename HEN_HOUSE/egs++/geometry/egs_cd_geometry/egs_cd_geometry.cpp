@@ -46,7 +46,26 @@
     #define S_STREAM std::istringstream
 #endif
 
-string EGS_CDGeometry::type = "EGS_CDGeometry";
+static string EGS_CDGEOMETRY_LOCAL typeStr("EGS_CDGeometry");
+string EGS_CDGeometry::type(typeStr);
+
+static bool EGS_CDGEOMETRY_LOCAL inputSet = false;
+
+struct EGS_CDGEOMETRY_LOCAL InputOptions {
+    string bg_name;
+};
+InputOptions inp;
+
+// Process inputs from the egsinp file
+EGS_CDGEOMETRY_LOCAL int processInputs(EGS_Input *input) {
+//     int err = input->getInput(ebox_key1,inp.boxSize);
+//     if(err && blockInput->getSingleInput(ebox_key1)->getRequired()) {
+//         egsWarning(ebox_message1,ebox_message3);
+//         return 0;
+//     }
+
+    return 1;
+}
 
 void EGS_CDGeometry::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_CDGeometry::setMedia: don't use this method. Use the\n"
@@ -110,6 +129,39 @@ void EGS_CDGeometry::setUpIndexing() {
 
 extern "C" {
 
+    static void setInputs() {
+        inputSet = true;
+
+        // Format: name, isRequired, description, vector string of allowed values
+        blockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso", vector<string>(1, typeStr));
+
+        blockInput->addSingleInput("base geometry", true, "The name of the geometry that defines regions for this 'cutting device'. It is within these regions that other geometries will be placed to create a composite geometry");
+        blockInput->addSingleInput("set geometry", true, "The region number in the base geometry, followed by the name of the geometry to place in that region. If this geometry extends beyond the region boundaries, it will be cut to size");
+    }
+
+    EGS_CDGEOMETRY_EXPORT string getExample() {
+        string example
+{R"(
+    :start geometry:
+        library         = EGS_CDGeometry
+        name            = my_cd
+        base geometry   = my_regions
+        # set geometry = 1 geom means:
+        # in region 1 of the basegeometry, use geometry named "geom"
+        set geometry   = 0 my_geom1
+        set geometry   = 1 my_geom2
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_CDGEOMETRY_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return blockInput;
+    }
+
     EGS_CDGEOMETRY_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
             egsWarning("createGeometry(CD_Geometry): null input?\n");
@@ -120,16 +172,21 @@ extern "C" {
             EGS_BaseGeometry::createSingleGeometry(ij);
             delete ij;
         }
-        string bg_name;
-        int err = input->getInput("base geometry",bg_name);
+
+        if(!processInputs(input)) {
+            egsWarning("Failed to process the inputs for %s.\n", typeStr.c_str());
+            return 0;
+        }
+
+        int err = input->getInput("base geometry",inp.bg_name);
         if (err) {
             egsWarning("createGeometry(CD_Geometry): no 'base geometry' input\n");
             return 0;
         }
-        EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(bg_name);
+        EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(inp.bg_name);
         if (!g) {
             egsWarning("createGeometry(CD_Geometry): no geometry named %s is"
-                       " defined\n",bg_name.c_str());
+                       " defined\n",inp.bg_name.c_str());
             return 0;
         }
         int nreg = g->regions();

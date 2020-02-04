@@ -51,21 +51,37 @@ void EGS_InputStruct::addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks) 
     blockInputs.insert(blockInputs.end(), blocks.begin(), blocks.end());
 }
 
+vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
+    return blockInputs;
+}
+
 shared_ptr<EGS_BlockInput> EGS_InputStruct::getLibraryBlock(string blockTitle, string libraryName) {
     // Loop through each input block in the structure to find the library with
     // the matching name
-    egsInformation("testA EGS_InputStruct::getLibraryBlock\n");
-    //shared_ptr<EGS_BlockInput> libraryBlock;
-    //shared_ptr<EGS_BlockInput> libraryBlock = make_shared<EGS_BlockInput>("geometry");
-    //auto libraryBlock = make_shared<EGS_BlockInput>();
-//     for(auto& block : blockInputs) {
-//         libraryBlock = block->getLibraryBlock(blockTitle, libraryName);
-//         egsInformation("testB EGS_InputStruct::getLibraryBlock\n");
-//         if(libraryBlock) {
-//             break;
-//         }
-//     }
-    return nullptr;
+    auto libraryBlock = make_shared<EGS_BlockInput>();
+    for(auto& block : blockInputs) {
+        libraryBlock = block->getLibraryBlock(blockTitle, libraryName);
+        if(libraryBlock) {
+            break;
+        }
+    }
+    return libraryBlock;
+}
+
+vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
+    // Loop through each input block in the structure to find all the possible
+    // library options that match the input block type
+    // E.g. find all the geometry libraries
+    vector<string> libOptions;
+    for(auto& block : blockInputs) {
+        if(block && block->getTitle() == blockTitle) {
+            string lib = block->getSingleInput("library")->getValues().front();
+            if(lib.size() > 0) {
+                libOptions.push_back(lib);
+            }
+        }
+    }
+    return libOptions;
 }
 
 EGS_BlockInput::EGS_BlockInput() {}
@@ -87,18 +103,17 @@ string EGS_BlockInput::getTitle() {
 }
 
 void EGS_BlockInput::addSingleInput(string attr, bool isReq, const string desc, const vector<string> vals) {
-    singleInputs.push_back(EGS_SingleInput(attr, isReq, desc, vals));
+    singleInputs.push_back(make_shared<EGS_SingleInput>(attr, isReq, desc, vals));
 }
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::addBlockInput(string blockTit, bool isReq) {
     egsInformation("addBlockInput\n");
     blockInputs.push_back(make_shared<EGS_BlockInput>(blockTit, isReq, shared_from_this()));
-    egsInformation("addBlockInput2\n");
 
     return blockInputs.back();
 }
 
-vector<EGS_SingleInput> EGS_BlockInput::getSingleInputs() {
+vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs() {
     return singleInputs;
 }
 
@@ -106,15 +121,15 @@ vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs() {
     return blockInputs;
 }
 
-EGS_SingleInput EGS_BlockInput::getSingleInput(string attr) {
+shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string attr) {
     for(auto& inp : singleInputs) {
         // TODO: this assumes unique attr
-        if(inp.getAttribute() == attr) {
+        if(inp && inp->getAttribute() == attr) {
             return inp;
         }
     }
 
-    return EGS_SingleInput();
+    return nullptr;
 }
 
 void EGS_BlockInput::setParent(shared_ptr<EGS_BlockInput> par) {
@@ -126,32 +141,44 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getParent() {
 }
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::getLibraryBlock(string blockTitle, string libraryName) {
-    egsInformation("test EGS_BlockInput::getLibraryBlock\n");
-    //shared_ptr<EGS_BlockInput> libraryBlock(new EGS_BlockInput);
-    auto libraryBlock = make_shared<EGS_BlockInput>();
 
+    // First search the singleInputs for the library name
+    // only if the block title matches (e.g. it's a geometry, or a source)
+    if(this->getTitle() == blockTitle) {
+        for(auto &inp: singleInputs) {
+            if(!inp) {
+                continue;
+            }
+            if(egsEquivStr(inp->getAttribute(), "library")) {
+                if(inp->getValues().size() && egsEquivStr(inp->getValues().front(), libraryName)) {
+                    return shared_from_this();
+                } else {
+                    break;
+                }
+            }
+        }
+    }
 
-//     // First search the singleInputs for the library name
-//     // only if the block title matches (e.g. it's a geometry, or a source)
-//     if(this->getTitle() == blockTitle) {
-//         egsInformation("test2 EGS_BlockInput::getLibraryBlock\n");
-//         for(auto& inp : singleInputs) {
-//             if(inp.getAttribute() == libraryName) {
-//                 egsInformation("test3 EGS_BlockInput::getLibraryBlock\n");
-//                 return shared_ptr<EGS_BlockInput>(this);
-//             }
-//         }
-//     }
-//
-//     // If not found, go through input blocks
-//     for(auto& block : blockInputs) {
-//         libraryBlock = block->getLibraryBlock(blockTitle, libraryName);
-//         if(libraryBlock) {
-//             egsInformation("test4 EGS_BlockInput::getLibraryBlock\n");
-//             return libraryBlock;
-//         }
-//     }
-    return libraryBlock;
+    // If not found, go through input blocks
+    for(auto &block: blockInputs) {
+        auto libraryBlock = block->getLibraryBlock(blockTitle, libraryName);
+        if(libraryBlock) {
+            return libraryBlock;
+        }
+    }
+    return nullptr;
+}
+
+bool EGS_BlockInput::contains(string inputTag) {
+    for(auto &inp: singleInputs) {
+        if(!inp) {
+            continue;
+        }
+        if(egsEquivStr(inp->getAttribute(), inputTag)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 EGS_SingleInput::EGS_SingleInput() {}
@@ -183,6 +210,10 @@ bool EGS_SingleInput::getRequired() {
 
 const vector<string> EGS_SingleInput::getValues() {
     return values;
+}
+
+string EGS_SingleInput::getDescription() {
+    return description;
 }
 
 
