@@ -231,9 +231,6 @@ private:
 
 string Mevegs_Application::revision = "1.0";
 
-extern "C" void F77_OBJ_(egs_scale_xcc,EGS_SCALE_XCC)(const int *,const EGS_Float *);
-extern "C" void F77_OBJ_(egs_scale_bc,EGS_SCALE_BC)(const int *,const EGS_Float *);
-
 //Prints some text before the simulation. Gets called by EGS.
 void Mevegs_Application::describeUserCode() const {
    egsInformation("\nMEVEGS\n");
