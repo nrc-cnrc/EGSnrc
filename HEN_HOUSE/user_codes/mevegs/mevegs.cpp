@@ -182,19 +182,19 @@ public:
     }
 
     //returns the total energy of the simulation.
-    const double getETot() const{
+    double getETot() const{
       return Etot;
     }
 
     //returns the current number of particles in the problem.
     //Calling after the simulation is done will be Equivalent
     //to the total number of particles in the simulation.
-    const long long getNParticles() const{
+    long long getNParticles() const{
       return static_cast<long long>(current_case);
     }
 
     //returns the number of regions in the current problem
-    const int getNReg() const{
+    int getNReg() const{
       return nreg;
     }
 
