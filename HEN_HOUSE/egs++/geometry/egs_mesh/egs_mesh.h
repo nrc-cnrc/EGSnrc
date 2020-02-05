@@ -1297,52 +1297,26 @@ public:
 
     void printInfo() const override;
 
-	void setMeshMedia(const Mesh& m);
+    void setMeshMedia(const Mesh& mesh) {
+        std::vector<std::string> names;
 
-    //create a mesh using a new mesh class
-    //static fn mirrors similar EGS_BaseGeometry createGeometry fn
-    //static
-    // bool operator==(const EGS_Mevex_tet_collection& rhs) const {
-    //   bool res;
-    //   res = aN1 == rhs.aN1;
-    //
-    //   aN2, aN3, aN4;
-    //   // //EGS_Vector          *aN1N2, *aN1N3, *aN1N4, *aN2N3, *aN2N4, *aN3N4; // Node 1 -> Node 2 vector, ...
-    //   // std::vector<EGS_Vector> aN1N2, aN1N3, aN1N4, aN2N3, aN2N4, aN3N4;
-    //   // //EGS_Vector          *aNorm1, *aNorm2, *aNorm3, *aNorm4; // Normal of plane without node 1, Normal of plane without node 2, ...
-    //   // std::vector<EGS_Vector> aNorm1, aNorm2, aNorm3, aNorm4;
-    //   //
-    //   // //int 				*n1, *n2, *n3, *n4; // Neighbours of the tet; n1 is the face 1 (missing N1) neighbour, etc.
-    //   // //bool				*BoundaryTet; //Indicates if the tet contains at least 1 face external to the collection.
-    //   // //int 	 			*mediaIndices; //Indicates which media from the input file to apply to the tet.
-    //   //
-    //   // std::vector<int> n1, n2, n3, n4;
-    //   // std::vector<bool> BoundaryTet;
-    //   // std::vector<int> mediaIndices;
-    //
-    //   return res;
-    // }
+        names.reserve(mesh.mediaMap.size());
+
+        for (const auto& pair : mesh.mediaMap) {
+            names.emplace_back(pair.second);
+        }
+
+        std::vector<int> mind;
+        mind.reserve(mesh.mediaMap.size());
+        for (auto pair : mesh.mediaMap) {
+            mind[pair.first] = EGS_BaseGeometry::addMedium(pair.second);
+        }
+
+        for (int i = 0; i<nreg; i++) {
+            EGS_BaseGeometry::setMedium(i,i,mind[mesh.media[i]]);
+        }
+    }
 };
-
-void EGS_Mevex_tet_collection::setMeshMedia(const Mesh& mesh) {
-    std::vector<std::string> names;
-
-    names.reserve(mesh.mediaMap.size());
-
-    for (const auto& pair : mesh.mediaMap) {
-        names.emplace_back(pair.second);
-    }
-
-    std::vector<int> mind;
-    mind.reserve(mesh.mediaMap.size());
-    for (auto pair : mesh.mediaMap) {
-        mind[pair.first] = EGS_BaseGeometry::addMedium(pair.second);
-    }
-
-    for (int i = 0; i<nreg; i++) {
-        EGS_BaseGeometry::setMedium(i,i,mind[mesh.media[i]]);
-    }
-}
 
   EGS_BaseGeometry* createMeshGeometry(EGS_Input *input, const double scaling, const Mesh& m) {
 
