@@ -1884,7 +1884,7 @@ int EGS_ChamberApplication::ausgab(int iarg) {
     // jwu: check if we are above ECUT
     if( do_rECUT[ig] && (the_stack->iq[np] == -1 || the_stack->iq[np] == 1) )
         if( is_rECUT[ig][ir] ){
-            if( the_stack->E[np]-the_useful->rm < rECUT[ig] ){
+            if( the_stack->E[np] < rECUT[ig] ){
             // before discarding the particle
             // deposit all of its energy locally
             if( ir >= 0 && is_cavity[ig][ir] ) {
