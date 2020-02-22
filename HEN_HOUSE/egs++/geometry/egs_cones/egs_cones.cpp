@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -48,6 +49,8 @@ string EGS_SimpleCone::type = "EGS_SimpleCone";
 string EGS_ParallelCones::type = "EGS_ParallelCones";
 string EGS_ConeSet::type = "EGS_ConeSet";
 string EGS_ConeStack::type = "EGS_ConeStack";
+
+static bool EGS_CONES_LOCAL inputSet = false;
 
 void EGS_ConeStack::clear(bool all) {
     if (nltot > 0) {
@@ -243,6 +246,60 @@ void EGS_ConeSet::printInfo() const {
 
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        // Format: name, isRequired, description, vector string of allowed values
+        blockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso", {"EGS_Cones"});
+        auto typePtr = blockInput->addSingleInput("type", true, "The type of cone", {"EGS_SimpleCone", "EGS_ParallelCones", "EGS_ConeSet", "EGS_ConeStack"});
+
+        blockInput->addSingleInput("axis", false, "The unit vector defining the axis along the length of the cones. Layers or cones are added sequentially in the vector direction");
+
+        auto inpPtr = blockInput->addSingleInput("apex", false, "TODO");
+        inpPtr->addDependency(typePtr,"EGS_SimpleCone");
+        inpPtr->addDependency(typePtr,"EGS_ParallelCones");
+        inpPtr->addDependency(typePtr,"EGS_ConeSet");
+
+        auto blockPtr = blockInput->addBlockInput("layer");
+        blockPtr->addDependency(typePtr,"EGS_ConeStack");
+        blockPtr->addSingleInput("thickness", true, "TODO");
+        blockPtr->addSingleInput("top radii", false, "TODO");
+        blockPtr->addSingleInput("bottom radii", true, "TODO");
+        blockPtr->addSingleInput("media", true, "TODO");
+
+        // EGS_ConeSet
+        //auto anglesPtr = blockInput->addSingleInput("opening angles", false, "TODO")->addDependency(typePtr, "EGS_ConeSet");
+//         inpPtr = blockInput->addSingleInput("opening angles in radian", false, "TODO")->addDependency(typePtr, "EGS_ConeSet");
+        //inpPtr->addDependency(anglesPtr, "", true);
+
+    }
+
+    EGS_CONES_EXPORT string getExample(string type) {
+        string example;
+        example =
+{R"(
+    :start geometry:
+        library         = EGS_CDGeometry
+        name            = my_cd
+        base geometry   = my_regions
+        # set geometry = 1 geom means:
+        # in region 1 of the basegeometry, use geometry named "geom"
+        set geometry   = 0 my_geom1
+        set geometry   = 1 my_geom2
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_CONES_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return blockInput;
+    }
 
     EGS_CONES_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 
