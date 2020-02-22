@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Marc Chamberland
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -51,22 +52,6 @@ static string EGS_CDGEOMETRY_LOCAL typeStr("EGS_CDGeometry");
 string EGS_CDGeometry::type(typeStr);
 
 static bool EGS_CDGEOMETRY_LOCAL inputSet = false;
-
-struct EGS_CDGEOMETRY_LOCAL InputOptions {
-    string bg_name;
-};
-InputOptions inp;
-
-// Process inputs from the egsinp file
-EGS_CDGEOMETRY_LOCAL int processInputs(EGS_Input *input) {
-//     int err = input->getInput(ebox_key1,inp.boxSize);
-//     if(err && blockInput->getSingleInput(ebox_key1)->getRequired()) {
-//         egsWarning(ebox_message1,ebox_message3);
-//         return 0;
-//     }
-
-    return 1;
-}
 
 void EGS_CDGeometry::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_CDGeometry::setMedia: don't use this method. Use the\n"
@@ -133,11 +118,14 @@ extern "C" {
     static void setInputs() {
         inputSet = true;
 
+        setBaseGeometryInputs(false);
+
         // Format: name, isRequired, description, vector string of allowed values
         blockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso", vector<string>(1, typeStr));
 
         blockInput->addSingleInput("base geometry", true, "The name of the geometry that defines regions for this 'cutting device'. It is within these regions that other geometries will be placed to create a composite geometry");
         blockInput->addSingleInput("set geometry", true, "The region number in the base geometry, followed by the name of the geometry to place in that region. If this geometry extends beyond the region boundaries, it will be cut to size");
+        blockInput->addSingleInput("new indexing style", false, "Set to 1 to use a new region numbering algorithm. Defaults to 0, to use the original indexing style");
     }
 
     EGS_CDGEOMETRY_EXPORT string getExample() {
@@ -174,20 +162,16 @@ extern "C" {
             delete ij;
         }
 
-        if(!processInputs(input)) {
-            egsWarning("Failed to process the inputs for %s.\n", typeStr.c_str());
-            return 0;
-        }
-
-        int err = input->getInput("base geometry",inp.bg_name);
+        string bg_name;
+        int err = input->getInput("base geometry", bg_name);
         if (err) {
             egsWarning("createGeometry(CD_Geometry): no 'base geometry' input\n");
             return 0;
         }
-        EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(inp.bg_name);
+        EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(bg_name);
         if (!g) {
             egsWarning("createGeometry(CD_Geometry): no geometry named %s is"
-                       " defined\n",inp.bg_name.c_str());
+                       " defined\n",bg_name.c_str());
             return 0;
         }
         int nreg = g->regions();
