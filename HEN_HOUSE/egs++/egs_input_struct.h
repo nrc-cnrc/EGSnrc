@@ -53,26 +53,26 @@ class EGS_EXPORT EGS_SingleInput {
 
 public:
     EGS_SingleInput();
-    EGS_SingleInput(string attr, bool isReq, const string desc, const vector<string> vals);
-    string getAttribute();
-    bool getRequired();
+    EGS_SingleInput(string inputTag, bool isReq, const string desc, const vector<string> vals);
     ~EGS_SingleInput();
+
+    string getTag();
+    bool getRequired();
     const vector<string> getValues();
     string getDescription();
-
-protected:
-
-    void addRequirement(string attr, string value="");
-    vector<EGS_SingleInput> getDependents();
+    void addDependency(shared_ptr<EGS_SingleInput> inp, string val="");
+    vector<shared_ptr<EGS_SingleInput>> getDependencyInp();
+    vector<string> getDependencyVal();
 
 private:
 
-    vector<EGS_SingleInput> dependents;
     vector<string> requirements;
-    string attribute;
+    string tag;
     bool isRequired;
     string description;
     vector<string> values;
+    vector<shared_ptr<EGS_SingleInput>> dependencyInp;
+    vector<string> dependencyVal;
 };
 
 class EGS_EXPORT EGS_BlockInput
@@ -84,15 +84,21 @@ public:
 
     void setTitle(string blockTit);
     string getTitle();
-    void addSingleInput(string attr, bool isReq, const string desc, const vector<string> vals = vector<string>());
+    shared_ptr<EGS_SingleInput> addSingleInput(string inputTag, bool isReq, const string desc, const vector<string> vals = vector<string>());
     shared_ptr<EGS_BlockInput> addBlockInput(string blockTit, bool isReq = false);
     vector<shared_ptr<EGS_SingleInput>> getSingleInputs();
+    vector<shared_ptr<EGS_SingleInput>> getSingleInputs(string title);
     vector<shared_ptr<EGS_BlockInput>> getBlockInputs();
-    shared_ptr<EGS_SingleInput> getSingleInput(string attr);
+    shared_ptr<EGS_SingleInput> getSingleInput(string inputTag);
+    shared_ptr<EGS_SingleInput> getSingleInput(string inputTag, string title);
+    shared_ptr<EGS_BlockInput> getBlockInput(string title);
     void setParent(shared_ptr<EGS_BlockInput> par);
     shared_ptr<EGS_BlockInput> getParent();
     shared_ptr<EGS_BlockInput> getLibraryBlock(string blockTitle, string libraryName);
     bool contains(string inputTag);
+    void addDependency(shared_ptr<EGS_SingleInput> inp, string val="");
+    shared_ptr<EGS_SingleInput> getDependencyInp();
+    string getDependencyVal();
 
 
 private:
@@ -103,6 +109,8 @@ private:
     string blockTitle;
     bool isRequired;
     const string desc;
+    shared_ptr<EGS_SingleInput> dependencyInp;
+    string dependencyVal;
 };
 
 class EGS_EXPORT EGS_InputStruct {
