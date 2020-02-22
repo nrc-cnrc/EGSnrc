@@ -40,14 +40,17 @@ private slots:
 
 private:
     shared_ptr<EGS_BlockInput> getBlockInput(QString &blockTitle);
+    QString getBlockTitle();
+    QString getInputValue(QString inp, QTextBlock currentBlock);
+    QTextBlock getBlockEnd(QTextBlock currentBlock);
+    bool inputHasDependency(shared_ptr<EGS_SingleInput> inp);
+    bool inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp);
     int countStartingWhitespace(const QString &s);
 
     QWidget *lineNumberArea;
     shared_ptr<EGS_InputStruct> inputStruct;
     QListView *popup;
     QStringListModel *model;
-    QTextCharFormat normalFormat,
-                    invalidFormat;
 };
 
 

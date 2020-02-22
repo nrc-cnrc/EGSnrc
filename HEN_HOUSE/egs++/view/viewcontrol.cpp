@@ -278,7 +278,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     vector<shared_ptr<EGS_SingleInput>> singleInputs = geom->getSingleInputs();
                     for (auto &inp : singleInputs) {
                         const vector<string> vals = inp->getValues();
-                        egsInformation("  single %s\n", inp->getAttribute().c_str());
+                        egsInformation("  single %s\n", inp->getTag().c_str());
                         for (auto&& val : vals) {
                             egsInformation("      %s\n", val.c_str());
                         }
@@ -290,7 +290,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                         vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
                         for (auto &inp : singleInputs) {
                             const vector<string> vals = inp->getValues();
-                            egsInformation("   single %s\n", inp->getAttribute().c_str());
+                            egsInformation("   single %s\n", inp->getTag().c_str());
                             for (auto&& val : vals) {
                                 egsInformation("      %s\n", val.c_str());
                             }
