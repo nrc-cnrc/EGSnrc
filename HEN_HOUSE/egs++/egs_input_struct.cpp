@@ -47,7 +47,6 @@ void EGS_InputStruct::addBlockInput(shared_ptr<EGS_BlockInput> block) {
 }
 
 void EGS_InputStruct::addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks) {
-    egsInformation("testA EGS_InputStruct::addBlockInputs\n");
     blockInputs.insert(blockInputs.end(), blocks.begin(), blocks.end());
 }
 
@@ -102,12 +101,12 @@ string EGS_BlockInput::getTitle() {
     return blockTitle;
 }
 
-void EGS_BlockInput::addSingleInput(string attr, bool isReq, const string desc, const vector<string> vals) {
-    singleInputs.push_back(make_shared<EGS_SingleInput>(attr, isReq, desc, vals));
+shared_ptr<EGS_SingleInput> EGS_BlockInput::addSingleInput(string inputTag, bool isReq, const string desc, const vector<string> vals) {
+    singleInputs.push_back(make_shared<EGS_SingleInput>(inputTag, isReq, desc, vals));
+    return singleInputs.back();
 }
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::addBlockInput(string blockTit, bool isReq) {
-    egsInformation("addBlockInput\n");
     blockInputs.push_back(make_shared<EGS_BlockInput>(blockTit, isReq, shared_from_this()));
 
     return blockInputs.back();
@@ -117,15 +116,66 @@ vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs() {
     return singleInputs;
 }
 
+vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs(string title) {
+    if(egsEquivStr(blockTitle, title)) {
+        return singleInputs;
+    } else {
+        for(auto &block: blockInputs) {
+            auto inp = block->getSingleInputs(title);
+            if(inp.size() > 0) {
+                return inp;
+            }
+        }
+    }
+
+    return {};
+}
+
 vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs() {
     return blockInputs;
 }
 
-shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string attr) {
+shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag) {
     for(auto& inp : singleInputs) {
-        // TODO: this assumes unique attr
-        if(inp && inp->getAttribute() == attr) {
+        // TODO: this assumes unique inputTag
+        if(inp && egsEquivStr(inp->getTag(), inputTag)) {
             return inp;
+        }
+    }
+
+    return nullptr;
+}
+
+shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag, string title) {
+    // First search the top-level input block
+    if(egsEquivStr(blockTitle, title)) {
+        for(auto &inp: singleInputs) {
+            // TODO: this assumes unique inputTag
+            if(inp && egsEquivStr(inp->getTag(), inputTag)) {
+                return inp;
+            }
+        }
+    }
+
+    // If not found, go through input lower level blocks
+    for(auto &block: blockInputs) {
+        auto inp = block->getSingleInput(inputTag, title);
+        if(inp) {
+            return inp;
+        }
+    }
+
+    return nullptr;
+}
+
+shared_ptr<EGS_BlockInput> EGS_BlockInput::getBlockInput(string title) {
+    if(egsEquivStr(blockTitle, title)) {
+        return shared_from_this();
+    } else {
+        for(auto &block: blockInputs) {
+            if(egsEquivStr(block->getTitle(), title)) {
+                return block;
+            }
         }
     }
 
@@ -141,15 +191,15 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getParent() {
 }
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::getLibraryBlock(string blockTitle, string libraryName) {
-
     // First search the singleInputs for the library name
     // only if the block title matches (e.g. it's a geometry, or a source)
-    if(this->getTitle() == blockTitle) {
+    // TODO: remove blockTitle from input params??
+    //if(this->getTitle() == blockTitle) {
         for(auto &inp: singleInputs) {
             if(!inp) {
                 continue;
             }
-            if(egsEquivStr(inp->getAttribute(), "library")) {
+            if(egsEquivStr(inp->getTag(), "library")) {
                 if(inp->getValues().size() && egsEquivStr(inp->getValues().front(), libraryName)) {
                     return shared_from_this();
                 } else {
@@ -157,7 +207,7 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getLibraryBlock(string blockTitle, st
                 }
             }
         }
-    }
+    //}
 
     // If not found, go through input blocks
     for(auto &block: blockInputs) {
@@ -174,17 +224,30 @@ bool EGS_BlockInput::contains(string inputTag) {
         if(!inp) {
             continue;
         }
-        if(egsEquivStr(inp->getAttribute(), inputTag)) {
+        if(egsEquivStr(inp->getTag(), inputTag)) {
             return true;
         }
     }
     return false;
 }
 
+void EGS_BlockInput::addDependency(shared_ptr<EGS_SingleInput> inp, string val) {
+    dependencyInp = inp;
+    dependencyVal = val;
+}
+
+shared_ptr<EGS_SingleInput> EGS_BlockInput::getDependencyInp() {
+    return dependencyInp;
+}
+
+string EGS_BlockInput::getDependencyVal() {
+    return dependencyVal;
+}
+
 EGS_SingleInput::EGS_SingleInput() {}
 
-EGS_SingleInput::EGS_SingleInput(string attr, bool isReq, const string desc, const vector<string> vals) {
-    attribute = attr;
+EGS_SingleInput::EGS_SingleInput(string inputTag, bool isReq, const string desc, const vector<string> vals) {
+    tag = inputTag;
     isRequired = isReq;
     description = desc;
     values = vals;
@@ -192,16 +255,21 @@ EGS_SingleInput::EGS_SingleInput(string attr, bool isReq, const string desc, con
 
 EGS_SingleInput::~EGS_SingleInput() {}
 
-void EGS_SingleInput::addRequirement(string attr, string val) {
-
+void EGS_SingleInput::addDependency(shared_ptr<EGS_SingleInput> inp, string val) {
+    dependencyInp.push_back(inp);
+    dependencyVal.push_back(val);
 }
 
-vector<EGS_SingleInput> EGS_SingleInput::getDependents() {
-
+vector<shared_ptr<EGS_SingleInput>> EGS_SingleInput::getDependencyInp() {
+    return dependencyInp;
 }
 
-string EGS_SingleInput::getAttribute() {
-    return attribute;
+vector<string> EGS_SingleInput::getDependencyVal() {
+    return dependencyVal;
+}
+
+string EGS_SingleInput::getTag() {
+    return tag;
 }
 
 bool EGS_SingleInput::getRequired() {
