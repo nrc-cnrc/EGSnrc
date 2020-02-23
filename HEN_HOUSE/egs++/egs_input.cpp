@@ -103,6 +103,7 @@ public:
     int addContentFromFile(const char *fname);
     int addContentFromString(string &input);
     int addContent(istream &input);
+    string getCleanInputString(istream &input);
 
     void processInputLoop(EGS_InputPrivate *p);
 
@@ -873,42 +874,49 @@ void EGS_InputPrivate::processInputLoop(EGS_InputPrivate *p) {
 }
 
 int EGS_InputPrivate::addContent(istream &in) {
-    string input;
-    bool last_was_space = false;
-    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
-        if (loopCount == loopMax) {
-            egsFatal("EGS_InputPrivate::addContent: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
-            return -1;
-        }
-        char c;
-        in.get(c);
-        if (in.eof() || !in.good()) {
-            break;
-        }
-        bool take_it = true;
-        if (isspace(c)) {
-            if (last_was_space && c != '\n') {
-                take_it = false;
-            }
-            last_was_space = true;
-        }
-        else {
-            last_was_space = false;
-        }
-        if (take_it) {
-            input += c;
-        }
-    }
-    removeComment("#","\n",input,true);
-    removeComment("!","\n",input,true);
-    removeComment("//","\n",input,true);
-    removeComment("/*","*/",input,false);
-    removeEmptyLines(input);
-    vector<string> start_keys, stop_keys;
+    string input = getCleanInputString(in);
+
+    // Add content from include files first
+    // Just replace the include line in the input string
+    // with the content from the external file
+    string::size_type p1;
     int p = 0;
+    while ((p1=input.find('\n',p)) < input.size()) {
+        string::size_type p2 = input.find('=',p);
+        if (p2 < p1) {
+            string what;
+            what.assign(input,p,p2-p);
+            if (compareKeys(what,"includefile")) {
+                string value;
+                value.assign(input,p2+1,p1-p2-1);
+
+
+                const char *s = value.c_str();
+                while (isspace(*s) && (*s)) {
+                    ++s;
+                }
+                ifstream in2(s);
+                if (!in2) {
+                    egsFatal("EGS_Input: failed to add content from "
+                             "include file %s\n",value.c_str());
+                }
+
+                string input2 = getCleanInputString(in2);
+
+                input.erase(p, p1 - p);
+                input.insert(p, input2);
+                p += input2.size();
+            }
+        }
+        p = p1+1;
+    }
+
+    // Now build the hierarchy structure of input blocks
+    vector<string> start_keys, stop_keys;
     int ep = input.size();
     string what;
     int ie;
+    p = 0;
     while ((p=findStart(p,ep,start_key_begin,start_key_end,input,what,ie))>=0) {
         string the_start = start_key_begin;
         string the_end = stop_key_begin;
@@ -942,8 +950,9 @@ int EGS_InputPrivate::addContent(istream &in) {
             return -1;
         }
     }
+
+    // Replace commas and backslashes in the input value with spaces
     p = 0;
-    string::size_type p1;
     while ((p1=input.find('\n',p)) < input.size()) {
         int j=p1;
         while (--j > p && isspace(input[j]));
@@ -955,7 +964,9 @@ int EGS_InputPrivate::addContent(istream &in) {
         }
         p = p1+1;
     }
-    p=0;
+
+    // Parse the single input values
+    p = 0;
     while ((p1=input.find('\n',p)) < input.size()) {
         string::size_type p2 = input.find('=',p);
         if (p2 < p1) {
@@ -968,17 +979,9 @@ int EGS_InputPrivate::addContent(istream &in) {
                     value[j] = ' ';
                 }
             }
-            if (compareKeys(what,"includefile")) {
-                int res = addContentFromFile(value.c_str());
-                if (res) {
-                    egsFatal("EGS_Input: failed to add content from "
-                             "include file %s\n",value.c_str());
-                }
-            }
-            else {
-                EGS_InputPrivate *ip = new EGS_InputPrivate(what,value);
-                children.push_back(ip);
-            }
+
+            EGS_InputPrivate *ip = new EGS_InputPrivate(what,value);
+            children.push_back(ip);
         }
         p = p1+1;
     }
@@ -989,6 +992,41 @@ int EGS_InputPrivate::addContent(istream &in) {
 
     return 0;
 
+}
+
+string EGS_InputPrivate::getCleanInputString(istream &in) {
+    string input;
+    bool last_was_space = false;
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_InputPrivate::addContent: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+        }
+        char c;
+        in.get(c);
+        if (in.eof() || !in.good()) {
+            break;
+        }
+        bool take_it = true;
+        if (isspace(c)) {
+            if (last_was_space && c != '\n') {
+                take_it = false;
+            }
+            last_was_space = true;
+        }
+        else {
+            last_was_space = false;
+        }
+        if (take_it) {
+            input += c;
+        }
+    }
+    removeComment("#","\n",input,true);
+    removeComment("!","\n",input,true);
+    removeComment("//","\n",input,true);
+    removeComment("/*","*/",input,false);
+    removeEmptyLines(input);
+
+    return input;
 }
 
 int EGS_InputPrivate::findStop(int start, const string &the_start,
