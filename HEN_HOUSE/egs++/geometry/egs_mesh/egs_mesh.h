@@ -31,270 +31,166 @@
 ###############################################################################
 */
 
-
-/*! \file egs_Mevex_tet_collection.h
- *  \brief A tet collection geometry: header
- *  \MJR
+/*! \file egs_mesh.h
+ *  \brief Tetrahedral mesh geometry: header
  */
 
-#ifndef EGS_MEVEX_TET_COLLECTION_
-#define EGS_MEVEX_TET_COLLECTION_
+#ifndef EGS_MESH
+#define EGS_MESH
 
-#include <algorithm>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
+
 #include "egs_base_geometry.h"
-#include "Mesh.h"
+#include "TetrahedralMesh.h"
 
 #ifdef WIN32
 
-    #ifdef BUILD_MEVEX_TET_COLLECTION_DLL
-        #define EGS_MEVEX_TET_COLLECTION_EXPORT __declspec(dllexport)
+    #ifdef BUILD_EGS_MESH_DLL
+        #define EGS_MESH_EXPORT __declspec(dllexport)
     #else
-        #define EGS_MEVEX_TET_COLLECTION_EXPORT __declspec(dllimport)
+        #define EGS_MESH_EXPORT __declspec(dllimport)
     #endif
-    #define EGS_MEVEX_TET_COLLECTION_LOCAL
+    #define EGS_MESH_LOCAL
 
 #else
 
     #ifdef HAVE_VISIBILITY
-        #define EGS_MEVEX_TET_COLLECTION_EXPORT __attribute__ ((visibility ("default")))
-        #define EGS_MEVEX_TET_COLLECTION_LOCAL  __attribute__ ((visibility ("hidden")))
+        #define EGS_MESH_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_MESH_LOCAL  __attribute__ ((visibility ("hidden")))
     #else
-        #define EGS_MEVEX_TET_COLLECTION_EXPORT
-        #define EGS_MEVEX_TET_COLLECTION_LOCAL
+        #define EGS_MESH_EXPORT
+        #define EGS_MESH_LOCAL
     #endif
 
 #endif
 
-/*! \brief A tet collection geometry
-
+/*! \brief A tetrahedral mesh geometry
   \ingroup Geometry
   \ingroup ElementaryG
-
-The EGS_Mevex_tet_collection class implements a tet collection geometry.
-Strictly speaking a tet is not a primitive geometry because
-its methods could be implemented using the methods of sets of planes.
-However, due to its frequent use, slightly faster geometry methods
-using a direct implementation, and simpler definition, it is provided
-as a separate elementary geometry.
-
-This implementation of a collection of tets makes use of a conventional EGS
-input file to define the sources, run control, and other standard EGS input
-parameters.  Tetrahedron geometry is initiated within the egsinp file but
-refers to an external text files containing N lines of numbers to define N tets.
-Materials for the tets are defined in the egsinp file as described below,
-and the external text file contains a key on each tet line to describe which
-material to apply to each tet.
-
-A tet collection data file is defined using the following
-descriptive key:
-
-tet data file = 12 float numbers defining the tet nodes
-				4 int numbers defining the neighbour tet number (or -1 for outside)
-				1 boolean (0 or 1) number to flag if it is a boundary tet (ie contains
-				  at least one outside face)
-				1 int number to define the material
-All arranged in a single line.  An example will be shown below.
-
-The tet points are contained in an external file referenced by the "tet data file" key
-in the egsinp file.
-
-The tet data file path must be fully defined to use egs_view, or the data file must be in the
-same directory as the egs_view executable, or the data file may not open properly.
-
-The tet data file may be named as the user wishes providing the name and extension are
-included in the geometry input file.
-
-The tet data file format is strictly numbers, no headers, as follows:
-\verbatim
-0 0 0 10.0 0 0 0 10.0 0 0 5.0 10.0 -1 1 -1 -1 1 1
-0 0 0 -10.0 0 0 0 10.0 0 0 5.0 10.0 -1 0 -1 -1 1 0
-\endverbatim
-
-The above input file describes two tetrahedrons per this descriptive text:
-Tet 0 Nodes:
-(0,0,0) (10.0,0,0) (0,10.0,0) (0,5.0,10.0) This defines the X, Y, Z coordinates of tets 1, 2, 3 and 4.
-Tet 0 Neighbours:
-(-1,1,-1,-1) This indicates faces 1, 3 and 4 are outside faces and face 2 is shared with
-neighbour Tet 1.  By convention, face 1 is opposite node 1, face 2 is opposite node 2, etc.
-Tet 0 Boundary:
-(1) This tet has external faces.  Set to 0 if the tet is strictly internal to the tet collection.
-This flag is used to optimize searching for intersection points when a particle is entering
-the collection from the outside.
-(1) This tet is composed of material 1 from a list of 0, 1, 2... n materials described in the
-input file format below.
-
-The above input file describes two tetrahedrons per this descriptive text:
-Tet 1 Nodes:
-(0,0,0) (-10.0,0,0) (0,10.0,0) (0,5.0,10.0) This defines the X, Y, Z coordinates of tets 1, 2, 3 and 4.
-Tet 0 Neighbours:
-(-1,0,-1,-1) This indicates faces 1, 3 and 4 are outside faces and face 2 is shared with
-neighbour Tet 0.
-Tet 0 Boundary:
-(1) This tet has external faces.  Set to 0 if the tet is strictly internal to the tet collection.
-This flag is used to optimize searching for intersection points when a particle is entering
-the collection from the outside.
-(0) This tet is composed of material 1 from a list of 0, 1, 2... n materials described in the
-input file format below.
-
-
-A simple example:
-\verbatim
-:start geometry definition:
-    :start geometry:
-        library = egs_Mevex_tet_collection
-        nTets = 2 #total number of tetrahedrons in the collection
-        tet data file = C:\EGS\HEN_HOUSE\egs++\geometry\egs_Mevex_tet_collection\tmp.txt #path to the
-        							#external file containing the tet data lines
-        name = myTets #User input
-        :start media input:
-            media = Water512 Air512 #Material names from pegs4dat file arranged by material 0, 1, .. n materials
-        :stop media input:
-    :stop geometry:
-    simulation geometry = myTets
-:stop geometry definition:
-\endverbatim
 */
 
+class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
 
-
-
-// MJR customized class definition
-class EGS_MEVEX_TET_COLLECTION_EXPORT EGS_Mevex_tet_collection : public EGS_BaseGeometry {
-
-    //EGS_Vector          *aN1, *aN2, *aN3, *aN4; // Node 1 (x,y,z), Node 2 (x,y,z), ...
+    // Node 1 (x,y,z), ...
     std::vector<EGS_Vector> aN1, aN2, aN3, aN4;
-    //EGS_Vector          *aN1N2, *aN1N3, *aN1N4, *aN2N3, *aN2N4, *aN3N4; // Node 1 -> Node 2 vector, ...
+    // Vector from node 1 to node 2, ...
     std::vector<EGS_Vector> aN1N2, aN1N3, aN1N4, aN2N3, aN2N4, aN3N4;
-    //EGS_Vector          *aNorm1, *aNorm2, *aNorm3, *aNorm4; // Normal of plane without node 1, Normal of plane without node 2, ...
+    // Normal of planar face opposite node 1, ...
     std::vector<EGS_Vector> aNorm1, aNorm2, aNorm3, aNorm4;
 
-    //int 				*n1, *n2, *n3, *n4; // Neighbours of the tet; n1 is the face 1 (missing N1) neighbour, etc.
-    //bool				*BoundaryTet; //Indicates if the tet contains at least 1 face external to the collection.
-    //int 	 			*mediaIndices; //Indicates which media from the input file to apply to the tet.
-
+    // Neighbours of the element, n1 is the neighbour across face 1.
     std::vector<int> n1, n2, n3, n4;
+    // Is this element on the boundary?
     std::vector<bool> BoundaryTet;
+    // The media index of the element.
     std::vector<int> mediaIndices;
 
-    int 				areg; //current region of the particle
+    // which element the particle is inside.
+    int areg;
 
-    string       type = "EGS_Mevex_tet_collection";
+    const string type = "EGS_Mesh";
 
 public:
 
-  EGS_Mevex_tet_collection(const Mesh& mesh, const double scalingFactor = 10, const string &Name = "Mesh_tet_collection") : EGS_BaseGeometry(Name) {
+    int size() const {
+        return EGS_BaseGeometry::nreg;
+    }
 
-    // call mesh methods to initialize class member data
-    //get all of the x, y, z coordinate values for every point in the mesh object
+  EGS_Mesh(const TetrahedralMesh& mesh, double scalingFactor, EGS_Application* app) : EGS_BaseGeometry("EGS_Mesh") {
+
+    // must be set before other calls
+    EGS_BaseGeometry::setApplication(app);
+    EGS_BaseGeometry::nreg = mesh.size();
+
+    // get all of the x, y, z coordinate values for every point in the mesh object
     std::vector<double> coordinates;
-    coordinates = mesh.getCoords();
+    coordinates = mesh.coords(1.0 / scalingFactor);
 
-    auto neighbours = mesh.eltNeighbours;
-    auto mediaType = mesh.media;
-    auto isBoundaryTet = mesh.boundaryTet;
+    auto neighbours = mesh.neighbours();
+    auto mediaType = mesh.media();
+    auto isBoundaryTet = mesh.boundaries();
 
-    int nt = mediaType.size();
+    int num_mesh_elements = mesh.size();
 
-    EGS_BaseGeometry::nreg = nt; 							//set number of regions to equal number of tets nt passed in.
+    // set relative rho values
+    auto rhor = mesh.relative_densities();
+    for (int i = 0; i < num_mesh_elements; i++) {
+        EGS_BaseGeometry::setRelativeRho(i, i, rhor[i]);
+    }
 
-    //TODO change over to vectors
-    // Create arrays for each attribute
-    // aN1 = new EGS_Vector [nt]; 		//Node 1 Vector array, will contain aN1.x, aN1.y, aN1.z for each tet
-    // aN2 = new EGS_Vector [nt];
-    // aN3 = new EGS_Vector [nt];
-    // aN4 = new EGS_Vector [nt];
+    // Vectors to each node
+    aN1.reserve(num_mesh_elements);
+    aN2.reserve(num_mesh_elements);
+    aN3.reserve(num_mesh_elements);
+    aN4.reserve(num_mesh_elements);
 
-    aN1.reserve(nt);
-    aN2.reserve(nt);
-    aN3.reserve(nt);
-    aN4.reserve(nt);
+    // Vectors from node 1 to node 2, etc.
+    aN1N2.reserve(num_mesh_elements);
+    aN1N3.reserve(num_mesh_elements);
+    aN1N4.reserve(num_mesh_elements);
+    aN2N3.reserve(num_mesh_elements);
+    aN2N4.reserve(num_mesh_elements);
+    aN3N4.reserve(num_mesh_elements);
 
-    // aN1N3 = new EGS_Vector [nt];
-    // aN1N2 = new EGS_Vector [nt]; 	//Vectors from N1 to N2, etc.
-    // aN1N4 = new EGS_Vector [nt];
-    // aN2N3 = new EGS_Vector [nt];
-    // aN2N4 = new EGS_Vector [nt];
-    // aN3N4 = new EGS_Vector [nt];
+    //Normal of face 1 (opposite node 1)
+    aNorm1.reserve(num_mesh_elements);
+    aNorm2.reserve(num_mesh_elements);
+    aNorm3.reserve(num_mesh_elements);
+    aNorm4.reserve(num_mesh_elements);
 
-    aN1N2.reserve(nt);
-    aN1N3.reserve(nt);
-    aN1N4.reserve(nt);
-    aN2N3.reserve(nt);
-    aN2N4.reserve(nt);
-    aN3N4.reserve(nt);
+    // Neighbour element across face 1
+    n1.reserve(num_mesh_elements);
+    n2.reserve(num_mesh_elements);
+    n3.reserve(num_mesh_elements);
+    n4.reserve(num_mesh_elements);
 
+    // is this element on the boundary?
+    BoundaryTet.reserve(num_mesh_elements);
 
-    // aNorm1 = new EGS_Vector [nt]; 	//Normal of face 1 (opposite Node 1)
-    // aNorm2 = new EGS_Vector [nt];
-    // aNorm3 = new EGS_Vector [nt];
-    // aNorm4 = new EGS_Vector [nt];
-
-    aNorm1.reserve(nt);
-    aNorm2.reserve(nt);
-    aNorm3.reserve(nt);
-    aNorm4.reserve(nt);
-
-    // n1 = new int [nt];  			//Neighbour of face 1 (opposite Node 1)
-    // n2 = new int [nt];
-    // n3 = new int [nt];
-    // n4 = new int [nt];
-
-    n1.reserve(nt);
-    n2.reserve(nt);
-    n3.reserve(nt);
-    n4.reserve(nt);
-
-    // BoundaryTet = new bool [nt]; 	//Variable to hold boundary tet flag.
-    // mediaIndices = new int [nt]; 	//Variable to hold media index.
-
-    BoundaryTet.reserve(nt);
-    mediaIndices.reserve(nt);
+    // Media index of this element
+    mediaIndices.reserve(num_mesh_elements);
 
     	//loop through each tet
-  	for (int i = 0; i < nt; ++i){
-      int coordIdx = i*12;
+  	for (int i = 0; i < num_mesh_elements; ++i) {
+        {
+          int coordIdx = i*12;
+          aN1[i].x = coordinates[coordIdx];
+          aN1[i].y = coordinates[coordIdx+1];
+          aN1[i].z = coordinates[coordIdx+2];
+          aN2[i].x = coordinates[coordIdx+3];
+          aN2[i].y = coordinates[coordIdx+4];
+          aN2[i].z = coordinates[coordIdx+5];
+          aN3[i].x = coordinates[coordIdx+6];
+          aN3[i].y = coordinates[coordIdx+7];
+          aN3[i].z = coordinates[coordIdx+8];
+          aN4[i].x = coordinates[coordIdx+9];
+          aN4[i].y = coordinates[coordIdx+10];
+          aN4[i].z = coordinates[coordIdx+11];
+        }
 
-      aN1[i].x = coordinates[coordIdx+0] / scalingFactor;
-      aN1[i].y = coordinates[coordIdx+1] / scalingFactor;
-      aN1[i].z = coordinates[coordIdx+2] / scalingFactor;
-      aN2[i].x = coordinates[coordIdx+3] / scalingFactor;
-      aN2[i].y = coordinates[coordIdx+4] / scalingFactor;
-      aN2[i].z = coordinates[coordIdx+5] / scalingFactor;
-      aN3[i].x = coordinates[coordIdx+6] / scalingFactor;
-      aN3[i].y = coordinates[coordIdx+7] / scalingFactor;
-      aN3[i].z = coordinates[coordIdx+8] / scalingFactor;
-      aN4[i].x = coordinates[coordIdx+9] / scalingFactor;
-      aN4[i].y = coordinates[coordIdx+10] / scalingFactor;
-      aN4[i].z = coordinates[coordIdx+11] / scalingFactor;
+        {
+          int nIdx = i*4;
+          n1[i] = neighbours[nIdx];
+          n2[i] = neighbours[nIdx+1];
+          n3[i] = neighbours[nIdx+2];
+          n4[i] = neighbours[nIdx+3];
+        }
 
-      int nIdx = i*4;
-
-      (neighbours[nIdx]   == -1)?   n1[i] = neighbours[nIdx+0]   : n1[i] = neighbours[nIdx+0] - 1;
-      (neighbours[nIdx+1] == -1)?   n2[i] = neighbours[nIdx+1]   : n2[i] = neighbours[nIdx+1] - 1;
-      (neighbours[nIdx+2] == -1)?   n3[i] = neighbours[nIdx+2]   : n3[i] = neighbours[nIdx+2] - 1;
-      (neighbours[nIdx+3] == -1)?   n4[i] = neighbours[nIdx+3]   : n4[i] = neighbours[nIdx+3] - 1;
-
-
-
-      // n1[i] = neighbours[nIdx+0] - 1;
-      // n2[i] = neighbours[nIdx+1] - 1;
-      // n3[i] = neighbours[nIdx+2] - 1;
-      // n4[i] = neighbours[nIdx+3] - 1;
-
-      //same indices for these guys
-      BoundaryTet[i]  = isBoundaryTet[i];
-      mediaIndices[i] = mediaType[i];
+        //same indices for these guys
+        BoundaryTet[i]  = isBoundaryTet[i];
+        mediaIndices[i] = mediaType[i];
 
     	// Calculate attribute values for vectors between nodes and normals
 		// Use (b - a) to calculate vector from a to b
   		// aN1N2 - from Node 1 to Node 2, etc.
-  		aN1N2[i] = aN2[i] - aN1[i];  
-  		aN1N3[i] = aN3[i] - aN1[i];  
-  		aN1N4[i] = aN4[i] - aN1[i]; 
+  		aN1N2[i] = aN2[i] - aN1[i];
+  		aN1N3[i] = aN3[i] - aN1[i];
+  		aN1N4[i] = aN4[i] - aN1[i];
   		aN2N3[i] = aN3[i] - aN2[i];
-  		aN2N4[i] = aN4[i] - aN2[i]; 
-  		aN3N4[i] = aN4[i] - aN3[i]; 
+  		aN2N4[i] = aN4[i] - aN2[i];
+  		aN3N4[i] = aN4[i] - aN3[i];
 
   		// Compute normals of each face of the tet
   		// Faces omit node with same number as face
@@ -343,195 +239,51 @@ public:
     	}
     }
 
-  // MJR customized
-  // class constructor
-  //EGS_Mevex_tet_collection(number of tets, Node1 x, y, z; Node2 x, y, z; Node3 x, y, z; Node4 x, y, z; Boundary tet; media index )
-  EGS_Mevex_tet_collection(int nt, const EGS_Float *X1, const EGS_Float *Y1, const EGS_Float *Z1, const EGS_Float *X2, const EGS_Float *Y2, const EGS_Float *Z2, const EGS_Float *X3, const EGS_Float *Y3, const EGS_Float *Z3, const EGS_Float *X4, const EGS_Float *Y4, const EGS_Float *Z4,
-    const int *N1, const int *N2, const int *N3, const int *N4, const bool *bT, const int *mediaIndexes,
-    const string &Name = "") : EGS_BaseGeometry(Name) {
+  ~EGS_Mesh() = default;
 
-
-      if (nt > 0) { //If we have tets to build
-
-        //TODO change over to vectors
-        // Create arrays for each attribute
-        // aN1 = new EGS_Vector [nt]; 		//Node 1 Vector array, will contain aN1.x, aN1.y, aN1.z for each tet
-        // aN2 = new EGS_Vector [nt];
-        // aN3 = new EGS_Vector [nt];
-        // aN4 = new EGS_Vector [nt];
-
-        aN1.reserve(nt);
-        aN2.reserve(nt);
-        aN3.reserve(nt);
-        aN4.reserve(nt);
-
-
-        // aN1N3 = new EGS_Vector [nt];
-        // aN1N2 = new EGS_Vector [nt]; 	//Vectors from N1 to N2, etc.
-        // aN1N4 = new EGS_Vector [nt];
-        // aN2N3 = new EGS_Vector [nt];
-        // aN2N4 = new EGS_Vector [nt];
-        // aN3N4 = new EGS_Vector [nt];
-
-        aN1N2.reserve(nt);
-        aN1N3.reserve(nt);
-        aN1N4.reserve(nt);
-        aN2N3.reserve(nt);
-        aN2N4.reserve(nt);
-        aN3N4.reserve(nt);
-
-
-        // aNorm1 = new EGS_Vector [nt]; 	//Normal of face 1 (opposite Node 1)
-        // aNorm2 = new EGS_Vector [nt];
-        // aNorm3 = new EGS_Vector [nt];
-        // aNorm4 = new EGS_Vector [nt];
-
-        aNorm1.reserve(nt);
-        aNorm2.reserve(nt);
-        aNorm3.reserve(nt);
-        aNorm4.reserve(nt);
-
-        // n1 = new int [nt];  			//Neighbour of face 1 (opposite Node 1)
-        // n2 = new int [nt];
-        // n3 = new int [nt];
-        // n4 = new int [nt];
-
-        n1.reserve(nt);
-        n2.reserve(nt);
-        n3.reserve(nt);
-        n4.reserve(nt);
-
-        // BoundaryTet = new bool [nt]; 	//Variable to hold boundary tet flag.
-        // mediaIndices = new int [nt]; 	//Variable to hold media index.
-
-        BoundaryTet.reserve(nt);
-        mediaIndices.reserve(nt);
-      }
-
-      nreg = nt; 							//set number of regions to equal number of tets nt passed in.
-
-      for (int i=0; i<nt; i++) {			// Initialize Arrays to values from input
-        // egsInformation("\ncoords\n");
-        aN1[i].x = X1[i];
-        // egsInformation(" %f", X1[i]);
-        aN1[i].y = Y1[i];
-        // egsInformation(" %f", Y1[i]);
-        aN1[i].z = Z1[i];
-        // egsInformation(" %f", Z1[i]);
-        aN2[i].x = X2[i];
-        // egsInformation(" %f", X2[i]);
-        aN2[i].y = Y2[i];
-        // egsInformation(" %f", Y2[i]);
-        aN2[i].z = Z2[i];
-        // egsInformation(" %f", Z2[i]);
-        aN3[i].x = X3[i];
-        // egsInformation(" %f", X3[i]);
-        aN3[i].y = Y3[i];
-        // egsInformation(" %f", Y3[i]);
-        aN3[i].z = Z3[i];
-        // egsInformation(" %f", Z3[i]);
-        aN4[i].x = X4[i];
-        // egsInformation(" %f", X4[i]);
-        aN4[i].y = Y4[i];
-        // egsInformation(" %f", Y4[i]);
-        aN4[i].z = Z4[i];
-        // egsInformation(" %f", Z4[i]);
-
-        // egsInformation("\nNeighbours\n");
-
-        n1[i] = N1[i];
-        // egsInformation(" %d", N1[i]);
-        n2[i] = N2[i];
-        // egsInformation(" %d", N2[i]);
-        n3[i] = N3[i];
-        // egsInformation(" %d", N3[i]);
-        n4[i] = N4[i];
-        // egsInformation(" %d", N4[i]);
-
-        // egsInformation("\n");
-
-        BoundaryTet[i] = bT[i];
-        // egsInformation("%d", bT[i]) ;
-        mediaIndices[i] = mediaIndexes[i];
-        // egsInformation("%d", mediaIndexes[i]);
-
-        // egsInformation("\n");
-        // Calculate attribute values for vectors between nodes and normals
-        // Use > to calculate vector from a to b
-        // aN1N2 - from Node 1 to Node 2, etc.
-  	aN1N2[i] = aN2[i] - aN1[i];  
-  	aN1N3[i] = aN3[i] - aN1[i];  
-  	aN1N4[i] = aN4[i] - aN1[i]; 
-  	aN2N3[i] = aN3[i] - aN2[i];
-  	aN2N4[i] = aN4[i] - aN2[i]; 
-  	aN3N4[i] = aN4[i] - aN3[i]; 
-
-        // Compute normals of each face of the tet
-        // Faces omit node with same number as face
-        aNorm1[i] = aN2N3[i].times(aN2N4[i]); //Calculate vector products of the vectors between nodes to determine the normals to the faces.
-        aNorm2[i] = aN1N3[i].times(aN1N4[i]);
-        aNorm3[i] = aN1N2[i].times(aN1N4[i]);
-        aNorm4[i] = aN1N2[i].times(aN1N3[i]);
-
-        // Check direction of normals is within 90 deg of vector to remaining node (inward)
-        // (dot product +ve otherwise multiply normal by -1)
-        // Face 1 - does not include node 1
-        // normal should point in same direction as vector from any node in the plane to node 1
-        if ((aNorm1[i]*aN1N2[i]) > 0) { // aN1N2 is from Node 1 to Node 2 - checking if the normal points in
-          // the direction of 1 to 2 would be an outward normal so change it
-          aNorm1[i].x = -1 * aNorm1[i].x;
-          aNorm1[i].y = -1 * aNorm1[i].y;
-          aNorm1[i].z = -1 * aNorm1[i].z;
-        }
-        // Face 2
-        if ((aNorm2[i]*aN1N2[i]) < 0) { // In this case aN1N2 is the direction we want the normal to point
-          // NB Face 1 had ">"; while for face 2 we have "<"
-          aNorm2[i].x = -1 * aNorm2[i].x;
-          aNorm2[i].y = -1 * aNorm2[i].y;
-          aNorm2[i].z = -1 * aNorm2[i].z;
-        }
-        // Face 3
-        if ((aNorm3[i]*aN1N3[i]) < 0) {
-          aNorm3[i].x = -1 * aNorm3[i].x;
-          aNorm3[i].y = -1 * aNorm3[i].y;
-          aNorm3[i].z = -1 * aNorm3[i].z;
-        }
-        // Face 4
-        if ((aNorm4[i]*aN1N4[i]) < 0) {
-          aNorm4[i].x = -1 * aNorm4[i].x;
-          aNorm4[i].y = -1 * aNorm4[i].y;
-          aNorm4[i].z = -1 * aNorm4[i].z;
-        }
-
-        // Unitize Normal vectors
-        (aNorm1[i]).normalize();
-        (aNorm2[i]).normalize();
-        (aNorm3[i]).normalize();
-        (aNorm4[i]).normalize();
-      }
-    };
-
-  ~EGS_Mevex_tet_collection() = default;
-
-  //JBT
-  //sets relative density for a specified tet
-  void setRelativeRho(int ind, EGS_Float rho) {
-      // egsInformation("# Regions: %d, Index: %d\n", nreg, ind);
-      // if(ind >= nreg) egsInformation("^^^ ERROR ^^^\n");
-      if (ind >= 0 && ind <= nreg) {
-          if (!rhor) {
-              rhor = new EGS_Float [nreg];
-              for (int j=0; j<nreg; j++) {
-                  rhor[j] = 1;
-              }
-          }
-          rhor[ind] = rho;
-          has_rho_scaling = true;
-      }
+  std::string print_element(int i) const {
+      std::ostringstream elt_info;
+      elt_info << "Tetrahedron " << i << ":\n"
+               << "\tNode coordinates (cm):\n"
+               << "\t0: " << aN1[i].x << " " << aN1[i].y << " " << aN1[i].z << "\n"
+               << "\t1: " << aN2[i].x << " " << aN2[i].y << " " << aN2[i].z << "\n"
+               << "\t2: " << aN3[i].x << " " << aN3[i].y << " " << aN3[i].z << "\n"
+               << "\t3: " << aN4[i].x << " " << aN4[i].y << " " << aN4[i].z << "\n"
+               << "\tNeighbour elements:\n"
+               << "\t\tOn face 0: " << n1[i] << "\n"
+               << "\t\tOn face 1: " << n2[i] << "\n"
+               << "\t\tOn face 2: " << n3[i] << "\n"
+               << "\t\tOn face 3: " << n4[i] << "\n"
+               << std::boolalpha
+               << "\tBoundary element: " << BoundaryTet[i] << "\n"
+               << "\tMedia index: "<< mediaIndices[i] << "\n";
+      return elt_info.str();
   }
 
-  const std::vector<int>& getMediaIndices() const {
-    return mediaIndices;
+  // Return element volumes in cm3.
+  std::vector<EGS_Float> element_volumes() const {
+        std::vector<EGS_Float> volumes;
+        volumes.reserve(this->size());
+
+        for (int i = 0; i < this->size(); i++) {
+            volumes.push_back(std::abs(
+                ((aN1[i] - aN4[i]) * ((aN2[i] - aN4[i]) % (aN3[i] - aN4[i]))) / 6.0
+            ));
+        }
+
+        return volumes;
+  }
+
+  // Return element densities in g/cm3 (after applying relative rho scaling).
+  std::vector<EGS_Float> element_densities() const {
+        std::vector<EGS_Float> densities;
+        densities.reserve(this->size());
+
+        for (int i = 0; i < this->size(); i++) {
+            densities.push_back(this->getMediumRho(mediaIndices[i]) * this->rhor[i]);
+        }
+
+        return densities;
   }
 
     // MJR written
@@ -686,8 +438,6 @@ public:
     int inside(const EGS_Vector &x) override {
         return isWhere(x);
     };
-
-
 
     EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
                               const EGS_Vector &u) override {
@@ -1290,50 +1040,42 @@ public:
 	    return dist;
     };
 
-
-    const string &getType() const {
+    const std::string& getType() const {
         return type;
     };
 
     void printInfo() const override;
 
-    void setMeshMedia(const Mesh& mesh) {
+    void setMeshMedia(const TetrahedralMesh& mesh) {
         std::vector<std::string> names;
 
-        names.reserve(mesh.mediaMap.size());
+        auto media = mesh.media();
+        auto media_map = mesh.mesh_media_map();
 
-        for (const auto& pair : mesh.mediaMap) {
+        names.reserve(media_map.size());
+
+        for (const auto& pair : media_map) {
             names.emplace_back(pair.second);
         }
 
         std::vector<int> mind;
-        mind.reserve(mesh.mediaMap.size());
-        for (auto pair : mesh.mediaMap) {
+        mind.reserve(media_map.size());
+        for (auto pair : media_map) {
             mind[pair.first] = EGS_BaseGeometry::addMedium(pair.second);
         }
 
         for (int i = 0; i<nreg; i++) {
-            EGS_BaseGeometry::setMedium(i,i,mind[mesh.media[i]]);
+            EGS_BaseGeometry::setMedium(i,i,mind[media[i]]);
         }
     }
 };
 
-  EGS_BaseGeometry* createMeshGeometry(EGS_Input *input, const double scaling, const Mesh& m) {
-
-  egsInformation("It works!\n");
-
-  EGS_Mevex_tet_collection* result = new EGS_Mevex_tet_collection(m, scaling, "Mesh_tet_collection");
-
-  egsInformation("Makes tet collection!\n");
-
-  result->setBoundaryTolerance(input);
-
-  result->setMeshMedia(m);
-
-  result->setLabels(input);
-
-  return result;
-
+EGS_BaseGeometry* createMeshGeometry(EGS_Input *input, EGS_Application *app, double scaling, const TetrahedralMesh& m) {
+      // FIXME: leaky?
+      EGS_Mesh* result = new EGS_Mesh(m, scaling, app);
+      result->setBoundaryTolerance(input);
+      result->setMeshMedia(m);
+      result->setLabels(input);
+      return result;
  }
-
 #endif

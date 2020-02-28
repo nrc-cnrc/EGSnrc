@@ -1,9 +1,8 @@
 %C80
 "#############################################################################"
 "                                                                             "
-"  EGSnrc egs++ mevegs application mortran macros                             "
-"                                                                             "
-"  Copyright (C) 2019 Mevex Corporation                                       "
+"  EGSnrc egs++ tutor7pp application mortran macros                           "
+"  Copyright (C) 2015 National Research Council Canada                        "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
 "                                                                             "
@@ -21,7 +20,14 @@
 "  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
 "                                                                             "
 "#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow , 2009                                      "
+"                                                                             "
+"  Contributors:    Max Orok, 2020 (adapted for mevegs)                       "
+"                                                                             "
+"#############################################################################"
 
+REPLACE {$MXREG} WITH {1000000}
 
 /*
    Range rejection/Russian roulette
@@ -36,17 +42,4 @@ REPLACE {$RANGE-DISCARD;} WITH {;
     ]
 };
 
-"============================================================================="
-"  scale elastic scattering strength by a given factor                        "
-"============================================================================="
-subroutine egs_scale_bc(imed,factor);
-implicit none;
-$INTEGER imed;
-$REAL    factor;
-$declare_max_medium;
-;COMIN/ELECIN,MEDIA/;
-IF( imed > 0 & imed <= nmed ) [ blcc(imed) = blcc(imed)*factor; ]
-return; end;
-
 ;
-

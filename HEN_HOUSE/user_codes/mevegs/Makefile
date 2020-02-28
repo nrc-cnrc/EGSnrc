@@ -64,10 +64,6 @@ INCL += -I$(ABS_EGSPP)geometry$(DSEP)egs_mesh -I$(HEN_HOUSE)user_codes$(DSEP)$(U
 # add optimization defaults
 # opt += -march=native -O3 -ffast-math -Wall -pipe
 
-# Add your Gmsh library path to this user code
-VENDOR = $(HEN_HOUSE)user_codes$(DSEP)$(USER_CODE)$(DSEP)vendor
-INCL += -I$(VENDOR)
-
 # add our required libraries
 fortran_libs += -lgmsh -legs_mesh -legs_planes -liaea_phsp
 

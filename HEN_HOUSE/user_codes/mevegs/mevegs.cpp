@@ -41,12 +41,10 @@
                                 ░
 */
 
-// functions for mevegs setup from gmsh
-#include "gmsh_manip.h"
-// output quantities calculation
-#include "dosemath.h"
-// Use the mesh geometry
-#include "egs_mesh.h"
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include "egs_advanced_application.h"
 #include "egs_scoring.h"
@@ -54,184 +52,84 @@
 #include "egs_functions.h"
 #include "egs_input.h"
 
-using std::vector;
-using std::string;
+#include "egs_mesh.h"
+#include "gmsh_manip.h"
 
-//All EGS++ user codes extend the EGS_AdvancedApplication class.
 class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
 
- const Mesh &mesh;
+ const TetrahedralMesh &mesh;
 
- //result vectors built up by aggregateResults
- vector<double> allDoses, allUncerts;
+ // result vectors
+ std::vector<double> e_deps, uncerts;
+ // info blob to log
+ std::string run_info;
 
-    // data variables
-    EGS_ScoringArray *score = nullptr;    // scoring array with energies deposited
-    int              nreg = 0;      // number of regions in the geometry
-    double           Etot = 0.0;      // total energy that has entered the geometry
-    int              rr_flag = 0;   // used for RR and radiative splitting
-    EGS_Float        current_weight = 1.0; // the weight of the initial particle that
-                                     // is currently being simulated
-    static string revision;    // revision number
+ // scoring array with deposited energies
+ EGS_ScoringArray *score = nullptr;
+ // number of mesh elements
+ int nreg = 0;
+ // total energy
+ double Etot = 0.0;
+ // used for russian roulette and radiative splitting
+ int rr_flag = 0;
+ EGS_Float current_weight = 1.0;
+ static std::string revision;
 
 public:
 
-    /*! Constructor
-     The command line arguments are passed to the EGS_AdvancedApplication
-     contructor, which determines the input file, the pegs file, if the
-     simulation is a parallel run, etc.
-    */
-    Mevegs_Application(int argc, char **argv, const Mesh &_mesh):
+    Mevegs_Application(int argc, char **argv, const TetrahedralMesh &_mesh):
         EGS_AdvancedApplication(argc,argv),
         mesh(_mesh) {
         std::cout << "Successfully constructed MevEGS Application" << std::endl;
     };
 
-    //returns whether this job is the last one of a parallel run using a batch script or similar
-    bool isLastJob(){
-      return EGS_AdvancedApplication::final_job;
-    }
-
-    /*! Destructor.
-     Deallocate memory
-     */
     ~Mevegs_Application() override {
         if( score ) delete score;
     };
 
-    /*! Describe the application.
-     This function is called from within the initSimulation() function
-     so that applications derived from EGS_AdvancedApplication can print a
-     header at the beginning of the output file.
-    */
+    // Number of mesh elements
+    int num_elements() const {
+        return nreg;
+    }
+
+    // Average energy per source particle in MeV
+    EGS_Float average_energy() const {
+        return this->Etot /  static_cast<EGS_Float>(this->current_case);
+    }
+
+    // EGS_AdvancedApplication overrides
     void describeUserCode() const override;
-
-    /*! Initialize scoring.
-     This function is called from within initSimulation() after the
-     geometry and the particle source have been initialized.
-     In our case we simple construct a scoring array with nreg+2 regions
-     to collect the deposited energy in the nreg geometry regions and
-     the reflected and transmitted energies, and if the user has
-     requested it, initialize scoring array objects for pulse height
-     distributions in the requested regions.
-    */
     int initScoring() override;
-
-    // Initialize geometry.
-    // Matches vrtl fn inside egs_application.h
-    // Called within initSimulation() and reimplemented here to handle Mesh
-    // objects used for making tet_collection geometries w/o reading them
-    // directly from an input file - MXO
-
     int initGeometry() override;
-
-    /*! Accumulate quantities of interest at run time
-     This function is called from within the electron and photon transport
-     routines at 28 different occasions specified by iarg (see PIRS-701
-     for details). Here we are only interested in energy deposition =>
-     only in iarg<=4 ausgab calls and simply use the score method of
-     the scoring array object to accumulate the deposited energy.
-    */
     int ausgab(int iarg) override;
-
-    /*! Output intermediate results to the .egsdat file.
-     This function is called at the end of each batch. We must store
-     the results in the file so that simulations can be restarted and results
-     of parallel runs recombined.
-     */
     int outputData() override;
-
-    /*! Read results from a .egsdat file.
-     This function is used to read simulation results in restarted
-     calculations.
-     */
     int readData() override;
-
-    /*! Reset the variables used for accumulating results
-     This function is called at the beginning of the combineResults()
-     function, which is used to combine the results of parallel runs.
-    */
     void resetCounter() override;
-
-    /*! Add simulation results
-     This function is called from within combineResults() in the loop
-     over parallel jobs. data is a reference to the currently opened
-     data stream (basically the j'th .egsdat file).
-     */
     int addState(istream &data) override;
-
-    /*! Output the results of a simulation. */
     void outputResults() override;
-
-    /*! Get the current simulation result.
-     This function is called from the run control object in parallel runs
-     in order to obtain a combined result for all parallel jobs.
-     A single result is requested (and so, in simulations that calculate
-     many quantites such as a 3D dose distribution, it is up to the user
-     code to decide which single result to return). If this function is
-     not reimplemented in a derived class, the run control object will simply
-     not store information about the combined result in the JCF and not print
-     this info in the log file. In our case we arbitrarily decide to return the
-     reflected energy fraction as the single result of the simulation.
-    */
     void getCurrentResult(double &sum, double &sum2, double &norm,
             double &count);
 
-    const string getInputFileName() const {
-      return EGS_Application::input_file;
+    EGS_Mesh* getGeometry() const {
+       return dynamic_cast<EGS_Mesh*>(geometry);
     }
-
-    //returns the total energy of the simulation.
-    double getETot() const{
-      return Etot;
-    }
-
-    //returns the current number of particles in the problem.
-    //Calling after the simulation is done will be Equivalent
-    //to the total number of particles in the simulation.
-    long long getNParticles() const{
-      return static_cast<long long>(current_case);
-    }
-
-    //returns the number of regions in the current problem
-    int getNReg() const{
-      return nreg;
-    }
-
-    //returns the tet collection object representing the problem geometry for
-    //this simulation
-    //by itself doesn't change geometry but cannot be returned as const -> edited later
-    EGS_Mevex_tet_collection* getGeometry() const{
-       return dynamic_cast<EGS_Mevex_tet_collection*>(geometry);
-    }
-
-    //get an array for the internal egs "media map" of indices to densities
-    const double* getDensities() const{
-      return the_media->rho;
-    }
-
-    //get all the results for the simulation
-    dosemath::namedResults calculateResults();
 
 protected: // called by the base class
-
-    /*! Start a new shower.
-     This function is called from within the shower loop just before the
-     actual simulation of the particle starts. The particle parameters are
-     available via the protected base class variable p which is of type
-     EGS_Particle (see egs_application.h).
-    */
     int startNewShower();
 
 private:
 
-    //MXO -> save results to internal result vectors
-    inline void aggregateResults();
+    // save results to internal result vectors
+    void aggregateResults();
+
+    // write simulation results to a Gmsh msh file.
+    void write_gmsh();
+    void append_gmsh_data(std::ostream& out_file, std::string title,
+            const std::vector<double>& data);
 };
 
-string Mevegs_Application::revision = "1.0";
+string Mevegs_Application::revision = "1.1";
 
-//Prints some text before the simulation. Gets called by EGS.
 void Mevegs_Application::describeUserCode() const {
    egsInformation("\nMEVEGS\n");
    egsInformation("This is MEVEGS %s based on\n"
@@ -240,23 +138,13 @@ void Mevegs_Application::describeUserCode() const {
      egsSimplifyCVSKey(base_revision).c_str());
 }
 
-//Initialize scoring quantities for EGS, as well as some other things
-//that are convenient to initialize at the same time, such as
-//variance reduction.
-//Originally from tutor7pp, lots of additions.
+// Based on tutor7pp.
 int Mevegs_Application::initScoring() {
 
   // Get the number of regions in the geometry.
   this->nreg = geometry->regions();
-
   this->score = new EGS_ScoringArray(nreg+2);
-   //i.e. we always score energy fractions
-
-    //try setting the WATCH
-    //"this is for the watch"
-    //F77_OBJ_(watch, WATCH)(-99, 1);
-
-  the_egsvr->i_do_rr = 1; //Nigel's bugfix re breaking brems with ausgab
+  the_egsvr->i_do_rr = 1;
 
   //JBT: Code to read in some variance reduction parameters from egsinp.
   EGS_Input *vr = input->takeInputItem("variance reduction");
@@ -283,7 +171,6 @@ int Mevegs_Application::initScoring() {
        setAusgabCall(AfterAnnihFlight,true);
        setAusgabCall(BeforeAnnihRest,true);
        setAusgabCall(AfterAnnihRest,true);
-       //setAusgabCall(FluorescentEvent,true);
        egsInformation("\n => initScoring: russian roulette with survival probability 1/%d\n\n",n_rr);
      }
    delete vr;
@@ -291,15 +178,14 @@ int Mevegs_Application::initScoring() {
   return 0;
 }
 
-
-//initializes the tet collection geometry for the simulation, either from a
-//mesh class or from a tet file
+// initializes the mesh geometry for the simulation
 int Mevegs_Application::initGeometry(){
 
     EGS_BaseGeometry::setActiveGeometryList(app_index);
 
     //Read in scaling factor
-    double scaling = 10;
+    double default_scaling = 1.0;
+    double scaling = 1.0;
     EGS_Input *mevegs = input->takeInputItem("mevegs");
     if( mevegs ) {
       if(!mevegs->getInput("scaling", scaling) && scaling != 0) {
@@ -308,12 +194,12 @@ int Mevegs_Application::initGeometry(){
       delete mevegs;
     }
 
-    if(scaling != scaling) {//somehow got NaN scaling (:
-      egsInformation("\nError scaling, got NaN! Using default of 10.");
-      scaling = 10;
+    if(scaling != scaling) {
+      egsInformation("\nError scaling, got NaN! Using default of %lf.", default_scaling);
+      scaling = default_scaling;
     }
 
-    geometry = createMeshGeometry(input, scaling, this->mesh);
+    geometry = createMeshGeometry(input, this, scaling, this->mesh);
 
     egsInformation("\nMesh class\n");
     egsInformation("nregions: %d \n", geometry->regions());
@@ -321,15 +207,15 @@ int Mevegs_Application::initGeometry(){
     egsInformation("label count: %d \n", geometry->getLabelCount());
     EGS_BaseGeometry::describeGeometries();
 
-      if (!geometry) {
-        return 1;
-      }
-      geometry->ref();
-      return 0;
+    if (!geometry) {
+      return 1;
+    }
+    geometry->ref();
+    return 0;
 }
 
-//output scoring quantities to an ausgab object
-//From tutor7pp.
+// output scoring quantities to an ausgab object
+// from tutor7pp.
 int Mevegs_Application::ausgab(int iarg) {
     if( iarg <= 4 ) {
         int np = the_stack->np - 1; int ir = the_stack->ir[np]-1;
@@ -362,61 +248,35 @@ int Mevegs_Application::ausgab(int iarg) {
     return 0;
 }
 
-//Outputs the current data of the simulation to a file.
-//This is used internally by EGS for restarting and combining runs.
-//From tutor7pp.
+// from tutor7pp.
 int Mevegs_Application::outputData() {
     int err = EGS_AdvancedApplication::outputData();
     if( err ) return err;
-    // We first call the outputData() function of our base class.
-    // This takes care of saving data related to the source, the random
-    // number generator, CPU time used, number of histories, etc.
-    // We then write our own data to the data stream. data_out is
-    // a pointer to a data stream that has been opened for writing
-    // in the base class.
     (*data_out) << " " << Etot << endl;
     if( !score->storeState(*data_out) ) return 101;
     return 0;
 }
 
-//This function gets called when you restart a run.
-//It sets the state of EGS to the final state of the previous simulation
-//whose data this function reads.
-//From tutor7pp.
+// from tutor7pp.
 int Mevegs_Application::readData() {
-    // We first call the readData() function of our base class.
-    // This takes care of reading data related to the source, the random
-    // number generator, CPU time used, number of histories, etc.
-    // (everything that was stored by the base class outputData() method).
     int err = EGS_AdvancedApplication::readData();
     if( err ) return err;
-    // We then read our own data from the data stream.
-    // data_in is a pointer to an input stream that has been opened
-    // by the base class.
     (*data_in) >> Etot;
     if( !score->setState(*data_in) ) return 101;
     return 0;
 }
 
-//Resets all aspects of the simulation to empty/0/nothing.
-//Used right before combining results from parallel simulations.
-//From tutor7pp.
+// Resets all aspects of the simulation.
+// Used right before combining results from parallel simulations.
+// from tutor7pp.
 void Mevegs_Application::resetCounter() {
-    // Reset everything in the base class
     EGS_AdvancedApplication::resetCounter();
-    // Reset our own data to zero.
     score->reset(); Etot = 0;
 }
 
-//this code gets called from combineResults() when combining parallel jobs.
-//From tutor7pp.
 int Mevegs_Application::addState(istream &data) {
-    // Call first the base class addState() function to read and add
-    // all data related to source, RNG, CPU time, etc.
     int err = EGS_AdvancedApplication::addState(data);
     if( err ) return err;
-    // Then read our own data to temporary variables and add to
-    // our results.
     double etot_tmp; data >> etot_tmp; Etot += etot_tmp;
     EGS_ScoringArray tmp(nreg+2);
     if( !tmp.setState(data) ) return 101;
@@ -424,68 +284,117 @@ int Mevegs_Application::addState(istream &data) {
     return 0;
 }
 
-//save all results to result vectors.
-//this is where the internal EGS EFrac and Uncert values get calculated
-void Mevegs_Application::aggregateResults(){
+void Mevegs_Application::aggregateResults() {
 
-  egsInformation("aggregating results for job %d\n", getIparallel());
+  egsInformation("aggregating results for job %d\n\n", getIparallel());
 
-  //normalize the results
-  double norm = (static_cast<double>(current_case))/Etot;
-  auto currScore = Mevegs_Application::score;
+  // call score by a more descriptive name
+  auto edep_score = this->score;
 
-  // go over score array and load up dose and uncertainty vectors
   // the score array is size nreg + 2, first elt is reflected, last is transmitted
   // start at 1 to skip energy reflected, stop 1 before end to skip transmitted
-  vector<double> _doses, _uncerts; //result vectors
-  for (int i = 1; i < Mevegs_Application::nreg + 1; ++i){
-    double _dose, _uncert;
-    currScore->currentResult(i, _dose, _uncert);
+  this->e_deps.reserve(num_elements());
+  this->uncerts.reserve(num_elements());
 
-    _doses.emplace_back(_dose*norm);
-    _uncerts.emplace_back(_uncert*norm);
+  // convert absolute uncertainty to percent uncertainty
+  auto abs_to_percent = [](EGS_Float val, EGS_Float uncert) -> EGS_Float {
+        if (val > 0) {
+            return uncert / val * 100.0;
+        }
+        return 100.0;
+  };
+
+  for (int i = 1; i < num_elements() + 1; ++i){
+    double e_dep, uncert;
+    // don't normalize the results, we can calculate fractions, etc. after the simulation
+    edep_score->currentResult(i, e_dep, uncert);
+    e_deps.push_back(e_dep);
+    uncerts.push_back(abs_to_percent(e_dep, uncert));
   }
 
-  allDoses   = _doses;
-  allUncerts = _uncerts;
+    // report reflected and transmitted quantities
+  std::ostringstream oss;
+  oss << "****Results given for a 66% confidence interval****\n";
 
-  char reflectBuffer[100];
-  char transmitBuffer[100];
-  //comment reflected and transmitted fractions to mesh file
-  double dosebuff, uncertbuff;
-  currScore->currentResult(0, dosebuff, uncertbuff);
-  sprintf(reflectBuffer, "Reflected (-Z) Fraction: %lf +/- %lf\n", dosebuff*norm, uncertbuff*norm);
-  currScore->currentResult(nreg + 1, dosebuff, uncertbuff);
-  sprintf(transmitBuffer, "Transmitted (+Z) Fraction: %lf +/- %lf\n", dosebuff*norm, uncertbuff*norm);
-  appInformation(reflectBuffer);
-  appInformation(transmitBuffer);
+  EGS_Float dep;
+  EGS_Float uncert;
+
+  // 0th region is reflected energy
+  edep_score->currentResult(0, dep, uncert);
+
+  // normalize to the source's average particle energy
+  auto norm = 1.0 / average_energy();
+
+  oss << "Reflected (-Z) fraction: " << dep * norm << " +/- " << abs_to_percent(dep * norm, uncert * norm) << "%\n";
+  oss << "Reflected (-Z) energy per particle [MeV]: " << dep << " +/- " << abs_to_percent(dep, uncert) << "%\n";
+
+  // one past last region is transmitted energy
+  edep_score->currentResult(num_elements() + 1, dep, uncert);
+  oss << "Transmitted (+Z) fraction: " << dep * norm << " +/- " << abs_to_percent(dep * norm, uncert * norm) << "%\n";
+  oss << "Transmitted (+Z) energy per particle [MeV]: " << dep << " +/- " << abs_to_percent(dep, uncert) << "%\n";
+
+  appInformation(oss.str().c_str());
+  this->run_info += oss.str();
 }
 
-//called after the simulation is over, actually outputs the calculated quantities.
-//if you want to print something to the console after the simulation is done,
-//maybe do it here! Or do whatever you want, I guess. Don't let me tell you
-//what to do.
 void Mevegs_Application::outputResults() {
-
-    //save results to internal result vectors in Application class
     aggregateResults();
 
-    // double norm = (static_cast<double>(current_case))/Etot;
     egsInformation("\n\n last case = %d Etot = %g\n",
-    static_cast<int>(current_case),Etot);
+        static_cast<int>(current_case),Etot);
 
-    //NB -> we commented this stuff out to avoid printing info of > 100000 tets
-    //for every run, would take a whole minute to do.
-
-    // score->reportResults(norm,
-    //         "Reflected/deposited/transmitted energy fraction",false,
-    //         "  %d  %12.6e +/- %12.6e %c\n");
-    // EGS_Float Rmax = 20; EGS_Float dr = Rmax/200;
+    // save the results as a mesh data file
+    write_gmsh();
 }
 
-//Reports the current result,
-//used for reporting intermediate results during simulation.
-//From tutor7pp
+// Save simulation results to a Gmsh msh file.
+//
+// Should work for either msh2 or msh4 because the ElementData section format
+// is the same for both.
+//
+// FIXME: fstream error checking
+void Mevegs_Application::write_gmsh() {
+
+    // calculate energy fractions
+    std::vector<EGS_Float> fractions;
+    fractions.reserve(this->e_deps.size());
+
+    for (auto e: e_deps) {
+        fractions.push_back(e / average_energy());
+    }
+
+    auto result_file = std::ofstream(this->mesh.output_filename(), std::ios::app);
+
+    append_gmsh_data(result_file, "Energy fraction per particle", fractions);
+    append_gmsh_data(result_file, "Energy deposition per particle [MeV]", this->e_deps);
+    append_gmsh_data(result_file, "Energy uncertainty [%]", this->uncerts);
+    append_gmsh_data(result_file, "Volume [cm^3]", this->getGeometry()->element_volumes());
+    append_gmsh_data(result_file, "Density [g/cm^3]", this->getGeometry()->element_densities());
+
+    auto extra_info = std::ofstream(this->mesh.output_filename() + ".egsinfo", std::ios::app);
+    // extra run information
+    extra_info << "$EGSInfo\n" << this->run_info << "$EndEGSInfo\n";
+}
+
+// append data to a mesh (same ElementData format for msh v2 and v4.1)
+void Mevegs_Application::append_gmsh_data(std::ostream& out_file, std::string title, const std::vector<double>& data)
+{
+    auto elt_tags = this->mesh.element_tags();
+
+    out_file << "$ElementData\n"; // header
+    out_file << "1\n" << "\"" << title << "\"\n"; // one string, the view title
+    out_file << "1\n0.0\n"; // one real number, the time (0.0)
+
+    // three ints, timestep 0, 1 value per elt, number of elts
+    out_file << "3\n0\n1\n" << data.size() << "\n";
+
+    for (std::size_t i = 0; i < data.size(); i++) {
+        out_file << elt_tags[i] << " " << data[i] << "\n";
+    }
+    out_file << "$EndElementData\n"; // footer
+}
+
+// from tutor7pp
 void Mevegs_Application::getCurrentResult(double &sum, double &sum2,
         double &norm, double &count) {
     count = current_case;
@@ -493,9 +402,7 @@ void Mevegs_Application::getCurrentResult(double &sum, double &sum2,
     score->currentScore(0,sum,sum2);
 }
 
-//called just before the shower() function. If this function does not return 0,
-//shower() will not get called.
-//From tutor7pp
+// from tutor7pp
 int Mevegs_Application::startNewShower() {
     Etot += p.E*p.wt;
     int res = EGS_Application::startNewShower();
@@ -508,32 +415,12 @@ int Mevegs_Application::startNewShower() {
     return 0;
 }
 
-//bundles together dosemath calculations
-//namedResults is alias for result type in dosemath
-//natural place is of course in dosemath but need the Mevegs_Application
-//ptr to app and don't want to make a header just to include in the dosemath file
-dosemath::namedResults Mevegs_Application::calculateResults(){
-  using std::make_pair;
-
-  dosemath::namedResults allRes;
-
-  allRes.emplace_back(make_pair("Energy Fraction", this->allDoses));
-  allRes.emplace_back(make_pair("Absolute uncertainty", this->allUncerts));
-
-  //then find quantites used for other quantites up front
-  vector<double> tetVols = dosemath::getTetVols(this->mesh.getCoords());
-  allRes.emplace_back(make_pair("Tet Volumes [cm^3]", tetVols));
-
-  return allRes;
-}
-
-// MevEGS main function
 int main(int argc, char** argv) {
 
     // check for mesh file
-    string meshFilePath = "";
+    std::string meshFilePath = "";
     for (int i = 0; i < argc; i++) {
-      auto strArg = string(argv[i]);
+      auto strArg = std::string(argv[i]);
       if ((strArg.size() > 3) &&
           (strArg.compare(strArg.size()-4, 4, ".msh")) == 0) {
               meshFilePath = strArg;
@@ -541,36 +428,21 @@ int main(int argc, char** argv) {
     }
 
     if (meshFilePath == "") {
-        std::cerr << "no msh file given, exiting\n";
+        std::cerr << "mevegs: no msh file given, exiting\n";
         exit(1);
     }
 
     // make a mesh or die trying
-    Mesh mesh = gmsh_manip::createMesh(meshFilePath);
+    auto mesh = gmsh_manip::mesh_from_gmsh(meshFilePath);
     Mevegs_Application app(argc, argv, mesh);
 
     int initErr = app.initSimulation();
     if (initErr)
         return initErr;
 
-    // FIXME (do in constructor)
-    // set mesh relative densities
-    for (std::size_t i = 0; i < mesh.rhor.size(); i++) {
-      app.getGeometry()->setRelativeRho(i, mesh.rhor[i]);
-    }
-
-    //3/4: run simulation if there weren't any initErrs
     int runErr = app.runSimulation();
     if (runErr < 0)
         return runErr;
 
-    //4/4: finish simulation and return error value
-    int finishErr = app.finishSimulation();
-
-    // if serial run, or last job of a parallel run, save to output file
-    if (app.getNparallel() == 0 || app.isLastJob()){
-      gmsh_manip::saveMeshOutput(mesh, app.calculateResults(), app.getInputFileName());
-    }
-
-    return finishErr;
+    return app.finishSimulation();
 }

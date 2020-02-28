@@ -25,11 +25,13 @@ include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
-DEFS = $(DEF1) -DBUILD_MEVEX_TET_COLLECTION_DLL
+DEFS = $(DEF1) -DBUILD_EGS_MESH_DLL
 
 library = egs_mesh
 lib_files = egs_mesh
-my_deps = egs_transformations.h geometry$(DSEP)$(library)$(DSEP)Mesh.h
+my_deps = egs_transformations.h geometry$(DSEP)$(library)$(DSEP)TetrahedralMesh.h \
+			geometry$(DSEP)$(library)$(DSEP)neighbour.h
+
 extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
 include $(SPEC_DIR)egspp_libs.spec
