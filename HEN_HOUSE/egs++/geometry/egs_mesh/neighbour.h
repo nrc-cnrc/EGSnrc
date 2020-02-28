@@ -132,7 +132,7 @@ tetrahedron_neighbours(const std::vector<int>& nodes) {
   // if an elt has no neighbours on a face, that face is a boundary
   std::vector<int> neighbours(num_faces * num_elts, -1);
 
-  find neighbours
+  // find neighbours
   std::array<int, 3> face_points = {0, 0, 0};
   std::vector<int> pointsOfFaceFlag(num_unique_nodes, 0);
 
