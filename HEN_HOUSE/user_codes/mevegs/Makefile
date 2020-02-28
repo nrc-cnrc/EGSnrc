@@ -2,7 +2,7 @@
 #
 #  Makefile to build the mevegs application, based on the tutor7pp makefile
 #
-#  Copyright (C) 2019 Mevex Corporation
+#  Copyright (C) 2020 National Research Council Canada
 #
 #  This file is part of EGSnrc.
 #
@@ -20,7 +20,13 @@
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
-
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:    Max Orok, 2020 (adapted for mevegs)                       "
+#
+###############################################################################
+#
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp1.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf

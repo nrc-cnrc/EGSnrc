@@ -2,7 +2,7 @@
 ###############################################################################
 #
 #  EGSnrc egs++ mevegs application
-#  Copyright (C) 2019 Mevex Corporation
+#  Copyright (C) 2020 Mevex Corporation
 #
 #  This file is part of EGSnrc.
 #
