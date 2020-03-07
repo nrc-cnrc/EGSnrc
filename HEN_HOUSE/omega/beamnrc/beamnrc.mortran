@@ -9190,8 +9190,10 @@ IF (NSC_PLANES >  0) [
 " Dose zone results
 " *****************
 IF (NDOSE_ZONE ~= 0) [
-   WRITE(IOUTLIST,'(/T30,'' DOSE RESULTS''/
+   WRITE(IOUTLIST,'(/T30,'' DOSE RESULTS*''/
                  T30,'' ************''/)');
+   WRITE(IOUTLIST,
+      '('' *Dose will not be output for zones with zero mass.''/)');
    IF(OLDSRC=1|OLDSRC=2) [
                WRITE(IOUTLIST,
        '('' ***WARNING: DOSES ARE NORMALIZED per PARTICLE INCIDENT FROM''/
@@ -9210,23 +9212,33 @@ IF (NDOSE_ZONE ~= 0) [
 
    "Print a summary of the dose zone results"
    WRITE(IOUTLIST,300);
-   WRITE(IOUTLIST,302)
-      (ID,AMASS(ID),SCDOSE(ID,1),SCDOSE2(ID,1),(AMASS(ID)/1000.)*SCDOSE(ID,1),
-      SCDOSE2(ID,1),ID=1,NDOSE_ZONE);
+   DO ID=1,NDOSE_ZONE[
+      IF(AMASS(ID)>0.0)[
+         WRITE(IOUTLIST,302) ID,AMASS(ID),SCDOSE(ID,1),SCDOSE2(ID,1),
+         (AMASS(ID)/1000.)*SCDOSE(ID,1),SCDOSE2(ID,1);
+      ]
+   ]
    IF(IBRSPL=2)["print total non-fat dose for DBS"
      WRITE(IOUTLIST, *);
      WRITE(IOUTLIST,305);
-     WRITE(IOUTLIST,302)
-      (ID,AMASS(ID),SCDOSE(ID,2),SCDOSE2(ID,2),(AMASS(ID)/1000.)*SCDOSE(ID,2),
-      SCDOSE2(ID,2),ID=1,NDOSE_ZONE);
+     DO ID=1,NDOSE_ZONE[
+      IF(AMASS(ID)>0.0)[
+         WRITE(IOUTLIST,302) ID,AMASS(ID),SCDOSE(ID,1),SCDOSE2(ID,1),
+         (AMASS(ID)/1000.)*SCDOSE(ID,1),SCDOSE2(ID,1);
+      ]
+     ]
    ]
    IF( ITDOSE_ON=1) [
 
       IF( ICM_CONTAM >= 1) [
          WRITE(IOUTLIST, *);
          WRITE(IOUTLIST,304)ICM_CONTAM;
-         WRITE(IOUTLIST,302)(ID,AMASS(ID),SCDOSE(ID,3),SCDOSE2(ID,3),
-             (AMASS(ID)/1000.)*SCDOSE(ID,3),SCDOSE2(ID,3),ID=1,NDOSE_ZONE);
+         DO ID=1,NDOSE_ZONE[
+            IF(AMASS(ID)>0.0)[
+              WRITE(IOUTLIST,302) ID,AMASS(ID),SCDOSE(ID,1),SCDOSE2(ID,1),
+              (AMASS(ID)/1000.)*SCDOSE(ID,1),SCDOSE2(ID,1);
+            ]
+         ]
       ]
       WRITE(IOUTLIST, *);
       IF(LNEXC+LNINC>0)[
@@ -9300,6 +9312,7 @@ IF (NDOSE_ZONE ~= 0) [
           ]
           WRITE(IOUTLIST, *);
           DO ID=1,NDOSE_ZONE [
+           IF(AMASS(ID)>0.0)[
             WRITE(IOUTLIST, '(/I4,$ )' ) ID;
             WRITE(IOUTLIST, '(1X,1PE10.3, "+/-",0PF4.1,"%", $ )')
             SCDOSE(ID,1), SCDOSE2(ID,1);
@@ -9307,6 +9320,7 @@ IF (NDOSE_ZONE ~= 0) [
                WRITE(IOUTLIST, '(1X,1PE10.3, "+/-",0PF4.1,"%", $ )')
                SCDOSE(ID,IT+IT2), SCDOSE2(ID,IT+IT2)
             ]
+           ]
           ]   " end of the do id loop "
           WRITE(IOUTLIST,*);
           WRITE(IOUTLIST,*);
