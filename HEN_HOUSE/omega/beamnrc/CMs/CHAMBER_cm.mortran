@@ -2204,7 +2204,12 @@ IF(N_CHM_$CHAMBER<0)["inputting for a group of layers"
       IRA = IRA+1;
       ECUT(IRA)=ECUT(IRSTART_$CHAMBER);
       PCUT(IRA)=PCUT(IRSTART_$CHAMBER);
-      DOSE_ZONE(IRA)=DOSE_ZONE(IRSTART_$CHAMBER) + (IM-1);
+      IF(DOSE_ZONE(IRSTART_$CHAMBER)<=0)[
+         DOSE_ZONE(IRA)=0;
+      ]
+      ELSE[
+         DOSE_ZONE(IRA)=DOSE_ZONE(IRSTART_$CHAMBER) + (IM-1);
+      ]
       IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
          ;OUTPUT ICM_$CHAMBER,IM,$MAX_DOSE_ZONE;
            (//'***ERROR IN CM ',I4,' (CHAMBER):'/
@@ -2275,7 +2280,12 @@ ELSE[
        IRA = IRA+1;
        ECUT(IRA)=ECUT(IRSTART_$CHAMBER);
        PCUT(IRA)=PCUT(IRSTART_$CHAMBER);
-       DOSE_ZONE(IRA)=DOSE_ZONE(IRSTART_$CHAMBER) + (IM-1);
+       IF(DOSE_ZONE(IRSTART_$CHAMBER)<=0)[
+         DOSE_ZONE(IRA)=0;
+       ]
+       ELSE[
+         DOSE_ZONE(IRA)=DOSE_ZONE(IRSTART_$CHAMBER) + (IM-1);
+       ]
        IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
           ;OUTPUT ICM_$CHAMBER,IM,$MAX_DOSE_ZONE;
             (//'***ERROR IN CM ',I4,' (CHAMBER):'/
