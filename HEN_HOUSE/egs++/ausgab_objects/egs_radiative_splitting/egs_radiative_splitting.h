@@ -49,6 +49,8 @@
 #include "egs_application.h"
 #include "egs_scoring.h"
 #include "egs_base_geometry.h"
+#include "egs_rndm.h"
+#include "egs_interpolator.h"
 
 #ifdef WIN32
 
@@ -81,7 +83,15 @@ events. This ausgab object is specified via:
 :start ausgab object:
     library   = egs_radiative_splitting
     name      = some_name
-    splitting = n_split
+    splitting type   = uniform (default), directional, or BEAMnrc directional
+    splitting = the splitting number (n_split)
+ The following inputs apply to directional or BEAMnrc directional splitting only:
+    field size = radius of splitting field (cm) -- required
+    ssd = source-to-surface distance (SSD) at which splitting field is defined (cm) -- required
+    e-/e+ split region = region number(s) for e-/e+ splitting.  On entering this(ese) region(s), charged particles will be split n_split times.
+                         If set to 0 or omitted, charged particles will not be split.
+    radially redistribute e-/e+ = "yes" or "no" (default) -- if "yes", evenly distribute split e-/e+ in a circle of radius sqrt(x(np)^2+y(np)^2) about the Z-axis
+    Z of russian roulette plane = Z below which russian roulette is not played on low-weight charged particles resulting from e-/e+ splitting (cm)
 :stop ausgab object:
 \endverbatim
 
@@ -95,7 +105,7 @@ class EGS_RADIATIVE_SPLITTING_EXPORT EGS_RadiativeSplitting : public EGS_AusgabO
 public:
 
     /*! Splitting algortihm type */
-    enum Type {
+    enum {
         URS, // EGSnrc Uniform Radiative Splitting
         DRS, // Directional Radiative Splitting
         DRSf // Directional Radiative Splitting (BEAMnrc)
@@ -107,21 +117,79 @@ public:
 
     void setApplication(EGS_Application *App);
 
+    int doInteractions(int iarg, EGS_RandomGenerator *rndm, int &killed);
+
+    int doSmartBrems(EGS_RandomGenerator *rndm);
+
+    void getCostMinMax(const EGS_Vector &xx, const EGS_Vector &uu,
+                        EGS_Float &ro, EGS_Float &ct_min, EGS_Float &ct_max);
+
     void setSplitting(const int &n_s) {
         nsplit = n_s;
+    };
+
+    void setSplitType(const int &type) {
+        split_type = type;
+    };
+
+    void initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr);
+
+  /*
+   {
+        fs = field_rad;
+        ssd = field_ssd;
+        ireg_esplit = splitreg;
+        irad_esplit = irad;
+        zrr_esplit = zrr;
+
+        y2_KM = new EGS_Float [nsplit];
+        f_KM_a = new EGS_Interpolator* [the_media->nmed];
+        f_KM_b = new EGS_Interpolator* [the_media->nmed];
+        zbr_KM = new EGS_Float [nmed];
+    };
+ */
+
+    bool needsCall(EGS_Application::AusgabCall iarg) {
+        if (split_type == EGS_RadiativeSplitting::DRS || split_type == EGS_RadiativeSplitting::DRSf) {
+           if (iarg == EGS_Application::BeforeBrems || iarg == EGS_Application::BeforeAnnihFlight || iarg == EGS_Application::BeforeAnnihRest ||
+               iarg == EGS_Application::BeforePair || iarg == EGS_Application::BeforeCompton || iarg == EGS_Application::BeforePhoto ||
+               iarg == EGS_Application::BeforeRayleigh || iarg == EGS_Application::FluorescentEvent) {
+               return true;
+           }
+        }
+        //or else false?
     };
 
     int processEvent(EGS_Application::AusgabCall iarg) {
         return 0;
     };
+
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
         return 0;
     };
 
 protected:
+    int split_type; //0 = uniform, 1 = DBS, 2 = BEAMnrc DBS
     /* Maximum splitting limited to 2,147,483,647 */
     int nsplit;
+    EGS_Float fs; //radius of splitting field
+    EGS_Float ssd; //ssd at which splitting field is defined
+    vector<int> ireg_esplit; //numbers of regions on entering which charged particles are split
+    int irad_esplit; //set to 1 to radially redistribute split e-/e+
+    int zrr_esplit; //Z value below which Russian Roulette will not be played with split e-/e+
 
+    bool use_cyl_sym = false; //set to true to use cylindrical symmetry, hard coded as false for now
+    EGS_Float zcyls; //Z below which cylindrical symmetry does not exist
+
+    EGS_Float *y2_KM;
+
+    EGS_Interpolator **f_KM_a;
+    EGS_Interpolator **f_KM_b;
+    EGS_Float        *zbr_KM;
+
+    const char *dbs_err_msg =
+"Stack size exceeded in BEAMpp_DBS::%s()\n"
+"Increase MXSTACK (currently %d) in array_sizes.h and retry\n";
 };
 
 #endif
