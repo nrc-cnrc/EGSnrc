@@ -51,16 +51,18 @@ geometry_libs = egs_planes egs_cd_geometry egs_gtransformed egs_nd_geometry \
                egs_box egs_genvelope egs_spheres egs_cylinders egs_iplanes \
                egs_cones egs_gstack egs_prism egs_union egs_pyramid egs_conez\
                egs_space egs_elliptic_cylinders egs_smart_envelope \
-               egs_vhp_geometry egs_octree egs_roundrect_cylinders
+               egs_vhp_geometry egs_octree egs_roundrect_cylinders \
+               egs_rz egs_autoenvelope egs_glib
 
 source_libs = egs_collimated_source egs_isotropic_source egs_parallel_beam \
               egs_point_source egs_source_collection egs_transformed_source \
               egs_beam_source egs_phsp_source egs_angular_spread \
-              iaea_phsp_source egs_radionuclide_source egs_dynamic_source
+              iaea_phsp_source egs_radionuclide_source egs_dynamic_source \
+              egs_fano_source
 
 shape_libs = egs_circle egs_ellipse egs_extended_shape egs_gaussian_shape \
              egs_line_shape egs_polygon_shape egs_rectangle egs_shape_collection \
-             egs_voxelized_shape
+             egs_voxelized_shape egs_spherical_shell egs_conical_shell
 
 aobject_libs = egs_track_scoring egs_dose_scoring egs_radiative_splitting egs_phsp_scoring
 

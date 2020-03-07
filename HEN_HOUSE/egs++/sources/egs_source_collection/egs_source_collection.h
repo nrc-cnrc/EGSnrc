@@ -250,6 +250,12 @@ public:
         return (nsource > 0);
     };
 
+    void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) {
+        for (int j=0; j<nsource; j++) {
+            sources[j]->setSimulationChunk(nstart, nrun);
+        }
+    };
+
 protected:
 
     int nsource;

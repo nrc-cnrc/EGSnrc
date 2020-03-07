@@ -128,7 +128,8 @@ EGS_BeamSource::EGS_BeamSource(EGS_Input *input, EGS_ObjectFactory *f) :
         return;
     }
 
-    int ipar=0, ilog=6; int npar=0;
+    int ipar=0, ilog=6;
+    int npar=0;
     EGS_Application *app = EGS_Application::activeApplication();
     if (app) {
         ipar = app->getIparallel();
