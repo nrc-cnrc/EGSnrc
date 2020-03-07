@@ -41,7 +41,15 @@ extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
 include $(SPEC_DIR)egspp_libs.spec
 
-$(make_depend)
+$(DSO2)$(library).$(obje): $(library).cpp $(library).h
+
+egsnrc_$(my_machine).$(obje): egsnrc_$(my_machine).F array_sizes.h
+	$(F77) $(FC_FLAGS) $(FDEFS) -c $(FOUT)$@ $<
+
+egsnrc_$(my_machine).F: $(CPP_SOURCES)
+	@echo "Mortran compiling EGSnrc sources ..."
+	@$(MORTRAN_EXE) -s -i -d $(MORTRAN_DATA) -f $(CPP_SOURCES) -o7 $@ \
+	-o8 $(@:.F=.mortlst)
 
 test:
 	@echo "common_h2: $(common_h2)"
