@@ -258,7 +258,16 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QStringList libraries = directory.entryList(QStringList() << (lib_prefix+"*"+lib_suffix).c_str(), QDir::Files);
     QStringList geomLibs, sourceLibs;
 
-    shared_ptr<EGS_InputStruct> inputStruct(new EGS_InputStruct);
+    // The input template structure
+    inputStruct = make_shared<EGS_InputStruct>();
+
+    // Geometry definition block
+    auto geomDefPtr = inputStruct->addBlockInput("geometry definition");
+    geomDefPtr->addSingleInput("simulation geometry", true, "The name of the geometry that will be used in the simulation, or to be viewed in egs_view. If you have created a composite geometry using many other geometries, name the final composite geometry here. Note that in some applications, the calculation geometry input block overrides this input, but it is still required.");
+
+    // Source definition block
+    auto srcDefPtr = inputStruct->addBlockInput("source definition");
+    srcDefPtr->addSingleInput("simulation source", true, "The name of the source that will be used in the simulation. If you have created a composite source using many other sources, name the final composite source here.");
 
     // For each library, try to load it and determine if it is geometry or source
     for (const auto &lib : libraries) {
@@ -283,7 +292,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
                 shared_ptr<EGS_BlockInput> geom = getInputs();
                 if (geom) {
-                    geomTemplates.push_back(geom);
+                    geomDefPtr->addBlockInput(geom);
 
                     vector<shared_ptr<EGS_SingleInput>> singleInputs = geom->getSingleInputs();
                     for (auto &inp : singleInputs) {
@@ -325,7 +334,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         }
     }
 
-    inputStruct->addBlockInputs(geomTemplates);
     egsinpEdit->setInputStruct(inputStruct);
 
     // Populate the geometry and simulation template lists
