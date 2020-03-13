@@ -42,7 +42,13 @@ EGS_InputStruct::EGS_InputStruct() {}
 
 EGS_InputStruct::~EGS_InputStruct() {}
 
-void EGS_InputStruct::addBlockInput(shared_ptr<EGS_BlockInput> block) {
+shared_ptr<EGS_BlockInput> EGS_InputStruct::addBlockInput(string blockTit, bool isReq) {
+    blockInputs.push_back(make_shared<EGS_BlockInput>(blockTit, isReq, nullptr));
+
+    return blockInputs.back();
+}
+
+shared_ptr<EGS_BlockInput> EGS_InputStruct::addBlockInput(shared_ptr<EGS_BlockInput> block) {
     blockInputs.push_back(block);
 }
 
@@ -52,6 +58,16 @@ void EGS_InputStruct::addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks) 
 
 vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
     return blockInputs;
+}
+
+shared_ptr<EGS_BlockInput> EGS_InputStruct::getBlockInput(string title) {
+    for(auto &block: blockInputs) {
+        if(egsEquivStr(block->getTitle(), title)) {
+            return block;
+        }
+    }
+
+    return nullptr;
 }
 
 shared_ptr<EGS_BlockInput> EGS_InputStruct::getLibraryBlock(string blockTitle, string libraryName) {
@@ -108,6 +124,13 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::addSingleInput(string inputTag, bool
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::addBlockInput(string blockTit, bool isReq) {
     blockInputs.push_back(make_shared<EGS_BlockInput>(blockTit, isReq, shared_from_this()));
+
+    return blockInputs.back();
+}
+
+shared_ptr<EGS_BlockInput> EGS_BlockInput::addBlockInput(shared_ptr<EGS_BlockInput> block) {
+    block->setParent(shared_from_this());
+    blockInputs.push_back(block);
 
     return blockInputs.back();
 }
@@ -297,6 +320,10 @@ bool EGS_SingleInput::getRequired() {
 
 const vector<string> EGS_SingleInput::getValues() {
     return values;
+}
+
+void EGS_SingleInput::setValues(const vector<string> vals) {
+    values = vals;
 }
 
 string EGS_SingleInput::getDescription() {
