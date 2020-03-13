@@ -360,6 +360,8 @@ void EGS_Editor::autoComplete() {
 
         vector<shared_ptr<EGS_SingleInput>> singleInputs = inputBlockTemplate->getSingleInputs(blockTitle.toStdString());
 
+        vector<shared_ptr<EGS_BlockInput>> blockInputs = inputBlockTemplate->getBlockInputs(blockTitle.toStdString());
+
         // Populate the popup list
         QStringList itemList;
 
@@ -368,6 +370,9 @@ void EGS_Editor::autoComplete() {
             if(!egsEquivStr(inp->getTag(), "library")) {
                 itemList << QString((inp->getTag() + " = ").c_str());
             }
+        }
+        for(auto &block: blockInputs) {
+            itemList << QString((":start " + block->getTitle() + ":").c_str());
         }
         if(itemList.size() > 0) {
             model->setStringList(itemList);
@@ -432,10 +437,8 @@ void EGS_Editor::autoComplete() {
             QTextCharFormat format;
             format.setUnderlineStyle(QTextCharFormat::NoUnderline);
 
-            cout << "test " << blockTitle.toLatin1().data() << endl;
             auto inputPtr = inputBlockTemplate->getBlockInput(blockTitle.toStdString());
             if(!inputPtr) {
-                cout << "test2 " << blockTitle.toLatin1().data() << endl;
                 // Red underline the input tag
                 // Select the input tag
                 selection.cursor.movePosition(QTextCursor::StartOfBlock);
@@ -476,7 +479,8 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle) {
         return nullptr;
     }
 
-    QString library = getInputValue("library", textCursor().block());
+    bool foundTag;
+    QString library = getInputValue("library", textCursor().block(), foundTag);
 
     // If we couldn't find a library tag in the current block,
     // try searching the containing block (if there is one)
@@ -497,10 +501,8 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle) {
         blockEnd = blockEnd.next();
 
         // Check for the library tag here
-        library = getInputValue("library", blockEnd);
+        library = getInputValue("library", blockEnd, foundTag);
     }
-
-    cout << "test getBlockInput " << blockTitle.toLatin1().data() << " " << library.toLatin1().data() << endl;
 
     // If we got the library tag, we can directly look up this input block structure
     if(library.size() > 0) {
@@ -558,10 +560,11 @@ QString EGS_Editor::getBlockTitle() {
     return blockTitle;
 }
 
-QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock) {
+QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag) {
     QString value;
     vector<QString> innerList;
     bool withinOtherBlock = false;
+    foundTag = false;
 
     // Get the last textblock in this input block
     // so that we search all the inputs in the block
@@ -581,12 +584,16 @@ QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock) {
         // Only look for the library tag if we're not in a sub-block
         int pos;
         if(!withinOtherBlock) {
-            pos = line.lastIndexOf(inp.simplified());
+            pos = line.lastIndexOf(inp);
             if(pos >= 0) {
                 int pos2 = line.lastIndexOf("=");
                 if(pos2 > pos) {
-                    value = line.right(line.size()-pos2-1).simplified();
-                    break;
+                    QString tag = line.left(pos2).simplified();
+                    if(egsEquivStr(tag.toStdString(), inp.simplified().toStdString())) {
+                        foundTag = true;
+                        value = line.right(line.size()-pos2-1).simplified();
+                        break;
+                    }
                 }
             }
         }
@@ -681,63 +688,80 @@ bool EGS_Editor::inputHasDependency(shared_ptr<EGS_SingleInput> inp) {
     }
 }
 
-/*bool EGS_Editor::inputHasDependency(shared_ptr<EGS_SingleInput> inp) {
-    auto dependencyInp = inp->getDependencyInp();
-    if(!dependencyInp) {
-        return false;
-    } else {
-        return true;
-    }
-}*/
-
 bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp) {
 
+    // This is a list of inputs that the current input depends on
     auto dependencyInp = inp->getDependencyInp();
     if(dependencyInp.size() < 1) {
         return false;
     }
+    // This is a list of values, that each of the dependencies above must match
+    // These are like the required input parameters that we are checking against
     auto dependencyVal = inp->getDependencyVal();
+    auto dependencyAnti = inp->getDependencyAnti();
 
     // Loop through the dependencies
-    bool satisfied = false;
-    size_t i = 0;
-    for(auto &depInp: dependencyInp) {
-
-        string depTag = depInp->getTag();
-
-        // Get the value from the input file
-        QString val = getInputValue(QString::fromStdString(depTag), textCursor().block());
-
-        // Do an OR operation
-        if(egsEquivStr(val.toLatin1().data(), dependencyVal[i])) {
-            return true;
+    vector<bool> previousSatisfied;
+    bool satisfied = true;
+    string previousTag;
+    for(size_t i = 0; i < dependencyInp.size(); ++i) {
+        if(!satisfied) {
+            break;
         }
 
-        ++i;
+        string depTag = dependencyInp[i]->getTag();
+
+        // Get the value from the input file
+        bool foundTag;
+        QString val = getInputValue(QString::fromStdString(depTag), textCursor().block(), foundTag);
+
+        if(foundTag && !dependencyAnti[i]) {
+            if(egsEquivStr(val.toLatin1().data(), dependencyVal[i])) {
+                satisfied = true;
+            } else {
+                satisfied = false;
+            }
+        } else {
+            // If this is an anti dependency, then we didn't want to find the tag
+            if(!foundTag && dependencyAnti[i]) {
+                satisfied = true;
+            } else {
+                satisfied = false;
+            }
+        }
+
+        // Look ahead, if the following inputs have the same tag as this one (i)
+        for(size_t j = i+1; j < dependencyInp.size(); ++j) {
+            if(egsEquivStr(dependencyInp[j]->getTag(), depTag)) {
+                // If we already were satisfied by the first one, just skip
+                // ahead.
+                // This is because dependencies with the same tag are treated
+                // with an OR operation
+                if(satisfied) {
+                    // If we hit the end because all the tags matched, reset i
+                    if(j == dependencyInp.size()-1) {
+                        i = j-1;
+                    }
+                    continue;
+                } else {
+                    if(egsEquivStr(val.toLatin1().data(), dependencyVal[j])) {
+                        satisfied = true;
+                        // If we hit the end because all the tags matched, reset i
+                        if(j == dependencyInp.size()-1) {
+                            i = j-1;
+                        }
+                        continue;
+                    }
+                }
+            } else {
+                i = j-1;
+                break;
+            }
+        }
     }
 
     return satisfied;
 }
-
-/*bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp) {
-
-    shared_ptr<EGS_SingleInput> dependencyInp = inp->getDependencyInp();
-    if(!dependencyInp) {
-        return false;
-    }
-
-    // Get the input tag that we're looking for
-    string dependencyTag = dependencyInp->getTag();
-    string dependencyVal = inp->getDependencyVal();
-
-    QString val = getInputValue(QString::fromStdString(dependencyTag), textCursor().block());
-
-    if(egsEquivStr(val.toLatin1().data(), dependencyVal.c_str())) {
-        return true;
-    } else {
-        return false;
-    }
-}*/
 
 void EGS_Editor::lineNumberAreaPaintEvent(QPaintEvent *event) {
     QPainter painter(lineNumberArea);
