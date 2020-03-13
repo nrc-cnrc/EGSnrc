@@ -60,9 +60,10 @@ public:
     bool getRequired();
     const vector<string> getValues();
     string getDescription();
-    void addDependency(shared_ptr<EGS_SingleInput> inp, string val="");
+    void addDependency(shared_ptr<EGS_SingleInput> inp, string val="", bool isAntiDependency = false);
     vector<shared_ptr<EGS_SingleInput>> getDependencyInp();
     vector<string> getDependencyVal();
+    vector<bool> getDependencyAnti();
 
 private:
 
@@ -73,6 +74,7 @@ private:
     vector<string> values;
     vector<shared_ptr<EGS_SingleInput>> dependencyInp;
     vector<string> dependencyVal;
+    vector<bool> dependencyAnti;
 };
 
 class EGS_EXPORT EGS_BlockInput
@@ -89,6 +91,7 @@ public:
     vector<shared_ptr<EGS_SingleInput>> getSingleInputs();
     vector<shared_ptr<EGS_SingleInput>> getSingleInputs(string title);
     vector<shared_ptr<EGS_BlockInput>> getBlockInputs();
+    vector<shared_ptr<EGS_BlockInput>> getBlockInputs(string title);
     shared_ptr<EGS_SingleInput> getSingleInput(string inputTag);
     shared_ptr<EGS_SingleInput> getSingleInput(string inputTag, string title);
     shared_ptr<EGS_BlockInput> getBlockInput(string title);

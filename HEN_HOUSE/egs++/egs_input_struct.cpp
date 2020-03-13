@@ -135,6 +135,20 @@ vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs() {
     return blockInputs;
 }
 
+vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs(string title) {
+    if(egsEquivStr(this->getTitle(), title)) {
+        return blockInputs;
+    } else {
+        for(auto &block: blockInputs) {
+            if(egsEquivStr(block->getTitle(), title)) {
+                return block->getBlockInputs();
+            }
+        }
+    }
+
+    return {};
+}
+
 shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag) {
     for(auto& inp : singleInputs) {
         // TODO: this assumes unique inputTag
@@ -255,9 +269,10 @@ EGS_SingleInput::EGS_SingleInput(string inputTag, bool isReq, const string desc,
 
 EGS_SingleInput::~EGS_SingleInput() {}
 
-void EGS_SingleInput::addDependency(shared_ptr<EGS_SingleInput> inp, string val) {
+void EGS_SingleInput::addDependency(shared_ptr<EGS_SingleInput> inp, string val, bool isAntiDependency) {
     dependencyInp.push_back(inp);
     dependencyVal.push_back(val);
+    dependencyAnti.push_back(isAntiDependency);
 }
 
 vector<shared_ptr<EGS_SingleInput>> EGS_SingleInput::getDependencyInp() {
@@ -266,6 +281,10 @@ vector<shared_ptr<EGS_SingleInput>> EGS_SingleInput::getDependencyInp() {
 
 vector<string> EGS_SingleInput::getDependencyVal() {
     return dependencyVal;
+}
+
+vector<bool> EGS_SingleInput::getDependencyAnti() {
+    return dependencyAnti;
 }
 
 string EGS_SingleInput::getTag() {
