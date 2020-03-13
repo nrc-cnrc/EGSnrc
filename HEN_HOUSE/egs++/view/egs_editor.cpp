@@ -371,8 +371,14 @@ void EGS_Editor::autoComplete() {
                 itemList << QString((inp->getTag() + " = ").c_str());
             }
         }
+
+        // Store the block titles in a set to remove duplicates
+        QSet<QString> blockTitles;
         for(auto &block: blockInputs) {
-            itemList << QString((":start " + block->getTitle() + ":").c_str());
+            blockTitles << QString((":start " + block->getTitle() + ":").c_str());
+        }
+        for(auto &title: blockTitles) {
+            itemList << title;
         }
         if(itemList.size() > 0) {
             model->setStringList(itemList);
@@ -416,12 +422,12 @@ void EGS_Editor::autoComplete() {
         if(inputBlockTemplate) {
 
             // Get the block title
-            QString blockTitle;
+            QString blockTit;
             int pos = selectedText.lastIndexOf(":start ");
             pos += 7;
             int endPos = selectedText.indexOf(":",pos);
             if(endPos > 0) {
-                blockTitle = selectedText.mid(pos, endPos-pos);
+                blockTit = selectedText.mid(pos, endPos-pos);
             }
 
             QList<QTextEdit::ExtraSelection> extraSelections = this->extraSelections();
@@ -437,7 +443,7 @@ void EGS_Editor::autoComplete() {
             QTextCharFormat format;
             format.setUnderlineStyle(QTextCharFormat::NoUnderline);
 
-            auto inputPtr = inputBlockTemplate->getBlockInput(blockTitle.toStdString());
+            auto inputPtr = inputBlockTemplate->getBlockInput(blockTit.toStdString());
             if(!inputPtr) {
                 // Red underline the input tag
                 // Select the input tag
@@ -463,6 +469,47 @@ void EGS_Editor::autoComplete() {
             selection.cursor.endEditBlock();
             extraSelections.append(selection);
             setExtraSelections(extraSelections);
+        }
+
+    // For geometry and source blocks that don't contain a library line,
+    // add 'library =' as an option in the popup
+    } else if(egsEquivStr(blockTitle, "geometry")) {
+
+        // Populate the popup list
+        QStringList itemList;
+        itemList << "library";
+        if(itemList.size() > 0) {
+            model->setStringList(itemList);
+        }
+
+        popup->setModel(model);
+        popup->setFont(this->font());
+
+        // Get max string length
+        int strLength = 0;
+        for (auto &item: itemList) {
+            if (item.size() > strLength) {
+                strLength = item.size();
+            }
+        }
+
+        // Create a selection popup
+        int maxVisibleItems = 6;
+        int h = (popup->sizeHintForRow(0) * qMin(maxVisibleItems, popup->model()->rowCount()) + 3) + 3;
+        QScrollBar *hsb = popup->horizontalScrollBar();
+        if (hsb && hsb->isVisible()) {
+            h += popup->horizontalScrollBar()->sizeHint().height();
+        }
+
+        QPoint pos = this->viewport()->mapToGlobal(this->cursorRect().bottomRight());
+        QFontMetrics fm(popup->font());
+        int w = 20 + strLength * fm.horizontalAdvance('9');
+
+        popup->setGeometry(pos.x(), pos.y(), w, h);
+
+        // Show the popup
+        if (!popup->isVisible()) {
+            popup->show();
         }
     }
 }
@@ -512,7 +559,11 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle) {
         }
     }
 
-    return nullptr;
+    // If we didn't get the library tag, we might be in a top-level block
+    // like a geometry definition. Just return the block with the matching title
+    shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput(blockTitle.toStdString());
+
+    return inputBlock;
 }
 
 QString EGS_Editor::getBlockTitle() {

@@ -255,8 +255,9 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
+        blockInput->getSingleInput("library")->setValues({"EGS_Cones"});
+
         // Format: name, isRequired, description, vector string of allowed values
-        blockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso.", {"EGS_Cones"});
         auto typePtr = blockInput->addSingleInput("type", true, "The type of cone.", {"EGS_ConeStack", "EGS_SimpleCone", "EGS_ParallelCones", "EGS_ConeSet"});
 
         blockInput->addSingleInput("axis", false, "The unit vector defining the axis along the length of the cones. Layers or cones are added sequentially in the vector direction.");
