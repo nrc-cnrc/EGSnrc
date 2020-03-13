@@ -82,8 +82,8 @@ extern "C" {
         setBaseGeometryInputs();
 
         // Format: name, isRequired, description, vector string of allowed values
-        blockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso", vector<string>(1, typeStr));
-        blockInput->addSingleInput("box size", true, "1 number defining the side-length of a cube, or 3 numbers defining the x, y, and z side-lengths");
+        blockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso.", vector<string>(1, typeStr));
+        blockInput->addSingleInput("box size", true, "1 number defining the side-length of a cube, or 3 numbers defining the x, y, and z side-lengths.");
     }
 
     EGS_BOX_EXPORT string getExample() {
