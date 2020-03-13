@@ -76,6 +76,7 @@ public:
 
 static shared_ptr<EGS_BlockInput> blockInput = make_shared<EGS_BlockInput>("geometry");
 static void setBaseGeometryInputs(bool includeMediaBlock = true) {
+    blockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso.");
     blockInput->addSingleInput("name", true, "The user-declared unique name of this geometry. This is the name you may refer to elsewhere in the input file");
 
     if(includeMediaBlock) {
