@@ -73,8 +73,8 @@ using namespace std;
     #include <sys/statvfs.h>
 #endif
 
-// #define MAXIMUM_JOB_NUMBER 8192 // GPSC1: 256 nodes with 16 cores (32 threads)
-#define MAXIMUM_JOB_NUMBER 1024
+#define MAXIMUM_JOB_NUMBER 8192 // GPSC1: 256 nodes with 16 cores (32 threads)
+//#define MAXIMUM_JOB_NUMBER 1024
 
 static char __egs_app_msg1[] = "EGS_Application::EGS_Application(int,char**):";
 static char __egs_app_msg2[] = "EGS_Application::initSimulation():";
