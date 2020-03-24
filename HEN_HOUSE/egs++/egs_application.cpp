@@ -803,6 +803,10 @@ void EGS_Application::describeSimulation() {
         rndm->describeRNG();
         egsInformation("\n\n");
     }
+    if (run) {
+        run->describeRCO();
+        egsInformation("\n\n");
+    }
     if (a_objects_list.size() > 0) {
         egsInformation("The following ausgab objects are included in the simulation\n");
         egsInformation("===========================================================\n\n");

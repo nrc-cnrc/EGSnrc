@@ -194,6 +194,7 @@ public:
     */
     virtual bool    finishBatch();
 
+    virtual void    describeRCO();
     virtual bool    storeState(ostream &data);
     virtual bool    setState(istream &data);
     virtual bool    addState(istream &data);
@@ -366,6 +367,8 @@ public:
 
     EGS_UniformRunControl(EGS_Application *app);
     ~EGS_UniformRunControl() {};
+
+    void  describeRCO();
 
     int  startSimulation();
 

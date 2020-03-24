@@ -120,6 +120,23 @@ EGS_RunControl::~EGS_RunControl() {
     }
 }
 
+void EGS_RunControl::describeRCO() {
+    egsInformation(
+        "Run Control Object (RCO):\n"
+        "=========================\n");
+    switch (rco_type) {
+    case simple:
+        egsInformation("  type = simple\n");
+        break;
+    case balanced:
+        egsInformation("  type = balanced (JCF)\n");
+        break;
+    case uniform:
+        egsInformation("  type = uniform\n");
+        break;
+    }
+}
+
 bool EGS_RunControl::storeState(ostream &data) {
     if (!egsStoreI64(data,ndone)) {
         return false;
@@ -305,19 +322,6 @@ EGS_UniformRunControl::EGS_UniformRunControl(EGS_Application *a) :
 
 int EGS_UniformRunControl::startSimulation() {
 
-    egsInformation("\n\n-> Uniform run control object (URCO)\n");
-    if (watcher_job) {
-        //egsInformation( "   Watcher job: remains running after completion\n");
-        if (check_egsdat) {
-            egsInformation(
-                "   Watcher job: remains running after completion checking\n"
-                "                for other jobs finishing every %d s for %d s!\n",
-                milliseconds/1000, check_intervals*milliseconds/1000);
-        }
-        else {
-            egsInformation("   Option to check for finishing jobs is OFF!\n\n");
-        }
-    }
 
     /* Check run completion based on *egsdat files requires erasing
        existing files from previous runs.
@@ -333,6 +337,25 @@ int EGS_UniformRunControl::startSimulation() {
     }
 
     return EGS_RunControl::startSimulation();
+}
+
+void EGS_UniformRunControl::describeRCO() {
+
+    EGS_RunControl::describeRCO();
+
+    if (watcher_job) {
+        if (check_egsdat) {
+            egsInformation(
+                "   Watcher job: remains running after completion checking\n"
+                "                for other jobs finishing every %d s for %d s!\n",
+                milliseconds/1000, check_intervals*milliseconds/1000);
+        }
+        else {
+            egsInformation(
+                "   Option to check for finishing jobs is OFF!\n\n");
+        }
+    }
+
 }
 
 #ifdef WIN32
