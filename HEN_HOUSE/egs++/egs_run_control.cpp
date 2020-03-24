@@ -244,7 +244,7 @@ bool EGS_RunControl::finishBatch() {
 EGS_UniformRunControl::EGS_UniformRunControl(EGS_Application *a) :
     EGS_RunControl(a), njob(0), npar(app->getNparallel()),
     ipar(app->getIparallel()), ifirst(app->getFirstParallel()),
-    milliseconds(1000), check_intervals(5), check_egsdat(false),
+    milliseconds(1000), check_intervals(5), check_egsdat(true),
     watcher_job(false) {
 
     rco_type = uniform;
@@ -293,11 +293,11 @@ EGS_UniformRunControl::EGS_UniformRunControl(EGS_Application *a) :
 
         /* Request checking parallel run completion */
         vector<string> check_options;
-        check_options.push_back("no");
         check_options.push_back("yes");
+        check_options.push_back("no");
         int ichk = input->getInput("check jobs completed",check_options,0);
         if (ichk != 0) {
-            check_egsdat = true;    // false by default
+            check_egsdat = false;    // true by default
         }
 
     }
@@ -305,15 +305,17 @@ EGS_UniformRunControl::EGS_UniformRunControl(EGS_Application *a) :
 
 int EGS_UniformRunControl::startSimulation() {
 
-    egsInformation("\n\n-> RCO is of type %d\n", rco_type);
+    egsInformation("\n\n-> Uniform run control object (URCO)\n");
     if (watcher_job) {
-        egsInformation(" I am a watcher job! \n");
+        //egsInformation( "   Watcher job: remains running after completion\n");
         if (check_egsdat) {
-            egsInformation("And will check for parallel run completion every %d s for %d s!\n",
-                           milliseconds/1000, check_intervals*milliseconds/1000);
+            egsInformation(
+                "   Watcher job: remains running after completion checking\n"
+                "                for other jobs finishing every %d s for %d s!\n",
+                milliseconds/1000, check_intervals*milliseconds/1000);
         }
         else {
-            egsInformation("\n\n");
+            egsInformation("   Option to check for finishing jobs is OFF!\n\n");
         }
     }
 
@@ -326,10 +328,6 @@ int EGS_UniformRunControl::startSimulation() {
         string datFile = egsJoinPath(app->getAppDir(),buf);
         if (remove(datFile.c_str()) == 0) {
             egsWarning("EGS_UniformRunControl: %s deleted\n",
-                       datFile.c_str());
-        }
-        else {
-            egsWarning("EGS_UniformRunControl: %s not found!\n",
                        datFile.c_str());
         }
     }
