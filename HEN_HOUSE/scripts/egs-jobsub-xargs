@@ -1,0 +1,418 @@
+#! /bin/bash
+###############################################################################
+#
+#  Script to submit jobs to the Grid Engine job scheduler using xargs
+#  Copyright (C) 2018 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2018
+#
+#  Contributors:    Iwan Kawrakow
+#                   Dave Rogers
+#                   Frederic Tessier
+#                   Blake Walters
+#
+###############################################################################
+#
+# Check enough arguments provided
+#
+my_name=`echo "$0" |sed 's,.*[\\/],,'`
+if test $# -lt 3; then
+    cat >&2 <<EOF
+
+Usage: $my_name app inp pegs|pegsless [p=N] [config=xxx] [eh=xxx] [hh=xxx] [cpu_t=t] [email=xxx]
+
+$my_name runs app using inp as input file (use two double quotes if 
+there is no input file needed) and pegs as pegs4 data file.
+Using config=xxx you can use a configuration different from the one 
+specified by the environment variable EGS_CONFIG.
+
+For parallel job submission one needs to pass the number of jobs
+by setting the variable p to the number of jobs N.
+
+EOF
+    exit 1
+fi
+
+
+# 
+# Initialization
+#
+app=$1
+inp=$2
+pegs=$3
+egs_home="$EGS_HOME"
+hen_house_arg=
+start_job=0
+stop_job=0
+egs_configuration="$EGS_CONFIG"
+n_parallel=0
+other_args=
+testing=no
+
+#########################
+# NRC specific settings #
+#########################
+# Project name
+#project=nrc_mss
+project=
+# email
+email=ernesto.mainegra-hing@nrc-cnrc.gc.ca
+#image=nrc/nrc_all_default_ubuntu-14.04-amd64_latest
+image=nrc/nrc_all_default_centos-7-amd64_latest
+# CPU time requested to run job to completion
+cpu_t=7200
+# slots from the dev parallel environment (PE)
+slot=1
+# cpus requested per slot
+cpus=16 #32
+# RAM memory in MB per job
+ram=4000
+# Temporary file space in MB per job
+tmpfs=2000
+#simple=no
+rmegsdat=yes
+
+# First 3 arguments already taken above
+shift 3
+#
+# Parse command line for arguments
+#
+while test $# -gt 0; do
+
+    case "$1" in
+
+        proj=*)  project=`echo $1 | sed 's/proj=//'` ;;
+          eh=*)  egs_home=`echo $1 | sed 's/eh=//'` ;;
+          hh=*)  hen_house_arg=`echo $1 | sed 's/hh=//'` ;;
+      config=*)  egs_configuration=`echo $1 | sed 's/config=//'` ;;
+           p=*)  n_parallel=`echo $1 | sed 's/p=//'` ;;
+       start=*)  start_job=`echo $1 | sed 's/start=//'`;;
+        stop=*)  stop_job=`echo $1 | sed 's/stop=//'`;;
+       cpu_t=*)  cpu_t=`echo $1 | sed 's/cpu_t=//'`;;
+        cpus=*)  cpus=`echo $1 | sed 's/cpus=//'`;;
+        slot=*)  slot=`echo $1 | sed 's/slot=//'`;;
+         ram=*)  ram=`echo $1 | sed 's/ram=//'`;;
+       tmpfs=*)  tmpfs=`echo $1 | sed 's/tmpfs=//'`;;
+       email=*)  email=`echo $1 | sed 's/email=//'`;;
+#      simple=*)  simple=`echo $1 | sed 's/simple=//'` ;;
+    rmegsdat=*)  rmegsdat=`echo $1 | sed 's/rmegsdat=//'` ;;
+     testing=*)  testing=`echo $1 | sed 's/testing=//'` ;;
+             *) # concatenate everything else to other_args
+                # and hope that the user knows what they are doing.
+                if test "x$other_args" = x; then
+                    other_args="$1"
+                else
+                    other_args="$other_args $1"
+                fi
+                ;;
+
+    esac
+
+    shift
+
+done
+#
+# Check that EGS_HOME is set
+#
+if test "x$egs_home" = x; then
+
+    if test "x$EGS_HOME" = x; then
+       cat >&2 <<EOF
+
+The environment variable EGS_HOME is not set. You have to either
+define EGS_HOME to point to a valid location or you must run this 
+script as
+    $my_name ... eh=path_to_work_area
+
+EOF
+       exit 1
+    fi
+    cat >&2 <<EOF
+
+There should be no spaces between 'eh=' and the work area path!
+
+EOF
+    exit 1
+fi
+#
+# Check that EGS_CONFIG is set
+#
+if test "x$egs_configuration" = x; then
+
+    if test "x$EGS_CONFIG" = x; then
+        cat >&2 <<EOF
+
+The environment variable 'EGS_CONFIG' is not set. You have to either
+define EGS_CONFIG to point to a valid EGSnrc config file or
+you must run this script as
+    $my_name ... config=some_config_file
+
+EOF
+        exit 1
+    fi
+    cat >&2 <<EOF
+
+There should be no spaces between 'config=' and the name of the configuration
+file!
+
+EOF
+    exit 1
+fi
+#
+# Check that EGS_CONFIG points to an existing file
+#
+if test ! -f "$egs_configuration"; then
+
+    cat >&2 <<EOF
+
+The file $egs_configuration does not exist. The environment variable
+EGS_CONFIG or the config=some_config command line option must
+define the absolute path to a valid EGSnrc config file.
+
+EOF
+    exit 1
+fi
+#
+# Check that HEN_HOUSE is set
+#
+if test "x$hen_house_arg" = x; then
+    if test "x$HEN_HOUSE" = x; then
+        hen_house=`cat $egs_configuration | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //'`
+    else
+        hen_house="$HEN_HOUSE"
+    fi
+else
+    hen_house=$hen_house_arg
+fi
+
+my_machine=`cat $egs_configuration | grep "my_machine =" | sed 's/my_machine = //'`
+
+if test ! -d "$egs_home"; then
+
+    echo "The directory '$egs_home' dose not exist. Creating it." >&2
+    if { mkdir "$egs_home"; status=$?; (exit $status); }; then
+       :
+    else
+       echo "Failed." >&2
+       exit 1
+    fi
+
+fi
+
+if test ! -d "$egs_home/$app"; then
+
+    echo "The directory '$egs_home/$app' dose not exist. Creating it." >&2
+    if { mkdir "$egs_home/$app"; status=$?; (exit $status); }; then
+       :
+    else
+       echo "Failed." >&2
+       exit 1
+    fi
+
+fi
+
+executable="${egs_home}bin/$my_machine/$app"
+#
+# Check if executable exists
+#
+if test ! -x $executable; then
+    executable="${hen_house}bin/$my_machine/$app"
+    if test ! -x $executable; then
+        echo "No $app executable on your area or on HEN_HOUSE" >&2
+        exit 1
+    fi
+fi
+#
+# Check if running pegslessly
+#
+if test "$pegs" = pegsless; then
+    command="$executable -b"
+else
+    command="$executable -p $pegs -b"
+fi
+
+#
+# Add input file to command
+#
+if test "x$inp" != x; then
+    command="$command -i $inp"
+fi
+
+#
+# Add EGSnrc environment to command
+#
+command="$command -e $egs_home -H $hen_house"
+
+#
+# Add rest of arguments to command
+#
+if test "x$other_args" != x; then
+    command="$command -i $other_args"
+fi
+
+#
+# NOT NEEDED! This goes in the extra arguments
+#
+# Check if no JCF desired
+#
+#if test "x$simple" = xyes; then
+#   command="$command -s"
+#fi
+
+# Remove previous egsdat files
+if test "x$rmegsdat" = xyes; then
+   rm -f ${egs_home}${app}/${inpf}_w*.egsdat
+fi
+
+if test $start_job -ge 0; then
+    if test $stop_job -gt $start_job; then
+        if test $n_parallel -eq 0; then
+            n_parallel=`expr $stop_job - $start_job`
+        fi
+    else
+        stop_job=`expr $start_job + $n_parallel`
+    fi
+fi
+
+inpf=`echo $inp |sed 's/.egsinp//'`
+the_email=dummy@nowhere.org
+#
+# Check if running multiple jobs
+#
+if test $n_parallel -gt 0; then
+  command="$command -P $n_parallel"
+  job=$start_job
+  first_job=`expr $start_job + 1`
+  # Submit multiple jobs
+  while true; do
+    job=`expr $job + 1`
+    # Exit loop condition
+    if test $job -gt $stop_job; then break; fi
+    # Only send email about last job
+    jobs_left=`expr $stop_job - $job`
+    if test $jobs_left -le $cpus; then the_email=$email; fi
+    #if test $job -eq $stop_job; then the_email=$email; fi
+    the_command="$command -j $job -f $first_job"
+    # Set chunk of tasks to run per node (per slot)
+    top_job=`expr $job + $cpus - 1`
+    if test $top_job -gt $stop_job; then top_job=$stop_job; fi
+    name=${inpf}_w${job}-${top_job}
+    if test "x$testing" = xyes; then
+      cat > ${name}.sh << EOF
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N $name          # Modify job name as needed.
+#$ -M $the_email   # NOTE: Replace with appropriate email address
+##$ -P $project
+#$ -m bea
+#$ -j y
+#$ -o ${egs_home}${app}/$name.out
+#$ -pe dev ${slot}
+#$ -l res_cpus=${cpus}
+#$ -l res_mem=${ram}
+#$ -l res_tmpfs=${tmpfs}
+#$ -l res_image=${image}
+#$ -l h_rt=${cpu_t}
+# Export these environmental variables
+#$ -v EGS_CONFIG=$egs_configuration
+#$ -v HEN_HOUSE=$hen_house
+#$ -v EGS_HOME=$egs_home
+#$ -v TZ=America/Toronto
+# Call your program
+for i in \$(seq $job $top_job);do 
+    echo \$i;
+done | xargs -P${cpus} -n1 -I{} sh -c '$command -j \$1 -f $first_job'  - {}
+EOF
+    else
+      cat << EOF | jobsub -
+#!/bin/bash
+#$ -S /bin/bash
+#$ -N $name          # Modify job name as needed.
+#$ -M $the_email   # NOTE: Replace with appropriate email address
+##$ -P $project
+#$ -m bea
+#$ -j y
+#$ -o ${egs_home}${app}/$name.out
+#$ -pe dev ${slot}
+#$ -l res_cpus=${cpus}
+#$ -l res_mem=${ram}
+#$ -l res_tmpfs=${tmpfs}
+#$ -l res_image=${image}
+#$ -l h_rt=${cpu_t}
+# Export these environmental variables
+#$ -v EGS_CONFIG=$egs_configuration
+#$ -v HEN_HOUSE=$hen_house
+#$ -v EGS_HOME=$egs_home
+#$ -v TZ=America/Toronto
+# Call your program
+for i in \$(seq $job $top_job);do 
+    echo \$i;
+done | xargs -P${cpus} -n1 -I{} sh -c '$command -j \$1 -f $first_job'  - {}
+EOF
+    fi
+    job=$top_job
+  done
+
+#
+# Submitting one job
+#
+else
+  name=$inpf
+    if test "x$testing" = xyes; then
+        echo "Job $name: Executing $command using jobsub"
+        echo "qsub options: CPU time=$cpu_t email=$email output=${egs_home}${app}/$name.out"
+    else
+        cat << EOF | jobsub -
+#! /bin/bash
+#
+## hello.job
+#
+#$ -N $name             # Modify job name as needed.
+#
+#$ -M $email          # NOTE: Replace with appropriate email address
+#$ -P $project
+#$ -m bea
+#
+#$ -j y
+#$ -o ${egs_home}/${app}$name.out
+#
+#$ -pe dev ${slot}
+#$ -l res_cpus=${cpus}
+#$ -l res_mem=${ram}
+#$ -l res_tmpfs=${tmpfs}
+#
+#$ -l res_image=${image}
+#
+#$ -l h_rt=${cpu_t}
+#
+# Export these environmental variables
+#$ -v EGS_CONFIG=$egs_configuration
+#$ -v HEN_HOUSE=$hen_house
+#$ -v EGS_HOME=$egs_home
+#$ -v TZ=America/Toronto
+
+ # Call your program
+
+$command 
+EOF
+    fi
+fi
+
+exit 0
