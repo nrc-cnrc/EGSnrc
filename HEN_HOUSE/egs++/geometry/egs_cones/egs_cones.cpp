@@ -252,20 +252,20 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        blockInput->getSingleInput("library")->setValues({"EGS_Cones"});
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Cones"});
 
         // Format: name, isRequired, description, vector string of allowed values
-        auto typePtr = blockInput->addSingleInput("type", true, "The type of cone.", {"EGS_ConeStack", "EGS_SimpleCone", "EGS_ParallelCones", "EGS_ConeSet"});
+        auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of cone.", {"EGS_ConeStack", "EGS_SimpleCone", "EGS_ParallelCones", "EGS_ConeSet"});
 
-        blockInput->addSingleInput("axis", false, "The unit vector defining the axis along the length of the cones. Layers or cones are added sequentially in the vector direction.");
+        geomBlockInput->addSingleInput("axis", false, "The unit vector defining the axis along the length of the cones. Layers or cones are added sequentially in the vector direction.");
 
-        auto inpPtr = blockInput->addSingleInput("apex", false, "The position of the cone apex (x, y, z). For EGS_ParallelCones, this is the position of the first cone apex.");
+        auto inpPtr = geomBlockInput->addSingleInput("apex", false, "The position of the cone apex (x, y, z). For EGS_ParallelCones, this is the position of the first cone apex.");
         inpPtr->addDependency(typePtr, "EGS_SimpleCone");
         inpPtr->addDependency(typePtr, "EGS_ParallelCones");
         inpPtr->addDependency(typePtr, "EGS_ConeSet");
 
         // EGS_ConeStack
-        auto blockPtr = blockInput->addBlockInput("layer");
+        auto blockPtr = geomBlockInput->addBlockInput("layer");
         blockPtr->addDependency(typePtr, "EGS_ConeStack");
         blockPtr->addSingleInput("thickness", true, "The thickness of the layer.");
         blockPtr->addSingleInput("top radii", false, "A list of the top cone radii. If omitted, the top radii are assumed to be the same as a bottom radii from the previous layer. This improves the algorithm efficiency.");
@@ -273,23 +273,23 @@ extern "C" {
         blockPtr->addSingleInput("media", true, "A list of media names, one for each region.");
 
         // EGS_ConeSet
-        auto anglesPtr = blockInput->addSingleInput("opening angles", false, "A list of angles in degrees.");
+        auto anglesPtr = geomBlockInput->addSingleInput("opening angles", false, "A list of angles in degrees.");
         anglesPtr->addDependency(typePtr, "EGS_ConeSet");
-        auto anglesRadPtr = blockInput->addSingleInput("opening angles in radian", false, "A list of angles in radians.");
+        auto anglesRadPtr = geomBlockInput->addSingleInput("opening angles in radian", false, "A list of angles in radians.");
         anglesRadPtr->addDependency(typePtr, "EGS_ConeSet");
         // Only one of these inputs two can be included
         anglesRadPtr->addDependency(anglesPtr, "", true);
         anglesPtr->addDependency(anglesRadPtr, "", true);
-        blockInput->addSingleInput("flag", false, "0 or 1 or 2. This input affects the region numbering algorithm; see the documentation for details.")->addDependency(typePtr, "EGS_ConeSet");
+        geomBlockInput->addSingleInput("flag", false, "0 or 1 or 2. This input affects the region numbering algorithm; see the documentation for details.")->addDependency(typePtr, "EGS_ConeSet");
 
         // EGS_SimpleCone
-        auto anglePtr = blockInput->addSingleInput("opening angle", false, "The opening angle of the cone in degrees.");
+        auto anglePtr = geomBlockInput->addSingleInput("opening angle", false, "The opening angle of the cone in degrees.");
         anglePtr->addDependency(typePtr, "EGS_SimpleCone");
         anglePtr->addDependency(typePtr, "EGS_ParallelCones");
-        blockInput->addSingleInput("height", false, "The height of the cone.");
+        geomBlockInput->addSingleInput("height", false, "The height of the cone.");
 
         // EGS_ParallelCones
-        blockInput->addSingleInput("apex distances", false, "A list of distances from the first apex.");
+        geomBlockInput->addSingleInput("apex distances", false, "A list of distances from the first apex.");
     }
 
     EGS_CONES_EXPORT string getExample(string type) {
@@ -378,7 +378,7 @@ extern "C" {
         if(!inputSet) {
             setInputs();
         }
-        return blockInput;
+        return geomBlockInput;
     }
 
     EGS_CONES_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {

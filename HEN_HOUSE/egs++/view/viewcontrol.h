@@ -206,7 +206,7 @@ private:
     vector<vector<EGS_Float>> scoreArrays;
     vector<string> geometryNames;
     vector<string> geomExamples;
-    vector<shared_ptr<EGS_BlockInput>> geomTemplates;
+    vector<string> sourceExamples;
     EGS_BaseGeometry *origSimGeom;
     EGS_Editor *egsinpEdit;
     EGS_Highlighter *highlighter;
