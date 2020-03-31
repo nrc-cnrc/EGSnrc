@@ -64,7 +64,7 @@ EGS_Highlighter::EGS_Highlighter(QTextDocument *parent) : QSyntaxHighlighter(par
 
     nameFormat.setForeground(Qt::darkBlue);
     nameFormat.setFontWeight(QFont::Bold);
-    rule.pattern = QRegularExpression("name.*=.*");
+    rule.pattern = QRegularExpression("( )*name( )*=.*");
     rule.format = nameFormat;
     highlightingRules.append(rule);
 
