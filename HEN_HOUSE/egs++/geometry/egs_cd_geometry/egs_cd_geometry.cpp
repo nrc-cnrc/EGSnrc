@@ -120,12 +120,12 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        blockInput->getSingleInput("library")->setValues(vector<string>(1, typeStr));
+        geomBlockInput->getSingleInput("library")->setValues(vector<string>(1, typeStr));
 
         // Format: name, isRequired, description, vector string of allowed values
-        blockInput->addSingleInput("base geometry", true, "The name of the geometry that defines regions for this 'cutting device'. It is within these regions that other geometries will be placed to create a composite geometry.");
-        blockInput->addSingleInput("set geometry", true, "The region number in the base geometry, followed by the name of the geometry to place in that region. If this geometry extends beyond the region boundaries, it will be cut to size.");
-        blockInput->addSingleInput("new indexing style", false, "Set to 1 to use a new region numbering algorithm. Defaults to 0, to use the original indexing style.");
+        geomBlockInput->addSingleInput("base geometry", true, "The name of the geometry that defines regions for this 'cutting device'. It is within these regions that other geometries will be placed to create a composite geometry.");
+        geomBlockInput->addSingleInput("set geometry", true, "The region number in the base geometry, followed by the name of the geometry to place in that region. If this geometry extends beyond the region boundaries, it will be cut to size.");
+        geomBlockInput->addSingleInput("new indexing style", false, "Set to 1 to use a new region numbering algorithm. Defaults to 0, to use the original indexing style.");
     }
 
     EGS_CDGEOMETRY_EXPORT string getExample() {
@@ -148,7 +148,7 @@ extern "C" {
         if(!inputSet) {
             setInputs();
         }
-        return blockInput;
+        return geomBlockInput;
     }
 
     EGS_CDGEOMETRY_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
