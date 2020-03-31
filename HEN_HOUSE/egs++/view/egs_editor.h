@@ -1,3 +1,33 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ egsinp editor
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Reid Townson, 2020
+#
+#  Contributors:    
+#
+###############################################################################
+*/
+
 #ifndef EGS_EDITOR_H
 #define EGS_EDITOR_H
 
@@ -26,6 +56,7 @@ public:
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
     void setInputStruct(shared_ptr<EGS_InputStruct> inp);
+    void validateEntireInput();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -34,17 +65,19 @@ protected:
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void highlightCurrentLine();
+    void validateLine(QTextCursor line);
     void autoComplete();
     void insertCompletion(QModelIndex index);
     void updateLineNumberArea(const QRect &, int);
 
 private:
-    shared_ptr<EGS_BlockInput> getBlockInput(QString &blockTitle);
-    QString getBlockTitle();
+    shared_ptr<EGS_BlockInput> getBlockInput(QString &blockTitle, QTextCursor cursor = QTextCursor());
+    QString getBlockTitle(QTextCursor cursor = QTextCursor());
     QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag);
     QTextBlock getBlockEnd(QTextBlock currentBlock);
     bool inputHasDependency(shared_ptr<EGS_SingleInput> inp);
-    bool inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp);
+    bool inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QTextCursor cursor = QTextCursor());
+    QTextBlock findSiblingBlock(QString title, QTextBlock currentBlock);
     int countStartingWhitespace(const QString &s);
 
     QWidget *lineNumberArea;

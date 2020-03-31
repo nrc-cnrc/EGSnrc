@@ -72,7 +72,7 @@ using namespace std;
 
 typedef EGS_Application *(*createAppFunction)(int argc, char **argv);
 typedef EGS_BaseGeometry *(*createGeomFunction)();
-typedef EGS_BaseSource *(*isSourceFunction)();
+typedef EGS_BaseSource *(*createSourceFunction)();
 typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
 typedef string (*getExampleFunction)();
 
@@ -273,8 +273,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             continue;
         }
 
-        createGeomFunction createGeom = (createGeomFunction) egs_lib.resolve("createGeometry");
-        if (createGeom) {
+        createGeomFunction isGeom = (createGeomFunction) egs_lib.resolve("createGeometry");
+        if (isGeom) {
             egsInformation(" testgeom %s\n",libName.toLatin1().data());
 
             getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
@@ -318,9 +318,49 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             }
         }
 
-        bool isSource = (bool) egs_lib.resolve("createSource");
+        createSourceFunction isSource = (createSourceFunction) egs_lib.resolve("createSource");
         if (isSource) {
-            sourceLibs.append(libName);
+            egsInformation(" testsrc %s\n",libName.toLatin1().data());
+
+            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+            if (getInputs) {
+
+                shared_ptr<EGS_BlockInput> src = getInputs();
+                if (src) {
+                    srcDefPtr->addBlockInput(src);
+
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = src->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+                        egsInformation("  single %s\n", inp->getTag().c_str());
+                        for (auto&& val : vals) {
+                            egsInformation("      %s\n", val.c_str());
+                        }
+                    }
+
+                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = src->getBlockInputs();
+                    for (auto &block : inputBlocks) {
+                        egsInformation("  block %s\n", block->getTitle().c_str());
+                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                        for (auto &inp : singleInputs) {
+                            const vector<string> vals = inp->getValues();
+                            egsInformation("   single %s\n", inp->getTag().c_str());
+                            for (auto&& val : vals) {
+                                egsInformation("      %s\n", val.c_str());
+                            }
+                        }
+                    }
+                }
+            }
+
+            getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
+            if (getExample) {
+                // Only add geometries to the list that have a function
+                // to get the input example
+                sourceLibs.append(libName);
+
+                sourceExamples.push_back(getExample());
+            }
         }
     }
 
@@ -569,6 +609,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     // Load the egsinp file into the editor
     if (file.open(QFile::ReadOnly | QFile::Text)) {
         egsinpEdit->setPlainText(file.readAll());
+        egsinpEdit->validateEntireInput();
     }
 
     return true;
@@ -3156,9 +3197,9 @@ void GeometryViewControl::insertGeomTemplate(int ind) {
 }
 
 void GeometryViewControl::insertSimTemplate(int ind) {
-    QString selection = comboBox_simTemplate->itemText(ind);
-
-    QTextCursor cursor(egsinpEdit->textCursor());
-    egsinpEdit->insertPlainText(selection);
+    if(ind > 0) {
+        QTextCursor cursor(egsinpEdit->textCursor());
+        egsinpEdit->insertPlainText(QString::fromStdString(sourceExamples[ind-1]));
+    }
 }
 

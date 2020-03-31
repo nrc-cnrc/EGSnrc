@@ -1,3 +1,33 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ egsinp editor
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Reid Townson, 2020
+#
+#  Contributors:    
+#
+###############################################################################
+*/
+
 #include "egs_editor.h"
 #include "egs_functions.h"
 
@@ -141,20 +171,22 @@ int EGS_Editor::countStartingWhitespace(const QString &s) {
     return i;
 }
 
-void EGS_Editor::autoComplete() {
-    // Get the text of the current line
+void EGS_Editor::validateEntireInput() {
+    // This actually validates from the current cursor position,
+    // but we only call this upon loading the file so the cursor is already at the top
     QTextCursor cursor = textCursor();
+    for (QTextBlock it = cursor.document()->begin(); it != cursor.document()->end(); it = it.next()) {
+        cursor.movePosition(QTextCursor::NextBlock);
+        validateLine(cursor);
+    }
+}
+
+void EGS_Editor::validateLine(QTextCursor cursor) {
     QString selectedText = cursor.block().text().simplified();
 
-    // If the first character is a "#", ignore this line
-    if(selectedText.startsWith("#")) {
-        return;
-    }
-
-    // Get the input structure
     QString blockTitle;
-    shared_ptr<EGS_BlockInput> inputBlockTemplate = getBlockInput(blockTitle);
-
+    shared_ptr<EGS_BlockInput> inputBlockTemplate = getBlockInput(blockTitle, cursor);
+    
     // If we aren't inside an input block, ignore this line
     if(blockTitle.size() < 1) {
         return;
@@ -166,6 +198,7 @@ void EGS_Editor::autoComplete() {
     if(equalsPos != -1) {
         QString inputTag = selectedText.left(equalsPos).simplified();
         QString inputVal = selectedText.right(selectedText.size() - equalsPos - 1).simplified();
+        egsInformation("test foundEquals %s\n",inputTag.toLatin1().data());
 
         // If we found a template for this type of input block,
         // check that the input tag  (LHS) is valid
@@ -173,7 +206,7 @@ void EGS_Editor::autoComplete() {
 
             QList<QTextEdit::ExtraSelection> extraSelections = this->extraSelections();
             QTextEdit::ExtraSelection selection;
-            selection.cursor = textCursor();
+            selection.cursor = cursor;
             selection.cursor.joinPreviousEditBlock();
 
             // Select the whole line
@@ -210,7 +243,7 @@ void EGS_Editor::autoComplete() {
 
                 // Check if this input has any dependencies
                 // and then confirm that the dependencies are satisfied
-                if(inputHasDependency(inputPtr) && inputDependencySatisfied(inputPtr) == false) {
+                if(inputHasDependency(inputPtr) && inputDependencySatisfied(inputPtr, cursor) == false) {
                     // Red underline the input tag
                     // Select the input tag
                     selection.cursor.movePosition(QTextCursor::StartOfBlock);
@@ -240,6 +273,43 @@ void EGS_Editor::autoComplete() {
             extraSelections.append(selection);
             setExtraSelections(extraSelections);
         }
+    }
+}
+
+void EGS_Editor::autoComplete() {
+    // Get the text of the current line
+    QTextCursor cursor = textCursor();
+    QString selectedText = cursor.block().text().simplified();
+
+    // Clear the popup string list
+    model->setStringList(QStringList{});
+    popup->setModel(model);
+
+    // If the first character is a "#", ignore this line
+    if(selectedText.startsWith("#")) {
+        return;
+    }
+
+    // Get the input structure
+    QString blockTitle;
+    shared_ptr<EGS_BlockInput> inputBlockTemplate = getBlockInput(blockTitle);
+    egsInformation("testA %s\n", blockTitle.toLatin1().data());
+
+    // If we aren't inside an input block, ignore this line
+    if(blockTitle.size() < 1) {
+        return;
+    }
+
+    // Check the validity of the inputs
+    // If this line contains an "=" then it should match a single input
+    int equalsPos = selectedText.indexOf("=");
+    if(equalsPos != -1) {
+        QString inputTag = selectedText.left(equalsPos).simplified();
+        QString inputVal = selectedText.right(selectedText.size() - equalsPos - 1).simplified();
+        egsInformation("test foundEquals %s\n",inputTag.toLatin1().data());
+
+        // Check that the line is valid
+        validateLine(cursor);
 
         // Return if the input value (RHS) is already filled
         // This way we only offer options for blank inputs
@@ -261,36 +331,37 @@ void EGS_Editor::autoComplete() {
             }
             if(itemList.size() > 0) {
                 model->setStringList(itemList);
-            }
+                
 
-            popup->setModel(model);
-            popup->setFont(this->font());
+                popup->setModel(model);
+                popup->setFont(this->font());
 
-            // Get max string length
-            int strLength = 0;
-            for (auto &item: itemList) {
-                if (item.size() > strLength) {
-                    strLength = item.size();
+                // Get max string length
+                int strLength = 0;
+                for (auto &item: itemList) {
+                    if (item.size() > strLength) {
+                        strLength = item.size();
+                    }
                 }
-            }
 
-            // Create a selection popup
-            int maxVisibleItems = 6;
-            int h = (popup->sizeHintForRow(0) * qMin(maxVisibleItems, popup->model()->rowCount()) + 3) + 3;
-            QScrollBar *hsb = popup->horizontalScrollBar();
-            if (hsb && hsb->isVisible()) {
-                h += popup->horizontalScrollBar()->sizeHint().height();
-            }
+                // Create a selection popup
+                int maxVisibleItems = 6;
+                int h = (popup->sizeHintForRow(0) * qMin(maxVisibleItems, popup->model()->rowCount()) + 3) + 3;
+                QScrollBar *hsb = popup->horizontalScrollBar();
+                if (hsb && hsb->isVisible()) {
+                    h += popup->horizontalScrollBar()->sizeHint().height();
+                }
 
-            QPoint pos = this->viewport()->mapToGlobal(this->cursorRect().bottomRight());
-            QFontMetrics fm(popup->font());
-            int w = 20 + strLength * fm.horizontalAdvance('9');
+                QPoint pos = this->viewport()->mapToGlobal(this->cursorRect().bottomRight());
+                QFontMetrics fm(popup->font());
+                int w = 20 + strLength * fm.horizontalAdvance('9');
 
-            popup->setGeometry(pos.x(), pos.y(), w, h);
+                popup->setGeometry(pos.x(), pos.y(), w, h);
 
-            // Show the popup
-            if (!popup->isVisible()) {
-                popup->show();
+                // Show the popup
+                if (!popup->isVisible()) {
+                    popup->show();
+                }
             }
         } else {
 
@@ -300,7 +371,7 @@ void EGS_Editor::autoComplete() {
             }
 
             // Check for this input tag in the template
-            shared_ptr<EGS_SingleInput> inp = inputBlockTemplate->getSingleInput(inputTag.toStdString());
+            shared_ptr<EGS_SingleInput> inp = inputBlockTemplate->getSingleInput(inputTag.toStdString(), blockTitle.toStdString());
 
             // Return if we didn't find this input in the template
             if(!inp) {
@@ -322,7 +393,72 @@ void EGS_Editor::autoComplete() {
             }
             if(itemList.size() > 0) {
                 model->setStringList(itemList);
+                
+
+                popup->setModel(model);
+                popup->setFont(this->font());
+
+                // Get max string length
+                int strLength = 0;
+                for (auto &item: itemList) {
+                    if (item.size() > strLength) {
+                        strLength = item.size();
+                    }
+                }
+
+                // Create a selection popup
+                int maxVisibleItems = 6;
+                int h = (popup->sizeHintForRow(0) * qMin(maxVisibleItems, popup->model()->rowCount()) + 3) + 3;
+                QScrollBar *hsb = popup->horizontalScrollBar();
+                if (hsb && hsb->isVisible()) {
+                    h += popup->horizontalScrollBar()->sizeHint().height();
+                }
+
+                QPoint pos = this->viewport()->mapToGlobal(this->cursorRect().bottomRight());
+                QFontMetrics fm(popup->font());
+                int w = 20 + strLength * fm.horizontalAdvance('9');
+
+                popup->setGeometry(pos.x(), pos.y(), w, h);
+
+                // Show the popup
+                if (!popup->isVisible()) {
+                    popup->show();
+                }
             }
+        }
+
+    // If this is just an empty line, we can offer suggestions of valid inputs
+    } else if(inputBlockTemplate && selectedText == "") {
+
+        vector<shared_ptr<EGS_SingleInput>> singleInputs = inputBlockTemplate->getSingleInputs(blockTitle.toStdString());
+
+        vector<shared_ptr<EGS_BlockInput>> blockInputs = inputBlockTemplate->getBlockInputs(blockTitle.toStdString());
+
+        // Populate the popup list
+        QStringList itemList;
+
+        // Add all the single inputs for the top level block
+        for(auto &inp: singleInputs) {
+            if(!egsEquivStr(inp->getTag(), "library")) {
+                // Skip any inputs that have a dependency which is not satisfied
+                if(inputHasDependency(inp) && inputDependencySatisfied(inp, cursor) == false) {
+                    continue;
+                }
+
+                itemList << QString((inp->getTag() + " = ").c_str());
+            }
+        }
+
+        // Store the block titles in a set to remove duplicates
+        QSet<QString> blockTitles;
+        for(auto &block: blockInputs) {
+            blockTitles << QString((":start " + block->getTitle() + ":").c_str());
+        }
+        for(auto &title: blockTitles) {
+            itemList << title;
+        }
+        if(itemList.size() > 0) {
+            model->setStringList(itemList);
 
             popup->setModel(model);
             popup->setFont(this->font());
@@ -355,65 +491,6 @@ void EGS_Editor::autoComplete() {
             }
         }
 
-    // If this is just an empty line, we can offer suggestions of valid inputs
-    } else if(inputBlockTemplate && selectedText == "") {
-
-        vector<shared_ptr<EGS_SingleInput>> singleInputs = inputBlockTemplate->getSingleInputs(blockTitle.toStdString());
-
-        vector<shared_ptr<EGS_BlockInput>> blockInputs = inputBlockTemplate->getBlockInputs(blockTitle.toStdString());
-
-        // Populate the popup list
-        QStringList itemList;
-
-        // Add all the single inputs for the top level block
-        for(auto &inp: singleInputs) {
-            if(!egsEquivStr(inp->getTag(), "library")) {
-                itemList << QString((inp->getTag() + " = ").c_str());
-            }
-        }
-
-        // Store the block titles in a set to remove duplicates
-        QSet<QString> blockTitles;
-        for(auto &block: blockInputs) {
-            blockTitles << QString((":start " + block->getTitle() + ":").c_str());
-        }
-        for(auto &title: blockTitles) {
-            itemList << title;
-        }
-        if(itemList.size() > 0) {
-            model->setStringList(itemList);
-        }
-
-        popup->setModel(model);
-        popup->setFont(this->font());
-
-        // Get max string length
-        int strLength = 0;
-        for (auto &item: itemList) {
-            if (item.size() > strLength) {
-                strLength = item.size();
-            }
-        }
-
-        // Create a selection popup
-        int maxVisibleItems = 6;
-        int h = (popup->sizeHintForRow(0) * qMin(maxVisibleItems, popup->model()->rowCount()) + 3) + 3;
-        QScrollBar *hsb = popup->horizontalScrollBar();
-        if (hsb && hsb->isVisible()) {
-            h += popup->horizontalScrollBar()->sizeHint().height();
-        }
-
-        QPoint pos = this->viewport()->mapToGlobal(this->cursorRect().bottomRight());
-        QFontMetrics fm(popup->font());
-        int w = 20 + strLength * fm.horizontalAdvance('9');
-
-        popup->setGeometry(pos.x(), pos.y(), w, h);
-
-        // Show the popup
-        if (!popup->isVisible()) {
-            popup->show();
-        }
-
     // If this is the start of an input block, check that it belongs here
     } else if(selectedText.contains(":start ")) {
 
@@ -432,7 +509,7 @@ void EGS_Editor::autoComplete() {
 
             QList<QTextEdit::ExtraSelection> extraSelections = this->extraSelections();
             QTextEdit::ExtraSelection selection;
-            selection.cursor = textCursor();
+            selection.cursor = cursor;
             selection.cursor.joinPreviousEditBlock();
 
             // Select the whole line
@@ -473,43 +550,43 @@ void EGS_Editor::autoComplete() {
 
     // For geometry and source blocks that don't contain a library line,
     // add 'library =' as an option in the popup
-    } else if(egsEquivStr(blockTitle, "geometry")) {
+    } else if(selectedText.size() == 0 && (egsEquivStr(blockTitle.toStdString(), "geometry") || egsEquivStr(blockTitle.toStdString(), "source"))) {
 
         // Populate the popup list
         QStringList itemList;
-        itemList << "library";
+        itemList << "library = ";
         if(itemList.size() > 0) {
             model->setStringList(itemList);
-        }
 
-        popup->setModel(model);
-        popup->setFont(this->font());
+            popup->setModel(model);
+            popup->setFont(this->font());
 
-        // Get max string length
-        int strLength = 0;
-        for (auto &item: itemList) {
-            if (item.size() > strLength) {
-                strLength = item.size();
+            // Get max string length
+            int strLength = 0;
+            for (auto &item: itemList) {
+                if (item.size() > strLength) {
+                    strLength = item.size();
+                }
             }
-        }
 
-        // Create a selection popup
-        int maxVisibleItems = 6;
-        int h = (popup->sizeHintForRow(0) * qMin(maxVisibleItems, popup->model()->rowCount()) + 3) + 3;
-        QScrollBar *hsb = popup->horizontalScrollBar();
-        if (hsb && hsb->isVisible()) {
-            h += popup->horizontalScrollBar()->sizeHint().height();
-        }
+            // Create a selection popup
+            int maxVisibleItems = 6;
+            int h = (popup->sizeHintForRow(0) * qMin(maxVisibleItems, popup->model()->rowCount()) + 3) + 3;
+            QScrollBar *hsb = popup->horizontalScrollBar();
+            if (hsb && hsb->isVisible()) {
+                h += popup->horizontalScrollBar()->sizeHint().height();
+            }
 
-        QPoint pos = this->viewport()->mapToGlobal(this->cursorRect().bottomRight());
-        QFontMetrics fm(popup->font());
-        int w = 20 + strLength * fm.horizontalAdvance('9');
+            QPoint pos = this->viewport()->mapToGlobal(this->cursorRect().bottomRight());
+            QFontMetrics fm(popup->font());
+            int w = 20 + strLength * fm.horizontalAdvance('9');
 
-        popup->setGeometry(pos.x(), pos.y(), w, h);
+            popup->setGeometry(pos.x(), pos.y(), w, h);
 
-        // Show the popup
-        if (!popup->isVisible()) {
-            popup->show();
+            // Show the popup
+            if (!popup->isVisible()) {
+                popup->show();
+            }
         }
     }
 }
@@ -519,15 +596,18 @@ void EGS_Editor::insertCompletion(QModelIndex index) {
     insertPlainText(model->data(index).toString());
 }
 
-shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle) {
+shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextCursor cursor) {
+    if(cursor == QTextCursor()) {
+        cursor = textCursor();
+    }
 
-    blockTitle = getBlockTitle();
+    blockTitle = getBlockTitle(cursor);
     if(blockTitle.size() < 1) {
         return nullptr;
     }
 
     bool foundTag;
-    QString library = getInputValue("library", textCursor().block(), foundTag);
+    QString library = getInputValue("library", cursor.block(), foundTag);
 
     // If we couldn't find a library tag in the current block,
     // try searching the containing block (if there is one)
@@ -535,10 +615,10 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle) {
         // If we're current on a :start line, start searching on the next line
         // so that we're actually starting within the block
         QTextBlock blockEnd;
-        if(textCursor().block().text().contains(":start ")) {
-            blockEnd = getBlockEnd(textCursor().block().next());
+        if(cursor.block().text().contains(":start ")) {
+            blockEnd = getBlockEnd(cursor.block().next());
         } else {
-            blockEnd = getBlockEnd(textCursor().block());
+            blockEnd = getBlockEnd(cursor.block());
         }
         if(!blockEnd.isValid()) {
             return nullptr;
@@ -549,10 +629,12 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle) {
 
         // Check for the library tag here
         library = getInputValue("library", blockEnd, foundTag);
+        egsInformation("test searching containing block %s\n", library.toLatin1().data());
     }
 
     // If we got the library tag, we can directly look up this input block structure
     if(library.size() > 0) {
+        egsInformation("test getBlockInput %s %s\n", blockTitle.toLatin1().data(), library.toLatin1().data());
         shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getLibraryBlock(blockTitle.toStdString(), library.toStdString());
         if(inputBlock) {
             return inputBlock;
@@ -566,14 +648,18 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle) {
     return inputBlock;
 }
 
-QString EGS_Editor::getBlockTitle() {
+QString EGS_Editor::getBlockTitle(QTextCursor cursor) {
+    if(cursor == QTextCursor()) {
+        cursor = textCursor();
+    }
+
     vector<QString> innerList;
     QString blockTitle;
     bool withinOtherBlock = false;
 
     // Starting at the current line, starting iterating in reverse through
     // the previous lines
-    for(QTextBlock block = textCursor().block(); block.isValid(); block = block.previous()) {
+    for(QTextBlock block = cursor.block(); block.isValid(); block = block.previous()) {
         QString line = block.text().simplified();
 
         // Get block title
@@ -658,7 +744,9 @@ QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &fo
                 QString blockTitle = line.mid(pos, endPos-pos);
                 if(innerList.size() > 0 && blockTitle == innerList.back()) {
                     innerList.pop_back();
-                    withinOtherBlock = false;
+                    if(innerList.size() == 0) {
+                        withinOtherBlock = false;
+                    }
                 } else {
                     // If we got to the start of the block,
                     // then we failed to find the input
@@ -732,20 +820,23 @@ QTextBlock EGS_Editor::getBlockEnd(QTextBlock currentBlock) {
 
 bool EGS_Editor::inputHasDependency(shared_ptr<EGS_SingleInput> inp) {
     auto dependencyInp = inp->getDependencyInp();
-    if(dependencyInp.size() < 1) {
+    auto dependencyBlock = inp->getDependencyBlock();
+    if(dependencyInp.size() < 1 && !dependencyBlock) {
         return false;
     } else {
         return true;
     }
 }
 
-bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp) {
+bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QTextCursor cursor) {
+    if(cursor == QTextCursor()) {
+        cursor = textCursor();
+    }
+    bool satisfied = true;
 
     // This is a list of inputs that the current input depends on
     auto dependencyInp = inp->getDependencyInp();
-    if(dependencyInp.size() < 1) {
-        return false;
-    }
+
     // This is a list of values, that each of the dependencies above must match
     // These are like the required input parameters that we are checking against
     auto dependencyVal = inp->getDependencyVal();
@@ -753,7 +844,6 @@ bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp) {
 
     // Loop through the dependencies
     vector<bool> previousSatisfied;
-    bool satisfied = true;
     string previousTag;
     for(size_t i = 0; i < dependencyInp.size(); ++i) {
         if(!satisfied) {
@@ -764,16 +854,21 @@ bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp) {
 
         // Get the value from the input file
         bool foundTag;
-        QString val = getInputValue(QString::fromStdString(depTag), textCursor().block(), foundTag);
+        QString val = getInputValue(QString::fromStdString(depTag), cursor.block(), foundTag);
 
         if(foundTag && !dependencyAnti[i]) {
-            if(egsEquivStr(val.toLatin1().data(), dependencyVal[i])) {
-                satisfied = true;
+            if(dependencyVal[i].size() > 0) {
+                if(egsEquivStr(val.toLatin1().data(), dependencyVal[i])) {
+                    satisfied = true;
+                } else {
+                    satisfied = false;
+                }
             } else {
-                satisfied = false;
+                satisfied = true;
             }
         } else {
             // If this is an anti dependency, then we didn't want to find the tag
+            // Note that we don't check the value, only whether or not the input tag is used
             if(!foundTag && dependencyAnti[i]) {
                 satisfied = true;
             } else {
@@ -791,7 +886,7 @@ bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp) {
                 if(satisfied) {
                     // If we hit the end because all the tags matched, reset i
                     if(j == dependencyInp.size()-1) {
-                        i = j-1;
+                        i = j;
                     }
                     continue;
                 } else {
@@ -799,19 +894,111 @@ bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp) {
                         satisfied = true;
                         // If we hit the end because all the tags matched, reset i
                         if(j == dependencyInp.size()-1) {
-                            i = j-1;
+                            i = j;
                         }
                         continue;
                     }
                 }
             } else {
-                i = j-1;
+                i = j;
                 break;
             }
         }
     }
 
+    // Check for any input blocks that this input depends on
+    // We are doing an AND between the input-type dependencies and the block-type ones
+    // So we can skip this section if the input-type dependencies failed
+    if(satisfied) {
+        auto dependencyBlock = inp->getDependencyBlock();
+
+        if(dependencyBlock) {
+            auto dependencyBlockAnti = inp->getDependencyBlockAnti();
+
+            QTextBlock depBlock = findSiblingBlock(QString::fromStdString(dependencyBlock->getTitle()), cursor.block());
+            
+            if(depBlock.isValid()) {
+                if(dependencyBlockAnti) {
+                    satisfied = false; 
+                } else {
+                    satisfied = true;
+                }
+            } else {
+                if(dependencyBlockAnti) {
+                    satisfied = true; 
+                } else {
+                    satisfied = false;
+                }
+            }
+        }
+    }
+
     return satisfied;
+}
+
+QTextBlock EGS_Editor::findSiblingBlock(QString title, QTextBlock currentBlock) {
+    vector<QString> innerList;
+    bool withinOtherBlock = false;
+
+    // Get the last textblock in this input block
+    // so that we search all the inputs in the block
+    QTextBlock blockEnd = getBlockEnd(currentBlock);
+    if(!blockEnd.isValid()) {
+        return QTextBlock();
+    }
+
+    // Starting at the last line, start iterating in reverse through
+    // the previous lines
+    blockEnd = blockEnd.previous();
+    for(QTextBlock block = blockEnd; block.isValid(); block = block.previous()) {
+        QString line = block.text().simplified();
+
+        // Find a sibling block with the title we're looking for
+        // Here we expect to be within another block because the start line counts as inside the block
+        int pos;
+        if(withinOtherBlock) {
+            pos = line.lastIndexOf(":start " + title + ":");
+            if(pos >= 0) {
+                return block;
+            }
+        }
+
+        // Get block title
+        pos = line.lastIndexOf(":start ");
+        if(pos >= 0) {
+            pos += 7;
+            int endPos = line.indexOf(":",pos);
+            if(endPos > 0) {
+                QString blockTitle = line.mid(pos, endPos-pos);
+                if(innerList.size() > 0 && blockTitle == innerList.back()) {
+                    innerList.pop_back();
+                    if(innerList.size() == 0) {
+                        withinOtherBlock = false;
+                    }
+                } else {
+                    // If we got to the start of the current block,
+                    // then we failed to find the target block
+                    return QTextBlock();
+                }
+            }
+        }
+
+        // Save a vector of blocks that have already been closed
+        // This means both a matching :start and :stop are above the cursor
+        // so we're not inside the block
+        pos = line.lastIndexOf(":stop ");
+        if(pos >= 0) {
+            pos += 6;
+            int endPos = line.indexOf(":",pos);
+            if(endPos > 0) {
+                QString stopTitle = line.mid(pos, endPos-pos);
+                innerList.push_back(stopTitle);
+                withinOtherBlock = true;
+            }
+        }
+    }
+
+    return QTextBlock();
 }
 
 void EGS_Editor::lineNumberAreaPaintEvent(QPaintEvent *event) {
@@ -891,7 +1078,8 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
 
             QString stopLine;
             int pos = line.lastIndexOf(":start ");
-            if(pos > -1) {
+            int posInBlock = cursor.positionInBlock();
+            if(pos > -1 && posInBlock > pos) {
                 stopLine = line.replace(pos, 7, ":stop ");
             }
 
@@ -912,7 +1100,8 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
             // Skip the usual return event! So we have to handle it here
             return true;
         }
-    } else if(event->type() == QEvent::Wheel || event->type() == QEvent::FocusOut) {
+    //} else if(event->type() == QEvent::Wheel || event->type() == QEvent::FocusOut) {
+    } else if(event->type() == QEvent::FocusOut) {
         popup->hide();
     }
 
