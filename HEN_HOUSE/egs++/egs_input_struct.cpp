@@ -89,15 +89,21 @@ vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
     // E.g. find all the geometry libraries
     vector<string> libOptions;
     for(auto& block : blockInputs) {
-        if(block && block->getTitle() == blockTitle) {
-            string lib = block->getSingleInput("library")->getValues().front();
-            if(lib.size() > 0) {
-                libOptions.push_back(lib);
+        egsInformation("test getLibOpt %s %s\n",block->getTitle().c_str(),blockTitle.c_str() );
+        // We only search the 2nd-level blocks
+        // i.e. don't look at the geometry definition block, look at the geometries
+        for(auto& block2 : block->getBlockInputs()) {
+            if(block2 && block2->getTitle() == blockTitle) {
+                string lib = block2->getSingleInput("library")->getValues().front();
+                if(lib.size() > 0) {
+                    libOptions.push_back(lib);
+                }
             }
         }
     }
     return libOptions;
 }
+
 
 EGS_BlockInput::EGS_BlockInput() {}
 
@@ -176,6 +182,14 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag) {
     for(auto& inp : singleInputs) {
         // TODO: this assumes unique inputTag
         if(inp && egsEquivStr(inp->getTag(), inputTag)) {
+            return inp;
+        }
+    }
+
+    // If not found in the top level, search recursively
+    for(auto &block: blockInputs) {
+        auto inp = block->getSingleInput(inputTag);
+        if(inp) {
             return inp;
         }
     }
@@ -298,6 +312,11 @@ void EGS_SingleInput::addDependency(shared_ptr<EGS_SingleInput> inp, string val,
     dependencyAnti.push_back(isAntiDependency);
 }
 
+void EGS_SingleInput::addDependency(shared_ptr<EGS_BlockInput> block, bool isAntiDependency) {
+    dependencyBlock = block;
+    dependencyBlockAnti = isAntiDependency;
+}
+
 vector<shared_ptr<EGS_SingleInput>> EGS_SingleInput::getDependencyInp() {
     return dependencyInp;
 }
@@ -308,6 +327,14 @@ vector<string> EGS_SingleInput::getDependencyVal() {
 
 vector<bool> EGS_SingleInput::getDependencyAnti() {
     return dependencyAnti;
+}
+
+shared_ptr<EGS_BlockInput> EGS_SingleInput::getDependencyBlock() {
+    return dependencyBlock;
+}
+
+bool EGS_SingleInput::getDependencyBlockAnti() {
+    return dependencyBlockAnti;
 }
 
 string EGS_SingleInput::getTag() {

@@ -76,13 +76,13 @@ public:
     vector<int> regions;
 };
 
-static shared_ptr<EGS_BlockInput> blockInput = make_shared<EGS_BlockInput>("geometry");
+static shared_ptr<EGS_BlockInput> geomBlockInput = make_shared<EGS_BlockInput>("geometry");
 static void setBaseGeometryInputs(bool includeMediaBlock = true) {
-    blockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso.");
-    blockInput->addSingleInput("name", true, "The user-declared unique name of this geometry. This is the name you may refer to elsewhere in the input file");
+    geomBlockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso.");
+    geomBlockInput->addSingleInput("name", true, "The user-declared unique name of this geometry. This is the name you may refer to elsewhere in the input file");
 
     if(includeMediaBlock) {
-        shared_ptr<EGS_BlockInput> mediaBlock = blockInput->addBlockInput("media input");
+        shared_ptr<EGS_BlockInput> mediaBlock = geomBlockInput->addBlockInput("media input");
         mediaBlock->addSingleInput("media", true, "A list of media that are used in this geometry");
         mediaBlock->addSingleInput("set medium", false, "TODO");
     }

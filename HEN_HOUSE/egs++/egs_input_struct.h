@@ -49,6 +49,8 @@
 
 using namespace std;
 
+class EGS_BlockInput;
+
 class EGS_EXPORT EGS_SingleInput {
 
 public:
@@ -59,9 +61,12 @@ public:
     string getTag();
     bool getRequired();
     void addDependency(shared_ptr<EGS_SingleInput> inp, string val="", bool isAntiDependency = false);
+    void addDependency(shared_ptr<EGS_BlockInput> block, bool isAntiDependency = false);
     vector<shared_ptr<EGS_SingleInput>> getDependencyInp();
     vector<string> getDependencyVal();
     vector<bool> getDependencyAnti();
+    shared_ptr<EGS_BlockInput> getDependencyBlock();
+    bool getDependencyBlockAnti();
     const vector<string> getValues();
     void setValues(const vector<string> vals);
     string getDescription();
@@ -76,6 +81,8 @@ private:
     vector<shared_ptr<EGS_SingleInput>> dependencyInp;
     vector<string> dependencyVal;
     vector<bool> dependencyAnti;
+    shared_ptr<EGS_BlockInput> dependencyBlock;
+    bool dependencyBlockAnti;
 };
 
 class EGS_EXPORT EGS_BlockInput
