@@ -65,7 +65,7 @@ InputOptions inp;
 // Process inputs from the egsinp file
 EGS_BOX_LOCAL int processInputs(EGS_Input *input) {
     int err = input->getInput(ebox_key1,inp.boxSize);
-    if(err && blockInput->getSingleInput(ebox_key1)->getRequired()) {
+    if(err && geomBlockInput->getSingleInput(ebox_key1)->getRequired()) {
         egsWarning(ebox_message1,ebox_message3);
         return 0;
     }
@@ -80,10 +80,10 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        blockInput->getSingleInput("library")->setValues(vector<string>(1, typeStr));
+        geomBlockInput->getSingleInput("library")->setValues(vector<string>(1, typeStr));
 
         // Format: name, isRequired, description, vector string of allowed values
-        blockInput->addSingleInput("box size", true, "1 number defining the side-length of a cube, or 3 numbers defining the x, y, and z side-lengths.");
+        geomBlockInput->addSingleInput("box size", true, "1 number defining the side-length of a cube, or 3 numbers defining the x, y, and z side-lengths.");
     }
 
     EGS_BOX_EXPORT string getExample() {
@@ -105,7 +105,7 @@ extern "C" {
         if(!inputSet) {
             setInputs();
         }
-        return blockInput;
+        return geomBlockInput;
     }
 
     EGS_BOX_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
