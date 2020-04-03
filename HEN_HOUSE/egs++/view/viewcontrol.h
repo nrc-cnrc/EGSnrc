@@ -148,8 +148,7 @@ public slots:
     virtual void changeTrackMaxE(int t);
     virtual void changeTrackMaxPo(int t);
     virtual void updateTracks(vector<size_t> ntracks);
-    virtual void insertGeomTemplate(int ind);
-    virtual void insertSimTemplate(int ind);
+    virtual void insertInputExample();
 
 private:
 
@@ -206,12 +205,13 @@ private:
             energyScaling;
     vector<vector<EGS_Float>> scoreArrays;
     vector<string> geometryNames;
-    vector<string> geomExamples;
-    vector<string> sourceExamples;
+    vector<string> inputExamples;
     EGS_BaseGeometry *origSimGeom;
     EGS_Editor *egsinpEdit;
     EGS_Highlighter *highlighter;
     EGS_AdvancedApplication *egsApp;
+    shared_ptr<EGS_InputStruct> inputStruct;
+    QMenu *exampleMenu;
 
 protected slots:
 
