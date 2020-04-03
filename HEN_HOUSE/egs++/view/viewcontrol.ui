@@ -1675,50 +1675,7 @@ p, li { white-space: pre-wrap; }
              <attribute name="title">
               <string>Editor</string>
              </attribute>
-             <layout class="QGridLayout" name="editorLayout">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="editorLayout_2">
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayout_9">
-                  <property name="sizeConstraint">
-                   <enum>QLayout::SetMaximumSize</enum>
-                  </property>
-                  <item>
-                   <widget class="QLabel" name="label">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Insert template:</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_geomTemplate">
-                    <item>
-                     <property name="text">
-                      <string>Geometry</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QComboBox" name="comboBox_simTemplate">
-                    <item>
-                     <property name="text">
-                      <string>Simulation</string>
-                     </property>
-                    </item>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </item>
-             </layout>
+             <layout class="QGridLayout" name="editorLayout"/>
             </widget>
            </widget>
           </item>
@@ -2475,38 +2432,6 @@ p, li { white-space: pre-wrap; }
    <signal>activated(int)</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>updateSimulationGeometry(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>comboBox_simTemplate</sender>
-   <signal>activated(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>insertSimTemplate(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>comboBox_geomTemplate</sender>
-   <signal>activated(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>insertGeomTemplate(int)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
