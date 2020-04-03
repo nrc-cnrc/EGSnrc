@@ -216,6 +216,8 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
             // Reset the format to have no red underline
             QTextCharFormat format;
             format.setUnderlineStyle(QTextCharFormat::NoUnderline);
+            format.setToolTip("");
+            selection.cursor.setCharFormat(format);
 
             // Check that the input block template contains this type of input
             // If the input isn't defined, it will return nullptr
@@ -239,32 +241,53 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
                 format.setUnderlineColor(QColor("red"));
                 format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
             } else {
-                QTextCharFormat newFormat;
+
+                // Get the description for this input
+                string desc = inputPtr->getDescription();
 
                 // Check if this input has any dependencies
                 // and then confirm that the dependencies are satisfied
-                if(inputHasDependency(inputPtr) && inputDependencySatisfied(inputPtr, cursor) == false) {
-                    // Red underline the input tag
-                    // Select the input tag
-                    selection.cursor.movePosition(QTextCursor::StartOfBlock);
-
-                    // If whitespace was trimmed from the start of the line,
-                    // we account for it so only the input tag is underlined
-                    int originalEqualsPos = cursor.block().text().indexOf("=");
-                    int numWhitespace = countStartingWhitespace(cursor.block().text());
-                    if(numWhitespace > 0) {
-                        selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, numWhitespace);
+                if(inputHasDependency(inputPtr)) {
+                    // Add the list of dependencies to the description tooltip
+                    desc += "\nDependencies: ";
+                    auto vals = inputPtr->getDependencyVal();
+                    int i = 0;
+                    for(auto &inp: inputPtr->getDependencyInp()) {
+                        if(vals[i].size() > 0) {
+                            desc += "'" + inp->getTag() + "=" + vals[i] + "' ";
+                        } else {
+                            desc += "'" + inp->getTag() + "' ";
+                        }
+                        ++i;
+                    }
+                    auto depBlock = inputPtr->getDependencyBlock();
+                    if(depBlock) {
+                        desc += "':start " + depBlock->getTitle() + ":'";
                     }
 
-                    selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, originalEqualsPos - numWhitespace);
+                    if(inputDependencySatisfied(inputPtr, cursor) == false) {
+                        // Red underline the input tag
+                        // Select the input tag
+                        selection.cursor.movePosition(QTextCursor::StartOfBlock);
 
-                    // Set the format to have a red underline
-                    format.setUnderlineColor(QColor("red"));
-                    format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+                        // If whitespace was trimmed from the start of the line,
+                        // we account for it so only the input tag is underlined
+                        int originalEqualsPos = cursor.block().text().indexOf("=");
+                        int numWhitespace = countStartingWhitespace(cursor.block().text());
+                        if(numWhitespace > 0) {
+                            selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, numWhitespace);
+                        }
+
+                        selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, originalEqualsPos - numWhitespace);
+
+                        // Set the format to have a red underline
+                        format.setUnderlineColor(QColor("red"));
+                        format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
+                    }
                 }
 
                 // If the input is valid, add the description as a tooltip
-                format.setToolTip(QString::fromStdString(inputPtr->getDescription()));
+                format.setToolTip(QString::fromStdString(desc));
             }
 
             selection.cursor.setCharFormat(format);
@@ -900,7 +923,7 @@ bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QText
                     }
                 }
             } else {
-                i = j;
+                i = j-1;
                 break;
             }
         }
