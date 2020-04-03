@@ -61,6 +61,7 @@
 #include <qfiledialog.h>
 #include <qprogressdialog.h>
 #include <QTextStream>
+#include <QMenuBar>
 
 #include <cmath>
 #include <cstdlib>
@@ -256,7 +257,14 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     QDir directory(dso_dir.c_str());
     QStringList libraries = directory.entryList(QStringList() << (lib_prefix+"*"+lib_suffix).c_str(), QDir::Files);
-    QStringList geomLibs, sourceLibs;
+
+    // Create an examples drop down menu on the editor tab
+    QMenuBar* menuBar = new QMenuBar();
+    QMenu *exampleMenu = new QMenu("Insert example...");
+    menuBar->addMenu(exampleMenu);
+    QMenu *geomMenu = exampleMenu->addMenu("Geometries");
+    QMenu *sourceMenu = exampleMenu->addMenu("Sources");
+    editorLayout->setMenuBar(menuBar);
 
     // The input template structure
     inputStruct = make_shared<EGS_InputStruct>();
@@ -320,11 +328,9 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
-                // Only add geometries to the list that have a function
-                // to get the input example
-                geomLibs.append(libName);
-
-                geomExamples.push_back(getExample());
+                QAction *action = geomMenu->addAction(libName);
+                action->setData(QString::fromStdString(getExample()));
+                connect(action,  &QAction::triggered, this, [this]{ insertInputExample(); });
             }
         }
 
@@ -365,20 +371,14 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
-                // Only add geometries to the list that have a function
-                // to get the input example
-                sourceLibs.append(libName);
-
-                sourceExamples.push_back(getExample());
+                QAction *action = sourceMenu->addAction(libName);
+                action->setData(QString::fromStdString(getExample()));
+                connect(action,  &QAction::triggered, this, [this]{ insertInputExample(); });
             }
         }
     }
 
     egsinpEdit->setInputStruct(inputStruct);
-
-    // Populate the geometry and simulation template lists
-    comboBox_geomTemplate->addItems(geomLibs);
-    comboBox_simTemplate->addItems(sourceLibs);
 
     //set the play button active boolean to false
     isPlaying=false;
@@ -3526,20 +3526,11 @@ void GeometryViewControl::setFontSize(int size) {
     controlsText->setTextCursor(cursor);
 }
 
-void GeometryViewControl::insertGeomTemplate(int ind) {
-    //QString selection = comboBox_geomTemplate->itemText(ind);
+void GeometryViewControl::insertInputExample() {
+    QAction *pAction = qobject_cast<QAction*>(sender());
 
-    if(ind > 0) {
-        QTextCursor cursor(egsinpEdit->textCursor());
-        egsinpEdit->insertPlainText(QString::fromStdString(geomExamples[ind-1]));
-    }
-}
-
-void GeometryViewControl::insertSimTemplate(int ind) {
-    if(ind > 0) {
-        QTextCursor cursor(egsinpEdit->textCursor());
-        egsinpEdit->insertPlainText(QString::fromStdString(sourceExamples[ind-1]));
-    }
+    QTextCursor cursor(egsinpEdit->textCursor());
+    egsinpEdit->insertPlainText(pAction->data().toString());
 }
 
 bool GeometryViewControl::hasValidTime() {
