@@ -1,0 +1,347 @@
+/*
+###############################################################################
+#
+#  EGSnrc g application documentation
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2020
+#
+#  Contributors:    
+#
+###############################################################################
+*/
+
+/*! \file g.doxy
+ *  \brief Documents the g application
+ *  \EM
+ */
+
+ /*! \mainpage notitle
+
+<ul>
+<li> \ref g_intro </li>
+<li> \ref g_method </li>
+  <ul>
+  <li> \ref g_photons </li>
+  <li> \ref g_charged </li>
+  </ul>
+<li> \ref g_src_types </li>
+  <ul>
+  <li> \ref g_src_type_0 </li>
+  <li> \ref g_src_type_1 </li>
+  </ul>
+<li> \ref g_calc_types </li>
+  <ul>
+  <li> \ref g_calc_type_0 </li>
+  <li> \ref g_calc_type_1 </li>
+  </ul>
+<li> \ref g_usage </li>
+<li> \ref g_example </li>
+  <ul>
+   <li> \ref g_mono </li>
+   <li> \ref g_spec </li>
+  </ul>
+</ul>
+
+\section g_intro Introduction
+
+The EGSnrc application \b g calculates \g, the average kinetic energy fraction lost 
+to radiative events for photon beams or the radiative yield Y in the 
+case of charged particle  beams. For photons, in addition to \f$\overline{g}\f$, 
+quantities such as kerma, \f$\textrm{K}\f$, collision kerma, \f$\textrm{K}_\mathrm{col}\f$, 
+energy fluence averaged mass energy-transfer coefficient, \f$\overline{\mu}_\mathrm{tr}/\rho\f$ 
+and mass energy-absorption coefficient, \f$\overline{\mu}_\mathrm{en}/\rho\f$ are also calculated.
+
+Version 1.0 was released in January 2000 for the calculation of the average radiative 
+fraction \f$\overline{g}\f$ or the raditaive yield Y. Later on in March 2002, the 
+code was extended to compute total and collision kerma (version 1.1). In the summer of 2002 
+the code was modified to also calculate average mass energy transfer and energy absorption 
+coefficients (version 1.2) and to properly account for fluorescent photons (version 1.3).
+The \f$\overline{g}\f$ value used during the 2003 update to the Canadian Co-60 
+air kerma primary standard was obtained using this code.
+
+Motivated by the need to generate large \Emuen_rho databases for EGSnrc applications 
+requiring the calculation of the quantity kerma, a photon-only calculation (calculation type = 1) 
+was implemented in April 2006 which would finish the calculation as soon as a prescribed uncertainty 
+had been reached. This calculation type took advantage of the faster convergence of \mutr and 1-\g 
+(when \g is small) to a desired accuracy. With this calculation type the efficiency of \muen 
+calculations is increased significantly. For instance, an efficiency increase of about a factor 
+of 70 is obtained for a 600 keV calculation in air. At around the same time, the ability to run the 
+calculation for more than one energy was added, giving the user the possibility to request a 
+linear or a logarithmic energy grid.
+
+In January 2017, the AUSGAB routine was refined to properly classify sub-threshold events as either 
+radiative or non-radiative during atomic relaxations following photoeffect, Compton scattering, and 
+electron impact ionization (version change to 1.4).
+According to this scheme, sub-threshold Auger electrons are added to the kerma calculation 
+(non-radiative) and sub-threshold fluorescent photons are included as part of the energy lost 
+to radiative events.
+
+The current version (1.5) fixes a bug in the calculation of \g for both calculation types when the photon's 
+energy is sampled from an energy spectrum. It also provides a cleaner output and an option for
+more verbose output.
+
+\section g_method Calculation method
+
+\subsection g_charged Radiation yield Y
+
+Radiation yield Y(\T0) of a charged particle is defined as the fraction of its initial kinetic energy \T0 that is 
+emitted as electromagnetic radiation through the slowing down process of that particle in a medium. For light charged 
+particles, bremsstrahlung, fluorescence after impact ionization and in-flight annihilation (in the case of positrons) 
+are the interactions responsible for the emission of electromagnetic radiation. For the calculation of Y, the \c g 
+application scores the energy radiated per charged particle after these interactions, \Erad, and computes Y using the expression
+
+\f[
+     Y = \frac{\overline{E}\mathrm{rad}}{T_0}.
+\f]
+
+In adition to Y, \b g also outputs \f$Y_\mathrm{brems}\f$, the radiative energy fraction due only to bremsstrahlung events to assess 
+the approximation incurred when ignoring all other interactions as has been customarily done in the past.
+
+\subsection g_photons Radiative fraction, mass energy transfer and mass energy absorption coefficients
+
+These calculations estimate the kinetic photon energy transferred to charged particles, \Etr,
+and the kinetic energy lost by charged particles via radiative events, \Erad. Atomic relaxation 
+events after electron impact ionization (EII), leading to fluoresence are classified as part of the radiative loss.
+Primary photons are killed after interacting in the medium, while radiative photons (bremsstrahlung, annihilation photons, 
+fluorescent photons after EII) are immediately discarded after their energy is scored as part of \Erad. Electrons are followed 
+as they slow down in the medium until their 
+energy falls below the transport cut-off energy ECUT. Especial attention is paid to sub-threshold
+relaxation particles. In the case of sub-threshold non-radiative events after Compton or photoeffect, the energy of the Auger 
+electrons is scored as part of \Etr. Furthermore, sub-threshold fluorescent photons after EII are scored as part of \Erad.
+
+The mass energy transfer coefficient, \mutr_rho for a monoenegetic photon beam of energy E 
+can be calculated using the expression 
+
+\f[
+     \left(\frac{\mu_\mathrm{tr}}{\rho}\right) = \frac{\overline{E}_\mathrm{tr}}{E} \cdot \left(\frac{\mu}{\rho}\right),
+\f]
+
+which follows from the definition of \f$ \mu_\mathrm{tr}/\rho\f$ and where \murho is the mass attenuation coefficient for a photon of energy E. To estimate \Etr, all kinetic energy transferred
+to charged particles after any photon interaction (photoelectric, Compton, and pair production) is scored. After atomic relaxations only energy transferred to charged particles (Auger or Coster-Kronig)
+is scored as part of \Etr, while energy transferred to fluorescent photons is scored as part of
+\Erad.
+
+Similarly, the mass energy absorption coefficient for photons of energy E is calculated using the expression
+
+\f[
+     \left(\frac{\mu_\mathrm{en}}{\rho}\right) = 
+     \left(1-\overline{g}\right) \cdot \left(\frac{\mu_\mathrm{tr}}{\rho}\right).
+\f]
+
+The calculation of \g requires the scoring of the average kinetic energy transferred to charged 
+particles by photons, \f$\overline{E}_\mathrm{tr}\f$, and the average energy lost to radiative events, 
+\f$\overline{E}_\mathrm{rad}\f$, as the electrons slow down in an infinite homogeneous 
+geometry filled with the medium of interest.  
+
+The average radiative fraction \g for monoenergetic photons is obtained as the ratio
+
+\f[
+     \overline{g} = \frac{\overline{E}_\mathrm{rad}}{\overline{E}_\mathrm{tr}}.
+\f]
+
+In the case of a polyenergetic source of photons, 
+
+relationship between kerma and energy fluence averaged mass energy-transfer coefficient
+
+\f[
+     \frac{K}{\psi} = \left(\overline{\mu}_\mathrm{tr}/\rho\right)_{\psi} 
+                    = \int \psi(E) \mu_\mathrm{tr}(E)/\rho dE/\int \psi(E) dE
+\f]
+
+\section g_src_types Source options
+
+Although the calculation assumes an infinite homogeneous medium, the \c g application 
+offers the possibility to select between two source types. However, test calculations performed for 
+these source type produced no differences within the one-sigma 0.01 \% statistical uncertainties.
+
+\subsection g_src_type_0 Pencil beam
+
+Source type 0 corresponds to a pencil beam incident at a polar angle \f$\theta\f$ between 0\deg and 90\deg.
+
+An example of the input syntax is provided in the example below for a 30 keV photon beam:
+
+\code
+##################### 
+ :Start Source Input:
+##################### 
+ INCIDENT SPECTRUM=       mono-energy
+ INCIDENT KINETIC ENERGY= 0.030
+ Incident Charge=         0
+ SOURCE TYPE=             0
+ Incident Angle=          angle
+##################### 
+ :Stop Source Input:
+##################### 
+\endcode
+
+\subsection g_src_type_1 Collimated beam
+
+Source type 1 corresponds to a point source collimated beam incident on a circular field of radius rbeam situated at a distance d from the circular field.
+
+An example of the input syntax is provided in the example below for a 30 keV photon beam:
+
+\code
+##################### 
+ :Start Source Input:
+##################### 
+ INCIDENT SPECTRUM=       mono-energy
+ INCIDENT KINETIC ENERGY= 0.030
+ Incident Charge=         0
+ SOURCE TYPE=             1
+ SOURCE RBEAM = rbeam
+ SOURCE DISTANCE = d
+##################### 
+ :Stop Source Input:
+##################### 
+\endcode
+
+\section g_calc_types Calculation types
+
+The application can be used in two different calculation modes, a full simulation mode
+or a photon only simulation mode.
+
+\subsection g_calc_type_0 Photon and electron beams (type 0, default)
+
+In its original implementation, the \c g code looped over a fixed number of histories
+for a source of photons or charged particles. After each photon interaction, the energy 
+transferred to charged particles was scored
+
+\subsection g_calc_type_1 Photon beams only (type 1)
+
+\section g_usage Usage
+The EGSnrc application \c g can be started from the command line
+using
+\code
+g -i input_file [-p pegs_file] [-o output_file] [-b]
+\endcode
+where the arguments in square brackets are optional. If material information is 
+obtained via a PEGS4 data file, the option <b>\c -p</b>  tells the application
+which file to use. Alternatively, materials can be defined in the input file via 
+a media definition input block, in which case this option must be ommited.
+With the <b>\c -o</b> option one can change the name of the output files 
+(by default <b>\c input_file.xxx</b>
+is used, where <b>\c xxx</b> is <b>\c .egslog</b> for the log file, <b>\c .egsdat</b> for the
+data file, etc.). With <b>\c -b</b> one specifies a "batch" run, \em i.e. the
+output is redirected to <b>\c output_file.egslog</b>. 
+Remember that any application can be executed from the EGSnrc GUI \c egs_gui.
+
+\section g_example Input examples
+
+\subsection g_mono Monoenergetic 30 keV photon beam example
+\code
+############################################
+#
+# Example input file for the g application:
+#
+#  - Monoenergetic 30 keV photon beam
+#  - Calculation type 1 (photons only)
+#  - Verbose output
+#  - Desired accuracy 0.1%
+#
+###########################################
+
+##############################
+# Application specific inputs
+##############################
+ media=  air0o
+ INITIAL RANDOM NO. SEEDS= 97, 33
+ Number of HISTORIES= 2000000000000
+ accuracy= 0.001
+ calculation type= 1
+ verbose = yes
+
+##################### 
+ :Start Source Input:
+##################### 
+
+ INCIDENT SPECTRUM=       mono-energy
+ INCIDENT KINETIC ENERGY= 0.030
+ Incident Charge=         0
+ SOURCE TYPE=             0
+ Incident Angle=          0
+
+##################### 
+ :Stop Source Input:
+##################### 
+
+################################ 
+ :Start MC Transport Parameter:
+################################ 
+
+ Global ECUT=                    0.512
+ Global PCUT=                    0.001
+ Global SMAX=                    1e10
+ Spin effects=                   On
+
+ Rayleigh scattering   = On
+ Photon cross sections  = mcdf-xcom
+ Pair cross sections = nrc
+ Triplet production = On
+ Bound Compton Scattering = norej
+ Radiative Compton corrections = ON
+ Atomic relaxations=             On
+ Photoelectron angular sampling= On
+
+ Brems angular sampling=         KM
+ Brems cross sections= nrc
+ Pair angular sampling=          KM
+ ESTEPE=                         0.25
+ XIMAX=                          0.5
+ Electron Impact Ionization=     ik
+ Skin depth for BCA=             3
+ Boundary crossing algorithm=    exact
+ Electron-step algorithm=        default
+
+###############################
+ :Stop MC Transport Parameter:
+###############################
+
+###########################
+:start media definition:
+###########################
+
+    ### energy transport cutoffs
+    ae = 0.512
+    ue = 2.511
+    ap = 0.001
+    up = 2.00
+
+    :start air0o:
+      density correction file     = air_dry_nearsealevel
+      bremsstrahlung correction= NRC
+    :stop air0o:
+
+###########################
+:stop media definition:
+###########################
+\endcode
+
+\subsection g_spec Photon spectrum
+
+*/
+
+/*
+\f[
+     \left(\frac{\mu_\mathrm{en}}{\rho}\right) = 
+     \frac{\left(\overline{E}_\mathrm{tr}-\overline{E}_\mathrm{rad}\right)}{E} \cdot \left(\frac{\mu}{\rho}\right) =
+     \frac{\overline{E}_\mathrm{tr}\left(1-\overline{g}\right)}{E} \cdot \left(\frac{\mu}{\rho}\right)
+\f]
+*/

@@ -1,0 +1,44 @@
+
+/* body, table, div, p, dl {
+	font: 400 14px/22px Roboto,sans-serif;
+}
+ */
+/*
+h1, h2, h3 {
+    width: 90%;
+    margin: auto;
+}
+*/
+/* Paragraphs */
+p {
+    font-size: 1.15rem;
+}
+
+/* Code style */
+div.line {
+    font-size: 1.15rem;
+}
+/* Body */
+body{
+    width: 100%;
+    font-size: 1.15rem;
+}
+/* Equations: Font size defined in Doxyfile */
+/*p.formulaDsp {
+    text-align: left;
+}
+p.formulaInl {
+    font-size: 1.15rem;
+}*/
+/* Parameters *#sideanav{
+    font-size: 1.15em;
+}
+/* 20x Styling */
+a.el {
+	font-size: 1.15rem;
+}
+/* Access to navigation tree */
+#nav-tree .label {
+    font: 1.15em 'Lucida Grande',Geneva,Helvetica,Arial,sans-serif;
+    /*font: 14px 'Lucida Grande',Geneva,Helvetica,Arial,sans-serif;*/
+}

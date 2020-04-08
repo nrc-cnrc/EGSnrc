@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Script to build the g-code documentation.
+#
+# Documentation built using Doxygen's ability to parse Fortran
+# comments. 
+#
+
+my_machine=`cat $EGS_CONFIG | grep "my_machine =" | sed 's/my_machine = //'`
+docdir=$PWD
+eh=$EGS_HOME
+
+#
+# Parse command line for arguments
+#
+while test $# -gt 0; do
+    case "$1" in
+      dir=*) docdir=`echo $1 | sed 's/dir=//'` ;;
+       eh=*) eh=`echo $1 | sed 's/eh=//'` ;;
+   config=*) my_machine=`echo $1 | sed 's/config=//'` ;;
+    esac
+    shift
+done
+
+echo PWD: $PWD
+echo docdir: $docdir
+echo EGS_HOME: $eh
+echo config: $my_machine
+
+#if [ "$docdir" != $PWD ] && [ "$my_machine" != template ]; then
+# echo "$docdir not equal to $PWD !"
+#else
+# echo "$docdir equal to $PWD !"
+#fi
+#exit 0
+
+
+######################################################
+# What if no EGSnrc? Use the provided Fortran source!
+######################################################
+if test "x$my_machine" = x; then
+ my_machine=template
+fi
+
+if test -d "$eh"; then
+ cd $eh/g
+ make fortran
+ echo 'C> @endcond' >> g_${my_machine}.f
+ mv $docdir/g_template.f $docdir/g_template.f.OK
+ rm -f $docdir/*.f
+ cp g_${my_machine}.f $docdir/
+fi
+
+if test "$docdir" != $PWD; then
+ cd $docdir
+fi
+
+rm -f html/*form*.*
+doxygen
+mv $docdir/g_template.f.OK $docdir/g_template.f
+exit 0
+
