@@ -149,7 +149,13 @@ public:
         EGS_Float angleBetween = std::acos(u * perpToCircle / (perpToCircle.length() * u.length()));
 
         // We will rotate about a vector perpendicular to u and the target surface normal
-        EGS_Vector rotateAbout = u.times(perpToCircle);
+        // Check against fabs(u.z) to account for both parallel and anti-parallel cases
+        EGS_Vector rotateAbout;
+        if((fabs(u.z) - perpToCircle.z) < epsilon) {
+            rotateAbout = perpToCircle;
+        } else {
+            rotateAbout = u.times(perpToCircle);
+        }
         EGS_RotationMatrix rotation = EGS_RotationMatrix::rotV(-angleBetween, rotateAbout);
         EGS_AffineTransform *transform = new EGS_AffineTransform(rotation);
         if(transform) {
