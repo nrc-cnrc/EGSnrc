@@ -77,7 +77,8 @@ This shape is specified via
 :stop shape:
 \endverbatim
 and delivers points uniformly distributed within a circle.
-The surface of this circle is always perpendicular to source particles,
+The surface of this circle is always perpendicular to a ray based on the 
+source particle position,
 when this shape is used as the target in a source that calls the
 getPointSourceDirection() function. For example, in a 
 \link EGS_CollimatedSource collimated source \endlink
@@ -87,7 +88,7 @@ it behaves like an \link EGS_CircleShape egs_circle \endlink.
 
 For each source particle, when getPointSourceDirection() is called, the 
 circle shape is rotated so that the circle surface is perpendicular to the 
-vector between the source location, and the origin of the circle. In 
+vector between the source particle location and the origin of the circle. In 
 effect this means that the source particles see a sphere instead of a 
 circle, except that for a given particle, the possible target locations
 are on the surface of a circle rather than within a sphere.
@@ -162,7 +163,7 @@ public:
 
         d2i = 1/u.length2(), di = sqrt(d2i);
         u *= di;
-        wt = A*fabs(u.z)*d2i;
+        wt = A*u.length()*d2i;
         if (T) {
             T->rotate(u);
         }
