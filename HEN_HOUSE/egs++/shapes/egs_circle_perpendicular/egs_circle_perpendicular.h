@@ -113,7 +113,7 @@ public:
     /*! \brief Conctruct a circle with midpoint given by \a Xo and \a Yo,
     radius \a R and innder radius \a R_i */
     EGS_CirclePerpendicularShape(EGS_Float Xo, EGS_Float Yo, EGS_Float R, EGS_Float R_i = 0,
-                    const string &Name="",EGS_ObjectFactory *f=0) :
+                                 const string &Name="",EGS_ObjectFactory *f=0) :
         EGS_SurfaceShape(Name,f), xo(Xo), yo(Yo), ro(R_i), dr(R-R_i) {
         otype = "circle";
         if (dr < 0) {
@@ -149,10 +149,17 @@ public:
         EGS_Float angleBetween = std::acos(u * perpToCircle / (perpToCircle.length() * u.length()));
 
         // We will rotate about a vector perpendicular to u and the target surface normal
-        EGS_Vector rotateAbout = u.times(perpToCircle);
+        // Check against fabs(u.z) to account for both parallel and anti-parallel cases
+        EGS_Vector rotateAbout;
+        if ((fabs(u.z) - perpToCircle.z) < epsilon) {
+            rotateAbout = perpToCircle;
+        }
+        else {
+            rotateAbout = u.times(perpToCircle);
+        }
         EGS_RotationMatrix rotation = EGS_RotationMatrix::rotV(-angleBetween, rotateAbout);
         EGS_AffineTransform *transform = new EGS_AffineTransform(rotation);
-        if(transform) {
+        if (transform) {
             // Transform the point on the target surface by this rotation
             transform->rotate(x);
 
