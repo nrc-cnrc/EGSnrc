@@ -1261,6 +1261,37 @@ void EGS_AdvancedApplication::setLatch(int latch) {
     the_stack->latch[np] = latch;
 }
 
+//************************************************************
+// Utility function for ausgab egs_radiative_spliting objects
+//************************************************************
+//get the RNG required by DBS
+EGS_RandomGenerator *EGS_AdvancedApplication::getRNG() {
+    return rndm;
+}
+
+//add a particle (+ dnear) to the top of the stack and increment np
+void EGS_AdvancedApplication::addParticleToStack(EGS_Particle p, dnear) {
+    int np = the_stack->np; //np+1
+    the_stack->E[np] = p.E;
+    the_stack->wt[np] = p.wt;
+    the_stack->x[np] = p.x.x;
+    the_stack->y[np] = p.x.y;
+    the_stack->z[np] = p.x.z;
+    the_stack->u[np] = p.u.x;
+    the_stack->v[np] = p.u.y;
+    the_stack->w[np] = p.u.z;
+    the_stack->iq[np] = p.q;
+    the_stack->ir[np] = p.ir+2;
+    the_stack->latch[np] = p.latch;
+    the_stack->dnear[np] = dnear;
+    the_stack->np++;
+}
+
+//get dnear from position np in the stack
+EGS_Float EGS_AdvancedApplication::getDnear(int np) {
+    return the_stack->dnear[np+1];
+}
+
 extern __extc__ void egsHowfar() {
     CHECK_GET_APPLICATION(app,"egsHowfar()");
     int np = the_stack->np-1;
