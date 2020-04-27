@@ -227,6 +227,13 @@ public:
     int getNp();
     int getNpOld();
 
+    //************************************************************
+    // Utility functions for egs_radiative_splitting ausgab objects
+    //************************************************************
+    EGS_RandomGenerator *getRNG();
+    void addParticleToStack(EGS_Particle p, dnear);
+    EGS_Float getDnear(int np);
+
     /* Needed by some sources */
     EGS_Float getRM();
     /* Turn ON/OFF radiative splitting */

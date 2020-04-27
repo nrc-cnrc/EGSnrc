@@ -57,24 +57,6 @@ extern "C" void F77_OBJ_(kill_the_photons,KILL_THE_PHOTONS)(const EGS_Float *fs,
 extern "C" void F77_OBJ_(brems,BREMS)(){;}
 extern __extc__ void F77_OBJ_(egs_fill_rndm_array,EGS_GET_RNDM_ARRAY)(const EGS_I32 *n, EGS_Float *rarray);
 
-struct EGS_Stack {
-  double    E[MXSTACK];
-  EGS_Float x[MXSTACK];
-  EGS_Float y[MXSTACK];
-  EGS_Float z[MXSTACK];
-  EGS_Float u[MXSTACK];
-  EGS_Float v[MXSTACK];
-  EGS_Float w[MXSTACK];
-  EGS_Float dnear[MXSTACK];
-  EGS_Float wt[MXSTACK];
-  EGS_I32   iq[MXSTACK];
-  EGS_I32   ir[MXSTACK];
-  EGS_I32   latch[MXSTACK];
-  EGS_I32   latchi;
-  EGS_I32   np;
-  EGS_I32   npold;
-};
-
 struct EGS_XOptions {
   EGS_I32   ibrdst;
   EGS_I32   iprdst;
@@ -101,9 +83,6 @@ struct EGS_Media {
     char      photonucxsec[16];
     EGS_I32   nmed;
 };
-
-extern __extc__ struct EGS_Stack F77_OBJ_(stack,STACK);
-struct EGS_Stack *the_stack = & F77_OBJ_(stack,STACK);
 
 extern __extc__ struct EGS_XOptions F77_OBJ_(xsection_options,XSECTION_OPTIONS);
 struct EGS_XOptions  *the_xoptions = & F77_OBJ_(xsection_options,XSECTION_OPTIONS);
@@ -161,6 +140,8 @@ void EGS_RadiativeSplitting::initDBS(const float &field_rad, const float &field_
         f_KM_a = new EGS_Interpolator* [the_media->nmed];
         f_KM_b = new EGS_Interpolator* [the_media->nmed];
         zbr_KM = new EGS_Float [the_media->nmed];
+
+        rndm = app->getRNG();
 }
 
 //at least try to get brems working with this
@@ -283,7 +264,7 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
     int ip = np;
     int irl=app->top_p.ir;
     int latch=app->top_p.latch;
-    EGS_Float dnear = the_stack->dnear[np+1]; int ib = 0;
+    EGS_Float dnear = app->getDnear[np]; int ib = 0;
 
     if( w1 < w2 ) {
         for(int j=0; j<nsample; j++) {
@@ -320,13 +301,18 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
                         "smartBrems",MXSTACK);
                 if( the_xoptions->ibrdst == 1 )
                     y2_KM[ib++] = beta*(1+beta)*(tau+1)*(tau+1)*(1-cost);
-                the_stack->x[ip]=x.x; the_stack->y[ip]=x.y;
-                the_stack->z[ip]=x.z;
-                the_stack->u[ip]=un;  the_stack->v[ip]=vn;  the_stack->w[ip]=wn;
-                the_stack->ir[ip]=irl; the_stack->dnear[ip]=dnear;
-                the_stack->wt[ip]=wt*ns; the_stack->latch[ip]=latch;
-                the_stack->iq[ip]=0;
-                /*
+
+                EGS_Particle p;
+                p.x = x;
+                p.u = EGS_Vector(un,vn,wn);
+                p.irl = irl;
+                p.wt = wt*ns;
+                p.latch = latch;
+                p.q = 0;
+
+                app->addParticleToStack(p,dnear);
+
+                /* need to figure this out
                 the_extra_stack->icreate[ip] = the_extra_stack->int_num;
                 the_extra_stack->pid[ip] = ++the_extra_stack->pidI;
                 the_extra_stack->iweight[ip] = ns;
@@ -366,12 +352,18 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
                     if( y2 < 0 ) y2 = 0;
                     y2_KM[ib++] = y2;
                 }
-                the_stack->x[ip]=x.x; the_stack->y[ip]=x.y;
-                the_stack->z[ip]=x.z;
-                the_stack->u[ip]=un;  the_stack->v[ip]=vn;  the_stack->w[ip]=wn;
-                the_stack->ir[ip]=irl; the_stack->dnear[ip]=dnear;
-                the_stack->wt[ip]=wt*iw; the_stack->latch[ip]=latch;
-                the_stack->iq[ip]=0;
+
+                EGS_Particle p;
+                p.x = x;
+                p.u = EGS_Vector(un,vn,wn);
+                p.irl = irl;
+                p.wt = wt*iw;
+                p.latch = latch;
+                p.q = 0;
+
+                app->addParticleToStack(p,dnear);
+
+                //have to figure out what to do below
                 /*
                 the_extra_stack->icreate[ip] = the_extra_stack->int_num;
                 the_extra_stack->pid[ip] = ++the_extra_stack->pidI;
@@ -409,11 +401,18 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
             if( ++ip >= MXSTACK ) egsFatal(dbs_err_msg,
                     "smartBrems",MXSTACK);
             ireal = ip;
-            the_stack->x[ip]=x.x;the_stack->y[ip]=x.y;the_stack->z[ip]=x.z;
-            the_stack->u[ip]=un; the_stack->v[ip]=vn; the_stack->w[ip]=wn;
-            the_stack->ir[ip]=irl; the_stack->dnear[ip]=dnear;
-            the_stack->wt[ip]=wt*nbrspl; the_stack->latch[ip]=latch;
-            the_stack->iq[ip]=0;
+
+            EGS_Particle p;
+            p.x = x;
+            p.u = EGS_Vector(un,vn,wn);
+            p.irl = irl;
+            p.wt = wt*ns;
+            p.latch = latch;
+            p.q = 0;
+
+            app->addParticleToStack(p,dnear);
+
+            //need to figure out what to do here
           /*
             the_extra_stack->icreate[ip] = the_extra_stack->int_num;
             the_extra_stack->pid[ip] = ++the_extra_stack->pidI;

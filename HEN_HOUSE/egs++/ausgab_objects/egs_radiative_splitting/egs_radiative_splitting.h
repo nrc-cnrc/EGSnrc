@@ -100,6 +100,16 @@ TODO:
 
 */
 
+struct EGS_Particle {
+    int        q;      //!< particle charge
+    int        latch;  //!< latch variable (useful as a flag on many occasions)
+    int        ir;     //!< particle region index
+    EGS_Float  E;      //!< particle energy in MeV
+    EGS_Float  wt;     //!< statistical weight
+    EGS_Vector x;      //!< position
+    EGS_Vector u;      //!< direction
+};
+
 class EGS_RADIATIVE_SPLITTING_EXPORT EGS_RadiativeSplitting : public EGS_AusgabObject {
 
 public:
@@ -134,21 +144,6 @@ public:
 
     void initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr);
 
-  /*
-   {
-        fs = field_rad;
-        ssd = field_ssd;
-        ireg_esplit = splitreg;
-        irad_esplit = irad;
-        zrr_esplit = zrr;
-
-        y2_KM = new EGS_Float [nsplit];
-        f_KM_a = new EGS_Interpolator* [the_media->nmed];
-        f_KM_b = new EGS_Interpolator* [the_media->nmed];
-        zbr_KM = new EGS_Float [nmed];
-    };
- */
-
     bool needsCall(EGS_Application::AusgabCall iarg) {
         if (split_type == EGS_RadiativeSplitting::DRS || split_type == EGS_RadiativeSplitting::DRSf) {
            if (iarg == EGS_Application::BeforeBrems || iarg == EGS_Application::BeforeAnnihFlight || iarg == EGS_Application::BeforeAnnihRest ||
@@ -161,10 +156,24 @@ public:
     };
 
     int processEvent(EGS_Application::AusgabCall iarg) {
+        if (split_type >  EGS_RadiativeSplitting::URS && iarg > AfterTransport)
+        {
+            if( !doInteractions(iarg,rndm,killed,be_factor) )
+            {
+            	return 0;
+            }
+        }
         return 0;
     };
 
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
+        if (split_type >  EGS_RadiativeSplitting::URS && iarg > AfterTransport)
+        {
+            if( !doInteractions(iarg,rndm,killed,be_factor) )
+            {
+                return 0;
+            }
+        }
         return 0;
     };
 
@@ -172,6 +181,8 @@ protected:
     int split_type; //0 = uniform, 1 = DBS, 2 = BEAMnrc DBS
     /* Maximum splitting limited to 2,147,483,647 */
     int nsplit;
+    int killed; //no of photons killed
+    EGS_Float be_factor = 0; //Brems enhancement factor--currently set to zero and not used
     EGS_Float fs; //radius of splitting field
     EGS_Float ssd; //ssd at which splitting field is defined
     vector<int> ireg_esplit; //numbers of regions on entering which charged particles are split
@@ -186,6 +197,8 @@ protected:
     EGS_Interpolator **f_KM_a;
     EGS_Interpolator **f_KM_b;
     EGS_Float        *zbr_KM;
+
+    EGS_RandomGenerator rndm; //RNG for DBS--passed from the application
 
     const char *dbs_err_msg =
 "Stack size exceeded in BEAMpp_DBS::%s()\n"
