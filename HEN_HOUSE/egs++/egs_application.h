@@ -1189,7 +1189,6 @@ public:
     // Utility function for ausgab phase space scoring objects
     //************************************************************
     virtual void setLatch(int latch) {};
-
 };
 
 #define APP_MAIN(app_name) \
