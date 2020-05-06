@@ -3381,7 +3381,7 @@ $INTEGER ircode,IERR;
 ;COMIN/BOUNDS, BREMPR, CMs, EDGE, ELECIN, ENERGYSRC, EPCONT, GEOM,
   IO_INFO,MEDIA, MISC, PHOTIN, SCORE, SOURCE, STACK, THRESH, UPHIOT,
   USEFUL, USER, RANDOM, BMODEL, RWPHSP, EGS-VARIANCE-REDUCTION, CH-Steps,
-  EGS-IO,TIMING-INFO,GetInput/;
+  EGS-IO,TIMING-INFO,GetInput,EII-DATA/;
 "V>**************************
 "T>TYPE DECLARATIONS FOR MAIN
 "T>**************************
@@ -4290,6 +4290,9 @@ IF( use_cs_enhance ) [
 IF(IBRSPL=1)[IAUSFL(26)=1; "to split eii relaxation photons in UBS"]
                            "regardless of the use of BCSE         "
 IF(USE_BCSE)[/IAUSFL(7),IAUSFL(8),IAUSFL(26)/=1;]
+
+IF(eii_flag > 0)[iausfl($EIIA+1)=1;] "to mark fluorescent photon secondaries"
+                                "even if splitting is off"
 
 "*******************************************************************************
 "
@@ -5736,6 +5739,14 @@ IF( use_bcse & ibrspl < 2 ) [
 
 IF((IBRSPL=1 | (USE_BCSE & IBRSPL<2)) & IARG=25 & WT(NP)=1.0)[
    NPOLD=NP;
+   "label fluorescent photons as secondary"
+   IF(latch(np)>=LNOB29)["parent e- was secondary particle"
+      latch(np)=latch(np)+
+                 (IREGION_TO_BIT(IRL)- INT(latch(np)/LNOB29))*LNOB29;
+   ]
+   ELSE["The parent is a primary."
+      latch(np) =  latch(np)+IREGION_TO_BIT(IRL)*LNOB29;
+   ]
    CALL UNIFORM_PHOTONS_4PI(NBRSPL,E(NP));
 ]
 
@@ -6558,6 +6569,17 @@ ELSEIF(IBRSPL=2) ["directional bremsstrahlung splitting"
 
    IF( iarg = 25 ) [ "a fluorescent photon has just been put on the stack "
                      "split it"
+       "label all fluorescent photons as secondary"
+       "Note: Necessary for eii relaxations"
+       "For Compton and photoelectric relaxations it is overkill since"
+       "latch is set for secondaries before the interaction happens"
+       IF(latch(np)>=LNOB29)["parent e- was secondary particle"
+            latch(np)=latch(np)+
+                 (IREGION_TO_BIT(IRL)- INT(latch(np)/LNOB29))*LNOB29;
+       ]
+       ELSE["The parent is a primary."
+            latch(np) =  latch(np)+IREGION_TO_BIT(IRL)*LNOB29;
+       ]
        IF( iphat(np) = nbrspl ) [
            ener = e(np);
            npold=np;
@@ -6624,6 +6646,10 @@ IF(IZLAST = 1)[
            ZLAST(I)=Z(I); "mark Z of creation of e- and e+"
       ]
   ]
+  ELSEIF(IARG=25)[ "fluorescent photon: this is necessary if it arose"
+                   "from a split eii relaxation"
+      zlast(np)=z(np);
+  ]
 ]" END IF FOR IZLAST=1"
 
 ELSEIF(IZLAST = 2)["store x and y for display too"
@@ -6673,6 +6699,12 @@ ELSEIF(IZLAST = 2)["store x and y for display too"
            YLAST(I)=Y(I);
            ZLAST(I)=Z(I);
       ]
+  ]
+  ELSEIF(IARG = 25)[ "fluorescent photon: necessary if it arose after a split"
+                    "eii relaxation"
+      xlast(np)=x(np);
+      ylast(np)=y(np);
+      zlast(np)=z(np);
   ]
 ]" END IF FOR IZLAST = 2"
 
@@ -6903,6 +6935,21 @@ REPLACE {$RESTORE_LATCH_BIT30I;} WITH {LATCH(I)=LATCH(I)+IBITH30;}
     ]
   ] "End of photo"
 
+  ELSEIF(IARG = $EIIA)[ "electron impact ionization -- label fluorescent"
+                        "photons as secondaries"
+    DO i=npold,np[
+      IF(iq(i)=0)[
+        IF(latch(i) >= LNOB29)["parent is a secondary. "
+           latch(i) = latch(i)+(IREGION_TO_BIT(IRL)-
+                      INT(latch(i)/LNOB29))*LNOB29;
+        ]
+        ELSE["the parent is a primary"
+           latch(i) = latch(i)+IREGION_TO_BIT(IRL)*LNOB29;
+        ]
+      ]
+    ]
+  ] "end of eii"
+
 ]         "End of LATCH option = 2,   "
 "
 "*******************************************************************************
@@ -7097,6 +7144,21 @@ ELSEIF(LATCH_OPTION  = 3 & IARG > 6)[
       $RESTORE_LATCH_BIT30I;
     ]
   ] "End of Annih"
+
+  ELSEIF(IARG = $EIIA)[ "electron impact ionization -- label fluorescent"
+                        "photons as secondaries"
+    DO i=npold,np[
+      IF(iq(i)=0)[
+        IF(latch(i) >= LNOB29)["parent is a secondary. "
+           latch(i) = latch(i)+(IREGION_TO_BIT(IRL)-
+                      INT(latch(i)/LNOB29))*LNOB29;
+        ]
+        ELSE["the parent is a primary"
+           latch(i) = latch(i)+IREGION_TO_BIT(IRL)*LNOB29;
+        ]
+      ]
+    ]
+  ] "end of eii"
 ]         "End of LATCH option = 3,   "
 
 
