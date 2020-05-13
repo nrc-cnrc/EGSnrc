@@ -50,10 +50,18 @@ shared_ptr<EGS_BlockInput> EGS_InputStruct::addBlockInput(string blockTit, bool 
 
 shared_ptr<EGS_BlockInput> EGS_InputStruct::addBlockInput(shared_ptr<EGS_BlockInput> block) {
     blockInputs.push_back(block);
+
+    return blockInputs.back();
 }
 
 void EGS_InputStruct::addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks) {
     blockInputs.insert(blockInputs.end(), blocks.begin(), blocks.end());
+}
+
+shared_ptr<EGS_BlockInput> EGS_InputStruct::addFloatingBlock(shared_ptr<EGS_BlockInput> block) {
+    floatingBlocks.push_back(block);
+
+    return floatingBlocks.back();
 }
 
 vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
@@ -94,9 +102,11 @@ vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
         // i.e. don't look at the geometry definition block, look at the geometries
         for(auto& block2 : block->getBlockInputs()) {
             if(block2 && block2->getTitle() == blockTitle) {
-                string lib = block2->getSingleInput("library")->getValues().front();
-                if(lib.size() > 0) {
-                    libOptions.push_back(lib);
+                vector<string> libAr = block2->getSingleInput("library")->getValues();
+                for(auto& lib : libAr) {
+                    if(lib.size() > 0) {
+                        libOptions.push_back(lib);
+                    }
                 }
             }
         }
@@ -243,22 +253,18 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getParent() {
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::getLibraryBlock(string blockTitle, string libraryName) {
     // First search the singleInputs for the library name
-    // only if the block title matches (e.g. it's a geometry, or a source)
-    // TODO: remove blockTitle from input params??
-    //if(this->getTitle() == blockTitle) {
-        for(auto &inp: singleInputs) {
-            if(!inp) {
-                continue;
-            }
-            if(egsEquivStr(inp->getTag(), "library")) {
-                if(inp->getValues().size() && egsEquivStr(inp->getValues().front(), libraryName)) {
-                    return shared_from_this();
-                } else {
-                    break;
-                }
+    for(auto &inp: singleInputs) {
+        if(!inp) {
+            continue;
+        }
+        if(egsEquivStr(inp->getTag(), "library")) {
+            if(inp->getValues().size() && egsEquivStr(inp->getValues().front(), libraryName)) {
+                return shared_from_this();
+            } else {
+                break;
             }
         }
-    //}
+    }
 
     // If not found, go through input blocks
     for(auto &block: blockInputs) {
