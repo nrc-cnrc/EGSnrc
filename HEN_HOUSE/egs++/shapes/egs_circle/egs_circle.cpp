@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -38,7 +38,39 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
+static string EGS_CIRCLE_LOCAL typeStr("EGS_Circle");
+static bool EGS_CIRCLE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_CIRCLE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", vector<string>(1, typeStr));
+        shapeBlockInput->addSingleInput("radius", false, "The radius of the circle.");
+        shapeBlockInput->addSingleInput("midpoint", false, "The x, y midpoint of the circle, which is in the x-y plane located at z=0. Use an EGS_AffineTransform block to translate or rotate the shape.");
+        shapeBlockInput->addSingleInput("inner radius", false, "The inner radius, to define a ring. Points will only be sampled within the ring between the 'inner radius' and 'radius'.");
+    }
+
+    EGS_CIRCLE_EXPORT string getExample() {
+        string example
+{R"(
+        :start shape:
+            library = egs_circle
+            radius = the circle radius
+            midpoint = Ox, Oy (optional)
+            inner radius = the inner radius (optional)
+        :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_CIRCLE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_CIRCLE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {
