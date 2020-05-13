@@ -39,6 +39,7 @@
 #include "egs_libconfig.h"
 #include "egs_functions.h"
 #include "egs_base_geometry.h"
+#include "egs_shapes.h"
 #include "egs_visualizer.h"
 #include "egs_timer.h"
 #include "egs_input.h"
@@ -74,6 +75,7 @@ using namespace std;
 typedef EGS_Application *(*createAppFunction)(int argc, char **argv);
 typedef EGS_BaseGeometry *(*createGeomFunction)();
 typedef EGS_BaseSource *(*createSourceFunction)();
+typedef EGS_BaseShape *(*createShapeFunction)();
 typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
 typedef string (*getExampleFunction)();
 
@@ -254,6 +256,10 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     menuBar->addMenu(exampleMenu);
     QMenu *geomMenu = exampleMenu->addMenu("Geometries");
     QMenu *sourceMenu = exampleMenu->addMenu("Sources");
+    QMenu *shapeMenu = exampleMenu->addMenu("Shapes");
+    QMenu *ausgabMenu = exampleMenu->addMenu("Ausgab/Output");
+    QMenu *mediaMenu = exampleMenu->addMenu("Media");
+    QMenu *runMenu = exampleMenu->addMenu("Run Control");
     editorLayout->setMenuBar(menuBar);
 
     // The input template structure
@@ -362,6 +368,49 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = sourceMenu->addAction(libName);
+                action->setData(QString::fromStdString(getExample()));
+                connect(action,  &QAction::triggered, this, [this]{ insertInputExample(); });
+            }
+        }
+
+        createShapeFunction isShape = (createShapeFunction) egs_lib.resolve("createShape");
+        if (isShape) {
+            egsInformation(" testshape %s\n",libName.toLatin1().data());
+
+            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+            if (getInputs) {
+
+                shared_ptr<EGS_BlockInput> shape = getInputs();
+                if (shape) {
+                    inputStruct->addFloatingBlock(shape);
+
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = shape->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+                        egsInformation("  single %s\n", inp->getTag().c_str());
+                        for (auto&& val : vals) {
+                            egsInformation("      %s\n", val.c_str());
+                        }
+                    }
+
+                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = shape->getBlockInputs();
+                    for (auto &block : inputBlocks) {
+                        egsInformation("  block %s\n", block->getTitle().c_str());
+                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                        for (auto &inp : singleInputs) {
+                            const vector<string> vals = inp->getValues();
+                            egsInformation("   single %s\n", inp->getTag().c_str());
+                            for (auto&& val : vals) {
+                                egsInformation("      %s\n", val.c_str());
+                            }
+                        }
+                    }
+                }
+            }
+
+            getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
+            if (getExample) {
+                QAction *action = shapeMenu->addAction(libName);
                 action->setData(QString::fromStdString(getExample()));
                 connect(action,  &QAction::triggered, this, [this]{ insertInputExample(); });
             }

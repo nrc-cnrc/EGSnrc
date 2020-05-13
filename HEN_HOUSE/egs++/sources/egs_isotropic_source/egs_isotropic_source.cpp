@@ -163,7 +163,7 @@ extern "C" {
         auto shapePtr = srcBlockInput->addBlockInput("shape");
         /* Commented out because I don't think this input is used
         Also at this point dependency of a block on an input hasn't been implemented
-        auto shapeNamePtr = srcBlockInput->addSingleInput("shape name", false, "TODO");
+        auto shapeNamePtr = srcBlockInput->addSingleInput("shape name", false, "...");
         shapeNamePtr->addDependency(shapePtr, true);
         shapePtr->addDependency(shapeNamePtr, true);*/
 
