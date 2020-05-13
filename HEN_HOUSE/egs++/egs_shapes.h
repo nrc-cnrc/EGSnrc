@@ -49,7 +49,12 @@ using std::string;
 class EGS_Input;
 
 static void setShapeInputs(shared_ptr<EGS_BlockInput> shapePtr) {
-    auto typePtr = shapePtr->addSingleInput("type", true, "The type of shape - this input includes only a small set of simple shapes. For more options, use the 'library' input instead.", {"point", "box", "sphere", "cylinder"});
+    auto libPtr = shapePtr->addSingleInput("library", false, "The type of shape, loaded by shared library in egs++/dso.");
+    auto typePtr = shapePtr->addSingleInput("type", false, "The type of shape - this input includes only a small set of simple shapes. For more options, use the 'library' input instead.", {"point", "box", "sphere", "cylinder"});
+
+    // Only one of "library" or "type" are allowed
+    libPtr->addDependency(typePtr, "", true);
+    typePtr->addDependency(libPtr, "", true);
 
     // Point
     shapePtr->addSingleInput("position", false, "The x, y, z position that the source will emit particles from.")->addDependency(typePtr, "point");
