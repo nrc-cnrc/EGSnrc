@@ -1312,36 +1312,23 @@ int EGS_KermaApplication::initScoring() {
         }
 
         string emuen_file;
-        int errKmuen = options->getInput("emuen file",emuen_file);
+        int errKmuen = options->getInput("emuen file", emuen_file);
         if (errKmuen) {
             // Handle legacy option
-            errKmuen = options->getInput("muen file",emuen_file);
+            errKmuen = options->getInput("muen file", emuen_file);
             if (errKmuen)
                 egsFatal(
                     "\n\n***  Wrong/missing 'emuen file' input for a "
                     "Kerma calculation\n    This is a fatal error\n\n");
         }
-        //Check for environment variable at beginning of file name
-        std::size_t p1= emuen_file.find_first_of("$");
-        if (p1 != emuen_file.npos) {
-            string str = emuen_file;
-            std::size_t p2 = str.find_first_of("/");
-            string envvar = str.substr(p1+1,p2-1);
-            //egsInformation(" Found env var: %s\n",envvar.c_str());
-            char  *envloc = getenv(envvar.c_str());
-            //egsInformation(" %s points to: %s\n",envvar.c_str(),envloc);
-            emuen_file.replace(p1,p2+1,envloc);
-            //egsInformation("\n-> Kerma calculated using E*muen/rho file : %s\n\n",emuen_file.c_str());
 
-        }
-
-        //emuen_file = egsExpandPath(emuen_file);
+        emuen_file = egsExpandPath(emuen_file);
 
         ifstream muen_data(emuen_file.c_str());
         if (!muen_data) {
             egsFatal(
                 "\n\n***  Failed to open emuen file %s\n"
-                "     This is a fatal error\n",emuen_file.c_str());
+                "     This is a fatal error\n", emuen_file.c_str());
         }
         else {
             egsInformation(

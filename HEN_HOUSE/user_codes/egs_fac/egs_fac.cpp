@@ -955,9 +955,17 @@ int EGS_FACApplication::initScoring() {
         int err3 = options->getInput("muen file",muen_file);
         if( err3 ) egsFatal("\n\n***  Wrong/missing 'muen file' input\n"
              "     This is a fatal error\n\n");
+        muen_file = egsExpandPath(muen_file);
         ifstream muen_data(muen_file.c_str());
         if( !muen_data ) egsFatal("\n\n***  Failed to open muen file %s\n"
                  "     This is a fatal error\n",muen_file.c_str());
+        else{
+            egsInformation(
+                "\n\n=============== Kerma Scoring ===============\n"
+                    "E*muen/rho file: %s\n"
+                    "=============================================\n\n",
+                    muen_file.c_str());
+        }
         int ndat; muen_data >> ndat;
         if( ndat < 2 || muen_data.fail() ) egsFatal(
                    "\n\n*** Failed to read muen dfata file\n");

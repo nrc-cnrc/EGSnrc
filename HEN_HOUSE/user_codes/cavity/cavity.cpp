@@ -2822,6 +2822,7 @@ int Cavity_Application::initScoring() {
                 if( err3 ) egsFatal(
                   "\n\n***  Wrong/missing 'muen file' input for a "
                   "HVL calculation\n    This is a fatal error\n\n");
+                muen_file = egsExpandPath(muen_file);
                 ifstream muen_data(muen_file.c_str());
                 if( !muen_data ){
                     egsFatal(
