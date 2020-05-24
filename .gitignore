@@ -21,6 +21,8 @@ HEN_HOUSE/pegs4/pegs4_*.f
 HEN_HOUSE/pieces/linux/egs_gui_*
 HEN_HOUSE/pieces/linux/egs_inprz_*
 HEN_HOUSE/pieces/linux/egs_view_*
+HEN_HOUSE/specs/*_linux.spec
+HEN_HOUSE/specs/*linux.conf
 
 
 ### ignore generated documentation
