@@ -1795,8 +1795,14 @@ write(ounit,'(a,/)')
 write(ounit,'(a,/)') line;
 
 /* initialized in egs_set_defaults */
-write(ounit,'(a,38x,a)') ' Photon cross sections',
+IF (mcdf_pe_xsections)[
+    write(ounit,'(a,38x,a,a)') ' Photon cross sections',
+      'mcdf-',$cstring(photon_xsections);
+]
+ELSE[
+    write(ounit,'(a,38x,a)') ' Photon cross sections',
       $cstring(photon_xsections);
+]
 write(ounit,'(a,37x,a)') ' Compton cross sections', $cstring(comp_xsections);
 
 write(ounit,'(a,$)') ' Photon transport cutoff(MeV)';
