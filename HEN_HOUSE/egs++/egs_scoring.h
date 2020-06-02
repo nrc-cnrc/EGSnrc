@@ -149,6 +149,20 @@ public:
         return data.good();
     };
 
+    /*! \brief Stores the state of the scoring object into binary stream
+	  \a data.
+
+      This function is analogous to storeState, but assumes istream is open
+	  with ios::binary.  This is intended to be used in a file
+	  analogous to the .egsdat file (suggest it be named .begsdat) 
+	  handled by a custom usercode so as not to interfere with the
+	  EGS_Application and EGS_AdvancedApplication implementations.
+    */
+    bool storeBinState(ostream &data) {
+        data << current_ncase << sum+tmp << sum2+tmp*tmp;
+        return data.good();
+    };
+
     /*! \brief Set the state of the scoring object from the data stream \a data.
 
       The data extracted from the stream is the 16 bit integer representing
@@ -159,6 +173,20 @@ public:
       \sa storeState()
      */
     bool setState(istream &data) {
+        data >> current_ncase >> sum >> sum2;
+        tmp = 0;
+        return data.good();
+    };
+
+    /*! \brief Set the state of the scoring object from a binary stream \a data.
+
+      This function is analogous to setState, but assumes istream is open with
+	  ios::binary.  This is intended to be used in a file
+	  analogous to the .egsdat file (suggest it be named .begsdat) 
+	  handled by a custom usercode so as not to interfere with the
+	  EGS_Application and EGS_AdvancedApplication implementations.
+     */
+    bool setBinState(istream &data) {
         data >> current_ncase >> sum >> sum2;
         tmp = 0;
         return data.good();
@@ -330,6 +358,26 @@ public:
         return true;
     };
 
+    /*! \brief Stores the state of the scoring array object into a binary
+      stream \a data.
+
+      This function is analogous to storeState but assuming data is
+	  opened with ios::binary.  This is intended to be used in a file
+	  analogous to the .egsdat file (suggest it be named .begsdat) 
+	  handled by a custom usercode so as not to interfere with the
+	  EGS_Application and EGS_AdvancedApplication implementations.
+    */
+    bool storeBinState(ostream &data) {
+        data << nreg << current_ncase_short << current_ncase
+		    << current_ncase_65536;
+        for (int j=0; j<nreg; j++) {
+            if (!result[j].storeBinState(data)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     /*! \brief Sets the state fof the scoring array object from the
       data in the input stream \a data.
 
@@ -349,6 +397,37 @@ public:
         if (!egsGetI64(data,current_ncase_65536)) {
             return false;
         }
+        if (nreg1 != nreg) {
+            if (nreg > 0) {
+                delete [] result;
+            }
+            nreg = nreg1;
+            result = new EGS_ScoringSingle [nreg];
+        }
+        for (int j=0; j<nreg; j++) {
+            if (!result[j].setState(data)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    /*! \brief Sets the state of the scoring array object from a binary
+      stream \a data.
+
+      This function is analogous to setState but assuming data is
+	  opened with ios::binary.  This is intended to be used in a file
+	  analogous to the .egsdat file (suggest it be named .begsdat) 
+	  handled by a custom usercode so as not to interfere with the
+	  EGS_Application and EGS_AdvancedApplication implementations.
+    */
+    bool setBinState(istream &data) {
+        int nreg1;
+        data >> nreg1 >> current_ncase_short;
+        if (!data.good() || nreg1 < 1) {
+            return false;
+        }
+        data >> current_ncase >> current_ncase_65536;
         if (nreg1 != nreg) {
             if (nreg > 0) {
                 delete [] result;
