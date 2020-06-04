@@ -30,7 +30,7 @@
 #   C++ user code for estimating the quantity kerma in a volume.
 #
 #   Additionally, the fluence in the volume can be also calculated if
-#   requested in the scoring options input block. 
+#   requested in the scoring options input block.
 #
 #   Two calculation options are available:
 #
@@ -102,6 +102,7 @@ extern __extc__ void F77_OBJ(compt,COMPT)();
 extern __extc__ void F77_OBJ(photo,PHOTO)();
 
 #define INT_MAX 2147483647
+#define TSTEP_MAX 1e35
 //const EGS_Float kermaEpsilon = 1.0/(1ULL<<50);
 const EGS_Float kermaEpsilon = 4.0*2.225E-308;// About 4 times the Min. normal positive double
 EGS_Float Eave;
@@ -186,7 +187,7 @@ public:
                               emuen   = E_Muen_Rho->interpolateFast(gle)*rho_cv[ig],
                               wtstep  = the_stack->wt[np]*the_epcont->tvstep;
                     kerma->score(ig,wtstep*emuen);
-                    if (kerma_r[ig]) 
+                    if (kerma_r[ig])
                         kerma_r[ig]->score(ir,wtstep*emuen);
                     //--------------------------------------------
                     // score photon fluence
@@ -218,7 +219,6 @@ public:
                 latch = 0;
 
             the_stack->latch[np] = latch;
-
         }
         return 0;
     }
@@ -237,10 +237,10 @@ public:
         EGS_BaseGeometry *save_geometry = geometry;
         for(ig=0; ig<ngeom; ig++) {
             geometry = geoms[ig];
-            if ( fd_geoms[ig] ){ 
+            if ( fd_geoms[ig] ){
                fd_geom = fd_geoms[ig];
             }
-            else { 
+            else {
                fd_geom = 0;
             }
             p.x = x;
@@ -268,33 +268,37 @@ public:
 
     /*! Score Air-Kerma in Collecting Volume (CV)
 
+        Ray-trace photon across geometry keeping track of path to scoring
+        volume (CV). Once inside CV, determine its path across the CV and
+        once it exits the CV, proceed to score kerma and fluence.
+
+        If the CV is such that multiple entries are possible, e.g., photons
+        entering or backscattering into hollow geometries, for instance a
+        spherical or cylindrical shell, this method is called recursively
+        to continue ray-tracing.
+
         Photons touching excluded region are immediately discarded.
 
         TODO: Use region labels to define sensitive regions
 
      */
-    int scoreInCV() {
-        int np = the_stack->np-1;
-        EGS_Float E = the_stack->E[np];
+    int scoreInCV(int &ir, EGS_Vector &xi, EGS_Float &wt_att, EGS_Vector &u, int &np, EGS_Float &glei) {
 
-        if( E < the_bounds->pcut ) return 0;
+        if( the_stack->E[np] < the_bounds->pcut ) return 0;
 
-        EGS_Vector x(the_stack->x[np],the_stack->y[np],the_stack->z[np]);
-        EGS_Vector u(the_stack->u[np],the_stack->v[np],the_stack->w[np]);
-
-        int ireg   = the_stack->ir[np]-2, newmed = geometry->medium(ireg);
+        EGS_Vector x = xi;
+        int ireg = ir, newmed = geometry->medium(ireg);
 
         EGS_Float tstep;
         int inew;
         int imed = -1;
         EGS_Float gmfp, sigma = 0, cohfac = 1, mu_cv = 0;
-        EGS_Float cohfac_int, gle = log(E), //rho_cv, -> global var now
-                  Lambda_to_CV = 0;
-        double Lambda = 0, t_sc_tot = 0, ttot = 0;
+        EGS_Float cohfac_int, gle = glei, Lambda_to_CV = 0;
+        double Lambda = 0, t_sc_tot = 0;
         double t_sc[n_scoring_r[ig]];
         int   ir_sc[n_scoring_r[ig]];
         int n_ir_sc = 0;
-        bool inside_cv  = false;
+        bool inside_cv  = false, re_enters_cv = false;
         /* Ray-trace from current position to CV and keep track of path to
          * CV and path in the CV
          */
@@ -314,7 +318,7 @@ public:
                     cohfac = 1;
                 }
             }
-            tstep = 1e35;
+            tstep = TSTEP_MAX;
             inew = geometry->howfar(ireg,x,u,tstep,&newmed);
 
             Lambda += tstep*sigma;// keep track of path outside scoring volume
@@ -333,16 +337,24 @@ public:
             }
 
             if( inew < 0 ) break; // outside geometry, stop and score
-            // track-length estimation of kerma
-
-            if ( inside_cv && !is_sensitive[ig][inew] ) break; // leaves cv
 
             ireg = inew;
             x += u*tstep;
-            ttot += tstep;
+
+            // Leaves CV?
+            if ( inside_cv && !is_sensitive[ig][ireg] )
+            {
+                // Does it re-enter CV?
+                tstep = TSTEP_MAX;
+                if ( fd_geom->isInside(x) ||
+                     fd_geom->howfar(-1,x,u,tstep,&newmed)>= 0 ){
+                   re_enters_cv = true;
+                }
+                break;
+            }
         }
         if (inside_cv) {
-            EGS_Float wt = the_stack->wt[np];
+            EGS_Float wt = the_stack->wt[np]*wt_att;
             EGS_Float emuen_rho  = E_Muen_Rho->interpolateFast(gle);
             EGS_Float exp_Lambda_to_CV = exp(-Lambda_to_CV),
                       exp_Lambda = exp_Lambda_to_CV,
@@ -356,7 +368,7 @@ public:
                 //--------------------------------------------
                 // score kerma in scoring region
                 //--------------------------------------------
-                if (kerma_r[ig]) 
+                if (kerma_r[ig])
                     kerma_r[ig]->score(ir_sc[i],wt*edepCV);
                 //--------------------------------------------
                 // score photon fluence
@@ -388,6 +400,11 @@ public:
             kerma->score(ig,wt*edepCV);
             if( flug ) {
                flugT->score(ig,wt*exp_Att);
+            }
+            // Ray-tracing continues
+            if (re_enters_cv){
+                wt_att *= exp_Lambda;
+                scoreInCV(ireg,x,wt_att,u,np,gle);
             }
         }
         //==============================================================
@@ -711,9 +728,9 @@ public:
         double flu = source->getFluence(),
                mCV = kerma_r[0] ? mass[0][active_reg]:mass_cv[0];
         norm = flu > 0 ? 1.602e-10*count/(flu*mCV) : 0;
-        if (kerma_r[0]) 
+        if (kerma_r[0])
            kerma_r[0]->currentScore(active_reg,sum,sum2);
-        else   
+        else
            kerma->currentScore(0,sum,sum2);
     };
 
@@ -723,11 +740,11 @@ public:
         EGS_Vector x(the_stack->x[np],the_stack->y[np],the_stack->z[np]);
         EGS_Vector u(the_stack->u[np],the_stack->v[np],the_stack->w[np]);
         int ireg   = the_stack->ir[np]-2, newmed = geometry->medium(ireg);
-        EGS_Float tstep = 1e35;
+        EGS_Float tstep = TSTEP_MAX;
         //******************************************************************
         // FD Track-length kerma estimation for photons entering or aimed
         // at the collecting volume. It requires an FD geometry to direct
-        // the ray-tracing and that the photon has not touched an exclusion 
+        // the ray-tracing and that the photon has not touched an exclusion
         // region (latch >= 0). Photons inside this geometry or any scoring
         // region are also ray-traced.
         //******************************************************************
@@ -736,7 +753,9 @@ public:
             (is_sensitive[ig][ireg] || fd_geom->howfar(-1,x,u,tstep,&newmed)>= 0 || fd_geom->isInside(x)) )
         {
             /* Photon at or aimed at cavity */
-            int errK = scoreInCV();
+            //int errK = scoreInCV();
+            EGS_Float wt_att = 1.0;
+            int errK = scoreInCV(ireg, x, wt_att, u, np, the_epcont->gle);
         }
         dpmfp = -log(1 - rndm->getUniform());
         return;
@@ -820,7 +839,7 @@ private:
     /*! Force-Detection geometry.
       If no FD geometry defined, kerma scoring only done when photons
       enter scoring regions. If an FD geometry is defined photons AIMED
-      AT or INSIDE that geometry score a contribution weighted by 
+      AT or INSIDE that geometry score a contribution weighted by
       the probability of reaching the scoring volume via a ray-tracing algorithm.
       Photons already in a scoring region are also ray-traced if an FD geometry
       is defined.
@@ -912,7 +931,7 @@ int EGS_KermaApplication::initScoring() {
               if (cav.size() != cmass.size()){
                  if (cmass.size() == 1)
                    egsWarning("\ninitScoring: Only one mass defined. Assuming it is the total mass!\n\n");
-                 else  
+                 else
                    egsFatal("\n**************************************************************\n"
                               "initScoring: Number of mass values must match number \n"
                               "             of scoring regions unless defining total mass!\n"
@@ -936,7 +955,7 @@ int EGS_KermaApplication::initScoring() {
                             egsWarning("initScoring: region %d is not within"
                                        " the allowed range of 0...%d -> input"
                                        " ignored\n",cav[j],nreg-1);
-                        else{ 
+                        else{
                             regs[ncav++] = cav[j];
                         }
                     }
@@ -1024,7 +1043,7 @@ int EGS_KermaApplication::initScoring() {
             /* Initialize masses */
             if (n_cavity_masses[j] > 1){
                mass[j]    = new EGS_Float [nreg];
-               kerma_r[j] = new EGS_ScoringArray(nreg); 
+               kerma_r[j] = new EGS_ScoringArray(nreg);
                for(i=0; i<nreg; i++) {
                   mass[j][i] = -1.0;
                }
@@ -1033,7 +1052,7 @@ int EGS_KermaApplication::initScoring() {
             else{
                 mass_cv[j] = cavity_masses[j][0];
                 mass[j]    = 0;
-                kerma_r[j] = 0; 
+                kerma_r[j] = 0;
             }
             /* Initialize sensitive and exclude regions */
             for(i=0; i<nreg; i++) {
@@ -1047,7 +1066,7 @@ int EGS_KermaApplication::initScoring() {
                 if( imed == -999 ) imed = geoms[j]->medium(ireg);
                 else {
                     int imed1 = geoms[j]->medium(ireg);
-                    if( imed1 != imed ) 
+                    if( imed1 != imed )
                       egsWarning(
                       "initScoring: different "
                       "medium %d in region %d compared to medium %d in "
@@ -1055,7 +1074,7 @@ int EGS_KermaApplication::initScoring() {
                       imed1,ireg,imed,cavity_regions[j][0]);
                 }
                 //if (n_cavity_masses[j] > 1){
-                if (mass[j]){    
+                if (mass[j]){
                    mass[j][ireg] = cavity_masses[j][i];
                    mass_cv[j]   += cavity_masses[j][i];
                 }
@@ -1063,14 +1082,14 @@ int EGS_KermaApplication::initScoring() {
                 if (ireg > max_sc_reg) max_sc_reg = ireg;
                 if (ireg < active_reg) active_reg = ireg;
             }
-            n_scoring_r[j] = n_cavity_regions[j]; 
+            n_scoring_r[j] = n_cavity_regions[j];
             delete [] cavity_regions[j];
             delete [] cavity_masses[j];
             /* Get cavity mass density */
             if (rho_cv[j] < 0) rho_cv[j] = the_media->rho[imed];
             else {
                 EGS_Float rho_cv_new = the_media->rho[imed];
-                if (rho_cv[j] != rho_cv_new) 
+                if (rho_cv[j] != rho_cv_new)
                     egsWarning(
                     "initScoring:\n"
                     "density of cavity medium in geometry %s is %g g/cm3\n"
@@ -1170,7 +1189,7 @@ int EGS_KermaApplication::initScoring() {
               "Kerma calculation\n    This is a fatal error\n\n");
         }
         //Check for environment variable at beginning of file name
-        std::size_t p1= emuen_file.find_first_of("$");
+         std::size_t p1= emuen_file.find_first_of("$");
         if (p1 != emuen_file.npos){
            string str = emuen_file;
            std::size_t p2 = str.find_first_of("/");
@@ -1182,11 +1201,21 @@ int EGS_KermaApplication::initScoring() {
            //egsInformation("\n-> Kerma calculated using E*muen/rho file : %s\n\n",emuen_file.c_str());
 
         }
+
+        //emuen_file = egsExpandPath(emuen_file);
+
         ifstream muen_data(emuen_file.c_str());
         if( !muen_data ) {
             egsFatal(
                 "\n\n***  Failed to open emuen file %s\n"
                 "     This is a fatal error\n",emuen_file.c_str());
+        }
+        else{
+            egsInformation(
+                "\n\n=============== Kerma Scoring ===============\n"
+                    "E*muen/rho file: %s\n"
+                    "=============================================\n\n",
+                    emuen_file.c_str());
         }
         int ndat;
         muen_data >> ndat;
@@ -1210,7 +1239,7 @@ int EGS_KermaApplication::initScoring() {
             if( fd_geom ) {
               // Use global FD geometry for calc geom without one
               for (int i = 0; i < ngeom; i++){
-                  if (!fd_geoms[i]){ 
+                  if (!fd_geoms[i]){
                      fd_geoms[i] = fd_geom;
                   }
               }
