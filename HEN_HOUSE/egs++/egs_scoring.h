@@ -159,7 +159,11 @@ public:
 	  EGS_Application and EGS_AdvancedApplication implementations.
     */
     bool storeBinState(ostream &data) {
-        data << current_ncase << sum+tmp << sum2+tmp*tmp;
+	data.write((char*)&current_ncase,sizeof(current_ncase));
+	double tempOut = sum+tmp;
+	data.write((char*)&tempOut,sizeof(tempOut));
+	tempOut = sum2+(tmp*tmp);
+	data.write((char*)&tempOut,sizeof(tempOut));
         return data.good();
     };
 
@@ -187,7 +191,9 @@ public:
 	  EGS_Application and EGS_AdvancedApplication implementations.
      */
     bool setBinState(istream &data) {
-        data >> current_ncase >> sum >> sum2;
+	data.read((char*)&current_ncase,sizeof(current_ncase));
+	data.read((char*)&sum,sizeof(sum));
+	data.read((char*)&sum2,sizeof(sum2));
         tmp = 0;
         return data.good();
     };
@@ -368,13 +374,16 @@ public:
 	  EGS_Application and EGS_AdvancedApplication implementations.
     */
     bool storeBinState(ostream &data) {
-        data << nreg << current_ncase_short << current_ncase
-		    << current_ncase_65536;
+	data.write((char*)&nreg,sizeof(nreg));
+	data.write((char*)&current_ncase_short,sizeof(current_ncase_short));
+	data.write((char*)&current_ncase,sizeof(current_ncase));
+	data.write((char*)&current_ncase_65536,sizeof(current_ncase_65536));
         for (int j=0; j<nreg; j++) {
             if (!result[j].storeBinState(data)) {
                 return false;
             }
         }
+	//data.write((char*)result,sizeof(result[0])*nreg);		
         return true;
     };
 
@@ -423,11 +432,15 @@ public:
     */
     bool setBinState(istream &data) {
         int nreg1;
-        data >> nreg1 >> current_ncase_short;
+	data.read((char*)&nreg1,sizeof(nreg1));
+	data.read((char*)&current_ncase_short,sizeof(current_ncase_short));
+		
         if (!data.good() || nreg1 < 1) {
             return false;
         }
-        data >> current_ncase >> current_ncase_65536;
+	data.read((char*)&current_ncase,sizeof(current_ncase));
+	data.read((char*)&current_ncase_65536,sizeof(current_ncase_65536));
+		
         if (nreg1 != nreg) {
             if (nreg > 0) {
                 delete [] result;
@@ -436,10 +449,11 @@ public:
             result = new EGS_ScoringSingle [nreg];
         }
         for (int j=0; j<nreg; j++) {
-            if (!result[j].setState(data)) {
+            if (!result[j].setBinState(data)) {
                 return false;
             }
         }
+	//data.read((char*)result,sizeof(result[0])*nreg);		
         return true;
     };
 
