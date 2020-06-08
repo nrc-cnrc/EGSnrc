@@ -1,0 +1,6 @@
+# ignore local data
+data/
+assets/
+
+# ignore hidden system files
+.DS_Store

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dose Viewer</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://x3dom.org/download/dev/x3dom-full.js"></script>
+    <link rel="stylesheet" href="https://x3dom.org/release/x3dom.css" />
+    <script src="https://raw.githack.com/jamesleesaunders/d3-x3d/master/dist/d3-x3d.js"></script>
+  </head>
+  <body>
+    <h1>Dose Viewer</h1>
+    <div id="chartholder"></div>
+    <!-- <input type="file" id="file-input" />
+    <button id="read-button">Read File</label> -->
+    <script>
+      densityVolume = d3
+        .json("/data/UVicmouse_printed_data.json")
+        .then((densityData) => createDensityVolume(densityData))
+        .then((densityVolume) => plotVolume(densityVolume))
+        .catch((e) =>
+          console.log(
+            "There has been a problem with your fetch operation: " + e.message
+          )
+        );
+
+      var createDensityVolume = function (rawData) {
+        var image_creation_context = document
+          .createElement("canvas")
+          .getContext("2d");
+
+        var volume = {
+          position: {},
+          xLen: rawData.phant_x.length,
+          yLen: rawData.phant_y.length,
+          zLen: rawData.phant_z.length,
+          data: rawData.density,
+          materials: rawData.materials,
+          intensityMin: 0,
+          intensityMax: 255,
+          slice: function (axis, sliceNum) {
+            sliceNum =
+              sliceNum === undefined ? volume.position[axis] : sliceNum;
+
+            var slice;
+            var sliceData = new Array(volume.xLen * volume.yLen);
+
+            var i = 0;
+            var z = sliceNum;
+            for (var x = 0; x < volume.xLen; x++) {
+              for (var y = 0; y < volume.yLen; y++) {
+                sliceData[i++] = volume.data[x][y][z];
+              }
+            }
+
+            slice = {
+              axis: axis,
+              data: sliceData,
+              width: volume.xLen,
+              height: volume.yLen,
+            };
+            return slice;
+          },
+          getSliceImage: function (slice) {
+            var image = image_creation_context.createImageData(
+              slice.width,
+              slice.height
+            );
+
+            function getMax(a) {
+              return Math.max(
+                ...a.map((e) => (Array.isArray(e) ? getMax(e) : e))
+              );
+            }
+
+            maxVal = getMax(slice.data);
+            console.log("Max dose in slice:" + maxVal);
+
+            for (let i = 0; i < slice.data.length; i += 1) {
+              pixelVal = slice.data[i] * (255 / maxVal);
+              image.data[i * 4] = pixelVal; // R value
+              image.data[i * 4 + 1] = pixelVal; // G value
+              image.data[i * 4 + 2] = pixelVal; // B value
+              image.data[i * 4 + 3] = 255; // A value
+            }
+
+            return image;
+          },
+        };
+        console.log(volume);
+        return volume;
+      };
+
+      var plotVolume = function (volume) {
+        var canvas = d3
+          .select("#chartholder")
+          .append("canvas")
+          .attr("width", volume.xLen * 5)
+          .attr("height", volume.yLen * 5)
+          .attr("class", "volume-plot");
+
+        var context = canvas.node().getContext("2d");
+
+        var slice = volume.slice("xy", 30);
+        context.putImageData(volume.getSliceImage(slice), 20, 20);
+      };
+    </script>
+  </body>
+</html>
