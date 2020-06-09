@@ -1,0 +1,12 @@
+body {
+  margin: 25px 50px 25px 50px;
+}
+p {
+  font-family: helvetica;
+  color: grey;
+}
+h1,
+input,
+button {
+  font-family: helvetica;
+}
