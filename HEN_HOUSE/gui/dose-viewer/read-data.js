@@ -26,11 +26,11 @@ d3.select("#read-button").on("click", function () {
     let data;
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
-      const densityVol = new DensityVolume(10, 10, data);
+      densityVol.addData(data);
       // TODO: Figure out a better layout for event listeners
-      let slice = densityVol.getSlice("xy", 10);
-      let context = densityVol.getSliceImageContext(slice);
-      context.canvas;
+      let axis = d3.selectAll("input[name='axis']:checked").node().value;
+      let slice = densityVol.getSlice(axis, sliceNum);
+      let context = densityVol.getSliceImageContext(slice, canvas);
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
     } else {

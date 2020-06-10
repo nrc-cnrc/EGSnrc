@@ -10,10 +10,47 @@
   </head>
   <body>
     <h1>Dose Viewer</h1>
+    <p>Upload .egsphant and .3ddose files.</p>
     <input type="file" id="file-input" />
     <button id="read-button">Read File</button>
-    <div id="chartholder"></div>
+    <div id="dose-viewer-container">
+      <form>
+        <input type="radio" id="xy" name="axis" value="xy" checked />
+        <label for="xy">xy</label>
+        <input type="radio" id="yz" name="axis" value="yz" />
+        <label for="yz">yz</label>
+        <input type="radio" id="xz" name="axis" value="xz" />
+        <label for="xz">xz</label>
+      </form>
+      <div id="chartholder"></div>
+      <div class="slider-container"></div>
+    </div>
+
     <script type="text/javascript" src="./create-volume.js"></script>
+    <script>
+      let width = 400;
+      let height = 400;
+      var sliceNum = 110;
+
+      var canvas = d3
+        .select("#chartholder")
+        .append("canvas")
+        .attr("height", height)
+        .attr("width", width)
+        .attr("class", "volume-plot");
+
+      const densityVol = new DensityVolume(height, width);
+
+      const buttons = d3
+        .selectAll("input[name='axis']")
+        .on("change", function () {
+          if (Object.keys(densityVol.data).length > 0) {
+            let newAxis = this.value;
+            let slice = densityVol.getSlice(newAxis, sliceNum);
+            let context = densityVol.getSliceImageContext(slice, canvas);
+          }
+        });
+    </script>
     <script type="text/javascript" src="./read-data.js"></script>
   </body>
 </html>

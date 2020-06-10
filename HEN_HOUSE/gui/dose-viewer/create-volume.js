@@ -1,82 +1,91 @@
-// TODO: Allow for other axis views
 class DensityVolume {
-  constructor(height, width, data, position) {
-    this.height = data.numVoxY;
-    this.width = data.numVoxX;
+  // General volume structure
+  // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
+
+  constructor(height, width) {
+    this.height = height; //TODO: Figure out a better system for height and width
+    this.width = width;
+    this.data = {};
+  }
+
+  addData(data, position) {
+    // TODO: Find max/min for this.colour without stack overflow
+    // TODO: Incorporate xScale, yScale
     this.data = data;
     this.position = position || {};
-    this.xScale = d3
-      .scaleLinear()
-      .domain(x[0] < x[1] ? [x[0], x[-1]] : [x[-1], x[0]]) // unit: mm
-      .range([0, 400]); // unit: pixels
-    this.yScale = d3
-      .scaleLinear()
-      .domain(y[0] < y[1] ? [y[0], y[-1]] : [y[-1], y[0]]) // unit: mm
-      .range([0, 400]); // unit: pixels
-    this.yScale = d3
-      .scaleLinear()
-      .domain(z[0] < z[1] ? [z[0], z[-1]] : [z[-1], z[0]]) // unit: mm
-      .range([0, 400]); // unit: pixels
-
-    // TODO: Find max/min without stack overflow
     this.colour = d3.scaleSequentialSqrt(d3.interpolateYlGnBu).domain([0, 2]);
   }
 
   getSlice(axis, sliceNum) {
-    sliceNum = sliceNum === undefined ? volume.position[axis] : sliceNum;
-
-    let size;
-
+    sliceNum = sliceNum === undefined ? volume.position.sliceNum : sliceNum;
+    let slice;
+    // For slice structure
+    // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1502-L1546
     if (axis === "xy") {
-      size = this.data.numVoxX * this.data.numVoxY;
+      slice = {
+        dx: this.data.voxelSize.x,
+        dy: this.data.voxelSize.y,
+        xVoxels: this.data.voxelNumber.x,
+        yVoxels: this.data.voxelNumber.y,
+        xMin: this.data.voxelArr.x[0],
+        yMin: this.data.voxelArr.y[0],
+      };
     } else if (axis === "yz") {
-      size = this.data.numVoxY * this.data.numVoxZ;
+      slice = {
+        dx: this.data.voxelSize.y,
+        dy: this.data.voxelSize.z,
+        xVoxels: this.data.voxelNumber.y,
+        yVoxels: this.data.voxelNumber.z,
+        xMin: this.data.voxelArr.y[0],
+        yMin: this.data.voxelArr.z[0],
+      };
     } else if (axis === "xz") {
-      size = this.data.numVoxX * this.data.numVoxZ;
+      slice = {
+        dx: this.data.voxelSize.x,
+        dy: this.data.voxelSize.z,
+        xVoxels: this.data.voxelNumber.x,
+        yVoxels: this.data.voxelNumber.z,
+        xMin: this.data.voxelArr.x[0],
+        yMin: this.data.voxelArr.z[0],
+      };
     }
 
-    //https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L161
-    let sliceData = new Array(size);
+    // For address calculations:
+    // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1999-L2034
+    let sliceData = new Array(slice.xVoxels * slice.yVoxels);
 
-    let i = 0;
-    let z = sliceNum;
-
-    // Order 'F' indexing: First index changing fastest, last index changing slowest
-    for (let x = 0; x < this.data.numVoxX; x++) {
-      for (let y = 0; y < this.data.numVoxY; y++) {
-        sliceData[i++] = this.colour(
-          this.data.density[
-            z * (this.data.numVoxX * this.data.numVoxY) +
-              y * this.data.numVoxX +
-              x
-          ]
-        );
+    // TODO: Fix the sliceData so output is not shifted
+    for (let i = 0; i < slice.xVoxels; i++) {
+      for (let j = 0; j < slice.yVoxels; j++) {
+        let address;
+        if (axis === "xy") {
+          address = i + slice.xVoxels * (j + sliceNum * slice.yVoxels);
+        } else if (axis === "yz") {
+          address =
+            sliceNum + this.data.voxelNumber.x * (i + j * slice.xVoxels);
+        } else if ((axis = "xz")) {
+          address =
+            i + slice.xVoxels * (sliceNum + j * this.data.voxelNumber.y);
+        }
+        let new_address = i + slice.xVoxels * j;
+        sliceData[new_address] = this.colour(this.data.density[address]);
       }
     }
 
-    return {
-      axis: axis,
-      sliceData: sliceData,
-      width: this.data.numVoxX,
-      height: this.data.numVoxY,
-    };
+    slice["axis"] = axis;
+    slice["sliceData"] = sliceData;
+    slice["sliceNum"] = sliceNum;
+    return slice;
   }
 
-  getSliceImageContext(slice) {
-    let canvas = d3
-      .select("#chartholder")
-      .append("canvas")
-      .attr("width", this.width)
-      .attr("height", this.height)
-      .attr("class", "volume-plot");
-
+  getSliceImageContext(slice, canvas) {
     let context = canvas.node().getContext("2d");
-
-    let i = 0;
-    for (let x = 0; x < this.data.numVoxX; x++) {
-      for (let y = 0; y < this.data.numVoxY; y++) {
-        context.fillStyle = slice.sliceData[i++];
-        context.fillRect(x, y, 2, 2);
+    context.clearRect(0, 0, canvas.node().width, canvas.node().height);
+    for (let i = 0; i < slice.xVoxels; i++) {
+      for (let j = 0; j < slice.yVoxels; j++) {
+        let new_address = i + slice.xVoxels * j;
+        context.fillStyle = slice.sliceData[new_address];
+        context.fillRect(i, j, 1, 1);
       }
     }
     canvas.id = "canvas";
