@@ -22,34 +22,99 @@
         <input type="radio" id="xz" name="axis" value="xz" />
         <label for="xz">xz</label>
       </form>
-      <div id="chartholder"></div>
-      <div class="slider-container"></div>
+      <div class="slider-container">
+        <label for="slice-number"
+          >Slice Number:
+          <output type="text" id="slider-value" value="">0</output>
+        </label>
+        <br />
+        <output type="text" id="slider-min" value="">0</output>
+        <input
+          type="range"
+          id="slider-range"
+          min="0"
+          max="100"
+          value="0"
+          class="slider"
+          disabled
+        />
+        <output type="text" id="slider-max" value=""></output>
+      </div>
+      <div id="chartholder">
+        <svg id="axis-svg" class="plot"></svg>
+        <canvas id="plot-canvas" class="plot"></canvas>
+      </div>
     </div>
 
     <script type="text/javascript" src="./create-volume.js"></script>
     <script>
-      let width = 400;
-      let height = 400;
-      var sliceNum = 110;
+      // TODO: Make a dose-view options class?
+      // TODO: Move all javascript outside of index.html
+      // TODO: Add button to increment/decrement slider by 1
 
+      // Define all size variables
+      var fullWidth = 500;
+      var fullHeight = 500;
+      var margin = { top: 10, right: 10, bottom: 30, left: 30 };
+      var width = fullWidth - margin.left - margin.right;
+      var height = fullHeight - margin.top - margin.bottom;
+
+      var sliceNum = d3.select("#slider-value").node().value;
+      var axis = d3.selectAll("input[name='axis']:checked").node().value;
       var canvas = d3
-        .select("#chartholder")
-        .append("canvas")
+        .select("#plot-canvas")
         .attr("height", height)
         .attr("width", width)
-        .attr("class", "volume-plot");
+        .style(
+          "transform",
+          "translate(" + margin.left + "px" + "," + margin.top + "px" + ")"
+        );
+
+      var svg = d3
+        .select("#axis-svg")
+        .attr("width", fullWidth)
+        .attr("height", fullHeight)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       const densityVol = new DensityVolume(height, width);
+
+      const slider = d3.select("#slider-range").on("change", function () {
+        // Update slider text
+        d3.select("#slider-value").node().value = this.value;
+        sliceNum = parseInt(this.value);
+        // Update image if densityVol data exists
+        if (Object.keys(densityVol.data).length > 0) {
+          let slice = densityVol.getSlice(axis, sliceNum);
+          let context = densityVol.getSliceImageContext(slice, canvas);
+        }
+      });
 
       const buttons = d3
         .selectAll("input[name='axis']")
         .on("change", function () {
+          // Update image if densityVol data exists
+          axis = this.value;
           if (Object.keys(densityVol.data).length > 0) {
-            let newAxis = this.value;
-            let slice = densityVol.getSlice(newAxis, sliceNum);
+            let slice = densityVol.getSlice(axis, sliceNum);
             let context = densityVol.getSliceImageContext(slice, canvas);
+            updateSlider(slice);
           }
         });
+
+      function updateSlider(slice) {
+        let sliderRange = d3.select("#slider-range").node();
+
+        // Enable slider if disabled
+        if (sliderRange.disabled) sliderRange.disabled = false;
+
+        // Change max slider value to max number of slices
+        if (sliceNum >= slice.totalSlices) {
+          d3.select("#slider-value").node().value = slice.totalSlices - 1;
+        }
+        sliderRange.max = slice.totalSlices - 1;
+        d3.select("#slider-max").node().value = slice.totalSlices - 1;
+      }
     </script>
     <script type="text/javascript" src="./read-data.js"></script>
   </body>

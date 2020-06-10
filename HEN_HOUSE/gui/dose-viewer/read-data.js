@@ -28,9 +28,11 @@ d3.select("#read-button").on("click", function () {
       data = processPhantomData(resultSplit);
       densityVol.addData(data);
       // TODO: Figure out a better layout for event listeners
-      let axis = d3.selectAll("input[name='axis']:checked").node().value;
+      // TODO: Plot dose contours
       let slice = densityVol.getSlice(axis, sliceNum);
       let context = densityVol.getSliceImageContext(slice, canvas);
+
+      updateSlider(slice);
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
     } else {
@@ -50,6 +52,7 @@ d3.select("#read-button").on("click", function () {
 });
 
 // Process .egsphant files
+// TODO: Test with other .egsphant files
 var processPhantomData = function (data) {
   let curr = 0;
   let numMaterials = parseInt(data[curr++]);
@@ -88,13 +91,16 @@ var processPhantomData = function (data) {
   // yArr.pop();
   // zArr.pop();
 
+  // Skip material data
   curr += numVoxY * numVoxZ + numVoxZ + 1;
 
   // Read the density data
-  let lines = data.slice(
-    curr,
-    parseInt(curr) + parseInt(numVoxY) * parseInt(numVoxZ) + parseInt(numVoxZ)
-  );
+  let lines = data
+    .slice(
+      curr,
+      parseInt(curr) + parseInt(numVoxY) * parseInt(numVoxZ) + parseInt(numVoxZ)
+    )
+    .filter((subArr) => subArr.length > 0);
 
   let density = lines
     .map((subArr) => {
@@ -131,6 +137,7 @@ var processPhantomData = function (data) {
 
 // Process .3ddose files
 // TODO: Test with other .3ddose files
+// TODO: Update format to be consistent with .egsphant processing
 var processDoseData = function (data) {
   let curr = 0;
 

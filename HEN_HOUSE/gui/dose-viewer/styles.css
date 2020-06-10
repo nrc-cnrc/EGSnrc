@@ -7,6 +7,20 @@ p {
 }
 h1,
 input,
+output,
+label,
 button {
   font-family: helvetica;
+}
+
+.plot {
+  position: absolute;
+}
+
+#plot-canvas {
+  z-index: 2;
+}
+
+#axis-svg {
+  z-index: 1;
 }
