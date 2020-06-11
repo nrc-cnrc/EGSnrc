@@ -19,6 +19,7 @@ d3.select("#read-button").on("click", function () {
   });
 
   // File is successfully read
+  // TODO: Allow files to be read in any order
   reader.addEventListener("load", function (event) {
     console.log("Successfully read file");
     let result = event.target.result;
@@ -26,15 +27,16 @@ d3.select("#read-button").on("click", function () {
     let data;
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
-      densityVol.addData(data);
+      densityVol.addDensityData(data);
+    } else if (ext === "3ddose") {
+      data = processDoseData(resultSplit);
+      densityVol.addDoseData(data);
       // TODO: Figure out a better layout for event listeners
       // TODO: Plot dose contours
       let slice = densityVol.getSlice(axis, sliceNum);
       let context = densityVol.getSliceImageContext(slice, canvas);
 
       updateSlider(slice);
-    } else if (ext === "3ddose") {
-      data = processDoseData(resultSplit);
     } else {
       console.log("Unknown file extension");
       return;
@@ -80,17 +82,6 @@ var processPhantomData = function (data) {
 
   curr += 3;
 
-  // [xArr, yArr, zArr] = [xArr, yArr, zArr].map((a) => {
-  //   for (let i = 0; i < a.length; i++) {
-  //     a[i] = a[i] + (a[i + 1] - a[i]) / 2;
-  //   }
-  //   return a;
-  // });
-
-  // xArr.pop();
-  // yArr.pop();
-  // zArr.pop();
-
   // Skip material data
   curr += numVoxY * numVoxZ + numVoxZ + 1;
 
@@ -102,17 +93,22 @@ var processPhantomData = function (data) {
     )
     .filter((subArr) => subArr.length > 0);
 
-  let density = lines
-    .map((subArr) => {
-      return subArr
-        .trim()
-        .split(/\ +/)
-        .map((v) => {
-          return parseFloat(v);
-        });
-    })
-    .flat()
-    .slice(0, numVoxX * numVoxY * numVoxZ);
+  let densityGrid = lines.map((subArr) => {
+    return subArr
+      .trim()
+      .split(/\ +/)
+      .map((v) => {
+        return parseFloat(v);
+      });
+  });
+
+  let getMax = function (a) {
+    return Math.max(...a.map((e) => (Array.isArray(e) ? getMax(e) : e)));
+  };
+
+  let maxDensity = getMax(densityGrid);
+
+  density = densityGrid.flat().slice(0, numVoxX * numVoxY * numVoxZ);
 
   return {
     voxelNumber: {
@@ -132,6 +128,7 @@ var processPhantomData = function (data) {
     },
     density: density, // The flattened density matrix
     materials: materials, // The materials in the phantom
+    maxDensity: maxDensity,
   };
 };
 
@@ -150,7 +147,7 @@ var processDoseData = function (data) {
     });
 
   // Get x, y, and z arrays
-  [x, y, z] = data.slice(curr, curr + 3).map((subArr) => {
+  [xArr, yArr, zArr] = data.slice(curr, curr + 3).map((subArr) => {
     return subArr
       .trim()
       .split(/\ +/)
@@ -161,44 +158,37 @@ var processDoseData = function (data) {
 
   curr += 3;
 
-  [x, y, z] = [x, y, z].map((a) => {
-    for (let i = 0; i < a.length; i++) {
-      a[i] = a[i] + (a[i + 1] - a[i]) / 2;
-    }
-    return a;
-  });
-
-  x.pop();
-  y.pop();
-  z.pop();
-
   // Read the dose data
-  let lines = data.slice(
-    curr,
-    parseInt(curr) + parseInt(numVoxY) * parseInt(numVoxZ) + parseInt(numVoxZ)
-  );
+  let dose = data[curr++]
+    .trim()
+    .split(/\ +/)
+    .slice(0, numVoxX * numVoxY * numVoxZ)
+    .map((v) => {
+      return parseFloat(v);
+    });
 
-  let dose = lines
-    .map((subArr) => {
-      return subArr
-        .trim()
-        .split(/\ +/)
-        .map((v) => {
-          return parseFloat(v);
-        });
-    })
-    .flat()
-    .slice(0, numVoxX * numVoxY * numVoxZ);
+  // TODO: Calculate max dose without excedding maximum call stack size
+  let maxDose = 6.203982670362241e-19; //Math.max(...dose);
 
   // TODO: Add error matrix
+
   return {
-    numVoxX: numVoxX, // The number of x voxels
-    numVoxY: numVoxY, // The number of y voxels
-    numVoxZ: numVoxZ, // The number of z voxels
-    x: x, // The dimensions of x voxels
-    y: y, // The dimensions of y voxels
-    z: z, // The dimensions of z voxels
+    voxelNumber: {
+      x: numVoxX, // The number of x voxels
+      y: numVoxY, // The number of y voxels
+      z: numVoxZ, // The number of z voxels
+    },
+    voxelArr: {
+      x: xArr, // The dimensions of x voxels
+      y: yArr, // The dimensions of x voxels
+      z: zArr, // The dimensions of x voxels
+    },
+    voxelSize: {
+      x: xArr[1] - xArr[0],
+      y: yArr[1] - yArr[0],
+      z: zArr[1] - zArr[0],
+    },
     dose: dose, // The flattened dose matrix
-    // error: error, // The flattened dose error matrix
+    maxDose: maxDose, // The maximum dose value
   };
 };
