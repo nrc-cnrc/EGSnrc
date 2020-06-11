@@ -43,6 +43,7 @@
       <div id="chartholder">
         <svg id="axis-svg" class="plot"></svg>
         <canvas id="plot-canvas" class="plot"></canvas>
+        <svg id="plot-svg" class="plot"></svg>
       </div>
     </div>
 
@@ -70,7 +71,16 @@
           "translate(" + margin.left + "px" + "," + margin.top + "px" + ")"
         );
 
-      var svg = d3
+      var svgPlot = d3
+        .select("#plot-svg")
+        .attr("width", height)
+        .attr("height", height)
+        .style(
+          "transform",
+          "translate(" + margin.left + "px" + "," + margin.top + "px" + ")"
+        );
+
+      var svgAxis = d3
         .select("#axis-svg")
         .attr("width", fullWidth)
         .attr("height", fullHeight)

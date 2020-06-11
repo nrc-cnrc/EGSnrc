@@ -17,10 +17,14 @@ button {
   position: absolute;
 }
 
+#axis-svg {
+  z-index: 1;
+}
+
 #plot-canvas {
   z-index: 2;
 }
 
-#axis-svg {
-  z-index: 1;
+#plot-svg {
+  z-index: 3;
 }

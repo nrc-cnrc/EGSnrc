@@ -1,3 +1,4 @@
+// TODO: Make general volume structure that includes dose
 class DensityVolume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
@@ -10,11 +11,20 @@ class DensityVolume {
   }
   //TODO: Add function to check if data has been added
 
-  addData(data, position) {
+  addDensityData(data) {
     // TODO: Find max/min for this.colour without stack overflow
     this.data = data;
-    this.position = position || {};
-    this.colour = d3.scaleSequentialSqrt(d3.interpolateYlGnBu).domain([0, 2]);
+    this.colour = d3
+      .scaleSequentialSqrt(d3.interpolateGreys)
+      .domain([0, data.maxDensity]);
+  }
+
+  addDoseData(data) {
+    // TODO: Find max/min for this.doseColour without stack overflow
+    this.doseData = data;
+    this.doseColour = d3
+      .scaleSequentialSqrt(d3.interpolateYlOrRd)
+      .domain([0, data.maxDose]);
   }
 
   getSlice(axis, sliceNum) {
@@ -66,6 +76,7 @@ class DensityVolume {
     // For address calculations:
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1999-L2034
     let sliceData = new Array(slice.xVoxels * slice.yVoxels);
+    let doseData = new Array(slice.xVoxels * slice.yVoxels);
 
     for (let i = 0; i < slice.xVoxels; i++) {
       for (let j = 0; j < slice.yVoxels; j++) {
@@ -81,6 +92,7 @@ class DensityVolume {
         }
         let new_address = i + slice.xVoxels * j;
         sliceData[new_address] = this.colour(this.data.density[address]);
+        doseData[new_address] = this.doseData.dose[address];
       }
     }
 
@@ -95,12 +107,13 @@ class DensityVolume {
       .range([0, this.height]); // unit: pixels
     slice["axis"] = axis;
     slice["sliceData"] = sliceData;
+    slice["doseData"] = doseData;
     slice["sliceNum"] = sliceNum;
     return slice;
   }
 
   getSliceImageContext(slice, canvas) {
-    // TODO: Clear svg <g> only if axis changed
+    // TODO: Clear svgAxis <g> only if axis changed
     // TODO: Allow zooming and translating
     // TODO: Make two new functions: change slicenum and change axes
 
@@ -110,17 +123,57 @@ class DensityVolume {
 
     // Clear canvas context and svg
     context.clearRect(0, 0, canvas.node().width, canvas.node().height);
-    svg.selectAll("g").remove();
+    svgAxis.selectAll("g").remove();
+    svgPlot.selectAll("g").remove();
 
     // Draw axes
     var xAxis = d3.axisBottom().scale(slice.xScale);
     var yAxis = d3.axisLeft().scale(slice.yScale);
-    svg
+    svgAxis
       .append("g")
       .attr("class", "x-axis")
       .attr("transform", "translate(0," + height + ")")
       .call(xAxis);
-    svg.append("g").attr("class", "y-axis").call(yAxis);
+    svgAxis.append("g").attr("class", "y-axis").call(yAxis);
+
+    // Draw contours
+    let thresholds = d3
+      .range(0, 1.1, 0.1)
+      .map((i) => i * this.doseData.maxDose);
+
+    var contours = d3
+      .contours()
+      .size([slice.xVoxels, slice.yVoxels])
+      .thresholds(thresholds)(slice.doseData);
+
+    var scaledContours = contours.map(({ type, value, coordinates }) => ({
+      type,
+      value,
+      coordinates: coordinates.map((rings) =>
+        rings.map((points) =>
+          points.map(([i, j]) => [
+            i * (this.width / slice.xVoxels),
+            j * (this.height / slice.yVoxels),
+          ])
+        )
+      ),
+    }));
+
+    svgPlot
+      .append("g")
+      .attr("width", this.width)
+      .attr("height", this.height)
+      .attr("fill", "none")
+      .attr("stroke", "#fff")
+      .attr("stroke-opacity", 0.5)
+      .selectAll("path")
+      .data(scaledContours)
+      .join("path")
+      .attr("fill", "none")
+      .attr("stroke-width", 5.0)
+      .attr("stroke", (d) => this.doseColour(d.value))
+      .attr("stroke-linejoin", "round")
+      .attr("d", d3.geoPath());
 
     // Calcuate display pixel dimensions
     let dxScaled = this.width / slice.xVoxels;
