@@ -28,12 +28,14 @@ d3.select("#read-button").on("click", function () {
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
       densityVol.addData(data);
+      densityVol.initializeLegend();
       let slice = densityVol.getSlice(axis, sliceNum);
       let context = densityVol.getSliceImageContext(slice, canvas);
       updateSlider(slice);
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
       doseVol.addData(data);
+      doseVol.initializeLegend();
       // TODO: Figure out a better layout for event listeners
       let slice = doseVol.getSlice(axis, sliceNum);
       let context = doseVol.getSliceImageContext(slice, svgPlot);

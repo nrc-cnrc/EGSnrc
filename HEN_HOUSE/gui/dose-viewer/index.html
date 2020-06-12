@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://x3dom.org/release/x3dom.css" />
     <link rel="stylesheet" href="styles.css" />
     <script src="https://raw.githack.com/jamesleesaunders/d3-x3d/master/dist/d3-x3d.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.js"></script>
   </head>
   <body>
     <h1>Dose Viewer</h1>
@@ -44,6 +45,10 @@
         <svg id="axis-svg" class="plot"></svg>
         <canvas id="plot-canvas" class="plot"></canvas>
         <svg id="plot-svg" class="plot"></svg>
+        <div id="legendholder">
+          <svg id="dose-legend-svg" class="legend"></svg>
+          <svg id="density-legend-svg" class="legend"></svg>
+        </div>
       </div>
     </div>
 
@@ -52,6 +57,7 @@
       // TODO: Make a dose-view options class?
       // TODO: Move all javascript outside of index.html
       // TODO: Add button to increment/decrement slider by 1
+      // TODO: Make plotting object? Define all variables there
 
       // Define all size variables
       var fullWidth = 500;
@@ -59,6 +65,16 @@
       var margin = { top: 10, right: 10, bottom: 30, left: 30 };
       var width = fullWidth - margin.left - margin.right;
       var height = fullHeight - margin.top - margin.bottom;
+
+      // Define legend size variables
+      // From https://bl.ocks.org/starcalibre/6cccfa843ed254aa0a0d
+      var legendFullHeight = fullHeight;
+      var legendFullWidth = 100;
+      var legendMargin = { top: 30, bottom: 20, left: 10, right: 5 };
+      var legendWidth =
+        legendFullWidth - legendMargin.left - legendMargin.right;
+      var legendHeight =
+        legendFullHeight - legendMargin.top - legendMargin.bottom;
 
       var sliceNum = d3.select("#slider-value").node().value;
       var axis = d3.selectAll("input[name='axis']:checked").node().value;
@@ -73,7 +89,7 @@
 
       var svgPlot = d3
         .select("#plot-svg")
-        .attr("width", height)
+        .attr("width", width)
         .attr("height", height)
         .style(
           "transform",
@@ -85,7 +101,42 @@
         .attr("width", fullWidth)
         .attr("height", fullHeight)
         .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        .style(
+          "transform",
+          "translate(" + margin.left + "px" + "," + margin.top + "px" + ")"
+        );
+
+      var doseLegendSvg = d3
+        .select("#dose-legend-svg")
+        .attr("width", legendFullWidth)
+        .attr("height", legendFullHeight / 2)
+        .style("padding-left", fullWidth)
+        .style(
+          "transform",
+          "translate(" +
+            legendMargin.left +
+            "px" +
+            "," +
+            legendMargin.top +
+            "px" +
+            ")"
+        );
+
+      var densityLegendSvg = d3
+        .select("#density-legend-svg")
+        .attr("width", legendFullWidth)
+        .attr("height", legendFullHeight / 2)
+        .style("padding-left", fullWidth)
+        .style(
+          "transform",
+          "translate(" +
+            legendMargin.left +
+            "px" +
+            "," +
+            legendMargin.top +
+            "px" +
+            ")"
+        );
 
       //TODO: Make a list of volumes rather than have one global
       const densityVol = new DensityVolume(height, width);

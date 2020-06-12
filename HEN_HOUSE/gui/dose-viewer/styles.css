@@ -9,8 +9,13 @@ h1,
 input,
 output,
 label,
+text,
 button {
   font-family: helvetica;
+}
+
+.label {
+  font-size: small;
 }
 
 .plot {
@@ -27,4 +32,8 @@ button {
 
 #plot-svg {
   z-index: 3;
+}
+
+#legend-svg {
+  z-index: 4;
 }

@@ -90,6 +90,50 @@ class Volume {
       sliceNum: sliceNum,
     };
   }
+
+  scaleContour(contours, xScale, yScale) {
+    return contours.map(({ type, value, coordinates }) => ({
+      type,
+      value,
+      coordinates: coordinates.map((rings) =>
+        rings.map((points) => points.map(([i, j]) => [i * xScale, j * yScale]))
+      ),
+    }));
+  }
+
+  initializeLegend(legendSvg, legendClass, format, cells, title) {
+    // Note: Cells can either be a list of the value for each label or the total number of labels
+
+    // Clear and redraw current legend
+    legendSvg.select("." + legendClass).remove();
+
+    // Make space for legend title
+    legendSvg
+      .append("g")
+      .attr("class", legendClass)
+      .style("transform", "translate(0px," + 20 + "px)");
+
+    // Append title
+    legendSvg
+      .append("text")
+      .attr("x", legendWidth / 2)
+      .attr("y", legendMargin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "14px")
+      .text(title);
+
+    // Create legend
+    var legend = d3
+      .legendColor()
+      .labelFormat(format)
+      .shapeWidth(10)
+      .cells(cells)
+      .ascending(true)
+      .orient("vertical")
+      .scale(this.colour);
+
+    legendSvg.select("." + legendClass).call(legend);
+  }
 }
 
 class DoseVolume extends Volume {
@@ -100,6 +144,8 @@ class DoseVolume extends Volume {
   addData(data) {
     super.addData(data);
     super.addColourScheme(d3.interpolateYlOrRd, this.data.maxDose);
+    // Calculate the contour thresholds
+    this.thresholds = d3.range(0, 1.1, 0.1).map((i) => i * this.data.maxDose);
   }
 
   getSlice(axis, sliceNum) {
@@ -107,29 +153,17 @@ class DoseVolume extends Volume {
   }
 
   getSliceImageContext(slice, svgPlot) {
+    //TODO: Don't rely on plugin for legend/colour scale
+    // https://observablehq.com/@d3/color-legend
+
     // Clear dose plot
     svgPlot.selectAll("g").remove();
 
     // Draw contours
-    let thresholds = d3.range(0, 1.1, 0.1).map((i) => i * this.data.maxDose);
-
     var contours = d3
       .contours()
       .size([slice.xVoxels, slice.yVoxels])
-      .thresholds(thresholds)(slice.sliceData);
-
-    var scaledContours = contours.map(({ type, value, coordinates }) => ({
-      type,
-      value,
-      coordinates: coordinates.map((rings) =>
-        rings.map((points) =>
-          points.map(([i, j]) => [
-            i * (this.width / slice.xVoxels),
-            j * (this.height / slice.yVoxels),
-          ])
-        )
-      ),
-    }));
+      .thresholds(this.thresholds)(slice.sliceData);
 
     svgPlot
       .append("g")
@@ -139,13 +173,29 @@ class DoseVolume extends Volume {
       .attr("stroke", "#fff")
       .attr("stroke-opacity", 0.8)
       .selectAll("path")
-      .data(scaledContours)
+      .data(
+        super.scaleContour(
+          contours,
+          this.width / slice.xVoxels,
+          this.height / slice.yVoxels
+        )
+      )
       .join("path")
       .attr("fill", "none")
       .attr("stroke-width", 1.0)
       .attr("stroke", (d) => this.colour(d.value))
       .attr("stroke-linejoin", "round")
       .attr("d", d3.geoPath());
+  }
+
+  initializeLegend() {
+    super.initializeLegend(
+      doseLegendSvg,
+      "doseLegend",
+      d3.format(".2e"),
+      this.thresholds,
+      "Dose"
+    );
   }
 }
 
@@ -210,5 +260,15 @@ class DensityVolume extends Volume {
     canvas.id = "canvas";
     this.prevAxis = axis;
     return context;
+  }
+
+  initializeLegend() {
+    super.initializeLegend(
+      densityLegendSvg,
+      "densityLegend",
+      d3.format(".2f"),
+      5,
+      "Density"
+    );
   }
 }
