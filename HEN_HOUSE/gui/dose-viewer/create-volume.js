@@ -1,4 +1,6 @@
 // TODO: Make general volume structure that includes dose
+class DoseVolume {}
+
 class DensityVolume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
@@ -8,6 +10,7 @@ class DensityVolume {
     this.height = height;
     this.width = width;
     this.data = {};
+    this.prevAxis = "";
   }
   //TODO: Add function to check if data has been added
 
@@ -30,41 +33,36 @@ class DensityVolume {
   getSlice(axis, sliceNum) {
     // TODO: Cache previous slices
     // TODO: Only redefine slice attributes on axis change
-    let slice;
     // For slice structure
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1502-L1546
-    if (axis === "xy") {
-      // TODO: Make function that takes data, dim1, dim2, outputs slice
-      slice = {
-        dx: this.data.voxelSize.x,
-        dy: this.data.voxelSize.y,
-        xVoxels: this.data.voxelNumber.x,
-        yVoxels: this.data.voxelNumber.y,
-        x: this.data.voxelArr.x,
-        y: this.data.voxelArr.y,
-        totalSlices: this.data.voxelNumber.z,
-      };
-    } else if (axis === "yz") {
-      slice = {
-        dx: this.data.voxelSize.y,
-        dy: this.data.voxelSize.z,
-        xVoxels: this.data.voxelNumber.y,
-        yVoxels: this.data.voxelNumber.z,
-        x: this.data.voxelArr.y,
-        y: this.data.voxelArr.z,
-        totalSlices: this.data.voxelNumber.x,
-      };
-    } else if (axis === "xz") {
-      slice = {
-        dx: this.data.voxelSize.x,
-        dy: this.data.voxelSize.z,
-        xVoxels: this.data.voxelNumber.x,
-        yVoxels: this.data.voxelNumber.z,
-        x: this.data.voxelArr.x,
-        y: this.data.voxelArr.z,
-        totalSlices: this.data.voxelNumber.y,
-      };
-    }
+
+    let [dim1, dim2, dim3] =
+      axis === "xy"
+        ? ["x", "y", "z"]
+        : axis === "yz"
+        ? ["y", "z", "x"]
+        : ["x", "z", "y"];
+
+    let x = this.data.voxelArr[dim1];
+    let y = this.data.voxelArr[dim2];
+
+    let slice = {
+      dx: this.data.voxelSize[dim1],
+      dy: this.data.voxelSize[dim2],
+      xVoxels: this.data.voxelNumber[dim1],
+      yVoxels: this.data.voxelNumber[dim2],
+      x: x,
+      y: y,
+      totalSlices: this.data.voxelNumber[dim3],
+      xScale: d3
+        .scaleLinear()
+        .domain([x[0], x[x.length - 1]])
+        .range([0, this.width]), // unit: pixels
+      yScale: d3
+        .scaleLinear()
+        .domain([y[0], y[y.length - 1]])
+        .range([0, this.height]), // unit: pixels
+    };
 
     // If current slice number is larger than the total number of slices
     // set slice number to last slice
@@ -91,25 +89,18 @@ class DensityVolume {
             i + slice.xVoxels * (sliceNum + j * this.data.voxelNumber.y);
         }
         let new_address = i + slice.xVoxels * j;
-        sliceData[new_address] = this.colour(this.data.density[address]);
+        sliceData[new_address] = this.data.density[address];
         doseData[new_address] = this.doseData.dose[address];
       }
     }
 
-    slice["xScale"] = d3
-      .scaleLinear()
-      .domain([slice.x[0], slice.x[slice.x.length - 1]]) // unit: mm
-      .range([0, this.width]); // unit: pixels
-
-    slice["yScale"] = d3
-      .scaleLinear()
-      .domain([slice.y[0], slice.y[slice.y.length - 1]]) // unit: mm
-      .range([0, this.height]); // unit: pixels
-    slice["axis"] = axis;
-    slice["sliceData"] = sliceData;
-    slice["doseData"] = doseData;
-    slice["sliceNum"] = sliceNum;
-    return slice;
+    return {
+      ...slice,
+      axis: axis,
+      sliceData: sliceData,
+      doseData: doseData,
+      sliceNum: sliceNum,
+    };
   }
 
   getSliceImageContext(slice, canvas) {
@@ -121,20 +112,23 @@ class DensityVolume {
     // https://bl.ocks.org/ejb/e2da5a23e9a09d494bd532803d8db61c
     let context = canvas.node().getContext("2d");
 
-    // Clear canvas context and svg
+    // Clear canvas context and svg plot
     context.clearRect(0, 0, canvas.node().width, canvas.node().height);
-    svgAxis.selectAll("g").remove();
     svgPlot.selectAll("g").remove();
 
-    // Draw axes
-    var xAxis = d3.axisBottom().scale(slice.xScale);
-    var yAxis = d3.axisLeft().scale(slice.yScale);
-    svgAxis
-      .append("g")
-      .attr("class", "x-axis")
-      .attr("transform", "translate(0," + height + ")")
-      .call(xAxis);
-    svgAxis.append("g").attr("class", "y-axis").call(yAxis);
+    // Clear and redraw axes upon change
+    let axisChange = axis !== this.prevAxis ? true : false;
+    if (axisChange) {
+      svgAxis.selectAll("g").remove();
+      var xAxis = d3.axisBottom().scale(slice.xScale);
+      var yAxis = d3.axisLeft().scale(slice.yScale);
+      svgAxis
+        .append("g")
+        .attr("class", "x-axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+      svgAxis.append("g").attr("class", "y-axis").call(yAxis);
+    }
 
     // Draw contours
     let thresholds = d3
@@ -179,10 +173,11 @@ class DensityVolume {
     let dxScaled = this.width / slice.xVoxels;
     let dyScaled = this.height / slice.yVoxels;
 
+    // TODO: Turn this into a mapping/forEach?
     for (let i = 0; i < slice.xVoxels; i++) {
       for (let j = 0; j < slice.yVoxels; j++) {
         let new_address = i + slice.xVoxels * j;
-        context.fillStyle = slice.sliceData[new_address];
+        context.fillStyle = this.colour(slice.sliceData[new_address]);
         context.fillRect(
           slice.xScale(slice.x[i]),
           slice.yScale(slice.y[j]),
@@ -192,6 +187,7 @@ class DensityVolume {
       }
     }
     canvas.id = "canvas";
+    this.prevAxis = axis;
     return context;
   }
 }
