@@ -32,7 +32,6 @@ d3.select("#read-button").on("click", function () {
       data = processDoseData(resultSplit);
       densityVol.addDoseData(data);
       // TODO: Figure out a better layout for event listeners
-      // TODO: Plot dose contours
       let slice = densityVol.getSlice(axis, sliceNum);
       let context = densityVol.getSliceImageContext(slice, canvas);
 
@@ -128,13 +127,12 @@ var processPhantomData = function (data) {
     },
     density: density, // The flattened density matrix
     materials: materials, // The materials in the phantom
-    maxDensity: maxDensity,
+    maxDensity: maxDensity, // The maximum density value
   };
 };
 
 // Process .3ddose files
 // TODO: Test with other .3ddose files
-// TODO: Update format to be consistent with .egsphant processing
 var processDoseData = function (data) {
   let curr = 0;
 
@@ -158,19 +156,29 @@ var processDoseData = function (data) {
 
   curr += 3;
 
-  // Read the dose data
-  let dose = data[curr++]
-    .trim()
-    .split(/\ +/)
-    .slice(0, numVoxX * numVoxY * numVoxZ)
-    .map((v) => {
-      return parseFloat(v);
-    });
+  // TODO: If can easily check if value will be zero from string, parse float later after removing zeros
+  let [doseDense, error] = data.slice(curr, curr + 2).map((subArr) => {
+    return subArr
+      .trim()
+      .split(/\ +/)
+      .slice(0, numVoxX * numVoxY * numVoxZ)
+      .map((v) => {
+        return parseFloat(v);
+      });
+  });
 
-  // TODO: Calculate max dose without excedding maximum call stack size
-  let maxDose = 6.203982670362241e-19; //Math.max(...dose);
+  let maxDose = 0;
+  let dose = new Array(numVoxX * numVoxY * numVoxZ);
 
-  // TODO: Add error matrix
+  // Populate sparse dose array
+  doseDense.forEach((elem, i) => {
+    if (elem !== 0) {
+      dose[i] = elem;
+      if (dose[i] > maxDose) {
+        maxDose = dose[i];
+      }
+    }
+  });
 
   return {
     voxelNumber: {
@@ -189,6 +197,7 @@ var processDoseData = function (data) {
       z: zArr[1] - zArr[0],
     },
     dose: dose, // The flattened dose matrix
+    error: error, // The flattened error matrix
     maxDose: maxDose, // The maximum dose value
   };
 };
