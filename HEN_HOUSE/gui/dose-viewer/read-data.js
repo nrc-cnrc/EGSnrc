@@ -27,13 +27,16 @@ d3.select("#read-button").on("click", function () {
     let data;
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
-      densityVol.addDensityData(data);
-    } else if (ext === "3ddose") {
-      data = processDoseData(resultSplit);
-      densityVol.addDoseData(data);
-      // TODO: Figure out a better layout for event listeners
+      densityVol.addData(data);
       let slice = densityVol.getSlice(axis, sliceNum);
       let context = densityVol.getSliceImageContext(slice, canvas);
+      updateSlider(slice);
+    } else if (ext === "3ddose") {
+      data = processDoseData(resultSplit);
+      doseVol.addData(data);
+      // TODO: Figure out a better layout for event listeners
+      let slice = doseVol.getSlice(axis, sliceNum);
+      let context = doseVol.getSliceImageContext(slice, svgPlot);
 
       updateSlider(slice);
     } else {

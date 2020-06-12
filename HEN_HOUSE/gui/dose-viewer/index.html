@@ -87,28 +87,43 @@
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+      //TODO: Make a list of volumes rather than have one global
       const densityVol = new DensityVolume(height, width);
+      const doseVol = new DoseVolume(height, width);
 
       const slider = d3.select("#slider-range").on("change", function () {
         // Update slider text
         d3.select("#slider-value").node().value = this.value;
         sliceNum = parseInt(this.value);
-        // Update image if densityVol data exists
+
+        // Update image if densityVol data and/or doseVol data exists
+        let slice;
+        let context;
         if (Object.keys(densityVol.data).length > 0) {
-          let slice = densityVol.getSlice(axis, sliceNum);
-          let context = densityVol.getSliceImageContext(slice, canvas);
+          slice = densityVol.getSlice(axis, sliceNum);
+          context = densityVol.getSliceImageContext(slice, canvas);
+        }
+        if (Object.keys(doseVol.data).length > 0) {
+          slice = doseVol.getSlice(axis, sliceNum);
+          context = doseVol.getSliceImageContext(slice, svgPlot);
         }
       });
 
       const buttons = d3
         .selectAll("input[name='axis']")
         .on("change", function () {
-          // Update image if densityVol data exists
           axis = this.value;
+          // Update image if densityVol data and/or doseVol data exists
+          let slice;
+          let context;
           if (Object.keys(densityVol.data).length > 0) {
-            let slice = densityVol.getSlice(axis, sliceNum);
-            let context = densityVol.getSliceImageContext(slice, canvas);
+            slice = densityVol.getSlice(axis, sliceNum);
+            context = densityVol.getSliceImageContext(slice, canvas);
             updateSlider(slice);
+          }
+          if (Object.keys(doseVol.data).length > 0) {
+            slice = doseVol.getSlice(axis, sliceNum);
+            context = doseVol.getSliceImageContext(slice, svgPlot);
           }
         });
 
