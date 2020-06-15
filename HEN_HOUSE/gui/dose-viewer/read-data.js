@@ -16,6 +16,7 @@ d3.select("#read-button").on("click", function () {
 
   reader.addEventListener("loadstart", function () {
     console.log("File reading started");
+    return true;
   });
 
   // File is successfully read
@@ -43,18 +44,21 @@ d3.select("#read-button").on("click", function () {
       updateSlider(slice);
     } else {
       console.log("Unknown file extension");
-      return;
+      return true;
     }
     console.log("Finished processing data");
+    return true;
   });
 
   // File reading failed
   reader.addEventListener("error", function () {
     alert("Error: Failed to read file");
+    return true;
   });
 
   // Read as text file
   reader.readAsText(file);
+  return true;
 });
 
 // Process .egsphant files

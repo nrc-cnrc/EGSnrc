@@ -143,7 +143,7 @@ class DoseVolume extends Volume {
 
   addData(data) {
     super.addData(data);
-    super.addColourScheme(d3.interpolateYlOrRd, this.data.maxDose);
+    super.addColourScheme(d3.interpolateTurbo, this.data.maxDose);
     // Calculate the contour thresholds
     this.thresholds = d3.range(0, 1.1, 0.1).map((i) => i * this.data.maxDose);
   }
@@ -159,6 +159,7 @@ class DoseVolume extends Volume {
     // Clear dose plot
     svgPlot.selectAll("g").remove();
 
+    //TODO: Try out different thresholds
     // Draw contours
     var contours = d3
       .contours()
@@ -171,7 +172,8 @@ class DoseVolume extends Volume {
       .attr("height", this.height)
       .attr("fill", "none")
       .attr("stroke", "#fff")
-      .attr("stroke-opacity", 0.8)
+      .attr("stroke-opacity", 0.5)
+      .attr("stroke-width", 0.5)
       .selectAll("path")
       .data(
         super.scaleContour(
@@ -181,10 +183,8 @@ class DoseVolume extends Volume {
         )
       )
       .join("path")
-      .attr("fill", "none")
-      .attr("stroke-width", 1.0)
-      .attr("stroke", (d) => this.colour(d.value))
-      .attr("stroke-linejoin", "round")
+      .attr("fill", (d) => this.colour(d.value))
+      .attr("fill-opacity", 0.5)
       .attr("d", d3.geoPath());
   }
 
@@ -206,7 +206,7 @@ class DensityVolume extends Volume {
 
   addData(data) {
     super.addData(data);
-    super.addColourScheme(d3.interpolateGreys, this.data.maxDensity);
+    super.addColourScheme(d3.interpolateViridis, this.data.maxDensity);
   }
 
   getSlice(axis, sliceNum) {
@@ -245,15 +245,16 @@ class DensityVolume extends Volume {
     let dyScaled = this.height / slice.yVoxels;
 
     // TODO: Turn this into a mapping/forEach?
+    // TODO: Could save canvas as URL then scale up easily?
     for (let i = 0; i < slice.xVoxels; i++) {
       for (let j = 0; j < slice.yVoxels; j++) {
         let new_address = i + slice.xVoxels * j;
         context.fillStyle = this.colour(slice.sliceData[new_address]);
         context.fillRect(
-          slice.xScale(slice.x[i]),
-          slice.yScale(slice.y[j]),
-          dxScaled,
-          dyScaled
+          Math.ceil(slice.xScale(slice.x[i])),
+          Math.ceil(slice.yScale(slice.y[j])),
+          Math.ceil(dxScaled),
+          Math.ceil(dyScaled)
         );
       }
     }

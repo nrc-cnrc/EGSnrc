@@ -176,6 +176,7 @@
             slice = doseVol.getSlice(axis, sliceNum);
             context = doseVol.getSliceImageContext(slice, svgPlot);
           }
+          return true;
         });
 
       function updateSlider(slice) {
