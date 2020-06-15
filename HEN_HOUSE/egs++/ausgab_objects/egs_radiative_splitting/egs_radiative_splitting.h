@@ -134,6 +134,14 @@ public:
     void getCostMinMax(const EGS_Vector &xx, const EGS_Vector &uu,
                         EGS_Float &ro, EGS_Float &ct_min, EGS_Float &ct_max);
 
+    void getBremsEnergies(int npold, int np);
+
+    void killThePhotons(EGS_Float fs, EGS_Float ssd, int n_split, int npstart, int kill_electrons);
+
+    void selectAzimuthalAngles(EGS_Float &cphi, EGS_FLOAT &sphi);
+
+    void uniformPhotons(int nsample, int n_split, EGS_Float fs, EGS_Float ssd, EGS_Float energy);
+
     void setSplitting(const int &n_s) {
         nsplit = n_s;
     };
@@ -144,7 +152,7 @@ public:
 
     void initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr);
 
-    bool needsCall(EGS_Application::AusgabCall iarg) {
+    bool needsCall(EGS_Application::AusgabCall iarg) const override {
         if (split_type == EGS_RadiativeSplitting::DRS || split_type == EGS_RadiativeSplitting::DRSf) {
            if (iarg == EGS_Application::BeforeBrems || iarg == EGS_Application::BeforeAnnihFlight || iarg == EGS_Application::BeforeAnnihRest ||
                iarg == EGS_Application::BeforePair || iarg == EGS_Application::BeforeCompton || iarg == EGS_Application::BeforePhoto ||
@@ -152,11 +160,11 @@ public:
                return true;
            }
         }
-        //or else false?
+        return false;
     };
 
     int processEvent(EGS_Application::AusgabCall iarg) {
-        if (split_type >  EGS_RadiativeSplitting::URS && iarg > AfterTransport)
+        if (split_type >  EGS_RadiativeSplitting::URS && iarg > EGS_Application::AfterTransport)
         {
             if( !doInteractions(iarg,rndm,killed,be_factor) )
             {
@@ -167,7 +175,7 @@ public:
     };
 
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
-        if (split_type >  EGS_RadiativeSplitting::URS && iarg > AfterTransport)
+        if (split_type >  EGS_RadiativeSplitting::URS && iarg > EGS_Application::AfterTransport)
         {
             if( !doInteractions(iarg,rndm,killed,be_factor) )
             {
@@ -198,7 +206,11 @@ protected:
     EGS_Interpolator **f_KM_b;
     EGS_Float        *zbr_KM;
 
-    EGS_RandomGenerator rndm; //RNG for DBS--passed from the application
+    vector<EGS_particle> brems_particles; //store a stack of brems particles in do_smart_brems
+
+    int imed;
+
+    EGS_RandomGenerator *rndm; //RNG for DBS--passed from the application
 
     const char *dbs_err_msg =
 "Stack size exceeded in BEAMpp_DBS::%s()\n"

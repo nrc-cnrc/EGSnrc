@@ -1270,7 +1270,7 @@ EGS_RandomGenerator *EGS_AdvancedApplication::getRNG() {
 }
 
 //add a particle (+ dnear) to the top of the stack and increment np
-void EGS_AdvancedApplication::addParticleToStack(EGS_Particle p, dnear) {
+void EGS_AdvancedApplication::addParticleToStack(EGS_Particle p, EGS_Float dnear) {
     int np = the_stack->np; //np+1
     the_stack->E[np] = p.E;
     the_stack->wt[np] = p.wt;
@@ -1290,6 +1290,52 @@ void EGS_AdvancedApplication::addParticleToStack(EGS_Particle p, dnear) {
 //get dnear from position np in the stack
 EGS_Float EGS_AdvancedApplication::getDnear(int np) {
     return the_stack->dnear[np+1];
+}
+
+//set npold of stack
+void EGS_AdvancedApplication::setNpold(int npold) {
+    the_stack->npold = npold+1;
+}
+
+//get npold of stack
+int EGS_AdvancedApplication::getNpold(){
+    return the_stack->npold-1;
+}
+
+//delete particle at stack position ip
+//replace with data at position np and reduce np by 1
+void EGS_AdvancedAppliction::deleteParticleFromStack(int ip) {
+    int np = the_stack->np;
+    if (ip+1 < np)
+    {
+    	the_stack->iq[ip+1] = the_stack->iq[np];
+    	the_stack->E[ip+1] = the_stack->E[np];
+    	the_stack->x[ip+1] = the_stack->x[np];
+    	the_stack->y[ip+1] = the_stack->y[np];
+    	the_stack->z[ip+1] = the_stack->z[np];
+    	the_stack->u[ip+1] = the_stack->u[np];
+    	the_stack->v[ip+1] = the_stack->v[np];
+    	the_stack->w[ip+1] = the_stack->w[np];
+    	the_stack->wt[ip+1] = the_stack->wt[np];
+    	the_stack->ir[ip+1] = the_stack->ir[np];
+    	the_stack->latch[ip+1] = the_stack->latch[np];
+    	the_stack->dnear[ip+1] = the_stack->dnear[np];
+    }
+    the_stack->np--;
+    return;
+}
+
+//retrieve particle information at stack position ip
+EGS_Particle EGS_AdvancedAppliction::getParticleFromStack(int ip) {
+    EGS_Particle p;
+    p.q = the_stack->iq[ip+1];
+    p.E = the_stack->E[ip+1];
+    p.latch = the_stack->latch[ip+1];
+    p.ir = the_stack->latch[ip+1];
+    p.wt = the_stack->wt[ip+1];
+    p.x = EGS_Vector(the_stack->x[ip+1],the_stack->y[ip+1],the_stack->z[ip+1]);
+    p.u = EGS_Vector(the_stack->u[ip+1],the_stack->v[ip+1],the_stack->w[ip+1]);
+    return p;
 }
 
 extern __extc__ void egsHowfar() {
