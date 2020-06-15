@@ -231,8 +231,12 @@ public:
     // Utility functions for egs_radiative_splitting ausgab objects
     //************************************************************
     EGS_RandomGenerator *getRNG();
-    void addParticleToStack(EGS_Particle p, dnear);
+    void addParticleToStack(EGS_Particle p, EGS_Float dnear);
     EGS_Float getDnear(int np);
+    int getNpold();
+    void setNpold(int npold);
+    void deleteParticleFromStack(int ip);
+    EGS_Particle getParticleFromStack(int ip);
 
     /* Needed by some sources */
     EGS_Float getRM();
