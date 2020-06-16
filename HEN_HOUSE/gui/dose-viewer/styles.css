@@ -14,6 +14,10 @@ button {
   font-family: helvetica;
 }
 
+span {
+  display: inline-block;
+}
+
 .label {
   font-size: small;
 }
@@ -36,4 +40,9 @@ button {
 
 #legend-svg {
   z-index: 4;
+}
+
+#voxel-info {
+  border: 1px solid black;
+  padding: 0px 16px 16px 16px;
 }

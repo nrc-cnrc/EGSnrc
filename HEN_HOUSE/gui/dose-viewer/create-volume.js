@@ -1,5 +1,6 @@
 // TODO: Make a plotting object that takes list of volumes, plots them
 // Each plotting object has radio buttons, slider, axes, canvas, and svg
+// TODO: Make a dataName variable to reduce code
 class Volume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
@@ -9,11 +10,24 @@ class Volume {
     this.height = height;
     this.width = width;
     this.data = {};
+    this.prevSlice = {};
     this.prevAxis = "";
   }
-  //TODO: Add function to check if data has been added
+
   addData(data) {
     this.data = data;
+    this.xWorldToVoxelScale = d3
+      .scaleQuantile()
+      .domain([data.voxelArr.x[0], data.voxelArr.x[data.voxelArr.x.length - 1]])
+      .range(d3.range(0, data.voxelNumber.x, 1));
+    this.yWorldToVoxelScale = d3
+      .scaleQuantile()
+      .domain([data.voxelArr.y[0], data.voxelArr.y[data.voxelArr.y.length - 1]])
+      .range(d3.range(0, data.voxelNumber.y, 1));
+    this.zWorldToVoxelScale = d3
+      .scaleQuantile()
+      .domain([data.voxelArr.z[0], data.voxelArr.z[data.voxelArr.z.length - 1]])
+      .range(d3.range(0, data.voxelNumber.z, 1));
   }
 
   addColourScheme(colourScheme, maxVal) {
@@ -36,7 +50,10 @@ class Volume {
 
     let x = this.data.voxelArr[dim1];
     let y = this.data.voxelArr[dim2];
+    let z = this.data.voxelArr[dim3];
+    let totalSlices = this.data.voxelNumber[dim3];
 
+    // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
       dx: this.data.voxelSize[dim1],
       dy: this.data.voxelSize[dim2],
@@ -44,7 +61,7 @@ class Volume {
       yVoxels: this.data.voxelNumber[dim2],
       x: x,
       y: y,
-      totalSlices: this.data.voxelNumber[dim3],
+      totalSlices: totalSlices,
       xScale: d3
         .scaleLinear()
         .domain([x[0], x[x.length - 1]])
@@ -53,6 +70,10 @@ class Volume {
         .scaleLinear()
         .domain([y[0], y[y.length - 1]])
         .range([0, this.height]), // unit: pixels
+      zScale: d3
+        .scaleLinear()
+        .domain([z[0], z[z.length - 1]])
+        .range([0, totalSlices]), // unit: pixels
     };
 
     // If current slice number is larger than the total number of slices
@@ -83,12 +104,15 @@ class Volume {
       }
     }
 
-    return {
+    slice = {
       ...slice,
       axis: axis,
       sliceData: sliceData,
       sliceNum: sliceNum,
     };
+
+    this.prevSlice = slice;
+    return slice;
   }
 
   scaleContour(contours, xScale, yScale) {
@@ -133,6 +157,20 @@ class Volume {
       .scale(this.colour);
 
     legendSvg.select("." + legendClass).call(legend);
+  }
+
+  isEmpty() {
+    return Object.keys(this.data).length === 0;
+  }
+
+  getDataAtVoxelCoords(voxelCoords, dataName) {
+    let [x, y, z] = voxelCoords; //.map((v) => parseInt(v));
+    let address =
+      z * (this.data.voxelNumber.x * this.data.voxelNumber.y) +
+      y * this.data.voxelNumber.x +
+      x;
+
+    return this.data[dataName][address];
   }
 }
 
@@ -196,6 +234,10 @@ class DoseVolume extends Volume {
       this.thresholds,
       "Dose"
     );
+  }
+
+  getDataAtVoxelCoords(voxelCoords) {
+    return super.getDataAtVoxelCoords(voxelCoords, "dose");
   }
 }
 
@@ -271,5 +313,9 @@ class DensityVolume extends Volume {
       5,
       "Density"
     );
+  }
+
+  getDataAtVoxelCoords(voxelCoords) {
+    return super.getDataAtVoxelCoords(voxelCoords, "density");
   }
 }

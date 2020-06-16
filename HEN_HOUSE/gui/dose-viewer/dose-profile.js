@@ -3,9 +3,9 @@ const doseProfileButtons = d3
   .on("change", function () {
     profileAxis = this.value;
 
-    if (Object.keys(densityVol.data).length > 0) {
+    if (!densityVol.isEmpty()) {
       updateCoordInputsLabels(profileAxis, densityVol.data.voxelNumber);
-    } else if (Object.keys(doseVol.data).length > 0) {
+    } else if (!doseVol.isEmpty()) {
       updateCoordInputsLabels(profileAxis, doseVol.data.voxelNumber);
     }
 

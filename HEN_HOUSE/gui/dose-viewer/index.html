@@ -15,31 +15,69 @@
     <input type="file" id="file-input" />
     <button id="read-button">Read File</button>
     <div id="dose-viewer-container">
-      <form>
-        <input type="radio" id="xy" name="axis" value="xy" checked />
-        <label for="xy">xy</label>
-        <input type="radio" id="yz" name="axis" value="yz" />
-        <label for="yz">yz</label>
-        <input type="radio" id="xz" name="axis" value="xz" />
-        <label for="xz">xz</label>
-      </form>
-      <div class="slider-container">
-        <label for="slice-number"
-          >Slice Number:
-          <output type="text" id="slider-value" value="">0</output>
+      <span id="axis-slider-container">
+        <form>
+          <input type="radio" id="xy" name="axis" value="xy" checked />
+          <label for="xy">xy</label>
+          <input type="radio" id="yz" name="axis" value="yz" />
+          <label for="yz">yz</label>
+          <input type="radio" id="xz" name="axis" value="xz" />
+          <label for="xz">xz</label>
+        </form>
+        <div class="slider-container">
+          <label for="slice-number"
+            >Slice Number:
+            <output type="text" id="slider-value" value="">0</output>
+          </label>
+          <br />
+          <output type="text" id="slider-min" value="">0</output>
+          <input
+            type="range"
+            id="slider-range"
+            min="0"
+            value="0"
+            class="slider"
+            disabled
+          />
+          <output type="text" id="slider-max" value=""></output>
+        </div>
+      </span>
+      <span id="voxel-info">
+        <p>World Coordinates</p>
+        <label for="world-x-value"
+          >x:
+          <output type="text" id="world-x-value" value=""> </output>
         </label>
-        <br />
-        <output type="text" id="slider-min" value="">0</output>
-        <input
-          type="range"
-          id="slider-range"
-          min="0"
-          value="0"
-          class="slider"
-          disabled
-        />
-        <output type="text" id="slider-max" value=""></output>
-      </div>
+        <label for="world-y-value"
+          >y:
+          <output type="text" id="world-y-value" value=""> </output>
+        </label>
+        <label for="world-z-value"
+          >z:
+          <output type="text" id="world-z-value" value=""> </output>
+        </label>
+        <p>Voxel Coordinates</p>
+        <label for="voxel-x-value"
+          >x:
+          <output type="text" id="voxel-x-value" value=""> </output>
+        </label>
+        <label for="voxel-y-value"
+          >y:
+          <output type="text" id="voxel-y-value" value=""> </output>
+        </label>
+        <label for="voxel-z-value"
+          >z:
+          <output type="text" id="voxel-z-value" value=""> </output>
+        </label>
+        <p>Data at Coordinates</p>
+        <label for="density-value"
+        >Density:
+        <output type="text" id="density-value" value=""> </output>
+        <label for="dose-value"
+        >Dose:
+        <output type="text" id="dose-value" value=""> </output>
+      </label>
+      </span>
       <div id="chartholder">
         <svg id="axis-svg" class="plot"></svg>
         <canvas id="plot-canvas" class="plot"></canvas>
@@ -51,7 +89,9 @@
       </div>
     </div>
     <div id="dose-profile-viewer">
-      <p>Select axis and coordinates to view and compare dose profiles.</p>
+      <p>
+        Select axis and voxel coordinates to view and compare dose profiles.
+      </p>
       <form>
         <input type="radio" id="x" name="profile-axis" value="x" checked />
         <label for="x">x</label>
@@ -119,6 +159,8 @@
 
       var sliceNum = d3.select("#slider-value").node().value;
       var axis = d3.selectAll("input[name='axis']:checked").node().value;
+      var plotCoords;
+
       var canvas = d3
         .select("#plot-canvas")
         .attr("height", height)
@@ -183,7 +225,7 @@
       const densityVol = new DensityVolume(height, width);
       const doseVol = new DoseVolume(height, width);
 
-      const slider = d3.select("#slider-range").on("change", function () {
+      d3.select("#slider-range").on("change", function () {
         // Update slider text
         d3.select("#slider-value").node().value = this.value;
         sliceNum = parseInt(this.value);
@@ -191,37 +233,45 @@
         // Update image if densityVol data and/or doseVol data exists
         let slice;
         let context;
-        if (Object.keys(densityVol.data).length > 0) {
+        if (!densityVol.isEmpty()) {
           slice = densityVol.getSlice(axis, sliceNum);
           context = densityVol.getSliceImageContext(slice, canvas);
         }
-        if (Object.keys(doseVol.data).length > 0) {
+        if (!doseVol.isEmpty()) {
           slice = doseVol.getSlice(axis, sliceNum);
           context = doseVol.getSliceImageContext(slice, svgPlot);
         }
+
+        //Update voxel coordinates
+        plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, svgPlot);
+
         return true;
       });
 
-      const axisButtons = d3
-        .selectAll("input[name='axis']")
-        .on("change", function () {
-          axis = this.value;
-          // Update image if densityVol data and/or doseVol data exists
-          let slice;
-          let context;
-          if (Object.keys(densityVol.data).length > 0) {
-            slice = densityVol.getSlice(axis, sliceNum);
-            context = densityVol.getSliceImageContext(slice, canvas);
-            updateSlider(slice);
-          }
-          if (Object.keys(doseVol.data).length > 0) {
-            slice = doseVol.getSlice(axis, sliceNum);
-            context = doseVol.getSliceImageContext(slice, svgPlot);
-          }
-          return true;
-        });
+      d3.selectAll("input[name='axis']").on("change", function () {
+        axis = this.value;
+        // Update image if densityVol data and/or doseVol data exists
+        let slice;
+        let context;
+        if (!densityVol.isEmpty()) {
+          slice = densityVol.getSlice(axis, sliceNum);
+          context = densityVol.getSliceImageContext(slice, canvas);
+        }
+        if (!doseVol.isEmpty()) {
+          slice = doseVol.getSlice(axis, sliceNum);
+          context = doseVol.getSliceImageContext(slice, svgPlot);
+        }
 
-      //TODO: Figure out why this doesn't work if only dose is uploaded
+        if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
+          updateSlider(slice);
+        }
+
+        //Update voxel coordinates
+        plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, svgPlot);
+
+        return true;
+      });
+
       function updateSlider(slice) {
         let sliderRange = d3.select("#slider-range").node();
 
@@ -235,7 +285,14 @@
         sliderRange.max = slice.totalSlices - 1;
         d3.select("#slider-max").node().value = slice.totalSlices - 1;
       }
+
+      svgPlot.on("click", function () {
+        plotCoords = d3.mouse(this);
+        updateVoxelCoords(plotCoords, axis, sliceNum, svgPlot);
+        return true;
+      });
     </script>
+    <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./read-data.js"></script>
     <script type="text/javascript" src="./dose-profile.js"></script>
   </body>
