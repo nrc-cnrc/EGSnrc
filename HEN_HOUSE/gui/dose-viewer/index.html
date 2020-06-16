@@ -34,7 +34,6 @@
           type="range"
           id="slider-range"
           min="0"
-          max="100"
           value="0"
           class="slider"
           disabled
@@ -50,6 +49,48 @@
           <svg id="density-legend-svg" class="legend"></svg>
         </div>
       </div>
+    </div>
+    <div id="dose-profile-viewer">
+      <p>Select axis and coordinates to view and compare dose profiles.</p>
+      <form>
+        <input type="radio" id="x" name="profile-axis" value="x" checked />
+        <label for="x">x</label>
+        <input type="radio" id="y" name="profile-axis" value="y" />
+        <label for="y">y</label>
+        <input type="radio" id="z" name="profile-axis" value="z" />
+        <label for="z">z</label>
+      </form>
+      <form>
+        <label>
+          <span id="coord-1-label">y:</span>
+          <input
+            type="number"
+            id="coord-1"
+            name="coord-input"
+            autocomplete="off"
+            min="0"
+            step="1"
+            value="0"
+            disabled
+          />
+        </label>
+        <br />
+        <label>
+          <span id="coord-2-label">z:</span>
+          <input
+            type="number"
+            id="coord-2"
+            name="coord-input"
+            autocomplete="off"
+            min="0"
+            step="1"
+            value="0"
+            disabled
+          />
+        </label>
+      </form>
+      <button id="dose-profile-button">Make Dose Profile</button>
+      <svg id="dose-profile-svg" class="plot"></svg>
     </div>
 
     <script type="text/javascript" src="./create-volume.js"></script>
@@ -158,9 +199,10 @@
           slice = doseVol.getSlice(axis, sliceNum);
           context = doseVol.getSliceImageContext(slice, svgPlot);
         }
+        return true;
       });
 
-      const buttons = d3
+      const axisButtons = d3
         .selectAll("input[name='axis']")
         .on("change", function () {
           axis = this.value;
@@ -179,6 +221,7 @@
           return true;
         });
 
+      //TODO: Figure out why this doesn't work if only dose is uploaded
       function updateSlider(slice) {
         let sliderRange = d3.select("#slider-range").node();
 
@@ -194,5 +237,6 @@
       }
     </script>
     <script type="text/javascript" src="./read-data.js"></script>
+    <script type="text/javascript" src="./dose-profile.js"></script>
   </body>
 </html>

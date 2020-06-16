@@ -33,6 +33,7 @@ d3.select("#read-button").on("click", function () {
       let slice = densityVol.getSlice(axis, sliceNum);
       let context = densityVol.getSliceImageContext(slice, canvas);
       updateSlider(slice);
+      enableCoordInputs(densityVol.data.voxelNumber);
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
       doseVol.addData(data);
@@ -42,6 +43,7 @@ d3.select("#read-button").on("click", function () {
       let context = doseVol.getSliceImageContext(slice, svgPlot);
 
       updateSlider(slice);
+      enableCoordInputs(doseVol.data.voxelNumber);
     } else {
       console.log("Unknown file extension");
       return true;
