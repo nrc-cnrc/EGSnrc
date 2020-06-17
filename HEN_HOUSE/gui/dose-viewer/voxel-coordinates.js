@@ -4,7 +4,7 @@ function coordsToWorld(coords, axis, sliceNum, volume) {
   let j = volume.prevSlice.yScale.invert(coords[1]);
   // Add 0.5 to sliceNum in order to map values to center of voxel bondaries
   // TODO: Perhaps fix scale to get rid of the 0.5 hack
-  let k = volume.prevSlice.zScale.invert(sliceNum + 0.5);
+  let k = volume.prevSlice.zScale.invert(parseInt(sliceNum) + 0.5);
 
   let [xVal, yVal, zVal] =
     axis === "xy" ? [i, j, k] : axis === "yz" ? [k, i, j] : [i, k, j];
@@ -71,3 +71,10 @@ function updateVoxelCoords(coords, axis, sliceNum, svg) {
     }
   }
 }
+
+svgPlot.on("click", function () {
+  plotCoords = d3.mouse(this);
+  let sliceNum = d3.select("#slider-value").node().value;
+  updateVoxelCoords(plotCoords, axis, sliceNum, svgPlot);
+  return true;
+});

@@ -26,13 +26,14 @@ d3.select("#read-button").on("click", function () {
     let result = event.target.result;
     let resultSplit = result.split("\n");
     let data;
+    let sliceNum = d3.select("#slider-value").node().value;
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
       densityVol.addData(data);
       densityVol.initializeLegend();
       let slice = densityVol.getSlice(axis, sliceNum);
       let context = densityVol.getSliceImageContext(slice, canvas);
-      updateSlider(slice);
+      updateSliderAfterAxisChange(slice);
       enableCoordInputs(densityVol.data.voxelNumber);
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
@@ -41,8 +42,7 @@ d3.select("#read-button").on("click", function () {
       // TODO: Figure out a better layout for event listeners
       let slice = doseVol.getSlice(axis, sliceNum);
       let context = doseVol.getSliceImageContext(slice, svgPlot);
-
-      updateSlider(slice);
+      updateSliderAfterAxisChange(slice);
       enableCoordInputs(doseVol.data.voxelNumber);
     } else {
       console.log("Unknown file extension");
