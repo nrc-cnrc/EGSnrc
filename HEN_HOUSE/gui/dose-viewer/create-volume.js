@@ -190,12 +190,12 @@ class DoseVolume extends Volume {
     return super.getSlice(axis, sliceNum, "dose");
   }
 
-  getSliceImageContext(slice, svgPlot) {
+  getSliceImageContext(slice, svg) {
     //TODO: Don't rely on plugin for legend/colour scale
     // https://observablehq.com/@d3/color-legend
 
     // Clear dose plot
-    svgPlot.selectAll("g").remove();
+    svg.selectAll("g").remove();
 
     //TODO: Try out different thresholds
     // Draw contours
@@ -204,8 +204,9 @@ class DoseVolume extends Volume {
       .size([slice.xVoxels, slice.yVoxels])
       .thresholds(this.thresholds)(slice.sliceData);
 
-    svgPlot
+    let doseContour = svg
       .append("g")
+      .attr("class", "dose-contour")
       .attr("width", this.width)
       .attr("height", this.height)
       .attr("fill", "none")
@@ -224,6 +225,10 @@ class DoseVolume extends Volume {
       .attr("fill", (d) => this.colour(d.value))
       .attr("fill-opacity", 0.5)
       .attr("d", d3.geoPath());
+
+    if (zoomTransform) {
+      svg.select("g.dose-contour").attr("transform", zoomTransform.toString());
+    }
   }
 
   initializeLegend() {
@@ -249,24 +254,18 @@ class DensityVolume extends Volume {
   addData(data) {
     super.addData(data);
     super.addColourScheme(d3.interpolateViridis, this.data.maxDensity);
+    // Calculate the contour thresholds
+    this.thresholds = Array.from(new Set(data.density)).sort();
   }
 
   getSlice(axis, sliceNum) {
     return super.getSlice(axis, sliceNum, "density");
   }
 
-  getSliceImageContext(slice, canvas) {
+  getSliceImageContext(slice, svgAxis, svgDensity) {
     // TODO: Leave axes outside of either volume
     // TODO: Clear svgAxis <g> only if axis changed
-    // TODO: Allow zooming and translating
     // TODO: Make two new functions: change slicenum and change axes
-
-    // For axis structure
-    // https://bl.ocks.org/ejb/e2da5a23e9a09d494bd532803d8db61c
-    let context = canvas.node().getContext("2d");
-
-    // Clear canvas context
-    context.clearRect(0, 0, canvas.node().width, canvas.node().height);
 
     // Clear and redraw axes upon change
     let axisChange = axis !== this.prevAxis ? true : false;
@@ -282,27 +281,45 @@ class DensityVolume extends Volume {
       svgAxis.append("g").attr("class", "y-axis").call(yAxis);
     }
 
-    // Calcuate display pixel dimensions
-    let dxScaled = this.width / slice.xVoxels;
-    let dyScaled = this.height / slice.yVoxels;
-
-    // TODO: Turn this into a mapping/forEach?
-    // TODO: Could save canvas as URL then scale up easily?
-    for (let i = 0; i < slice.xVoxels; i++) {
-      for (let j = 0; j < slice.yVoxels; j++) {
-        let new_address = i + slice.xVoxels * j;
-        context.fillStyle = this.colour(slice.sliceData[new_address]);
-        context.fillRect(
-          Math.ceil(slice.xScale(slice.x[i])),
-          Math.ceil(slice.yScale(slice.y[j])),
-          Math.ceil(dxScaled),
-          Math.ceil(dyScaled)
-        );
-      }
-    }
-    canvas.id = "canvas";
+    this.drawDensity(slice, svgDensity);
     this.prevAxis = axis;
-    return context;
+  }
+
+  drawDensity(slice, svg) {
+    // Clear density plot
+    svg.selectAll(".density-contour").remove();
+
+    // Draw contours
+    var contours = d3
+      .contours()
+      .size([slice.xVoxels, slice.yVoxels])
+      .smooth(false)
+      .thresholds(this.thresholds)(slice.sliceData);
+
+    svg
+      .append("g")
+      .attr("class", "density-contour")
+      .attr("width", this.width)
+      .attr("height", this.height)
+      .attr("fill", "none")
+      .selectAll("path")
+      .data(
+        super.scaleContour(
+          contours,
+          this.width / slice.xVoxels,
+          this.height / slice.yVoxels
+        )
+      )
+      .join("path")
+      .attr("fill", (d) => this.colour(d.value))
+      .attr("fill-opacity", 1.0)
+      .attr("d", d3.geoPath());
+
+    if (zoomTransform) {
+      svg
+        .select("g.density-contour")
+        .attr("transform", zoomTransform.toString());
+    }
   }
 
   initializeLegend() {
@@ -310,7 +327,7 @@ class DensityVolume extends Volume {
       densityLegendSvg,
       "densityLegend",
       d3.format(".2f"),
-      5,
+      this.thresholds,
       "Density"
     );
   }

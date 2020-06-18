@@ -30,14 +30,15 @@ span {
   z-index: 1;
 }
 
-#plot-canvas {
+#plot-density {
   z-index: 2;
 }
 
-#plot-svg {
+#plot-dose {
   z-index: 3;
 }
 
+#plot-marker,
 #legend-svg {
   z-index: 4;
 }

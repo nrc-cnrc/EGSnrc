@@ -1,7 +1,12 @@
-// TODO: Add dose and density information!!
 function coordsToWorld(coords, axis, sliceNum, volume) {
-  let i = volume.prevSlice.xScale.invert(coords[0]);
-  let j = volume.prevSlice.yScale.invert(coords[1]);
+  // Invert transformation if applicable then invert scale to get world coordinate
+  let i = volume.prevSlice.xScale.invert(
+    zoomTransform ? invertTransform(coords[0], zoomTransform, "x") : coords[0]
+  );
+  let j = volume.prevSlice.yScale.invert(
+    zoomTransform ? invertTransform(coords[1], zoomTransform, "y") : coords[1]
+  );
+
   // Add 0.5 to sliceNum in order to map values to center of voxel bondaries
   // TODO: Perhaps fix scale to get rid of the 0.5 hack
   let k = volume.prevSlice.zScale.invert(parseInt(sliceNum) + 0.5);
@@ -13,7 +18,6 @@ function coordsToWorld(coords, axis, sliceNum, volume) {
 
 function worldCoordsToVoxel(worldCoords, volume) {
   // Map pixel to number of voxels
-
   let xVal = volume.xWorldToVoxelScale(worldCoords[0]);
   let yVal = volume.yWorldToVoxelScale(worldCoords[1]);
   let zVal = volume.zWorldToVoxelScale(worldCoords[2]);
@@ -35,19 +39,31 @@ function updateVoxelLabels(coords) {
   d3.select("#voxel-z-value").node().value = coords[2];
 }
 
+function invertTransform(val, transform, dir) {
+  return (val - transform[dir]) / transform.k;
+}
+
 function updateMarker(coords, svg) {
   // Remove old marker
   svg.select(".marker").remove();
 
-  // Add new one
+  // Add new marker with modified coordinates so it can smoothly transform with other elements
   svg
-    .append("circle")
+    .append("g")
     .attr("class", "marker")
-    .attr("cx", coords[0])
-    .attr("cy", coords[1])
-    .attr("r", 3)
-    .style("stroke", "white")
-    .style("stroke-width", "3")
+    .attr("transform", zoomTransform ? zoomTransform.toString() : "")
+    .append("circle")
+    .attr(
+      "cx",
+      zoomTransform ? invertTransform(coords[0], zoomTransform, "x") : coords[0]
+    )
+    .attr(
+      "cy",
+      zoomTransform ? invertTransform(coords[1], zoomTransform, "y") : coords[1]
+    )
+    .attr("r", 2)
+    .style("stroke", "red")
+    .style("stroke-width", "1.5")
     .style("fill", "none");
 }
 
@@ -58,7 +74,6 @@ function updateVoxelCoords(coords, axis, sliceNum, svg) {
     voxelCoords = worldCoordsToVoxel(worldCoords, vol);
     updateWorldLabels(worldCoords);
     updateVoxelLabels(voxelCoords);
-    updateMarker(coords, svg);
 
     if (!densityVol.isEmpty()) {
       let density = densityVol.getDataAtVoxelCoords(voxelCoords);
@@ -72,9 +87,11 @@ function updateVoxelCoords(coords, axis, sliceNum, svg) {
   }
 }
 
-svgPlot.on("click", function () {
+// TODO: Update voxel info upon dose or density upload for existing marker
+svgMarker.on("click", function () {
   plotCoords = d3.mouse(this);
   let sliceNum = d3.select("#slider-value").node().value;
-  updateVoxelCoords(plotCoords, axis, sliceNum, svgPlot);
+  updateVoxelCoords(plotCoords, axis, sliceNum, svgDose);
+  updateMarker(plotCoords, svgMarker);
   return true;
 });

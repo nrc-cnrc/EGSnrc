@@ -19,15 +19,15 @@ function updateImage(axis, sliceNum) {
   let context;
   if (!densityVol.isEmpty()) {
     slice = densityVol.getSlice(axis, sliceNum);
-    context = densityVol.getSliceImageContext(slice, canvas);
+    context = densityVol.getSliceImageContext(slice, svgAxis, svgDensity);
   }
   if (!doseVol.isEmpty()) {
     slice = doseVol.getSlice(axis, sliceNum);
-    context = doseVol.getSliceImageContext(slice, svgPlot);
+    context = doseVol.getSliceImageContext(slice, svgDose);
   }
 
   //Update voxel coordinates
-  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, svgPlot);
+  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, svgDose);
 }
 
 d3.select("#increment-slider").on("click", function () {
@@ -68,11 +68,11 @@ d3.selectAll("input[name='axis']").on("change", function () {
   let context;
   if (!densityVol.isEmpty()) {
     slice = densityVol.getSlice(axis, sliceNum);
-    context = densityVol.getSliceImageContext(slice, canvas);
+    context = densityVol.getSliceImageContext(slice, svgAxis, svgDensity);
   }
   if (!doseVol.isEmpty()) {
     slice = doseVol.getSlice(axis, sliceNum);
-    context = doseVol.getSliceImageContext(slice, svgPlot);
+    context = doseVol.getSliceImageContext(slice, svgDose);
   }
 
   if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
@@ -80,7 +80,7 @@ d3.selectAll("input[name='axis']").on("change", function () {
   }
 
   //Update voxel coordinates
-  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, svgPlot);
+  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, svgDose);
 
   return true;
 });
