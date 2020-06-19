@@ -27,20 +27,20 @@
 #
 ###############################################################################
 #
-#   C++ user code for estimating the quantity kerma in a volume.
-#
-#   Additionally, the fluence in the volume can be also calculated if
-#   requested in the scoring options input block.
+#   C++ user code for estimating the quantity kerma in a scoring volume. Kerma in
+#   each scoring volume region, as well as total and differential photon fluence
+#   can be requested in the scoring options input block.
 #
 #   Two calculation options are available:
 #
-#  - If a foreced-detection geometry provided, a forced detection scoring technique
-#    can be used to score kerma and fluence for photons reaching the geometry
-#    that haven't been in any of the exclusion regions. Photons interacting inside
+#  - If a forced-detection (FD) geometry provided, a ray-tracing towards and across
+#    the FD geometry combined with an exponential track-length (eTL) scoring technique
+#    is used to score kerma and fluence for photons reaching the scoring volume
+#    if they haven't been in any of the exclusion regions. Photons interacting inside
 #    the scoring regions are included.
 #
-#  - If no geometry provided, a classic TL scoring 'a la FLURZnrc' is used
-#    for kerma and fluence.
+#  - If no geometry provided, a linear track-length (TL) scoring 'a la FLURZnrc' is
+#    used.
 #
 #  Required: E*muen or E*mutr file for scoring either collision or total kerma
 #  --------  for the scoring medium (unique).
@@ -52,8 +52,6 @@
 #  Exclusion of user specified regions
 #
 #  Scoring volume regions must be provided (perhaps use labels?)
-#
-#  Fluence scoring must be specifically requested
 #
 #  Dose calculation in the scoring volume can be done using a dose scoring AO.
 #  This could be useful to check the validity of the kerma-approximation.
@@ -274,137 +272,150 @@ public:
 
         If the CV is such that multiple entries are possible, e.g., photons
         entering or backscattering into hollow geometries, for instance a
-        spherical or cylindrical shell, this method is called recursively
-        to continue ray-tracing.
+        spherical or cylindrical shell, this method continues the
+        ray-tracing to the next re-entry.
 
         Photons touching excluded region are immediately discarded.
 
         TODO: Use region labels to define sensitive regions
 
      */
-    int scoreInCV(int &ir, EGS_Vector &xi, EGS_Float &wt_att, EGS_Vector &u, int &np, EGS_Float &glei) {
+    int scoreInCV() {
+
+        int np = the_stack->np-1;
 
         if( the_stack->E[np] < the_bounds->pcut ) return 0;
 
-        EGS_Vector x = xi;
-        int ireg = ir, newmed = geometry->medium(ireg);
+        EGS_Vector x(the_stack->x[np],the_stack->y[np],the_stack->z[np]);
+        EGS_Vector u(the_stack->u[np],the_stack->v[np],the_stack->w[np]);
+
+        int ireg = the_stack->ir[np]-2, newmed = geometry->medium(ireg);
 
         EGS_Float tstep;
         int inew;
         int imed = -1;
         EGS_Float gmfp, sigma = 0, cohfac = 1, mu_cv = 0;
-        EGS_Float cohfac_int, gle = glei, Lambda_to_CV = 0;
+        EGS_Float gle = the_epcont->gle, wt_att = 1, Lambda_to_CV = 0;
         double Lambda = 0, t_sc_tot = 0;
-        double t_sc[n_scoring_r[ig]];
-        int   ir_sc[n_scoring_r[ig]];
+        double t_sc[2*n_scoring_r[ig]];
+        int   ir_sc[2*n_scoring_r[ig]];
         int n_ir_sc = 0;
-        bool inside_cv  = false, re_enters_cv = false;
+        bool inside_cv  = false, re_enters_cv = false, navigating = true;
         /* Ray-trace from current position to CV and keep track of path to
          * CV and path in the CV
          */
-        while(1) {
-            if (is_excluded[ig][ireg]) break;
-            if( imed != newmed ) {
-                imed = newmed;
-                if( imed >= 0 ) {
-                    gmfp = i_gmfp[imed].interpolateFast(gle);
-                    if( the_xoptions->iraylr ) {
-                        cohfac = i_cohe[imed].interpolateFast(gle);
-                        gmfp *= cohfac;
+        while( navigating ){
+            while(1) {
+                if (is_excluded[ig][ireg]) break;
+                if( imed != newmed ) {
+                    imed = newmed;
+                    if( imed >= 0 ) {
+                        gmfp = i_gmfp[imed].interpolateFast(gle);
+                        if( the_xoptions->iraylr ) {
+                            cohfac = i_cohe[imed].interpolateFast(gle);
+                            gmfp *= cohfac;
+                        }
+                        sigma = 1/gmfp;
+                    } else {
+                        sigma = 0;
+                        cohfac = 1;
                     }
-                    sigma = 1/gmfp;
-                } else {
-                    sigma = 0;
-                    cohfac = 1;
                 }
-            }
-            tstep = TSTEP_MAX;
-            inew = geometry->howfar(ireg,x,u,tstep,&newmed);
-
-            Lambda += tstep*sigma;// keep track of path outside scoring volume
-
-            if ( is_sensitive[ig][ireg] ) { //in cavity, get path through it
-                ir_sc[n_ir_sc]  = ireg;
-                t_sc[n_ir_sc]   = tstep;
-                t_sc_tot       += tstep;
-                n_ir_sc++;
-                if (!inside_cv) {
-                    Lambda_to_CV = Lambda - tstep*sigma;
-                    inside_cv = true;
-                    mu_cv = sigma;
-                }
-                Lambda = Lambda - tstep*sigma;
-            }
-
-            if( inew < 0 ) break; // outside geometry, stop and score
-
-            ireg = inew;
-            x += u*tstep;
-
-            // Leaves CV?
-            if ( inside_cv && !is_sensitive[ig][ireg] )
-            {
-                // Does it re-enter CV?
                 tstep = TSTEP_MAX;
-                if ( fd_geom->isInside(x) ||
-                     fd_geom->howfar(-1,x,u,tstep,&newmed)>= 0 ){
-                   re_enters_cv = true;
+                inew = geometry->howfar(ireg,x,u,tstep,&newmed);
+
+                Lambda += tstep*sigma;// keep track of path outside scoring volume
+
+                if ( is_sensitive[ig][ireg] ) { //in cavity, get path through it
+                    ir_sc[n_ir_sc]  = ireg;
+                    t_sc[n_ir_sc]   = tstep;
+                    t_sc_tot       += tstep;
+                    n_ir_sc++;
+                    if (!inside_cv) {
+                        Lambda_to_CV = Lambda - tstep*sigma;
+                        inside_cv = true;
+                        mu_cv = sigma;
+                    }
+                    Lambda = Lambda - tstep*sigma;
                 }
-                break;
+
+                if( inew < 0 ) break; // outside geometry, stop and score
+
+                ireg = inew;
+                x += u*tstep;
+
+                // Leaves CV?
+                if ( inside_cv && !is_sensitive[ig][ireg] )
+                {
+                    // Does it re-enter CV?
+                    tstep = TSTEP_MAX;
+                    if ( fd_geom->isInside(x) ||
+                         fd_geom->howfar(-1,x,u,tstep,&newmed)>= 0 ){
+                       re_enters_cv = true;
+                    }
+                    break;
+                }
             }
-        }
-        if (inside_cv) {
-            EGS_Float wt = the_stack->wt[np]*wt_att;
-            EGS_Float emuen_rho  = E_Muen_Rho->interpolateFast(gle);
-            EGS_Float exp_Lambda_to_CV = exp(-Lambda_to_CV),
-                      exp_Lambda = exp_Lambda_to_CV,
-                      exp_CV     = 1.0,
-                      exp_Att, edepCV;
-            for (int i = 0; i < n_ir_sc; i++){
+            if (inside_cv) {
+                EGS_Float wt = the_stack->wt[np]*wt_att;
+                EGS_Float emuen_rho  = E_Muen_Rho->interpolateFast(gle);
+                EGS_Float exp_Lambda_to_CV = exp(-Lambda_to_CV),
+                          exp_Lambda = exp_Lambda_to_CV,
+                          exp_CV     = 1.0,
+                          exp_Att, edepCV;
+                for (int i = 0; i < n_ir_sc; i++){
+                    edepCV     = emuen_rho*rho_cv[ig];// Data base contains E_muen/rho values
+                    exp_CV     = exp(-mu_cv*t_sc[i]);
+                    exp_Att    = exp_Lambda*(1-exp_CV)/mu_cv;//Attenuation in scoring region
+                    edepCV    *= exp_Att;
+                    //--------------------------------------------
+                    // score kerma in scoring region
+                    //--------------------------------------------
+                    if (kerma_r[ig])
+                        kerma_r[ig]->score(ir_sc[i],wt*edepCV);
+                    //--------------------------------------------
+                    // score photon fluence
+                    //--------------------------------------------
+                    if( flug ) {
+                        EGS_Float e = the_stack->E[np];
+                        if( flu_s ) {
+                            e = log(e);
+                        }
+                        EGS_Float ae;
+                        int je;
+                        if( e > flu_xmin && e <= flu_xmax) {
+                            ae = flu_a*e + flu_b;
+                            je = min((int)ae,flu_nbin-1);
+                            EGS_ScoringArray *aux = flug[ig];
+                            aux->score(  je,wt*exp_Att);
+                        }
+                    }
+                    // Include as attenuation to next scoring region
+                    exp_Lambda *= exp_CV;
+                }
+                //--------------------------------------------
+                // score total kerma and fluence in CV
+                //--------------------------------------------
                 edepCV     = emuen_rho*rho_cv[ig];// Data base contains E_muen/rho values
-                exp_CV     = exp(-mu_cv*t_sc[i]);
-                exp_Att    = exp_Lambda*(1-exp_CV)/mu_cv;//Attenuation in scoring region
+                exp_CV     = exp(-mu_cv*t_sc_tot);
+                exp_Att    = exp_Lambda_to_CV*(1-exp_CV)/mu_cv;
                 edepCV    *= exp_Att;
-                //--------------------------------------------
-                // score kerma in scoring region
-                //--------------------------------------------
-                if (kerma_r[ig])
-                    kerma_r[ig]->score(ir_sc[i],wt*edepCV);
-                //--------------------------------------------
-                // score photon fluence
-                //--------------------------------------------
+                kerma->score(ig,wt*edepCV);
                 if( flug ) {
-                    EGS_Float e = the_stack->E[np];
-                    if( flu_s ) {
-                        e = log(e);
-                    }
-                    EGS_Float ae;
-                    int je;
-                    if( e > flu_xmin && e <= flu_xmax) {
-                        ae = flu_a*e + flu_b;
-                        je = min((int)ae,flu_nbin-1);
-                        EGS_ScoringArray *aux = flug[ig];
-                        aux->score(  je,wt*exp_Att);
-                    }
+                   flugT->score(ig,wt*exp_Att);
                 }
-                // Include as attenuation to next scoring region
-                exp_Lambda *= exp_CV;
+                // Ray-tracing continues
+                if (re_enters_cv){
+                    wt_att *= exp_Lambda; Lambda_to_CV = 0;
+                    Lambda = 0; t_sc_tot = 0; n_ir_sc = 0;
+                    inside_cv = false;
+                }
+                else{
+                    navigating = false;
+                }
             }
-            //--------------------------------------------
-            // score total kerma and fluence in CV
-            //--------------------------------------------
-            edepCV     = emuen_rho*rho_cv[ig];// Data base contains E_muen/rho values
-            exp_CV     = exp(-mu_cv*t_sc_tot);
-            exp_Att    = exp_Lambda_to_CV*(1-exp_CV)/mu_cv;
-            edepCV    *= exp_Att;
-            kerma->score(ig,wt*edepCV);
-            if( flug ) {
-               flugT->score(ig,wt*exp_Att);
-            }
-            // Ray-tracing continues
-            if (re_enters_cv){
-                wt_att *= exp_Lambda;
-                scoreInCV(ireg,x,wt_att,u,np,gle);
+            else{
+                navigating = false;
             }
         }
         //==============================================================
@@ -750,12 +761,12 @@ public:
         //******************************************************************
         //if ( fd_geom && !the_stack->latch[np] && // TAKES ONLY PRIMARIES!!!!
         if ( fd_geom && the_stack->latch[np] >= 0 && // TAKES ALL PHOTONS !!!
-            (is_sensitive[ig][ireg] || fd_geom->howfar(-1,x,u,tstep,&newmed)>= 0 || fd_geom->isInside(x)) )
+            (is_sensitive[ig][ireg] ||
+             fd_geom->howfar(-1,x,u,tstep,&newmed)>= 0 ||
+             fd_geom->isInside(x)) )
         {
             /* Photon at or aimed at cavity */
-            //int errK = scoreInCV();
-            EGS_Float wt_att = 1.0;
-            int errK = scoreInCV(ireg, x, wt_att, u, np, the_epcont->gle);
+            int errK = scoreInCV();
         }
         dpmfp = -log(1 - rndm->getUniform());
         return;
