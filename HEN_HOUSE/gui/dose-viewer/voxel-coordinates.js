@@ -47,24 +47,48 @@ function updateMarker(coords, svg) {
   // Remove old marker
   svg.select(".marker").remove();
 
+  // If there is existing transformation, calculate proper x and y coordinates
+  let x = zoomTransform
+    ? invertTransform(coords[0], zoomTransform, "x")
+    : coords[0];
+  let y = zoomTransform
+    ? invertTransform(coords[1], zoomTransform, "y")
+    : coords[1];
+
   // Add new marker with modified coordinates so it can smoothly transform with other elements
-  svg
+  let marker = svg
     .append("g")
     .attr("class", "marker")
-    .attr("transform", zoomTransform ? zoomTransform.toString() : "")
+    .attr("transform", zoomTransform ? zoomTransform.toString() : "");
+
+  // Create centre circle
+  marker
     .append("circle")
-    .attr(
-      "cx",
-      zoomTransform ? invertTransform(coords[0], zoomTransform, "x") : coords[0]
-    )
-    .attr(
-      "cy",
-      zoomTransform ? invertTransform(coords[1], zoomTransform, "y") : coords[1]
-    )
-    .attr("r", 2)
-    .style("stroke", "red")
-    .style("stroke-width", "1.5")
-    .style("fill", "none");
+    .attr("cx", x)
+    .attr("cy", y)
+    .attr("id", "crosshairCentre")
+    .attr("class", "crosshair")
+    .attr("r", 2);
+
+  // Create horizontal line
+  marker
+    .append("line")
+    .attr("id", "crosshairX")
+    .attr("class", "crosshair")
+    .attr("x1", x)
+    .attr("y1", 0)
+    .attr("x2", x)
+    .attr("y2", height);
+
+  // Create vertical line
+  marker
+    .append("line")
+    .attr("id", "crosshairY")
+    .attr("class", "crosshair")
+    .attr("x1", 0)
+    .attr("y1", y)
+    .attr("x2", width)
+    .attr("y2", y);
 }
 
 function updateVoxelCoords(coords, axis, sliceNum, svg) {

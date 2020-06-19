@@ -97,11 +97,18 @@
         Select axis and voxel coordinates to view and compare dose profiles.
       </p>
       <form>
-        <input type="radio" id="x" name="profile-axis" value="x" checked />
+        <input
+          type="radio"
+          id="x"
+          name="profile-axis"
+          value="x"
+          checked
+          disabled
+        />
         <label for="x">x</label>
-        <input type="radio" id="y" name="profile-axis" value="y" />
+        <input type="radio" id="y" name="profile-axis" value="y" disabled />
         <label for="y">y</label>
-        <input type="radio" id="z" name="profile-axis" value="z" />
+        <input type="radio" id="z" name="profile-axis" value="z" disabled />
         <label for="z">z</label>
       </form>
       <form>
@@ -132,8 +139,16 @@
             disabled
           />
         </label>
+        <input
+          type="checkbox"
+          id="density-profile-checkbox"
+          name="density-profile-checkbox"
+          value="PlotDensity"
+          disabled
+        />
+        <label for="density-profile-checkbox"> Plot density? </label>
       </form>
-      <button id="dose-profile-button">Make Dose Profile</button>
+      <button id="dose-profile-button" disabled>Make Dose Profile</button>
       <svg id="dose-profile-svg" class="plot"></svg>
     </div>
     <script type="text/javascript" src="./create-volume.js"></script>
@@ -180,6 +195,13 @@
           "transform",
           "translate(" + margin.left + "px" + "," + margin.top + "px" + ")"
         );
+
+      // Add black bakground to plot
+      svgDensity
+        .append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("fill", "black");
 
       var svgAxis = d3
         .select("#axis-svg")

@@ -20,7 +20,6 @@ d3.select("#read-button").on("click", function () {
   });
 
   // File is successfully read
-  // TODO: Allow files to be read in any order
   reader.addEventListener("load", function (event) {
     console.log("Successfully read file");
     let result = event.target.result;
@@ -34,7 +33,9 @@ d3.select("#read-button").on("click", function () {
       let slice = densityVol.getSlice(axis, sliceNum);
       let context = densityVol.getSliceImageContext(slice, svgAxis, svgDensity);
       updateSliderAfterAxisChange(slice);
-      enableCoordInputs(densityVol.data.voxelNumber);
+      if (!doseVol.isEmpty()) {
+        enableCheckboxForDensityPlot();
+      }
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
       doseVol.addData(data);

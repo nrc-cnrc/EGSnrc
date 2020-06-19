@@ -47,3 +47,10 @@ span {
   border: 1px solid black;
   padding: 0px 16px 16px 16px;
 }
+
+.crosshair {
+  fill: none;
+  stroke-width: 1px;
+  stroke: rgba(115, 255, 0, 0.7);
+  vector-effect: non-scaling-stroke;
+}

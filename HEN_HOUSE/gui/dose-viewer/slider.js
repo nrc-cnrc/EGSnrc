@@ -50,7 +50,7 @@ d3.select("#decrement-slider").on("click", function () {
   updateImage(axis, slider.value);
 });
 
-d3.select("#slider-range").on("change", function () {
+d3.select("#slider-range").on("input", function () {
   // Update slider text
   d3.select("#slider-value").node().value = this.value;
   sliceNum = parseInt(this.value);

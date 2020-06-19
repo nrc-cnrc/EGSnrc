@@ -30,8 +30,9 @@ class Volume {
       .range(d3.range(0, data.voxelNumber.z, 1));
   }
 
-  addColourScheme(colourScheme, maxVal) {
-    this.colour = d3.scaleSequentialSqrt(colourScheme).domain([0, maxVal]);
+  addColourScheme(colourScheme, maxVal, invertScheme) {
+    let domain = invertScheme ? [maxVal, 0] : [0, maxVal];
+    this.colour = d3.scaleSequentialSqrt(colourScheme).domain(domain);
   }
 
   // dataName : density or dose
@@ -164,7 +165,7 @@ class Volume {
   }
 
   getDataAtVoxelCoords(voxelCoords, dataName) {
-    let [x, y, z] = voxelCoords; //.map((v) => parseInt(v));
+    let [x, y, z] = voxelCoords;
     let address =
       z * (this.data.voxelNumber.x * this.data.voxelNumber.y) +
       y * this.data.voxelNumber.x +
@@ -181,7 +182,7 @@ class DoseVolume extends Volume {
 
   addData(data) {
     super.addData(data);
-    super.addColourScheme(d3.interpolateTurbo, this.data.maxDose);
+    super.addColourScheme(d3.interpolateViridis, this.data.maxDose);
     // Calculate the contour thresholds
     this.thresholds = d3.range(0, 1.1, 0.1).map((i) => i * this.data.maxDose);
   }
@@ -253,9 +254,18 @@ class DensityVolume extends Volume {
 
   addData(data) {
     super.addData(data);
-    super.addColourScheme(d3.interpolateViridis, this.data.maxDensity);
+    super.addColourScheme(d3.interpolateGreys, this.data.maxDensity, true);
     // Calculate the contour thresholds
-    this.thresholds = Array.from(new Set(data.density)).sort();
+    this.thresholds = this.getThresholds(data);
+  }
+
+  getThresholds(data) {
+    let thresholds = Array.from(new Set(data.density));
+    if (thresholds.length < 10) {
+      return thresholds.sort();
+    }
+    let maxThresh = Math.ceil(data.maxDensity * 10) / 10;
+    return d3.range(0, maxThresh, 0.1);
   }
 
   getSlice(axis, sliceNum) {
@@ -323,11 +333,17 @@ class DensityVolume extends Volume {
   }
 
   initializeLegend() {
+    let maxThresh = Math.ceil(this.data.maxDensity * 10) / 10;
+    let cells =
+      this.thresholds > 10
+        ? d3.range(0, maxThresh, maxThresh / 10)
+        : this.thresholds;
+
     super.initializeLegend(
       densityLegendSvg,
       "densityLegend",
       d3.format(".2f"),
-      this.thresholds,
+      cells,
       "Density"
     );
   }
