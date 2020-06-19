@@ -30,20 +30,20 @@
 #  A simple example input file for the egs_kerma C++ application.
 #
 #  Simulates a 40 keV isotropic photon source in a room with concrete walls
-#  irradiating an air sphere placed in the centre of the room at 1 m from the 
-#  source. Kerma and fluence inside the 5 cm radius air sphere are calculated 
+#  irradiating an air sphere placed in the centre of the room at 1 m from the
+#  source. Kerma and fluence inside the 5 cm radius air sphere are calculated
 #  using a forced-detection (FD) technique (exponential track-length estimator).
 #  This should be about 80% more efficient than a linear track-length estimation.
 #  The latter can be invoked by commenting out the input key "Default FD geometry"
 #
-#  The effect of scatter off the concrete walls on the air sphere is estimated by 
-#  computing the ratio of the total kerma to the kerma from a calculation excluding 
+#  The effect of scatter off the concrete walls on the air sphere is estimated by
+#  computing the ratio of the total kerma to the kerma from a calculation excluding
 #  particles touching exclusion regions (the wall in this case).
 #
 #  NOTE 1: Material data is generated on-the-fly (pegsless). If source energy
 #          changed, make sure to adjust energy cut-offs (ae, ue, ap, up) below.
 #
-#  NOTE 2: Although one geometry would be enough, two geometries are used for 
+#  NOTE 2: Although one geometry would be enough, two geometries are used for
 #          illustration purposes (see comments below for more details).
 #
 ###############################################################################
@@ -221,7 +221,7 @@
     #emuen file = emuen_icru90_1.5MeV.data
     ### Use absolute path when submitting parallel jobs!!!
     ### $EGS_HOME replaced with its value now
-    emuen file = $EGS_HOME/egs_kerma/emuen_icru90_1.5MeV.data
+    emuen file = $EGS_HOME/egs_kerma/emuen_rho_air_1keV-1.5MeV.data
 
     ### geometry for forced-detection (if omitted, score ONLY when reaching scoring region)
     Default FD geometry = sphere

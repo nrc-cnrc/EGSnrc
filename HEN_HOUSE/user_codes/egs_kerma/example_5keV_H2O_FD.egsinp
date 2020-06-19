@@ -1,0 +1,180 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ egs_kerma application sample input file
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:        Ernesto Mainegra-Hing, 2020
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  A simple example input file for the egs_kerma C++ application.
+#
+#  Simulates a 5 keV isotropic photon source inside a 15 cm radius water sphere.
+#  Dose as function of depth in spherical shells of the water phantom is calculated
+#  using a forced-detection (FD) technique (exponential track-length estimator).
+#
+#  This technique allows estimating kerma 20 times more efficiently than linear
+#  track-length (TL) estimation within the inner most sphere. The efficiency gain
+#  increases exponentially at larger depths in the phantom. This can be tested
+#  by turning off FD commenting out the FD geometry input below.
+#
+#  The dramatic efficiency gains at 5 keV are not observed at 25 keV. As a matter
+#  of fact TL estimation is more efficient than FD below 1 cm increasing past
+#  that depth to only a 20% efficiency gain at 2 cm. This is related with the
+#  fact that in a spherical concentric geometry, photons are always directed to
+#  the FD geometry and ray-tracing is done all the time.
+#
+#  NOTE : Material data is generated on-the-fly (pegsless). If source energy
+#         changed, make sure to adjust energy cut-offs (ae, ue, ap, up) below.
+#
+###############################################################################
+
+###############################################################################
+### Geometry
+###############################################################################
+:start geometry definition:
+
+    ### water sphere, 15 cm radius
+     :start geometry:
+        name     = the_phantom
+        library  = egs_spheres
+        midpoint = 0 0 0
+        radii    = 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 15
+        :start media input:
+            media = water
+        :stop media input:
+     :stop geometry:
+
+     :start geometry:
+        name     = fd_g
+        library  = egs_spheres
+        midpoint = 0 0 0
+        radii    = 2.0
+        :start media input:
+            media = water
+        :stop media input:
+     :stop geometry:
+
+    ### simulation geometry
+    simulation geometry = the_phantom
+
+:stop geometry definition:
+
+
+###############################################################################
+### Media
+###############################################################################
+:start media definition:
+
+    ### energy cutoffs
+    ae = 0.512
+    ue = 0.542
+    ap = 0.001
+    up = 0.030
+
+    ### concrete
+    :start water:
+        density correction file = water_icru90
+    :stop water:
+
+:stop media definition:
+
+:start rng definition:
+    type = ranmar
+    initial seeds = 7 12
+    high resolution = yes
+:stop rng definition:
+
+###############################################################################
+### Source
+###############################################################################
+:start source definition:
+
+    ### isotropic
+    :start source:
+        name    = isotropic
+        library = egs_isotropic_source
+        charge  = 0
+
+        ### source shape
+        :start shape:
+            type = point
+            position = 0, 0, 0
+        :stop shape:
+
+        ### source spectrum
+        :start spectrum:
+            type = monoenergetic
+            energy = 0.005  # MeV
+        :stop spectrum:
+
+   :stop source:
+
+   ### simulation source
+   simulation source = isotropic
+
+:stop source definition:
+
+
+###############################################################################
+### Scoring options
+###############################################################################
+:start scoring options:
+
+    ### use the same geometry under two different names, for easier bookeeping
+     :start calculation geometry:
+        geometry name          = the_phantom
+        scoring regions        = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
+        scoring region masses  = 0.0041804126 0.029263 0.079428 0.154675 0.255005 0.380418 0.530912 \
+                                 0.70649 0.90715 1.132892 1.383717 1.659624 1.960614 2.286686 \
+                                 2.63784 3.014078 3.415397 3.841799 4.293284 4.769851
+        FD geometry            = fd_g
+     :stop calculation geometry:
+
+
+    ### E*muen file (could also be E*mutr): absolute or relative file path
+    emuen file = $EGS_HOME/egs_kerma/emuen_rho_water_1keV-1.5MeV.data
+
+:stop scoring options:
+
+
+###############################################################################
+### Transport parameters
+###############################################################################
+:start MC transport parameter:
+
+    ### you can include here any of the EGSnrc transport parameters
+
+    Global ECUT = 2000.                 # Turn-off electron transport
+    Photon cross sections = mcdf-xcom   # XCOM with renormalized PE xsections
+
+:stop MC transport parameter:
+
+
+###############################################################################
+### Run control
+###############################################################################
+:start run control:
+    ncase = 4e+6
+:stop run control:
+
