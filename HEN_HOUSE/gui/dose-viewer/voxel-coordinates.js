@@ -108,12 +108,19 @@ function updateVoxelCoords(coords, axis, sliceNum) {
 function updateVoxelInfo(voxelCoords) {
   if (!densityVol.isEmpty()) {
     let density = densityVol.getDataAtVoxelCoords(voxelCoords);
-    d3.select("#density-value").node().value = d3.format(".3f")(density);
+    d3.select("#density-value").node().value =
+      d3.format(".3f")(density) + " g/cm^3";
   }
 
   if (!doseVol.isEmpty()) {
     let dose = doseVol.getDataAtVoxelCoords(voxelCoords) || 0;
-    d3.select("#dose-value").node().value = d3.format(".3e")(dose);
+    let error = doseVol.getErrorAtVoxelCoords(voxelCoords) || 0;
+    d3.select("#dose-value").node().value =
+      "(" +
+      d3.format(".3e")(dose) +
+      " +/- " +
+      d3.format(".3e")(error * dose) +
+      ") Gy";
   }
 }
 

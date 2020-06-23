@@ -245,6 +245,10 @@ class DoseVolume extends Volume {
   getDataAtVoxelCoords(voxelCoords) {
     return super.getDataAtVoxelCoords(voxelCoords, "dose");
   }
+
+  getErrorAtVoxelCoords(voxelCoords) {
+    return super.getDataAtVoxelCoords(voxelCoords, "error");
+  }
 }
 
 class DensityVolume extends Volume {
