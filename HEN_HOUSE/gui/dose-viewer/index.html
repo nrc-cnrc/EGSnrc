@@ -86,10 +86,14 @@
         <svg id="plot-density" class="plot"></svg>
         <svg id="plot-dose" class="plot"></svg>
         <svg id="plot-marker" class="plot"></svg>
-        <div id="legendholder">
+        <span id="legendholder">
           <svg id="dose-legend-svg" class="legend"></svg>
           <svg id="density-legend-svg" class="legend"></svg>
-        </div>
+        </span>
+        <span id="dose-profile-holder">
+          <svg id="dose-profile-svg-x" class="dose-profile-plot"></svg>
+          <svg id="dose-profile-svg-y" class="dose-profile-plot"></svg>
+        </span>
       </div>
     </div>
     <div id="dose-profile-viewer">
@@ -156,6 +160,7 @@
       // TODO: Make a dose-view options class?
       // TODO: Move all javascript outside of index.html
       // TODO: Make plotting object? Define all variables there
+      // TODO: Make size variables objects
 
       // Define all size variables
       var fullWidth = 500;
@@ -174,7 +179,19 @@
       var legendHeight =
         legendFullHeight - legendMargin.top - legendMargin.bottom;
 
-      //var sliceNum = d3.select("#slider-value").node().value;
+      // Define profile dose size variables
+      let sideDoseProfileDimensions = {
+        fullWidth: 400,
+        fullHeight: fullHeight / 2,
+        margin: { top: 30, right: 30, bottom: 50, left: 70 },
+        get width() {
+          return this.fullWidth - this.margin.left - this.margin.right;
+        },
+        get height() {
+          return this.fullHeight - this.margin.top - this.margin.bottom;
+        },
+      };
+
       var axis = d3.selectAll("input[name='axis']:checked").node().value;
       var plotCoords;
 
@@ -250,6 +267,38 @@
             "px" +
             "," +
             legendMargin.top +
+            "px" +
+            ")"
+        );
+
+      var doseProfileXSvg = d3
+        .select("#dose-profile-svg-x")
+        .attr("width", sideDoseProfileDimensions.fullWidth)
+        .attr("height", sideDoseProfileDimensions.fullHeight)
+        .append("g")
+        .style(
+          "transform",
+          "translate(" +
+            sideDoseProfileDimensions.margin.left +
+            "px" +
+            "," +
+            sideDoseProfileDimensions.margin.top +
+            "px" +
+            ")"
+        );
+
+      var doseProfileYSvg = d3
+        .select("#dose-profile-svg-y")
+        .attr("width", sideDoseProfileDimensions.fullWidth)
+        .attr("height", sideDoseProfileDimensions.fullHeight)
+        .append("g")
+        .style(
+          "transform",
+          "translate(" +
+            sideDoseProfileDimensions.margin.left +
+            "px" +
+            "," +
+            sideDoseProfileDimensions.margin.top +
             "px" +
             ")"
         );

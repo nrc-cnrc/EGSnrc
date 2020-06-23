@@ -1,3 +1,6 @@
+// TODO: Only update dose profile on slider release to speed things up
+// TODO: Use curr slice for dose profile data for side plots
+
 const doseProfileButtons = d3
   .selectAll("input[name='profile-axis']")
   .on("change", function () {
@@ -122,7 +125,7 @@ function plotDoseProfile(
       "translate(" +
         profileDims.width / 2 +
         " ," +
-        (profileDims.height + profileDims.margin.top + 20) +
+        (profileDims.height + profileDims.margin.top + 5) +
         ")"
     )
     .style("text-anchor", "middle")

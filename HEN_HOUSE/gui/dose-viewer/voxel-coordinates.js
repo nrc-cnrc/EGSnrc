@@ -91,31 +91,72 @@ function updateMarker(coords, svg) {
     .attr("y2", y);
 }
 
-function updateVoxelCoords(coords, axis, sliceNum, svg) {
+function updateVoxelCoords(coords, axis, sliceNum) {
   if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
     let vol = !densityVol.isEmpty() ? densityVol : doseVol;
     worldCoords = coordsToWorld(coords, axis, sliceNum, vol);
     voxelCoords = worldCoordsToVoxel(worldCoords, vol);
     updateWorldLabels(worldCoords);
     updateVoxelLabels(voxelCoords);
+    updateVoxelInfo(voxelCoords);
 
-    if (!densityVol.isEmpty()) {
-      let density = densityVol.getDataAtVoxelCoords(voxelCoords);
-      d3.select("#density-value").node().value = d3.format(".3f")(density);
-    }
-
-    if (!doseVol.isEmpty()) {
-      let dose = doseVol.getDataAtVoxelCoords(voxelCoords) || 0;
-      d3.select("#dose-value").node().value = d3.format(".3e")(dose);
-    }
+    updateMarker(coords, svgMarker);
+    updateDoseProfiles(voxelCoords);
   }
+}
+
+function updateVoxelInfo(voxelCoords) {
+  if (!densityVol.isEmpty()) {
+    let density = densityVol.getDataAtVoxelCoords(voxelCoords);
+    d3.select("#density-value").node().value = d3.format(".3f")(density);
+  }
+
+  if (!doseVol.isEmpty()) {
+    let dose = doseVol.getDataAtVoxelCoords(voxelCoords) || 0;
+    d3.select("#dose-value").node().value = d3.format(".3e")(dose);
+  }
+}
+
+function updateDoseProfiles(voxelCoords) {
+  let axis = d3.selectAll("input[name='axis']:checked").node().value;
+
+  let [coord1X, coord2X, coord1Y, coord2Y] =
+    axis === "xy"
+      ? [voxelCoords[1], voxelCoords[2], voxelCoords[0], voxelCoords[2]]
+      : axis === "yz"
+      ? [voxelCoords[0], voxelCoords[2], voxelCoords[0], voxelCoords[1]]
+      : [voxelCoords[1], voxelCoords[2], voxelCoords[0], voxelCoords[1]];
+
+  let doseProfileXData = getDoseProfileData(axis[0], coord1X, coord2X);
+  let doseProfileYData = getDoseProfileData(axis[1], coord1Y, coord2Y);
+
+  // plot the dose profile along the x axis
+  plotDoseProfile(
+    doseProfileXSvg,
+    sideDoseProfileDimensions,
+    doseProfileXData,
+    axis[0],
+    coord1X,
+    coord2X
+  );
+
+  // plot the dose profile along the y axis
+  plotDoseProfile(
+    doseProfileYSvg,
+    sideDoseProfileDimensions,
+    doseProfileYData,
+    axis[1],
+    coord1Y,
+    coord2Y
+  );
 }
 
 // TODO: Update voxel info upon dose or density upload for existing marker
 svgMarker.on("click", function () {
   plotCoords = d3.mouse(this);
+  let axis = d3.selectAll("input[name='axis']:checked").node().value;
   let sliceNum = d3.select("#slider-value").node().value;
-  updateVoxelCoords(plotCoords, axis, sliceNum, svgDose);
-  updateMarker(plotCoords, svgMarker);
+
+  updateVoxelCoords(plotCoords, axis, sliceNum);
   return true;
 });

@@ -54,3 +54,8 @@ span {
   stroke: rgba(115, 255, 0, 0.7);
   vector-effect: non-scaling-stroke;
 }
+
+#chartholder {
+  overflow: hidden;
+  display: flex;
+}
