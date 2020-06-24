@@ -134,28 +134,22 @@ function updateDoseProfiles(voxelCoords) {
       ? [voxelCoords[0], voxelCoords[2], voxelCoords[0], voxelCoords[1]]
       : [voxelCoords[1], voxelCoords[2], voxelCoords[0], voxelCoords[1]];
 
-  let doseProfileXData = getDoseProfileData(axis[0], coord1X, coord2X);
-  let doseProfileYData = getDoseProfileData(axis[1], coord1Y, coord2Y);
-
-  // plot the dose profile along the x axis
-  plotDoseProfile(
-    doseProfileXSvg,
-    sideDoseProfileDimensions,
-    doseProfileXData,
+  let doseProfileXData = doseProfileX.getDoseProfileData(
     axis[0],
     coord1X,
     coord2X
   );
-
-  // plot the dose profile along the y axis
-  plotDoseProfile(
-    doseProfileYSvg,
-    sideDoseProfileDimensions,
-    doseProfileYData,
+  let doseProfileYData = doseProfileY.getDoseProfileData(
     axis[1],
     coord1Y,
     coord2Y
   );
+
+  // Plot the dose profile along the x axis
+  doseProfileX.plotDoseProfile(doseProfileXData, axis[0], coord1X, coord2X);
+
+  // Plot the dose profile along the y axis
+  doseProfileY.plotDoseProfile(doseProfileYData, axis[1], coord1Y, coord2Y);
 }
 
 // TODO: Update voxel info upon dose or density upload for existing marker
