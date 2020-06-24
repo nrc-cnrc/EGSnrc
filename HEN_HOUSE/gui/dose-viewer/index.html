@@ -157,6 +157,7 @@
       <svg id="dose-profile-svg" class="plot"></svg>
     </div>
     <script type="text/javascript" src="./create-volume.js"></script>
+    <script type="text/javascript" src="./dose-profile.js"></script>
     <script>
       // TODO: Make a dose-view options class?
       // TODO: Move all javascript outside of index.html
@@ -307,49 +308,14 @@
       //TODO: Make a list of volumes rather than have one global
       const densityVol = new DensityVolume(height, width);
       const doseVol = new DoseVolume(height, width);
-      var zoomTransform;
+      const doseProfileX = new DoseProfile(sideDoseProfileDimensions, doseProfileXSvg);
+      const doseProfileY = new DoseProfile(sideDoseProfileDimensions, doseProfileYSvg);
 
-      //TODO: Disable until data is uploaded
-      // Zooming functionality
-      svgMarker.call(
-        d3
-          .zoom()
-          .extent([
-            [0, 0],
-            [width, height],
-          ])
-          .scaleExtent([1, 6])
-          .on("zoom", () => zoomedAll(d3.event.transform))
-      );
-
-      function zoomedAll(transform) {
-        if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
-          zoomTransform = transform;
-          let gDensity = svgDensity.select("g.density-contour");
-          svgDensity
-            .select("g.density-contour")
-            .attr("transform", transform.toString());
-
-          svgDose
-            .select("g.dose-contour")
-            .attr("transform", transform.toString());
-
-          svgMarker.select(".marker").attr("transform", transform.toString());
-
-          // create new scale ojects based on event
-          let vol = !densityVol.isEmpty() ? densityVol : doseVol;
-          var new_xScale = transform.rescaleX(vol.prevSlice.xScale);
-          var new_yScale = transform.rescaleY(vol.prevSlice.yScale);
-
-          // update axes
-          svgAxis.select(".x-axis").call(d3.axisBottom().scale(new_xScale));
-          svgAxis.select(".y-axis").call(d3.axisLeft().scale(new_yScale));
-        }
-      }
     </script>
+    <script type="text/javascript" src="./zoom.js"></script>
     <script type="text/javascript" src="./slider.js"></script>
     <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./read-data.js"></script>
-    <script type="text/javascript" src="./dose-profile.js"></script>
+    <script type="text/javascript" src="./dose-profile-setup.js"></script>
   </body>
 </html>
