@@ -76,7 +76,7 @@
           >Density:
           <output type="text" id="density-value" value=""> </output>
         </label>
-      </br>
+        <br />
         <label for="dose-value"
           >Dose:
           <output type="text" id="dose-value" value=""> </output>
@@ -273,6 +273,7 @@
             ")"
         );
 
+      // Initializing svgs for dose profile plots
       var doseProfileXSvg = d3
         .select("#dose-profile-svg-x")
         .attr("width", sideDoseProfileDimensions.fullWidth)
@@ -305,17 +306,51 @@
             ")"
         );
 
+      // Create box to capture mouse events
+      var doseProfileBoxX = doseProfileXSvg
+        .append("rect")
+        .attr("width", sideDoseProfileDimensions.width)
+        .attr("height", sideDoseProfileDimensions.height)
+        .attr("fill", "white");
+      var doseProfileBoxY = doseProfileYSvg
+        .append("rect")
+        .attr("width", sideDoseProfileDimensions.width)
+        .attr("height", sideDoseProfileDimensions.height)
+        .attr("fill", "white");
+
+      // Create clip path to bound output after zooming
+      doseProfileXSvg
+        .append("defs")
+        .append("clipPath")
+        .attr("id", "clip-x")
+        .append("rect")
+        .attr("width", sideDoseProfileDimensions.width)
+        .attr("height", sideDoseProfileDimensions.height);
+
+      doseProfileYSvg
+        .append("defs")
+        .append("clipPath")
+        .attr("id", "clip-y")
+        .append("rect")
+        .attr("width", sideDoseProfileDimensions.width)
+        .attr("height", sideDoseProfileDimensions.height);
+
       //TODO: Make a list of volumes rather than have one global
       const densityVol = new DensityVolume(height, width);
       const doseVol = new DoseVolume(height, width);
-      const doseProfileX = new DoseProfile(sideDoseProfileDimensions, doseProfileXSvg);
-      const doseProfileY = new DoseProfile(sideDoseProfileDimensions, doseProfileYSvg);
-
+      const doseProfileX = new DoseProfile(
+        sideDoseProfileDimensions,
+        doseProfileXSvg
+      );
+      const doseProfileY = new DoseProfile(
+        sideDoseProfileDimensions,
+        doseProfileYSvg
+      );
     </script>
-    <script type="text/javascript" src="./zoom.js"></script>
     <script type="text/javascript" src="./slider.js"></script>
     <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./read-data.js"></script>
     <script type="text/javascript" src="./dose-profile-setup.js"></script>
+    <script type="text/javascript" src="./zoom.js"></script>
   </body>
 </html>

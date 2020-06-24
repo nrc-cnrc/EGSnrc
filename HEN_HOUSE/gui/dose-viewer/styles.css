@@ -39,7 +39,8 @@ span {
 }
 
 #plot-marker,
-#legend-svg {
+#legend-svg,
+.plotting-area {
   z-index: 4;
 }
 

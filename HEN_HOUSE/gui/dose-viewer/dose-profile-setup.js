@@ -108,20 +108,15 @@ d3.select("#dose-profile-button").on("click", function () {
     .select("input[name='density-profile-checkbox']")
     .node().checked;
 
+  doseProfile.plotDensity = densityChecked;
+
   let doseProfileData = doseProfile.getDoseProfileData(
     profileAxis,
     coord1,
-    coord2,
-    densityChecked
+    coord2
   );
 
   // TODO: Add a check to see if dose and density have same coordinate system
 
-  doseProfile.plotDoseProfile(
-    doseProfileData,
-    profileAxis,
-    coord1,
-    coord2,
-    densityChecked
-  );
+  doseProfile.plotDoseProfile(doseProfileData, profileAxis, coord1, coord2);
 });

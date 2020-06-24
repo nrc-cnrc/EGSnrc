@@ -101,7 +101,9 @@ function updateVoxelCoords(coords, axis, sliceNum) {
     updateVoxelInfo(voxelCoords);
 
     updateMarker(coords, svgMarker);
-    updateDoseProfiles(voxelCoords);
+    if (!doseVol.isEmpty()) {
+      updateDoseProfiles(voxelCoords);
+    }
   }
 }
 
