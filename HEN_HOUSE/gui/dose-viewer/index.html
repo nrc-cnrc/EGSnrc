@@ -82,15 +82,18 @@
           <output type="text" id="dose-value" value=""> </output>
         </label>
       </span>
+      <button id="saveVis">Export visualization to PNG</button>
       <div id="chartholder">
-        <svg id="axis-svg" class="plot"></svg>
-        <svg id="plot-density" class="plot"></svg>
-        <svg id="plot-dose" class="plot"></svg>
-        <svg id="plot-marker" class="plot"></svg>
-        <span id="legendholder">
-          <svg id="dose-legend-svg" class="legend"></svg>
-          <svg id="density-legend-svg" class="legend"></svg>
-        </span>
+        <div id="imageholder">
+          <svg id="axis-svg" class="plot"></svg>
+          <svg id="plot-density" class="plot"></svg>
+          <svg id="plot-dose" class="plot"></svg>
+          <svg id="plot-marker" class="plot"></svg>
+          <span id="legendholder">
+            <svg id="dose-legend-svg" class="legend"></svg>
+            <svg id="density-legend-svg" class="legend"></svg>
+          </span>
+        </div>
         <span id="dose-profile-holder">
           <svg id="dose-profile-svg-x" class="dose-profile-plot"></svg>
           <svg id="dose-profile-svg-y" class="dose-profile-plot"></svg>
@@ -175,7 +178,7 @@
       // From https://bl.ocks.org/starcalibre/6cccfa843ed254aa0a0d
       var legendFullHeight = fullHeight;
       var legendFullWidth = 100;
-      var legendMargin = { top: 30, bottom: 20, left: 10, right: 5 };
+      var legendMargin = { top: 25, bottom: 10, left: 10, right: 5 };
       var legendWidth =
         legendFullWidth - legendMargin.left - legendMargin.right;
       var legendHeight =
@@ -346,7 +349,16 @@
         sideDoseProfileDimensions,
         doseProfileYSvg
       );
+
+      function getSliceNum() {
+        return d3.select("#slider-value").node().value;
+      }
+
+      function getAxis() {
+        return d3.selectAll("input[name='axis']:checked").node().value;
+      }
     </script>
+    <script type="text/javascript" src="./export.mjs"></script>
     <script type="text/javascript" src="./slider.js"></script>
     <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./read-data.js"></script>
