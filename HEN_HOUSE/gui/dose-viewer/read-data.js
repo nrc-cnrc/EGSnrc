@@ -19,13 +19,14 @@ d3.select("#read-button").on("click", function () {
     return true;
   });
 
+  // TODO: Add check for dose and density distributions like https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1407-L1412
   // File is successfully read
   reader.addEventListener("load", function (event) {
     console.log("Successfully read file");
     let result = event.target.result;
     let resultSplit = result.split("\n");
     let data;
-    let sliceNum = d3.select("#slider-value").node().value;
+    let sliceNum = getSliceNum();
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
       densityVol.addData(data);
@@ -119,6 +120,7 @@ var processPhantomData = function (data) {
 
   let maxDensity = getMax(densityGrid);
 
+  // TODO: .flat() does not work in Safari, find an alternative
   density = densityGrid.flat().slice(0, numVoxX * numVoxY * numVoxZ);
 
   return {

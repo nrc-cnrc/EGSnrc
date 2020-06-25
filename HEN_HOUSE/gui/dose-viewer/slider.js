@@ -1,6 +1,6 @@
 function updateSliderAfterAxisChange(slice) {
   let sliderRange = d3.select("#slider-range").node();
-  let sliceNum = d3.select("#slider-value").node().value;
+  let sliceNum = getSliceNum();
 
   // Enable slider if disabled
   if (sliderRange.disabled) sliderRange.disabled = false;
@@ -60,9 +60,10 @@ d3.select("#slider-range").on("input", function () {
   return true;
 });
 
+// TODO: Fix marker position on axis change!!!
 d3.selectAll("input[name='axis']").on("change", function () {
   axis = this.value;
-  let sliceNum = d3.select("#slider-value").node().value;
+  let sliceNum = getSliceNum();
   // Update image if densityVol data and/or doseVol data exists
   let slice;
   let context;
@@ -80,7 +81,7 @@ d3.selectAll("input[name='axis']").on("change", function () {
   }
 
   //Update voxel coordinates
-  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum);
+  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, true);
 
   return true;
 });

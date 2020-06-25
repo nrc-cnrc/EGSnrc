@@ -6,7 +6,6 @@ class Volume {
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
 
   constructor(height, width) {
-    //TODO: Figure out a better system for height and width
     this.height = height;
     this.width = width;
     this.data = {};
@@ -198,7 +197,6 @@ class DoseVolume extends Volume {
     // Clear dose plot
     svg.selectAll("g").remove();
 
-    //TODO: Try out different thresholds
     // Draw contours
     var contours = d3
       .contours()
@@ -285,8 +283,18 @@ class DensityVolume extends Volume {
     let axisChange = axis !== this.prevAxis ? true : false;
     if (axisChange) {
       svgAxis.selectAll("g").remove();
-      var xAxis = d3.axisBottom().scale(slice.xScale);
-      var yAxis = d3.axisLeft().scale(slice.yScale);
+
+      // If there is existing transformation, apply it
+      let xScale = zoomTransform
+        ? zoomTransform.rescaleX(slice.xScale)
+        : slice.xScale;
+      let yScale = zoomTransform
+        ? zoomTransform.rescaleY(slice.yScale)
+        : slice.yScale;
+
+      var xAxis = d3.axisBottom().scale(xScale);
+      var yAxis = d3.axisLeft().scale(yScale);
+
       svgAxis
         .append("g")
         .attr("class", "x-axis")
@@ -339,7 +347,7 @@ class DensityVolume extends Volume {
   initializeLegend() {
     let maxThresh = Math.ceil(this.data.maxDensity * 10) / 10;
     let cells =
-      this.thresholds > 10
+      this.thresholds.length > 10
         ? d3.range(0, maxThresh, maxThresh / 10)
         : this.thresholds;
 

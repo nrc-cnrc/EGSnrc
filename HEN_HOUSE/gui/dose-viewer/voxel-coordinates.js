@@ -1,11 +1,21 @@
-function coordsToWorld(coords, axis, sliceNum, volume) {
-  // Invert transformation if applicable then invert scale to get world coordinate
-  let i = volume.prevSlice.xScale.invert(
-    zoomTransform ? invertTransform(coords[0], zoomTransform, "x") : coords[0]
-  );
-  let j = volume.prevSlice.yScale.invert(
-    zoomTransform ? invertTransform(coords[1], zoomTransform, "y") : coords[1]
-  );
+function coordsToWorld(coords, axis, sliceNum, volume, updateXY) {
+  // TODO: Have a more permanent solution to the click/transform problem, make a class?
+  let i, j;
+  if (updateXY) {
+    // Invert transformation if applicable then invert scale to get world coordinate
+    i = volume.prevSlice.xScale.invert(
+      zoomTransform ? invertTransform(coords[0], zoomTransform, "x") : coords[0]
+    );
+    j = volume.prevSlice.yScale.invert(
+      zoomTransform ? invertTransform(coords[1], zoomTransform, "y") : coords[1]
+    );
+  } else {
+    // Use previous axes coordinates
+    [i, j] = [
+      d3.select("#world-" + axis[0] + "-value").node().value,
+      d3.select("#world-" + axis[1] + "-value").node().value,
+    ];
+  }
 
   // Add 0.5 to sliceNum in order to map values to center of voxel bondaries
   // TODO: Perhaps fix scale to get rid of the 0.5 hack
@@ -91,16 +101,19 @@ function updateMarker(coords, svg) {
     .attr("y2", y);
 }
 
-function updateVoxelCoords(coords, axis, sliceNum) {
+function updateVoxelCoords(coords, axis, sliceNum, updateXY = false) {
   if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
     let vol = !densityVol.isEmpty() ? densityVol : doseVol;
-    worldCoords = coordsToWorld(coords, axis, sliceNum, vol);
+    worldCoords = coordsToWorld(coords, axis, sliceNum, vol, updateXY);
     voxelCoords = worldCoordsToVoxel(worldCoords, vol);
     updateWorldLabels(worldCoords);
     updateVoxelLabels(voxelCoords);
     updateVoxelInfo(voxelCoords);
 
-    updateMarker(coords, svgMarker);
+    if (updateXY) {
+      updateMarker(coords, svgMarker);
+    }
+
     if (!doseVol.isEmpty()) {
       updateDoseProfiles(voxelCoords);
     }
@@ -127,7 +140,7 @@ function updateVoxelInfo(voxelCoords) {
 }
 
 function updateDoseProfiles(voxelCoords) {
-  let axis = d3.selectAll("input[name='axis']:checked").node().value;
+  let axis = getAxis();
 
   let [coord1X, coord2X, coord1Y, coord2Y] =
     axis === "xy"
@@ -157,9 +170,9 @@ function updateDoseProfiles(voxelCoords) {
 // TODO: Update voxel info upon dose or density upload for existing marker
 svgMarker.on("click", function () {
   plotCoords = d3.mouse(this);
-  let axis = d3.selectAll("input[name='axis']:checked").node().value;
-  let sliceNum = d3.select("#slider-value").node().value;
+  let axis = getAxis();
+  let sliceNum = getSliceNum();
 
-  updateVoxelCoords(plotCoords, axis, sliceNum);
+  updateVoxelCoords(plotCoords, axis, sliceNum, true);
   return true;
 });
