@@ -140,31 +140,33 @@ function updateVoxelInfo(voxelCoords) {
 }
 
 function updateDoseProfiles(voxelCoords) {
-  let axis = getAxis();
+  if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
+    let axis = getAxis();
 
-  let [coord1X, coord2X, coord1Y, coord2Y] =
-    axis === "xy"
-      ? [voxelCoords[1], voxelCoords[2], voxelCoords[0], voxelCoords[2]]
-      : axis === "yz"
-      ? [voxelCoords[0], voxelCoords[2], voxelCoords[0], voxelCoords[1]]
-      : [voxelCoords[1], voxelCoords[2], voxelCoords[0], voxelCoords[1]];
+    let [coord1X, coord2X, coord1Y, coord2Y] =
+      axis === "xy"
+        ? [voxelCoords[1], voxelCoords[2], voxelCoords[0], voxelCoords[2]]
+        : axis === "yz"
+        ? [voxelCoords[0], voxelCoords[2], voxelCoords[0], voxelCoords[1]]
+        : [voxelCoords[1], voxelCoords[2], voxelCoords[0], voxelCoords[1]];
 
-  let doseProfileXData = doseProfileX.getDoseProfileData(
-    axis[0],
-    coord1X,
-    coord2X
-  );
-  let doseProfileYData = doseProfileY.getDoseProfileData(
-    axis[1],
-    coord1Y,
-    coord2Y
-  );
+    let doseProfileXData = doseProfileX.getDoseProfileData(
+      axis[0],
+      coord1X,
+      coord2X
+    );
+    let doseProfileYData = doseProfileY.getDoseProfileData(
+      axis[1],
+      coord1Y,
+      coord2Y
+    );
 
-  // Plot the dose profile along the x axis
-  doseProfileX.plotDoseProfile(doseProfileXData, axis[0], coord1X, coord2X);
+    // Plot the dose profile along the x axis
+    doseProfileX.plotDoseProfile(doseProfileXData, axis[0], coord1X, coord2X);
 
-  // Plot the dose profile along the y axis
-  doseProfileY.plotDoseProfile(doseProfileYData, axis[1], coord1Y, coord2Y);
+    // Plot the dose profile along the y axis
+    doseProfileY.plotDoseProfile(doseProfileYData, axis[1], coord1Y, coord2Y);
+  }
 }
 
 // TODO: Update voxel info upon dose or density upload for existing marker

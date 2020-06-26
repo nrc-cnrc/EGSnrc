@@ -41,6 +41,21 @@ const doseProfileButtons = d3
     return true;
   });
 
+var enableCheckboxForDensityPlot = () => {
+  let densityCheckbox = d3
+    .select("input[name='density-profile-checkbox']")
+    .node();
+  if (densityCheckbox.disabled) densityCheckbox.disabled = false;
+};
+
+var enableCheckboxForDoseProfilePlot = () => {
+  let showDoseProfileCheckbox = d3
+    .select("input[name='show-dose-profile-checkbox']")
+    .node();
+  if (showDoseProfileCheckbox.disabled)
+    showDoseProfileCheckbox.disabled = false;
+};
+
 function updateCoordInputsLabels(profileAxis, voxelNumber) {
   // Update max value and label of coordinate inputs
   if (profileAxis === "x") {
@@ -91,11 +106,6 @@ function enableCoordInputs(voxelNumber) {
   if (!densityVol.isEmpty()) {
     enableCheckboxForDensityPlot();
   }
-}
-
-function enableCheckboxForDensityPlot() {
-  densityCheckbox = d3.select("input[name='density-profile-checkbox']").node();
-  if (densityCheckbox.disabled) densityCheckbox.disabled = false;
 }
 
 d3.select("#dose-profile-button").on("click", function () {

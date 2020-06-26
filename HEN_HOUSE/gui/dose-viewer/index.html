@@ -83,6 +83,16 @@
         </label>
       </span>
       <button id="saveVis">Export visualization to PNG</button>
+      <input
+        type="checkbox"
+        id="show-dose-profile-checkbox"
+        name="show-dose-profile-checkbox"
+        value="ShowDoseProfile"
+        disabled
+      />
+      <label for="show-dose-profile-checkbox">
+        Plot dose profile at crosshairs for each slice?
+      </label>
       <div id="chartholder">
         <div id="imageholder">
           <svg id="axis-svg" class="plot"></svg>

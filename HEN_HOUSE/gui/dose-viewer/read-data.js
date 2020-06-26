@@ -46,6 +46,7 @@ d3.select("#read-button").on("click", function () {
       let context = doseVol.getSliceImageContext(slice, svgDose);
       updateSliderAfterAxisChange(slice);
       enableCoordInputs(doseVol.data.voxelNumber);
+      enableCheckboxForDoseProfilePlot();
     } else {
       console.log("Unknown file extension");
       return true;
