@@ -178,26 +178,36 @@
       // TODO: Make size variables objects
 
       // Define all size variables
-      var fullWidth = 500;
-      var fullHeight = 500;
-      var margin = { top: 10, right: 20, bottom: 30, left: 40 };
-      var width = fullWidth - margin.left - margin.right;
-      var height = fullHeight - margin.top - margin.bottom;
+      let mainViewerDimensions = {
+        fullWidth: 520,
+        fullHeight: 500,
+        margin: { top: 10, right: 20, bottom: 30, left: 40 },
+        get width() {
+          return this.fullWidth - this.margin.left - this.margin.right;
+        },
+        get height() {
+          return this.fullHeight - this.margin.top - this.margin.bottom;
+        },
+      };
 
       // Define legend size variables
       // From https://bl.ocks.org/starcalibre/6cccfa843ed254aa0a0d
-      var legendFullHeight = fullHeight;
-      var legendFullWidth = 100;
-      var legendMargin = { top: 25, bottom: 10, left: 10, right: 5 };
-      var legendWidth =
-        legendFullWidth - legendMargin.left - legendMargin.right;
-      var legendHeight =
-        legendFullHeight - legendMargin.top - legendMargin.bottom;
+      let legendDimensions = {
+        fullWidth: 100,
+        fullHeight: mainViewerDimensions.fullHeight,
+        margin: { top: 25, bottom: 10, left: 10, right: 5 },
+        get width() {
+          return this.fullWidth - this.margin.left - this.margin.right;
+        },
+        get height() {
+          return this.fullHeight - this.margin.top - this.margin.bottom;
+        },
+      };
 
       // Define profile dose size variables
       let sideDoseProfileDimensions = {
         fullWidth: 400,
-        fullHeight: fullHeight / 2,
+        fullHeight: mainViewerDimensions.fullHeight / 2,
         margin: { top: 30, right: 30, bottom: 50, left: 70 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
@@ -212,76 +222,100 @@
 
       var svgDose = d3
         .select("#plot-dose")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("width", mainViewerDimensions.width)
+        .attr("height", mainViewerDimensions.height)
         .style(
           "transform",
-          "translate(" + margin.left + "px" + "," + margin.top + "px" + ")"
+          "translate(" +
+            mainViewerDimensions.margin.left +
+            "px" +
+            "," +
+            mainViewerDimensions.margin.top +
+            "px" +
+            ")"
+        );
+
+      var svgMarker = d3
+        .select("#plot-marker")
+        .attr("width", mainViewerDimensions.width)
+        .attr("height", mainViewerDimensions.height)
+        .style(
+          "transform",
+          "translate(" +
+            mainViewerDimensions.margin.left +
+            "px" +
+            "," +
+            mainViewerDimensions.margin.top +
+            "px" +
+            ")"
         );
 
       var svgDensity = d3
         .select("#plot-density")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("width", mainViewerDimensions.width)
+        .attr("height", mainViewerDimensions.height)
         .style(
           "transform",
-          "translate(" + margin.left + "px" + "," + margin.top + "px" + ")"
+          "translate(" +
+            mainViewerDimensions.margin.left +
+            "px" +
+            "," +
+            mainViewerDimensions.margin.top +
+            "px" +
+            ")"
         );
 
       // Add black bakground to plot
       svgDensity
         .append("rect")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("width", mainViewerDimensions.width)
+        .attr("height", mainViewerDimensions.height)
         .attr("fill", "black");
 
       var svgAxis = d3
         .select("#axis-svg")
-        .attr("width", fullWidth)
-        .attr("height", fullHeight)
+        .attr("width", mainViewerDimensions.fullWidth)
+        .attr("height", mainViewerDimensions.fullHeight)
         .append("g")
         .style(
           "transform",
-          "translate(" + margin.left + "px" + "," + margin.top + "px" + ")"
-        );
-
-      var svgMarker = d3
-        .select("#plot-marker")
-        .attr("width", width)
-        .attr("height", height)
-        .style(
-          "transform",
-          "translate(" + margin.left + "px" + "," + margin.top + "px" + ")"
+          "translate(" +
+            mainViewerDimensions.margin.left +
+            "px" +
+            "," +
+            mainViewerDimensions.margin.top +
+            "px" +
+            ")"
         );
 
       var doseLegendSvg = d3
         .select("#dose-legend-svg")
-        .attr("width", legendFullWidth)
-        .attr("height", legendFullHeight / 2)
-        .style("padding-left", fullWidth)
+        .attr("width", legendDimensions.fullWidth)
+        .attr("height", legendDimensions.fullHeight / 2)
+        .style("padding-left", mainViewerDimensions.fullWidth)
         .style(
           "transform",
           "translate(" +
-            legendMargin.left +
+            legendDimensions.margin.left +
             "px" +
             "," +
-            legendMargin.top +
+            legendDimensions.margin.top +
             "px" +
             ")"
         );
 
       var densityLegendSvg = d3
         .select("#density-legend-svg")
-        .attr("width", legendFullWidth)
-        .attr("height", legendFullHeight / 2)
-        .style("padding-left", fullWidth)
+        .attr("width", legendDimensions.fullWidth)
+        .attr("height", legendDimensions.fullHeight / 2)
+        .style("padding-left", mainViewerDimensions.fullWidth)
         .style(
           "transform",
           "translate(" +
-            legendMargin.left +
+            legendDimensions.margin.left +
             "px" +
             "," +
-            legendMargin.top +
+            legendDimensions.margin.top +
             "px" +
             ")"
         );
@@ -325,6 +359,7 @@
         .attr("width", sideDoseProfileDimensions.width)
         .attr("height", sideDoseProfileDimensions.height)
         .attr("fill", "white");
+
       var doseProfileBoxY = doseProfileYSvg
         .append("rect")
         .attr("width", sideDoseProfileDimensions.width)
@@ -349,8 +384,11 @@
         .attr("height", sideDoseProfileDimensions.height);
 
       //TODO: Make a list of volumes rather than have one global
-      const densityVol = new DensityVolume(height, width);
-      const doseVol = new DoseVolume(height, width);
+      const densityVol = new DensityVolume(
+        mainViewerDimensions,
+        legendDimensions
+      );
+      const doseVol = new DoseVolume(mainViewerDimensions, legendDimensions);
       const doseProfileX = new DoseProfile(
         sideDoseProfileDimensions,
         doseProfileXSvg

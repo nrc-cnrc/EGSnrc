@@ -88,7 +88,7 @@ function updateMarker(coords, svg) {
     .attr("x1", x)
     .attr("y1", 0)
     .attr("x2", x)
-    .attr("y2", height);
+    .attr("y2", mainViewerDimensions.height);
 
   // Create vertical line
   marker
@@ -97,7 +97,7 @@ function updateMarker(coords, svg) {
     .attr("class", "crosshair")
     .attr("x1", 0)
     .attr("y1", y)
-    .attr("x2", width)
+    .attr("x2", mainViewerDimensions.width)
     .attr("y2", y);
 }
 

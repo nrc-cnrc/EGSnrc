@@ -5,9 +5,9 @@ class Volume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
 
-  constructor(height, width) {
-    this.height = height;
-    this.width = width;
+  constructor(dimensions, legendDimensions) {
+    this.dimensions = dimensions;
+    this.legendDimensions = legendDimensions;
     this.data = {};
     this.prevSlice = {};
     this.prevAxis = "";
@@ -65,11 +65,11 @@ class Volume {
       xScale: d3
         .scaleLinear()
         .domain([x[0], x[x.length - 1]])
-        .range([0, this.width]), // unit: pixels
+        .range([0, this.dimensions.width]), // unit: pixels
       yScale: d3
         .scaleLinear()
         .domain([y[0], y[y.length - 1]])
-        .range([0, this.height]), // unit: pixels
+        .range([0, this.dimensions.height]), // unit: pixels
       zScale: d3
         .scaleLinear()
         .domain([z[0], z[z.length - 1]])
@@ -140,8 +140,8 @@ class Volume {
     // Append title
     legendSvg
       .append("text")
-      .attr("x", legendWidth / 2)
-      .attr("y", legendMargin.top / 2)
+      .attr("x", this.legendDimensions.width / 2)
+      .attr("y", this.legendDimensions.margin.top / 2)
       .attr("text-anchor", "middle")
       .style("font-size", "14px")
       .text(title);
@@ -175,8 +175,8 @@ class Volume {
 }
 
 class DoseVolume extends Volume {
-  constructor(height, width) {
-    super(height, width); // call the super class constructor
+  constructor(dimensions, legendDimensions) {
+    super(dimensions, legendDimensions); // call the super class constructor
   }
 
   addData(data) {
@@ -206,8 +206,8 @@ class DoseVolume extends Volume {
     let doseContour = svg
       .append("g")
       .attr("class", "dose-contour")
-      .attr("width", this.width)
-      .attr("height", this.height)
+      .attr("width", this.dimensions.width)
+      .attr("height", this.dimensions.height)
       .attr("fill", "none")
       .attr("stroke", "#fff")
       .attr("stroke-opacity", 0.5)
@@ -216,8 +216,8 @@ class DoseVolume extends Volume {
       .data(
         super.scaleContour(
           contours,
-          this.width / slice.xVoxels,
-          this.height / slice.yVoxels
+          this.dimensions.width / slice.xVoxels,
+          this.dimensions.height / slice.yVoxels
         )
       )
       .join("path")
@@ -250,8 +250,8 @@ class DoseVolume extends Volume {
 }
 
 class DensityVolume extends Volume {
-  constructor(height, width) {
-    super(height, width); // call the super class constructor
+  constructor(dimensions, legendDimensions) {
+    super(dimensions, legendDimensions); // call the super class constructor
   }
 
   addData(data) {
@@ -298,7 +298,7 @@ class DensityVolume extends Volume {
       svgAxis
         .append("g")
         .attr("class", "x-axis")
-        .attr("transform", "translate(0," + height + ")")
+        .attr("transform", "translate(0," + this.dimensions.height + ")")
         .call(xAxis);
       svgAxis.append("g").attr("class", "y-axis").call(yAxis);
     }
@@ -321,15 +321,15 @@ class DensityVolume extends Volume {
     svg
       .append("g")
       .attr("class", "density-contour")
-      .attr("width", this.width)
-      .attr("height", this.height)
+      .attr("width", this.dimensions.width)
+      .attr("height", this.dimensions.height)
       .attr("fill", "none")
       .selectAll("path")
       .data(
         super.scaleContour(
           contours,
-          this.width / slice.xVoxels,
-          this.height / slice.yVoxels
+          this.dimensions.width / slice.xVoxels,
+          this.dimensions.height / slice.yVoxels
         )
       )
       .join("path")

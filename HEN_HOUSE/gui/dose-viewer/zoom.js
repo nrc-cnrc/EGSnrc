@@ -28,7 +28,7 @@ svgMarker.call(
     .zoom()
     .extent([
       [0, 0],
-      [width, height],
+      [mainViewerDimensions.width, mainViewerDimensions.height],
     ])
     .scaleExtent([1, 6])
     .on("zoom", () => zoomedAll(d3.event.transform))
