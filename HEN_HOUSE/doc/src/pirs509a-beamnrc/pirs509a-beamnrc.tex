@@ -4161,7 +4161,7 @@ For more detailed information about DSB, see the directional source biasing pape
 \index{x-ray tubes!variance reduction}
 
 The Bremsstrahlung Cross Section Enhancement (BCSE) variance reduction
-technique is introduced into BEAMnrc in the Fall of 2007 to improve
+technique is introduced into BEAMnrc in 2007 to improve
 the efficiency of simulations that involve x-ray production from
 bremsstrahlung targets (e.g. x-ray tubes and clinical linear
 accelerators), both in the kilovoltage and megavoltage range. The
@@ -4198,30 +4198,52 @@ preceding it).
 \noindent {\tt Use BCSE= ON} (could be {\tt OFF}, internal variable {\tt
 USE\_BCSE} is 0 or 1 for {\tt OFF} or {\tt ON}, respectively).
 \index{USE\_BCSE}
-\index{Use BCSE}
-
+\index{Use BCSE}\\~~\\
 \noindent {\tt Medium to enhance= med} ({\tt med} is the name of
 the medium in which to enhance the bremsstrahlung cross
 section (internal variable {\tt BCSE\_MEDNAME}).  The medium must exist
 in the accelerator, otherwise BCSE will not be done.
 \index{BCSE\_MEDNAME}
-\index{Medium number to enhance}
-
-
-\noindent {\tt Enhancement factor= $n_{2}$} ($n_{2}$ is an integer number
-representing the factor by which the bremsstrahlung cross section is
-enhanced (internal variable {\tt BCSE\_FACTOR}) )
-\index{BCSE\_FACTOR}
-\index{Enhancement factor}
-
+\index{Medium number to enhance}\\~~\\
+\noindent {\tt Enhancement constant= C}, where {\tt C} is a real number $\ge$0
+(internal variable {\tt BCSE\_FACTOR\_C})
+\index{BCSE\_FACTOR\_C}
+\index{Enhancement constant}\\
+\noindent {\tt Enhancement power= N}, where {\tt N} is a real number
+(internal variable {\tt BCSE\_POWER\_N})
+\index{BCSE\_POWER\_N}
+\index{Enhancement power}\\~~\\
 \noindent {\tt Russian Roulette= ON} (could be {\tt OFF}. If the focus of
 the simulation
 is on the photons, it is strongly recommended to set Russian Roulette
 {\tt ON}. (internal variable {\tt IRRLTT} which is 0 if {\tt OFF} and 2 if
-{\tt ON}.))
+{\tt ON}.)
 \index{IRRLTT}
 
 \noindent {\tt :Stop BCSE:}
+
+The {\tt Enhancement constant} ({\tt C}) and {\tt Enhancement power} ({\tt N})
+inputs determine the bremsstrahlung cross-section enhancement factor, {\tt BCSE\_FACTOR},
+which is given by:
+\begin{equation}
+{\tt BCSE\_FACTOR}=
+\begin{cases}
+{\tt C} & \text{if {\tt N} is set $\leq$0}\\
+1+{\tt C} \times E^{\tt N} & \text{if {\tt N} is set $>$0}\\
+\end{cases}
+\label{bcse_enhancement_factor_eqn}
+\end{equation}
+\index{BCSE!Energy-dependent enhancement factor}
+where E is the kinetic energy of the electron undergoing a bremsstrahlung event.
+
+While an energy-dependent enhancement factor
+(lower part of Equation~\ref{bcse_enhancement_factor_eqn}) can achieve a further $\sim$20\%
+increase in efficiency over a constant enhancement factor (Equation~\ref{bcse_enhancement_factor_eqn}
+upper part), it requires a judicious choice of both {\tt C} and {\tt N}.  Thus, unless you are prepared to do a detailed
+study of simulation efficiency, we recommend setting {\tt N}$\leq$0 and using a constant enhancement factor,
+{\tt BCSE\_FACTOR}={\tt C}.
+The
+discussion on optimizing BCSE below assumes you are using a constant enhancement factor.
 
 \subsubsection{Simulation optimization with BCSE}
 
@@ -8025,31 +8047,26 @@ Rotation angle and translation distance are determined by user
 inputs which define the spacing between the
 centres of the leaf cross-sections, {\tt SPACE},
 as projected down to {\tt SSD} and the requirement that the leaf sides
-focus to Z=0.   Leaves are first rotated about the X=0 ({\tt ORIENT}=0)
+focus to Z=0.   For leaf $I$=1,2,...,{\tt NUM\_LEAF}, the cross-section
+is first rotated about X=0 ({\tt ORIENT}=0)
 or Y=0 ({\tt ORIENT}=1), Z={\tt ZMIN} using:
 \begin{equation}
 rotation=
-\begin{cases}
-ATAN\left[-\left(2I-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right)\right] &
-\text{for 1$\leq I\leq\frac{NUM\_LEAF}{2}$},\\
-ATAN\left[\left(2I-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right)\right] &
-\text{for $\frac{NUM\_LEAF}{2}+1\leq I\leq NUM\_LEAF$}.
-\end{cases}
+ATAN\left[\left(2I-NUM\_LEAF-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{1}{SSD}\right)\right]
+\label{mlce_rotation_equation}
 \end{equation}
-Then they are translated in the X ({\tt ORIENT}=0) or Y
+and then translated in the X ({\tt ORIENT}=0) or Y
 ({\tt ORIENT}=1) direction using:
 \begin{equation}
 translation=
-\begin{cases}
--\left(2I-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right) &
-\text{for 1$\leq I\leq\frac{NUM\_LEAF}{2}$},\\
-\left(2I-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right) &
-\text{for $\frac{NUM\_LEAF}{2}+1\leq I\leq NUM\_LEAF$}.
-\end{cases}
+\left(2I-NUM\_LEAF-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right)
+\label{mlce_translation_equation}
 \end{equation}
-Note the restriction that {\tt NUM\_LEAF} must be an even number.
-After the leaves have been rotated/translated according to the above equations,
-their cross-sections are symmetric about the Z axis.
+where {\tt NUM\_LEAF} must be an even number.  Note that the result of
+applying Equations~\ref{mlce_rotation_equation} and \ref{mlce_translation_equation} is that cross-sections for
+leaves 1 - {\tt NUM\_LEAF}/2 are rotated/translated in the negative sense with respect to the Z-axis
+while cross-sections for leaves {\tt NUM\_LEAF}/2+1 - {\tt NUM\_LEAF} are rotated/translated in the positive
+sense and the cross-section of the leaf bank is symmetric about the Z-axis.
 
 The user also has
 the option to rotate the entire leaf bank about the axis
