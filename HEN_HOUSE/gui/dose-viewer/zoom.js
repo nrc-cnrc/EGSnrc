@@ -105,7 +105,15 @@ function zoomedAll(transform) {
     var new_yScale = transform.rescaleY(vol.prevSlice.yScale);
 
     // Update axes
-    svgAxis.select(".x-axis").call(d3.axisBottom().scale(new_xScale));
-    svgAxis.select(".y-axis").call(d3.axisLeft().scale(new_yScale));
+    svgAxis
+      .select(".x-axis")
+      .call(
+        d3.axisBottom().scale(new_xScale).tickSize(-mainViewerDimensions.height)
+      );
+    svgAxis
+      .select(".y-axis")
+      .call(
+        d3.axisLeft().scale(new_yScale).tickSize(-mainViewerDimensions.width)
+      );
   }
 }

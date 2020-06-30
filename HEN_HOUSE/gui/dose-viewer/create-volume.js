@@ -53,6 +53,25 @@ class Volume {
     let z = this.data.voxelArr[dim3];
     let totalSlices = this.data.voxelNumber[dim3];
 
+    var getLengthCm = (voxelArrDim) =>
+      Math.abs(voxelArrDim[voxelArrDim.length - 1] - voxelArrDim[0]);
+    let [xLengthCm, yLengthCm] = [getLengthCm(x), getLengthCm(y)];
+    let xDomain, yDomain, contourXScale, contourYScale;
+    if (xLengthCm > yLengthCm) {
+      xDomain = [x[0], x[x.length - 1]];
+      yDomain = [y[0], y[0] + xLengthCm];
+      contourXScale = this.dimensions.width / this.data.voxelNumber[dim1];
+      contourYScale =
+        (this.dimensions.height * (yLengthCm / xLengthCm)) /
+        this.data.voxelNumber[dim2];
+    } else {
+      xDomain = [x[0], x[0] + yLengthCm];
+      yDomain = [y[0], y[y.length - 1]];
+      contourXScale =
+        (this.dimensions.width * (xLengthCm / yLengthCm)) /
+        this.data.voxelNumber[dim1];
+      contourYScale = this.dimensions.height / this.data.voxelNumber[dim2];
+    }
     // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
       dx: this.data.voxelSize[dim1],
@@ -64,16 +83,18 @@ class Volume {
       totalSlices: totalSlices,
       xScale: d3
         .scaleLinear()
-        .domain([x[0], x[x.length - 1]])
-        .range([0, this.dimensions.width]), // unit: pixels
+        .domain(xDomain)
+        .range([0, this.dimensions.width]),
       yScale: d3
         .scaleLinear()
-        .domain([y[0], y[y.length - 1]])
-        .range([0, this.dimensions.height]), // unit: pixels
+        .domain(yDomain)
+        .range([0, this.dimensions.height]),
       zScale: d3
         .scaleLinear()
         .domain([z[0], z[z.length - 1]])
         .range([0, totalSlices]), // unit: pixels
+      contourXScale: contourXScale,
+      contourYScale: contourYScale,
     };
 
     // If current slice number is larger than the total number of slices
@@ -214,11 +235,7 @@ class DoseVolume extends Volume {
       .attr("stroke-width", 0.5)
       .selectAll("path")
       .data(
-        super.scaleContour(
-          contours,
-          this.dimensions.width / slice.xVoxels,
-          this.dimensions.height / slice.yVoxels
-        )
+        super.scaleContour(contours, slice.contourXScale, slice.contourYScale)
       )
       .join("path")
       .attr("fill", (d) => this.colour(d.value))
@@ -292,8 +309,11 @@ class DensityVolume extends Volume {
         ? zoomTransform.rescaleY(slice.yScale)
         : slice.yScale;
 
-      var xAxis = d3.axisBottom().scale(xScale);
-      var yAxis = d3.axisLeft().scale(yScale);
+      var xAxis = d3
+        .axisBottom()
+        .scale(xScale)
+        .tickSize(-this.dimensions.height);
+      var yAxis = d3.axisLeft().scale(yScale).tickSize(-this.dimensions.width);
 
       svgAxis
         .append("g")
@@ -326,11 +346,7 @@ class DensityVolume extends Volume {
       .attr("fill", "none")
       .selectAll("path")
       .data(
-        super.scaleContour(
-          contours,
-          this.dimensions.width / slice.xVoxels,
-          this.dimensions.height / slice.yVoxels
-        )
+        super.scaleContour(contours, slice.contourXScale, slice.contourYScale)
       )
       .join("path")
       .attr("fill", (d) => this.colour(d.value))
