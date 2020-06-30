@@ -11,19 +11,22 @@ function updateSliderAfterAxisChange(slice) {
   }
   sliderRange.max = slice.totalSlices - 1;
   d3.select("#slider-max").node().value = slice.totalSlices - 1;
+
+  // Update the axis
+  drawAxes(svgAxis, slice);
 }
 
 function updateImage(axis, sliceNum) {
   // Update image if densityVol data and/or doseVol data exists
   let slice;
-  let context;
+
   if (!densityVol.isEmpty()) {
     slice = densityVol.getSlice(axis, sliceNum);
-    context = densityVol.getSliceImageContext(slice, svgAxis, svgDensity);
+    densityVol.drawDensity(slice, svgDensity);
   }
   if (!doseVol.isEmpty()) {
     slice = doseVol.getSlice(axis, sliceNum);
-    context = doseVol.getSliceImageContext(slice, svgDose);
+    doseVol.drawDose(slice, svgDose);
   }
 
   //Update voxel coordinates
@@ -66,14 +69,14 @@ d3.selectAll("input[name='axis']").on("change", function () {
   let sliceNum = getSliceNum();
   // Update image if densityVol data and/or doseVol data exists
   let slice;
-  let context;
+
   if (!densityVol.isEmpty()) {
     slice = densityVol.getSlice(axis, sliceNum);
-    context = densityVol.getSliceImageContext(slice, svgAxis, svgDensity);
+    densityVol.drawDensity(slice, svgDensity);
   }
   if (!doseVol.isEmpty()) {
     slice = doseVol.getSlice(axis, sliceNum);
-    context = doseVol.getSliceImageContext(slice, svgDose);
+    doseVol.drawDose(slice, svgDose);
   }
 
   if (!densityVol.isEmpty() || !doseVol.isEmpty()) {

@@ -32,7 +32,7 @@ d3.select("#read-button").on("click", function () {
       densityVol.addData(data);
       densityVol.initializeLegend();
       let slice = densityVol.getSlice(axis, sliceNum);
-      let context = densityVol.getSliceImageContext(slice, svgAxis, svgDensity);
+      densityVol.drawDensity(slice, svgDensity);
       updateSliderAfterAxisChange(slice);
       if (!doseVol.isEmpty()) {
         enableCheckboxForDensityPlot();
@@ -43,7 +43,7 @@ d3.select("#read-button").on("click", function () {
       doseVol.initializeLegend();
       // TODO: Figure out a better layout for event listeners
       let slice = doseVol.getSlice(axis, sliceNum);
-      let context = doseVol.getSliceImageContext(slice, svgDose);
+      doseVol.drawDose(slice, svgDose);
       updateSliderAfterAxisChange(slice);
       enableCoordInputs(doseVol.data.voxelNumber);
       enableCheckboxForDoseProfilePlot();

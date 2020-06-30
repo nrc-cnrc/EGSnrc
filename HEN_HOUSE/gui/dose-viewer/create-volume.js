@@ -1,6 +1,29 @@
 // TODO: Make a plotting object that takes list of volumes, plots them
 // Each plotting object has radio buttons, slider, axes, canvas, and svg
 // TODO: Make a dataName variable to reduce code
+
+var drawAxes = (svgAxis, slice) => {
+  svgAxis.selectAll("g").remove();
+
+  // If there is existing transformation, apply it
+  let xScale = zoomTransform
+    ? zoomTransform.rescaleX(slice.xScale)
+    : slice.xScale;
+  let yScale = zoomTransform
+    ? zoomTransform.rescaleY(slice.yScale)
+    : slice.yScale;
+
+  var xAxis = d3.axisBottom().scale(xScale).tickSize(-slice.dimensions.height);
+  var yAxis = d3.axisLeft().scale(yScale).tickSize(-slice.dimensions.width);
+
+  svgAxis
+    .append("g")
+    .attr("class", "x-axis")
+    .attr("transform", "translate(0," + slice.dimensions.height + ")")
+    .call(xAxis);
+  svgAxis.append("g").attr("class", "y-axis").call(yAxis);
+};
+
 class Volume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
@@ -95,6 +118,7 @@ class Volume {
         .range([0, totalSlices]), // unit: pixels
       contourXScale: contourXScale,
       contourYScale: contourYScale,
+      dimensions: this.dimensions,
     };
 
     // If current slice number is larger than the total number of slices
@@ -146,9 +170,7 @@ class Volume {
     }));
   }
 
-  initializeLegend(legendSvg, legendClass, format, cells, title) {
-    // Note: Cells can either be a list of the value for each label or the total number of labels
-
+  initializeLegend(legendSvg, legendClass, title, parameters) {
     // Clear and redraw current legend
     legendSvg.select("." + legendClass).remove();
 
@@ -170,14 +192,25 @@ class Volume {
     // Create legend
     var legend = d3
       .legendColor()
-      .labelFormat(format)
       .shapeWidth(10)
-      .cells(cells)
       .ascending(true)
       .orient("vertical")
       .scale(this.colour);
 
+    // Apply all the parameters
+    Object.entries(parameters).forEach(([name, val]) => {
+      legend[name](val);
+    });
+
     legendSvg.select("." + legendClass).call(legend);
+
+    // Set the height of the svg so the div can scroll if need be
+    let height =
+      legendSvg
+        .select("." + legendClass)
+        .node()
+        .getBoundingClientRect().height + 20;
+    legendSvg.attr("height", height);
   }
 
   isEmpty() {
@@ -201,17 +234,21 @@ class DoseVolume extends Volume {
   }
 
   addData(data) {
+    // TODO: Want user to be able to choose their own space between contours
     super.addData(data);
     super.addColourScheme(d3.interpolateViridis, this.data.maxDose);
     // Calculate the contour thresholds
-    this.thresholds = d3.range(0, 1.1, 0.1).map((i) => i * this.data.maxDose);
+    let contourInt = 0.05;
+    this.thresholds = d3
+      .range(0, 1.0 + contourInt, contourInt)
+      .map((i) => i * this.data.maxDose);
   }
 
   getSlice(axis, sliceNum) {
     return super.getSlice(axis, sliceNum, "dose");
   }
 
-  getSliceImageContext(slice, svg) {
+  drawDose(slice, svg) {
     //TODO: Don't rely on plugin for legend/colour scale
     // https://observablehq.com/@d3/color-legend
 
@@ -248,13 +285,12 @@ class DoseVolume extends Volume {
   }
 
   initializeLegend() {
-    super.initializeLegend(
-      doseLegendSvg,
-      "doseLegend",
-      d3.format(".2e"),
-      this.thresholds,
-      "Dose"
-    );
+    super.initializeLegend(doseLegendSvg, "doseLegend", "Dose", {
+      labels: this.thresholds.map((e) =>
+        d3.format(".0%")(e / this.data.maxDose)
+      ),
+      cells: this.thresholds,
+    });
   }
 
   getDataAtVoxelCoords(voxelCoords) {
@@ -291,43 +327,9 @@ class DensityVolume extends Volume {
     return super.getSlice(axis, sliceNum, "density");
   }
 
-  getSliceImageContext(slice, svgAxis, svgDensity) {
-    // TODO: Leave axes outside of either volume
-    // TODO: Clear svgAxis <g> only if axis changed
+  drawDensity(slice, svg) {
     // TODO: Make two new functions: change slicenum and change axes
 
-    // Clear and redraw axes upon change
-    let axisChange = axis !== this.prevAxis ? true : false;
-    if (axisChange) {
-      svgAxis.selectAll("g").remove();
-
-      // If there is existing transformation, apply it
-      let xScale = zoomTransform
-        ? zoomTransform.rescaleX(slice.xScale)
-        : slice.xScale;
-      let yScale = zoomTransform
-        ? zoomTransform.rescaleY(slice.yScale)
-        : slice.yScale;
-
-      var xAxis = d3
-        .axisBottom()
-        .scale(xScale)
-        .tickSize(-this.dimensions.height);
-      var yAxis = d3.axisLeft().scale(yScale).tickSize(-this.dimensions.width);
-
-      svgAxis
-        .append("g")
-        .attr("class", "x-axis")
-        .attr("transform", "translate(0," + this.dimensions.height + ")")
-        .call(xAxis);
-      svgAxis.append("g").attr("class", "y-axis").call(yAxis);
-    }
-
-    this.drawDensity(slice, svgDensity);
-    this.prevAxis = axis;
-  }
-
-  drawDensity(slice, svg) {
     // Clear density plot
     svg.selectAll(".density-contour").remove();
 
@@ -358,22 +360,15 @@ class DensityVolume extends Volume {
         .select("g.density-contour")
         .attr("transform", zoomTransform.toString());
     }
+
+    this.prevAxis = axis;
   }
 
   initializeLegend() {
-    let maxThresh = Math.ceil(this.data.maxDensity * 10) / 10;
-    let cells =
-      this.thresholds.length > 10
-        ? d3.range(0, maxThresh, maxThresh / 10)
-        : this.thresholds;
-
-    super.initializeLegend(
-      densityLegendSvg,
-      "densityLegend",
-      d3.format(".2f"),
-      cells,
-      "Density"
-    );
+    super.initializeLegend(densityLegendSvg, "densityLegend", "Density", {
+      labelFormat: d3.format(".2f"),
+      cells: this.thresholds.length > 10 ? 10 : this.thresholds,
+    });
   }
 
   getDataAtVoxelCoords(voxelCoords) {

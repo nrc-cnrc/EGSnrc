@@ -1,3 +1,15 @@
+.parent {
+  display: grid;
+  grid-template-columns: 1fr;
+  float: left;
+}
+
+.parent div {
+  padding: 10px;
+  grid-row-start: 1;
+  grid-column-start: 1;
+}
+
 body {
   margin: 25px 50px 25px 50px;
 }
@@ -14,16 +26,12 @@ button {
   font-family: helvetica;
 }
 
-span {
+span.container {
   display: inline-block;
 }
 
 .label {
   font-size: small;
-}
-
-.plot {
-  position: absolute;
 }
 
 #axis-svg {
@@ -56,7 +64,8 @@ span {
   vector-effect: non-scaling-stroke;
 }
 
-#chartholder {
-  overflow: hidden;
-  display: flex;
+div.legend-holder {
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
 }

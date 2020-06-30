@@ -15,7 +15,7 @@
     <input type="file" id="file-input" />
     <button id="read-button">Read File</button>
     <div id="dose-viewer-container">
-      <span id="axis-slider-container">
+      <span id="axis-slider-container" class="container">
         <form>
           <input type="radio" id="xy" name="axis" value="xy" checked />
           <label for="xy">xy</label>
@@ -44,7 +44,7 @@
           <button id="increment-slider">+</button>
         </div>
       </span>
-      <span id="voxel-info">
+      <span id="voxel-info" class="container">
         <p>World Coordinates</p>
         <label for="world-x-value"
           >x:
@@ -91,24 +91,34 @@
         disabled
       />
       <label for="show-dose-profile-checkbox">
-        Plot dose profile at crosshairs for each slice?
+        Plot dose profile at crosshairs?
       </label>
-      <div id="chartholder">
-        <div id="imageholder">
-          <svg id="axis-svg" class="plot"></svg>
+      <div id="imageholder" class="parent">
+        <div class="layer-1">
           <svg id="plot-density" class="plot"></svg>
-          <svg id="plot-dose" class="plot"></svg>
-          <svg id="plot-marker" class="plot"></svg>
-          <span id="legendholder">
-            <svg id="dose-legend-svg" class="legend"></svg>
-            <svg id="density-legend-svg" class="legend"></svg>
-          </span>
         </div>
-        <span id="dose-profile-holder">
-          <svg id="dose-profile-svg-x" class="dose-profile-plot"></svg>
-          <svg id="dose-profile-svg-y" class="dose-profile-plot"></svg>
-        </span>
+        <div class="layer-2">
+          <svg id="plot-dose" class="plot"></svg>
+        </div>
+        <div class="layer-3">
+          <svg id="plot-marker" class="plot"></svg>
+        </div>
+        <div class="layer-4">
+          <svg id="axis-svg" class="plot"></svg>
+        </div>
       </div>
+      <span id="legendholder">
+        <div id="dose-legend-holder" class="legend-holder">
+          <svg id="dose-legend-svg" class="legend"></svg>
+        </div>
+        <div id="density-legend-holder" class="legend-holder">
+          <svg id="density-legend-svg" class="legend"></svg>
+        </div>
+      </span>
+      <span id="dose-profile-holder">
+        <svg id="dose-profile-svg-x" class="dose-profile-plot"></svg>
+        <svg id="dose-profile-svg-y" class="dose-profile-plot"></svg>
+      </span>
     </div>
     <div id="dose-profile-viewer">
       <p>
@@ -195,7 +205,7 @@
       let legendDimensions = {
         fullWidth: 100,
         fullHeight: mainViewerDimensions.fullHeight,
-        margin: { top: 25, bottom: 10, left: 10, right: 5 },
+        margin: { top: 25, bottom: 5, left: 10, right: 5 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
         },
@@ -270,7 +280,7 @@
         .append("rect")
         .attr("width", mainViewerDimensions.width)
         .attr("height", mainViewerDimensions.height)
-        .attr("fill", "black");
+        .attr("fill", "rgba(225,225,225,0.5)");
 
       var svgAxis = d3
         .select("#axis-svg")
@@ -288,37 +298,31 @@
             ")"
         );
 
-      var doseLegendSvg = d3
-        .select("#dose-legend-svg")
-        .attr("width", legendDimensions.fullWidth)
-        .attr("height", legendDimensions.fullHeight / 2)
-        .style("padding-left", mainViewerDimensions.fullWidth)
-        .style(
-          "transform",
-          "translate(" +
-            legendDimensions.margin.left +
-            "px" +
-            "," +
-            legendDimensions.margin.top +
-            "px" +
-            ")"
-        );
+      var getMarginStr = (margin) =>
+        margin.top +
+        "px " +
+        margin.right +
+        "px " +
+        margin.bottom +
+        "px " +
+        margin.left +
+        "px";
 
-      var densityLegendSvg = d3
-        .select("#density-legend-svg")
-        .attr("width", legendDimensions.fullWidth)
-        .attr("height", legendDimensions.fullHeight / 2)
-        .style("padding-left", mainViewerDimensions.fullWidth)
-        .style(
-          "transform",
-          "translate(" +
-            legendDimensions.margin.left +
-            "px" +
-            "," +
-            legendDimensions.margin.top +
-            "px" +
-            ")"
-        );
+      // Initialize dose legend
+      d3.select("#dose-legend-holder")
+        .style("width", legendDimensions.width + "px")
+        .style("height", legendDimensions.height / 2 + "px")
+        .style("margin", getMarginStr(legendDimensions.margin));
+
+      var doseLegendSvg = d3.select("#dose-legend-svg");
+
+      // Initialize density legend
+      d3.select("#density-legend-holder")
+        .style("width", legendDimensions.width + "px")
+        .style("height", legendDimensions.height / 2 + "px")
+        .style("margin", getMarginStr(legendDimensions.margin));
+
+      var densityLegendSvg = d3.select("#density-legend-svg");
 
       // Initializing svgs for dose profile plots
       var doseProfileXSvg = d3
