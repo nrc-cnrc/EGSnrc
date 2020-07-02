@@ -238,9 +238,22 @@ class DoseVolume extends Volume {
     super.addData(data);
     super.addColourScheme(d3.interpolateViridis, this.data.maxDose);
     // Calculate the contour thresholds
-    let contourInt = 0.05;
+    this.contourInt = parseFloat(
+      d3.select("#contour-line-select").node().value
+    );
+    this.updateThresholds();
+  }
+
+  updateContourInterval(val) {
+    this.contourInt = val;
+    this.updateThresholds();
+    this.initializeLegend();
+    this.drawDose(this.prevSlice, svgDose);
+  }
+
+  updateThresholds() {
     this.thresholds = d3
-      .range(0, 1.0 + contourInt, contourInt)
+      .range(0, 1.0 + this.contourInt, this.contourInt)
       .map((i) => i * this.data.maxDose);
   }
 

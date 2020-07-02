@@ -26,7 +26,7 @@ button {
   font-family: helvetica;
 }
 
-span.container {
+.container {
   display: inline-block;
 }
 
