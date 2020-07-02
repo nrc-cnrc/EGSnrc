@@ -73,16 +73,35 @@ function zoomedDoseProfile(transform, doseProfile) {
     var new_yDoseScale = transform.rescaleY(doseProfile.yDoseScale);
 
     // Update axes
-    doseProfile.svg.select(".x-axis").call(d3.axisBottom().scale(new_xScale));
     doseProfile.svg
-      .select(".y-dose-axis")
-      .call(d3.axisLeft().scale(new_yDoseScale).tickFormat(d3.format(".2e")));
+      .select(".profile-x-axis")
+      .call(
+        d3
+          .axisBottom()
+          .scale(new_xScale)
+          .tickSize(-doseProfile.dimensions.height)
+      );
+
+    doseProfile.svg
+      .select(".profile-y-dose-axis")
+      .call(
+        d3
+          .axisLeft()
+          .scale(new_yDoseScale)
+          .tickFormat(d3.format(".0%"))
+          .tickSize(-doseProfile.dimensions.width)
+      );
 
     if (doseProfile.plotDensity) {
       var new_yDensityScale = transform.rescaleY(doseProfile.yDensityScale);
       doseProfile.svg
-        .select(".y-density-axis")
-        .call(d3.axisLeft().scale(new_yDensityScale));
+        .select(".profile-y-density-axis")
+        .call(
+          d3
+            .axisLeft()
+            .scale(new_yDensityScale)
+            .tickSize(-doseProfile.dimensions.width)
+        );
     }
   }
 }

@@ -91,9 +91,6 @@ class DoseProfile {
   // TODO: Don't update on slider change, only on crosshair position or axes change
   setDoseScales(data) {
     let [minPos, maxPos] = [data[0].position, data[data.length - 1].position];
-    let maxDose = Math.max(
-      ...data.map((v) => v.value * (1.0 + parseFloat(v.err)))
-    );
 
     // Create x and y scale
     this.xScale = d3
@@ -103,7 +100,7 @@ class DoseProfile {
 
     this.yDoseScale = d3
       .scaleLinear()
-      .domain([0, maxDose])
+      .domain([0, 1.0])
       .range([this.dimensions.height, 0]);
 
     if (this.densityChecked) {
@@ -119,28 +116,34 @@ class DoseProfile {
   // TODO: Don't update on slider change, only on crosshair position or axes change
   plotAxes(axis) {
     // Clear existing axes and labels
-    this.svg.selectAll(".x-axis").remove();
-    this.svg.selectAll(".y-dose-axis").remove();
+    this.svg.selectAll(".profile-x-axis").remove();
+    this.svg.selectAll(".profile-y-dose-axis").remove();
 
     // Create and append x and dose y axes
-    let xAxis = d3.axisBottom().scale(this.xScale);
+    let xAxis = d3
+      .axisBottom()
+      .scale(this.xScale)
+      .tickSize(-this.dimensions.height);
+
     let yDoseAxis = d3
       .axisLeft()
       .scale(this.yDoseScale)
-      .tickFormat(d3.format(".2e"));
+      .ticks(10)
+      .tickFormat(d3.format(".0%"))
+      .tickSize(-this.dimensions.width);
 
     this.svg
       .append("g")
-      .attr("class", "x-axis")
+      .attr("class", "profile-x-axis")
       .attr("transform", "translate(0," + this.dimensions.height + ")")
       .call(xAxis);
 
-    this.svg.append("g").attr("class", "y-dose-axis").call(yDoseAxis);
+    this.svg.append("g").attr("class", "profile-y-dose-axis").call(yDoseAxis);
 
     // Label for position x axis
     this.svg
       .append("text")
-      .attr("class", "x-axis")
+      .attr("class", "profile-x-axis")
       .attr(
         "transform",
         "translate(" +
@@ -155,7 +158,7 @@ class DoseProfile {
     // Label for dose y axis
     this.svg
       .append("text")
-      .attr("class", "y-dose-axis")
+      .attr("class", "profile-y-dose-axis")
       .attr("transform", "rotate(-90)")
       .attr(
         "transform",
@@ -170,24 +173,25 @@ class DoseProfile {
 
     if (this.densityChecked) {
       // Clear existing axis and label
-      this.svg.selectAll(".y-density-axis").remove();
+      this.svg.selectAll(".profile-y-density-axis").remove();
 
       // Create and append density y axes
       let yDensityAxis = d3
         .axisRight()
         .scale(this.yDensityScale)
-        .tickFormat(d3.format(".2f"));
+        .tickFormat(d3.format(".2f"))
+        .tickSize(-this.dimensions.width);
 
       this.svg
         .append("g")
-        .attr("class", "y-density-axis")
+        .attr("class", "profile-y-density-axis")
         .attr("transform", "translate(" + this.dimensions.width + ",0)")
         .call(yDensityAxis);
 
       // Label for density y axis
       this.svg
         .append("text")
-        .attr("class", "y-density-axis")
+        .attr("class", "profile-y-density-axis")
         .attr("transform", "rotate(-90)")
         .attr(
           "transform",
@@ -232,6 +236,11 @@ class DoseProfile {
   }
 
   plotData(data) {
+    let preYDoseScale = d3
+      .scaleLinear()
+      .domain([0, doseVol.data.maxDose * 1.1])
+      .range([0, 1.1]);
+
     // Clear all existing elements
     this.svg.selectAll(".plotting-area").remove();
 
@@ -252,14 +261,18 @@ class DoseProfile {
     let errorArea = d3
       .area()
       .x((d) => this.xScale(d.position))
-      .y0((d) => this.yDoseScale(d.value * (1.0 - parseFloat(d.err))))
-      .y1((d) => this.yDoseScale(d.value * (1.0 + parseFloat(d.err))));
+      .y0((d) =>
+        this.yDoseScale(preYDoseScale(d.value * (1.0 - parseFloat(d.err))))
+      )
+      .y1((d) =>
+        this.yDoseScale(preYDoseScale(d.value * (1.0 + parseFloat(d.err))))
+      );
 
     // Create the dose line
     let line = d3
       .line()
       .x((d) => this.xScale(d.position))
-      .y((d) => this.yDoseScale(d.value));
+      .y((d) => this.yDoseScale(preYDoseScale(d.value)));
 
     // Plot error
     plotArea
@@ -275,7 +288,7 @@ class DoseProfile {
       .datum(data)
       .attr("fill", "none")
       .attr("stroke", "steelblue")
-      .attr("stroke-width", 1.0)
+      .attr("stroke-width", 1.5)
       .attr("stroke-linejoin", "round")
       .attr("stroke-linecap", "round")
       .attr("class", "lines")
@@ -307,13 +320,10 @@ class DoseProfile {
     }
   }
 
-  async plotDoseProfile(data, axis, coord1, coord2) {
+  plotDoseProfile(data, axis, coord1, coord2) {
     let axisChange = axis !== this.prevAxis ? true : false;
-    let coordsChange =
-      coord1 !== this.prevCoords[0] || coord2 !== this.prevCoords[1]
-        ? true
-        : false;
-    if (this.xScale === null || axisChange || coordsChange) {
+
+    if (this.xScale === null || axisChange) {
       this.setDoseScales(data);
       this.plotAxes(axis);
     }

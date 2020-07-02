@@ -64,8 +64,22 @@ button {
   vector-effect: non-scaling-stroke;
 }
 
+.lines {
+  vector-effect: non-scaling-stroke;
+}
+
 div.legend-holder {
   display: block;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+span#legendholder {
+  float: left;
+}
+
+.profile-x-axis,
+.profile-y-dose-axis,
+.profile-y-density-axis {
+  color: grey;
 }
