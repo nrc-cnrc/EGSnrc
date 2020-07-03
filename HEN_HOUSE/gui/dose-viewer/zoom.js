@@ -7,56 +7,51 @@ var disableZoom = (obj) => {
   obj.call(d3.behavior.zoom().on("zoom", null));
 };
 
-// Generic enable zoom function
-var enableZoom = (obj, width, height, zoomCallback, args) => {
-  obj.call(
-    d3
-      .zoom()
-      .extent([
-        [0, 0],
-        [width, height],
-      ])
-      .scaleExtent([1, 6])
-      .on("zoom", () => zoomCallback(...args))
-  );
+// Generic get zoom function
+var getZoom = (width, height, zoomCallback, args) =>
+  d3
+    .zoom()
+    .extent([
+      [0, 0],
+      [width, height],
+    ])
+    .scaleExtent([1, 6])
+    .on("zoom", () => zoomCallback(d3.event.transform, ...args));
+
+// Generic reset zoom function
+var resetZoom = (obj, zoom) => {
+  obj.call(zoom.transform, d3.zoomIdentity.scale(1));
 };
 
 //TODO: Disable until data is uploaded
 // Zooming functionality for main plot
-svgMarker.call(
-  d3
-    .zoom()
-    .extent([
-      [0, 0],
-      [mainViewerDimensions.width, mainViewerDimensions.height],
-    ])
-    .scaleExtent([1, 6])
-    .on("zoom", () => zoomedAll(d3.event.transform))
+let mainViewerZoom = getZoom(
+  mainViewerDimensions.width,
+  mainViewerDimensions.height,
+  zoomedAll,
+  []
 );
+svgMarker.call(mainViewerZoom);
 
 // Zooming for x dose profile
-doseProfileBoxX.call(
-  d3
-    .zoom()
-    .extent([
-      [0, 0],
-      [sideDoseProfileDimensions.width, sideDoseProfileDimensions.height],
-    ])
-    .scaleExtent([1, 6])
-    .on("zoom", () => zoomedDoseProfile(d3.event.transform, doseProfileX))
+let doseProfileXZoom = getZoom(
+  sideDoseProfileDimensions.width,
+  sideDoseProfileDimensions.height,
+  zoomedDoseProfile,
+  [doseProfileX]
 );
+doseProfileX.svg.select("rect.bounding-box").call(doseProfileXZoom);
+doseProfileX.zoomObj = doseProfileXZoom;
 
 // Zooming for y dose profile
-doseProfileBoxY.call(
-  d3
-    .zoom()
-    .extent([
-      [0, 0],
-      [sideDoseProfileDimensions.width, sideDoseProfileDimensions.height],
-    ])
-    .scaleExtent([1, 6])
-    .on("zoom", () => zoomedDoseProfile(d3.event.transform, doseProfileY))
+let doseProfileYZoom = getZoom(
+  sideDoseProfileDimensions.width,
+  sideDoseProfileDimensions.height,
+  zoomedDoseProfile,
+  [doseProfileY]
 );
+doseProfileY.svg.select("rect.bounding-box").call(doseProfileYZoom);
+doseProfileY.zoomObj = doseProfileYZoom;
 
 function zoomedDoseProfile(transform, doseProfile) {
   doseProfile.zoomTransform = transform;

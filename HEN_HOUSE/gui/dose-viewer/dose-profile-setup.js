@@ -110,7 +110,7 @@ function enableCoordInputs(voxelNumber) {
 
 d3.select("#dose-profile-button").on("click", function () {
   // Get 1D plot data
-  let profileAxis = d3.selectAll("input[name='profile-axis']:checked").node()
+  let profileDim = d3.selectAll("input[name='profile-axis']:checked").node()
     .value;
   let coord1 = parseInt(d3.select("#coord-1").node().value);
   let coord2 = parseInt(d3.select("#coord-2").node().value);
@@ -121,12 +121,18 @@ d3.select("#dose-profile-button").on("click", function () {
   doseProfile.plotDensity = densityChecked;
 
   let doseProfileData = doseProfile.getDoseProfileData(
-    profileAxis,
+    profileDim,
     coord1,
     coord2
   );
 
   // TODO: Add a check to see if dose and density have same coordinate system
-
-  doseProfile.plotDoseProfile(doseProfileData, profileAxis, coord1, coord2);
+  let axis = profileDim === "x" ? "yz" : profileDim === "y" ? "xz" : "xy";
+  doseProfile.plotDoseProfile(
+    doseProfileData,
+    axis,
+    profileDim,
+    coord1,
+    coord2
+  );
 });

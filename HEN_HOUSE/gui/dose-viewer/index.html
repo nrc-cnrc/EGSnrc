@@ -374,13 +374,15 @@
         .append("rect")
         .attr("width", sideDoseProfileDimensions.width)
         .attr("height", sideDoseProfileDimensions.height)
-        .attr("fill", "white");
+        .attr("fill", "white")
+        .attr("class", "bounding-box");
 
       var doseProfileBoxY = doseProfileYSvg
         .append("rect")
         .attr("width", sideDoseProfileDimensions.width)
         .attr("height", sideDoseProfileDimensions.height)
-        .attr("fill", "white");
+        .attr("fill", "white")
+        .attr("class", "bounding-box");
 
       // Create clip path to bound output after zooming
       doseProfileXSvg

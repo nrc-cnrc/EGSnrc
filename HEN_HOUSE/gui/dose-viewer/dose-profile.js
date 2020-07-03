@@ -10,6 +10,7 @@ class DoseProfile {
     this.yDensityScale = null;
     this.densityChecked = false;
     this.transform = null;
+    this.zoomObj = null;
     this.prevAxis = null;
     this.prevCoords = [-1, -1];
   }
@@ -30,8 +31,10 @@ class DoseProfile {
     return this.densityChecked;
   }
 
-  resetTransform() {
-    this.transform = null;
+  resetZoomTransform() {
+    this.svg
+      .select("rect.bounding-box")
+      .call(this.zoomObj.transform, d3.zoomIdentity.scale(1));
   }
 
   getDoseProfileData(profileAxis, coord1, coord2) {
@@ -294,12 +297,6 @@ class DoseProfile {
       .attr("class", "lines")
       .attr("d", line);
 
-    if (this.transform) {
-      this.svg
-        .selectAll("path.lines")
-        .attr("transform", this.transform.toString());
-    }
-
     if (this.densityChecked) {
       // Create the density line
       let densityLine = d3
@@ -318,16 +315,24 @@ class DoseProfile {
         .attr("stroke-linecap", "round")
         .attr("d", densityLine);
     }
+
+    if (this.transform) {
+      this.svg
+        .selectAll("path.lines")
+        .attr("transform", this.transform.toString());
+    }
   }
 
-  plotDoseProfile(data, axis, coord1, coord2) {
+  plotDoseProfile(data, axis, dim, coord1, coord2) {
     let axisChange = axis !== this.prevAxis ? true : false;
 
     if (this.xScale === null || axisChange) {
       this.setDoseScales(data);
-      this.plotAxes(axis);
+      this.plotAxes(dim);
+      this.resetZoomTransform();
     }
-    this.makeTitle(axis, coord1, coord2);
+
+    this.makeTitle(dim, coord1, coord2);
     this.plotData(data);
 
     this.prevAxis = axis;

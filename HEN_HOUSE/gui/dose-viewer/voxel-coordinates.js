@@ -1,3 +1,4 @@
+// TODO: If marker exists, on axis change, use marker coordinates?
 function coordsToWorld(coords, axis, sliceNum, volume, updateXY) {
   // TODO: Have a more permanent solution to the click/transform problem, make a class?
   let i, j;
@@ -162,10 +163,22 @@ function updateDoseProfiles(voxelCoords) {
     );
 
     // Plot the dose profile along the x axis
-    doseProfileX.plotDoseProfile(doseProfileXData, axis[0], coord1X, coord2X);
+    doseProfileX.plotDoseProfile(
+      doseProfileXData,
+      axis,
+      axis[0],
+      coord1X,
+      coord2X
+    );
 
     // Plot the dose profile along the y axis
-    doseProfileY.plotDoseProfile(doseProfileYData, axis[1], coord1Y, coord2Y);
+    doseProfileY.plotDoseProfile(
+      doseProfileYData,
+      axis,
+      axis[1],
+      coord1Y,
+      coord2Y
+    );
   }
 }
 
