@@ -108,6 +108,34 @@ function enableCoordInputs(voxelNumber) {
   }
 }
 
+var voxelCoordsToWorld = (voxelCoords, profileDim, volume) =>
+  profileDim === "x"
+    ? [
+        volume.yWorldToVoxelScale
+          .invertExtent(voxelCoords[0])
+          .reduce((e, arr) => e + arr) / 2,
+        volume.zWorldToVoxelScale
+          .invertExtent(voxelCoords[1])
+          .reduce((e, arr) => e + arr) / 2,
+      ]
+    : profileDim === "y"
+    ? [
+        volume.xWorldToVoxelScale
+          .invertExtent(voxelCoords[0])
+          .reduce((e, arr) => e + arr) / 2,
+        volume.zWorldToVoxelScale
+          .invertExtent(voxelCoords[1])
+          .reduce((e, arr) => e + arr) / 2,
+      ]
+    : [
+        volume.xWorldToVoxelScale
+          .invertExtent(voxelCoords[0])
+          .reduce((e, arr) => e + arr) / 2,
+        volume.yWorldToVoxelScale
+          .invertExtent(voxelCoords[1])
+          .reduce((e, arr) => e + arr) / 2,
+      ];
+
 d3.select("#dose-profile-button").on("click", function () {
   // Get 1D plot data
   let profileDim = d3.selectAll("input[name='profile-axis']:checked").node()
@@ -120,11 +148,10 @@ d3.select("#dose-profile-button").on("click", function () {
 
   doseProfile.plotDensity = densityChecked;
 
-  let doseProfileData = doseProfile.getDoseProfileData(
-    profileDim,
+  let doseProfileData = doseProfile.getDoseProfileData(profileDim, [
     coord1,
-    coord2
-  );
+    coord2,
+  ]);
 
   // TODO: Add a check to see if dose and density have same coordinate system
   let axis = profileDim === "x" ? "yz" : profileDim === "y" ? "xz" : "xy";
@@ -132,7 +159,6 @@ d3.select("#dose-profile-button").on("click", function () {
     doseProfileData,
     axis,
     profileDim,
-    coord1,
-    coord2
+    voxelCoordsToWorld([coord1, coord2], profileDim, doseVol)
   );
 });

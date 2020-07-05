@@ -116,7 +116,7 @@ function updateVoxelCoords(coords, axis, sliceNum, updateXY = false) {
     }
 
     if (!doseVol.isEmpty()) {
-      updateDoseProfiles(voxelCoords);
+      updateDoseProfiles(voxelCoords, worldCoords);
     }
   }
 }
@@ -140,45 +140,43 @@ function updateVoxelInfo(voxelCoords) {
   }
 }
 
-function updateDoseProfiles(voxelCoords) {
+function updateDoseProfiles(voxelCoords, worldCoords) {
   if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
     let axis = getAxis();
 
-    let [coord1X, coord2X, coord1Y, coord2Y] =
+    var getCoords = (coords) =>
       axis === "xy"
-        ? [voxelCoords[1], voxelCoords[2], voxelCoords[0], voxelCoords[2]]
+        ? [
+            [coords[1], coords[2]],
+            [coords[0], coords[2]],
+          ]
         : axis === "yz"
-        ? [voxelCoords[0], voxelCoords[2], voxelCoords[0], voxelCoords[1]]
-        : [voxelCoords[1], voxelCoords[2], voxelCoords[0], voxelCoords[1]];
+        ? [
+            [coords[0], coords[2]],
+            [coords[0], coords[1]],
+          ]
+        : [
+            [coords[1], coords[2]],
+            [coords[0], coords[1]],
+          ];
+
+    let [voxelCoordsX, voxelCoordsY] = getCoords(voxelCoords);
+    let [worldCoordsX, worldCoordsY] = getCoords(worldCoords);
 
     let doseProfileXData = doseProfileX.getDoseProfileData(
       axis[0],
-      coord1X,
-      coord2X
+      voxelCoordsX
     );
     let doseProfileYData = doseProfileY.getDoseProfileData(
       axis[1],
-      coord1Y,
-      coord2Y
+      voxelCoordsY
     );
 
     // Plot the dose profile along the x axis
-    doseProfileX.plotDoseProfile(
-      doseProfileXData,
-      axis,
-      axis[0],
-      coord1X,
-      coord2X
-    );
+    doseProfileX.plotDoseProfile(doseProfileXData, axis, axis[0], worldCoordsX);
 
     // Plot the dose profile along the y axis
-    doseProfileY.plotDoseProfile(
-      doseProfileYData,
-      axis,
-      axis[1],
-      coord1Y,
-      coord2Y
-    );
+    doseProfileY.plotDoseProfile(doseProfileYData, axis, axis[1], worldCoordsY);
   }
 }
 

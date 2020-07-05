@@ -12,7 +12,6 @@ class DoseProfile {
     this.transform = null;
     this.zoomObj = null;
     this.prevAxis = null;
-    this.prevCoords = [-1, -1];
   }
 
   set zoomTransform(val) {
@@ -37,7 +36,7 @@ class DoseProfile {
       .call(this.zoomObj.transform, d3.zoomIdentity.scale(1));
   }
 
-  getDoseProfileData(profileAxis, coord1, coord2) {
+  getDoseProfileData(profileAxis, coords) {
     let [dim1, dim2, dim3] =
       profileAxis === "x"
         ? ["x", "y", "z"]
@@ -61,15 +60,16 @@ class DoseProfile {
     for (let i = 0; i < totalSlices; i++) {
       let address;
       if (profileAxis === "z") {
-        address = coord1 + xVoxels * (coord2 + i * yVoxels);
+        address = coords[0] + xVoxels * (coords[1] + i * yVoxels);
       } else if (profileAxis === "x") {
         address =
           i +
-          parseInt(doseVol.data.voxelNumber.x) * (coord1 + coord2 * xVoxels);
+          parseInt(doseVol.data.voxelNumber.x) *
+            (coords[0] + coords[1] * xVoxels);
       } else if (profileAxis === "y") {
         address =
-          coord1 +
-          xVoxels * (i + coord2 * parseInt(doseVol.data.voxelNumber.y));
+          coords[0] +
+          xVoxels * (i + coords[1] * parseInt(doseVol.data.voxelNumber.y));
       }
 
       if (this.densityChecked) {
@@ -209,12 +209,14 @@ class DoseProfile {
     }
   }
 
-  makeTitle(axis, coord1, coord2) {
+  makeTitle(axis, coords) {
     // Clear existing title
     this.svg.select(".title").remove();
 
     let [dim1, dim2] =
       axis === "x" ? ["y", "z"] : axis === "y" ? ["x", "z"] : ["x", "y"];
+
+    let format = d3.format(".2f");
 
     this.svg
       .append("text")
@@ -231,9 +233,9 @@ class DoseProfile {
           ", " +
           dim2 +
           "): (" +
-          coord1 +
+          format(coords[0]) +
           ", " +
-          coord2 +
+          format(coords[1]) +
           ")"
       );
   }
@@ -323,19 +325,18 @@ class DoseProfile {
     }
   }
 
-  plotDoseProfile(data, axis, dim, coord1, coord2) {
+  plotDoseProfile(data, axis, dim, coords) {
     let axisChange = axis !== this.prevAxis ? true : false;
 
     if (this.xScale === null || axisChange) {
       this.setDoseScales(data);
       this.plotAxes(dim);
-      this.resetZoomTransform();
+      if (this.zoomObj !== null) this.resetZoomTransform();
     }
 
-    this.makeTitle(dim, coord1, coord2);
+    this.makeTitle(dim, coords);
     this.plotData(data);
 
     this.prevAxis = axis;
-    this.prevCoords = [coord1, coord2];
   }
 }
