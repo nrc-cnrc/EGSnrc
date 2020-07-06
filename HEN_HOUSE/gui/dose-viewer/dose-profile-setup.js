@@ -145,18 +145,18 @@ d3.select("#dose-profile-button").on("click", function () {
   let densityChecked = d3
     .select("input[name='density-profile-checkbox']")
     .node().checked;
+  let axisList =
+    profileDim === "x" ? "xyz" : profileDim === "y" ? "yxz" : "zxy";
 
+  // TODO: Add listener to density-profile-checkbox instead of setting the variable each time
   doseProfile.plotDensity = densityChecked;
-
-  let doseProfileData = doseProfile.getDoseProfileData(profileDim, [
-    coord1,
-    coord2,
-  ]);
+  doseProfile.setDoseProfileData(axisList, [coord1, coord2]);
+  doseProfile.updateAxes();
 
   // TODO: Add a check to see if dose and density have same coordinate system
   let axis = profileDim === "x" ? "yz" : profileDim === "y" ? "xz" : "xy";
+
   doseProfile.plotDoseProfile(
-    doseProfileData,
     axis,
     profileDim,
     voxelCoordsToWorld([coord1, coord2], profileDim, doseVol)

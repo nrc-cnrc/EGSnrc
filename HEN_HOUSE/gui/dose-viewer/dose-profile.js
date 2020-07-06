@@ -12,6 +12,8 @@ class DoseProfile {
     this.transform = null;
     this.zoomObj = null;
     this.prevAxis = null;
+    this.data = null;
+    this.dim = null;
   }
 
   set zoomTransform(val) {
@@ -24,6 +26,7 @@ class DoseProfile {
 
   set plotDensity(val) {
     this.densityChecked = val;
+    if (this.data !== null) this.updateAxes();
   }
 
   get plotDensity() {
@@ -36,11 +39,11 @@ class DoseProfile {
       .call(this.zoomObj.transform, d3.zoomIdentity.scale(1));
   }
 
-  getDoseProfileData(profileAxis, coords) {
+  setDoseProfileData(profileDim, coords) {
     let [dim1, dim2, dim3] =
-      profileAxis === "x"
+      profileDim === "x"
         ? ["x", "y", "z"]
-        : profileAxis === "y"
+        : profileDim === "y"
         ? ["y", "x", "z"]
         : ["z", "x", "y"];
 
@@ -59,14 +62,14 @@ class DoseProfile {
 
     for (let i = 0; i < totalSlices; i++) {
       let address;
-      if (profileAxis === "z") {
+      if (profileDim === "z") {
         address = coords[0] + xVoxels * (coords[1] + i * yVoxels);
-      } else if (profileAxis === "x") {
+      } else if (profileDim === "x") {
         address =
           i +
           parseInt(doseVol.data.voxelNumber.x) *
             (coords[0] + coords[1] * xVoxels);
-      } else if (profileAxis === "y") {
+      } else if (profileDim === "y") {
         address =
           coords[0] +
           xVoxels * (i + coords[1] * parseInt(doseVol.data.voxelNumber.y));
@@ -87,13 +90,15 @@ class DoseProfile {
         };
       }
     }
-
-    return doseProfileData;
+    this.data = doseProfileData;
   }
 
   // TODO: Don't update on slider change, only on crosshair position or axes change
-  setDoseScales(data) {
-    let [minPos, maxPos] = [data[0].position, data[data.length - 1].position];
+  setDoseScales() {
+    let [minPos, maxPos] = [
+      this.data[0].position,
+      this.data[this.data.length - 1].position,
+    ];
 
     // Create x and y scale
     this.xScale = d3
@@ -107,7 +112,7 @@ class DoseProfile {
       .range([this.dimensions.height, 0]);
 
     if (this.densityChecked) {
-      let maxDensity = Math.max(...data.map((v) => v.density));
+      let maxDensity = Math.max(...this.data.map((v) => v.density));
 
       this.yDensityScale = d3
         .scaleLinear()
@@ -117,7 +122,7 @@ class DoseProfile {
   }
 
   // TODO: Don't update on slider change, only on crosshair position or axes change
-  plotAxes(axis) {
+  plotAxes() {
     // Clear existing axes and labels
     this.svg.selectAll(".profile-x-axis").remove();
     this.svg.selectAll(".profile-y-dose-axis").remove();
@@ -156,7 +161,7 @@ class DoseProfile {
           ")"
       )
       .style("text-anchor", "middle")
-      .text(axis + " Position (cm)");
+      .text(this.dim + " Position (cm)");
 
     // Label for dose y axis
     this.svg
@@ -325,18 +330,23 @@ class DoseProfile {
     }
   }
 
-  plotDoseProfile(data, axis, dim, coords) {
+  // TODO: Instead of leaving logic inside of dose profile object, just updateAxes before plotDoseProfile if need be
+  updateAxes() {
+    this.setDoseScales();
+    this.plotAxes();
+    if (this.zoomObj !== null) this.resetZoomTransform();
+  }
+
+  plotDoseProfile(axis, dim, coords) {
+    this.dim = dim;
     let axisChange = axis !== this.prevAxis ? true : false;
 
     if (this.xScale === null || axisChange) {
-      this.setDoseScales(data);
-      this.plotAxes(dim);
-      if (this.zoomObj !== null) this.resetZoomTransform();
+      this.updateAxes();
     }
 
     this.makeTitle(dim, coords);
-    this.plotData(data);
-
+    this.plotData(this.data);
     this.prevAxis = axis;
   }
 }

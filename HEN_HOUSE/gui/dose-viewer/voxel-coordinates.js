@@ -116,7 +116,7 @@ function updateVoxelCoords(coords, axis, sliceNum, updateXY = false) {
     }
 
     if (!doseVol.isEmpty()) {
-      updateDoseProfiles(voxelCoords, worldCoords);
+      updateDoseProfiles(axis, voxelCoords, worldCoords);
     }
   }
 }
@@ -140,10 +140,8 @@ function updateVoxelInfo(voxelCoords) {
   }
 }
 
-function updateDoseProfiles(voxelCoords, worldCoords) {
+function updateDoseProfiles(axis, voxelCoords, worldCoords) {
   if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
-    let axis = getAxis();
-
     var getCoords = (coords) =>
       axis === "xy"
         ? [
@@ -163,20 +161,14 @@ function updateDoseProfiles(voxelCoords, worldCoords) {
     let [voxelCoordsX, voxelCoordsY] = getCoords(voxelCoords);
     let [worldCoordsX, worldCoordsY] = getCoords(worldCoords);
 
-    let doseProfileXData = doseProfileX.getDoseProfileData(
-      axis[0],
-      voxelCoordsX
-    );
-    let doseProfileYData = doseProfileY.getDoseProfileData(
-      axis[1],
-      voxelCoordsY
-    );
+    doseProfileX.setDoseProfileData(axis[0], voxelCoordsX);
+    doseProfileY.setDoseProfileData(axis[1], voxelCoordsY);
 
     // Plot the dose profile along the x axis
-    doseProfileX.plotDoseProfile(doseProfileXData, axis, axis[0], worldCoordsX);
+    doseProfileX.plotDoseProfile(axis, axis[0], worldCoordsX);
 
     // Plot the dose profile along the y axis
-    doseProfileY.plotDoseProfile(doseProfileYData, axis, axis[1], worldCoordsY);
+    doseProfileY.plotDoseProfile(axis, axis[1], worldCoordsY);
   }
 }
 
