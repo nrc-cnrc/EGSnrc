@@ -3,7 +3,8 @@
 // TODO: Make a dataName variable to reduce code
 
 var drawAxes = (svgAxis, slice) => {
-  svgAxis.selectAll("g").remove();
+  svgAxis.selectAll(".x-axis").remove();
+  svgAxis.selectAll(".y-axis").remove();
 
   // If there is existing transformation, apply it
   let xScale = zoomTransform
@@ -22,6 +23,37 @@ var drawAxes = (svgAxis, slice) => {
     .attr("transform", "translate(0," + slice.dimensions.height + ")")
     .call(xAxis);
   svgAxis.append("g").attr("class", "y-axis").call(yAxis);
+
+  // Label for x axis
+  svgAxis
+    .append("text")
+    .attr("class", "x-axis")
+    .attr(
+      "transform",
+      "translate(" +
+        slice.dimensions.width / 2 +
+        " ," +
+        (slice.dimensions.height + slice.dimensions.margin.top + 18) +
+        ")"
+    )
+    .style("text-anchor", "middle")
+    .text(slice.axis[0] + " Position (cm)");
+
+  // Label for y axis
+  svgAxis
+    .append("text")
+    .attr("class", "y-axis")
+    .attr("transform", "rotate(-90)")
+    .attr(
+      "transform",
+      "translate(" +
+        (15 - slice.dimensions.margin.left) +
+        " ," +
+        slice.dimensions.height / 2 +
+        ") rotate(-90)"
+    )
+    .style("text-anchor", "middle")
+    .text(slice.axis[1] + " Position (cm)");
 };
 
 class Volume {
@@ -119,6 +151,7 @@ class Volume {
       contourXScale: contourXScale,
       contourYScale: contourYScale,
       dimensions: this.dimensions,
+      axis: axis,
     };
 
     // If current slice number is larger than the total number of slices
@@ -151,7 +184,6 @@ class Volume {
 
     slice = {
       ...slice,
-      axis: axis,
       sliceData: sliceData,
       sliceNum: sliceNum,
     };

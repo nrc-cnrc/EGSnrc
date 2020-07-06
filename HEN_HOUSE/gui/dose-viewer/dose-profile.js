@@ -171,13 +171,13 @@ class DoseProfile {
       .attr(
         "transform",
         "translate(" +
-          (15 - this.dimensions.margin.left) +
+          -(this.dimensions.margin.left / 2) +
           " ," +
           this.dimensions.height / 2 +
           ") rotate(-90)"
       )
       .style("text-anchor", "middle")
-      .text("Dose (Gy)");
+      .text("Dose");
 
     if (this.densityChecked) {
       // Clear existing axis and label
