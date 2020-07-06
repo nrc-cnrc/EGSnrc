@@ -111,22 +111,27 @@ class Volume {
     var getLengthCm = (voxelArrDim) =>
       Math.abs(voxelArrDim[voxelArrDim.length - 1] - voxelArrDim[0]);
     let [xLengthCm, yLengthCm] = [getLengthCm(x), getLengthCm(y)];
-    let xDomain, yDomain, contourXScale, contourYScale;
+    let xDomain, yDomain, xRangeContour, yRangeContour;
     if (xLengthCm > yLengthCm) {
       xDomain = [x[0], x[x.length - 1]];
       yDomain = [y[0], y[0] + xLengthCm];
-      contourXScale = this.dimensions.width / this.data.voxelNumber[dim1];
-      contourYScale =
-        (this.dimensions.height * (yLengthCm / xLengthCm)) /
-        this.data.voxelNumber[dim2];
+      xRangeContour = [0, this.dimensions.width];
+      yRangeContour = [0, this.dimensions.height * (yLengthCm / xLengthCm)];
     } else {
       xDomain = [x[0], x[0] + yLengthCm];
       yDomain = [y[0], y[y.length - 1]];
-      contourXScale =
-        (this.dimensions.width * (xLengthCm / yLengthCm)) /
-        this.data.voxelNumber[dim1];
-      contourYScale = this.dimensions.height / this.data.voxelNumber[dim2];
+      xRangeContour = [0, this.dimensions.width * (xLengthCm / yLengthCm)];
+      yRangeContour = [0, this.dimensions.height];
     }
+
+    let contourXScale = d3
+      .scaleLinear()
+      .domain([0, this.data.voxelNumber[dim1]])
+      .range(xRangeContour);
+    let contourYScale = d3
+      .scaleLinear()
+      .domain([0, this.data.voxelNumber[dim2]])
+      .range(yRangeContour);
     // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
       dx: this.data.voxelSize[dim1],
@@ -148,10 +153,17 @@ class Volume {
         .scaleLinear()
         .domain([z[0], z[z.length - 1]])
         .range([0, totalSlices]), // unit: pixels
-      contourXScale: contourXScale,
-      contourYScale: contourYScale,
       dimensions: this.dimensions,
       axis: axis,
+      contourTransform: ({ type, value, coordinates }) => ({
+        type,
+        value,
+        coordinates: coordinates.map((rings) =>
+          rings.map((points) =>
+            points.map(([i, j]) => [contourXScale(i), contourYScale(j)])
+          )
+        ),
+      }),
     };
 
     // If current slice number is larger than the total number of slices
@@ -190,16 +202,6 @@ class Volume {
 
     this.prevSlice = slice;
     return slice;
-  }
-
-  scaleContour(contours, xScale, yScale) {
-    return contours.map(({ type, value, coordinates }) => ({
-      type,
-      value,
-      coordinates: coordinates.map((rings) =>
-        rings.map((points) => points.map(([i, j]) => [i * xScale, j * yScale]))
-      ),
-    }));
   }
 
   initializeLegend(legendSvg, legendClass, title, parameters) {
@@ -304,9 +306,10 @@ class DoseVolume extends Volume {
     var contours = d3
       .contours()
       .size([slice.xVoxels, slice.yVoxels])
-      .thresholds(this.thresholds)(slice.sliceData);
+      .thresholds(this.thresholds)(slice.sliceData)
+      .map(slice.contourTransform);
 
-    let doseContour = svg
+    svg
       .append("g")
       .attr("class", "dose-contour")
       .attr("width", this.dimensions.width)
@@ -316,9 +319,7 @@ class DoseVolume extends Volume {
       .attr("stroke-opacity", 0.5)
       .attr("stroke-width", 0.5)
       .selectAll("path")
-      .data(
-        super.scaleContour(contours, slice.contourXScale, slice.contourYScale)
-      )
+      .data(contours)
       .join("path")
       .attr("fill", (d) => this.colour(d.value))
       .attr("fill-opacity", 0.5)
@@ -383,7 +384,8 @@ class DensityVolume extends Volume {
       .contours()
       .size([slice.xVoxels, slice.yVoxels])
       .smooth(false)
-      .thresholds(this.thresholds)(slice.sliceData);
+      .thresholds(this.thresholds)(slice.sliceData)
+      .map(slice.contourTransform);
 
     svg
       .append("g")
@@ -392,9 +394,7 @@ class DensityVolume extends Volume {
       .attr("height", this.dimensions.height)
       .attr("fill", "none")
       .selectAll("path")
-      .data(
-        super.scaleContour(contours, slice.contourXScale, slice.contourYScale)
-      )
+      .data(contours)
       .join("path")
       .attr("fill", (d) => this.colour(d.value))
       .attr("fill-opacity", 1.0)
