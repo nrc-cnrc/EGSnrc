@@ -457,19 +457,21 @@ void EGS_Editor::autoComplete() {
 
         vector<shared_ptr<EGS_BlockInput>> blockInputs = inputBlockTemplate->getBlockInputs(blockTitle.toStdString());
 
+        //vector<shared_ptr<EGS_BlockInput>> generalInputs = inputBlockTemplate->getGeneralBlock(blockTitle.toStdString());
+
         // Populate the popup list
         QStringList itemList;
 
         // Add all the single inputs for the top level block
         for(auto &inp: singleInputs) {
-            if(!egsEquivStr(inp->getTag(), "library")) {
+            //if(!egsEquivStr(inp->getTag(), "library")) {
                 // Skip any inputs that have a dependency which is not satisfied
                 if(inputHasDependency(inp) && inputDependencySatisfied(inp, cursor) == false) {
                     continue;
                 }
 
                 itemList << QString((inp->getTag() + " = ").c_str());
-            }
+            //}
         }
 
         // Store the block titles in a set to remove duplicates
@@ -543,6 +545,7 @@ void EGS_Editor::autoComplete() {
             QTextCharFormat format;
             format.setUnderlineStyle(QTextCharFormat::NoUnderline);
 
+            egsInformation("testQQ %s %s\n",blockTit.toLatin1().data(), selectedText.toLatin1().data());
             auto inputPtr = inputBlockTemplate->getBlockInput(blockTit.toStdString());
             if(!inputPtr) {
                 // Red underline the input tag
@@ -635,14 +638,25 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
     // If we couldn't find a library tag in the current block,
     // try searching the containing block (if there is one)
     if(library.size() < 1) {
-        // If we're current on a :start line, start searching on the next line
+        egsInformation("test searching containing block %s\n", blockTitle.toLatin1().data());
+
+        // If we're currently on a :start line, start searching on the next line
         // so that we're actually starting within the block
         QTextBlock blockEnd;
-        if(cursor.block().text().contains(":start ")) {
-            blockEnd = getBlockEnd(cursor.block().next());
-        } else {
-            blockEnd = getBlockEnd(cursor.block());
+        blockEnd = cursor.block();
+        int loopGuard = 10000;
+        int i = 0;
+        while(blockEnd.text().contains(":start ")) {
+            blockEnd = getBlockEnd(blockEnd.next());
+            if(++i > loopGuard) {
+                egsInformation("Warning: Encountered infinite loop while processing the input file. Contact the developers to report this bug.\n");
+                break;
+            }
+            if(blockEnd.isValid()) {
+                blockEnd = blockEnd.next();
+            }
         }
+        blockEnd = getBlockEnd(blockEnd);
         if(!blockEnd.isValid()) {
             return nullptr;
         }
@@ -652,7 +666,35 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
 
         // Check for the library tag here
         library = getInputValue("library", blockEnd, foundTag);
-        egsInformation("test searching containing block %s\n", library.toLatin1().data());
+
+        // If we still didn't find the library, search one block higher
+        if(library.size() < 1) {
+            egsInformation("test searching containing block2 %s\n", blockTitle.toLatin1().data());
+            // If we're currently on a :start line, start searching on the next line
+            // so that we're actually starting within the block
+            int loopGuard = 10000;
+            int i = 0;
+            while(blockEnd.text().contains(":start ")) {
+                blockEnd = getBlockEnd(blockEnd.next());
+                if(++i > loopGuard) {
+                    egsInformation("Warning: Encountered infinite loop while processing the input file. Contact the developers to report this bug.\n");
+                    break;
+                }
+                if(blockEnd.isValid()) {
+                    blockEnd = blockEnd.next();
+                }
+            }
+            blockEnd = getBlockEnd(blockEnd);
+            if(!blockEnd.isValid()) {
+                return nullptr;
+            }
+
+            // Go to the line after the end of the current input block
+            blockEnd = blockEnd.next();
+
+            // Check for the library tag here
+            library = getInputValue("library", blockEnd, foundTag);
+        }
     }
 
     // If we got the library tag, we can directly look up this input block structure
