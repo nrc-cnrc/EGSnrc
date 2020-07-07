@@ -58,12 +58,6 @@ void EGS_InputStruct::addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks) 
     blockInputs.insert(blockInputs.end(), blocks.begin(), blocks.end());
 }
 
-shared_ptr<EGS_BlockInput> EGS_InputStruct::addFloatingBlock(shared_ptr<EGS_BlockInput> block) {
-    floatingBlocks.push_back(block);
-
-    return floatingBlocks.back();
-}
-
 vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
     return blockInputs;
 }
@@ -111,6 +105,23 @@ vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
             }
         }
     }
+
+    // If nothing was found on the 2nd level blocks, search the top level ones
+    // This is the case for shapes
+    if(libOptions.size() < 1) {
+        for(auto& block : blockInputs) {
+            egsInformation("test getLibOpt2 %s %s\n",block->getTitle().c_str(),blockTitle.c_str() );
+            if(block && block->getTitle() == blockTitle) {
+                vector<string> libAr = block->getSingleInput("library")->getValues();
+                for(auto& lib : libAr) {
+                    if(lib.size() > 0) {
+                        libOptions.push_back(lib);
+                    }
+                }
+            }
+        }
+    }
+
     return libOptions;
 }
 
@@ -236,6 +247,12 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getBlockInput(string title) {
         for(auto &block: blockInputs) {
             if(egsEquivStr(block->getTitle(), title)) {
                 return block;
+            } else {
+                // Do a recursive search
+                auto foundBlock = block->getBlockInput(title);
+                if(foundBlock) {
+                    return foundBlock;
+                }
             }
         }
     }
