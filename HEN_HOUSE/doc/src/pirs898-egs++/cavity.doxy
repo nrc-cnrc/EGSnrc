@@ -38,7 +38,7 @@
 
 <ul>
 <li> \ref cavity_intro </li>
-<li> \ref common_intro </li>
+<li> \ref common_intro "Common inputs" </li>
 <li> \ref cavity_options </li>
   <ul>
   <li> \ref cavity_fac </li>
@@ -85,63 +85,6 @@ explained in detail in sections \ref cavity_fac and \ref cavity_hvl.
 Variance reduction techniques, which are available in CAVRZnrc but are not
 particularly useful for cavity dose calculations are also not implemented
 (see \ref cavity_vr for more details).
-
-\section cavity_geom_source_rco Geometry, particle source and run control
-
-Geometry and particle source are specified in an input file as
-explained in the \link Geometry geometry module \endlink and the
-\link Sources particle sources module\endlink.
-Run control is specified in a section of the input file delimited by
-\verbatim
-:start run control:
-:stop run control:
-\endverbatim
-
-A \link EGS_RunControl simple \endlink run control object (RCO) is
-used to control a single run. A simple RCO understands the following
-inputs
-\verbatim
-ncase                       = number of histories to run
-nbatch                      = number of batches to use (default is 10)
-statistical accuracy sought = required uncertainty in %
-max cpu hours allowed       = max. CPU time allowed
-calculation                 = first or restart or combine or analyze
-\endverbatim
-The only required input is the number of histories. The \b nbatch input
-determines how many times the simulation will report its progress
-(and not, as one might expect, the number of statistical batches as
-\c egs_fac uses history-by-history statistical analysis). With the
-<b><code> statistical accuracy sought </code></b> input one can
-make the calculation terminate when the specified uncertainty is reached
-for the cavity dose. Note, however, that after <b>\c ncase</b> histories
-the simulation does not continue \em until this uncertainty is obtained.
-With the <b><code>max cpu hours allowed</code></b> input one can limit the
-simulation time
-to some maximum time in hours. With the <b>\c calculation</b> input
-one determines the type of simulation:
- - <b> \c first</b> means a fresh simulation (the default)
- - with <b> \c restart</b> one can restart a previously performed simulation
- - with <b>\c combine</b> one can combine the results of parallel runs. This is needed
-   when one or more of the parallel jobs has not finished so that the
-   results are not automatically combined or when one uses a simple RCO
-   for parallel runs (see below).
- - the <b>\c analyze</b> option is used to read the simulation data from the
-   <b>\c .egsdat</b> file and output the results to the standard output.
-
-A \link EGS_JCFControl "job-control-file" (JCF) \endlink RCO is used by default
-for parallel runs. A JCF RCO understands in addition to the above
-the optional input
-\verbatim
-nchunk = number of simulation chunks (default is 10)
-\endverbatim
-In parallel runs the simulation is split into <b><code> nchunk*n_parallel</code></b>
-portions and each parallel job simulates one portion at a time until
-no histories are left. Note that a functioning file locking functionality
-is needed on the system in order to use a JCF-RCO. As some users have
-reported problems with file locking, one can force the use of a simple
-RCO by specifying <b><code>-s</code></b> on the command line. In this case,
-all parallel jobs will execute the same number of histories as specified
-in the input file.
 
 \section cavity_options Scoring options
 
