@@ -76,6 +76,8 @@ static void setShapeInputs(shared_ptr<EGS_BlockInput> shapePtr) {
     shapePtr->addSingleInput("height", false, "The height of the cylinder, in cm.")->addDependency(typePtr, "cylinder");
     shapePtr->addSingleInput("phi range", false, "The minimum and maximum phi values, in degrees. This allows you restrict the cylinder to a shape like a slice of pie!")->addDependency(typePtr, "cylinder");
     shapePtr->addSingleInput("axis", false, "A unit vector that defines the axis of the cylinder.")->addDependency(typePtr, "cylinder");
+
+    addTransformationBlock(shapePtr);
 }
 
 /*! \defgroup Shapes Shapes
