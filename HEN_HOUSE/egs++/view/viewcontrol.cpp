@@ -287,6 +287,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             continue;
         }
 
+        // Geometries
         createGeomFunction isGeom = (createGeomFunction) egs_lib.resolve("createGeometry");
         if (isGeom) {
             egsInformation(" testgeom %s\n",libName.toLatin1().data());
@@ -330,6 +331,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             }
         }
 
+        // Sources
         createSourceFunction isSource = (createSourceFunction) egs_lib.resolve("createSource");
         if (isSource) {
             egsInformation(" testsrc %s\n",libName.toLatin1().data());
@@ -373,6 +375,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             }
         }
 
+        // Shapes
         createShapeFunction isShape = (createShapeFunction) egs_lib.resolve("createShape");
         if (isShape) {
             egsInformation(" testshape %s\n",libName.toLatin1().data());
@@ -382,7 +385,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
                 shared_ptr<EGS_BlockInput> shape = getInputs();
                 if (shape) {
-                    inputStruct->addFloatingBlock(shape);
+                    inputStruct->addBlockInput(shape);
 
                     vector<shared_ptr<EGS_SingleInput>> singleInputs = shape->getSingleInputs();
                     for (auto &inp : singleInputs) {

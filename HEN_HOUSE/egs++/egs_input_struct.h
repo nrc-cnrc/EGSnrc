@@ -133,7 +133,6 @@ public:
     shared_ptr<EGS_BlockInput> addBlockInput(string blockTit, bool isReq = false);
     shared_ptr<EGS_BlockInput> addBlockInput(shared_ptr<EGS_BlockInput> block);
     void addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks);
-    shared_ptr<EGS_BlockInput> addFloatingBlock(shared_ptr<EGS_BlockInput> block);
     vector<shared_ptr<EGS_BlockInput>> getBlockInputs();
     shared_ptr<EGS_BlockInput> getBlockInput(string title);
     shared_ptr<EGS_BlockInput> getLibraryBlock(string blockTitle, string libraryName);
@@ -142,7 +141,7 @@ public:
 private:
 
     vector<shared_ptr<EGS_BlockInput>> blockInputs;
-    vector<shared_ptr<EGS_BlockInput>> floatingBlocks;
+    vector<shared_ptr<EGS_BlockInput>> generalBlocks;
 };
 
 
