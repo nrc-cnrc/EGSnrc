@@ -103,8 +103,12 @@ class DoseProfile {
     // Create x and y scale
     this.xScale = d3
       .scaleLinear()
-      .domain([minPos, maxPos])
-      .range([0, this.dimensions.width]);
+      .domain(minPos < maxPos ? [minPos, maxPos] : [maxPos, minPos])
+      .range(
+        minPos < maxPos
+          ? [0, this.dimensions.width]
+          : [this.dimensions.width, 0]
+      );
 
     this.yDoseScale = d3
       .scaleLinear()

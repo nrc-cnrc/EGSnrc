@@ -40,9 +40,11 @@ d3.select("#read-button").on("click", function () {
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
       doseVol.addData(data);
+      doseVol.initializeMaxDoseSlider();
       doseVol.initializeLegend();
       // TODO: Figure out a better layout for event listeners
       let slice = doseVol.getSlice(axis, sliceNum);
+      doseVol.initializeDoseContourInput();
       doseVol.drawDose(slice, svgDose);
       updateSliderAfterAxisChange(slice);
       enableCoordInputs(doseVol.data.voxelNumber);

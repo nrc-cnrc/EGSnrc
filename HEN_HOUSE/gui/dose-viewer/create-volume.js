@@ -1,10 +1,10 @@
 // TODO: Make a plotting object that takes list of volumes, plots them
 // Each plotting object has radio buttons, slider, axes, canvas, and svg
 // TODO: Make a dataName variable to reduce code
+// TODO: Make the max dose slider its own object
 
 var drawAxes = (svgAxis, slice) => {
-  svgAxis.selectAll(".x-axis").remove();
-  svgAxis.selectAll(".y-axis").remove();
+  svgAxis.selectAll(".x-axis, .y-axis, .x-axis-grid, .y-axis-grid").remove();
 
   // If there is existing transformation, apply it
   let xScale = zoomTransform
@@ -14,15 +14,42 @@ var drawAxes = (svgAxis, slice) => {
     ? zoomTransform.rescaleY(slice.yScale)
     : slice.yScale;
 
-  var xAxis = d3.axisBottom().scale(xScale).tickSize(-slice.dimensions.height);
-  var yAxis = d3.axisLeft().scale(yScale).tickSize(-slice.dimensions.width);
+  // Create and append the x and y axes
+  var xAxis = d3.axisBottom().scale(xScale).ticks(6);
+  var yAxis = d3.axisLeft().scale(yScale).ticks(6);
 
   svgAxis
     .append("g")
     .attr("class", "x-axis")
     .attr("transform", "translate(0," + slice.dimensions.height + ")")
+    .style("font-size", "12px")
     .call(xAxis);
-  svgAxis.append("g").attr("class", "y-axis").call(yAxis);
+  svgAxis
+    .append("g")
+    .attr("class", "y-axis")
+    .style("font-size", "12px")
+    .call(yAxis);
+
+  // Create and append the x and y grids
+  var xAxisGrid = d3
+    .axisBottom()
+    .scale(xScale)
+    .tickSize(-slice.dimensions.height)
+    .tickFormat("")
+    .ticks(6);
+  var yAxisGrid = d3
+    .axisLeft()
+    .scale(yScale)
+    .tickSize(-slice.dimensions.width)
+    .tickFormat("")
+    .ticks(6);
+
+  svgAxis
+    .append("g")
+    .attr("class", "x-axis-grid")
+    .attr("transform", "translate(0," + slice.dimensions.height + ")")
+    .call(xAxisGrid);
+  svgAxis.append("g").attr("class", "y-axis-grid").call(yAxisGrid);
 
   // Label for x axis
   svgAxis
@@ -33,11 +60,11 @@ var drawAxes = (svgAxis, slice) => {
       "translate(" +
         slice.dimensions.width / 2 +
         " ," +
-        (slice.dimensions.height + slice.dimensions.margin.top + 18) +
+        (slice.dimensions.fullHeight - 15) +
         ")"
     )
     .style("text-anchor", "middle")
-    .text(slice.axis[0] + " Position (cm)");
+    .text(slice.axis[0] + " (cm)");
 
   // Label for y axis
   svgAxis
@@ -53,7 +80,7 @@ var drawAxes = (svgAxis, slice) => {
         ") rotate(-90)"
     )
     .style("text-anchor", "middle")
-    .text(slice.axis[1] + " Position (cm)");
+    .text(slice.axis[1] + " (cm)");
 };
 
 class Volume {
@@ -114,23 +141,33 @@ class Volume {
     let xDomain, yDomain, xRangeContour, yRangeContour;
     if (xLengthCm > yLengthCm) {
       xDomain = [x[0], x[x.length - 1]];
-      yDomain = [y[0], y[0] + xLengthCm];
+      yDomain = [y[y.length - 1] - xLengthCm, y[y.length - 1]];
       xRangeContour = [0, this.dimensions.width];
-      yRangeContour = [0, this.dimensions.height * (yLengthCm / xLengthCm)];
+      yRangeContour = [this.dimensions.height * (yLengthCm / xLengthCm), 0];
     } else {
       xDomain = [x[0], x[0] + yLengthCm];
       yDomain = [y[0], y[y.length - 1]];
       xRangeContour = [0, this.dimensions.width * (xLengthCm / yLengthCm)];
-      yRangeContour = [0, this.dimensions.height];
+      yRangeContour = [this.dimensions.height, 0];
     }
+
+    let xPixelToVoxelScale = d3
+      .scaleQuantile()
+      .domain(xRangeContour)
+      .range(d3.range(0, this.data.voxelNumber[dim1], 1));
+    let yPixelToVoxelScale = d3
+      .scaleQuantile()
+      .domain([yRangeContour[1], yRangeContour[0]])
+      .range(d3.range(this.data.voxelNumber[dim2] - 1, -1, -1));
 
     let contourXScale = d3
       .scaleLinear()
       .domain([0, this.data.voxelNumber[dim1]])
       .range(xRangeContour);
+    // Bump by 1 to fix misalignment after flipping y axis
     let contourYScale = d3
       .scaleLinear()
-      .domain([0, this.data.voxelNumber[dim2]])
+      .domain([1, this.data.voxelNumber[dim2] + 1])
       .range(yRangeContour);
     // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
@@ -148,13 +185,15 @@ class Volume {
       yScale: d3
         .scaleLinear()
         .domain(yDomain)
-        .range([0, this.dimensions.height]),
+        .range([this.dimensions.height, 0]),
       zScale: d3
         .scaleLinear()
         .domain([z[0], z[z.length - 1]])
         .range([0, totalSlices]), // unit: pixels
       dimensions: this.dimensions,
       axis: axis,
+      xPixelToVoxelScale: xPixelToVoxelScale,
+      yPixelToVoxelScale: yPixelToVoxelScale,
       contourTransform: ({ type, value, coordinates }) => ({
         type,
         value,
@@ -207,6 +246,7 @@ class Volume {
   initializeLegend(legendSvg, legendClass, title, parameters) {
     // Clear and redraw current legend
     legendSvg.select("." + legendClass).remove();
+    legendSvg.select("text").remove();
 
     // Make space for legend title
     legendSvg
@@ -217,6 +257,7 @@ class Volume {
     // Append title
     legendSvg
       .append("text")
+      .attr("class", legendClass)
       .attr("x", this.legendDimensions.width / 2)
       .attr("y", this.legendDimensions.margin.top / 2)
       .attr("text-anchor", "middle")
@@ -233,7 +274,7 @@ class Volume {
 
     // Apply all the parameters
     Object.entries(parameters).forEach(([name, val]) => {
-      legend[name](val);
+      legend[name](...val);
     });
 
     legendSvg.select("." + legendClass).call(legend);
@@ -270,25 +311,36 @@ class DoseVolume extends Volume {
   addData(data) {
     // TODO: Want user to be able to choose their own space between contours
     super.addData(data);
+    // Max dose used for dose contour plot
+    this.maxDoseVar = this.data.maxDose;
     super.addColourScheme(d3.interpolateViridis, this.data.maxDose);
     // Calculate the contour thresholds
-    this.contourInt = parseFloat(
-      d3.select("#contour-line-select").node().value
-    );
+    let contourInt = 0.1;
+    this.thresholdPercents = d3.range(0, 1.0 + contourInt, contourInt);
     this.updateThresholds();
+    // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
+    this.className = (i) =>
+      "col-" + d3.format("d")(this.thresholdPercents[i] * 1000);
   }
 
-  updateContourInterval(val) {
-    this.contourInt = val;
+  setMaxDose(val) {
+    this.maxDoseVar = val * this.data.maxDose;
+    super.addColourScheme(d3.interpolateViridis, this.maxDoseVar);
     this.updateThresholds();
-    this.initializeLegend();
     this.drawDose(this.prevSlice, svgDose);
   }
 
   updateThresholds() {
-    this.thresholds = d3
-      .range(0, 1.0 + this.contourInt, this.contourInt)
-      .map((i) => i * this.data.maxDose);
+    this.thresholds = this.thresholdPercents.map((i) => i * this.maxDoseVar);
+  }
+
+  // TODO: Don't reinitialize legend when adding a new threshold
+  addThresholdPercent(thresholdPercent) {
+    this.thresholdPercents.push(thresholdPercent);
+    this.thresholdPercents.sort();
+    this.updateThresholds();
+    this.initializeLegend();
+    this.drawDose(this.prevSlice, svgDose);
   }
 
   getSlice(axis, sliceNum) {
@@ -309,7 +361,7 @@ class DoseVolume extends Volume {
       .thresholds(this.thresholds)(slice.sliceData)
       .map(slice.contourTransform);
 
-    svg
+    let contourPaths = svg
       .append("g")
       .attr("class", "dose-contour")
       .attr("width", this.dimensions.width)
@@ -317,26 +369,131 @@ class DoseVolume extends Volume {
       .attr("fill", "none")
       .attr("stroke", "#fff")
       .attr("stroke-opacity", 0.5)
-      .attr("stroke-width", 0.5)
+      .attr("stroke-width", 0.1)
       .selectAll("path")
       .data(contours)
       .join("path")
+      .classed("contour-path", true)
+      .attr("class", (d, i) => "contour-path" + " " + this.className(i))
       .attr("fill", (d) => this.colour(d.value))
       .attr("fill-opacity", 0.5)
       .attr("d", d3.geoPath());
+
+    // Get list of class names of hidden contours
+    let hiddenContourClassList = this.getHiddenContourClassList();
+
+    if (hiddenContourClassList.length > 0) {
+      // Apply hidden class to hidden contours
+      contourPaths
+        .filter(hiddenContourClassList.join(","))
+        .classed("hidden", true);
+    }
 
     if (zoomTransform) {
       svg.select("g.dose-contour").attr("transform", zoomTransform.toString());
     }
   }
 
-  initializeLegend() {
-    super.initializeLegend(doseLegendSvg, "doseLegend", "Dose", {
-      labels: this.thresholds.map((e) =>
-        d3.format(".0%")(e / this.data.maxDose)
-      ),
-      cells: this.thresholds,
+  getHiddenContourClassList() {
+    let hiddenContourClassList = [];
+    doseLegendSvg.selectAll("g.cell.hidden").each(function (d, i) {
+      hiddenContourClassList[i] =
+        "." + d3.select(this).attr("class").split(" ")[1];
     });
+
+    return hiddenContourClassList;
+  }
+
+  initializeLegend() {
+    // Get list of class names of hidden contours
+    let hiddenContourClassList = this.getHiddenContourClassList();
+
+    var toggleContour = (className) => {
+      svgDose
+        .selectAll("path.contour-path." + className)
+        .classed("hidden", function () {
+          return !d3.select(this).classed("hidden");
+        });
+    };
+
+    super.initializeLegend(doseLegendSvg, "doseLegend", "Dose", {
+      labels: [
+        this.thresholds.map((e) => d3.format(".0%")(e / this.maxDoseVar)),
+      ],
+      cells: [this.thresholds],
+      on: [
+        "cellclick",
+        function (d) {
+          let legendCell = d3.select(this);
+          toggleContour(legendCell.attr("class").split(" ")[1]);
+          legendCell.classed("hidden", !legendCell.classed("hidden"));
+        },
+      ],
+    });
+
+    // Add the appropriate classnames to each legend cell
+    let len = this.thresholdPercents.length - 1;
+    doseLegendSvg
+      .selectAll("g.cell")
+      .attr("class", (d, i) => "cell " + this.className(len - i));
+
+    if (hiddenContourClassList.length > 0) {
+      // Apply hidden class to hidden contours
+      let hiddenLegendCells = doseLegendSvg
+        .selectAll("g.cell")
+        .filter(hiddenContourClassList.join(","));
+      hiddenLegendCells.classed("hidden", !hiddenLegendCells.classed("hidden"));
+    }
+  }
+
+  initializeDoseContourInput() {
+    var addNewThresholdPercent = () => {
+      let val = parseFloat(submitDoseContour.node().value);
+      let newPercentage = val / 100.0;
+      if (!Number.isNaN(newPercentage)) {
+        // Check if valid or if percentage already exists
+        if (
+          val < 0 ||
+          val > 100 ||
+          !Number.isInteger(val) ||
+          this.thresholdPercents.includes(newPercentage)
+        ) {
+          console.log("Invalid value or value already exists on plot");
+          // Flash the submit box red
+          submitDoseContour
+            .transition()
+            .duration(200)
+            .style("background-color", "red")
+            .transition()
+            .duration(300)
+            .style("background-color", "white");
+        } else {
+          this.addThresholdPercent(newPercentage);
+        }
+      }
+    };
+
+    let doseContourInputWidth = 45;
+
+    // Add number input box
+    let submitDoseContour = doseLegendHolder
+      .append("input")
+      .attr("type", "number")
+      .attr("name", "add-dose-contour-line")
+      .attr("id", "add-dose-contour-line")
+      .attr("min", 0)
+      .attr("max", 100)
+      .attr("step", 1)
+      .style("width", doseContourInputWidth + "px");
+
+    // Add submit button
+    doseLegendHolder
+      .append("input")
+      .attr("type", "submit")
+      .attr("name", "submit-dose-contour-line")
+      .attr("id", "submit-dose-contour-line")
+      .attr("value", "+")
+      .on("click", addNewThresholdPercent);
   }
 
   getDataAtVoxelCoords(voxelCoords) {
@@ -345,6 +502,78 @@ class DoseVolume extends Volume {
 
   getErrorAtVoxelCoords(voxelCoords) {
     return super.getDataAtVoxelCoords(voxelCoords, "error");
+  }
+
+  // TODO: Make a slider object for slice iteration and max dose setting
+  // TODO: Connect slider to data
+  initializeMaxDoseSlider() {
+    let maxDosePercent = 1.5;
+    let startingDosePercent = 1.0;
+    let maxDoseSliderRange = d3.select("#max-dose-slider-range");
+    var dosePercentFormat = d3.format(".0%");
+
+    // Set slider step to be 1%
+    maxDoseSliderRange.node().step = 0.01;
+
+    // Enable slider
+    if (maxDoseSliderRange.node().disabled)
+      maxDoseSliderRange.node().disabled = false;
+
+    // On increment button push
+    d3.select("#max-dose-increment-slider").on("click", function () {
+      let slider = d3.select("#max-dose-slider-range").node();
+      slider.stepUp(1);
+
+      // Update slider text
+      d3.select("#max-dose-slider-value").node().value = dosePercentFormat(
+        slider.value
+      );
+
+      doseVol.setMaxDose(slider.value);
+    });
+
+    // On decrement button push
+    d3.select("#max-dose-decrement-slider").on("click", function () {
+      let slider = d3.select("#max-dose-slider-range").node();
+      slider.stepDown(1);
+
+      // Update slider text
+      d3.select("#max-dose-slider-value").node().value = dosePercentFormat(
+        slider.value
+      );
+
+      doseVol.setMaxDose(slider.value);
+    });
+
+    // On slider input, update text
+    maxDoseSliderRange.on("input", function () {
+      // Update slider text
+      d3.select("#max-dose-slider-value").node().value = dosePercentFormat(
+        this.value
+      );
+
+      doseVol.setMaxDose(this.value);
+      return true;
+    });
+
+    // Set max to max dose and current value to starting value define above
+    maxDoseSliderRange
+      .attr("max", maxDosePercent)
+      .attr("max", maxDosePercent)
+      .attr("value", startingDosePercent);
+
+    // Show maximum value of slider
+    d3.select("#max-dose-slider-max").node().value = dosePercentFormat(
+      maxDosePercent
+    );
+
+    // Show minimum value of slider
+    d3.select("#max-dose-slider-min").node().value = dosePercentFormat(0);
+
+    // Show current value of slider
+    d3.select("#max-dose-slider-value").node().value = dosePercentFormat(
+      startingDosePercent
+    );
   }
 }
 
@@ -410,10 +639,94 @@ class DensityVolume extends Volume {
   }
 
   initializeLegend() {
-    super.initializeLegend(densityLegendSvg, "densityLegend", "Density", {
-      labelFormat: d3.format(".2f"),
-      cells: this.thresholds.length > 10 ? 10 : this.thresholds,
-    });
+    let legendClass = "densityLegend";
+    let title = "Density";
+    let dims = this.legendDimensions;
+
+    function gradientUrl(colour, height, width, max, n = 150) {
+      let canvas = document.createElement("canvas");
+      let context = canvas.getContext("2d");
+
+      for (let i = 0; i < height; ++i) {
+        context.fillStyle = "black";
+        context.fillRect(0, i, 1, 1);
+        context.fillStyle = colour(((n - i) / n) * max);
+        context.fillRect(1, i, width - 1, 1);
+      }
+      return canvas.toDataURL();
+    }
+
+    // Remove old text
+    densityLegendSvg.select("." + legendClass).remove();
+    densityLegendSvg.select("text").remove();
+
+    // Set dimensions of svg
+    densityLegendSvg
+      .attr("width", dims.width)
+      .attr("height", dims.height / 2)
+      .attr("viewBox", [0, 0, dims.width, dims.height / 2])
+      .style("overflow", "visible")
+      .style("display", "block");
+
+    // Define parameters for ticks
+    let ticks = 6;
+    let n = Math.round(ticks + 1);
+    let tickValues = d3
+      .range(n)
+      .map((i) => d3.quantile(this.colour.domain(), i / (n - 1)));
+    let tickFormat = d3.format(".3f");
+    let tickSize = 15;
+
+    let gradUrl = gradientUrl(
+      this.colour,
+      dims.height / 2 - 20,
+      30,
+      this.data.maxDensity
+    );
+
+    // Set height of legend
+    let legendHeight = dims.height / 2 - 80;
+
+    // Create scale for ticks
+    let scale = d3
+      .scaleLinear()
+      .domain([0, this.data.maxDensity])
+      .range([legendHeight, 0]);
+
+    // Append title
+    densityLegendSvg
+      .append("text")
+      .attr("class", legendClass)
+      .attr("x", dims.width / 2)
+      .attr("y", dims.margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "14px")
+      .text(title);
+
+    // Append gradient image
+    densityLegendSvg
+      .append("g")
+      .attr("class", legendClass)
+      .append("image")
+      .attr("y", dims.margin.top)
+      .attr("width", dims.width)
+      .attr("height", legendHeight)
+      .attr("preserveAspectRatio", "none")
+      .attr("xlink:href", gradUrl);
+
+    // Append ticks
+    densityLegendSvg
+      .append("g")
+      .attr("transform", "translate(" + 0 + ", " + dims.margin.top + ")")
+      .call(
+        d3
+          .axisRight()
+          .ticks(ticks, tickFormat)
+          .tickFormat(tickFormat)
+          .tickSize(tickSize)
+          .tickValues(tickValues)
+          .scale(scale)
+      );
   }
 
   getDataAtVoxelCoords(voxelCoords) {

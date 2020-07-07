@@ -119,15 +119,30 @@ function zoomedAll(transform) {
     var new_yScale = transform.rescaleY(vol.prevSlice.yScale);
 
     // Update axes
+    svgAxis.select(".x-axis").call(d3.axisBottom().scale(new_xScale).ticks(6));
+    svgAxis.select(".y-axis").call(d3.axisLeft().scale(new_yScale).ticks(6));
+
+    // Update grid
     svgAxis
-      .select(".x-axis")
+      .select(".x-axis-grid")
       .call(
-        d3.axisBottom().scale(new_xScale).tickSize(-mainViewerDimensions.height)
+        d3
+          .axisBottom()
+          .scale(new_xScale)
+          .tickSize(-mainViewerDimensions.height)
+          .tickFormat("")
+          .ticks(6)
       );
+
     svgAxis
-      .select(".y-axis")
+      .select(".y-axis-grid")
       .call(
-        d3.axisLeft().scale(new_yScale).tickSize(-mainViewerDimensions.width)
+        d3
+          .axisLeft()
+          .scale(new_yScale)
+          .tickSize(-mainViewerDimensions.width)
+          .tickFormat("")
+          .ticks(6)
       );
   }
 }

@@ -83,3 +83,16 @@ span#legendholder {
 .profile-y-density-axis {
   color: grey;
 }
+
+.contour-path.hidden {
+  opacity: 0;
+}
+
+.cell.hidden {
+  opacity: 0.2 !important;
+}
+
+.x-axis-grid,
+.y-axis-grid {
+  color: grey;
+}

@@ -27,12 +27,28 @@ function coordsToWorld(coords, axis, sliceNum, volume, updateXY) {
   return [xVal, yVal, zVal];
 }
 
-function worldCoordsToVoxel(worldCoords, volume) {
-  // Map pixel to number of voxels
-  let xVal = volume.xWorldToVoxelScale(worldCoords[0]);
-  let yVal = volume.yWorldToVoxelScale(worldCoords[1]);
-  let zVal = volume.zWorldToVoxelScale(worldCoords[2]);
+function coordsToVoxel(coords, axis, sliceNum, volume, updateXY) {
+  let i, j;
+  if (updateXY) {
+    // Invert transformation if applicable then apply scale to get voxel coordinate
+    i = volume.prevSlice.xPixelToVoxelScale(
+      zoomTransform ? invertTransform(coords[0], zoomTransform, "x") : coords[0]
+    );
+    j = volume.prevSlice.yPixelToVoxelScale(
+      zoomTransform ? invertTransform(coords[1], zoomTransform, "y") : coords[1]
+    );
+  } else {
+    // Use previous axes coordinates
+    [i, j] = [
+      parseInt(d3.select("#voxel-" + axis[0] + "-value").node().value),
+      parseInt(d3.select("#voxel-" + axis[1] + "-value").node().value),
+    ];
+  }
 
+  let k = parseInt(sliceNum);
+
+  let [xVal, yVal, zVal] =
+    axis === "xy" ? [i, j, k] : axis === "yz" ? [k, i, j] : [i, k, j];
   return [xVal, yVal, zVal];
 }
 
@@ -105,8 +121,12 @@ function updateMarker(coords, svg) {
 function updateVoxelCoords(coords, axis, sliceNum, updateXY = false) {
   if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
     let vol = !densityVol.isEmpty() ? densityVol : doseVol;
-    worldCoords = coordsToWorld(coords, axis, sliceNum, vol, updateXY);
-    voxelCoords = worldCoordsToVoxel(worldCoords, vol);
+
+    // Get world and voxel coordinates from pixel value
+    let worldCoords = coordsToWorld(coords, axis, sliceNum, vol, updateXY);
+    let voxelCoords = coordsToVoxel(coords, axis, sliceNum, vol, updateXY);
+
+    // Update labels
     updateWorldLabels(worldCoords);
     updateVoxelLabels(voxelCoords);
     updateVoxelInfo(voxelCoords);

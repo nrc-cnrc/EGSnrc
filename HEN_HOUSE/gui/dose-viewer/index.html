@@ -44,16 +44,25 @@
             <button id="decrement-slider">-</button>
             <button id="increment-slider">+</button>
           </div>
-        </div>
-        <div id="contour-line-select-container">
-          <label for="contour-line-select"
-            >Choose interval between contour lines:</label
-          >
-          <select name="contour-line-select" id="contour-line-select">
-            <option value="0.02">2%</option>
-            <option value="0.05">5%</option>
-            <option selected="selected" value="0.1">10%</option>
-          </select>
+          <div class="slider-container">
+            <label for="max-dose"
+              >Max Dose:
+              <output type="text" id="max-dose-slider-value" value="">0</output>
+            </label>
+            <br />
+            <output type="text" id="max-dose-slider-min" value=""></output>
+            <input
+              type="range"
+              id="max-dose-slider-range"
+              min="0"
+              value="0"
+              class="slider"
+              disabled
+            />
+            <output type="text" id="max-dose-slider-max" value=""></output>
+            <button id="max-dose-decrement-slider">-</button>
+            <button id="max-dose-increment-slider">+</button>
+          </div>
         </div>
       </span>
       <span id="voxel-info" class="container">
@@ -201,9 +210,9 @@
 
       // Define all size variables
       let mainViewerDimensions = {
-        fullWidth: 520,
-        fullHeight: 510,
-        margin: { top: 10, right: 20, bottom: 40, left: 40 },
+        fullWidth: 540,
+        fullHeight: 520,
+        margin: { top: 10, right: 20, bottom: 50, left: 60 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
         },
@@ -321,7 +330,8 @@
         "px";
 
       // Initialize dose legend
-      d3.select("#dose-legend-holder")
+      var doseLegendHolder = d3
+        .select("#dose-legend-holder")
         .style("width", legendDimensions.width + "px")
         .style("height", legendDimensions.height / 2 + "px")
         .style("margin", getMarginStr(legendDimensions.margin));
@@ -423,13 +433,6 @@
       function getAxis() {
         return d3.selectAll("input[name='axis']:checked").node().value;
       }
-
-      d3.select("#contour-line-select").on("change", function () {
-        // When dropdown is changed
-        if (!doseVol.isEmpty()) {
-          doseVol.updateContourInterval(parseFloat(this.value));
-        }
-      });
     </script>
     <script type="text/javascript" src="./export.mjs"></script>
     <script type="text/javascript" src="./slider.js"></script>
