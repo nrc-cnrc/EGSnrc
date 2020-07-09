@@ -233,7 +233,7 @@ class DoseProfile {
       .attr("x", this.dimensions.width / 2)
       .attr("y", 0 - this.dimensions.margin.top / 2)
       .attr("text-anchor", "middle")
-      .style("font-size", "16px")
+      .style("font-size", "14px")
       .style("text-decoration", "underline")
       .text(
         axis +
@@ -243,16 +243,17 @@ class DoseProfile {
           dim2 +
           "): (" +
           format(coords[0]) +
-          ", " +
+          " cm, " +
           format(coords[1]) +
-          ")"
+          " cm)"
       );
   }
 
-  plotData(data) {
+  plotData() {
+    let data = this.data;
     let preYDoseScale = d3
       .scaleLinear()
-      .domain([0, doseVol.data.maxDose * 1.1])
+      .domain([0, doseVol.maxDoseVar * 1.1])
       .range([0, 1.1]);
 
     // Clear all existing elements
@@ -350,7 +351,7 @@ class DoseProfile {
     }
 
     this.makeTitle(dim, coords);
-    this.plotData(this.data);
+    this.plotData();
     this.prevAxis = axis;
   }
 }

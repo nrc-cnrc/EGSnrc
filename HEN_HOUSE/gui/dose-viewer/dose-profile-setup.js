@@ -56,6 +56,31 @@ var enableCheckboxForDoseProfilePlot = () => {
     showDoseProfileCheckbox.disabled = false;
 };
 
+d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
+  if (this.checked) {
+    // Enable zooming
+    doseProfileX.svg.select("rect.bounding-box").call(doseProfileX.zoomObj);
+    doseProfileY.svg.select("rect.bounding-box").call(doseProfileY.zoomObj);
+
+    // Remove hidden class
+    let doseProfilePlots = d3.selectAll("svg.dose-profile-plot");
+    doseProfilePlots.classed("hidden", false);
+
+    // Plot dose profile
+    if (plotCoords) {
+      updateVoxelCoords(plotCoords, getAxis(), getSliceNum(), false);
+    }
+  } else {
+    // Disable zooming
+    disableZoom(doseProfileX.svg.select("rect.bounding-box"));
+    disableZoom(doseProfileY.svg.select("rect.bounding-box"));
+
+    // Add hidden class to dose profile plots
+    let doseProfilePlots = d3.selectAll("svg.dose-profile-plot");
+    doseProfilePlots.classed("hidden", true);
+  }
+});
+
 function updateCoordInputsLabels(profileAxis, voxelNumber) {
   // Update max value and label of coordinate inputs
   if (profileAxis === "x") {

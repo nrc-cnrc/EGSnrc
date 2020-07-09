@@ -328,6 +328,10 @@ class DoseVolume extends Volume {
     super.addColourScheme(d3.interpolateViridis, this.maxDoseVar);
     this.updateThresholds();
     this.drawDose(this.prevSlice, svgDose);
+    if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
+      doseProfileX.plotData();
+      doseProfileY.plotData();
+    }
   }
 
   updateThresholds() {

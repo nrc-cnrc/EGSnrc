@@ -88,7 +88,8 @@ span#legendholder {
   opacity: 0;
 }
 
-.cell.hidden {
+.cell.hidden,
+svg.hidden {
   opacity: 0.2 !important;
 }
 

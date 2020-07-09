@@ -4,7 +4,7 @@ var zoomTransform;
 // TODO: Disable zoom before upload
 // Generic disable zoom function
 var disableZoom = (obj) => {
-  obj.call(d3.behavior.zoom().on("zoom", null));
+  obj.on(".zoom", null);
 };
 
 // Generic get zoom function
@@ -34,24 +34,20 @@ let mainViewerZoom = getZoom(
 svgMarker.call(mainViewerZoom);
 
 // Zooming for x dose profile
-let doseProfileXZoom = getZoom(
+doseProfileX.zoomObj = getZoom(
   sideDoseProfileDimensions.width,
   sideDoseProfileDimensions.height,
   zoomedDoseProfile,
   [doseProfileX]
 );
-doseProfileX.svg.select("rect.bounding-box").call(doseProfileXZoom);
-doseProfileX.zoomObj = doseProfileXZoom;
 
 // Zooming for y dose profile
-let doseProfileYZoom = getZoom(
+doseProfileY.zoomObj = getZoom(
   sideDoseProfileDimensions.width,
   sideDoseProfileDimensions.height,
   zoomedDoseProfile,
   [doseProfileY]
 );
-doseProfileY.svg.select("rect.bounding-box").call(doseProfileYZoom);
-doseProfileY.zoomObj = doseProfileYZoom;
 
 function zoomedDoseProfile(transform, doseProfile) {
   doseProfile.zoomTransform = transform;
