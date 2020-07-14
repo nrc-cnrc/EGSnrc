@@ -37,6 +37,7 @@ d3.select("#read-button").on("click", function () {
       if (!doseVol.isEmpty()) {
         enableCheckboxForDensityPlot();
       }
+      enableExportVisualizationButton();
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
       doseVol.addData(data);
@@ -49,6 +50,7 @@ d3.select("#read-button").on("click", function () {
       updateSliderAfterAxisChange(slice);
       enableCoordInputs(doseVol.data.voxelNumber);
       enableCheckboxForDoseProfilePlot();
+      enableExportVisualizationButton();
     } else {
       console.log("Unknown file extension");
       return true;

@@ -56,6 +56,12 @@ var enableCheckboxForDoseProfilePlot = () => {
     showDoseProfileCheckbox.disabled = false;
 };
 
+var enableExportVisualizationButton = () => {
+  let exportVisualizationButton = d3.select("button#save-vis").node();
+  if (exportVisualizationButton.disabled)
+    exportVisualizationButton.disabled = false;
+};
+
 d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
   if (this.checked) {
     // Enable zooming
@@ -70,6 +76,9 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
     if (plotCoords) {
       updateVoxelCoords(plotCoords, getAxis(), getSliceNum(), false);
     }
+
+    // Enable saving dose profiles as svg
+    d3.select("#save-dose-profile").node().disabled = false;
   } else {
     // Disable zooming
     disableZoom(doseProfileX.svg.select("rect.bounding-box"));
@@ -78,6 +87,9 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
     // Add hidden class to dose profile plots
     let doseProfilePlots = d3.selectAll("svg.dose-profile-plot");
     doseProfilePlots.classed("hidden", true);
+
+    // Disable saving dose profiles as svg
+    d3.select("#save-dose-profile").node().disabled = true;
   }
 });
 

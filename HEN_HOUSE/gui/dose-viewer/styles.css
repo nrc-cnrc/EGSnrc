@@ -12,19 +12,19 @@
 
 body {
   margin: 25px 50px 25px 50px;
+  font-family: helvetica;
 }
 p {
-  font-family: helvetica;
   color: grey;
 }
-h1,
+/* h1,
 input,
 output,
 label,
 text,
 button {
   font-family: helvetica;
-}
+} */
 
 .container {
   display: inline-block;

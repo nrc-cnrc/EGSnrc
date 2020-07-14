@@ -8,6 +8,15 @@
     <link rel="stylesheet" href="styles.css" />
     <script src="https://raw.githack.com/jamesleesaunders/d3-x3d/master/dist/d3-x3d.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.js"></script>
+    <script async src="http://cdn.jsdelivr.net/g/filesaver.js"></script>
+    <script
+      async
+      src="http://html2canvas.hertzen.com/dist/html2canvas.js"
+    ></script>
+    <script
+      async
+      src="https://unpkg.com/computed-style-to-inline-style"
+    ></script>
   </head>
   <body>
     <h1>Dose Viewer</h1>
@@ -103,43 +112,53 @@
           <output type="text" id="dose-value" value=""> </output>
         </label>
       </span>
-      <button id="saveVis">Export visualization to PNG</button>
-      <input
-        type="checkbox"
-        id="show-dose-profile-checkbox"
-        name="show-dose-profile-checkbox"
-        value="ShowDoseProfile"
-        disabled
-      />
-      <label for="show-dose-profile-checkbox">
-        Plot dose profile at crosshairs?
-      </label>
-      <div id="imageholder" class="parent">
-        <div class="layer-1">
-          <svg id="plot-density" class="plot"></svg>
+      <span class="container">
+        <button id="save-vis" disabled>Export visualization to PNG</button>
+        <br />
+        <button id="save-dose-profile" disabled>
+          Export dose profiles to CSV
+        </button>
+        <br />
+        <input
+          type="checkbox"
+          id="show-dose-profile-checkbox"
+          name="show-dose-profile-checkbox"
+          value="ShowDoseProfile"
+          disabled
+        />
+        <label for="show-dose-profile-checkbox">
+          Plot dose profile at crosshairs?
+        </label>
+        <br />
+      </span>
+      <div id="image-to-print">
+        <div id="imageholder" class="parent">
+          <div class="layer-1">
+            <svg id="plot-density" class="plot"></svg>
+          </div>
+          <div class="layer-2">
+            <svg id="plot-dose" class="plot"></svg>
+          </div>
+          <div class="layer-3">
+            <svg id="plot-marker" class="plot"></svg>
+          </div>
+          <div class="layer-4">
+            <svg id="axis-svg" class="plot"></svg>
+          </div>
         </div>
-        <div class="layer-2">
-          <svg id="plot-dose" class="plot"></svg>
-        </div>
-        <div class="layer-3">
-          <svg id="plot-marker" class="plot"></svg>
-        </div>
-        <div class="layer-4">
-          <svg id="axis-svg" class="plot"></svg>
-        </div>
+        <span id="legendholder">
+          <div id="dose-legend-holder" class="legend-holder">
+            <svg id="dose-legend-svg" class="legend"></svg>
+          </div>
+          <div id="density-legend-holder" class="legend-holder">
+            <svg id="density-legend-svg" class="legend"></svg>
+          </div>
+        </span>
+        <span id="dose-profile-holder">
+          <svg id="dose-profile-svg-x" class="dose-profile-plot"></svg>
+          <svg id="dose-profile-svg-y" class="dose-profile-plot"></svg>
+        </span>
       </div>
-      <span id="legendholder">
-        <div id="dose-legend-holder" class="legend-holder">
-          <svg id="dose-legend-svg" class="legend"></svg>
-        </div>
-        <div id="density-legend-holder" class="legend-holder">
-          <svg id="density-legend-svg" class="legend"></svg>
-        </div>
-      </span>
-      <span id="dose-profile-holder">
-        <svg id="dose-profile-svg-x" class="dose-profile-plot"></svg>
-        <svg id="dose-profile-svg-y" class="dose-profile-plot"></svg>
-      </span>
     </div>
     <div id="dose-profile-viewer">
       <p>
