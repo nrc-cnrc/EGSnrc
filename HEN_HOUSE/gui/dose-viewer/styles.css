@@ -84,6 +84,7 @@ span#legendholder {
   color: grey;
 }
 
+progress.hidden,
 .contour-path.hidden {
   opacity: 0;
 }
@@ -96,4 +97,19 @@ svg.hidden {
 .x-axis-grid,
 .y-axis-grid {
   color: grey;
+}
+
+#drop-area {
+  border: 2px dashed #ccc;
+  border-radius: 20px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+#drop-area.highlight {
+  border-color: blue;
+}
+
+progress {
+  width: 300px;
 }

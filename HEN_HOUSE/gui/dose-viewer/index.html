@@ -21,8 +21,26 @@
   <body>
     <h1>Dose Viewer</h1>
     <p>Upload .egsphant and .3ddose files.</p>
-    <input type="file" id="file-input" />
-    <button id="read-button">Read File</button>
+    <div id="drop-area">
+      <form class="file-upload">
+        <p>
+          Drop or select one or more .egsphant and .3ddose files.
+        </p>
+        <input
+          type="file"
+          id="file-input"
+          multiple
+          accept=".egsphant, .3ddose"
+        />
+        <br />
+        <progress
+          id="progress-bar"
+          max="100"
+          value="0"
+          class="hidden"
+        ></progress>
+      </form>
+    </div>
     <div id="dose-viewer-container" class="container">
       <span id="dose-viewer-info-container" class="container">
         <div id="axis-slider-container">
@@ -453,6 +471,7 @@
         return d3.selectAll("input[name='axis']:checked").node().value;
       }
     </script>
+    <script type="text/javascript" src="./file-upload.js"></script>
     <script type="text/javascript" src="./export.mjs"></script>
     <script type="text/javascript" src="./slider.js"></script>
     <script type="text/javascript" src="./voxel-coordinates.js"></script>
