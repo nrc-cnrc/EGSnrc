@@ -736,4 +736,18 @@ class DensityVolume extends Volume {
   getDataAtVoxelCoords(voxelCoords) {
     return super.getDataAtVoxelCoords(voxelCoords, "density");
   }
+
+  getMaterialAtVoxelCoords(voxelCoords) {
+    let [x, y, z] = voxelCoords;
+    let address =
+      z * (this.data.voxelNumber.x * this.data.voxelNumber.y) +
+      y * this.data.voxelNumber.x +
+      x;
+
+    let divisor = this.data.voxelNumber.x;
+    let materialNumber = parseInt(
+      this.data.material[Math.floor(address / divisor)][address % divisor]
+    );
+    return this.data.materialList[materialNumber - 1];
+  }
 }

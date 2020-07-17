@@ -1,10 +1,14 @@
 // Process .egsphant files
 // TODO: Test with other .egsphant files
 var processPhantomData = function (data) {
+  var getMax = function (a) {
+    return Math.max(...a.map((e) => (Array.isArray(e) ? getMax(e) : e)));
+  };
+
   let curr = 0;
   let numMaterials = parseInt(data[curr++]);
 
-  let materials = data.slice(curr, numMaterials + curr);
+  let materialList = data.slice(curr, numMaterials + curr);
   curr += numMaterials * 2;
 
   // Get number of x, y, and z voxels
@@ -27,7 +31,14 @@ var processPhantomData = function (data) {
 
   curr += 3;
 
-  // Skip material data
+  // Read the material data
+  let material = data
+    .slice(
+      curr,
+      parseInt(curr) + parseInt(numVoxY) * parseInt(numVoxZ) + parseInt(numVoxZ)
+    )
+    .filter((subArr) => subArr.length > 0);
+
   curr += numVoxY * numVoxZ + numVoxZ + 1;
 
   // Read the density data
@@ -47,14 +58,10 @@ var processPhantomData = function (data) {
       });
   });
 
-  let getMax = function (a) {
-    return Math.max(...a.map((e) => (Array.isArray(e) ? getMax(e) : e)));
-  };
-
   let maxDensity = getMax(densityGrid);
 
   // TODO: .flat() does not work in Safari, find an alternative
-  density = densityGrid.flat().slice(0, numVoxX * numVoxY * numVoxZ);
+  let density = densityGrid.flat().slice(0, numVoxX * numVoxY * numVoxZ);
 
   return {
     voxelNumber: {
@@ -73,7 +80,8 @@ var processPhantomData = function (data) {
       z: zArr[1] - zArr[0],
     },
     density: density, // The flattened density matrix
-    materials: materials, // The materials in the phantom
+    materialList: materialList, // The materials in the phantom
+    material: material, // The flattened material matrix
     maxDensity: maxDensity, // The maximum density value
   };
 };

@@ -146,6 +146,9 @@ function updateVoxelInfo(voxelCoords) {
     let density = densityVol.getDataAtVoxelCoords(voxelCoords);
     d3.select("#density-value").node().value =
       d3.format(".3f")(density) + " g/cm^3";
+
+    let material = densityVol.getMaterialAtVoxelCoords(voxelCoords);
+    d3.select("#material-value").node().value = material;
   }
 
   if (!doseVol.isEmpty()) {
