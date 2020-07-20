@@ -64,6 +64,7 @@ vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
 
 shared_ptr<EGS_BlockInput> EGS_InputStruct::getBlockInput(string title) {
     for(auto &block: blockInputs) {
+        egsInformation("test struct getBlockInput %s\n", block->getTitle().c_str());
         if(egsEquivStr(block->getTitle(), title)) {
             return block;
         }

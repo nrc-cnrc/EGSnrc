@@ -245,6 +245,11 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
                 // Get the description for this input
                 string desc = inputPtr->getDescription();
 
+                bool isRequired = inputPtr->getRequired();
+                if(isRequired) {
+                    desc += "\nRequired.";
+                }
+
                 // Check if this input has any dependencies
                 // and then confirm that the dependencies are satisfied
                 if(inputHasDependency(inputPtr)) {
@@ -317,6 +322,9 @@ void EGS_Editor::autoComplete() {
     QString blockTitle;
     shared_ptr<EGS_BlockInput> inputBlockTemplate = getBlockInput(blockTitle);
     egsInformation("testA %s\n", blockTitle.toLatin1().data());
+    if(inputBlockTemplate) {
+        egsInformation("test foundtemplate\n");
+    }
 
     // If we aren't inside an input block, ignore this line
     if(blockTitle.size() < 1) {
@@ -657,15 +665,13 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
             }
         }
         blockEnd = getBlockEnd(blockEnd);
-        if(!blockEnd.isValid()) {
-            return nullptr;
+        if(blockEnd.isValid()) {
+            // Go to the line after the end of the current input block
+            blockEnd = blockEnd.next();
+
+            // Check for the library tag here
+            library = getInputValue("library", blockEnd, foundTag);
         }
-
-        // Go to the line after the end of the current input block
-        blockEnd = blockEnd.next();
-
-        // Check for the library tag here
-        library = getInputValue("library", blockEnd, foundTag);
 
         // If we still didn't find the library, search one block higher
         if(library.size() < 1) {
@@ -685,15 +691,13 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
                 }
             }
             blockEnd = getBlockEnd(blockEnd);
-            if(!blockEnd.isValid()) {
-                return nullptr;
+            if(blockEnd.isValid()) {
+                // Go to the line after the end of the current input block
+                blockEnd = blockEnd.next();
+
+                // Check for the library tag here
+                library = getInputValue("library", blockEnd, foundTag);
             }
-
-            // Go to the line after the end of the current input block
-            blockEnd = blockEnd.next();
-
-            // Check for the library tag here
-            library = getInputValue("library", blockEnd, foundTag);
         }
     }
 
@@ -709,6 +713,7 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
     // If we didn't get the library tag, we might be in a top-level block
     // like a geometry definition. Just return the block with the matching title
     shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput(blockTitle.toStdString());
+    egsInformation("test returning top level block\n");
 
     return inputBlock;
 }
