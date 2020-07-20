@@ -57,13 +57,13 @@ static void setShapeInputs(shared_ptr<EGS_BlockInput> shapePtr) {
     typePtr->addDependency(libPtr, "", true);
 
     // Point
-    shapePtr->addSingleInput("position", false, "The x, y, z position that the source will emit particles from.")->addDependency(typePtr, "point");
+    shapePtr->addSingleInput("position", true, "The x, y, z position that the source will emit particles from.")->addDependency(typePtr, "point");
 
     // Box
-    shapePtr->addSingleInput("box size", false, "The side lengths of the box, in cm. Enter 1 number for a cube, or 3 numbers to denote the x, y, and z side lengths.")->addDependency(typePtr, "box");
+    shapePtr->addSingleInput("box size", true, "The side lengths of the box, in cm. Enter 1 number for a cube, or 3 numbers to denote the x, y, and z side lengths.")->addDependency(typePtr, "box");
 
     // Sphere
-    auto radiusPtr = shapePtr->addSingleInput("radius", false, "The radius of the sphere or cylinder, in cm.");
+    auto radiusPtr = shapePtr->addSingleInput("radius", true, "The radius of the sphere or cylinder, in cm.");
     radiusPtr->addDependency(typePtr, "sphere");
     auto midPtr = shapePtr->addSingleInput("midpoint", false, "The x, y and z coordinates of the midpoint of the sphere or cylinder, in cm. Defaults to 0, 0, 0.");
     midPtr->addDependency(typePtr, "sphere");
@@ -71,9 +71,9 @@ static void setShapeInputs(shared_ptr<EGS_BlockInput> shapePtr) {
     // Cylinder
     radiusPtr->addDependency(typePtr, "cylinder");
     midPtr->addDependency(typePtr, "cylinder");
-    shapePtr->addSingleInput("height", false, "The height of the cylinder, in cm.")->addDependency(typePtr, "cylinder");
+    shapePtr->addSingleInput("height", true, "The height of the cylinder, in cm.")->addDependency(typePtr, "cylinder");
     shapePtr->addSingleInput("phi range", false, "The minimum and maximum phi values, in degrees. This allows you restrict the cylinder to a shape like a slice of pie!")->addDependency(typePtr, "cylinder");
-    shapePtr->addSingleInput("axis", false, "A unit vector that defines the axis of the cylinder.")->addDependency(typePtr, "cylinder");
+    shapePtr->addSingleInput("axis", true, "A unit vector that defines the axis of the cylinder.")->addDependency(typePtr, "cylinder");
 
     addTransformationBlock(shapePtr);
 }

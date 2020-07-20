@@ -40,12 +40,23 @@
 
 #include "egs_libconfig.h"
 #include "egs_timer.h"
+#include "egs_input_struct.h"
 
 #include <iostream>
 using namespace std;
 
 class EGS_Application;
 class EGS_Input;
+
+static void addRunControlBlock(shared_ptr<EGS_BlockInput> blockPtr) {
+    shared_ptr<EGS_BlockInput> runBlock = blockPtr->addBlockInput("run control");
+    runBlock->addSingleInput("ncase", true, "The number of histories to simulate.");
+    runBlock->addSingleInput("nbatch", false, "The number of batches to divide the simulation into. After each batch, a checkpoint is created to allow for simulation restarts. Defaults to 10.");
+    runBlock->addSingleInput("max cpu hours allowed", false, "The number hours after which the simulation will be haulted. Defaults to -1, which is no limit.");
+    runBlock->addSingleInput("statistical accuracy sought", false, "The statistical uncertainty for a particular quantity of interest, below which the simulation will be haulted. Note that the quantity must be defined by the application (e.g. the cavity dose in egs_chamber), and in general is undefined.");
+    runBlock->addSingleInput("geometry error limit", false, "The number of geometry errors that will be allowed to occur, before haulting the simulation. Defaults to 0.");
+    runBlock->addSingleInput("calculation", false, "The calculation type: first (default, runs a new simulation), restart (resumes a terminated simulation), analyze (prints results), combine (combines results from a parallel run). Defaults to 'first'.", {"first", "restart", "analyze", "combine"});
+}
 
 /*! \brief A simple run control object for advanced EGSnrc C++ applications.
 

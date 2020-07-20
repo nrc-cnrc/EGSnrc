@@ -43,7 +43,6 @@
 #include "egs_input.h"
 #include "egs_base_source.h"
 #include "egs_rndm.h"
-#include "egs_run_control.h"
 #include "egs_base_source.h"
 #include "egs_simple_container.h"
 #include "egs_ausgab_object.h"
