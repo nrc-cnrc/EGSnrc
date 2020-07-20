@@ -232,13 +232,13 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     lib_dir += CONFIG_NAME;
     lib_dir += fs;
 
-    EGS_Library egs_lib(app_name.c_str(),lib_dir.c_str());
-    if (!egs_lib.load()) egsFatal("\n%s: Failed to load the %s application library from %s\n\n",
+    EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
+    if (!app_lib.load()) egsFatal("\n%s: Failed to load the %s application library from %s\n\n",
                                       appv[0],app_name.c_str(),lib_dir.c_str());
 
-    createAppFunction createApp = (createAppFunction) egs_lib.resolve("createApplication");
+    createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
     if (!createApp) egsFatal("\n%s: Failed to resolve the address of the 'createApplication' function"
-                                 " in the application library %s\n\n",appv[0],egs_lib.libraryFile());
+                                 " in the application library %s\n\n",appv[0],app_lib.libraryFile());
 /*TODO left here crash 'cause tutor7pp isn't compiled <=======================
     EGS_Application *app = createApp(appc,appv);
     if (!app) {
@@ -274,6 +274,25 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // The input template structure
     inputStruct = make_shared<EGS_InputStruct>();
+
+    // Get the application level input blocks
+    getInputsFunction getAppInputs = (getInputsFunction) app_lib.resolve("getAppInputs");
+    egsInformation("getInputs test0\n");
+    if(getAppInputs) {
+        egsInformation("getInputs test1\n");
+        shared_ptr<EGS_BlockInput> inpBlock = getAppInputs();
+       /*  if(inpBlock) {
+            egsInformation("getInputs test2\n");
+            for (auto &inp : inpBlock->getSingleInputs()) {
+                const vector<string> vals = inp->getValues();
+                egsInformation("  single %s\n", inp->getTag().c_str());
+                for (auto&& val : vals) {
+                    egsInformation("      %s\n", val.c_str());
+                }
+            }
+            inputStruct->addBlockInput(inpBlock);
+        } */
+    }
 
     // Geometry definition block
     auto geomDefPtr = inputStruct->addBlockInput("geometry definition");
