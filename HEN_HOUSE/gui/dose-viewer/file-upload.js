@@ -88,7 +88,7 @@ function readFile(file, fileNum) {
       densityVol.addData(data);
       densityVol.initializeLegend();
       let slice = densityVol.getSlice(axis, sliceNum);
-      densityVol.drawDensity(slice, svgDensity);
+      densityVol.drawDensity(slice, canvDensity);
       updateSliderAfterAxisChange(slice);
       if (!doseVol.isEmpty()) {
         enableCheckboxForDensityPlot();

@@ -22,7 +22,7 @@ function updateImage(axis, sliceNum) {
 
   if (!densityVol.isEmpty()) {
     slice = densityVol.getSlice(axis, sliceNum);
-    densityVol.drawDensity(slice, svgDensity);
+    densityVol.drawDensity(slice, canvDensity);
   }
   if (!doseVol.isEmpty()) {
     slice = doseVol.getSlice(axis, sliceNum);
@@ -72,7 +72,7 @@ d3.selectAll("input[name='axis']").on("change", function () {
 
   if (!densityVol.isEmpty()) {
     slice = densityVol.getSlice(axis, sliceNum);
-    densityVol.drawDensity(slice, svgDensity);
+    densityVol.drawDensity(slice, canvDensity);
   }
   if (!doseVol.isEmpty()) {
     slice = doseVol.getSlice(axis, sliceNum);

@@ -97,13 +97,25 @@ function zoomedDoseProfile(transform, doseProfile) {
   }
 }
 
+function zoomedCanvas(transform, canvas) {
+  // Get the image to draw
+  let image = densityVol.prevSliceImg;
+  let context = canvas.node().getContext("2d");
+
+  // Clear the canvas, apply transformations, and redraw
+  context.clearRect(0, 0, canvas.node().width, canvas.node().height);
+  context.save();
+  context.translate(transform.x, transform.y);
+  context.scale(transform.k, transform.k);
+  context.drawImage(image, 0, 0);
+  context.restore();
+}
+
 function zoomedAll(transform) {
   if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
     zoomTransform = transform;
 
-    svgDensity
-      .select("g.density-contour")
-      .attr("transform", transform.toString());
+    zoomedCanvas(transform, canvDensity);
 
     svgDose.select("g.dose-contour").attr("transform", transform.toString());
 

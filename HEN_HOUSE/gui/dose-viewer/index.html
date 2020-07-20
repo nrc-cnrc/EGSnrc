@@ -157,7 +157,7 @@
       <div id="image-to-print">
         <div id="imageholder" class="parent">
           <div class="layer-1">
-            <svg id="plot-density" class="plot"></svg>
+            <canvas id="plot-density" class="plot"></canvas>
           </div>
           <div class="layer-2">
             <svg id="plot-dose" class="plot"></svg>
@@ -323,7 +323,7 @@
             ")"
         );
 
-      var svgDensity = d3
+      var canvDensity = d3
         .select("#plot-density")
         .attr("width", mainViewerDimensions.width)
         .attr("height", mainViewerDimensions.height)
@@ -338,8 +338,8 @@
             ")"
         );
 
-      // Add black bakground to plot
-      svgDensity
+      // Add black background to plot
+      canvDensity
         .append("rect")
         .attr("width", mainViewerDimensions.width)
         .attr("height", mainViewerDimensions.height)

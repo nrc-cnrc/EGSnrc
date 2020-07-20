@@ -609,36 +609,60 @@ class DensityVolume extends Volume {
   drawDensity(slice, svg) {
     // TODO: Make two new functions: change slicenum and change axes
 
-    // Clear density plot
-    svg.selectAll(".density-contour").remove();
+    // For axis structure
+    // https://bl.ocks.org/ejb/e2da5a23e9a09d494bd532803d8db61c
 
-    // Draw contours
-    var contours = d3
-      .contours()
-      .size([slice.xVoxels, slice.yVoxels])
-      .smooth(false)
-      .thresholds(this.thresholds)(slice.sliceData)
-      .map(slice.contourTransform);
+    // Create new canvas element and set the dimensions
+    let canvas = document.createElement("canvas");
+    canvas.width = this.dimensions.width;
+    canvas.height = this.dimensions.height;
 
-    svg
-      .append("g")
-      .attr("class", "density-contour")
-      .attr("width", this.dimensions.width)
-      .attr("height", this.dimensions.height)
-      .attr("fill", "none")
-      .selectAll("path")
-      .data(contours)
-      .join("path")
-      .attr("fill", (d) => this.colour(d.value))
-      .attr("fill-opacity", 1.0)
-      .attr("d", d3.geoPath());
+    // Get and clear the canvas context
+    let context = canvas.getContext("2d");
+    context.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
 
-    if (zoomTransform) {
-      svg
-        .select("g.density-contour")
-        .attr("transform", zoomTransform.toString());
+    // Calcuate display pixel dimensions
+    let dxScaled = this.dimensions.width / slice.xVoxels;
+    let dyScaled = this.dimensions.height / slice.yVoxels;
+
+    // Draw the image voxel by voxel
+    for (let i = 0; i < slice.xVoxels; i++) {
+      for (let j = 0; j < slice.yVoxels; j++) {
+        let new_address = i + slice.xVoxels * j;
+        context.fillStyle = this.colour(slice.sliceData[new_address]);
+        context.fillRect(
+          Math.ceil(slice.xScale(slice.x[i])),
+          Math.ceil(slice.yScale(slice.y[j])),
+          Math.ceil(dxScaled),
+          Math.ceil(dyScaled)
+        );
+      }
     }
 
+    // Create a new image to set the canvas data as the image source
+    var image = new Image();
+
+    // Once the image has loaded, draw it on the context
+    image.addEventListener("load", (e) => {
+      imgContext.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
+      imgContext.save();
+      // Apply transforms if needed
+      if (zoomTransform) {
+        imgContext.translate(zoomTransform.x, zoomTransform.y);
+        imgContext.scale(zoomTransform.k, zoomTransform.k);
+      }
+      imgContext.drawImage(image, 0, 0);
+      imgContext.restore();
+    });
+
+    image.src = canvas.toDataURL();
+
+    // Get the canvas and context in the webpage
+    let imgCanvas = svg.node();
+    let imgContext = imgCanvas.getContext("2d");
+
+    // Save the image and axis as properties of the volume object
+    this.prevSliceImg = image;
     this.prevAxis = axis;
   }
 
