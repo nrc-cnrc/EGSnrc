@@ -58,7 +58,7 @@ win32 {
     DEFINES += WIN32
     DEFINES += VDEBUG
     RC_FILE = egs_view.rc
-    LIBS	+= ../dso/$$my_machine/egspp.lib ../dso/$$my_machine/egs_input_struct.lib
+    LIBS	+= ../dso/$$my_machine/egspp.lib
     DESTDIR = ../dso/$$my_machine
     TARGET = egs_view
 }
@@ -66,7 +66,7 @@ win32 {
 unix {
     CONFIG    += qt warn_on release $$my_build
     macx {
-        LIBS  += -L../dso/$$my_machine -legspp -legs_input_struct
+        LIBS  += -L../dso/$$my_machine -legspp
         TARGET = ../../bin/$$my_machine/egs_view
     }
     !macx {
@@ -74,13 +74,13 @@ unix {
        !contains( CONFIG, static ){
          message( "Dynamic build..." )
          TARGET = egs_view
-         LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp -legs_input_struct
+         LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp
         }
         contains( CONFIG, static ){
             message( "Static build ..." )
             DESTDIR = ../../pieces/linux
             #LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp # Fixes path to library
-            LIBS += -L$$hhouse/egs++/dso/$$my_machine -legspp -legs_input_struct                                # Relies on LD_LIBRARY_PATH
+            LIBS += -L$$hhouse/egs++/dso/$$my_machine -legspp                             # Relies on LD_LIBRARY_PATH
             UNAME = $$system(getconf LONG_BIT)
             contains( UNAME, 64 ){
                message( "-> 64 bit ($$SNAME)" )

@@ -45,6 +45,7 @@
 #include "egs_simple_container.h"
 #include "egs_interpolator.h"
 #include "egs_input_struct.h"
+#include "egs_run_control.h"
 
 #include <memory>
 #include <string>
@@ -1226,6 +1227,11 @@ public:
     extern "C" {\
         APP_EXPORT EGS_Application* createApplication(int argc, char **argv) {\
             return new app_name(argc,argv);\
+        }\
+        APP_EXPORT shared_ptr<EGS_BlockInput> getAppInputs() {\
+            shared_ptr<EGS_BlockInput> inpPtr;\
+            addRunControlBlock(inpPtr);\ 
+            return inpPtr;\
         }\
     }
 
