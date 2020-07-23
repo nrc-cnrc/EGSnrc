@@ -83,6 +83,7 @@ typedef EGS_Application *(*createAppFunction)(int argc, char **argv);
 typedef EGS_BaseGeometry *(*createGeomFunction)();
 typedef EGS_BaseSource *(*createSourceFunction)();
 typedef EGS_BaseShape *(*createShapeFunction)();
+typedef void (*getAppInputsFunction)(shared_ptr<EGS_InputStruct> inpPtr);
 typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
 typedef string (*getExampleFunction)();
 
@@ -276,22 +277,23 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     inputStruct = make_shared<EGS_InputStruct>();
 
     // Get the application level input blocks
-    getInputsFunction getAppInputs = (getInputsFunction) app_lib.resolve("getAppInputs");
-    egsInformation("getInputs test0\n");
+    getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
     if(getAppInputs) {
-        egsInformation("getInputs test1\n");
-        shared_ptr<EGS_BlockInput> inpBlock = getAppInputs();
-       /*  if(inpBlock) {
-            egsInformation("getInputs test2\n");
-            for (auto &inp : inpBlock->getSingleInputs()) {
-                const vector<string> vals = inp->getValues();
-                egsInformation("  single %s\n", inp->getTag().c_str());
-                for (auto&& val : vals) {
-                    egsInformation("      %s\n", val.c_str());
+        getAppInputs(inputStruct);
+        if(inputStruct) {
+            vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputStruct->getBlockInputs();
+            for (auto &block : inputBlocks) {
+                egsInformation("  block %s\n", block->getTitle().c_str());
+                vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                for (auto &inp : singleInputs) {
+                    const vector<string> vals = inp->getValues();
+                    egsInformation("   single %s\n", inp->getTag().c_str());
+                    for (auto&& val : vals) {
+                        egsInformation("      %s\n", val.c_str());
+                    }
                 }
             }
-            inputStruct->addBlockInput(inpBlock);
-        } */
+        }
     }
 
     // Geometry definition block
