@@ -1165,12 +1165,11 @@ public:
         APP_EXPORT EGS_Application* createApplication(int argc, char **argv) {\
             return new app_name(argc,argv);\
         }\
-        APP_EXPORT shared_ptr<EGS_BlockInput> getAppInputs() {\
-            shared_ptr<EGS_BlockInput> inpPtr;\
-            addRunControlBlock(inpPtr);\ 
-            return inpPtr;\
+        APP_EXPORT void getAppInputs(shared_ptr<EGS_InputStruct> inpPtr) {\
+            addRunControlBlock(inpPtr);\
         }\
     }
 
 
 #endif
+

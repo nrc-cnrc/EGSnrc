@@ -47,7 +47,7 @@ using namespace std;
 class EGS_Application;
 class EGS_Input;
 
-static void addRunControlBlock(shared_ptr<EGS_BlockInput> blockPtr) {
+static void addRunControlBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     shared_ptr<EGS_BlockInput> runBlock = blockPtr->addBlockInput("run control");
     runBlock->addSingleInput("ncase", true, "The number of histories to simulate.");
     runBlock->addSingleInput("nbatch", false, "The number of batches to divide the simulation into. After each batch, a checkpoint is created to allow for simulation restarts. Defaults to 10.");
