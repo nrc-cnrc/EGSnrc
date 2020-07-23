@@ -90,6 +90,13 @@
             <button id="max-dose-decrement-slider">-</button>
             <button id="max-dose-increment-slider">+</button>
           </div>
+          <div class="window-level-container">
+            <label for="window">Window:</label>
+            <input type="range" class="window-slider" name="window" />
+            <br />
+            <label for="level">Level:</label>
+            <input type="range" class="level-slider" name="level" />
+          </div>
         </div>
       </span>
       <span id="voxel-info" class="container">
@@ -476,6 +483,7 @@
         return d3.selectAll("input[name='axis']:checked").node().value;
       }
     </script>
+    <script type="text/javascript" src="./window-level-slider.js"></script>
     <script type="text/javascript" src="./file-upload.js"></script>
     <script type="text/javascript" src="./export.mjs"></script>
     <script type="text/javascript" src="./slider.js"></script>

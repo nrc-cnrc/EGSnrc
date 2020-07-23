@@ -111,8 +111,8 @@ class Volume {
       .range(d3.range(0, data.voxelNumber.z, 1));
   }
 
-  addColourScheme(colourScheme, maxVal, invertScheme) {
-    let domain = invertScheme ? [maxVal, 0] : [0, maxVal];
+  addColourScheme(colourScheme, maxVal, minVal, invertScheme) {
+    let domain = invertScheme ? [maxVal, minVal] : [minVal, maxVal];
     this.colour = d3.scaleSequentialSqrt(colourScheme).domain(domain);
   }
 
@@ -313,7 +313,7 @@ class DoseVolume extends Volume {
     super.addData(data);
     // Max dose used for dose contour plot
     this.maxDoseVar = this.data.maxDose;
-    super.addColourScheme(d3.interpolateViridis, this.data.maxDose);
+    super.addColourScheme(d3.interpolateViridis, this.data.maxDose, 0);
     // Calculate the contour thresholds
     let contourInt = 0.1;
     this.thresholdPercents = d3.range(0, 1.0 + contourInt, contourInt);
@@ -325,7 +325,7 @@ class DoseVolume extends Volume {
 
   setMaxDose(val) {
     this.maxDoseVar = val * this.data.maxDose;
-    super.addColourScheme(d3.interpolateViridis, this.maxDoseVar);
+    super.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0);
     this.updateThresholds();
     this.drawDose(this.prevSlice, svgDose);
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
@@ -588,9 +588,30 @@ class DensityVolume extends Volume {
 
   addData(data) {
     super.addData(data);
-    super.addColourScheme(d3.interpolateGreys, this.data.maxDensity, true);
+    this.setWindow();
+    this.setLevel();
+    this.addColourScheme();
     // Calculate the contour thresholds
     this.thresholds = this.getThresholds(data);
+  }
+
+  addColourScheme() {
+    super.addColourScheme(
+      d3.interpolateGreys,
+      this.level + this.window / 2.0,
+      this.level - this.window / 2.0,
+      true
+    );
+  }
+
+  setWindow(window) {
+    // Window is whole range
+    this.window = parseFloat(window) || this.data.maxDensity;
+  }
+
+  setLevel(level) {
+    // Level is mid level
+    this.level = parseFloat(level) || this.window / 2.0;
   }
 
   getThresholds(data) {

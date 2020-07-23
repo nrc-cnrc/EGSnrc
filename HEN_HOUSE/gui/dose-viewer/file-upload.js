@@ -94,6 +94,7 @@ function readFile(file, fileNum) {
         enableCheckboxForDensityPlot();
       }
       enableExportVisualizationButton();
+      initializeWindowAndLevelSlider(densityVol);
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
       doseVol.addData(data);
