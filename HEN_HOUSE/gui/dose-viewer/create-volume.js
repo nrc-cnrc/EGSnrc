@@ -138,27 +138,38 @@ class Volume {
     var getLengthCm = (voxelArrDim) =>
       Math.abs(voxelArrDim[voxelArrDim.length - 1] - voxelArrDim[0]);
     let [xLengthCm, yLengthCm] = [getLengthCm(x), getLengthCm(y)];
-    let xDomain, yDomain, xRangeContour, yRangeContour;
+    let xDomain,
+      yDomain,
+      xRangeContour,
+      yRangeContour,
+      yPixelToVoxelScale,
+      contourYScaleDomain;
     if (xLengthCm > yLengthCm) {
       xDomain = [x[0], x[x.length - 1]];
       yDomain = [y[y.length - 1] - xLengthCm, y[y.length - 1]];
       xRangeContour = [0, this.dimensions.width];
       yRangeContour = [this.dimensions.height * (yLengthCm / xLengthCm), 0];
+      yPixelToVoxelScale = d3
+        .scaleQuantile()
+        .domain([yRangeContour[1], yRangeContour[0]])
+        .range(d3.range(this.data.voxelNumber[dim2], 0, -1));
+      contourYScaleDomain = [1, this.data.voxelNumber[dim2] + 1];
     } else {
       xDomain = [x[0], x[0] + yLengthCm];
       yDomain = [y[0], y[y.length - 1]];
       xRangeContour = [0, this.dimensions.width * (xLengthCm / yLengthCm)];
       yRangeContour = [this.dimensions.height, 0];
+      yPixelToVoxelScale = d3
+        .scaleQuantile()
+        .domain([yRangeContour[1], yRangeContour[0]])
+        .range(d3.range(this.data.voxelNumber[dim2] - 1, -1, -1));
+      contourYScaleDomain = [0, this.data.voxelNumber[dim2]];
     }
 
     let xPixelToVoxelScale = d3
       .scaleQuantile()
       .domain(xRangeContour)
       .range(d3.range(0, this.data.voxelNumber[dim1], 1));
-    let yPixelToVoxelScale = d3
-      .scaleQuantile()
-      .domain([yRangeContour[1], yRangeContour[0]])
-      .range(d3.range(this.data.voxelNumber[dim2] - 1, -1, -1));
 
     let contourXScale = d3
       .scaleLinear()
@@ -167,7 +178,7 @@ class Volume {
     // Bump by 1 to fix misalignment after flipping y axis
     let contourYScale = d3
       .scaleLinear()
-      .domain([1, this.data.voxelNumber[dim2] + 1])
+      .domain(contourYScaleDomain)
       .range(yRangeContour);
     // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
@@ -643,8 +654,8 @@ class DensityVolume extends Volume {
     context.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
 
     // Calcuate display pixel dimensions
-    let dxScaled = this.dimensions.width / slice.xVoxels;
-    let dyScaled = this.dimensions.height / slice.yVoxels;
+    let dxScaled = Math.ceil(this.dimensions.width / slice.xVoxels);
+    let dyScaled = Math.ceil(this.dimensions.height / slice.yVoxels);
 
     // Draw the image voxel by voxel
     for (let i = 0; i < slice.xVoxels; i++) {
@@ -653,9 +664,9 @@ class DensityVolume extends Volume {
         context.fillStyle = this.colour(slice.sliceData[new_address]);
         context.fillRect(
           Math.ceil(slice.xScale(slice.x[i])),
-          Math.ceil(slice.yScale(slice.y[j])),
-          Math.ceil(dxScaled),
-          Math.ceil(dyScaled)
+          Math.ceil(slice.yScale(slice.y[j + 1])),
+          dxScaled,
+          dyScaled
         );
       }
     }

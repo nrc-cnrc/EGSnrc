@@ -95,6 +95,7 @@ function readFile(file, fileNum) {
       }
       enableExportVisualizationButton();
       initializeWindowAndLevelSlider(densityVol);
+      enableCheckboxForVoxelInformation();
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
       doseVol.addData(data);
@@ -108,6 +109,7 @@ function readFile(file, fileNum) {
       enableCoordInputs(doseVol.data.voxelNumber);
       enableCheckboxForDoseProfilePlot();
       enableExportVisualizationButton();
+      enableCheckboxForVoxelInformation();
     } else {
       console.log("Unknown file extension");
       return true;

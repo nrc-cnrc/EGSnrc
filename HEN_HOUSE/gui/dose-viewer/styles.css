@@ -14,17 +14,9 @@ body {
   margin: 25px 50px 25px 50px;
   font-family: helvetica;
 }
-p {
+p.description {
   color: grey;
 }
-/* h1,
-input,
-output,
-label,
-text,
-button {
-  font-family: helvetica;
-} */
 
 .container {
   display: inline-block;
@@ -55,6 +47,11 @@ button {
 #voxel-info {
   border: 1px solid black;
   padding: 0px 16px 16px 16px;
+  font-size: 12px;
+}
+
+.voxel-info-output {
+  color: grey;
 }
 
 .crosshair {
@@ -90,7 +87,8 @@ progress.hidden,
 }
 
 .cell.hidden,
-svg.hidden {
+svg.hidden,
+span.hidden {
   opacity: 0.2 !important;
 }
 

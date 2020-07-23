@@ -20,7 +20,7 @@
   </head>
   <body>
     <h1>Dose Viewer</h1>
-    <p>Upload .egsphant and .3ddose files.</p>
+    <p class="description">Upload .egsphant and .3ddose files.</p>
     <div id="drop-area">
       <form class="file-upload">
         <p>
@@ -93,53 +93,109 @@
           <div class="window-level-container">
             <label for="window">Window:</label>
             <input type="range" class="window-slider" name="window" />
+            <output type="text" id="window-value" value="">0</output>
             <br />
             <label for="level">Level:</label>
             <input type="range" class="level-slider" name="level" />
+            <output type="text" id="level-value" value="">0</output>
           </div>
         </div>
       </span>
-      <span id="voxel-info" class="container">
-        <p>World Coordinates</p>
+      <span id="voxel-info" class="container hidden">
+        <p>World Coordinates (cm)</p>
         <label for="world-x-value"
           >x:
-          <output type="text" id="world-x-value" value=""> </output>
+          <output
+            type="text"
+            class="voxel-info-output"
+            id="world-x-value"
+            value=""
+          >
+          </output>
         </label>
         <label for="world-y-value"
           >y:
-          <output type="text" id="world-y-value" value=""> </output>
+          <output
+            type="text"
+            class="voxel-info-output"
+            id="world-y-value"
+            value=""
+          >
+          </output>
         </label>
         <label for="world-z-value"
           >z:
-          <output type="text" id="world-z-value" value=""> </output>
+          <output
+            type="text"
+            class="voxel-info-output"
+            id="world-z-value"
+            value=""
+          >
+          </output>
         </label>
         <p>Voxel Coordinates</p>
         <label for="voxel-x-value"
           >x:
-          <output type="text" id="voxel-x-value" value=""> </output>
+          <output
+            type="text"
+            class="voxel-info-output"
+            id="voxel-x-value"
+            value=""
+          >
+          </output>
         </label>
         <label for="voxel-y-value"
           >y:
-          <output type="text" id="voxel-y-value" value=""> </output>
+          <output
+            type="text"
+            class="voxel-info-output"
+            id="voxel-y-value"
+            value=""
+          >
+          </output>
         </label>
         <label for="voxel-z-value"
           >z:
-          <output type="text" id="voxel-z-value" value=""> </output>
+          <output
+            type="text"
+            class="voxel-info-output"
+            id="voxel-z-value"
+            value=""
+          >
+          </output>
         </label>
         <p>Data at Coordinates</p>
         <label for="density-value"
           >Density:
-          <output type="text" id="density-value" value=""> </output>
+          <output
+            type="text"
+            class="voxel-info-output"
+            id="density-value"
+            value=""
+          >
+          </output>
         </label>
         <br />
         <label for="material-value"
           >Material:
-          <output type="text" id="material-value" value=""> </output>
+          <output
+            type="text"
+            class="voxel-info-output"
+            id="material-value"
+            value=""
+          >
+          </output>
         </label>
         <br />
         <label for="dose-value"
           >Dose:
-          <output type="text" id="dose-value" value=""> </output>
+          <output
+            type="text"
+            class="voxel-info-output"
+            id="dose-value"
+            value=""
+          >
+          </output>
         </label>
       </span>
       <span class="container">
@@ -148,6 +204,18 @@
         <button id="save-dose-profile" disabled>
           Export dose profiles to CSV
         </button>
+        <br />
+        <input
+          type="checkbox"
+          id="show-marker-checkbox"
+          name="show-marker-checkbox"
+          value="ShowMarker"
+          disabled
+        />
+        <label for="show-marker-checkbox">
+          Show voxel information on click?
+        </label>
+        <br />
         <br />
         <input
           type="checkbox"

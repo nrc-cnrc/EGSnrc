@@ -119,7 +119,10 @@ function zoomedAll(transform) {
 
     svgDose.select("g.dose-contour").attr("transform", transform.toString());
 
-    svgMarker.select(".marker").attr("transform", transform.toString());
+    svgMarker.select(".circle-marker").attr("transform", transform.toString());
+    svgMarker
+      .select(".crosshair-marker")
+      .attr("transform", transform.toString());
 
     // Create new scale ojects based on event
     let vol = !densityVol.isEmpty() ? densityVol : doseVol;

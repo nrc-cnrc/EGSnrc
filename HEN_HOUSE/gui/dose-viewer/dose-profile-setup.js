@@ -62,6 +62,13 @@ var enableExportVisualizationButton = () => {
     exportVisualizationButton.disabled = false;
 };
 
+var enableCheckboxForVoxelInformation = () => {
+  let showMarkerCheckbox = d3
+    .select("input[name='show-marker-checkbox']")
+    .node();
+  if (showMarkerCheckbox.disabled) showMarkerCheckbox.disabled = false;
+};
+
 d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
   if (this.checked) {
     // Enable zooming
@@ -72,9 +79,16 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
     let doseProfilePlots = d3.selectAll("svg.dose-profile-plot");
     doseProfilePlots.classed("hidden", false);
 
-    // Plot dose profile
-    if (plotCoords) {
-      updateVoxelCoords(plotCoords, getAxis(), getSliceNum(), false);
+    // Plot dose profile if circle marker exists
+    if (svgMarker.select(".circle-marker").node()) {
+      let circle = svgMarker.select("circle.crosshair");
+      let coords = zoomTransform
+        ? [
+            circle.attr("cx") * zoomTransform.k + zoomTransform.x,
+            circle.attr("cy") * zoomTransform.k + zoomTransform.y,
+          ]
+        : [circle.attr("cx"), circle.attr("cy")];
+      updateVoxelCoords(coords, getAxis(), getSliceNum(), true);
     }
 
     // Enable saving dose profiles as svg
@@ -90,6 +104,36 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
 
     // Disable saving dose profiles as svg
     d3.select("#save-dose-profile").node().disabled = true;
+
+    // Remove crosshairs
+    svgMarker.select(".crosshair-marker").remove();
+  }
+});
+
+d3.select("input[name='show-marker-checkbox']").on("change", function () {
+  let doseProfilePlots = d3.selectAll("span#voxel-info");
+  if (this.checked) {
+    // Remove hidden class
+    doseProfilePlots.classed("hidden", false);
+
+    // If crosshairs exist, add circle marker and update voxel information at that point
+    if (svgMarker.select(".crosshair-marker").node()) {
+      let x = svgMarker.select("line.crosshairX").attr("x1");
+      let y = svgMarker.select("line.crosshairY").attr("y1");
+      let coords = zoomTransform
+        ? [
+            x * zoomTransform.k + zoomTransform.x,
+            y * zoomTransform.k + zoomTransform.y,
+          ]
+        : [x, y];
+      updateVoxelCoords(coords, getAxis(), getSliceNum(), true);
+    }
+  } else {
+    // Add hidden class
+    doseProfilePlots.classed("hidden", true);
+
+    // Remove circle marker
+    svgMarker.select(".circle-marker").remove();
   }
 });
 

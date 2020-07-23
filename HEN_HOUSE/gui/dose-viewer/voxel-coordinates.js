@@ -52,7 +52,6 @@ function coordsToVoxel(coords, axis, sliceNum, volume, updateXY) {
   return [xVal, yVal, zVal];
 }
 
-// TODO: Ask if should I round to nearest world coord value read in vs interpolating
 function updateWorldLabels(coords) {
   let format = d3.format(".3f");
   d3.select("#world-x-value").node().value = format(coords[0]);
@@ -70,9 +69,9 @@ function invertTransform(val, transform, dir) {
   return (val - transform[dir]) / transform.k;
 }
 
-function updateMarker(coords, svg) {
+function updateCircleMarker(coords, svg) {
   // Remove old marker
-  svg.select(".marker").remove();
+  svg.select(".circle-marker").remove();
 
   // If there is existing transformation, calculate proper x and y coordinates
   let x = zoomTransform
@@ -85,7 +84,7 @@ function updateMarker(coords, svg) {
   // Add new marker with modified coordinates so it can smoothly transform with other elements
   let marker = svg
     .append("g")
-    .attr("class", "marker")
+    .attr("class", "circle-marker")
     .attr("transform", zoomTransform ? zoomTransform.toString() : "");
 
   // Create centre circle
@@ -93,15 +92,33 @@ function updateMarker(coords, svg) {
     .append("circle")
     .attr("cx", x)
     .attr("cy", y)
-    .attr("id", "crosshairCentre")
     .attr("class", "crosshair")
     .attr("r", 2);
+}
+
+function updateCrosshairs(coords, svg) {
+  // Remove old crosshairs
+  svg.select(".crosshair-marker").remove();
+
+  // If there is existing transformation, calculate proper x and y coordinates
+  let x = zoomTransform
+    ? invertTransform(coords[0], zoomTransform, "x")
+    : coords[0];
+  let y = zoomTransform
+    ? invertTransform(coords[1], zoomTransform, "y")
+    : coords[1];
+
+  // Add new crosshairs with modified coordinates so it can smoothly transform with other elements
+  let marker = svg
+    .append("g")
+    .attr("class", "crosshair-marker")
+    .attr("transform", zoomTransform ? zoomTransform.toString() : "");
 
   // Create horizontal line
   marker
     .append("line")
-    .attr("id", "crosshairX")
-    .attr("class", "crosshair")
+    .classed("crosshair", true)
+    .classed("crosshairX", true)
     .attr("x1", x)
     .attr("y1", 0)
     .attr("x2", x)
@@ -110,8 +127,8 @@ function updateMarker(coords, svg) {
   // Create vertical line
   marker
     .append("line")
-    .attr("id", "crosshairY")
-    .attr("class", "crosshair")
+    .classed("crosshair", true)
+    .classed("crosshairY", true)
     .attr("x1", 0)
     .attr("y1", y)
     .attr("x2", mainViewerDimensions.width)
@@ -126,17 +143,21 @@ function updateVoxelCoords(coords, axis, sliceNum, updateXY = false) {
     let worldCoords = coordsToWorld(coords, axis, sliceNum, vol, updateXY);
     let voxelCoords = coordsToVoxel(coords, axis, sliceNum, vol, updateXY);
 
-    // Update labels
-    updateWorldLabels(worldCoords);
-    updateVoxelLabels(voxelCoords);
-    updateVoxelInfo(voxelCoords);
-
-    if (updateXY) {
-      updateMarker(coords, svgMarker);
+    // Update voxel info if checkbox is checked
+    if (d3.select("input[name='show-marker-checkbox']").node().checked) {
+      updateWorldLabels(worldCoords);
+      updateVoxelLabels(voxelCoords);
+      updateVoxelInfo(voxelCoords);
+      if (updateXY) updateCircleMarker(coords, svgMarker);
     }
 
-    if (!doseVol.isEmpty()) {
+    // Update dose profiles if checkbox is checked
+    if (
+      !doseVol.isEmpty() &&
+      d3.select("input[name='show-dose-profile-checkbox']").node().checked
+    ) {
       updateDoseProfiles(axis, voxelCoords, worldCoords);
+      if (updateXY) updateCrosshairs(coords, svgMarker);
     }
   }
 }
@@ -160,35 +181,33 @@ function updateVoxelInfo(voxelCoords) {
 }
 
 function updateDoseProfiles(axis, voxelCoords, worldCoords) {
-  if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
-    var getCoords = (coords) =>
-      axis === "xy"
-        ? [
-            [coords[1], coords[2]],
-            [coords[0], coords[2]],
-          ]
-        : axis === "yz"
-        ? [
-            [coords[0], coords[2]],
-            [coords[0], coords[1]],
-          ]
-        : [
-            [coords[1], coords[2]],
-            [coords[0], coords[1]],
-          ];
+  var getCoords = (coords) =>
+    axis === "xy"
+      ? [
+          [coords[1], coords[2]],
+          [coords[0], coords[2]],
+        ]
+      : axis === "yz"
+      ? [
+          [coords[0], coords[2]],
+          [coords[0], coords[1]],
+        ]
+      : [
+          [coords[1], coords[2]],
+          [coords[0], coords[1]],
+        ];
 
-    let [voxelCoordsX, voxelCoordsY] = getCoords(voxelCoords);
-    let [worldCoordsX, worldCoordsY] = getCoords(worldCoords);
+  let [voxelCoordsX, voxelCoordsY] = getCoords(voxelCoords);
+  let [worldCoordsX, worldCoordsY] = getCoords(worldCoords);
 
-    doseProfileX.setDoseProfileData(axis[0], voxelCoordsX);
-    doseProfileY.setDoseProfileData(axis[1], voxelCoordsY);
+  doseProfileX.setDoseProfileData(axis[0], voxelCoordsX);
+  doseProfileY.setDoseProfileData(axis[1], voxelCoordsY);
 
-    // Plot the dose profile along the x axis
-    doseProfileX.plotDoseProfile(axis, axis[0], worldCoordsX);
+  // Plot the dose profile along the x axis
+  doseProfileX.plotDoseProfile(axis, axis[0], worldCoordsX);
 
-    // Plot the dose profile along the y axis
-    doseProfileY.plotDoseProfile(axis, axis[1], worldCoordsY);
-  }
+  // Plot the dose profile along the y axis
+  doseProfileY.plotDoseProfile(axis, axis[1], worldCoordsY);
 }
 
 // TODO: Update voxel info upon dose or density upload for existing marker
