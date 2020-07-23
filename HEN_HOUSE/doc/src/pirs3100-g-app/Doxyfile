@@ -39,7 +39,7 @@ PROJECT_NAME           = "The EGSnrc g application"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = "Report PIRS-3100 (2020)"
+PROJECT_NUMBER         = "Report PIRS-3100"
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -1083,8 +1083,7 @@ HTML_STYLESHEET        =
 # see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_STYLESHEET  = mydoxygen.css
-#HTML_EXTRA_STYLESHEET  = egsppdoxygen.css
+#HTML_EXTRA_STYLESHEET  = g-doxygen.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or
 # other source files which should be copied to the HTML output directory. Note
@@ -1624,7 +1623,8 @@ EXTRA_PACKAGES         =
 # PROJECT_NAME), or the project number (see PROJECT_NUMBER).
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-LATEX_HEADER           = pirs3100-header.tex
+LATEX_HEADER           = 
+#LATEX_HEADER           = pirs3100-header.tex
 
 # The LATEX_FOOTER tag can be used to specify a personal LaTeX footer for the
 # generated LaTeX document. The footer should contain everything after the last
@@ -1703,7 +1703,7 @@ LATEX_BIB_STYLE        = plain
 # readers/editors.
 # The default value is: NO.
 
-GENERATE_RTF           = NO
+GENERATE_RTF           = no
 
 # The RTF_OUTPUT tag is used to specify where the RTF docs will be put. If a
 # relative path is entered the value of OUTPUT_DIRECTORY will be put in front of
