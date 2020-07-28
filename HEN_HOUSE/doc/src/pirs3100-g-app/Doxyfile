@@ -46,7 +46,7 @@ PROJECT_NUMBER         = "Report PIRS-3100"
 # quick idea about the purpose of the project. Keep the description short.
 
 #PROJECT        = "Radiative energy loss calculations"
-PROJECT_BRIEF   = "Ernesto Mainegra-Hing, Reid Townson, Dave Rogers, and Iwan Kawrakow"
+PROJECT_BRIEF   = "E. Mainegra-Hing, R.W. Townson, D.W.O. Rogers, and I. Kawrakow"
 
 # With the PROJECT_LOGO tag one can specify an logo or icon that is included in
 # the documentation. The maximum height of the logo should not exceed 55 pixels
@@ -234,6 +234,7 @@ ALIASES                = "internwarning=\par Warning:\n This class is not part o
                          "muen=\f$\mu_\mathrm{en}\f$" \
                          "Emuen_rho=\f$E \times \left( \frac{\mu_\mathrm{en}}{\rho} \right)\f$"\
                          "deg=\f$^o\f$" \
+                         "Etot=\f$\overline{E}_\mathrm{tot}\f$" \
                          "Erad=\f$\overline{E}_\mathrm{rad}\f$" \
                          "EradP=\f$\overline{\overline{E}}_\mathrm{rad}\f$" \
                          "Etr=\f$\overline{E}_\mathrm{tr}\f$" \
@@ -242,8 +243,12 @@ ALIASES                = "internwarning=\par Warning:\n This class is not part o
 						 "K=\f$K\f$" \
 						 "Y=\f$Y\f$" \
 						 "Kcol=\f$K_\mathrm{col}\f$" \
+                         "Tave=\f$\overline{T}\f$" \
                          "T0=\f$T_0\f$"
-
+ALIASES               += refl{1}="\latexonly\ref{\1}\endlatexonly"
+ALIASES               += refh{1}="\htmlonly \1 \endhtmlonly" \
+ALIASES               += reflh{2}="\refl{\1}\refh{\2}"
+						 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"
 # will allow you to use the command class in the itcl::class meaning.
@@ -1607,7 +1612,8 @@ PAPER_TYPE             = a4
 # If left blank no extra packages will be included.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-EXTRA_PACKAGES         =
+#EXTRA_PACKAGES         = listings 
+#EXTRA_PACKAGES         = chngcntr
 
 # The LATEX_HEADER tag can be used to specify a personal LaTeX header for the
 # generated LaTeX document. The header should contain everything until the first
