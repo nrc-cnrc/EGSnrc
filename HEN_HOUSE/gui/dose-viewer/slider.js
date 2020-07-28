@@ -13,7 +13,7 @@ function updateSliderAfterAxisChange(slice) {
   d3.select("#slider-max").node().value = slice.totalSlices - 1;
 
   // Update the axis
-  drawAxes(svgAxis, slice);
+  drawAxes(svgObjs["axis-svg"][slice.axis], slice);
 }
 
 function updateImage(axis, sliceNum) {
@@ -22,11 +22,11 @@ function updateImage(axis, sliceNum) {
 
   if (!densityVol.isEmpty()) {
     slice = densityVol.getSlice(axis, sliceNum);
-    densityVol.drawDensity(slice, canvDensity);
+    densityVol.drawDensity(slice);
   }
   if (!doseVol.isEmpty()) {
     slice = doseVol.getSlice(axis, sliceNum);
-    doseVol.drawDose(slice, svgDose);
+    doseVol.drawDose(slice);
   }
 
   //Update voxel coordinates
@@ -72,11 +72,11 @@ d3.selectAll("input[name='axis']").on("change", function () {
 
   if (!densityVol.isEmpty()) {
     slice = densityVol.getSlice(axis, sliceNum);
-    densityVol.drawDensity(slice, canvDensity);
+    densityVol.drawDensity(slice);
   }
   if (!doseVol.isEmpty()) {
     slice = doseVol.getSlice(axis, sliceNum);
-    doseVol.drawDose(slice, svgDose);
+    doseVol.drawDose(slice);
   }
 
   if (!densityVol.isEmpty() || !doseVol.isEmpty()) {

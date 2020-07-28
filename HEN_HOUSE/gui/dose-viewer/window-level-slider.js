@@ -24,7 +24,7 @@ var initializeWindowAndLevelSlider = (densityVolume) => {
 windowSlider.on("input", function () {
   densityVol.setWindow(this.value);
   densityVol.addColourScheme();
-  densityVol.drawDensity(densityVol.prevSlice, canvDensity);
+  densityVol.drawDensity(densityVol.prevSlice);
 
   // Show the current window value
   d3.select("#window-value").node().value = this.value;
@@ -40,7 +40,7 @@ windowSlider.on("input", function () {
 levelSlider.on("input", function () {
   densityVol.setLevel(this.value);
   densityVol.addColourScheme();
-  densityVol.drawDensity(densityVol.prevSlice, canvDensity);
+  densityVol.drawDensity(densityVol.prevSlice);
 
   // Show the current level value
   d3.select("#level-value").node().value = this.value;

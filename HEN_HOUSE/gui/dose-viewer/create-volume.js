@@ -87,12 +87,13 @@ class Volume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
 
-  constructor(dimensions, legendDimensions) {
+  constructor(dimensions, legendDimensions, htmlElementObj) {
     this.dimensions = dimensions;
     this.legendDimensions = legendDimensions;
     this.data = {};
     this.prevSlice = {};
     this.prevAxis = "";
+    this.htmlElementObj = htmlElementObj;
   }
 
   addData(data) {
@@ -315,8 +316,8 @@ class Volume {
 }
 
 class DoseVolume extends Volume {
-  constructor(dimensions, legendDimensions) {
-    super(dimensions, legendDimensions); // call the super class constructor
+  constructor(dimensions, legendDimensions, svgDoseObj) {
+    super(dimensions, legendDimensions, svgDoseObj); // call the super class constructor
   }
 
   addData(data) {
@@ -338,7 +339,7 @@ class DoseVolume extends Volume {
     this.maxDoseVar = val * this.data.maxDose;
     super.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0);
     this.updateThresholds();
-    this.drawDose(this.prevSlice, svgDose);
+    this.drawDose(this.prevSlice);
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
       doseProfileX.plotData();
       doseProfileY.plotData();
@@ -355,14 +356,15 @@ class DoseVolume extends Volume {
     this.thresholdPercents.sort();
     this.updateThresholds();
     this.initializeLegend();
-    this.drawDose(this.prevSlice, svgDose);
+    this.drawDose(this.prevSlice);
   }
 
   getSlice(axis, sliceNum) {
     return super.getSlice(axis, sliceNum, "dose");
   }
 
-  drawDose(slice, svg) {
+  drawDose(slice) {
+    let svg = this.htmlElementObj[slice.axis];
     //TODO: Don't rely on plugin for legend/colour scale
     // https://observablehq.com/@d3/color-legend
 
@@ -424,11 +426,13 @@ class DoseVolume extends Volume {
     let hiddenContourClassList = this.getHiddenContourClassList();
 
     var toggleContour = (className) => {
-      svgDose
-        .selectAll("path.contour-path." + className)
-        .classed("hidden", function () {
-          return !d3.select(this).classed("hidden");
-        });
+      Object.values(this.htmlElementObj).forEach((svg) => {
+        svg
+          .selectAll("path.contour-path." + className)
+          .classed("hidden", function () {
+            return !d3.select(this).classed("hidden");
+          });
+      });
     };
 
     super.initializeLegend(doseLegendSvg, "doseLegend", "Dose", {
@@ -593,8 +597,8 @@ class DoseVolume extends Volume {
 }
 
 class DensityVolume extends Volume {
-  constructor(dimensions, legendDimensions) {
-    super(dimensions, legendDimensions); // call the super class constructor
+  constructor(dimensions, legendDimensions, canvDensityObj) {
+    super(dimensions, legendDimensions, canvDensityObj); // call the super class constructor
   }
 
   addData(data) {
@@ -638,7 +642,8 @@ class DensityVolume extends Volume {
     return super.getSlice(axis, sliceNum, "density");
   }
 
-  drawDensity(slice, svg) {
+  drawDensity(slice) {
+    let svg = this.htmlElementObj[slice.axis];
     // TODO: Make two new functions: change slicenum and change axes
 
     // For axis structure

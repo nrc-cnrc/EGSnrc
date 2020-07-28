@@ -87,9 +87,12 @@ function readFile(file, fileNum) {
       data = processPhantomData(resultSplit);
       densityVol.addData(data);
       densityVol.initializeLegend();
-      let slice = densityVol.getSlice(axis, sliceNum);
-      densityVol.drawDensity(slice, canvDensity);
-      updateSliderAfterAxisChange(slice);
+      ["xy", "yz", "xz"].forEach((axis) => {
+        let slice = densityVol.getSlice(axis, sliceNum);
+        densityVol.drawDensity(slice);
+        updateSliderAfterAxisChange(slice);
+      });
+
       if (!doseVol.isEmpty()) {
         enableCheckboxForDensityPlot();
       }
@@ -101,11 +104,13 @@ function readFile(file, fileNum) {
       doseVol.addData(data);
       doseVol.initializeMaxDoseSlider();
       doseVol.initializeLegend();
-      // TODO: Figure out a better layout for event listeners
-      let slice = doseVol.getSlice(axis, sliceNum);
       doseVol.initializeDoseContourInput();
-      doseVol.drawDose(slice, svgDose);
-      updateSliderAfterAxisChange(slice);
+      // TODO: Figure out a better layout for event listeners
+      ["xy", "yz", "xz"].forEach((axis) => {
+        let slice = doseVol.getSlice(axis, sliceNum);
+        doseVol.drawDose(slice);
+        updateSliderAfterAxisChange(slice);
+      });
       enableCoordInputs(doseVol.data.voxelNumber);
       enableCheckboxForDoseProfilePlot();
       enableExportVisualizationButton();

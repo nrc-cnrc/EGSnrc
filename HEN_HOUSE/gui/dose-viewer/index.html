@@ -230,20 +230,7 @@
         <br />
       </span>
       <div id="image-to-print">
-        <div id="imageholder" class="parent">
-          <div class="layer-1">
-            <canvas id="plot-density" class="plot"></canvas>
-          </div>
-          <div class="layer-2">
-            <svg id="plot-dose" class="plot"></svg>
-          </div>
-          <div class="layer-3">
-            <svg id="plot-marker" class="plot"></svg>
-          </div>
-          <div class="layer-4">
-            <svg id="axis-svg" class="plot"></svg>
-          </div>
-        </div>
+        <span id="viewer-container"></span>
         <span id="legendholder">
           <div id="dose-legend-holder" class="legend-holder">
             <svg id="dose-legend-svg" class="legend"></svg>
@@ -327,8 +314,8 @@
 
       // Define all size variables
       let mainViewerDimensions = {
-        fullWidth: 540,
-        fullHeight: 520,
+        fullWidth: 340,
+        fullHeight: 320,
         margin: { top: 10, right: 20, bottom: 50, left: 60 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
@@ -365,23 +352,50 @@
         },
       };
 
-      var axis = d3.selectAll("input[name='axis']:checked").node().value;
-      var plotCoords;
+      // For each axis and plot class, make html
+      let axes = ["xy", "yz", "xz"];
+      let classes = ["plot-density", "plot-dose", "plot-marker", "axis-svg"];
+      let type = ["canvas", "svg", "svg", "svg"];
+      let svgObjs = {
+        "plot-density": {},
+        "plot-dose": {},
+        "plot-marker": {},
+        "axis-svg": {},
+      };
 
-      var svgDose = d3
-        .select("#plot-dose")
-        .attr("width", mainViewerDimensions.width)
-        .attr("height", mainViewerDimensions.height)
-        .style(
-          "transform",
-          "translate(" +
-            mainViewerDimensions.margin.left +
-            "px" +
-            "," +
-            mainViewerDimensions.margin.top +
-            "px" +
-            ")"
-        );
+      axes.forEach((axis) => {
+        let selectedDiv = d3
+          .select("#viewer-container")
+          .append("div")
+          .classed("imageholder-" + axis, true)
+          .classed("parent", true);
+
+        classes.forEach((className, i) => {
+          let layerNum = i + 1;
+          let plot = selectedDiv
+            .append("div")
+            .classed("layer-" + layerNum, true)
+            .style("z-index", layerNum)
+            .append(type[i])
+            .classed(className, true)
+            .classed(axis, true)
+            .classed("plot", true)
+            .attr("width", mainViewerDimensions.width)
+            .attr("height", mainViewerDimensions.height);
+          // .style(
+          //   "transform",
+          //   "translate(" +
+          //     mainViewerDimensions.margin.left +
+          //     "px" +
+          //     "," +
+          //     mainViewerDimensions.margin.top +
+          //     "px" +
+          //     ")"
+          // );
+
+          svgObjs[className][axis] = plot;
+        });
+      });
 
       var svgMarker = d3
         .select("#plot-marker")
@@ -398,27 +412,12 @@
             ")"
         );
 
-      var canvDensity = d3
-        .select("#plot-density")
-        .attr("width", mainViewerDimensions.width)
-        .attr("height", mainViewerDimensions.height)
-        .style(
-          "transform",
-          "translate(" +
-            mainViewerDimensions.margin.left +
-            "px" +
-            "," +
-            mainViewerDimensions.margin.top +
-            "px" +
-            ")"
-        );
-
-      // Add black background to plot
-      canvDensity
-        .append("rect")
-        .attr("width", mainViewerDimensions.width)
-        .attr("height", mainViewerDimensions.height)
-        .attr("fill", "rgba(225,225,225,0.5)");
+      // // Add black background to plot
+      // canvDensity
+      //   .append("rect")
+      //   .attr("width", mainViewerDimensions.width)
+      //   .attr("height", mainViewerDimensions.height)
+      //   .attr("fill", "rgba(225,225,225,0.5)");
 
       var svgAxis = d3
         .select("#axis-svg")
@@ -435,6 +434,10 @@
             "px" +
             ")"
         );
+
+      var axis = d3.selectAll("input[name='axis']:checked").node().value;
+      var plotCoords;
+      var zoomTransform;
 
       var getMarginStr = (margin) =>
         margin.top +
@@ -531,9 +534,14 @@
       //TODO: Make a list of volumes rather than have one global
       const densityVol = new DensityVolume(
         mainViewerDimensions,
-        legendDimensions
+        legendDimensions,
+        svgObjs["plot-density"]
       );
-      const doseVol = new DoseVolume(mainViewerDimensions, legendDimensions);
+      const doseVol = new DoseVolume(
+        mainViewerDimensions,
+        legendDimensions,
+        svgObjs["plot-dose"]
+      );
       const doseProfileX = new DoseProfile(
         sideDoseProfileDimensions,
         doseProfileXSvg
@@ -557,7 +565,7 @@
     <script type="text/javascript" src="./slider.js"></script>
     <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./read-data.js"></script>
-    <script type="text/javascript" src="./zoom.js"></script>
+    <!-- <script type="text/javascript" src="./zoom.js"></script> -->
     <script type="text/javascript" src="./dose-profile-setup.js"></script>
   </body>
 </html>
