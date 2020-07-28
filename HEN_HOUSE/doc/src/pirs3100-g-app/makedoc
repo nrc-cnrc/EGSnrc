@@ -1,10 +1,36 @@
 #!/bin/bash
+###############################################################################
 #
-# Script to build the g-code documentation.
+#  EGSnrc script to build the g-code documentation.
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2020
+#
+#  Contributors:
+#
+###############################################################################
 #
 # Documentation built using Doxygen's ability to parse Fortran
 # comments. 
 #
+###############################################################################
 
 my_machine=`cat $EGS_CONFIG | grep "my_machine =" | sed 's/my_machine = //'`
 docdir=$PWD
@@ -49,7 +75,7 @@ if test -d "$eh"; then
  echo 'C> @endcond' >> g_${my_machine}.f
  mv $docdir/g_template.f $docdir/g_template.f.OK
  rm -f $docdir/*.f
- cp g_${my_machine}.f $docdir/g_current.f
+ cp g_${my_machine}.f $docdir/g.f
 fi
 
 if test "$docdir" != $PWD; then
@@ -64,9 +90,7 @@ doxygen
 mv $docdir/g_template.f.OK $docdir/g_template.f
 
 ###########################################
-# Backticks for code span and decimal dots 
-# translated to Latex with
-# \+ prepended to each character
+# Update authors on Latex refman 
 ##########################################
 for filename in latex/*.tex
 do

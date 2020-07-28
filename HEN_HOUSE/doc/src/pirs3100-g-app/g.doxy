@@ -30,6 +30,9 @@
 
 /*! \file g.doxy
  *  \brief Documents the g application
+ *
+ *  Contains the main body of the user's manual for the g application.
+ *
  *  \EM
  */
 
@@ -88,7 +91,7 @@ the approximation incurred when ignoring all other interactions as has been cust
 
 \subsubsection g_e_scoring Scoring algorithm for charged particle sources
 
-- Charged particle transport starts at the origin of an infinite geometry filled with a user-defined medium and are followed as they slow down in the medium until their energy falls below the transport cut-off energy ECUT. 
+- Charged particle transport starts at the origin of an infinite geometry filled with a user-defined medium and the charged particles are followed as they slow down in the medium until their energy falls below the transport cut-off energy ECUT. 
 
 - The average total energy of charged particles is scored in \Etot. In the case of a 
   monoenergetic source of energy \T0, \Etot = \T0, while for a spectrum \f$T(E)\f$, \Etot = \Tave, the average spectrum energy.
@@ -152,22 +155,22 @@ and similarly, collision kerma per unit fluence is given by
 
 In the case of a polyenergetic source of photons, the definition of \g follows from the defintion of kerma and collision kerma. Kerma per unit fluence is defined by
 
-\f{equation}{
+\f{equation}{\label{eq:def}
      \frac{K}{\phi} = \int \phi(E) \cdot E \cdot \left[\frac{\mu_\mathrm{tr}(E)}{\rho}\right] \cdot dE/\int \phi(E) \cdot dE.
 \f}
 
-The right-hand side can be interpreted as the energy fluence weighted average of \mutr_rho times 
+The right-hand side of Eq.(\reflh{eq:def,8}) can be interpreted as the energy fluence weighted average of \mutr_rho times 
 the fluence averaged spectrum energy or equivalently, as the fluence weighted average of the product of photon energy E and \mutr_rho:
 
 \f{equation}{\label{eq:Kpoly}
-     \frac{K}{\phi} = \left<\mu_\mathrm{tr}/\rho\right>_{\psi} \cdot \left<E\right>
+     \frac{K}{\phi} = \left<\mu_\mathrm{tr}/\rho\right>_{\psi} \cdot \left<E\right>_{\phi}
 	                = \left<E\cdot\mu_\mathrm{tr}/\rho\right>_{\phi}.
 \f}
 
 Similarly, substituting \mutr with \muen, collision kerma per unit fluence is given by
 
 \f{equation}{\label{eq:Kpolycol}\label{eq_kerma_0}
-     \frac{K_\mathrm{col}}{\phi} = \left<\mu_\mathrm{en}/\rho\right>_{\psi} \cdot \left<E\right>
+     \frac{K_\mathrm{col}}{\phi} = \left<\mu_\mathrm{en}/\rho\right>_{\psi} \cdot \left<E\right>_{\phi}
 	                             = \left<E\cdot\mu_\mathrm{en}/\rho\right>_{\phi}.
 \f}
 
@@ -196,16 +199,16 @@ The energy fluence weighted average \f$\left<\mu_\mathrm{tr}/\rho\right>_{\psi}\
 
 \f{equation}{
      \left<\mu_\mathrm{tr}/\rho\right>_{\psi} = 
-	 \frac{\left<E\cdot\mu_\mathrm{tr}/\rho\right>_{\phi}}{\left<E\right>} =
-	 \frac{\left<\overline{E}_\mathrm{tr}\cdot\mu\right>_{\phi}}{\left<E\right>},
+	 \frac{\left<E\cdot\mu_\mathrm{tr}/\rho\right>_{\phi}}{\left<E\right>_{\phi}} =
+	 \frac{\left<\overline{E}_\mathrm{tr}\cdot\mu\right>_{\phi}}{\left<E\right>_{\phi}},
 \f}
 
 and the energy fluence weighted average \f$\left<\mu_\mathrm{en}/\rho\right>_{\psi}\f$ with
 
 \f{equation}{\label{eq_muen_0}
      \left<\mu_\mathrm{en}/\rho\right>_{\psi} = 
-	 \frac{\left<E\cdot\mu_\mathrm{en}/\rho\right>_{\phi}}{\left<E\right>} =
-	 \frac{\left<\overline{E}_\mathrm{en}\cdot\mu\right>_{\phi}}{\left<E\right>},
+	 \frac{\left<E\cdot\mu_\mathrm{en}/\rho\right>_{\phi}}{\left<E\right>_{\phi}} =
+	 \frac{\left<\overline{E}_\mathrm{en}\cdot\mu\right>_{\phi}}{\left<E\right>_{\phi}},
 \f}
 
 or alternatively using
@@ -284,7 +287,7 @@ all histories are completed, is shown in the following code snippet:
   #############
 \endcode
 
-\note If the number of histories is not large enough, the calculation will finish without reaching a desired accuracy.
+\note If the number of histories in a calculation type 1 is not large enough, the calculation will finish without reaching a desired accuracy.
 
 \section g_spec Source definition
 
@@ -350,10 +353,10 @@ defining a logarithmic grid of N energy values
   E_i = e^{log(E_\mathrm{min})+i \cdot \Delta_\mathrm{log}}
 \f}
 
-These calculations will be limited to one CPU thread since there is no parallel execution capability in `g`. As the energy increases, CPU time will also increase. If a computer cluster or multiprocessor PC is available, it is more efficient to perform these calculations individually
-by submitting them to the available CPU threads. 
 
-\note A strategy for creating large \muen databases is discussed below in section \ref g_databases.
+\note These calculations will be limited to one CPU thread since there is no parallel execution capability in `g`. As the energy increases, CPU time will also increase. If a computer cluster or multiprocessor PC is available, it is more efficient to perform these calculations individually
+by submitting them to the available CPU threads. 
+A strategy for creating large \muen databases is discussed below in section \ref g_databases.
 
 Source of particles with a tabulated energy distribution (spectrum) can also be defined. A polyenergetic Co-60 beam is defined using the keys:   
 
@@ -465,6 +468,212 @@ Source of particles with a tabulated energy distribution (spectrum) can also be 
 ###########################
 \endcode
 
+\subsection g_databases Building large databases
+
+A consequence of not having an option for parallel execution is that
+lengthy calculations cannot be run on multiple cores, for instance on a computer cluster
+or a multicore processor PC.
+This limitation makes the creation of large databases spaning an energy range from threshold
+up to several MeV very time consuming. As the energy of the initial particle increases, more energetic electrons are created which have to be followed in an infinite geometry until they have lost all their kinetic energy. It is hence more practical to create individual input files for  each energy, and submit individual calculations. Furhtermore, one can take advantage of the energy dependence of the mass energy transfer and absorption coefficients and use a logarithmic energy grid to reduce the number of high energy data points.
+
+A simple Bash script is provided here as an example of what one could do to submit multiple calculations on a logarithmic energy grid. By default it runs type 1 calculations 
+in air for 10 energies between 1 keV and 1 MeV on a logarithmic energy grid in the available
+cores of a PC. Accuracy is set to 0.1\%. Water is also available and further media can be added to the media definition block of the input file template. By passing different arguments a user can change certain parameters of the simulations. It would be simple to allow changing other parameters:
+\latexonly
+\newpage
+\endlatexonly
+\code
+#!/bin/bash
+###############################################################################
+#
+#  Linux script to create input files on-the-fly for the g-app 
+#  to generate databases of muen or mutr values on a logarithmic grid.
+#
+#  Copyright (C) 2020 National Research Council Canada
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing
+#
+#  Contributors:    
+#
+###############################################################################
+#
+#
+# Defaults
+#
+n=10
+Emin=0.001
+Emax=1.0
+accu=0.001 # 0.1% stat. accuracy
+prefix=muen_rho
+pe_xsections=xcom
+medium=air
+E=0.01
+#---------------------------------
+# Parse command line for arguments
+#---------------------------------
+while test $# -gt 0; do
+    case "$1" in
+      min=*)  Emin=`echo $1  | sed 's/min=//'` ;;
+      max=*)  Emax=`echo $1  | sed 's/max=//'` ;;
+        n=*)     n=`echo $1  | sed 's/n=//'` ;;
+     accu=*)  accu=`echo $1  | sed 's/accu=//'` ;;
+   medium=*) medium=`echo $1 | sed 's/medium=//'` ;;
+   prefix=*) prefix=`echo $1 | sed 's/prefix=//'` ;;
+       pe=*) pe_xsections=`echo $1 | sed 's/pe=//'` ;;
+    esac
+    shift
+done
+
+#---------------------
+# get energy limits
+#---------------------
+AP=$(echo "scale=3; $Emin" | bc)
+UP=$(echo "scale=3; $Emax" | bc)
+AE=$(echo "scale=3; $AP+0.511" | bc)
+UE=$(echo "scale=3; $UP+0.511" | bc)
+#---------------------
+# prepend leading zero
+#---------------------
+printf -v AP "%0.3f" ${AP}
+printf -v UP "%0.3f" ${UP}
+printf -v AE "%0.3f" ${AE}
+printf -v UE "%0.3f" ${UE}
+
+echo 'lower photon energy cut-off:' $AP
+echo 'upper photon energy cut-off:' $UP
+echo 'lower electron energy cut-off:' $AE
+echo 'upper electron energy cut-off:' $UE
+
+# Let's be explicit
+typeset -i i 
+let "n -= 1"
+Dlog1=$(echo "l(${Emax}) - l(${Emin})" | bc -l)
+Dlog=$(echo "${Dlog1} / $n" | bc -l)
+printf 'Dlog = %.5f\n' "$Dlog"
+
+for ((i=0;i<=n;i++)) 
+do
+  E=$(echo "e(l(${Emin})+$i*${Dlog})" | bc -l)
+  # Protect against round-off at 1 keV
+  if (( $(echo "$E == 0.001" | bc -l) )); then
+     E=$(echo "e(l(${Emin})+0.0000000001+$i*${Dlog})" | bc -l)
+  fi
+  printf -v Ename "%0.8f" ${E}
+  echo E = ${E}
+  name=${prefix}_${medium}_${pe_xsections}_${Ename}_MeV
+    cat >${name}.egsinp <<EOF
+
+##############################
+ :Start MC Transport Parameter:
+
+ Global ECUT=                    $AE
+ Global PCUT=                    $AP
+ Global SMAX=                    1e10
+ Spin effects=                   On
+
+ Rayleigh scattering   = On
+ Photon cross sections  = $pe_xsections
+ Pair cross sections = nrc
+ Triplet production = On
+ Bound Compton Scattering = norej
+ Radiative Compton corrections = ON
+ Atomic relaxations=             On
+ Photoelectron angular sampling= On
+
+ Brems angular sampling=         KM
+ Brems cross sections= nrc
+ Pair angular sampling=          KM
+ ESTEPE=                         0.25
+ XIMAX=                          0.5
+ Electron Impact Ionization=     On
+ Skin depth for BCA=             3
+ Boundary crossing algorithm=    exact
+ Electron-step algorithm=        default
+
+ :Stop MC Transport Parameter:
+ #############################
+
+ media=  $medium
+ INITIAL RANDOM NO. SEEDS= 97, 33
+ Number of HISTORIES= 2000000000000
+ accuracy= $accu # relative accuracy
+ calculation type= 1
+ verbose = yes
+
+ :Start Source Input:
+ --------------------
+
+ INCIDENT SPECTRUM=       mono-energy
+ INCIDENT KINETIC ENERGY= ${E}
+ Incident Charge=         0
+ 
+ :Stop Source Input:
+ -------------------
+################################################################################
+### PEGS PARAMETERS
+################################################################################
+
+:start media definition:
+
+    ### energy transport cutoffs
+    ae = $AE 
+    ue = $UE 
+    ap = $AP 
+    up = $UP 
+
+
+    :start air:
+      density correction file     = air_dry_nearsealevel
+      bremsstrahlung correction= NRC
+    :stop air:
+
+    :start water:
+      density correction file     = water_icru90
+      bremsstrahlung correction= NRC
+    :stop water:
+
+:stop media definition:
+
+EOF
+########################################################################
+#
+# Command to submit the calculations to the cores of a Unix/Linux 
+# computer cluster running a PBS job scheduler. 
+#
+# Uncomment the two lines below and comment out the subsequent lines to 
+# submit to a cluster:
+#
+#echo Submitting $name to the queue user1...
+#${HEN_HOUSE}scripts/run_user_code_batch g ${name} pegsless batch=pbs user1
+##########################################################################
+
+########################################################################
+#
+# Submission to the available logical threads of a multicore PC:
+#
+# Comment out the 4 lines below if using the command above for submission
+# to a cluster!
+#
+########################################################################
+command="g -i $name"
+$command -b -P 1 -j 1 >/dev/null 2>&1 &
+processid=`printf %5d $!`
+echo "LAUNCHED $processid: $command -b -P 1 -j 1 &"
+########################################################################
+done
+# wait for completion and report
+# Comment out the 4 lines below if using the command for submission
+# to a cluster!
+wait
+echo --------------------------------------------------------------------------------
+echo "SIMULATION COMPLETED"
+echo
+########################################################################
+exit 0
+\endcode
+
 \section g_usage Usage
 The `EGSnrc` application \c g can be started from the command line
 using
@@ -473,111 +682,43 @@ using
 g -i input_file [-p pegs_file] [-o output_file] [-b]
 \endverbatim
 
-where the arguments in square brackets are optional. If material information is 
-obtained via a PEGS4 data file, the option <b>\c -p</b>  tells the application
+where the arguments in square brackets are optional. When the \c g application 
+is run interactively, results of a calculation are written to standard output.
+If one wants to print the results of an interactive calculation to an output file, 
+one can redirect the ouptut to a file using
+
+\verbatim
+g -i input_file [-p pegs_file] > output_file
+\endverbatim
+
+On Linux, one can make use of the \b tee command to route the results to multiple
+outputs (standard and a file) :
+
+\verbatim
+g -i input_file [-p pegs_file] | tee output_file
+\endverbatim
+
+\note <b>Beware of overwritting an existing file!</b>
+
+\subsection usage_options Optional options:
+<ul>
+<li>
+With the <b>\c -b</b> option one specifies a `batch` run, \em i.e. the
+output is redirected to <b>\c output_file.egslog</b>. 
+</li>
+<li>
+If material information is obtained via a PEGS4 data file, 
+the option <b>\c -p</b> tells the application
 which file to use. Alternatively, materials can be defined in the input file via 
 a media definition input block, in which case this option must be ommited.
+</li>
+<li>
 With the <b>\c -o</b> option one can change the name of the output files 
 (by default <b>\c input_file.xxx</b>
 is used, where <b>\c xxx</b> is <b>\c .egslog</b> for the log file, <b>\c .egsdat</b> for the
-data file, etc.). With <b>\c -b</b> one specifies a "batch" run, \em i.e. the
-output is redirected to <b>\c output_file.egslog</b>. 
-Remember that any application can be executed from the `EGSnrc` GUI \c egs_gui.
-
-\section g_databases Building large databases
-
-As a consequence of not having an option for parallel execution,
-lengthy calculations cannot be run on multiple cores, for instance on a computer cluster. 
-This limitation makes the creation of large databases spaning an energy range from threshold
-up to several MeVs very time consuming. As the energy of the initial particle increases, more energetic electrons are created which have to be followed in an infinite geometry until they have lost all their kinetic energy.
-
-The energy grid source options are still executed on one CPU thread, while most machines today offer several cores that could be put to good use. It is hence more practical to create individual input files for either energy groups (low energies) or for each energy, and submit individual calculations. Furhtermore, one can take advantage of the energy dependence of the mass energy transfer and absorption coefficients and use a logarithmic energy grid to reduce the number of high energy data points.
-
-<ul>
-<li> Generate the desired list of energies either with a small program, a spreadsheet application,
-or with g. For the latter create an input file with the option for an energy grid (linear or logarithmic) and capture `g`'s output on a text file.
-</li>
-<li>
-Use a bash script to read those energies and submit individual calculations to either a cluster
-or a multi-core machine.
+data file, etc.). 
 </li>
 </ul>
-
-A recipe for creating a database of 2000 \muen or \mutr values on a logarithmic energy grid
-from 1 keV up to 1.5 MeV is presented:
-
-<ul>
-<li> Create an input file for the material of interest \c air0o and a logarithmic energy grid 
-  from 1 keV up to 1.5 MeV using calculation type 1:
-
-
-\code
-##############################
-# Application specific inputs
-##############################
- media=  air0o
- INITIAL RANDOM NO. SEEDS= 97, 33
- Number of HISTORIES= 1000 # quick simulation
- calculation type= 1
-
-##################### 
- :Start Source Input:
-##################### 
-  Incident Charge=         0
-  INCIDENT SPECTRUM=       mono-energy-log-range
-  INCIDENT KINETIC ENERGY= 0.001, 1.5, 2000 # Emin, Emax, Npoints
-##################### 
- :Stop Source Input:
-##################### 
-
-###########################
-:start media definition:
-###########################
-    ### energy transport cutoffs
-    ae = 0.512
-    ue = 2.511
-    ap = 0.001
-    up = 2.00
-    :start air0o:
-      density correction file     = air_dry_nearsealevel
-      bremsstrahlung correction= NRC
-    :stop air0o:
-###########################
-:stop media definition:
-###########################
-
-################################ 
- :Start MC Transport Parameter:
-################################ 
- Global ECUT=                    0.512
- Global PCUT=                    0.001
-###############################
- :Stop MC Transport Parameter:
-###############################
-\endcode
-</li>
-<li> Run \c g using the input file g_log-grid.egsinp (1 to a few minutes depending on CPU speed) using
-the batch option -b to redirect output to an *.egslog file:
-
-
-\verbatim
-g -i input_file -b
-\endverbatim
-
-Alternatively one can execute
-
-\verbatim
-g -i input_file > log_file
-\endverbatim  
-
-to redirect the putput to a log_file. On a linux system one can also use
-
-\verbatim
-g -i input_file | tee log_file
-\endverbatim  
-
-to send the output to both, the screen and a log_file.
-</li>
-</ul>
+<b>Remember that any application can be executed from the `EGSnrc` GUI \c egs_gui!!!</b>
 
 */
