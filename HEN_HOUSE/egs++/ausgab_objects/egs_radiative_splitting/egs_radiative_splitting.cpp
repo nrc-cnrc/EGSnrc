@@ -183,6 +183,32 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, EGS_RandomGenerator *rndm, 
         }
         check = 1;
     }
+    else if( iarg == EGS_Application::BeforeCompton ||
+             iarg == EGS_Application::BeforePair ||
+             iarg == EGS_Application::BeforePhoto ||
+             iarg == EGS_Application::BeforeRayleigh )
+    {
+        //split charged particles if interaction happens below the
+        //Russian Roulette plane (and user has opted to split e-/e+)
+        //Eventually, we will also use range to the nearest region boundary
+        //to determine whether the particle needs to be split or not
+        bool e_split = false;
+        if(i_esplit && app->top_p.x.z > z_rr) e_split = true;
+
+
+    else if( iarg == EGS_Application::BeforeCompton )
+    {
+        if( is_fat && !app->the_xoptions->ibcmp)
+        {
+            doSmartCompton(afak,nsp,nint,rndm);
+             iarg == EGS_Application::BeforePair ||
+             iarg == EGS_Application::BeforePhoto ||
+             iarg == EGS_Application::BeforeRayleigh ) {
+
+        //eventually we need to determine whether e- splitting should be done or not based
+        //on charged particle range to the nearest region boundary
+        //for now, though, just base this on whether the interaction happens below the
+        //russian roulette plane, Z_RR, or not
     return 1;
 }
 
