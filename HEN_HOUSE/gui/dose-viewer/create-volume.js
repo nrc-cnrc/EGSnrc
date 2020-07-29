@@ -87,13 +87,21 @@ class Volume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
 
-  constructor(dimensions, legendDimensions, htmlElementObj) {
+  constructor(
+    dimensions,
+    legendDimensions,
+    htmlElementObj,
+    legendHolder,
+    legendSvg
+  ) {
     this.dimensions = dimensions;
     this.legendDimensions = legendDimensions;
     this.data = {};
     this.prevSlice = {};
     this.prevAxis = "";
     this.htmlElementObj = htmlElementObj;
+    this.legendHolder = legendHolder;
+    this.legendSvg = legendSvg;
   }
 
   addData(data) {
@@ -255,19 +263,19 @@ class Volume {
     return slice;
   }
 
-  initializeLegend(legendSvg, legendClass, title, parameters) {
+  initializeLegend(legendClass, title, parameters) {
     // Clear and redraw current legend
-    legendSvg.select("." + legendClass).remove();
-    legendSvg.select("text").remove();
+    this.legendSvg.select("." + legendClass).remove();
+    this.legendSvg.select("text").remove();
 
     // Make space for legend title
-    legendSvg
+    this.legendSvg
       .append("g")
       .attr("class", legendClass)
       .style("transform", "translate(0px," + 20 + "px)");
 
     // Append title
-    legendSvg
+    this.legendSvg
       .append("text")
       .attr("class", legendClass)
       .attr("x", this.legendDimensions.width / 2)
@@ -289,15 +297,15 @@ class Volume {
       legend[name](...val);
     });
 
-    legendSvg.select("." + legendClass).call(legend);
+    this.legendSvg.select("." + legendClass).call(legend);
 
     // Set the height of the svg so the div can scroll if need be
     let height =
-      legendSvg
+      this.legendSvg
         .select("." + legendClass)
         .node()
         .getBoundingClientRect().height + 20;
-    legendSvg.attr("height", height);
+    this.legendSvg.attr("height", height);
   }
 
   isEmpty() {
@@ -316,8 +324,20 @@ class Volume {
 }
 
 class DoseVolume extends Volume {
-  constructor(dimensions, legendDimensions, svgDoseObj) {
-    super(dimensions, legendDimensions, svgDoseObj); // call the super class constructor
+  constructor(
+    dimensions,
+    legendDimensions,
+    svgDoseObj,
+    doseLegendHolder,
+    doseLegend
+  ) {
+    super(
+      dimensions,
+      legendDimensions,
+      svgDoseObj,
+      doseLegendHolder,
+      doseLegend
+    ); // call the super class constructor
   }
 
   addData(data) {
@@ -328,7 +348,7 @@ class DoseVolume extends Volume {
     super.addColourScheme(d3.interpolateViridis, this.data.maxDose, 0);
     // Calculate the contour thresholds
     let contourInt = 0.1;
-    this.thresholdPercents = d3.range(0, 1.0 + contourInt, contourInt);
+    this.thresholdPercents = d3.range(contourInt, 1.0 + contourInt, contourInt);
     this.updateThresholds();
     // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
     this.className = (i) =>
@@ -375,6 +395,7 @@ class DoseVolume extends Volume {
     var contours = d3
       .contours()
       .size([slice.xVoxels, slice.yVoxels])
+      .smooth(false)
       .thresholds(this.thresholds)(slice.sliceData)
       .map(slice.contourTransform);
 
@@ -413,7 +434,7 @@ class DoseVolume extends Volume {
 
   getHiddenContourClassList() {
     let hiddenContourClassList = [];
-    doseLegendSvg.selectAll("g.cell.hidden").each(function (d, i) {
+    this.legendSvg.selectAll("g.cell.hidden").each(function (d, i) {
       hiddenContourClassList[i] =
         "." + d3.select(this).attr("class").split(" ")[1];
     });
@@ -435,7 +456,7 @@ class DoseVolume extends Volume {
       });
     };
 
-    super.initializeLegend(doseLegendSvg, "doseLegend", "Dose", {
+    super.initializeLegend("doseLegend", "Dose", {
       labels: [
         this.thresholds.map((e) => d3.format(".0%")(e / this.maxDoseVar)),
       ],
@@ -452,13 +473,13 @@ class DoseVolume extends Volume {
 
     // Add the appropriate classnames to each legend cell
     let len = this.thresholdPercents.length - 1;
-    doseLegendSvg
+    this.legendSvg
       .selectAll("g.cell")
       .attr("class", (d, i) => "cell " + this.className(len - i));
 
     if (hiddenContourClassList.length > 0) {
       // Apply hidden class to hidden contours
-      let hiddenLegendCells = doseLegendSvg
+      let hiddenLegendCells = this.legendSvg
         .selectAll("g.cell")
         .filter(hiddenContourClassList.join(","));
       hiddenLegendCells.classed("hidden", !hiddenLegendCells.classed("hidden"));
@@ -495,7 +516,7 @@ class DoseVolume extends Volume {
     let doseContourInputWidth = 45;
 
     // Add number input box
-    let submitDoseContour = doseLegendHolder
+    let submitDoseContour = this.legendHolder
       .append("input")
       .attr("type", "number")
       .attr("name", "add-dose-contour-line")
@@ -506,7 +527,7 @@ class DoseVolume extends Volume {
       .style("width", doseContourInputWidth + "px");
 
     // Add submit button
-    doseLegendHolder
+    this.legendHolder
       .append("input")
       .attr("type", "submit")
       .attr("name", "submit-dose-contour-line")
@@ -516,7 +537,7 @@ class DoseVolume extends Volume {
   }
 
   getDataAtVoxelCoords(voxelCoords) {
-    return super.getDataAtVoxelCoords(voxelCoords, "dose");
+    return super.getDataAtVoxelCoords(voxelCoords, "dose") / this.data.maxDose;
   }
 
   getErrorAtVoxelCoords(voxelCoords) {
@@ -597,8 +618,21 @@ class DoseVolume extends Volume {
 }
 
 class DensityVolume extends Volume {
-  constructor(dimensions, legendDimensions, canvDensityObj) {
-    super(dimensions, legendDimensions, canvDensityObj); // call the super class constructor
+  //
+  constructor(
+    dimensions,
+    legendDimensions,
+    canvDensityObj,
+    densityLegendHolder,
+    densityLegend
+  ) {
+    super(
+      dimensions,
+      legendDimensions,
+      canvDensityObj,
+      densityLegendHolder,
+      densityLegend
+    ); // call the super class constructor
   }
 
   addData(data) {
@@ -722,14 +756,14 @@ class DensityVolume extends Volume {
     }
 
     // Remove old text
-    densityLegendSvg.select("." + legendClass).remove();
-    densityLegendSvg.select("text").remove();
+    this.legendSvg.select("." + legendClass).remove();
+    this.legendSvg.select("text").remove();
 
     // Set dimensions of svg
-    densityLegendSvg
+    this.legendSvg
       .attr("width", dims.width)
-      .attr("height", dims.height / 2)
-      .attr("viewBox", [0, 0, dims.width, dims.height / 2])
+      .attr("height", dims.height)
+      .attr("viewBox", [0, 0, dims.width, dims.height])
       .style("overflow", "visible")
       .style("display", "block");
 
@@ -744,13 +778,13 @@ class DensityVolume extends Volume {
 
     let gradUrl = gradientUrl(
       this.colour,
-      dims.height / 2 - 20,
+      dims.height - 20,
       30,
       this.data.maxDensity
     );
 
     // Set height of legend
-    let legendHeight = dims.height / 2 - 80;
+    let legendHeight = dims.height - 80;
 
     // Create scale for ticks
     let scale = d3
@@ -759,7 +793,7 @@ class DensityVolume extends Volume {
       .range([legendHeight, 0]);
 
     // Append title
-    densityLegendSvg
+    this.legendSvg
       .append("text")
       .attr("class", legendClass)
       .attr("x", dims.width / 2)
@@ -769,7 +803,7 @@ class DensityVolume extends Volume {
       .text(title);
 
     // Append gradient image
-    densityLegendSvg
+    this.legendSvg
       .append("g")
       .attr("class", legendClass)
       .append("image")
@@ -780,7 +814,7 @@ class DensityVolume extends Volume {
       .attr("xlink:href", gradUrl);
 
     // Append ticks
-    densityLegendSvg
+    this.legendSvg
       .append("g")
       .attr("transform", "translate(" + 0 + ", " + dims.margin.top + ")")
       .call(

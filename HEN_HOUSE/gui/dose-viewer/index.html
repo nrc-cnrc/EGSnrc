@@ -230,22 +230,15 @@
         <br />
       </span>
       <div id="image-to-print">
-        <span id="viewer-container"></span>
-        <span id="legendholder">
-          <div id="dose-legend-holder" class="legend-holder">
-            <svg id="dose-legend-svg" class="legend"></svg>
-          </div>
-          <div id="density-legend-holder" class="legend-holder">
-            <svg id="density-legend-svg" class="legend"></svg>
-          </div>
-        </span>
-        <span id="dose-profile-holder">
+        <span id="viewer-container" class="container"> </span>
+        <span id="legendholder" class="legend-holder"> </span>
+        <span id="dose-profile-holder" class="container">
           <svg id="dose-profile-svg-x" class="dose-profile-plot"></svg>
           <svg id="dose-profile-svg-y" class="dose-profile-plot"></svg>
         </span>
       </div>
     </div>
-    <div id="dose-profile-viewer">
+    <div id="dose-profile-viewer" style="display: none">
       <p>
         Select axis and voxel coordinates to view and compare dose profiles.
       </p>
@@ -314,8 +307,8 @@
 
       // Define all size variables
       let mainViewerDimensions = {
-        fullWidth: 340,
-        fullHeight: 320,
+        fullWidth: 320,
+        fullHeight: 300,
         margin: { top: 10, right: 20, bottom: 50, left: 60 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
@@ -328,7 +321,7 @@
       // Define legend size variables
       // From https://bl.ocks.org/starcalibre/6cccfa843ed254aa0a0d
       let legendDimensions = {
-        fullWidth: 100,
+        fullWidth: 80,
         fullHeight: mainViewerDimensions.fullHeight,
         margin: { top: 25, bottom: 5, left: 10, right: 5 },
         get width() {
@@ -397,6 +390,43 @@
         });
       });
 
+      // Initialize dose and density legend
+      var getMarginStr = (margin) =>
+        margin.top +
+        "px " +
+        margin.right +
+        "px " +
+        margin.bottom +
+        "px " +
+        margin.left +
+        "px";
+
+      var getLegendHolderAndSvg = (parentDiv, className) => {
+        let legendHolder = parentDiv
+          .append("span")
+          .attr("id", className + "-legend-holder")
+          .style("width", legendDimensions.width + "px")
+          .style("height", legendDimensions.height + "px")
+          .style("margin", getMarginStr(legendDimensions.margin));
+
+        let legendSvg = legendHolder
+          .append("svg")
+          .attr("id", className + "-legend-svg")
+          .attr("class", "legend");
+
+        return [legendHolder, legendSvg];
+      };
+
+      let selectedDiv = d3.select("#legendholder");
+      let [doseLegendHolder, doseLegendSvg] = getLegendHolderAndSvg(
+        selectedDiv,
+        "dose"
+      );
+      let [densityLegendHolder, densityLegendSvg] = getLegendHolderAndSvg(
+        selectedDiv,
+        "density"
+      );
+
       var svgMarker = d3
         .select("#plot-marker")
         .attr("width", mainViewerDimensions.width)
@@ -438,33 +468,6 @@
       var axis = d3.selectAll("input[name='axis']:checked").node().value;
       var plotCoords;
       var zoomTransform;
-
-      var getMarginStr = (margin) =>
-        margin.top +
-        "px " +
-        margin.right +
-        "px " +
-        margin.bottom +
-        "px " +
-        margin.left +
-        "px";
-
-      // Initialize dose legend
-      var doseLegendHolder = d3
-        .select("#dose-legend-holder")
-        .style("width", legendDimensions.width + "px")
-        .style("height", legendDimensions.height / 2 + "px")
-        .style("margin", getMarginStr(legendDimensions.margin));
-
-      var doseLegendSvg = d3.select("#dose-legend-svg");
-
-      // Initialize density legend
-      d3.select("#density-legend-holder")
-        .style("width", legendDimensions.width + "px")
-        .style("height", legendDimensions.height / 2 + "px")
-        .style("margin", getMarginStr(legendDimensions.margin));
-
-      var densityLegendSvg = d3.select("#density-legend-svg");
 
       // Initializing svgs for dose profile plots
       var doseProfileXSvg = d3
@@ -535,12 +538,16 @@
       const densityVol = new DensityVolume(
         mainViewerDimensions,
         legendDimensions,
-        svgObjs["plot-density"]
+        svgObjs["plot-density"],
+        densityLegendHolder,
+        densityLegendSvg
       );
       const doseVol = new DoseVolume(
         mainViewerDimensions,
         legendDimensions,
-        svgObjs["plot-dose"]
+        svgObjs["plot-dose"],
+        doseLegendHolder,
+        doseLegendSvg
       );
       const doseProfileX = new DoseProfile(
         sideDoseProfileDimensions,

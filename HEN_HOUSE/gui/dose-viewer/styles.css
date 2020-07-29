@@ -30,18 +30,6 @@ svg.axis-svg {
   overflow: visible;
 }
 
-/* #axis-svg {
-  z-index: 1;
-}
-
-#plot-density {
-  z-index: 2;
-}
-
-#plot-dose {
-  z-index: 3;
-} */
-
 #plot-marker,
 #legend-svg,
 .plotting-area {
@@ -69,14 +57,15 @@ svg.axis-svg {
   vector-effect: non-scaling-stroke;
 }
 
-div.legend-holder {
-  display: block;
+.legend-holder {
+  vertical-align: top;
+  display: inline-flex;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-span#legendholder {
-  float: left;
+.legend {
+  display: block;
 }
 
 .profile-x-axis,

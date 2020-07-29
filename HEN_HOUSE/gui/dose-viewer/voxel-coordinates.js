@@ -176,7 +176,7 @@ function updateVoxelInfo(voxelCoords) {
     let dose = doseVol.getDataAtVoxelCoords(voxelCoords) || 0;
     let error = doseVol.getErrorAtVoxelCoords(voxelCoords) || 0;
     d3.select("#dose-value").node().value =
-      d3.format(".3e")(dose) + " Gy +/- " + d3.format(".1%")(error);
+      d3.format(".1%")(dose) + " +/- " + d3.format(".1%")(error);
   }
 }
 
