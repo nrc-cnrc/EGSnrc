@@ -196,6 +196,8 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
     // If this line contains an "=" then it should match a single input
     int equalsPos = selectedText.indexOf("=");
     if(equalsPos != -1) {
+        cursor.beginEditBlock();
+
         QString inputTag = selectedText.left(equalsPos).simplified();
         QString inputVal = selectedText.right(selectedText.size() - equalsPos - 1).simplified();
         egsInformation("test foundEquals %s\n",inputTag.toLatin1().data());
@@ -301,6 +303,7 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
             extraSelections.append(selection);
             setExtraSelections(extraSelections);
         }
+        cursor.endEditBlock();
     }
 }
 
@@ -626,8 +629,11 @@ void EGS_Editor::autoComplete() {
 }
 
 void EGS_Editor::insertCompletion(QModelIndex index) {
+    QTextCursor cursor = textCursor();
+    cursor.beginEditBlock();
     this->moveCursor(QTextCursor::EndOfBlock);
     insertPlainText(model->data(index).toString());
+    cursor.endEditBlock();
 }
 
 shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextCursor cursor) {
