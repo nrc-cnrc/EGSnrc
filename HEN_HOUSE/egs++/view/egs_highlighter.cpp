@@ -80,15 +80,14 @@ EGS_Highlighter::EGS_Highlighter(QTextDocument *parent) : QSyntaxHighlighter(par
 
     // Comment highlighting must come last
     singleLineCommentFormat.setForeground(Qt::gray);
-    rule.pattern = QRegularExpression("#[^\n]*");
+    rule.pattern = QRegularExpression("(#|//|!)[^\n]*");
     rule.format = singleLineCommentFormat;
     highlightingRules.append(rule);
 
     // For multi-line comments
-    //multiLineCommentFormat.setForeground(Qt::red);
-
-    //commentStartExpression = QRegularExpression("/\\*");
-    //commentEndExpression = QRegularExpression("\\*/");
+    multiLineCommentFormat.setForeground(Qt::gray);
+    commentStartExpression = QRegularExpression("/\\*");
+    commentEndExpression = QRegularExpression("\\*/");
 }
 
 void EGS_Highlighter::highlightBlock(const QString &text) {
@@ -101,7 +100,6 @@ void EGS_Highlighter::highlightBlock(const QString &text) {
     }
     setCurrentBlockState(0);
 
-    /*
     //For multi-line comments
     int startIndex = 0;
     if (previousBlockState() != 1)
@@ -120,5 +118,5 @@ void EGS_Highlighter::highlightBlock(const QString &text) {
         }
         setFormat(startIndex, commentLength, multiLineCommentFormat);
         startIndex = text.indexOf(commentStartExpression, startIndex + commentLength);
-    }*/
+    }
 }

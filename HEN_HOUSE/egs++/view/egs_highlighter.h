@@ -61,10 +61,10 @@ private:
                     definitionFormat,
                     nameFormat,
                     singleLineCommentFormat,
+                    multiLineCommentFormat,
                     quotationFormat,
                     squotationFormat,
                     functionFormat;
-    //QTextCharFormat multiLineCommentFormat;
 
 signals:
 
