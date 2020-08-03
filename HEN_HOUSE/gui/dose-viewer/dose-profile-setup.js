@@ -79,6 +79,9 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
     let doseProfilePlots = d3.selectAll("svg.dose-profile-plot");
     doseProfilePlots.classed("hidden", false);
 
+    // Display crosshairs
+    d3.selectAll("line.crosshair").style("display", "");
+
     // Plot dose profile if circle marker exists
     if (svgMarker.select(".circle-marker").node()) {
       let circle = svgMarker.select("circle.crosshair");
@@ -102,6 +105,9 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
     let doseProfilePlots = d3.selectAll("svg.dose-profile-plot");
     doseProfilePlots.classed("hidden", true);
 
+    // Hide crosshairs
+    d3.selectAll("line.crosshair").style("display", "none");
+
     // Disable saving dose profiles as svg
     d3.select("#save-dose-profile").node().disabled = true;
 
@@ -115,6 +121,9 @@ d3.select("input[name='show-marker-checkbox']").on("change", function () {
   if (this.checked) {
     // Remove hidden class
     doseProfilePlots.classed("hidden", false);
+
+    // Display marker
+    d3.select("circle.crosshair").style("display", "");
 
     // If crosshairs exist, add circle marker and update voxel information at that point
     if (svgMarker.select(".crosshair-marker").node()) {
@@ -131,6 +140,9 @@ d3.select("input[name='show-marker-checkbox']").on("change", function () {
   } else {
     // Add hidden class
     doseProfilePlots.classed("hidden", true);
+
+    // Hide marker
+    d3.select("circle.crosshair").style("display", "none");
 
     // Remove circle marker
     svgMarker.select(".circle-marker").remove();

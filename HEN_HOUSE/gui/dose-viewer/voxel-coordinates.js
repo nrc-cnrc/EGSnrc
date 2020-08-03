@@ -1,4 +1,6 @@
 // TODO: If marker exists, on axis change, use marker coordinates?
+// https://github.com/aces/brainbrowser/blob/master/src/brainbrowser/volume-viewer.js#L411-L415
+
 function coordsToWorld(coords, axis, sliceNum, volume, updateXY) {
   // TODO: Have a more permanent solution to the click/transform problem, make a class?
   let i, j;
@@ -69,72 +71,6 @@ function invertTransform(val, transform, dir) {
   return (val - transform[dir]) / transform.k;
 }
 
-function updateCircleMarker(coords, svg) {
-  // Remove old marker
-  svg.select(".circle-marker").remove();
-
-  // If there is existing transformation, calculate proper x and y coordinates
-  let x = zoomTransform
-    ? invertTransform(coords[0], zoomTransform, "x")
-    : coords[0];
-  let y = zoomTransform
-    ? invertTransform(coords[1], zoomTransform, "y")
-    : coords[1];
-
-  // Add new marker with modified coordinates so it can smoothly transform with other elements
-  let marker = svg
-    .append("g")
-    .attr("class", "circle-marker")
-    .attr("transform", zoomTransform ? zoomTransform.toString() : "");
-
-  // Create centre circle
-  marker
-    .append("circle")
-    .attr("cx", x)
-    .attr("cy", y)
-    .attr("class", "crosshair")
-    .attr("r", 2);
-}
-
-function updateCrosshairs(coords, svg) {
-  // Remove old crosshairs
-  svg.select(".crosshair-marker").remove();
-
-  // If there is existing transformation, calculate proper x and y coordinates
-  let x = zoomTransform
-    ? invertTransform(coords[0], zoomTransform, "x")
-    : coords[0];
-  let y = zoomTransform
-    ? invertTransform(coords[1], zoomTransform, "y")
-    : coords[1];
-
-  // Add new crosshairs with modified coordinates so it can smoothly transform with other elements
-  let marker = svg
-    .append("g")
-    .attr("class", "crosshair-marker")
-    .attr("transform", zoomTransform ? zoomTransform.toString() : "");
-
-  // Create horizontal line
-  marker
-    .append("line")
-    .classed("crosshair", true)
-    .classed("crosshairX", true)
-    .attr("x1", x)
-    .attr("y1", 0)
-    .attr("x2", x)
-    .attr("y2", mainViewerDimensions.height);
-
-  // Create vertical line
-  marker
-    .append("line")
-    .classed("crosshair", true)
-    .classed("crosshairY", true)
-    .attr("x1", 0)
-    .attr("y1", y)
-    .attr("x2", mainViewerDimensions.width)
-    .attr("y2", y);
-}
-
 function updateVoxelCoords(coords, axis, sliceNum, updateXY = false) {
   if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
     let vol = !densityVol.isEmpty() ? densityVol : doseVol;
@@ -148,7 +84,6 @@ function updateVoxelCoords(coords, axis, sliceNum, updateXY = false) {
       updateWorldLabels(worldCoords);
       updateVoxelLabels(voxelCoords);
       updateVoxelInfo(voxelCoords);
-      if (updateXY) updateCircleMarker(coords, svgMarker);
     }
 
     // Update dose profiles if checkbox is checked
@@ -157,7 +92,6 @@ function updateVoxelCoords(coords, axis, sliceNum, updateXY = false) {
       d3.select("input[name='show-dose-profile-checkbox']").node().checked
     ) {
       updateDoseProfiles(axis, voxelCoords, worldCoords);
-      if (updateXY) updateCrosshairs(coords, svgMarker);
     }
   }
 }
@@ -209,13 +143,3 @@ function updateDoseProfiles(axis, voxelCoords, worldCoords) {
   // Plot the dose profile along the y axis
   doseProfileY.plotDoseProfile(axis, axis[1], worldCoordsY);
 }
-
-// TODO: Update voxel info upon dose or density upload for existing marker
-svgMarker.on("click", function () {
-  plotCoords = d3.mouse(this);
-  let axis = getAxis();
-  let sliceNum = getSliceNum();
-
-  updateVoxelCoords(plotCoords, axis, sliceNum, true);
-  return true;
-});

@@ -238,7 +238,7 @@
         </span>
       </div>
     </div>
-    <div id="dose-profile-viewer" style="display: none">
+    <div id="dose-profile-viewer" style="display: none;">
       <p>
         Select axis and voxel coordinates to view and compare dose profiles.
       </p>
@@ -299,6 +299,7 @@
     </div>
     <script type="text/javascript" src="./create-volume.js"></script>
     <script type="text/javascript" src="./dose-profile.js"></script>
+    <script type="text/javascript" src="./panel.js"></script>
     <script>
       // TODO: Make a dose-view options class?
       // TODO: Move all javascript outside of index.html
@@ -347,13 +348,20 @@
 
       // For each axis and plot class, make html
       let axes = ["xy", "yz", "xz"];
-      let classes = ["plot-density", "plot-dose", "plot-marker", "axis-svg"];
-      let type = ["canvas", "svg", "svg", "svg"];
+      let classes = ["axis-svg", "plot-density", "plot-dose", "plot-marker"];
+      let type = ["svg", "canvas", "svg", "svg"];
       let svgObjs = {
+        "axis-svg": {},
         "plot-density": {},
         "plot-dose": {},
         "plot-marker": {},
-        "axis-svg": {},
+      };
+
+      // TODO: Just make one object
+      let axisObjs = {
+        xy: {},
+        yz: {},
+        xz: {},
       };
 
       axes.forEach((axis) => {
@@ -375,18 +383,9 @@
             .classed("plot", true)
             .attr("width", mainViewerDimensions.width)
             .attr("height", mainViewerDimensions.height);
-          // .style(
-          //   "transform",
-          //   "translate(" +
-          //     mainViewerDimensions.margin.left +
-          //     "px" +
-          //     "," +
-          //     mainViewerDimensions.margin.top +
-          //     "px" +
-          //     ")"
-          // );
 
           svgObjs[className][axis] = plot;
+          axisObjs[axis][className] = plot;
         });
       });
 
@@ -427,20 +426,8 @@
         "density"
       );
 
-      var svgMarker = d3
-        .select("#plot-marker")
-        .attr("width", mainViewerDimensions.width)
-        .attr("height", mainViewerDimensions.height)
-        .style(
-          "transform",
-          "translate(" +
-            mainViewerDimensions.margin.left +
-            "px" +
-            "," +
-            mainViewerDimensions.margin.top +
-            "px" +
-            ")"
-        );
+      var svgMarker = d3.select("#viewer-container");
+      var svgMarkers = svgObjs["plot-marker"];
 
       // // Add black background to plot
       // canvDensity
@@ -549,6 +536,17 @@
         doseLegendHolder,
         doseLegendSvg
       );
+
+      let panels = axes.map(
+        (axis) =>
+          new Panel(
+            mainViewerDimensions,
+            densityVol || doseVol,
+            axis,
+            axisObjs[axis]
+          )
+      );
+
       const doseProfileX = new DoseProfile(
         sideDoseProfileDimensions,
         doseProfileXSvg
