@@ -36,6 +36,15 @@ class Panel {
       updateVoxelCoords(plotCoords, this.axis, this.sliceNum, true);
     };
 
+    let mainViewerZoom = getZoom(
+      mainViewerDimensions.width,
+      mainViewerDimensions.height,
+      zoomedAll,
+      [this]
+    );
+
+    axisElements["plot-marker"].call(mainViewerZoom);
+
     axisElements["plot-marker"].on("click", function () {
       let plotCoords = d3.mouse(this);
       updateMarkerAndVoxelInfo(plotCoords);
@@ -67,9 +76,12 @@ class Panel {
 
     function dragged() {
       // TODO: Update voxel position on drag / fire event?
-      var x = d3.event.x - coords[0];
-      var y = d3.event.y - coords[1];
-      d3.select(this).attr("transform", "translate(" + x + "," + y + ")");
+      var x = d3.event.x;
+      var y = d3.event.y;
+
+      d3.select(this).select("circle").attr("cx", x).attr("cy", y);
+      d3.select(this).select("line.crosshairX").attr("x1", x).attr("x2", x);
+      d3.select(this).select("line.crosshairY").attr("y1", y).attr("y2", y);
     }
 
     function dragended() {
@@ -88,17 +100,19 @@ class Panel {
       : coords[1];
 
     // Add new marker with modified coordinates so it can smoothly transform with other elements
-    var marker = this.axisElements["plot-marker"]
+    var markerHolder = this.axisElements["plot-marker"]
       .append("g")
       .attr("class", "marker")
       .attr(
         "transform",
         this.zoomTransform ? this.zoomTransform.toString() : ""
       )
-      .attr("cursor", "grab");
+      .attr("cursor", "grab")
+      .append("g")
+      .attr("class", "marker-holder");
 
     // Add drag functionality
-    marker.call(
+    markerHolder.call(
       d3
         .drag()
         .on("start", dragstarted)
@@ -107,7 +121,7 @@ class Panel {
     );
 
     // Create centre circle
-    marker
+    markerHolder
       .append("circle")
       .attr("cx", x)
       .attr("cy", y)
@@ -117,7 +131,7 @@ class Panel {
       .style("display", this.showMarker() ? "" : "none");
 
     // Create horizontal line
-    marker
+    markerHolder
       .append("line")
       .classed("crosshair", true)
       .classed("crosshairX", true)
@@ -128,7 +142,7 @@ class Panel {
       .style("display", this.showCrosshairs() ? "" : "none");
 
     // Create vertical line
-    marker
+    markerHolder
       .append("line")
       .classed("crosshair", true)
       .classed("crosshairY", true)

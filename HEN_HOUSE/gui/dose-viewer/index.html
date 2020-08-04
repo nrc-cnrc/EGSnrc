@@ -299,6 +299,7 @@
     </div>
     <script type="text/javascript" src="./create-volume.js"></script>
     <script type="text/javascript" src="./dose-profile.js"></script>
+    <script type="text/javascript" src="./zoom.js"></script>
     <script type="text/javascript" src="./panel.js"></script>
     <script>
       // TODO: Make a dose-view options class?
@@ -556,6 +557,24 @@
         doseProfileYSvg
       );
 
+      //TODO: Disable zoom until data is uploaded
+
+      // Zooming for x dose profile
+      doseProfileX.zoomObj = getZoom(
+        sideDoseProfileDimensions.width,
+        sideDoseProfileDimensions.height,
+        zoomedDoseProfile,
+        [doseProfileX]
+      );
+
+      // Zooming for y dose profile
+      doseProfileY.zoomObj = getZoom(
+        sideDoseProfileDimensions.width,
+        sideDoseProfileDimensions.height,
+        zoomedDoseProfile,
+        [doseProfileY]
+      );
+
       function getSliceNum() {
         return d3.select("#slider-value").node().value;
       }
@@ -570,7 +589,6 @@
     <script type="text/javascript" src="./slider.js"></script>
     <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./read-data.js"></script>
-    <!-- <script type="text/javascript" src="./zoom.js"></script> -->
     <script type="text/javascript" src="./dose-profile-setup.js"></script>
   </body>
 </html>

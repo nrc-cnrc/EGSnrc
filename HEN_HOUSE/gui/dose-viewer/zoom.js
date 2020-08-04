@@ -23,32 +23,6 @@ var resetZoom = (obj, zoom) => {
   obj.call(zoom.transform, d3.zoomIdentity.scale(1));
 };
 
-//TODO: Disable until data is uploaded
-// Zooming functionality for main plot
-let mainViewerZoom = getZoom(
-  mainViewerDimensions.width,
-  mainViewerDimensions.height,
-  zoomedAll,
-  []
-);
-svgMarker.call(mainViewerZoom);
-
-// Zooming for x dose profile
-doseProfileX.zoomObj = getZoom(
-  sideDoseProfileDimensions.width,
-  sideDoseProfileDimensions.height,
-  zoomedDoseProfile,
-  [doseProfileX]
-);
-
-// Zooming for y dose profile
-doseProfileY.zoomObj = getZoom(
-  sideDoseProfileDimensions.width,
-  sideDoseProfileDimensions.height,
-  zoomedDoseProfile,
-  [doseProfileY]
-);
-
 function zoomedDoseProfile(transform, doseProfile) {
   doseProfile.zoomTransform = transform;
   if (
@@ -111,49 +85,57 @@ function zoomedCanvas(transform, canvas) {
   context.restore();
 }
 
-function zoomedAll(transform) {
-  if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
-    zoomTransform = transform;
+function zoomedAll(transform, panel) {
+  zoomTransform = transform;
 
-    zoomedCanvas(transform, canvDensity);
+  panel.zoomTransform = transform;
+  let axisElements = panel.axisElements;
+  let volume = panel.volume;
 
-    svgDose.select("g.dose-contour").attr("transform", transform.toString());
+  // Zoom on canvas
+  zoomedCanvas(transform, axisElements["plot-density"]);
 
-    svgMarker.select(".circle-marker").attr("transform", transform.toString());
-    svgMarker
-      .select(".crosshair-marker")
-      .attr("transform", transform.toString());
+  // Zoom dose plot
+  axisElements["plot-dose"]
+    .select("g.dose-contour")
+    .attr("transform", transform.toString());
 
-    // Create new scale ojects based on event
-    let vol = !densityVol.isEmpty() ? densityVol : doseVol;
-    var new_xScale = transform.rescaleX(vol.prevSlice.xScale);
-    var new_yScale = transform.rescaleY(vol.prevSlice.yScale);
+  // Zoom marker
+  axisElements["plot-marker"]
+    .select("g.marker")
+    .attr("transform", transform.toString());
 
-    // Update axes
-    svgAxis.select(".x-axis").call(d3.axisBottom().scale(new_xScale).ticks(6));
-    svgAxis.select(".y-axis").call(d3.axisLeft().scale(new_yScale).ticks(6));
+  // Create new scale ojects based on event
+  var new_xScale = transform.rescaleX(volume.prevSlice.xScale);
+  var new_yScale = transform.rescaleY(volume.prevSlice.yScale);
 
-    // Update grid
-    svgAxis
-      .select(".x-axis-grid")
-      .call(
-        d3
-          .axisBottom()
-          .scale(new_xScale)
-          .tickSize(-mainViewerDimensions.height)
-          .tickFormat("")
-          .ticks(6)
-      );
+  // Update axes
+  axisElements["axis-svg"]
+    .select(".x-axis")
+    .call(d3.axisBottom().scale(new_xScale).ticks(6));
+  axisElements["axis-svg"]
+    .select(".y-axis")
+    .call(d3.axisLeft().scale(new_yScale).ticks(6));
 
-    svgAxis
-      .select(".y-axis-grid")
-      .call(
-        d3
-          .axisLeft()
-          .scale(new_yScale)
-          .tickSize(-mainViewerDimensions.width)
-          .tickFormat("")
-          .ticks(6)
-      );
-  }
+  // Update grid
+  axisElements["axis-svg"]
+    .select(".x-axis-grid")
+    .call(
+      d3
+        .axisBottom()
+        .scale(new_xScale)
+        .tickSize(-mainViewerDimensions.height)
+        .tickFormat("")
+        .ticks(6)
+    );
+  axisElements["axis-svg"]
+    .select(".y-axis-grid")
+    .call(
+      d3
+        .axisLeft()
+        .scale(new_yScale)
+        .tickSize(-mainViewerDimensions.width)
+        .tickFormat("")
+        .ticks(6)
+    );
 }
