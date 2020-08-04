@@ -30,7 +30,7 @@ function updateImage(axis, sliceNum) {
   }
 
   //Update voxel coordinates
-  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum);
+  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, zoomTransform);
 }
 
 d3.select("#increment-slider").on("click", function () {
@@ -84,7 +84,8 @@ d3.selectAll("input[name='axis']").on("change", function () {
   }
 
   //Update voxel coordinates
-  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, true);
+  plotCoords &&
+    updateVoxelCoords(plotCoords, axis, sliceNum, zoomTransform, true);
 
   return true;
 });

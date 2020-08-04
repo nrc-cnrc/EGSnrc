@@ -1,16 +1,16 @@
 // TODO: If marker exists, on axis change, use marker coordinates?
 // https://github.com/aces/brainbrowser/blob/master/src/brainbrowser/volume-viewer.js#L411-L415
 
-function coordsToWorld(coords, axis, sliceNum, volume, updateXY) {
+function coordsToWorld(coords, axis, sliceNum, volume, updateXY, transform) {
   // TODO: Have a more permanent solution to the click/transform problem, make a class?
   let i, j;
   if (updateXY) {
     // Invert transformation if applicable then invert scale to get world coordinate
     i = volume.prevSlice.xScale.invert(
-      zoomTransform ? invertTransform(coords[0], zoomTransform, "x") : coords[0]
+      transform ? invertTransform(coords[0], transform, "x") : coords[0]
     );
     j = volume.prevSlice.yScale.invert(
-      zoomTransform ? invertTransform(coords[1], zoomTransform, "y") : coords[1]
+      transform ? invertTransform(coords[1], transform, "y") : coords[1]
     );
   } else {
     // Use previous axes coordinates
@@ -29,15 +29,15 @@ function coordsToWorld(coords, axis, sliceNum, volume, updateXY) {
   return [xVal, yVal, zVal];
 }
 
-function coordsToVoxel(coords, axis, sliceNum, volume, updateXY) {
+function coordsToVoxel(coords, axis, sliceNum, volume, updateXY, transform) {
   let i, j;
   if (updateXY) {
     // Invert transformation if applicable then apply scale to get voxel coordinate
     i = volume.prevSlice.xPixelToVoxelScale(
-      zoomTransform ? invertTransform(coords[0], zoomTransform, "x") : coords[0]
+      transform ? invertTransform(coords[0], transform, "x") : coords[0]
     );
     j = volume.prevSlice.yPixelToVoxelScale(
-      zoomTransform ? invertTransform(coords[1], zoomTransform, "y") : coords[1]
+      transform ? invertTransform(coords[1], transform, "y") : coords[1]
     );
   } else {
     // Use previous axes coordinates
@@ -71,13 +71,33 @@ function invertTransform(val, transform, dir) {
   return (val - transform[dir]) / transform.k;
 }
 
-function updateVoxelCoords(coords, axis, sliceNum, updateXY = false) {
+function updateVoxelCoords(
+  coords,
+  axis,
+  sliceNum,
+  transform,
+  updateXY = false
+) {
   if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
     let vol = !densityVol.isEmpty() ? densityVol : doseVol;
 
     // Get world and voxel coordinates from pixel value
-    let worldCoords = coordsToWorld(coords, axis, sliceNum, vol, updateXY);
-    let voxelCoords = coordsToVoxel(coords, axis, sliceNum, vol, updateXY);
+    let worldCoords = coordsToWorld(
+      coords,
+      axis,
+      sliceNum,
+      vol,
+      updateXY,
+      transform
+    );
+    let voxelCoords = coordsToVoxel(
+      coords,
+      axis,
+      sliceNum,
+      vol,
+      updateXY,
+      transform
+    );
 
     // Update voxel info if checkbox is checked
     if (d3.select("input[name='show-marker-checkbox']").node().checked) {

@@ -1,8 +1,8 @@
 // Detect clicks
 // Store zoom, cursor info
 // Draw axes
-// Handle zoom???
 // https://github.com/aces/brainbrowser/blob/master/src/brainbrowser/volume-viewer/lib/panel.js#L165
+// TODO: Make voxel info work when slice changes!!!
 
 class Panel {
   constructor(
@@ -26,6 +26,15 @@ class Panel {
     this.showCrosshairs = () =>
       d3.select("input[name='show-dose-profile-checkbox']").node().checked;
 
+    // Set up zoom for panel
+    let mainViewerZoom = getZoom(
+      mainViewerDimensions.width,
+      mainViewerDimensions.height,
+      zoomedAll,
+      [this]
+    );
+    axisElements["plot-marker"].call(mainViewerZoom);
+
     // Update circle marker position and voxel coords on click
     var updateMarkerAndVoxelInfo = (plotCoords) => {
       if (d3.event.defaultPrevented) return;
@@ -33,22 +42,17 @@ class Panel {
       // TODO: Trigger a marker moved event??
       this.updateSliceNum();
       this.updateMarker(plotCoords);
-      updateVoxelCoords(plotCoords, this.axis, this.sliceNum, true);
+      updateVoxelCoords(
+        plotCoords,
+        this.axis,
+        this.sliceNum,
+        this.zoomTransform,
+        true
+      );
     };
-
-    let mainViewerZoom = getZoom(
-      mainViewerDimensions.width,
-      mainViewerDimensions.height,
-      zoomedAll,
-      [this]
-    );
-
-    axisElements["plot-marker"].call(mainViewerZoom);
-
     axisElements["plot-marker"].on("click", function () {
       let plotCoords = d3.mouse(this);
       updateMarkerAndVoxelInfo(plotCoords);
-
       return true;
     });
   }
@@ -67,7 +71,10 @@ class Panel {
     );
   }
 
-  updateMarker(coords) {
+  getDrag() {
+    let axis = this.axis;
+    let sliceNum = this.sliceNum;
+
     // Define the drag attributes
     function dragstarted() {
       d3.select(this).raise();
@@ -75,19 +82,29 @@ class Panel {
     }
 
     function dragged() {
-      // TODO: Update voxel position on drag / fire event?
       var x = d3.event.x;
       var y = d3.event.y;
 
       d3.select(this).select("circle").attr("cx", x).attr("cy", y);
       d3.select(this).select("line.crosshairX").attr("x1", x).attr("x2", x);
       d3.select(this).select("line.crosshairY").attr("y1", y).attr("y2", y);
+
+      // The d3.event coords are same regardless of zoom, so pass in null as transform
+      updateVoxelCoords([x, y], axis, sliceNum, null, true);
     }
 
     function dragended() {
       d3.select(this).attr("cursor", "grab");
     }
 
+    return d3
+      .drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended);
+  }
+
+  updateMarker(coords) {
     // Remove old marker and crosshairs
     this.axisElements["plot-marker"].select(".marker").remove();
 
@@ -112,13 +129,7 @@ class Panel {
       .attr("class", "marker-holder");
 
     // Add drag functionality
-    markerHolder.call(
-      d3
-        .drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended)
-    );
+    markerHolder.call(this.getDrag());
 
     // Create centre circle
     markerHolder

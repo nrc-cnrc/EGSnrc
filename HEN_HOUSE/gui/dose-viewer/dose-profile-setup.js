@@ -91,7 +91,7 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
             circle.attr("cy") * zoomTransform.k + zoomTransform.y,
           ]
         : [circle.attr("cx"), circle.attr("cy")];
-      updateVoxelCoords(coords, getAxis(), getSliceNum(), true);
+      updateVoxelCoords(coords, getAxis(), getSliceNum(), zoomTransform, true);
     }
 
     // Enable saving dose profiles as svg
@@ -135,7 +135,7 @@ d3.select("input[name='show-marker-checkbox']").on("change", function () {
             y * zoomTransform.k + zoomTransform.y,
           ]
         : [x, y];
-      updateVoxelCoords(coords, getAxis(), getSliceNum(), true);
+      updateVoxelCoords(coords, getAxis(), getSliceNum(), zoomTransform, true);
     }
   } else {
     // Add hidden class
