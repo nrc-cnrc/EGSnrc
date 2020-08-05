@@ -27,8 +27,8 @@
 #
 ###############################################################################
 #
-# Documentation built using Doxygen's ability to parse Fortran
-# comments. 
+# Documentation built using Doxygen's ability to parse comments from the
+# Fortran source from $EGS_HOME/g. Make sure it is the up-to-date version!
 #
 ###############################################################################
 
@@ -53,14 +53,6 @@ echo PWD: $PWD
 echo docdir: $docdir
 echo EGS_HOME: $eh
 echo config: $my_machine
-
-#if [ "$docdir" != $PWD ] && [ "$my_machine" != template ]; then
-# echo "$docdir not equal to $PWD !"
-#else
-# echo "$docdir equal to $PWD !"
-#fi
-#exit 0
-
 
 ######################################################
 # What if no EGSnrc? Use the provided Fortran source!
@@ -90,7 +82,7 @@ doxygen
 mv $docdir/g_template.f.OK $docdir/g_template.f
 
 ###########################################
-# Update authors on Latex refman 
+# Update authors on Latex refman
 ##########################################
 for filename in latex/*.tex
 do
@@ -99,5 +91,6 @@ do
   fi
 done
 
-exit 0
+cd latex;make;mv refman.pdf ../../pirs3100-g-refman.pdf;cd ..
 
+exit 0
