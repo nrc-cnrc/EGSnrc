@@ -33,7 +33,7 @@ class Panel {
       zoomedAll,
       [this]
     );
-    axisElements["plot-marker"].call(mainViewerZoom);
+    this.axisElements["plot-marker"].call(mainViewerZoom);
 
     // Update circle marker position and voxel coords on click
     var updateMarkerAndVoxelInfo = (plotCoords) => {
@@ -59,7 +59,7 @@ class Panel {
 
   // Add listener to do it on slider change
   updateSliceNum() {
-    this.sliceNum = this.volume.prevSlice.sliceNum;
+    this.sliceNum = this.volume.prevSlice[this.axis].sliceNum;
   }
 
   setSlice(panel, sliceNum) {

@@ -6,10 +6,10 @@ function coordsToWorld(coords, axis, sliceNum, volume, updateXY, transform) {
   let i, j;
   if (updateXY) {
     // Invert transformation if applicable then invert scale to get world coordinate
-    i = volume.prevSlice.xScale.invert(
+    i = volume.prevSlice[axis].xScale.invert(
       transform ? invertTransform(coords[0], transform, "x") : coords[0]
     );
-    j = volume.prevSlice.yScale.invert(
+    j = volume.prevSlice[axis].yScale.invert(
       transform ? invertTransform(coords[1], transform, "y") : coords[1]
     );
   } else {
@@ -22,7 +22,7 @@ function coordsToWorld(coords, axis, sliceNum, volume, updateXY, transform) {
 
   // Add 0.5 to sliceNum in order to map values to center of voxel bondaries
   // TODO: Perhaps fix scale to get rid of the 0.5 hack
-  let k = volume.prevSlice.zScale.invert(parseInt(sliceNum) + 0.5);
+  let k = volume.prevSlice[axis].zScale.invert(parseInt(sliceNum) + 0.5);
 
   let [xVal, yVal, zVal] =
     axis === "xy" ? [i, j, k] : axis === "yz" ? [k, i, j] : [i, k, j];
@@ -33,10 +33,10 @@ function coordsToVoxel(coords, axis, sliceNum, volume, updateXY, transform) {
   let i, j;
   if (updateXY) {
     // Invert transformation if applicable then apply scale to get voxel coordinate
-    i = volume.prevSlice.xPixelToVoxelScale(
+    i = volume.prevSlice[axis].xPixelToVoxelScale(
       transform ? invertTransform(coords[0], transform, "x") : coords[0]
     );
-    j = volume.prevSlice.yPixelToVoxelScale(
+    j = volume.prevSlice[axis].yPixelToVoxelScale(
       transform ? invertTransform(coords[1], transform, "y") : coords[1]
     );
   } else {

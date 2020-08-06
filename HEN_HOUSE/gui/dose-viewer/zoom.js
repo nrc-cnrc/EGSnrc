@@ -71,9 +71,9 @@ function zoomedDoseProfile(transform, doseProfile) {
   }
 }
 
-function zoomedCanvas(transform, canvas) {
+function zoomedCanvas(transform, canvas, axis) {
   // Get the image to draw
-  let image = densityVol.prevSliceImg;
+  let image = densityVol.prevSliceImg[axis];
   let context = canvas.node().getContext("2d");
 
   // Clear the canvas, apply transformations, and redraw
@@ -91,9 +91,10 @@ function zoomedAll(transform, panel) {
   panel.zoomTransform = transform;
   let axisElements = panel.axisElements;
   let volume = panel.volume;
+  let axis = panel.axis;
 
   // Zoom on canvas
-  zoomedCanvas(transform, axisElements["plot-density"]);
+  zoomedCanvas(transform, axisElements["plot-density"], axis);
 
   // Zoom dose plot
   axisElements["plot-dose"]
@@ -106,8 +107,8 @@ function zoomedAll(transform, panel) {
     .attr("transform", transform.toString());
 
   // Create new scale ojects based on event
-  var new_xScale = transform.rescaleX(volume.prevSlice.xScale);
-  var new_yScale = transform.rescaleY(volume.prevSlice.yScale);
+  var new_xScale = transform.rescaleX(volume.prevSlice[this.axis].xScale);
+  var new_yScale = transform.rescaleY(volume.prevSlice[this.axis].yScale);
 
   // Update axes
   axisElements["axis-svg"]

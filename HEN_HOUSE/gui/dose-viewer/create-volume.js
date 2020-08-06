@@ -97,7 +97,7 @@ class Volume {
     this.dimensions = dimensions;
     this.legendDimensions = legendDimensions;
     this.data = {};
-    this.prevSlice = {};
+    this.prevSlice = { xy: {}, yz: {}, xz: {} };
     this.prevAxis = "";
     this.htmlElementObj = htmlElementObj;
     this.legendHolder = legendHolder;
@@ -259,7 +259,7 @@ class Volume {
       sliceNum: sliceNum,
     };
 
-    this.prevSlice = slice;
+    this.prevSlice[axis] = slice;
     return slice;
   }
 
@@ -359,7 +359,9 @@ class DoseVolume extends Volume {
     this.maxDoseVar = val * this.data.maxDose;
     super.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0);
     this.updateThresholds();
-    this.drawDose(this.prevSlice);
+
+    ["xy", "yz", "xz"].forEach((axis) => this.drawDose(this.prevSlice[axis]));
+
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
       doseProfileX.plotData();
       doseProfileY.plotData();
@@ -376,7 +378,7 @@ class DoseVolume extends Volume {
     this.thresholdPercents.sort();
     this.updateThresholds();
     this.initializeLegend();
-    this.drawDose(this.prevSlice);
+    ["xy", "yz", "xz"].forEach((axis) => this.drawDose(this.prevSlice[axis]));
   }
 
   getSlice(axis, sliceNum) {
@@ -633,6 +635,8 @@ class DensityVolume extends Volume {
       densityLegendHolder,
       densityLegend
     ); // call the super class constructor
+
+    this.prevSliceImg = { xy: {}, yz: {}, xz: {} };
   }
 
   addData(data) {
@@ -733,8 +737,8 @@ class DensityVolume extends Volume {
     let imgContext = imgCanvas.getContext("2d");
 
     // Save the image and axis as properties of the volume object
-    this.prevSliceImg = image;
-    this.prevAxis = axis;
+    this.prevSliceImg[slice.axis] = image;
+    this.prevAxis = slice.axis;
   }
 
   initializeLegend() {
