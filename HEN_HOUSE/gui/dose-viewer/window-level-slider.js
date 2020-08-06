@@ -25,7 +25,10 @@ windowSlider.on("input", function () {
   densityVol.setWindow(this.value);
   densityVol.addColourScheme();
   ["xy", "yz", "xz"].forEach((axis) =>
-    densityVol.drawDensity(densityVol.prevSlice[axis])
+    densityVol.drawDensity(
+      densityVol.prevSlice[axis],
+      panels[axis].zoomTransform
+    )
   );
 
   // Show the current window value
@@ -43,7 +46,10 @@ levelSlider.on("input", function () {
   densityVol.setLevel(this.value);
   densityVol.addColourScheme();
   ["xy", "yz", "xz"].forEach((axis) =>
-    densityVol.drawDensity(densityVol.prevSlice[axis])
+    densityVol.drawDensity(
+      densityVol.prevSlice[axis],
+      panels[axis].zoomTransform
+    )
   );
 
   // Show the current level value

@@ -1,7 +1,7 @@
 // TODO: If marker exists, on axis change, use marker coordinates?
 // https://github.com/aces/brainbrowser/blob/master/src/brainbrowser/volume-viewer.js#L411-L415
 
-function coordsToWorld(coords, axis, sliceNum, volume, updateXY, transform) {
+function coordsToWorld(coords, axis, sliceNum, volume, transform, updateXY) {
   // TODO: Have a more permanent solution to the click/transform problem, make a class?
   let i, j;
   if (updateXY) {
@@ -29,7 +29,7 @@ function coordsToWorld(coords, axis, sliceNum, volume, updateXY, transform) {
   return [xVal, yVal, zVal];
 }
 
-function coordsToVoxel(coords, axis, sliceNum, volume, updateXY, transform) {
+function coordsToVoxel(coords, axis, sliceNum, volume, transform, updateXY) {
   let i, j;
   if (updateXY) {
     // Invert transformation if applicable then apply scale to get voxel coordinate
@@ -87,16 +87,16 @@ function updateVoxelCoords(
       axis,
       sliceNum,
       vol,
-      updateXY,
-      transform
+      transform,
+      updateXY
     );
     let voxelCoords = coordsToVoxel(
       coords,
       axis,
       sliceNum,
       vol,
-      updateXY,
-      transform
+      transform,
+      updateXY
     );
 
     // Update voxel info if checkbox is checked

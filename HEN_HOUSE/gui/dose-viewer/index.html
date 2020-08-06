@@ -347,6 +347,7 @@
         },
       };
 
+      // TODO: var makePanels = () => {}; in volume?
       // For each axis and plot class, make html
       let axes = ["xy", "yz", "xz"];
       let classes = ["axis-svg", "plot-density", "plot-dose", "plot-marker"];
@@ -538,15 +539,37 @@
         doseLegendSvg
       );
 
-      let panels = axes.map(
-        (axis) =>
-          new Panel(
+      // Set up marker coord change event
+      var dispatch = d3.dispatch("markerchange");
+
+      var panels = axes.reduce((obj, axis, i) => {
+        return {
+          ...obj,
+          [axis]: new Panel(
             mainViewerDimensions,
-            densityVol || doseVol,
+            densityVol,
+            doseVol,
             axis,
             axisObjs[axis]
-          )
-      );
+          ),
+        };
+      }, {});
+
+      dispatch.on("markerchange.panels", function (d) {
+        Object.values(panels).forEach((panel) => {
+          if (panel.axis !== this.axis) {
+            let sliceNum;
+            if (panel.axis === "xy") {
+              sliceNum = d[2];
+            } else if (panel.axis === "yz") {
+              sliceNum = d[0];
+            } else {
+              sliceNum = d[1];
+            }
+            panel.updateSlice(sliceNum);
+          }
+        });
+      });
 
       const doseProfileX = new DoseProfile(
         sideDoseProfileDimensions,

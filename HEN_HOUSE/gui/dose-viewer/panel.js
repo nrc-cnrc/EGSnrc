@@ -7,7 +7,8 @@
 class Panel {
   constructor(
     dimensions,
-    volume,
+    densityVol,
+    doseVol,
     axis,
     axisElements,
     sliceNum = 0,
@@ -15,7 +16,9 @@ class Panel {
     markerPosition = null
   ) {
     this.dimensions = dimensions;
-    this.volume = volume;
+    this.densityVol = densityVol;
+    this.doseVol = doseVol;
+    this.volume = doseVol.isEmpty() ? densityVol : doseVol;
     this.axis = axis;
     this.axisElements = axisElements;
     this.sliceNum = sliceNum;
@@ -42,6 +45,19 @@ class Panel {
       // TODO: Trigger a marker moved event??
       this.updateSliceNum();
       this.updateMarker(plotCoords);
+
+      // Want to get the voxel coords then change the sliceNum of the other volume panels
+      let voxelCoords = coordsToVoxel(
+        plotCoords,
+        this.axis,
+        this.sliceNum,
+        this.volume,
+        this.zoomTransform,
+        true
+      );
+
+      dispatch.call("markerchange", this, voxelCoords);
+
       updateVoxelCoords(
         plotCoords,
         this.axis,
@@ -62,18 +78,25 @@ class Panel {
     this.sliceNum = this.volume.prevSlice[this.axis].sliceNum;
   }
 
-  setSlice(panel, sliceNum) {
+  updateSlice(sliceNum) {
     this.sliceNum = sliceNum;
-    this.slice = this.volume.getSlice(
-      sliceNum,
-      panel.contrast,
-      panel.brightness
-    );
+
+    let slice;
+
+    if (!this.densityVol.isEmpty()) {
+      slice = densityVol.getSlice(this.axis, sliceNum);
+      densityVol.drawDensity(slice, this.zoomTransform);
+    }
+    if (!this.doseVol.isEmpty()) {
+      slice = doseVol.getSlice(this.axis, sliceNum);
+      doseVol.drawDose(slice, this.zoomTransform);
+    }
   }
 
   getDrag() {
     let axis = this.axis;
     let sliceNum = this.sliceNum;
+    // let volume = this.volume;
 
     // Define the drag attributes
     function dragstarted() {
@@ -91,6 +114,18 @@ class Panel {
 
       // The d3.event coords are same regardless of zoom, so pass in null as transform
       updateVoxelCoords([x, y], axis, sliceNum, null, true);
+
+      // // Want to get the voxel coords then change the sliceNum of the other volume panels
+      // let voxelCoords = coordsToVoxel(
+      //   [x, y],
+      //   axis,
+      //   sliceNum,
+      //   volume,
+      //   null,
+      //   true
+      // );
+
+      // dispatch.call("markerchange", this, voxelCoords);
     }
 
     function dragended() {

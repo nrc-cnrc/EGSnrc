@@ -385,7 +385,7 @@ class DoseVolume extends Volume {
     return super.getSlice(axis, sliceNum, "dose");
   }
 
-  drawDose(slice) {
+  drawDose(slice, transform) {
     let svg = this.htmlElementObj[slice.axis];
     //TODO: Don't rely on plugin for legend/colour scale
     // https://observablehq.com/@d3/color-legend
@@ -429,8 +429,8 @@ class DoseVolume extends Volume {
         .classed("hidden", true);
     }
 
-    if (zoomTransform) {
-      svg.select("g.dose-contour").attr("transform", zoomTransform.toString());
+    if (transform) {
+      svg.select("g.dose-contour").attr("transform", transform.toString());
     }
   }
 
@@ -680,7 +680,7 @@ class DensityVolume extends Volume {
     return super.getSlice(axis, sliceNum, "density");
   }
 
-  drawDensity(slice) {
+  drawDensity(slice, transform) {
     let svg = this.htmlElementObj[slice.axis];
     // TODO: Make two new functions: change slicenum and change axes
 
@@ -722,9 +722,9 @@ class DensityVolume extends Volume {
       imgContext.clearRect(0, 0, this.dimensions.width, this.dimensions.height);
       imgContext.save();
       // Apply transforms if needed
-      if (zoomTransform) {
-        imgContext.translate(zoomTransform.x, zoomTransform.y);
-        imgContext.scale(zoomTransform.k, zoomTransform.k);
+      if (transform) {
+        imgContext.translate(transform.x, transform.y);
+        imgContext.scale(transform.k, transform.k);
       }
       imgContext.drawImage(image, 0, 0);
       imgContext.restore();
