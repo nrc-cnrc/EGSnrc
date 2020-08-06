@@ -6,31 +6,33 @@ C>  the average fraction of kinetic
 C>  energy transferred to charged particles by photons lost to radiation when
 C>  electrons slow down, or the radiative yield Y for electron beams.
 C>  For photons, quantities such as kerma, collision kerma,
-C>  \f$\left<\mu_\mathrm{tr}/\rho\right>\f$ and
-C>  \f$\left<\mu_\mathrm{en}/\rho\right>\f$ are also calculated.
+C>  \f$\left<\mu_\mathrm{tr}/\rho\right>_\psi\f$ and
+C>  \f$\left<\mu_\mathrm{en}/\rho\right>_\psi\f$ are also calculated.
 C>
 C>  Implemented a type=1 calculation that can run until a prescribed accuracy
 C>  is reached at any stage during the calculation. In a type=1 calculation
-C>  \f$\mu_\mathrm{tr}\f$ is calculated first, then \f$\mu_en\f$ is obtained as
-C>  \f$\mu_\mathrm{tr}\cdot\left(1-\mathrm{\overline{g}}\right)\f$,
+C>  \f$\mu_\mathrm{tr}/\rho\f$ is calculated first,
+C>  then \f$\mu_\mathrm{en}/\rho\f$ is obtained as
+C>  \f$\mu_\mathrm{tr}/\rho\cdot\left(1-\mathrm{\overline{g}}\right)\f$,
 C>  where \f$\mathrm{\overline{g}}\f$ is the fraction lost to radiation from
 C>  slowing down electrons. The advantage is that when
-C>  \f$\mathrm{\overline{g}}\f$ is small, \f$\mu_\mathrm{en}\f$ converges much
-C>  faster to the desired accuracy compared to a type=0 calculation.
+C>  \f$\mathrm{\overline{g}}\f$ is small, \f$\mu_\mathrm{en}/\rho\f$
+C>  converges much faster to the desired accuracy compared to a type=0
+C>  calculation.
 C>
 C>  Revision History
 C>
 C>  Version 1.0 (I. Kawrakow, January 2000): Initial version.
 C>
-C>  Version 1.1 (I. Kawrakow, March 2002): Added \f$E\cdot\mu_\mathrm{tr}\f$
-C>  and \f$E\cdot\mu_\mathrm{en}\f$.
+C>  Version 1.1 (I. Kawrakow, March 2002):
+C>  Added \f$E\cdot\mu_\mathrm{tr}/\rho\f$ and \f$E\cdot\mu_\mathrm{en}\f$.
 C>
-C>  Version 1.2 (D. Rogers, June 2002): Get \f$\mu_\mathrm{tr}\f$ and
-C>  \f$\mu_\mathrm{en}\f$.
+C>  Version 1.2 (D. Rogers, June 2002):
+C>  Get \f$\mu_\mathrm{tr}/\rho\f$ and \f$\mu_\mathrm{en}/\rho\f$.
 C>
 C>  Version 1.3 (D. Rogers, Aug 2002):
 C>  Account for fluorescent photons in \f$\mathrm{\overline{g}}\f$ and
-C>  \f$\mu_\mathrm{tr}\f$ correctly.
+C>  \f$\mu_\mathrm{tr}/\rho\f$ correctly.
 C>
 C>  Version 1.4 (R. Townson, December 2016):
 C>  Energy depositions for kerma calculations below the cut-off are
@@ -208,7 +210,7 @@ C> over the fluence, not the energy fluence
       WRITE(6,1030)AE(1)-PRM, AP(1)
 1030  FORMAT(' knock-on electrons can be created and any electron follow
      *ed down to' /T40,F8.3,' MeV kinetic energy'/ '   brem photons canb
-     *e created and any photon followed down to      ', /T40,F8.3,' MeV 
+     *e created and any photon followed down to      ', /T40,F8.3,' MeV
      *')
       WRITE(6,1040)UE(1)-rm, UP(1)
 1040  FORMAT(' electron and photon upper kinetic energies are:',F8.3,F11
@@ -6051,7 +6053,7 @@ C> @cond
         ELSE
           WRITE(6,3200) AXISTYPE
 3200      FORMAT (//'  ------------Error in Subroutine XVGRPLOT---------
-     *--' ,/'   AXISTYPE specified (',I2,') is not a valid option.' ,/' 
+     *--' ,/'   AXISTYPE specified (',I2,') is not a valid option.' ,/'
      *----------------------------------------------'//)
           RETURN
         END IF
@@ -6476,7 +6478,7 @@ C> @cond
 3752      CONTINUE
           IF ((i_survived_rr .GT. 0)) THEN
             WRITE(6,3780)i_survived_rr,prob_rr
-3780        FORMAT(T10,'Russian Roulette eliminated ',I2,'              
+3780        FORMAT(T10,'Russian Roulette eliminated ',I2,'
      *                  particle(s) with probability ',F8.5)
             ICOUNT=ICOUNT+1
             WRITE(6,3790)NP,KE,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),U(NP),V(N
@@ -11783,7 +11785,7 @@ C*****************************************************************************
             WRITE(6,5910)
 5910        FORMAT(' STOPPED IN SUBROUTINE SPINIT BECAUSE THIS',/, ' ELE
      *MENT (H, N, OR O) CAN ONLY EXIST AS A DIATOMIC MOLECULE.',/, ' REM
-     *EDY:  USE COMP OPTION FOR H2, N2, OR O2 WITH NE=2,PZ=1,1'/, '     
+     *EDY:  USE COMP OPTION FOR H2, N2, OR O2 WITH NE=2,PZ=1,1'/, '
      *AND, IN THE CASE OF A GAS, DEFINE STERNHEIMER ID',/, '   (I.E., ID
      *STRN) LIKE H2-GAS')
             call exit(21)

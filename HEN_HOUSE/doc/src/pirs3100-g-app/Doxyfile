@@ -46,7 +46,7 @@ PROJECT_NUMBER         = "Report PIRS-3100"
 # quick idea about the purpose of the project. Keep the description short.
 
 #PROJECT        = "Radiative energy loss calculations"
-PROJECT_BRIEF   = "E. Mainegra-Hing, R.W. Townson, D.W.O. Rogers, and I. Kawrakow"
+PROJECT_BRIEF   = "E. Mainegra-Hing, D.W.O. Rogers, R.W. Townson, B.R.B. Walters, F. Tessier and I. Kawrakow"
 
 # With the PROJECT_LOGO tag one can specify an logo or icon that is included in
 # the documentation. The maximum height of the logo should not exceed 55 pixels
@@ -227,11 +227,13 @@ ALIASES                = "internwarning=\par Warning:\n This class is not part o
                          "BW=\author Blake Walters, NRC" \
                          "RT=\author Reid Townson, NRC" \
                          "g=\f$\overline{g}\f$" \
-                         "murho=\f$\left(\mu/\rho\right)\f$" \
-                         "mutr_rho=\f$\mu_\mathrm{tr}/\rho\f$" \
-                         "muen_rho=\f$\mu_\mathrm{en}/\rho\f$" \
                          "mutr=\f$\mu_\mathrm{tr}\f$" \
                          "muen=\f$\mu_\mathrm{en}\f$" \
+                         "murho=\f$\mu/\rho\f$" \
+                         "mutr_rho=\f$\mu_\mathrm{tr}/\rho\f$" \
+                         "muen_rho=\f$\mu_\mathrm{en}/\rho\f$" \
+                         "mutr_rho_ave=\f$\left<\mu_\mathrm{tr}/\rho\right>_{\psi}\f$" \
+                         "muen_rho_ave=\f$\left<\mu_\mathrm{en}/\rho\right>_{\psi}\f$" \
                          "Emuen_rho=\f$E \times \left( \frac{\mu_\mathrm{en}}{\rho} \right)\f$"\
                          "deg=\f$^o\f$" \
                          "Etot=\f$\overline{E}_\mathrm{tot}\f$" \
