@@ -15,7 +15,7 @@ var getZoom = (width, height, zoomCallback, args) =>
       [0, 0],
       [width, height],
     ])
-    .scaleExtent([1, 6])
+    .scaleExtent([1, 8])
     .on("zoom", () => zoomCallback(d3.event.transform, ...args));
 
 // Generic reset zoom function
@@ -107,8 +107,8 @@ function zoomedAll(transform, panel) {
     .attr("transform", transform.toString());
 
   // Create new scale ojects based on event
-  var new_xScale = transform.rescaleX(volume.prevSlice[this.axis].xScale);
-  var new_yScale = transform.rescaleY(volume.prevSlice[this.axis].yScale);
+  var new_xScale = transform.rescaleX(volume.prevSlice[panel.axis].xScale);
+  var new_yScale = transform.rescaleY(volume.prevSlice[panel.axis].yScale);
 
   // Update axes
   axisElements["axis-svg"]

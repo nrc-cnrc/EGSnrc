@@ -49,12 +49,16 @@ svg.axis-svg {
 .crosshair {
   fill: none;
   stroke-width: 1px;
-  stroke: rgba(115, 255, 0, 0.7);
+  stroke: rgba(255, 32, 32, 0.4);
   vector-effect: non-scaling-stroke;
 }
 
 .lines {
   vector-effect: non-scaling-stroke;
+}
+
+.active {
+  stroke: rgba(255, 32, 32, 0.7);
 }
 
 .legend-holder {

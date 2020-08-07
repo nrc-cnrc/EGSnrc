@@ -56,15 +56,11 @@ class Panel {
         true
       );
 
-      dispatch.call("markerchange", this, voxelCoords);
-
-      updateVoxelCoords(
-        plotCoords,
-        this.axis,
-        this.sliceNum,
-        this.zoomTransform,
-        true
-      );
+      dispatch.call("markerchange", this, {
+        plotCoords: plotCoords,
+        voxelCoords: voxelCoords,
+        panel: this,
+      });
     };
     axisElements["plot-marker"].on("click", function () {
       let plotCoords = d3.mouse(this);
@@ -130,6 +126,9 @@ class Panel {
 
     function dragended() {
       d3.select(this).attr("cursor", "grab");
+      console.log(this);
+
+      // TODO: Add move cursor behaviour here
     }
 
     return d3
@@ -139,7 +138,7 @@ class Panel {
       .on("end", dragended);
   }
 
-  updateMarker(coords) {
+  updateMarker(coords, activePanel = true) {
     // Remove old marker and crosshairs
     this.axisElements["plot-marker"].select(".marker").remove();
 
@@ -174,7 +173,8 @@ class Panel {
       .classed("crosshair", true)
       .attr("r", 2)
       .style("cursor", "pointer")
-      .style("display", this.showMarker() ? "" : "none");
+      .style("display", this.showMarker() ? "" : "none")
+      .classed("active", activePanel);
 
     // Create horizontal line
     markerHolder
@@ -185,7 +185,8 @@ class Panel {
       .attr("y1", 0)
       .attr("x2", x)
       .attr("y2", mainViewerDimensions.height)
-      .style("display", this.showCrosshairs() ? "" : "none");
+      .style("display", this.showCrosshairs() ? "" : "none")
+      .classed("active", activePanel);
 
     // Create vertical line
     markerHolder
@@ -196,6 +197,7 @@ class Panel {
       .attr("y1", y)
       .attr("x2", mainViewerDimensions.width)
       .attr("y2", y)
-      .style("display", this.showCrosshairs() ? "" : "none");
+      .style("display", this.showCrosshairs() ? "" : "none")
+      .classed("active", activePanel);
   }
 }
