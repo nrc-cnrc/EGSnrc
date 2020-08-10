@@ -5,7 +5,6 @@
 }
 
 .parent div {
-  padding: 30px;
   grid-row-start: 1;
   grid-column-start: 1;
 }
@@ -14,8 +13,18 @@ body {
   margin: 25px 50px 25px 50px;
   font-family: helvetica;
 }
+
+#dose-viewer-container {
+  width: 100%;
+}
+
 p.description {
   color: grey;
+}
+
+span#dose-profile-holder {
+  display: inline-grid;
+  vertical-align: bottom;
 }
 
 .container {
@@ -72,6 +81,15 @@ svg.axis-svg {
   display: block;
 }
 
+div.volume-holder {
+  border: 2px solid #ccc;
+  border-radius: 20px;
+  margin-top: 10px;
+  width: 100%;
+  overflow: auto;
+  white-space: nowrap;
+}
+
 .profile-x-axis,
 .profile-y-dose-axis,
 .profile-y-density-axis {
@@ -107,4 +125,9 @@ span.hidden {
 
 progress {
   width: 300px;
+}
+
+text.dose-profile-axis-label {
+  font-size: 12px;
+  color: grey;
 }

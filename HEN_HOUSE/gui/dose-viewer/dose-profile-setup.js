@@ -72,8 +72,9 @@ var enableCheckboxForVoxelInformation = () => {
 d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
   if (this.checked) {
     // Enable zooming
-    doseProfileX.svg.select("rect.bounding-box").call(doseProfileX.zoomObj);
-    doseProfileY.svg.select("rect.bounding-box").call(doseProfileY.zoomObj);
+    doseProfileList.forEach((doseProfile) => {
+      doseProfile.svg.select("rect.bounding-box").call(doseProfile.zoomObj);
+    });
 
     // Remove hidden class
     let doseProfilePlots = d3.selectAll("svg.dose-profile-plot");
@@ -98,8 +99,9 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
     d3.select("#save-dose-profile").node().disabled = false;
   } else {
     // Disable zooming
-    disableZoom(doseProfileX.svg.select("rect.bounding-box"));
-    disableZoom(doseProfileY.svg.select("rect.bounding-box"));
+    doseProfileList.forEach((doseProfile) =>
+      disableZoom(doseProfile.svg.select("rect.bounding-box"))
+    );
 
     // Add hidden class to dose profile plots
     let doseProfilePlots = d3.selectAll("svg.dose-profile-plot");

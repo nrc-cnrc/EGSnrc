@@ -230,12 +230,11 @@
         <br />
       </span>
       <div id="image-to-print">
-        <span id="viewer-container" class="container"> </span>
-        <span id="legendholder" class="legend-holder"> </span>
-        <span id="dose-profile-holder" class="container">
-          <svg id="dose-profile-svg-x" class="dose-profile-plot"></svg>
-          <svg id="dose-profile-svg-y" class="dose-profile-plot"></svg>
-        </span>
+        <div id="volume-holder-1" class="volume-holder">
+          <span id="viewer-container" class="container"></span>
+          <span id="legendholder" class="legend-holder"></span>
+          <span id="dose-profile-holder"></span>
+        </div>
       </div>
     </div>
     <div id="dose-profile-viewer" style="display: none;">
@@ -309,9 +308,9 @@
 
       // Define all size variables
       let mainViewerDimensions = {
-        fullWidth: 320,
-        fullHeight: 300,
-        margin: { top: 10, right: 20, bottom: 50, left: 60 },
+        fullWidth: 330,
+        fullHeight: 320,
+        margin: { top: 20, right: 20, bottom: 50, left: 60 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
         },
@@ -323,9 +322,9 @@
       // Define legend size variables
       // From https://bl.ocks.org/starcalibre/6cccfa843ed254aa0a0d
       let legendDimensions = {
-        fullWidth: 80,
+        fullWidth: 90,
         fullHeight: mainViewerDimensions.fullHeight,
-        margin: { top: 25, bottom: 5, left: 10, right: 5 },
+        margin: { top: 25, bottom: 5, left: 10, right: 10 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
         },
@@ -336,9 +335,9 @@
 
       // Define profile dose size variables
       let sideDoseProfileDimensions = {
-        fullWidth: 400,
-        fullHeight: mainViewerDimensions.fullHeight / 2,
-        margin: { top: 30, right: 30, bottom: 50, left: 70 },
+        fullWidth: 300,
+        fullHeight: mainViewerDimensions.fullHeight / 3,
+        margin: { top: 30, right: 30, bottom: 30, left: 50 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
         },
@@ -346,6 +345,16 @@
           return this.fullHeight - this.margin.top - this.margin.bottom;
         },
       };
+
+      var getMarginStr = (margin) =>
+        margin.top +
+        "px " +
+        margin.right +
+        "px " +
+        margin.bottom +
+        "px " +
+        margin.left +
+        "px";
 
       // TODO: var makePanels = () => {}; in volume?
       // For each axis and plot class, make html
@@ -366,9 +375,12 @@
         xz: {},
       };
 
+      let viewerContainer = d3
+        .select("#viewer-container")
+        .style("vertical-align", "top");
+
       axes.forEach((axis) => {
-        let selectedDiv = d3
-          .select("#viewer-container")
+        let selectedDiv = viewerContainer
           .append("div")
           .classed("imageholder-" + axis, true)
           .classed("parent", true);
@@ -384,24 +396,71 @@
             .classed(axis, true)
             .classed("plot", true)
             .attr("width", mainViewerDimensions.width)
-            .attr("height", mainViewerDimensions.height);
+            .attr("height", mainViewerDimensions.height)
+            .style("margin", getMarginStr(mainViewerDimensions.margin));
 
           svgObjs[className][axis] = plot;
           axisObjs[axis][className] = plot;
         });
       });
 
-      // Initialize dose and density legend
-      var getMarginStr = (margin) =>
-        margin.top +
-        "px " +
-        margin.right +
-        "px " +
-        margin.bottom +
-        "px " +
-        margin.left +
-        "px";
+      // Initializing svgs for dose profile plots
+      let parentDiv = d3.select("span#dose-profile-holder");
 
+      let doseProfileList = ["x", "y", "z"].map((dimension) => {
+        let profileSvg = parentDiv
+          .append("svg")
+          .attr("width", sideDoseProfileDimensions.fullWidth)
+          .attr("height", sideDoseProfileDimensions.fullHeight)
+          .append("g")
+          .style(
+            "transform",
+            "translate(" +
+              sideDoseProfileDimensions.margin.left +
+              "px" +
+              "," +
+              sideDoseProfileDimensions.margin.top +
+              "px" +
+              ")"
+          )
+          .classed("dose-profile-plot", true)
+          .classed(dimension, true);
+
+        // Create box to capture mouse events
+        profileSvg
+          .append("rect")
+          .attr("width", sideDoseProfileDimensions.width)
+          .attr("height", sideDoseProfileDimensions.height)
+          .attr("fill", "white")
+          .attr("class", "bounding-box");
+
+        // Create clip path to bound output after zooming
+        profileSvg
+          .append("defs")
+          .append("clipPath")
+          .attr("class", "clip-" + dimension)
+          .append("rect")
+          .attr("width", sideDoseProfileDimensions.width)
+          .attr("height", sideDoseProfileDimensions.height);
+
+        let doseProfileAxis = new DoseProfile(
+          sideDoseProfileDimensions,
+          profileSvg
+        );
+
+        //TODO: Disable zoom until data is uploaded
+        // Zooming for dose profile
+        doseProfileAxis.zoomObj = getZoom(
+          sideDoseProfileDimensions.width,
+          sideDoseProfileDimensions.height,
+          zoomedDoseProfile,
+          [doseProfileAxis]
+        );
+
+        return doseProfileAxis;
+      });
+
+      // Initialize dose and density legend
       var getLegendHolderAndSvg = (parentDiv, className) => {
         let legendHolder = parentDiv
           .append("span")
@@ -438,90 +497,9 @@
       //   .attr("height", mainViewerDimensions.height)
       //   .attr("fill", "rgba(225,225,225,0.5)");
 
-      var svgAxis = d3
-        .select("#axis-svg")
-        .attr("width", mainViewerDimensions.fullWidth)
-        .attr("height", mainViewerDimensions.fullHeight)
-        .append("g")
-        .style(
-          "transform",
-          "translate(" +
-            mainViewerDimensions.margin.left +
-            "px" +
-            "," +
-            mainViewerDimensions.margin.top +
-            "px" +
-            ")"
-        );
-
       var axis = d3.selectAll("input[name='axis']:checked").node().value;
       var plotCoords;
       var zoomTransform;
-
-      // Initializing svgs for dose profile plots
-      var doseProfileXSvg = d3
-        .select("#dose-profile-svg-x")
-        .attr("width", sideDoseProfileDimensions.fullWidth)
-        .attr("height", sideDoseProfileDimensions.fullHeight)
-        .append("g")
-        .style(
-          "transform",
-          "translate(" +
-            sideDoseProfileDimensions.margin.left +
-            "px" +
-            "," +
-            sideDoseProfileDimensions.margin.top +
-            "px" +
-            ")"
-        );
-
-      var doseProfileYSvg = d3
-        .select("#dose-profile-svg-y")
-        .attr("width", sideDoseProfileDimensions.fullWidth)
-        .attr("height", sideDoseProfileDimensions.fullHeight)
-        .append("g")
-        .style(
-          "transform",
-          "translate(" +
-            sideDoseProfileDimensions.margin.left +
-            "px" +
-            "," +
-            sideDoseProfileDimensions.margin.top +
-            "px" +
-            ")"
-        );
-
-      // Create box to capture mouse events
-      var doseProfileBoxX = doseProfileXSvg
-        .append("rect")
-        .attr("width", sideDoseProfileDimensions.width)
-        .attr("height", sideDoseProfileDimensions.height)
-        .attr("fill", "white")
-        .attr("class", "bounding-box");
-
-      var doseProfileBoxY = doseProfileYSvg
-        .append("rect")
-        .attr("width", sideDoseProfileDimensions.width)
-        .attr("height", sideDoseProfileDimensions.height)
-        .attr("fill", "white")
-        .attr("class", "bounding-box");
-
-      // Create clip path to bound output after zooming
-      doseProfileXSvg
-        .append("defs")
-        .append("clipPath")
-        .attr("id", "clip-x")
-        .append("rect")
-        .attr("width", sideDoseProfileDimensions.width)
-        .attr("height", sideDoseProfileDimensions.height);
-
-      doseProfileYSvg
-        .append("defs")
-        .append("clipPath")
-        .attr("id", "clip-y")
-        .append("rect")
-        .attr("width", sideDoseProfileDimensions.width)
-        .attr("height", sideDoseProfileDimensions.height);
 
       //TODO: Make a list of volumes rather than have one global
       const densityVol = new DensityVolume(
@@ -604,33 +582,6 @@
           true
         );
       });
-
-      const doseProfileX = new DoseProfile(
-        sideDoseProfileDimensions,
-        doseProfileXSvg
-      );
-      const doseProfileY = new DoseProfile(
-        sideDoseProfileDimensions,
-        doseProfileYSvg
-      );
-
-      //TODO: Disable zoom until data is uploaded
-
-      // Zooming for x dose profile
-      doseProfileX.zoomObj = getZoom(
-        sideDoseProfileDimensions.width,
-        sideDoseProfileDimensions.height,
-        zoomedDoseProfile,
-        [doseProfileX]
-      );
-
-      // Zooming for y dose profile
-      doseProfileY.zoomObj = getZoom(
-        sideDoseProfileDimensions.width,
-        sideDoseProfileDimensions.height,
-        zoomedDoseProfile,
-        [doseProfileY]
-      );
 
       function getSliceNum() {
         return d3.select("#slider-value").node().value;

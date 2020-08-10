@@ -140,7 +140,7 @@ class DoseProfile {
     let yDoseAxis = d3
       .axisLeft()
       .scale(this.yDoseScale)
-      .ticks(10)
+      .ticks(4)
       .tickFormat(d3.format(".0%"))
       .tickSize(-this.dimensions.width);
 
@@ -156,26 +156,28 @@ class DoseProfile {
     this.svg
       .append("text")
       .attr("class", "profile-x-axis")
+      .classed("dose-profile-axis-label", true)
       .attr(
         "transform",
         "translate(" +
           this.dimensions.width / 2 +
           " ," +
-          (this.dimensions.height + this.dimensions.margin.top + 5) +
+          (this.dimensions.height + this.dimensions.margin.top - 5) +
           ")"
       )
       .style("text-anchor", "middle")
-      .text(this.dim + " Position (cm)");
+      .text(this.dim + " (cm)");
 
     // Label for dose y axis
     this.svg
       .append("text")
       .attr("class", "profile-y-dose-axis")
+      .classed("dose-profile-axis-label", true)
       .attr("transform", "rotate(-90)")
       .attr(
         "transform",
         "translate(" +
-          -(this.dimensions.margin.left / 2) +
+          (15 - this.dimensions.margin.left) +
           " ," +
           this.dimensions.height / 2 +
           ") rotate(-90)"
@@ -204,6 +206,7 @@ class DoseProfile {
       this.svg
         .append("text")
         .attr("class", "profile-y-density-axis")
+        .classed("dose-profile-axis-label", true)
         .attr("transform", "rotate(-90)")
         .attr(
           "transform",
@@ -230,14 +233,14 @@ class DoseProfile {
     this.svg
       .append("text")
       .attr("class", "title")
+      .classed("dose-profile-axis-label", true)
       .attr("x", this.dimensions.width / 2)
       .attr("y", 0 - this.dimensions.margin.top / 2)
       .attr("text-anchor", "middle")
-      .style("font-size", "14px")
       .style("text-decoration", "underline")
       .text(
         axis +
-          " Axis Dose Profile at (" +
+          " Axis Dose at (" +
           dim1 +
           ", " +
           dim2 +

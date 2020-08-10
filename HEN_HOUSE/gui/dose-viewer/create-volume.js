@@ -60,7 +60,7 @@ var drawAxes = (svgAxis, slice) => {
       "translate(" +
         slice.dimensions.width / 2 +
         " ," +
-        (slice.dimensions.fullHeight - 15) +
+        (slice.dimensions.fullHeight - 25) +
         ")"
     )
     .style("text-anchor", "middle")
@@ -74,7 +74,7 @@ var drawAxes = (svgAxis, slice) => {
     .attr(
       "transform",
       "translate(" +
-        (15 - slice.dimensions.margin.left) +
+        (25 - slice.dimensions.margin.left) +
         " ," +
         slice.dimensions.height / 2 +
         ") rotate(-90)"
@@ -367,8 +367,7 @@ class DoseVolume extends Volume {
     ["xy", "yz", "xz"].forEach((axis) => this.drawDose(this.prevSlice[axis]));
 
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
-      doseProfileX.plotData();
-      doseProfileY.plotData();
+      doseProfileList.forEach((doseProfile) => doseProfile.plotData());
     }
   }
 
