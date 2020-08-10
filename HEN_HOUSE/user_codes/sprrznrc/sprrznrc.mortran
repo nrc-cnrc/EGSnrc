@@ -4668,8 +4668,8 @@ IF(ISPRREG=1)["create the .plotdat file"
     AXISTYPE=0;             "0 for no logs"
     DO IX=1, NR [
        XCOORD(IX) = RCYL(IX);
-       YCOORD(IZ) = SCDOSE(IZ,IX,3)/Dmax;
-       UNCERT(IZ) = SCDOSE(IZ,IX,3)*SCDOSE2(IZ,IX,3)/(Dmax*100.);
+       YCOORD(IX) = SCDOSE(IZ,IX,3)/Dmax;
+       UNCERT(IX) = SCDOSE(IZ,IX,3)*SCDOSE2(IZ,IX,3)/(Dmax*100.);
     ]
     "Convert slab number(IZ) to a character string"
     $CONVERT_INT(IZ)_TO_CHAR(CH_IZ);
