@@ -1995,28 +1995,23 @@ call show_transport_parameter(iout); " print the transport parameter settings"
 "=========================================================================="
 
 "now check to see if ECUTIN>ECUT or PCUTIN>PCUT"
-"or, in the case where GUI inputs for ECUT/PCUT were left blank and"
-"ECUT/PCUT defaulted to AE/AP in hatch, ECUT>ECUTIN or PCUT>PCUTIN"
-IF(ECUTIN>ECUT)[ "reset ecut in all regions to ecutin"
-   OUTPUT ECUT;
-    (/' ****WARNING****'/
-      ' ECUTIN > ECUT input in EGSnrc parameters ( ',F10.4,' MeV).'/
-      ' ECUT defaults to ECUTIN.'/);
-   ECUT=ECUTIN;
+IF(ECUTIN > ECUT + 1e-10)[ "reset ecut in all regions to ecutin"
+  OUTPUT ECUTIN,ECUT;
+  (/' WARNING'/
+    ' ECUTIN(=',F13.9,') > ECUT(=',F13.9,') input in EGSnrc parameters'/
+    ' ECUT defaults to ECUTIN.'/);
+  ECUT=ECUTIN;
 ]
-ELSE[
-   ECUTIN=ECUT;
+ELSE[ ECUTIN=ECUT; ]
+
+IF(PCUTIN > PCUT + 1e-10)[ "reset pcut in all regions to pcutin"
+  OUTPUT PCUTIN,PCUT;
+  (/' WARNING'/
+    ' PCUTIN(=',F13.9,') > PCUT(=',F13.9,') input in EGSnrc parameters'/
+    ' PCUT defaults to PCUTIN.'/);
+  PCUT=PCUTIN;
 ]
-IF(PCUTIN>PCUT)[ "reset ecut in all regions to ecutin"
-   OUTPUT PCUT;
-    (/' ****WARNING****'/
-      ' PCUTIN > PCUT input in EGSnrc parameters ( ',F10.4,' MeV).'/
-      ' PCUT defaults to PCUTIN.'/);
-   PCUT=PCUTIN;
-]
-ELSE[
-   ECUTIN=ECUT;
-]
+ELSE[ PCUTIN=PCUT; ]
 
 "call this here so that BEAM simulation source can get i_parallel if"
 "pprocess is used"
