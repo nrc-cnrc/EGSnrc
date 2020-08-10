@@ -49,7 +49,7 @@ svg.axis-svg {
 .crosshair {
   fill: none;
   stroke-width: 1px;
-  stroke: rgba(255, 32, 32, 0.4);
+  stroke: rgba(255, 32, 32, 0.3);
   vector-effect: non-scaling-stroke;
 }
 

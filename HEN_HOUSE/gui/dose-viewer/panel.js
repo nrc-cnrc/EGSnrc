@@ -90,9 +90,7 @@ class Panel {
   }
 
   getDrag() {
-    let axis = this.axis;
-    let sliceNum = this.sliceNum;
-    // let volume = this.volume;
+    let panel = this;
 
     // Define the drag attributes
     function dragstarted() {
@@ -109,26 +107,32 @@ class Panel {
       d3.select(this).select("line.crosshairY").attr("y1", y).attr("y2", y);
 
       // The d3.event coords are same regardless of zoom, so pass in null as transform
-      updateVoxelCoords([x, y], axis, sliceNum, null, true);
-
-      // // Want to get the voxel coords then change the sliceNum of the other volume panels
-      // let voxelCoords = coordsToVoxel(
-      //   [x, y],
-      //   axis,
-      //   sliceNum,
-      //   volume,
-      //   null,
-      //   true
-      // );
-
-      // dispatch.call("markerchange", this, voxelCoords);
+      updateVoxelCoords([x, y], panel.axis, panel.sliceNum, null, true);
     }
 
     function dragended() {
       d3.select(this).attr("cursor", "grab");
-      console.log(this);
 
-      // TODO: Add move cursor behaviour here
+      let plotCoords = [d3.event.x, d3.event.y];
+
+      // The d3.event coords are same regardless of zoom, so pass in null as transform
+      updateVoxelCoords(plotCoords, panel.axis, panel.sliceNum, null, true);
+
+      // Want to get the voxel coords then change the sliceNum of the other volume panels
+      let voxelCoords = coordsToVoxel(
+        plotCoords,
+        panel.axis,
+        panel.sliceNum,
+        panel.volume,
+        null,
+        true
+      );
+
+      dispatch.call("markerchange", this, {
+        plotCoords: plotCoords,
+        voxelCoords: voxelCoords,
+        panel: panel,
+      });
     }
 
     return d3
@@ -158,12 +162,14 @@ class Panel {
         "transform",
         this.zoomTransform ? this.zoomTransform.toString() : ""
       )
-      .attr("cursor", "grab")
+      .attr("cursor", activePanel ? "grab" : "")
       .append("g")
       .attr("class", "marker-holder");
 
-    // Add drag functionality
-    markerHolder.call(this.getDrag());
+    // Add drag functionality if active panel
+    if (activePanel) {
+      markerHolder.call(this.getDrag());
+    }
 
     // Create centre circle
     markerHolder
@@ -172,7 +178,6 @@ class Panel {
       .attr("cy", y)
       .classed("crosshair", true)
       .attr("r", 2)
-      .style("cursor", "pointer")
       .style("display", this.showMarker() ? "" : "none")
       .classed("active", activePanel);
 

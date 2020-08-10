@@ -175,6 +175,8 @@ class Volume {
       contourYScaleDomain = [0, this.data.voxelNumber[dim2]];
     }
 
+    // TODO : Clamp scales
+
     let xPixelToVoxelScale = d3
       .scaleQuantile()
       .domain(xRangeContour)
@@ -212,6 +214,8 @@ class Volume {
         .range([0, totalSlices]), // unit: pixels
       dimensions: this.dimensions,
       axis: axis,
+      contourXScale: contourXScale,
+      contourYScale: contourYScale,
       xPixelToVoxelScale: xPixelToVoxelScale,
       yPixelToVoxelScale: yPixelToVoxelScale,
       contourTransform: ({ type, value, coordinates }) => ({

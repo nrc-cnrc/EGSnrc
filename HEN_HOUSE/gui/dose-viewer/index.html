@@ -557,18 +557,52 @@
 
       dispatch.on("markerchange.panels", function (d) {
         Object.values(panels).forEach((panel) => {
-          if (panel.axis !== this.axis) {
-            let sliceNum;
+          if (panel.axis !== d.panel.axis) {
+            let sliceNum, voxelNums;
             if (panel.axis === "xy") {
-              sliceNum = d[2];
+              sliceNum = d.voxelCoords[2];
+              voxelNums = [d.voxelCoords[0], d.voxelCoords[1]];
             } else if (panel.axis === "yz") {
-              sliceNum = d[0];
+              sliceNum = d.voxelCoords[0];
+              voxelNums = [d.voxelCoords[1], d.voxelCoords[2]];
             } else {
-              sliceNum = d[1];
+              sliceNum = d.voxelCoords[1];
+              voxelNums = [d.voxelCoords[0], d.voxelCoords[2]];
             }
+
+            // Convert voxel number to pixel value for both x and y coordinates
+            let xScale, yScale;
+            if (panel.zoomTransform) {
+              xScale = panel.zoomTransform.rescaleX(
+                panel.volume.prevSlice[panel.axis].contourXScale
+              );
+              yScale = panel.zoomTransform.rescaleY(
+                panel.volume.prevSlice[panel.axis].contourYScale
+              );
+            } else {
+              xScale = panel.volume.prevSlice[panel.axis].contourXScale;
+              yScale = panel.volume.prevSlice[panel.axis].contourYScale;
+            }
+
+            let coords = [
+              Math.ceil(xScale(voxelNums[0])),
+              Math.ceil(yScale(voxelNums[1])),
+            ];
+
+            panel.updateMarker(coords, false);
             panel.updateSlice(sliceNum);
           }
         });
+      });
+
+      dispatch.on("markerchange.voxelinfo", function (d) {
+        updateVoxelCoords(
+          d.plotCoords,
+          d.panel.axis,
+          d.panel.sliceNum,
+          d.panel.zoomTransform,
+          true
+        );
       });
 
       const doseProfileX = new DoseProfile(
