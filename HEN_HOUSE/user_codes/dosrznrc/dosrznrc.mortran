@@ -3819,8 +3819,8 @@ IF (IKERMA = 1) ["want to score KERMA"
    ]
 
     "depositing sub-threshold energy for PE & Compton"
-    "Auger only"
-    IF( iarg = 34 ) [
+    "Auger and fluorescent photons"
+    IF( iarg = 33 | iarg = 34 ) [
         IF( during_pe_compt = 1 ) [
             $SCOREDK(SCKERMA,(IZD,IXD,1):WT(NP)*edep_local);
             IF(IFULL=3 & (BTEST(LATCH(NP),6) | BTEST(LATCH(NP),7)))[
