@@ -22,13 +22,15 @@
 ################################################################################
 #
 #  When egs_lattice is used for publications, please cite the following paper:
-#  Manuscript submission underway, to be replaced with title after publication
+#  
+#  Martinov, Martin P., and Rowan M. Thomson.
+#  "Taking EGSnrc to new lows: Development of egs++ lattice geometry
+#  and testing with microscopic geometries."
+#  Medical Physics (2020).
 #
 ###############################################################################
 #
 #  Author:          Martin Martinov, 2019
-#
-#  Contributors:
 #
 ###############################################################################
 */
@@ -37,7 +39,22 @@
 /*! \file egs_lattice.cpp
  *  \brief A Bravais, cubic, and hexagonal lattice geometry
 
-    #Example Bravais lattice with spacings 1, 2 and 3
+  \ingroup Geometry
+
+A geometry which embeds a lattice of one geometry (named subgeometry below)
+into one region of a second geometry (named base geometry).  This geometry
+effectively recurses the subgeometry at every position defined by a Bravais,
+cubic, or hexagonal lattice.  As such, you can model an infinite amount of
+subgeometries (e.g., region 0 of egs_space) and the only slow down to your
+simulation would depend on how many subgeometries you would expect over a
+particle track.
+As this geometry only stores a single subgeometry in memory, it can only
+score in ALL subgeometries (or rather, the single subgeometry at all lattice
+positions) at once.  Therefore, dose to the subgeometry at different
+locations cannot be discerned.
+
+#Example Bravais lattice with spacings 1, 2 and 3
+\verbatim
     :start geometry:
         library           = egs_lattice
         name              = phantom_w_microcavity
@@ -46,8 +63,10 @@
         subgeometry index = 0
         spacing           = 1 2 3
     :stop geometry:
+\endverbatim
 
-    #Example cubic lattice with spacings 1
+#Example cubic lattice with spacings 1
+\verbatim
     :start geometry:
         library           = egs_lattice
         name              = phantom_w_microcavity
@@ -56,8 +75,10 @@
         subgeometry index = 0
         spacing           = 1
     :stop geometry:
+\endverbatim
 
-    #Example hexagonal lattice with nearest neighbour distance 1
+#Example hexagonal lattice with nearest neighbour distance 1
+\verbatim
     :start geometry:
         library           = egs_lattice
         type              = hexagonal
@@ -67,7 +88,8 @@
         subgeometry index = 0
         spacing           = 1
     :stop geometry:
- */
+\endverbatim
+*/
 
 #include "egs_base_geometry.h"
 #include "../egs_gtransformed/egs_gtransformed.h"
