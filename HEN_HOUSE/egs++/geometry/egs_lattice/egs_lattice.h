@@ -40,6 +40,7 @@
  *  \brief A Bravais, cubic, and hexagonal lattice geometry
 
   \ingroup Geometry
+  \ingroup CompositeG
 
 A geometry which embeds a lattice of one geometry (named subgeometry below)
 into one region of a second geometry (named base geometry).  This geometry
