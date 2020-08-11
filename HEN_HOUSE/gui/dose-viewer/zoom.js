@@ -25,10 +25,7 @@ var resetZoom = (obj, zoom) => {
 
 function zoomedDoseProfile(transform, doseProfile) {
   doseProfile.zoomTransform = transform;
-  if (
-    !doseVol.isEmpty() &&
-    d3.select("svg#plot-marker").select(".crosshair").node()
-  ) {
+  if (!doseVol.isEmpty()) {
     doseProfile.svg
       .selectAll("path.lines")
       .attr("transform", transform.toString());
@@ -53,6 +50,7 @@ function zoomedDoseProfile(transform, doseProfile) {
         d3
           .axisLeft()
           .scale(new_yDoseScale)
+          .ticks(doseProfile.yTicks)
           .tickFormat(d3.format(".0%"))
           .tickSize(-doseProfile.dimensions.width)
       );
@@ -65,6 +63,7 @@ function zoomedDoseProfile(transform, doseProfile) {
           d3
             .axisLeft()
             .scale(new_yDensityScale)
+            .ticks(doseProfile.yTicks)
             .tickSize(-doseProfile.dimensions.width)
         );
     }

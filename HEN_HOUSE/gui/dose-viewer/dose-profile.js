@@ -14,6 +14,7 @@ class DoseProfile {
     this.prevAxis = null;
     this.data = null;
     this.dim = null;
+    this.yTicks = 3;
   }
 
   set zoomTransform(val) {
@@ -140,7 +141,7 @@ class DoseProfile {
     let yDoseAxis = d3
       .axisLeft()
       .scale(this.yDoseScale)
-      .ticks(4)
+      .ticks(this.yTicks)
       .tickFormat(d3.format(".0%"))
       .tickSize(-this.dimensions.width);
 
@@ -193,6 +194,7 @@ class DoseProfile {
       let yDensityAxis = d3
         .axisRight()
         .scale(this.yDensityScale)
+        .ticks(this.yTicks)
         .tickFormat(d3.format(".2f"))
         .tickSize(-this.dimensions.width);
 

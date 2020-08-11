@@ -71,6 +71,10 @@ function invertTransform(val, transform, dir) {
   return (val - transform[dir]) / transform.k;
 }
 
+function applyTransform(val, transform, dir) {
+  return val * transform.k + transform[dir];
+}
+
 function updateVoxelCoords(
   coords,
   axis,

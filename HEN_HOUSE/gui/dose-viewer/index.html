@@ -308,9 +308,9 @@
 
       // Define all size variables
       let mainViewerDimensions = {
-        fullWidth: 330,
+        fullWidth: 320,
         fullHeight: 320,
-        margin: { top: 20, right: 20, bottom: 50, left: 60 },
+        margin: { top: 20, right: 15, bottom: 50, left: 55 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
         },
@@ -405,10 +405,12 @@
       });
 
       // Initializing svgs for dose profile plots
-      let parentDiv = d3.select("span#dose-profile-holder");
+      let doseProfileParentDiv = d3
+        .select("span#dose-profile-holder")
+        .style("display", "none");
 
       let doseProfileList = ["x", "y", "z"].map((dimension) => {
-        let profileSvg = parentDiv
+        let profileSvg = doseProfileParentDiv
           .append("svg")
           .attr("width", sideDoseProfileDimensions.fullWidth)
           .attr("height", sideDoseProfileDimensions.fullHeight)
@@ -439,6 +441,7 @@
           .append("defs")
           .append("clipPath")
           .attr("class", "clip-" + dimension)
+          .attr("id", "clip-" + dimension + "-vol-1")
           .append("rect")
           .attr("width", sideDoseProfileDimensions.width)
           .attr("height", sideDoseProfileDimensions.height);
@@ -456,6 +459,11 @@
           zoomedDoseProfile,
           [doseProfileAxis]
         );
+
+        // Enable zooming
+        doseProfileAxis.svg
+          .select("rect.bounding-box")
+          .call(doseProfileAxis.zoomObj);
 
         return doseProfileAxis;
       });
@@ -534,18 +542,31 @@
       }, {});
 
       dispatch.on("markerchange.panels", function (d) {
+        d.panel.updateSliceNum();
+        d.panel.updateMarker(d.plotCoords);
+
+        // Want to get the voxel coords then change the sliceNum of the other volume panels
+        let voxelCoords = coordsToVoxel(
+          d.plotCoords,
+          d.panel.axis,
+          d.panel.sliceNum,
+          d.panel.volume,
+          d.panel.zoomTransform,
+          true
+        );
+
         Object.values(panels).forEach((panel) => {
           if (panel.axis !== d.panel.axis) {
             let sliceNum, voxelNums;
             if (panel.axis === "xy") {
-              sliceNum = d.voxelCoords[2];
-              voxelNums = [d.voxelCoords[0], d.voxelCoords[1]];
+              sliceNum = voxelCoords[2];
+              voxelNums = [voxelCoords[0], voxelCoords[1]];
             } else if (panel.axis === "yz") {
-              sliceNum = d.voxelCoords[0];
-              voxelNums = [d.voxelCoords[1], d.voxelCoords[2]];
+              sliceNum = voxelCoords[0];
+              voxelNums = [voxelCoords[1], voxelCoords[2]];
             } else {
-              sliceNum = d.voxelCoords[1];
-              voxelNums = [d.voxelCoords[0], d.voxelCoords[2]];
+              sliceNum = voxelCoords[1];
+              voxelNums = [voxelCoords[0], voxelCoords[2]];
             }
 
             // Convert voxel number to pixel value for both x and y coordinates

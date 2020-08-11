@@ -102,7 +102,6 @@ progress.hidden,
 }
 
 .cell.hidden,
-svg.hidden,
 span.hidden {
   opacity: 0.2 !important;
 }

@@ -39,39 +39,34 @@ class Panel {
     this.axisElements["plot-marker"].call(mainViewerZoom);
 
     // Update circle marker position and voxel coords on click
-    var updateMarkerAndVoxelInfo = (plotCoords) => {
-      if (d3.event.defaultPrevented) return;
-
-      // TODO: Trigger a marker moved event??
-      this.updateSliceNum();
-      this.updateMarker(plotCoords);
-
-      // Want to get the voxel coords then change the sliceNum of the other volume panels
-      let voxelCoords = coordsToVoxel(
-        plotCoords,
-        this.axis,
-        this.sliceNum,
-        this.volume,
-        this.zoomTransform,
-        true
-      );
-
-      dispatch.call("markerchange", this, {
-        plotCoords: plotCoords,
-        voxelCoords: voxelCoords,
-        panel: this,
-      });
-    };
+    let panel = this;
     axisElements["plot-marker"].on("click", function () {
       let plotCoords = d3.mouse(this);
-      updateMarkerAndVoxelInfo(plotCoords);
+
+      if (d3.event.defaultPrevented) return;
+      dispatch.call("markerchange", this, {
+        plotCoords: plotCoords,
+        panel: panel,
+      });
+
       return true;
     });
   }
 
-  // Add listener to do it on slider change
   updateSliceNum() {
     this.sliceNum = this.volume.prevSlice[this.axis].sliceNum;
+  }
+
+  updateCrosshairDisplay() {
+    this.axisElements["plot-marker"]
+      .selectAll("line.crosshair")
+      .style("display", this.showCrosshairs() ? "" : "none");
+  }
+
+  updateCircleMarkerDisplay() {
+    this.axisElements["plot-marker"]
+      .select("circle.crosshair")
+      .style("display", this.showMarker() ? "" : "none");
   }
 
   updateSlice(sliceNum) {
@@ -113,24 +108,16 @@ class Panel {
     function dragended() {
       d3.select(this).attr("cursor", "grab");
 
-      let plotCoords = [d3.event.x, d3.event.y];
+      let x = panel.zoomTransform
+        ? applyTransform(d3.event.x, panel.zoomTransform, "x")
+        : d3.event.x;
+      let y = panel.zoomTransform
+        ? applyTransform(d3.event.y, panel.zoomTransform, "y")
+        : d3.event.y;
 
-      // The d3.event coords are same regardless of zoom, so pass in null as transform
-      updateVoxelCoords(plotCoords, panel.axis, panel.sliceNum, null, true);
-
-      // Want to get the voxel coords then change the sliceNum of the other volume panels
-      let voxelCoords = coordsToVoxel(
-        plotCoords,
-        panel.axis,
-        panel.sliceNum,
-        panel.volume,
-        null,
-        true
-      );
-
+      if (d3.event.defaultPrevented) return;
       dispatch.call("markerchange", this, {
-        plotCoords: plotCoords,
-        voxelCoords: voxelCoords,
+        plotCoords: [x, y],
         panel: panel,
       });
     }
@@ -143,6 +130,8 @@ class Panel {
   }
 
   updateMarker(coords, activePanel = true) {
+    this.markerPosition = coords;
+
     // Remove old marker and crosshairs
     this.axisElements["plot-marker"].select(".marker").remove();
 
