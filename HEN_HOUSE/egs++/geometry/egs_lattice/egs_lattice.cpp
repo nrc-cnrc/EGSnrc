@@ -22,13 +22,15 @@
 ################################################################################
 #
 #  When egs_lattice is used for publications, please cite the following paper:
-#  Manuscript submission underway, to be replaced with title after publication
+#  
+#  Martinov, Martin P., and Rowan M. Thomson.
+#  "Taking EGSnrc to new lows: Development of egs++ lattice geometry
+#  and testing with microscopic geometries."
+#  Medical Physics (2020).
 #
 ###############################################################################
 #
 #  Author:          Martin Martinov, 2019
-#
-#  Contributors:
 #
 ###############################################################################
 */
