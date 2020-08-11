@@ -51,8 +51,25 @@ particle track.
 As this geometry only stores a single subgeometry in memory, it can only
 score in ALL subgeometries (or rather, the single subgeometry at all lattice
 positions) at once.  Therefore, dose to the subgeometry at different
-locations cannot be discerned.
+locations cannot be discerned.  Final geometry regions are numbered as
+all base geometry regions first, then enumerating all subgeometry regions
+afterwards.
 
+All egs_lattice geometries require a base geometry, a subgeometry, and a
+subgeometry index.  The base geometry is the larger geometry into which
+the lattice will be embedded.  The subgeometry is the geometry which will
+be placed at each lattice position.  The subgeometry index will be the
+base geometry region in which the lattice is placed.  Any geometries at
+the boundary will be partially modelled (only the fraction in the selected
+region).  The spacing and type of geometry can be defined in one of three
+ways:
+    1) Bravais Lattice: Define spacing in x, y, and z using the three
+    inputs for spacing, respectively.
+    2) Cubic Lattice: Define the same spacing in x, y, and z using a 
+    single input for spacing.
+    3) Hexagonal Lattice: Define the type as hexagonal, then spacing
+    defines the hexagonal close-packed lattice nearest neighbour distance.
+    
 #Example Bravais lattice with spacings 1, 2 and 3
 \verbatim
     :start geometry:
