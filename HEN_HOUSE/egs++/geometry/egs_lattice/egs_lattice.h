@@ -53,7 +53,8 @@ score in ALL subgeometries (or rather, the single subgeometry at all lattice
 positions) at once.  Therefore, dose to the subgeometry at different
 locations cannot be discerned.  Final geometry regions are numbered as
 all base geometry regions first, then enumerating all subgeometry regions
-afterwards.
+afterwards.  A more complete description can be found in the paper
+referenced in the header.
 
 All egs_lattice geometries require a base geometry, a subgeometry, and a
 subgeometry index.  The base geometry is the larger geometry into which
