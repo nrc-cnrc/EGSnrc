@@ -82,7 +82,7 @@ function readFile(file, fileNum) {
     let result = event.target.result;
     let resultSplit = result.split("\n");
     let data;
-    let sliceNum = getSliceNum();
+    let sliceNum = 0;
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
       densityVol.addData(data);
@@ -90,7 +90,8 @@ function readFile(file, fileNum) {
       ["xy", "yz", "xz"].forEach((axis) => {
         let slice = densityVol.getSlice(axis, sliceNum);
         densityVol.drawDensity(slice);
-        updateSliderAfterAxisChange(slice);
+        // Update the axis
+        drawAxes(svgObjs["axis-svg"][axis], slice);
       });
 
       if (!doseVol.isEmpty()) {
@@ -109,7 +110,8 @@ function readFile(file, fileNum) {
       ["xy", "yz", "xz"].forEach((axis) => {
         let slice = doseVol.getSlice(axis, sliceNum);
         doseVol.drawDose(slice);
-        updateSliderAfterAxisChange(slice);
+        // Update the axis
+        drawAxes(svgObjs["axis-svg"][axis], slice);
       });
       enableCoordInputs(doseVol.data.voxelNumber);
       enableCheckboxForDoseProfilePlot();
@@ -119,6 +121,14 @@ function readFile(file, fileNum) {
       console.log("Unknown file extension");
       return true;
     }
+
+    // Update the slider max values
+    let volume = doseVol.isEmpty() ? densityVol : doseVol;
+    let dims = "zxy";
+    ["xy", "yz", "xz"].forEach((axis, i) =>
+      sliceSliders[axis].setMaxValue(volume.data.voxelNumber[dims[i]])
+    );
+
     console.log("Finished processing data");
     return true;
   });

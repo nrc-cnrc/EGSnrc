@@ -44,52 +44,6 @@
     <div id="dose-viewer-container" class="container">
       <span id="dose-viewer-info-container" class="container">
         <div id="axis-slider-container">
-          <form>
-            <input type="radio" id="xy" name="axis" value="xy" checked />
-            <label for="xy">xy</label>
-            <input type="radio" id="yz" name="axis" value="yz" />
-            <label for="yz">yz</label>
-            <input type="radio" id="xz" name="axis" value="xz" />
-            <label for="xz">xz</label>
-          </form>
-          <div class="slider-container">
-            <label for="slice-number"
-              >Slice Number:
-              <output type="text" id="slider-value" value="">0</output>
-            </label>
-            <br />
-            <output type="text" id="slider-min" value="">0</output>
-            <input
-              type="range"
-              id="slider-range"
-              min="0"
-              value="0"
-              class="slider"
-              disabled
-            />
-            <output type="text" id="slider-max" value=""></output>
-            <button id="decrement-slider">-</button>
-            <button id="increment-slider">+</button>
-          </div>
-          <div class="slider-container">
-            <label for="max-dose"
-              >Max Dose:
-              <output type="text" id="max-dose-slider-value" value="">0</output>
-            </label>
-            <br />
-            <output type="text" id="max-dose-slider-min" value=""></output>
-            <input
-              type="range"
-              id="max-dose-slider-range"
-              min="0"
-              value="0"
-              class="slider"
-              disabled
-            />
-            <output type="text" id="max-dose-slider-max" value=""></output>
-            <button id="max-dose-decrement-slider">-</button>
-            <button id="max-dose-increment-slider">+</button>
-          </div>
           <div class="window-level-container">
             <label for="window">Window:</label>
             <input type="range" class="window-slider" name="window" />
@@ -300,6 +254,7 @@
     <script type="text/javascript" src="./dose-profile.js"></script>
     <script type="text/javascript" src="./zoom.js"></script>
     <script type="text/javascript" src="./panel.js"></script>
+    <script type="text/javascript" src="./slider.js"></script>
     <script>
       // TODO: Make a dose-view options class?
       // TODO: Move all javascript outside of index.html
@@ -357,6 +312,7 @@
         "px";
 
       // TODO: var makePanels = () => {}; in volume?
+      // TODO: Just make one object
       // For each axis and plot class, make html
       let axes = ["xy", "yz", "xz"];
       let classes = ["axis-svg", "plot-density", "plot-dose", "plot-marker"];
@@ -368,7 +324,6 @@
         "plot-marker": {},
       };
 
-      // TODO: Just make one object
       let axisObjs = {
         xy: {},
         yz: {},
@@ -379,15 +334,54 @@
         .select("#viewer-container")
         .style("vertical-align", "top");
 
+      let sliceSliders = {};
+
       axes.forEach((axis) => {
         let selectedDiv = viewerContainer
+          .append("div")
+          .classed("panel-" + axis, true)
+          .style("display", "inline-block");
+
+        var onSliceChangeCallback = (sliderVal) => {
+          // Update slice of current panel
+          panels[axis].updateSlice(parseInt(sliderVal));
+
+          // Update marker position, voxel information and dose profile
+          let plotCoords = panels[axis].markerPosition;
+          if (plotCoords) {
+            dispatch.call("markerchange", this, {
+              plotCoords: plotCoords,
+              panel: panels[axis],
+            });
+          }
+
+          // TODO: Also update marker position
+        };
+
+        let sliceSliderParams = {
+          id: "slice-number-" + axis,
+          label: "Slice Number",
+          format: d3.format("d"),
+          startingVal: 0,
+          minVal: 0,
+          maxVal: 1,
+          step: 1,
+        };
+
+        sliceSliders[axis] = new Slider(
+          selectedDiv,
+          onSliceChangeCallback,
+          sliceSliderParams
+        );
+
+        let imageHolder = selectedDiv
           .append("div")
           .classed("imageholder-" + axis, true)
           .classed("parent", true);
 
         classes.forEach((className, i) => {
           let layerNum = i + 1;
-          let plot = selectedDiv
+          let plot = imageHolder
             .append("div")
             .classed("layer-" + layerNum, true)
             .style("z-index", layerNum)
@@ -505,7 +499,6 @@
       //   .attr("height", mainViewerDimensions.height)
       //   .attr("fill", "rgba(225,225,225,0.5)");
 
-      var axis = d3.selectAll("input[name='axis']:checked").node().value;
       var plotCoords;
       var zoomTransform;
 
@@ -536,7 +529,8 @@
             densityVol,
             doseVol,
             axis,
-            axisObjs[axis]
+            axisObjs[axis],
+            sliceSliders[axis]
           ),
         };
       }, {});
@@ -590,6 +584,7 @@
 
             panel.updateMarker(coords, false);
             panel.updateSlice(sliceNum);
+            panel.updateSlider(sliceNum);
           }
         });
       });
@@ -615,7 +610,6 @@
     <script type="text/javascript" src="./window-level-slider.js"></script>
     <script type="text/javascript" src="./file-upload.js"></script>
     <script type="text/javascript" src="./export.mjs"></script>
-    <script type="text/javascript" src="./slider.js"></script>
     <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./read-data.js"></script>
     <script type="text/javascript" src="./dose-profile-setup.js"></script>

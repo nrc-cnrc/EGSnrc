@@ -549,75 +549,23 @@ class DoseVolume extends Volume {
     return super.getDataAtVoxelCoords(voxelCoords, "error");
   }
 
-  // TODO: Make a slider object for slice iteration and max dose setting
-  // TODO: Connect slider to data
   initializeMaxDoseSlider() {
-    let maxDosePercent = 1.5;
-    let startingDosePercent = 1.0;
-    let maxDoseSliderRange = d3.select("#max-dose-slider-range");
-    var dosePercentFormat = d3.format(".0%");
+    let parentDiv = d3.select("#axis-slider-container");
+    var onMaxDoseChangeCallback = (sliderVal) => this.setMaxDose(sliderVal);
+    let doseSliderParams = {
+      id: "max-dose",
+      label: "Max Dose",
+      format: d3.format(".0%"),
+      startingVal: 1.0,
+      minVal: 0.0,
+      maxVal: 1.5,
+      step: 0.01,
+    };
 
-    // Set slider step to be 1%
-    maxDoseSliderRange.node().step = 0.01;
-
-    // Enable slider
-    if (maxDoseSliderRange.node().disabled)
-      maxDoseSliderRange.node().disabled = false;
-
-    // On increment button push
-    d3.select("#max-dose-increment-slider").on("click", function () {
-      let slider = d3.select("#max-dose-slider-range").node();
-      slider.stepUp(1);
-
-      // Update slider text
-      d3.select("#max-dose-slider-value").node().value = dosePercentFormat(
-        slider.value
-      );
-
-      doseVol.setMaxDose(slider.value);
-    });
-
-    // On decrement button push
-    d3.select("#max-dose-decrement-slider").on("click", function () {
-      let slider = d3.select("#max-dose-slider-range").node();
-      slider.stepDown(1);
-
-      // Update slider text
-      d3.select("#max-dose-slider-value").node().value = dosePercentFormat(
-        slider.value
-      );
-
-      doseVol.setMaxDose(slider.value);
-    });
-
-    // On slider input, update text
-    maxDoseSliderRange.on("input", function () {
-      // Update slider text
-      d3.select("#max-dose-slider-value").node().value = dosePercentFormat(
-        this.value
-      );
-
-      doseVol.setMaxDose(this.value);
-      return true;
-    });
-
-    // Set max to max dose and current value to starting value define above
-    maxDoseSliderRange
-      .attr("max", maxDosePercent)
-      .attr("max", maxDosePercent)
-      .attr("value", startingDosePercent);
-
-    // Show maximum value of slider
-    d3.select("#max-dose-slider-max").node().value = dosePercentFormat(
-      maxDosePercent
-    );
-
-    // Show minimum value of slider
-    d3.select("#max-dose-slider-min").node().value = dosePercentFormat(0);
-
-    // Show current value of slider
-    d3.select("#max-dose-slider-value").node().value = dosePercentFormat(
-      startingDosePercent
+    let maxDoseSlider = new Slider(
+      parentDiv,
+      onMaxDoseChangeCallback,
+      doseSliderParams
     );
   }
 }

@@ -11,6 +11,7 @@ class Panel {
     doseVol,
     axis,
     axisElements,
+    sliceSlider,
     sliceNum = 0,
     zoomTransform = null,
     markerPosition = null
@@ -21,6 +22,7 @@ class Panel {
     this.volume = doseVol.isEmpty() ? densityVol : doseVol;
     this.axis = axis;
     this.axisElements = axisElements;
+    this.sliceSlider = sliceSlider;
     this.sliceNum = sliceNum;
     this.zoomTransform = zoomTransform;
     this.markerPosition = markerPosition;
@@ -193,5 +195,9 @@ class Panel {
       .attr("y2", y)
       .style("display", this.showCrosshairs() ? "" : "none")
       .classed("active", activePanel);
+  }
+
+  updateSlider(sliceNum) {
+    this.sliceSlider.setCurrentValue(sliceNum);
   }
 }

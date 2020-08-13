@@ -1,91 +1,152 @@
-function updateSliderAfterAxisChange(slice) {
-  let sliderRange = d3.select("#slider-range").node();
-  let sliceNum = getSliceNum();
-
-  // Enable slider if disabled
-  if (sliderRange.disabled) sliderRange.disabled = false;
-
-  // Change max slider value to max number of slices
-  if (sliceNum >= slice.totalSlices) {
-    d3.select("#slider-value").node().value = slice.totalSlices - 1;
+// TODO: Make slider for sliceNum
+// TODO: Make slider for window/level
+class Slider {
+  constructor(parentDiv, onValChangeCallback, params) {
+    this.format = params.format;
+    this.onValChangeCallback = onValChangeCallback;
+    this.buildSliderHtml(parentDiv, params.id, params.label);
+    this.initializeBehaviour(
+      params.format,
+      params.startingVal,
+      params.minVal,
+      params.maxVal,
+      params.step
+    );
   }
-  sliderRange.max = slice.totalSlices - 1;
-  d3.select("#slider-max").node().value = slice.totalSlices - 1;
 
-  // Update the axis
-  drawAxes(svgObjs["axis-svg"][slice.axis], slice);
+  buildSliderHtml(
+    parentDiv,
+    id,
+    labelStr,
+    incrementButtons = true,
+    disabled = false
+  ) {
+    let mainDiv = parentDiv.append("div").attr("class", "slider-container");
+
+    // Add label and slider value output
+    let sliderValue = mainDiv
+      .append("label")
+      .attr("for", id)
+      .text(labelStr + ": ")
+      .append("output")
+      .attr("type", "text")
+      .attr("id", "slider-value-" + id)
+      .attr("value", " ");
+
+    // Add break
+    mainDiv.append("br");
+
+    // Slider minimum output
+    let sliderMin = mainDiv
+      .append("output")
+      .attr("type", "text")
+      .attr("id", "slider-min-" + id)
+      .attr("value", " ");
+
+    // Actual slider component
+    let slider = mainDiv
+      .append("input")
+      .attr("type", "range")
+      .attr("class", "slider")
+      .attr("id", "slider-range-" + id)
+      .attr("min", 0)
+      .attr("value", 0)
+      .attr("disabled", disabled ? "disabled" : null);
+
+    // Slider maximum output
+    let sliderMax = mainDiv
+      .append("output")
+      .attr("type", "text")
+      .attr("id", "slider-max-" + id)
+      .attr("value", "");
+
+    if (incrementButtons) {
+      // Increment and decrement buttons
+      let decrementNode = mainDiv
+        .append("button")
+        .attr("id", "decrement-slider-" + id)
+        .text("-");
+
+      let incrementNode = mainDiv
+        .append("button")
+        .attr("id", "increment-slider-" + id)
+        .text("+");
+
+      this.decrementNode = decrementNode;
+      this.incrementNode = incrementNode;
+    }
+
+    this.slider = slider;
+    this.sliderMin = sliderMin;
+    this.sliderMax = sliderMax;
+    this.sliderValue = sliderValue;
+  }
+
+  initializeBehaviour(format, startingVal, minVal, maxVal, step) {
+    let sliderNode = this.slider.node();
+
+    var updateSlider = (val) => {
+      // Update slider text
+      this.sliderValue.text(format(val));
+
+      // Call value callback
+      this.onValChangeCallback(val);
+    };
+
+    // On slider input, update text
+    this.slider.on("input", function () {
+      updateSlider(this.value);
+    });
+
+    if (this.incrementNode) {
+      // On increment button push
+      this.incrementNode.on("click", function () {
+        sliderNode.stepUp(1);
+        updateSlider(sliderNode.value);
+      });
+    }
+
+    if (this.decrementNode) {
+      // On decrement button push
+      this.decrementNode.on("click", function () {
+        sliderNode.stepDown(1);
+        updateSlider(sliderNode.value);
+      });
+    }
+
+    // Set the slider step
+    this.slider.attr("step", step);
+
+    // Set max and current value
+    this.slider.attr("max", maxVal).attr("value", startingVal);
+
+    // Show maximum value of slider
+    this.sliderMax.text(format(maxVal));
+
+    // Show minimum value of slider
+    this.sliderMin.text(format(minVal));
+
+    // Show current value of slider
+    this.sliderValue.text(format(startingVal));
+  }
+
+  enableSlider() {
+    if (this.slider.attr("disabled")) this.slider.attr("disabled", null);
+  }
+
+  setMaxValue(maxVal) {
+    // Set max value
+    this.slider.attr("max", maxVal);
+
+    // Show maximum value of slider
+    this.sliderMax.text(this.format(maxVal));
+  }
+
+  setCurrentValue(val) {
+    // Update slider range
+    this.slider.node().value = val;
+
+    // Update slider text
+    this.sliderValue.text(this.format(val));
+  }
 }
-
-function updateImage(axis, sliceNum) {
-  // Update image if densityVol data and/or doseVol data exists
-  let slice;
-
-  if (!densityVol.isEmpty()) {
-    slice = densityVol.getSlice(axis, sliceNum);
-    densityVol.drawDensity(slice);
-  }
-  if (!doseVol.isEmpty()) {
-    slice = doseVol.getSlice(axis, sliceNum);
-    doseVol.drawDose(slice);
-  }
-
-  //Update voxel coordinates
-  plotCoords && updateVoxelCoords(plotCoords, axis, sliceNum, zoomTransform);
-}
-
-d3.select("#increment-slider").on("click", function () {
-  slider = d3.select("#slider-range").node();
-  slider.stepUp(1);
-
-  // Update slider text
-  d3.select("#slider-value").node().value = slider.value;
-
-  updateImage(axis, slider.value);
-});
-
-d3.select("#decrement-slider").on("click", function () {
-  slider = d3.select("#slider-range").node();
-  slider.stepDown(1);
-
-  // Update slider text
-  d3.select("#slider-value").node().value = slider.value;
-
-  updateImage(axis, slider.value);
-});
-
-d3.select("#slider-range").on("input", function () {
-  // Update slider text
-  d3.select("#slider-value").node().value = this.value;
-  sliceNum = parseInt(this.value);
-
-  updateImage(axis, sliceNum);
-
-  return true;
-});
-
-// TODO: Fix marker position on axis change!!!
-d3.selectAll("input[name='axis']").on("change", function () {
-  axis = this.value;
-  let sliceNum = getSliceNum();
-  // Update image if densityVol data and/or doseVol data exists
-  let slice;
-
-  if (!densityVol.isEmpty()) {
-    slice = densityVol.getSlice(axis, sliceNum);
-    densityVol.drawDensity(slice);
-  }
-  if (!doseVol.isEmpty()) {
-    slice = doseVol.getSlice(axis, sliceNum);
-    doseVol.drawDose(slice);
-  }
-
-  if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
-    updateSliderAfterAxisChange(slice);
-  }
-
-  //Update voxel coordinates
-  plotCoords &&
-    updateVoxelCoords(plotCoords, axis, sliceNum, zoomTransform, true);
-
-  return true;
-});

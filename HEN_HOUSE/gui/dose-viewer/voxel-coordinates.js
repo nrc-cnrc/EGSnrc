@@ -148,12 +148,17 @@ function updateDoseProfiles(voxelCoords, worldCoords) {
   let voxelCoordsList = getCoords(voxelCoords);
   let worldCoordsList = getCoords(worldCoords);
   let dimensionsList = ["x", "y", "z"];
+  let axesList = ["yz", "xz", "xy"];
 
   doseProfileList.forEach((doseProfile, i) => {
     // Set the data
     doseProfile.setDoseProfileData(dimensionsList[i], voxelCoordsList[i]);
 
     // Plot the dose profile
-    doseProfile.plotDoseProfile(axis, dimensionsList[i], worldCoordsList[i]);
+    doseProfile.plotDoseProfile(
+      axesList[i],
+      dimensionsList[i],
+      worldCoordsList[i]
+    );
   });
 }
