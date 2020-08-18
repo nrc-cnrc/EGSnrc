@@ -22,7 +22,7 @@ p.description {
   color: grey;
 }
 
-span#dose-profile-holder {
+span.dose-profile-holder {
   display: inline-grid;
   vertical-align: bottom;
 }

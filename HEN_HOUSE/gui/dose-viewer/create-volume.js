@@ -87,25 +87,24 @@ class Volume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
 
-  constructor(
-    dimensions,
-    legendDimensions,
-    htmlElementObj,
-    legendHolder,
-    legendSvg
-  ) {
+  constructor(data, fileName, dimensions, legendDimensions) {
+    this.data = data;
+    this.fileName = fileName;
     this.dimensions = dimensions;
     this.legendDimensions = legendDimensions;
-    this.data = {};
     this.prevSlice = { xy: {}, yz: {}, xz: {} };
     this.prevAxis = "";
+    this.addData(data);
+  }
+
+  // TODO: Remove html elements as properties and just pass them in
+  setHtmlObjects(htmlElementObj, legendHolder, legendSvg) {
     this.htmlElementObj = htmlElementObj;
     this.legendHolder = legendHolder;
     this.legendSvg = legendSvg;
   }
 
   addData(data) {
-    this.data = data;
     this.xWorldToVoxelScale = d3
       .scaleQuantile()
       .domain([data.voxelArr.x[0], data.voxelArr.x[data.voxelArr.x.length - 1]])
@@ -328,20 +327,9 @@ class Volume {
 }
 
 class DoseVolume extends Volume {
-  constructor(
-    dimensions,
-    legendDimensions,
-    svgDoseObj,
-    doseLegendHolder,
-    doseLegend
-  ) {
-    super(
-      dimensions,
-      legendDimensions,
-      svgDoseObj,
-      doseLegendHolder,
-      doseLegend
-    ); // call the super class constructor
+  constructor(data, fileName, dimensions, legendDimensions) {
+    // Call the super class constructor
+    super(data, fileName, dimensions, legendDimensions);
   }
 
   addData(data) {
@@ -571,21 +559,8 @@ class DoseVolume extends Volume {
 }
 
 class DensityVolume extends Volume {
-  //
-  constructor(
-    dimensions,
-    legendDimensions,
-    canvDensityObj,
-    densityLegendHolder,
-    densityLegend
-  ) {
-    super(
-      dimensions,
-      legendDimensions,
-      canvDensityObj,
-      densityLegendHolder,
-      densityLegend
-    ); // call the super class constructor
+  constructor(data, fileName, dimensions, legendDimensions) {
+    super(data, fileName, dimensions, legendDimensions); // call the super class constructor
 
     this.prevSliceImg = { xy: {}, yz: {}, xz: {} };
   }

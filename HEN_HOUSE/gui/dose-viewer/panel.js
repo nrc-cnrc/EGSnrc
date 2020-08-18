@@ -12,6 +12,7 @@ class Panel {
     axis,
     axisElements,
     sliceSlider,
+    dispatch,
     sliceNum = 0,
     zoomTransform = null,
     markerPosition = null
@@ -19,10 +20,11 @@ class Panel {
     this.dimensions = dimensions;
     this.densityVol = densityVol;
     this.doseVol = doseVol;
-    this.volume = doseVol.isEmpty() ? densityVol : doseVol;
+    this.volume = doseVol || densityVol;
     this.axis = axis;
     this.axisElements = axisElements;
     this.sliceSlider = sliceSlider;
+    this.dispatch = dispatch;
     this.sliceNum = sliceNum;
     this.zoomTransform = zoomTransform;
     this.markerPosition = markerPosition;
@@ -77,12 +79,12 @@ class Panel {
     let slice;
 
     if (!this.densityVol.isEmpty()) {
-      slice = densityVol.getSlice(this.axis, sliceNum);
-      densityVol.drawDensity(slice, this.zoomTransform);
+      slice = this.densityVol.getSlice(this.axis, sliceNum);
+      this.densityVol.drawDensity(slice, this.zoomTransform);
     }
     if (!this.doseVol.isEmpty()) {
-      slice = doseVol.getSlice(this.axis, sliceNum);
-      doseVol.drawDose(slice, this.zoomTransform);
+      slice = this.doseVol.getSlice(this.axis, sliceNum);
+      this.doseVol.drawDose(slice, this.zoomTransform);
     }
   }
 
@@ -118,7 +120,7 @@ class Panel {
         : d3.event.y;
 
       if (d3.event.defaultPrevented) return;
-      dispatch.call("markerchange", this, {
+      this.dispatch.call("markerchange", this, {
         plotCoords: [x, y],
         panel: panel,
       });

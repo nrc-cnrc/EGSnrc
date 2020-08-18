@@ -57,7 +57,8 @@ function handleFiles(files) {
 // Read file
 function readFile(file, fileNum) {
   let reader = new FileReader();
-  let ext = file.name.split(".").pop();
+  let fileName = file.name;
+  let ext = fileName.split(".").pop();
 
   reader.addEventListener("loadstart", function () {
     console.log("File reading started");
@@ -82,52 +83,47 @@ function readFile(file, fileNum) {
     let result = event.target.result;
     let resultSplit = result.split("\n");
     let data;
-    let sliceNum = 0;
+
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
-      densityVol.addData(data);
-      densityVol.initializeLegend();
-      ["xy", "yz", "xz"].forEach((axis) => {
-        let slice = densityVol.getSlice(axis, sliceNum);
-        densityVol.drawDensity(slice);
-        // Update the axis
-        drawAxes(svgObjs["axis-svg"][axis], slice);
-      });
+      let densityVol = new DensityVolume(
+        data,
+        fileName,
+        mainViewerDimensions,
+        legendDimensions
+      );
 
-      if (!doseVol.isEmpty()) {
-        enableCheckboxForDensityPlot();
-      }
-      enableExportVisualizationButton();
-      initializeWindowAndLevelSlider(densityVol);
-      enableCheckboxForVoxelInformation();
+      densityVolumeList.push(densityVol);
+      volumeViewerList.forEach((volumeViewer) =>
+        volumeViewer.updateDensityFileSelector(
+          densityVol,
+          densityVolumeList.length - 1
+        )
+      );
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
-      doseVol.addData(data);
-      doseVol.initializeMaxDoseSlider();
-      doseVol.initializeLegend();
-      doseVol.initializeDoseContourInput();
-      // TODO: Figure out a better layout for event listeners
-      ["xy", "yz", "xz"].forEach((axis) => {
-        let slice = doseVol.getSlice(axis, sliceNum);
-        doseVol.drawDose(slice);
-        // Update the axis
-        drawAxes(svgObjs["axis-svg"][axis], slice);
-      });
-      enableCoordInputs(doseVol.data.voxelNumber);
-      enableCheckboxForDoseProfilePlot();
-      enableExportVisualizationButton();
-      enableCheckboxForVoxelInformation();
+      let doseVol = new DoseVolume(
+        data,
+        fileName,
+        mainViewerDimensions,
+        legendDimensions
+      );
+
+      doseVolumeList.push(doseVol);
+      volumeViewerList.forEach((volumeViewer) =>
+        volumeViewer.updateDoseFileSelector(doseVol, doseVolumeList.length - 1)
+      );
     } else {
       console.log("Unknown file extension");
       return true;
     }
 
-    // Update the slider max values
-    let volume = doseVol.isEmpty() ? densityVol : doseVol;
-    let dims = "zxy";
-    ["xy", "yz", "xz"].forEach((axis, i) =>
-      sliceSliders[axis].setMaxValue(volume.data.voxelNumber[dims[i]])
-    );
+    // // Update the slider max values
+    // let volume = doseVol.isEmpty() ? densityVol : doseVol;
+    // let dims = "zxy";
+    // ["xy", "yz", "xz"].forEach((axis, i) =>
+    //   sliceSliders[axis].setMaxValue(volume.data.voxelNumber[dims[i]])
+    // );
 
     console.log("Finished processing data");
     return true;
