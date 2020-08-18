@@ -44,10 +44,16 @@ class VolumeViewer {
       drawAxes(this.svgObjs["axis-svg"][axis], slice);
     });
 
+    // Set the panel doseVolume object
     Object.values(this.panels).forEach((panel) => {
       panel.doseVol = doseVol;
       if (!panel.volume) {
         panel.volume = doseVol;
+        // Update the slider max values
+        let dims = "zxy";
+        axes.forEach((axis, i) =>
+          this.sliceSliders[axis].setMaxValue(doseVol.data.voxelNumber[dims[i]])
+        );
       }
     });
 
@@ -75,10 +81,18 @@ class VolumeViewer {
       drawAxes(this.svgObjs["axis-svg"][axis], slice);
     });
 
+    // Set the panel densityVolume object
     Object.values(this.panels).forEach((panel) => {
       panel.densityVol = densityVol;
       if (!panel.volume) {
         panel.volume = densityVol;
+        // Update the slider max values
+        let dims = "zxy";
+        axes.forEach((axis, i) =>
+          this.sliceSliders[axis].setMaxValue(
+            densityVol.data.voxelNumber[dims[i]]
+          )
+        );
       }
     });
 
@@ -181,11 +195,11 @@ class VolumeViewer {
     this.buildViewerContainer(this.mainViewerDimensions);
     this.buildLegend(this.legendDimensions);
     this.buildDoseProfile(this.sideDoseProfileDimensions);
-    this.buildSliceSliders();
     this.buildPanels(mainViewerDimensions);
   }
 
   buildViewerContainer(mainViewerDimensions) {
+    // TODO: In panel class, have build html instead
     // For each axis and plot class, make html
     let classes = ["axis-svg", "plot-density", "plot-dose", "plot-marker"];
     let type = ["svg", "canvas", "svg", "svg"];
@@ -209,6 +223,40 @@ class VolumeViewer {
         .classed("panel-" + axis, true)
         .style("display", "inline-block");
 
+      // Slice slider callback and parameters
+      var onSliceChangeCallback = (sliderVal) => {
+        let currPanel = this.panels[axis];
+        // Update slice of current panel
+        currPanel.updateSlice(parseInt(sliderVal));
+
+        // Update marker position, voxel information and dose profile
+        let plotCoords = currPanel.markerPosition;
+        if (plotCoords) {
+          dispatch.call("markerchange", this, {
+            plotCoords: plotCoords,
+            panel: currPanel,
+          });
+        }
+      };
+
+      let sliceSliderParams = {
+        id: "slice-number-" + axis,
+        label: "Slice Number",
+        format: d3.format("d"),
+        startingVal: 0,
+        minVal: 0,
+        maxVal: 1,
+        step: 1,
+      };
+
+      // Build new slider
+      this.sliceSliders[axis] = new Slider(
+        selectedDiv,
+        onSliceChangeCallback,
+        sliceSliderParams
+      );
+
+      // Build div to hold the panel
       let imageHolder = selectedDiv
         .append("div")
         .classed("imageholder-" + axis, true)
@@ -320,45 +368,6 @@ class VolumeViewer {
     });
   }
 
-  // TODO: In panel class, have build html instead
-  buildSliceSliders() {
-    // Add panels and slice sliders
-    axes.forEach((axis) => {
-      let selectedDiv = this.viewerContainer.select(".panel-" + axis);
-
-      var onSliceChangeCallback = (sliderVal) => {
-        let currPanel = this.panels[axis];
-        // Update slice of current panel
-        currPanel.updateSlice(parseInt(sliderVal));
-
-        // Update marker position, voxel information and dose profile
-        let plotCoords = currPanel.markerPosition;
-        if (plotCoords) {
-          dispatch.call("markerchange", this, {
-            plotCoords: plotCoords,
-            panel: currPanel,
-          });
-        }
-      };
-
-      let sliceSliderParams = {
-        id: "slice-number-" + axis,
-        label: "Slice Number",
-        format: d3.format("d"),
-        startingVal: 0,
-        minVal: 0,
-        maxVal: 1,
-        step: 1,
-      };
-
-      this.sliceSliders[axis] = new Slider(
-        selectedDiv,
-        onSliceChangeCallback,
-        sliceSliderParams
-      );
-    });
-  }
-
   buildPanels(mainViewerDimensions) {
     this.panels = axes.reduce((obj, axis, i) => {
       return {
@@ -436,6 +445,8 @@ class VolumeViewer {
 
     this.dispatch.on("markerchange.voxelinfo", function (d) {
       updateVoxelCoords(
+        d.panel.densityVol,
+        d.panel.doseVol,
         d.plotCoords,
         d.panel.axis,
         d.panel.sliceNum,

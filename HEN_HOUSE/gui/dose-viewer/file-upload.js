@@ -118,13 +118,6 @@ function readFile(file, fileNum) {
       return true;
     }
 
-    // // Update the slider max values
-    // let volume = doseVol.isEmpty() ? densityVol : doseVol;
-    // let dims = "zxy";
-    // ["xy", "yz", "xz"].forEach((axis, i) =>
-    //   sliceSliders[axis].setMaxValue(volume.data.voxelNumber[dims[i]])
-    // );
-
     console.log("Finished processing data");
     return true;
   });

@@ -71,8 +71,10 @@ var enableCheckboxForVoxelInformation = () => {
 
 d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
   // Call all panels to show/hide crosshairs
-  Object.values(panels).forEach((panel) => {
-    panel.updateCrosshairDisplay();
+  volumeViewerList.forEach((volumeViewer) => {
+    Object.values(volumeViewer.panels).forEach((panel) => {
+      panel.updateCrosshairDisplay();
+    });
   });
 
   if (this.checked) {
@@ -86,6 +88,8 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
     let panel = panels["xy"];
     if (panel.markerPosition) {
       updateVoxelCoords(
+        panel.densityVol,
+        panel.doseVol,
         panel.markerPosition,
         panel.axis,
         panel.sliceNum,
@@ -104,8 +108,10 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
 
 d3.select("input[name='show-marker-checkbox']").on("change", function () {
   // Call all panels to show/hide circle marker
-  Object.values(panels).forEach((panel) => {
-    panel.updateCircleMarkerDisplay();
+  volumeViewerList.forEach((volumeViewer) => {
+    Object.values(volumeViewer.panels).forEach((panel) => {
+      panel.updateCircleMarkerDisplay();
+    });
   });
 
   let voxelInfo = d3.selectAll("span#voxel-info");
@@ -114,16 +120,20 @@ d3.select("input[name='show-marker-checkbox']").on("change", function () {
     voxelInfo.classed("hidden", false);
 
     // Update voxel information
-    let panel = panels["xy"];
-    if (panel.markerPosition) {
-      updateVoxelCoords(
-        panel.markerPosition,
-        panel.axis,
-        panel.sliceNum,
-        panel.zoomTransform,
-        true
-      );
-    }
+    volumeViewerList.forEach((volumeViewer) => {
+      let panel = volumeViewer.panels["xy"];
+      if (panel.markerPosition) {
+        updateVoxelCoords(
+          panel.densityVol,
+          panel.doseVol,
+          panel.markerPosition,
+          panel.axis,
+          panel.sliceNum,
+          panel.zoomTransform,
+          true
+        );
+      }
+    });
   } else {
     // Add hidden class
     voxelInfo.classed("hidden", true);
@@ -177,9 +187,10 @@ function enableCoordInputs(voxelNumber) {
 
   updateCoordInputsLabels(profileAxis, voxelNumber);
 
-  if (!densityVol.isEmpty()) {
-    enableCheckboxForDensityPlot();
-  }
+  // TODO: Put all this in a class
+  // if (!densityVol.isEmpty()) {
+  //   enableCheckboxForDensityPlot();
+  // }
 }
 
 var voxelCoordsToWorld = (voxelCoords, profileDim, volume) =>

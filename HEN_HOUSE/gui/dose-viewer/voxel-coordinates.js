@@ -1,5 +1,10 @@
 // TODO: If marker exists, on axis change, use marker coordinates?
-// https://github.com/aces/brainbrowser/blob/master/src/brainbrowser/volume-viewer.js#L411-L415
+// // https://github.com/aces/brainbrowser/blob/master/src/brainbrowser/volume-viewer.js#L411-L415
+// class VoxelInfo {
+//   constructor() {
+
+//   }
+// }
 
 function coordsToWorld(coords, axis, sliceNum, volume, transform, updateXY) {
   // TODO: Have a more permanent solution to the click/transform problem, make a class?
@@ -76,15 +81,16 @@ function applyTransform(val, transform, dir) {
 }
 
 function updateVoxelCoords(
+  densityVol,
+  doseVol,
   coords,
   axis,
   sliceNum,
   transform,
   updateXY = false
 ) {
-  if (!densityVol.isEmpty() || !doseVol.isEmpty()) {
-    let vol = !densityVol.isEmpty() ? densityVol : doseVol;
-
+  let vol = densityVol || doseVol;
+  if (vol) {
     // Get world and voxel coordinates from pixel value
     let worldCoords = coordsToWorld(
       coords,
@@ -107,12 +113,13 @@ function updateVoxelCoords(
     if (d3.select("input[name='show-marker-checkbox']").node().checked) {
       updateWorldLabels(worldCoords);
       updateVoxelLabels(voxelCoords);
-      updateVoxelInfo(voxelCoords);
+      updateVoxelInfo(voxelCoords, densityVol, doseVol);
     }
 
+    // TODO: Use dispatch event instead of this
     // Update dose profiles if checkbox is checked
     if (
-      !doseVol.isEmpty() &&
+      doseVol &&
       d3.select("input[name='show-dose-profile-checkbox']").node().checked
     ) {
       updateDoseProfiles(voxelCoords, worldCoords);
@@ -120,8 +127,8 @@ function updateVoxelCoords(
   }
 }
 
-function updateVoxelInfo(voxelCoords) {
-  if (!densityVol.isEmpty()) {
+function updateVoxelInfo(voxelCoords, densityVol, doseVol) {
+  if (densityVol) {
     let density = densityVol.getDataAtVoxelCoords(voxelCoords);
     d3.select("#density-value").node().value =
       d3.format(".3f")(density) + " g/cm^3";
@@ -130,7 +137,7 @@ function updateVoxelInfo(voxelCoords) {
     d3.select("#material-value").node().value = material;
   }
 
-  if (!doseVol.isEmpty()) {
+  if (doseVol) {
     let dose = doseVol.getDataAtVoxelCoords(voxelCoords) || 0;
     let error = doseVol.getErrorAtVoxelCoords(voxelCoords) || 0;
     d3.select("#dose-value").node().value =

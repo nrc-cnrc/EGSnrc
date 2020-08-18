@@ -78,11 +78,11 @@ class Panel {
 
     let slice;
 
-    if (!this.densityVol.isEmpty()) {
+    if (this.densityVol) {
       slice = this.densityVol.getSlice(this.axis, sliceNum);
       this.densityVol.drawDensity(slice, this.zoomTransform);
     }
-    if (!this.doseVol.isEmpty()) {
+    if (this.doseVol) {
       slice = this.doseVol.getSlice(this.axis, sliceNum);
       this.doseVol.drawDose(slice, this.zoomTransform);
     }
@@ -106,7 +106,15 @@ class Panel {
       d3.select(this).select("line.crosshairY").attr("y1", y).attr("y2", y);
 
       // The d3.event coords are same regardless of zoom, so pass in null as transform
-      updateVoxelCoords([x, y], panel.axis, panel.sliceNum, null, true);
+      updateVoxelCoords(
+        panel.densityVol,
+        panel.doseVol,
+        [x, y],
+        panel.axis,
+        panel.sliceNum,
+        null,
+        true
+      );
     }
 
     function dragended() {
