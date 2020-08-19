@@ -108,6 +108,16 @@ extern __extc__ void F77_OBJ(photo,PHOTO)();
                 the_stack->latch[np1] = the_stack->latch[np]; \
                 the_stack->ir[np1] = the_stack->ir[np]; \
                 the_stack->dnear[np1] = the_stack->dnear[np]; \
+                the_extra_stack->nbr_splitting[np1] = the_extra_stack->nbr_splitting[np]; \
+
+// Extra stack to hold variance reduction data per particle
+struct EGS_ExtraStack {
+    int nbr_splitting[MXSTACK];
+};
+
+extern __extc__ struct EGS_ExtraStack F77_OBJ_(extra_stack,EXTRA_STACK);
+static struct EGS_ExtraStack *the_extra_stack =
+                 &F77_OBJ_(extra_stack,EXTRA_STACK);
 
 /*! a class for storing the phase-space temporarilly */
 
@@ -115,8 +125,8 @@ extern __extc__ void F77_OBJ(photo,PHOTO)();
 class TmpPhsp {
 public:
     // constructor
-    TmpPhsp() : np(0), ntot(4), p(new EGS_Particle[4]) {};
-    ~TmpPhsp() { delete [] p; };
+    TmpPhsp() : np(0), ntot(4), p(new EGS_Particle[4]), nbr_split(new int[4]) {};
+    ~TmpPhsp() { delete [] p; delete [] nbr_split; };
     void grow() {
         int ntot_new = 2*ntot;
         if( ntot_new > MAXPHSP ) egsFatal("TmpPhsp::grow(): exceeded maximum size %d\n",MAXPHSP);
@@ -124,6 +134,11 @@ public:
         for(int j=0; j<np; j++) pnew[j] = p[j];
         delete [] p;
         p = pnew; ntot = ntot_new;
+
+        int *nbr_split_new = new int [ntot_new];
+        for(int j=0; j<np; j++) nbr_split_new[j] = nbr_split[j];
+        delete [] nbr_split;
+        nbr_split = nbr_split_new;
     };
 
     void set() {
@@ -135,7 +150,9 @@ public:
         p[np].E     = the_stack->E[ip];
         p[np].wt    = the_stack->wt[ip];
         p[np].x     = EGS_Vector(the_stack->x[ip],the_stack->y[ip],the_stack->z[ip]);
-        p[np++].u   = EGS_Vector(the_stack->u[ip],the_stack->v[ip],the_stack->w[ip]);
+        p[np].u   = EGS_Vector(the_stack->u[ip],the_stack->v[ip],the_stack->w[ip]);
+
+        nbr_split[np++] = the_extra_stack->nbr_splitting[ip];
     };
     void set(const EGS_Particle &particle) {
         if( np > ntot-1 ) grow();
@@ -153,6 +170,8 @@ public:
         the_stack->iq[ip] = p[np].q;
         the_stack->latch[ip] = p[np].latch;
         the_stack->wt[ip] = p[np].wt;
+
+        the_extra_stack->nbr_splitting[ip] = nbr_split[np];
     };
 
     void clean() { np = 0; };
@@ -165,6 +184,7 @@ private:
 
     int          ntot, np;
     EGS_Particle *p;
+    int *nbr_split;
 };
 
 //*HB_start************************
@@ -1961,8 +1981,8 @@ int EGS_ChamberApplication::ausgab(int iarg) {
     // are split or RR'ed so a uniform weight distribution results
     // and electrons not likely to contribute to dose in region of
     // interest are reduced in number
-    // however dont do this with fat electrons that survived rangerejection-RR (latch > 1)
-    if( iarg == AfterTransport && the_stack->iq[np] && the_stack->latch[np] < 1 ){
+    // however dont do this with fat electrons that survived rangerejection-RR (nbr_split > 1)
+    if( iarg == AfterTransport && the_stack->iq[np] && the_extra_stack->nbr_splitting[np] < 1 ){
         // region change occured for e-/e+
         // split since cse is enhanced in this region
         if( ir >= 0 && cs_enhance[ig][the_epcont->irold-2] < cs_enhance[ig][ir] ){
@@ -1980,7 +2000,7 @@ int EGS_ChamberApplication::ausgab(int iarg) {
         if( ir >= 0 && cs_enhance[ig][the_epcont->irold-2] > cs_enhance[ig][ir] ){
             int RRprob = cs_enhance[ig][the_epcont->irold-2]/cs_enhance[ig][ir];
             //
-            // ******* IK: why is latch not set here?
+            // ******* IK: why is nbr_split not set here?
             //
             if( rndm->getUniform()*RRprob < 1 ) {
                 the_stack->wt[np] *= RRprob;
@@ -1992,27 +2012,27 @@ int EGS_ChamberApplication::ausgab(int iarg) {
 
     // split up fat electrons' radiative events
     // i.e. electrons that survived range-rejection RR
-    if( (the_stack->latch[np] != 0) &&
+    if( (the_extra_stack->nbr_splitting[np] != 0) &&
         (iarg == BeforeBrems || iarg == BeforeAnnihFlight || iarg == BeforeAnnihRest) ) {
-        the_egsvr->nbr_split = the_stack->latch[np];	// split photons up
+        the_egsvr->nbr_split = the_extra_stack->nbr_splitting[np];	// split photons up
         return 0;
     }
 
     // RR all (low weight) radiative photons
     // that can be the descendants of cse-split electrons
-    // if these are photons of brems-split (see above) reset latch and splitting#
+    // if these are photons of brems-split (see above) reset splitting#
     if(  (iarg == AfterBrems || iarg == AfterMoller ||
           iarg == AfterBhabha || iarg == AfterAnnihFlight ||
           iarg == AfterAnnihRest) && do_cse ) {
         for(int ip=the_stack->npold-1; ip<=np; ip++)
             if( !the_stack->iq[ip] )
-                if(cs_enhance[ig][ir] > 1 && the_stack->latch[ip] == 0)
+                if(cs_enhance[ig][ir] > 1 && the_extra_stack->nbr_splitting[ip] == 0)
                     // play RR with photons of non-fat electron radiative event
                     if( rndm->getUniform() * (EGS_Float)cs_enhance[ig][ir] < 1 ){
                         the_stack->wt[ip] *= cs_enhance[ig][ir];
                     }
                     else the_stack->wt[ip] = 0;
-                else the_stack->latch[ip] = 0;	// split-photon of fat electron
+                else the_extra_stack->nbr_splitting[ip] = 0;	// split-photon of fat electron
         // or electron outside cse-region
         the_egsvr->nbr_split = 1;
         return 0;
@@ -2082,15 +2102,15 @@ int EGS_ChamberApplication::ausgab(int iarg) {
         iarg == AfterAnnihRest ) {
         for(int ip=the_stack->npold-1; ip<=np; ip++) {
             if( !the_stack->iq[ip] ) {
-                if( fsplit > 1 && the_stack->latch[ip] < 2 ) {
+                if( fsplit > 1 && the_extra_stack->nbr_splitting[ip] < 2 ) {
                     if( rndm->getUniform()*fsplit < 1 )
                         the_stack->wt[ip] *= fsplit;
                     else
                         the_stack->wt[ip] = 0;
                 }
-                if( !do_cse && (the_stack->latch[ip] == 0 ||
-                            (rr_flag > 1 && the_stack->latch[ip] == rr_flag) ) ){
-                    the_stack->latch[ip] += 1;
+                if( !do_cse && (the_extra_stack->nbr_splitting[ip] == 0 ||
+                            (rr_flag > 1 && the_extra_stack->nbr_splitting[ip] == rr_flag) ) ){
+                    the_extra_stack->nbr_splitting[ip] += 1;
                 }
             }
         }
@@ -2204,6 +2224,7 @@ int EGS_ChamberApplication::simulateSingleShower() {
     the_egsvr->nbr_split = csplit;
     current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
     //egsInformation("Got particle: q=%d E=%g wt=%g latch=%d x=(%g,%g,%g) u=(%g,%g,%g)\n",p.q,p.E,p.wt,p.latch,x.x,x.y,x.z,u.x,u.y,u.z);
+    the_extra_stack->nbr_splitting[0] = 0;
     int err = startNewShower(); if( err ) return err;
     //*HB_start************************
     //isocenter positioning uncertainty
@@ -2349,7 +2370,7 @@ int EGS_ChamberApplication::simulateSingleShower() {
                             the_stack->ir[0] = geometry->isWhere(xt) + 2;
                             if( the_stack->ir[0] < 2 ) continue;
                             the_stack->wt[0] /= (EGS_Float)do_TmpPhsp;// adjust weight due to splitting
-                            the_stack->latch[0] /= do_TmpPhsp;	  // the latch is only set for fat electrons ph
+                            the_extra_stack->nbr_splitting[0] /= do_TmpPhsp; // nbr_split is only set for fat electrons ph
                             the_stack->dnear[0] = 0;
                             // adjust the number/weight of electrons
                             // I assume that the cse_enhance in the cavity of the TmpPhsp object
@@ -2716,13 +2737,14 @@ void EGS_ChamberApplication::selectPhotonMFP(EGS_Float &dpmfp) {
         " particle of charge %d\n",the_stack->iq[np]);
     EGS_Float wt_o = the_stack->wt[np];
     EGS_Float E = the_stack->E[np];
-    int ireg   = the_stack->ir[np]-2, latch = the_stack->latch[np];
-    int latch1 = latch;
+    int ireg   = the_stack->ir[np]-2, nbr_split = the_extra_stack->nbr_splitting[np];
+    int nbr_split1 = nbr_split;
+    int latch1 = the_stack->latch[np];
     EGS_Float f_split, f_spliti;
-    if( latch < 2 ) { f_split = fsplit; f_spliti = fspliti; }
+    if( nbr_split < 2 ) { f_split = fsplit; f_spliti = fspliti; }
     else {
         f_split = rr_flag; f_spliti = 1/f_split;
-        latch1 = latch - rr_flag; the_stack->latch[np] = latch1;
+        nbr_split1 = nbr_split - rr_flag; the_extra_stack->nbr_splitting[np] = nbr_split1;
     }
     the_stack->wt[np] = wt_o*f_spliti;
     int imed = geometry->medium(ireg);
@@ -2786,7 +2808,7 @@ void EGS_ChamberApplication::selectPhotonMFP(EGS_Float &dpmfp) {
                 else {
                  the_stack->wt[np] = wt_o;
                  doRayleigh();
-                 the_stack->latch[np] = latch < 2 ?
+                 the_extra_stack->nbr_splitting[np] = nbr_split < 2 ?
                         1 : (rr_flag+1);
                 }
             }
@@ -2818,7 +2840,7 @@ void EGS_ChamberApplication::selectPhotonMFP(EGS_Float &dpmfp) {
                 if( !the_stack->iq[ip] ) {
                     if( isplit == i_survive ) {
                       the_stack->wt[ip] = wt_o;
-                      the_stack->latch[ip++] = latch < 2 ?
+                      the_extra_stack->nbr_splitting[ip++] = nbr_split < 2 ?
                             1 : (rr_flag+1);
                     }
                     else {
@@ -2829,6 +2851,7 @@ void EGS_ChamberApplication::selectPhotonMFP(EGS_Float &dpmfp) {
                             the_stack->u[ip] = the_stack->u[np];
                             the_stack->v[ip] = the_stack->v[np];
                             the_stack->w[ip] = the_stack->w[np];
+                            the_extra_stack->nbr_splitting[ip] = the_extra_stack->nbr_splitting[np];
                     }
                     --np; --the_stack->np;
                     }
@@ -2849,7 +2872,7 @@ void EGS_ChamberApplication::selectPhotonMFP(EGS_Float &dpmfp) {
                             else {
                                 if( rndm->getUniform()*rr_flag < 1 ) {
                                     the_stack->wt[ip] *= rr_flag;
-                                    the_stack->latch[ip] += rr_flag;
+                                    the_extra_stack->nbr_splitting[ip] += rr_flag;
                                 } else keep = false;
                             }
                         }
@@ -2863,6 +2886,7 @@ void EGS_ChamberApplication::selectPhotonMFP(EGS_Float &dpmfp) {
                             the_stack->u[ip] = the_stack->u[np];
                             the_stack->v[ip] = the_stack->v[np];
                             the_stack->w[ip] = the_stack->w[np];
+                            the_extra_stack->nbr_splitting[ip] = the_extra_stack->nbr_splitting[np];
                         }
                         --np; --the_stack->np;
                     }
@@ -2874,6 +2898,7 @@ void EGS_ChamberApplication::selectPhotonMFP(EGS_Float &dpmfp) {
         the_stack->E[np] = E; the_stack->wt[np] = wt_o*f_spliti;
         the_stack->iq[np] = 0;
         the_stack->latch[np] = latch1;
+        the_extra_stack->nbr_splitting[np] = nbr_split1;
         the_stack->ir[np] = ireg+2;
         the_stack->u[np]=u.x; the_stack->v[np]=u.y; the_stack->w[np]=u.z;
         the_stack->x[np]=x.x; the_stack->y[np]=x.y; the_stack->z[np]=x.z;
@@ -2891,14 +2916,14 @@ int EGS_ChamberApplication::rangeDiscard(EGS_Float tperp, EGS_Float range) const
     // probability of 1/rr_flag, if it can not reach the cavity or
     // discard it if it is in the cavity and can not escape and E<Esave
     // However, we only play RR if that was not done before.
-    // This is indicated by the value of latch:
-    //   latch=0,1 indicates a primary/secondary electron that has
+    // This is indicated by the value of nbr_split:
+    //   nbr_split=0,1 indicates a primary/secondary electron that has
     //             not been previosly subjected to RR.
-    //   latch=x,x+1 (with x>1) indicates a primary/secondary electron
+    //   nbr_split=x,x+1 (with x>1) indicates a primary/secondary electron
     //             that has already been range-RR'ed.
     //
     int np = the_stack->np-1;
-    if( abs(the_stack->latch[np]) > 1 ) return 0;
+    if( abs(the_extra_stack->nbr_splitting[np]) > 1 ) return 0;
     bool is_cav = is_cavity[ig][the_stack->ir[np]-2];
 
     // if transport is done only in one geometry
@@ -2954,7 +2979,7 @@ int EGS_ChamberApplication::rangeDiscard(EGS_Float tperp, EGS_Float range) const
         // particle survives.
         the_stack->wt[np] *= rr_flag;
         // mark where this electron as RR and if it is already low weight due to cse
-        the_stack->latch[np] = rr_flag/cs_enhance[ig][the_stack->ir[np]-2];
+        the_extra_stack->nbr_splitting[np] = rr_flag/cs_enhance[ig][the_stack->ir[np]-2];
         return 0;
     }
     //egsInformation("Killing particle: E=%g x=(%g,%g,%g) tperp=%g"
