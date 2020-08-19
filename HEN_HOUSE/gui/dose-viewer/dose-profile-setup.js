@@ -75,35 +75,36 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
     Object.values(volumeViewer.panels).forEach((panel) => {
       panel.updateCrosshairDisplay();
     });
-  });
 
-  if (this.checked) {
-    // Hide dose profile plots
-    doseProfileParentDiv.style("display", null);
+    if (this.checked) {
+      // Hide dose profile plots
+      volumeViewer.doseProfileHolder.style("display", null);
 
-    // Enable saving dose profiles as csv
-    d3.select("#save-dose-profile").node().disabled = false;
+      // Enable saving dose profiles as csv
+      d3.select("#save-dose-profile").node().disabled = false;
 
-    // Update dose profiles
-    let panel = panels["xy"];
-    if (panel.markerPosition) {
-      updateVoxelCoords(
-        panel.densityVol,
-        panel.doseVol,
-        panel.markerPosition,
-        panel.axis,
-        panel.sliceNum,
-        panel.zoomTransform,
-        true
-      );
+      // Update dose profiles
+      // Only choose first panel because it will update all dose profiles
+      let panel = volumeViewer.panels["xy"];
+      if (panel.markerPosition) {
+        updateVoxelCoords(
+          panel.densityVol,
+          panel.doseVol,
+          panel.markerPosition,
+          panel.axis,
+          panel.sliceNum,
+          panel.zoomTransform,
+          true
+        );
+      }
+    } else {
+      // Show dose profile plots
+      volumeViewer.doseProfileHolder.style("display", "none");
+
+      // Disable saving dose profiles as csv
+      d3.select("#save-dose-profile").node().disabled = true;
     }
-  } else {
-    // Show dose profile plots
-    doseProfileParentDiv.style("display", "none");
-
-    // Disable saving dose profiles as csv
-    d3.select("#save-dose-profile").node().disabled = true;
-  }
+  });
 });
 
 d3.select("input[name='show-marker-checkbox']").on("change", function () {
@@ -235,7 +236,7 @@ d3.select("#dose-profile-button").on("click", function () {
 
   // TODO: Add listener to density-profile-checkbox instead of setting the variable each time
   doseProfile.plotDensity = densityChecked;
-  doseProfile.setDoseProfileData(axisList, [coord1, coord2]);
+  doseProfile.setDoseProfileData(doseVol, axisList, [coord1, coord2]);
   doseProfile.updateAxes();
 
   // TODO: Add a check to see if dose and density have same coordinate system

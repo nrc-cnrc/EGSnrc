@@ -157,15 +157,21 @@ function updateDoseProfiles(voxelCoords, worldCoords) {
   let dimensionsList = ["x", "y", "z"];
   let axesList = ["yz", "xz", "xy"];
 
-  doseProfileList.forEach((doseProfile, i) => {
-    // Set the data
-    doseProfile.setDoseProfileData(dimensionsList[i], voxelCoordsList[i]);
+  volumeViewerList.forEach((volumeViewer) => {
+    volumeViewer.doseProfileList.forEach((doseProfile, i) => {
+      // Set the data
+      doseProfile.setDoseProfileData(
+        volumeViewer.doseVolume,
+        dimensionsList[i],
+        voxelCoordsList[i]
+      );
 
-    // Plot the dose profile
-    doseProfile.plotDoseProfile(
-      axesList[i],
-      dimensionsList[i],
-      worldCoordsList[i]
-    );
+      // Plot the dose profile
+      doseProfile.plotDoseProfile(
+        axesList[i],
+        dimensionsList[i],
+        worldCoordsList[i]
+      );
+    });
   });
 }

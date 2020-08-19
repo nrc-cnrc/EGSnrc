@@ -13,6 +13,7 @@ class DoseProfile {
     this.zoomObj = null;
     this.prevAxis = null;
     this.data = null;
+    this.doseVol = null;
     this.dim = null;
     this.yTicks = 3;
   }
@@ -40,7 +41,7 @@ class DoseProfile {
       .call(this.zoomObj.transform, d3.zoomIdentity.scale(1));
   }
 
-  setDoseProfileData(profileDim, coords) {
+  setDoseProfileData(doseVol, profileDim, coords) {
     let [dim1, dim2, dim3] =
       profileDim === "x"
         ? ["x", "y", "z"]
@@ -92,6 +93,7 @@ class DoseProfile {
       }
     }
     this.data = doseProfileData;
+    this.doseVol = doseVol;
   }
 
   // TODO: Don't update on slider change, only on crosshair position or axes change
@@ -258,7 +260,7 @@ class DoseProfile {
     let data = this.data;
     let preYDoseScale = d3
       .scaleLinear()
-      .domain([0, doseVol.maxDoseVar * 1.1])
+      .domain([0, this.doseVol.maxDoseVar * 1.1])
       .range([0, 1.1]);
 
     // Clear all existing elements
