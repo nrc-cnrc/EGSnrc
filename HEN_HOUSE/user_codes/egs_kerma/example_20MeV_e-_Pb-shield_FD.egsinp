@@ -1,0 +1,194 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ egs_kerma application sample input file
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:        Ernesto Mainegra-Hing, 2020
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  A simple example input file for the egs_kerma C++ application.
+#
+#  Simulates a 20 MeV isotropic electron source inside a very thick lead sphere.
+#  Kerma and photon fluence outside the lead sphere are calculated using a
+#  forced-detection (FD) technique (exponential track-length estimator). This
+#  technique allows estimating kerma 3.5 times more efficiently than linear
+#  track-length (TL) estimation. The fluence calculation is only 2 times more efficient.
+#  By using a 10 keV e- transport cut-off (ECUT=0.521 MeV), and a simpler e- transport
+#  algorithm, the calculation is made about 6X more efficient than LT for kerma estimation,
+#  and 3.5X more efficient for photon fluence.
+#
+#  Due to the thick lead shielding this simulation will require significant CPU
+#  time to provide statistically meaninful results. The current number of histories
+#  takes about 1 min on a single core of an Intel i7-2640M CPU @ 2.8 GHz and about
+#  40 s on all four cores. To submit to all available cores on a single computer
+#  use the egs-parallel script (available on request).
+#
+#  Provides a solution to problem 2.3.4 from the EGSnrc course.
+#
+#  NOTE : Material data is generated on-the-fly (pegsless). If source energy
+#         changed, make sure to adjust energy cut-offs (ae, ue, ap, up) below.
+#
+###############################################################################
+
+
+###############################################################################
+### Geometry
+###############################################################################
+:start geometry definition:
+
+    ### lead sphere, 18 cm radius (~ 22 RCSDA for 20 MeV e-)
+    :start geometry:
+        name     = shield
+        library  = egs_spheres
+        midpoint = 0 0 0
+        radii    = 18.0 18.1
+        :start media input:
+            media = lead, air
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+
+    ### simulation geometry
+    simulation geometry = shield
+
+:stop geometry definition:
+
+
+############################################
+### Media definition (pegsless mode)
+############################################
+:start media definition:
+
+    ### energy cutoffs
+    ae =  0.521
+    ue = 20.512
+    ap =  0.001
+    up = 20.000
+
+    ### air
+    :start air:
+        density correction file = air_dry_nearsealevel
+    :stop air:
+
+    ### concrete
+    :start lead:
+        density correction file = lead
+    :stop lead:
+
+:stop media definition:
+
+
+#########################################
+### 20 MeV isotropic point source
+#########################################
+:start source definition:
+
+    ### isotropic
+    :start source:
+        name    = isotropic
+        library = egs_isotropic_source
+        charge  = -1
+
+        ### source shape
+        :start shape:
+            type = point
+            position = 0, 0, 0
+        :stop shape:
+
+        ### source spectrum
+        :start spectrum:
+            type = monoenergetic
+            energy = 20.0  # MeV
+        :stop spectrum:
+
+   :stop source:
+
+   ### simulation source
+   simulation source = isotropic
+
+:stop source definition:
+
+
+###############################################################################
+### Scoring options
+###############################################################################
+:start scoring options:
+
+    ### Scoring geometry
+    :start calculation geometry:
+        geometry name         = shield
+        scoring regions       = 1       # outer air shell
+        scoring region masses = 0.49326 # mass in g for each region
+    :stop calculation geometry:
+
+    ### fluence scoring requested (common to all calculation geometries)
+    :start fluence scoring:
+        minimum energy = 0.00
+        maximum energy = 20.0
+        number of bins = 200
+        scale          = linear
+    :stop fluence scoring:
+
+    ### E*muen file (could also be E*mutr): absolute or relative file path
+    emuen file = $EGS_HOME/egs_kerma/emuen_rho_air_1keV-20MeV.data
+
+    ### geometry for forced-detection (if omitted, score ONLY when reaching scoring region)
+    Default FD geometry = shield
+
+:stop scoring options:
+
+
+###############################################################################
+### Transport parameters
+###############################################################################
+:start MC transport parameter:
+
+    ### you can include here any of the EGSnrc transport parameters
+
+    Global ECUT = 0.521 # To save some CPU time, might introduce small approximation
+    Global PCUT = 0.001 # Full transport
+    ####################
+    # Photon parameters
+    ####################
+    Photon cross sections = mcdf-xcom # Used for E*muen/rho calculations with g app
+    #################
+    # Electron parameters
+    # Using a less accurate e- transport and boundary crossing algorithm (PRESTA-I)
+    # to speed things up (2X). Since transport occurs in a homogeneous lead phantom
+    # the details of the e- transport algorithm are not as important, hence this
+    # approximation produces the same results as a more accurate approach (PRESTA-II).
+    ################
+    Global ECUT                 = 0.521    # negligible approximation
+    Boundary crossing algorithm = PRESTA-I # Speed up calculation
+    Electron-step algorithm     = PRESTA-I # Speed up calculation
+
+:stop MC transport parameter:
+
+###############################################################################
+### Run control
+###############################################################################
+:start run control:
+    ncase = 1e4
+:stop run control:

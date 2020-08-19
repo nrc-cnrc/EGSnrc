@@ -131,8 +131,9 @@ library.
 
 \section egs_cbct_sources Particle source definition
 
-Any source from the \c egs++ source module can be used. Here is an example for
-a collimated point source of 60 keV photons:
+For full description of the source input, see the \link Sources particle sources module \endlink.
+
+Here is an example for a collimated point source of 60 keV photons:
 
 \verbatim
 :start source:
