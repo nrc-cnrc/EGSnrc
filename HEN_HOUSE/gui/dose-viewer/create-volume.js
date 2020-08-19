@@ -3,7 +3,7 @@
 // TODO: Make a dataName variable to reduce code
 // TODO: Make the max dose slider its own object
 
-var drawAxes = (svgAxis, slice) => {
+var drawAxes = (zoomTransform, svgAxis, slice) => {
   svgAxis.selectAll(".x-axis, .y-axis, .x-axis-grid, .y-axis-grid").remove();
 
   // If there is existing transformation, apply it

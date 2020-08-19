@@ -1,5 +1,3 @@
-var zoomTransform;
-
 // TODO: Update rest of zoom functions to use these
 // TODO: Disable zoom before upload
 // Generic disable zoom function
@@ -25,52 +23,47 @@ var resetZoom = (obj, zoom) => {
 
 function zoomedDoseProfile(transform, doseProfile) {
   doseProfile.zoomTransform = transform;
-  if (!doseVol.isEmpty()) {
-    doseProfile.svg
-      .selectAll("path.lines")
-      .attr("transform", transform.toString());
+  doseProfile.svg
+    .selectAll("path.lines")
+    .attr("transform", transform.toString());
 
-    // Create new scale ojects based on event
-    var new_xScale = transform.rescaleX(doseProfile.xScale);
-    var new_yDoseScale = transform.rescaleY(doseProfile.yDoseScale);
+  // Create new scale ojects based on event
+  var new_xScale = transform.rescaleX(doseProfile.xScale);
+  var new_yDoseScale = transform.rescaleY(doseProfile.yDoseScale);
 
-    // Update axes
-    doseProfile.svg
-      .select(".profile-x-axis")
-      .call(
-        d3
-          .axisBottom()
-          .scale(new_xScale)
-          .tickSize(-doseProfile.dimensions.height)
-      );
+  // Update axes
+  doseProfile.svg
+    .select(".profile-x-axis")
+    .call(
+      d3.axisBottom().scale(new_xScale).tickSize(-doseProfile.dimensions.height)
+    );
 
+  doseProfile.svg
+    .select(".profile-y-dose-axis")
+    .call(
+      d3
+        .axisLeft()
+        .scale(new_yDoseScale)
+        .ticks(doseProfile.yTicks)
+        .tickFormat(d3.format(".0%"))
+        .tickSize(-doseProfile.dimensions.width)
+    );
+
+  if (doseProfile.plotDensity) {
+    var new_yDensityScale = transform.rescaleY(doseProfile.yDensityScale);
     doseProfile.svg
-      .select(".profile-y-dose-axis")
+      .select(".profile-y-density-axis")
       .call(
         d3
           .axisLeft()
-          .scale(new_yDoseScale)
+          .scale(new_yDensityScale)
           .ticks(doseProfile.yTicks)
-          .tickFormat(d3.format(".0%"))
           .tickSize(-doseProfile.dimensions.width)
       );
-
-    if (doseProfile.plotDensity) {
-      var new_yDensityScale = transform.rescaleY(doseProfile.yDensityScale);
-      doseProfile.svg
-        .select(".profile-y-density-axis")
-        .call(
-          d3
-            .axisLeft()
-            .scale(new_yDensityScale)
-            .ticks(doseProfile.yTicks)
-            .tickSize(-doseProfile.dimensions.width)
-        );
-    }
   }
 }
 
-function zoomedCanvas(transform, canvas, axis) {
+function zoomedCanvas(densityVol, transform, canvas, axis) {
   // Get the image to draw
   let image = densityVol.prevSliceImg[axis];
   let context = canvas.node().getContext("2d");
@@ -85,15 +78,13 @@ function zoomedCanvas(transform, canvas, axis) {
 }
 
 function zoomedAll(transform, panel) {
-  zoomTransform = transform;
-
   panel.zoomTransform = transform;
   let axisElements = panel.axisElements;
   let volume = panel.volume;
   let axis = panel.axis;
 
   // Zoom on canvas
-  zoomedCanvas(transform, axisElements["plot-density"], axis);
+  zoomedCanvas(panel.densityVol, transform, axisElements["plot-density"], axis);
 
   // Zoom dose plot
   axisElements["plot-dose"]

@@ -41,7 +41,11 @@ class VolumeViewer {
       let slice = doseVol.getSlice(axis, sliceNum);
       doseVol.drawDose(slice);
       // Update the axis
-      drawAxes(this.svgObjs["axis-svg"][axis], slice);
+      drawAxes(
+        this.panels[axis].zoomTransform,
+        this.svgObjs["axis-svg"][axis],
+        slice
+      );
     });
 
     // Set the panel doseVolume object
@@ -78,7 +82,11 @@ class VolumeViewer {
       let slice = densityVol.getSlice(axis, sliceNum);
       densityVol.drawDensity(slice);
       // Update the axis
-      drawAxes(this.svgObjs["axis-svg"][axis], slice);
+      drawAxes(
+        this.panels[axis].zoomTransform,
+        this.svgObjs["axis-svg"][axis],
+        slice
+      );
     });
 
     // Set the panel densityVolume object

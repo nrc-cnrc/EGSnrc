@@ -128,7 +128,7 @@ class Panel {
         : d3.event.y;
 
       if (d3.event.defaultPrevented) return;
-      this.dispatch.call("markerchange", this, {
+      panel.dispatch.call("markerchange", this, {
         plotCoords: [x, y],
         panel: panel,
       });
