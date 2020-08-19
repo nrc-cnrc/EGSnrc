@@ -55,103 +55,6 @@
           </div>
         </div>
       </span>
-      <span id="voxel-info" class="container hidden">
-        <p>World Coordinates (cm)</p>
-        <label for="world-x-value"
-          >x:
-          <output
-            type="text"
-            class="voxel-info-output"
-            id="world-x-value"
-            value=""
-          >
-          </output>
-        </label>
-        <label for="world-y-value"
-          >y:
-          <output
-            type="text"
-            class="voxel-info-output"
-            id="world-y-value"
-            value=""
-          >
-          </output>
-        </label>
-        <label for="world-z-value"
-          >z:
-          <output
-            type="text"
-            class="voxel-info-output"
-            id="world-z-value"
-            value=""
-          >
-          </output>
-        </label>
-        <p>Voxel Coordinates</p>
-        <label for="voxel-x-value"
-          >x:
-          <output
-            type="text"
-            class="voxel-info-output"
-            id="voxel-x-value"
-            value=""
-          >
-          </output>
-        </label>
-        <label for="voxel-y-value"
-          >y:
-          <output
-            type="text"
-            class="voxel-info-output"
-            id="voxel-y-value"
-            value=""
-          >
-          </output>
-        </label>
-        <label for="voxel-z-value"
-          >z:
-          <output
-            type="text"
-            class="voxel-info-output"
-            id="voxel-z-value"
-            value=""
-          >
-          </output>
-        </label>
-        <p>Data at Coordinates</p>
-        <label for="density-value"
-          >Density:
-          <output
-            type="text"
-            class="voxel-info-output"
-            id="density-value"
-            value=""
-          >
-          </output>
-        </label>
-        <br />
-        <label for="material-value"
-          >Material:
-          <output
-            type="text"
-            class="voxel-info-output"
-            id="material-value"
-            value=""
-          >
-          </output>
-        </label>
-        <br />
-        <label for="dose-value"
-          >Dose:
-          <output
-            type="text"
-            class="voxel-info-output"
-            id="dose-value"
-            value=""
-          >
-          </output>
-        </label>
-      </span>
       <span class="container">
         <button id="save-vis" disabled>Export visualization to PNG</button>
         <br />
@@ -249,6 +152,7 @@
     <script type="text/javascript" src="./zoom.js"></script>
     <script type="text/javascript" src="./panel.js"></script>
     <script type="text/javascript" src="./slider.js"></script>
+    <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./volume-viewer.js"></script>
     <script>
       // TODO: Make a dose-view options class?
@@ -274,7 +178,7 @@
       let legendDimensions = {
         fullWidth: 90,
         fullHeight: mainViewerDimensions.fullHeight,
-        margin: { top: 25, bottom: 5, left: 10, right: 10 },
+        margin: { top: 25, right: 10, bottom: 5, left: 10 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
         },
@@ -285,9 +189,9 @@
 
       // Define profile dose size variables
       let sideDoseProfileDimensions = {
-        fullWidth: 300,
-        fullHeight: mainViewerDimensions.fullHeight / 3,
-        margin: { top: 30, right: 30, bottom: 30, left: 50 },
+        fullWidth: mainViewerDimensions.fullWidth,
+        fullHeight: mainViewerDimensions.fullHeight * 0.6,
+        margin: { top: 30, right: 15, bottom: 30, left: 55 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
         },
@@ -333,7 +237,6 @@
     <script type="text/javascript" src="./window-level-slider.js"></script>
     <script type="text/javascript" src="./file-upload.js"></script>
     <script type="text/javascript" src="./export.mjs"></script>
-    <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./read-data.js"></script>
     <script type="text/javascript" src="./dose-profile-setup.js"></script>
   </body>

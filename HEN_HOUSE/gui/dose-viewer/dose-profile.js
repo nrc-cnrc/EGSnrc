@@ -15,7 +15,7 @@ class DoseProfile {
     this.data = null;
     this.doseVol = null;
     this.dim = null;
-    this.yTicks = 3;
+    this.yTicks = 6;
   }
 
   set zoomTransform(val) {

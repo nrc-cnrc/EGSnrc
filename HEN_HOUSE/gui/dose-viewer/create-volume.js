@@ -347,6 +347,7 @@ class DoseVolume extends Volume {
       "col-" + d3.format("d")(this.thresholdPercents[i] * 1000);
   }
 
+  // TODO: Is this even called ever?
   setMaxDose(val) {
     this.maxDoseVar = val * this.data.maxDose;
     super.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0);
@@ -355,7 +356,11 @@ class DoseVolume extends Volume {
     ["xy", "yz", "xz"].forEach((axis) => this.drawDose(this.prevSlice[axis]));
 
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
-      doseProfileList.forEach((doseProfile) => doseProfile.plotData());
+      volumeViewerList.forEach((volumeViewer) => {
+        volumeViewer.doseProfileList.forEach((doseProfile) =>
+          doseProfile.plotData()
+        );
+      });
     }
   }
 

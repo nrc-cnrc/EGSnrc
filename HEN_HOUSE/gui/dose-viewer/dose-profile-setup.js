@@ -78,7 +78,9 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
 
     if (this.checked) {
       // Hide dose profile plots
-      volumeViewer.doseProfileHolder.style("display", null);
+      volumeViewer.doseProfileList.forEach((doseProfile) =>
+        doseProfile.svg.style("display", null)
+      );
 
       // Enable saving dose profiles as csv
       d3.select("#save-dose-profile").node().disabled = false;
@@ -94,12 +96,15 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
           panel.axis,
           panel.sliceNum,
           panel.zoomTransform,
+          volumeViewer.id,
           true
         );
       }
     } else {
       // Show dose profile plots
-      volumeViewer.doseProfileHolder.style("display", "none");
+      volumeViewer.doseProfileList.forEach((doseProfile) =>
+        doseProfile.svg.style("display", "none")
+      );
 
       // Disable saving dose profiles as csv
       d3.select("#save-dose-profile").node().disabled = true;
@@ -113,32 +118,33 @@ d3.select("input[name='show-marker-checkbox']").on("change", function () {
     Object.values(volumeViewer.panels).forEach((panel) => {
       panel.updateCircleMarkerDisplay();
     });
+
+    let voxelInfo = d3.selectAll("div#voxel-info-" + volumeViewer.id);
+    if (this.checked) {
+      // Remove hidden class
+      voxelInfo.classed("hidden", false);
+
+      // Update voxel information
+      volumeViewerList.forEach((volumeViewer) => {
+        let panel = volumeViewer.panels["xy"];
+        if (panel.markerPosition) {
+          updateVoxelCoords(
+            panel.densityVol,
+            panel.doseVol,
+            panel.markerPosition,
+            panel.axis,
+            panel.sliceNum,
+            panel.zoomTransform,
+            panel.volumeViewerId,
+            true
+          );
+        }
+      });
+    } else {
+      // Add hidden class
+      voxelInfo.classed("hidden", true);
+    }
   });
-
-  let voxelInfo = d3.selectAll("span#voxel-info");
-  if (this.checked) {
-    // Remove hidden class
-    voxelInfo.classed("hidden", false);
-
-    // Update voxel information
-    volumeViewerList.forEach((volumeViewer) => {
-      let panel = volumeViewer.panels["xy"];
-      if (panel.markerPosition) {
-        updateVoxelCoords(
-          panel.densityVol,
-          panel.doseVol,
-          panel.markerPosition,
-          panel.axis,
-          panel.sliceNum,
-          panel.zoomTransform,
-          true
-        );
-      }
-    });
-  } else {
-    // Add hidden class
-    voxelInfo.classed("hidden", true);
-  }
 });
 
 function updateCoordInputsLabels(profileAxis, voxelNumber) {

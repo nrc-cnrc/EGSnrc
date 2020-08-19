@@ -13,6 +13,7 @@ class Panel {
     axisElements,
     sliceSlider,
     dispatch,
+    id,
     sliceNum = 0,
     zoomTransform = null,
     markerPosition = null
@@ -25,6 +26,7 @@ class Panel {
     this.axisElements = axisElements;
     this.sliceSlider = sliceSlider;
     this.dispatch = dispatch;
+    this.volumeViewerId = id;
     this.sliceNum = sliceNum;
     this.zoomTransform = zoomTransform;
     this.markerPosition = markerPosition;
@@ -113,6 +115,7 @@ class Panel {
         panel.axis,
         panel.sliceNum,
         null,
+        panel.volumeViewerId,
         true
       );
     }

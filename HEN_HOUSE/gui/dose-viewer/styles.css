@@ -1,7 +1,6 @@
 .parent {
   display: grid;
   grid-template-columns: 1fr;
-  float: left;
 }
 
 .parent div {
@@ -102,7 +101,7 @@ progress.hidden,
 }
 
 .cell.hidden,
-span.hidden {
+div.hidden {
   opacity: 0.2 !important;
 }
 

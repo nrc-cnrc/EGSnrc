@@ -6,24 +6,55 @@
 //   }
 // }
 
+function buildVoxelInfoHtml(parentDiv, id) {
+  // Define label texts and tags
+  let labelName = [
+    "World Coordinates (cm):",
+    "Voxel Coordinates:",
+    "Density:",
+    "Material:",
+    "Dose:",
+  ];
+
+  let tagList = [
+    "world-coords",
+    "voxel-coords",
+    "density-value",
+    "material-value",
+    "dose-value",
+  ];
+
+  // Add container
+  let voxelInfoHolder = parentDiv
+    .append("div")
+    .attr("id", "voxel-info-" + id)
+    .classed("hidden", true);
+
+  // Iterate through tag list and add label and output for each
+  tagList.forEach((tag, i) => {
+    voxelInfoHolder
+      .append("label")
+      .attr("for", tag + "-" + id)
+      .text(labelName[i]);
+
+    voxelInfoHolder
+      .append("output")
+      .attr("type", "text")
+      .attr("class", "voxel-info-output")
+      .attr("id", tag + "-" + id);
+  });
+}
+
 function coordsToWorld(coords, axis, sliceNum, volume, transform, updateXY) {
   // TODO: Have a more permanent solution to the click/transform problem, make a class?
-  let i, j;
-  if (updateXY) {
-    // Invert transformation if applicable then invert scale to get world coordinate
-    i = volume.prevSlice[axis].xScale.invert(
-      transform ? invertTransform(coords[0], transform, "x") : coords[0]
-    );
-    j = volume.prevSlice[axis].yScale.invert(
-      transform ? invertTransform(coords[1], transform, "y") : coords[1]
-    );
-  } else {
-    // Use previous axes coordinates
-    [i, j] = [
-      d3.select("#world-" + axis[0] + "-value").node().value,
-      d3.select("#world-" + axis[1] + "-value").node().value,
-    ];
-  }
+
+  // Invert transformation if applicable then invert scale to get world coordinate
+  let i = volume.prevSlice[axis].xScale.invert(
+    transform ? invertTransform(coords[0], transform, "x") : coords[0]
+  );
+  let j = volume.prevSlice[axis].yScale.invert(
+    transform ? invertTransform(coords[1], transform, "y") : coords[1]
+  );
 
   // Add 0.5 to sliceNum in order to map values to center of voxel bondaries
   // TODO: Perhaps fix scale to get rid of the 0.5 hack
@@ -35,23 +66,13 @@ function coordsToWorld(coords, axis, sliceNum, volume, transform, updateXY) {
 }
 
 function coordsToVoxel(coords, axis, sliceNum, volume, transform, updateXY) {
-  let i, j;
-  if (updateXY) {
-    // Invert transformation if applicable then apply scale to get voxel coordinate
-    i = volume.prevSlice[axis].xPixelToVoxelScale(
-      transform ? invertTransform(coords[0], transform, "x") : coords[0]
-    );
-    j = volume.prevSlice[axis].yPixelToVoxelScale(
-      transform ? invertTransform(coords[1], transform, "y") : coords[1]
-    );
-  } else {
-    // Use previous axes coordinates
-    [i, j] = [
-      parseInt(d3.select("#voxel-" + axis[0] + "-value").node().value),
-      parseInt(d3.select("#voxel-" + axis[1] + "-value").node().value),
-    ];
-  }
-
+  // Invert transformation if applicable then apply scale to get voxel coordinate
+  let i = volume.prevSlice[axis].xPixelToVoxelScale(
+    transform ? invertTransform(coords[0], transform, "x") : coords[0]
+  );
+  let j = volume.prevSlice[axis].yPixelToVoxelScale(
+    transform ? invertTransform(coords[1], transform, "y") : coords[1]
+  );
   let k = parseInt(sliceNum);
 
   let [xVal, yVal, zVal] =
@@ -59,17 +80,15 @@ function coordsToVoxel(coords, axis, sliceNum, volume, transform, updateXY) {
   return [xVal, yVal, zVal];
 }
 
-function updateWorldLabels(coords) {
-  let format = d3.format(".3f");
-  d3.select("#world-x-value").node().value = format(coords[0]);
-  d3.select("#world-y-value").node().value = format(coords[1]);
-  d3.select("#world-z-value").node().value = format(coords[2]);
+function updateWorldLabels(coords, id) {
+  let format = d3.format(".2f");
+  let formattedCoords = coords.map((coord) => format(coord));
+  d3.select("#world-coords-" + id).node().value =
+    "(" + formattedCoords.join(", ") + ")";
 }
 
-function updateVoxelLabels(coords) {
-  d3.select("#voxel-x-value").node().value = coords[0];
-  d3.select("#voxel-y-value").node().value = coords[1];
-  d3.select("#voxel-z-value").node().value = coords[2];
+function updateVoxelLabels(coords, id) {
+  d3.select("#voxel-coords-" + id).node().value = "(" + coords.join(", ") + ")";
 }
 
 function invertTransform(val, transform, dir) {
@@ -87,6 +106,7 @@ function updateVoxelCoords(
   axis,
   sliceNum,
   transform,
+  id,
   updateXY = false
 ) {
   let vol = densityVol || doseVol;
@@ -111,9 +131,9 @@ function updateVoxelCoords(
 
     // Update voxel info if checkbox is checked
     if (d3.select("input[name='show-marker-checkbox']").node().checked) {
-      updateWorldLabels(worldCoords);
-      updateVoxelLabels(voxelCoords);
-      updateVoxelInfo(voxelCoords, densityVol, doseVol);
+      updateWorldLabels(worldCoords, id);
+      updateVoxelLabels(voxelCoords, id);
+      updateVoxelInfo(voxelCoords, densityVol, doseVol, id);
     }
 
     // TODO: Use dispatch event instead of this
@@ -127,35 +147,35 @@ function updateVoxelCoords(
   }
 }
 
-function updateVoxelInfo(voxelCoords, densityVol, doseVol) {
+function updateVoxelInfo(voxelCoords, densityVol, doseVol, id) {
   if (densityVol) {
     let density = densityVol.getDataAtVoxelCoords(voxelCoords);
-    d3.select("#density-value").node().value =
+    d3.select("#density-value-" + id).node().value =
       d3.format(".3f")(density) + " g/cm^3";
 
     let material = densityVol.getMaterialAtVoxelCoords(voxelCoords);
-    d3.select("#material-value").node().value = material;
+    d3.select("#material-value-" + id).node().value = material;
   }
 
   if (doseVol) {
     let dose = doseVol.getDataAtVoxelCoords(voxelCoords) || 0;
     let error = doseVol.getErrorAtVoxelCoords(voxelCoords) || 0;
-    d3.select("#dose-value").node().value =
+    d3.select("#dose-value-" + id).node().value =
       d3.format(".1%")(dose) + " +/- " + d3.format(".1%")(error);
   }
 }
 
 function updateDoseProfiles(voxelCoords, worldCoords) {
   var getCoords = (coords) => [
+    [coords[0], coords[1]],
     [coords[1], coords[2]],
     [coords[0], coords[2]],
-    [coords[0], coords[1]],
   ];
 
   let voxelCoordsList = getCoords(voxelCoords);
   let worldCoordsList = getCoords(worldCoords);
-  let dimensionsList = ["x", "y", "z"];
-  let axesList = ["yz", "xz", "xy"];
+  let dimensionsList = ["z", "x", "y"];
+  // let axesList = ["yz", "xz", "xy"];
 
   volumeViewerList.forEach((volumeViewer) => {
     volumeViewer.doseProfileList.forEach((doseProfile, i) => {
@@ -168,7 +188,7 @@ function updateDoseProfiles(voxelCoords, worldCoords) {
 
       // Plot the dose profile
       doseProfile.plotDoseProfile(
-        axesList[i],
+        axes[i],
         dimensionsList[i],
         worldCoordsList[i]
       );
