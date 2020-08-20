@@ -205,6 +205,79 @@ string egsJoinPath(const string &first, const string &second) {
     return result;
 }
 
+/* Expand first environment variable found anywhere in string aname
+
+   - Checks for Unix or Windows style environment variable
+   - Expands environment variable in aname appending folder
+     separator if missing
+   - Replaces backslashes with slashes
+   - Checks for duplicate slashes in aname
+*/
+string egsExpandPath(const string &aname) {
+    string str = aname;
+    string c   = "%$";
+    // Check for FIRST environment variable anywhere in aname
+    size_t p1= str.npos;
+    int i = 0;
+    while (i < c.size()) {
+        p1= str.find_first_of(c[i++]);
+        if (p1 != str.npos) {
+            break;
+        }
+    }
+    string fs = "%/\\";
+    i = 0;
+    size_t p2 = str.npos;
+    while (p1 != str.npos && i < fs.size()) {
+        p2 = str.find_first_of(fs[i++],p1+1);
+        if (p2 != str.npos) {
+            break;
+        }
+    }
+    // Did we find an environment variable?
+    if (p1 != str.npos && p2 != str.npos) {
+        string envvar = str.substr(p1+1, p2-(p1+1));
+        char  *envval = getenv(envvar.c_str());
+        // Check that env var is defined
+        string envloc = envval ? string(envval) : string();
+        if (!envloc.empty()) {
+            // Append missing separator
+            size_t last = envloc.find_last_of("/\\");
+            if (last != envloc.size()-1) {
+                if (envloc[last] == __egs_fs) {
+                    envloc.append("\\");
+                }
+                else {
+                    envloc.append("/");
+                }
+            }
+            str.replace(p1, p2-p1+1,envloc);
+        }
+        else {
+            if (str[p1] == '$') {
+                egsWarning("\n\n *** egs++ egsExpandPath: Undefined environment variable $%s \n\n", envvar.c_str());
+            }
+            else {
+                egsWarning("\n\n *** egs++ egsExpandPath: Undefined environment variable %%%s%% \n\n", envvar.c_str());
+            }
+        }
+    }
+    // Replace back slashes with slashes
+    size_t found = str.find("\\");
+    while (found != str.npos) {
+        str.replace(found,1,"/");
+        found = str.find("\\");
+    }
+    // Remove duplicated slashes
+    found = str.find("//");
+    while (found != str.npos) {
+        str.replace(found,2,"/");
+        found = str.find("//");
+    }
+
+    return str;
+}
+
 string egsStripPath(const string &aname) {
     int j;
     for (j=aname.size()-1; j>=0; j--) {

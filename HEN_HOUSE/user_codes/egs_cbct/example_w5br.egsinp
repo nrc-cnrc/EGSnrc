@@ -31,8 +31,8 @@
 #
 #  Projections at other angles can be obtained by modifying input block
 #  :cbct setup: below. One can define the projection angle and angular
-#  :interval. Negative values of the latter indicate rotation is done
-#  :counter-clockwise around the indicated axis.
+#  interval. Negative values of the latter indicate rotation is done
+#  counter-clockwise around the indicated axis.
 #
 #  BEWARE:
 #
@@ -42,8 +42,6 @@
 #
 #  - media information in PEGS4 data file 521icru.pegs4dat distributed
 #    with EGSnrc.
-#
-#  - Replace $EGS_HOME string below with the actual value!!!
 #
 #  - If the detector resolution is changed, one must recalculate the blank
 #    scan
@@ -183,7 +181,7 @@
               rotation = 0 1.570796326794896619 0
            :stop transformation:
             # Uses file provided in the distribution
-            muen file = /home/mainegra/egsnrc_mp/egs_fac/muen_air.data
+            muen file = $HEN_HOUSE/user_codes/egs_fac/examples/muen_air.data
         :stop planar scoring:
 
 :stop scoring options:
@@ -197,13 +195,13 @@
         ###############################################
         # Use the 2 lines below to produce a blank scan
         ###############################################
-        #scan file = /home/mainegra/egsnrc_mp/egs_cbct/blank_coll_64.scan
+        #scan file = $EGS_HOME/egs_cbct/blank_coll_64.scan
 	#scan type = blank
         ###############################################
         # Use the 3 lines below to produce real scans
         ###############################################
-        scan file = /home/mainegra/egsnrc_mp/egs_cbct/scan_w5br_coll_64.scan
-        blank scan = /home/mainegra/egsnrc_mp/egs_cbct/blank_coll_64.scan
+        scan file  = $EGS_HOME/egs_cbct/scan_w5br_coll_64.scan
+        blank scan = $EGS_HOME/egs_cbct/blank_coll_64.scan
 	scan type = scatter
         ###############################################
     :stop scan output:
@@ -286,18 +284,20 @@
 
 
 ########
-# For fast computation one can use KN for Compton scattering. However,
-# in realistic phantoms this may cause a 3% discrepancy.
+# For fast computation one can assume scattering from free electrons.
+# However, in realistic phantoms this may cause a 3% discrepancy.
 ########
 :start MC transport parameter:
 
   Global ECUT = 1
 
-  Photon cross sections = xcom  # epdl (or xcom)
+  Photon cross sections    = xcom  # epdl (or xcom)
 
   Bound Compton scattering = off
+  
+  Rayleigh scattering      = off
 
-  Rayleigh scattering=  on
+  Atomic relaxations       = off
 
 :stop MC transport parameter:
 

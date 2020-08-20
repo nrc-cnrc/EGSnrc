@@ -1145,6 +1145,7 @@ int EGS_CBCT::initScoring() {
             if( err3 ) egsFatal(
               "\n\n***  Wrong/missing 'muen file' input for a "
               "kerma calculation\n    This is a fatal error\n\n");
+            muen_file = egsExpandPath(muen_file);
             ifstream muen_data(muen_file.c_str());
             if( !muen_data.is_open() ){
                 egsFatal(
@@ -1152,8 +1153,11 @@ int EGS_CBCT::initScoring() {
                   "     This is a fatal error\n",muen_file.c_str());
             }
             else{
-              egsInformation("\nUsing E*muen file %s for air-kerma calculation\n",
-                             muen_file.c_str());
+                egsInformation(
+                "\n\n=============== Kerma Scoring ===============\n"
+                    "E*muen/rho file: %s\n"
+                    "=============================================\n",
+                    muen_file.c_str());
             }
             int ndat; muen_data >> ndat;
             if( ndat < 2 || muen_data.fail() ) egsFatal(
@@ -1403,7 +1407,7 @@ void EGS_CBCT::initOutput() {
             scan_type = blank;
         }
         else{
-          blank_scan = b_scan;
+          blank_scan = egsExpandPath(b_scan);
         }
         /*
           If no scan file name entry, a warning is issued.
@@ -1417,7 +1421,7 @@ void EGS_CBCT::initOutput() {
               "       This is not a proper CBCT calculation.\n\n");
         }
         else{
-          real_scan = the_scan;
+          real_scan = egsExpandPath(the_scan);
         }
         /* check what scans are requested by the user
            real => real scan simulation

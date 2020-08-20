@@ -199,6 +199,16 @@ string EGS_EXPORT egsJoinPath(const string &first, const string &second);
  */
 string EGS_EXPORT egsStripPath(const string &fname);
 
+/*! \brief Expands first environment variable found in a file name.
+ *
+ *  Looks for first Unix or Windows environment variable and expands
+ *  it into its value. Missing folder separator is added, duplicated
+ *  separators are removed. Final file name uses slashes as separators.
+ *
+ * \ingroup egspp_main
+ */
+string EGS_EXPORT egsExpandPath(const string &fname);
+
 /*! \brief Get the name of the host the program is running on.
  *
  * \ingroup egspp_main

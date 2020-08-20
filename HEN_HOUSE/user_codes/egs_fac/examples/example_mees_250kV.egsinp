@@ -29,8 +29,7 @@
 #
 #  An example input file for egs_fac.
 #
-#  NOTE: Substitute every instance of $HEN_HOUSE for its actual value in this
-#  file! It is essential to use 'Bound Compton Scattering = norej'. See the MC
+#  NOTE: It is essential to use 'Bound Compton Scattering = norej'. See the MC
 #  transport parameter input section for more info. See comments accompanying
 #  the various inputs for more details.
 #
@@ -803,7 +802,7 @@
     # ignores them (except for the first and last energy, which define the
     # energy interval).
     #
-    muen file = $HEN_HOUSE/user_codes/egs_fac/muen_air.data
+    muen file = $HEN_HOUSE/user_codes/egs_fac/examples/muen_air.data
 
 :stop scoring options:
 

@@ -163,9 +163,16 @@ AIRICRU512
 
  :Stop MC Transport Parameter:
  #########################
+ #
+ # User-defined entries
+ #
+ #########################
  :Start user inputs:
 
-  # phsp output directory = /home/mainegra/egsnrc_mp/phsp/
+  # Enter here a custom location for phase-space file output
+  # For instance users might want to direct the output to a
+  # device with enough disk space!
+  # phsp output directory = enter_user_defined_location
 
  :Stop user inputs:
  #########################

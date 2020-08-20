@@ -1873,6 +1873,8 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
     else if (inp->compare(stype,"tabulated spectrum")) {
         string spec_file;
         err = inp->getInput("spectrum file",spec_file);
+        // Expands FIRST environment variable found in spec_file
+        spec_file = egsExpandPath(spec_file);
         if (!err) {
             ifstream sdata(spec_file.c_str());
             if (!sdata) egsWarning("%s failed to open spectrum file %s\n",
