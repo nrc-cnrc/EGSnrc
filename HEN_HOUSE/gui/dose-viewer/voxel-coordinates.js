@@ -179,19 +179,21 @@ function updateDoseProfiles(voxelCoords, worldCoords) {
 
   volumeViewerList.forEach((volumeViewer) => {
     volumeViewer.doseProfileList.forEach((doseProfile, i) => {
-      // Set the data
-      doseProfile.setDoseProfileData(
-        volumeViewer.doseVolume,
-        dimensionsList[i],
-        voxelCoordsList[i]
-      );
+      if (volumeViewer.doseVolume) {
+        // Set the data
+        doseProfile.setDoseProfileData(
+          volumeViewer.doseVolume,
+          dimensionsList[i],
+          voxelCoordsList[i]
+        );
 
-      // Plot the dose profile
-      doseProfile.plotDoseProfile(
-        axes[i],
-        dimensionsList[i],
-        worldCoordsList[i]
-      );
+        // Plot the dose profile
+        doseProfile.plotDoseProfile(
+          axes[i],
+          dimensionsList[i],
+          worldCoordsList[i]
+        );
+      }
     });
   });
 }

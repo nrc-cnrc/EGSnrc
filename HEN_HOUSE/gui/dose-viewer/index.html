@@ -87,6 +87,9 @@
         <br />
       </span>
       <div id="image-to-print"></div>
+      <button id="add-volume-viewer">
+        Add new volume viewer
+      </button>
     </div>
     <div id="dose-profile-viewer" style="display: none;">
       <p>
@@ -202,9 +205,6 @@
 
       var axes = ["xy", "yz", "xz"];
 
-      // var svgMarker = d3.select("#viewer-container");
-      // var svgMarkers = svgObjs["plot-marker"];
-
       // // Add black background to plot
       // canvDensity
       //   .append("rect")
@@ -218,13 +218,16 @@
       var doseVolumeList = [];
       var volumeViewerList = [];
 
-      volumeViewerList.push(
-        new VolumeViewer(
-          mainViewerDimensions,
-          legendDimensions,
-          sideDoseProfileDimensions
-        )
-      );
+      d3.select("#add-volume-viewer").on("click", function () {
+        volumeViewerList.push(
+          new VolumeViewer(
+            mainViewerDimensions,
+            legendDimensions,
+            sideDoseProfileDimensions,
+            "vol-" + volumeViewerList.length
+          )
+        );
+      });
 
       function getSliceNum() {
         return d3.select("#slider-value").node().value;

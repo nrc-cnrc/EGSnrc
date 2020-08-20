@@ -151,6 +151,15 @@ class VolumeViewer {
   setUpFileSelectors() {
     let volumeViewer = this;
 
+    // For existing dose and density files uploaded, add to file selectors
+    densityVolumeList.forEach((densityVol, i) =>
+      this.updateDensityFileSelector(densityVol, i)
+    );
+    doseVolumeList.forEach((doseVol, i) =>
+      this.updateDoseFileSelector(doseVol, i)
+    );
+
+    // Add behvaiour, when volume is selected, change the volume viewer property
     this.doseSelector.on("change", function () {
       volumeViewer.setDoseVolume(doseVolumeList[this.value]);
     });
@@ -241,6 +250,7 @@ class VolumeViewer {
         // Update slice of current panel
         currPanel.updateSlice(parseInt(sliderVal));
 
+        // TODO: Fix this, bug after zooming/translating and changing slice
         // Update marker position, voxel information and dose profile
         let plotCoords = currPanel.markerPosition;
         if (plotCoords) {
@@ -326,13 +336,14 @@ class VolumeViewer {
   }
 
   buildDoseProfile(parentDiv, sideDoseProfileDimensions, dimension) {
-    console.log("buildDoseProfile");
-    console.log(dimension);
     // Initializing svgs for dose profile plots
-    let profileSvg = parentDiv
+    let parentSvg = parentDiv
       .append("svg")
       .attr("width", sideDoseProfileDimensions.fullWidth)
       .attr("height", sideDoseProfileDimensions.fullHeight)
+      .style("display", "none");
+
+    let profileSvg = parentSvg
       .append("g")
       .style(
         "transform",
@@ -367,7 +378,8 @@ class VolumeViewer {
 
     let doseProfileAxis = new DoseProfile(
       sideDoseProfileDimensions,
-      profileSvg
+      profileSvg,
+      parentSvg
     );
 
     //TODO: Disable zoom until data is uploaded

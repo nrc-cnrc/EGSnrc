@@ -79,7 +79,7 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
     if (this.checked) {
       // Hide dose profile plots
       volumeViewer.doseProfileList.forEach((doseProfile) =>
-        doseProfile.svg.style("display", null)
+        doseProfile.parentSvg.style("display", null)
       );
 
       // Enable saving dose profiles as csv
@@ -102,9 +102,9 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
       }
     } else {
       // Show dose profile plots
-      volumeViewer.doseProfileList.forEach((doseProfile) =>
-        doseProfile.svg.style("display", "none")
-      );
+      volumeViewer.doseProfileList.forEach((doseProfile) => {
+        doseProfile.parentSvg.style("display", "none");
+      });
 
       // Disable saving dose profiles as csv
       d3.select("#save-dose-profile").node().disabled = true;

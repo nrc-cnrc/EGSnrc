@@ -2,9 +2,10 @@
 // TODO: Use curr slice for dose profile data for side plots
 
 class DoseProfile {
-  constructor(dimensions, svg) {
+  constructor(dimensions, svg, parentSvg) {
     this.dimensions = dimensions;
     this.svg = svg;
+    this.parentSvg = parentSvg;
     this.xScale = null;
     this.yDoseScale = null;
     this.yDensityScale = null;
