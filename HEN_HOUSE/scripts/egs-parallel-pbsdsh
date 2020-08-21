@@ -1,0 +1,93 @@
+#!/bin/bash
+
+### help function
+function help {
+    log "HELP"
+    cat <<END
+
+    usage:
+
+        $(basename $0) queue ncore delay first basename 'command' ['others']
+
+        This script is not meant to be called directly, but rather via the egs-parallel script
+        with the batch option "-b pbsdsh"
+
+    arguments:
+
+        queue       queue name on the pbs scheduler
+        ncore       number of computing cores to use
+        delay       delay in seconds between individual jobs
+        basename    simulation base name (input file name, without ".egsinp" extension)
+        first       first job index
+        command     command to run, in quotes
+        others      other options passed to scheduler, in quotes
+
+END
+}
+
+### log function to write messages to standard output
+function log {
+    printf "EGSnrc $(date --rfc-3339=ns): $1\n"
+}
+
+### quit function (with optional command as $2)
+function quit {
+    lineno=$1
+    msg=$2
+    case $3 in
+        help)  run="help";;
+        *)     run="";;
+    esac
+    log "$(basename $0) line $lineno: $msg"; $run; log "QUIT."; exit 1
+}
+
+### begin script
+log "BEGIN $0"
+
+### parse command-line arguments (simplistic)
+args_min=6
+if [ "$#" -lt $args_min ]; then
+    quit $LINENO "only $# arguments provided; at least $args_min required" help
+fi
+queue=$1
+ncore=$2
+delay=$3
+first=$4
+basename=$5
+command=$6
+scheduler_options=$7
+
+### add parallel flags to egs command
+command="$command -b -P $ncore"
+
+### set scheduler job name (maximum 14 characters)
+jobname=$(echo ${basename}[$ncore])
+trim=$(( $(echo $jobname | wc -c) - 14 ))
+if [ $trim -gt 0 ]; then
+    jobname=$(echo $jobname | cut -c $trim-)
+fi
+log "job name: $jobname"
+
+### create pbsdsh directory to store task files for job numbers
+pbsdsh_dir=$basename.pbsdsh
+log "create temporary directory $pbsdsh_dir"
+err=$(mkdir $pbsdsh_dir 2>&1)
+if ! [[ -z $err ]]; then
+    quit $LINENO "$err"
+fi
+
+### launch pbsdsh tasks
+jobid=$(qsub -q $queue $scheduler_options <<END
+#!/bin/sh
+#PBS -j eo
+#PBS -e ${basename}.eo
+#PBS -N $jobname
+#PBS -l select=$ncore:ncpus=1
+#PBS -v HEN_HOUSE,EGS_HOME,EGS_CONFIG
+pbsdsh /home/ftessier/pbs/egs-parallel-dshtask $pbsdsh_dir $basename $ncore $first $delay '$command'
+END
+)
+log "LAUNCH $ncore pbsdsh tasks on $jobid"
+
+### print pid
+printf "$jobid\n"

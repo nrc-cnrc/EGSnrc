@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# usage display
+usage() {
+    echo -e "\nPlease provide at least one simulation basename."
+    echo -e "\nUSAGE:\n$(basename $0) [ basename1 basename2 ... ]\n"
+}
+
+# check if there is at least one argument
+if [ $# -lt 1 ]; then
+    usage
+    exit 1
+fi
+
+# simulation base names
+names=("$@")
+
+# loop over all names
+for name in "${names[@]}"; do
+
+    # echo current name
+    echo "CLEANING ${name} ..."
+
+    # loop over file extensions
+    for ext in lock eo mederr egsjob; do
+
+        # remove files
+        count=$( find -maxdepth 1 -name "${name}.${ext}" | wc -l )
+        if [ $count -gt 0 ]; then
+            for f in ${name}.${ext}; do
+                (set -x; /bin/rm $f)
+            done
+        fi
+    done
+
+    # remove parallel pbs directory
+    count=$( find -maxdepth 1 -name "${name}.pbs*" | wc -l )
+    if [ $count -gt 0 ]; then
+        for f in ${name}.pbs*; do
+            (set -x; /bin/rm -r $f)
+        done
+    fi
+
+    # remove work files
+    count=$( find -maxdepth 1 -name "${name}_w*" | wc -l )
+    if [ $count -gt 0 ]; then
+        echo "+ /bin/rm ${name}_w*"
+        /bin/rm ${name}_w*
+    fi
+
+    # remove egsrun directories
+    count=$( find -maxdepth 1 -name "egsrun_*_${name}_*" | wc -l )
+    if [ $count -gt 0 ]; then
+        echo "+ /bin/rm egsrun_*_${name}_*"
+        /bin/rm -r egsrun_*_${name}_*
+    fi
+
+done

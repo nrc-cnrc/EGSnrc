@@ -1,0 +1,203 @@
+#!/bin/bash
+
+### help function
+function help {
+    log "HELP"
+    cat <<END
+
+    usage:
+
+        $(basename $0) pbsdsh_dir basename taskcount first delay 'command'
+
+        This script is not meant to be called directly, but rather from the egs-parallel-pbsdsh script
+
+    arguments:
+
+        pbsdsh_dir  existing directory where to store task files for job numbers
+        basename    simulation base name (input file name, without ".egsinp" extension)
+        taskcount   number of task to run under dsh
+        first       first job index
+        delay       user-specified delay in seconds between individual jobs
+        command     command to run, in quotes
+
+END
+}
+
+### log function to write messages to standard output
+function log {
+    printf "EGSnrc $(date --rfc-3339=ns): $1\n"
+}
+
+### quit function (with optional command as $2)
+function quit {
+    lineno=$1
+    msg=$2
+    case $3 in
+        help)  run="help";;
+        *)     run="";;
+    esac
+    log "$0 line $lineno: $msg"; $run; log "QUIT."; exit 1
+}
+
+### quit function if simulation is done
+function quit_if_done {
+    done=$(grep -o END $basename.egsjob)
+    if [ "$done" = "END" ]; then
+        log "$jobstr: QUIT (simulation already finished)"
+        exit
+    fi
+}
+
+# go to pbs working directory
+cd $PBS_O_WORKDIR
+
+### parse arguments
+args_min=6
+if [ "$#" -lt $args_min ]; then
+    quit $LINENO "only $# arguments provided; at least $args_min required" help
+fi
+pbsdsh_dir=$1
+basename=$2
+taskcount=$3
+first=$4
+delay=$5
+command=$6
+
+### task label and task file
+task=${PBS_TASKNUM}
+taskstr="task $task"
+prefix="$pbsdsh_dir/$basename_"
+taskfile=${prefix}${task}.task
+log "$taskstr: $HOSTNAME: $taskfile"
+touch $taskfile
+
+### wait until all tasks have launched
+delta=2
+filecount=$(ls -Ub1 -- $prefix*.task | wc -l)
+while [ $filecount -lt $taskcount ]; do
+    log "$taskstr: wait $delta seconds for all tasks to start ($filecount/$taskcount)"
+    sleep $delta
+    filecount=$(ls -Ub1 -- $prefix*.task | wc -l)
+done
+
+### select manager job (first one in file list)
+manager=$(ls $prefix*.task | sed -n 1p)           # using sed instead of head to curb broken pipe error
+manager=$(basename ${manager#${prefix}} .task)
+
+### manager assigns task indices
+if [ $manager == $task ]; then
+    log "$taskstr: manager: assigning $taskcount tasks"
+    job=$first
+    for f in $(ls ${prefix}*.task); do
+        printf "$job\n" > $f
+        job=$((job+1))
+    done
+fi
+
+### wait for my job index (which is printed in task file by manager job)
+delta=2
+while [ ! -s $taskfile ]; do
+    log "$taskstr: wait $delta seconds for job index"
+    sleep $delta
+done
+
+### job index
+job=$(cat $taskfile)
+jobstr=$(printf "job %04d" $job)
+log "$jobstr <- $taskstr"
+
+### job label
+jobstr=$(printf "job %04d" $job)
+
+### manage jobs to avoid bottleneck and race conditions
+if [ $job -eq 1 ]; then
+
+    # log host and pid of job 1 in .egsjob file
+    log "$jobstr: host=$(hostname) BEGIN pid=$$" > $basename.egsjob
+
+else
+
+    # log the host and pid of this job
+    log "$jobstr: host=$(hostname) pid=$$"
+
+    # all jobs wait a fixed delay (relative to first job)
+    delta=1
+    log "$jobstr: wait $delta seconds (initial delay)"
+    sleep $delta
+
+    # wait until there is an .egsjob file (maximum 120 seconds)
+    total=0
+    delta=10
+    limit=120
+    while [ ! -e $basename.egsjob ]; do
+        log "$jobstr: wait $delta seconds (no $basename.egsjob file after $total seconds)"
+        sleep $delta
+        total=$((total+$delta))
+        if [ $total -gt $limit ]; then
+            log "$jobstr: QUIT (no $basename.egsjob file after $limit seconds)"
+            exit
+        fi
+    done
+
+    # sleep until there is a lock file, maximum 300 seconds
+    total=0
+    delta=10
+    limit=300
+    while [ ! -e $basename.lock ]; do
+
+        # quit if simulation is already done
+        quit_if_done
+
+        # otherwise wait for lock file
+        log "$jobstr: wait $delta seconds ($basename.lock not found after $total seconds)"
+        sleep $delta
+        total=$((total+$delta))
+        if [ $total -gt $limit ]; then
+            log "$jobstr: QUIT ($basename.lock not found after $limit seconds)"
+            exit
+        fi
+    done
+
+    # offset all jobs by a fixed delay (relative to previous job)
+    delta=100000
+    log "$jobstr: wait $((job*$delta)) microseconds (default job offset delay)"
+    for j in $(seq 1 $job); do
+        usleep $delta
+        quit_if_done
+    done
+
+    # extra user-specified delay between each job
+    delta=$delay
+    if [ $delta -gt 0 ]; then
+        log "$jobstr: wait $((job*$delta)) seconds (user job offset delay)"
+        for j in $(seq 1 $job); do
+            sleep $delta
+            quit_if_done
+        done
+    fi
+
+    # report on lock file content
+    if [ -r $basename.lock ]; then
+        content=$(cat $basename.lock)
+        log "$jobstr: found $basename.lock: $content"
+    else
+        log "$jobstr: QUIT ($basename.lock does not exist or is not readable)"
+        exit
+    fi
+
+fi
+
+### launch the job if simulation is not done already
+quit_if_done
+log "$jobstr: RUN $command -j $job"
+source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
+$command -j $job
+
+### report that this job is done
+log "$jobstr: DONE."
+
+### report that the simulation (job 1) is done
+if [ $job -eq 1 ]; then
+    log "$jobstr: host=$(hostname) END pid=$$" >> $basename.egsjob
+    log "$jobstr: FINISH simulation"
+fi
