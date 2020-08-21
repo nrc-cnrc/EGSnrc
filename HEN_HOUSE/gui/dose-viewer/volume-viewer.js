@@ -146,6 +146,15 @@ class VolumeViewer {
 
   updateDoseFileSelector(doseVol, i) {
     this.doseSelector.append("option").attr("value", i).text(doseVol.fileName);
+
+    this.doseComparisonSelector
+      .append("option")
+      .attr("value", i)
+      .text(doseVol.fileName);
+
+    if (doseVolumeList.length >= 2) {
+      this.doseComparisonSelector.attr("disabled", null);
+    }
   }
 
   updateDensityFileSelector(densityVol, i) {
@@ -200,6 +209,14 @@ class VolumeViewer {
       .append("option")
       .attr("value", "")
       .text("Choose a dose file");
+    this.doseComparisonSelector = fileSelector
+      .append("select")
+      .attr("name", "dose-file-comparison")
+      .attr("disabled", "disabled");
+    this.doseComparisonSelector
+      .append("option")
+      .attr("value", "")
+      .text("Choose a dose file to compare");
 
     // Set up the file selector dropdowns
     this.setUpFileSelectors();
