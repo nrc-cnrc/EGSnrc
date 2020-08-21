@@ -65,6 +65,7 @@ egs_configuration="$EGS_CONFIG"
 n_parallel=0
 other_args=
 testing=no
+sleep_t=0.1
 
 #########################
 # NRC specific settings #
@@ -106,6 +107,7 @@ while test $# -gt 0; do
        start=*)  start_job=`echo $1 | sed 's/start=//'`;;
         stop=*)  stop_job=`echo $1 | sed 's/stop=//'`;;
        cpu_t=*)  cpu_t=`echo $1 | sed 's/cpu_t=//'`;;
+     sleep_t=*)  sleep_t=`echo $1 | sed 's/sleep_t=//'`;;
         cpus=*)  cpus=`echo $1 | sed 's/cpus=//'`;;
         slot=*)  slot=`echo $1 | sed 's/slot=//'`;;
          ram=*)  ram=`echo $1 | sed 's/ram=//'`;;
@@ -368,6 +370,7 @@ done | xargs -P${cpus} -n1 -I{} sh -c '$command -j \$1 -f $first_job'  - {}
 EOF
     fi
     job=$top_job
+    sleep $sleep_t
   done
 
 #
