@@ -84,12 +84,21 @@ function zoomedAll(transform, panel) {
   let axis = panel.axis;
 
   // Zoom on canvas
-  zoomedCanvas(panel.densityVol, transform, axisElements["plot-density"], axis);
+  if (panel.densityVol) {
+    zoomedCanvas(
+      panel.densityVol,
+      transform,
+      axisElements["plot-density"],
+      axis
+    );
+  }
 
   // Zoom dose plot
-  axisElements["plot-dose"]
-    .select("g.dose-contour")
-    .attr("transform", transform.toString());
+  if (panel.doseVol) {
+    axisElements["plot-dose"]
+      .select("g.dose-contour")
+      .attr("transform", transform.toString());
+  }
 
   // Zoom marker
   axisElements["plot-marker"]

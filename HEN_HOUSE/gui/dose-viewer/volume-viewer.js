@@ -26,7 +26,6 @@ class VolumeViewer {
   }
 
   setDoseVolume(doseVol) {
-    let sliceNum = 0;
     this.doseVolume = doseVol;
 
     // Set dose volume html elements
@@ -41,8 +40,13 @@ class VolumeViewer {
     doseVol.initializeDoseContourInput();
     // TODO: Figure out a better layout for event listeners
     axes.forEach((axis) => {
+      // Get the correct slice number
+      let sliceNum = this.densityVolume
+        ? this.densityVolume.prevSlice[axis].sliceNum
+        : 0;
+
       let slice = doseVol.getSlice(axis, sliceNum);
-      doseVol.drawDose(slice);
+      doseVol.drawDose(slice, this.panels[axis].zoomTransform);
       // Update the axis
       drawAxes(
         this.panels[axis].zoomTransform,
@@ -71,7 +75,6 @@ class VolumeViewer {
   }
 
   setDensityVolume(densityVol) {
-    let sliceNum = 0;
     this.densityVolume = densityVol;
 
     densityVol.setHtmlObjects(
@@ -82,8 +85,12 @@ class VolumeViewer {
 
     densityVol.initializeLegend();
     axes.forEach((axis) => {
+      // Get the correct slice number
+      let sliceNum = this.doseVolume
+        ? this.doseVolume.prevSlice[axis].sliceNum
+        : 0;
       let slice = densityVol.getSlice(axis, sliceNum);
-      densityVol.drawDensity(slice);
+      densityVol.drawDensity(slice, this.panels[axis].zoomTransform);
       // Update the axis
       drawAxes(
         this.panels[axis].zoomTransform,
