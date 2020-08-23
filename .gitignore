@@ -22,6 +22,10 @@ HEN_HOUSE/pieces/linux/egs_gui_*
 HEN_HOUSE/pieces/linux/egs_inprz_*
 HEN_HOUSE/pieces/linux/egs_view_*
 
+HEN_HOUSE/specs/*_linux.spec
+HEN_HOUSE/specs/*_linux64.spec
+HEN_HOUSE/specs/*linux.conf
+HEN_HOUSE/specs/*linux64.conf
 
 ### ignore generated documentation
 doc/*.pdf
