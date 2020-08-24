@@ -33,14 +33,6 @@ for name in "${names[@]}"; do
         fi
     done
 
-    # remove parallel pbs directory
-    count=$( find -maxdepth 1 -name "${name}.pbs*" | wc -l )
-    if [ $count -gt 0 ]; then
-        for f in ${name}.pbs*; do
-            (set -x; /bin/rm -r $f)
-        done
-    fi
-
     # remove work files
     count=$( find -maxdepth 1 -name "${name}_w*" | wc -l )
     if [ $count -gt 0 ]; then

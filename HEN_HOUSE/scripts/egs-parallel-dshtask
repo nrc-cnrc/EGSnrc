@@ -3,11 +3,11 @@
 ### help function
 function help {
     log "HELP"
-    cat <<END
+    cat <<EOF
 
     usage:
 
-        $(basename $0) pbsdsh_dir basename taskcount first delay 'command'
+        $(basename $0) pbsdsh_dir basename ncore first delay 'command'
 
         This script is not meant to be called directly, but rather from the egs-parallel-pbsdsh script
 
@@ -15,28 +15,29 @@ function help {
 
         pbsdsh_dir  existing directory where to store task files for job numbers
         basename    simulation base name (input file name, without ".egsinp" extension)
-        taskcount   number of task to run under dsh
+        ncore   number of task to run under dsh
         first       first job index
         delay       user-specified delay in seconds between individual jobs
         command     command to run, in quotes
 
-END
+EOF
 }
 
-### log function to write messages to standard output
+### log function to write messages to log file and standard output
 function log {
-    printf "EGSnrc $(date --rfc-3339=ns): $1\n"
+    msg="EGSnrc $(date --rfc-3339=ns): $1\n"
+    printf "$msg"
 }
 
-### quit function (with optional command as $2)
+### quit function
 function quit {
     lineno=$1
     msg=$2
     case $3 in
-        help)  run="help";;
-        *)     run="";;
+        help)  cmd="help";;
+        *)     cmd="";;
     esac
-    log "$0 line $lineno: $msg"; $run; log "QUIT."; exit 1
+    log "$0 line $lineno: $msg"; $cmd; log "QUIT."; exit 1
 }
 
 ### quit function if simulation is done
@@ -48,7 +49,7 @@ function quit_if_done {
     fi
 }
 
-# go to pbs working directory
+### go to pbs working directory
 cd $PBS_O_WORKDIR
 
 ### parse arguments
@@ -58,7 +59,7 @@ if [ "$#" -lt $args_min ]; then
 fi
 pbsdsh_dir=$1
 basename=$2
-taskcount=$3
+ncore=$3
 first=$4
 delay=$5
 command=$6
@@ -66,7 +67,7 @@ command=$6
 ### task label and task file
 task=${PBS_TASKNUM}
 taskstr="task $task"
-prefix="$pbsdsh_dir/$basename_"
+prefix="$pbsdsh_dir/${basename}_"
 taskfile=${prefix}${task}.task
 log "$taskstr: $HOSTNAME: $taskfile"
 touch $taskfile
@@ -74,8 +75,8 @@ touch $taskfile
 ### wait until all tasks have launched
 delta=2
 filecount=$(ls -Ub1 -- $prefix*.task | wc -l)
-while [ $filecount -lt $taskcount ]; do
-    log "$taskstr: wait $delta seconds for all tasks to start ($filecount/$taskcount)"
+while [ $filecount -lt $ncore ]; do
+    log "$taskstr: wait $delta seconds for all tasks to start ($filecount/$ncore)"
     sleep $delta
     filecount=$(ls -Ub1 -- $prefix*.task | wc -l)
 done
@@ -86,7 +87,7 @@ manager=$(basename ${manager#${prefix}} .task)
 
 ### manager assigns task indices
 if [ $manager == $task ]; then
-    log "$taskstr: manager: assigning $taskcount tasks"
+    log "$taskstr: manager: assigning $ncore tasks"
     job=$first
     for f in $(ls ${prefix}*.task); do
         printf "$job\n" > $f
@@ -101,13 +102,13 @@ while [ ! -s $taskfile ]; do
     sleep $delta
 done
 
-### job index
+### job index and label
 job=$(cat $taskfile)
 jobstr=$(printf "job %04d" $job)
 log "$jobstr <- $taskstr"
 
-### job label
-jobstr=$(printf "job %04d" $job)
+# log the host and pid of this job
+log "$jobstr: host=$(hostname) BEGIN pid=$$"
 
 ### manage jobs to avoid bottleneck and race conditions
 if [ $job -eq 1 ]; then
@@ -116,9 +117,6 @@ if [ $job -eq 1 ]; then
     log "$jobstr: host=$(hostname) BEGIN pid=$$" > $basename.egsjob
 
 else
-
-    # log the host and pid of this job
-    log "$jobstr: host=$(hostname) pid=$$"
 
     # all jobs wait a fixed delay (relative to first job)
     delta=1
@@ -138,6 +136,9 @@ else
             exit
         fi
     done
+
+    # quit if simulation is already done
+    quit_if_done
 
     # sleep until there is a lock file, maximum 300 seconds
     total=0
@@ -189,12 +190,12 @@ fi
 
 ### launch the job if simulation is not done already
 quit_if_done
-log "$jobstr: RUN $command -j $job"
 source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
-$command -j $job
+log "$jobstr: RUN $command -b -P $ncore-j $job"
+$command b -P $ncore -j $job
 
 ### report that this job is done
-log "$jobstr: DONE."
+log "$jobstr: host=$(hostname) END pid=$$"
 
 ### report that the simulation (job 1) is done
 if [ $job -eq 1 ]; then

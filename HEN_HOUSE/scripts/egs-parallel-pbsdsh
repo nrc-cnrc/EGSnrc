@@ -3,11 +3,11 @@
 ### help function
 function help {
     log "HELP"
-    cat <<END
+    cat <<EOF
 
     usage:
 
-        $(basename $0) queue ncore delay first basename 'command' ['others']
+        $(basename $0) queue ncore delay first basename 'command' ['others'] [verbose]
 
         This script is not meant to be called directly, but rather via the egs-parallel script
         with the batch option "-b pbsdsh"
@@ -17,36 +17,40 @@ function help {
         queue       queue name on the pbs scheduler
         ncore       number of computing cores to use
         delay       delay in seconds between individual jobs
-        basename    simulation base name (input file name, without ".egsinp" extension)
         first       first job index
+        basename    simulation base name (input file name, without ".egsinp" extension)
         command     command to run, in quotes
         others      other options passed to scheduler, in quotes
+        verbose     echo detailed egs-parallel log messages to terminal
 
-END
+EOF
 }
 
-### log function to write messages to standard output
+### log function to write messages to log file and standard output
 function log {
-    printf "EGSnrc $(date --rfc-3339=ns): $1\n"
+    msg="EGSnrc $(date --rfc-3339=ns): $1\n"
+    printf "$msg" >&3
+    if [ "$verbosity" = "verbose" ]; then
+        printf "$msg"
+    fi
 }
 
-### quit function (with optional command as $2)
+### quit function
 function quit {
     lineno=$1
     msg=$2
     case $3 in
-        help)  run="help";;
-        *)     run="";;
+        help)  cmd="help";;
+        *)     cmd="";;
     esac
-    log "$(basename $0) line $lineno: $msg"; $run; log "QUIT."; exit 1
+    verbosity="verbose"
+    log "$0 line $lineno: $msg"; $cmd; log "QUIT."; exit 1
 }
-
-### begin script
-log "BEGIN $0"
 
 ### parse command-line arguments (simplistic)
 args_min=6
 if [ "$#" -lt $args_min ]; then
+    exec 3>/dev/null
     quit $LINENO "only $# arguments provided; at least $args_min required" help
 fi
 queue=$1
@@ -56,9 +60,13 @@ first=$4
 basename=$5
 command=$6
 scheduler_options=$7
+verbosity=$8
 
-### add parallel flags to egs command
-command="$command -b -P $ncore"
+### link file descriptor 3 to egs-parallel log file
+exec 3>>$basename.egsparallel
+
+### begin script
+log "BEGIN $0"
 
 ### set scheduler job name (maximum 14 characters)
 jobname=$(echo ${basename}[$ncore])
@@ -71,23 +79,27 @@ log "job name: $jobname"
 ### create pbsdsh directory to store task files for job numbers
 pbsdsh_dir=$basename.pbsdsh
 log "create temporary directory $pbsdsh_dir"
+if [ -e $pbsdsh_dir ]; then
+    /bin/rm -r $pbsdsh_dir
+fi
 err=$(mkdir $pbsdsh_dir 2>&1)
 if ! [[ -z $err ]]; then
     quit $LINENO "$err"
 fi
-
 ### launch pbsdsh tasks
-jobid=$(qsub -q $queue $scheduler_options <<END
+task_script=$HEN_HOUSE/scripts/egs-parallel-dshtask
+jobid=$(qsub -q $queue $scheduler_options <<EOF
 #!/bin/sh
 #PBS -j eo
 #PBS -e ${basename}.eo
 #PBS -N $jobname
 #PBS -l select=$ncore:ncpus=1
 #PBS -v HEN_HOUSE,EGS_HOME,EGS_CONFIG
-pbsdsh /home/ftessier/pbs/egs-parallel-dshtask $pbsdsh_dir $basename $ncore $first $delay '$command'
-END
+pbsdsh $task_script $pbsdsh_dir $basename $ncore $first $delay '$command'
+EOF
 )
 log "LAUNCH $ncore pbsdsh tasks on $jobid"
+log "pbsdsh task logs will be collated in ${basename}.eo"
 
 ### print pid
 printf "$jobid\n"
