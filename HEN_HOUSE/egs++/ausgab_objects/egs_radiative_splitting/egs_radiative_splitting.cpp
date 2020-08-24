@@ -51,13 +51,14 @@
 #include "egs_functions.h"
 #include "array_sizes.h"
 
-//subroutines and functions we need from egsnrc.mortran and other src codes
-extern "C" void F77_OBJ_(kill_the_photons,KILL_THE_PHOTONS)(const EGS_Float *fs, const EGS_Float *ssd,
-                  const int *nbrspl,const int *nstart,const int *do_electrons){;}
+//subroutines we need from egsnrc.mortran
 
 extern "C" void F77_OBJ_(brems,BREMS)(){;}
 extern "C" void F77_OBJ_(annih,ANNIH)(){;}
-extern "C" void F77_OBJ_(egs_fill_rndm_array,EGS_GET_RNDM_ARRAY)(const EGS_I32 *n, EGS_Float *rarray){;}
+extern "C" void F77_OBJ_(annih_at_rest,ANNIH_AT_REST)(){;}
+extern "C" void F77_OBJ_(photo,PHOTO)(){;}
+extern "C" void F77_OBJ_(pair,PAIR)(){;}
+extern "C" void F77_OBJ_(compt,COMPT)(){;}
 extern "C" void F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(const EGS_I32 *mxbrxs, EGS_Float *nb_xdata[3], EGS_Float *nb_fdata[3], EGS_Float *nb_wdata[3], EGS_Float *nb_idata[3]){;}
 
 EGS_RadiativeSplitting::EGS_RadiativeSplitting(const string &Name,
@@ -152,7 +153,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, EGS_RandomGenerator *rndm, 
             app->setRadiativeSplitting(1);
             F77_OBJ(brems,BREMS)();
             int nstart = np+2, aux=0;
-            F77_OBJ_(kill_the_photons,KILL_THE_PHOTONS)(&fs,&ssd,&nsplit,&nstart,&aux);
+            killThePhotons(fs,ssd,nsplit,nstart,aux);
         }
     }
     else if( iarg == EGS_Application::BeforeAnnihFlight ) {
@@ -164,7 +165,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, EGS_RandomGenerator *rndm, 
         else app->setRadiativeSplitting(1);
         F77_OBJ_(annih,ANNIH)();
         int nstart=np+1,aux=0;
-        F77_OBJ_(kill_the_photons,KILL_THE_PHOTONS)(&fs,&ssd,&nsplit,&nstart,&aux);
+        killThePhotons(fs,ssd,nsplit,nstart,aux);
         check = 1;
     }
     else if( iarg == EGS_Application::BeforeAnnihRest ) {
@@ -188,27 +189,77 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, EGS_RandomGenerator *rndm, 
              iarg == EGS_Application::BeforePhoto ||
              iarg == EGS_Application::BeforeRayleigh )
     {
-        //split charged particles if interaction happens below the
-        //Russian Roulette plane (and user has opted to split e-/e+)
-        //Eventually, we will also use range to the nearest region boundary
-        //to determine whether the particle needs to be split or not
-        bool e_split = false;
-        if(i_esplit && app->top_p.x.z > z_rr) e_split = true;
+        //We want to do something here to split electrons once this option is introduced
 
+        int nint = is_fat ? nsplit : 1;
 
-    else if( iarg == EGS_Application::BeforeCompton )
-    {
-        if( is_fat && !app->the_xoptions->ibcmp)
+        if(iarg == EGS_Application::BeforePair)
         {
-            doSmartCompton(afak,nsp,nint,rndm);
-             iarg == EGS_Application::BeforePair ||
-             iarg == EGS_Application::BeforePhoto ||
-             iarg == EGS_Application::BeforeRayleigh ) {
+            //for now don't split the interaction
+            //what happens to nonfat charged particles?
+            F77_OBJ(pair,PAIR)();
+        }
+        else if(iarg == EGS_Application::BeforePhoto)
+        {
+            //for now don't split the interaction
+            //what happens to nonfat charged particles?
+            F77_OBJ(photo,PHOTO)();
+        }
+        else if(iarg == EGS_Application::BeforeCompton)
+        {
+            if(is_fat && !app->xoptions->ibcmp)
+            {
+                doSmartCompton(afak,nsp,nint,rndm);
+            }
+            else //straight-up compton
+            {
+                for (int i=0; i<nint; i++)
+                {
+                    F77_OBJ(compt,COMPT)();
+                }
+                // kill photons not aimed into the field and any electrons
+                int nstart = np+1, aux=1;
+                killThePhotons(fs,ssd,nint,nstart,aux);
+            }
+        }
+        else
+        { //before Rayleigh
+            for (int i=0; i<nint; i++)
+            {
+               F77_OBJ(rayl,RAYL)();
+            }
+            int nstart = np+1; aux=0;
+            killThePhotons(fs,ssd,nint,nstart,aux);
+        }
+        check = 1;
+    }
+    else if(iarg == EGS_Application::FluorescentEvent )
+    {
+        if( is_fat ) {
+            EGS_Float ener = app->top_p.E;
+            uniformPhotons(nsplit,nsplit,fs,ssd,ener);
+        }
+        else {
+            int nstart=np+1, aux=0;
+            killThePhotons(fs,ssd,nsplit,nstart,aux);
+        }
+        check = 2;
+    }
 
-        //eventually we need to determine whether e- splitting should be done or not based
-        //on charged particle range to the nearest region boundary
-        //for now, though, just base this on whether the interaction happens below the
-        //russian roulette plane, Z_RR, or not
+    if( check ) {
+        if( check == 1 ) {
+            if( app->Np >= MXSTACK ) egsFatal("Stack size exceeded "
+              "in EGS_RadiativeSplitting::doInteractions()\n");
+            //set weight of particle on top of stack to 0
+            EGS_Particle p = app->top_p;
+            dnear = app->getDnear(app->Np);
+            p.wt = 0.;
+            app->deleteParticleFromStack(app->Np);
+            app->addParticleToStack(p);
+        }
+        return 0;
+    }
+
     return 1;
 }
 
@@ -931,6 +982,231 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
    return;
 }
 
+void EGS_RadiativeSplitting::doSmartCompton(int nsample, EGS_RandomGenerator *rndm)
+{
+   app->setNpold(app->Np);
+   int np = app->Np;
+   EGS_Vector x = app->top_p.x;
+   EGS_Vector u = app->top_p.u;
+   EGS_Float ct_min,ct_max,ro; EGS_Float d = ssd - x.z;
+   getCostMinMax(x,u,ro,ct_min,ct_max);
+
+   EGS_Float E = app->top_p.E; EGS_Float Ko = E/app->getRM();
+   EGS_Float broi = 1+2*Ko, Ko2 = Ko*Ko;
+   EGS_Float wt = app->top_p.wt;
+
+   //
+   // calculate probability for method 1: picking points within
+   // the circle and rejecting with probability sigma(direction)/sigma_max
+   //
+   EGS_Float dmin = ro <= fs ? d : sqrt(d*d + (ro-fs)*(ro-fs));
+   EGS_Float wnew = fs*fs*d/(2*dmin*dmin*dmin);
+   //bool will_rotate = use_cyl_sym && x.z < zcyls;
+   //if( will_rotate ) wnew *= rsamp->getAeff();
+   EGS_Float alpha1_t = log(broi);
+   EGS_Float eps1_t = 1/broi, eps2_t = 1;
+   EGS_Float w2 = alpha1_t*(Ko2-2*Ko-2)+(eps2_t-eps1_t)*
+       (1./eps1_t/eps2_t + broi + Ko2*(eps1_t+eps2_t)/2);
+   EGS_Float fnorm = w2/(Ko2*Ko);
+   EGS_Float a = 1 + Ko*(1-ct_max); EGS_Float a2 = a*a;
+   EGS_Float f1 = (1/a + a - 1 + ct_max*ct_max)/a2;
+   a = 1 + Ko*(1-ct_min); a2 = a*a;
+   EGS_Float f2 = (1/a + a - 1 + ct_min*ct_min)/a2;
+   EGS_Float fmax = f1 > f2 ? f1 : f2;
+   wnew *= fmax/fnorm;
+
+   //
+   // calculate probability for method 2: picking directions
+   // between ct_min and ct_max and rejecting those not going towards
+   // the circle
+   //
+   EGS_Float eps1 = 1/(1+Ko*(1-ct_min)), eps2 = 1/(1+Ko*(1-ct_max));
+   EGS_Float alpha1 = log(eps2/eps1);
+   EGS_Float w1 = alpha1*(Ko2-2*Ko-2)+(eps2-eps1)*(1./eps1/eps2 + broi
+                + Ko2*(eps1+eps2)/2);
+   EGS_Float wc = w1/w2;
+
+   //
+   // number of interactions to sample
+   //
+   bool method1; EGS_Float wprob;
+   if( wnew <= wc ) { method1 = true; wprob = wnew; }
+   else { method1 = false; wprob = wc; }
+   EGS_Float asample = wprob*wt; int nsample = (int) asample;
+   asample -= nsample; if( rndm->getUniform() < asample ) ++nsample;
+
+   // prepare rotations--not totally sure why this is needed
+   EGS_Float sinpsi, sindel, cosdel; bool need_rotation;
+   sinpsi = u.x*u.x + u.y*u.y;
+   if( sinpsi > 1e-20 ) {
+       sinpsi = sqrt(sinpsi); need_rotation = true;
+       cosdel = the_stack->u[np]/sinpsi;
+       sindel = the_stack->v[np]/sinpsi;
+   } else need_rotation = false;
+
+   //
+   // sample interactions towards circle
+   //
+   imed = app->getMedium(app->isWhere(x));
+   EGS_Float AP = app->the_thresh->ap[imed];
+   int irl=app->top_p.ir,latch=app->top_p.latch;
+   EGS_Float dnear = app->getDnear(np); int ip = np-1;
+
+   if(method1)
+   {
+       for(int j=0; j<nsample; j++)
+       {
+           EGS_Particle p;
+           EGS_Float x1, y1; int iw;
+           //TODO: logic around will_rotate
+           do {
+              x1 = 2*rndm->getUniform()-1; y1 = 2*rndm->getUniform()-1;
+           } while(x1*x1 + y1*y1 > 1);
+           x1 *= fs; y1 *= fs; iw = 1;
+
+           EGS_Float un = x1 - x.x, vn = y1 - x.y, wn = d;
+           EGS_Float dist = sqrt(un*un + vn*vn + wn*wn);
+           EGS_Float disti = 1/dist;
+           un *= disti; vn *= disti; wn *= disti;
+           EGS_Float cost = u.x*un + u.y*vn + u.z*wn;
+           EGS_Float aux = dmin*disti;
+           a = 1/(1 + Ko*(1-cost));
+           if( E*a > AP ) {
+               EGS_Float frej = (1/a+a-1+cost*cost)*a*a*aux*aux*aux;
+               if( rndm->getUniform()*fmax < frej ) {
+                   p.x = x;
+                   p.u = EGS_Vector(un,vn,wn);
+                   p.ir = irl;
+                   p.wt = wt*iw
+                   p.latch = latch;
+                   p.iq = 0;
+                   p.E = E*a;
+
+                   app->addParticleToStack(p,dnear);
+               }
+            }
+        }
+     }
+     else //method2
+     {
+        EGS_Float eps12 = eps1*eps1, alpha2 = (eps2*eps2-eps12);
+        EGS_Float alpha = alpha1/(alpha1+alpha2/2);
+        EGS_Float rej1 = 1-(1-eps1)*(broi*eps1-1)/(Ko*Ko*eps1*(1+eps1*eps1));
+        EGS_Float rej2 = 1-(1-eps2)*(broi*eps2-1)/(Ko*Ko*eps2*(1+eps2*eps2));
+        EGS_Float rejmax = max(rej1,rej2);
+        for(int j=0; j<nsample; j++) {
+            EGS_Particle p;
+            EGS_Float br,temp, cost, sint, rejf;
+            do {
+                if( rndm->getUniform() < alpha )
+                    br = eps1*exp(alpha1*rndm->getUniform());
+                else
+                    br = sqrt(eps12 + rndm->getUniform()*alpha2);
+                temp = (1-br)/(Ko*br); sint = temp*(2-temp);
+                rejf = 1 - br*sint/(1+br*br);
+            } while ( rndm->getUniform()*rejmax > rejf || sint < 0 );
+            if( E*br > AP ) {
+                cost = 1 - temp; sint = sqrt(sint);
+                EGS_Float cphi,sphi;
+                rndm->getAzimuth(cphi,sphi);
+                EGS_Float un,vn,wn;
+                if( need_rotation ) {
+                    EGS_Float us = sint*cphi, vs = sint*sphi;
+                    un = u.z*cosdel*us - sindel*vs + u.x*cost;
+                    vn = u.z*sindel*us + cosdel*vs + u.y*cost;
+                    wn = u.z*cost - sinpsi*us;
+                } else { un = sint*cphi; vn = sint*sphi; wn = u.z*cost; }
+                int ns = 0;
+                if( wn > 0 ) {
+                    EGS_Float aux = (ssd - x.z)/wn;
+                    EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
+                    if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
+                }
+                if( ns > 0 ) {
+                    p.x = x;
+                    p.u = EGS_Vector(un,vn,wn);
+                    p.ir = irl;
+                    p.wt = wt*ns;
+                    p.latch = latch;
+                    p.iq = 0;
+                    p.E = E*br;
+
+                    app->addParticleToStack(p,dnear);
+                }
+            }
+        }
+    }
+
+    //now potentially generate one fat photon directed away from the field
+    //and the compton scattered electron
+    //NB: most of this is really poorly documented
+
+    //photon first
+    eps1 = eps1_t; eps2 = eps2_t; alpha1 = alpha1_t;
+    EGS_Float eps12 = eps1*eps1; EGS_Float alpha2 = (eps2*eps2-eps12);
+    EGS_Float alpha = alpha1/(alpha1+alpha2/2);
+    EGS_Float br,temp, cost, sint, rejf;
+    do {
+        if( rndm->getUniform() < alpha )
+            br = eps1*exp(alpha1*rndm->getUniform());
+        else
+            br = sqrt(eps12 + rndm->getUniform()*alpha2);
+        temp = (1-br)/(Ko*br); sint = temp*(2-temp);
+        rejf = 1 - br*sint/(1+br*br);
+     } while ( rndm->getUniform() > rejf || sint < 0 );
+     cost = 1 - temp; sint = sqrt(sint);
+     EGS_Float cphi,sphi; rndm->getAzimuth(cphi,sphi);
+     if (E*br > AP) {
+        EGS_Float un,vn,wn;
+        if( need_rotation ) {
+                EGS_Float us = sint*cphi, vs = sint*sphi;
+                un = u.z*cosdel*us - sindel*vs + u.x*cost;
+                vn = u.z*sindel*us + cosdel*vs + u.y*cost;
+                wn = u.z*cost - sinpsi*us;
+        } else { un = sint*cphi; vn = sint*sphi; wn = u.z*cost; }
+        bool take_it = true;
+        if( wn > 0) {
+           EGS_Float t = (ssd-x.z)/wn;
+           EGS_Float x1 = x.x + un*t, y1 = x.y + vn*t;
+           if( x1*x1 + y1*y1 <= fs*fs ) take_it = false; //directed into the field
+        }
+        if (take_it) {
+           EGS_Particle p;
+           p.x = x;
+           p.u = EGS_Vector(un,vn,wn);
+           p.ir = irl;
+           p.wt=wt;
+           p.latch = latch;
+           p.q = 0;
+           p.E = E*br;
+           app->addParticleToStack(p,dnear);
+        }
+      }
+
+      //now the electron
+      EGS_Float Eelec = E*(1-br);
+      EGS_Float aux = 1 + br*br - 2*br*cost;
+      EGS_Float un=0,vn=0,wn=1;
+      if( aux > 1e-10 ) {
+            cost = (1-br*cost)/sqrt(aux); sint = 1-cost*cost;
+            if( sint > 0 ) sint = -sqrt(sint); else sint = 0;
+            if( need_rotation ) {
+                EGS_Float us = sint*cphi, vs = sint*sphi;
+                un = u.z*cosdel*us - sindel*vs + u.x*cost;
+                vn = u.z*sindel*us + cosdel*vs + u.y*cost;
+                wn = u.z*cost - sinpsi*us;
+            } else { un = sint*cphi; vn = sint*sphi; wn = u.z*cost; }
+      }
+      EGS_Particle p;
+      p.x = x;
+      p.u = EGS_Vector(un,vn,wn);
+      p.ir = irl;
+      p.wt = wt;
+      p.latch = latch;
+      p.q = -1;
+      p.E = Eelec + app->getRM();
+      app->addParticleToStack(p,dnear);
+}
 
 //*********************************************************************
 // Process input for this ausgab object
