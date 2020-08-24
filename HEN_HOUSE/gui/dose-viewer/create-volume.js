@@ -230,6 +230,7 @@ class Volume {
 
     // If current slice number is larger than the total number of slices
     // set slice number to last slice
+    // TODO: Remove this?
     sliceNum =
       sliceNum >= slice.totalSlices
         ? parseInt(slice.totalSlices - 1)
@@ -347,13 +348,14 @@ class DoseVolume extends Volume {
       "col-" + d3.format("d")(this.thresholdPercents[i] * 1000);
   }
 
-  // TODO: Is this even called ever?
-  setMaxDose(val) {
+  setMaxDose(val, panels) {
     this.maxDoseVar = val * this.data.maxDose;
     super.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0);
     this.updateThresholds();
 
-    ["xy", "yz", "xz"].forEach((axis) => this.drawDose(this.prevSlice[axis]));
+    ["xy", "yz", "xz"].forEach((axis) =>
+      this.drawDose(this.prevSlice[axis], panels[axis].zoomTransform)
+    );
 
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
       volumeViewerList.forEach((volumeViewer) => {
@@ -369,16 +371,25 @@ class DoseVolume extends Volume {
   }
 
   // TODO: Don't reinitialize legend when adding a new threshold
-  addThresholdPercent(thresholdPercent) {
+  addThresholdPercent(thresholdPercent, panels) {
+    // Here here
     this.thresholdPercents.push(thresholdPercent);
     this.thresholdPercents.sort();
     this.updateThresholds();
     this.initializeLegend();
-    ["xy", "yz", "xz"].forEach((axis) => this.drawDose(this.prevSlice[axis]));
+    ["xy", "yz", "xz"].forEach((axis) =>
+      this.drawDose(this.prevSlice[axis], panels[axis].zoomTransform)
+    );
   }
 
   getSlice(axis, sliceNum) {
     return super.getSlice(axis, sliceNum, "dose");
+  }
+
+  clearDose(slice) {
+    let svg = this.htmlElementObj[slice.axis];
+    // Clear dose plot
+    svg.selectAll("g").remove();
   }
 
   drawDose(slice, transform) {
@@ -484,7 +495,7 @@ class DoseVolume extends Volume {
     }
   }
 
-  initializeDoseContourInput() {
+  initializeDoseContourInput(panels) {
     var addNewThresholdPercent = () => {
       let val = parseFloat(submitDoseContour.node().value);
       let newPercentage = val / 100.0;
@@ -506,10 +517,13 @@ class DoseVolume extends Volume {
             .duration(300)
             .style("background-color", "white");
         } else {
-          this.addThresholdPercent(newPercentage);
+          this.addThresholdPercent(newPercentage, panels);
         }
       }
     };
+
+    // Remove existing dose contour inputs
+    this.legendHolder.selectAll("input").remove();
 
     let doseContourInputWidth = 45;
 
@@ -542,9 +556,11 @@ class DoseVolume extends Volume {
     return super.getDataAtVoxelCoords(voxelCoords, "error");
   }
 
-  initializeMaxDoseSlider() {
+  // TODO: Fix lack of zoom on max dose slider change
+  initializeMaxDoseSlider(panels) {
     let parentDiv = d3.select("#axis-slider-container");
-    var onMaxDoseChangeCallback = (sliderVal) => this.setMaxDose(sliderVal);
+    var onMaxDoseChangeCallback = (sliderVal) =>
+      this.setMaxDose(sliderVal, panels);
     let doseSliderParams = {
       id: "max-dose",
       label: "Max Dose",
@@ -555,6 +571,9 @@ class DoseVolume extends Volume {
       step: 0.01,
     };
 
+    // Remove existing sliders
+    parentDiv.selectAll(".slider-container").remove();
+
     let maxDoseSlider = new Slider(
       parentDiv,
       onMaxDoseChangeCallback,
@@ -563,6 +582,36 @@ class DoseVolume extends Volume {
   }
 }
 
+class DoseComparisonVolume extends DoseVolume {
+  constructor(data, fileName, dimensions, legendDimensions) {
+    // Call the super class constructor
+    super(data, fileName, dimensions, legendDimensions);
+  }
+  // thresholds and thresholdPercents are the same
+  addData(data) {
+    super.addData(data);
+
+    // Max dose used for dose contour plot
+    this.maxDoseVar = 1.0;
+    super.addColourScheme(d3.interpolateViridis, 1.0, -1.0);
+
+    // Calculate the contour thresholds
+    let contourInt = 0.2;
+    this.thresholdPercents = d3.range(
+      -1.0 + contourInt,
+      1.0 + contourInt,
+      contourInt
+    );
+    super.updateThresholds();
+    // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
+    this.className = (i) =>
+      "col-" + d3.format("d")(this.thresholdPercents[i] * 1000);
+  }
+
+  getDataAtVoxelCoords(voxelCoords) {
+    return super.getDataAtVoxelCoords(voxelCoords, "dose");
+  }
+}
 class DensityVolume extends Volume {
   constructor(data, fileName, dimensions, legendDimensions) {
     super(data, fileName, dimensions, legendDimensions); // call the super class constructor
@@ -609,6 +658,14 @@ class DensityVolume extends Volume {
 
   getSlice(axis, sliceNum) {
     return super.getSlice(axis, sliceNum, "density");
+  }
+
+  clearDensity(slice) {
+    let svg = this.htmlElementObj[slice.axis].node();
+
+    // Clear density plot
+    let context = svg.getContext("2d");
+    context.clearRect(0, 0, svg.width, svg.height);
   }
 
   drawDensity(slice, transform) {

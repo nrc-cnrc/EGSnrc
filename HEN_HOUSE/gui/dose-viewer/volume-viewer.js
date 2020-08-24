@@ -35,9 +35,9 @@ class VolumeViewer {
       this.doseLegendSvg
     );
 
-    doseVol.initializeMaxDoseSlider();
+    doseVol.initializeMaxDoseSlider(this.panels);
     doseVol.initializeLegend();
-    doseVol.initializeDoseContourInput();
+    doseVol.initializeDoseContourInput(this.panels);
     // TODO: Figure out a better layout for event listeners
     axes.forEach((axis) => {
       // Get the correct slice number
@@ -122,6 +122,38 @@ class VolumeViewer {
     enableCheckboxForVoxelInformation();
   }
 
+  removeDoseVolume() {
+    this.doseVolume = null;
+
+    // Remove the volume object from panels
+    Object.values(this.panels).forEach((panel) => {
+      // Clear the panel
+      if (panel.doseVol)
+        panel.doseVol.clearDose(panel.doseVol.prevSlice[panel.axis]);
+
+      // Set the volume object to density vol if need be
+      if (panel.volume === panel.doseVol) panel.volume = panel.densityVol;
+
+      panel.doseVol = null;
+    });
+  }
+
+  removeDensityVolume() {
+    this.densityVolume = null;
+
+    // Remove the volume object from panels
+    Object.values(this.panels).forEach((panel) => {
+      // Clear the panel
+      if (panel.densityVol)
+        panel.densityVol.clearDensity(panel.densityVol.prevSlice[panel.axis]);
+
+      // Set the volume object to density vol if need be
+      if (panel.volume === panel.densityVol) panel.volume = panel.doseVol;
+
+      panel.densityVol = null;
+    });
+  }
+
   updateMaxSliderValues() {
     // Update the slider max values
     let volume = this.densityVolume || this.doseVolume;
@@ -152,6 +184,7 @@ class VolumeViewer {
       .attr("value", i)
       .text(doseVol.fileName);
 
+    // TODO: Wait until first dose selector has dose loaded to enable
     if (doseVolumeList.length >= 2) {
       this.doseComparisonSelector.attr("disabled", null);
     }
@@ -177,12 +210,91 @@ class VolumeViewer {
 
     // Add behvaiour, when volume is selected, change the volume viewer property
     this.doseSelector.on("change", function () {
-      volumeViewer.setDoseVolume(doseVolumeList[this.value]);
+      if (this.value == -1) {
+        // If the base text is chosen, remove dose volume if loaded
+        volumeViewer.removeDoseVolume();
+      } else {
+        volumeViewer.setDoseVolume(doseVolumeList[this.value]);
+      }
     });
 
     this.densitySelector.on("change", function () {
-      volumeViewer.setDensityVolume(densityVolumeList[this.value]);
+      if (this.value == -1) {
+        volumeViewer.removeDensityVolume();
+      } else {
+        volumeViewer.setDensityVolume(densityVolumeList[this.value]);
+      }
     });
+
+    this.doseComparisonSelector.on("change", function () {
+      if (volumeViewer.doseVolume) {
+        if (this.value == -1) {
+          // If the base text is chosen, remove density volume if loaded
+          let volIndex = parseInt(
+            volumeViewerList[0].doseSelector.node().value
+          );
+          if (volIndex >= 0) {
+            volumeViewer.setDoseVolume(doseVolumeList[volIndex]);
+          } else {
+            volumeViewer.removeDoseVolume();
+          }
+        } else if (volumeViewer.doseVolume === doseVolumeList[this.value]) {
+          console.log(
+            "Select a different dose volume than one that is already loaded"
+          );
+        } else {
+          volumeViewer.makeDoseComparison(
+            volumeViewer.doseVolume,
+            doseVolumeList[this.value]
+          );
+        }
+      }
+    });
+  }
+
+  makeDoseComparison(doseVol1, doseVol2) {
+    // First normalize the dose data to turn into a percentage
+    let doseArr1 = doseVol1.data.dose.map(
+      (doseVal) => doseVal / doseVol1.data.maxDose
+    );
+    let doseArr2 = doseVol2.data.dose.map(
+      (doseVal) => doseVal / doseVol2.data.maxDose
+    );
+
+    // Take the difference
+    let doseDiff = new Array(doseArr1.length);
+    for (let i = 0; i < doseArr1.length; i++) {
+      if (doseArr1[i] || doseArr2[i]) {
+        doseDiff[i] = (doseArr1[i] || 0) - (doseArr2[i] || 0);
+      }
+    }
+    // Calculate the error for each
+    let errArr2 = doseVol2.data.error;
+    let error = doseVol1.data.error.map((err1, i) =>
+      Math.sqrt(err1 * err1 + errArr2[i] * errArr2[i])
+    );
+
+    // Make new volume
+    let newData = {
+      ...doseVol1.data,
+      dose: doseDiff,
+      error: error,
+      maxDose: 1.0,
+    };
+
+    let combinedFileName = doseVol1.fileName + "_" + doseVol2.fileName;
+
+    let doseComparisonVol = new DoseComparisonVolume(
+      newData,
+      combinedFileName,
+      this.mainViewerDimensions,
+      this.legendDimensions
+    );
+
+    doseComparisonVolumeList.push(doseComparisonVol);
+
+    // Set dose to new difference volume
+    this.setDoseVolume(doseComparisonVol);
   }
 
   buildBaseHtml(id) {
@@ -202,12 +314,12 @@ class VolumeViewer {
       .attr("name", "density-file");
     this.densitySelector
       .append("option")
-      .attr("value", "")
+      .attr("value", -1)
       .text("Choose a density file");
     this.doseSelector = fileSelector.append("select").attr("name", "dose-file");
     this.doseSelector
       .append("option")
-      .attr("value", "")
+      .attr("value", -1)
       .text("Choose a dose file");
     this.doseComparisonSelector = fileSelector
       .append("select")
@@ -215,7 +327,7 @@ class VolumeViewer {
       .attr("disabled", "disabled");
     this.doseComparisonSelector
       .append("option")
-      .attr("value", "")
+      .attr("value", -1)
       .text("Choose a dose file to compare");
 
     // Set up the file selector dropdowns
