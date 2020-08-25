@@ -1,0 +1,206 @@
+#!/bin/bash
+
+### help function
+function help {
+    log "HELP"
+    cat <<EOF
+
+    usage:
+
+        $(basename $0) queue ncore delay first basename 'command' ['others'] [verbose]
+
+        This script is not meant to be called directly, but rather via the egs-parallel script
+        with the batch option "-b pbsdsh"
+
+    arguments:
+
+        queue       queue name on the pbs scheduler
+        ncore       number of computing cores to use
+        delay       delay in seconds between individual jobs
+        basename    simulation base name (input file name, without ".egsinp" extension)
+        first       first job index
+        command     command to run, in quotes
+        others      other options passed to scheduler, in quotes
+        verbose     echo detailed egs-parallel log messages to terminal
+
+EOF
+}
+
+### log function to write messages to log file and standard output
+function log {
+    msg="EGSnrc egs-parallel $(date --rfc-3339=ns): $1\n"
+    printf "$msg" >&3
+    if [ "$verbosity" = "verbose" ]; then
+        printf "$msg"
+    fi
+}
+
+### quit function
+function quit {
+    lineno=$1
+    msg=$2
+    case $3 in
+        help)  cmd="help";;
+        *)     cmd="";;
+    esac
+    verbosity="verbose"
+    log "$0 line $lineno: $msg"; $cmd; log "QUIT."; exit 1
+}
+
+### quit function if simulation is done
+function quit_if_done {
+    if [ -r $basename.egsjob ]; then
+        done=$(grep -o END $basename.egsjob)
+        if [ "$done" = "END" ]; then
+            log "$jobstr: QUIT (simulation already finished)"
+            exit
+        fi
+    fi
+}
+
+### begin script
+log "BEGIN $0"
+
+### parse command-line arguments (simplistic)
+args_min=6
+if [ "$#" -lt $args_min ]; then
+    quit $LINENO "only $# arguments provided; at least $args_min required" help
+fi
+queue=$1
+ncore=$2
+delay=$3
+first=$4
+basename=$5
+command=$6
+scheduler_options=$7
+verbosity=$8
+
+### link file descriptor 3 to egs-parallel log file
+exec 3>>$basename.egsparallel
+
+### set scheduler job name (maximum 14 characters)
+jobname=$(echo ${basename}[$ncore])
+trim=$(( $(echo $jobname | wc -c) - 14 ))
+if [ $trim -gt 0 ]; then
+    jobname=$(echo $jobname | cut -c $trim-)
+fi
+log "job name: $jobname"
+
+### loop to launch ncore pbs jobs
+for job in $(seq 1 $ncore); do
+
+    # job label
+    jobstr=$(printf "job %04d" $job)
+
+    ### manage jobs to avoid bottleneck and race conditions
+    if [ $job -gt 1 ]; then
+
+        # job 2 does all the waiting
+        delta=2
+        if [ $job -eq 2 ]; then
+
+            # wait a fixed delay (relative to first job)
+            log "$jobstr: wait $delta seconds (initial delay)"
+            sleep $delta
+
+            # wait until there is an .egsjob file (maximum 120 seconds)
+            total=0
+            delta=10
+            limit=120
+            while [ ! -e $basename.egsjob ]; do
+                log "$jobstr: wait $delta seconds (no $basename.egsjob file after $total seconds)"
+                sleep $delta
+                total=$((total+$delta))
+                if [ $total -gt $limit ]; then
+                    log "$jobstr: QUIT (no $basename.egsjob file after $limit seconds)"
+                    exit
+                fi
+            done
+
+            # quit if simulation is already done
+            quit_if_done
+
+            # sleep until there is a lock file, maximum 300 seconds
+            total=0
+            delta=10
+            limit=300
+            while [ ! -e $basename.lock ]; do
+
+                # quit if simulation is already done
+                quit_if_done
+
+                # otherwise wait for lock file
+                log "$jobstr: wait $delta seconds ($basename.lock not found after $total seconds)"
+                sleep $delta
+                total=$((total+$delta))
+                if [ $total -gt $limit ]; then
+                    log "$jobstr: QUIT ($basename.lock not found after $limit seconds)"
+                    exit
+                fi
+            done
+        fi
+
+        # quit if simulation is already done
+        quit_if_done
+
+        # offset all jobs by a fixed delay (relative to previous job)
+        delta=500000
+        log "$jobstr: wait $delta microseconds (default job offset delay)"
+        usleep $delta
+
+        # extra user-specified delay between each job
+        delta=$delay
+        if [ $delta -gt 0 ]; then
+            log "$jobstr: wait $delta seconds (user job offset delay)"
+            sleep $delta
+        fi
+
+        # report on lock file content
+        if [ -r $basename.lock ]; then
+            content=$(cat $basename.lock)
+            log "$jobstr: found $basename.lock: $content"
+        else
+            log "$jobstr: QUIT ($basename.lock does not exist or is not readable)"
+            exit
+        fi
+    fi
+
+    ### launch the job if simulation is not done already
+    quit_if_done
+    log "$jobstr: RUN $command -b -P $ncore -j $job"
+    source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
+    jobid=$(qsub -q $queue $scheduler_options <<EOF
+#!/bin/sh
+#PBS -j eo
+#PBS -e ${basename}_w$job.eo
+#PBS -N $jobname
+#PBS -v HEN_HOUSE,EGS_HOME,EGS_CONFIG
+
+### go to pbs working directory
+cd \$PBS_O_WORKDIR
+
+### log function to write messages to standard output
+function log {
+    printf "EGSnrc egs-parallel \$(date --rfc-3339=ns): \$1\n"
+}
+
+### log start
+log "$jobstr: PBS host=\$(hostname) LAUNCH pid=\$\$"
+if [ $job -eq 1 ]; then
+    log "$jobstr: host=\$(hostname) LAUNCH pid=\$\$" > \$PBS_O_WORKDIR/$basename.egsjob
+fi
+
+### run command
+$command -b -P $ncore -j $job
+
+### log completion
+log "$jobstr: PBS host=\$(hostname) END pid=\$\$"
+if [ $job -eq 1 ]; then
+    log "$jobstr: host=\$(hostname) END pid=\$\$" >> \$PBS_O_WORKDIR/$basename.egsjob
+    log "$jobstr: FINISH simulation"
+fi
+EOF
+    )
+    echo $jobid
+
+done
