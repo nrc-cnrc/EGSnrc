@@ -1,1 +1,3 @@
 egsnrc.f
+*.pyc
+__pycache__
