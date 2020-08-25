@@ -3,7 +3,7 @@
 ### help function
 function help {
     log "HELP"
-    cat <<END
+    cat <<EOF
 
     usage:
 
@@ -17,37 +17,40 @@ function help {
         -q | --queue        scheduler queue ("long" by default)
         -n | --ncore        number of cores ("8" by default)
         -o | --option       option(s) to pass to job scheduler, in quotes
+        -v | --verbose      echo detailed egs-parallel log messages to terminal
         -c | --command      command to run, given in quotes
 
-END
+EOF
 }
 
-### log function to write messages to standard output
+### timestamp function
+function timestamp {
+    printf "EGSnrc egs-parallel $(date --rfc-3339=ns)"
+}
+
+### log function to write messages to log file and standard output
 function log {
-    printf "EGSnrc $(date --rfc-3339=ns): $1\n"
+    msg="$(timestamp): $1\n"
+    printf "$msg" >&3
+    if [ "$verbosity" = "verbose" ]; then
+        printf "$msg"
+    fi
 }
 
-### quit function (with optional command as $2)
+### quit function for errors, with source, line, message and command
 function quit {
     lineno=$1
     msg=$2
     case $3 in
-        help)  run="help";;
-        *)     run="";;
+        help)  cmd="help";;
+        *)     cmd="";;
     esac
-    log "$(basename $0) line $lineno: $msg"; $run; log "QUIT."; exit 1
+    verbosity="verbose"
+    log "$0 line $lineno: $msg"; $cmd; log "QUIT."; exit 1
 }
 
-### begin script
-log "BEGIN $0"
-
-### show EGSnrc environment variables
-log "EGSnrc environment:"
-log "    HEN_HOUSE  = $HEN_HOUSE"
-log "    EGS_HOME   = $EGS_HOME"
-log "    EGS_CONFIG = $EGS_CONFIG"
-hen_house=${HEN_HOUSE%/}
-egs_home=${EGS_HOME%/}
+### link file descriptor 3 to egs-parallel log file
+exec 3>egs-parallel-$$.log
 
 ### default option values
 opt_batch="pbsdsh"
@@ -55,31 +58,61 @@ opt_queue="long"
 opt_ncore="8"
 opt_delay="0"
 opt_command=""
-opt_option=""
+opt_options=""
+verbosity="silent"
+declare -a opt_options_array
 
-### parse command-line options (simplistic)
+### parse command-line options
 while [ "$#" -gt 0 ]; do
+
+    # consume next command-line token
     opt=$1; shift
-    arg=$1; shift
+
+    # options without arguments
     case $opt in
         -h|--help)      help; exit;;
+        -v|--verbose)   verbosity="verbose"; continue;;
+    esac
+
+    # allow joined single-letter options and argument (no space in between)
+    if [ -n "${opt:2}" ] && [ "${opt:0:1}" = "-" ] && ! [ "${opt:0:2}" = "--" ]; then
+        arg="${opt:2}"
+        opt="${opt:0:2}"
+    else
+        arg=$1; shift;
+    fi
+
+    # options with arguments
+    case $opt in
         -b|--batch)     opt_batch="$arg";;
         -q|--queue)     opt_queue="$arg";;
         -n|--ncore)     opt_ncore="$arg";;
         -d|--delay)     opt_delay="$arg";;
         -c|--command)   opt_cmd="$arg";;
-        -o|--option)    opt_option="${opt_option}${opt_option:+" "}$arg"; arg="parsed";;
+        -o|--option)    opt_options_array+=("$arg"); arg="parsed";;
         *)              quit $LINENO "unknown option: $opt" help;;
     esac
     if [ -z "$arg" ] || [ "${arg:0:1}" = "-" ]; then
         quit $LINENO "missing argument to $opt option" help
     fi
 done
+opt_options="${opt_options_array[@]}"
+
+### begin script
+log "BEGIN $0"
+
+### EGSnrc environment variables
+log "EGSnrc environment:"
+log "    HEN_HOUSE  = $HEN_HOUSE"
+log "    EGS_HOME   = $EGS_HOME"
+log "    EGS_CONFIG = $EGS_CONFIG"
+hen_house=${HEN_HOUSE%/}
+egs_home=${EGS_HOME%/}
 
 ### check that the batch option command exists and is executable
 batch_script=$hen_house/scripts/egs-parallel-${opt_batch}
 if ! [ -x "$(command -v ${batch_script})" ]; then
-    quit $LINENO "no such batch option command found: ${batch_script}"
+    quit $LINENO "batch script not found: ${batch_script}"
 fi
 
 ### check that ncore is an integer
@@ -151,12 +184,20 @@ log "    delay      = $opt_delay"
 log "    command    = $opt_cmd"
 log "    basename   = $basename"
 log "    first job  = $cmd_first"
-log "    options    = $opt_option"
+log "    options    = $opt_options"
+
+### redirect egs-parallel log file to application directory
+logfile=$egs_home/$cmd_app/$basename.egsparallel
+/bin/mv egs-parallel-$$.log $logfile
+exec 3>>$logfile
+log "egs-parallel log: $logfile"
 
 ### go to egs application directory
 log "cd $egs_home/$cmd_app"
 cd $egs_home/$cmd_app
 
+### log script specific for this batch system
+log "EXEC egs-parallel-$opt_batch $opt_queue $opt_ncore $opt_delay $cmd_first $basename '$opt_cmd' '$opt_options' $verbosity"
+
 ### exec script specific for this batch system
-log "EXEC egs-parallel-$opt_batch $opt_queue $opt_ncore $opt_delay $cmd_first $basename '$opt_cmd' '$opt_option'"
-exec $batch_script $opt_queue $opt_ncore $opt_delay $cmd_first $basename "$opt_cmd" "$opt_option"
+exec $batch_script $opt_queue $opt_ncore $opt_delay $cmd_first $basename $opt_silent "$opt_cmd" "$opt_options" $verbosity
