@@ -1,5 +1,6 @@
 ###############################################################################
 #
+#  Copyright (C) 2020 Simon Biggs
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -27,7 +28,9 @@
 
 include $(EGS_CONFIG)
 
-all: egsnrc.f
+export PYTHON_BUILD = cpython-37m-x86_64-linux-gnu
+
+all: pyegsnrc/egsnrc.$(PYTHON_BUILD).so
 
 SOURCES = \
     $(EGS_SOURCEDIR)egsnrc.macros \
@@ -36,7 +39,10 @@ SOURCES = \
 	$(RANDOM).mortran \
 	$(EGS_SOURCEDIR)nrcaux.mortran \
 	$(MACHINE_MORTRAN) \
+	$(EGS_SOURCEDIR)egs_utilities.mortran \
 	$(EGS_SOURCEDIR)egsnrc.mortran
 
-egsnrc.f :
-	$(MORTRAN_EXE) -s -d $(MORTRAN_DATA) -f $(SOURCES) $< -o7 $@ -o8 egsnrc.mortlst
+pyegsnrc/egsnrc.%.so :
+	$(MORTRAN_EXE) -s -d $(MORTRAN_DATA) -f $(SOURCES) $< -o7 ./pyegsnrc/egsnrc.f -o8 egsnrc.mortlst
+	poetry run python -m numpy.f2py -c ./pyegsnrc/egsnrc.f -m egsnrc
+	mv egsnrc.$(PYTHON_BUILD).so $@
