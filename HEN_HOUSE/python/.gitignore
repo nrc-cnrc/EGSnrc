@@ -1,3 +1,4 @@
 egsnrc.f
 *.pyc
 __pycache__
+dist
