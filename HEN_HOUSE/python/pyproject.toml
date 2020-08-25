@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "pyegsnrc"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+numpy = ">= 1.12"
+
+[tool.poetry.dev-dependencies]
+# Testing
+pytest = "*"
+pytest-sugar  = "*"
+hypothesis  = "*"
+pylint  = "*"
+pytest-pylint  = "*"
+
+# Git Management
+pre-commit = "*"
+
+# VSCode linting and formatting
+black = "^19.10b0"
+mypy = "*"
+rope = "*"
+
+# VSCode extension dependencies
+doc8 = "*"
+pydot = "^1.4.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0a5"]
+build-backend = "poetry.core.masonry.api"
