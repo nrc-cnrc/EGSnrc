@@ -7,7 +7,7 @@ function help {
 
     usage:
 
-        $(basename $0) queue ncore delay first basename 'command' ['others'] [verbose]
+        $(basename $0) queue nthread delay first basename 'command' ['others'] [verbose]
 
         This script is not meant to be called directly, but rather via the egs-parallel script
         with the batch option "-b pbs"
@@ -15,7 +15,7 @@ function help {
     arguments:
 
         queue       queue name on the pbs scheduler
-        ncore       number of computing cores to use
+        nthread     number of computing threads to use (how many jobs)
         delay       delay in seconds between individual jobs
         basename    simulation base name (input file name, without ".egsinp" extension)
         first       first job index
@@ -72,7 +72,7 @@ if [ "$#" -lt $args_min ]; then
     quit $LINENO "only $# arguments provided; at least $args_min required" help
 fi
 queue=$1
-ncore=$2
+nthread=$2
 delay=$3
 first=$4
 basename=$5
@@ -84,15 +84,15 @@ verbosity=$8
 exec 3>>$basename.egsparallel
 
 ### set scheduler job name (maximum 14 characters)
-jobname=$(echo ${basename}[$ncore])
+jobname=$(echo ${basename}[$nthread])
 trim=$(( $(echo $jobname | wc -c) - 14 ))
 if [ $trim -gt 0 ]; then
     jobname=$(echo $jobname | cut -c $trim-)
 fi
 log "job name: $jobname"
 
-### loop to launch ncore pbs jobs
-for job in $(seq 1 $ncore); do
+### loop to launch nthread pbs jobs
+for job in $(seq 1 $nthread); do
 
     # job label
     jobstr=$(printf "job %04d" $job)
@@ -173,8 +173,8 @@ for job in $(seq 1 $ncore); do
         quit_if_done
     fi
 
-    ### launch the job if simulation
-    runcommand="$command -b -P $ncore -j $job -f $first"
+    ### launch the job
+    runcommand="$command -b -P $nthread -j $job -f $first"
     log "$jobstr: SUBMIT $runcommand"
     source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
     jobpid=$(qsub -q $queue $scheduler_options <<EOF

@@ -15,7 +15,7 @@ function help {
         -b | --batch        batch system to use ("pbsdsh" by default)
         -d | --delay        delay in seconds between individual jobs
         -q | --queue        scheduler queue ("long" by default)
-        -n | --ncore        number of cores ("8" by default)
+        -n | --nthread      number of threads ("8" by default)
         -o | --option       option(s) to pass to job scheduler, in quotes
         -v | --verbose      echo detailed egs-parallel log messages to terminal
         -c | --command      command to run, given in quotes
@@ -55,7 +55,7 @@ exec 3>egs-parallel-$$.log
 ### default option values
 opt_batch="pbsdsh"
 opt_queue="long"
-opt_ncore="8"
+opt_nthread="8"
 opt_delay="0"
 opt_command=""
 opt_options=""
@@ -86,7 +86,7 @@ while [ "$#" -gt 0 ]; do
     case $opt in
         -b|--batch)     opt_batch="$arg";;
         -q|--queue)     opt_queue="$arg";;
-        -n|--ncore)     opt_ncore="$arg";;
+        -n|--nthread)   opt_nthread="$arg";;
         -d|--delay)     opt_delay="$arg";;
         -c|--command)   opt_cmd="$arg";;
         -o|--option)    opt_options_array+=("$arg"); arg="parsed";;
@@ -115,9 +115,9 @@ if ! [ -x "$(command -v ${batch_script})" ]; then
     quit $LINENO "batch script not found: ${batch_script}"
 fi
 
-### check that ncore is an integer
-if ! [[ "$opt_ncore" =~ ^[0-9]+$ ]] ; then
-    quit $LINENO "number of cores (-n option) is not an integer: $opt_ncore"
+### check that nthread is an integer
+if ! [[ "$opt_nthread" =~ ^[0-9]+$ ]] ; then
+    quit $LINENO "number of threads (-n option) is not an integer: $opt_nthread"
 fi
 
 ### check that delay is an integer
@@ -179,7 +179,7 @@ fi
 log "parallel options:"
 log "    batch      = $opt_batch"
 log "    queue      = $opt_queue"
-log "    ncore      = $opt_ncore"
+log "    nthread    = $opt_nthread"
 log "    delay      = $opt_delay"
 log "    command    = $opt_cmd"
 log "    basename   = $basename"
@@ -197,7 +197,7 @@ log "cd $egs_home/$cmd_app"
 cd $egs_home/$cmd_app
 
 ### log script specific for this batch system
-log "EXEC egs-parallel-$opt_batch $opt_queue $opt_ncore $opt_delay $cmd_first $basename '$opt_cmd' '$opt_options' $verbosity"
+log "EXEC egs-parallel-$opt_batch $opt_queue $opt_nthread $opt_delay $cmd_first $basename '$opt_cmd' '$opt_options' $verbosity"
 
 ### exec script specific for this batch system
-exec $batch_script $opt_queue $opt_ncore $opt_delay $cmd_first $basename $opt_silent "$opt_cmd" "$opt_options" $verbosity
+exec $batch_script $opt_queue $opt_nthread $opt_delay $cmd_first $basename $opt_silent "$opt_cmd" "$opt_options" $verbosity

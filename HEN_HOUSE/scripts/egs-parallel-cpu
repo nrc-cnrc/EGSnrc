@@ -7,7 +7,7 @@ function help {
 
     usage:
 
-        $(basename $0) queue ncore delay first basename 'command' ['others'] [verbose]
+        $(basename $0) queue nthread delay first basename 'command' ['others'] [verbose]
 
         This script is not meant to be called directly, but rather via the egs-parallel script
         with the batch option "-b cpu"
@@ -15,7 +15,7 @@ function help {
     arguments:
 
         queue       queue name on the pbs scheduler
-        ncore       number of computing cores to use
+        nthread     number of threads to use (number of jobs; at most available cpu threads)
         delay       delay in seconds between individual jobs
         basename    simulation base name (input file name, without ".egsinp" extension)
         first       first job index
@@ -61,7 +61,7 @@ if [ "$#" -lt $args_min ]; then
     quit $LINENO "only $# arguments provided; at least $args_min required" help
 fi
 queue=$1
-ncore=$2
+nthread=$2
 delay=$3
 first=$4
 basename=$5
@@ -77,19 +77,19 @@ log "BEGIN $0"
 
 ### restrict number of jobs to the number of cpu threads
 cpu_nthread=$(grep -c processor /proc/cpuinfo)
-if [ $ncore -gt $cpu_nthread ]; then
-    log "reduce requested threads ($ncore) to match available cpu threads ($cpu_nthread)"
-    ncore=$cpu_nthread
+if [ $nthread -gt $cpu_nthread ]; then
+    log "reduce requested threads ($nthread) to match available cpu threads ($cpu_nthread)"
+    nthread=$cpu_nthread
 fi
 
-### loop to launch ncore jobs on cpu
-for job in $(seq 1 $ncore); do
+### loop to launch nthread jobs on cpu
+for job in $(seq 1 $nthread); do
 
     # job label
     jobstr=$(printf "job %04d" $job)
 
     ### launch the job
-    runcommand="$command -b -P $ncore -j $job -f $first"
+    runcommand="$command -b -P $nthread -j $job -f $first"
     source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
     $runcommand >/dev/null 2>&1 &
     pid=$(printf $!)

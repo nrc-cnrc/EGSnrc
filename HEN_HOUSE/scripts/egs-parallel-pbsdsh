@@ -7,7 +7,7 @@ function help {
 
     usage:
 
-        $(basename $0) queue ncore delay first basename 'command' ['others'] [verbose]
+        $(basename $0) queue nthread delay first basename 'command' ['others'] [verbose]
 
         This script is not meant to be called directly, but rather via the egs-parallel script
         with the batch option "-b pbsdsh"
@@ -15,7 +15,7 @@ function help {
     arguments:
 
         queue       queue name on the pbs scheduler
-        ncore       number of computing cores to use
+        nthread     number of threads to use (number of jobs)
         delay       delay in seconds between individual jobs
         first       first job index
         basename    simulation base name (input file name, without ".egsinp" extension)
@@ -59,7 +59,7 @@ if [ "$#" -lt $args_min ]; then
     quit $LINENO "only $# arguments provided; at least $args_min required" help
 fi
 queue=$1
-ncore=$2
+nthread=$2
 delay=$3
 first=$4
 basename=$5
@@ -74,7 +74,7 @@ exec 3>>$basename.egsparallel
 log "BEGIN $0"
 
 ### set scheduler job name (maximum 14 characters)
-jobname=$(echo ${basename}[$ncore])
+jobname=$(echo ${basename}[$nthread])
 trim=$(( $(echo $jobname | wc -c) - 14 ))
 if [ $trim -gt 0 ]; then
     jobname=$(echo $jobname | cut -c $trim-)
@@ -98,12 +98,12 @@ jobpid=$(qsub -q $queue $scheduler_options <<EOF
 #PBS -j eo
 #PBS -e ${basename}.eo
 #PBS -N $jobname
-#PBS -l select=$ncore:ncpus=1
+#PBS -l select=$nthread:ncpus=1
 #PBS -v HEN_HOUSE,EGS_HOME,EGS_CONFIG
-pbsdsh $task_script $pbsdsh_dir $basename $ncore $first $delay '$command'
+pbsdsh $task_script $pbsdsh_dir $basename $nthread $first $delay '$command'
 EOF
 )
-log "SUBMIT $ncore pbsdsh tasks on $jobid"
+log "SUBMIT $nthread pbsdsh tasks on $jobid"
 log "pbsdsh task logs will be collated in ${basename}.eo"
 
 ### print pid
