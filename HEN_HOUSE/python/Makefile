@@ -36,7 +36,7 @@ SOURCES = \
     $(EGS_SOURCEDIR)egsnrc.macros \
 	$(MACHINE_MACROS) \
 	$(RANDOM).macros \
-	./ausgab.mortran \
+	./user-stubs.mortran \
 	$(RANDOM).mortran \
 	$(EGS_SOURCEDIR)nrcaux.mortran \
 	$(MACHINE_MORTRAN) \
