@@ -1,0 +1,69 @@
+%C80
+"#############################################################################"
+"                                                                             "
+"  EGSnrc tutor1 application                                                  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Dave Roger, 1985                                          "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Frederic Tessier                                          "
+"                   Reid Townson                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  An EGSnrc user code. It lists the particles escaping from the back of a    "
+"  1 mm tantalum plate when a pencil beam of 20 MeV electrons is incident on  "
+"  it normally.                                                               "
+"                                                                             "
+"  The following units are used: unit 6  for (terminal) output, and unit 12   "
+"  is PEGS cross section file                                                 "
+"                                                                             "
+"  Iwan Kawrakow, 2003: Adapted to new EGSnrc MP system by adding call        "
+"  egs_init at the beginning and call egs_finish at the end.                  "
+"                                                                             "
+"#############################################################################"
+
+
+"********************************************************************"
+"                                                                    "
+SUBROUTINE AUSGAB(IARG);
+"                                                                    "
+"  In general, AUSGAB is a routine which is called under a series    "
+"  of well defined conditions specified by the value of IARG (see the"
+"  EGSnrc manual for the list). This is a particularily simple AUSGAB"
+"  Whenever this routine is called with IARG=3 , a particle has      "
+"  been discarded by the user in HOWFAR                              "
+"  We get AUSGAB to print the required information at that point     "
+"                                                                    "
+"********************************************************************"
+$IMPLICIT-NONE;
+$INTEGER IARG;
+$REAL EKINE, ANGLE;
+
+COMIN/STACK/;
+
+IF(IARG = 3)[
+ANGLE=ACOS(W(NP))*180./3.14159;"angle w.r.t. Z axis in degrees"
+
+IF(IQ(NP) = 0)[EKINE=E(NP);]
+ELSE          [EKINE=E(NP)-0.510998946131;]"get kinetic energy"
+OUTPUT EKINE,IQ(NP),ANGLE;(T21,F10.3,T33,I10,T49,F10.1);]
+RETURN;END;"END OF AUSGAB"
