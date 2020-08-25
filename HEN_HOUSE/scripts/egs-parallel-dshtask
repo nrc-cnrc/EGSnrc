@@ -23,13 +23,18 @@ function help {
 EOF
 }
 
+### timestamp function
+function timestamp {
+    printf "EGSnrc egs-parallel $(date --rfc-3339=ns)"
+}
+
 ### log function to write messages to log file and standard output
 function log {
-    msg="EGSnrc $(date --rfc-3339=ns): $1\n"
+    msg="$(timestamp): $1\n"
     printf "$msg"
 }
 
-### quit function
+### quit function for errors, with source, line, message and command
 function quit {
     lineno=$1
     msg=$2
@@ -42,17 +47,19 @@ function quit {
 
 ### quit function if simulation is done
 function quit_if_done {
-    done=$(grep -o END $basename.egsjob)
-    if [ "$done" = "END" ]; then
-        log "$jobstr: QUIT (simulation already finished)"
-        exit
+    if [ -r $basename.egsjob ]; then
+        done=$(grep -o END $basename.egsjob)
+        if [ "$done" = "END" ]; then
+            log "$jobstr: QUIT (simulation already finished)"
+            exit
+        fi
     fi
 }
 
 ### go to pbs working directory
 cd $PBS_O_WORKDIR
 
-### parse arguments
+### parse command-line arguments (simplistic)
 args_min=6
 if [ "$#" -lt $args_min ]; then
     quit $LINENO "only $# arguments provided; at least $args_min required" help
@@ -69,7 +76,7 @@ task=${PBS_TASKNUM}
 taskstr="task $task"
 prefix="$pbsdsh_dir/${basename}_"
 taskfile=${prefix}${task}.task
-log "$taskstr: $HOSTNAME: $taskfile"
+log "$taskstr: host $HOSTNAME: $taskfile"
 touch $taskfile
 
 ### wait until all tasks have launched
@@ -114,7 +121,7 @@ log "$jobstr: host=$(hostname) BEGIN pid=$$"
 if [ $job -eq 1 ]; then
 
     # log host and pid of job 1 in .egsjob file
-    log "$jobstr: host=$(hostname) BEGIN pid=$$" > $basename.egsjob
+    log "$jobstr: BEGIN host=$(hostname) pid=$$" > $basename.egsjob
 
 else
 
@@ -191,14 +198,13 @@ fi
 ### launch the job if simulation is not done already
 quit_if_done
 source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
-log "$jobstr: RUN $command -b -P $ncore-j $job"
-$command b -P $ncore -j $job
+log "$jobstr: RUN $command -b -P $ncore -j $job -f $first"
+$command -b -P $ncore -j $job -f $first
 
 ### report that this job is done
-log "$jobstr: host=$(hostname) END pid=$$"
+log "$jobstr: DONE."
 
 ### report that the simulation (job 1) is done
 if [ $job -eq 1 ]; then
-    log "$jobstr: host=$(hostname) END pid=$$" >> $basename.egsjob
-    log "$jobstr: FINISH simulation"
+    log "$jobstr: END host=$(hostname) pid=$$" >> $basename.egsjob
 fi

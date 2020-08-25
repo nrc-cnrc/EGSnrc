@@ -10,7 +10,7 @@ function help {
         $(basename $0) queue ncore delay first basename 'command' ['others'] [verbose]
 
         This script is not meant to be called directly, but rather via the egs-parallel script
-        with the batch option "-b pbsdsh"
+        with the batch option "-b pbs"
 
     arguments:
 
@@ -26,16 +26,21 @@ function help {
 EOF
 }
 
+### timestamp function
+function timestamp {
+    printf "EGSnrc egs-parallel $(date --rfc-3339=ns)"
+}
+
 ### log function to write messages to log file and standard output
 function log {
-    msg="EGSnrc egs-parallel $(date --rfc-3339=ns): $1\n"
+    msg="$(timestamp): $1\n"
     printf "$msg" >&3
     if [ "$verbosity" = "verbose" ]; then
         printf "$msg"
     fi
 }
 
-### quit function
+### quit function for errors, with source, line, message and command
 function quit {
     lineno=$1
     msg=$2
@@ -92,61 +97,62 @@ for job in $(seq 1 $ncore); do
     # job label
     jobstr=$(printf "job %04d" $job)
 
-    ### manage jobs to avoid bottleneck and race conditions
-    if [ $job -gt 1 ]; then
+    # job 2 does all the waiting
+    if [ $job -eq 2 ]; then
 
-        # job 2 does all the waiting
+        # wait a fixed delay (relative to first job)
         delta=2
-        if [ $job -eq 2 ]; then
+        log "$jobstr: wait $delta seconds (initial delay)"
+        sleep $delta
 
-            # wait a fixed delay (relative to first job)
-            log "$jobstr: wait $delta seconds (initial delay)"
+        # wait until there is an .egsjob file (maximum 120 seconds)
+        total=0
+        delta=10
+        limit=120
+        while [ ! -e $basename.egsjob ]; do
+            log "$jobstr: wait $delta seconds (no $basename.egsjob file after $total seconds)"
             sleep $delta
+            total=$((total+$delta))
+            if [ $total -gt $limit ]; then
+                log "$jobstr: QUIT (no $basename.egsjob file after $limit seconds)"
+                exit
+            fi
+        done
 
-            # wait until there is an .egsjob file (maximum 120 seconds)
-            total=0
-            delta=10
-            limit=120
-            while [ ! -e $basename.egsjob ]; do
-                log "$jobstr: wait $delta seconds (no $basename.egsjob file after $total seconds)"
-                sleep $delta
-                total=$((total+$delta))
-                if [ $total -gt $limit ]; then
-                    log "$jobstr: QUIT (no $basename.egsjob file after $limit seconds)"
-                    exit
-                fi
-            done
+        # quit if simulation is already done
+        quit_if_done
+
+        # sleep until there is a lock file, maximum 300 seconds
+        total=0
+        delta=10
+        limit=300
+        while [ ! -e $basename.lock ]; do
 
             # quit if simulation is already done
             quit_if_done
 
-            # sleep until there is a lock file, maximum 300 seconds
-            total=0
-            delta=10
-            limit=300
-            while [ ! -e $basename.lock ]; do
+            # otherwise wait for lock file
+            log "$jobstr: wait $delta seconds ($basename.lock not found after $total seconds)"
+            sleep $delta
+            total=$((total+$delta))
+            if [ $total -gt $limit ]; then
+                log "$jobstr: QUIT ($basename.lock not found after $limit seconds)"
+                exit
+            fi
+        done
+    fi
 
-                # quit if simulation is already done
-                quit_if_done
-
-                # otherwise wait for lock file
-                log "$jobstr: wait $delta seconds ($basename.lock not found after $total seconds)"
-                sleep $delta
-                total=$((total+$delta))
-                if [ $total -gt $limit ]; then
-                    log "$jobstr: QUIT ($basename.lock not found after $limit seconds)"
-                    exit
-                fi
-            done
-        fi
+    ### manage jobs to avoid bottleneck and race conditions
+    if [ $job -gt 1 ]; then
 
         # quit if simulation is already done
         quit_if_done
 
         # offset all jobs by a fixed delay (relative to previous job)
-        delta=500000
+        delta=250000
         log "$jobstr: wait $delta microseconds (default job offset delay)"
         usleep $delta
+        quit_if_done
 
         # extra user-specified delay between each job
         delta=$delay
@@ -154,6 +160,7 @@ for job in $(seq 1 $ncore); do
             log "$jobstr: wait $delta seconds (user job offset delay)"
             sleep $delta
         fi
+        quit_if_done
 
         # report on lock file content
         if [ -r $basename.lock ]; then
@@ -163,13 +170,14 @@ for job in $(seq 1 $ncore); do
             log "$jobstr: QUIT ($basename.lock does not exist or is not readable)"
             exit
         fi
+        quit_if_done
     fi
 
-    ### launch the job if simulation is not done already
-    quit_if_done
-    log "$jobstr: RUN $command -b -P $ncore -j $job"
+    ### launch the job if simulation
+    runcommand="$command -b -P $ncore -j $job -f $first"
+    log "$jobstr: SUBMIT $runcommand"
     source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
-    jobid=$(qsub -q $queue $scheduler_options <<EOF
+    jobpid=$(qsub -q $queue $scheduler_options <<EOF
 #!/bin/sh
 #PBS -j eo
 #PBS -e ${basename}_w$job.eo
@@ -184,23 +192,25 @@ function log {
     printf "EGSnrc egs-parallel \$(date --rfc-3339=ns): \$1\n"
 }
 
-### log start
-log "$jobstr: PBS host=\$(hostname) LAUNCH pid=\$\$"
-if [ $job -eq 1 ]; then
-    log "$jobstr: host=\$(hostname) LAUNCH pid=\$\$" > \$PBS_O_WORKDIR/$basename.egsjob
-fi
-
 ### run command
-$command -b -P $ncore -j $job
+$runcommand &
+pid=\$(printf \$!)
 
-### log completion
-log "$jobstr: PBS host=\$(hostname) END pid=\$\$"
+### log start
 if [ $job -eq 1 ]; then
-    log "$jobstr: host=\$(hostname) END pid=\$\$" >> \$PBS_O_WORKDIR/$basename.egsjob
-    log "$jobstr: FINISH simulation"
+    log "$jobstr: BEGIN host=\$(hostname) pid=\$pid" > \$PBS_O_WORKDIR/$basename.egsjob
+fi
+log "$jobstr: host=\$(hostname) pid=\$pid"
+log "$jobstr: RUN $runcommand"
+
+### wait for completion and log
+wait
+log "$jobstr: DONE."
+if [ $job -eq 1 ]; then
+    log "$jobstr: END host=\$(hostname) pid=\$pid" >> \$PBS_O_WORKDIR/$basename.egsjob
 fi
 EOF
     )
-    echo $jobid
+    echo $jobpid
 
 done

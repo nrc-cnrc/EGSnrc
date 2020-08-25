@@ -26,16 +26,21 @@ function help {
 EOF
 }
 
+### timestamp function
+function timestamp {
+    printf "EGSnrc egs-parallel $(date --rfc-3339=ns)"
+}
+
 ### log function to write messages to log file and standard output
 function log {
-    msg="EGSnrc $(date --rfc-3339=ns): $1\n"
+    msg="$(timestamp): $1\n"
     printf "$msg" >&3
     if [ "$verbosity" = "verbose" ]; then
         printf "$msg"
     fi
 }
 
-### quit function
+### quit function for errors, with source, line, message and command
 function quit {
     lineno=$1
     msg=$2
@@ -83,12 +88,12 @@ if [ -e $pbsdsh_dir ]; then
     /bin/rm -r $pbsdsh_dir
 fi
 err=$(mkdir $pbsdsh_dir 2>&1)
-if ! [[ -z $err ]]; then
+if ! [ -z $err ]; then
     quit $LINENO "$err"
 fi
 ### launch pbsdsh tasks
 task_script=$HEN_HOUSE/scripts/egs-parallel-dshtask
-jobid=$(qsub -q $queue $scheduler_options <<EOF
+jobpid=$(qsub -q $queue $scheduler_options <<EOF
 #!/bin/sh
 #PBS -j eo
 #PBS -e ${basename}.eo
@@ -98,8 +103,8 @@ jobid=$(qsub -q $queue $scheduler_options <<EOF
 pbsdsh $task_script $pbsdsh_dir $basename $ncore $first $delay '$command'
 EOF
 )
-log "LAUNCH $ncore pbsdsh tasks on $jobid"
+log "SUBMIT $ncore pbsdsh tasks on $jobid"
 log "pbsdsh task logs will be collated in ${basename}.eo"
 
 ### print pid
-printf "$jobid\n"
+printf "$jobpid\n"
