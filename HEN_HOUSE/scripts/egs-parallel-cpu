@@ -1,0 +1,110 @@
+#!/bin/bash
+
+### help function
+function help {
+    log "HELP"
+    cat <<EOF
+
+    usage:
+
+        $(basename $0) queue ncore delay first basename 'command' ['others'] [verbose]
+
+        This script is not meant to be called directly, but rather via the egs-parallel script
+        with the batch option "-b cpu"
+
+    arguments:
+
+        queue       queue name on the pbs scheduler
+        ncore       number of computing cores to use
+        delay       delay in seconds between individual jobs
+        basename    simulation base name (input file name, without ".egsinp" extension)
+        first       first job index
+        command     command to run, in quotes
+        others      other options passed to scheduler, in quotes
+        verbose     echo detailed egs-parallel log messages to terminal
+
+EOF
+}
+
+### timestamp function
+function timestamp {
+    printf "EGSnrc egs-parallel $(date --rfc-3339=ns)"
+}
+
+### log function to write messages to log file and standard output
+function log {
+    msg="$(timestamp): $1\n"
+    printf "$msg" >&3
+    if [ "$verbosity" = "verbose" ]; then
+        printf "$msg"
+    fi
+}
+
+### quit function for errors, with source, line, message and command
+function quit {
+    lineno=$1
+    msg=$2
+    case $3 in
+        help)  cmd="help";;
+        *)     cmd="";;
+    esac
+    verbosity="verbose"
+    log "$0 line $lineno: $msg"; $cmd; log "QUIT."; exit 1
+}
+
+### begin script
+log "BEGIN $0"
+
+### parse command-line arguments (simplistic)
+args_min=6
+if [ "$#" -lt $args_min ]; then
+    quit $LINENO "only $# arguments provided; at least $args_min required" help
+fi
+queue=$1
+ncore=$2
+delay=$3
+first=$4
+basename=$5
+command=$6
+scheduler_options=$7
+verbosity=$8
+
+### link file descriptor 3 to egs-parallel log file
+exec 3>>$basename.egsparallel
+
+### begin script
+log "BEGIN $0"
+
+### restrict number of jobs to the number of cpu threads
+cpu_nthread=$(grep -c processor /proc/cpuinfo)
+if [ $ncore -gt $cpu_nthread ]; then
+    log "reduce requested threads ($ncore) to match available cpu threads ($cpu_nthread)"
+    ncore=$cpu_nthread
+fi
+
+### loop to launch ncore jobs on cpu
+for job in $(seq 1 $ncore); do
+
+    # job label
+    jobstr=$(printf "job %04d" $job)
+
+    ### launch the job
+    runcommand="$command -b -P $ncore -j $job -f $first"
+    source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
+    $runcommand >/dev/null 2>&1 &
+    pid=$(printf $!)
+
+    ### update .egsjob file
+    if [ $job -eq 1 ]; then
+        printf "$(timestamp): $jobstr: BEGIN host=\$(hostname) pid=$$\n" > $basename.egsjob
+        log "BEGIN host=$(hostname)"
+    fi
+    log "$jobstr: RUN $runcommand"
+    log "$jobstr: host=$(hostname) pid=$pid"
+
+done
+
+# wait for all simulations to finish
+wait
+printf "$(timestamp): $jobstr: END host=\$(hostname) pid=$$\n" >> $basename.egsjob
+log "DONE."
