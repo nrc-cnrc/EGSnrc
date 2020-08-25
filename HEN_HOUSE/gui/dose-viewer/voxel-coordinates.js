@@ -27,6 +27,7 @@ function buildVoxelInfoHtml(parentDiv, id) {
   // Add container
   let voxelInfoHolder = parentDiv
     .append("div")
+    .classed("voxel-info", true)
     .attr("id", "voxel-info-" + id)
     .classed("hidden", true);
 
@@ -35,7 +36,7 @@ function buildVoxelInfoHtml(parentDiv, id) {
     voxelInfoHolder
       .append("label")
       .attr("for", tag + "-" + id)
-      .text(labelName[i]);
+      .text("  " + labelName[i] + " ");
 
     voxelInfoHolder
       .append("output")
@@ -151,7 +152,7 @@ function updateVoxelInfo(voxelCoords, densityVol, doseVol, id) {
   if (densityVol) {
     let density = densityVol.getDataAtVoxelCoords(voxelCoords);
     d3.select("#density-value-" + id).node().value =
-      d3.format(".3f")(density) + " g/cm^3";
+      d3.format(".3f")(density) + " g/cm\u00B3";
 
     let material = densityVol.getMaterialAtVoxelCoords(voxelCoords);
     d3.select("#material-value-" + id).node().value = material;
@@ -161,7 +162,7 @@ function updateVoxelInfo(voxelCoords, densityVol, doseVol, id) {
     let dose = doseVol.getDataAtVoxelCoords(voxelCoords) || 0;
     let error = doseVol.getErrorAtVoxelCoords(voxelCoords) || 0;
     d3.select("#dose-value-" + id).node().value =
-      d3.format(".1%")(dose) + " +/- " + d3.format(".1%")(error);
+      d3.format(".1%")(dose) + " \u00B1 " + d3.format(".1%")(error);
   }
 }
 
@@ -183,16 +184,13 @@ function updateDoseProfiles(voxelCoords, worldCoords) {
         // Set the data
         doseProfile.setDoseProfileData(
           volumeViewer.doseVolume,
+          volumeViewer.densityVolume,
           dimensionsList[i],
           voxelCoordsList[i]
         );
 
         // Plot the dose profile
-        doseProfile.plotDoseProfile(
-          axes[i],
-          dimensionsList[i],
-          worldCoordsList[i]
-        );
+        doseProfile.plotDoseProfile(dimensionsList[i], worldCoordsList[i]);
       }
     });
   });

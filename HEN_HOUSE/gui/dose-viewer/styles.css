@@ -31,7 +31,7 @@ span.dose-profile-holder {
 }
 
 .label {
-  font-size: small;
+  font-size: 12px;
 }
 
 svg.axis-svg {
@@ -44,10 +44,9 @@ svg.axis-svg {
   z-index: 4;
 }
 
-#voxel-info {
-  border: 1px solid black;
-  padding: 0px 16px 16px 16px;
-  font-size: 12px;
+div.voxel-info {
+  font-size: 13px;
+  margin: 10px 0px 10px 0px;
 }
 
 .voxel-info-output {

@@ -49,7 +49,7 @@ function zoomedDoseProfile(transform, doseProfile) {
         .tickSize(-doseProfile.dimensions.width)
     );
 
-  if (doseProfile.plotDensity) {
+  if (doseProfile.densityChecked()) {
     var new_yDensityScale = transform.rescaleY(doseProfile.yDensityScale);
     doseProfile.svg
       .select(".profile-y-density-axis")

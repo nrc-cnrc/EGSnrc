@@ -14,6 +14,10 @@ class Slider {
     );
   }
 
+  value() {
+    return this.slider.node().value;
+  }
+
   buildSliderHtml(
     parentDiv,
     id,
@@ -30,8 +34,7 @@ class Slider {
       .text(labelStr + ": ")
       .append("output")
       .attr("type", "text")
-      .attr("id", "slider-value-" + id)
-      .attr("value", " ");
+      .attr("id", "slider-value-" + id);
 
     // Add break
     mainDiv.append("br");
@@ -40,8 +43,7 @@ class Slider {
     let sliderMin = mainDiv
       .append("output")
       .attr("type", "text")
-      .attr("id", "slider-min-" + id)
-      .attr("value", " ");
+      .attr("id", "slider-min-" + id);
 
     // Actual slider component
     let slider = mainDiv
@@ -50,15 +52,13 @@ class Slider {
       .attr("class", "slider")
       .attr("id", "slider-range-" + id)
       .attr("min", 0)
-      .attr("value", 0)
       .attr("disabled", disabled ? "disabled" : null);
 
     // Slider maximum output
     let sliderMax = mainDiv
       .append("output")
       .attr("type", "text")
-      .attr("id", "slider-max-" + id)
-      .attr("value", "");
+      .attr("id", "slider-max-" + id);
 
     if (incrementButtons) {
       // Increment and decrement buttons
@@ -118,7 +118,7 @@ class Slider {
     this.slider.attr("step", step);
 
     // Set max and current value
-    this.slider.attr("max", maxVal).attr("value", startingVal);
+    this.slider.attr("max", maxVal).node().value = startingVal;
 
     // Show maximum value of slider
     this.sliderMax.text(format(maxVal));
@@ -134,12 +134,30 @@ class Slider {
     if (this.slider.attr("disabled")) this.slider.attr("disabled", null);
   }
 
+  setMinValue(minVal) {
+    // Set min value
+    this.slider.attr("min", minVal);
+
+    // Show maximum value of slider
+    this.sliderMin.text(this.format(minVal));
+
+    // Change current value to min if it is smaller
+    if (this.sliderValue.text() < minVal) {
+      this.setCurrentValue(minVal);
+    }
+  }
+
   setMaxValue(maxVal) {
     // Set max value
     this.slider.attr("max", maxVal);
 
     // Show maximum value of slider
     this.sliderMax.text(this.format(maxVal));
+
+    // Change current value to max if it is larger
+    if (this.sliderValue.text() > maxVal) {
+      this.setCurrentValue(maxVal);
+    }
   }
 
   setCurrentValue(val) {

@@ -87,14 +87,11 @@ class Volume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
 
-  constructor(data, fileName, dimensions, legendDimensions) {
-    this.data = data;
+  constructor(fileName, dimensions, legendDimensions) {
     this.fileName = fileName;
     this.dimensions = dimensions;
     this.legendDimensions = legendDimensions;
     this.prevSlice = { xy: {}, yz: {}, xz: {} };
-    this.prevAxis = "";
-    this.addData(data);
   }
 
   // TODO: Remove html elements as properties and just pass them in
@@ -102,21 +99,6 @@ class Volume {
     this.htmlElementObj = htmlElementObj;
     this.legendHolder = legendHolder;
     this.legendSvg = legendSvg;
-  }
-
-  addData(data) {
-    this.xWorldToVoxelScale = d3
-      .scaleQuantile()
-      .domain([data.voxelArr.x[0], data.voxelArr.x[data.voxelArr.x.length - 1]])
-      .range(d3.range(0, data.voxelNumber.x, 1));
-    this.yWorldToVoxelScale = d3
-      .scaleQuantile()
-      .domain([data.voxelArr.y[0], data.voxelArr.y[data.voxelArr.y.length - 1]])
-      .range(d3.range(0, data.voxelNumber.y, 1));
-    this.zWorldToVoxelScale = d3
-      .scaleQuantile()
-      .domain([data.voxelArr.z[0], data.voxelArr.z[data.voxelArr.z.length - 1]])
-      .range(d3.range(0, data.voxelNumber.z, 1));
   }
 
   addColourScheme(colourScheme, maxVal, minVal, invertScheme) {
@@ -328,17 +310,17 @@ class Volume {
 }
 
 class DoseVolume extends Volume {
-  constructor(data, fileName, dimensions, legendDimensions) {
+  constructor(fileName, dimensions, legendDimensions, data) {
     // Call the super class constructor
-    super(data, fileName, dimensions, legendDimensions);
+    super(fileName, dimensions, legendDimensions);
+    this.addData(data);
   }
 
   addData(data) {
-    // TODO: Want user to be able to choose their own space between contours
-    super.addData(data);
+    this.data = data;
     // Max dose used for dose contour plot
-    this.maxDoseVar = this.data.maxDose;
-    super.addColourScheme(d3.interpolateViridis, this.data.maxDose, 0);
+    this.maxDoseVar = data.maxDose;
+    super.addColourScheme(d3.interpolateViridis, data.maxDose, 0);
     // Calculate the contour thresholds
     let contourInt = 0.1;
     this.thresholdPercents = d3.range(contourInt, 1.0 + contourInt, contourInt);
@@ -583,14 +565,14 @@ class DoseVolume extends Volume {
 }
 
 class DoseComparisonVolume extends DoseVolume {
-  constructor(data, fileName, dimensions, legendDimensions) {
+  constructor(fileName, dimensions, legendDimensions, data) {
     // Call the super class constructor
-    super(data, fileName, dimensions, legendDimensions);
+    super(fileName, dimensions, legendDimensions);
+    this.addData(data);
   }
-  // thresholds and thresholdPercents are the same
-  addData(data) {
-    super.addData(data);
 
+  addData(data) {
+    this.data = data;
     // Max dose used for dose contour plot
     this.maxDoseVar = 1.0;
     super.addColourScheme(d3.interpolateViridis, 1.0, -1.0);
@@ -602,7 +584,9 @@ class DoseComparisonVolume extends DoseVolume {
       1.0 + contourInt,
       contourInt
     );
+    // Thresholds and thresholdPercents are the same
     super.updateThresholds();
+
     // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
     this.className = (i) =>
       "col-" + d3.format("d")(this.thresholdPercents[i] * 1000);
@@ -613,14 +597,14 @@ class DoseComparisonVolume extends DoseVolume {
   }
 }
 class DensityVolume extends Volume {
-  constructor(data, fileName, dimensions, legendDimensions) {
-    super(data, fileName, dimensions, legendDimensions); // call the super class constructor
-
+  constructor(fileName, dimensions, legendDimensions, data) {
+    super(fileName, dimensions, legendDimensions); // call the super class constructor
+    this.addData(data);
     this.prevSliceImg = { xy: {}, yz: {}, xz: {} };
   }
 
   addData(data) {
-    super.addData(data);
+    this.data = data;
     this.setWindow();
     this.setLevel();
     this.addColourScheme();
@@ -724,9 +708,8 @@ class DensityVolume extends Volume {
     let imgCanvas = svg.node();
     let imgContext = imgCanvas.getContext("2d");
 
-    // Save the image and axis as properties of the volume object
+    // Save the image as properties of the volume object
     this.prevSliceImg[slice.axis] = image;
-    this.prevAxis = slice.axis;
   }
 
   initializeLegend() {
@@ -760,7 +743,7 @@ class DensityVolume extends Volume {
       .style("display", "block");
 
     // Define parameters for ticks
-    let ticks = 6;
+    let ticks = 4;
     let n = Math.round(ticks + 1);
     let tickValues = d3
       .range(n)
@@ -809,6 +792,7 @@ class DensityVolume extends Volume {
     this.legendSvg
       .append("g")
       .attr("transform", "translate(" + 0 + ", " + dims.margin.top + ")")
+      .classed("label", true)
       .call(
         d3
           .axisRight()

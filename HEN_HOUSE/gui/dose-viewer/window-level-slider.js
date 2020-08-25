@@ -1,57 +1,68 @@
-var windowSlider = d3.select("input.window-slider");
-var levelSlider = d3.select("input.level-slider");
+var initializeWindowAndLevelSlider = (
+  levelParentDiv,
+  windowParentDiv,
+  densityVol,
+  panels
+) => {
+  // Make level slider
+  var levelSliderChangeCallback = (sliderVal) => {
+    densityVol.setLevel(sliderVal);
+    densityVol.addColourScheme();
+    ["xy", "yz", "xz"].forEach((axis) =>
+      densityVol.drawDensity(
+        densityVol.prevSlice[axis],
+        panels[axis].zoomTransform
+      )
+    );
+  };
 
-var initializeWindowAndLevelSlider = (densityVolume) => {
-  windowSlider.attr("min", 0);
-  windowSlider.attr("max", densityVolume.window);
-  windowSlider.attr("step", 0.01);
-  windowSlider.attr("value", densityVolume.window);
-  // Show the current window value
-  d3.select("#window-value").node().value = densityVolume.window;
+  let levelSliderParams = {
+    id: "level",
+    label: "Level",
+    format: d3.format(".2f"),
+    startingVal: densityVol.level,
+    minVal: densityVol.window / 2,
+    maxVal: densityVol.data.maxDensity - densityVol.window / 2,
+    step: 0.01,
+  };
 
-  levelSlider.attr("min", densityVolume.window / 2);
-  levelSlider.attr(
-    "max",
-    densityVolume.data.maxDensity - densityVolume.window / 2
+  let levelSlider = new Slider(
+    levelParentDiv,
+    levelSliderChangeCallback,
+    levelSliderParams
   );
-  levelSlider.attr("step", 0.01);
-  levelSlider.attr("value", densityVolume.level);
 
-  // Show the current level value
-  d3.select("#level-value").node().value = densityVolume.level;
+  // Make window slider
+  var windowSliderChangeCallback = (sliderVal) => {
+    densityVol.setWindow(sliderVal);
+    densityVol.addColourScheme();
+    ["xy", "yz", "xz"].forEach((axis) =>
+      densityVol.drawDensity(
+        densityVol.prevSlice[axis],
+        panels[axis].zoomTransform
+      )
+    );
+    // Fix level slider min and max vals
+    levelSlider.setMinValue(densityVol.window / 2);
+    levelSlider.setMaxValue(densityVol.data.maxDensity - densityVol.window / 2);
+
+    // Set level in density volume if changed
+    densityVol.setLevel(levelSlider.value());
+  };
+
+  let windowSliderParams = {
+    id: "window",
+    label: "Window",
+    format: d3.format(".2f"),
+    startingVal: densityVol.window,
+    minVal: 0.0,
+    maxVal: densityVol.window,
+    step: 0.01,
+  };
+
+  let windowSlider = new Slider(
+    windowParentDiv,
+    windowSliderChangeCallback,
+    windowSliderParams
+  );
 };
-
-windowSlider.on("input", function () {
-  densityVol.setWindow(this.value);
-  densityVol.addColourScheme();
-  ["xy", "yz", "xz"].forEach((axis) =>
-    densityVol.drawDensity(
-      densityVol.prevSlice[axis],
-      panels[axis].zoomTransform
-    )
-  );
-
-  // Show the current window value
-  d3.select("#window-value").node().value = this.value;
-
-  // Fix level slider min and max vals
-  levelSlider.attr("min", densityVol.window / 2);
-  levelSlider.attr("max", densityVol.data.maxDensity - densityVol.window / 2);
-  if (levelSlider.attr("value") > levelSlider.attr("max")) {
-    levelSlider.attr("value", levelSlider.attr("max"));
-  }
-});
-
-levelSlider.on("input", function () {
-  densityVol.setLevel(this.value);
-  densityVol.addColourScheme();
-  ["xy", "yz", "xz"].forEach((axis) =>
-    densityVol.drawDensity(
-      densityVol.prevSlice[axis],
-      panels[axis].zoomTransform
-    )
-  );
-
-  // Show the current level value
-  d3.select("#level-value").node().value = this.value;
-});

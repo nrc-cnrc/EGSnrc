@@ -100,28 +100,50 @@ var processDoseData = function (data) {
     });
 
   // Get x, y, and z arrays
-  [xArr, yArr, zArr] = data.slice(curr, curr + 3).map((subArr) => {
-    return subArr
-      .trim()
-      .split(/\ +/)
-      .map((v) => {
-        return parseFloat(v);
-      });
+  const [xArr, yArr, zArr] = [numVoxX, numVoxY, numVoxZ].map((numVox) => {
+    let arr = [];
+    while (arr.length <= numVox) {
+      arr.push(
+        ...data[curr++]
+          .trim()
+          .split(/\ +/)
+          .map((v) => parseFloat(v))
+      );
+    }
+    return arr;
   });
 
-  curr += 3;
+  // Get the dose and error arrays
+  let [doseDense, error] = [[], []];
+  let prevCurr = curr;
 
-  // TODO: If can easily check if value will be zero from string, parse float later after removing zeros
-  let [doseDense, error] = data.slice(curr, curr + 2).map((subArr) => {
-    return subArr
-      .trim()
-      .split(/\ +/)
-      .slice(0, numVoxX * numVoxY * numVoxZ)
-      .map((v) => {
-        return parseFloat(v);
+  try {
+    [doseDense, error].forEach((arr) => {
+      while (arr.length < numVoxX * numVoxY * numVoxZ) {
+        arr.push(
+          ...data[curr++]
+            .trim()
+            .split(/\ +/)
+            .map((v) => parseFloat(v))
+        );
+      }
+    });
+  } catch (e) {
+    if (e instanceof RangeError) {
+      // If range error, the length of each line is too long for the spread syntax, now assuming all data is in one line
+      [doseDense, error] = data.slice(prevCurr, prevCurr + 2).map((arr) => {
+        return arr
+          .trim()
+          .split(/\ +/)
+          .slice(0, numVoxX * numVoxY * numVoxZ)
+          .map((v) => parseFloat(v));
       });
-  });
+    } else {
+      throw e;
+    }
+  }
 
+  // Convert dose matrix to be sparse
   let maxDose = 0;
   let dose = new Array(numVoxX * numVoxY * numVoxZ);
 

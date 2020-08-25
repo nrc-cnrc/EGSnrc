@@ -35,15 +35,6 @@ class Panel {
     this.showCrosshairs = () =>
       d3.select("input[name='show-dose-profile-checkbox']").node().checked;
 
-    // Set up zoom for panel
-    let mainViewerZoom = getZoom(
-      mainViewerDimensions.width,
-      mainViewerDimensions.height,
-      zoomedAll,
-      [this]
-    );
-    this.axisElements["plot-marker"].call(mainViewerZoom);
-
     // Update circle marker position and voxel coords on click
     let panel = this;
     axisElements["plot-marker"].on("click", function () {
@@ -57,6 +48,17 @@ class Panel {
 
       return true;
     });
+  }
+
+  setupZoom() {
+    // Set up zoom for panel
+    let mainViewerZoom = getZoom(
+      mainViewerDimensions.width,
+      mainViewerDimensions.height,
+      zoomedAll,
+      [this]
+    );
+    this.axisElements["plot-marker"].call(mainViewerZoom);
   }
 
   updateSliceNum() {

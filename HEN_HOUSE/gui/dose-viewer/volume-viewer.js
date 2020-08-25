@@ -60,6 +60,7 @@ class VolumeViewer {
       panel.doseVol = doseVol;
       if (!panel.volume) {
         panel.volume = doseVol;
+        panel.setupZoom();
         // Update the slider max values
         let dims = "zxy";
         axes.forEach((axis, i) =>
@@ -68,7 +69,9 @@ class VolumeViewer {
       }
     });
 
-    enableCoordInputs(doseVol.data.voxelNumber);
+    if (this.densityVolume) {
+      enableCheckboxForDensityPlot();
+    }
     enableCheckboxForDoseProfilePlot();
     enableExportVisualizationButton();
     enableCheckboxForVoxelInformation();
@@ -104,6 +107,7 @@ class VolumeViewer {
       panel.densityVol = densityVol;
       if (!panel.volume) {
         panel.volume = densityVol;
+        panel.setupZoom();
         // Update the slider max values
         let dims = "zxy";
         axes.forEach((axis, i) =>
@@ -118,7 +122,12 @@ class VolumeViewer {
       enableCheckboxForDensityPlot();
     }
     enableExportVisualizationButton();
-    initializeWindowAndLevelSlider(densityVol);
+    initializeWindowAndLevelSlider(
+      this.levelParentDiv,
+      this.windowParentDiv,
+      densityVol,
+      this.panels
+    );
     enableCheckboxForVoxelInformation();
   }
 
@@ -141,6 +150,10 @@ class VolumeViewer {
   removeDensityVolume() {
     this.densityVolume = null;
 
+    // Remove the level and dose sliders
+    this.levelParentDiv.select("*").remove();
+    this.windowParentDiv.select("*").remove();
+
     // Remove the volume object from panels
     Object.values(this.panels).forEach((panel) => {
       // Clear the panel
@@ -152,6 +165,8 @@ class VolumeViewer {
 
       panel.densityVol = null;
     });
+
+    // TODO: Remove legend as well
   }
 
   updateMaxSliderValues() {
@@ -285,10 +300,10 @@ class VolumeViewer {
     let combinedFileName = doseVol1.fileName + "_" + doseVol2.fileName;
 
     let doseComparisonVol = new DoseComparisonVolume(
-      newData,
       combinedFileName,
       this.mainViewerDimensions,
-      this.legendDimensions
+      this.legendDimensions,
+      newData
     );
 
     doseComparisonVolumeList.push(doseComparisonVol);
@@ -332,6 +347,14 @@ class VolumeViewer {
 
     // Set up the file selector dropdowns
     this.setUpFileSelectors();
+
+    // Add window and level sliders
+    this.levelParentDiv = volHolder
+      .append("div")
+      .attr("class", "window-level-container");
+    this.windowParentDiv = volHolder
+      .append("div")
+      .attr("class", "window-level-container");
 
     // Add voxel information
     buildVoxelInfoHtml(volHolder, id);
@@ -439,10 +462,10 @@ class VolumeViewer {
       });
 
       // Add dose profile to bottom of panel
-      this.doseProfileList[i] = this.buildDoseProfile(
-        selectedDiv,
+      this.doseProfileList[i] = new DoseProfile(
         sideDoseProfileDimensions,
-        dimensions[i]
+        selectedDiv,
+        this.id + "-" + dimensions[i]
       );
     });
   }
@@ -469,70 +492,6 @@ class VolumeViewer {
     [this.densityLegendHolder, this.densityLegendSvg] = getLegendHolderAndSvg(
       "density"
     );
-  }
-
-  buildDoseProfile(parentDiv, sideDoseProfileDimensions, dimension) {
-    // Initializing svgs for dose profile plots
-    let parentSvg = parentDiv
-      .append("svg")
-      .attr("width", sideDoseProfileDimensions.fullWidth)
-      .attr("height", sideDoseProfileDimensions.fullHeight)
-      .style("display", "none");
-
-    let profileSvg = parentSvg
-      .append("g")
-      .style(
-        "transform",
-        "translate(" +
-          sideDoseProfileDimensions.margin.left +
-          "px" +
-          "," +
-          sideDoseProfileDimensions.margin.top +
-          "px" +
-          ")"
-      )
-      .classed("dose-profile-plot", true)
-      .classed(dimension, true);
-
-    // Create box to capture mouse events
-    profileSvg
-      .append("rect")
-      .attr("width", sideDoseProfileDimensions.width)
-      .attr("height", sideDoseProfileDimensions.height)
-      .attr("fill", "white")
-      .attr("class", "bounding-box");
-
-    // Create clip path to bound output after zooming
-    profileSvg
-      .append("defs")
-      .append("clipPath")
-      .attr("class", "clip-" + dimension)
-      .attr("id", "clip-" + dimension + "-" + this.id)
-      .append("rect")
-      .attr("width", sideDoseProfileDimensions.width)
-      .attr("height", sideDoseProfileDimensions.height);
-
-    let doseProfileAxis = new DoseProfile(
-      sideDoseProfileDimensions,
-      profileSvg,
-      parentSvg
-    );
-
-    //TODO: Disable zoom until data is uploaded
-    // Zooming for dose profile
-    doseProfileAxis.zoomObj = getZoom(
-      sideDoseProfileDimensions.width,
-      sideDoseProfileDimensions.height,
-      zoomedDoseProfile,
-      [doseProfileAxis]
-    );
-
-    // Enable zooming
-    doseProfileAxis.svg
-      .select("rect.bounding-box")
-      .call(doseProfileAxis.zoomObj);
-
-    return doseProfileAxis;
   }
 
   buildPanels(mainViewerDimensions) {

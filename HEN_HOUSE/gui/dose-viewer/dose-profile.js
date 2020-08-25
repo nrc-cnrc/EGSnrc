@@ -12,10 +12,8 @@ class DoseProfile {
     this.densityChecked = false;
     this.transform = null;
     this.zoomObj = null;
-    this.prevAxis = null;
     this.data = null;
     this.doseVol = null;
-    this.dim = null;
     this.yTicks = 6;
   }
 
@@ -42,7 +40,7 @@ class DoseProfile {
       .call(this.zoomObj.transform, d3.zoomIdentity.scale(1));
   }
 
-  setDoseProfileData(doseVol, profileDim, coords) {
+  setDoseProfileData(doseVol, densityVol, profileDim, coords) {
     let [dim1, dim2, dim3] =
       profileDim === "x"
         ? ["x", "y", "z"]
@@ -119,7 +117,7 @@ class DoseProfile {
       .domain([0, 1.0])
       .range([this.dimensions.height, 0]);
 
-    if (this.densityChecked) {
+    if (this.densityChecked()) {
       let maxDensity = Math.max(...this.data.map((v) => v.density));
 
       this.yDensityScale = d3
@@ -130,7 +128,7 @@ class DoseProfile {
   }
 
   // TODO: Don't update on slider change, only on crosshair position or axes change
-  plotAxes() {
+  plotAxes(dim) {
     // Clear existing axes and labels
     this.svg.selectAll(".profile-x-axis").remove();
     this.svg.selectAll(".profile-y-dose-axis").remove();
@@ -170,7 +168,7 @@ class DoseProfile {
           ")"
       )
       .style("text-anchor", "middle")
-      .text(this.dim + " (cm)");
+      .text(dim + " (cm)");
 
     // Label for dose y axis
     this.svg
@@ -189,7 +187,7 @@ class DoseProfile {
       .style("text-anchor", "middle")
       .text("Dose");
 
-    if (this.densityChecked) {
+    if (this.densityChecked()) {
       // Clear existing axis and label
       this.svg.selectAll(".profile-y-density-axis").remove();
 
@@ -222,7 +220,7 @@ class DoseProfile {
             ") rotate(90)"
         )
         .style("text-anchor", "middle")
-        .text("Density (g/cm^2)");
+        .text("Density (g/cm\u00B3)");
     }
   }
 
@@ -317,7 +315,7 @@ class DoseProfile {
       .attr("class", "lines")
       .attr("d", line);
 
-    if (this.densityChecked) {
+    if (this.densityChecked()) {
       // Create the density line
       let densityLine = d3
         .line()
@@ -333,6 +331,8 @@ class DoseProfile {
         .attr("stroke-width", 1.5)
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round")
+        .attr("class", "lines")
+        .classed("density", true)
         .attr("d", densityLine);
     }
 
@@ -344,22 +344,18 @@ class DoseProfile {
   }
 
   // TODO: Instead of leaving logic inside of dose profile object, just updateAxes before plotDoseProfile if need be
-  updateAxes() {
+  updateAxes(dim) {
     this.setDoseScales();
-    this.plotAxes();
+    this.plotAxes(dim);
     if (this.zoomObj !== null) this.resetZoomTransform();
   }
 
-  plotDoseProfile(axis, dim, coords) {
-    this.dim = dim;
-    let axisChange = axis !== this.prevAxis ? true : false;
-
-    if (this.xScale === null || axisChange) {
-      this.updateAxes();
+  plotDoseProfile(dim, coords) {
+    if (this.xScale === null) {
+      this.updateAxes(dim);
     }
 
     this.makeTitle(dim, coords);
     this.plotData();
-    this.prevAxis = axis;
   }
 }

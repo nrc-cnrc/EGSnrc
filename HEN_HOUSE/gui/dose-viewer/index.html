@@ -23,9 +23,7 @@
     <p class="description">Upload .egsphant and .3ddose files.</p>
     <div id="drop-area">
       <form class="file-upload">
-        <p>
-          Drop or select one or more .egsphant and .3ddose files.
-        </p>
+        <p>Drop or select one or more .egsphant and .3ddose files.</p>
         <input
           type="file"
           id="file-input"
@@ -43,17 +41,7 @@
     </div>
     <div id="dose-viewer-container" class="container">
       <span id="dose-viewer-info-container" class="container">
-        <div id="axis-slider-container">
-          <div class="window-level-container">
-            <label for="window">Window:</label>
-            <input type="range" class="window-slider" name="window" />
-            <output type="text" id="window-value" value="">0</output>
-            <br />
-            <label for="level">Level:</label>
-            <input type="range" class="level-slider" name="level" />
-            <output type="text" id="level-value" value="">0</output>
-          </div>
-        </div>
+        <div id="axis-slider-container"></div>
       </span>
       <span class="container">
         <button id="save-vis" disabled>Export visualization to PNG</button>
@@ -85,70 +73,22 @@
           Plot dose profile at crosshairs?
         </label>
         <br />
-      </span>
-      <div id="image-to-print"></div>
-      <button id="add-volume-viewer">
-        Add new volume viewer
-      </button>
-    </div>
-    <div id="dose-profile-viewer" style="display: none;">
-      <p>
-        Select axis and voxel coordinates to view and compare dose profiles.
-      </p>
-      <form>
-        <input
-          type="radio"
-          id="x"
-          name="profile-axis"
-          value="x"
-          checked
-          disabled
-        />
-        <label for="x">x</label>
-        <input type="radio" id="y" name="profile-axis" value="y" disabled />
-        <label for="y">y</label>
-        <input type="radio" id="z" name="profile-axis" value="z" disabled />
-        <label for="z">z</label>
-      </form>
-      <form>
-        <label>
-          <span id="coord-1-label">y:</span>
-          <input
-            type="number"
-            id="coord-1"
-            name="coord-input"
-            autocomplete="off"
-            min="0"
-            step="1"
-            value="0"
-            disabled
-          />
-        </label>
-        <br />
-        <label>
-          <span id="coord-2-label">z:</span>
-          <input
-            type="number"
-            id="coord-2"
-            name="coord-input"
-            autocomplete="off"
-            min="0"
-            step="1"
-            value="0"
-            disabled
-          />
-        </label>
+
         <input
           type="checkbox"
           id="density-profile-checkbox"
           name="density-profile-checkbox"
           value="PlotDensity"
+          style="display: none"
           disabled
         />
-        <label for="density-profile-checkbox"> Plot density? </label>
-      </form>
-      <button id="dose-profile-button" disabled>Make Dose Profile</button>
-      <svg id="dose-profile-svg" class="plot"></svg>
+        <label for="density-profile-checkbox" style="display: none">
+          Plot density?
+        </label>
+        <br />
+      </span>
+      <div id="image-to-print"></div>
+      <button id="add-volume-viewer">Add new volume viewer</button>
     </div>
     <script type="text/javascript" src="./create-volume.js"></script>
     <script type="text/javascript" src="./dose-profile.js"></script>
@@ -181,7 +121,7 @@
       let legendDimensions = {
         fullWidth: 90,
         fullHeight: mainViewerDimensions.fullHeight,
-        margin: { top: 25, right: 10, bottom: 5, left: 10 },
+        margin: { top: 25, right: 10, bottom: 25, left: 10 },
         get width() {
           return this.fullWidth - this.margin.left - this.margin.right;
         },

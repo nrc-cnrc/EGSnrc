@@ -87,10 +87,10 @@ function readFile(file, fileNum) {
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
       let densityVol = new DensityVolume(
-        data,
         fileName,
         mainViewerDimensions,
-        legendDimensions
+        legendDimensions,
+        data
       );
 
       densityVolumeList.push(densityVol);
@@ -103,10 +103,10 @@ function readFile(file, fileNum) {
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
       let doseVol = new DoseVolume(
-        data,
         fileName,
         mainViewerDimensions,
-        legendDimensions
+        legendDimensions,
+        data
       );
 
       doseVolumeList.push(doseVol);
