@@ -9,23 +9,26 @@ function help {
 
         $(basename $0) pbsdsh_dir basename nthread first delay 'command'
 
-        This script is not meant to be called directly, but rather from the egs-parallel-pbsdsh script
-
     arguments:
 
-        pbsdsh_dir  existing directory where to store task files for job numbers
-        basename    simulation base name (input file name, without ".egsinp" extension)
+        pbsdsh_dir  existing directory to save task files for job numbers
+        basename    simulation input file name, without ".egsinp" extension
         nthread     number of task to run under dsh
         first       first job index
         delay       user-specified delay in seconds between individual jobs
         command     command to run, in quotes
+
+    note:
+
+        This script is not meant to be called directly, but rather from the
+        egs-parallel-pbsdsh script
 
 EOF
 }
 
 ### timestamp function
 function timestamp {
-    printf "EGSnrc egs-parallel $(date --rfc-3339=ns)"
+    printf "EGSnrc egs-parallel $(date -u "+%Y-%m-%d (UTC) %H:%M:%S.%N")"
 }
 
 ### log function to write messages to log file and standard output

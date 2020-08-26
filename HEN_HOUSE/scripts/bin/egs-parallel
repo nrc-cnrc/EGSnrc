@@ -23,9 +23,9 @@ function help {
 EOF
 }
 
-### timestamp function
+### timestamp functionq
 function timestamp {
-    printf "EGSnrc egs-parallel $(date --rfc-3339=ns)"
+    printf "EGSnrc egs-parallel $(date -u "+%Y-%m-%d (UTC) %H:%M:%S.%N")"
 }
 
 ### log function to write messages to log file and standard output

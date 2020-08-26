@@ -9,26 +9,28 @@ function help {
 
         $(basename $0) queue nthread delay first basename 'command' ['others'] [verbose]
 
-        This script is not meant to be called directly, but rather via the egs-parallel script
-        with the batch option "-b cpu"
-
     arguments:
 
         queue       queue name on the pbs scheduler
-        nthread     number of threads to use (number of jobs; at most available cpu threads)
+        nthread     number of threads to use (number of jobs)
         delay       delay in seconds between individual jobs
-        basename    simulation base name (input file name, without ".egsinp" extension)
         first       first job index
+        basename    simulation input file name, without ".egsinp" extension
         command     command to run, in quotes
         others      other options passed to scheduler, in quotes
         verbose     echo detailed egs-parallel log messages to terminal
+
+    note:
+
+        This script is not meant to be called directly, but rather via the
+        egs-parallel script with the batch option "-b cpu"
 
 EOF
 }
 
 ### timestamp function
 function timestamp {
-    printf "EGSnrc egs-parallel $(date --rfc-3339=ns)"
+    printf "EGSnrc egs-parallel $(date -u "+%Y-%m-%d (UTC) %H:%M:%S.%N")"
 }
 
 ### log function to write messages to log file and standard output
