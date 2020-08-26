@@ -44,8 +44,9 @@ my_machine=`cat $EGS_CONFIG | grep "my_machine =" | sed "s/my_machine = //"`
 HEN_HOUSE=`cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed "s/HEN_HOUSE = //"`
 export OMEGA_HOME=${HEN_HOUSE}omega
 
-# Add HEN_HOUSE bin area to the path
+# Add HEN_HOUSE bin and scripts/bin to the path
 #
+PATH="${HEN_HOUSE}scripts/bin:$PATH"
 PATH="${HEN_HOUSE}bin/$my_machine:$PATH"
 
 # Now check for EGS_HOME.
