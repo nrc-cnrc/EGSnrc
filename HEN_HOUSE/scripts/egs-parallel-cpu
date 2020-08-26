@@ -90,7 +90,6 @@ for job in $(seq 1 $nthread); do
 
     ### launch the job
     runcommand="$command -b -P $nthread -j $job -f $first"
-    source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
     $runcommand >/dev/null 2>&1 &
     pid=$(printf $!)
 

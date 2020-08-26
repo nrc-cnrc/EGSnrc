@@ -176,7 +176,6 @@ for job in $(seq 1 $nthread); do
     ### launch the job
     runcommand="$command -b -P $nthread -j $job -f $first"
     log "$jobstr: SUBMIT $runcommand"
-    source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
     jobpid=$(qsub -q $queue $scheduler_options <<EOF
 #!/bin/sh
 #PBS -j eo

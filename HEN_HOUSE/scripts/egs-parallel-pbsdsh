@@ -99,7 +99,7 @@ jobpid=$(qsub -q $queue $scheduler_options <<EOF
 #PBS -e ${basename}.eo
 #PBS -N $jobname
 #PBS -l select=$nthread:ncpus=1
-#PBS -v HEN_HOUSE,EGS_HOME,EGS_CONFIG
+#PBS -v HEN_HOUSE,EGS_HOME,EGS_CONFIG,PATH
 pbsdsh $task_script $pbsdsh_dir $basename $nthread $first $delay '$command'
 EOF
 )

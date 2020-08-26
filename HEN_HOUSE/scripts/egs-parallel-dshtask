@@ -197,7 +197,6 @@ fi
 
 ### launch the job if simulation is not done already
 quit_if_done
-source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
 log "$jobstr: RUN $command -b -P $nthread -j $job -f $first"
 $command -b -P $nthread -j $job -f $first
 
