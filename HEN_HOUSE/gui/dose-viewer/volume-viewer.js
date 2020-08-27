@@ -328,13 +328,15 @@ class VolumeViewer {
     let base = d3.select("#image-to-print");
 
     // Add div to hold the panels, legend, and dose profiles
-    let volHolder = base
+    this.volHolder = base
       .append("div")
       .attr("id", "volume-holder-" + id)
       .attr("class", "volume-holder");
 
     // Add the file selector dropdowns
-    let fileSelector = volHolder.append("div").attr("class", "file-selector");
+    let fileSelector = this.volHolder
+      .append("div")
+      .attr("class", "file-selector");
     this.densitySelector = fileSelector
       .append("select")
       .attr("name", "density-file");
@@ -360,24 +362,26 @@ class VolumeViewer {
     this.setUpFileSelectors();
 
     // Add window and level sliders
-    this.levelParentDiv = volHolder
+    this.levelParentDiv = this.volHolder
       .append("div")
       .attr("class", "window-level-container");
-    this.windowParentDiv = volHolder
+    this.windowParentDiv = this.volHolder
       .append("div")
       .attr("class", "window-level-container");
 
     // Add voxel information
-    buildVoxelInfoHtml(volHolder, id);
+    buildVoxelInfoHtml(this.volHolder, id);
 
     // Append div to hold the panels
-    this.viewerContainer = volHolder
+    this.viewerContainer = this.volHolder
       .append("span")
       .attr("class", "container")
       .style("vertical-align", "top");
 
     // Append div to hold the legend
-    this.legendHolder = volHolder.append("span").attr("class", "legend-holder");
+    this.legendHolder = this.volHolder
+      .append("span")
+      .attr("class", "legend-holder");
 
     // Build other html and class objects
     this.buildViewerContainer(this.mainViewerDimensions);

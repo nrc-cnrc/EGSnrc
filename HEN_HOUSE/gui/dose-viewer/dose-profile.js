@@ -15,6 +15,7 @@ class DoseProfile {
     this.data = null;
     this.doseVol = null;
     this.yTicks = 6;
+    this.profileDim = null;
   }
 
   set zoomTransform(val) {
@@ -93,6 +94,7 @@ class DoseProfile {
     }
     this.data = doseProfileData;
     this.doseVol = doseVol;
+    this.profileDim = profileDim;
   }
 
   // TODO: Don't update on slider change, only on crosshair position or axes change
@@ -128,7 +130,7 @@ class DoseProfile {
   }
 
   // TODO: Don't update on slider change, only on crosshair position or axes change
-  plotAxes(dim) {
+  plotAxes() {
     // Clear existing axes and labels
     this.svg.selectAll(".profile-x-axis").remove();
     this.svg.selectAll(".profile-y-dose-axis").remove();
@@ -168,7 +170,7 @@ class DoseProfile {
           ")"
       )
       .style("text-anchor", "middle")
-      .text(dim + " (cm)");
+      .text(this.profileDim + " (cm)");
 
     // Label for dose y axis
     this.svg
@@ -224,12 +226,16 @@ class DoseProfile {
     }
   }
 
-  makeTitle(axis, coords) {
+  makeTitle(coords) {
     // Clear existing title
     this.svg.select(".title").remove();
 
     let [dim1, dim2] =
-      axis === "x" ? ["y", "z"] : axis === "y" ? ["x", "z"] : ["x", "y"];
+      this.profileDim === "x"
+        ? ["y", "z"]
+        : this.profileDim === "y"
+        ? ["x", "z"]
+        : ["x", "y"];
 
     let format = d3.format(".2f");
 
@@ -242,7 +248,7 @@ class DoseProfile {
       .attr("text-anchor", "middle")
       .style("text-decoration", "underline")
       .text(
-        axis +
+        this.profileDim +
           " Axis Dose at (" +
           dim1 +
           ", " +
@@ -344,18 +350,18 @@ class DoseProfile {
   }
 
   // TODO: Instead of leaving logic inside of dose profile object, just updateAxes before plotDoseProfile if need be
-  updateAxes(dim) {
+  updateAxes() {
     this.setDoseScales();
-    this.plotAxes(dim);
+    this.plotAxes();
     if (this.zoomObj !== null) this.resetZoomTransform();
   }
 
-  plotDoseProfile(dim, coords) {
+  plotDoseProfile(coords) {
     if (this.xScale === null) {
-      this.updateAxes(dim);
+      this.updateAxes();
     }
 
-    this.makeTitle(dim, coords);
+    this.makeTitle(coords);
     this.plotData();
   }
 }

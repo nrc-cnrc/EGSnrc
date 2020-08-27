@@ -190,7 +190,7 @@ function updateDoseProfiles(voxelCoords, worldCoords) {
         );
 
         // Plot the dose profile
-        doseProfile.plotDoseProfile(dimensionsList[i], worldCoordsList[i]);
+        doseProfile.plotDoseProfile(worldCoordsList[i]);
       }
     });
   });
