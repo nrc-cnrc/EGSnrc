@@ -46,7 +46,7 @@ function quit {
         *)     cmd="";;
     esac
     verbosity="verbose"
-    log "$0 line $lineno: $msg"; $cmd; log "QUIT."; exit 1
+    log "$(basename $0): line $lineno: $msg"; $cmd; log "QUIT."; exit 1
 }
 
 ### link file descriptor 3 to egs-parallel log file

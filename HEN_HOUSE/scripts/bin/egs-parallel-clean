@@ -8,22 +8,26 @@ function help {
 
         $(basename $0)  [options]  { -f | -n }  basename [ basename2 ... ]
 
-        With -f flag, remove temporary files created by EGSnrc simulations for
-        input files basename1.egsinp basename2.egsinp, etc. Run with -n flag to check
-        which files would be deleted. Unless the -x option is given, also sort and merge
-        the output from egs-parallel output into a .egsparallel log file, and merge
-        the outputs from all the scheduler .eo files into a .egsparallel.eo file
-
-        Note that the list of basenames can also be given as a glob pattern within quotes,
-        as in $(basename $0) "myinput*", for example.
-
     options and arguments:
 
-        -f | --force    remove temporary files (using /bin/rm -rf)
-        -n | --dry-run  show which files would be removed when using -f flag (default)
-        -x | --extra    extra clean: also remove .egsparallel and .egsparallel.eo log files
-        -v | --verbose  log the actual commands executed, instead of concise log messages
-        basename        simulation base name (input file name, with or without ".egsinp" extension)
+        -l | --list     only list the .egslog files in directory and exit
+        -f | --force    remove temporary files (using /bin/rm -r)
+        -n | --dry-run  show which files would be removed with -f flag
+        -x | --extra    extra clean: also remove egs-parallel log files
+        -v | --verbose  log the commands executed, instead of concise log messages
+        basename        input file name, with or without the ".egsinp" extension
+
+    description:
+
+        With -f flag, remove temporary files created by EGSnrc simulations for
+        input files basename.egsinp basename2.egsinp, etc. Run with -n flag to
+        check which files would be deleted. Unless the -x option is given, also
+        sort and merge the output from egs-parallel output into a .egsparallel
+        log file, and merge the outputs from all the scheduler .eo files into a
+        .egsparallel-eo file
+
+        Note that the list of basenames can also be given as a glob pattern
+        within quotes, as in $(basename $0) "myinput*", for example.
 
 EOF
 }
@@ -41,7 +45,7 @@ function quit {
         help)  cmd="help";;
         *)     cmd="";;
     esac
-    log "$0 line $lineno: $msg"; $cmd; log "QUIT."; exit 1
+    log "$(basename $0): line $lineno: $msg"; $cmd; log "QUIT."; exit 1
 }
 
 ### list or delete the file passed as the first argument
@@ -65,21 +69,22 @@ function action {
         msg="$@"
     fi
 
-    # log action
-    if ! [ -z "$msg" ]; then
-        log "$msg"
-    fi
-
     # perform action if -f (--force) option is invoked
     if [ "$opt_force" = "yes" ]; then
         eval "$@"
     fi
     dirty="yes"
 
+    # log action
+    if ! [ -z "$msg" ]; then
+        log "$msg"
+    fi
+
 }
 
 ### default option values
 opt_force=""
+opt_listonly="no"
 opt_extra="no"
 opt_verbose="no"
 declare -a opt_names
@@ -92,6 +97,7 @@ while [ "$#" -gt 0 ]; do
         -f|--force)     if [ -z "$opt_force" ]; then
                             opt_force="yes"
                         fi;;
+        -l|--list)      opt_listonly="yes";;
         -n|--dry-run)   opt_force="no";;
         -x|--extra)     opt_extra="yes";;
         -v|--verbose)   opt_verbose="yes";;
@@ -101,6 +107,21 @@ done
 
 ### begin script
 log "$(basename $0)"
+log "current directory: $PWD/\n"
+
+
+### just list the egslog basenames  and exit if option -l is invoked
+if [ "$opt_listonly" = "yes" ]; then
+    log "LIST of .egslog basenames:"
+    tab="    "
+    for f in $(ls -1dF *.egslog); do
+        if ! [[ "$f" =~ _w[0-9]+.egslog ]]; then
+            log "${f%.egslog}"
+        fi
+    done
+    printf "\nDONE.\n"
+    exit 0
+fi
 
 ### ensure either -f or -n is specified
 if [ -z "$opt_force" ]; then
@@ -121,11 +142,7 @@ for name in "${opt_names[@]}"; do
 
     ### log name and indentation
     tab=""
-    dryrun=""
-    if [ "$opt_force" = "no" ]; then
-        dryrun="(dry-run)"
-    fi
-    log "CLEANING ${name} ... $dryrun"
+    log "CLEANING ${name} ..."
     tab="    "
 
     ### dirty flag and log tabulation
@@ -133,20 +150,21 @@ for name in "${opt_names[@]}"; do
 
     ### log dry run
     if [ "$opt_force" = "no" ]; then
-        log "with the -f (--force) option, cleaning would:"
+        tab="    ! "
+        log "TESTING only: with the -f (--force) option, $(basename $0) WOULD:"
     fi
 
     ### clean .egsparallel and .eo log files if -x (--extra) is invoked, otherwise catenate them
     if [ "$opt_extra" = "yes" ]; then
-        clean_extensions="$clean_extensions .egsparallel .egsparallel.eo"
+        clean_extensions="$clean_extensions .egsparallel .egsparallel-eo"
     else
         for f in ${name}.egsparallel; do
             f=${f%.egsparallel}
             files=($f.egsjob $f.o $f.eo ${f}_w*.o ${f}_w*.eo)
-            lsfiles=$(/bin/ls -dx ${files[@]} 2>/dev/null)
+            lsfiles=$(/bin/ls -d ${files[@]} 2>/dev/null)
             if ! [ -z "$lsfiles" ]; then
-                action --log "merge $f pbs sterr and stdout files into $f.egsparallel.eo" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep -v 'EGSnrc egs-parallel' >$f.egsparallel.eo"
-                action --log "merge $f egs-parallel log files into $f.egsparallel" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep 'EGSnrc egs-parallel' | sort >$f.egsparallel.merged"
+                action --log "merge parallel output and error streams into $f.egsparallel-eo" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep -v 'EGSnrc egs-parallel' >$f.egsparallel-eo"
+                action --log "merge egs-parallel log messages into $f.egsparallel" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep 'EGSnrc egs-parallel' | sort >$f.egsparallel.merged"
                 action --log --none "mv $f.egsparallel.merged $f.egsparallel"
             fi
         done
@@ -183,6 +201,8 @@ for name in "${opt_names[@]}"; do
     if [ "$dirty" = "no" ]; then
         log "(nothing to clean)"
     fi
+
     printf "\n"
 
 done
+printf "DONE.\n"

@@ -51,7 +51,7 @@ function quit {
         *)     cmd="";;
     esac
     verbosity="verbose"
-    log "$0 line $lineno: $msg"; $cmd; log "QUIT."; exit 1
+    log "$(basename $0): line $lineno: $msg"; $cmd; log "QUIT."; exit 1
 }
 
 ### begin script
