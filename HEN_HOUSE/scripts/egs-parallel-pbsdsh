@@ -1,4 +1,37 @@
 #!/bin/bash
+###############################################################################
+#
+#  EGSnrc script to submit parallel jobs under one PBS distributed shell job
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Frederic Tessier, 2020
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  This script is not meant to be called directly, but rather via the script
+#  egs-parallel, with the batch option "--batch pbsdsh"
+#
+###############################################################################
+
 
 ### help function
 function help {
@@ -23,7 +56,7 @@ function help {
     note:
 
         This script is not meant to be called directly, but rather via the
-        egs-parallel script with the batch option "-b pbsdsh"
+        egs-parallel script with the batch option "--batch pbsdsh"
 
 EOF
 }
