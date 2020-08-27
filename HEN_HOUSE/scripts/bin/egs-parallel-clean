@@ -6,19 +6,23 @@ function help {
 
     usage:
 
-        $(basename $0) [ -f | -n ]  basename [ basename2 ... ]
+        $(basename $0)  [options]  { -f | -n }  basename [ basename2 ... ]
 
         With -f flag, remove temporary files created by EGSnrc simulations for
         input files basename1.egsinp basename2.egsinp, etc. Run with -n flag to check
-        which files would be deleted; The list of basenames can also be given as a
-        glob pattern given in double quotes, as in $(basename $0) "myinput*", for example.
-        Also sorts and catenates output from job scheduler into the basename.egsparallel
-        log file.
+        which files would be deleted. Unless the -x option is given, also sort and merge
+        the output from egs-parallel output into a .egsparallel log file, and merge
+        the outputs from all the scheduler .eo files into a .egsparallel.eo file
+
+        Note that the list of basenames can also be given as a glob pattern within quotes,
+        as in $(basename $0) "myinput*", for example.
 
     options and arguments:
 
         -f | --force    remove temporary files (using /bin/rm -rf)
         -n | --dry-run  show which files would be removed when using -f flag (default)
+        -x | --extra    extra clean: also remove .egsparallel and .egsparallel.eo log files
+        -v | --verbose  log the actual commands executed, instead of concise log messages
         basename        simulation base name (input file name, with or without ".egsinp" extension)
 
 EOF
@@ -41,24 +45,43 @@ function quit {
 }
 
 ### list or delete the file passed as the first argument
-function list_or_delete {
-    slash=""
-    if [ -d "$1" ]; then
-        slash="/"
-    fi
-    if [ "$opt_delete" = "yes" ]; then
-        log "/bin/rm -r $1$slash"
-        /bin/rm -r $1
+function action {
+
+    # process specific log message for the action
+    option_log=$1
+    option_msg=$2
+    if [ "$option_log" = "--log" ]; then
+        msg=$option_msg
+        if [ "$msg" = "--none" ]; then
+            msg=""
+        fi
+        shift 2;
     else
-        log "remove $1$slash"
+        msg="$@"
     fi
+
+    # if verbose option is invoked, log the actual command that will be run
+    if [ "$opt_verbose" = "yes" ]; then
+        msg="$@"
+    fi
+
+    # log action
+    if ! [ -z "$msg" ]; then
+        log "$msg"
+    fi
+
+    # perform action if -f (--force) option is invoked
+    if [ "$opt_force" = "yes" ]; then
+        eval "$@"
+    fi
+    dirty="yes"
+
 }
 
-### begin script
-log "$0"
-
 ### default option values
-opt_delete=""
+opt_force=""
+opt_extra="no"
+opt_verbose="no"
 declare -a opt_names
 
 ### parse command-line arguments (simplistic)
@@ -66,91 +89,100 @@ while [ "$#" -gt 0 ]; do
     opt=$1; shift
     case $opt in
         -h|--help)      help; exit;;
-        -f|--force)     if [ -z $opt_delete ]; then
-                            opt_delete="yes"
+        -f|--force)     if [ -z "$opt_force" ]; then
+                            opt_force="yes"
                         fi;;
-        -n|--dry-run)   opt_delete="no";;
+        -n|--dry-run)   opt_force="no";;
+        -x|--extra)     opt_extra="yes";;
+        -v|--verbose)   opt_verbose="yes";;
         *)              opt_names+=("${opt%.egsinp}");;
     esac
 done
 
+### begin script
+log "$(basename $0)"
+
 ### ensure either -f or -n is specified
-if [ -z "$opt_delete" ]; then
+if [ -z "$opt_force" ]; then
     quit $LINENO "either option -f (--force) or -n (--dry-run) must be specified" help
 fi
 
 ### ensure there is at least one basename provided
-if [ -z "${opt_names[@]}" ]; then
+names="${opt_names[@]}"
+if [ -z "$names" ]; then
     quit $LINENO "at least one simulation basename must be specified" help
 fi
 
 ### define filename extension to clean
-clean_ext=".lock .mederr .egsjob .pbsdsh .eo .e .o"
+clean_extensions=".lock .mederr .egsjob .pbsdsh .eo .e .o"
 
 ### loop over all names
 for name in "${opt_names[@]}"; do
 
-    # log name and indentation
+    ### log name and indentation
     tab=""
     dryrun=""
-    if [ "$opt_delete" = "no" ]; then
+    if [ "$opt_force" = "no" ]; then
         dryrun="(dry-run)"
     fi
     log "CLEANING ${name} ... $dryrun"
     tab="    "
 
-    # dirty flag and log tabulation
+    ### dirty flag and log tabulation
     dirty="no"
 
-    # log dry run
-    if [ "$opt_delete" = "no" ]; then
+    ### log dry run
+    if [ "$opt_force" = "no" ]; then
         log "with the -f (--force) option, cleaning would:"
     fi
 
-    # sort catenated egs-parallel log files into .egsparallel
-    for f in ${name}.egsjob; do
-        f=${f%.egsjob}
-        eofiles=($f.egsjob $f.o $f.eo ${f}_w*.o ${f}_w*.eo)
-        eofiles=$(ls echo ${eofiles[@]} 2>/dev/null)
-        if [ -n "$eofiles" ]; then
-            dirty="yes"
-            log "join egs-parallel log files into $f.egsparallel"
-            if [ "$opt_delete" = "yes" ]; then
-                cat $f.egsparallel $eofiles 2>/dev/null | grep 'EGSnrc egs-parallel' | sort >$f.egsparallel.combined
-                /bin/mv $f.egsparallel.combined $f.egsparallel
+    ### clean .egsparallel and .eo log files if -x (--extra) is invoked, otherwise catenate them
+    if [ "$opt_extra" = "yes" ]; then
+        clean_extensions="$clean_extensions .egsparallel .egsparallel.eo"
+    else
+        for f in ${name}.egsparallel; do
+            f=${f%.egsparallel}
+            files=($f.egsjob $f.o $f.eo ${f}_w*.o ${f}_w*.eo)
+            lsfiles=$(/bin/ls -dx ${files[@]} 2>/dev/null)
+            if ! [ -z "$lsfiles" ]; then
+                action --log "merge $f pbs sterr and stdout files into $f.egsparallel.eo" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep -v 'EGSnrc egs-parallel' >$f.egsparallel.eo"
+                action --log "merge $f egs-parallel log files into $f.egsparallel" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep 'EGSnrc egs-parallel' | sort >$f.egsparallel.merged"
+                action --log --none "mv $f.egsparallel.merged $f.egsparallel"
             fi
-        fi
-    done
+        done
+    fi
 
-    # loop over file extensions
-    for ext in $clean_ext; do
+    ### loop over file extensions
+    for ext in $clean_extensions; do
 
         # remove files
         count=$( find -maxdepth 1 -name "${name}${ext}" | wc -l )
         if [ $count -gt 0 ]; then
-            dirty="yes"
             for f in ${name}${ext}; do
-                list_or_delete "$f"
+                if [ -d $f ]; then
+                    f="${f%/}/"
+                fi
+                action --log "remove $f" "/bin/rm -r $f"
             done
         fi
     done
-    # remove work files
+
+    ### remove work files
     count=$( find -maxdepth 1 -name "${name}_w*" | wc -l )
     if [ $count -gt 0 ]; then
-        dirty="yes"
-        list_or_delete "${name}_w*"
+        action --log "remove ${name}_w*" "/bin/rm -r ${name}_w*"
     fi
 
-    # remove egsrun directories
+    ### remove egsrun directories
     count=$( find -maxdepth 1 -name "egsrun_*_${name}_*" | wc -l )
     if [ $count -gt 0 ]; then
-        dirty="yes"
-        list_or_delete "egsrun_*_${name}_*"
+        action --log "remove egsrun_*_${name}_*/" "/bin/rm -r egsrun_*_${name}_*"
     fi
 
+    ### report if there is nothing to clean
     if [ "$dirty" = "no" ]; then
         log "(nothing to clean)"
     fi
-    printf ""
+    printf "\n"
 
 done
