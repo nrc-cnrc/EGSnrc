@@ -40,7 +40,7 @@ function help {
     options:
 
         -h | --help         show this help
-        -b | --batch        batch system to use ("pbsdsh" by default)
+        -b | --batch        batch system to use ("cpu" by default)
         -d | --delay        delay in seconds between individual jobs
         -q | --queue        scheduler queue ("long" by default)
         -n | --nthread      number of threads ("8" by default)
@@ -85,7 +85,7 @@ function quit {
 exec 3>egs-parallel-$$.log
 
 ### default option values
-opt_batch="pbsdsh"
+opt_batch="cpu"
 opt_queue="long"
 opt_nthread="8"
 opt_delay="0"
