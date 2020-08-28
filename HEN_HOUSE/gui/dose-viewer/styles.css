@@ -11,6 +11,7 @@
 body {
   margin: 25px 50px 25px 50px;
   font-family: helvetica;
+  font-size: 16px;
 }
 
 #dose-viewer-container {
@@ -19,6 +20,17 @@ body {
 
 p.description {
   color: grey;
+}
+
+button.link-appearance {
+  background: none !important;
+  border: none;
+  padding: 0 !important;
+  font-family: helvetica;
+  color: #069;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 span.dose-profile-holder {

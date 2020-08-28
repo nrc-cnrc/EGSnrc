@@ -3,6 +3,37 @@ let progressBar = d3.select("#progress-bar");
 let progressBarNode = progressBar.node();
 let totalFiles = 0;
 
+var makeDensityVolume = (fileName, data) => {
+  let densityVol = new DensityVolume(
+    fileName,
+    mainViewerDimensions,
+    legendDimensions,
+    data
+  );
+
+  densityVolumeList.push(densityVol);
+  volumeViewerList.forEach((volumeViewer) =>
+    volumeViewer.updateDensityFileSelector(
+      densityVol,
+      densityVolumeList.length - 1
+    )
+  );
+};
+
+var makeDoseVolume = (fileName, data) => {
+  let doseVol = new DoseVolume(
+    fileName,
+    mainViewerDimensions,
+    legendDimensions,
+    data
+  );
+
+  doseVolumeList.push(doseVol);
+  volumeViewerList.forEach((volumeViewer) =>
+    volumeViewer.updateDoseFileSelector(doseVol, doseVolumeList.length - 1)
+  );
+};
+
 function initializeProgress(numfiles) {
   progressBarNode.value = 0;
   // Show the progress bar
@@ -49,6 +80,30 @@ d3.select("#file-input").on("change", function () {
   }
 });
 
+// If the test files link is pressed, process test files
+d3.select("#test-files").on("click", function () {
+  // Add a new volume viewer
+  const volViewer = new VolumeViewer(
+    mainViewerDimensions,
+    legendDimensions,
+    sideDoseProfileDimensions,
+    "vol-" + volumeViewerList.length
+  );
+  volumeViewerList.push(volViewer);
+
+  d3.json("/test-files/ismail-density.json").then((densityData) => {
+    makeDensityVolume("ismail.egsphant", densityData);
+    volViewer.setDensityVolume(densityVolumeList[0]);
+    volViewer.densitySelector.node().selectedIndex = 1;
+  });
+
+  d3.json("/test-files/ismail100-dose.json").then((doseData) => {
+    makeDoseVolume("ismail100.3ddose", doseData);
+    volViewer.setDoseVolume(doseVolumeList[0]);
+    volViewer.doseSelector.node().selectedIndex = 1;
+  });
+});
+
 function handleFiles(files) {
   initializeProgress(files.length);
   files.forEach((file, fileNum) => readFile(file, fileNum + 1));
@@ -86,33 +141,14 @@ function readFile(file, fileNum) {
 
     if (ext === "egsphant") {
       data = processPhantomData(resultSplit);
-      let densityVol = new DensityVolume(
-        fileName,
-        mainViewerDimensions,
-        legendDimensions,
-        data
-      );
 
-      densityVolumeList.push(densityVol);
-      volumeViewerList.forEach((volumeViewer) =>
-        volumeViewer.updateDensityFileSelector(
-          densityVol,
-          densityVolumeList.length - 1
-        )
-      );
+      // Create density volume
+      makeDensityVolume(fileName, data);
     } else if (ext === "3ddose") {
       data = processDoseData(resultSplit);
-      let doseVol = new DoseVolume(
-        fileName,
-        mainViewerDimensions,
-        legendDimensions,
-        data
-      );
 
-      doseVolumeList.push(doseVol);
-      volumeViewerList.forEach((volumeViewer) =>
-        volumeViewer.updateDoseFileSelector(doseVol, doseVolumeList.length - 1)
-      );
+      // Create dose volume
+      makeDoseVolume(fileName, data);
     } else {
       console.log("Unknown file extension");
       return true;

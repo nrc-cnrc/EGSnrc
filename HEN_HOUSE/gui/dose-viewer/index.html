@@ -20,24 +20,15 @@
   </head>
   <body>
     <h1>Dose Viewer</h1>
-    <p class="description">Upload .egsphant and .3ddose files.</p>
+    <p class="description">Upload your own .egsphant and .3ddose files.</p>
     <div id="drop-area">
-      <form class="file-upload">
-        <p>Drop or select one or more .egsphant and .3ddose files.</p>
-        <input
-          type="file"
-          id="file-input"
-          multiple
-          accept=".egsphant, .3ddose"
-        />
-        <br />
-        <progress
-          id="progress-bar"
-          max="100"
-          value="0"
-          class="hidden"
-        ></progress>
-      </form>
+      <p>
+        Drop or select one or more .egsphant and .3ddose files or use existing
+        <button id="test-files" class="link-appearance">test files</button>.
+      </p>
+      <input type="file" id="file-input" multiple accept=".egsphant, .3ddose" />
+      <br />
+      <progress id="progress-bar" max="100" value="0" class="hidden"></progress>
     </div>
     <div id="dose-viewer-container" class="container">
       <span id="dose-viewer-info-container" class="container">
