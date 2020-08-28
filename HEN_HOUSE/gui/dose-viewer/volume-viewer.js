@@ -38,14 +38,18 @@ class VolumeViewer {
     doseVol.initializeMaxDoseSlider(this.panels);
     doseVol.initializeLegend();
     doseVol.initializeDoseContourInput(this.panels);
-    // TODO: Figure out a better layout for event listeners
-    axes.forEach((axis) => {
-      // Get the correct slice number
-      let sliceNum = this.densityVolume
-        ? this.densityVolume.prevSlice[axis].sliceNum
-        : 0;
 
-      let slice = doseVol.getSlice(axis, sliceNum);
+    let dims = "zxy";
+    let sliceNum = {};
+
+    // TODO: Figure out a better layout for event listeners
+    axes.forEach((axis, i) => {
+      // Get the correct slice number
+      sliceNum[axis] = this.densityVolume
+        ? this.densityVolume.prevSlice[axis].sliceNum
+        : Math.floor(doseVol.data.voxelNumber[dims[i]] / 2);
+
+      let slice = doseVol.getSlice(axis, sliceNum[axis]);
       doseVol.drawDose(slice, this.panels[axis].zoomTransform);
       // Update the axis
       drawAxes(
@@ -53,6 +57,7 @@ class VolumeViewer {
         this.svgObjs["axis-svg"][axis],
         slice
       );
+      this.sliceSliders[axis].setCurrentValue(sliceNum[axis]);
     });
 
     // Set the panel doseVolume object
@@ -62,10 +67,12 @@ class VolumeViewer {
         panel.volume = doseVol;
         panel.setupZoom();
         // Update the slider max values
-        let dims = "zxy";
-        axes.forEach((axis, i) =>
-          this.sliceSliders[axis].setMaxValue(doseVol.data.voxelNumber[dims[i]])
-        );
+        axes.forEach((axis, i) => {
+          this.sliceSliders[axis].setMaxValue(
+            doseVol.data.voxelNumber[dims[i]]
+          );
+          this.sliceSliders[axis].setCurrentValue(sliceNum[axis]);
+        });
       }
     });
 
@@ -87,12 +94,16 @@ class VolumeViewer {
     );
 
     densityVol.initializeLegend();
-    axes.forEach((axis) => {
+    let dims = "zxy";
+    let sliceNum = {};
+
+    axes.forEach((axis, i) => {
       // Get the correct slice number
-      let sliceNum = this.doseVolume
+      sliceNum[axis] = this.doseVolume
         ? this.doseVolume.prevSlice[axis].sliceNum
-        : 0;
-      let slice = densityVol.getSlice(axis, sliceNum);
+        : Math.floor(densityVol.data.voxelNumber[dims[i]] / 2);
+
+      let slice = densityVol.getSlice(axis, sliceNum[axis]);
       densityVol.drawDensity(slice, this.panels[axis].zoomTransform);
       // Update the axis
       drawAxes(
@@ -109,12 +120,12 @@ class VolumeViewer {
         panel.volume = densityVol;
         panel.setupZoom();
         // Update the slider max values
-        let dims = "zxy";
-        axes.forEach((axis, i) =>
+        axes.forEach((axis, i) => {
           this.sliceSliders[axis].setMaxValue(
             densityVol.data.voxelNumber[dims[i]]
-          )
-        );
+          );
+          this.sliceSliders[axis].setCurrentValue(sliceNum[axis]);
+        });
       }
     });
 

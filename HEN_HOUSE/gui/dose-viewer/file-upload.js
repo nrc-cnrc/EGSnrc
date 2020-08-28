@@ -118,6 +118,25 @@ function readFile(file, fileNum) {
       return true;
     }
 
+    // If this is the first volume uploaded, load into first volume viewer
+    if (volumeViewerList.length === 0) {
+      const volViewer = new VolumeViewer(
+        mainViewerDimensions,
+        legendDimensions,
+        sideDoseProfileDimensions,
+        "vol-" + volumeViewerList.length
+      );
+      volumeViewerList.push(volViewer);
+
+      if (densityVolumeList.length === 1 && doseVolumeList.length === 0) {
+        volViewer.setDensityVolume(densityVolumeList[0]);
+        volViewer.densitySelector.node().selectedIndex = 1;
+      } else {
+        volViewer.setDoseVolume(doseVolumeList[0]);
+        volViewer.doseSelector.node().selectedIndex = 1;
+      }
+    }
+
     console.log("Finished processing data");
     return true;
   });
