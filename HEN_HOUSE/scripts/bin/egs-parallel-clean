@@ -163,7 +163,7 @@ if [ -z "$names" ]; then
 fi
 
 ### define filename extension to clean
-clean_extensions=".lock .mederr .egsjob .pbsdsh .eo .e .o"
+clean_extensions=".lock .mederr .eo .e .o .pbsdsh .egsjob .egsparallel"
 
 ### loop over all names
 for name in "${opt_names[@]}"; do
@@ -184,16 +184,15 @@ for name in "${opt_names[@]}"; do
 
     ### clean .egsparallel and .eo log files if -x (--extra) is invoked, otherwise catenate them
     if [ "$opt_extra" = "yes" ]; then
-        clean_extensions="$clean_extensions .egsparallel .egsparallel-eo"
+        clean_extensions="$clean_extensions .egsparallel-log .egsparallel-out"
     else
         for f in ${name}.egsparallel; do
             f=${f%.egsparallel}
             files=($f.egsjob $f.o $f.eo ${f}_w*.o ${f}_w*.eo)
             lsfiles=$(/bin/ls -d ${files[@]} 2>/dev/null)
             if ! [ -z "$lsfiles" ]; then
-                action --log "merge parallel output and error streams into $f.egsparallel-eo" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep -v 'EGSnrc egs-parallel' >$f.egsparallel-eo"
-                action --log "merge egs-parallel log messages into $f.egsparallel" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep 'EGSnrc egs-parallel' | sort >$f.egsparallel.merged"
-                action --log --none "mv $f.egsparallel.merged $f.egsparallel"
+                action --log "create $f.egsparallel-log (merged egs-parallel log messages)"    "cat $f.egsparallel ${files[@]} 2>/dev/null | grep 'EGSnrc egs-parallel' | sort >$f.egsparallel-log"
+                action --log "create $f.egsparallel-out (merged parallel jobs output streams)" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep -v 'EGSnrc egs-parallel' >$f.egsparallel-out"
             fi
         done
     fi
