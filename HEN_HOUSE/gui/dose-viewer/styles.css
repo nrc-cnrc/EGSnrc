@@ -1,19 +1,15 @@
-.parent {
-  display: grid;
-  grid-template-columns: 1fr;
-}
-
-.parent div {
-  grid-row-start: 1;
-  grid-column-start: 1;
-}
-
+/* Primary layout */
 body {
   margin: 25px 50px 25px 50px;
   font-family: helvetica;
   font-size: 16px;
 }
 
+.container {
+  display: inline-block;
+}
+
+/* Header layout */
 div.header {
   display: flex;
   justify-content: space-between;
@@ -29,48 +25,63 @@ div.header {
   border-bottom: 3px solid black;
 }
 
-#dose-viewer-container {
-  width: 100%;
-}
-
+/* Text related */
 p.description {
   color: grey;
 }
 
-button.link-appearance {
-  background: none !important;
-  border: none;
-  padding: 0 !important;
-  font-family: helvetica;
-  color: #069;
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: 16px;
+/* Main viewer plot style settings */
+#dose-viewer-container {
+  width: 100%;
 }
 
-span.dose-profile-holder {
-  display: inline-grid;
-  vertical-align: bottom;
+.parent {
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
-.container {
-  display: inline-block;
+.parent div {
+  grid-row-start: 1;
+  grid-column-start: 1;
 }
 
-.label {
-  font-size: 12px;
+.x-axis-grid,
+.y-axis-grid {
+  color: grey;
 }
 
 svg.axis-svg {
   overflow: visible;
 }
 
-#plot-marker,
-#legend-svg,
-.plotting-area {
-  z-index: 4;
+/* Styling the div to hold the panels, legends, and dose profiles */
+div.volume-holder {
+  border: 2px solid #ccc;
+  border-radius: 20px;
+  margin-top: 10px;
+  width: 100%;
+  overflow: auto;
+  white-space: nowrap;
 }
 
+/* Dose profile settings */
+span.dose-profile-holder {
+  display: inline-grid;
+  vertical-align: bottom;
+}
+
+.profile-x-axis,
+.profile-y-dose-axis,
+.profile-y-density-axis {
+  color: grey;
+}
+
+text.dose-profile-axis-label {
+  font-size: 12px;
+  color: grey;
+}
+
+/* Styling the voxel information */
 div.voxel-info {
   font-size: 13px;
   margin: 10px 0px 10px 0px;
@@ -80,6 +91,7 @@ div.voxel-info {
   color: grey;
 }
 
+/* Styling the marker and crosshairs */
 .crosshair {
   fill: none;
   stroke-width: 1px;
@@ -95,6 +107,7 @@ div.voxel-info {
   stroke: rgba(255, 32, 32, 0.7);
 }
 
+/* Styling the dose and density legends */
 .legend-holder {
   vertical-align: top;
   display: inline-flex;
@@ -106,36 +119,11 @@ div.voxel-info {
   display: block;
 }
 
-div.volume-holder {
-  border: 2px solid #ccc;
-  border-radius: 20px;
-  margin-top: 10px;
-  width: 100%;
-  overflow: auto;
-  white-space: nowrap;
+.label {
+  font-size: 12px;
 }
 
-.profile-x-axis,
-.profile-y-dose-axis,
-.profile-y-density-axis {
-  color: grey;
-}
-
-progress.hidden,
-.contour-path.hidden {
-  opacity: 0;
-}
-
-.cell.hidden,
-div.hidden {
-  opacity: 0.2 !important;
-}
-
-.x-axis-grid,
-.y-axis-grid {
-  color: grey;
-}
-
+/* Styling the file upload drag and drop area */
 #drop-area {
   border: 2px dashed #ccc;
   border-radius: 20px;
@@ -147,11 +135,30 @@ div.hidden {
   border-color: blue;
 }
 
+/* Make a button look like a hyperlink  */
+button.link-appearance {
+  background: none !important;
+  border: none;
+  padding: 0 !important;
+  font-family: helvetica;
+  color: #069;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Styling the progress bar */
 progress {
   width: 300px;
 }
 
-text.dose-profile-axis-label {
-  font-size: 12px;
-  color: grey;
+/* Defining the hidden class */
+progress.hidden,
+.contour-path.hidden {
+  opacity: 0;
+}
+
+.cell.hidden,
+div.hidden {
+  opacity: 0.2 !important;
 }

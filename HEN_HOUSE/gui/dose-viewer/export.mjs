@@ -1,4 +1,8 @@
-// Set up the export to csv button
+/**
+ * Set up the export to csv button behaviour. Downloads a csv for each dose
+ * profile (x, y, z) for each volume viewer.
+ */
+// TODO: If plot density is selected, download density information as well.
 d3.select("#save-dose-profile").on("click", function () {
   volumeViewerList.forEach((volumeViewer, i) => {
     volumeViewer.doseProfileList.forEach((doseProfile) => {
@@ -27,23 +31,14 @@ d3.select("#save-dose-profile").on("click", function () {
   });
 });
 
-function downloadURI(uri, name) {
-  var link = document.createElement("a");
-
-  link.download = name;
-  link.href = uri;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-// Part from http://bl.ocks.org/Rokotyan/0556f8facbaf344507cdc45dc3622177
-// https://github.com/aces/brainbrowser/blob/master/examples/volume-viewer-demo.js#L194-L248
-// Set-up the export button
+/**
+ * Set-up the export to png button behaviour. Takes a screenshot of each volume
+ * viewer open on the page.
+ *
+ * Part from http://bl.ocks.org/Rokotyan/0556f8facbaf344507cdc45dc3622177
+ * https://github.com/aces/brainbrowser/blob/master/examples/volume-viewer-demo.js#L194-L248
+ */
 d3.select("#save-vis").on("click", function () {
-  // If show marker is selected, show marker and voxel info
-  // If show crosshairs is selected, show crosshairs and dose profile plots
-
   volumeViewerList.forEach((volumeViewer, i) => {
     let node = volumeViewer.volHolder.node();
 
@@ -68,12 +63,13 @@ d3.select("#save-vis").on("click", function () {
 
     imageName += "image" + i + "." + format;
 
-    // Optional: define elements to exclude from png image
+    // Optional: Define elements to exclude from png image
     function filter(node) {
       return node.tagName !== "input";
     }
 
     if (format === "png") {
+      // Use the domtoimage module to save the node
       domtoimage
         .toBlob(node, {
           // filter: filter,
@@ -87,14 +83,37 @@ d3.select("#save-vis").on("click", function () {
     } else if (format === "svg") {
       // Convert the div to string
       var imgString = getImgString(node);
+
+      // Convert img string to data URL
       var imgsrc =
         "data:image/svg+xml;base64," +
-        btoa(unescape(encodeURIComponent(imgString))); // Convert img string to data URL
+        btoa(unescape(encodeURIComponent(imgString)));
       downloadURI(imgsrc, imageName + ".png");
     }
   });
 });
 
+/**
+ * Download the URI to the users computer.
+ *
+ * @param {string} uri  The URI of the resource to download.
+ * @param {string} name The name given to the downloaded file.
+ */
+function downloadURI(uri, name) {
+  var link = document.createElement("a");
+
+  link.download = name;
+  link.href = uri;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+/**
+ * Encode the node as a string for downloading.
+ *
+ * @param {Object} node The element node to get a string representation of.
+ */
 function getImgString(node) {
   // Extract all CSS Rules
   // From https://developer.mozilla.org/en-US/docs/Web/API/StyleSheetList

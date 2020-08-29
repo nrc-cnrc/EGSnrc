@@ -1,6 +1,17 @@
-// TODO: Make slider for sliceNum
-// TODO: Make slider for window/level
+/**
+ * @class Generic number slider class.
+ * */
 class Slider {
+  /**
+   * Creates an instance of a Slider.
+   *
+   * @constructor
+   * @param {Object} parentDiv The parent HTML element to build the slider on.
+   * @param {function} onValChangeCallback The function to call when the slider
+   * changes value.
+   * @param {Object} params The parameters of the slider that includes id, label,
+   * format, startingVal, minVal, maxVal, and step.
+   */
   constructor(parentDiv, onValChangeCallback, params) {
     this.format = params.format;
     this.onValChangeCallback = onValChangeCallback;
@@ -14,10 +25,25 @@ class Slider {
     );
   }
 
-  value() {
+  /**
+   * Get current value of slider.
+   *
+   * @returns {number}
+   */
+  get value() {
     return this.slider.node().value;
   }
 
+  /**
+   * Build the slider element on the webpage.
+   *
+   * @params {Object} parentDiv The parent HTML element to build the slider on.
+   * @params {string} id The unique ID of the slider element.
+   * @params {string} labelStr The text label of the slider.
+   * @params {boolean} [incrementButtons = true] Whether or not to add increment
+   * and decrement buttons.
+   * @params {boolean} [disabled = true] Whether or not the slider is initially disabled.
+   */
   buildSliderHtml(
     parentDiv,
     id,
@@ -82,6 +108,15 @@ class Slider {
     this.sliderValue = sliderValue;
   }
 
+  /**
+   * Setup the behaviour of the slider.
+   *
+   * @params {function} format The function that formats the number output.
+   * @params {number} startingVal The starting value of the slider.
+   * @params {number} minVal The minimum value of the slider.
+   * @params {number} maxVal The maximum value of the slider.
+   * @params {number} step The interval between two values on the slider.
+   */
   initializeBehaviour(format, startingVal, minVal, maxVal, step) {
     let sliderNode = this.slider.node();
 
@@ -130,10 +165,18 @@ class Slider {
     this.sliderValue.text(format(startingVal));
   }
 
+  /**
+   * Enable the slider if disabled.
+   */
   enableSlider() {
     if (this.slider.attr("disabled")) this.slider.attr("disabled", null);
   }
 
+  /**
+   * Set the minimum value of the slider.
+   *
+   * @params {number} minVal The minimum value of the slider.
+   */
   setMinValue(minVal) {
     // Set min value
     this.slider.attr("min", minVal);
@@ -147,6 +190,11 @@ class Slider {
     }
   }
 
+  /**
+   * Set the maximum value of the slider.
+   *
+   * @params {number} maxVal The maximum value of the slider.
+   */
   setMaxValue(maxVal) {
     // Set max value
     this.slider.attr("max", maxVal);
@@ -160,6 +208,11 @@ class Slider {
     }
   }
 
+  /**
+   * Set the current value of the slider.
+   *
+   * @params {number} val The value of the slider to be set to.
+   */
   setCurrentValue(val) {
     // Update slider range
     this.slider.node().value = val;

@@ -1,8 +1,3 @@
-// TODO: Make a plotting object that takes list of volumes, plots them
-// Each plotting object has radio buttons, slider, axes, canvas, and svg
-// TODO: Make a dataName variable to reduce code
-// TODO: Make the max dose slider its own object
-
 var drawAxes = (zoomTransform, svgAxis, slice) => {
   svgAxis.selectAll(".x-axis, .y-axis, .x-axis-grid, .y-axis-grid").remove();
 
@@ -83,10 +78,20 @@ var drawAxes = (zoomTransform, svgAxis, slice) => {
     .text(slice.axis[1] + " (cm)");
 };
 
+/** @class Volume represents a dose or density file and includes classes the
+ * get slices of data.  */
 class Volume {
   // General volume structure
   // https://github.com/aces/brainbrowser/blob/fe0ce114c6cd8e317a6bdd9b7ef97cbf1c38309d/src/brainbrowser/volume-viewer/volume-loaders/minc.js#L88-L190
 
+  /**
+   * Creates an instance of a Volume.
+   *
+   * @constructor
+   * @param {string} fileName The name of the file.
+   * @param {Object} dimensions The pixel dimensions of the volume plots.
+   * @param {Object} legendDimensions The pixel dimensions of legends.
+   */
   constructor(fileName, dimensions, legendDimensions) {
     this.fileName = fileName;
     this.dimensions = dimensions;
@@ -94,6 +99,14 @@ class Volume {
     this.prevSlice = { xy: {}, yz: {}, xz: {} };
   }
 
+  /**
+   * Sets the HTML elements used in plotting as properties of the volume.
+   *
+   * @param {Object} htmlElementObj Stores the HTML element of each axis (xy,
+   * yz, and xz).
+   * @param {Object} legendHolder The parent element of the legend.
+   * @param {Object} legendSvg The child svg element of the legend.
+   */
   // TODO: Remove html elements as properties and just pass them in
   setHtmlObjects(htmlElementObj, legendHolder, legendSvg) {
     this.htmlElementObj = htmlElementObj;
@@ -101,18 +114,34 @@ class Volume {
     this.legendSvg = legendSvg;
   }
 
+  /**
+   * Add the colour scheme used for the plots.
+   *
+   * @param {function} colourScheme The d3 colour scheme.
+   * @param {number} maxVal The maximum value mapped to the colour scheme.
+   * @param {number} maxVal The maximum value mapped to the colour scheme.
+   * @param {boolean} invertScheme Whether to map from max to min or min to max.
+   */
   addColourScheme(colourScheme, maxVal, minVal, invertScheme) {
     let domain = invertScheme ? [maxVal, minVal] : [minVal, maxVal];
     this.colour = d3.scaleSequentialSqrt(colourScheme).domain(domain);
   }
 
-  // dataName : density or dose
+  /**
+   * Get a slice of data through an axis.
+   *
+   * @param {string} axis The axis of the slice (xy, yz, or xz).
+   * @param {number} sliceNum The number of the slice.
+   * @param {string} dataName The type of data, either "density" or "dose".
+   * @returns {Object}
+   */
   getSlice(axis, sliceNum, dataName) {
     // TODO: Cache previous slices
     // TODO: Only redefine slice attributes on axis change
     // For slice structure
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1502-L1546
 
+    // Get the axes and slice dimensions
     let [dim1, dim2, dim3] =
       axis === "xy"
         ? ["x", "y", "z"]
@@ -125,15 +154,19 @@ class Volume {
     let z = this.data.voxelArr[dim3];
     let totalSlices = this.data.voxelNumber[dim3];
 
+    // Get the length in cm of the x and y dimensions
     var getLengthCm = (voxelArrDim) =>
       Math.abs(voxelArrDim[voxelArrDim.length - 1] - voxelArrDim[0]);
     let [xLengthCm, yLengthCm] = [getLengthCm(x), getLengthCm(y)];
+
+    // Initialize variables to make slice scales
     let xDomain,
       yDomain,
       xRangeContour,
       yRangeContour,
       yPixelToVoxelScale,
       contourYScaleDomain;
+
     if (xLengthCm > yLengthCm) {
       xDomain = [x[0], x[x.length - 1]];
       yDomain = [y[y.length - 1] - xLengthCm, y[y.length - 1]];
@@ -156,22 +189,24 @@ class Volume {
       contourYScaleDomain = [0, this.data.voxelNumber[dim2]];
     }
 
-    // TODO : Clamp scales
+    // TODO: Clamp scales
 
+    // Define the screen pixel to volume voxel mapping
     let xPixelToVoxelScale = d3
       .scaleQuantile()
       .domain(xRangeContour)
       .range(d3.range(0, this.data.voxelNumber[dim1], 1));
-
     let contourXScale = d3
       .scaleLinear()
       .domain([0, this.data.voxelNumber[dim1]])
       .range(xRangeContour);
+
     // Bump by 1 to fix misalignment after flipping y axis
     let contourYScale = d3
       .scaleLinear()
       .domain(contourYScaleDomain)
       .range(yRangeContour);
+
     // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
       dx: this.data.voxelSize[dim1],
@@ -212,12 +247,12 @@ class Volume {
 
     // If current slice number is larger than the total number of slices
     // set slice number to last slice
-    // TODO: Remove this?
     sliceNum =
       sliceNum >= slice.totalSlices
         ? parseInt(slice.totalSlices - 1)
         : parseInt(sliceNum);
 
+    // Get the slice data for the given axis and index
     // For address calculations:
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1999-L2034
     let sliceData = new Array(slice.xVoxels * slice.yVoxels);
@@ -249,55 +284,13 @@ class Volume {
     return slice;
   }
 
-  initializeLegend(legendClass, title, parameters) {
-    // Clear and redraw current legend
-    this.legendSvg.select("." + legendClass).remove();
-    this.legendSvg.select("text").remove();
-
-    // Make space for legend title
-    this.legendSvg
-      .append("g")
-      .attr("class", legendClass)
-      .style("transform", "translate(0px," + 20 + "px)");
-
-    // Append title
-    this.legendSvg
-      .append("text")
-      .attr("class", legendClass)
-      .attr("x", this.legendDimensions.width / 2)
-      .attr("y", this.legendDimensions.margin.top / 2)
-      .attr("text-anchor", "middle")
-      .style("font-size", "14px")
-      .text(title);
-
-    // Create legend
-    var legend = d3
-      .legendColor()
-      .shapeWidth(10)
-      .ascending(true)
-      .orient("vertical")
-      .scale(this.colour);
-
-    // Apply all the parameters
-    Object.entries(parameters).forEach(([name, val]) => {
-      legend[name](...val);
-    });
-
-    this.legendSvg.select("." + legendClass).call(legend);
-
-    // Set the height of the svg so the div can scroll if need be
-    let height =
-      this.legendSvg
-        .select("." + legendClass)
-        .node()
-        .getBoundingClientRect().height + 20;
-    this.legendSvg.attr("height", height);
-  }
-
-  isEmpty() {
-    return Object.keys(this.data).length === 0;
-  }
-
+  /**
+   * Get the data value at the given coordinates.
+   *
+   * @param {number[]} voxelCoords The voxel position of the data.
+   * @param {string} dataName The type of data, either "density" or "dose".
+   * @returns {number}
+   */
   getDataAtVoxelCoords(voxelCoords, dataName) {
     let [x, y, z] = voxelCoords;
     let address =
@@ -309,13 +302,30 @@ class Volume {
   }
 }
 
+/** @class Volume represents a .3ddose file.  */
 class DoseVolume extends Volume {
+  /**
+   * Creates an instance of a DoseVolume.
+   *
+   * @constructor
+   * @extends Volume
+   * @param {string} fileName The name of the file.
+   * @param {Object} dimensions The pixel dimensions of the volume plots.
+   * @param {Object} legendDimensions The pixel dimensions of legends.
+   * @param {Object} data The data from parsing the file.
+   */
   constructor(fileName, dimensions, legendDimensions, data) {
     // Call the super class constructor
     super(fileName, dimensions, legendDimensions);
     this.addData(data);
   }
 
+  /**
+   * Adds data to the DoseVolume object.
+   *
+   * @param {Object} data The data from parsing the file.
+   */
+  // TODO: Remove maxDoseVar
   addData(data) {
     this.data = data;
     // Max dose used for dose contour plot
@@ -330,8 +340,15 @@ class DoseVolume extends Volume {
       "col-" + d3.format("d")(this.thresholdPercents[i] * 1000);
   }
 
+  /**
+   * Sets the maximum dose value for dose contour plots.
+   *
+   * @param {number} val The maximum dose percentage.
+   * @param {Object} panels The panels for which to update the dose plots.
+   */
   setMaxDose(val, panels) {
     this.maxDoseVar = val * this.data.maxDose;
+    // Update the colour scheme and thresholds with the new max dose variable
     super.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0);
     this.updateThresholds();
 
@@ -348,13 +365,20 @@ class DoseVolume extends Volume {
     }
   }
 
+  /**
+   * Updates the threshold values used for creating the dose contours.
+   */
   updateThresholds() {
     this.thresholds = this.thresholdPercents.map((i) => i * this.maxDoseVar);
   }
 
-  // TODO: Don't reinitialize legend when adding a new threshold
+  /**
+   * Add a new threshold value to create a new contour in the dose contour plots.
+   *
+   * @param {number} thresholdPercent The dose percentage to add.
+   * @param {Object} panels The panels for which to update the dose plots.
+   */
   addThresholdPercent(thresholdPercent, panels) {
-    // Here here
     this.thresholdPercents.push(thresholdPercent);
     this.thresholdPercents.sort();
     this.updateThresholds();
@@ -364,20 +388,36 @@ class DoseVolume extends Volume {
     );
   }
 
+  /**
+   * Get a slice of dose data for a given axis and slice index.
+   *
+   * @param {string} axis The axis of the slice (xy, yz, or xz).
+   * @param {number} sliceNum The number of the slice.
+   * @returns {Object}
+   */
   getSlice(axis, sliceNum) {
     return super.getSlice(axis, sliceNum, "dose");
   }
 
-  clearDose(slice) {
-    let svg = this.htmlElementObj[slice.axis];
+  /**
+   * Clear the current dose plot.
+   *
+   * @param {string} axis The axis of the slice (xy, yz, or xz).
+   */
+  clearDose(axis) {
+    let svg = this.htmlElementObj[axis];
     // Clear dose plot
     svg.selectAll("g").remove();
   }
 
+  /**
+   * Make a dose contour plot of the given slice.
+   *
+   * @param {Object} slice The slice of the dose data.
+   * @param {Object} [transform] The zoom transform of the plot.
+   */
   drawDose(slice, transform) {
     let svg = this.htmlElementObj[slice.axis];
-    //TODO: Don't rely on plugin for legend/colour scale
-    // https://observablehq.com/@d3/color-legend
 
     // Clear dose plot
     svg.selectAll("g").remove();
@@ -423,6 +463,11 @@ class DoseVolume extends Volume {
     }
   }
 
+  /**
+   * Get a class list of all the hidden dose contours.
+   *
+   * @returns {string[]}
+   */
   getHiddenContourClassList() {
     let hiddenContourClassList = [];
     this.legendSvg.selectAll("g.cell.hidden").each(function (d, i) {
@@ -433,21 +478,14 @@ class DoseVolume extends Volume {
     return hiddenContourClassList;
   }
 
+  /**
+   * Create the dose legend.
+   */
   initializeLegend() {
     // Get list of class names of hidden contours
     let hiddenContourClassList = this.getHiddenContourClassList();
-
-    var toggleContour = (className) => {
-      Object.values(this.htmlElementObj).forEach((svg) => {
-        svg
-          .selectAll("path.contour-path." + className)
-          .classed("hidden", function () {
-            return !d3.select(this).classed("hidden");
-          });
-      });
-    };
-
-    super.initializeLegend("doseLegend", "Dose", {
+    let legendClass = "doseLegend";
+    let parameters = {
       labels: [
         this.thresholds.map((e) => d3.format(".0%")(e / this.maxDoseVar)),
       ],
@@ -460,7 +498,60 @@ class DoseVolume extends Volume {
           legendCell.classed("hidden", !legendCell.classed("hidden"));
         },
       ],
+    };
+
+    var toggleContour = (className) => {
+      Object.values(this.htmlElementObj).forEach((svg) => {
+        svg
+          .selectAll("path.contour-path." + className)
+          .classed("hidden", function () {
+            return !d3.select(this).classed("hidden");
+          });
+      });
+    };
+
+    // Clear and redraw current legend
+    this.legendSvg.select("." + legendClass).remove();
+    this.legendSvg.select("text").remove();
+
+    // Make space for legend title
+    this.legendSvg
+      .append("g")
+      .attr("class", legendClass)
+      .style("transform", "translate(0px," + 20 + "px)");
+
+    // Append title
+    this.legendSvg
+      .append("text")
+      .attr("class", legendClass)
+      .attr("x", this.legendDimensions.width / 2)
+      .attr("y", this.legendDimensions.margin.top / 2)
+      .attr("text-anchor", "middle")
+      .style("font-size", "14px")
+      .text("Dose");
+
+    // Create legend
+    var legend = d3
+      .legendColor()
+      .shapeWidth(10)
+      .ascending(true)
+      .orient("vertical")
+      .scale(this.colour);
+
+    // Apply all the parameters
+    Object.entries(parameters).forEach(([name, val]) => {
+      legend[name](...val);
     });
+
+    this.legendSvg.select("." + legendClass).call(legend);
+
+    // Set the height of the svg so the div can scroll if need be
+    let height =
+      this.legendSvg
+        .select("." + legendClass)
+        .node()
+        .getBoundingClientRect().height + 20;
+    this.legendSvg.attr("height", height);
 
     // Add the appropriate classnames to each legend cell
     let len = this.thresholdPercents.length - 1;
@@ -477,6 +568,11 @@ class DoseVolume extends Volume {
     }
   }
 
+  /**
+   * Create the input box to add new dose contour thresholds.
+   *
+   * @param {Object} panels The panels to update when a dose contour is added.
+   */
   initializeDoseContourInput(panels) {
     var addNewThresholdPercent = () => {
       let val = parseFloat(submitDoseContour.node().value);
@@ -530,15 +626,31 @@ class DoseVolume extends Volume {
       .on("click", addNewThresholdPercent);
   }
 
+  /**
+   * Get the dose value at the given coordinates.
+   *
+   * @param {number[]} voxelCoords The voxel position of the data.
+   * @returns {number}
+   */
   getDataAtVoxelCoords(voxelCoords) {
     return super.getDataAtVoxelCoords(voxelCoords, "dose") / this.data.maxDose;
   }
 
+  /**
+   * Get the dose error value at the given coordinates.
+   *
+   * @param {number[]} voxelCoords The voxel position of the data.
+   * @returns {number}
+   */
   getErrorAtVoxelCoords(voxelCoords) {
     return super.getDataAtVoxelCoords(voxelCoords, "error");
   }
 
-  // TODO: Fix lack of zoom on max dose slider change
+  /**
+   * Create the max dose slider to choose the maximum dose in the contour plots.
+   *
+   * @param {Object} panels The panels for which to update on maximum dose change.
+   */
   initializeMaxDoseSlider(panels) {
     let parentDiv = d3.select("#axis-slider-container");
     var onMaxDoseChangeCallback = (sliderVal) =>
@@ -564,13 +676,29 @@ class DoseVolume extends Volume {
   }
 }
 
+/** @class Volume represents the difference between two .3ddose files.  */
 class DoseComparisonVolume extends DoseVolume {
+  /**
+   * Creates an instance of a DoseComparisonVolume.
+   *
+   * @constructor
+   * @extends DoseVolume
+   * @param {string} fileName The name of the file.
+   * @param {Object} dimensions The pixel dimensions of the volume plots.
+   * @param {Object} legendDimensions The pixel dimensions of legends.
+   * @param {Object} data The data from parsing the file.
+   */
   constructor(fileName, dimensions, legendDimensions, data) {
     // Call the super class constructor
     super(fileName, dimensions, legendDimensions);
     this.addData(data);
   }
 
+  /**
+   * Adds data to the DoseComparisonVolume object.
+   *
+   * @param {Object} data The difference of the data from the two dose files.
+   */
   addData(data) {
     this.data = data;
     // Max dose used for dose contour plot
@@ -592,28 +720,45 @@ class DoseComparisonVolume extends DoseVolume {
       "col-" + d3.format("d")(this.thresholdPercents[i] * 1000);
   }
 
+  /**
+   * Get the dose difference value at the given coordinates.
+   *
+   * @param {number[]} voxelCoords The voxel position of the data.
+   * @returns {number}
+   */
   getDataAtVoxelCoords(voxelCoords) {
     return super.getDataAtVoxelCoords(voxelCoords, "dose");
   }
 }
+
+/** @class Volume represents a .egsphant file.  */
 class DensityVolume extends Volume {
+  /**
+   * Creates an instance of a DoseVolume.
+   *
+   * @constructor
+   * @extends Volume
+   * @param {string} fileName The name of the file.
+   * @param {Object} dimensions The pixel dimensions of the volume plots.
+   * @param {Object} legendDimensions The pixel dimensions of legends.
+   * @param {Object} data The data from parsing the file.
+   */
   constructor(fileName, dimensions, legendDimensions, data) {
     super(fileName, dimensions, legendDimensions); // call the super class constructor
     this.addData(data);
     this.prevSliceImg = { xy: {}, yz: {}, xz: {} };
   }
 
+  /**
+   * Adds data to the DensityVolume object.
+   *
+   * @param {Object} data The data from parsing the file.
+   */
   addData(data) {
     this.data = data;
     this.setWindow();
     this.setLevel();
-    this.addColourScheme();
-    // Calculate the contour thresholds
-    this.thresholds = this.getThresholds(data);
-  }
-
-  addColourScheme() {
-    super.addColourScheme(
+    this.addColourScheme(
       d3.interpolateGreys,
       this.level + this.window / 2.0,
       this.level - this.window / 2.0,
@@ -621,40 +766,59 @@ class DensityVolume extends Volume {
     );
   }
 
-  setWindow(window) {
+  /**
+   * Set the window of density values displayed.
+   *
+   * @param {number} width The size of the window of densities to display.
+   */
+  setWindow(width) {
     // Window is whole range
-    this.window = parseFloat(window) || this.data.maxDensity;
+    this.window = parseFloat(width) || this.data.maxDensity;
   }
 
+  /**
+   * Set the level of density values displayed.
+   *
+   * @param {number} level The midpoint of the window.
+   */
   setLevel(level) {
     // Level is mid level
     this.level = parseFloat(level) || this.window / 2.0;
   }
 
-  getThresholds(data) {
-    let thresholds = Array.from(new Set(data.density));
-    if (thresholds.length < 10) {
-      return thresholds.sort();
-    }
-    let maxThresh = Math.ceil(data.maxDensity * 10) / 10;
-    return d3.range(0, maxThresh, 0.1);
-  }
-
+  /**
+   * Get a slice of density data for a given axis and slice index.
+   *
+   * @param {string} axis The axis of the slice (xy, yz, or xz).
+   * @param {number} sliceNum The number of the slice.
+   * @returns {Object}
+   */
   getSlice(axis, sliceNum) {
     return super.getSlice(axis, sliceNum, "density");
   }
 
-  clearDensity(slice) {
-    let svg = this.htmlElementObj[slice.axis].node();
+  /**
+   * Clear the current density plot.
+   *
+   * @param {string} axis The axis of the slice (xy, yz, or xz).
+   */
+  clearDensity(axis) {
+    let svg = this.htmlElementObj[axis].node();
 
     // Clear density plot
     let context = svg.getContext("2d");
     context.clearRect(0, 0, svg.width, svg.height);
   }
 
+  /**
+   * Make a density plot of the given slice.
+   *
+   * @param {Object} slice The slice of the density data.
+   * @param {Object} [transform] The zoom transform of the plot.
+   */
   drawDensity(slice, transform) {
     let svg = this.htmlElementObj[slice.axis];
-    // TODO: Make two new functions: change slicenum and change axes
+    // TODO: Make change slicenum function
 
     // For axis structure
     // https://bl.ocks.org/ejb/e2da5a23e9a09d494bd532803d8db61c
@@ -712,6 +876,9 @@ class DensityVolume extends Volume {
     this.prevSliceImg[slice.axis] = image;
   }
 
+  /**
+   * Create the density legend.
+   */
   initializeLegend() {
     let legendClass = "densityLegend";
     let title = "Density";
@@ -804,10 +971,22 @@ class DensityVolume extends Volume {
       );
   }
 
+  /**
+   * Get the density value at the given coordinates.
+   *
+   * @param {number[]} voxelCoords The voxel position of the data.
+   * @returns {number}
+   */
   getDataAtVoxelCoords(voxelCoords) {
     return super.getDataAtVoxelCoords(voxelCoords, "density");
   }
 
+  /**
+   * Get the material at the given coordinates.
+   *
+   * @param {number[]} voxelCoords The voxel position of the data.
+   * @returns {string}
+   */
   getMaterialAtVoxelCoords(voxelCoords) {
     let [x, y, z] = voxelCoords;
     let address =

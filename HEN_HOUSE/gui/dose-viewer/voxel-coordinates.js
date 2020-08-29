@@ -1,11 +1,11 @@
-// TODO: If marker exists, on axis change, use marker coordinates?
-// // https://github.com/aces/brainbrowser/blob/master/src/brainbrowser/volume-viewer.js#L411-L415
-// class VoxelInfo {
-//   constructor() {
+// TODO: Make voxel information a class
 
-//   }
-// }
-
+/**
+ * Create the HTML elements to display the voxel information.
+ *
+ * @param {Object} parentDiv The HTML parent div.
+ * @param {string} id The unique ID of the volume viewers voxel info.
+ */
 function buildVoxelInfoHtml(parentDiv, id) {
   // Define label texts and tags
   let labelName = [
@@ -46,9 +46,18 @@ function buildVoxelInfoHtml(parentDiv, id) {
   });
 }
 
-function coordsToWorld(coords, axis, sliceNum, volume, transform, updateXY) {
-  // TODO: Have a more permanent solution to the click/transform problem, make a class?
-
+/**
+ * Transform panel coordinates to world coordinates
+ *
+ * @param {number[]} coords The coordinates of the mouse position on the panel.
+ * @param {string} axis The axis of the slice (xy, yz, or xz).
+ * @param {number} sliceNum The number of the current slice displayed in the panel.
+ * @param {Volume} volume The volume of the panel.
+ * @param {Object} transform The zoom transform of the panel.
+ * @returns {number[]}
+ */
+// TODO: Just pass in panel and coords?
+function coordsToWorld(coords, axis, sliceNum, volume, transform) {
   // Invert transformation if applicable then invert scale to get world coordinate
   let i = volume.prevSlice[axis].xScale.invert(
     transform ? invertTransform(coords[0], transform, "x") : coords[0]
@@ -66,7 +75,17 @@ function coordsToWorld(coords, axis, sliceNum, volume, transform, updateXY) {
   return [xVal, yVal, zVal];
 }
 
-function coordsToVoxel(coords, axis, sliceNum, volume, transform, updateXY) {
+/**
+ * Transform panel coordinates to voxel coordinates
+ *
+ * @param {number[]} coords The coordinates of the mouse position on the panel.
+ * @param {string} axis The axis of the slice (xy, yz, or xz).
+ * @param {number} sliceNum The number of the current slice displayed in the panel.
+ * @param {Volume} volume The volume of the panel.
+ * @param {Object} transform The zoom transform of the panel.
+ * @returns {number[]}
+ */
+function coordsToVoxel(coords, axis, sliceNum, volume, transform) {
   // Invert transformation if applicable then apply scale to get voxel coordinate
   let i = volume.prevSlice[axis].xPixelToVoxelScale(
     transform ? invertTransform(coords[0], transform, "x") : coords[0]
@@ -81,6 +100,12 @@ function coordsToVoxel(coords, axis, sliceNum, volume, transform, updateXY) {
   return [xVal, yVal, zVal];
 }
 
+/**
+ * Update the world coordinates.
+ *
+ * @param {number[]} coords The worlds coordinates to show.
+ * @param {string} id  The unique ID of the volume viewers voxel info.
+ */
 function updateWorldLabels(coords, id) {
   let format = d3.format(".2f");
   let formattedCoords = coords.map((coord) => format(coord));
@@ -88,18 +113,52 @@ function updateWorldLabels(coords, id) {
     "(" + formattedCoords.join(", ") + ")";
 }
 
+/**
+ * Update the voxel coordinates.
+ *
+ * @param {number[]} coords The voxel coordinates to show.
+ * @param {string} id The unique ID of the volume viewers voxel info.
+ */
 function updateVoxelLabels(coords, id) {
   d3.select("#voxel-coords-" + id).node().value = "(" + coords.join(", ") + ")";
 }
 
+/**
+ * Invert the zoom transform to get the coordinates as if no transformation had
+ * been applied.
+ *
+ * @param {number} val The value to invert.
+ * @param {Object} transform The zoom transform to reverse.
+ * @param {string} dir The direction of the zoom transform (x or y) to reverse.
+ * @returns {number}
+ */
 function invertTransform(val, transform, dir) {
   return (val - transform[dir]) / transform.k;
 }
 
+/**
+ * Apply the zoom transform to get transformed coordinates.
+ *
+ * @param {number} val The value to transform.
+ * @param {Object} transform The zoom transform to apply.
+ * @param {string} dir The direction of the zoom transform (x or y) to apply.
+ * @returns {number}
+ */
 function applyTransform(val, transform, dir) {
   return val * transform.k + transform[dir];
 }
 
+/**
+ * Update the voxel coordinates and dose profiles.
+ *
+ * @param {DensityVolume} densityVol The density volume of the volume viewer.
+ * @param {DoseVolume} doseVol The dose volume of the volume viewer.
+ * @param {number[]} coords The coordinates of the mouse position on the panel.
+ * @param {string} axis The axis of the slice (xy, yz, or xz).
+ * @param {number} sliceNum The number of the current slice displayed in the panel.
+ * @param {Object} transform The zoom transform of the panel.
+ * @param {string} id The unique ID of the volume viewers voxel info.
+ */
 function updateVoxelCoords(
   densityVol,
   doseVol,
@@ -107,28 +166,13 @@ function updateVoxelCoords(
   axis,
   sliceNum,
   transform,
-  id,
-  updateXY = false
+  id
 ) {
   let vol = densityVol || doseVol;
   if (vol) {
     // Get world and voxel coordinates from pixel value
-    let worldCoords = coordsToWorld(
-      coords,
-      axis,
-      sliceNum,
-      vol,
-      transform,
-      updateXY
-    );
-    let voxelCoords = coordsToVoxel(
-      coords,
-      axis,
-      sliceNum,
-      vol,
-      transform,
-      updateXY
-    );
+    let worldCoords = coordsToWorld(coords, axis, sliceNum, vol, transform);
+    let voxelCoords = coordsToVoxel(coords, axis, sliceNum, vol, transform);
 
     // Update voxel info if checkbox is checked
     if (d3.select("input[name='show-marker-checkbox']").node().checked) {
@@ -137,7 +181,6 @@ function updateVoxelCoords(
       updateVoxelInfo(voxelCoords, densityVol, doseVol, id);
     }
 
-    // TODO: Use dispatch event instead of this
     // Update dose profiles if checkbox is checked
     if (
       doseVol &&
@@ -148,6 +191,14 @@ function updateVoxelCoords(
   }
 }
 
+/**
+ * Update the voxel information including density, material, and dose.
+ *
+ * @param {number[]} voxelCoords The voxel coordinates of the data.
+ * @param {DensityVolume} densityVol The density volume of the volume viewer.
+ * @param {DoseVolume} doseVol The dose volume of the volume viewer.
+ * @param {string} id The unique ID of the volume viewers voxel info.
+ */
 function updateVoxelInfo(voxelCoords, densityVol, doseVol, id) {
   if (densityVol) {
     let density = densityVol.getDataAtVoxelCoords(voxelCoords);
@@ -166,6 +217,12 @@ function updateVoxelInfo(voxelCoords, densityVol, doseVol, id) {
   }
 }
 
+/**
+ * Update the dose profiles to show the dose through the given coordinates.
+ *
+ * @param {number[]} voxelCoords The voxel coordinates of the data.
+ * @param {number[]} worldCoords The world coordinates of the data.
+ */
 function updateDoseProfiles(voxelCoords, worldCoords) {
   var getCoords = (coords) => [
     [coords[0], coords[1]],
@@ -176,7 +233,6 @@ function updateDoseProfiles(voxelCoords, worldCoords) {
   let voxelCoordsList = getCoords(voxelCoords);
   let worldCoordsList = getCoords(worldCoords);
   let dimensionsList = ["z", "x", "y"];
-  // let axesList = ["yz", "xz", "xy"];
 
   volumeViewerList.forEach((volumeViewer) => {
     volumeViewer.doseProfileList.forEach((doseProfile, i) => {

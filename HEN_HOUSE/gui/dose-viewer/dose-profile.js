@@ -1,46 +1,142 @@
-// TODO: Only update dose profile on slider release to speed things up
-// TODO: Use curr slice for dose profile data for side plots
-
+/** @class DoseProfile contains all information to build a dose profile at a line through a dose volume. */
 class DoseProfile {
-  constructor(dimensions, svg, parentSvg) {
+  /**
+   * Creates an instance of DoseProfile.
+   *
+   * @constructor
+   * @param {Object} dimensions The pixel dimensions of the dose profile plot.
+   * @param {Object} parentDiv  The svg that holds the dose profile.
+   * @param {String} id         The id of the dose profile (used mostly for bounding boxes).
+   */
+  constructor(dimensions, parentDiv, id) {
     this.dimensions = dimensions;
-    this.svg = svg;
-    this.parentSvg = parentSvg;
+    this.id = id;
+
+    // Create main svg elements
+    this.buildSvg(dimensions, parentDiv, id);
+
+    // Set up zoom object
+    this.zoomObj = getZoom(
+      dimensions.width,
+      dimensions.height,
+      zoomedDoseProfile,
+      [this]
+    );
+
+    // Enable zooming
+    this.svg.select("rect.bounding-box").call(this.zoomObj);
+
+    // Check if the plot density checkbox is selected
+    this.densityChecked = () =>
+      d3.select("input[name='density-profile-checkbox']").node().checked;
+
+    // Initialize all properties
     this.xScale = null;
     this.yDoseScale = null;
     this.yDensityScale = null;
-    this.densityChecked = false;
     this.transform = null;
-    this.zoomObj = null;
     this.data = null;
     this.doseVol = null;
     this.yTicks = 6;
     this.profileDim = null;
   }
 
+  /**
+   * Set the transform variable used for zooming.
+   */
   set zoomTransform(val) {
     this.transform = val;
   }
 
+  /**
+   * Get the transform variable used for zooming.
+   */
   get zoomTransform() {
     return this.transform;
   }
 
-  set plotDensity(val) {
-    this.densityChecked = val;
-    if (this.data !== null) this.updateAxes();
+  /**
+   * Build the parent svg and main g objects for plotting.
+   *
+   * @param {Object} dimensions The pixel dimensions of the dose profile plot.
+   * @param {Object} parentDiv  The svg that holds the dose profile.
+   * @param {String} id         The id of the dose profile (used mostly for bounding boxes).
+   */
+  buildSvg(dimensions, parentDiv, id) {
+    // Initializing svgs for dose profile plots
+    this.parentSvg = parentDiv
+      .append("svg")
+      .attr("width", sideDoseProfileDimensions.fullWidth)
+      .attr("height", sideDoseProfileDimensions.fullHeight)
+      .style("display", "none");
+
+    this.svg = this.parentSvg
+      .append("g")
+      .style(
+        "transform",
+        "translate(" +
+          dimensions.margin.left +
+          "px" +
+          "," +
+          dimensions.margin.top +
+          "px" +
+          ")"
+      )
+      .classed("dose-profile-plot", true);
+
+    // Create box to capture mouse events
+    this.svg
+      .append("rect")
+      .attr("width", dimensions.width)
+      .attr("height", dimensions.height)
+      .attr("fill", "white")
+      .attr("class", "bounding-box");
+
+    // Create clip path to bound output after zooming
+    this.svg
+      .append("defs")
+      .append("clipPath")
+      .attr("id", "clip-" + id)
+      .append("rect")
+      .attr("width", dimensions.width)
+      .attr("height", dimensions.height);
   }
 
-  get plotDensity() {
-    return this.densityChecked;
+  /**
+   * Initializes the zoom of the dose profile plot using functions from the zoom file.
+   */
+  initializeZoom() {
+    // Zooming for dose profile
+    doseProfileAxis.zoomObj = getZoom(
+      sideDoseProfileDimensions.width,
+      sideDoseProfileDimensions.height,
+      zoomedDoseProfile,
+      [doseProfileAxis]
+    );
+
+    // Enable zooming
+    doseProfileAxis.svg
+      .select("rect.bounding-box")
+      .call(doseProfileAxis.zoomObj);
   }
 
+  /**
+   * Resets the zoom of the dose profile plot.
+   */
   resetZoomTransform() {
     this.svg
       .select("rect.bounding-box")
       .call(this.zoomObj.transform, d3.zoomIdentity.scale(1));
   }
 
+  /**
+   * Set the dose profile data for the current slice
+   *
+   * @param {DoseVolume} doseVol        The dose volume object.
+   * @param {DensityVolume} densityVol  The density volume object (fine if undefined, only used if density checkbox is checked).
+   * @param {String} profileDim         The dimension (x, y, z) of the dose profile.
+   * @param {number[]} coords              The voxel position of the line through the volumes.
+   */
   setDoseProfileData(doseVol, densityVol, profileDim, coords) {
     let [dim1, dim2, dim3] =
       profileDim === "x"
@@ -61,6 +157,7 @@ class DoseProfile {
     position.pop();
 
     let doseProfileData = new Array(totalSlices);
+    let plotDensity = this.densityChecked() && densityVol;
 
     for (let i = 0; i < totalSlices; i++) {
       let address;
@@ -77,7 +174,7 @@ class DoseProfile {
           xVoxels * (i + coords[1] * parseInt(doseVol.data.voxelNumber.y));
       }
 
-      if (this.densityChecked) {
+      if (plotDensity) {
         doseProfileData[i] = {
           position: position[i],
           value: doseVol.data.dose[address] || 0,
@@ -97,7 +194,9 @@ class DoseProfile {
     this.profileDim = profileDim;
   }
 
-  // TODO: Don't update on slider change, only on crosshair position or axes change
+  /**
+   * Set the dose scales based on the loaded data.
+   * */
   setDoseScales() {
     let [minPos, maxPos] = [
       this.data[0].position,
@@ -129,7 +228,9 @@ class DoseProfile {
     }
   }
 
-  // TODO: Don't update on slider change, only on crosshair position or axes change
+  /**
+   * Create the x and y axes for the dose profile plot.
+   */
   plotAxes() {
     // Clear existing axes and labels
     this.svg.selectAll(".profile-x-axis").remove();
@@ -226,6 +327,9 @@ class DoseProfile {
     }
   }
 
+  /**
+   * Create the title of the plot with the correct coordinates.
+   */
   makeTitle(coords) {
     // Clear existing title
     this.svg.select(".title").remove();
@@ -261,6 +365,9 @@ class DoseProfile {
       );
   }
 
+  /**
+   * Plot the dose profile data.
+   */
   plotData() {
     let data = this.data;
     let preYDoseScale = d3
@@ -349,13 +456,19 @@ class DoseProfile {
     }
   }
 
-  // TODO: Instead of leaving logic inside of dose profile object, just updateAxes before plotDoseProfile if need be
+  /**
+   * Update the x,y scales and axes.
+   */
   updateAxes() {
     this.setDoseScales();
     this.plotAxes();
     if (this.zoomObj !== null) this.resetZoomTransform();
   }
 
+  /**
+   * Check if the axes need an update, then plot the data at the specified coordinates.
+   */
+  // TODO: Either combine this with getting the data or pass it in to reduce confusion
   plotDoseProfile(coords) {
     if (this.xScale === null) {
       this.updateAxes();

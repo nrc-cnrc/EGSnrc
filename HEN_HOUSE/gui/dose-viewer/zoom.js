@@ -1,11 +1,13 @@
-// TODO: Update rest of zoom functions to use these
-// TODO: Disable zoom before upload
-// Generic disable zoom function
-var disableZoom = (obj) => {
-  obj.on(".zoom", null);
-};
-
-// Generic get zoom function
+/**
+ * Builds a zoom object according to the specs and callback passed in.
+ *
+ * @param {number} width The width of the zooming extent.
+ * @param {number} height The height of the zooming extent.
+ * @param {function} zoomCallback The function to determine what happens on
+ * zoom.
+ * @param {Array} args Any arguments to be passed into zoomCallback.
+ * @returns {Object}
+ */
 var getZoom = (width, height, zoomCallback, args) =>
   d3
     .zoom()
@@ -16,18 +18,19 @@ var getZoom = (width, height, zoomCallback, args) =>
     .scaleExtent([1, 8])
     .on("zoom", () => zoomCallback(d3.event.transform, ...args));
 
-// Generic reset zoom function
-var resetZoom = (obj, zoom) => {
-  obj.call(zoom.transform, d3.zoomIdentity.scale(1));
-};
-
+/**
+ * The zoom callback function for dose profiles.
+ *
+ * @param {Object} transform The zoom transform object.
+ * @param {DoseProfile} doseProfile The dose profile to be zoomed.
+ */
 function zoomedDoseProfile(transform, doseProfile) {
   doseProfile.zoomTransform = transform;
   doseProfile.svg
     .selectAll("path.lines")
     .attr("transform", transform.toString());
 
-  // Create new scale ojects based on event
+  // Create new scale objects based on event
   var new_xScale = transform.rescaleX(doseProfile.xScale);
   var new_yDoseScale = transform.rescaleY(doseProfile.yDoseScale);
 
@@ -63,7 +66,15 @@ function zoomedDoseProfile(transform, doseProfile) {
   }
 }
 
-function zoomedCanvas(densityVol, transform, canvas, axis) {
+/**
+ * The zoom callback function for the density plots.
+ *
+ * @param {Object} transform The zoom transform object.
+ * @param {DensityProfile} densityVol The density profile to be zoomed.
+ * @param {Object} canvas The canvas element to be zoomed.
+ * @param {string} axis The axis of the slice to be zoomed.
+ */
+function zoomedCanvas(transform, densityVol, canvas, axis) {
   // Get the image to draw
   let image = densityVol.prevSliceImg[axis];
   let context = canvas.node().getContext("2d");
@@ -77,6 +88,12 @@ function zoomedCanvas(densityVol, transform, canvas, axis) {
   context.restore();
 }
 
+/**
+ * The zoom callback function density canvas, dose svg, axes, and markers.
+ *
+ * @param {Object} transform The zoom transform object.
+ * @param {Panel} panel The panel to be zoomed on.
+ */
 function zoomedAll(transform, panel) {
   panel.zoomTransform = transform;
   let axisElements = panel.axisElements;
@@ -86,8 +103,8 @@ function zoomedAll(transform, panel) {
   // Zoom on canvas
   if (panel.densityVol) {
     zoomedCanvas(
-      panel.densityVol,
       transform,
+      panel.densityVol,
       axisElements["plot-density"],
       axis
     );

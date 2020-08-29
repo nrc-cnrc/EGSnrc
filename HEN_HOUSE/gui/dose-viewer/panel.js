@@ -1,10 +1,24 @@
-// Detect clicks
-// Store zoom, cursor info
-// Draw axes
-// https://github.com/aces/brainbrowser/blob/master/src/brainbrowser/volume-viewer/lib/panel.js#L165
-// TODO: Make voxel info work when slice changes!!!
-
+/** @class Panel holds one axis view and detects clicks, stores information, and
+ * updates plots */
+// TODO: Build panel HTML inside panel object
 class Panel {
+  /**
+   * Creates an instance of a Panel.
+   *
+   * @constructor
+   * @param {Object} dimensions The pixel dimensions of the panel.
+   * @param {DensityVolume} densityVol The density volume of the panel.
+   * @param {DoseVolume} doseVol The dose volume of the panel.
+   * @param {String} axis The axis (x, y, z) of the volume that is shown in the panel.
+   * @param {Object} axisElements The HTML elements to plot the axes, density,
+   * dose, and crosshairs.
+   * @param {Slider} sliceSlider The slider object used to move through slices.
+   * @param {Object} dispatch The event dispatcher used for actions on panel clicks.
+   * @param {string} id The unique ID of the panel.
+   * @param {Object} zoomTransform Holds information about the current transform
+   * of the slice.
+   * @param {number[]} markerPosition The current position of the marker.
+   */
   constructor(
     dimensions,
     densityVol,
@@ -14,7 +28,6 @@ class Panel {
     sliceSlider,
     dispatch,
     id,
-    sliceNum = 0,
     zoomTransform = null,
     markerPosition = null
   ) {
@@ -27,9 +40,10 @@ class Panel {
     this.sliceSlider = sliceSlider;
     this.dispatch = dispatch;
     this.volumeViewerId = id;
-    this.sliceNum = sliceNum;
     this.zoomTransform = zoomTransform;
     this.markerPosition = markerPosition;
+
+    // Properties to check values of voxel and dose profile checkboxes
     this.showMarker = () =>
       d3.select("input[name='show-marker-checkbox']").node().checked;
     this.showCrosshairs = () =>
@@ -50,8 +64,10 @@ class Panel {
     });
   }
 
+  /**
+   * Set up zoom for panel.
+   */
   setupZoom() {
-    // Set up zoom for panel
     let mainViewerZoom = getZoom(
       mainViewerDimensions.width,
       mainViewerDimensions.height,
@@ -61,25 +77,39 @@ class Panel {
     this.axisElements["plot-marker"].call(mainViewerZoom);
   }
 
-  updateSliceNum() {
-    this.sliceNum = this.volume.prevSlice[this.axis].sliceNum;
+  /**
+   * Return the slice number of the current volume loaded in the panel.
+   *
+   * @returns {number}
+   */
+  get sliceNum() {
+    return this.volume.prevSlice[this.axis].sliceNum;
   }
 
+  /**
+   * Show crosshairs if plot dose checkbox is selected.
+   */
   updateCrosshairDisplay() {
     this.axisElements["plot-marker"]
       .selectAll("line.crosshair")
       .style("display", this.showCrosshairs() ? "" : "none");
   }
 
+  /**
+   * Show circle marker if show voxel info checkbox is selected.
+   */
   updateCircleMarkerDisplay() {
     this.axisElements["plot-marker"]
       .select("circle.crosshair")
       .style("display", this.showMarker() ? "" : "none");
   }
 
+  /**
+   * Change the slice of the loaded volumes in the panel.
+   *
+   * @param {number} sliceNum The number of the current slice displayed in the panel.
+   */
   updateSlice(sliceNum) {
-    this.sliceNum = sliceNum;
-
     let slice;
 
     if (this.densityVol) {
@@ -92,6 +122,11 @@ class Panel {
     }
   }
 
+  /**
+   * Create the drag behaviour of the circle marker and crosshairs.
+   *
+   * @returns {Object}
+   */
   getDrag() {
     let panel = this;
 
@@ -117,8 +152,7 @@ class Panel {
         panel.axis,
         panel.sliceNum,
         null,
-        panel.volumeViewerId,
-        true
+        panel.volumeViewerId
       );
     }
 
@@ -146,6 +180,13 @@ class Panel {
       .on("end", dragended);
   }
 
+  /**
+   * Update the marker position on the panel.
+   *
+   * @param {number[]} coords The coordinates of the new marker position.
+   * @param {boolean} [activePanel = true] Whether it is the active panel (i.e.
+   * most recently interacted with)
+   */
   updateMarker(coords, activePanel = true) {
     this.markerPosition = coords;
 
@@ -212,6 +253,11 @@ class Panel {
       .classed("active", activePanel);
   }
 
+  /**
+   * Update the current value of the slice slider.
+   *
+   * @param {number} sliceNum The number of the current slice displayed in the panel.
+   */
   updateSlider(sliceNum) {
     this.sliceSlider.setCurrentValue(sliceNum);
   }

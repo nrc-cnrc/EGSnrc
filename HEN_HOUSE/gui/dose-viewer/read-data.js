@@ -1,13 +1,19 @@
-// Process .egsphant files
-// TODO: Test with other .egsphant files
+/**
+ * Extract data from .egsphant files.
+ *
+ * @param {Object} data The .egsphant file read as text.
+ * @returns {Object}
+ */
 var processPhantomData = function (data) {
   var getMax = function (a) {
     return Math.max(...a.map((e) => (Array.isArray(e) ? getMax(e) : e)));
   };
 
+  // The current line of the text file being read
   let curr = 0;
-  let numMaterials = parseInt(data[curr++]);
 
+  // Get number and type of materials
+  let numMaterials = parseInt(data[curr++]);
   let materialList = data.slice(curr, numMaterials + curr);
   curr += numMaterials * 2;
 
@@ -86,9 +92,14 @@ var processPhantomData = function (data) {
   };
 };
 
-// Process .3ddose files
-// TODO: Test with other .3ddose files
+/**
+ * Extract data from .3ddose files.
+ *
+ * @param {Object} data The .3ddose file read as text.
+ * @returns {Object}
+ */
 var processDoseData = function (data) {
+  // The current line of the text file being read
   let curr = 0;
 
   // Get number of x, y, and z voxels
@@ -118,6 +129,7 @@ var processDoseData = function (data) {
   let prevCurr = curr;
 
   try {
+    // This method works if there are line breaks throughout the data
     [doseDense, error].forEach((arr) => {
       while (arr.length < numVoxX * numVoxY * numVoxZ) {
         arr.push(

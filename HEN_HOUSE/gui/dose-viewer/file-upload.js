@@ -1,8 +1,52 @@
 let dropArea = d3.select("#drop-area");
 let progressBar = d3.select("#progress-bar");
 let progressBarNode = progressBar.node();
-let totalFiles = 0;
 
+/**
+ * Initialize the progress bar for a new round of uploading files.
+ *
+ * @param {number} numfiles The number of files being uploaded.
+ */
+function initializeProgress() {
+  progressBarNode.value = 0;
+  // Show the progress bar
+  progressBar.classed("hidden", false);
+}
+
+/**
+ * Initialize the progress bar for a new round of uploading files.
+ *
+ * @param {number} numfiles The number of files being uploaded.
+ */
+function updateProgress(percent, fileNum, totalFiles) {
+  progressBarNode.value = percent * (fileNum / totalFiles);
+}
+
+/**
+ * Once files are uploaded, end progress by hiding the bar.
+ */
+function endProgress() {
+  progressBar.classed("hidden", true);
+}
+
+// Turn off normal drop response on window
+["dragover", "drop"].forEach((eventName) => {
+  window.addEventListener(eventName, function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  });
+});
+
+// Add highlight class to drop area when holding file overtop
+dropArea.on("dragenter dragover", () => dropArea.classed("highlight", true));
+dropArea.on("dragleave drop", () => dropArea.classed("highlight", false));
+
+/**
+ * Make a DensityVolume object and add it to the density volume list.
+ *
+ * @param {string} fileName The name of the .egsphant file.
+ * @param {Object} data     The data object created from the .egsphant file.
+ */
 var makeDensityVolume = (fileName, data) => {
   let densityVol = new DensityVolume(
     fileName,
@@ -20,6 +64,12 @@ var makeDensityVolume = (fileName, data) => {
   );
 };
 
+/**
+ * Make a DoseVolume object and add it to the density volume list.
+ *
+ * @param {string} fileName The name of the .3ddose file.
+ * @param {Object} data     The data object created from the .3ddose file.
+ */
 var makeDoseVolume = (fileName, data) => {
   let doseVol = new DoseVolume(
     fileName,
@@ -34,35 +84,9 @@ var makeDoseVolume = (fileName, data) => {
   );
 };
 
-function initializeProgress(numfiles) {
-  progressBarNode.value = 0;
-  // Show the progress bar
-  progressBar.classed("hidden", false);
-  totalFiles = numfiles;
-}
-
-function updateProgress(percent, fileNum) {
-  progressBarNode.value = percent * (fileNum / totalFiles);
-}
-
-function endProgress() {
-  // Hide the progress bar
-  progressBar.classed("hidden", true);
-}
-
-// Turn off normal drop response on window
-["dragover", "drop"].forEach((eventName) => {
-  window.addEventListener(eventName, function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-  });
-});
-
-// Add highlight class to drop area when holding file overtop
-dropArea.on("dragenter dragover", () => dropArea.classed("highlight", true));
-dropArea.on("dragleave drop", () => dropArea.classed("highlight", false));
-
-// Add event listener on drop to process files
+/**
+ * Add event listener on drop to process files.
+ */
 dropArea.node().addEventListener("drop", function (e) {
   if (e.dataTransfer && e.dataTransfer.files.length) {
     e.preventDefault();
@@ -72,7 +96,9 @@ dropArea.node().addEventListener("drop", function (e) {
   }
 });
 
-// Add event listener on button press to process files
+/**
+ * Add event listener on button press to process files.
+ */
 d3.select("#file-input").on("change", function () {
   if (this.files.length) {
     let files = [...this.files];
@@ -80,7 +106,9 @@ d3.select("#file-input").on("change", function () {
   }
 });
 
-// If the test files link is pressed, process test files
+/**
+ * If the test files link is pressed, process test files.
+ */
 d3.select("#test-files").on("click", function () {
   // Add a new volume viewer
   const volViewer = new VolumeViewer(
@@ -91,26 +119,39 @@ d3.select("#test-files").on("click", function () {
   );
   volumeViewerList.push(volViewer);
 
-  d3.json("/test-files/ismail-density.json").then((densityData) => {
+  // Read the JSON density file from the test files directory
+  d3.json("./test-files/ismail-density.json").then((densityData) => {
     makeDensityVolume("ismail.egsphant", densityData);
     volViewer.setDensityVolume(densityVolumeList[0]);
     volViewer.densitySelector.node().selectedIndex = 1;
   });
 
-  d3.json("/test-files/ismail100-dose.json").then((doseData) => {
+  // Read the JSON dose file from the test files directory
+  d3.json("./test-files/ismail100-dose.json").then((doseData) => {
     makeDoseVolume("ismail100.3ddose", doseData);
     volViewer.setDoseVolume(doseVolumeList[0]);
     volViewer.doseSelector.node().selectedIndex = 1;
   });
 });
 
+/**
+ * Initializes the progress bar and reads each of the files.
+ *
+ * @param {File[]} files  The list of files to be processed.
+ */
 function handleFiles(files) {
-  initializeProgress(files.length);
-  files.forEach((file, fileNum) => readFile(file, fileNum + 1));
+  initializeProgress();
+  files.forEach((file, i) => readFile(file, i + 1, files.length));
 }
 
-// Read file
-function readFile(file, fileNum) {
+/**
+ * Read each file and create a dose or density volume object.
+ *
+ * @param {File} file       The file to be processed.
+ * @param {number} fileNum  The index of the file to be processed.
+ * @param {File} totalFiles The total number of files to be processed.
+ */
+function readFile(file, fileNum, totalFiles) {
   let reader = new FileReader();
   let fileName = file.name;
   let ext = fileName.split(".").pop();
@@ -123,7 +164,11 @@ function readFile(file, fileNum) {
   // Update progress bar
   reader.addEventListener("progress", function (e) {
     if (e.lengthComputable == true) {
-      updateProgress(Math.floor((e.loaded / e.total) * 100), fileNum);
+      updateProgress(
+        Math.floor((e.loaded / e.total) * 100),
+        fileNum,
+        totalFiles
+      );
     }
   });
 
@@ -132,10 +177,11 @@ function readFile(file, fileNum) {
     return true;
   });
 
-  // TODO: Add check for dose and density distributions like https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1407-L1412
+  // TODO: Add check for dose and density distributions like
+  // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1407-L1412
   // File is successfully read
-  reader.addEventListener("load", function (event) {
-    let result = event.target.result;
+  reader.addEventListener("load", function (e) {
+    let result = e.target.result;
     let resultSplit = result.split("\n");
     let data;
 

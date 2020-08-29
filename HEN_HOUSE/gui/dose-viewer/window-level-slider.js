@@ -1,3 +1,11 @@
+/**
+ * Initialize the window and level sliders.
+ *
+ * @param {Object} levelParentDiv The parent div of the level slider.
+ * @param {Object} windowParentDiv The parent div of the window slider.
+ * @param {DensityVolume} densityVol The density volume the sliders control.
+ * @param {Object} panels The panel for each axis.
+ */
 var initializeWindowAndLevelSlider = (
   levelParentDiv,
   windowParentDiv,
@@ -47,7 +55,7 @@ var initializeWindowAndLevelSlider = (
     levelSlider.setMaxValue(densityVol.data.maxDensity - densityVol.window / 2);
 
     // Set level in density volume if changed
-    densityVol.setLevel(levelSlider.value());
+    densityVol.setLevel(levelSlider.value);
   };
 
   let windowSliderParams = {

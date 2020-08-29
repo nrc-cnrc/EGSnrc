@@ -84,13 +84,10 @@
     <script type="text/javascript" src="./voxel-coordinates.js"></script>
     <script type="text/javascript" src="./volume-viewer.js"></script>
     <script>
-      // TODO: Make a dose-view options class?
       // TODO: Move all javascript outside of index.html
-      // TODO: Make plotting object? Define all variables there
-      // TODO: Make size variables objects
 
       // Define all size variables
-      let mainViewerDimensions = {
+      const mainViewerDimensions = {
         fullWidth: 320,
         fullHeight: 320,
         margin: { top: 20, right: 15, bottom: 50, left: 55 },
@@ -103,8 +100,7 @@
       };
 
       // Define legend size variables
-      // From https://bl.ocks.org/starcalibre/6cccfa843ed254aa0a0d
-      let legendDimensions = {
+      const legendDimensions = {
         fullWidth: 90,
         fullHeight: mainViewerDimensions.fullHeight,
         margin: { top: 25, right: 10, bottom: 25, left: 10 },
@@ -117,7 +113,7 @@
       };
 
       // Define profile dose size variables
-      let sideDoseProfileDimensions = {
+      const sideDoseProfileDimensions = {
         fullWidth: mainViewerDimensions.fullWidth,
         fullHeight: mainViewerDimensions.fullHeight * 0.6,
         margin: { top: 30, right: 15, bottom: 30, left: 55 },
@@ -129,45 +125,17 @@
         },
       };
 
-      var axes = ["xy", "yz", "xz"];
-
-      // // Add black background to plot
-      // canvDensity
-      //   .append("rect")
-      //   .attr("width", mainViewerDimensions.width)
-      //   .attr("height", mainViewerDimensions.height)
-      //   .attr("fill", "rgba(225,225,225,0.5)");
-
-      // Global Variables
-      var plotCoords;
+      // Global variables
+      const axes = ["xy", "yz", "xz"];
       var densityVolumeList = [];
       var doseVolumeList = [];
       var doseComparisonVolumeList = [];
       var volumeViewerList = [];
-
-      d3.select("#add-volume-viewer").on("click", function () {
-        volumeViewerList.push(
-          new VolumeViewer(
-            mainViewerDimensions,
-            legendDimensions,
-            sideDoseProfileDimensions,
-            "vol-" + volumeViewerList.length
-          )
-        );
-      });
-
-      function getSliceNum() {
-        return d3.select("#slider-value").node().value;
-      }
-
-      function getAxis() {
-        return d3.selectAll("input[name='axis']:checked").node().value;
-      }
     </script>
     <script type="text/javascript" src="./window-level-slider.js"></script>
     <script type="text/javascript" src="./file-upload.js"></script>
     <script type="text/javascript" src="./export.mjs"></script>
     <script type="text/javascript" src="./read-data.js"></script>
-    <script type="text/javascript" src="./dose-profile-setup.js"></script>
+    <script type="text/javascript" src="./checkbox-button-helper.js"></script>
   </body>
 </html>

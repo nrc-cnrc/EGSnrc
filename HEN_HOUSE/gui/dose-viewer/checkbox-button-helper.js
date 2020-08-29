@@ -1,3 +1,6 @@
+/**
+ * Enable the plot density checkbox for the dose profile plots.
+ */
 var enableCheckboxForDensityPlot = () => {
   let densityCheckbox = d3
     .select("input[name='density-profile-checkbox']")
@@ -5,6 +8,9 @@ var enableCheckboxForDensityPlot = () => {
   if (densityCheckbox.disabled) densityCheckbox.disabled = false;
 };
 
+/**
+ * Enable the checkbox for the dose profile plots.
+ */
 var enableCheckboxForDoseProfilePlot = () => {
   let showDoseProfileCheckbox = d3
     .select("input[name='show-dose-profile-checkbox']")
@@ -13,12 +19,18 @@ var enableCheckboxForDoseProfilePlot = () => {
     showDoseProfileCheckbox.disabled = false;
 };
 
+/**
+ * Enable the export visualization to png button.
+ */
 var enableExportVisualizationButton = () => {
   let exportVisualizationButton = d3.select("button#save-vis").node();
   if (exportVisualizationButton.disabled)
     exportVisualizationButton.disabled = false;
 };
 
+/**
+ * Enable the checkbox to view voxel information on click.
+ */
 var enableCheckboxForVoxelInformation = () => {
   let showMarkerCheckbox = d3
     .select("input[name='show-marker-checkbox']")
@@ -26,6 +38,23 @@ var enableCheckboxForVoxelInformation = () => {
   if (showMarkerCheckbox.disabled) showMarkerCheckbox.disabled = false;
 };
 
+/**
+ * Define the behaviour of clicking the add volume viewer button.
+ */
+d3.select("#add-volume-viewer").on("click", function () {
+  volumeViewerList.push(
+    new VolumeViewer(
+      mainViewerDimensions,
+      legendDimensions,
+      sideDoseProfileDimensions,
+      "vol-" + volumeViewerList.length
+    )
+  );
+});
+
+/**
+ * Define the behaviour of selecting the show dose profile checkbox.
+ */
 d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
   // Call all panels to show/hide crosshairs
   volumeViewerList.forEach((volumeViewer) => {
@@ -53,8 +82,7 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
           panel.axis,
           panel.sliceNum,
           panel.zoomTransform,
-          volumeViewer.id,
-          true
+          volumeViewer.id
         );
       }
     } else {
@@ -69,6 +97,9 @@ d3.select("input[name='show-dose-profile-checkbox']").on("change", function () {
   });
 });
 
+/**
+ * Define the behaviour of selecting the show voxel information checkbox.
+ */
 d3.select("input[name='show-marker-checkbox']").on("change", function () {
   // Call all panels to show/hide circle marker
   volumeViewerList.forEach((volumeViewer) => {
@@ -92,8 +123,7 @@ d3.select("input[name='show-marker-checkbox']").on("change", function () {
             panel.axis,
             panel.sliceNum,
             panel.zoomTransform,
-            panel.volumeViewerId,
-            true
+            panel.volumeViewerId
           );
         }
       });

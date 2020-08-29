@@ -1,4 +1,16 @@
+/** @class VolumeViewer combines a density and/or dose file, three panels for
+ * the three axes views, and three dose profile plots. */
 class VolumeViewer {
+  /**
+   * Creates an instance of a VolumeViewer.
+   *
+   * @constructor
+   * @param {Object} mainViewerDimensions The pixel dimensions of the main viewer.
+   * @param {Object} legendDimensions The pixel dimensions of the legends.
+   * @param {Object} sideDoseProfileDimensions The pixel dimensions of dose profiles.
+   * @param {string} id The unique ID of the volume viewer.
+   */
+  // TODO: Avoid making the dimensions properties of the volume viewer
   constructor(
     mainViewerDimensions,
     legendDimensions,
@@ -13,7 +25,7 @@ class VolumeViewer {
     // Set volume viewer ID
     this.id = id;
 
-    // Intialize class properties
+    // Initialize class properties
     this.doseVolume = null;
     this.densityVolume = null;
     this.panels = null;
@@ -22,9 +34,14 @@ class VolumeViewer {
     this.dispatch = d3.dispatch("markerchange");
 
     this.buildBaseHtml(id);
-    this.intializeDispatch();
+    this.initializeDispatch();
   }
 
+  /**
+   * Set the dose volume of the VolumeViewer.
+   *
+   * @param {DoseVolume} doseVol The dose volume to be set.
+   */
   setDoseVolume(doseVol) {
     this.doseVolume = doseVol;
 
@@ -42,7 +59,6 @@ class VolumeViewer {
     let dims = "zxy";
     let sliceNum = {};
 
-    // TODO: Figure out a better layout for event listeners
     axes.forEach((axis, i) => {
       // Get the correct slice number
       sliceNum[axis] = this.densityVolume
@@ -84,6 +100,11 @@ class VolumeViewer {
     enableCheckboxForVoxelInformation();
   }
 
+  /**
+   * Set the density volume of the VolumeViewer.
+   *
+   * @param {DensityVolume} densityVol The density volume to be set.
+   */
   setDensityVolume(densityVol) {
     this.densityVolume = densityVol;
 
@@ -133,6 +154,8 @@ class VolumeViewer {
       enableCheckboxForDensityPlot();
     }
     enableExportVisualizationButton();
+    // TODO: Move this outside volume viewer and assume all loaded egsphants
+    // have same density range
     initializeWindowAndLevelSlider(
       this.levelParentDiv,
       this.windowParentDiv,
@@ -142,14 +165,16 @@ class VolumeViewer {
     enableCheckboxForVoxelInformation();
   }
 
+  /**
+   * Remove the current dose volume of the VolumeViewer.
+   */
   removeDoseVolume() {
     this.doseVolume = null;
 
     // Remove the volume object from panels
     Object.values(this.panels).forEach((panel) => {
       // Clear the panel
-      if (panel.doseVol)
-        panel.doseVol.clearDose(panel.doseVol.prevSlice[panel.axis]);
+      if (panel.doseVol) panel.doseVol.clearDose(panel.axis);
 
       // Set the volume object to density vol if need be
       if (panel.volume === panel.doseVol) panel.volume = panel.densityVol;
@@ -158,6 +183,9 @@ class VolumeViewer {
     });
   }
 
+  /**
+   * Remove the current density volume of the VolumeViewer.
+   */
   removeDensityVolume() {
     this.densityVolume = null;
 
@@ -168,8 +196,7 @@ class VolumeViewer {
     // Remove the volume object from panels
     Object.values(this.panels).forEach((panel) => {
       // Clear the panel
-      if (panel.densityVol)
-        panel.densityVol.clearDensity(panel.densityVol.prevSlice[panel.axis]);
+      if (panel.densityVol) panel.densityVol.clearDensity(panel.axis);
 
       // Set the volume object to density vol if need be
       if (panel.volume === panel.densityVol) panel.volume = panel.doseVol;
@@ -180,15 +207,12 @@ class VolumeViewer {
     // TODO: Remove legend as well
   }
 
-  updateMaxSliderValues() {
-    // Update the slider max values
-    let volume = this.densityVolume || this.doseVolume;
-    let dims = "zxy";
-    axes.forEach((axis, i) =>
-      sliceSliders[axis].setMaxValue(volume.data.voxelNumber[dims[i]])
-    );
-  }
-
+  /**
+   * Get a string representation of the margin object to style HTML elements.
+   *
+   * @param {Object} margin An object containing numbers of pixels for the top,
+   * right, bottom, and left margins.
+   */
   getMarginStr(margin) {
     return (
       margin.top +
@@ -202,6 +226,14 @@ class VolumeViewer {
     );
   }
 
+  /**
+   * Update the dose file dropdown selector when a new dose file is added.
+   *
+   * @param {DoseVolume} doseVol The new dose volume to be added to the
+   * dropdown.
+   * @param {number} i The index of the dose volume.
+   */
+  // TODO: Create event listeners instead of calling this every time
   updateDoseFileSelector(doseVol, i) {
     this.doseSelector.append("option").attr("value", i).text(doseVol.fileName);
 
@@ -216,6 +248,13 @@ class VolumeViewer {
     }
   }
 
+  /**
+   * Update the density file dropdown selector when a new density file is added.
+   *
+   * @param {DensityVolume} densityVol The new density volume to be added to the
+   * dropdown.
+   * @param {number} i The index of the density volume.
+   */
   updateDensityFileSelector(densityVol, i) {
     this.densitySelector
       .append("option")
@@ -223,6 +262,9 @@ class VolumeViewer {
       .text(densityVol.fileName);
   }
 
+  /**
+   * Populate the file selectors with uploaded dose and density volumes.
+   */
   setUpFileSelectors() {
     let volumeViewer = this;
 
@@ -234,7 +276,7 @@ class VolumeViewer {
       this.updateDoseFileSelector(doseVol, i)
     );
 
-    // Add behvaiour, when volume is selected, change the volume viewer property
+    // Add behaviour, when volume is selected, change the volume viewer property
     this.doseSelector.on("change", function () {
       if (this.value == -1) {
         // If the base text is chosen, remove dose volume if loaded
@@ -278,6 +320,13 @@ class VolumeViewer {
     });
   }
 
+  /**
+   * Create a dose comparison volume from two given dose volumes.
+   *
+   * @param {DoseVolume} doseVol1 The first dose volume to compare.
+   * @param {DoseVolume} doseVol2 The second dose volume to compare.
+   */
+  // TODO: Move this logic to DoseComparisonVolume class
   makeDoseComparison(doseVol1, doseVol2) {
     // First normalize the dose data to turn into a percentage
     let doseArr1 = doseVol1.data.dose.map(
@@ -323,6 +372,11 @@ class VolumeViewer {
     this.setDoseVolume(doseComparisonVol);
   }
 
+  /**
+   * Build the HTML of the volume viewer object.
+   *
+   * @param {string} id The unique ID of the volume viewer.
+   */
   buildBaseHtml(id) {
     // Select main div
     let base = d3.select("#image-to-print");
@@ -389,6 +443,11 @@ class VolumeViewer {
     this.buildPanels(mainViewerDimensions);
   }
 
+  /**
+   * Build the HTML for the viewer container to hold the panels.
+   *
+   * @param {Object} mainViewerDimensions The pixel dimensions of the main viewer.
+   */
   buildViewerContainer(mainViewerDimensions) {
     // TODO: In panel class, have build html instead
     let dimensions = ["z", "x", "y"];
@@ -485,6 +544,11 @@ class VolumeViewer {
     });
   }
 
+  /**
+   * Build the HTML for the dose and density legends.
+   *
+   * @param {Object} legendDimensions The pixel dimensions of the legends.
+   */
   buildLegend(legendDimensions) {
     // Set up legends
     var getLegendHolderAndSvg = (className) => {
@@ -509,6 +573,11 @@ class VolumeViewer {
     );
   }
 
+  /**
+   * Create the panel object for each axis.
+   *
+   * @param {Object} mainViewerDimensions The pixel dimensions of the main viewer.
+   */
   buildPanels(mainViewerDimensions) {
     this.panels = axes.reduce((obj, axis, i) => {
       return {
@@ -527,12 +596,14 @@ class VolumeViewer {
     }, {});
   }
 
-  intializeDispatch() {
+  /**
+   * Set up the event dispatcher.
+   */
+  initializeDispatch() {
     // Set up marker coord change event
     let panels = this.panels;
 
     this.dispatch.on("markerchange.panels", function (d) {
-      d.panel.updateSliceNum();
       d.panel.updateMarker(d.plotCoords);
 
       // Want to get the voxel coords then change the sliceNum of the other volume panels
@@ -541,8 +612,7 @@ class VolumeViewer {
         d.panel.axis,
         d.panel.sliceNum,
         d.panel.volume,
-        d.panel.zoomTransform,
-        true
+        d.panel.zoomTransform
       );
 
       Object.values(panels).forEach((panel) => {
@@ -593,8 +663,7 @@ class VolumeViewer {
         d.panel.axis,
         d.panel.sliceNum,
         d.panel.zoomTransform,
-        d.panel.volumeViewerId,
-        true
+        d.panel.volumeViewerId
       );
     });
   }
