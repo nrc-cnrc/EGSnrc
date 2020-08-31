@@ -117,6 +117,16 @@ if [ $nthread -gt $cpu_nthread ]; then
     nthread=$cpu_nthread
 fi
 
+### remove existing egsjob and lock files
+if [ -e $basename.egsjob ]; then
+    log "remove existing egsjob file: $basename.egsjob"
+    /bin/rm $basename.egsjob
+fi
+if [ -e $basename.lock ]; then
+    log "remove existing lock file: $basename.lock"
+    /bin/rm $basename.lock
+fi
+
 ### loop to launch nthread jobs on cpu
 for job in $(seq 1 $nthread); do
 

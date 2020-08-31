@@ -171,6 +171,11 @@ else
     delta=10
     limit=120
     while [ ! -e $basename.egsjob ]; do
+
+        # quit if simulation is already done
+        quit_if_done
+
+        # otherwise wait for egsjob file
         log "$jobstr: wait $delta seconds (no $basename.egsjob file after $total seconds)"
         sleep $delta
         total=$((total+$delta))
@@ -182,25 +187,6 @@ else
 
     # quit if simulation is already done
     quit_if_done
-
-    # sleep until there is a lock file, maximum 300 seconds
-    total=0
-    delta=10
-    limit=300
-    while [ ! -e $basename.lock ]; do
-
-        # quit if simulation is already done
-        quit_if_done
-
-        # otherwise wait for lock file
-        log "$jobstr: wait $delta seconds ($basename.lock not found after $total seconds)"
-        sleep $delta
-        total=$((total+$delta))
-        if [ $total -gt $limit ]; then
-            log "$jobstr: QUIT ($basename.lock not found after $limit seconds)"
-            exit
-        fi
-    done
 
     # offset all jobs by a fixed delay (relative to previous job)
     delta=100000
@@ -224,9 +210,6 @@ else
     if [ -r $basename.lock ]; then
         content=$(cat $basename.lock)
         log "$jobstr: found $basename.lock: $content"
-    else
-        log "$jobstr: QUIT ($basename.lock does not exist or is not readable)"
-        exit
     fi
 
 fi

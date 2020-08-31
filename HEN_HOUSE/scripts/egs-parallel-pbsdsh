@@ -116,16 +116,28 @@ if [ $trim -gt 0 ]; then
 fi
 log "job name: $jobname"
 
-### create pbsdsh directory to store task files for job numbers
+### create pbsdsh directory to store task files for job numbers (remove existing directory)
 pbsdsh_dir=$basename.pbsdsh
-log "create temporary directory $pbsdsh_dir"
 if [ -e $pbsdsh_dir ]; then
+    log "remove existing directory $pbsdsh_dir"
     /bin/rm -r $pbsdsh_dir
 fi
+log "create temporary directory $pbsdsh_dir"
 err=$(mkdir $pbsdsh_dir 2>&1)
 if ! [ -z $err ]; then
     quit $LINENO "$err"
 fi
+
+### remove existing egsjob and lock files
+if [ -e $basename.egsjob ]; then
+    log "remove existing egsjob file: $basename.egsjob"
+    /bin/rm $basename.egsjob
+fi
+if [ -e $basename.lock ]; then
+    log "remove existing lock file: $basename.lock"
+    /bin/rm $basename.lock
+fi
+
 ### launch pbsdsh tasks
 task_script=$HEN_HOUSE/scripts/egs-parallel-dshtask
 jobpid=$(qsub -q $queue $scheduler_options <<EOF
@@ -138,7 +150,7 @@ jobpid=$(qsub -q $queue $scheduler_options <<EOF
 pbsdsh $task_script $pbsdsh_dir $basename $nthread $first $delay '$command'
 EOF
 )
-log "SUBMIT $nthread pbsdsh tasks on $jobid"
+log "SUBMIT $nthread pbsdsh tasks on $jobpid"
 log "pbsdsh task logs will be collated in ${basename}.eo"
 
 ### print pid

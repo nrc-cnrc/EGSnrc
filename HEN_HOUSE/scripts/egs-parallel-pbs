@@ -126,6 +126,16 @@ if [ $trim -gt 0 ]; then
 fi
 log "job name: $jobname"
 
+### remove existing egsjob and lock files
+if [ -e $basename.egsjob ]; then
+    log "remove existing egsjob file: $basename.egsjob"
+    /bin/rm $basename.egsjob
+fi
+if [ -e $basename.lock ]; then
+    log "remove existing lock file: $basename.lock"
+    /bin/rm $basename.lock
+fi
+
 ### loop to launch nthread pbs jobs
 for job in $(seq 1 $nthread); do
 
@@ -145,33 +155,16 @@ for job in $(seq 1 $nthread); do
         delta=10
         limit=120
         while [ ! -e $basename.egsjob ]; do
+
+            # quit if simulation is already done
+            quit_if_done
+
+            # otherwise wait for egsjob file
             log "$jobstr: wait $delta seconds (no $basename.egsjob file after $total seconds)"
             sleep $delta
             total=$((total+$delta))
             if [ $total -gt $limit ]; then
                 log "$jobstr: QUIT (no $basename.egsjob file after $limit seconds)"
-                exit
-            fi
-        done
-
-        # quit if simulation is already done
-        quit_if_done
-
-        # sleep until there is a lock file, maximum 300 seconds
-        total=0
-        delta=10
-        limit=300
-        while [ ! -e $basename.lock ]; do
-
-            # quit if simulation is already done
-            quit_if_done
-
-            # otherwise wait for lock file
-            log "$jobstr: wait $delta seconds ($basename.lock not found after $total seconds)"
-            sleep $delta
-            total=$((total+$delta))
-            if [ $total -gt $limit ]; then
-                log "$jobstr: QUIT ($basename.lock not found after $limit seconds)"
                 exit
             fi
         done
@@ -201,9 +194,6 @@ for job in $(seq 1 $nthread); do
         if [ -r $basename.lock ]; then
             content=$(cat $basename.lock)
             log "$jobstr: found $basename.lock: $content"
-        else
-            log "$jobstr: QUIT ($basename.lock does not exist or is not readable)"
-            exit
         fi
         quit_if_done
     fi
