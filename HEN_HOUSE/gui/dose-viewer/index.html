@@ -1,7 +1,38 @@
+<!--
+###############################################################################
+#
+#  EGSnrc online voxel and dose visualization tool
+#  Copyright (C) 2020 Magdalena Bazalova-Carter and Elise Badun
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Elise Badun, 2020
+#
+#  Contributors:
+#
+###############################################################################
+-->
+
+
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Dose Viewer</title>
+    <title>UVic Dose Dig</title>
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://x3dom.org/download/dev/x3dom-full.js"></script>
     <link rel="stylesheet" href="styles.css" />
@@ -12,7 +43,7 @@
   </head>
   <body>
     <div class="header">
-      <h1>Dose Viewer</h1>
+      <h1>UVic Dose Dig</h1>
       <img src="./images/logo.jpg" alt="XCITE Lab logo" />
     </div>
     <p class="description">Upload your own .egsphant and .3ddose files.</p>
@@ -129,6 +160,8 @@
       };
 
       // Global variables
+      // TODO: Make a global dimensions list [x, y, z]
+      // TODO: Make use of global axes list throughout code
       const axes = ["xy", "yz", "xz"];
       var densityVolumeList = [];
       var doseVolumeList = [];
