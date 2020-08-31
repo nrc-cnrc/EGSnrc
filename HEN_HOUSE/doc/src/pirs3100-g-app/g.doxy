@@ -44,11 +44,11 @@ This `EGSnrc` application calculates \g, the average kinetic energy fraction los
 to radiative events for primary photon interactions (radiative loss fraction) or the radiative yield Y in the case of charged particle beams as they slow down. For photons, quantities such as kerma, \f$\textrm{K}\f$, collision kerma, \f$\textrm{K}_\mathrm{col}\f$, energy-fluence-averaged mass energy-transfer coefficient, \f$\overline{\mu}_\mathrm{tr}/\rho\f$,
 and mass energy-absorption coefficient, \f$\overline{\mu}_\mathrm{en}/\rho\f$, are also calculated for the incident photons.
 
-The `g` application was written by Iwan Kawrakow in the late 90's using the Mortran 3 language, well before a C/C++ interface was available. Important contributions and refinements were made by Dave Rogers in the early 2000's. Version 1.0 was released in January 2000 for the calculation of the average radiative fraction \f$\overline{g}\f$ or the raditaive yield Y. Later on, in March 2002, the code was extended to compute total and collision kerma (version 1.1). In the summer of 2002 the calculation of average mass-energy transfer and absorption coefficients was added (version 1.2) and a bug corrected to properly account for fluorescent photons(version 1.3).
+The `g` application was written by Iwan Kawrakow in the late 90's using the Mortran 3 language, well before a C/C++ interface was available. Important contributions and refinements were made by Dave Rogers in the early 2000's. Version 1.0 was released in January 2000 for the calculation of the average radiative fraction \f$\overline{g}\f$ or the radiative yield Y. Later on, in March 2002, the code was extended to compute total and collision kerma (version 1.1). In the summer of 2002 the calculation of average mass-energy transfer and absorption coefficients was added (version 1.2) and a bug corrected to properly account for fluorescent photons(version 1.3).
 The \f$\overline{g}\f$ value used during the 2003 update of the Canadian Co-60
 air kerma primary standard was calculated with this code. It was first released as part of EGSnrc in 2004 and has since been maintained by the EGSnrc Monte Carlo group at the NRC and the Carleton Laboratory for Radiotherapy Physics (CLRP).
 
-Motivated by the need to generate databases of mass-energy aborption coefficients for `EGSnrc` applications that allow calculating collision kerma, a photon-beam-only calculation (calculation type = 1) was implemented in April 2006. With this calculation type the efficiency of \muen
+Motivated by the need to generate databases of mass-energy absorption coefficients for `EGSnrc` applications that allow calculating collision kerma, a photon-beam-only calculation (calculation type = 1) was implemented in April 2006. With this calculation type the efficiency of \muen
 calculations is increased significantly. For instance, an efficiency increase of about a factor
 of 70 is obtained for a 600 keV calculation in air. At around the same time, the ability to run the calculation for more than one energy on a linear or a logarithmic energy grid was added.
 Since the code calculates \muen_rho and \mutr_rho values, databases for calculating collision and total kerma can be generated.
@@ -61,9 +61,12 @@ sub-threshold relaxation Auger electrons following photoeffect or Compton scatte
 the kerma calculation (non-radiative) and sub-threshold relaxation fluorescent photons after EII are
 included as part of the energy lost to radiative events. An exhaustive discussion of these issues can be found in a detailed paper by Rogers and Townson
 ([Med.Phys.46 2019](https://doi.org/10.1002/mp.13744)).
+Version 1.5 fixes a bug in the calculation of \g for both calculation types when the photon
+energy is sampled from an energy spectrum. It also provides a cleaner output and an option for more verbose output. The code has been extensively documented and a [Doxygen](https://www.doxygen.nl/index.html) based user's
+manual created.
 
-The current version (1.5) fixes a bug in the calculation of \g for both calculation types when the photon
-energy is sampled from an energy spectrum. It also provides a cleaner output and an option for more verbose output.
+In the current version (1.6) the original algorithm of a `calculation type` 1 has been slightly adjusted to ensure @muen_rho is calculated to a user-requested relative uncertainty @accu and it has been made independent of the number of histories. The target accuracy now defaults to 1%. The possibility to further optimize `calculation type` 1 in the megavoltage energy range is introduced. The calculation progress messages during a type 1 calculation were made clearer and the documentation has been updated to reflect these changes.
+
 
 \section g_method Calculation method
 
@@ -93,7 +96,7 @@ with initial direction along the positive z-axis (0,0,1) as they travel across a
      Y = \frac{\overline{E}_\mathrm{rad}}{T_0}.
 \f}
 
-In adition to Y, the application also outputs \f$Y_\mathrm{brems}\f$, the radiative yield due to bremsstrahlung events to assess
+In addition to Y, the application also outputs \f$Y_\mathrm{brems}\f$, the radiative yield due to bremsstrahlung events to assess
 the approximation incurred when ignoring all other interactions as has been customarily done in the past.
 
 \subsubsection g_e_scoring Scoring algorithm for charged particle sources
@@ -111,7 +114,7 @@ A derivation of the equations used in the `g` application for the calculation of
 
 \subsubsection mono Monoenergetic beams
 
-The mass energy transfer coefficient, \mutr_rho for a monoenegetic photon beam of energy E can be calculated using
+The mass energy transfer coefficient, \mutr_rho for a monoenergetic photon beam of energy E can be calculated using
 
 \f{equation}{\label{def_mutr}
      \left(\frac{\mu_\mathrm{tr}}{\rho}\right) = \frac{\overline{E}_\mathrm{tr}}{E} \cdot \left(\frac{\mu}{\rho}\right),
@@ -160,7 +163,7 @@ and similarly, collision kerma per unit fluence is given by
 
 \subsubsection poly Polyenergetic beams
 
-In the case of a polyenergetic source of photons, the definition of \g follows from the defintion of kerma and collision kerma. Kerma per unit fluence is defined by
+In the case of a polyenergetic source of photons, the definition of \g follows from the definition of kerma and collision kerma. Kerma per unit fluence is defined by
 
 \f{equation}{\label{eq:def}
      \frac{K}{\phi} = \int \phi(E) \cdot E \cdot \left[\frac{\mu_\mathrm{tr}(E)}{\rho}\right] \cdot dE/\int \phi(E) \cdot dE.
@@ -255,13 +258,28 @@ and the energy fluence averaged mass energy absorption coefficient \muen_rho_ave
 
 A `calculation type` 1, for use with photon sources only, is tailored to the efficient calculation of the mass energy absorption coefficient \muen_rho_ave. In this mode the `g` application takes advantage of the faster convergence of \mutr and 1-\g  (when \g is small) to a desired accuracy and collision kerma is calculated with Eq.(\reflh{eq_kerma_1,11})
 and the energy fluence averaged mass energy absorption coefficient \muen_rho_ave is calculated using Eq.(\reflh{eq_muen_1,16}).
-The calculation finishes as soon as a prescribed relative uncertainty \c accu is reached if provided by the user (\c accu > 0), otherwise the calculation runs until all histories complete.
+The calculation finishes as soon as a user-requested relative uncertainty @accu is reached, which by default is set to 0.01 (1%). For this calculation type the `number of histories` input entry has no effect.
+By default @mutr_rho is calculated to an accuracy of \f$\sigma/\sqrt{4/3}\f$ and 1-@g of \f$\sigma/2\f$, respectively, ensuring the accuracy in @muen_rho will be \accu. This approach can be modified for instance to speed up the calculation at higher energies as described in section \ref accu_balance .
+
+The advantage of using a `calculation type` 1, tailored to the efficient computation of @muen_rho,
+can be observed in Figure \reflh{Fig1,1} where the efficiency gain of a `calculation type` 1 over type 0 as function of photon energy in air is quantitatively shown for the original and the current implementation. The main difference is that the current implementation guarantees that the uncertainty in @muen_rho is equal to or less than the user-requested value @accu, while the  original implementation computed @muen_rho to an accuracy of 1.1\accu since @mutr_rho was calculated to the user-requested accuracy @accu and 1-@g to \accu/2. Calculation type 1 can be 20 times more efficient in the kilovoltage range and up to 80 times more efficient around 1 MeV.
+The efficiency gains decrease abruptly above the pair production threshold.
+
+@image html fig1.png "Figure 1. Efficiency gain of calculation type 1 over type 0 in air."
+
+\latexonly
+\begin{figure}[htb]
+\centering
+\includegraphics[width=12.5cm]{../figures/fig1}
+\caption{Efficiency gain of calculation type 1 over type 0 in air.}
+\label{Fig1}
+\end{figure}
+\endlatexonly
 
 The inputs for a `calculation type` can be anywhere in the input file and are not required to
-be placed between delimiters as is customary in most EGSnrc applications. An example of a calculation type 1 input block that should run until a 0.01% accuracy is reached, or
-all histories are completed, is shown in the following code snippet:
+be placed between delimiters as is customary in most EGSnrc applications. An example of a calculation type 1 input block that should run until a 0.1% accuracy is reached is shown in the following code snippet:
 \latexonly
-\newpage
+\\
 \endlatexonly
 \code
   ####################################################################
@@ -269,31 +287,18 @@ all histories are completed, is shown in the following code snippet:
   #
   # 0 (default)            : Executes fixed number of histories
   #
-  # 1 (photon source only) : Runs to desired accuracy or total number
-  #                          of histories if no accuracy specified or
-  #                          number of histories not large enough.
+  # 1 (photon source only) : Runs to desired accuracy
+  #
   #####################################################################
   #
   calculation type = 1
-
-  ##################################
-  # Desired accuracy for mutr, muen, and 1-g
-  # (relevant only for calculation type 1)
-  ##################################
-  accuracy = 0.0001
-
-  #####################################################################
-  # Option to provide extra information such as a efficiency gain
-  # of calculation type 1 over 0, correlation between total and radiative
-  # energy losses. Only relevant for type 1 calculations.
-  # Defaults to 'no'.
-  ####################################################################
-  verbose = yes
+  ######################
+  # 0.1% desired accuracy
+  ######################
+  accuracy = 0.001    # relative accuracy
   #############
 \endcode
 
-
-\note If the number of histories in a calculation type 1 is not large enough, the calculation will finish without reaching the desired accuracy.
 
 \section g_spec Source definition
 
@@ -365,7 +370,9 @@ by submitting them to the available CPU threads.
 A strategy for creating large \muen databases is discussed below in section \ref g_databases.
 
 A source of particles with a tabulated energy distribution (spectrum) can also be defined. A polyenergetic Co-60 beam is defined using the keys:
-
+\latexonly
+\\
+\endlatexonly
 \code
 #########################################################################
 ### SOURCE DEFINITION
@@ -401,7 +408,7 @@ g -i input_file [-p pegs_file] [-o output_file] [-b]
 where the arguments in square brackets are optional. When the \c g application
 is run interactively, results of a calculation are written to standard output.
 If one wants to print the results of an interactive calculation to an output file,
-one can redirect the ouptut to a file using
+one can redirect the output to a file using
 
 \verbatim
 g -i input_file [-p pegs_file] > output_file
@@ -414,7 +421,7 @@ outputs (standard and a file) :
 g -i input_file [-p pegs_file] | tee output_file
 \endverbatim
 
-\note <b>Beware of overwritting an existing file!</b>
+\note <b>Beware of overwriting an existing file!</b>
 
 \subsection usage_options Optional arguments
 <ul>
@@ -439,7 +446,6 @@ data file, etc.).
 
 \section g_example Input example: Monoenergetic 30 keV photon beam
 \code
-
 ############################################
 #
 # Example input file for the g application:
@@ -530,15 +536,15 @@ data file, etc.).
 A consequence of not having an option for parallel execution is that
 lengthy calculations cannot be run on multiple cores, for instance on a computer cluster
 or a multicore processor PC.
-This limitation makes the creation of large databases spanning an energy range from threshold
-up to several MeV very time consuming. As the energy of the initial particle increases, more energetic electrons are created which have to be followed in an infinite geometry until they have lost all their kinetic energy. It is hence more practical to create individual input files for  each energy, and submit individual calculations. Furthermore, one can take advantage of the energy dependence of the mass energy transfer and absorption coefficients and use a logarithmic energy grid to reduce the number of high energy data points.
+This limitation makes the creation of large @muen_rho or @mutr_rho databases spanning an energy range from threshold up to several MeV very time consuming. As the energy of the initial particle increases, more energetic electrons are created which have to be followed in an infinite geometry until they have lost all their kinetic energy. It is hence more practical to create individual input files for each energy, and submit individual type 1 calculations. Furthermore, one can take advantage of the energy dependence of the mass energy transfer and absorption coefficients and use a logarithmic energy grid to reduce the number of high energy data points.
 
 A simple Bash script is provided here as an example of what one could do to submit multiple calculations on a logarithmic energy grid. By default it runs type 1 calculations
 in air for 10 energies between 1 keV and 1 MeV on a logarithmic energy grid in the available
 cores of a PC. Accuracy is set to 0.1\%. Water is also available and further media can be added to the media definition block of the input file template. By passing different arguments a user can change certain parameters of the simulations. It would be simple to modify the script to allow other parameters to be changed.
-
+\latexonly
+\\
+\endlatexonly
 \code
-
 #!/bin/bash
 ###############################################################################
 #
@@ -729,6 +735,51 @@ echo
 ########################################################################
 exit 0
 \endcode
+
+\subsection accu_balance Speeding up calculations above 1 MeV
+
+As the energy of the photons increases over the pair production threshold, more high energy charged particles are produced and computing 1-@g down to @accu/2 becomes increasingly time
+consuming. To reduce the calculation time in this energy range, one could calculate 1-@g to a higher uncertainty and correspondingly @mutr_rho to a smaller uncertainty so that the accuracy of @muen_rho remains @accu.
+Further optimization of a `calculation type` 1 in the megavoltage energy range is possible
+by modifying the target uncertainty in @mutr_rho and 1-@g according to the relationships:
+
+\f{equation}{
+\sigma(\mu_\mathrm{tr}) = \frac{\sigma}{\sqrt{m}} \qquad \textrm{and}
+\qquad \sigma(1-\overline{g})  = \frac{\sigma}{\sqrt{m/(m-1)}}
+\f}
+
+which guarantee a user-desired accuracy \accu in @muen_rho and where m = 2, 3, 4, .., etc.
+The efficiency gain of a calculation type 1 over a type 0 in air as function of energy
+is shown in figure \reflh{Fig2,2} for different m values. A value of m = 2 is recommended for calculations around 1 MeV. @image html fig2.png "Figure 2. Efficiency gain of calculation type 1 over type 0 in air for different m values."
+
+\latexonly
+\begin{figure}[htb]
+\centering
+\includegraphics[width=15cm]{../figures/fig2}
+\caption{Efficiency gain of calculation type 1 over type 0 in air for different m values.}
+\label{Fig2}
+\end{figure}
+\endlatexonly
+
+The input key for modifying m is `accuracy balance` as shown in
+the input block example below
+\latexonly
+\\
+\endlatexonly
+\code
+####################################
+  calculation type = 1
+
+  ##################################
+  # Desired accuracy for muen
+  # (relevant only for calculation type 1)
+  ##################################
+  accuracy = 0.0001    # relative accuracy
+  accuracy balance = 2 # same accuracy accu/sqrt(2) for mutr and 1-g
+  #############
+\endcode
+
+Note that omitting m or setting m = 1 invokes the default approach.
 
 \section cvs_log CVS log history
 

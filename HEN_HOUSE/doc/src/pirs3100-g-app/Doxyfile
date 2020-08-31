@@ -226,6 +226,7 @@ ALIASES                = "internwarning=\par Warning:\n This class is not part o
                          "EM=\author Ernesto Mainegra-Hing, NRC" \
                          "BW=\author Blake Walters, NRC" \
                          "RT=\author Reid Townson, NRC" \
+                         "accu=\f$\sigma\f$" \
                          "g=\f$\overline{g}\f$" \
                          "mutr=\f$\mu_\mathrm{tr}\f$" \
                          "muen=\f$\mu_\mathrm{en}\f$" \
@@ -847,7 +848,7 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             =
+IMAGE_PATH             = figures
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
