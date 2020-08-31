@@ -64,6 +64,14 @@ div.volume-holder {
   white-space: nowrap;
 }
 
+div.file-selector {
+  margin: 5px 0px 5px 10px;
+}
+
+div.window-level-container {
+  margin: 5px 0px 5px 10px;
+}
+
 /* Dose profile settings */
 span.dose-profile-holder {
   display: inline-grid;
@@ -84,7 +92,7 @@ text.dose-profile-axis-label {
 /* Styling the voxel information */
 div.voxel-info {
   font-size: 13px;
-  margin: 10px 0px 10px 0px;
+  margin: 10px 0px 10px 10px;
 }
 
 .voxel-info-output {

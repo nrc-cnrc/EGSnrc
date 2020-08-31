@@ -15,7 +15,13 @@ class Slider {
   constructor(parentDiv, onValChangeCallback, params) {
     this.format = params.format;
     this.onValChangeCallback = onValChangeCallback;
-    this.buildSliderHtml(parentDiv, params.id, params.label);
+    this.buildSliderHtml(
+      parentDiv,
+      params.id,
+      params.label,
+      params.margin,
+      params.style
+    );
     this.initializeBehaviour(
       params.format,
       params.startingVal,
@@ -40,6 +46,8 @@ class Slider {
    * @params {Object} parentDiv The parent HTML element to build the slider on.
    * @params {string} id The unique ID of the slider element.
    * @params {string} labelStr The text label of the slider.
+   * @params {Object} [margin] The margin dimensions of the slider.
+   * @params {Object} [style] The style applied to the slider.
    * @params {boolean} [incrementButtons = true] Whether or not to add increment
    * and decrement buttons.
    * @params {boolean} [disabled = true] Whether or not the slider is initially disabled.
@@ -48,10 +56,31 @@ class Slider {
     parentDiv,
     id,
     labelStr,
+    margin,
+    style,
     incrementButtons = true,
     disabled = false
   ) {
     let mainDiv = parentDiv.append("div").attr("class", "slider-container");
+
+    if (margin) {
+      var getMarginStr = (margin) =>
+        margin.top +
+        "px " +
+        margin.right +
+        "px " +
+        margin.bottom +
+        "px " +
+        margin.left +
+        "px";
+      mainDiv.style("margin", getMarginStr(margin));
+    }
+
+    if (style) {
+      Object.entries(style).forEach((styleEntry) =>
+        mainDiv.style(...styleEntry)
+      );
+    }
 
     // Add label and slider value output
     let sliderValue = mainDiv

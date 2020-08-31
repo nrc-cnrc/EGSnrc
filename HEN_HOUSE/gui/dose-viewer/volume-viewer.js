@@ -502,6 +502,13 @@ class VolumeViewer {
         minVal: 0,
         maxVal: 1,
         step: 1,
+        margin: {
+          top: 0,
+          right: mainViewerDimensions.margin.right,
+          bottom: 0,
+          left: mainViewerDimensions.margin.left,
+        },
+        style: { "text-align": "center" },
       };
 
       // Build new slider

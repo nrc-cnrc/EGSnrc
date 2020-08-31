@@ -758,7 +758,14 @@ class DensityVolume extends Volume {
     this.data = data;
     this.setWindow();
     this.setLevel();
-    this.addColourScheme(
+    this.addColourScheme();
+  }
+
+  /**
+   * Add the colour scheme used for the plots.
+   */
+  addColourScheme() {
+    super.addColourScheme(
       d3.interpolateGreys,
       this.level + this.window / 2.0,
       this.level - this.window / 2.0,
