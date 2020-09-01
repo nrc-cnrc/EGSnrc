@@ -1012,8 +1012,6 @@ $LOGICAL ex,iwin;
 
 iwin=.false.; "start off assuming a non-Windows system"
 
-user_code = 'tutor1';
-
 $set_string(base,' ');
 base = $cstring(egs_home) // $cstring(user_code) // $file_sep //
        $cstring(output_file) // '_w';
@@ -1199,8 +1197,6 @@ IF( egs_is_absolute_path(extension) ) [
     egs_open_file = the_unit; return;
 ]
 
-user_code = 'tutor1';
-
 $set_string(tmp_string,' ');
 tmp_string = $cstring(egs_home) // $cstring(user_code) // $file_sep //
              $cstring(work_dir) // $cstring(output_file);
@@ -1297,8 +1293,6 @@ IF( egs_is_absolute_path(extension) ) [
     IF( action = 0 ) [ egs_open_datfile = -2; return; ]
     $egs_fatal(*,'Failed to open file ',$cstring(extension));
 ]
-
-user_code = 'tutor1';
 
 $set_string(base,' '); $set_string(fn,' ');
 base = $cstring(egs_home) // $cstring(user_code) // $file_sep;
