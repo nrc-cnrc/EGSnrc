@@ -622,6 +622,13 @@ ELSE[
 " Deduct the user code name from the executable name "
 call egs_get_usercode(user_code);
 
+$set_string(arg,' ');
+arg = 'tutor1';
+call getarg(0,arg); call egs_strip_path(arg);
+l = lnblnk1(arg);
+$set_string(user_code,' '); user_code(:l) = arg(:l);
+
+
 " Check for an input file "
 $check_get_argument('-i','--input',arg);
 IF( have_arg ) [
@@ -1468,11 +1475,23 @@ character*512 arg;
 integer  l,l1,lnblnk1,i;
 $declare_write_buffer;
 
-arg = 'tutor1';
+call getarg(0,arg); call egs_strip_path(arg);
 l = lnblnk1(arg);
+IF( arg(l-3:l) = '.exe' ) [
+    arg(l-3:l) = ' '; l = l - 4;
+]
+IF( arg(l-5:l) = '_debug' ) [
+    arg(l-5:l) = ' '; l = l-5;
+]
+IF( arg(l-5:l) = '_noopt' ) [
+    arg(l-5:l) = ' '; l = l-5;
+]
+l1 = len(ucode);
+IF( l > l1 ) [
+    $egs_fatal(*,' user code name is too long (',l,' chars)');
+]
 $set_string(ucode,' '); ucode(:l) = arg(:l);
 return; end;
-
 
 subroutine egs_itostring(string,i,leave_space);
 implicit none;
