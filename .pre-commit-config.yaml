@@ -6,3 +6,7 @@ repos:
     hooks:
     - id: black
       language_version: python3.7
+-   repo: https://github.com/SimonBiggs/nbstripout
+    rev: 0a4fa37151ce3c2fb522bf64469224c831a41773
+    hooks:
+    - id: nbstripout

@@ -27,6 +27,7 @@ rope = "*"
 # VSCode extension dependencies
 doc8 = "*"
 pydot = "^1.4.1"
+ipykernel = "^5.3.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0a5"]
