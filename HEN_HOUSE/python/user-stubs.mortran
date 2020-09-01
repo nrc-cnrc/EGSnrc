@@ -42,6 +42,65 @@
 "#############################################################################"
 
 
+
+" Handy macros for checking command line arguments "
+REPLACE {$check_get_argument(#,#,#);} WITH {
+  have_arg = .false.;
+
+  IF( {P1} = '-p', & {P2} = '--pegs-file' ) [
+    have_arg = .true.;
+    {P3} = 'tutor_data';
+  ]
+
+  DO i=1,narg-1 [
+      call getarg(i,{P3}); l = lnblnk1({P3});
+      IF( ( l = lnblnk1({P1}) & {P3}(:l) = {P1} ) |
+          ( l = lnblnk1({P2}) & {P3}(:l) = {P2} ) ) [
+          have_arg = .true.; call getarg(i+1,{P3}); EXIT;
+      ]
+  ]
+};
+
+REPLACE {$check_argument(#,#,#);} WITH {
+  have_arg = .false.;
+  DO i=1,narg [
+      call getarg(i,{P3}); l = lnblnk1({P3});
+      IF( ( l = lnblnk1({P1}) & {P3}(:l) = {P1} ) |
+          ( l = lnblnk1({P2}) & {P3}(:l) = {P2} ) ) [
+          have_arg = .true.; EXIT;
+      ]
+  ]
+};
+
+
+
+
+
+
+
+
+
+REPLACE {$egs_debug(#,#);} WITH { write(i_log,{P1}) {P2}; };
+REPLACE {$egs_fatal(#,#,#);} WITH {
+  $warning('(/a)','***************** Error: ');
+  $warning({P1},{P2});
+  $warning('(/a)','***************** Quitting now.');
+};
+REPLACE {$egs_fatal(#,#);} WITH {
+  $warning('(/a)','***************** Error: ');
+  $warning({P1},{P2});
+  $warning('(/a)','***************** Quitting now.');
+};
+REPLACE {$egs_warning(#,#);} WITH {
+  $warning('(/a)','***************** Warning: ');
+  $warning({P1},{P2});
+};
+REPLACE {$warning(#,#);} WITH { write(i_log,{P1}) {P2}; };
+REPLACE {$egs_info(#,#);} WITH { write(i_log,{P1}) {P2}; };
+
+
+
+
 "---------------------------------------------------------------------"
 "STEP 1:  USER-OVERRIDE-OF-EGSnrc-MACROS                              "
 "---------------------------------------------------------------------"

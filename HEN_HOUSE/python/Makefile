@@ -29,8 +29,9 @@
 include $(EGS_CONFIG)
 
 export PYTHON_BUILD = cpython-37m-x86_64-linux-gnu
+export COMPILED_FILE = egsnrc/_egsnrc.$(PYTHON_BUILD).so
 
-all: egsnrc/_egsnrc.$(PYTHON_BUILD).so
+all : $(COMPILED_FILE)
 
 SOURCES = \
     $(EGS_SOURCEDIR)egsnrc.macros \
@@ -47,3 +48,6 @@ egsnrc/_egsnrc.%.so :
 	$(MORTRAN_EXE) -s -d $(MORTRAN_DATA) -f $(SOURCES) $< -o7 ./egsnrc/egsnrc.f -o8 egsnrc.mortlst
 	poetry run python -m numpy.f2py -c ./egsnrc/egsnrc.f -m _egsnrc
 	mv _egsnrc.$(PYTHON_BUILD).so $@
+
+clean :
+	rm $(COMPILED_FILE)
