@@ -151,7 +151,8 @@ jobstr=$(printf "job %04d" $job)
 log "$jobstr <- $taskstr"
 
 # log the host and pid of this job
-log "$jobstr: host=$(hostname) BEGIN pid=$$"
+log "$jobstr: host=$(hostname)"
+log "$jobstr: BEGIN pid=$$"
 
 ### manage jobs to avoid bottleneck and race conditions
 if [ $job -eq 1 ]; then

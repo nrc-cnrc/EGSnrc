@@ -140,7 +140,9 @@ fi
 
 ### launch pbsdsh tasks
 task_script=$HEN_HOUSE/scripts/egs-parallel-dshtask
-jobpid=$(qsub -q $queue $scheduler_options <<EOF
+pbscommand="qsub -q $queue $scheduler_options"
+log "SUBMIT $pbscommand"
+jobpid=$(eval "$pbscommand" <<EOF
 #!/bin/sh
 #PBS -j eo
 #PBS -e ${basename}.eo
@@ -150,7 +152,10 @@ jobpid=$(qsub -q $queue $scheduler_options <<EOF
 pbsdsh $task_script $pbsdsh_dir $basename $nthread $first $delay '$command'
 EOF
 )
-log "SUBMIT $nthread pbsdsh tasks on $jobpid"
+if ! [[ "${jobpid%%.*}" =~ ^[0-9]+$ ]] ; then
+    quit $LINENO "FAILED to submit job"
+fi
+log "LAUNCH $nthread pbsdsh tasks on $jobpid"
 log "pbsdsh task logs will be collated in ${basename}.eo"
 
 ### print pid

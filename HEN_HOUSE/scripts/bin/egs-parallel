@@ -134,7 +134,7 @@ done
 opt_options="${opt_options_array[@]}"
 
 ### begin script
-log "BEGIN $0"
+log "BEGIN $(basename $0)"
 
 ### EGSnrc environment variables
 log "EGSnrc environment:"
@@ -238,7 +238,7 @@ log "    options    = $opt_options"
 logfile=$egs_home/$cmd_app/$basename.egsparallel
 /bin/mv egs-parallel-$$.log $logfile
 exec 3>>$logfile
-log "egs-parallel log: $logfile"
+log "log file: $logfile"
 
 ### go to egs application directory
 log "cd $egs_home/$cmd_app"

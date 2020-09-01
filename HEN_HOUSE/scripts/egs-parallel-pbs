@@ -199,9 +199,11 @@ for job in $(seq 1 $nthread); do
     fi
 
     ### launch the job
+    pbscommand="qsub -q $queue $scheduler_options"
     runcommand="$command -b -P $nthread -j $job -f $first"
-    log "$jobstr: SUBMIT $runcommand"
-    jobpid=$(qsub -q $queue $scheduler_options <<EOF
+    log "$jobstr: SUBMIT $pbscommand"
+    log "$jobstr: LAUNCH $runcommand"
+    jobpid=$(eval "$pbscommand" <<EOF
 #!/bin/sh
 #PBS -j eo
 #PBS -e ${basename}_w$job.eo
@@ -235,6 +237,12 @@ if [ $job -eq 1 ]; then
 fi
 EOF
     )
+    if ! [[ "${jobpid%%.*}" =~ ^[0-9]+$ ]] ; then
+        log "FAILED to launch job $job"
+        if [[ "$job" = "1" ]]; then
+            quit $LINENO "FAILED to submit first job"
+        fi
+    fi
     echo $jobpid
 
 done
