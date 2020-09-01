@@ -65,7 +65,7 @@ Version 1.5 fixes a bug in the calculation of \g for both calculation types when
 energy is sampled from an energy spectrum. It also provides a cleaner output and an option for more verbose output. The code has been extensively documented and a [Doxygen](https://www.doxygen.nl/index.html) based user's
 manual created.
 
-In the current version (1.6) the original algorithm of a `calculation type` 1 has been slightly adjusted to ensure @muen_rho is calculated to a user-requested relative uncertainty @accu and it has been made independent of the number of histories. The target accuracy now defaults to 1%. The possibility to further optimize `calculation type` 1 in the megavoltage energy range is introduced. The calculation progress messages during a type 1 calculation were made clearer and the documentation has been updated to reflect these changes.
+In the current version (1.6) the original algorithm of a `calculation type` 1 has been slightly adjusted to ensure @muen_rho is calculated to a user-requested relative precision @accu and it has been made independent of the number of histories. The target statistical precision now defaults to 1%. The possibility to further optimize `calculation type` 1 in the megavoltage energy range is introduced. The calculation progress messages during a type 1 calculation were made clearer and the documentation has been updated to reflect these changes.
 
 
 \section g_method Calculation method
@@ -256,13 +256,13 @@ for a source of \a photons or <em>charged particles</em> sampling the initial pa
 and invoking the electromagnetic shower routine. This calculation can be explicitly requested by setting the `calculation type` input to 0. Collision kerma is calculated using Eq.(\reflh{eq_kerma_0,10})
 and the energy fluence averaged mass energy absorption coefficient \muen_rho_ave is calculated using Eq.(\reflh{eq_muen_0,15})
 
-A `calculation type` 1, for use with photon sources only, is tailored to the efficient calculation of the mass energy absorption coefficient \muen_rho_ave. In this mode the `g` application takes advantage of the faster convergence of \mutr and 1-\g  (when \g is small) to a desired accuracy and collision kerma is calculated with Eq.(\reflh{eq_kerma_1,11})
+A `calculation type` 1, for use with photon sources only, is tailored to the efficient calculation of the mass energy absorption coefficient \muen_rho_ave. In this mode the `g` application takes advantage of the faster convergence of \mutr and 1-\g  (when \g is small) to a desired statistical precision and collision kerma is calculated with Eq.(\reflh{eq_kerma_1,11})
 and the energy fluence averaged mass energy absorption coefficient \muen_rho_ave is calculated using Eq.(\reflh{eq_muen_1,16}).
-The calculation finishes as soon as a user-requested relative uncertainty @accu is reached, which by default is set to 0.01 (1%). For this calculation type the `number of histories` input entry has no effect.
-By default @mutr_rho is calculated to an accuracy of \f$\sigma/\sqrt{4/3}\f$ and 1-@g of \f$\sigma/2\f$, respectively, ensuring the accuracy in @muen_rho will be \accu. This approach can be modified for instance to speed up the calculation at higher energies as described in section \ref accu_balance .
+The calculation finishes as soon as a user-requested relative uncertainty @accu is reached, which by default is set to 0.01 (1%). For this calculation type the `number of histories` input entry is ignored.
+By default @mutr_rho is calculated to a precision of \f$\sigma/\sqrt{4/3}\f$ and 1-@g of \f$\sigma/2\f$, respectively, ensuring the precision in @muen_rho will be \accu. This approach can be modified for instance to speed up the calculation at higher energies as described in section \ref accu_balance .
 
 The advantage of using a `calculation type` 1, tailored to the efficient computation of @muen_rho,
-can be observed in Figure \reflh{Fig1,1} where the efficiency gain of a `calculation type` 1 over type 0 as function of photon energy in air is quantitatively shown for the original and the current implementation. The main difference is that the current implementation guarantees that the uncertainty in @muen_rho is equal to or less than the user-requested value @accu, while the  original implementation computed @muen_rho to an accuracy of 1.1\accu since @mutr_rho was calculated to the user-requested accuracy @accu and 1-@g to \accu/2. Calculation type 1 can be 20 times more efficient in the kilovoltage range and up to 80 times more efficient around 1 MeV.
+can be observed in Figure \reflh{Fig1,1} where the efficiency gain of a `calculation type` 1 over type 0 as function of photon energy in air is quantitatively shown for the original and the current implementation. The main difference is that the current implementation guarantees that the uncertainty in @muen_rho is equal to or less than the user-requested value @accu, while the  original implementation computed @muen_rho to a statistical precision of 1.1\accu since @mutr_rho was calculated to the user-requested precision @accu and 1-@g to \accu/2. Calculation type 1 can be 20 times more efficient in the kilovoltage range and up to 80 times more efficient around 1 MeV.
 The efficiency gains decrease abruptly above the pair production threshold.
 
 @image html fig1.png "Figure 1. Efficiency gain of calculation type 1 over type 0 in air."
@@ -277,7 +277,7 @@ The efficiency gains decrease abruptly above the pair production threshold.
 \endlatexonly
 
 The inputs for a `calculation type` can be anywhere in the input file and are not required to
-be placed between delimiters as is customary in most EGSnrc applications. An example of a calculation type 1 input block that should run until a 0.1% accuracy is reached is shown in the following code snippet:
+be placed between delimiters as is customary in most EGSnrc applications. An example of a calculation type 1 input block that should run until a 0.1% precision is reached is shown in the following code snippet:
 \latexonly
 \\
 \endlatexonly
@@ -287,15 +287,15 @@ be placed between delimiters as is customary in most EGSnrc applications. An exa
   #
   # 0 (default)            : Executes fixed number of histories
   #
-  # 1 (photon source only) : Runs to desired accuracy
+  # 1 (photon source only) : Runs to desired precision
   #
   #####################################################################
   #
   calculation type = 1
   ######################
-  # 0.1% desired accuracy
+  # 0.1% desired precision
   ######################
-  accuracy = 0.001    # relative accuracy
+  precision = 0.001    # relative precision
   #############
 \endcode
 
@@ -453,7 +453,7 @@ data file, etc.).
 #  - Monoenergetic 30 keV photon beam
 #  - Calculation type 1 (photon beam only)
 #  - Verbose output
-#  - Desired accuracy 0.1%
+#  - Desired precision 0.1%
 #
 ###########################################
 
@@ -463,7 +463,7 @@ data file, etc.).
  media=  air0o
  INITIAL RANDOM NO. SEEDS= 97, 33
  Number of HISTORIES= 2000000000000
- accuracy= 0.001
+ precision= 0.001
  calculation type= 1
  verbose = yes
 
@@ -536,11 +536,11 @@ data file, etc.).
 A consequence of not having an option for parallel execution is that
 lengthy calculations cannot be run on multiple cores, for instance on a computer cluster
 or a multicore processor PC.
-This limitation makes the creation of large @muen_rho or @mutr_rho databases spanning an energy range from threshold up to several MeV very time consuming. As the energy of the initial particle increases, more energetic electrons are created which have to be followed in an infinite geometry until they have lost all their kinetic energy. It is hence more practical to create individual input files for each energy, and submit individual type 1 calculations. Furthermore, one can take advantage of the energy dependence of the mass energy transfer and absorption coefficients and use a logarithmic energy grid to reduce the number of high energy data points.
+This limitation makes the creation of large @muen_rho or @mutr_rho databases spanning an energy range from threshold up to several MeV very time consuming. As the energy of the initial particle increases, more energetic electrons are created which have to be followed in an infinite geometry until they have lost all their kinetic energy.  It is hence more practical to submit individual type 1 calculations for each energy. Furthermore, one can take advantage of the energy dependence of the mass energy transfer and absorption coefficients and use a logarithmic energy grid to reduce the number of high energy data points.
 
 A simple Bash script is provided here as an example of what one could do to submit multiple calculations on a logarithmic energy grid. By default it runs type 1 calculations
 in air for 10 energies between 1 keV and 1 MeV on a logarithmic energy grid in the available
-cores of a PC. Accuracy is set to 0.1\%. Water is also available and further media can be added to the media definition block of the input file template. By passing different arguments a user can change certain parameters of the simulations. It would be simple to modify the script to allow other parameters to be changed.
+cores of a PC. Precision is set to 0.1\%. Water is also available and further media can be added to the media definition block of the input file template. By passing different arguments a user can change certain parameters of the simulations. It would be simple to modify the script to allow other parameters to be changed.
 \latexonly
 \\
 \endlatexonly
@@ -567,7 +567,7 @@ cores of a PC. Accuracy is set to 0.1\%. Water is also available and further med
 n=10
 Emin=0.001
 Emax=1.0
-accu=0.001 # 0.1% stat. accuracy
+accu=0.001 # 0.1% stat. precision
 prefix=muen_rho
 pe_xsections=xcom
 medium=air
@@ -660,7 +660,7 @@ do
  media=  $medium
  INITIAL RANDOM NO. SEEDS= 97, 33
  Number of HISTORIES= 2000000000000
- accuracy= $accu # relative accuracy
+ precision= $accu # relative precision
  calculation type= 1
  verbose = yes
 
@@ -739,7 +739,7 @@ exit 0
 \subsection accu_balance Speeding up calculations above 1 MeV
 
 As the energy of the photons increases over the pair production threshold, more high energy charged particles are produced and computing 1-@g down to @accu/2 becomes increasingly time
-consuming. To reduce the calculation time in this energy range, one could calculate 1-@g to a higher uncertainty and correspondingly @mutr_rho to a smaller uncertainty so that the accuracy of @muen_rho remains @accu.
+consuming. To reduce the calculation time in this energy range, one could calculate 1-@g to a higher uncertainty and correspondingly @mutr_rho to a smaller uncertainty so that the statistical precision of @muen_rho remains @accu.
 Further optimization of a `calculation type` 1 in the megavoltage energy range is possible
 by modifying the target uncertainty in @mutr_rho and 1-@g according to the relationships:
 
@@ -748,7 +748,7 @@ by modifying the target uncertainty in @mutr_rho and 1-@g according to the relat
 \qquad \sigma(1-\overline{g})  = \frac{\sigma}{\sqrt{m/(m-1)}}
 \f}
 
-which guarantee a user-desired accuracy \accu in @muen_rho and where m = 2, 3, 4, .., etc.
+which guarantee a user-desired precision \accu in @muen_rho and where m = 2, 3, 4, .., etc.
 The efficiency gain of a calculation type 1 over a type 0 in air as function of energy
 is shown in figure \reflh{Fig2,2} for different m values. A value of m = 2 is recommended for calculations around 1 MeV. @image html fig2.png "Figure 2. Efficiency gain of calculation type 1 over type 0 in air for different m values."
 
@@ -761,7 +761,7 @@ is shown in figure \reflh{Fig2,2} for different m values. A value of m = 2 is re
 \end{figure}
 \endlatexonly
 
-The input key for modifying m is `accuracy balance` as shown in
+The input key for modifying m is `precision balance` as shown in
 the input block example below
 \latexonly
 \\
@@ -771,11 +771,11 @@ the input block example below
   calculation type = 1
 
   ##################################
-  # Desired accuracy for muen
+  # Desired precision for muen
   # (relevant only for calculation type 1)
   ##################################
-  accuracy = 0.0001    # relative accuracy
-  accuracy balance = 2 # same accuracy accu/sqrt(2) for mutr and 1-g
+  precision = 0.0001    # relative precision
+  precision balance = 2 # same precision accu/sqrt(2) for mutr and 1-g
   #############
 \endcode
 

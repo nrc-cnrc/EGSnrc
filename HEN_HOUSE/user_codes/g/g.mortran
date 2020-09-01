@@ -68,9 +68,9 @@
 "  manual created.                                                    "
 "                                                                     "
 " Version 1.6  E. Mainegra-Hing, August 2020                          "
-"  Adjust original algorithm to ensure a desired accuracy in muen.    "
+"  Adjust original algorithm to ensure a desired precision in muen.   "
 "  Option to speed up calculation type 1 in MeV range added. It has   "
-"  been made independent of NCASE and accuracy defaults to 1%.        "
+"  been made independent of NCASE and precision defaults to 1%.       "
 "  Improved calculation progress messages for type 1 calculations.    "
 "                                                                     "
 "*********************************************************************"
@@ -87,7 +87,7 @@ C>  For photons, quantities such as kerma, collision kerma,
 C>  \f$\left<\mu_\mathrm{tr}/\rho\right>_\psi\f$ and
 C>  \f$\left<\mu_\mathrm{en}/\rho\right>_\psi\f$ are also calculated.
 C>
-C>  Implemented a type=1 calculation that can run until a prescribed accuracy
+C>  Implemented a type=1 calculation that can run until a prescribed precision
 C>  is reached at any stage during the calculation. In a type=1 calculation
 C>  \f$\mu_\mathrm{tr}/\rho\f$ is calculated first,
 C>  then \f$\mu_\mathrm{en}/\rho\f$ is obtained as
@@ -95,7 +95,7 @@ C>  \f$\mu_\mathrm{tr}/\rho\cdot\left(1-\mathrm{\overline{g}}\right)\f$,
 C>  where \f$\mathrm{\overline{g}}\f$ is the fraction lost to radiation from
 C>  slowing down electrons. The advantage is that when
 C>  \f$\mathrm{\overline{g}}\f$ is small, \f$\mu_\mathrm{en}/\rho\f$
-C>  converges much faster to the desired accuracy compared to a type=0
+C>  converges much faster to the desired precision compared to a type=0
 C>  calculation.
 C>
 C>  Revision History
@@ -129,14 +129,14 @@ C>  manual created.
 C>
 C>  Version 1.6 (E. Mainegra-Hing, August 2020):
 C>  Calculation type 1 has been made independent of NCASE and the target
-C>  accuracy now defaults to 1%. Algorithm now ensures @muen_rho
-C>  is calculated to the  user-requested accuracy @accu by computing @mutr_rho
+C>  precision now defaults to 1%. Algorithm now ensures @muen_rho
+C>  is calculated to the  user-requested precision @accu by computing @mutr_rho
 C>  down to @accu/\f$\sqrt{4/3}\f$ and 1-@g to @accu/2.
 C>  For calculations in the megavoltage range (for Ir-192, Co-60)
-C>  one can modify the target accuracy of mutr and 1-g to save substantial
+C>  one can modify the target precision of mutr and 1-g to save substantial
 C>  time in the fairly time consuming calculations above 1 MeV. To this end
 C>  the uncertainty in @mutr_rho and 1-@g can be modified so that the
-C>  \muen_rho value has an accuracy \accu according to:
+C>  \muen_rho value has an precision \accu according to:
 C>
 C>  \f$\sigma(\mu_\mathrm{tr}) = \frac{\sigma}{\sqrt{m}} \qquad \textrm{and}
 C>  \qquad \sigma(1-\overline{g})  = \frac{\sigma}{\sqrt{m/(m-1)}}\f$
@@ -406,14 +406,14 @@ IF( calc_type = 1) [
   write(*,*)
   '-------------------';
   write(6,'(a,0Pf7.4,a)')
-  ' Calculation type 1: Calculation interrupted when desired accuracy of ',
-  accu*100.,'% in muen attained.';
-  IF (m_balance > 1)[
+  ' Calculation type 1: Calculation interrupted when muen precision <= ',
+  accu*100.,'%.';
+  IF (m_balance = 1)[
      write(*,*) '-------------------';
   ]
   ELSE[
      write(*,'(a,i0)')
-     '------------------- Accuracy balancing factor m = ',m_balance;
+     '-------------------  Precision balance factor m = ',m_balance;
   ]
 ]
 ELSE[
@@ -449,10 +449,10 @@ call source_switch_energy(itimes);
 "above gets initial energy from those we loop over"
 "returns ei"
 
-IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
+IF( calc_type = 1 ) [  "will seek a given precision -- default does not do this"
 
    /*********************************************************************
-       Accuracy balancing can be used to speed up calculations
+       Precision balancing can be used to speed up calculations
        for energies above 1 MeV. Most times the kerma approximation
        is used for energies under 100 keV where the original
        implementation is more efficient. An exception would be Ir-192.
@@ -465,8 +465,8 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
        accu = accu0/sqrt(4./3.);
     ]
     write(6,*);
-    write(6,'(a,0Pf7.4,a)') '=> First calculating mutr to ',accu*100.,
-                             '% statistical accuracy';
+    write(6,'(a,0Pf7.4,a)') '=> First calculating mutr to <= ',accu*100.,
+                             '% statistical precision';
     write(6,*);
     /x(1),y(1),z(1)/=0; wt(1) = 1; ir(1) = 1; medium = 1;
     ibatch = 1; icase = 1;
@@ -542,15 +542,15 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
             "write(6,*) icase,xtest2/xtest;"
             IF( xtest2/xtest < accu ) EXIT;
             /*****************************************************************
-             Display calculation progress starting at 10X the target accuracy
-             reporting the time it takes to get 10X, 9X,.. the target accuracy.
+             Display calculation progress starting at 10X the target precision
+             reporting the time it takes to get 10X, 9X,..the target precision.
              Since this check is done after an arbitrary number of histories,
-             the progress will show a statistical accuracy that is at or below
+             the progress will show a statistical precision that is at or below
              a multiple of the target.
             *****************************************************************/
             IF( xtest2/xtest/(nbatch-ibatch+1) < accu) [
               write(6,'(a,i2,a,a,f8.2,a,f11.8,a,f8.4,a)')
-              '+ Reached ',nbatch-ibatch+1,'X target accuracy ',
+              '+ Reached ',nbatch-ibatch+1,'X target precision ',
               ', cpu time = ',etime(time_array)-cpu,
               ' sec. <mu_tr/rho> = ', xtest/Eave,' cm^2/g [',
               100*xtest2/xtest,'%]';
@@ -558,24 +558,24 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
               ibatch +=1;
             ]
         ]
-    ] REPEAT; "end of icase loop for calc_type=1 seeking a given accuracy"
+    ] REPEAT; "end of icase loop for calc_type=1 seeking a given precision"
     $FLUSH_UNIT(6);  "so the log file is updated each time"
     xtest = e_mutr; xtest2 = e_mutr2; $ANALYZE xtest(nmutr);
     IF( xtest2/xtest < accu ) [
         write(6,'(a,f8.2,a,f11.8,a,f8.4,a)')
-            '+ Reached     target accuracy , cpu time = ',
+            '+ Reached     target precision , cpu time = ',
             etime(time_array)-cpu,
             ' sec. <mu_tr/rho> = ', xtest/Eave,' cm^2/g [',
             100*xtest2/xtest,'%]';
         write(6,*);
         write(6,'(a,i0,a)')
-        ' mu_tr attained desired accuracy after ',nmutr,' histories';
+        ' mu_tr attained desired precision after ',nmutr,' histories';
         write(6,*);
     ]
     ELSE[
         write(6,*);
         write(6,'(a,i0,a)')
-       ' ran out of histories, mu_tr did not reach target accuracy after ',
+       ' mu_tr did not reach target precision after ',
        nmutr,' histories';
         write(6,*);
     ]
@@ -592,13 +592,13 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
     ]
 
     write(6,*);
-    write(6,'(a,0Pf7.4,a)') '=> Now calculating 1-g to ',accu*100.,
-                             '% statistical accuracy';
+    write(6,'(a,0Pf7.4,a)') '=> Now calculating 1-g to <= ',accu*100.,
+                             '% statistical precision';
     write(6,*);
     $FLUSH_UNIT(6);  "so the log file is updated each time"
 
     "we are in the calc_type = 1 block photons only"
-    "     -quits when accuracy reached"
+    "     -quits when precision reached"
     ibatch = 1; icase = 0;
     "initiate muen timer"
     t_muen = etime(time_array);
@@ -685,23 +685,23 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
                 ]
             ]
             /*****************************************************************
-             Display calculation progress starting at 10X the target accuracy
-             reporting the time it takes to get 10X, 9X,.. the target accuracy.
+             Display calculation progress starting at 10X the target precision
+             reporting the time it takes to get 10X, 9X,..the target precision.
              Since this check is done after an arbitrary number of histories,
-             the progress will show a statistical accuracy that is at or below
+             the progress will show a statistical precision that is at or below
              a multiple of the target.
             *****************************************************************/
             IF( rel_e/(nbatch-ibatch+1) < accu) [
               IF (verbose & ert2 > 0 & ett2 > 0)[
                  write(6,'(a,i2,a,a,f8.2,a,f11.8,a,f8.4,a,a,f8.4)')
-                 '+ Reached ',nbatch-ibatch+1,'X target accuracy ',
+                 '+ Reached ',nbatch-ibatch+1,'X target precision ',
                  ', cpu time = ',etime(time_array)-cpu,' sec. 1-g = ',
                  1-e_rad/e_tot,' [',100*rel_e,'%]',
                  ' Corr = Cov/s_rad/s_tot =',cov/ert2/ett2;
               ]
               ELSE[
                  write(6,'(a,i2,a,a,f8.2,a,f11.8,a,f8.4,a)')
-                 '+ Reached ',nbatch-ibatch+1,'X target accuracy ',
+                 '+ Reached ',nbatch-ibatch+1,'X target precision ',
                  ', cpu time = ',etime(time_array)-cpu,' sec. 1-g = ',
                  1-e_rad/e_tot,' [',100*rel_e,'%]';
               ]
@@ -720,19 +720,19 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
     IF( ert2 < accu ) [
         IF (verbose & ert2 > 0 & ett2 > 0)[
             write(6,'(a,f8.2,a,f11.8,a,f8.4,a,a,f8.4)')
-            '+ Reached     target accuracy , cpu time = ',
+            '+ Reached     target precision , cpu time = ',
             etime(time_array)-cpu,' sec. 1-g = ',
             1-e_rad/e_tot,' [',100*rel_e,'%]',
             ' Corr = Cov/s_rad/s_tot =',cov/ert2/ett2;
         ]
         ELSE[
             write(6,'(a,f8.2,a,f11.8,a,f8.4,a)')
-            '+ Reached     target accuracy , cpu time = ',
+            '+ Reached     target precision , cpu time = ',
             etime(time_array)-cpu,' sec. 1-g = ',
             1-e_rad/e_tot,' [',100*rel_e,'%]';
         ]
         write(6,*);
-        write(6,'(a,i0,a)') ' 1-g attained desired accuracy after ',
+        write(6,'(a,i0,a)') ' 1-g attained desired precision after ',
                    nmuen,' histories';
         write(6,*);
         write(6,*);
@@ -740,7 +740,7 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
     ELSE[
         write(6,*);
         write(6,'(a,i0,a)')
-       ' ran out of histories, 1-g did not reach target accuracy after ',
+       ' 1-g did not reach target precision after ',
        nmuen,' histories';
         write(6,*);
     ]
@@ -788,13 +788,13 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
         1-e_rad/e_tot,' [',100*e_rad2,'%]';
     write(6,*);
 
-    write(6,:KERMAFORMAT:) '<mu_tr> = <E*mu_tr/rho>/Eave         = ',
+    write(6,:KERMAFORMAT:) '<mu_tr/rho> = <E*mu_tr/rho>/Eave         = ',
                e_mutr/Eave,'   cm^2/g [',
                100*sqrt((e_mutr2/e_mutr)**2+err_Eave**2),'%]';
-    write(6,:KERMAFORMAT:) '<mu_en> = <E*mu_tr/rho>*(1-<g>)/Eave = ',
+    write(6,:KERMAFORMAT:) '<mu_en/rho> = <E*mu_tr/rho>*(1-<g>)/Eave = ',
                e_mutr*(1-e_rad/e_tot)/Eave,'   cm^2/g [',
                100*sqrt((e_mutr2/e_mutr)**2+e_rad2**2+err_Eave**2),'%]';
-    write(6,'(a,1PE12.6,a)') '<E*mu_en/rho>                        = ',
+    write(6,'(a,1PE12.6,a)') '<E*mu_en/rho>                            = ',
              e_mutr*(1-e_rad/e_tot),'   MeV cm^2/g';
 
     IF (verbose)[
@@ -809,8 +809,8 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
                   factor*e_muen,' 10^-12 Gy cm^2       [',
                   100*e_muen2/e_muen,'%]';
 
-        write(6,:KERMAFORMAT:) '<mu_en>     = <E*mu_en/rho>/Eave = ',
-              e_muen/Eave,'   cm^2/g [',
+        write(6,:KERMAFORMAT:) '<mu_en/rho> = <E*mu_en/rho>/Eave = ',
+              e_muen/Eave,'   cm^2/g             [',
               100*sqrt((e_muen2/e_muen)**2+err_Eave**2),'%]';
 
         write(*,'(/a,f12.1,a/)')
@@ -825,12 +825,12 @@ goto :the_end:;
 
 :KERMAFORMAT: FORMAT(a,1PE12.6,a,0PF7.4,a);
 
-]  "end of calc_type = 1 block seeking a specified accuracy"
+]  "end of calc_type = 1 block seeking a specified precision"
 
 $FLUSH_UNIT(6);
 
 "############################################################################"
-"   start calc_type = 0, fixed number of histories                             "
+"   start calc_type = 0, fixed number of histories                           "
 "############################################################################"
 
 write(6,*);
@@ -1127,21 +1127,26 @@ IF( error_flag = 0 ) [
 ELSE                 [ error_flag = 0; ]
 
 "----------------------------------------------------------------------"
-" accuracy sought and calculation type                                 "
+" precision sought and calculation type                                 "
 "----------------------------------------------------------------------"
 ival                   = ival + 1;
-values_sought(ival)    = 'ACCURACY';
+values_sought(ival)    = 'PRECISION';
 type(ival)             = 0;
 nvalue(ival)           = 1;
 value_min(ival)        = -1e30;
 value_max(ival)        = 1.0;
 default(ival)          = 0.01;
 $GET_INPUT(IVAL);
-IF( error_flag = 0 ) [ accu = value(ival,1); ]
-ELSE                 [ error_flag = 0; ]
+IF( error_flag = 0 )    [ accu = value(ival,1); ]
+ELSE["Backwards compatible"
+   values_sought(ival) = 'ACCURACY';
+   $GET_INPUT(IVAL);
+   IF( error_flag = 0 ) [ accu = value(ival,1); ]
+   ELSE                 [ error_flag = 0; ]
+]
 
 ival                   = ival + 1;
-values_sought(ival)    = 'ACCURACY BALANCE';
+values_sought(ival)    = 'PRECISION BALANCE';
 type(ival)             = 0;
 nvalue(ival)           = 1;
 value_min(ival)        = 1;
