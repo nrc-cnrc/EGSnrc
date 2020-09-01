@@ -1,0 +1,2284 @@
+%C80
+"#############################################################################"
+"                                                                             "
+"  EGSnrc I/O functions                                                       "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2003                                       "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Ernesto Mainegra-Hing                                     "
+"                   Blake Walters                                             "
+"                   Frederic Tessier                                          "
+"                   Reid Townson                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+" Iwan Kawrakow, 2004:                                                        "
+"                                                                             "
+" re-factored egs_init so that it is easy to program a corresponding egs_init "
+" when one loads a EGSnrc user code as a library and therefore no command     "
+" line arguments are available. (see beam library).                           "
+"                                                                             "
+"#############################################################################"
+
+
+%I4
+%C80
+%Q1
+!INDENT F2;
+REPLACE {$max_unit} WITH {99}
+
+REPLACE {$egs_debug(#,#);} WITH {;} " no need for debug info "
+
+REPLACE {;COMIN/my_times/;} WITH {;
+  common/my_times/ t_elapsed, t_cpu, t_first;
+  $REAL            t_elapsed, t_cpu;
+  integer          t_first(8);
+  real             egs_tot_time,egs_etime;
+};
+
+"******************************************************************************
+" subroutine egs_init;
+"******************************************************************************
+" A call to this subroutine becomes Step 0 in every EGSnrc user code.
+" Its purpose is to:
+"   - initialize arrays and default values for various transport options
+"     (this was previously done in block data, but due to the GNU Fortran
+"     compiler complaints and extremely slow compilation when the number of
+"     regions is large, we decided to remove block data from the source)
+"   - Process command line arguments specifying input file, pegs4 data file,etc.
+"     In the current version the following command line options are supported:
+"
+"       -i or --input ifile          Input file is ifile.egsinp
+"
+"       -p or --pegs-file file_name  The pegs4 data file is file_name.pegs4dat
+"                                    The system will look for it in the
+"                                    HEN_HOUSE and the user's pegs4 data areas
+"
+"       -o or --output ofile         Output data will be writtent to
+"                                    ofile.egslog, ofile.egslst, etc., instead
+"                                    of ifile.egslog, etc.
+"
+"       -H or --hen-house dir        Change the HEN_HOUSE to be dir instead
+"                                    of the directory specified in the
+"                                    machine.macros file.
+"
+"       -e or --egs-home dir         Change EGS_HOME to be dir instead of
+"                                    the directory specified by the EGS_HOME
+"                                    environment variable
+"
+"       -h or --help                 Print a help message and exit
+"                                    ignoring all other arguments
+"
+"       -b or --batch                Specify a 'batch' run. The difference
+"                                    between a 'batch' run and an interactive
+"                                    run is that in 'batch' mode unit 6 is
+"                                    connected to a file, whereas in intarctive
+"                                    mode unit 6 goes to the standard output.
+"                                    The file name in batch run is determined
+"                                    as follows:
+"                                     - ofile.egslog, if ofile was specified
+"                                       with the -o option
+"                                     - ifile.egslog, if there was no -o option
+"                                       used but an input file was specified
+"                                       with -i
+"                                     - test.egslog, if neither -i nor -o was
+"                                       used.
+"
+"       -P or --parallel n           Tell the system that this run is part of
+"                                    a parallel run and that this is job number
+"                                    n (so that the random number sequence
+"                                    can be initialized differently)
+"
+"       -c or --chunk N              Tell the system to use N histories per
+"                                    calculation 'chunk' in parallel runs.
+"
+"   - open default EGSnrc data file units thus avoiding the necessity for
+"     symbolik links
+"   - open user code specific I/O units if a .io file is found in
+"     the user code area. The format of this file is an integer
+"     followed by a string on every line.
+"     The string specifies the file extension
+"     and the integer the unit number this file should connect to, e.g.
+"       4   .egsdat
+"       15  .egserr
+"       1   .egslst
+"     will result in connecting unit 4 to the file ifile.egsdat
+"     (or ofile.egsdat, see above) to unit 4, [i|o]file.egserr to unit 15, etc.
+"  -  Outputs a summary to standard output about configuration etc
+"  -  Creates a temporary working directory in the user code area
+"
+"  The files always opened (appart from the ones specified in the .io file)
+"  are the following:
+"
+"  1. The PEGS data file (and so, for now, the -p pegs_file command line
+"     option must be always given)
+"     The algorithm for looking for a PEGS data file is:
+"       - The file name passed with -p. In this way, PEGS files can be located
+"         everywhere on the file system (not just in $HEN_HOUSE/pegs4/data
+"         and $EGS_HOME/pegs4/data) if the absolute path name is given after
+"         the -p option.
+"       - $EGS_HOME/pegs4/data/pegs_file or
+"         $EGS_HOME/pegs4/data/pegs_file.pegs4dat
+"       - $HEN_HOUSE/pegs4/data/pegs_file or
+"         $HEN_HOUSE/pegs4/data/pegs_file.pegs4dat
+"     See note below on how $HEN_HOUSE and $EGS_HOME are determined
+"
+"  2. If a -i ifile option was given as argument, ifile.egsinp is
+"     opened as fortran unit 5.
+"     The input file MUST be in the user code directory on $EGS_HOME
+"
+"  3. If the run is a batch run (the -b option was present on the command
+"     line), fortran unit 6 is connected to an output file with a .egslog
+"     extension instead of going to standard output.
+"     The algorithm for determining the .egslog file name is the following:
+"       - If the -o ofile option was present, the output to unit 6 will go
+"         to ofile.egslog
+"       - If there was no -o option, but there is an inpuit file specified
+"         with -i ifile, output to unit 6 will go to ifile.egslog
+"       - If neither of the above is true, the output will go to
+"         test.egslog.
+"
+"  Note on determining EGS_HOME:
+"  EGS_HOME is normally taken from the environment variable EGS_HOME.
+"  However, one can overwrite the environment by giving the
+"    -e | --egs-home  new_egs_home_location
+"  option on the command line.
+"  EGS_HOME must be set, either via the environment or via the command line,
+"  otherwise the job will abort.
+"
+"  Note on determining HEN_HOUSE:
+"  HEN_HOUSE is set to the value defined in machine.macros, which is
+"  created by the configure script or the configuration wizard in the GUI
+"  This value can be overwritten by giving the
+"    -H | --hen-house new_hen_house_location
+"  option on the command line.
+"  HEN_HOUSE is NOT taken from the environment.
+"
+"  The name of the temporary working directory is created using
+"    egsrun_getpid_ifile_hostname, if there was an input file, or
+"    egsrun_getpid_noinput_hostname, if there was no input file specified.
+"  In the above, getpid is the process id returned bt the getpid() intrinsic
+"  and hostname is the host name as determined by egs_get_hostnm().
+"  During run time, all output from the program (the .egslog file and
+"  all other files specified in the .io file) is kept in the
+"  temporary working directory. After succesful completion, egs_finish
+"  moves all output back to the user code area and removes the
+"  temporary working directory. This implies that if for whatever reason
+"  the job terminates prematurely, the temporary working directory
+"  with all output will be left behind.
+"
+"
+"
+"******************************************************************************
+subroutine egs_init;
+"******************************************************************************
+implicit none;
+;COMIN/my_times/;
+$REAL dum;
+
+/*
+t_elapsed = 0; t_cpu = egs_etime(); dum = egs_tot_time(1);
+call egs_date_and_time(t_first);
+*/
+call egs_set_defaults;
+call egs_check_arguments;
+call egs_init1;
+return; end;
+
+"******************************************************************************
+subroutine egs_init1;
+"******************************************************************************
+
+implicit none;
+;COMIN/EGS-IO,MISC,my_times/;
+integer   l, lnblnk1, l1, l2;
+integer   i;
+character arg*256,tmp_string*512, tmp1_string*512, ucode_dir*512,
+          line*80,
+          line1*80,dattim*24;
+$LOGICAL  have_input,egs_isdir,egs_strip_extension,ex,
+          on_egs_home,is_opened;
+$INTEGER  mypid;
+integer   getpid;
+integer   istat, egs_system, u, pos1, pos2,egs_get_unit,itmp;
+$REAL     dum;
+$declare_write_buffer;
+
+t_elapsed = 0; t_cpu = egs_etime(); dum = egs_tot_time(1);
+call egs_date_and_time(t_first);
+
+$set_string(line,'=');
+$set_string(line1,'.');
+
+" Handy macros for checking command line arguments "
+REPLACE {$check_get_argument(#,#,#);} WITH {
+  have_arg = .false.;
+  DO i=1,narg-1 [
+      call getarg(i,{P3}); l = lnblnk1({P3});
+      IF( ( l = lnblnk1({P1}) & {P3}(:l) = {P1} ) |
+          ( l = lnblnk1({P2}) & {P3}(:l) = {P2} ) ) [
+          have_arg = .true.; call getarg(i+1,{P3}); EXIT;
+      ]
+  ]
+};
+
+REPLACE {$check_argument(#,#,#);} WITH {
+  have_arg = .false.;
+  DO i=1,narg [
+      call getarg(i,{P3}); l = lnblnk1({P3});
+      IF( ( l = lnblnk1({P1}) & {P3}(:l) = {P1} ) |
+          ( l = lnblnk1({P2}) & {P3}(:l) = {P2} ) ) [
+          have_arg = .true.; EXIT;
+      ]
+  ]
+};
+
+IF(~is_pegsless)[
+" Get the pegs4 data file "
+on_egs_home = .false.;
+
+pegs_file = 'tutor_data';
+
+inquire(file=pegs_file,exist=ex);
+IF( ex ) [
+    kmpi=egs_get_unit(kmpi);
+    IF(kmpi<0)[
+      $egs_fatal(*,'failed to get a free Fortran I/O unit for pegs file');
+    ]
+    open(kmpi,file=pegs_file,status='old',err=:open_pegs_error:);
+    $egs_debug('(a,a)','opened pegs file ',$cstring(pegs_file));
+    goto :found_pegs_file:;
+]
+arg = $cstring(pegs_file);
+ex = egs_strip_extension(arg,'.pegs4dat');
+l = lnblnk1(egs_home); l1 = lnblnk1('pegs4data') + 2*lnblnk1($file_sep);
+l2 = lnblnk1(arg) + lnblnk1('.pegs4dat');
+IF( l + l1 + l2 > 256 ) [
+    $egs_warning(*,'pegs4 data file name (including absolute path)');
+    $warning('(a,i4,a)','is too long (',l+l1+l2,') characters');
+]
+ELSE [
+    pegs_file = $cstring(egs_home) // 'pegs4' // $file_sep // 'data' //
+      $file_sep // $cstring(arg) // '.pegs4dat';
+    $egs_debug('(a,a)','checking for pegs file ',$cstring(pegs_file));
+    inquire(file=pegs_file,exist=ex);
+    IF( ex ) [
+        kmpi=egs_get_unit(kmpi);
+        IF(kmpi<0)[
+          $egs_fatal(*,'failed to get a free Fortran I/O unit for pegs file');
+        ]
+        open(kmpi,file=pegs_file,status='old',err=:open_pegs_error:);
+        $egs_debug('(a,a)','opened pegs file ',$cstring(pegs_file));
+        on_egs_home = .true.;
+        goto :found_pegs_file:;
+    ]
+]
+l = lnblnk1(hen_house);
+IF( l + l1 + l2 > 256 ) [
+    $egs_warning(*,'pegs4 data file name (including absolute path)');
+    $warning('(a,i4,a)','is too long (',l+l1+l2,') characters');
+]
+ELSE [
+    pegs_file = $cstring(hen_house) // 'pegs4' // $file_sep // 'data' //
+       $file_sep // $cstring(arg) // '.pegs4dat';
+    $egs_debug('(a,a)','checking for pegs file ',$cstring(pegs_file));
+    inquire(file=pegs_file,exist=ex);
+    IF( ex ) [
+        kmpi=egs_get_unit(kmpi);
+        IF(kmpi<0)[
+          $egs_fatal(*,'failed to get a free Fortran I/O unit for pegs file');
+        ]
+        open(kmpi,file=pegs_file,status='old',err=:open_pegs_error:);
+        $egs_debug('(a,a)','opened pegs file ',$cstring(pegs_file));
+        goto :found_pegs_file:;
+    ]
+]
+
+$egs_fatal(*,'could not find pegs4 file named ',$cstring(arg));
+
+]
+
+:found_pegs_file:
+;
+" Open egsnrc data files "
+$set_string(tmp_string,' ');
+tmp_string = $cstring(hen_house) // 'data' // $file_sep;
+
+"set proposed unit numbers"
+i_nist_data=76;
+i_incoh=78;
+i_photo_relax=77;
+i_photo_cs=79;
+i_mscat=11;
+
+REPLACE {$open_data_file(#,#,#,#);} WITH {;
+    $set_string({P2},' ');
+    {P2} = $cstring({P1}) // {P3};
+    inquire(file={P2},exist=ex,opened=is_opened,number=itmp);
+    IF( ~ex ) [
+        $egs_fatal(*,'EGSnrc data file ',{P3},' does not exist');
+    ]
+    IF( ~is_opened ) [
+        {P4}=egs_get_unit({P4});
+        IF({P4}<0)[
+          $egs_fatal(*,'failed to get a free Fortran I/O unit for data file ',
+                       $cstring({P2}));
+        ]
+        open({P4},file={P2},status='old',err=:data_file_error:);
+    ]
+    ELSE [ {P4} = itmp; ]
+    $egs_debug('(a,a)','opened data file ',$cstring({P2}));
+};
+$open_data_file(tmp_string,tmp1_string,'photo_cs.data',$PHOCSUNIT);
+$open_data_file(tmp_string,tmp1_string,'msnew.data',$MSCAT-DATAFILE);
+$open_data_file(tmp_string,tmp1_string,'incoh.data',$INCOHUNIT);
+$open_data_file(tmp_string,tmp1_string,'photo_relax.data',$PHOTOUNIT);
+
+$set_string(ucode_dir,' ');
+ucode_dir = $cstring(egs_home) // $cstring(user_code) // $file_sep;
+
+have_input = .false.;
+i_input=5;
+IF( lnblnk1(input_file) > 0 ) [
+    have_input = .true.;
+    l = lnblnk1(egs_home); l1 = lnblnk1(user_code)+1;
+    l2 = lnblnk1(input_file) + lnblnk1('.egsinp');
+    IF( l + l1 + l2 > 1024 ) [
+        $egs_fatal(*,'input file name (including path) is too long ',l+l1+l2);
+    ]
+    ex = egs_strip_extension(input_file,'.egsinp');
+    tmp_string = $cstring(ucode_dir) // $cstring(input_file) // '.egsinp';
+    inquire(file=tmp_string,exist=ex);
+    IF( ~ex ) [
+        $egs_fatal(*,'Input file ',$cstring(tmp_string),' does not exist.');
+    ]
+    $AVAILABLE_UNIT(i_input,tmp_string);
+    open(i_input,file=tmp_string,status='old',err=:open_input_error:);
+]
+
+" Construct a temporary directory name to run from "
+$set_string(work_dir,' ');
+work_dir = 'egsrun_'; mypid = getpid();
+call egs_itostring(work_dir,mypid,.false.);
+call egs_get_hostnm(host_name);
+IF( lnblnk1(host_name) < 1 ) host_name = 'unknown';
+IF( have_input ) [
+    work_dir = $cstring(work_dir) // '_' // $cstring(input_file) //
+               '_' // $cstring(host_name) // $file_sep;
+]
+ELSE [
+    work_dir = $cstring(work_dir) // '_noinput_' // $cstring(host_name) //
+               $file_sep;
+]
+$set_string(tmp_string,' ');
+tmp_string = $cstring(ucode_dir) // $cstring(work_dir);
+DO i=1,lnblnk1(tmp_string) [
+    IF( tmp_string(i:i) = '/' ) [
+        tmp_string(i:i) = $file_sep;
+    ]
+]
+ex = egs_isdir(tmp_string);
+IF( ex ) [
+ $egs_fatal(*,'a directory named ',$cstring(tmp_string),' already exists?');
+]
+tmp1_string = 'mkdir ' // $cstring(tmp_string);
+l = lnblnk1(tmp1_string); tmp1_string(l+1:l+1) = char(0);
+                 " some systems need the command string to be 0 terminated"
+istat = egs_system(tmp1_string);
+IF( istat ~= 0 ) [
+    $egs_fatal(*,'failed to create working directory ',$cstring(tmp1_string));
+]
+
+call egs_open_units(.true.);
+
+" Now print a summary of what happened "
+$egs_info('(a)',line);
+$egs_info('(a,a,t55,a,$)','EGSnrc version 4 for ',$CANONICAL_SYSTEM,' ');
+call egs_get_fdate(dattim);
+$egs_info('(a,/,a)',dattim,line);
+
+REPLACE {$write_description(#);} WITH {;
+  $egs_info('(a,$)',{P1}); l = pos2 - lnblnk1({P1});
+  $egs_info('(a,$)',line1(:l));
+};
+pos1 = lnblnk1('output file(s)');
+pos2 = 80 - lnblnk1($CONFIGURATION_NAME);
+pos2 = min(pos2,80-lnblnk1(user_code));
+$set_string(tmp_string,' '); tmp_string = pegs_file;
+call egs_strip_path(tmp_string);
+ex = egs_strip_extension(tmp_string,'.pegs4dat');
+IF( on_egs_home ) [ tmp_string = $cstring(tmp_string) // ' on EGS_HOME'; ]
+ELSE [ tmp_string = $cstring(tmp_string) // ' on HEN_HOUSE'; ]
+IF( lnblnk1(tmp_string) > lnblnk1(pegs_file) ) [
+    $set_string(tmp_string,' '); tmp_string = pegs_file;
+]
+pos2 = min(pos2,80-lnblnk1(tmp_string));
+pos2 = min(pos2,80-lnblnk1(host_name));
+IF( have_input ) pos2 = min(pos2,80-lnblnk1(input_file));
+pos2 = min(pos2,80-lnblnk1(output_file));
+IF( pos2 < pos1+2 ) pos2 = pos1 + 2;
+
+$write_description('configuration'); $egs_info('(a)',$CONFIGURATION_NAME);
+$write_description('user code'); $egs_info('(a)',$cstring(user_code));
+$write_description('pegs file'); $egs_info('(a)',$cstring(tmp_string));
+$write_description('using host'); $egs_info('(a)',$cstring(host_name));
+IF( have_input ) [
+    $write_description('input file'); $egs_info('(a)',$cstring(input_file));
+]
+$write_description('output file(s)'); $egs_info('(a)',$cstring(output_file));
+IF( n_parallel > 0 ) [
+    $write_description('number of parallel jobs');
+    $egs_info('(i2)',n_parallel);
+    $write_description('job number'); $egs_info('(i2)',i_parallel);
+]
+$egs_info('(a)',line);
+
+return;
+
+" Errors "
+:open_input_error:
+$egs_fatal(*,'failed to open input file ',$cstring(tmp_string));
+
+:open_pegs_error:
+$egs_fatal(*,'failed to open existing pegs file ',$cstring(pegs_file));
+
+:data_file_error:
+$egs_fatal(*,'failed to open EGSnrc data file ',$cstring(tmp1_string));
+
+return; end;
+
+"*****************************************************************************
+subroutine egs_check_arguments;
+"*****************************************************************************
+implicit none;
+
+;COMIN/EGS-IO/;
+
+character arg*256,tmp_string*512, line1*80;
+$LOGICAL  have_arg,egs_isdir,egs_strip_extension,ex,
+          on_egs_home;
+integer   narg, iargc, i, lnblnk1, l, l2,i_help,egs_get_unit;
+$declare_write_buffer;
+
+narg = iargc();
+IF( narg < 1 ) return;
+
+" Check for hen_house "
+$check_get_argument('-H','--hen-house',arg);
+IF( have_arg ) [
+    l = lnblnk1(arg); $set_string(hen_house,' ');
+    IF( l > 0 ) [
+        IF( l > 254 ) [
+            $egs_fatal('(a,i5)',' HEN_HOUSE argument is too long',l);
+        ]
+        hen_house(:l) = $cstring(arg);
+        IF( hen_house(l:l) ~= $file_sep ) hen_house(l+1:l+1) = $file_sep;
+    ]
+    ELSE [
+        $egs_fatal('(a)',' empty argument after -H');
+    ]
+    DO i=1,lnblnk1(hen_house) [
+        IF( hen_house(i:i) = '/' ) [
+            hen_house(i:i) = $file_sep;
+        ]
+    ]
+]
+IF( ~egs_isdir(hen_house) ) [
+    $egs_warning('(a,a)',' HEN_HOUSE directory ',$cstring(hen_house));
+    $warning('(a)','does not exist. Hope you know what you are doing.');
+]
+
+" Check if the user requested help "
+$check_argument('-h','--help',arg);
+IF( have_arg ) [
+  call getarg(0,arg); call egs_strip_path(arg);
+  $egs_info('(//,a,a,a,//)','Usage: ',$cstring(arg),' [args] ');
+  tmp_string = $cstring(hen_house) // 'pieces/help_message';
+  i_help=98;
+  i_help=egs_get_unit(i_help);
+  IF(i_help<0)[
+     $egs_fatal(*,'failed to get a free Fortran I/O unit for help file');
+  ]
+  open(i_help,file=tmp_string,status='old',err=:no_help_file:);
+  LOOP [
+      read(i_help,'(a)',err=:end_of_help:,end=:end_of_help:) line1;
+      $egs_info('(a)',line1);
+  ]
+  :end_of_help:;
+  $CALL_EXIT(0);
+  :no_help_file:;
+  $egs_fatal(*,'Did not find the help_message file!');
+]
+
+" Check for batch option "
+$check_argument('-b','--batch',arg);
+IF( have_arg ) is_batch = .true.;
+
+" Check for parallel run option"
+$check_get_argument('-P','--parallel',arg);
+IF( have_arg ) [
+    read(arg,*,err=:wrong_parallel_arg:) n_parallel;
+    IF( n_parallel < 0 ) goto :wrong_parallel_arg:;
+    goto :ok_parallel_arg:;
+    :wrong_parallel_arg:;
+    $egs_warning(*,
+     ' Wrong/missing parallel job number argument, -P option ignored');
+    n_parallel = 0;
+    :ok_parallel_arg:;
+]
+
+$check_get_argument('-j','--job',arg);
+IF( have_arg ) [
+    read(arg,*,err=:wrong_job_arg:) i_parallel;
+    IF( i_parallel < 0 ) goto :wrong_job_arg:;
+    goto :ok_job_arg:;
+    :wrong_job_arg:;
+    $egs_warning(*,' Wrong/missing job argument, -j option ognored');
+    i_parallel = 0;
+    :ok_job_arg:;
+]
+
+$check_get_argument('-f','--first-job',arg);
+IF( have_arg ) [
+    read(arg,*,err=:wrong_first_job_arg:) first_parallel;
+    IF( first_parallel < 1 ) goto :wrong_first_job_arg:;
+    goto :ok_first_job_arg:;
+    :wrong_first_job_arg:;
+    $egs_warning(*,' Wrong/missing first job argument, -f option ognored');
+    first_parallel = 1;
+    :ok_first_job_arg:;
+]
+
+IF( n_parallel > 0 | i_parallel > 0 ) [
+    IF( n_parallel*i_parallel = 0 ) [
+        $egs_warning(*,'You need to specify number of jobs AND job number ',
+          '=> will not use parallel run ');
+        n_parallel = 0; i_parallel = 0;
+    ]
+    IF( first_parallel > i_parallel ) [
+        $egs_warning(*,'i_parallel (',i_parallel,
+          ') can not be smaller than first_parallel (',first_parallel,')');
+        first_parallel = i_parallel;
+    ]
+]
+
+$egs_debug('(a,a)','HEN_HOUSE is ',$cstring(hen_house));
+
+" Check for egs_home "
+$check_get_argument('-e','--egs-home',arg);
+IF( have_arg ) [
+    l = lnblnk1(arg); $set_string(egs_home,' ');
+    IF( l = 0 ) [
+        $egs_fatal('(a)',' empty argument after -e');
+    ]
+    IF( l > 254 ) [
+        $egs_fatal('(a,i5)',' EGS_HOME argument is too long ',l);
+    ]
+    egs_home(:l) = $cstring(arg);
+    IF( egs_home(l:l) ~= $file_sep ) egs_home(l+1:l+1) = $file_sep;
+    DO i=1,lnblnk1(egs_home) [
+        IF( egs_home(i:i) = '/' ) [
+            egs_home(i:i) = $file_sep;
+        ]
+    ]
+]
+IF( ~egs_isdir(egs_home) ) [
+  $egs_fatal(*,' EGS_HOME directory ',$cstring(egs_home),' does not exist.');
+]
+$egs_debug('(a,a)','EGS_HOME is ',$cstring(egs_home));
+
+" Get the pegs4 data file "
+on_egs_home = .false.;
+is_pegsless=.false.;
+$check_get_argument('-p','--pegs-file',arg);
+IF( ~have_arg ) [
+    $egs_warning(*,'No pegs4 file name supplied.  Will assume you are running
+ in pegs-less mode with media details specified in input file.');
+    is_pegsless=.true.;
+]
+ELSE[
+    pegs_file = $cstring(arg);
+]
+
+" Deduct the user code name from the executable name "
+call egs_get_usercode(user_code);
+
+" Check for an input file "
+$check_get_argument('-i','--input',arg);
+IF( have_arg ) [
+    ex = egs_strip_extension(arg,'.egsinp');
+    l2 = lnblnk1(arg) + lnblnk1('.egsinp');
+    IF( l2 > 256 ) [
+        $egs_fatal(*,'input file name is too long ',l2);
+    ]
+    input_file = $cstring(arg);
+]
+
+" Check for an output file option "
+$check_get_argument('-o','--output',arg);
+IF( have_arg ) [
+    l = lnblnk1(arg);
+    IF( l > 256 ) [
+        $egs_fatal(*,'output file name is too long ',l);
+    ]
+    output_file(:l) = $cstring(arg);
+]
+ELSE [
+    IF( lnblnk1(input_file) > 0 ) [
+        output_file(:lnblnk1(input_file)) = $cstring(input_file);
+    ]
+    ELSE [
+        output_file = 'test';
+    ]
+]
+
+return; end;
+
+"******************************************************************************
+subroutine egs_open_units(flag);
+"******************************************************************************
+" Open output files.
+" Looks for output file definition in user_code.io.
+" In addition, if it is a batch run connects a .egslog file to unit 6.
+" If flag is .true., open the files in the temporary working directory,
+" else open them in the user code directory.
+"******************************************************************************
+implicit none;
+$LOGICAL flag;
+
+;COMIN/EGS-IO/;
+
+character tmp_string*1024, tmp1_string*1024, tmp2_string*1024, ucode_dir*1024,
+          input_line*100, arg*20;
+integer   i,lnblnk1,u,l,istart,egs_get_unit,i_iofile;
+$LOGICAL  ex,is_open;
+$declare_write_buffer;
+
+$set_string(tmp_string,' '); $set_string(ucode_dir,' ');
+ucode_dir = $cstring(egs_home) // $cstring(user_code) // $file_sep;
+IF( flag ) [
+    tmp_string = $cstring(ucode_dir) // $cstring(work_dir);
+]
+ELSE [
+    tmp_string = $cstring(ucode_dir);
+]
+
+tmp_string = $cstring(tmp_string) // $cstring(output_file);
+IF( i_parallel > 0 ) [
+    tmp_string = $cstring(tmp_string) // '_w';
+    call egs_itostring(tmp_string,i_parallel,.false.);
+]
+$set_string(tmp1_string,' ');
+i_log=6;
+IF( is_batch ) [
+    tmp1_string = $cstring(tmp_string) // '.egslog';
+    $AVAILABLE_UNIT(i_log,tmp1_string);
+    open(i_log,file=tmp1_string,status='unknown',err=:output_file_error:);
+]
+$set_string(tmp2_string,' ');
+tmp2_string = $cstring(ucode_dir) // $cstring(user_code) // '.io';
+inquire(file=tmp2_string,exist=ex);
+n_files = 0;
+IF( ex ) [
+    i_iofile=99;
+    i_iofile=egs_get_unit(i_iofile);
+    IF (i_iofile<1)[
+      $egs_fatal(*,'failed to get a free Fortran I/O unit for .io file');
+    ]
+    open(i_iofile,file=tmp2_string,status='old',err=:io_file_error:);
+    LOOP [
+        read(i_iofile,'(a)',err=:end_of_iofile:,end=:end_of_iofile:) input_line;
+        IF( input_line(1:1) = '#' ) NEXT;
+        "The DEC and SGI compilers fail at the following statement!"
+        "read(input_line,*,err=:end_of_iofile:,end=:end_of_iofile:) u,arg;"
+        read(input_line,*,err=:end_of_ioline:,end=:end_of_ioline:) u;
+        istart = 1;
+        DO i=lnblnk1(input_line),1,-1 [
+            IF( input_line(i:i) = ' ' ) [ istart = i+1; EXIT; ]
+        ]
+        DO i=1,len(arg) [ arg(i:i) = ' '; ]
+        DO i=istart,lnblnk1(input_line) [
+            arg(i+1-istart:i+1-istart) = input_line(i:i);
+        ]
+        inquire(unit=u,opened=is_open);
+        IF( is_open ) [
+            $egs_warning('(a,i3,a,a,a,/,a,/,a,/)',
+              'Unit ',u,' which you want to connect to a ',
+              $cstring(arg),' file ',
+           'is already in use. Will assume this code is being used as',
+           'a shared library source and this file will be opened explicitly.');
+        ]
+        ELSE[
+            n_files = n_files + 1;
+            IF( n_files > $mx_units ) [
+               $egs_fatal(*,'Too many units requested in .io.',
+                ' Increas $mx_units and retry');
+            ]
+            file_units(n_files) = u;
+            $set_string(file_extensions(n_files),' ');
+            l = lnblnk1(arg);
+            IF( l > $max_extension_length ) [
+                $egs_fatal(*,'extension ',$cstring(arg),' is longer than ',
+                  $max_extension_length,' chars. ',
+                  'Increase $max_extension_length and retry ');
+            ]
+            file_extensions(n_files) = $cstring(arg);
+            tmp1_string = $cstring(tmp_string) // $cstring(arg);
+            open(u,file=tmp1_string,status='unknown');
+            $egs_debug('(a,a,a,i3)','connected ',$cstring(tmp1_string),
+              ' to unit ',u);
+        ]
+        :end_of_ioline:
+    ]
+    :end_of_iofile:
+    close(i_iofile);
+]
+return;
+
+:output_file_error:
+$egs_fatal(*,'failed to open output file ',$cstring(tmp1_string));
+
+:io_file_error:
+$egs_fatal(*,'failed to open existing .io file',$cstring(tmp2_string));
+return; end;
+
+
+"******************************************************************************
+subroutine egs_finish;
+"******************************************************************************
+" This subroutine becomes the last step in every EGSnrc user code.
+" It's purpose is to move the all output files from the temporary working
+" directory to the user code directory and to remove the working dir.
+" This was previously done by the egs_run script.
+" This routine also prints a summary to standard output.
+"******************************************************************************
+implicit none;
+;COMIN/EGS-IO,my_times/;
+character line*80,base*512,base1*512,tmp_string*512,junk_file*128,fname*512;
+character dattim*24;
+integer  i,l,lnblnk1,istat,egs_system,n_open,unlink,i_junk,egs_get_unit;
+$LOGICAL is_open,egs_isdir;
+$REAL    t1,t2,tt_cpu;
+$declare_write_buffer;
+
+$set_string(line,'=');
+IF( n_parallel = 0 | i_parallel > 0 ) [
+ "i.e. we want that info if this is not a parallel run (n_parallel = 0)"
+ "or if it is parallel but it is not the final egs_finish (after combining"
+ "results from parallel runs)"
+t_elapsed = egs_tot_time(1); tt_cpu = egs_etime() - t_cpu;
+t1 = t_elapsed; t2 = t1/3600;
+$egs_info('(//a,/,a,/)',line,'Finished simulation');
+$egs_info('(2x,a,t30,f9.1,a,f7.3,a)','Elapsed time: ',t1,' s (',t2,' h)');
+t1 = tt_cpu; t2 = t1/3600;
+$egs_info('(2x,a,t30,f9.1,a,f7.3,a)','CPU time:',t1,' s (',t2,' h)');
+$egs_info('(2x,a,t30,f10.3)','Ratio:',t_elapsed/tt_cpu);
+]
+call egs_get_fdate(dattim);
+$egs_info('(//a,t56,a,/,a)','End of run ',dattim,line);
+
+" Close all I/O units "
+n_open=0;
+$set_string(base,' ');
+base = $cstring(egs_home) // $cstring(user_code);
+DO i=1,$max_unit [
+    IF( is_batch | i ~= i_log ) [
+      inquire(i,opened=is_open);
+      IF( is_open ) [
+         inquire(i,name=fname);
+         IF(index($cstring(fname),$cstring(base))>0)[
+              close(i); n_open = n_open+1; ]
+      ]
+    ]
+]
+
+"If work_dir is empty, this is a second call to egs_finish for the last"
+"job in a parallel run. This implies that the temporary working "
+"directory has been already removed => just return"
+
+IF( lnblnk1(work_dir) = 0 ) [ return; ]
+
+" Now generate a junk file in the working directory so that the move "
+" command does not fail in case there are no files "
+$set_string(base,' ');
+base = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+        $cstring(work_dir);
+DO i=1,lnblnk1(base) [
+    IF( base(i:i) = '/' ) [
+        base(i:i) = $file_sep;
+    ]
+]
+IF( egs_isdir(base) ) [
+    $set_string(tmp_string,' '); $set_string(junk_file,' ');
+    junk_file = $cstring(work_dir);
+    l = lnblnk1(junk_file); junk_file(l:l) = ' ';
+    junk_file = $cstring(junk_file) // '_junk';
+    tmp_string = $cstring(base) // $cstring(junk_file);
+    i_junk=99;
+    i_junk=egs_get_unit(i_junk);
+    IF(i_junk<0)[
+      $egs_fatal(*,'failed to get a free Fortran I/O unit for junk file');
+    ]
+    open(i_junk,file=tmp_string,status='unknown');
+    write(i_junk,*) 'junk';
+    close(i_junk);
+
+    " Move all files from the working directory to the user code directory "
+    $set_string(base1,' ');
+    base = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+            $cstring(work_dir);
+    base1 = $cstring(egs_home) // $cstring(user_code);
+    $set_string(tmp_string,' ');
+    tmp_string = $move_file // $cstring(base) // '*  ' // $cstring(base1);
+    l = lnblnk1(tmp_string)+1;
+    tmp_string(l:l) = char(0);
+    istat = egs_system(tmp_string);
+    IF( istat ~= 0 ) [
+        $egs_warning(*,'Moving files from working directory failed ?');
+        $warning(*,'=> will not remove working directory');
+    ]
+    ELSE [
+        " Remove the working directory "
+        $set_string(tmp_string,' ');
+        tmp_string = $remove_directory // $cstring(base);
+        l = lnblnk1(tmp_string)+1; tmp_string(l:l) = char(0);
+        istat = egs_system(tmp_string);
+        IF( istat ~= 0 ) [
+            $egs_warning(*,'Failed to remove working directory ',
+              $cstring(work_dir));
+        ]
+        " Remove the junk file "
+        $set_string(tmp_string,' ');
+        tmp_string = $cstring(base1) // $file_sep // $cstring(junk_file);
+        l = lnblnk1(tmp_string)+1; tmp_string(l:l) = char(0);
+        istat = unlink(tmp_string);
+    ]
+]
+
+" Now set work_dir to blank so that all I/O stuff after egs_finish ends up"
+" in the user code directory "
+$set_string(work_dir,' ');
+
+return; end;
+
+"******************************************************************************
+subroutine egs_set_defaults;
+"******************************************************************************
+" Replaces BLOCK DATA "
+implicit none;
+$COMIN-SET-DEFAULTS;
+
+integer  i,j,lnblnk1;
+$TYPE MEDIA1(24); EQUIVALENCE(MEDIA1(1),MEDIA(1,1));
+character fool_dec;
+data MEDIA1/$S'NAI                     '/;
+data fool_dec/'/'/;
+data fool_intel_optimizer/.false./;
+
+vacdst = 1e8;
+$set-region-by-region-defaults;
+
+eii_flag = 0; "No EII by default. "
+eii_xfile = 'Off';
+eii_L_factor = 1.0; "No L-shell EII xsection scaling by default"
+"========================================="
+"See egsnrc.macros for defaults used below"
+"========================================="
+xsec_out = $XSEC-DEFAULT;
+photon_xsections = $XDATA-DEFAULT;"default photon xsection"
+comp_xsections = $COMP-XDATA-DEFAULT;
+eadl_relax = $EADL-RELAX-DEFAULT;
+mcdf_pe_xsections = $MCDF-PE-DEFAULT;
+"Ali:photonuc, 2 lines"
+photonuc_xsections = $PHOTONUC-XDATA-DEFAULT;
+"EMH:emf"
+ExIN=$ExDEF;EyIN=$EyDEF;EzIN=$EzDEF;
+" Initially set to input values, could change with regions"
+" by converting it to an array over all regions. This is  "
+" currently implemented ONLY for the C++ applications     "
+BxIN=$BxDEF;ByIN=$ByDEF;BzIN=$BzDEF; EMLMTIN=$EMLMTDEF;
+Bx=BxIN;    By=ByIN;    Bz=BzIN;
+Bx_new=Bx;  By_new=By;  Bz_new=Bz;
+emfield_on=.false.;
+IF( ExIN**2+EyIN**2+EzIN**2 + BxIN**2+ByIN**2+BzIN**2 > 0 ) [
+    emfield_on=.true.
+]
+
+DO i=1,$MXMED [
+    iraylm(i) = 0; "Rayleigh data available?"
+    DO j=1,len(iray_ff_file(i)) [ iray_ff_file(i)(j:j) = ' ';]
+    DO j=1,len(iray_ff_media(i)) [ iray_ff_media(i)(j:j) = ' ';]
+      " set all thresholds to zero "
+    /ae(i),ap(i),ue(i),up(i),te(i),thmoll(i)/=0;
+]
+DO i=1,$MXSHXSEC [
+  DO j=1,$MXELEMENT [ binding_energies(i,j) = 0; ]
+]
+ibrdst = $IBRDST-DEFAULT;      " brems angular sampling"
+ibr_nist = $IBR-NIST-DEFAULT;  " flag for brems from NIST data base "
+pair_nrc = $PAIR-NRC-DEFAULT;  " flag for pair from the NRC data base "
+itriplet = $TRIPLET-DEFAULT;   " flag for triplet production "
+iprdst = $IPRDST-DEFAULT;      " pair angular sampling "
+rhof = 1;
+DO i=1,5 [ iausfl(i) = 1; ]
+"Ali:photonuc, line below already includes iarg=29,30"
+DO i=6,$MXAUS [ iausfl(i) = 0; ]
+ximax = $EXACT-BCA-XIMAX; estepe = $MAX-ELOSS;
+skindepth_for_bca = $SKIN-DEPTH-FOR-BCA;
+transport_algorithm = $TRANSPORT-ALGORITHM-DEFAULT;
+bca_algorithm = $BCA-ALGORITHM-DEFAULT;
+exact_bca = $EXACT-BCA-DEFAULT;
+spin_effects = $SPIN-EFFECTS-DEFAULT;
+count_pII_steps = 0; count_all_steps = 0;
+radc_flag = 0;
+nmed = $default_nmed;
+kmpi = 12; kmpo = 8; dunit = 1;
+rng_seed = 999999;
+latchi = 0;
+
+rmt2 = 2*rm; rmsq = rm*rm;
+
+pi = 4*datan(1d0); twopi = 2*pi; pi5d2 = 2.5*pi;
+nbr_split = 1;
+i_play_RR = 0; i_survived_RR = 0; prob_RR = -1; n_RR_warning = 0;
+
+$set_string(hen_house,' ');
+i = lnblnk1($HEN_HOUSE);
+hen_house(:i) = $HEN_HOUSE;
+IF( $file_sep ~= fool_dec ) [
+    DO j=1,i [
+        IF( hen_house(j:j) = '/' ) hen_house(j:j) = $file_sep;
+    ]
+]
+IF( hen_house(i:i) ~= $file_sep ) hen_house(i+1:i+1) = $file_sep;
+
+n_files = 0;
+$set_egs_home;
+i = lnblnk1(egs_home);
+IF( $file_sep ~= fool_dec ) [
+    DO j=1,i [
+        IF( egs_home(j:j) = '/' ) egs_home(j:j) = $file_sep;
+    ]
+]
+IF( i > 0 & egs_home(i:i) ~= $file_sep ) egs_home(i+1:i+1) = $file_sep;
+$set_string(input_file,' ');
+$set_string(output_file,' ');
+$set_string(work_dir,' ');
+$set_string(pegs_file,' ');
+$set_string(host_name,' ');
+n_parallel = 0; i_parallel = 0; n_chunk = 0; is_batch = .false.;
+first_parallel = 1;
+return; end;
+
+"*****************************************************************************
+subroutine egs_combine_runs(combine_routine,extension);
+"*****************************************************************************
+" This subroutine loops over job number i from 1 to $max_unit,
+" checks if the file output_file_wi.extension exists, and if yes,
+" calls the external subroutine combine_routine with that file name.
+"*****************************************************************************
+implicit none;
+external combine_routine;
+character*(*) extension;
+;COMIN/EGS-IO/;
+character*1024 tmp_string,base,command,outfile,parfile_name,base1,
+           text_string;
+integer  lnblnk1,istat,ipar,egs_system,egs_open_file;
+$INTEGER i,k,j,numparfiles,textindex;
+$LOGICAL ex,iwin;
+
+iwin=.false.; "start off assuming a non-Windows system"
+
+$set_string(base,' ');
+base = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+       $cstring(output_file) // '_w';
+
+"the following is to count the number of output files from"
+"a parallel run"
+$set_string(base1,' ');
+base1 = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+       $cstring(output_file) // '_w*' // $cstring(extension);
+$set_string(outfile,' ');
+outfile = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+       'parfiles_tmp';
+"try Unix/Linux first"
+$set_string(command,' ');
+command = 'ls ' // $cstring(base1) // ' | wc -l > ' // $cstring(outfile);
+istat = egs_system($cstring(command));
+IF(istat~=0)["now assume a Windows system"
+   command = 'dir ' // $cstring(base1) // ' | find "File(s)" > ' //
+   $cstring(outfile);
+   istat = egs_system($cstring(command));
+   IF(istat~=0)[
+$egs_fatal(*,' Failed to write number of output files from parallel runs.');
+   ]
+   ELSE [
+     iwin=.true.;
+   ]
+]
+
+"now open parfiles_tmp and read the number of files"
+ipar=1;
+ipar=egs_open_file(ipar,0,1,$cstring(outfile));
+IF(iwin)[
+"need to do a bit of manipulation of a text string to get the number of files
+  read(ipar,'(a)',err=:end_of_parfile:,end=:end_of_parfile:) text_string;
+  text_string = $cstring(text_string);
+  textindex = index(text_string,'File(s)');
+  text_string = text_string(:textindex-1);
+  read(text_string,'(i256)',err=:end_of_parfile:) numparfiles;
+]
+ELSE[
+  read(ipar,'(i256)',err=:end_of_parfile:,end=:end_of_parfile:) numparfiles;
+]
+close(ipar);
+
+"now remove parfiles_tmp"
+$set_string(command,' ');
+
+IF(iwin)[
+   command = 'del /Q ' // $cstring(outfile);
+]
+ELSE[
+   command = 'rm -f ' // $cstring(outfile);
+]
+istat = egs_system($cstring(command));
+IF(istat~=0)[
+   $egs_warning(*,' Failed to delete list of output files from parallel runs.');
+]
+
+k=1;
+j=1;
+WHILE(j<=numparfiles) [
+     $set_string(tmp_string,' ');
+     tmp_string = $cstring(base);
+     call egs_itostring(tmp_string,k,.false.);
+     tmp_string = $cstring(tmp_string) // $cstring(extension);
+     inquire(file=tmp_string,exist=ex);
+     IF( ex ) [
+        call combine_routine(tmp_string);
+        j=j+1;
+     ]
+     k=k+1;
+]
+return;
+
+:end_of_parfile:
+$egs_fatal(*,' Failed to read number of output files from parallel runs.');
+end;
+
+"******************************************************************************
+$LOGICAL function egs_strip_extension(filen,fext);
+"******************************************************************************
+" Check if the string pointed to by filen ends with the string pointed to by
+" fext and if yes, replace with blanks and return .true., otherwise return
+" false.
+"******************************************************************************
+implicit none;
+character*(*) filen,fext;
+integer  l1,l2,lnblnk1,i;
+
+l1 = lnblnk1(filen); l2 = lnblnk1(fext);
+IF( l1 >= l2 & filen(l1-l2+1:l1) = fext(:l2) ) [
+    egs_strip_extension = .true.;
+    DO i=l1-l2+1,len(filen) [ filen(i:i) = ' '; ]
+]
+ELSE [ egs_strip_extension = .false.; ]
+return; end;
+
+"******************************************************************************
+$LOGICAL function egs_is_absolute_path(fn);
+"******************************************************************************
+" Returns .true., if the string pointed to by fn is an absolute file name,
+" .fale. otherwise.
+"******************************************************************************
+implicit none;
+character*(*) fn;
+integer  i,lnblnk1;
+DO i=1,lnblnk1(fn) [
+    IF( fn(i:i) = $file_sep ) [ egs_is_absolute_path = .true.; return; ]
+]
+egs_is_absolute_path = .false.; return; end;
+
+"******************************************************************************
+integer  function egs_get_unit(iunit);
+"******************************************************************************
+" Returns iunit, if the Fortran I/O unit iunit is not currently in use.
+" Otherwise return the first free I/O unit found or -1 if none is available.
+"******************************************************************************
+implicit none;
+$INTEGER iunit, i;
+$LOGICAL is_open;
+
+IF( iunit > 0 ) [
+    inquire(iunit,opened=is_open);
+    IF( ~is_open ) [ egs_get_unit = iunit; return; ]
+]
+DO i=1,$max_unit [
+    inquire(i,opened=is_open);
+    IF( ~is_open ) [ egs_get_unit = i; return; ]
+]
+egs_get_unit = -1; return; end;
+
+"******************************************************************************
+integer function egs_open_file(iunit,rl,action,extension);
+"******************************************************************************
+" Open a file trying to connect to Fortran I/O unit iunit.
+" If iunit is already in use, connect to the first free I/O unit found.
+" If no free I/O unit is found, then
+"   - if action = 0, return -1.
+"   - if action ~= 0, call the $egs_fatal macro.
+" If extension is an absolute file name (including path), use extension
+" as a file name, otherwise use output_file.extension in the temporary
+" working directory as name. In both cases use status='unknown' to open the
+" file. If rl = 0, open the file for formatted sequential access, otherwise
+" open for unformatted direct access with record length = rl.
+"******************************************************************************
+implicit none;
+$INTEGER iunit, rl, action;
+character*(*) extension;
+;COMIN/EGS-IO/;
+$LOGICAL egs_is_absolute_path,is_open;
+integer  egs_get_unit;
+integer  i,lnblnk1;
+character*1024 tmp_string,error_string;
+$INTEGER the_unit;
+$declare_write_buffer;
+
+egs_open_file = -1; "so that the DEC compiler does not complain that"
+                    "the function has an undefined values in some of"
+                    "the excution paths (where exit(1) is called."
+the_unit = egs_get_unit(iunit);
+IF( the_unit < 0 ) [
+    IF( action = 0 ) [ egs_open_file = -1; return; ]
+    $egs_fatal(*,'No free Fortran I/O units left');
+]
+
+IF( egs_is_absolute_path(extension) ) [
+    inquire(file=extension,opened=is_open);
+    IF(is_open)[
+        inquire(file=extension,number=the_unit);
+        $egs_warning('(a,a,/,a,i3,/,a,/,a)',
+             'File ',$cstring(extension),
+             ' is already opened and connected to unit ',the_unit,
+             ' Will not try to re-open this file, assuming it has been opened',
+             ' by the .io file.');
+    ]
+    ELSE IF( rl = 0 ) [
+        open(the_unit,file=extension,status='unknown');
+    ]
+    ELSE [
+        open(the_unit,file=extension,status='unknown',form='unformatted',
+             access='direct', recl=rl);
+    ]
+    egs_open_file = the_unit; return;
+]
+
+$set_string(tmp_string,' ');
+tmp_string = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+             $cstring(work_dir) // $cstring(output_file);
+IF( i_parallel > 0 ) [
+    tmp_string = $cstring(tmp_string) // '_w';
+    call egs_itostring(tmp_string,i_parallel,.false.);
+]
+tmp_string = $cstring(tmp_string) // $cstring(extension);
+
+inquire(file=tmp_string,opened=is_open);
+IF(is_open)[
+    inquire(file=tmp_string,number=the_unit);
+    $egs_warning('(a,a,/,a,i3,/,a,/,a,/)',
+             'File ',$cstring(tmp_string),
+             ' is already opened and connected to unit ',the_unit,
+             ' Will not try to re-open this file, assuming it has been opened',
+             ' by specifying it in the .io file.');
+]
+ELSE IF( rl = 0 ) [
+    open(the_unit,file=tmp_string,status='unknown',err=:open_error:);
+]
+ELSE [
+    open(the_unit,file=tmp_string,status='unknown',form='unformatted',
+         access='direct', recl=rl,err=:open_error:);
+]
+egs_open_file = the_unit; return;
+
+:open_error:
+error_string = 'In egs_open_file: failed to open file ' // $cstring(tmp_string)
+      // char(10) // 'iunit = ';
+call egs_itostring(error_string,iunit,.false.);
+error_string = $cstring(error_string) // ' the_unit = ';
+call egs_itostring(error_string,the_unit,.false.);
+$egs_fatal('(a)',$cstring(error_string));
+end;
+
+
+"******************************************************************************
+integer  function egs_open_datfile(iunit,rl,action,extension);
+"******************************************************************************
+"
+" Open an existing 'data' file.
+" First try to connect the file to Fortran unit iunit, but if iunit is
+" already in use, use the first free unit instead.
+" extension is the datafile extension (e.g. '.egsdat') .
+" The algorithm for searching for the file is as follows:
+"  1. If extension is an absolute file name (including path),
+"     try opening this file, else
+"  2. Try output_file.extension in the user code directory.
+"  3. Try input_file.extension in the user code directory (if input_file is
+"     different from output_file).
+" If the file is found, open it using status='old' for
+"   a) formatted sequential access, if rl=0
+"   b) unformatted direct access with record length = rl, if rl > 0.
+"
+" Return value:
+"   - if all is OK, return the opened unit number
+"   - if something fails, then
+"       * if action = 0, return error code less than 0.
+"       * if action != 0, call the $egs_fatal macro with an error message.
+"
+"******************************************************************************
+implicit none;
+$INTEGER iunit,rl,action;
+character*(*) extension;
+
+;COMIN/EGS-IO/;
+
+integer  i,the_unit,lnblnk1,egs_get_unit;
+$LOGICAL egs_is_absolute_path;
+character base*1024, fn*1024;
+$declare_write_buffer;
+
+egs_open_datfile = -1; "so that the DEC compiler does not complain that"
+                    "the function has an undefined values in some of"
+                    "the excution paths (where exit(1) is called."
+the_unit = egs_get_unit(iunit);
+IF( the_unit < 0 ) [
+    IF( action = 0 ) [ egs_open_datfile = -1; return; ]
+    $egs_fatal(*,'No free Fortran I/O units left');
+]
+
+IF( egs_is_absolute_path(extension) ) [
+    IF( rl = 0 ) [
+        open(the_unit,file=extension,status='old',err=:no_datfile_0:);
+    ]
+    ELSE [
+        open(the_unit,file=extension,status='old',form='unformatted',
+              access='direct',recl=rl,err=:no_datfile_0:);
+    ]
+    egs_open_datfile = the_unit; return;
+
+    :no_datfile_0:;
+    IF( action = 0 ) [ egs_open_datfile = -2; return; ]
+    $egs_fatal(*,'Failed to open file ',$cstring(extension));
+]
+
+$set_string(base,' '); $set_string(fn,' ');
+base = $cstring(egs_home) // $cstring(user_code) // $file_sep;
+"fn = $cstring(base) // $cstring(output_file) // $cstring(extension);"
+IF( i_parallel > 0 ) [
+    fn = $cstring(base) // $cstring(output_file) // '_w';
+    call egs_itostring(fn,i_parallel,.false.);
+    fn = $cstring(fn) // $cstring(extension);
+]
+ELSE [
+    fn = $cstring(base) // $cstring(output_file) // $cstring(extension);
+]
+IF( rl = 0 ) [
+    open(the_unit,file=fn,status='old',err=:no_datfile_1:);
+]
+ELSE [
+    open(the_unit,file=fn,status='old',form='unformatted',access='direct',
+         recl=rl,err=:no_datfile_1:);
+]
+egs_open_datfile = the_unit; return;
+
+:no_datfile_1:;
+$egs_warning('(a,a)','Failed to open ',$cstring(fn));
+$set_string(fn,' ');
+"fn = $cstring(base) // $cstring(input_file) // $cstring(extension);"
+IF( i_parallel > 0 ) [
+    fn = $cstring(base) // $cstring(input_file) // '_w';
+    call egs_itostring(fn,i_parallel,.false.);
+    fn = $cstring(fn) // $cstring(extension);
+]
+ELSE [
+    fn = $cstring(base) // $cstring(input_file) // $cstring(extension);
+]
+IF( rl = 0 ) [
+    open(the_unit,file=fn,status='old',err=:no_datfile_2:);
+]
+ELSE [
+    open(the_unit,file=fn,status='old',form='unformatted',access='direct',
+         recl=rl,err=:no_datfile_2:);
+]
+egs_open_datfile = the_unit; return;
+
+:no_datfile_2:;
+$egs_fatal(*,'Failed to open data file');
+end;
+
+"******************************************************************************
+integer  function egs_open_file_junk(iunit,do_it_anyway,filen);
+"******************************************************************************
+" Open the file filen for sequential formatted I/O and return the unit
+" number it was connected to.
+" If iunit ~= 0, try to connect to unit |iuniti|, otherwise
+" use the first unconnected unit found.
+" If iunit > 0
+"    open the unit even if it was already open, if do_it_anyway is .true.,
+"    otherwise return -4.
+" If iunit < 0
+"    if the unit |iunit| is already in use and do_it_anyway is .true.,
+"    search for the first available unit, otherwise return -4.
+" Return values:
+"   unit number, if the file was succesfully opened.
+"   -1, if there was no free unit numer to connect to.
+"   -2, if the file does not exist.
+"   -3, if the file exist, but could not be opened.
+"   -4, if |iunit|>0 & do_it_anyway=.false. and |iunit| is already in use.
+"******************************************************************************
+implicit none;
+$INTEGER iunit;
+$LOGICAL do_it_anyway;
+character*(*) filen;
+
+$LOGICAL aux;
+$INTEGER the_unit,i;
+
+inquire(file=filen,exist=aux);
+IF( ~aux ) [ egs_open_file_junk = -2; return; ]
+IF( iunit < 0 ) [ the_unit = -iunit; ] ELSE [ the_unit = iunit; ]
+IF( the_unit ~= 0 ) [
+    inquire(unit=the_unit,opened=aux);
+    IF( aux ) [
+        IF( ~do_it_anyway ) [ egs_open_file_junk = -4; return; ]
+        IF( iunit < 0 ) the_unit = 0;
+    ]
+]
+IF( the_unit = 0 ) [
+    DO i=1,$max_unit [
+        inquire(unit=i,opened=aux);
+        IF( ~aux ) [ the_unit = i; EXIT; ]
+    ]
+    IF( the_unit = 0 ) [ egs_open_file_junk = -1; return; ]
+]
+open(the_unit,file=filen,status='old',err=:failed_to_open:);
+egs_open_file_junk = the_unit; return;
+:failed_to_open:
+egs_open_file_junk = -3; return; end;
+
+"==============================================================================
+subroutine egs_strip_path(fname);
+"==============================================================================
+" Strip the path name from fname (if any)
+implicit none;
+character*(*) fname;
+integer  i,l,l1,lnblnk1,j;
+character slash;
+slash = '/';
+l = lnblnk1(fname);
+DO i=1,l [
+    IF( fname(i:i) = slash ) [ fname(i:i) = $file_sep; ]
+]
+DO i=l,1,-1 [
+    IF( fname(i:i) = $file_sep | fname(i:i) = slash ) [
+        l1 = l-i;
+        fname(:l1) = fname(i+1:l);
+        DO j=l1+1,len(fname) [ fname(j:j) = ' '; ]
+        return;
+    ]
+]
+return; end;
+
+"==============================================================================
+subroutine replace_env(fname);
+"==============================================================================
+"subroutine to replace environment variables (beginning with $) with their"
+"full names or ~ with the full name of $HOME"
+"Assumes environment variable or ~ appears only at the beginning of the"
+"file name"
+
+;COMIN/EGS-IO/;
+
+character*(*) fname;
+character*256 dirname;
+integer indsep,ind1,ind2;
+
+indsep = index(fname,$file_sep);
+IF(indsep <= 0) return;
+"hope that the user has just supplied the file name"
+"and it is in the current directory"
+
+ind1=index(fname,'$');
+ind2=index(fname,'~');
+
+"examine first character of name"
+IF(ind1=1)[
+    "get the environment variable"
+    call getenv(fname(2:indsep-1),dirname);
+    IF(dirname=' ')[
+      $egs_fatal('(a,a/,a)',' Error in file name: ',$cstring(fname),
+  ' First element in name does not specify a defined environment variable.');
+   ]
+   fname=$cstring(dirname)//fname(indsep:);
+   $egs_info('(//a,a/)',' Retrieving file: ',$cstring(fname));
+]
+ELSEIF(ind2=1)[
+    call getenv('HOME',dirname);
+    IF(dirname=' ')[
+      $egs_fatal('(a,a/,a)',' Error in file name: ',$cstring(fname),
+  ' HOME is undefined.');
+   ]
+   fname=$cstring(dirname)//fname(indsep:);
+   $egs_info('(//a,a/)',' Retrieving file: ',$cstring(fname));
+]
+return;
+end;
+
+"=============================================================================
+subroutine egs_get_usercode(ucode);
+"=============================================================================
+" Deduct the user code name from the executable name
+" The algorithm assumes that the executable is called
+"   xxx[_debug|noopt][.exe]
+" and it will fail if this is not the case.
+"=============================================================================
+implicit none;
+COMIN/EGS-IO/;
+character*(*) ucode;
+character*512 arg;
+integer  l,l1,lnblnk1,i;
+$declare_write_buffer;
+
+arg = 'tutor1';
+l = lnblnk1(arg);
+$set_string(ucode,' '); ucode(:l) = arg(:l);
+return; end;
+
+
+subroutine egs_itostring(string,i,leave_space);
+implicit none;
+character*(*) string;
+$INTEGER i;
+integer  l,lnblnk1,idiv,itmp,iaux;
+$LOGICAL first,leave_space;
+l = lnblnk1(string)+1; IF( l > 1 & leave_space ) l=l+1;
+idiv = 1000000000; itmp = i; first = .false.;
+do while(idiv.gt.0) ;
+    iaux = itmp/idiv;
+    IF( (iaux > 0 | first ) & l <= len(string) ) [
+        string(l:l) = char(iaux+48); first = .true.; l = l+1;
+    ]
+    itmp = itmp - iaux*idiv; idiv = idiv/10;
+end do;
+return; end;
+
+"=============================================================================
+$REAL function egs_rndm();
+"=============================================================================
+implicit none;
+;COMIN/RANDOM/;
+$RANDOMSET egs_rndm;
+return; end;
+
+"=============================================================================
+integer  function egs_add_medium(medname);
+implicit none;
+character*(*) medname;
+$declare_max_medium;
+;COMIN/MEDIA,EGS-IO/;
+$INTEGER i,l,imed,medname_len;
+character c;
+$LOGICAL  same;
+$declare_write_buffer;
+
+l = min(len(medname),24); medname_len = l;
+DO i=1,l [
+    c = medname(i:i);
+    IF( ichar(c) = 0 ) [ medname_len = i-1; EXIT; ]
+]
+DO imed=1,nmed [
+    l = 24;
+    DO i=1,24 [
+        IF( media(i,imed)(1:1) = ' ' ) [ l = i-1; EXIT; ]
+    ]
+    IF( l = medname_len ) [
+        same = .true.;
+        DO i=1,l [
+            c = medname(i:i);
+            IF( c ~= media(i,imed)(1:1) ) [ same = .false.; EXIT; ]
+        ]
+        IF( same ) [
+            egs_add_medium = imed; return;
+        ]
+    ]
+]
+nmed = nmed + 1;
+IF( nmed > $MXMED ) [
+  $egs_fatal('(a,/,a,i3,a)',
+    'In egs_add_medium: maximum number of media exceeded ',
+    'Increase the macro $MXMED (currently ',$MXMED,') and retry');
+]
+l = min(len(medname),24);
+DO i=1,l [
+    c = medname(i:i);
+    IF( ichar(c) = 0 ) [ l = i-1; EXIT; ]
+    media(i,nmed) = ' ';
+    media(i,nmed)(1:1) = c;
+]
+IF( l < 24 ) [
+    DO i=l+1,24 [ media(i,nmed) = ' '; ]
+]
+egs_add_medium = nmed;
+return; end;
+
+subroutine egs_get_medium_name(imed,medname);
+implicit none;
+character*(*) medname;
+$declare_max_medium;
+;COMIN/MEDIA,EGS-IO/;
+$INTEGER i,l,imed;
+DO i=1,len(medname) [ medname(i:i) = ' '; ]
+IF( imed < 1 | imed > nmed ) [ return; ]
+l = 24;
+DO l=24,1,-1 [
+    IF( media(l,imed)(1:1) ~= ' ' ) EXIT;
+]
+l = min(l,len(medname));
+DO i=1,l [ medname(i:i) = media(i,imed)(1:1); ]
+return; end;
+;
+
+"============================================================================"
+"  Pass pointers to the cross section interpolation coefficients to          "
+"  an external subroutine                                                    "
+"============================================================================"
+subroutine egs_get_electron_data(func,imed,which);
+implicit none;
+$INTEGER imed,which;
+external func;
+$declare_max_medium;
+;COMIN/ELECIN,MEDIA,EGS-IO/;
+$REAL    lemin,lemax;
+
+lemin = (1 - eke0(imed))/eke1(imed);
+lemax = (meke(imed) - eke0(imed))/eke1(imed);
+    IF( which = 1 ) [
+    call func(meke(imed),lemin,lemax,esig0(1,imed),esig1(1,imed));
+] ELSE IF( which = 2 ) [
+    call func(meke(imed),lemin,lemax,psig0(1,imed),psig1(1,imed));
+] ELSE IF( which = 3 ) [
+    call func(meke(imed),lemin,lemax,ededx0(1,imed),ededx1(1,imed));
+] ELSE IF( which = 4 ) [
+    call func(meke(imed),lemin,lemax,pdedx0(1,imed),pdedx1(1,imed));
+] ELSE IF( which = 5 ) [
+    call func(meke(imed),lemin,lemax,ebr10(1,imed),ebr11(1,imed));
+] ELSE IF( which = 6 ) [
+    call func(meke(imed),lemin,lemax,pbr10(1,imed),pbr11(1,imed));
+] ELSE IF( which = 7 ) [
+    call func(meke(imed),lemin,lemax,pbr20(1,imed),pbr21(1,imed));
+] ELSE IF( which = 8 ) [
+    call func(meke(imed),lemin,lemax,tmxs0(1,imed),tmxs1(1,imed));
+] ELSE IF( which = 9 ) [
+    call func(meke(imed),lemin,lemax,range_ep(0,1,imed),range_ep(1,1,imed));
+] ELSE [
+    $egs_fatal(*,'Unknown electron data type ',which);
+]
+return; end;
+
+subroutine egs_get_photon_data(func,imed,which);
+implicit none;
+$INTEGER imed,which;
+external func;
+$declare_max_medium;
+;COMIN/PHOTIN,MEDIA,EGS-IO/;
+$REAL    lemin,lemax;
+
+lemin = (1 - ge0(imed))/ge1(imed);
+lemax = (mge(imed) - ge0(imed))/ge1(imed);
+IF( which = 1 ) [
+    call func(mge(imed),lemin,lemax,gmfp0(1,imed),gmfp1(1,imed));
+] ELSE IF( which = 2 ) [
+    call func(mge(imed),lemin,lemax,gbr10(1,imed),gbr11(1,imed));
+] ELSE IF( which = 3 ) [
+    call func(mge(imed),lemin,lemax,gbr20(1,imed),gbr21(1,imed));
+] ELSE IF( which = 4 ) [
+    call func(mge(imed),lemin,lemax,cohe0(1,imed),cohe1(1,imed));
+] ELSE IF( which = 5 ) [
+    call func(mge(imed),lemin,lemax,PHOTONUC0(1,imed),PHOTONUC1(1,imed));
+] ELSE [
+    $egs_fatal(*,'Unknown photon data type ',which);
+]
+return; end;
+
+/* Print binding energies: In the case of the EPDL library
+   only energies above 1 keV are output for elements not part
+   of the current simlation. This is due to the fact that energies
+   below 1 keV are taken from the relaxation database only for
+   elements requested in the input when EPDL is used. This is not
+   an issue when using XCOM.
+ */
+subroutine egs_print_binding_energies;
+implicit none;
+$declare_max_medium;
+;COMIN/EDGE,MEDIA,EGS-IO/;
+$INTEGER    i,j;
+integer*4   lnblnk1;
+character*3 labels(16);
+data labels/'  K',' L1',' L2',' L3',
+            ' M1',' M2',' M3',' M4',' M5',
+            ' N1',' N2',' N3',' N4',' N5',' N6',' N7'/;
+
+$egs_info('(a,a,a)',
+        'Binding energies from ',$cstring(photon_xsections),
+        ' photon cross section library');
+DO j = 1,$MXELEMENT [
+   DO i = 1,$MXPESHELL [
+      IF ( binding_energies(i,j) > 0 ) [
+         $egs_info('(a,i3,a,a,a,1pe12.4,a)',
+         ' Eb(',j,',',labels(i),') = ',binding_energies(i,j),' MeV');
+      ]
+   ]
+]
+
+return;end;
+
+
+"============================================================================="
+"  scale elastic scattering strength by a given factor                        "
+"============================================================================="
+subroutine egs_scale_xcc(imed,factor);
+implicit none;
+$INTEGER imed;
+$REAL    factor;
+$declare_max_medium;
+;COMIN/ELECIN,MEDIA/;
+IF( imed > 0 & imed <= nmed ) [ xcc(imed) = xcc(imed)*factor; ]
+return; end;
+
+
+"============================================================================"
+subroutine egs_write_string(ounit,string);
+implicit none;
+$INTEGER ounit;
+character*(*) string;
+write(ounit,'(a,$)') string;
+$FLUSH_UNIT(ounit);
+return; end;
+
+
+"============================================================================"
+subroutine egs_swap_2(c);
+"============================================================================"
+" Convert a 2 byte object from little endian to big endian byte order        "
+" or vice versa                                                              "
+character  c(2),tmp;
+tmp=c(2); c(2)=c(1); c(1)=tmp;
+return; end;
+
+"============================================================================"
+subroutine egs_swap_4(c);
+"============================================================================"
+" Convert a 2 byte object from little endian to big endian byte order        "
+" or vice versa                                                              "
+character  c(4),tmp;
+tmp=c(4); c(4)=c(1); c(1)=tmp;
+tmp=c(3); c(3)=c(2); c(2)=tmp;
+return; end;
+
+
+"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+" Utility subroutines and functions previously in egsnrc.mortran
+"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+%E
+subroutine set_spline(x,f,a,b,c,d,n);
+"======================================================================"
+"
+" Sets cubic spline interpolation coefficients for the data contained  "
+" in the array f(n) at the abscissas x(n)                              "
+"                                                                      "
+" I.Kawrakow, NRC                                                      "
+"======================================================================"
+
+implicit none;
+
+$INTEGER n;
+$REAL    x(n),f(n),a(n),b(n),c(n),d(n);
+
+$INTEGER m1,m2,m,mr;
+$REAL    s,r;
+
+m1 = 2; m2 = n-1; s = 0;
+DO m=1,m2 [
+    d(m) = x(m+1) - x(m); r = (f(m+1) - f(m))/d(m);
+    c(m) = r - s; s = r;
+]
+/s,r,c(1),c(n)/=0;
+DO m=m1,m2 [
+    c(m) = c(m) + r*c(m-1);
+    b(m) = 2*(x(m-1) - x(m+1)) - r*s;
+    s = d(m); r = s/b(m);
+]
+mr = m2;
+DO m=m1,m2 [
+    c(mr) = (d(mr)*c(mr+1) - c(mr))/b(mr);
+    mr = mr - 1;
+]
+DO m=1,m2 [
+    s = d(m); r = c(m+1) - c(m); d(m) = r/s;
+    c(m) = 3*c(m);
+    b(m) = (f(m+1)-f(m))/s - (c(m)+r)*s;
+    a(m) = f(m);
+]
+return; end;
+;
+
+$REAL function spline(s,x,a,b,c,d,n);
+"======================================================================"
+"                                                                      "
+" Returns the value of the function at s using the spline coefficients "
+" a,b,c,d, which must have been set using set_spline                   "
+"                                                                      "
+" I.Kawrakow, NRC                                                      "
+"======================================================================"
+
+implicit none;
+
+$INTEGER n;
+$REAL    s,x(n),a(n),b(n),c(n),d(n);
+
+integer  m_lower,m_upper,direction,m,ml,mu,mav;
+$REAL    q;
+
+IF( x(1) > x(n) ) [ direction = 1; m_lower = n; m_upper = 0; ]
+ELSE              [ direction = 0; m_lower = 0; m_upper = n; ]
+IF ( s >= x(m_upper + direction) ) [
+    m = m_upper + 2*direction - 1;
+]
+ELSE IF( s <= x(m_lower+1-direction) ) [
+    m = m_lower - 2*direction + 1;
+]
+ELSE [   " Perform a binary search to find the interval s is in "
+    ml = m_lower; mu = m_upper;
+    WHILE ( iabs(mu-ml) > 1 ) [
+        mav = (ml+mu)/2;
+        IF( s < x(mav) ) [ mu = mav; ]
+        ELSE             [ ml = mav; ]
+    ]
+    m = mu + direction - 1;
+]
+q = s - x(m);
+spline = a(m) + q*(b(m) + q*(c(m) + q*d(m)));
+return; end;
+;
+
+%E "start of prepare_alias_table subroutine"
+"****************************************************************************
+
+subroutine prepare_alias_table(nsbin,xs_array,fs_array,ws_array,ibin_array);
+
+" Prepare an alias sampling table, given the histogram probabilities
+" xs_array,fs_array.
+"*****************************************************************************
+implicit none;
+
+integer   nsbin;
+$INTEGER  ibin_array(nsbin);
+$REAL     xs_array(0:nsbin),fs_array(0:nsbin),ws_array(nsbin);
+
+$INTEGER  i,j_l,j_h;
+$REAL     sum,aux;
+
+sum = 0;
+DO i=1,nsbin [
+    aux = 0.5*(fs_array(i)+fs_array(i-1))*(xs_array(i)-xs_array(i-1));
+    IF( aux < 1e-30 ) aux = 1e-30;
+    ws_array(i) = -aux; ibin_array(i) = 1;
+    sum = sum + aux;
+]
+sum = sum/nsbin;
+
+DO i=1,nsbin-1 [
+
+    DO j_h = 1,nsbin [
+        IF( ws_array(j_h) < 0 ) [
+            IF( abs(ws_array(j_h)) > sum ) GOTO :AT_EXIT_1:;
+        ]
+    ]
+    j_h = nsbin;
+    :AT_EXIT_1:
+
+    DO j_l = 1,nsbin [
+        IF( ws_array(j_l) < 0 ) [
+            IF( abs(ws_array(j_l)) < sum ) GOTO :AT_EXIT_2:;
+        ]
+    ]
+    j_l = nsbin;
+    :AT_EXIT_2:
+
+    aux = sum - abs(ws_array(j_l));
+    ws_array(j_h) = ws_array(j_h) + aux;
+    ws_array(j_l) = -ws_array(j_l)/sum;
+    ibin_array(j_l) = j_h;
+    IF( i = nsbin-1 ) ws_array(j_h) = 1;
+
+]
+
+return; end;
+;
+
+%E   " start of alias_sample1 function "
+"******************************************************************************
+
+$REAL function alias_sample1(nsbin,xs_array,fs_array,ws_array,ibin_array);
+
+" Sample a random variable from the alias table
+"    xs_array,fs_array,ws_array,ibin_array
+" which must have been prepared with prepare_alias_table
+"
+"******************************************************************************
+implicit none;
+
+integer   nsbin;
+$INTEGER  ibin_array(nsbin);
+$REAL     xs_array(0:nsbin),fs_array(0:nsbin),ws_array(nsbin);
+
+;COMIN/RANDOM/;
+
+$INTEGER j;
+$REAL    r1,r2,aj,x,dx,a,rnno1;
+
+$RANDOMSET r1; $RANDOMSET r2;
+aj = 1 + r1*nsbin; j = aj; aj = aj - j;
+IF( aj > ws_array(j) ) j = ibin_array(j);
+x = xs_array(j-1); dx = xs_array(j)-x;
+IF( fs_array(j-1) > 0 ) [
+    a = fs_array(j)/fs_array(j-1)-1;
+    IF( abs(a) < 0.2 ) [
+        rnno1 = 0.5*(1-r2)*a;
+        alias_sample1 = x + r2*dx*(1+rnno1*(1-r2*a));
+    ]
+    ELSE [
+        alias_sample1 = x - dx/a*(1-sqrt(1+r2*a*(2+a)));
+    ]
+]
+ELSE [
+    alias_sample1 = x + dx*sqrt(r2);
+]
+return; end;
+;
+
+%E   " start of prepare_alias_histogram routine "
+subroutine prepare_alias_histogram(nsbin,ws_array,ibin_array);
+"*************************************************************
+"                                                                           "
+" Prepares an alias histogram for the probability array ws_array of         "
+" dimension nsbin.                                                          "
+" On return, the ws_array is modified and contains the alias weights,       "
+" ibin_array holds the alias indices.                                       "
+" To be used with the integer function sample_alias_histogram, which        "
+" returns a bin index j with probability ws_array(j)                        "
+"                                                                           "
+" Iwan Kawrakow, November 2001
+"***************************************************************************"
+
+implicit none;
+
+$INTEGER  nsbin,ibin_array(nsbin);
+$REAL     ws_array(nsbin);
+
+$INTEGER  i,j_l,j_h;
+$REAL     sum,aux;
+
+sum = 0;
+DO i=1,nsbin [
+    sum = sum + ws_array(i); ibin_array(i) = -1;
+]
+sum = sum/nsbin;
+
+DO i=1,nsbin-1 [
+
+    DO j_h = 1,nsbin [
+        IF( ibin_array(j_h) < 0 & ws_array(j_h) > sum ) EXIT;
+    ]
+
+    DO j_l = 1,nsbin [
+        IF( ibin_array(j_l) < 0 & ws_array(j_l) < sum ) EXIT;
+    ]
+
+    aux = sum - ws_array(j_l);
+    ws_array(j_h) = ws_array(j_h) - aux;
+    ws_array(j_l) = ws_array(j_l)/sum;
+    ibin_array(j_l) = j_h;
+
+]
+
+DO i=1,nsbin [
+    IF( ibin_array(i) < 0 ) [
+        ibin_array(i) = i; ws_array(i) = 1;
+    ]
+]
+
+return;
+end;
+
+%E   " start of sample_alias_histogram function "
+$INTEGER function sample_alias_histogram(nsbin,ws_array,ibin_array);
+"***********************************************************************
+"
+" This function samples a bin index using the alias sampling technique.
+" The arrays ws_array and ibin_array of dimension nsbin must have been
+" prepared with the subroutine prepare_alias_histogram.
+"
+" Iwan Kawrakow, November 2001.
+"***********************************************************************
+
+implicit none;
+
+$INTEGER  nsbin,ibin_array(*);
+$REAL     ws_array(*);
+
+;COMIN/RANDOM/;
+
+$REAL    r1,r2;
+$INTEGER ibin;
+
+$RANDOMSET r1; $RANDOMSET r2;
+ibin = 1 + nsbin*r1;
+IF( r2 > ws_array(ibin) ) ibin = ibin_array(ibin);
+sample_alias_histogram = ibin;
+return;
+end;
+
+%E   " start of gauss_legendre subroutine "
+"******************************************************************************
+
+subroutine gauss_legendre(x1,x2,x,w,n);
+
+"     Given the lower and upper limit of integration, x1 and x2,
+"     and given n, this routine returns arrays x and w,
+"     containing the abscissas and weights of the Gauss-Legendre
+"     n - point quadrature formula
+"
+"******************************************************************************
+$IMPLICIT-NONE;
+
+$INTEGER n;
+real*8   x1,x2,x(n),w(n);
+
+real*8     eps,Pi;
+parameter (eps = 3.D-14, Pi = 3.141592654D0);
+
+$INTEGER i,m,j;
+real*8   xm,xl,z,z1,p1,p2,p3,pp;
+
+m = (n + 1)/2;
+xm=0.5d0*(x2+x1); xl=0.5d0*(x2-x1);
+DO i=1,m [
+    z=cos(Pi*(i-.25d0)/(n+.5d0));
+    LOOP [
+        p1=1.d0; p2=0.d0;
+        DO j=1,n [
+            p3 = p2; p2 = p1;
+            p1=((2.d0*j-1.d0)*z*p2-(j-1.d0)*p3)/j;
+        ]
+        pp=n*(z*p1-p2)/(z*z-1.d0);
+        z1=z; z=z1-p1/pp;
+    ] UNTIL (abs(z-z1) < eps);
+    x(i)=xm-xl*z; x(n+1-i)=xm+xl*z;
+    w(i)=2.d0*xl/((1.d0-z*z)*pp*pp); w(n+1-i)=w(i);
+]
+return; end;
+;
+
+%E   " start of lnblnk1 function"
+"******************************************************************************
+
+integer  function lnblnk1(string);
+
+"Function to return index of last non-blank character in a string"
+"We use this instead of lnblnk because there are compilers"
+"that do not have lnblnk"
+
+"******************************************************************************
+character*(*) string;
+integer i;
+DO i=len(string),1,-1 [
+    j = ichar(string(i:i));
+    IF( j = 0 ) [ lnblnk1 = i-1; return; ] "i.e. the same as strlen for "
+                                           "0-terminated C-strings"
+    IF( j ~= 9 & j ~= 10 & j ~= 11 & j ~= 12 & j ~= 13 & j ~= 32 ) [
+        lnblnk1 = i; return;
+    ]
+]
+lnblnk1 = 0; return; end;
+
+%E   " start of erf1 function "
+"************************************************************************
+"       an error function routine which is needed since some of
+"       the compiler don't have it as an intrinsic
+"
+"       Originally came from some library somewhere (Harwell I think)
+"       recoded in mortran
+"************************************************************************
+
+$REAL FUNCTION ERF1(X);
+
+$IMPLICIT-NONE;
+
+$REAL x;
+
+double precision A(0:22,2);     " Coefficients in expansion for erf(x) if x<3
+                                " (K=1) and for erfc(x) x>3 (K=2)
+double precision
+       CONST,                   " 2/sqrt(pi)
+       BN,BN1,BN2,              " Recursion coefficients B(n),B(n+1),B(n+2)
+       Y,FAC;                   " y=x/3 or 3/x and FAC = 2(2y**2-1)
+$INTEGER N,                     " recursion index n
+         K,                     " K=1,2 for x <= 3 or x > 3
+         NLIM(2);               " Maximum value of n in sum for K=1,2
+
+DATA A/  1.0954712997776232 , -0.2891754011269890 ,  0.1104563986337951 ,
+        -0.0412531882278565 ,  0.0140828380706516 , -0.0043292954474314 ,
+         0.0011982719015923 , -0.0002999729623532 ,  0.0000683258603789 ,
+        -0.0000142469884549 ,  0.0000027354087728 , -0.0000004861912872 ,
+         0.0000000803872762 , -0.0000000124184183 ,  0.0000000017995326 ,
+        -0.0000000002454795 ,  0.0000000000316251 , -0.0000000000038590 ,
+         0.0000000000004472 , -0.0000000000000493 ,  0.0000000000000052 ,
+        -0.0000000000000005 ,  0.0000000000000001 ,
+         0.9750834237085559 , -0.0240493938504146 ,  0.0008204522408804 ,
+        -0.0000434293081303 ,  0.0000030184470340 , -0.0000002544733193 ,
+         0.0000000248583530 , -0.0000000027317201 ,  0.0000000003308472 ,
+         0.0000000000001464 , -0.0000000000000244 ,  0.0000000000000042 ,
+        -0.0000000000000008 ,  0.0000000000000001 ,  9*0.0              /;
+
+DATA NLIM/ 22,16 /;
+DATA CONST/ 1.128379167095513 /;
+
+IF( x > 3 ) [ y = 3/x; k = 2; ]
+ELSE        [ y = x/3; k = 1; ]
+
+" Calculate sum of Chebyshev polynomials by backwards recursion
+"
+"       sum { A(n)*T(2n+1;y) : n=0,N } = y * ( B(0) - B(1) )
+"       sum { A(n)*T(2n;y)   : n=0,N } = ( B(0) - (2*y**2-1) * B(1) ) / 2
+"                                      = ( B(0) - B(2) + A(0) ) / 2
+"
+"       where B(N+2) = B(N+1) = 0
+"       and B(n) = 2*(2*y**2-1)*B(n+1) - B(n+2) + A(n) for n=N,(N-1),...,1,0
+"
+FAC = 2.0 * ( 2.0 * Y*Y - 1.0 );
+BN1 = 0.0;                       " Initialise B(N+2) = 0
+BN  = 0.0;                       " Initialise B(N+1) = 0
+
+DO n = NLIM(K),0,-1 [
+   BN2 = BN1; BN1 = BN;
+   BN = FAC * BN1 - BN2 + A(N,K)
+]
+
+IF ( k = 1 ) [ erf1 = CONST * Y * ( BN - BN1 ); ]
+ELSE       [ erf1 = 1 - CONST * EXP(-X**2) * ( BN - BN2 + A(0,K) )/(4.0 * X); ]
+
+RETURN;
+end;
+
+%E   " start of zero function "
+"********************************************************"
+"   Finds minimum non-zero value which can be used for   "
+"   evaluating logarithms without getting a NAN.         "
+"                                                        "
+" Starting with 10^-20 and decreasing it by 5 orders of  "
+" magnitud at a time, a check is made until the compiler "
+" recognizes the number as zero and the previous number  "
+" used. The same procedure is applied to this number but "
+" decreasing it by one order of magnitud. Finally it is  "
+" divided by 2..10 until the zero-check is successful.   "
+"********************************************************"
+$REAL FUNCTION ZERO();
+$IMPLICIT-NONE;
+
+$INTEGER i;
+$REAL    x, xtemp;
+
+x = 1.E-20;
+"jump over 5 orders of magnitude"
+DO i=1,100[
+   IF (x = 0.0) [EXIT;]
+   ELSE[xtemp = x;]
+   x = x/1.E5;
+]
+x = xtemp;
+"jump over 1 order of magnitude"
+DO i=1,5[
+   IF (x ~= 0.0)[xtemp = x;]
+   ELSE[EXIT;]
+   x = x/10;
+]
+x = xtemp;
+"divide it up by 2...10"
+DO i=2,10[
+   IF (x ~= 0.0)[xtemp = x;]
+   ELSE[EXIT;]
+   x = x/i;
+]
+zero = xtemp;
+return;end;
+;
+
+%E   " start of toUpper function "
+"**************************************"
+                                       "
+"   Converts a string to upper case.   "
+"                                      "
+"**************************************"
+character*512 function toUpper(a_string);
+character*(*) a_string;
+character*512 the_string;
+$INTEGER cursor, i, lnblnk1;
+toUpper = a_string; the_string = a_string;
+DO i=1, lnblnk1(the_string) [
+   cursor=ICHAR(the_string(i:i));
+   IF ((cursor.GE.97).AND.(cursor.LE.122)) [
+        cursor=cursor-32;toUpper(i:i)=CHAR(cursor);
+   ]
+]
+return; end;
+;
+
+/***********************************************************************
+   Tools for reading C/C++ binary files (byte-oriented) in Fortran.
+   Note that with gfortran one could use access=stream, but this is not
+   available in GNU g77. So, to preserve backwards compatibility we have
+   created these tools.
+ ************************************************************************/
+
+"================================================================="
+ integer*1 function egs_read_byte(iunit, jrec);
+"================================================================="
+" Reads one byte from a C/C++ binary file at jrec position        "
+ implicit none;
+ integer iunit, jrec, i, j, ierr;
+ integer*1 i_1;
+ character c_1;
+ equivalence (i_1,c_1);
+;COMIN/EGS-IO/;
+ read(iunit,rec=jrec,IOSTAT=ierr) c_1;
+ IF (ierr.ne.0) [
+    $egs_warning(*,' *** egs_read_byte: ERROR READING A byte *** ');
+    $egs_info(*,' From unit ',iunit,' position ',jrec,' bytes');
+    egs_read_byte = -1; return;
+ ]
+ jrec = jrec + 1; egs_read_byte = i_1;
+ return; end;
+
+"================================================================="
+ integer*2 function egs_read_short(iunit, jrec);
+"================================================================="
+" Reads short int from a C/C++ binary file at jrec position        "
+ implicit none;
+ integer iunit, jrec, i, j, ierr;
+ integer*2 i_2;
+ character c_2(2);
+ equivalence (i_2,c_2);
+;COMIN/EGS-IO/;
+ j = 0;
+ DO i=jrec,jrec+1[
+  j = j + 1;
+  read(iunit,rec=i,IOSTAT=ierr) c_2(j);
+  IF (ierr.ne.0) [
+    $egs_warning(*,' *** egs_read_short: ERROR READING short integer *** ');
+    $egs_info(*,' From unit ',iunit,' position ',jrec,' bytes');
+    egs_read_short = -1; return;
+  ]
+ ]
+ jrec = jrec + 2; egs_read_short = i_2;
+ return; end;
+
+"================================================================="
+ integer*4 function egs_read_int(iunit, jrec);
+"================================================================="
+" Reads integer from a C/C++ binary file at jrec position        "
+ implicit none;
+ integer iunit, jrec, i, j, ierr;
+ integer*4 i_4;
+ character c_4(4);
+ equivalence (i_4,c_4);
+;COMIN/EGS-IO/;
+ j = 0;
+ DO i=jrec,jrec+3[
+  j = j + 1;
+  read(iunit,rec=i,IOSTAT=ierr) c_4(j);
+  IF (ierr.ne.0) [
+    $egs_warning(*,' *** egs_read_int: ERROR READING integer *** ');
+    $egs_info(*,' From unit ',iunit,' position ',jrec,' bytes');
+    egs_read_int = -1; return;
+  ]
+ ]
+ jrec = jrec + 4; egs_read_int = i_4;
+ return; end;
+
+
+"================================================================="
+ real*4 function egs_read_real(iunit, jrec);
+"================================================================="
+" Reads float from a C/C++ binary file at jrec position        "
+ implicit none;
+ integer iunit, jrec, i, j, ierr;
+ real*4 r_4;
+ character c_4(4);
+ equivalence (r_4,c_4);
+;COMIN/EGS-IO/;
+ j = 0;
+ DO i=jrec,jrec+3[
+  j = j + 1;
+  read(iunit,rec=i,IOSTAT=ierr) c_4(j);
+  IF (ierr.ne.0) [
+    $egs_warning(*,' *** egs_read_real: ERROR READING float *** ');
+    $egs_info(*,' From unit ',iunit,' position ',jrec,' bytes');
+    egs_read_real = -1; return;
+  ]
+ ]
+ jrec = jrec + 4; egs_read_real = r_4;
+ return; end;
+
+"****************************************************************
+"*                                                              *
+"*                 Function ibsearch(a, nsh, b)                 *
+"*                                                              *
+"*       binary search for an element l of array b such that    *
+"*   b[l] =< a < b[l+1], array must be monotonically increasing *
+"*                                                              *
+"****************************************************************
+$INTEGER function ibsearch(a, nsh, b);
+ implicit none;
+ $REAL a, b(*);
+ $INTEGER min,max,help,nsh;
+ $REAL x;
+ min = 1; max = nsh; x = a;
+ WHILE ( min < max-1 )[
+       help = (max+min)/2;
+       IF ( b(help).le.x)[min = help;]
+       ELSE[max = help;]
+ ]
+ ibsearch = min;
+ return;end;
+

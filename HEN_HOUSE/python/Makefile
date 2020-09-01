@@ -41,12 +41,12 @@ SOURCES = \
 	$(RANDOM).mortran \
 	$(EGS_SOURCEDIR)nrcaux.mortran \
 	$(MACHINE_MORTRAN) \
-	$(EGS_SOURCEDIR)egs_utilities.mortran \
+	./egs_utilities.mortran \
 	$(EGS_SOURCEDIR)egsnrc.mortran
 
 egsnrc/_egsnrc.%.so :
 	$(MORTRAN_EXE) -s -d $(MORTRAN_DATA) -f $(SOURCES) $< -o7 ./egsnrc/egsnrc.f -o8 egsnrc.mortlst
-	poetry run python -m numpy.f2py -c ./egsnrc/egsnrc.f -m _egsnrc
+	poetry run python -m numpy.f2py -c ./egsnrc/egsnrc.f -m _egsnrc --debug-capi --debug
 	mv _egsnrc.$(PYTHON_BUILD).so $@
 
 clean :
