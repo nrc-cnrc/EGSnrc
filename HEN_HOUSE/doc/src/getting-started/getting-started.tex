@@ -512,7 +512,9 @@ You may consider it a bit of a cheat - we are using the defined function macro
 Compile your application with the \,\Verb|make|\, command, which builds the
 executable \,\Verb|myapp|\, and saves it under \,\Verb|$EGS_HOME/bin/|. For a
 given application, you only need to run \,\Verb|make|\, once
-(unless you modify the source code).
+(unless you modify the source code). Note that on Windows (if you are using 
+mingw as the compiler) the compilation command will likely be 
+\,\Verb|mingw32-make|\, instead.
 \begin{lstlisting}
 $ make
 \end{lstlisting}
