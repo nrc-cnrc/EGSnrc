@@ -28,10 +28,19 @@
 ###############################################################################
 */
 
+// definitions for StandardJS formatter
+/* global d3 */
+/* global getZoom */
+/* global mainViewerDimensions */
+/* global zoomedAll */
+/* global updateVoxelCoords */
+/* global applyTransform */
+/* global invertTransform */
+
 /** @class Panel holds one axis view and detects clicks, stores information, and
  * updates plots */
 // TODO: Build panel HTML inside panel object
-class Panel {
+class Panel { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a Panel.
    *

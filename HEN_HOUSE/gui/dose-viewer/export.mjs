@@ -28,6 +28,15 @@
 ###############################################################################
 */
 
+// definitions for StandardJS formatter
+/* global d3 */
+/* global volumeViewerList */
+/* global Blob */
+/* global webkitURL */
+/* global domtoimage */
+/* global btoa */
+/* global XMLSerializer */
+
 /**
  * Set up the export to csv button behaviour. Downloads a csv for each dose
  * profile (x, y, z) for each volume viewer.
@@ -94,7 +103,7 @@ d3.select('#save-vis').on('click', function () {
     imageName += 'image' + i + '.' + format
 
     // Optional: Define elements to exclude from png image
-    function filter (node) {
+    function filter (node) { // eslint-disable-line no-unused-vars
       return node.tagName !== 'input'
     }
 

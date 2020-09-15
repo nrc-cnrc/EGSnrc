@@ -28,8 +28,15 @@
 ###############################################################################
 */
 
+// definitions for StandardJS formatter
+/* global d3 */
+/* global getZoom */
+/* global zoomedDoseProfile */
+/* global sideDoseProfileDimensions */
+/* global doseProfileAxis */
+
 /** @class DoseProfile contains all information to build a dose profile at a line through a dose volume. */
-class DoseProfile {
+class DoseProfile { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of DoseProfile.
    *

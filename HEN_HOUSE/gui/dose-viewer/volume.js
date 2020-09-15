@@ -28,7 +28,13 @@
 ###############################################################################
 */
 
-var drawAxes = (zoomTransform, svgAxis, slice) => {
+// definitions for StandardJS formatter
+/* global d3 */
+/* global volumeViewerList */
+/* global Slider */
+/* global Image */
+
+var drawAxes = (zoomTransform, svgAxis, slice) => { // eslint-disable-line no-unused-vars
   svgAxis.selectAll('.x-axis, .y-axis, .x-axis-grid, .y-axis-grid').remove()
 
   // If there is existing transformation, apply it
@@ -299,8 +305,8 @@ class Volume {
           address =
             i + slice.xVoxels * (sliceNum + j * this.data.voxelNumber.y)
         }
-        const new_address = i + slice.xVoxels * j
-        sliceData[new_address] = this.data[dataName][address]
+        const newAddress = i + slice.xVoxels * j
+        sliceData[newAddress] = this.data[dataName][address]
       }
     }
 
@@ -698,7 +704,7 @@ class DoseVolume extends Volume {
     // Remove existing sliders
     parentDiv.selectAll('.slider-container').remove()
 
-    const maxDoseSlider = new Slider(
+    const maxDoseSlider = new Slider( // eslint-disable-line no-unused-vars
       parentDiv,
       onMaxDoseChangeCallback,
       doseSliderParams
@@ -707,7 +713,7 @@ class DoseVolume extends Volume {
 }
 
 /** @class Volume represents the difference between two .3ddose files.  */
-class DoseComparisonVolume extends DoseVolume {
+class DoseComparisonVolume extends DoseVolume { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a DoseComparisonVolume.
    *
@@ -762,7 +768,7 @@ class DoseComparisonVolume extends DoseVolume {
 }
 
 /** @class Volume represents a .egsphant file.  */
-class DensityVolume extends Volume {
+class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a DoseVolume.
    *
@@ -876,8 +882,8 @@ class DensityVolume extends Volume {
     // Draw the image voxel by voxel
     for (let i = 0; i < slice.xVoxels; i++) {
       for (let j = 0; j < slice.yVoxels; j++) {
-        const new_address = i + slice.xVoxels * j
-        context.fillStyle = this.colour(slice.sliceData[new_address])
+        const newAddress = i + slice.xVoxels * j
+        context.fillStyle = this.colour(slice.sliceData[newAddress])
         context.fillRect(
           Math.ceil(slice.xScale(slice.x[i])),
           Math.ceil(slice.yScale(slice.y[j + 1])),

@@ -28,6 +28,22 @@
 ###############################################################################
 */
 
+// definitions for StandardJS formatter
+/* global d3 */
+/* global DensityVolume */
+/* global mainViewerDimensions */
+/* global legendDimensions */
+/* global densityVolumeList */
+/* global VolumeViewer */
+/* global volumeViewerList */
+/* global DoseVolume */
+/* global doseVolumeList */
+/* global sideDoseProfileDimensions */
+/* global FileReader */
+/* global processPhantomData */
+/* global processDoseData */
+/* global alert */
+
 const dropArea = d3.select('#drop-area')
 const progressBar = d3.select('#progress-bar')
 const progressBarNode = progressBar.node()
@@ -193,7 +209,7 @@ function readFile (file, fileNum, totalFiles) {
 
   // Update progress bar
   reader.addEventListener('progress', function (e) {
-    if (e.lengthComputable == true) {
+    if (e.lengthComputable === true) {
       updateProgress(
         Math.floor((e.loaded / e.total) * 100),
         fileNum,

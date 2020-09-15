@@ -28,9 +28,32 @@
 ###############################################################################
 */
 
+// definitions for StandardJS formatter
+/* global d3 */
+/* global axes */
+/* global drawAxes */
+/* global enableCheckboxForDensityPlot */
+/* global enableCheckboxForDoseProfilePlot */
+/* global enableExportVisualizationButton */
+/* global enableCheckboxForVoxelInformation */
+/* global initializeWindowAndLevelSlider */
+/* global doseVolumeList */
+/* global densityVolumeList */
+/* global DoseComparisonVolume */
+/* global doseComparisonVolumeList */
+/* global buildVoxelInfoHtml */
+/* global mainViewerDimensions */
+/* global Slider */
+/* global DoseProfile */
+/* global sideDoseProfileDimensions */
+/* global Panel */
+/* global coordsToVoxel */
+/* global updateVoxelCoords */
+/* global volumeViewerList */
+
 /** @class VolumeViewer combines a density and/or dose file, three panels for
  * the three axes views, and three dose profile plots. */
-class VolumeViewer {
+class VolumeViewer { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a VolumeViewer.
    *
@@ -308,7 +331,7 @@ class VolumeViewer {
 
     // Add behaviour, when volume is selected, change the volume viewer property
     this.doseSelector.on('change', function () {
-      if (this.value == -1) {
+      if (this.value === -1) {
         // If the base text is chosen, remove dose volume if loaded
         volumeViewer.removeDoseVolume()
       } else {
@@ -317,7 +340,7 @@ class VolumeViewer {
     })
 
     this.densitySelector.on('change', function () {
-      if (this.value == -1) {
+      if (this.value === -1) {
         volumeViewer.removeDensityVolume()
       } else {
         volumeViewer.setDensityVolume(densityVolumeList[this.value])
@@ -326,7 +349,7 @@ class VolumeViewer {
 
     this.doseComparisonSelector.on('change', function () {
       if (volumeViewer.doseVolume) {
-        if (this.value == -1) {
+        if (this.value === -1) {
           // If the base text is chosen, remove density volume if loaded
           const volIndex = parseInt(
             volumeViewerList[0].doseSelector.node().value

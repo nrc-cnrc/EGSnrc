@@ -28,13 +28,18 @@
 ###############################################################################
 */
 
+// definitions for StandardJS formatter
+/* global xArr */
+/* global yArr */
+/* global zArr */
+
 /**
  * Extract data from .egsphant files.
  *
  * @param {Object} data The .egsphant file read as text.
  * @returns {Object}
  */
-var processPhantomData = function (data) {
+var processPhantomData = function (data) { // eslint-disable-line no-unused-vars
   var getMax = function (a) {
     return Math.max(...a.map((e) => (Array.isArray(e) ? getMax(e) : e)))
   }
@@ -50,16 +55,16 @@ var processPhantomData = function (data) {
   // Get number of x, y, and z voxels
   const [numVoxX, numVoxY, numVoxZ] = data[curr++]
     .trim()
-    .split(/\ +/)
+    .split(/ +/)
     .map((v) => {
       return parseInt(v)
     });
 
   // Get x, y, and z arrays
-  [xArr, yArr, zArr] = data.slice(curr, curr + 3).map((subArr) => {
+  [xArr, yArr, zArr] = data.slice(curr, curr + 3).map((subArr) => { // eslint-disable-line no-global-assign
     return subArr
       .trim()
-      .split(/\ +/)
+      .split(/ +/)
       .map((v) => {
         return parseFloat(v)
       })
@@ -88,7 +93,7 @@ var processPhantomData = function (data) {
   const densityGrid = lines.map((subArr) => {
     return subArr
       .trim()
-      .split(/\ +/)
+      .split(/ +/)
       .map((v) => {
         return parseFloat(v)
       })
@@ -128,14 +133,14 @@ var processPhantomData = function (data) {
  * @param {Object} data The .3ddose file read as text.
  * @returns {Object}
  */
-var processDoseData = function (data) {
+var processDoseData = function (data) { // eslint-disable-line no-unused-vars
   // The current line of the text file being read
   let curr = 0
 
   // Get number of x, y, and z voxels
   const [numVoxX, numVoxY, numVoxZ] = data[curr++]
     .trim()
-    .split(/\ +/)
+    .split(/ +/)
     .map((v) => {
       return parseInt(v)
     })
@@ -147,7 +152,7 @@ var processDoseData = function (data) {
       arr.push(
         ...data[curr++]
           .trim()
-          .split(/\ +/)
+          .split(/ +/)
           .map((v) => parseFloat(v))
       )
     }
@@ -165,7 +170,7 @@ var processDoseData = function (data) {
         arr.push(
           ...data[curr++]
             .trim()
-            .split(/\ +/)
+            .split(/ +/)
             .map((v) => parseFloat(v))
         )
       }
@@ -176,7 +181,7 @@ var processDoseData = function (data) {
       [doseDense, error] = data.slice(prevCurr, prevCurr + 2).map((arr) => {
         return arr
           .trim()
-          .split(/\ +/)
+          .split(/ +/)
           .slice(0, numVoxX * numVoxY * numVoxZ)
           .map((v) => parseFloat(v))
       })

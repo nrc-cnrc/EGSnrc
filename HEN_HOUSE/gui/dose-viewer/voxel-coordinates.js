@@ -28,6 +28,10 @@
 ###############################################################################
 */
 
+// definitions for StandardJS formatter
+/* global d3 */
+/* global volumeViewerList */
+
 // TODO: Make voxel information a class
 /**
  * Create the HTML elements to display the voxel information.
@@ -35,7 +39,7 @@
  * @param {Object} parentDiv The HTML parent div.
  * @param {string} id The unique ID of the volume viewers voxel info.
  */
-function buildVoxelInfoHtml (parentDiv, id) {
+function buildVoxelInfoHtml (parentDiv, id) { // eslint-disable-line no-unused-vars
   // Define label texts and tags
   const labelName = [
     'World Coordinates (cm):',
@@ -173,7 +177,7 @@ function invertTransform (val, transform, dir) {
  * @param {string} dir The direction of the zoom transform (x or y) to apply.
  * @returns {number}
  */
-function applyTransform (val, transform, dir) {
+function applyTransform (val, transform, dir) { // eslint-disable-line no-unused-vars
   return val * transform.k + transform[dir]
 }
 
@@ -188,7 +192,7 @@ function applyTransform (val, transform, dir) {
  * @param {Object} transform The zoom transform of the panel.
  * @param {string} id The unique ID of the volume viewers voxel info.
  */
-function updateVoxelCoords (
+function updateVoxelCoords ( // eslint-disable-line no-unused-vars
   densityVol,
   doseVol,
   coords,

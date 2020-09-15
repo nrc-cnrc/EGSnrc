@@ -28,6 +28,16 @@
 ###############################################################################
 */
 
+// definitions for StandardJS formatter
+/* global d3 */
+/* global mainViewerDimensions */
+/* global  */
+/* global  */
+/* global  */
+/* global  */
+/* global  */
+/* global  */
+
 /**
  * Builds a zoom object according to the specs and callback passed in.
  *
@@ -38,7 +48,7 @@
  * @param {Array} args Any arguments to be passed into zoomCallback.
  * @returns {Object}
  */
-var getZoom = (width, height, zoomCallback, args) =>
+var getZoom = (width, height, zoomCallback, args) => // eslint-disable-line no-unused-vars
   d3
     .zoom()
     .extent([
@@ -54,21 +64,21 @@ var getZoom = (width, height, zoomCallback, args) =>
  * @param {Object} transform The zoom transform object.
  * @param {DoseProfile} doseProfile The dose profile to be zoomed.
  */
-function zoomedDoseProfile (transform, doseProfile) {
+function zoomedDoseProfile (transform, doseProfile) { // eslint-disable-line no-unused-vars
   doseProfile.zoomTransform = transform
   doseProfile.svg
     .selectAll('path.lines')
     .attr('transform', transform.toString())
 
   // Create new scale objects based on event
-  var new_xScale = transform.rescaleX(doseProfile.xScale)
-  var new_yDoseScale = transform.rescaleY(doseProfile.yDoseScale)
+  var newxScale = transform.rescaleX(doseProfile.xScale)
+  var newyDoseScale = transform.rescaleY(doseProfile.yDoseScale)
 
   // Update axes
   doseProfile.svg
     .select('.profile-x-axis')
     .call(
-      d3.axisBottom().scale(new_xScale).tickSize(-doseProfile.dimensions.height)
+      d3.axisBottom().scale(newxScale).tickSize(-doseProfile.dimensions.height)
     )
 
   doseProfile.svg
@@ -76,20 +86,20 @@ function zoomedDoseProfile (transform, doseProfile) {
     .call(
       d3
         .axisLeft()
-        .scale(new_yDoseScale)
+        .scale(newyDoseScale)
         .ticks(doseProfile.yTicks)
         .tickFormat(d3.format('.0%'))
         .tickSize(-doseProfile.dimensions.width)
     )
 
   if (doseProfile.densityChecked()) {
-    var new_yDensityScale = transform.rescaleY(doseProfile.yDensityScale)
+    var newyDensityScale = transform.rescaleY(doseProfile.yDensityScale)
     doseProfile.svg
       .select('.profile-y-density-axis')
       .call(
         d3
           .axisLeft()
-          .scale(new_yDensityScale)
+          .scale(newyDensityScale)
           .ticks(doseProfile.yTicks)
           .tickSize(-doseProfile.dimensions.width)
       )
@@ -124,7 +134,7 @@ function zoomedCanvas (transform, densityVol, canvas, axis) {
  * @param {Object} transform The zoom transform object.
  * @param {Panel} panel The panel to be zoomed on.
  */
-function zoomedAll (transform, panel) {
+function zoomedAll (transform, panel) { // eslint-disable-line no-unused-vars
   panel.zoomTransform = transform
   const axisElements = panel.axisElements
   const volume = panel.volume
@@ -153,16 +163,16 @@ function zoomedAll (transform, panel) {
     .attr('transform', transform.toString())
 
   // Create new scale ojects based on event
-  var new_xScale = transform.rescaleX(volume.prevSlice[panel.axis].xScale)
-  var new_yScale = transform.rescaleY(volume.prevSlice[panel.axis].yScale)
+  var newxScale = transform.rescaleX(volume.prevSlice[panel.axis].xScale)
+  var newyScale = transform.rescaleY(volume.prevSlice[panel.axis].yScale)
 
   // Update axes
   axisElements['axis-svg']
     .select('.x-axis')
-    .call(d3.axisBottom().scale(new_xScale).ticks(6))
+    .call(d3.axisBottom().scale(newxScale).ticks(6))
   axisElements['axis-svg']
     .select('.y-axis')
-    .call(d3.axisLeft().scale(new_yScale).ticks(6))
+    .call(d3.axisLeft().scale(newyScale).ticks(6))
 
   // Update grid
   axisElements['axis-svg']
@@ -170,7 +180,7 @@ function zoomedAll (transform, panel) {
     .call(
       d3
         .axisBottom()
-        .scale(new_xScale)
+        .scale(newxScale)
         .tickSize(-mainViewerDimensions.height)
         .tickFormat('')
         .ticks(6)
@@ -180,7 +190,7 @@ function zoomedAll (transform, panel) {
     .call(
       d3
         .axisLeft()
-        .scale(new_yScale)
+        .scale(newyScale)
         .tickSize(-mainViewerDimensions.width)
         .tickFormat('')
         .ticks(6)
