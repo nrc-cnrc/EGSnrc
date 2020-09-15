@@ -1349,6 +1349,8 @@ REAL z_score_tmp; "dummy variable passed to IAEA phsp file opening macro"
 
 external combine_results;
 
+character medChar($IMAX);
+
 #ifdef HAVE_C_COMPILER;
 $REAL   part_dose, part2_dose, current_result, current_uncertainty;
 $LONG_INT n_run,n_tot,n_last,n_left,other_num_1,other_num_2,p_per_phsp_chunk;
@@ -1511,14 +1513,21 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
     (/' x range : ',F12.5,' - ',F12.5,' cm'/
       ' y range : ',F12.5,' - ',F12.5,' cm'/
       ' z range : ',F12.5,' - ',F12.5,' cm');
+
     "input the media numbers"
     DO k=1,KMAX[
        DO j=1,JMAX[
-          read($CTUnitNumber,:medformat:) (med($IR(i,j,k)),i=1,IMAX);
+          "Read in the characters that correspond to medium numbers"
+          read($CTUnitNumber,:medformat:) (medChar(i),i=1,IMAX);
+          "Convert from ASCII to a number"
+          DO i=1,IMAX[
+            med($IR(i,j,k)) = mod((iachar(medChar(i)) + 47), 95);
+          ]
        ]
        read($CTUnitNumber,*);
     ]
-    :medformat: FORMAT($IMAXi1);
+    :medformat: FORMAT($IMAXa1);
+
     "input the densities"
     maxrhor=0.;
     minrhor=999.;
@@ -4532,11 +4541,12 @@ WRITE(iunit,*) (ybnd(jj),jj=1,jjmax+1);
 WRITE(iunit,*) (zbnd(kk),kk=1,kkmax+1);
 DO kk=1,kkmax[
     DO jj=1,jjmax[
-        WRITE(iunit,1399) (med($IRWP(ii,jj,kk)),ii=1,iimax);
+        WRITE(iunit,1399) (achar(MOD((med($IRWP(ii,jj,kk))+16),95) + 32),
+            ii=1,iimax);
     ]
     WRITE(iunit,*);
 ]
-1399 FORMAT($IMAXi1);
+1399 FORMAT($IMAXa1);
 DO kk=1,kkmax[
     DO jj=1,jjmax[
         WRITE(iunit,*) (rho($IRWP(ii,jj,kk)),ii=1,iimax);
