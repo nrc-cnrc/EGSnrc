@@ -28,7 +28,6 @@
 ###############################################################################
 */
 
-
 /** @class Panel holds one axis view and detects clicks, stores information, and
  * updates plots */
 // TODO: Build panel HTML inside panel object
@@ -50,7 +49,7 @@ class Panel {
    * of the slice.
    * @param {number[]} markerPosition The current position of the marker.
    */
-  constructor(
+  constructor (
     dimensions,
     densityVol,
     doseVol,
@@ -62,50 +61,50 @@ class Panel {
     zoomTransform = null,
     markerPosition = null
   ) {
-    this.dimensions = dimensions;
-    this.densityVol = densityVol;
-    this.doseVol = doseVol;
-    this.volume = doseVol || densityVol;
-    this.axis = axis;
-    this.axisElements = axisElements;
-    this.sliceSlider = sliceSlider;
-    this.dispatch = dispatch;
-    this.volumeViewerId = id;
-    this.zoomTransform = zoomTransform;
-    this.markerPosition = markerPosition;
+    this.dimensions = dimensions
+    this.densityVol = densityVol
+    this.doseVol = doseVol
+    this.volume = doseVol || densityVol
+    this.axis = axis
+    this.axisElements = axisElements
+    this.sliceSlider = sliceSlider
+    this.dispatch = dispatch
+    this.volumeViewerId = id
+    this.zoomTransform = zoomTransform
+    this.markerPosition = markerPosition
 
     // Properties to check values of voxel and dose profile checkboxes
     this.showMarker = () =>
-      d3.select("input[name='show-marker-checkbox']").node().checked;
+      d3.select("input[name='show-marker-checkbox']").node().checked
     this.showCrosshairs = () =>
-      d3.select("input[name='show-dose-profile-checkbox']").node().checked;
+      d3.select("input[name='show-dose-profile-checkbox']").node().checked
 
     // Update circle marker position and voxel coords on click
-    let panel = this;
-    axisElements["plot-marker"].on("click", function () {
-      let plotCoords = d3.mouse(this);
+    const panel = this
+    axisElements['plot-marker'].on('click', function () {
+      const plotCoords = d3.mouse(this)
 
-      if (d3.event.defaultPrevented) return;
-      dispatch.call("markerchange", this, {
+      if (d3.event.defaultPrevented) return
+      dispatch.call('markerchange', this, {
         plotCoords: plotCoords,
-        panel: panel,
-      });
+        panel: panel
+      })
 
-      return true;
-    });
+      return true
+    })
   }
 
   /**
    * Set up zoom for panel.
    */
-  setupZoom() {
-    let mainViewerZoom = getZoom(
+  setupZoom () {
+    const mainViewerZoom = getZoom(
       mainViewerDimensions.width,
       mainViewerDimensions.height,
       zoomedAll,
       [this]
-    );
-    this.axisElements["plot-marker"].call(mainViewerZoom);
+    )
+    this.axisElements['plot-marker'].call(mainViewerZoom)
   }
 
   /**
@@ -113,26 +112,26 @@ class Panel {
    *
    * @returns {number}
    */
-  get sliceNum() {
-    return this.volume.prevSlice[this.axis].sliceNum;
+  get sliceNum () {
+    return this.volume.prevSlice[this.axis].sliceNum
   }
 
   /**
    * Show crosshairs if plot dose checkbox is selected.
    */
-  updateCrosshairDisplay() {
-    this.axisElements["plot-marker"]
-      .selectAll("line.crosshair")
-      .style("display", this.showCrosshairs() ? "" : "none");
+  updateCrosshairDisplay () {
+    this.axisElements['plot-marker']
+      .selectAll('line.crosshair')
+      .style('display', this.showCrosshairs() ? '' : 'none')
   }
 
   /**
    * Show circle marker if show voxel info checkbox is selected.
    */
-  updateCircleMarkerDisplay() {
-    this.axisElements["plot-marker"]
-      .select("circle.crosshair")
-      .style("display", this.showMarker() ? "" : "none");
+  updateCircleMarkerDisplay () {
+    this.axisElements['plot-marker']
+      .select('circle.crosshair')
+      .style('display', this.showMarker() ? '' : 'none')
   }
 
   /**
@@ -140,16 +139,16 @@ class Panel {
    *
    * @param {number} sliceNum The number of the current slice displayed in the panel.
    */
-  updateSlice(sliceNum) {
-    let slice;
+  updateSlice (sliceNum) {
+    let slice
 
     if (this.densityVol) {
-      slice = this.densityVol.getSlice(this.axis, sliceNum);
-      this.densityVol.drawDensity(slice, this.zoomTransform);
+      slice = this.densityVol.getSlice(this.axis, sliceNum)
+      this.densityVol.drawDensity(slice, this.zoomTransform)
     }
     if (this.doseVol) {
-      slice = this.doseVol.getSlice(this.axis, sliceNum);
-      this.doseVol.drawDose(slice, this.zoomTransform);
+      slice = this.doseVol.getSlice(this.axis, sliceNum)
+      this.doseVol.drawDose(slice, this.zoomTransform)
     }
   }
 
@@ -158,22 +157,22 @@ class Panel {
    *
    * @returns {Object}
    */
-  getDrag() {
-    let panel = this;
+  getDrag () {
+    const panel = this
 
     // Define the drag attributes
-    function dragstarted() {
-      d3.select(this).raise();
-      d3.select(this).attr("cursor", "grabbing");
+    function dragstarted () {
+      d3.select(this).raise()
+      d3.select(this).attr('cursor', 'grabbing')
     }
 
-    function dragged() {
-      var x = d3.event.x;
-      var y = d3.event.y;
+    function dragged () {
+      var x = d3.event.x
+      var y = d3.event.y
 
-      d3.select(this).select("circle").attr("cx", x).attr("cy", y);
-      d3.select(this).select("line.crosshairX").attr("x1", x).attr("x2", x);
-      d3.select(this).select("line.crosshairY").attr("y1", y).attr("y2", y);
+      d3.select(this).select('circle').attr('cx', x).attr('cy', y)
+      d3.select(this).select('line.crosshairX').attr('x1', x).attr('x2', x)
+      d3.select(this).select('line.crosshairY').attr('y1', y).attr('y2', y)
 
       // The d3.event coords are same regardless of zoom, so pass in null as transform
       updateVoxelCoords(
@@ -184,31 +183,31 @@ class Panel {
         panel.sliceNum,
         null,
         panel.volumeViewerId
-      );
+      )
     }
 
-    function dragended() {
-      d3.select(this).attr("cursor", "grab");
+    function dragended () {
+      d3.select(this).attr('cursor', 'grab')
 
-      let x = panel.zoomTransform
-        ? applyTransform(d3.event.x, panel.zoomTransform, "x")
-        : d3.event.x;
-      let y = panel.zoomTransform
-        ? applyTransform(d3.event.y, panel.zoomTransform, "y")
-        : d3.event.y;
+      const x = panel.zoomTransform
+        ? applyTransform(d3.event.x, panel.zoomTransform, 'x')
+        : d3.event.x
+      const y = panel.zoomTransform
+        ? applyTransform(d3.event.y, panel.zoomTransform, 'y')
+        : d3.event.y
 
-      if (d3.event.defaultPrevented) return;
-      panel.dispatch.call("markerchange", this, {
+      if (d3.event.defaultPrevented) return
+      panel.dispatch.call('markerchange', this, {
         plotCoords: [x, y],
-        panel: panel,
-      });
+        panel: panel
+      })
     }
 
     return d3
       .drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended);
+      .on('start', dragstarted)
+      .on('drag', dragged)
+      .on('end', dragended)
   }
 
   /**
@@ -218,70 +217,70 @@ class Panel {
    * @param {boolean} [activePanel = true] Whether it is the active panel (i.e.
    * most recently interacted with)
    */
-  updateMarker(coords, activePanel = true) {
-    this.markerPosition = coords;
+  updateMarker (coords, activePanel = true) {
+    this.markerPosition = coords
 
     // Remove old marker and crosshairs
-    this.axisElements["plot-marker"].select(".marker").remove();
+    this.axisElements['plot-marker'].select('.marker').remove()
 
     // If there is existing transformation, calculate proper x and y coordinates
-    let x = this.zoomTransform
-      ? invertTransform(coords[0], this.zoomTransform, "x")
-      : coords[0];
-    let y = this.zoomTransform
-      ? invertTransform(coords[1], this.zoomTransform, "y")
-      : coords[1];
+    const x = this.zoomTransform
+      ? invertTransform(coords[0], this.zoomTransform, 'x')
+      : coords[0]
+    const y = this.zoomTransform
+      ? invertTransform(coords[1], this.zoomTransform, 'y')
+      : coords[1]
 
     // Add new marker with modified coordinates so it can smoothly transform with other elements
-    var markerHolder = this.axisElements["plot-marker"]
-      .append("g")
-      .attr("class", "marker")
+    var markerHolder = this.axisElements['plot-marker']
+      .append('g')
+      .attr('class', 'marker')
       .attr(
-        "transform",
-        this.zoomTransform ? this.zoomTransform.toString() : ""
+        'transform',
+        this.zoomTransform ? this.zoomTransform.toString() : ''
       )
-      .attr("cursor", activePanel ? "grab" : "")
-      .append("g")
-      .attr("class", "marker-holder");
+      .attr('cursor', activePanel ? 'grab' : '')
+      .append('g')
+      .attr('class', 'marker-holder')
 
     // Add drag functionality if active panel
     if (activePanel) {
-      markerHolder.call(this.getDrag());
+      markerHolder.call(this.getDrag())
     }
 
     // Create centre circle
     markerHolder
-      .append("circle")
-      .attr("cx", x)
-      .attr("cy", y)
-      .classed("crosshair", true)
-      .attr("r", 2)
-      .style("display", this.showMarker() ? "" : "none")
-      .classed("active", activePanel);
+      .append('circle')
+      .attr('cx', x)
+      .attr('cy', y)
+      .classed('crosshair', true)
+      .attr('r', 2)
+      .style('display', this.showMarker() ? '' : 'none')
+      .classed('active', activePanel)
 
     // Create horizontal line
     markerHolder
-      .append("line")
-      .classed("crosshair", true)
-      .classed("crosshairX", true)
-      .attr("x1", x)
-      .attr("y1", 0)
-      .attr("x2", x)
-      .attr("y2", mainViewerDimensions.height)
-      .style("display", this.showCrosshairs() ? "" : "none")
-      .classed("active", activePanel);
+      .append('line')
+      .classed('crosshair', true)
+      .classed('crosshairX', true)
+      .attr('x1', x)
+      .attr('y1', 0)
+      .attr('x2', x)
+      .attr('y2', mainViewerDimensions.height)
+      .style('display', this.showCrosshairs() ? '' : 'none')
+      .classed('active', activePanel)
 
     // Create vertical line
     markerHolder
-      .append("line")
-      .classed("crosshair", true)
-      .classed("crosshairY", true)
-      .attr("x1", 0)
-      .attr("y1", y)
-      .attr("x2", mainViewerDimensions.width)
-      .attr("y2", y)
-      .style("display", this.showCrosshairs() ? "" : "none")
-      .classed("active", activePanel);
+      .append('line')
+      .classed('crosshair', true)
+      .classed('crosshairY', true)
+      .attr('x1', 0)
+      .attr('y1', y)
+      .attr('x2', mainViewerDimensions.width)
+      .attr('y2', y)
+      .style('display', this.showCrosshairs() ? '' : 'none')
+      .classed('active', activePanel)
   }
 
   /**
@@ -289,7 +288,7 @@ class Panel {
    *
    * @param {number} sliceNum The number of the current slice displayed in the panel.
    */
-  updateSlider(sliceNum) {
-    this.sliceSlider.setCurrentValue(sliceNum);
+  updateSlider (sliceNum) {
+    this.sliceSlider.setCurrentValue(sliceNum)
   }
 }

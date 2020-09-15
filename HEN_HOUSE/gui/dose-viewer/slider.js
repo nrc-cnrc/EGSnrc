@@ -28,7 +28,6 @@
 ###############################################################################
 */
 
-
 /**
  * @class Generic number slider class.
  * */
@@ -43,23 +42,23 @@ class Slider {
    * @param {Object} params The parameters of the slider that includes id, label,
    * format, startingVal, minVal, maxVal, and step.
    */
-  constructor(parentDiv, onValChangeCallback, params) {
-    this.format = params.format;
-    this.onValChangeCallback = onValChangeCallback;
+  constructor (parentDiv, onValChangeCallback, params) {
+    this.format = params.format
+    this.onValChangeCallback = onValChangeCallback
     this.buildSliderHtml(
       parentDiv,
       params.id,
       params.label,
       params.margin,
       params.style
-    );
+    )
     this.initializeBehaviour(
       params.format,
       params.startingVal,
       params.minVal,
       params.maxVal,
       params.step
-    );
+    )
   }
 
   /**
@@ -67,8 +66,8 @@ class Slider {
    *
    * @returns {number}
    */
-  get value() {
-    return this.slider.node().value;
+  get value () {
+    return this.slider.node().value
   }
 
   /**
@@ -83,7 +82,7 @@ class Slider {
    * and decrement buttons.
    * @params {boolean} [disabled = true] Whether or not the slider is initially disabled.
    */
-  buildSliderHtml(
+  buildSliderHtml (
     parentDiv,
     id,
     labelStr,
@@ -92,80 +91,80 @@ class Slider {
     incrementButtons = true,
     disabled = false
   ) {
-    let mainDiv = parentDiv.append("div").attr("class", "slider-container");
+    const mainDiv = parentDiv.append('div').attr('class', 'slider-container')
 
     if (margin) {
       var getMarginStr = (margin) =>
         margin.top +
-        "px " +
+        'px ' +
         margin.right +
-        "px " +
+        'px ' +
         margin.bottom +
-        "px " +
+        'px ' +
         margin.left +
-        "px";
-      mainDiv.style("margin", getMarginStr(margin));
+        'px'
+      mainDiv.style('margin', getMarginStr(margin))
     }
 
     if (style) {
       Object.entries(style).forEach((styleEntry) =>
         mainDiv.style(...styleEntry)
-      );
+      )
     }
 
     // Add label and slider value output
-    let sliderValue = mainDiv
-      .append("label")
-      .attr("for", id)
-      .text(labelStr + ": ")
-      .append("output")
-      .attr("type", "text")
-      .attr("id", "slider-value-" + id);
+    const sliderValue = mainDiv
+      .append('label')
+      .attr('for', id)
+      .text(labelStr + ': ')
+      .append('output')
+      .attr('type', 'text')
+      .attr('id', 'slider-value-' + id)
 
     // Add break
-    mainDiv.append("br");
+    mainDiv.append('br')
 
     // Slider minimum output
-    let sliderMin = mainDiv
-      .append("output")
-      .attr("type", "text")
-      .attr("id", "slider-min-" + id);
+    const sliderMin = mainDiv
+      .append('output')
+      .attr('type', 'text')
+      .attr('id', 'slider-min-' + id)
 
     // Actual slider component
-    let slider = mainDiv
-      .append("input")
-      .attr("type", "range")
-      .attr("class", "slider")
-      .attr("id", "slider-range-" + id)
-      .attr("min", 0)
-      .attr("disabled", disabled ? "disabled" : null);
+    const slider = mainDiv
+      .append('input')
+      .attr('type', 'range')
+      .attr('class', 'slider')
+      .attr('id', 'slider-range-' + id)
+      .attr('min', 0)
+      .attr('disabled', disabled ? 'disabled' : null)
 
     // Slider maximum output
-    let sliderMax = mainDiv
-      .append("output")
-      .attr("type", "text")
-      .attr("id", "slider-max-" + id);
+    const sliderMax = mainDiv
+      .append('output')
+      .attr('type', 'text')
+      .attr('id', 'slider-max-' + id)
 
     if (incrementButtons) {
       // Increment and decrement buttons
-      let decrementNode = mainDiv
-        .append("button")
-        .attr("id", "decrement-slider-" + id)
-        .text("-");
+      const decrementNode = mainDiv
+        .append('button')
+        .attr('id', 'decrement-slider-' + id)
+        .text('-')
 
-      let incrementNode = mainDiv
-        .append("button")
-        .attr("id", "increment-slider-" + id)
-        .text("+");
+      const incrementNode = mainDiv
+        .append('button')
+        .attr('id', 'increment-slider-' + id)
+        .text('+')
 
-      this.decrementNode = decrementNode;
-      this.incrementNode = incrementNode;
+      this.decrementNode = decrementNode
+      this.incrementNode = incrementNode
     }
 
-    this.slider = slider;
-    this.sliderMin = sliderMin;
-    this.sliderMax = sliderMax;
-    this.sliderValue = sliderValue;
+    this.slider = slider
+    this.sliderMin = sliderMin
+    this.sliderMax = sliderMax
+    this.sliderValue = sliderValue
   }
 
   /**
@@ -177,59 +176,59 @@ class Slider {
    * @params {number} maxVal The maximum value of the slider.
    * @params {number} step The interval between two values on the slider.
    */
-  initializeBehaviour(format, startingVal, minVal, maxVal, step) {
-    let sliderNode = this.slider.node();
+  initializeBehaviour (format, startingVal, minVal, maxVal, step) {
+    const sliderNode = this.slider.node()
 
     var updateSlider = (val) => {
       // Update slider text
-      this.sliderValue.text(format(val));
+      this.sliderValue.text(format(val))
 
       // Call value callback
-      this.onValChangeCallback(val);
-    };
+      this.onValChangeCallback(val)
+    }
 
     // On slider input, update text
-    this.slider.on("input", function () {
-      updateSlider(this.value);
-    });
+    this.slider.on('input', function () {
+      updateSlider(this.value)
+    })
 
     if (this.incrementNode) {
       // On increment button push
-      this.incrementNode.on("click", function () {
-        sliderNode.stepUp(1);
-        updateSlider(sliderNode.value);
-      });
+      this.incrementNode.on('click', function () {
+        sliderNode.stepUp(1)
+        updateSlider(sliderNode.value)
+      })
     }
 
     if (this.decrementNode) {
       // On decrement button push
-      this.decrementNode.on("click", function () {
-        sliderNode.stepDown(1);
-        updateSlider(sliderNode.value);
-      });
+      this.decrementNode.on('click', function () {
+        sliderNode.stepDown(1)
+        updateSlider(sliderNode.value)
+      })
     }
 
     // Set the slider step
-    this.slider.attr("step", step);
+    this.slider.attr('step', step)
 
     // Set max and current value
-    this.slider.attr("max", maxVal).node().value = startingVal;
+    this.slider.attr('max', maxVal).node().value = startingVal
 
     // Show maximum value of slider
-    this.sliderMax.text(format(maxVal));
+    this.sliderMax.text(format(maxVal))
 
     // Show minimum value of slider
-    this.sliderMin.text(format(minVal));
+    this.sliderMin.text(format(minVal))
 
     // Show current value of slider
-    this.sliderValue.text(format(startingVal));
+    this.sliderValue.text(format(startingVal))
   }
 
   /**
    * Enable the slider if disabled.
    */
-  enableSlider() {
-    if (this.slider.attr("disabled")) this.slider.attr("disabled", null);
+  enableSlider () {
+    if (this.slider.attr('disabled')) this.slider.attr('disabled', null)
   }
 
   /**
@@ -237,16 +236,16 @@ class Slider {
    *
    * @params {number} minVal The minimum value of the slider.
    */
-  setMinValue(minVal) {
+  setMinValue (minVal) {
     // Set min value
-    this.slider.attr("min", minVal);
+    this.slider.attr('min', minVal)
 
     // Show maximum value of slider
-    this.sliderMin.text(this.format(minVal));
+    this.sliderMin.text(this.format(minVal))
 
     // Change current value to min if it is smaller
     if (this.sliderValue.text() < minVal) {
-      this.setCurrentValue(minVal);
+      this.setCurrentValue(minVal)
     }
   }
 
@@ -255,16 +254,16 @@ class Slider {
    *
    * @params {number} maxVal The maximum value of the slider.
    */
-  setMaxValue(maxVal) {
+  setMaxValue (maxVal) {
     // Set max value
-    this.slider.attr("max", maxVal);
+    this.slider.attr('max', maxVal)
 
     // Show maximum value of slider
-    this.sliderMax.text(this.format(maxVal));
+    this.sliderMax.text(this.format(maxVal))
 
     // Change current value to max if it is larger
     if (this.sliderValue.text() > maxVal) {
-      this.setCurrentValue(maxVal);
+      this.setCurrentValue(maxVal)
     }
   }
 
@@ -273,11 +272,11 @@ class Slider {
    *
    * @params {number} val The value of the slider to be set to.
    */
-  setCurrentValue(val) {
+  setCurrentValue (val) {
     // Update slider range
-    this.slider.node().value = val;
+    this.slider.node().value = val
 
     // Update slider text
-    this.sliderValue.text(this.format(val));
+    this.sliderValue.text(this.format(val))
   }
 }
