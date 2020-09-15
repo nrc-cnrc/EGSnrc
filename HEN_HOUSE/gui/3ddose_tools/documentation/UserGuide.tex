@@ -1,0 +1,303 @@
+\documentclass[12pt]{article}
+\usepackage{fancyheadings}
+\usepackage{hyperref}
+\usepackage{float}
+%\setlength{\footrulewidth}{0.4pt}
+
+\newcommand{\GUI}{3ddose\_tools}
+\newcommand{\captionl}[1]{\parbox{13cm}{\caption[dummy]{{\sf #1}}}}
+
+\usepackage{overcite}
+\usepackage{graphicx}
+\usepackage{listings}
+
+%following lines fix up style of bibliography to look just like
+%in medical physics, i.e. superscripts
+%\begin{latexonly}	%this requires use of html package
+			%needed since the following mucks up latex2html
+		%since latexonly doesn't work, must comment out for latex2html
+			%took > 1 day to find what the problem was!!
+\makeatletter \renewcommand\@biblabel[1]{$^{#1}$} \makeatother
+\newlength{\bibhang}
+\setlength{\bibhang}{0em}
+
+\setlength{\labelsep}{1em}     %this was 0 caused notation list
+                                %to have no space after term
+\setlength{\itemindent}{-\bibhang}
+\setlength{\leftmargin}{\bibhang}
+%\end{latexonly}
+ 
+\setlength{\textwidth}{16.5cm}
+\setlength{\headwidth}{16cm}		%for fancy page style only
+\setlength{\textheight}{22.6cm} 
+\setlength{\oddsidemargin}{-1mm}
+\setlength{\evensidemargin}{-2mm} 
+\setlength{\topmargin}{-1.0cm}
+%\setlength{\parindent}{0em}
+%\setlength{\parskip}{1.3ex}
+\usepackage{indentfirst}
+\setlength{\floatsep}{0pt}
+\setlength{\textfloatsep}{0pt}		%space below a figure/table def 20pt
+\setlength{\intextsep}{0pt}		%space below a figure/table def 20pt
+					%p142 compendium
+
+%Following is for Med Phys numbering  I.A.1  etc
+\renewcommand{\thesection}{{\sf \Roman{section}}.}
+\renewcommand{\thesubsection}{\thesection{\sf \Alph{subsection}}.}
+\renewcommand{\thesubsubsection}{\thesubsection{\sf \arabic{subsubsection}}.}
+\renewcommand{\theparagraph}{\alph{paragraph}.}
+
+\newcommand{\note}[1]{\mbox{}\\ \noindent \rule{16cm}{0.5mm} \\
+{\em #1} \\ \noindent \rule{16cm}{0.5mm}
+\typeout{    }
+\typeout{***********note active on this page *************************}
+\typeout{Note: #1  }
+\typeout{****************************************end Note}
+}
+%Uncomment the following to remove all notes from the paper
+%\renewcommand{\note}[1]{}
+
+
+\newcommand{\mfig}[1]{\marginpar{{\sf Fig~\ref{#1} }}}
+\newcommand{\mtab}[1]{\marginpar{{\sf Table~\ref{#1} }}}
+\newcommand{\cen}[1]{\begin{center} #1 \end{center}}
+\newcommand{\eqn}[1]{\begin{equation} #1 \end{equation} }
+
+%\renewcommand{\contentsname}{}  %gets rid of word Contents at start of 
+				%table of contents  p31 companion
+\renewcommand{\refname}{}       %
+%\newcommand{\chaptermark}[1]{\markboth{#1}{#1}} % remember chapter title
+%\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+			 % section number and title
+
+%Rowan's commands
+\newcommand{\mt}[1]{\textrm{\tiny #1}}
+\newcommand{\ie}{{\it i.e.}, }
+\newcommand{\eg}{{\it e.g.}, }
+\newcommand{\etc}{{\it etc.}, }
+\newcommand{\io}{{${}^{125}$I }}
+\newcommand{\pa}{{${}^{103}$Pd }}
+\newcommand{\ioc}{{${}^{125}$I}}
+\newcommand{\pac}{{${}^{103}$Pd}}
+\newcommand{\ir}{{${}^{192}$Ir }}
+\newcommand{\irc}{{${}^{192}$Ir}}
+\newcommand{\cs}{{${}^{131}$Cs }}
+\newcommand{\cscc}{{${}^{131}$Cs}}
+\newcommand{\yb}{{${}^{169}$Yb }}
+\newcommand{\ybc}{{${}^{169}$Yb}}
+\newcommand{\pd}{\pa}
+\newcommand{\mw}{MW}
+\newcommand{\ww}{WW}
+\newcommand{\ms}{MS}
+\newcommand{\dd}{R}
+\newcommand{\muen}{$\mu_{en}/\rho$ }
+\newcommand{\muenc}{$\mu_{en}/\rho$}
+\newcommand{\dpresc}{$D_\mt{Rx}$}
+\newcommand{\dprescs}{$D_\mt{Rx}$ }
+\newcommand{\dw}{$D_\mt{w}$ }
+\newcommand{\sk}{$S_K$ }
+\newcommand{\dratio}{$\dot{D}_{PS}/\dot{D}_{BD}$}
+\newcommand{\comment}[1]{{\bf [[[#1]]]}}
+\newcommand{\bd}{BrachyDose }
+\newcommand{\bdc}{BrachyDose}
+\newcommand{\mg}{Multi-Geometry }
+\newcommand{\mgc}{Multi-Geometry}
+
+%[on even pages]{on odd pages}  %even only active twosided
+				%if no even given, uses same for both
+%lhead is left head, etc
+\lhead[{\sffamily page~\thepage}]{{\sffamily  \GUI{} user guide}}
+\lfoot{{\small {\sf Last edited 2014-02-19 5:06:37 }}}
+\rhead[{\sf Martinov and Thomson }]{{\sf page~\thepage}}
+\rfoot{{\sffamily Report CLRP 13-01}}
+%\cfoot{}
+%\chead{}
+
+\typeout{***Have turned off overfull and underfull messages****}
+\tolerance=10000        %suppress Overfull only
+\hbadness=10000         %suppress Overfull and Underfull for text (horizontal)
+\vbadness=10000         %suppress Overfull and Underfull for vertical "boxes"
+
+%Now set up for line numbers
+% Note: for now you must copy /home/drogers/tex/lineno/lineno.sty to the
+% local area with your tex file (until it is installed on tyr)
+%\usepackage[pagewise,mathlines,edtable]{lineno}
+%\usepackage[mathlines,edtable]{lineno}
+%\usepackage[mathlines]{lineno}
+%  pagewise => start new line number on each page  otherwise number from
+%  start
+%edtable => line num for table. Needs \begin{edtable}{tabular}{|c|}   etc
+%                        and \end{edtable}  We don't need \end{tabular}
+
+%\linenumbers
+%Comment out the above line and you remove all line numbers EXCEPT in
+%tables.  To get rid of those you need to remove edtable at the start and
+%stop of the table.
+
+\begin{document}  
+  \cen{\sf {\Large {\bfseries Report CLRP 13-01\vspace{3mm}\\User Guide for \GUI{} v1.1} \\  
+      \vspace*{5mm}
+      M. P. Martinov$^a$ and R. M. Thomson$^b$\\
+      \vspace*{2mm}
+      Carleton Laboratory for Radiotherapy Physics\\
+      Department of Physics,\\
+      Carleton University,\\
+      Ottawa, K1S 5B6}\vspace{2mm}\\
+E-mail: $^a$martinov@physics.carleton.ca\\
+$^b$ rthomson@physics.carleton.ca  \\ 
+%Report available at: www.physics.carleton.ca/clrp\vspace{4mm}\\
+\today
+  }
+  %\hfill CLRP Report {\sf CLRP-13-01}   % only if needed
+
+  \begin{abstract}
+
+ This report provides an overview of \GUI{}, a code to manipulate and analyze three-dimensional dose distributions in the 3ddose format which can be found at \url{https://physics.carleton.ca/clrp/3ddose_tools/3ddose-tools}.  \GUI{} is a reimplementation and expansion of the statdose program distributed with EGSnrc; it has the same basic functionality as well as several new operations and features. The program is implemented separately from the original statdose mortran code and is coded in c++ within the Qt framework to provide the user with a graphical user interface.
+
+  \end{abstract}
+
+  %\vfill
+  %\tableofcontents
+  \setlength{\baselineskip}{0.7cm}		
+
+  \vfill
+  \clearpage
+  \pagestyle{fancy}
+  \section{Introduction}
+
+  \GUI{} is a program for manipulating and analyzing dose distributions in the 3ddose file format.  It was created to be a more robust version of the code statdose (distributed with EGSnrc) with a lot of the original functionality maintained but  reimplemented in c++ with several new functions.  The front end of \GUI{} is a graphical user interface that allows for easy manipulation of several 3ddose distributions at once.  \GUI{} is able to create xmgrace graphs along any line (not just the $x$, $y$ and $z$ axes as in statdose) and create dose volume histograms.  In addition, many of the operations can be performed on a selected volume of the distribution (specified by $x,y,z$ axis boundaries or via an egsphant file).  \GUI{} also has the ability to extract data at specified points, redefine voxel boundaries, and operate on one distribution with another (e.g., taking a ratio).
+
+  \section{Installation}
+  The installation package for \GUI{} consists of two files: (1) a tar file containing an executable, the source code, and this document; (2) a script  for installation.  To install, place both files in the same directory and run the installation script from said directory.
+  The tar file contains the executable, so no compilation is necessary unless the user wishes it.  This code requires a c++ compiler as well as Qt version 4.6 or above to compile and is verified to be compilable using gnu++.  If working on a system with apt-get, the installation script will also output the command to install the needed packages.
+  To view any of the plots created by \GUI{}, one also requires the graphing software xmgrace.  Without the software installed, the xmgrace files (which are text files which may be viewed with a text editor) will still be written, but not displayed.
+ 
+ \section{Using \GUI{}}
+  This section describes the function of the different buttons and options in \GUI{}.
+  
+  \subsection{3ddose Distributions}
+  When using \GUI{} to manipulate 3ddose files, copies of the distributions loaded into memory are modified; the files on the hard drive remain unchanged unless they are explicitly saved and written over.
+  
+  \begin{itemize}
+  \item{\bf{Load}}:  Select 3ddose files to load into memory; files will appear in the 3ddose list identified by file name.
+
+  \item{\bf{Save}}:
+  Save each selected 3ddose distribution.  If the user has multiple 3ddose distributions selected, the user will be prompted to name each one.
+
+  \item{\bf{Copy}}:
+  Create a copy of selected 3ddose distributions.  Each copy will appear on the list with name of the original file with `\_copy' appended.
+  
+  \item{\bf{Rename}}:
+  Change the name of the selected 3ddose distributions as they are seen on the list.  The user will still be prompted to name the files should the user save the 3ddose distributions.
+  
+  \item{\bf{Remove}}:
+  Remove the selected 3ddose distributions from the list.  This does not delete the 3ddose file.
+  \end{itemize}
+  
+  \subsection{Create xmgrace plot}
+  
+  \begin{itemize}
+  \item{\bf{Plot}}:
+  Create an xmgrace plot.  The type of plot is selected using the adjacent dropdown list. The plot settings change depending on what is selected.
+
+  \item{\bf{Axis plot}}:
+  When plotting along an axis, the initial and final coordinates of two points along that axis are required.
+
+  \item{\bf{Free plot}}:
+  When making a free plot, the user must input initial and final points for the line as well as a resolution; doses along that line will be sampled at points at equally-spaced intervals determined by the resolution.  If interpolation is enabled, then the dose at a sampled point will be determined using trilinear interpolation.  If interpolation is disabled, then the dose of a sampled point will be that of the voxel containing that point.
+
+  \item{\bf{Dose volume histogram}}: Voxels to include in the dose volume histogram (DVH) are specified using the following three methods.
+  \begin{itemize}
+    \item{Total DVH}: all voxels in the distribution  %\\      A histogram of every voxel contained in the distribution.
+    \item{Regional DVH}: only voxels with centre points within a defined region %\\      A histogram of every voxel whose center point is contained within a defined region.
+    \item{Media DVH}: voxels with centre points within a selected media. %\\      A histogram of every voxel whose center point is within a selected medium.  
+This option requires an egsphant file to determine the media regions; loading an egsphant file will populate a list of media which can be selected.  The egsphant file need not be one used for the simulation; \GUI{} only checks to see if the centre point of the 3ddose distribution voxel is within a voxel containing a selected media in the egsphant file.  This allows the user to constuct an egsphant file to select a particular group of voxels to include in the DVH \eg the user may construct the egsphant file to any size and designate voxels to include by assigning the medium TARGET and remaining voxels NOTTARGET; when the user loads the egsphant file, they need only select the TARGET medium and create a DVH.
+  \end{itemize}
+
+
+  The DVH creation algorithm is of the order $n*log(n)$ and hence creating DVHs over a large number of voxels for several distributions can take some time.
+  
+  If output additional data is selected when the DVH is constructed, the user will be prompted to save a text file containing information such as the minimum, maximum, and average dose; average and maximum error; total volume and the number of voxels.  \GUI{} may also output the Dx, the minimum dose received by x\% of the volume, and Vx, the volume that received at least x dose.  The user can request multiple Dx and Vx by delimiting numbers with a comma \eg Dx:`90,50,25'.  The mean error output is a basic average of all the uncertainties tallied, whereas the uncertainty on the average dose is calculated in quadrature following the usual approach for error propagation.
+  \end{itemize}
+
+  
+  \subsection{Statistical Comparison} 
+  
+  \begin{itemize} 
+  \item{\bf{Compare}}:
+  The Statistical Comparison section allows for the creation of a histogram comparing the selected 3ddose distributions against another 3ddose distribution.  This buttons pulls up a drop-down window to select a reference 3ddose distribution to compare to.  It will then output a plot comparing the selected 3ddose distributions to the reference distribution.
+
+  \item{\bf{Region Type}}:
+  This drop-down menu allows the user to select what to compare.  Voxels to include in the histogram may be specified in the same three ways as with DVH creation:
+  
+  \begin{itemize}
+  \item Total histogram:  every voxel in the distribution.
+%A histogram over every dose value contained in the distribution.
+  \item Regional histogram:  voxels with central points contained within a defined region.
+%A histogram over the doses of every voxel whose centre point is contained within a defined region.
+  \item Media histogram:  voxels with central points within a selected medium in the loaded egsphant file.
+%A histogram over the doses of every voxel whose centre point is within a selected medium in the loaded egsphant file.
+  \end{itemize}
+
+  \item{\bf{Comparison Type}}:  This drop-down menu allows the user to choose the kind of comparison to make; the option selected when the Compare button is pressed will be the value binned in the histogram.
+
+  \item{\bf{Comparison Parameters}}:   For creation of the histogram, the x axis will be divided into bins; this will be done automatically (equally spaced intervals between the minimum and maximum values in the distribution) or using the values input under `min' and `max'.  When making histograms, the user can also select to output additional data.  If selected, then after the histogram is constructed, the user will be prompted to save a text file containing data retrieved during the histogram construction such as the volume, number of voxels, RMS and Chi-squared per degree of freedom.
+  \end{itemize}  
+
+  
+  \subsection{Scaling \& Normalization}
+  
+  \begin{itemize}
+  \item{\bf{Scale and Normalize}}:
+  This button scales all selected distributions using the selected method.
+
+  \item{\bf{Method}}:
+  This combo box allows the user to select one of four different methods to scale the selected distributions.  The first allows scaling by a single, real number.  The second option normalizes such that the dose at the input point chosen is 1.  If interpolation is enabled, then the dose of the selected point will be determined using trilinear interpolation.  The third method scales the selected distributions such that the average (weighed by volume) of all the voxels is 1.  The final method scales the selected distributions such that the largest dose in a voxel within the defined region is 1.
+  \end{itemize}
+
+  
+  \subsection{Additional Tools}
+  
+  \begin{itemize}
+  \item{\bf{Strip Outer Voxels}}:
+  This tool will remove all the `outer' voxels of the selected distributions.  If the distribution consists of $n_{x} \times n_{y} \times n_{z}$ voxels, then stripping will remove the first and last voxel in the X, Y and Z directions, leaving a $(n_{x}-2) \times (n_{y}-2) \times (n_{z}-2)$ distribution.  For example, this function is useful to remove `padding' voxels that were added to a simulation to ensure the full effects of backscatter were included.
+
+  \item{\bf{Output dose at points}}:
+  This tool outputs dose at each point specified in a text file, \eg
+  \begin{lstlisting}
+    -1,-1,0
+    (-1,1,0)
+    1;-1;0
+    1.0e-02 1e02 0
+  \end{lstlisting}
+  The parsing code assumes anything that is not a number, period (`.'), the letter e ('e' or 'E'), or dash (`-') is a delimiter.  Once a file is selected, \GUI{} constructs a new text file containing the dose in each selected distribution at each point.  If interpolation is enabled, then the dose of the selected point will be determined using trilinear interpolation.  The user will be prompted for a place to save the file once it is constructed.
+
+  \item{\bf{Change 3ddose file boundaries}}:
+  This tool requires a text file input containing three lines specifying x, y and z voxel boundary coordinates, respectively.  For example:
+  \begin{lstlisting}
+  -15,-5,-4,-3,-2,-1,0,1,2,3,4,5,15
+  -15,-5,-4,-3,-2,-1,0,1,2,3,4,5,15
+  -0.5,0.5
+  \end{lstlisting}
+  The parsing code assumes anything that is not a number, period (`.'), the letter e ('e' or 'E'), or dash (`-') is a delimiter.   Once a file is selected, \GUI{} constructs a new distribution for each selected one with the new boundaries defined in the loaded file.  The dose for the new voxels is obtained by summing the doses of the old voxels that overlap with the new voxel, weighted by volume. The user will be prompted for a place to save the file once it is constructed.  This function can be very useful if the user wants to make a comparison between 3ddose files with different dimensions.
+  \end{itemize}
+
+
+  \subsection{Previewer}
+
+  \GUI{} also comes with a previewer which can draw isodose contours over an image generated from an egsphant file.  When the window is opened and an egsphant file is selected, an image will be generated.  The images generated are slices along the x, y, or z axis of the phantom.  For any axis, the depth and boundaries of the image can be altered, as well as the image resolution.
+  
+  Selecting a high resolution for a large area can cause the program to slow significantly for systems without strong video processing, so resolutions should be chosen carefully.  Additionally, a low resolution can be used to quickly define the boundaries of the image before increasing it to the desired value.  The user can also hover the mouse over a point on the image to determine the $(x,y,z)$ position.
+  
+  Once an egsphant file is loaded, the user can select up to three dose distributions for which isodose contours may be generated based on the selected doses and colours above the distribution drop-down menus.  The contours are generated with a square march algorithm that scales linearly with the number of voxels in the image and the number of distributions.  Due to the large number of points used in the algorithm, the dashed and dotted line options may be hard to distinguish from the solid line at low resolutions.
+
+  The image can also be exported as it appears on screen.  It can be saved as a Portable Network Graphics (png) file. 
+  
+%\section*{Contacts}
+%\vspace*{-5mm}
+%\addcontentsline{toc}{section}{\numberline{}References}
+%$^a$e-mail: martinov@physics.carleton.ca~~~
+%$^b$e-mail: rthomson@physics.carleton.ca\\      
+%\vspace*{-30mm}
+\end{document}
+
