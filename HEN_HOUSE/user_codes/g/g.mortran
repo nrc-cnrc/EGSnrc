@@ -327,6 +327,7 @@ $INTEGER     nbatch, "$INTEGER and $REAL are defined in egsnrc.macros"
              ibatch, "they can be used (if employed consistently throughout"
              i,j,i_log;    "the user code) e.g. to switch to double precision"
 $INTEGER ifailed;    "Number of failed attempts to sample energy above AP"
+$REAL ekmax;
 
 "---------------------------------------------------------------------"
 " Steps 2 (pre-hatch initializations),                                "
@@ -379,6 +380,23 @@ IF(ecut_ask < ae(1)   | pcut_ask < ap(1) )[
       'Asked for PCUT of', F10.4,' MeV and have AP of',F10.4,' MeV'/
       'Exiting until there is a match'/
       '**************************************************************'/);
+   STOP;
+]
+
+"Also, check that max. energy of particle source is not > ue, up"
+call source_get_emax(iqin,ekmax);
+IF((iqin~=0 & ekmax+rm > ue(1)) | (iqin=0 & ekmax > up(1)))[
+   OUTPUT ekmax+abs(iqin)*rm;
+   (//'**************************************************************'/
+'The max. total energy of source particles exceeds that of cross-section data '/
+'Max. E of source particles = ',F10.4,' MeV');
+   IF(iqin ~=0)[
+      OUTPUT ue(1);('UE = ',F10.4,' MeV');
+   ]
+   ELSE[
+      OUTPUT up(1);('UP = ',F10.4,' MeV');
+   ]
+   OUTPUT;('**************************************************************'/);
    STOP;
 ]
 
@@ -1595,12 +1613,21 @@ write(ounit,'(//)');
 
 return;
 
-entry source_get_emax(emax);
+entry source_get_emax(iqin,emax);
 "=========================="
-
-IF( mono = 0 | mono = 2  | mono = 3 ) [
-    IF( iqi = 0 ) [ emax = ei; ]
-    ELSE          [ emax = ei-rm; ]
+"Note: emax = max. KE"
+iqin = iqi;
+IF( mono = 0 ) [
+    emax = eis(1);
+    DO i=2,neis[
+       IF( eis(i) > emax ) [
+         emax = eis(i);
+       ]
+    ]
+    emax = emax - abs(iqi)*rm;
+]
+ELSE IF( mono = 2 | mono = 3 ) [
+    emax = eis(neis) - abs(iqi)*rm;
 ]
 ELSE [
     emax = ensrcd(nensrc);
