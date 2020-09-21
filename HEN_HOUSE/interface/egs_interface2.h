@@ -642,6 +642,33 @@ struct EGS_emfInputs {
     bool emfield_on;
 };
 
+/*! \brief A structure corresponding to the \c NIST_BREMS common block.
+
+  This common block contains variables used to calculate NIST brems cross-
+  sections
+  */
+struct EGS_NistBrems {
+    EGS_Float nb_fdata[MXBRXS,MXBRES,MXMED], nb_xdata[MXBRXS,MXBRES,MXMED],
+              nb_wdata[MXBRXS,MXBRES,MXMED],
+              nb_emin[MXMED],nb_emax[MXMED],nb_lemin[MXMED],nb_lemax[MXMED],
+              nb_dle[MXMED],nb_dlei[MXMED],log_ap[MXMED];
+    EGS_I32 nb_idata[MXBRXS,MXBRES,MXMED];
+};
+
+/*! \brief A structure corresponding to the \c BREMPR common block.
+
+  This common block contains variables used to calculate NRC brems cross-
+  sections
+  */
+struct EGS_Brempr {
+   char asym[4,MXMED,MXEL,2];
+   EGS_Float dl1[8,MXMED],dl2[8,MXMED],dl3[8,MXMED],dl4[8,MXMED],dl5[8,MXMED],
+             dl6[8,MXMED],alphi[2,MXMED],bpar[2,MXMED],delpos[2,MXMED],
+             wa[MXMED,MXEL],pz[MXMED,MXEL],zelem[MXMED,MXEL],rhoz[MXMED,MXEL],
+             pwr2i[MXPWR2I],delcm[MXMED],zbrang[MXMED];
+   EGS_I32 nne[MXMED],ibrdst,iprdst,ibr_nist,itriplet,pair_nrc;
+};
+
 /*! \brief The address of the mortran \c STACK common block as a
     pointer to a C-structure of type EGS_Stack */
 extern __extc__ struct EGS_Stack             *the_stack;
@@ -689,6 +716,14 @@ extern __extc__ struct EGS_Rayleigh *the_rayleigh;
 /*! \brief The address of the mortran EMF-INPUTS common block as a
   pointer to a C-structure of type EGS_emfInputs */
 extern __extc__ struct EGS_emfInputs *the_emf;
+
+/*! \brief The address of the mortran NIST-BREMS common block as a
+  pointer to a C-structure of type EGS_NistBrems */
+extern __extc__ struct EGS_NistBrems *the_nist_brems;
+
+/*! \brief The address of the mortran BREMPR common block as a
+  pointer to a C-structure of type EGS_Brempr */
+extern __extc__ struct EGS_Brempr *the_brempr;
 
 /* ******************* EGSnrc interface functions *************************/
 

@@ -236,6 +236,18 @@ public:
     void setNpold(int npold);
     void deleteParticleFromStack(int ip);
     EGS_Particle getParticleFromStack(int ip);
+    EGS_Float getCohfac(int imed, EGS_Float gle);
+    EGS_Float getGle();
+    int getIbrdst();
+    EGS_Float getAp(int imed);
+    EGS_Float getIbrnist();
+    EGS_Float getNbLemin(int imed);
+    EGS_Float getNbDlei(int imed);
+    EGS_Float getNbEmin(int imed);
+    EGS_Float getNbXdata(int i, int j, int imed);
+    EGS_Float getNbFdata(int i, int j, int imed);
+    EGS_Float getNbWdata(int i, int j, int imed);
+    int getNbIdata(int i, int j, int imed);
 
     /* Needed by some sources */
     EGS_Float getRM();
