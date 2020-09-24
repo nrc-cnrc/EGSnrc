@@ -91,7 +91,7 @@ REPLACE {;COMIN/my_times/;} WITH {;
 "       -b or --batch                Specify a 'batch' run. The difference
 "                                    between a 'batch' run and an interactive
 "                                    run is that in 'batch' mode unit 6 is
-"                                    connected to a file, whereas in intarctive
+"                                    connected to a file, whereas in interactive
 "                                    mode unit 6 goes to the standard output.
 "                                    The file name in batch run is determined
 "                                    as follows:
@@ -449,6 +449,12 @@ IF( n_parallel > 0 ) [
 ]
 $egs_info('(a)',line);
 
+IF (is_uniform_run)[
+   $egs_info('(//a,i0,a,i0,a//)',
+   '-> User requests uniform run control. I am job # ',
+   i_parallel,' of ',n_parallel,' jobs');
+]
+
 return;
 
 " Errors "
@@ -577,6 +583,10 @@ IF( n_parallel > 0 | i_parallel > 0 ) [
         first_parallel = i_parallel;
     ]
 ]
+
+" Check for run control option "
+$check_argument('-u','--urc',arg);
+IF( have_arg ) is_uniform_run = .true.;
 
 $egs_debug('(a,a)','HEN_HOUSE is ',$cstring(hen_house));
 
@@ -984,6 +994,7 @@ $set_string(pegs_file,' ');
 $set_string(host_name,' ');
 n_parallel = 0; i_parallel = 0; n_chunk = 0; is_batch = .false.;
 first_parallel = 1;
+is_uniform_run = $URC-DEFAULT;
 return; end;
 
 "*****************************************************************************
