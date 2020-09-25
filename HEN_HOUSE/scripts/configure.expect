@@ -46,6 +46,8 @@ set timeout -1
 # C++ compiler
 expect "Input C++ compiler:"                            { send "\n" }
 expect "Input option to change, or enter to proceed:"   { send "\n" }
+expect "Do you want to retry? (yes/no) "                { send "no\n"}
+set timeout 1
 
 # Finalize for user
 expect "Do you want to finalize"                        { send "yes\n" }
