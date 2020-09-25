@@ -26,12 +26,12 @@
 "  Contributors:    Dave Rogers                                               "
 "                                                                             "
 "#############################################################################"
-#                                                                             "
-#  When using EEMF macros for publications, please cite our paper:            "
-#  VN Malkov, DWO Rogers. Charged particle transport in magnetic fields in    "
-#  EGSnrc. Medical Physics 43, pp. 4447-4458 (2016).                          "
-#                                                                             "
-##############################################################################"
+"#                                                                            "
+"#  When using EEMF macros for publications, please cite our paper:           "
+"#  VN Malkov, DWO Rogers. Charged particle transport in magnetic fields in   "
+"#  EGSnrc. Medical Physics 43, pp. 4447-4458 (2016).                         "
+"#                                                                            "
+"#############################################################################"
 
 
 "******************************************************************************"
