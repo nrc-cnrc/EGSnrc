@@ -192,7 +192,7 @@ public:
             R=new EGS_Float [radius.size()];
             R2=new EGS_Float [radius.size()];
 
-            for (int i=0; i<radius.size(); i++) {
+            for (std::size_t i=0; i<radius.size(); i++) {
                 R[i]=radius[i];
                 R2[i]=radius[i]*radius[i];
             }
