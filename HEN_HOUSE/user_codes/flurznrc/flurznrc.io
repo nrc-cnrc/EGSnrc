@@ -40,15 +40,16 @@
 # This should be cleaned up along the lines of cavrznrc and dosrznrc !
 #
 1  .egslst
-2  .egsrns
+#2  .egsrns
 #4  .egsdat
-9  .egseff
-10 .egsdose
+#9  .egseff
+#10 .egsdose
 #13 .egsgph
 #  Unit 15 is explicitly opened in get_inputs
 #15 .errors
 17 .spectra
-22 .ploterr
+#22 .ploterr
 23 .plotdat
-43 .egssrc
-44 .egssrctmp
+# It appears that the following 2 are unused
+#43 .egssrc
+#44 .egssrctmp

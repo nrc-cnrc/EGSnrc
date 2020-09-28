@@ -341,7 +341,7 @@ Pair cross sections= BH            # BH (default) or NRC.
                                    # NRC: use NRC pair production cross-sections
                                    # (in file $HEN_HOUSE/data/pair_nrc1.data).
 
-Photon cross sections= si          # si (Storm-Israel--the default),
+Photon cross sections= xcom        # si (Storm-Israel),
                                    # epdl (Evaluated Photon Data Library),
                                    # xcom (NIST Photon Cross Sections Database)
                                    # pegs4 (PEGS4 file photon data)

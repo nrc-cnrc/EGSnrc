@@ -39,4 +39,4 @@
 #
 1  .egslst
 #  Unit 15 is explicitly opened in get_inputs
-#15 .errors
+15 .errors

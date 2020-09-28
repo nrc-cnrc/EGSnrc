@@ -1358,8 +1358,16 @@ REPLACE {$VERSION} WITH {
 "  ESAVEIN             (R)  If ELECTRON RANGE REJECTION is on, discard an
 "                           electron  when E< ESAVEIN and RANGE < CDIST
 "                           where CDIST is closest distance to region of
+<<<<<<< HEAD
 "                           interest specified below (ignores bremsstrahlung
 "                           losses below ESAVEIN).
+||||||| merged common ancestors
+"                           interest specified below. This ignores bremsstrahlung
+"                           losses below ESAVEIN.
+=======
+"                           interest specified. This ignores bremsstrahlung
+"                           losses below ESAVEIN.
+>>>>>>> Changes to Mortran apps for URC implementation
 "                           This parameter must be input even if not used.
 "                           ESAVEIN is a total energy.
 "
@@ -3481,10 +3489,11 @@ IF( n_parallel > 0 & ~is_finished ) [
     call egs_pjob_finish(n_job);
     IF( n_job = 0 ) [
         is_finished = .true.;
+        call isumry;
         call egs_combine_runs(combine_results,'.egsdat');
         NCASET=NCASEO;  IHSTRY=NCASET;
         CALL SRCOTO(WEIGHT);
-        goto :STATS-ANAL:;
+        goto :END-SIM:;
     ]
 ]
 #endif;
@@ -5071,7 +5080,13 @@ nbr_split =VALUE(NUM_BREMPEVEN,1);
 IF(IBRSPL = 1)["brems splitting requested"
     "default bremsstrahlung splitting to maximum"
     "IF((nbr_split  <= 0) | (nbr_split  > $MAXBRSPLIT)) nbr_split =$MAXBRSPLIT;"
+<<<<<<< HEAD
     "Now allows bremsstrahlung and annihilation radiation to be turned off"
+||||||| merged common ancestors
+    "Changed to allow bremsstrahlung and annihilation radiation to be turned off"
+=======
+    "To allow bremsstrahlung and annihilation radiation to be turned off"
+>>>>>>> Changes to Mortran apps for URC implementation
     IF((nbr_split  > $MAXBRSPLIT)) nbr_split =$MAXBRSPLIT;"
 ]
 ELSE ["no bremsstrahlung splitting" nbr_split = 1;]
