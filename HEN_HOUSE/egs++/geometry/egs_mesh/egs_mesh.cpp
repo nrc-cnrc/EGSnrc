@@ -36,10 +36,31 @@
 ###############################################################################
 */
 
+#include "egs_input.h"
 #include "egs_mesh.h"
 #include "egs_vector.h"
 
 #include <limits>
+
+static char EGS_MESH_LOCAL geom_class_msg[] = "createGeometry(Mesh): %s\n";
+
+extern "C" {
+    EGS_MESH_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
+        if (!input) {
+            egsWarning(geom_class_msg, "null input");
+            return nullptr;
+        }
+
+        std::string mesh_file;
+        int err = input->getInput("file", mesh_file);
+        if (err) {
+            egsWarning(geom_class_msg, "no mesh file specified in input");
+            return nullptr;
+        }
+
+        return nullptr;
+    }
+}
 
 void EGS_Mesh::printInfo() const {
     EGS_BaseGeometry::printInfo();
