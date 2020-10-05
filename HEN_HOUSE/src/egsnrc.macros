@@ -2315,6 +2315,12 @@ REPLACE {$EADL-RELAX-DEFAULT} WITH {.true.}
 "Uniform Run Control (URC) is false by default"
 REPLACE {$URC-DEFAULT} WITH {.false.}
 ;
+"SLEEP INTERVAL for URC (1 s by default)"
+"Time to wait for jobs to complete after last job finished"
+REPLACE {$URC-SLEEP} WITH {1}
+"Times to check for jobs to complete after last job finished"
+REPLACE {$URC-INTERVALS} WITH {1}
+;
 "Sabbatucci and Salvat PE xsections not the default yet"
 REPLACE {$MCDF-PE-DEFAULT} WITH {.false.}
 ;

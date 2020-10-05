@@ -1012,9 +1012,13 @@ character*1024 tmp_string,base,command,outfile,parfile_name,base1,
            text_string;
 integer  lnblnk1,istat,ipar,egs_system,egs_open_file;
 $INTEGER i,k,j,numparfiles,textindex;
+integer urcSleep, urcCheckIntervals;
 $LOGICAL ex,iwin;
 
 iwin=.false.; "start off assuming a non-Windows system"
+
+urcSleep          = $URC-SLEEP;    "Set to 1 s in egsnrc.macros"
+urcCheckIntervals = $URC-INTERVALS;"Set to 1 in egsnrc.macros"
 
 $set_string(base,' ');
 base = $cstring(egs_home) // $cstring(user_code) // $file_sep //
@@ -1028,6 +1032,8 @@ base1 = $cstring(egs_home) // $cstring(user_code) // $file_sep //
 $set_string(outfile,' ');
 outfile = $cstring(egs_home) // $cstring(user_code) // $file_sep //
        'parfiles_tmp';
+
+:check-output-files:;
 "try Unix/Linux first"
 $set_string(command,' ');
 command = 'ls ' // $cstring(base1) // ' | wc -l > ' // $cstring(outfile);
@@ -1037,7 +1043,8 @@ IF(istat~=0)["now assume a Windows system"
    $cstring(outfile);
    istat = egs_system($cstring(command));
    IF(istat~=0)[
-$egs_fatal(*,' Failed to write number of output files from parallel runs.');
+     $egs_fatal(*,
+     ' Failed to write number of output files from parallel runs.');
    ]
    ELSE [
      iwin=.true.;
@@ -1059,6 +1066,14 @@ ELSE[
   read(ipar,'(i256)',err=:end_of_parfile:,end=:end_of_parfile:) numparfiles;
 ]
 close(ipar);
+
+#ifdef HAVE_C_COMPILER;
+IF ( is_uniform_run & numparfiles < n_parallel & urcCheckIntervals > 0 ) [
+   call egs_sleep(urcSleep);"sleep for urcSleep seconds"
+   urcCheckIntervals -= 1;
+   goto :check-output-files:;
+]
+#endif;
 
 "now remove parfiles_tmp"
 $set_string(command,' ');
