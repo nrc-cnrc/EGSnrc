@@ -223,7 +223,7 @@ void EGS_Application::storeGeometryStep(int ireg, int inew,
 }
 
 EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
-    source(0), rndm(0), run(0), simple_run(false), current_case(0),
+    source(0), rndm(0), run(0), simple_run(false), uniform_run(false), current_case(0),
     last_case(0), data_out(0), data_in(0), a_objects(0),
     ghistory(new EGS_GeometryHistory) {
 
@@ -415,6 +415,19 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
             simple_run = true;
             //for(int i=j; i<argc-1; i++) argv[i] = argv[i+1];
             //argc--;
+            break;
+        }
+    }
+
+    //
+    // *** See if user wants uniform job control.
+    //     (Takes precedence over simple job control)
+    //
+    for (int j=1; j<argc; j++) {
+        string tmp = argv[j];
+        if (tmp == "-u" || tmp == "--urc") {
+            uniform_run = true;
+            simple_run  = false;
             break;
         }
     }
@@ -699,6 +712,9 @@ int EGS_Application::initRunControl() {
     }
     if (simple_run) {
         run = new EGS_RunControl(this);
+    }
+    else if (uniform_run) {
+        run = new EGS_UniformRunControl(this);
     }
     else {
         run = EGS_RunControl::getRunControlObject(this);

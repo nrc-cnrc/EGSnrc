@@ -1071,7 +1071,8 @@ protected:
             i_parallel,  //!< Job index in parallel runs
             first_parallel; //!< first parallel job number
     bool    batch_run;   //!< Interactive or batch run.
-    bool    simple_run;  //!< Use a simple run control even for parallel runs
+    bool    simple_run;  //!< Use a simple run control object for parallel runs
+    bool    uniform_run; //!< Use a uniform run control object for parallel runs
     bool    is_pegsless; //!< set to true if a pegsless run
 
     EGS_Particle p;      /*!< Parameters of the particle that just
