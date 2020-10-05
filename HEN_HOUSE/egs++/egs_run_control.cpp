@@ -79,6 +79,12 @@ EGS_RunControl::EGS_RunControl(EGS_Application *a) : geomErrorCount(0),
                        "'number of histories' input\n");
     }
     ncase = EGS_I64(ncase_double);
+    /*****************************************************
+     * Split histories into different parallel jobs.
+     * For the JCFO ncase reset to total as it is handled
+     * via the lock file mechanism dispatching smaller
+     * of histories chunks.
+     *****************************************************/
     if (app->getNparallel()) {
         ncase /= app->getNparallel();
     }
@@ -266,11 +272,6 @@ EGS_UniformRunControl::EGS_UniformRunControl(EGS_Application *a) :
 
     rco_type = uniform;
 
-//     Not needed: Done now in the base EGS_RunControl constructor
-//     if (npar){
-//         ncase /= npar;
-//     }
-
     if (input) {
 
         /*Change waiting time to check for parallel run completion*/
@@ -307,7 +308,6 @@ EGS_UniformRunControl::EGS_UniformRunControl(EGS_Application *a) :
             }
         }
 
-
         /* Request checking parallel run completion */
         vector<string> check_options;
         check_options.push_back("yes");
@@ -317,6 +317,12 @@ EGS_UniformRunControl::EGS_UniformRunControl(EGS_Application *a) :
             check_egsdat = false;    // true by default
         }
 
+    }
+    else { // use defaults if no RCO input found
+        /* last job is watcher job */
+        if (ipar == ifirst + npar - 1) {
+            watcher_job = true;
+        }
     }
 }
 
@@ -548,6 +554,11 @@ EGS_JCFControl::EGS_JCFControl(EGS_Application *a, int Nbuf) :
     first_time(true), removed_jcf(false), nbuf(Nbuf), p(new EGS_FileLocking) {
 
     rco_type = balanced;
+
+    /* Recover initial number of histories */
+    if (npar) {
+        ncase *= npar;
+    }
 
     if (input) {
         int err = input->getInput("nchunk",nchunk);
