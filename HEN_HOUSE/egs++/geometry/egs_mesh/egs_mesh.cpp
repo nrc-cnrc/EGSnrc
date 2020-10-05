@@ -58,8 +58,33 @@ extern "C" {
             return nullptr;
         }
 
-        return nullptr;
+        EGS_BaseGeometry *mesh = EGS_Mesh::from_file(mesh_file);
+        if (!mesh) {
+            std::string error_msg = "couldn't create EGS_Mesh from file `" + mesh_file + "`";
+            egsWarning(geom_class_msg, error_msg.c_str());
+            return nullptr;
+        }
+        return mesh;
     }
+}
+
+EGS_Mesh *parse_msh_file(const std::string& file_name) {
+    return nullptr;
+}
+
+EGS_Mesh *EGS_Mesh::from_file(const std::string& file_name) {
+    // Gmsh msh files
+    if (file_name.length() >= 4 && file_name.rfind(".msh") == file_name.length() - 4)
+    {
+        EGS_Mesh *mesh = parse_msh_file(file_name);
+        if (!mesh) {
+            egsWarning("EGS_Mesh::from_file: Gmsh msh file parsing failed\n");
+            return nullptr;
+        }
+        return mesh;
+    }
+    egsWarning("EGS_Mesh::from_file: unknown file extension for file `%s`, only `.msh` is allowed\n", file_name.c_str());
+    return nullptr;
 }
 
 void EGS_Mesh::printInfo() const {

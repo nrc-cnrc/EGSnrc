@@ -98,6 +98,8 @@ public:
         return EGS_BaseGeometry::nreg;
     }
 
+    static EGS_Mesh *from_file(const std::string& file_name);
+
   EGS_Mesh(const TetrahedralMesh& mesh, double scalingFactor, EGS_Application* app) : EGS_BaseGeometry("EGS_Mesh") {
 
     // must be set before other calls
