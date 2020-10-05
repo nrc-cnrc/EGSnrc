@@ -5016,10 +5016,10 @@ ITMAX=3+LNEXC+LNINC;
 
 return; end;
 
-subroutine beam_finish(ientry);
+subroutine beam_finish(i_entry);
 implicit none;
 
-$INTEGER ientry,egs_open_file;
+$INTEGER i_entry, ientry, egs_open_file;
 
 ;COMIN/SCORE,SOURCE,STACK,IO_INFO,RANDOM,USER,CMs,EGS-IO,UPHIOT,TIMING-INFO,
        RWPHSP/;
@@ -5038,6 +5038,8 @@ $INTEGER I,I1,I2,I3,I4,IT,ITMAX,IERR,NUMIND,COVIND;
 
 $DECLARE_TIMING_VARIABLES;
 
+$LOGICAL is_beam_src;
+
 external combine_results;
 
 #ifdef HAVE_C_COMPILER;
@@ -5046,6 +5048,16 @@ integer n_job;
 #endif;
 
 is_finished = .false.;
+is_beam_src = .false.;
+
+"Calling from a BEAM source library"
+IF (i_entry = 3)[
+   is_beam_src = .true.;
+   ientry = 1;
+]
+ELSE["Proceed as usual"
+  ientry = i_entry;
+]
 
 "*******************************************************************************
 "
@@ -5485,7 +5497,7 @@ call egs_finish;     " Finish the simulation "
 
 #ifdef HAVE_C_COMPILER;
 ;
-IF( n_parallel > 0 & ~is_finished ) [
+IF( n_parallel > 0 & ~is_finished & ~is_beam_src ) [
     call egs_pjob_finish(n_job);
     IOUTLIST=egs_open_file(IOUTLIST,0,1,'.egslst');
     IF( n_job = 0 ) [
