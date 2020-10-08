@@ -30,11 +30,12 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global volumeViewerList */
-/* global Slider */
 /* global Image */
 
-var drawAxes = (zoomTransform, svgAxis, slice) => { // eslint-disable-line no-unused-vars
+import { volumeViewerList } from './index.js'
+import { Slider } from './slider.js'
+
+var drawAxes = (zoomTransform, svgAxis, slice) => {
   svgAxis.selectAll('.x-axis, .y-axis, .x-axis-grid, .y-axis-grid').remove()
 
   // If there is existing transformation, apply it
@@ -713,7 +714,7 @@ class DoseVolume extends Volume {
 }
 
 /** @class Volume represents the difference between two .3ddose files.  */
-class DoseComparisonVolume extends DoseVolume { // eslint-disable-line no-unused-vars
+class DoseComparisonVolume extends DoseVolume {
   /**
    * Creates an instance of a DoseComparisonVolume.
    *
@@ -768,7 +769,7 @@ class DoseComparisonVolume extends DoseVolume { // eslint-disable-line no-unused
 }
 
 /** @class Volume represents a .egsphant file.  */
-class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
+class DensityVolume extends Volume {
   /**
    * Creates an instance of a DoseVolume.
    *
@@ -1044,3 +1045,5 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
     return this.data.materialList[materialNumber - 1]
   }
 }
+
+export { DensityVolume, DoseComparisonVolume, DoseVolume, drawAxes }

@@ -30,7 +30,8 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global Slider */
+
+import { Slider } from './slider.js'
 
 /**
  * Initialize the window and level sliders.
@@ -40,7 +41,7 @@
  * @param {DensityVolume} densityVol The density volume the sliders control.
  * @param {Object} panels The panel for each axis.
  */
-var initializeWindowAndLevelSlider = ( // eslint-disable-line no-unused-vars
+var initializeWindowAndLevelSlider = (
   levelParentDiv,
   windowParentDiv,
   densityVol,
@@ -108,3 +109,5 @@ var initializeWindowAndLevelSlider = ( // eslint-disable-line no-unused-vars
     windowSliderParams
   )
 }
+
+export { initializeWindowAndLevelSlider }

@@ -30,19 +30,16 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global DensityVolume */
-/* global mainViewerDimensions */
-/* global legendDimensions */
-/* global densityVolumeList */
-/* global VolumeViewer */
-/* global volumeViewerList */
-/* global DoseVolume */
-/* global doseVolumeList */
-/* global sideDoseProfileDimensions */
 /* global FileReader */
-/* global processPhantomData */
-/* global processDoseData */
 /* global alert */
+
+import {
+  DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
+  densityVolumeList, doseVolumeList, volumeViewerList
+} from './index.js'
+import { processDoseData, processPhantomData } from './read-data.js'
+import { VolumeViewer } from './volume-viewer.js'
+import { DensityVolume, DoseVolume } from './volume.js'
 
 const dropArea = d3.select('#drop-area')
 const progressBar = d3.select('#progress-bar')
@@ -96,8 +93,8 @@ dropArea.on('dragleave drop', () => dropArea.classed('highlight', false))
 var makeDensityVolume = (fileName, data) => {
   const densityVol = new DensityVolume(
     fileName,
-    mainViewerDimensions,
-    legendDimensions,
+    MAIN_VIEWER_DIMENSIONS,
+    LEGEND_DIMENSIONS,
     data
   )
 
@@ -119,8 +116,8 @@ var makeDensityVolume = (fileName, data) => {
 var makeDoseVolume = (fileName, data) => {
   const doseVol = new DoseVolume(
     fileName,
-    mainViewerDimensions,
-    legendDimensions,
+    MAIN_VIEWER_DIMENSIONS,
+    LEGEND_DIMENSIONS,
     data
   )
 
@@ -158,9 +155,9 @@ d3.select('#file-input').on('change', function () {
 d3.select('#test-files').on('click', function () {
   // Add a new volume viewer
   const volViewer = new VolumeViewer(
-    mainViewerDimensions,
-    legendDimensions,
-    sideDoseProfileDimensions,
+    MAIN_VIEWER_DIMENSIONS,
+    LEGEND_DIMENSIONS,
+    DOSE_PROFILE_DIMENSIONS,
     'vol-' + volumeViewerList.length
   )
   volumeViewerList.push(volViewer)
@@ -249,9 +246,9 @@ function readFile (file, fileNum, totalFiles) {
     // If this is the first volume uploaded, load into first volume viewer
     if (volumeViewerList.length === 0) {
       const volViewer = new VolumeViewer(
-        mainViewerDimensions,
-        legendDimensions,
-        sideDoseProfileDimensions,
+        MAIN_VIEWER_DIMENSIONS,
+        LEGEND_DIMENSIONS,
+        DOSE_PROFILE_DIMENSIONS,
         'vol-' + volumeViewerList.length
       )
       volumeViewerList.push(volViewer)

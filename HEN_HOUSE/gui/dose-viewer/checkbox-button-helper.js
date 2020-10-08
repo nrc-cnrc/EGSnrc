@@ -30,17 +30,18 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global volumeViewerList */
-/* global VolumeViewer */
-/* global mainViewerDimensions */
-/* global legendDimensions */
-/* global sideDoseProfileDimensions */
-/* global updateVoxelCoords */
+
+import {
+  DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
+  volumeViewerList
+} from './index.js'
+import { VolumeViewer } from './volume-viewer.js'
+import { updateVoxelCoords } from './voxel-coordinates.js'
 
 /**
  * Enable the plot density checkbox for the dose profile plots.
  */
-var enableCheckboxForDensityPlot = () => { // eslint-disable-line no-unused-vars
+var enableCheckboxForDensityPlot = () => {
   const densityCheckbox = d3
     .select("input[name='density-profile-checkbox']")
     .node()
@@ -50,7 +51,7 @@ var enableCheckboxForDensityPlot = () => { // eslint-disable-line no-unused-vars
 /**
  * Enable the checkbox for the dose profile plots.
  */
-var enableCheckboxForDoseProfilePlot = () => { // eslint-disable-line no-unused-vars
+var enableCheckboxForDoseProfilePlot = () => {
   const showDoseProfileCheckbox = d3
     .select("input[name='show-dose-profile-checkbox']")
     .node()
@@ -60,7 +61,7 @@ var enableCheckboxForDoseProfilePlot = () => { // eslint-disable-line no-unused-
 /**
  * Enable the export visualization to png button.
  */
-var enableExportVisualizationButton = () => { // eslint-disable-line no-unused-vars
+var enableExportVisualizationButton = () => {
   const exportVisualizationButton = d3.select('button#save-vis').node()
   if (exportVisualizationButton.disabled) { exportVisualizationButton.disabled = false }
 }
@@ -68,7 +69,7 @@ var enableExportVisualizationButton = () => { // eslint-disable-line no-unused-v
 /**
  * Enable the checkbox to view voxel information on click.
  */
-var enableCheckboxForVoxelInformation = () => { // eslint-disable-line no-unused-vars
+var enableCheckboxForVoxelInformation = () => {
   const showMarkerCheckbox = d3
     .select("input[name='show-marker-checkbox']")
     .node()
@@ -81,9 +82,9 @@ var enableCheckboxForVoxelInformation = () => { // eslint-disable-line no-unused
 d3.select('#add-volume-viewer').on('click', function () {
   volumeViewerList.push(
     new VolumeViewer(
-      mainViewerDimensions,
-      legendDimensions,
-      sideDoseProfileDimensions,
+      MAIN_VIEWER_DIMENSIONS,
+      LEGEND_DIMENSIONS,
+      DOSE_PROFILE_DIMENSIONS,
       'vol-' + volumeViewerList.length
     )
   )
@@ -170,3 +171,8 @@ d3.select("input[name='show-marker-checkbox']").on('change', function () {
     }
   })
 })
+
+export {
+  enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
+  enableCheckboxForVoxelInformation, enableExportVisualizationButton
+}

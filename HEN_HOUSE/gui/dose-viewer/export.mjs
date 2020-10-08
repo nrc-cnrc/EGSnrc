@@ -30,12 +30,13 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global volumeViewerList */
 /* global Blob */
 /* global webkitURL */
 /* global domtoimage */
 /* global btoa */
 /* global XMLSerializer */
+
+import { volumeViewerList } from './index.js'
 
 /**
  * Set up the export to csv button behaviour. Downloads a csv for each dose

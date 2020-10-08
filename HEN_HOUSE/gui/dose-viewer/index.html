@@ -108,69 +108,18 @@
         Add new volume viewer
       </button>
     </div>
-    <script type="text/javascript" src="./volume.js"></script>
-    <script type="text/javascript" src="./dose-profile.js"></script>
-    <script type="text/javascript" src="./zoom.js"></script>
-    <script type="text/javascript" src="./panel.js"></script>
-    <script type="text/javascript" src="./slider.js"></script>
-    <script type="text/javascript" src="./voxel-coordinates.js"></script>
-    <script type="text/javascript" src="./volume-viewer.js"></script>
-    <script>
-      // TODO: Move all javascript outside of index.html
-      // TODO: Make add new volume viewer button work
-
-      // Define all size variables
-      const mainViewerDimensions = {
-        fullWidth: 320,
-        fullHeight: 320,
-        margin: { top: 20, right: 15, bottom: 50, left: 55 },
-        get width() {
-          return this.fullWidth - this.margin.left - this.margin.right;
-        },
-        get height() {
-          return this.fullHeight - this.margin.top - this.margin.bottom;
-        },
-      };
-
-      // Define legend size variables
-      const legendDimensions = {
-        fullWidth: 90,
-        fullHeight: mainViewerDimensions.fullHeight,
-        margin: { top: 25, right: 10, bottom: 25, left: 10 },
-        get width() {
-          return this.fullWidth - this.margin.left - this.margin.right;
-        },
-        get height() {
-          return this.fullHeight - this.margin.top - this.margin.bottom;
-        },
-      };
-
-      // Define profile dose size variables
-      const sideDoseProfileDimensions = {
-        fullWidth: mainViewerDimensions.fullWidth,
-        fullHeight: mainViewerDimensions.fullHeight * 0.6,
-        margin: { top: 30, right: 15, bottom: 30, left: 55 },
-        get width() {
-          return this.fullWidth - this.margin.left - this.margin.right;
-        },
-        get height() {
-          return this.fullHeight - this.margin.top - this.margin.bottom;
-        },
-      };
-
-      // Global variables
-      // TODO: Make a global dimensions list [x, y, z]
-      // TODO: Make use of global axes list throughout code
-      const axes = ["xy", "yz", "xz"];
-      var densityVolumeList = [];
-      var doseVolumeList = [];
-      var doseComparisonVolumeList = [];
-      var volumeViewerList = [];
-    </script>
-    <script type="text/javascript" src="./window-level-slider.js"></script>
-    <script type="text/javascript" src="./file-upload.js"></script>
-    <script type="text/javascript" src="./export.mjs"></script>
-    <script type="text/javascript" src="./read-data.js"></script>
-    <script type="text/javascript" src="./checkbox-button-helper.js"></script>
+    <script type="module" src="./index.js"></script>
+    <script type="module" src="./volume.js"></script>
+    <script type="module" src="./dose-profile.js"></script>
+    <script type="module" src="./zoom.js"></script>
+    <script type="module" src="./panel.js"></script>
+    <script type="module" src="./slider.js"></script>
+    <script type="module" src="./voxel-coordinates.js"></script>
+    <script type="module" src="./volume-viewer.js"></script>
+    <script type="module" src="./window-level-slider.js"></script>
+    <script type="module" src="./file-upload.js"></script>
+    <script type="module" src="./export.mjs"></script>
+    <script type="module" src="./read-data.js"></script>
+    <script type="module" src="./checkbox-button-helper.js"></script>
   </body>
 </html>

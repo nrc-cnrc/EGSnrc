@@ -30,30 +30,26 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global axes */
-/* global drawAxes */
-/* global enableCheckboxForDensityPlot */
-/* global enableCheckboxForDoseProfilePlot */
-/* global enableExportVisualizationButton */
-/* global enableCheckboxForVoxelInformation */
-/* global initializeWindowAndLevelSlider */
-/* global doseVolumeList */
-/* global densityVolumeList */
-/* global DoseComparisonVolume */
-/* global doseComparisonVolumeList */
-/* global buildVoxelInfoHtml */
-/* global mainViewerDimensions */
-/* global Slider */
-/* global DoseProfile */
-/* global sideDoseProfileDimensions */
-/* global Panel */
-/* global coordsToVoxel */
-/* global updateVoxelCoords */
-/* global volumeViewerList */
+
+import {
+  densityVolumeList, doseComparisonVolumeList, doseVolumeList, volumeViewerList
+} from './index.js'
+import {
+  enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
+  enableCheckboxForVoxelInformation, enableExportVisualizationButton
+} from './checkbox-button-helper.js'
+import { DoseProfile } from './dose-profile.js'
+import { Panel } from './panel.js'
+import { Slider } from './slider.js'
+import { DoseComparisonVolume, drawAxes } from './volume.js'
+import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
+import { initializeWindowAndLevelSlider } from './window-level-slider.js'
+
+const AXES = ['xy', 'yz', 'xz']
 
 /** @class VolumeViewer combines a density and/or dose file, three panels for
  * the three axes views, and three dose profile plots. */
-class VolumeViewer { // eslint-disable-line no-unused-vars
+class VolumeViewer {
   /**
    * Creates an instance of a VolumeViewer.
    *
@@ -112,7 +108,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     const dims = 'zxy'
     const sliceNum = {}
 
-    axes.forEach((axis, i) => {
+    AXES.forEach((axis, i) => {
       // Get the correct slice number
       sliceNum[axis] = this.densityVolume
         ? this.densityVolume.prevSlice[axis].sliceNum
@@ -136,7 +132,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         panel.volume = doseVol
         panel.setupZoom()
         // Update the slider max values
-        axes.forEach((axis, i) => {
+        AXES.forEach((axis, i) => {
           this.sliceSliders[axis].setMaxValue(
             doseVol.data.voxelNumber[dims[i]]
           )
@@ -171,7 +167,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     const dims = 'zxy'
     const sliceNum = {}
 
-    axes.forEach((axis, i) => {
+    AXES.forEach((axis, i) => {
       // Get the correct slice number
       sliceNum[axis] = this.doseVolume
         ? this.doseVolume.prevSlice[axis].sliceNum
@@ -194,7 +190,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         panel.volume = densityVol
         panel.setupZoom()
         // Update the slider max values
-        axes.forEach((axis, i) => {
+        AXES.forEach((axis, i) => {
           this.sliceSliders[axis].setMaxValue(
             densityVol.data.voxelNumber[dims[i]]
           )
@@ -493,7 +489,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     // Build other html and class objects
     this.buildViewerContainer(this.mainViewerDimensions)
     this.buildLegend(this.legendDimensions)
-    this.buildPanels(mainViewerDimensions)
+    this.buildPanels(this.mainViewerDimensions)
   }
 
   /**
@@ -524,7 +520,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     const dispatch = this.dispatch
 
     // Add html for panels and slice sliders
-    axes.forEach((axis, i) => {
+    AXES.forEach((axis, i) => {
       const selectedDiv = this.viewerContainer
         .append('div')
         .classed('panel-' + axis, true)
@@ -597,7 +593,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
       // Add dose profile to bottom of panel
       this.doseProfileList[i] = new DoseProfile(
-        sideDoseProfileDimensions,
+        this.sideDoseProfileDimensions,
         selectedDiv,
         this.id + '-' + dimensions[i]
       )
@@ -639,7 +635,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
    * @param {Object} mainViewerDimensions The pixel dimensions of the main viewer.
    */
   buildPanels (mainViewerDimensions) {
-    this.panels = axes.reduce((obj, axis, i) => {
+    this.panels = AXES.reduce((obj, axis, i) => {
       return {
         ...obj,
         [axis]: new Panel(
@@ -728,3 +724,5 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     })
   }
 }
+
+export { VolumeViewer }

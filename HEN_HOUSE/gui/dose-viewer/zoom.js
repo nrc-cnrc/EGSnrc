@@ -30,13 +30,8 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global mainViewerDimensions */
-/* global  */
-/* global  */
-/* global  */
-/* global  */
-/* global  */
-/* global  */
+
+import { MAIN_VIEWER_DIMENSIONS } from './index.js'
 
 /**
  * Builds a zoom object according to the specs and callback passed in.
@@ -48,7 +43,7 @@
  * @param {Array} args Any arguments to be passed into zoomCallback.
  * @returns {Object}
  */
-var getZoom = (width, height, zoomCallback, args) => // eslint-disable-line no-unused-vars
+var getZoom = (width, height, zoomCallback, args) =>
   d3
     .zoom()
     .extent([
@@ -64,7 +59,7 @@ var getZoom = (width, height, zoomCallback, args) => // eslint-disable-line no-u
  * @param {Object} transform The zoom transform object.
  * @param {DoseProfile} doseProfile The dose profile to be zoomed.
  */
-function zoomedDoseProfile (transform, doseProfile) { // eslint-disable-line no-unused-vars
+function zoomedDoseProfile (transform, doseProfile) {
   doseProfile.zoomTransform = transform
   doseProfile.svg
     .selectAll('path.lines')
@@ -134,7 +129,7 @@ function zoomedCanvas (transform, densityVol, canvas, axis) {
  * @param {Object} transform The zoom transform object.
  * @param {Panel} panel The panel to be zoomed on.
  */
-function zoomedAll (transform, panel) { // eslint-disable-line no-unused-vars
+function zoomedAll (transform, panel) {
   panel.zoomTransform = transform
   const axisElements = panel.axisElements
   const volume = panel.volume
@@ -181,7 +176,7 @@ function zoomedAll (transform, panel) { // eslint-disable-line no-unused-vars
       d3
         .axisBottom()
         .scale(newxScale)
-        .tickSize(-mainViewerDimensions.height)
+        .tickSize(-MAIN_VIEWER_DIMENSIONS.height)
         .tickFormat('')
         .ticks(6)
     )
@@ -191,8 +186,10 @@ function zoomedAll (transform, panel) { // eslint-disable-line no-unused-vars
       d3
         .axisLeft()
         .scale(newyScale)
-        .tickSize(-mainViewerDimensions.width)
+        .tickSize(-MAIN_VIEWER_DIMENSIONS.width)
         .tickFormat('')
         .ticks(6)
     )
 }
+
+export { getZoom, zoomedAll, zoomedDoseProfile }

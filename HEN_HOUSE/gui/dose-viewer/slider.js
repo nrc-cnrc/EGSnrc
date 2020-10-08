@@ -31,7 +31,7 @@
 /**
  * @class Generic number slider class.
  * */
-class Slider { // eslint-disable-line no-unused-vars
+class Slider {
   /**
    * Creates an instance of a Slider.
    *
@@ -280,3 +280,5 @@ class Slider { // eslint-disable-line no-unused-vars
     this.sliderValue.text(this.format(val))
   }
 }
+
+export { Slider }

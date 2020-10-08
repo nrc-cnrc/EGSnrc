@@ -30,13 +30,12 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global getZoom */
-/* global zoomedDoseProfile */
-/* global sideDoseProfileDimensions */
 /* global doseProfileAxis */
+import { getZoom, zoomedDoseProfile } from './zoom.js'
+import { DOSE_PROFILE_DIMENSIONS } from './index.js'
 
 /** @class DoseProfile contains all information to build a dose profile at a line through a dose volume. */
-class DoseProfile { // eslint-disable-line no-unused-vars
+class DoseProfile {
   /**
    * Creates an instance of DoseProfile.
    *
@@ -103,8 +102,8 @@ class DoseProfile { // eslint-disable-line no-unused-vars
     // Initializing svgs for dose profile plots
     this.parentSvg = parentDiv
       .append('svg')
-      .attr('width', sideDoseProfileDimensions.fullWidth)
-      .attr('height', sideDoseProfileDimensions.fullHeight)
+      .attr('width', DOSE_PROFILE_DIMENSIONS.fullWidth)
+      .attr('height', DOSE_PROFILE_DIMENSIONS.fullHeight)
       .style('display', 'none')
 
     this.svg = this.parentSvg
@@ -143,10 +142,11 @@ class DoseProfile { // eslint-disable-line no-unused-vars
    * Initializes the zoom of the dose profile plot using functions from the zoom file.
    */
   initializeZoom () {
+    console.log('IS THIS EVEN CALLED???')
     // Zooming for dose profile
     doseProfileAxis.zoomObj = getZoom(
-      sideDoseProfileDimensions.width,
-      sideDoseProfileDimensions.height,
+      DOSE_PROFILE_DIMENSIONS.width,
+      DOSE_PROFILE_DIMENSIONS.height,
       zoomedDoseProfile,
       [doseProfileAxis]
     )
@@ -515,3 +515,5 @@ class DoseProfile { // eslint-disable-line no-unused-vars
     this.plotData()
   }
 }
+
+export { DoseProfile }

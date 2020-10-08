@@ -30,17 +30,15 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global getZoom */
-/* global mainViewerDimensions */
-/* global zoomedAll */
-/* global updateVoxelCoords */
-/* global applyTransform */
-/* global invertTransform */
+
+import { MAIN_VIEWER_DIMENSIONS } from './index.js'
+import { applyTransform, invertTransform, updateVoxelCoords } from './voxel-coordinates.js'
+import { getZoom, zoomedAll } from './zoom.js'
 
 /** @class Panel holds one axis view and detects clicks, stores information, and
  * updates plots */
 // TODO: Build panel HTML inside panel object
-class Panel { // eslint-disable-line no-unused-vars
+class Panel {
   /**
    * Creates an instance of a Panel.
    *
@@ -108,8 +106,8 @@ class Panel { // eslint-disable-line no-unused-vars
    */
   setupZoom () {
     const mainViewerZoom = getZoom(
-      mainViewerDimensions.width,
-      mainViewerDimensions.height,
+      MAIN_VIEWER_DIMENSIONS.width,
+      MAIN_VIEWER_DIMENSIONS.height,
       zoomedAll,
       [this]
     )
@@ -275,7 +273,7 @@ class Panel { // eslint-disable-line no-unused-vars
       .attr('x1', x)
       .attr('y1', 0)
       .attr('x2', x)
-      .attr('y2', mainViewerDimensions.height)
+      .attr('y2', MAIN_VIEWER_DIMENSIONS.height)
       .style('display', this.showCrosshairs() ? '' : 'none')
       .classed('active', activePanel)
 
@@ -286,7 +284,7 @@ class Panel { // eslint-disable-line no-unused-vars
       .classed('crosshairY', true)
       .attr('x1', 0)
       .attr('y1', y)
-      .attr('x2', mainViewerDimensions.width)
+      .attr('x2', MAIN_VIEWER_DIMENSIONS.width)
       .attr('y2', y)
       .style('display', this.showCrosshairs() ? '' : 'none')
       .classed('active', activePanel)
@@ -301,3 +299,5 @@ class Panel { // eslint-disable-line no-unused-vars
     this.sliceSlider.setCurrentValue(sliceNum)
   }
 }
+
+export { Panel }
