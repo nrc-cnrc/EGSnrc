@@ -84,15 +84,35 @@ EGS_BeamSource::EGS_BeamSource(EGS_Input *input, EGS_ObjectFactory *f) :
     if (err1 || err2 || err3) {
         return;
     }
-    char *egs_home = getenv("EGS_HOME");
-    if (!egs_home) {
-        egsWarning("EGS_BeamSource: EGS_HOME is not defined\n");
-        return;
+    string egs_home;
+    int err_eh = input->getInput("egs_home",egs_home);
+    if (err_eh) {
+        char *eh = getenv("EGS_HOME");
+        if (!eh) {
+            egsWarning("EGS_BeamSource: EGS_HOME is not defined\n");
+            return;
+        }
+        else {
+            egs_home = eh;
+        }
     }
-    char *hen_house = getenv("HEN_HOUSE");
-    if (!hen_house) {
-        egsWarning("EGS_BeamSource: HEN_HOUSE is not defined\n");
-        return;
+    else {
+        egs_home = egsExpandPath(egs_home);
+    }
+    string hen_house;
+    int err_hh = input->getInput("hen_house",hen_house);
+    if (err_hh) {
+        char *hh = getenv("HEN_HOUSE");
+        if (!hh) {
+            egsWarning("EGS_BeamSource: HEN_HOUSE is not defined\n");
+            return;
+        }
+        else {
+            hen_house = hh;
+        }
+    }
+    else {
+        hen_house = egsExpandPath(hen_house);
     }
     string path = egs_home;
     path += "bin/";
@@ -136,9 +156,9 @@ EGS_BeamSource::EGS_BeamSource(EGS_Input *input, EGS_ObjectFactory *f) :
         npar = app->getNparallel();
     }
 
-    init(&ipar,&npar,&ilog,hen_house,egs_home,beam_code.c_str(),
-         pegs_file.c_str(),input_file.c_str(),
-         strlen(hen_house), strlen(egs_home),
+    init(&ipar,&npar,&ilog,hen_house.c_str(),egs_home.c_str(),
+         beam_code.c_str(),pegs_file.c_str(),input_file.c_str(),
+         hen_house.size(), egs_home.size(),
          beam_code.size(),pegs_file.size(),input_file.size());
     maxenergy(&Emax);
 
