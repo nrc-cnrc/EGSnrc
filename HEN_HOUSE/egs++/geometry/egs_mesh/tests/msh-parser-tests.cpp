@@ -1,7 +1,6 @@
 #include "msh_parser.h"
 
 int test_parse_msh_version() {
-    std::cerr << "starting test parse_msh_version" << std::endl;
     // catch empty inputs
     {
         std::istringstream input("");
@@ -139,11 +138,100 @@ int test_parse_msh_version() {
     return 0;
 }
 
+int test_parse_msh2_nodes() {
+    // $Nodes header has already been parsed
+    std::istringstream input(
+        // "$Nodes\n"
+        "4"
+        "1 0 0 1\n"
+        "2 0 0 0\n"
+        "3 0 1 1\n"
+        "4 0 1 0\n"
+        "$EndNodes\n"
+    );
+    std::string err_msg;
+    auto nodes = parse_msh2_nodes(input, err_msg);
+    if (err_msg != "") {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+    }
+    if (nodes.size() != 4) {
+        std::cerr << "expected 4 nodes, got " << nodes.size() << "\n";
+        return 1;
+    }
+    return 0;
+}
+
+int test_parse_msh_file() {
+    std::string header =
+        "$MeshFormat\n"
+        "2.2 0 8\n"
+        "$EndMeshFormat\n";
+
+    std::string pgroups =
+        "$PhysicalNames\n"
+        "1\n"
+        "3 1 \"Steel\"\n"
+        "$EndPhysicalNames\n";
+
+    std::string nodes =
+        "$Nodes\n"
+        "4\n"
+        "1 0 0 1\n"
+        "2 0 0 0\n"
+        "3 0 1 1\n"
+        "4 0 1 0\n"
+        "$EndNodes\n";
+
+    std::string elts =
+        "$Elements\n"
+        "1160\n"
+        "1 4 2 1 1 1 2 3 4\n"
+        "$EndElements\n";
+
+
+    // minimum complete mesh file for EGSnrc
+    {
+        std::istringstream input(header + pgroups + nodes + elts);
+        std::string err_msg;
+        parse_msh_file(input, err_msg);
+        if (err_msg != "") {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int main() {
+    int num_failed = 0;
+
+    std::cerr << "starting test parse_msh_version" << std::endl;
     int err = test_parse_msh_version();
     if (err) {
         std::cerr << "test FAILED" << std::endl;
-        return 1;
+        num_failed++;
+    } else {
+        std::cerr << "test PASSED" << std::endl;
     }
-    std::cerr << "test PASSED" << std::endl;
+
+    std::cerr << "starting test parse_msh2_nodes" << std::endl;
+    err = test_parse_msh2_nodes();
+    if (err) {
+        std::cerr << "test FAILED" << std::endl;
+        num_failed++;
+    } else {
+        std::cerr << "test PASSED" << std::endl;
+    }
+
+    std::cerr << "starting test parse_msh_file" << std::endl;
+    err = test_parse_msh_file();
+    if (err) {
+        std::cerr << "test FAILED" << std::endl;
+        num_failed++;
+    } else {
+        std::cerr << "test PASSED" << std::endl;
+    }
+
+    return num_failed;
 }

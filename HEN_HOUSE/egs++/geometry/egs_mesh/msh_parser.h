@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <vector>
 
 // todo namespace private
 
@@ -77,4 +78,48 @@ MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
     }
 
     return MshVersion::Failure;
+}
+
+struct Node {
+    std::size_t idx;
+    double x;
+    double y;
+    double z;
+};
+
+std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
+    std::vector<Node> nodes;
+    return nodes;
+}
+
+void parse_msh2_body(std::istream& input, std::string& err_msg) {
+    std::vector<Node> nodes;
+
+    std::string input_line;
+    while (std::getline(input, input_line)) {
+        rtrim(input_line);
+        // stop reading if we hit another mesh file
+        if (input_line == "$MeshFormat") {
+            break;
+        }
+        if (input_line == "$Nodes") {
+            nodes = parse_msh2_nodes(input, err_msg);
+        }
+        /* else if (input_line == "$PhysicalNames") {
+            parse_msh2_physical_groups(input, err_msg);
+        } else if (input_line == "$Elements") {
+            parse_msh2_elements(input, err_msg);
+        } */
+    }
+
+    err_msg = "unimplemented";
+}
+
+void parse_msh_file(std::istream& input, std::string& err_msg) {
+    auto version = parse_msh_version(input, err_msg);
+    // TODO auto mesh_data;
+    switch(version) {
+        case MshVersion::v22: parse_msh2_body(input, err_msg); break;
+        default: break; // TODO couldn't parse msh file
+    }
 }
