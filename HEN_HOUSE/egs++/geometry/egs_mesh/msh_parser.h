@@ -23,7 +23,7 @@ MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
     std::string format_line;
     std::getline(input, format_line);
     if (input.bad()) {
-        err_msg = "IO error during reading\n";
+        err_msg = "IO error during reading";
         return MshVersion::Failure;
     }
     if (input.eof()) {
@@ -81,14 +81,74 @@ MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
 }
 
 struct Node {
-    std::size_t idx;
+    int idx;
     double x;
     double y;
     double z;
 };
 
+int get_int_line(std::istream& input, std::string& err_msg) {
+    std::string line;
+    std::getline(input, line);
+    rtrim(line);
+    std::istringstream line_stream(line);
+    int target;
+    line_stream >> target;
+    if (line_stream.fail()) {
+        err_msg = "integer parsing failed";
+        return -1;
+    }
+    // check for trailing data
+    std::string trailing;
+    line_stream >> trailing;
+    if (!trailing.empty()) {
+        err_msg = "unexpected trailing data";
+    }
+    return target;
+}
+
 std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
     std::vector<Node> nodes;
+    int num_nodes = get_int_line(input, err_msg);
+    if (!err_msg.empty()) {
+        // todo add context to error message:
+        // -- failed to parse num_nodes
+        return nodes;
+    }
+
+    int node_num = -1;
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+
+    while (input >> node_num >> x >> y >> z) {
+        nodes.push_back(Node { node_num, x, y, z });
+    }
+
+    if (nodes.size() != num_nodes) {
+        err_msg = "expected " + std::to_string(num_nodes) + " nodes, but read "
+            + std::to_string(nodes.size());
+        return nodes;
+    }
+
+    // clear error state to continue parsing and check if we hit $EndNodes
+    input.clear();
+    std::string end_nodes;
+    input >> end_nodes;
+    if (input.bad()) {
+        err_msg = "IO error during reading";
+        return nodes;
+    }
+    if (input.eof()) {
+        err_msg = "expected $EndNodes, got EOF";
+        return nodes;
+    }
+    rtrim(end_nodes);
+    if (end_nodes != "$EndNodes") {
+        err_msg = "expected $EndNodes, got " + end_nodes;
+        return nodes;
+    }
+
     return nodes;
 }
 

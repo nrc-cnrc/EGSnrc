@@ -138,26 +138,126 @@ int test_parse_msh_version() {
     return 0;
 }
 
+// all test cases assume $Nodes header has already been parsed
 int test_parse_msh2_nodes() {
-    // $Nodes header has already been parsed
-    std::istringstream input(
-        // "$Nodes\n"
-        "4"
-        "1 0 0 1\n"
-        "2 0 0 0\n"
-        "3 0 1 1\n"
-        "4 0 1 0\n"
-        "$EndNodes\n"
-    );
-    std::string err_msg;
-    auto nodes = parse_msh2_nodes(input, err_msg);
-    if (err_msg != "") {
+    // empty section
+    {
+        std::istringstream input(
+            "0\n"
+            "$EndNodes\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh2_nodes(input, err_msg);
+        std::string expected = "";
+        if (!err_msg.empty()) {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
             return 1;
+        }
+        if (nodes.size() != 0) {
+            std::cerr << "expected 0 nodes, got " << nodes.size() << "\n";
+            return 1;
+        }
     }
-    if (nodes.size() != 4) {
-        std::cerr << "expected 4 nodes, got " << nodes.size() << "\n";
-        return 1;
+    // missing number of nodes fails
+    {
+        std::istringstream input(
+            "1 0 0 1\n"
+            "2 0 0 0\n"
+            "3 0 1 1\n"
+            "$EndNodes\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh2_nodes(input, err_msg);
+        std::string expected = "unexpected trailing data";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // num_nodes vs actual number of nodes mismatch
+    {
+        std::istringstream input(
+            "4\n"
+            "1 0 0 1\n"
+            "2 0 0 0\n"
+            "3 0 1 1\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh2_nodes(input, err_msg);
+        std::string expected = "expected 4 nodes, but read 3";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // catch missing $EndNodes
+    {
+        std::istringstream input(
+            "4\n"
+            "1 0 0 1\n"
+            "2 0 0 0\n"
+            "3 0 1 1\n"
+            "4 0 1 0\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh2_nodes(input, err_msg);
+        std::string expected = "expected $EndNodes, got EOF";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // bad section end tag
+    {
+        std::istringstream input(
+            "4\n"
+            "1 0 0 1\n"
+            "2 0 0 0\n"
+            "3 0 1 1\n"
+            "4 0 1 0\n"
+            "$End\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh2_nodes(input, err_msg);
+        std::string expected = "expected $EndNodes, got $End";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+
+    // successfully parse a nodes section
+    {
+        std::istringstream input(
+            "4\n"
+            "1 0 0 1\n"
+            "2 0 0 0\n"
+            "3 0 1 1\n"
+            "4 0 1 0\n"
+            "$EndNodes\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh2_nodes(input, err_msg);
+        if (err_msg != "") {
+                std::cerr << "got error message: \"" << err_msg << "\"\n";
+                return 1;
+        }
+        if (nodes.size() != 4) {
+            std::cerr << "expected 4 nodes, got " << nodes.size() << "\n";
+            return 1;
+        }
+        if (nodes[3].idx != 4 ||
+            nodes[3].x != 0.0 ||
+            nodes[3].y != 1.0 ||
+            nodes[3].z != 0.0)
+        {
+            std::cerr << "parsed node didn't match reference value\n";
+            return 1;
+        }
     }
     return 0;
 }
