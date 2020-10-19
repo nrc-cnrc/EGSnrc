@@ -1265,8 +1265,8 @@ void EGS_AdvancedApplication::setLatch(int latch) {
 // Utility function for ausgab egs_radiative_spliting objects
 //************************************************************
 //get the RNG required by DBS
-EGS_RandomGenerator *EGS_AdvancedApplication::getRNG() {
-    return rndm;
+void getRNG(EGS_RandomGenerator *rng) {
+    rng = rndm;
 }
 
 //add a particle (+ dnear) to the top of the stack and increment np
@@ -1302,6 +1302,11 @@ int EGS_AdvancedApplication::getNpold(){
     return the_stack->npold-1;
 }
 
+//get total no. of media in simulation
+int EGS_AdvancedApplication::getNmed(){
+    return nmed;
+}
+
 //delete particle at stack position ip
 //replace with data at position np and reduce np by 1
 void EGS_AdvancedAppliction::deleteParticleFromStack(int ip) {
@@ -1326,8 +1331,7 @@ void EGS_AdvancedAppliction::deleteParticleFromStack(int ip) {
 }
 
 //retrieve particle information at stack position ip
-EGS_Particle EGS_AdvancedAppliction::getParticleFromStack(int ip) {
-    EGS_Particle p;
+void EGS_AdvancedAppliction::getParticleFromStack(int ip,EGS_Particle p) {
     p.q = the_stack->iq[ip+1];
     p.E = the_stack->E[ip+1];
     p.latch = the_stack->latch[ip+1];
@@ -1335,7 +1339,7 @@ EGS_Particle EGS_AdvancedAppliction::getParticleFromStack(int ip) {
     p.wt = the_stack->wt[ip+1];
     p.x = EGS_Vector(the_stack->x[ip+1],the_stack->y[ip+1],the_stack->z[ip+1]);
     p.u = EGS_Vector(the_stack->u[ip+1],the_stack->v[ip+1],the_stack->w[ip+1]);
-    return p;
+    return;
 }
 
 //return the value of gle
@@ -1345,7 +1349,12 @@ EGS_Float EGS_AdvancedApplication::getGle() {
 
 //return the value of the_xoptions->ibrdst
 int EGS_AdvancedAppliction::getIbrdst() {
-    return the_stack->ibrdst;
+    return the_xoptions->ibrdst;
+}
+
+//return the value of the_xoptions->ibcmp
+int EGS_AdvancedAppliction::getIbcmp() {
+    return the_xoptions->ibcmp;
 }
 
 //return the value of the_thresh->ap[imed]
@@ -1425,6 +1434,41 @@ int EGS_AdvancedApplication::getNmed() {
 //calculate the value of cohfac for Rayleigh scattering
 EGS_Float EGS_AdvancedApplication::getCohfac(int imed, EGS_Float gle) {
     return i_cohe[imed].interpolateFast(gle);
+}
+
+//get max. energy of source from source
+EGS_Float EGS_AdvancedApplication::getEmax() {
+    return source->getEmax();
+}
+
+//get value of ZBRANG for medium
+EGS_Float EGS_AdvancedApplication::getZbrang(int imed) {
+    return the_brempr->zbrang[imed];
+}
+
+//get value of DELCM for medium
+EGS_Float EGS_AdvancedApplication::getDelcm(int imed) {
+    return the_brempr->delcm[imed];
+}
+
+//get values of DL1...DL6 for medium
+EGS_Float EGS_AdvancedApplication::getDl1(int i, int imed) {
+    return the_brempr->dl1[i,imed];
+}
+EGS_Float EGS_AdvancedApplication::getDl2(int i, int imed) {
+    return the_brempr->dl2[i,imed];
+}
+EGS_Float EGS_AdvancedApplication::getDl3(int i, int imed) {
+    return the_brempr->dl3[i,imed];
+}
+EGS_Float EGS_AdvancedApplication::getDl4(int i, int imed) {
+    return the_brempr->dl4[i,imed];
+}
+EGS_Float EGS_AdvancedApplication::getDl5(int i, int imed) {
+    return the_brempr->dl5[i,imed];
+}
+EGS_Float EGS_AdvancedApplication::getDl6(int i, int imed) {
+    return the_brempr->dl6[i,imed];
 }
 
 extern __extc__ void egsHowfar() {

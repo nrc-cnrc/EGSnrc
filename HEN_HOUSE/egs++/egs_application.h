@@ -1189,6 +1189,90 @@ public:
     // Utility function for ausgab phase space scoring objects
     //************************************************************
     virtual void setLatch(int latch) {};
+
+       //************************************************************
+    // Utility functions for egs_radiative_splitting ausgab objects
+    //************************************************************
+    virtual void getRNG(EGS_RandomGenerator *rng);
+    virtual void addParticleToStack(EGS_Particle p, EGS_Float dnear) {};
+    virtual EGS_Float getDnear(int np) {
+       return 0.0;
+    }
+    virtual int getNmed() {
+       return 0;
+    }
+    virtual int getNpold() {
+       return 0;
+    }
+    virtual void setNpold(int npold) {};
+    virtual void deleteParticleFromStack(int ip) {};
+    EGS_Particle getParticleFromStack(int ip, EGS_Particle p);
+    virtual EGS_Float getCohfac(int imed, EGS_Float gle) {
+       return 0.0;
+    }
+    virtual EGS_Float getGle() {
+       return 0.0;
+    }
+    virtual int getIbrdst() {
+       return 0;
+    }
+    virtual int getIbcmp() {
+       return 0;
+    }
+    virtual EGS_Float getAp(int imed) {
+       return 0.0;
+    }
+    virtual int getIbrnist() {
+       return 0.0;
+    }
+    virtual EGS_Float getNbLemin(int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getNbDlei(int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getNbEmin(int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getNbXdata(int i, int j, int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getNbFdata(int i, int j, int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getNbWdata(int i, int j, int imed) {
+       return 0.0;
+    }
+    virtual int getNbIdata(int i, int j, int imed) {
+       return 0;
+    }
+    virtual EGS_Float getEmax() {
+       return 0.0;
+    }
+    virtual EGS_Float getZbrang(int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getDelcm(int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getDl1(int i, int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getDl2(int i, int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getDl3(int i, int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getDl4(int i, int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getDl5(int i, int imed) {
+       return 0.0;
+    }
+    virtual EGS_Float getDl6(int i, int imed) {
+       return 0.0;
+    }
 };
 
 #define APP_MAIN(app_name) \
