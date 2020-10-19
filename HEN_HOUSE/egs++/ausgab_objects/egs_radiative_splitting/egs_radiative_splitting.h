@@ -46,7 +46,7 @@
 #define EGS_RADIATIVE_SPLITTING_
 
 #include "egs_ausgab_object.h"
-#include "egs_application.h"
+#include "egs_advanced_application.h"
 #include "egs_scoring.h"
 #include "egs_base_geometry.h"
 #include "egs_rndm.h"
@@ -100,16 +100,6 @@ TODO:
 
 */
 
-struct EGS_Particle {
-    int        q;      //!< particle charge
-    int        latch;  //!< latch variable (useful as a flag on many occasions)
-    int        ir;     //!< particle region index
-    EGS_Float  E;      //!< particle energy in MeV
-    EGS_Float  wt;     //!< statistical weight
-    EGS_Vector x;      //!< position
-    EGS_Vector u;      //!< direction
-};
-
 class EGS_RADIATIVE_SPLITTING_EXPORT EGS_RadiativeSplitting : public EGS_AusgabObject {
 
 public:
@@ -131,6 +121,8 @@ public:
 
     int doSmartBrems(EGS_RandomGenerator *rndm);
 
+    void doSmartCompton(int nsample, EGS_RandomGenerator *rndm);
+
     void getCostMinMax(const EGS_Vector &xx, const EGS_Vector &uu,
                         EGS_Float &ro, EGS_Float &ct_min, EGS_Float &ct_max);
 
@@ -138,9 +130,11 @@ public:
 
     void killThePhotons(EGS_Float fs, EGS_Float ssd, int n_split, int npstart, int kill_electrons);
 
-    void selectAzimuthalAngles(EGS_Float &cphi, EGS_FLOAT &sphi);
+    void selectAzimuthalAngle(EGS_Float &cphi, EGS_Float &sphi);
 
     void uniformPhotons(int nsample, int n_split, EGS_Float fs, EGS_Float ssd, EGS_Float energy);
+
+    void initSmartKM(EGS_Float Emax);
 
     void setSplitting(const int &n_s) {
         nsplit = n_s;
@@ -166,7 +160,7 @@ public:
     int processEvent(EGS_Application::AusgabCall iarg) {
         if (split_type >  EGS_RadiativeSplitting::URS && iarg > EGS_Application::AfterTransport)
         {
-            if( !doInteractions(iarg,rndm,killed,be_factor) )
+            if( !doInteractions(iarg,rndm,killed) )
             {
             	return 0;
             }
@@ -177,7 +171,7 @@ public:
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
         if (split_type >  EGS_RadiativeSplitting::URS && iarg > EGS_Application::AfterTransport)
         {
-            if( !doInteractions(iarg,rndm,killed,be_factor) )
+            if( !doInteractions(iarg,rndm,killed) )
             {
                 return 0;
             }
@@ -186,6 +180,9 @@ public:
     };
 
 protected:
+
+    EGS_AdvancedApplication app1; //the application
+
     int split_type; //0 = uniform, 1 = DBS, 2 = BEAMnrc DBS
     /* Maximum splitting limited to 2,147,483,647 */
     int nsplit;
@@ -200,13 +197,17 @@ protected:
     bool use_cyl_sym = false; //set to true to use cylindrical symmetry, hard coded as false for now
     EGS_Float zcyls; //Z below which cylindrical symmetry does not exist
 
-    EGS_Float *y2_KM;
-
+    //interpolators for smart brems estimates of KM distribution
+    EGS_Interpolator *f_KM_max;
     EGS_Interpolator **f_KM_a;
     EGS_Interpolator **f_KM_b;
+    EGS_Float        *a_KM, *b_KM;
+    EGS_Float        *y2_KM;
     EGS_Float        *zbr_KM;
+    int              nmed_KM;
 
-    vector<EGS_particle> brems_particles; //store a stack of brems particles in do_smart_brems
+    vector<EGS_Particle> particle_stack; //store a stack of brems particles in do_smart_brems
+    vector<EGS_Float> dnear_stack; //similar for dnear
 
     int imed;
 

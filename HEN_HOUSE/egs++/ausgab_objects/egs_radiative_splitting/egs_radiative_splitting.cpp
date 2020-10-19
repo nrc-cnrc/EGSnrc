@@ -59,9 +59,69 @@ extern "C" void F77_OBJ_(annih_at_rest,ANNIH_AT_REST)(){;}
 extern "C" void F77_OBJ_(photo,PHOTO)(){;}
 extern "C" void F77_OBJ_(pair,PAIR)(){;}
 extern "C" void F77_OBJ_(compt,COMPT)(){;}
-extern "C" void F77_OBJ_(pair,PAIR)(){;}
 extern "C" void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(EGS_I32 *medium, EGS_Float *e, EGS_Float *gle, EGS_I32 *lgle, EGS_Float *costhe, EGS_Float *sinthe){;}
-extern "C" void F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(const EGS_I32 *mxbrxs, EGS_Float *nb_xdata[3], EGS_Float *nb_fdata[3], EGS_Float *nb_wdata[3], EGS_Float *nb_idata[3]){;}
+extern "C" void F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float &nb_xdata, EGS_Float &nb_fdata, EGS_Float &nb_wdata, EGS_Float &nb_idata){;}
+
+//local structures required
+struct DBS_Aux {
+    int       np;
+    EGS_Float E;
+    EGS_Float Z13;
+    EGS_Float le;
+};
+
+//local functions
+EGS_Float dbs_func_KM(EGS_Float x, void *data) {
+    DBS_Aux *the_aux = (DBS_Aux *)data; EGS_Float Z13 = the_aux->Z13;
+    int np = the_aux->np;
+    EGS_Float E = the_aux->E;
+    EGS_Float k = (E-1)*x;
+    EGS_Float Ep = E - k;
+    EGS_Float r = Ep/E; EGS_Float delta = k/(2*E*Ep); delta *= delta;
+    EGS_Float r2p1 = 1+r*r, rp12 = r2p1 + 2*r;
+    EGS_Float beta = sqrt((E-1)*(E+1))/E;
+    EGS_Float y2min = 0, y2max = 2*beta*(1+beta)*E*E;
+    EGS_Float y2maxi = 1/y2max;
+    EGS_Float a = sqrt(1+y2max);
+    EGS_Float deta = 1./np;
+    double sum = 0;
+    for(int j=0; j<np; j++) {
+        EGS_Float eta = deta*(0.5+j);
+        EGS_Float tmp = a/(eta+(1-eta)*a);
+        EGS_Float y2 = tmp*tmp-1;
+        EGS_Float aux = y2 + 1; EGS_Float aux2 = aux*aux;
+        EGS_Float M = delta + Z13/aux2;
+        EGS_Float f = (16*y2*r/aux2 - rp12 - (r2p1 - 4*y2/aux2*r)*log(M))/tmp;
+        sum += f;
+    }
+    return sum*deta;
+}
+
+EGS_Float dbs_func_KM1(EGS_Float u, void *data) {
+    DBS_Aux *the_aux = (DBS_Aux *)data; EGS_Float Z13 = the_aux->Z13;
+    int np = the_aux->np;
+    EGS_Float E = the_aux->E;
+    EGS_Float k = E - exp(u*the_aux->le);
+    EGS_Float Ep = E - k;
+    EGS_Float r = Ep/E; EGS_Float delta = k/(2*E*Ep); delta *= delta;
+    EGS_Float r2p1 = 1+r*r, rp12 = r2p1 + 2*r;
+    EGS_Float beta = sqrt((E-1)*(E+1))/E;
+    EGS_Float y2min = 0, y2max = 2*beta*(1+beta)*E*E;
+    EGS_Float y2maxi = 1/y2max;
+    EGS_Float a = sqrt(1+y2max);
+    EGS_Float deta = 1./np;
+    double sum = 0;
+    for(int j=0; j<np; j++) {
+        EGS_Float eta = deta*(0.5+j);
+        EGS_Float tmp = a/(eta+(1-eta)*a);
+        EGS_Float y2 = tmp*tmp-1;
+        EGS_Float aux = y2 + 1; EGS_Float aux2 = aux*aux;
+        EGS_Float M = delta + Z13/aux2;
+        EGS_Float f = (16*y2*r/aux2 - rp12 - (r2p1 - 4*y2/aux2*r)*log(M))/tmp;
+        sum += f;
+    }
+    return sum*deta;
+}
 
 EGS_RadiativeSplitting::EGS_RadiativeSplitting(const string &Name,
         EGS_ObjectFactory *f) :
@@ -82,6 +142,11 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
 
     // Set EGSnrc internal radiative splitting number .
     app->setRadiativeSplitting(nsplit);
+
+    if ((split_type == EGS_RadiativeSplitting::DRS || split_type == EGS_RadiativeSplitting::DRSf) && app->getIbrdst())
+    {
+        initSmartKM(app->getEmax()*1.05);
+    }
 
     description = "\n===========================================\n";
     description +=  "Radiative splitting Object (";
@@ -109,17 +174,15 @@ void EGS_RadiativeSplitting::initDBS(const float &field_rad, const float &field_
         irad_esplit = irad;
         zrr_esplit = zrr;
 
-        y2_KM = new EGS_Float [nsplit];
-        f_KM_a = new EGS_Interpolator* [app->getNmed()];
-        f_KM_b = new EGS_Interpolator* [app->getNmed(];
-        zbr_KM = new EGS_Float [app->getNmed()];
-
-        rndm = app->getRNG();
+        app->getRNG(rndm);
 }
 
 //at least try to get brems working with this
 int EGS_RadiativeSplitting::doInteractions(int iarg, EGS_RandomGenerator *rndm, int &killed)
 {
+
+    int check = 0; //debugging variable
+
     killed = 0;
 
     if( iarg > EGS_Application::AfterTransport && app->top_p.x.z > ssd ) {
@@ -175,14 +238,14 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, EGS_RandomGenerator *rndm, 
             app->setNpold(np);
             app->setRadiativeSplitting(nsplit);
             int nsamp = 2*nsplit;
-            uniformPhotons(&nsamp,&iwt,&fs,&ssd,&app->getRM());
+            uniformPhotons(nsamp,nsplit,fs,ssd,app->getRM());
             //uniformPhotons(rndm,nsamp,2,the_useful->rm);
         }
         else {
             app->setRadiativeSplitting(1);
             F77_OBJ_(annih_at_rest,ANNIH_AT_REST)();
             int nstart=np+1,aux=0;
-            killThePhotons(&fs,&ssd,&nbrspl,&nstart,&aux);
+            killThePhotons(fs,ssd,nsplit,nstart,aux);
         }
         check = 1;
     }
@@ -209,9 +272,9 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, EGS_RandomGenerator *rndm, 
         }
         else if(iarg == EGS_Application::BeforeCompton)
         {
-            if(is_fat && !app->xoptions->ibcmp)
+            if(is_fat && !app->getIbcmp())
             {
-                doSmartCompton(afak,nsp,nint,rndm);
+                doSmartCompton(nint,rndm);
             }
             else //straight-up compton
             {
@@ -262,10 +325,10 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, EGS_RandomGenerator *rndm, 
               "in EGS_RadiativeSplitting::doInteractions()\n");
             //set weight of particle on top of stack to 0
             EGS_Particle p = app->top_p;
-            dnear = app->getDnear(app->Np);
+            EGS_Float dnear = app->getDnear(app->Np);
             p.wt = 0.;
             app->deleteParticleFromStack(app->Np);
-            app->addParticleToStack(p);
+            app->addParticleToStack(p,dnear);
         }
         return 0;
     }
@@ -350,7 +413,7 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
     int ip = np;
     int irl=app->top_p.ir;
     int latch=app->top_p.latch;
-    EGS_Float dnear = app->getDnear[np]; int ib = 0;
+    EGS_Float dnear = app->getDnear(np); int ib = 0;
 
     if( w1 < w2 ) {
         for(int j=0; j<nsample; j++) {
@@ -391,7 +454,7 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
                 EGS_Particle p;
                 p.x = x;
                 p.u = EGS_Vector(un,vn,wn);
-                p.irl = irl;
+                p.ir = irl;
                 p.wt = wt*ns;
                 p.latch = latch;
                 p.q = 0;
@@ -443,7 +506,7 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
                 EGS_Particle p;
                 p.x = x;
                 p.u = EGS_Vector(un,vn,wn);
-                p.irl = irl;
+                p.ir = irl;
                 p.wt = wt*iw;
                 p.latch = latch;
                 p.q = 0;
@@ -495,12 +558,12 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
             EGS_Particle p;
             p.x = x;
             p.u = EGS_Vector(un,vn,wn);
-            p.irl = irl;
-            p.wt = wt*ns;
+            p.ir = irl;
+            p.wt = wt*nbrspl;
             p.latch = latch;
             p.q = 0;
 
-            particle_stack.emplace_back(p)
+            particle_stack.emplace_back(p);
             dnear_stack.emplace_back(dnear);
 
             //need to figure out what to do here
@@ -516,13 +579,13 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
     //not sure what to do with real_brems yet--only relevant to BCSE
     if( ip > np || real_brems ) {
         getBremsEnergies(ip,np);
-        if( !real_brems ) particle_stack.E[ip] = E;
+        if( !real_brems ) particle_stack[ip].E = E;
         if( ip > np && app->getIbrdst() == 1 ) {
             ib = 0; EGS_Float E = tau+1; EGS_Float unorm = log(0.5*(E+1));
             for(int j=0; j<ip-np; j++) {
                 //note that this loop potentially includes high-weight particle put on stack
                 //above.  Why?
-                EGS_Float k = particle_stack.E[j]/app->getRM();
+                EGS_Float k = particle_stack[j].E/app->getRM();
                 EGS_Float Ep = E - k;
                 EGS_Float r = Ep/E; EGS_Float delta = k/(2*E*Ep);
                 delta *= delta;
@@ -547,7 +610,7 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
                     if( rejf > 1 ) egsInformation("rejf=%g for y2=%g\n",
                             rejf,y2);
                     if( rndm->getUniform() > rejf ) {
-                        particle_stack.wt[j] = 0; particle_stack.E[j] = 0;
+                        particle_stack[j].wt = 0; particle_stack[j].E = 0;
                     }
                 }
                 else {
@@ -594,10 +657,10 @@ int EGS_RadiativeSplitting::doSmartBrems(EGS_RandomGenerator *rndm) {
                         }
                     } else take_it = false;
                     if( take_it ) {
-                        particle_stack.u[j] = EGS_Vector(un,vn,wn);
+                        particle_stack[j].u = EGS_Vector(un,vn,wn);
                     }
                     else {
-                        particle_stack.wt[j] = 0; particle_stack.E[j] = 0;
+                        particle_stack[j].wt = 0; particle_stack[j].E = 0;
                     }
                 }
             }
@@ -711,10 +774,12 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
                      j = jj;
               }
               //maybe should use egs++ alias_sample function here
-              br = F77_OBJ(alias_sample1)(MXBRXS,app->getNbXdata(0,j,imed),
-                                          app->getNbFdata(0,j,imed),
-                                          app->getNbWdata(1,j,imed),
-                                          app->getNbIdata(i,j,imed));
+              int mxbrxs = MXBRXS;
+              EGS_Float f1 = app->getNbXdata(0,j,imed);
+              EGS_Float f2 = app->getNbFdata(0,j,imed);
+              EGS_Float f3 = app->getNbWdata(1,j,imed);
+              EGS_Float f4 = app->getNbIdata(1,j,imed);
+              br = F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(mxbrxs,f1,f2,f3,f4);
             }
             else
             {
@@ -730,8 +795,8 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
           do
           {
            // use BH cross-sections
-           rnno006 = rndm->getUniform();
-           rnno007 = rndm->getUniform();
+           rnno06 = rndm->getUniform();
+           rnno07 = rndm->getUniform();
            br = brmin*exp(rnno06*waux);
            esg = ekin*br;
            pesg = esg;
@@ -755,10 +820,10 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
        }
        if (ip <= np)
        {
-          particle_stack.E[ip] = pesg;
+          particle_stack[ip].E = pesg;
        }
    }
-   particle_stack.E[npold] = pese;
+   particle_stack[npold].E = pese;
 }
 
 void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_split, int npstart, int kill_electrons) {
@@ -766,8 +831,10 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
    if (npstart > app->Np) return;
    int i_playrr = 0;
    int idbs = npstart;
+   EGS_Float dnear = app->getDnear(idbs);
    do {
-      EGS_Particle p = app->getParticleFromStack(idbs);
+      EGS_Particle p;
+      app->getParticleFromStack(idbs,p);
       //below is temporary until we figure out how to pass iweight
       int is_fat = (p.latch & (1 << 31));
       if (p.q == 0)
@@ -775,14 +842,14 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
          i_playrr = 0;
          if (!is_fat)
          {
-            if (p.w < 0)
+            if (p.u.z < 0)
             {
                i_playrr = 1;
             }
             else
             {
-               EGS_Float dist = (ssd - p.z)/p.w;
-               EGS_Float r2 = (p.x+dist*p.u)*(p.x+dist*p.u) + (p.y+dist*p.v)*(p.y+dist*p.v);
+               EGS_Float dist = (ssd - p.x.z)/p.u.z;
+               EGS_Float r2 = (p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y);
                if (r2 > fs*fs) i_playrr = 1;
             }
          }
@@ -798,12 +865,13 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
                 //keep the particle and increase weight
                 //do this by saving the particle info, deleting the particle, changing the weight and adding it
                 //back to the stack
-                EGS_Particle p1 = app->getParticleFromStack(idbs);
+                EGS_Particle p1;
+                app->getParticleFromStack(idbs,p1);
                 p1.wt = p1.wt*n_split;
                 //set bit 31 of latch to mark as phat--temporary
                 p1.latch = p1.latch | (1 << 31);
                 app->deleteParticleFromStack(idbs);
-                app->addParticleToStack(p1);
+                app->addParticleToStack(p1,dnear);
                 idbs++;
             }
          }
@@ -832,10 +900,11 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
             else
             {
                 //keep the particle and increase weight
-                EGS_Particle p2 = app->getParticleFromStack(idbs);
+                EGS_Particle p2;
+                app->getParticleFromStack(idbs,p2);
                 p2.wt = p2.wt*kill_electrons;
                 app->deleteParticleFromStack(idbs);
-                app->addParticleToStack(p2);
+                app->addParticleToStack(p2,dnear);
             }
          }
       }
@@ -844,7 +913,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
    return;
 }
 
-void EGS_RadiativeSplitting::selectAzimuthalAngle(EGS_Float &cphi, EGS_FLOAT &sphi)
+void EGS_RadiativeSplitting::selectAzimuthalAngle(EGS_Float &cphi, EGS_Float &sphi)
 {
    //function to randomly select an azimuthal angle evenly distributed on 4pi
    //returns cos and sin of angle
@@ -877,6 +946,7 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
    EGS_Float d = ssd - app->top_p.x.z;
    EGS_Float aux = (ro + fs)/d;
    EGS_Float ct_min = 1/sqrt(1+aux*aux);
+   EGS_Float ct_max;
    if (ro <= fs)
    {
       ct_max = 1;
@@ -895,14 +965,16 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
 
    //now create the num_split photons
    //note: not all photons will go towards the circle and we will have to play russian roulette with these
-   EGS_Particle p_old = app->getParticleFromStack(app->getNpold());
+   EGS_Particle p_old;
+   EGS_Float dnear = app->getDnear(app->getNpold());
+   app->getParticleFromStack(app->getNpold(),p_old);
    EGS_Float weight = p_old.wt/n_split;
    EGS_Float cost, sint, cphi, sphi;
    int ns,ip;
    int np = app->Np-1;
    for (int i=0; i< num_split; i++)
    {
-       EGS_particle p;
+       EGS_Particle p;
        cost = ct_min + rndm->getUniform()*(ct_max-ct_min);
        sint = 1-cost*cost;
        if (sint > 0)
@@ -937,7 +1009,8 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
            {
               ip = app->getNpold();
            }
-           EGS_Particle p_ip = app->getParticleFromStack(ip);
+           EGS_Particle p_ip;
+           app->getParticleFromStack(ip,p_ip);
            p.latch = p_ip.latch;
            p.ir = p_ip.ir;
            p.x = p_ip.x;
@@ -947,7 +1020,7 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
            p.wt = weight*ns;
            p.u = EGS_Vector(sint*cphi, sint*sphi, cost);
 
-           app->addParticleToStack(p);
+           app->addParticleToStack(p,dnear);
        }
    }
 
@@ -979,7 +1052,8 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
            {
               ip = app->getNpold();
            }
-           EGS_Particle p_ip = app->getParticleFromStack(ip);
+           EGS_Particle p_ip,p;
+           app->getParticleFromStack(ip,p_ip);
            p.latch = p_ip.latch;
            p.ir = p_ip.ir;
            p.x = p_ip.x;
@@ -989,14 +1063,16 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
            p.wt = weight*n_split;
            p.u = EGS_Vector(sint*cphi, sint*sphi, cost);
 
-           app->addParticleToStack(p);
+           app->addParticleToStack(p,dnear);
        }
    }
    return;
 }
 
-void EGS_RadiativeSplitting::doSmartCompton(int nsample, EGS_RandomGenerator *rndm)
+void EGS_RadiativeSplitting::doSmartCompton(int nint, EGS_RandomGenerator *rndm)
 {
+
+   //need to set variable iwt=nsplit or iwt=nint
    app->setNpold(app->Np);
    int np = app->Np;
    EGS_Vector x = app->top_p.x;
@@ -1090,9 +1166,9 @@ void EGS_RadiativeSplitting::doSmartCompton(int nsample, EGS_RandomGenerator *rn
                    p.x = x;
                    p.u = EGS_Vector(un,vn,wn);
                    p.ir = irl;
-                   p.wt = wt*iw
+                   p.wt = wt*iw;
                    p.latch = latch;
-                   p.iq = 0;
+                   p.q = 0;
                    p.E = E*a;
 
                    app->addParticleToStack(p,dnear);
@@ -1141,7 +1217,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nsample, EGS_RandomGenerator *rn
                     p.ir = irl;
                     p.wt = wt*ns;
                     p.latch = latch;
-                    p.iq = 0;
+                    p.q = 0;
                     p.E = E*br;
 
                     app->addParticleToStack(p,dnear);
@@ -1219,6 +1295,65 @@ void EGS_RadiativeSplitting::doSmartCompton(int nsample, EGS_RandomGenerator *rn
       p.q = -1;
       p.E = Eelec + app->getRM();
       app->addParticleToStack(p,dnear);
+}
+
+void EGS_RadiativeSplitting::initSmartKM(EGS_Float Emax) {
+
+      int nmed = app->getNmed();
+      if( nmed < 1 ) return;
+      EGS_Float logEmax = log(Emax);
+
+      y2_KM = new EGS_Float [nsplit];
+      f_KM_a = new EGS_Interpolator* [nmed];
+      f_KM_b = new EGS_Interpolator* [nmed];
+      f_KM_max = new EGS_Interpolator [nmed];
+      zbr_KM = new EGS_Float [nmed];
+      a_KM = new EGS_Float [nmed]; b_KM = new EGS_Float [nmed];
+
+      DBS_Aux the_aux; the_aux.np = 128; EGS_Float b = 0.5;
+      int nx = 257; EGS_Float ddx = 0.00390625;
+      for(int imed=0; imed<nmed; imed++) {
+        EGS_Float AP = app->getAp(imed);
+        EGS_Float logAP = log(AP);
+        int ne = 1 + (int) ((logEmax-logAP)/0.12);
+        a_KM[imed] = ((EGS_Float)ne-1)/(logEmax-logAP);
+        b_KM[imed] = -a_KM[imed]*logAP;
+        f_KM_a[imed] = new EGS_Interpolator [ne];
+        f_KM_b[imed] = new EGS_Interpolator [ne];
+        EGS_Float *tmp_fmax = new EGS_Float [ne];
+        EGS_Float dle = (logEmax-logAP)/(ne-1);
+        int imedm = imed+1;
+        zbr_KM[imed] = app->getZbrang(imed);
+        the_aux.Z13 = zbr_KM[imed];
+        for(int ie=0; ie<ne; ie++) {
+            EGS_Float eke = AP*exp(dle*ie);
+            EGS_Float E = eke/app->getRM() + 1;
+            the_aux.E = E; the_aux.le = log(E - b*(E-1));
+            f_KM_a[imed][ie].initialize(0,b,dbs_func_KM,&the_aux,1025,9e-4);
+            f_KM_b[imed][ie].initialize(0,1,dbs_func_KM1,&the_aux,1025,9e-4);
+            EGS_Float fmax = 0;
+            for(int j=0; j<nx; j++) {
+                EGS_Float x = ddx*j;
+                EGS_Float k = x*(E-1);
+                EGS_Float fnorm;
+                if( x <= b ) fnorm = f_KM_a[imed][ie].interpolate(x);
+                else {
+                    EGS_Float u = log(E-x*(E-1))/the_aux.le;
+                    fnorm = f_KM_b[imed][ie].interpolate(u);
+                }
+                EGS_Float r = 1-k/E; EGS_Float delta = (1-r)/(2*r*E);
+                EGS_Float f = (-(1+r)*(1+r)-
+                        (1+r*r)*log(delta*delta+zbr_KM[imed]))/fnorm;
+                if( f > fmax ) fmax = f;
+            }
+            tmp_fmax[ie] = fmax;
+        }
+        f_KM_max[imed].initialize(ne,logAP,logEmax,tmp_fmax);
+        //egsWarning("---deleting in initSmartKM()\n");
+        delete [] tmp_fmax;
+    }
+    nmed_KM = nmed;
+    if( nsplit > 0 ) y2_KM = new EGS_Float [nsplit];
 }
 
 //*********************************************************************

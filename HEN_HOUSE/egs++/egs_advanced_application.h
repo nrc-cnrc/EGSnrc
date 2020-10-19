@@ -230,18 +230,20 @@ public:
     //************************************************************
     // Utility functions for egs_radiative_splitting ausgab objects
     //************************************************************
-    EGS_RandomGenerator *getRNG();
+    void getRNG(EGS_RandomGenerator *rng);
     void addParticleToStack(EGS_Particle p, EGS_Float dnear);
     EGS_Float getDnear(int np);
+    int getNmed();
     int getNpold();
     void setNpold(int npold);
     void deleteParticleFromStack(int ip);
-    EGS_Particle getParticleFromStack(int ip);
+    void getParticleFromStack(int ip,EGS_Particle p);
     EGS_Float getCohfac(int imed, EGS_Float gle);
     EGS_Float getGle();
     int getIbrdst();
+    int getIbcmp();
     EGS_Float getAp(int imed);
-    EGS_Float getIbrnist();
+    int getIbrnist();
     EGS_Float getNbLemin(int imed);
     EGS_Float getNbDlei(int imed);
     EGS_Float getNbEmin(int imed);
@@ -249,6 +251,15 @@ public:
     EGS_Float getNbFdata(int i, int j, int imed);
     EGS_Float getNbWdata(int i, int j, int imed);
     int getNbIdata(int i, int j, int imed);
+    EGS_Float getEmax();
+    EGS_Float getZbrang(int imed);
+    EGS_Float getDelcm(int imed);
+    EGS_Float getDl1(int i, int imed);
+    EGS_Float getDl2(int i, int imed);
+    EGS_Float getDl3(int i, int imed);
+    EGS_Float getDl4(int i, int imed);
+    EGS_Float getDl5(int i, int imed);
+    EGS_Float getDl6(int i, int imed);
 
     /* Needed by some sources */
     EGS_Float getRM();
