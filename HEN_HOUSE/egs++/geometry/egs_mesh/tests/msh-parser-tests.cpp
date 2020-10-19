@@ -148,7 +148,6 @@ int test_parse_msh2_nodes() {
         );
         std::string err_msg;
         auto nodes = parse_msh2_nodes(input, err_msg);
-        std::string expected = "";
         if (!err_msg.empty()) {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
             return 1;
@@ -242,7 +241,7 @@ int test_parse_msh2_nodes() {
         );
         std::string err_msg;
         auto nodes = parse_msh2_nodes(input, err_msg);
-        if (err_msg != "") {
+        if (!err_msg.empty()) {
                 std::cerr << "got error message: \"" << err_msg << "\"\n";
                 return 1;
         }
@@ -256,6 +255,221 @@ int test_parse_msh2_nodes() {
             nodes[3].z != 0.0)
         {
             std::cerr << "parsed node didn't match reference value\n";
+            return 1;
+        }
+    }
+    return 0;
+}
+
+// all test cases assume $PhysicalNames header has already been parsed
+int test_parse_msh2_groups() {
+    // empty section
+    {
+        std::istringstream input(
+            "0\n"
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        if (groups.size() != 0) {
+            std::cerr << "expected 0 nodes, got " << groups.size() << "\n";
+            return 1;
+        }
+    }
+    // missing number of groups fails
+    {
+        std::istringstream input(
+            "1 1 \"a line\"\n"
+            "2 2 \"a surface\"\n"
+            "3 3 \"a volume\"\n"
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        std::string expected = "unexpected trailing data";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // missing $EndPhysicalNames tag fails
+    {
+        std::istringstream input(
+            "3\n"
+            "1 1 \"a line\"\n"
+            "2 2 \"a surface\"\n"
+            "3 3 \"a volume\"\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        std::string expected = "unexpected end of file, expected $EndPhysicalNames";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // bad physical group line fails
+    {
+        std::istringstream input(
+            "1\n"
+            "1 \"a line\"\n" // missing tag
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        std::string expected = "physical group parsing failed: 1 \"a line\"";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // catch invalid physical group names
+    {
+        std::istringstream input(
+            "1\n"
+            "3 1 \"\"\n"
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        std::string expected = "empty physical group name: 3 1 \"\"";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // physical group names are quoted
+    {
+        std::istringstream input(
+            "1\n"
+            "3 1 Steel\n"
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        std::string expected = "physical group names must be quoted: 3 1 Steel";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // closing name quote is required
+    {
+        std::istringstream input(
+            "1\n"
+            "3 1 \"Steel\n"
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        std::string expected = "couldn't find closing quote for physical group: 3 1 \"Steel";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // only 3D groups are returned
+    {
+         std::istringstream input(
+            "3\n"
+            "1 1 \"line\"\n"
+            "2 2 \"surface\"\n"
+            "3 3 \"volume\"\n"
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        std::string expected_name = "volume";
+        if (groups.at(0).name != expected_name) {
+            std::cerr << "bad physical name parse, expected: " << expected_name
+                << "but got: " << groups.at(0).name << "\n";
+            return 1;
+        }
+    }
+    // spaces in names are OK
+    {
+         std::istringstream input(
+            "3\n"
+            "1 1 \"a line\"\n"
+            "2 2 \"a surface\"\n"
+            "3 3 \"a volume\"\n"
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        std::string expected_name = "a volume";
+        if (groups.at(0).name != expected_name) {
+            std::cerr << "bad physical name parse, expected: " << expected_name
+                << "but got: " << groups.at(0).name << "\n";
+            return 1;
+        }
+    }
+    // single letter names are OK
+    {
+         std::istringstream input(
+            "3\n"
+            "1 1 \"a line\"\n"
+            "2 2 \"a surface\"\n"
+            "3 3 \"a\"\n"
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        std::string expected_name = "a";
+        if (groups.at(0).name != expected_name) {
+            std::cerr << "bad physical name parse, expected: " << expected_name
+                << "but got: " << groups.at(0).name << "\n";
+            return 1;
+        }
+    }
+    // successfully parse a valid physical groups section
+    {
+         std::istringstream input(
+            "5\n"
+            "1 1 \"a line\"\n"
+            "2 2 \"a surface\"\n"
+            "3 3 \"Steel\"\n"
+            "3 4 \"Air\"\n"
+            "3 5 \"Water\"\n"
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh2_groups(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        if (groups.size() != 3) {
+            std::cerr << "expected 3 groups, got " << groups.size() << "\n";
+            return 1;
+        }
+        if (! (groups.at(0).name == "Steel" && groups.at(0).tag == 3) &&
+              (groups.at(1).name == "Air" && groups.at(1).tag == 4) &&
+              (groups.at(2).name == "Water" && groups.at(2).tag == 5))
+        {
+            std::cerr << "parsed physical groups didn't match reference values\n";
             return 1;
         }
     }
@@ -324,6 +538,15 @@ int main() {
         std::cerr << "test PASSED" << std::endl;
     }
 
+    std::cerr << "starting test parse_msh2_groups" << std::endl;
+    err = test_parse_msh2_groups();
+    if (err) {
+        std::cerr << "test FAILED" << std::endl;
+        num_failed++;
+    } else {
+        std::cerr << "test PASSED" << std::endl;
+    }
+    /*
     std::cerr << "starting test parse_msh_file" << std::endl;
     err = test_parse_msh_file();
     if (err) {
@@ -332,6 +555,6 @@ int main() {
     } else {
         std::cerr << "test PASSED" << std::endl;
     }
-
+    */
     return num_failed;
 }

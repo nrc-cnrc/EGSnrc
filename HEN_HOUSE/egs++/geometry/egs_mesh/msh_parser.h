@@ -152,8 +152,68 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
     return nodes;
 }
 
+// 3D Gmsh physical group
+struct PhysicalGroup {
+    int tag;
+    std::string name;
+};
+
+std::vector<PhysicalGroup> parse_msh2_groups(std::istream& input, std::string& err_msg) {
+    std::vector<PhysicalGroup> groups;
+    int num_groups = get_int_line(input, err_msg);
+    if (!err_msg.empty()) {
+        // todo add context to error message:
+        // -- failed to parse num_groups
+        return groups;
+    }
+    int dim = -1;
+    int tag = -1;
+    std::string line;
+    while (input) {
+        std::getline(input, line);
+        rtrim(line);
+        if (line == "$EndPhysicalNames") {
+            break;
+        }
+        std::istringstream line_stream(line);
+        line_stream >> dim;
+        line_stream >> tag;
+        if (line_stream.eof()) {
+            err_msg = "unexpected end of file, expected $EndPhysicalNames";
+            return std::vector<PhysicalGroup>{};
+        }
+        if (line_stream.fail()) {
+            err_msg = "physical group parsing failed: " + line;
+            return std::vector<PhysicalGroup>{};
+        }
+        // only save 3D physical groups
+        if (dim != 3) {
+            continue;
+        }
+        // find quoted group name
+        auto name_start = line.find_first_of('"');
+        if (name_start == std::string::npos) {
+            err_msg = "physical group names must be quoted: " + line;
+            return std::vector<PhysicalGroup>{};
+        }
+        auto name_end = line.find_last_of('"');
+        if (name_end == name_start) {
+            err_msg = "couldn't find closing quote for physical group: " + line;
+            return std::vector<PhysicalGroup>{};
+        }
+        if (name_end - name_start == 1) {
+            err_msg = "empty physical group name: " + line;
+            return std::vector<PhysicalGroup>{};
+        }
+        auto name_len = name_end - name_start - 1; // -1 to exclude closing quote
+        groups.push_back(PhysicalGroup { tag, line.substr(name_start + 1, name_len) });
+    }
+    return groups;
+}
+
 void parse_msh2_body(std::istream& input, std::string& err_msg) {
     std::vector<Node> nodes;
+    std::vector<PhysicalGroup> groups;
 
     std::string input_line;
     while (std::getline(input, input_line)) {
@@ -165,9 +225,9 @@ void parse_msh2_body(std::istream& input, std::string& err_msg) {
         if (input_line == "$Nodes") {
             nodes = parse_msh2_nodes(input, err_msg);
         }
-        /* else if (input_line == "$PhysicalNames") {
-            parse_msh2_physical_groups(input, err_msg);
-        } else if (input_line == "$Elements") {
+        else if (input_line == "$PhysicalNames") {
+            parse_msh2_groups(input, err_msg);
+        } /* else if (input_line == "$Elements") {
             parse_msh2_elements(input, err_msg);
         } */
     }
