@@ -115,6 +115,7 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
         // -- failed to parse num_nodes
         return std::vector<Node>{};
     }
+    nodes.reserve(num_nodes);
 
     int node_num = -1;
     double x = 0.0;
@@ -160,12 +161,15 @@ struct PhysicalGroup {
 
 std::vector<PhysicalGroup> parse_msh2_groups(std::istream& input, std::string& err_msg) {
     std::vector<PhysicalGroup> groups;
+    // this is the total number of physical groups, not just the number of 3D groups
     int num_groups = get_int_line(input, err_msg);
     if (!err_msg.empty()) {
         // todo add context to error message:
         // -- failed to parse num_groups
         return groups;
     }
+    groups.reserve(num_groups);
+
     int dim = -1;
     int tag = -1;
     std::string line;
