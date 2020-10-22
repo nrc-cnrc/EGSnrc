@@ -476,6 +476,137 @@ int test_parse_msh2_groups() {
     return 0;
 }
 
+// all test cases assume $Elements header has already been parsed
+int test_parse_msh2_elements() {
+    // empty section
+    {
+        std::istringstream input(
+            "0\n"
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh2_elements(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        if (elts.size() != 0) {
+            std::cerr << "expected 0 elements, got " << elts.size() << "\n";
+            return 1;
+        }
+    }
+    // skips non-tetrahedral elements
+    {
+         std::istringstream input(
+            "3\n"
+            "1 1 2 1 1 1 2\n" // line
+            "2 3 2 1 1 1 2 3 4\n" // quad
+            "3 4 2 1 1 1 2 3 4\n" // tetrahedron
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh2_elements(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        if (elts.size() != 1) {
+            std::cerr << "expected 1 element, got " << elts.size() << "\n";
+            return 1;
+        }
+        auto elt = elts.at(0);
+        if (! (elt.tag == 3 &&
+               elt.group == 1 &&
+               elt.a == 1 &&
+               elt.b == 2 &&
+               elt.c == 3 &&
+               elt.d == 4))
+        {
+            std::cerr << "parsed element didn't match reference value\n";
+            return 1;
+        }
+    }
+    // skips num_following OK
+    {
+         std::istringstream input(
+            "2\n"
+            "1 4 3 100 200 300 1 2 3 4\n"
+            "2 4 3 400 200 300 1 2 3 4\n"
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh2_elements(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        if (elts.size() != 2) {
+            std::cerr << "expected 1 element, got " << elts.size() << "\n";
+            return 1;
+        }
+        if (! (elts[0].tag == 1 && elts[0].group == 100 &&
+               elts[0].a == 1 && elts[0].b == 2 && elts[0].c == 3 && elts[0].d == 4 &&
+               elts[1].tag == 2 && elts[1].group == 400 &&
+               elts[1].a == 1 && elts[1].b == 2 && elts[1].c == 3 && elts[1].d == 4))
+        {
+            std::cerr << "parsed element didn't match reference value\n";
+            return 1;
+        }
+    }
+    // num_following = 0 fails
+    {
+         std::istringstream input(
+            "1\n"
+            "1 4 0 1 2 3 4\n"
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh2_elements(input, err_msg);
+        std::string expected = "got num_following = 0 which means no physical group. All elements must belong to a physical group";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // physical group = 0 fails
+    {
+         std::istringstream input(
+            "1\n"
+            "1 4 2 0 1 1 2 3 4\n"
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh2_elements(input, err_msg);
+        std::string expected =
+            "got physical group id of 0, all elements must have a nonzero physical group:\n "
+            "1 4 2 0 1 1 2 3 4";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // not enough nodes for a tetrahedron fails
+    {
+         std::istringstream input(
+            "1\n"
+            "1 4 2 1 1 1 2 3\n" // only 3 nodes
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh2_elements(input, err_msg);
+        std::string expected =
+            "element parsing failed:\n 1 4 2 1 1 1 2 3";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int test_parse_msh_file() {
     std::string header =
         "$MeshFormat\n"
@@ -546,6 +677,16 @@ int main() {
     } else {
         std::cerr << "test PASSED" << std::endl;
     }
+
+    std::cerr << "starting test parse_msh2_elements" << std::endl;
+    err = test_parse_msh2_elements();
+    if (err) {
+        std::cerr << "test FAILED" << std::endl;
+        num_failed++;
+    } else {
+        std::cerr << "test PASSED" << std::endl;
+    }
+
     /*
     std::cerr << "starting test parse_msh_file" << std::endl;
     err = test_parse_msh_file();

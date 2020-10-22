@@ -215,6 +215,83 @@ std::vector<PhysicalGroup> parse_msh2_groups(std::istream& input, std::string& e
     return groups;
 }
 
+// A tetrahedron composed of four nodes
+struct Tetrahedron {
+    int tag = -1;
+    int group = -1;
+    int a = -1;
+    int b = -1;
+    int c = -1;
+    int d = -1;
+};
+
+std::vector<Tetrahedron> parse_msh2_elements(std::istream& input, std::string& err_msg) {
+    std::vector<Tetrahedron> elts;
+    // total number of elements, not just tetrahedrons
+    int num_elts = get_int_line(input, err_msg);
+    if (!err_msg.empty()) {
+        // todo add context to error message:
+        // -- failed to parse num_elts
+        return elts;
+    }
+    elts.reserve(num_elts);
+
+    std::string line;
+    while (input) {
+        std::getline(input, line);
+        rtrim(line);
+        if (line == "$EndElements") {
+            break;
+        }
+        std::istringstream line_stream(line);
+
+        int tag = -1;
+        int elt_type = -1;
+        int num_following = -1;
+        line_stream >> tag;
+        line_stream >> elt_type;
+        line_stream >> num_following;
+        if (line_stream.eof()) {
+            err_msg = "unexpected end of file, expected $EndElements";
+            return std::vector<Tetrahedron>{};
+        }
+        if (line_stream.fail()) {
+            err_msg = "element parsing failed:\n " + line;
+            return std::vector<Tetrahedron>{};
+        }
+        if (elt_type != 4 /* tetrahedron type */) {
+            continue;
+        }
+        if (num_following == 0) {
+            err_msg = "got num_following = 0 which means no physical group. All elements must belong to a physical group";
+            return std::vector<Tetrahedron>{};
+        }
+        // parse physical group, skip the rest of num_following
+        int group = -1;
+        line_stream >> group;
+        int dummy = -1;
+        for (int i = 0; i < num_following - 1; ++i) {
+            line_stream >> dummy;
+        }
+        // parse the 4 nodes of this tetrahedron
+        int a = -1;
+        int b = -1;
+        int c = -1;
+        int d = -1;
+        line_stream >> a >> b >> c >> d;
+        if (line_stream.fail()) {
+            err_msg = "element parsing failed:\n " + line;
+            return std::vector<Tetrahedron>{};
+        }
+        if (group == 0) {
+            err_msg = "got physical group id of 0, all elements must have a nonzero physical group:\n " + line;
+            return std::vector<Tetrahedron>{};
+        }
+        elts.push_back(Tetrahedron { tag, group, a, b, c, d });
+    }
+    return elts;
+}
+
 void parse_msh2_body(std::istream& input, std::string& err_msg) {
     std::vector<Node> nodes;
     std::vector<PhysicalGroup> groups;
