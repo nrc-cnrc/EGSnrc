@@ -113,7 +113,7 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
     if (!err_msg.empty()) {
         // todo add context to error message:
         // -- failed to parse num_nodes
-        return nodes;
+        return std::vector<Node>{};
     }
 
     int node_num = -1;
@@ -128,7 +128,7 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
     if (nodes.size() != num_nodes) {
         err_msg = "expected " + std::to_string(num_nodes) + " nodes, but read "
             + std::to_string(nodes.size());
-        return nodes;
+        return std::vector<Node>{};
     }
 
     // clear error state to continue parsing and check if we hit $EndNodes
@@ -137,16 +137,16 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
     input >> end_nodes;
     if (input.bad()) {
         err_msg = "IO error during reading";
-        return nodes;
+        return std::vector<Node>{};
     }
     if (input.eof()) {
         err_msg = "expected $EndNodes, got EOF";
-        return nodes;
+        return std::vector<Node>{};
     }
     rtrim(end_nodes);
     if (end_nodes != "$EndNodes") {
         err_msg = "expected $EndNodes, got " + end_nodes;
-        return nodes;
+        return std::vector<Node>{};
     }
 
     return nodes;
