@@ -13,16 +13,16 @@ elaborate geometries and particle sources.
 
 ## Documentation
 
-- [**Getting Started**](doc/getting-started.pdf) with guided tutorials
-- [**EGSnrc**](doc/pirs701-egsnrc.pdf) core manual (PIRS-701)
-- [**BEAMnrc**](doc/pirs509a-beamnrc.pdf) accelerators (PIRS-509a)
-- [**DOSXYZnrc**](doc/pirs794-dosxyznrc.pdf) voxel dose (PIRS-794)
-- [**egs++**](doc/pirs898/index.html) geometry and source libraries (PIRS-898)
-- [**RZ and SPH apps**](doc/pirs702-egsnrc-codes.pdf) user manual (PIRS-702)
-- [**RZ GUI**](doc/pirs801-egsinprz.pdf) egs_inprz (PIRS-801)
-- [**BEAMDP basic**](doc/pirs509e-beamdp-utility.pdf) manual (PIRS-509e)
-- [**BEAMDP advanced**](doc/pirs509c-beamdp.pdf) manual (PIRS-509c)
-- [**STATDOSE**](doc/pirs509f-statdose.pdf) 3D dose processor (PIRS-509f)
+- [**Getting Started**](https://nrc-cnrc.github.io/EGSnrc/doc/getting-started.pdf) with guided tutorials
+- [**EGSnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs701-egsnrc.pdf) core manual (PIRS-701)
+- [**BEAMnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509a-beamnrc.pdf) accelerators (PIRS-509a)
+- [**DOSXYZnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs794-dosxyznrc.pdf) voxel dose (PIRS-794)
+- [**egs++**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs898/index.html) geometry and source libraries (PIRS-898)
+- [**RZ and SPH apps**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs702-egsnrc-codes.pdf) user manual (PIRS-702)
+- [**RZ GUI**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs801-egsinprz.pdf) egs_inprz (PIRS-801)
+- [**BEAMDP basic**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509e-beamdp-utility.pdf) manual (PIRS-509e)
+- [**BEAMDP advanced**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509c-beamdp.pdf) manual (PIRS-509c)
+- [**STATDOSE**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509f-statdose.pdf) 3D dose processor (PIRS-509f)
 
 
 ## Licence
