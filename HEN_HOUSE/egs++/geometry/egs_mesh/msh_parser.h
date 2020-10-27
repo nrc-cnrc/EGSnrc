@@ -14,7 +14,7 @@ static inline void rtrim(std::string &s) {
     }).base(), s.end());
 }
 
-enum class MshVersion { v22, Failure };
+enum class MshVersion { v41, Failure };
 
 MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
     if (!input) {
@@ -48,8 +48,8 @@ MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
         err_msg = "failed to parse msh version";
         return MshVersion::Failure;
     }
-    if (version != "2.2") {
-        err_msg = "unhandled msh version `" + version + "`, the only known version is 2.2";
+    if (version != "4.1") {
+        err_msg = "unsupported msh version `" + version + "`, the only supported version is 4.1";
         return MshVersion::Failure;
     }
     if (binary_flag != 0) {
@@ -249,7 +249,7 @@ struct PhysicalGroup {
     std::string name;
 };
 
-std::vector<PhysicalGroup> parse_msh2_groups(std::istream& input, std::string& err_msg) {
+std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& err_msg) {
     std::vector<PhysicalGroup> groups;
     // this is the total number of physical groups, not just the number of 3D groups
     int num_groups = get_int_line(input, err_msg);
@@ -382,9 +382,11 @@ std::vector<Tetrahedron> parse_msh2_elements(std::istream& input, std::string& e
     return elts;
 }
 
-void parse_msh2_body(std::istream& input, std::string& err_msg) {
+void parse_msh4_body(std::istream& input, std::string& err_msg) {
     std::vector<Node> nodes;
+    std::vector<MeshVolume> volumes;
     std::vector<PhysicalGroup> groups;
+    std::vector<Tetrahedron> elements;
 
     std::string input_line;
     while (std::getline(input, input_line)) {
@@ -393,13 +395,14 @@ void parse_msh2_body(std::istream& input, std::string& err_msg) {
         if (input_line == "$MeshFormat") {
             break;
         }
-        if (input_line == "$Nodes") {
+        if (input_line == "$Entities") {
+           volumes = parse_msh4_entities(input, err_msg);
+        } else if (input_line == "$PhysicalNames") {
+            groups = parse_msh4_groups(input, err_msg);
+        } /* else if (input_line == "$Nodes") {
             nodes = parse_msh2_nodes(input, err_msg);
-        }
-        else if (input_line == "$PhysicalNames") {
-            parse_msh2_groups(input, err_msg);
-        } /* else if (input_line == "$Elements") {
-            parse_msh2_elements(input, err_msg);
+        } else if (input_line == "$Elements") {
+            elements = parse_msh2_elements(input, err_msg);
         } */
     }
 
@@ -410,7 +413,7 @@ void parse_msh_file(std::istream& input, std::string& err_msg) {
     auto version = parse_msh_version(input, err_msg);
     // TODO auto mesh_data;
     switch(version) {
-        case MshVersion::v22: parse_msh2_body(input, err_msg); break;
+        case MshVersion::v41: parse_msh4_body(input, err_msg); break;
         default: break; // TODO couldn't parse msh file
     }
 }

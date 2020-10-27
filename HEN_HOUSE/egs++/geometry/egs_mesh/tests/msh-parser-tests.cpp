@@ -62,7 +62,7 @@ int test_parse_msh_version() {
         );
         std::string err_msg;
         parse_msh_version(input, err_msg);
-        std::string expected = "unhandled msh version `100.2`, the only known version is 2.2";
+        std::string expected = "unsupported msh version `100.2`, the only supported version is 4.1";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
                 << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
@@ -73,7 +73,7 @@ int test_parse_msh_version() {
     {
         std::istringstream input(
             "$MeshFormat\n"
-            "2.2 1 8\n"
+            "4.1 1 8\n"
             "$EndMeshFormat\n"
         );
         std::string err_msg;
@@ -89,7 +89,7 @@ int test_parse_msh_version() {
     {
         std::istringstream input(
             "$MeshFormat\n"
-            "2.2 0 4\n"
+            "4.1 0 4\n"
             "$EndMeshFormat\n"
         );
         std::string err_msg;
@@ -106,7 +106,7 @@ int test_parse_msh_version() {
     {
         std::istringstream input(
             "$MeshFormat\n"
-            "2.2 0 8\n"
+            "4.1 0 8\n"
         );
         std::string err_msg;
         auto vers = parse_msh_version(input, err_msg);
@@ -117,11 +117,11 @@ int test_parse_msh_version() {
             return 1;
         }
     }
-    // parse msh v2.2 successfully
+    // parse msh v4.1 successfully
     {
         std::istringstream input(
             "$MeshFormat\n"
-            "2.2 0 8\n"
+            "4.1 0 8\n"
             "$EndMeshFormat\n"
         );
         std::string err_msg;
@@ -130,8 +130,8 @@ int test_parse_msh_version() {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
             return 1;
         }
-        if (vers != MshVersion::v22) {
-            std::cerr << "failed to parse mesh version 2.2\n";
+        if (vers != MshVersion::v41) {
+            std::cerr << "failed to parse mesh version 4.1\n";
             return 1;
         }
     }
@@ -262,7 +262,7 @@ int test_parse_msh2_nodes() {
 }
 
 // all test cases assume $PhysicalNames header has already been parsed
-int test_parse_msh2_groups() {
+int test_parse_msh4_groups() {
     // empty section
     {
         std::istringstream input(
@@ -270,7 +270,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         if (!err_msg.empty()) {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
             return 1;
@@ -289,7 +289,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         std::string expected = "unexpected trailing data";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -306,7 +306,7 @@ int test_parse_msh2_groups() {
             "3 3 \"a volume\"\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         std::string expected = "unexpected end of file, expected $EndPhysicalNames";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -322,7 +322,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         std::string expected = "physical group parsing failed: 1 \"a line\"";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -338,7 +338,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         std::string expected = "empty physical group name: 3 1 \"\"";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -354,7 +354,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         std::string expected = "physical group names must be quoted: 3 1 Steel";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -370,7 +370,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         std::string expected = "couldn't find closing quote for physical group: 3 1 \"Steel";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -388,7 +388,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         if (!err_msg.empty()) {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
             return 1;
@@ -410,7 +410,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         if (!err_msg.empty()) {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
             return 1;
@@ -432,7 +432,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         if (!err_msg.empty()) {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
             return 1;
@@ -456,7 +456,7 @@ int test_parse_msh2_groups() {
             "$EndPhysicalNames\n"
         );
         std::string err_msg;
-        auto groups = parse_msh2_groups(input, err_msg);
+        auto groups = parse_msh4_groups(input, err_msg);
         if (!err_msg.empty()) {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
             return 1;
@@ -744,7 +744,7 @@ int test_parse_msh2_elements() {
 int test_parse_msh_file() {
     std::string header =
         "$MeshFormat\n"
-        "2.2 0 8\n"
+        "4.1 0 8\n"
         "$EndMeshFormat\n";
 
     std::string pgroups =
@@ -812,8 +812,8 @@ int main() {
         std::cerr << "test PASSED" << std::endl;
     }
 
-    std::cerr << "starting test parse_msh2_groups" << std::endl;
-    err = test_parse_msh2_groups();
+    std::cerr << "starting test parse_msh4_groups" << std::endl;
+    err = test_parse_msh4_groups();
     if (err) {
         std::cerr << "test FAILED" << std::endl;
         num_failed++;
