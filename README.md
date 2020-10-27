@@ -51,8 +51,8 @@ on any platform you need:
 - a C compiler
 - a C++ compiler
 - the GNU `make` utility
-- the Tcl/Tk interpreter and widget toolkit
-- the Grace plotting tool
+- the Tcl/Tk interpreter and widget toolkit (optional, for GUIs)
+- the Grace plotting tool (optional, for plotting data)
 
 Please read the
 [installation instructions](https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview) in the
