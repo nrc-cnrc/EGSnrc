@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <unordered_set>
 
 // todo namespace private
 
@@ -73,11 +74,100 @@ MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
         return MshVersion::Failure;
     }
 
-    if (version == "2.2") {
-        return MshVersion::v22;
+    if (version == "4.1") {
+        return MshVersion::v41;
     }
 
     return MshVersion::Failure;
+}
+
+// A model volume (e.g. cube, cylinder, complex shape constructed by boolean operations).
+struct MeshVolume {
+    int tag = -1;
+    int group = -1;
+};
+
+std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& err_msg) {
+    std::vector<MeshVolume> volumes;
+    int num_3d = -1;
+    // parse number of entities
+    {
+        std::string line;
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        int num_0d = -1;
+        int num_1d = -1;
+        int num_2d = -1;
+        line_stream >> num_0d >> num_1d >> num_2d >> num_3d;
+        if (input.fail()
+           || num_0d < 0 || num_1d < 0 || num_2d < 0 || num_3d < 0)
+        {
+            err_msg = "$Entities parsing failed";
+            return std::vector<MeshVolume>{};
+        }
+        if (num_3d == 0) {
+            err_msg = "$Entities parsing failed, no volumes found";
+            return std::vector<MeshVolume>{};
+        }
+        // skip to 3d entities
+        for (int i = 0; i < (num_0d + num_1d + num_2d); ++i) {
+            std::getline(input, line);
+        }
+    }
+
+    // parse 3d entities
+    volumes.reserve(num_3d);
+    std::string line;
+    while (std::getline(input, line)) {
+        rtrim(line);
+        if (line == "$EndEntities") {
+            break;
+        }
+        std::istringstream line_stream(line);
+        int tag = -1;
+        // unused
+          double min_x = 0.0;
+          double min_y = 0.0;
+          double min_z = 0.0;
+          double max_x = 0.0;
+          double max_y = 0.0;
+          double max_z = 0.0;
+        // ...unused
+        std::size_t num_groups = 0;
+        int group = -1;
+        line_stream >> tag >>
+            min_x >> min_y >> min_z >>
+            max_x >> max_y >> max_z >>
+            num_groups >> group;
+        if (line_stream.fail()) {
+            err_msg = "$Entities parsing failed, 3d volume parsing failed";
+            return std::vector<MeshVolume>{};
+        }
+        if (num_groups == 0) {
+            err_msg = "$Entities parsing failed, volume " + std::to_string(tag) + " was not assigned a physical group";
+            return std::vector<MeshVolume>{};
+        }
+        if (num_groups != 1) {
+            err_msg = "$Entities parsing failed, volume " + std::to_string(tag) + " has more than one physical group";
+            return std::vector<MeshVolume>{};
+        }
+        volumes.push_back( MeshVolume { tag, group } );
+    }
+    if (volumes.size() != num_3d) {
+        err_msg = "$Entities parsing failed, expected " + std::to_string(num_3d) + " volumes but got " + std::to_string(volumes.size());
+        return std::vector<MeshVolume>{};
+    }
+    // ensure the volumes have unique tags
+    std::unordered_set<int> vol_tags;
+    vol_tags.reserve(num_3d);
+    for (const auto& v: volumes) {
+        auto insert_res = vol_tags.insert(v.tag);
+        if (insert_res.second == false) {
+            err_msg = "$Entities parsing failed, found duplicate volume tag " + std::to_string(v.tag);
+            return std::vector<MeshVolume>{};
+        }
+    }
+    return volumes;
 }
 
 struct Node {
