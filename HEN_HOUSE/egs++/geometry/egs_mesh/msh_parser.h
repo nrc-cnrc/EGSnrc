@@ -15,6 +15,7 @@ static inline void rtrim(std::string &s) {
 }
 
 enum class MshVersion { v41, Failure };
+constexpr std::size_t SIZET_MAX = -1;
 
 MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
     if (!input) {
@@ -153,7 +154,7 @@ std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& er
         }
         volumes.push_back( MeshVolume { tag, group } );
     }
-    if (volumes.size() != num_3d) {
+    if (volumes.size() != static_cast<std::size_t>(num_3d)) {
         err_msg = "$Entities parsing failed, expected " + std::to_string(num_3d) + " volumes but got " + std::to_string(volumes.size());
         return std::vector<MeshVolume>{};
     }
@@ -171,10 +172,10 @@ std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& er
 }
 
 struct Node {
-    int idx;
-    double x;
-    double y;
-    double z;
+    int tag = -1;
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
 };
 
 int get_int_line(std::istream& input, std::string& err_msg) {
@@ -216,7 +217,7 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
         nodes.push_back(Node { node_num, x, y, z });
     }
 
-    if (nodes.size() != num_nodes) {
+    if (nodes.size() != static_cast<std::size_t>(num_nodes)) {
         err_msg = "expected " + std::to_string(num_nodes) + " nodes, but read "
             + std::to_string(nodes.size());
         return std::vector<Node>{};
@@ -243,9 +244,115 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
     return nodes;
 }
 
+// Parse a single entity bloc of nodes.
+std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg) {
+    std::vector<Node> nodes;
+    std::size_t num_nodes = SIZET_MAX;
+    int entity = -1;
+    std::string line;
+    {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        int dim = -1;
+        int parametric = -1;
+        line_stream >> dim >> entity >> parametric >> num_nodes;
+        if (line_stream.fail() || dim == -1 || entity == -1 || parametric == -1
+                || num_nodes == SIZET_MAX)
+        {
+            err_msg = "Node bloc parsing failed";
+            return std::vector<Node>{};
+        }
+        if (dim < 0 || dim > 3) {
+            err_msg = "Node bloc parsing failed for entity " + std::to_string(entity) + ", got dimension " + std::to_string(dim) + ", expected 0, 1, 2, or 3";
+            return std::vector<Node>{};
+        }
+    }
+    nodes.reserve(num_nodes);
+    // initialize node tags
+    for (std::size_t i = 0; i < num_nodes; ++i) {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        std::size_t tag = SIZET_MAX;
+        line_stream >> tag;
+        if (line_stream.fail() || tag == SIZET_MAX) {
+            err_msg = "Node bloc parsing failed during node tag section of entity " + std::to_string(entity);
+            return std::vector<Node>{};
+        }
+        Node n;
+        n.tag = tag;
+        nodes.push_back(n);
+    }
+    // fill in coordinates
+    for (std::size_t i = 0; i < num_nodes; ++i) {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        double x = 0.0;
+        double y = 0.0;
+        double z = 0.0;
+        line_stream >> x >> y >> z;
+        if (line_stream.fail()) {
+            err_msg = "Node bloc parsing failed during node coordinate section of entity " + std::to_string(entity);
+            return std::vector<Node>{};
+        }
+        nodes.at(i).x = x;
+        nodes.at(i).y = y;
+        nodes.at(i).z = z;
+    }
+    if (nodes.size() != num_nodes) {
+        err_msg = "Node bloc parsing failed, expected " + std::to_string(num_nodes) + " nodes but read "
+            + std::to_string(nodes.size()) + " for entity " + std::to_string(entity);
+        return std::vector<Node>{};
+    }
+    return nodes;
+}
+
+// Parse the entire $Nodes section
+std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
+    std::vector<Node> nodes;
+    std::size_t num_blocs = SIZET_MAX;
+    std::size_t num_nodes = SIZET_MAX;
+    std::string line;
+    {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        std::size_t min_tag = SIZET_MAX;
+        std::size_t max_tag = SIZET_MAX;
+        line_stream >> num_blocs >> num_nodes >> min_tag >> max_tag;
+        if (line_stream.fail() || num_blocs == SIZET_MAX || num_nodes == SIZET_MAX ||
+                min_tag == SIZET_MAX || max_tag == SIZET_MAX)
+        {
+            err_msg = "$Nodes section parsing failed, missing metadata";
+            return std::vector<Node>{};
+        }
+    }
+    nodes.reserve(num_nodes);
+    for (std::size_t i = 0; i < num_blocs; ++i) {
+        std::string bloc_node_err;
+        std::vector<Node> bloc_nodes = parse_msh4_node_bloc(input, bloc_node_err);
+        if (!bloc_node_err.empty()) {
+            err_msg = bloc_node_err;
+            return std::vector<Node>{};
+        }
+        nodes.insert(nodes.end(), bloc_nodes.begin(), bloc_nodes.end());
+    }
+    if (nodes.size() != num_nodes) {
+        err_msg = "$Nodes section parsing failed, expected " + std::to_string(num_nodes) + " nodes but read "
+            + std::to_string(nodes.size());
+        return std::vector<Node>{};
+    }
+    std::getline(input, line);
+    rtrim(line);
+    if (line != "$EndNodes") {
+        err_msg = "$Nodes section parsing failed, expected $EndNodes";
+        return std::vector<Node>{};
+    }
+
+    return nodes;
+}
+
 // 3D Gmsh physical group
 struct PhysicalGroup {
-    int tag;
+    int tag = -1;
     std::string name;
 };
 
@@ -308,12 +415,125 @@ std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& e
 // A tetrahedron composed of four nodes
 struct Tetrahedron {
     int tag = -1;
-    int group = -1;
+    int volume = -1;
     int a = -1;
     int b = -1;
     int c = -1;
     int d = -1;
 };
+
+std::vector<Tetrahedron> parse_msh4_element_bloc(std::istream& input, std::string& err_msg) {
+    std::vector<Tetrahedron> elts;
+    std::size_t num_elts = SIZET_MAX;
+    int entity = -1;
+    std::string line;
+    {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        int dim = -1;
+        int element_type = -1;
+        line_stream >> dim >> entity >> element_type >> num_elts;
+        if (line_stream.fail() || dim == -1 || entity == -1 || element_type == -1
+                || num_elts == SIZET_MAX)
+        {
+            err_msg = "Element bloc parsing failed";
+            return std::vector<Tetrahedron>{};
+        }
+        if (dim < 0 || dim > 3) {
+            err_msg = "Element bloc parsing failed for entity " + std::to_string(entity) + ", got dimension " + std::to_string(dim) + ", expected 0, 1, 2, or 3";
+            return std::vector<Tetrahedron>{};
+        }
+        // skip 0, 1, 2d element blocs
+        if (dim != 3) {
+            for (std::size_t i = 0; i < num_elts; ++i) {
+                std::getline(input, line);
+            }
+            return std::vector<Tetrahedron>{};
+        }
+        // If a mesh with 3d non-tetrahedral elements is provided, exit.
+        // The mesh may have some volumes that are supposed to be simulated but
+        // not represented by tetrahedrons, so they will be missing from the
+        // EGSnrc representation of the mesh.
+        const int TETRAHEDRON_TYPE = 4;
+        if (element_type != TETRAHEDRON_TYPE) {
+            err_msg = "Element bloc parsing failed for entity " + std::to_string(entity) +
+                ", got non-tetrahedral mesh element type " + std::to_string(element_type);
+            return std::vector<Tetrahedron>{};
+        }
+    }
+    elts.reserve(num_elts);
+
+    for (std::size_t i = 0; i < num_elts; ++i) {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        int tag = -1;
+        int a = -1;
+        int b = -1;
+        int c = -1;
+        int d = -1;
+        line_stream >> tag >> a >> b >> c >> d;
+        if (line_stream.fail() || tag == -1 || a == -1 || b == -1 ||
+                c == -1 || d == -1)
+        {
+            err_msg = "Element bloc parsing failed for entity " + std::to_string(entity);
+            return std::vector<Tetrahedron>{};
+        }
+        elts.push_back(Tetrahedron { tag, entity, a, b, c, d });
+    }
+    return elts;
+}
+
+std::vector<Tetrahedron> parse_msh4_elements(std::istream& input, std::string& err_msg) {
+    std::vector<Tetrahedron> elts;
+    std::size_t num_blocs = SIZET_MAX;
+    std::size_t num_elts = SIZET_MAX;
+    std::string line;
+    {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        std::size_t min_tag = SIZET_MAX;
+        std::size_t max_tag = SIZET_MAX;
+        line_stream >> num_blocs >> num_elts >> min_tag >> max_tag;
+        if (line_stream.fail() || num_blocs == SIZET_MAX || num_elts == SIZET_MAX ||
+                min_tag == SIZET_MAX || max_tag == SIZET_MAX)
+        {
+            err_msg = "$Elements section parsing failed, missing metadata";
+            return std::vector<Tetrahedron>{};
+        }
+    }
+    elts.reserve(num_elts);
+    for (std::size_t i = 0; i < num_blocs; ++i) {
+        std::string bloc_elt_err;
+        std::vector<Tetrahedron> bloc_elts = parse_msh4_element_bloc(input, bloc_elt_err);
+        if (!bloc_elt_err.empty()) {
+            err_msg = bloc_elt_err;
+            return std::vector<Tetrahedron>{};
+        }
+        elts.insert(elts.end(), bloc_elts.begin(), bloc_elts.end());
+    }
+    // can't check against num_elts because it counts all elements
+    std::getline(input, line);
+    rtrim(line);
+    if (line != "$EndElements") {
+        err_msg = "$Elements section parsing failed, expected $EndElements";
+        return std::vector<Tetrahedron>{};
+    }
+    if (elts.size() == 0) {
+        err_msg = "$Elements section parsing failed, no tetrahedral elements were read";
+        return std::vector<Tetrahedron>{};
+    }
+    // ensure element tags are unique
+    std::unordered_set<int> elt_tags;
+    elt_tags.reserve(elts.size());
+    for (const auto& e: elts) {
+        auto insert_res = elt_tags.insert(e.tag);
+        if (insert_res.second == false) {
+            err_msg = "$Elements parsing failed, found duplicate tetrahedron tag " + std::to_string(e.tag);
+            return std::vector<Tetrahedron>{};
+        }
+    }
+    return elts;
+}
 
 std::vector<Tetrahedron> parse_msh2_elements(std::istream& input, std::string& err_msg) {
     std::vector<Tetrahedron> elts;
@@ -399,11 +619,11 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
            volumes = parse_msh4_entities(input, err_msg);
         } else if (input_line == "$PhysicalNames") {
             groups = parse_msh4_groups(input, err_msg);
-        } /* else if (input_line == "$Nodes") {
-            nodes = parse_msh2_nodes(input, err_msg);
+        } else if (input_line == "$Nodes") {
+            nodes = parse_msh4_nodes(input, err_msg);
         } else if (input_line == "$Elements") {
-            elements = parse_msh2_elements(input, err_msg);
-        } */
+            elements = parse_msh4_elements(input, err_msg);
+        }
     }
 
     err_msg = "unimplemented";
