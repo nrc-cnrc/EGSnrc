@@ -243,12 +243,6 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
     return nodes;
 }
 
-// Parse the entire $Nodes section.
-std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
-    std::vector<Node> nodes;
-    return nodes;
-}
-
 // Parse a single entity bloc of nodes.
 std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg) {
     std::vector<Node> nodes;
@@ -304,10 +298,55 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg
         nodes.at(i).z = z;
     }
     if (nodes.size() != num_nodes) {
-        err_msg = "Node bloc parsing failed, expected " + std::to_string(num_nodes) + " nodes, but read "
+        err_msg = "Node bloc parsing failed, expected " + std::to_string(num_nodes) + " nodes but read "
             + std::to_string(nodes.size()) + " for entity " + std::to_string(entity);
         return std::vector<Node>{};
     }
+    return nodes;
+}
+
+// Parse the entire $Nodes section
+std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
+    std::vector<Node> nodes;
+    std::size_t num_blocs = -1;
+    std::size_t num_nodes = -1;
+    std::string line;
+    {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        std::size_t min_tag = -1;
+        std::size_t max_tag = -1;
+        line_stream >> num_blocs >> num_nodes >> min_tag >> max_tag;
+        std::size_t max_sizet = -1;
+        if (line_stream.fail() || num_blocs == max_sizet || num_nodes == max_sizet ||
+                min_tag == max_sizet || max_tag == max_sizet)
+        {
+            err_msg = "$Nodes section parsing failed, missing metadata";
+            return std::vector<Node>{};
+        }
+    }
+    nodes.reserve(num_nodes);
+    for (std::size_t i = 0; i < num_blocs; ++i) {
+        std::string bloc_node_err;
+        std::vector<Node> bloc_nodes = parse_msh4_node_bloc(input, bloc_node_err);
+        if (!bloc_node_err.empty()) {
+            err_msg = bloc_node_err;
+            return std::vector<Node>{};
+        }
+        nodes.insert(nodes.end(), bloc_nodes.begin(), bloc_nodes.end());
+    }
+    if (nodes.size() != num_nodes) {
+        err_msg = "$Nodes section parsing failed, expected " + std::to_string(num_nodes) + " nodes but read "
+            + std::to_string(nodes.size());
+        return std::vector<Node>{};
+    }
+    std::getline(input, line);
+    rtrim(line);
+    if (line != "$EndNodes") {
+        err_msg = "$Nodes section parsing failed, expected $EndNodes";
+        return std::vector<Node>{};
+    }
+
     return nodes;
 }
 
@@ -467,9 +506,9 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
            volumes = parse_msh4_entities(input, err_msg);
         } else if (input_line == "$PhysicalNames") {
             groups = parse_msh4_groups(input, err_msg);
-        } /* else if (input_line == "$Nodes") {
-            nodes = parse_msh2_nodes(input, err_msg);
-        } else if (input_line == "$Elements") {
+        } else if (input_line == "$Nodes") {
+            nodes = parse_msh4_nodes(input, err_msg);
+        } /* else if (input_line == "$Elements") {
             elements = parse_msh2_elements(input, err_msg);
         } */
     }

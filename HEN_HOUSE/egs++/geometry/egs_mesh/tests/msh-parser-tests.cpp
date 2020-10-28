@@ -482,7 +482,7 @@ int test_parse_msh4_groups() {
     return 0;
 }
 
-int test_parse_msh4_nodes() {
+int test_parse_msh4_node_bloc() {
     // missing bloc metadata fails
     {
         std::istringstream input(
@@ -562,6 +562,137 @@ int test_parse_msh4_nodes() {
         if (!(n0.tag == 1 && n0.x == 1.0 && n0.y == 0.0 && n0.z == 0.0 &&
               n1.tag == 2 && n1.x == 0.0 && n1.y == 1.0 && n1.z == 0.0 &&
               n2.tag == 3 && n2.x == 0.0 && n2.y == 0.0 && n2.z == 1.0))
+        {
+            std::cerr << "parsed entities didn't match reference value\n";
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int test_parse_msh4_nodes() {
+    // bad input stream fails
+    {
+        std::ifstream input("bad-file");
+        std::string err_msg;
+        auto nodes = parse_msh4_nodes(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "$Nodes section parsing failed, missing metadata";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // missing section metadata fails eventually (is parsed as the first bloc metadata)
+    {
+        std::istringstream input(
+            // "1 1 1 1\n"
+            "1 1 0 1\n"
+            "1\n"
+            "1 0 0\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_nodes(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "Node bloc parsing failed";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // wrong num_blocs fails
+    {
+        std::istringstream input(
+            "2 1 1 2\n" // num_blocs = 2 but is really 1
+            "1 1 0 1\n"
+            "1\n"
+            "1 0 0\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_nodes(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "Node bloc parsing failed";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // wrong num_nodes fails
+    {
+        std::istringstream input(
+            "1 100 1 2\n" // 100 nodes
+            "1 1 0 1\n"
+            "1\n"
+            "1 0 0\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_nodes(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "$Nodes section parsing failed, expected 100 nodes but read 1";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // missing $EndNodes fails
+    {
+         std::istringstream input(
+            "1 1 1 1\n" // 100 nodes
+            "1 1 0 1\n"
+            "1\n"
+            "1 0 0\n"
+            // "$EndNodes\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_nodes(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "$Nodes section parsing failed, expected $EndNodes";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // parse multiple blocs successfully
+    {
+        std::istringstream input(
+            "3 7 1 7\n"
+            "1 1 0 1\n"
+            "1\n"
+            "1 0 0\n"
+            "1 2 0 2\n"
+            "2\n"
+            "3\n"
+            "0 1 0\n"
+            "0 1 0\n"
+            "3 2 0 4\n"
+            "4\n"
+            "5\n"
+            "6\n"
+            "7\n"
+            "0 0 1\n"
+            "0 0 1\n"
+            "0 0 1\n"
+            "0 0 1\n"
+            "$EndNodes\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_nodes(input, err_msg);
+        assert(nodes.size() == 7);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        auto n0 = nodes.at(0);
+        auto n1 = nodes.at(1);
+        auto n6 = nodes.at(6);
+        if (!(n0.tag == 1 && n0.x == 1.0 && n0.y == 0.0 && n0.z == 0.0 &&
+              n1.tag == 2 && n1.x == 0.0 && n1.y == 1.0 && n1.z == 0.0 &&
+              n6.tag == 7 && n6.x == 0.0 && n6.y == 0.0 && n6.z == 1.0))
         {
             std::cerr << "parsed entities didn't match reference value\n";
             return 1;
@@ -896,6 +1027,15 @@ int main() {
 
     std::cerr << "starting test parse_msh4_entities" << std::endl;
     err = test_parse_msh4_entities();
+    if (err) {
+        std::cerr << "test FAILED" << std::endl;
+        num_failed++;
+    } else {
+        std::cerr << "test PASSED" << std::endl;
+    }
+
+    std::cerr << "starting test parse_msh4_node_bloc" << std::endl;
+    err = test_parse_msh4_node_bloc();
     if (err) {
         std::cerr << "test FAILED" << std::endl;
         num_failed++;
