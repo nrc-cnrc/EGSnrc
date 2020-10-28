@@ -1,4 +1,5 @@
 #include "msh_parser.h"
+#include <cassert>
 
 int test_parse_msh_version() {
     // catch empty inputs
@@ -249,7 +250,7 @@ int test_parse_msh2_nodes() {
             std::cerr << "expected 4 nodes, got " << nodes.size() << "\n";
             return 1;
         }
-        if (nodes[3].idx != 4 ||
+        if (nodes[3].tag != 4 ||
             nodes[3].x != 0.0 ||
             nodes[3].y != 1.0 ||
             nodes[3].z != 0.0)
@@ -470,6 +471,94 @@ int test_parse_msh4_groups() {
               (groups.at(2).name == "Water" && groups.at(2).tag == 5))
         {
             std::cerr << "parsed physical groups didn't match reference values\n";
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int test_parse_msh4_nodes() {
+    // missing bloc metadata fails
+    {
+        std::istringstream input(
+        //    "1 100 0 1\n"
+            "1\n"
+            "1 0 0\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_node_bloc(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "Node bloc parsing failed";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // bad dimension value fails
+    {
+        std::istringstream input(
+            "4 100 0 1\n" // 4d entity?
+            "1\n"
+            "1 0 0\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_node_bloc(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "Node bloc parsing failed for entity 100, got dimension 4,"
+            " expected 0, 1, 2, or 3";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // wrong number of nodes fails
+    {
+        std::istringstream input(
+            "1 100 0 2\n" // 2 nodes given, only 1 present
+            "1\n"
+            "1 0 0\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_node_bloc(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "Node bloc parsing failed during node coordinate section of entity 100";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // successfully parse a single node bloc
+    {
+        std::istringstream input(
+            "1 1 0 3\n"
+            "1\n"
+            "2\n"
+            "3\n"
+            "1 0 0\n"
+            "0 1 0\n"
+            "0 0 1\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_node_bloc(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        if (nodes.size() != 3) {
+            std::cerr << "expected 3 nodes, got " << nodes.size() << "\n";
+            return 1;
+        }
+        auto n0 = nodes.at(0);
+        auto n1 = nodes.at(1);
+        auto n2 = nodes.at(2);
+        if (!(n0.tag == 1 && n0.x == 1.0 && n0.y == 0.0 && n0.z == 0.0 &&
+              n1.tag == 2 && n1.x == 0.0 && n1.y == 1.0 && n1.z == 0.0 &&
+              n2.tag == 3 && n2.x == 0.0 && n2.y == 0.0 && n2.z == 1.0))
+        {
+            std::cerr << "parsed entities didn't match reference value\n";
             return 1;
         }
     }
@@ -803,8 +892,8 @@ int main() {
         std::cerr << "test PASSED" << std::endl;
     }
 
-    std::cerr << "starting test parse_msh2_nodes" << std::endl;
-    err = test_parse_msh2_nodes();
+    std::cerr << "starting test parse_msh4_nodes" << std::endl;
+    err = test_parse_msh4_nodes();
     if (err) {
         std::cerr << "test FAILED" << std::endl;
         num_failed++;

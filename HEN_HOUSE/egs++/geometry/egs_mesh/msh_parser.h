@@ -171,7 +171,7 @@ std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& er
 }
 
 struct Node {
-    int idx;
+    int tag;
     double x;
     double y;
     double z;
@@ -240,6 +240,72 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
         return std::vector<Node>{};
     }
 
+    return nodes;
+}
+
+// Parse the entire $Nodes section.
+std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
+    std::vector<Node> nodes;
+    return nodes;
+}
+
+// Parse a single entity bloc of nodes.
+std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg) {
+    std::vector<Node> nodes;
+    std::size_t num_nodes = -1;
+    int entity = -1;
+    std::string line;
+    {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        int dim = -1;
+        int parametric = -1;
+        line_stream >> dim >> entity >> parametric >> num_nodes;
+        if (line_stream.fail() || dim == -1 || entity == -1 || parametric == -1 || num_nodes == -1) {
+            err_msg = "Node bloc parsing failed";
+            return std::vector<Node>{};
+        }
+        if (dim < 0 || dim > 3) {
+            err_msg = "Node bloc parsing failed for entity " + std::to_string(entity) + ", got dimension " + std::to_string(dim) + ", expected 0, 1, 2, or 3";
+            return std::vector<Node>{};
+        }
+    }
+    nodes.reserve(num_nodes);
+    // initialize node tags
+    for (std::size_t i = 0; i < num_nodes; ++i) {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        std::size_t tag = 0;
+        line_stream >> tag;
+        if (line_stream.fail() || tag == 0) {
+            err_msg = "Node bloc parsing failed during node tag section of entity " + std::to_string(entity);
+            return std::vector<Node>{};
+        }
+        Node n;
+        n.tag = tag;
+        nodes.push_back(n);
+    }
+    // fill in coordinates
+    for (std::size_t i = 0; i < num_nodes; ++i) {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        double x = 0.0;
+        double y = 0.0;
+        double z = 0.0;
+        line_stream >> x >> y >> z;
+        if (line_stream.fail()) {
+            err_msg = "Node bloc parsing failed during node coordinate section of entity " + std::to_string(entity);
+            return std::vector<Node>{};
+        }
+        nodes.at(i).x = x;
+        nodes.at(i).y = y;
+        nodes.at(i).z = z;
+    }
+    if (nodes.size() != num_nodes) {
+        err_msg = "Node bloc parsing failed, expected " + std::to_string(num_nodes) + " nodes, but read "
+            + std::to_string(nodes.size()) + " for entity " + std::to_string(entity);
+        return std::vector<Node>{};
+    }
     return nodes;
 }
 
