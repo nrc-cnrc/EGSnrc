@@ -6,7 +6,8 @@ int test_parse_msh_version() {
     {
         std::istringstream input("");
         std::string err_msg;
-        parse_msh_version(input, err_msg);
+        auto vers = parse_msh_version(input, err_msg);
+        assert(vers == MshVersion::Failure);
         std::string expected = "unexpected end of input";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -18,7 +19,8 @@ int test_parse_msh_version() {
     {
         std::istringstream input("$MshFmt\n");
         std::string err_msg;
-        parse_msh_version(input, err_msg);
+        auto vers = parse_msh_version(input, err_msg);
+        assert(vers == MshVersion::Failure);
         std::string expected = "expected $MeshFormat, got $MshFmt";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -30,7 +32,8 @@ int test_parse_msh_version() {
     {
         std::istringstream input("$MeshFormat\r\n");
         std::string err_msg;
-        parse_msh_version(input, err_msg);
+        auto vers = parse_msh_version(input, err_msg);
+        assert(vers == MshVersion::Failure);
         std::string expected = "failed to parse msh version";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -46,7 +49,8 @@ int test_parse_msh_version() {
             "$EndMeshFormat\n"
         );
         std::string err_msg;
-        parse_msh_version(input, err_msg);
+        auto vers = parse_msh_version(input, err_msg);
+        assert(vers == MshVersion::Failure);
         std::string expected = "failed to parse msh version";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -62,7 +66,8 @@ int test_parse_msh_version() {
             "$EndMeshFormat\n"
         );
         std::string err_msg;
-        parse_msh_version(input, err_msg);
+        auto vers = parse_msh_version(input, err_msg);
+        assert(vers == MshVersion::Failure);
         std::string expected = "unsupported msh version `100.2`, the only supported version is 4.1";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -78,7 +83,8 @@ int test_parse_msh_version() {
             "$EndMeshFormat\n"
         );
         std::string err_msg;
-        parse_msh_version(input, err_msg);
+        auto vers = parse_msh_version(input, err_msg);
+        assert(vers == MshVersion::Failure);
         std::string expected = "binary msh files are unsupported, please convert this file to ascii and try again";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -94,7 +100,8 @@ int test_parse_msh_version() {
             "$EndMeshFormat\n"
         );
         std::string err_msg;
-        parse_msh_version(input, err_msg);
+        auto vers = parse_msh_version(input, err_msg);
+        assert(vers == MshVersion::Failure);
         std::string expected = "msh file size_t must be 8";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -111,6 +118,7 @@ int test_parse_msh_version() {
         );
         std::string err_msg;
         auto vers = parse_msh_version(input, err_msg);
+        assert(vers == MshVersion::Failure);
         std::string expected = "expected $EndMeshFormat, got ``";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -272,12 +280,9 @@ int test_parse_msh4_groups() {
         );
         std::string err_msg;
         auto groups = parse_msh4_groups(input, err_msg);
+        assert(groups.size() == 0);
         if (!err_msg.empty()) {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
-        if (groups.size() != 0) {
-            std::cerr << "expected 0 nodes, got " << groups.size() << "\n";
             return 1;
         }
     }
@@ -570,7 +575,8 @@ int test_parse_msh4_entities() {
     {
         std::ifstream input("bad-file");
         std::string err_msg;
-        auto elts = parse_msh4_entities(input, err_msg);
+        auto vols = parse_msh4_entities(input, err_msg);
+        assert(vols.size() == 0);
         std::string expected = "$Entities parsing failed";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -586,6 +592,7 @@ int test_parse_msh4_entities() {
         );
         std::string err_msg;
         auto vols = parse_msh4_entities(input, err_msg);
+        assert(vols.size() == 0);
         std::string expected = "$Entities parsing failed, no volumes found";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -603,6 +610,7 @@ int test_parse_msh4_entities() {
         );
         std::string err_msg;
         auto vols = parse_msh4_entities(input, err_msg);
+        assert(vols.size() == 0);
         std::string expected = "$Entities parsing failed, volume 1 was not assigned a physical group";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -620,6 +628,7 @@ int test_parse_msh4_entities() {
         );
         std::string err_msg;
         auto vols = parse_msh4_entities(input, err_msg);
+        assert(vols.size() == 0);
         std::string expected = "$Entities parsing failed, volume 2 has more than one physical group";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -636,6 +645,7 @@ int test_parse_msh4_entities() {
         );
         std::string err_msg;
         auto vols = parse_msh4_entities(input, err_msg);
+        assert(vols.size() == 0);
         std::string expected = "$Entities parsing failed, expected 2 volumes but got 1";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
@@ -653,6 +663,7 @@ int test_parse_msh4_entities() {
         );
         std::string err_msg;
         auto vols = parse_msh4_entities(input, err_msg);
+        assert(vols.size() == 0);
         std::string expected = "$Entities parsing failed, found duplicate volume tag 2";
         if (err_msg != expected) {
             std::cerr << "got error message: \""

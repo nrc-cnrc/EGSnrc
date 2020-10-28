@@ -153,7 +153,7 @@ std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& er
         }
         volumes.push_back( MeshVolume { tag, group } );
     }
-    if (volumes.size() != num_3d) {
+    if (volumes.size() != static_cast<std::size_t>(num_3d)) {
         err_msg = "$Entities parsing failed, expected " + std::to_string(num_3d) + " volumes but got " + std::to_string(volumes.size());
         return std::vector<MeshVolume>{};
     }
@@ -216,7 +216,7 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
         nodes.push_back(Node { node_num, x, y, z });
     }
 
-    if (nodes.size() != num_nodes) {
+    if (nodes.size() != static_cast<std::size_t>(num_nodes)) {
         err_msg = "expected " + std::to_string(num_nodes) + " nodes, but read "
             + std::to_string(nodes.size());
         return std::vector<Node>{};
@@ -261,7 +261,9 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg
         int dim = -1;
         int parametric = -1;
         line_stream >> dim >> entity >> parametric >> num_nodes;
-        if (line_stream.fail() || dim == -1 || entity == -1 || parametric == -1 || num_nodes == -1) {
+        if (line_stream.fail() || dim == -1 || entity == -1 || parametric == -1
+                || num_nodes == static_cast<std::size_t>(-1))
+        {
             err_msg = "Node bloc parsing failed";
             return std::vector<Node>{};
         }
