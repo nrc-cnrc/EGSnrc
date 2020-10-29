@@ -15,6 +15,7 @@ static inline void rtrim(std::string &s) {
 }
 
 enum class MshVersion { v41, Failure };
+constexpr std::size_t SIZET_MAX = -1;
 
 MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
     if (!input) {
@@ -246,7 +247,7 @@ std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
 // Parse a single entity bloc of nodes.
 std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg) {
     std::vector<Node> nodes;
-    std::size_t num_nodes = -1;
+    std::size_t num_nodes = SIZET_MAX;
     int entity = -1;
     std::string line;
     {
@@ -256,7 +257,7 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg
         int parametric = -1;
         line_stream >> dim >> entity >> parametric >> num_nodes;
         if (line_stream.fail() || dim == -1 || entity == -1 || parametric == -1
-                || num_nodes == static_cast<std::size_t>(-1))
+                || num_nodes == SIZET_MAX)
         {
             err_msg = "Node bloc parsing failed";
             return std::vector<Node>{};
@@ -271,9 +272,9 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg
     for (std::size_t i = 0; i < num_nodes; ++i) {
         std::getline(input, line);
         std::istringstream line_stream(line);
-        std::size_t tag = 0;
+        std::size_t tag = SIZET_MAX;
         line_stream >> tag;
-        if (line_stream.fail() || tag == 0) {
+        if (line_stream.fail() || tag == SIZET_MAX) {
             err_msg = "Node bloc parsing failed during node tag section of entity " + std::to_string(entity);
             return std::vector<Node>{};
         }
@@ -308,18 +309,17 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg
 // Parse the entire $Nodes section
 std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
     std::vector<Node> nodes;
-    std::size_t num_blocs = -1;
-    std::size_t num_nodes = -1;
+    std::size_t num_blocs = SIZET_MAX;
+    std::size_t num_nodes = SIZET_MAX;
     std::string line;
     {
         std::getline(input, line);
         std::istringstream line_stream(line);
-        std::size_t min_tag = -1;
-        std::size_t max_tag = -1;
+        std::size_t min_tag = SIZET_MAX;
+        std::size_t max_tag = SIZET_MAX;
         line_stream >> num_blocs >> num_nodes >> min_tag >> max_tag;
-        std::size_t max_sizet = -1;
-        if (line_stream.fail() || num_blocs == max_sizet || num_nodes == max_sizet ||
-                min_tag == max_sizet || max_tag == max_sizet)
+        if (line_stream.fail() || num_blocs == SIZET_MAX || num_nodes == SIZET_MAX ||
+                min_tag == SIZET_MAX || max_tag == SIZET_MAX)
         {
             err_msg = "$Nodes section parsing failed, missing metadata";
             return std::vector<Node>{};
