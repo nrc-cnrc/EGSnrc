@@ -767,6 +767,25 @@ int test_parse_msh4_entities() {
             return 1;
         }
     }
+    // repeated 3d entity tags fails
+    {
+        std::istringstream input(
+            "0 0 0 2\n"
+            "1 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
+            "1 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
+        //   ^-- volume tag 1 appears twice
+            "$EndEntities\n"
+        );
+        std::string err_msg;
+        auto vols = parse_msh4_entities(input, err_msg);
+        assert(vols.size() == 0);
+        std::string expected = "$Entities parsing failed, found duplicate volume tag 1";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
     // num entities mismatch fails
     {
         std::istringstream input(
