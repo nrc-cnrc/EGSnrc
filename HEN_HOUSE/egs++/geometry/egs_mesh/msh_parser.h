@@ -415,7 +415,7 @@ std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& e
 // A tetrahedron composed of four nodes
 struct Tetrahedron {
     int tag = -1;
-    int group = -1;
+    int volume = -1;
     int a = -1;
     int b = -1;
     int c = -1;
