@@ -172,10 +172,10 @@ std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& er
 }
 
 struct Node {
-    int tag;
-    double x;
-    double y;
-    double z;
+    int tag = -1;
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
 };
 
 int get_int_line(std::istream& input, std::string& err_msg) {
@@ -352,7 +352,7 @@ std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
 
 // 3D Gmsh physical group
 struct PhysicalGroup {
-    int tag;
+    int tag = -1;
     std::string name;
 };
 
