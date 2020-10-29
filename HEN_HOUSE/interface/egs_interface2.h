@@ -648,11 +648,11 @@ struct EGS_emfInputs {
   sections
   */
 struct EGS_NistBrems {
-    EGS_Float nb_fdata[MXBRXS,MXBRES,MXMED], nb_xdata[MXBRXS,MXBRES,MXMED],
-              nb_wdata[MXBRXS,MXBRES,MXMED],
-              nb_emin[MXMED],nb_emax[MXMED],nb_lemin[MXMED],nb_lemax[MXMED],
+    EGS_Float nb_fdata[MXMED][MXBRES][MXBRXS+1], nb_xdata[MXMED][MXBRES][MXBRXS+1],
+              nb_wdata[MXMED][MXBRES][MXBRXS];
+    EGS_I32   nb_idata[MXMED][MXBRES][MXBRXS];
+    EGS_Float nb_emin[MXMED],nb_emax[MXMED],nb_lemin[MXMED],nb_lemax[MXMED],
               nb_dle[MXMED],nb_dlei[MXMED],log_ap[MXMED];
-    EGS_I32 nb_idata[MXBRXS,MXBRES,MXMED];
 };
 
 /*! \brief A structure corresponding to the \c BREMPR common block.
@@ -661,13 +661,14 @@ struct EGS_NistBrems {
   sections
   */
 struct EGS_Brempr {
-   char asym[4,MXMED,MXEL,2];
-   EGS_Float dl1[8,MXMED],dl2[8,MXMED],dl3[8,MXMED],dl4[8,MXMED],dl5[8,MXMED],
-             dl6[8,MXMED],alphi[2,MXMED],bpar[2,MXMED],delpos[2,MXMED],
-             wa[MXMED,MXEL],pz[MXMED,MXEL],zelem[MXMED,MXEL],rhoz[MXMED,MXEL],
-             pwr2i[MXPWR2I],delcm[MXMED],zbrang[MXMED];
-   EGS_I32 nne[MXMED],ibrdst,iprdst,ibr_nist,itriplet,pair_nrc;
+   EGS_Float dl1[MXMED][8],dl2[MXMED][8],dl3[MXMED][8],dl4[MXMED][8],dl5[MXMED][8],
+             dl6[MXMED][8],alphi[MXMED][2],bpar[MXMED][2],delpos[MXMED][2],
+             wa[MXEL][MXMED],pz[MXEL][MXMED],zelem[MXEL][MXMED],rhoz[MXEL][MXMED],
+             pwr2i[MXPWR2I],delcm[MXMED],zbrang[MXMED],lzbrang[MXMED];
+   EGS_I32 nne[MXMED];
+   char asym[2][MXEL][MXMED][4];
 };
+
 
 /*! \brief The address of the mortran \c STACK common block as a
     pointer to a C-structure of type EGS_Stack */
