@@ -886,7 +886,9 @@ int EGS_AdvancedApplication::shower() {
 #ifdef GDEBUG
     steps_n = 0;
 #endif
+    egsInformation("Calling egsShower\n");
     egsShower();
+    egsInformation("Returning from egsShower\n");
     return 0;
 }
 
@@ -1262,11 +1264,16 @@ void EGS_AdvancedApplication::setLatch(int latch) {
 }
 
 //************************************************************
-// Utility function for ausgab egs_radiative_spliting objects
+// Utility functions for ausgab egs_radiative_splitting objects
 //************************************************************
-//get the RNG required by DBS
-void getRNG(EGS_RandomGenerator *rng) {
-    rng = rndm;
+
+//necessary RNG functions
+EGS_Float EGS_AdvancedApplication::getRngUniform() {
+    return rndm->getUniform();
+}
+
+void EGS_AdvancedApplication::getRngAzimuth(EGS_Float cphi, EGS_Float sphi) {
+    rndm->getAzimuth(cphi,sphi);
 }
 
 //add a particle (+ dnear) to the top of the stack and increment np
@@ -1309,7 +1316,7 @@ int EGS_AdvancedApplication::getNmed(){
 
 //delete particle at stack position ip
 //replace with data at position np and reduce np by 1
-void EGS_AdvancedAppliction::deleteParticleFromStack(int ip) {
+void EGS_AdvancedApplication::deleteParticleFromStack(int ip) {
     int np = the_stack->np;
     if (ip+1 < np)
     {
@@ -1331,7 +1338,7 @@ void EGS_AdvancedAppliction::deleteParticleFromStack(int ip) {
 }
 
 //retrieve particle information at stack position ip
-void EGS_AdvancedAppliction::getParticleFromStack(int ip,EGS_Particle p) {
+void EGS_AdvancedApplication::getParticleFromStack(int ip,EGS_Particle p) {
     p.q = the_stack->iq[ip+1];
     p.E = the_stack->E[ip+1];
     p.latch = the_stack->latch[ip+1];
@@ -1348,12 +1355,12 @@ EGS_Float EGS_AdvancedApplication::getGle() {
 }
 
 //return the value of the_xoptions->ibrdst
-int EGS_AdvancedAppliction::getIbrdst() {
+int EGS_AdvancedApplication::getIbrdst() {
     return the_xoptions->ibrdst;
 }
 
 //return the value of the_xoptions->ibcmp
-int EGS_AdvancedAppliction::getIbcmp() {
+int EGS_AdvancedApplication::getIbcmp() {
     return the_xoptions->ibcmp;
 }
 
@@ -1362,9 +1369,9 @@ EGS_Float EGS_AdvancedApplication::getAp(int imed) {
     return the_thresh->ap[imed];
 }
 
-//return the value of the_brempr->ibr_nist
-int EGS_AdvancedAppliction::getIbrnist() {
-    return the_brempr->ibrnist;
+//return the value of the_xoptions->ibr_nist
+int EGS_AdvancedApplication::getIbrnist() {
+    return the_xoptions->ibr_nist;
 }
 
 //return the value of the_nist_brems->nb_lemin[imed]
@@ -1384,22 +1391,22 @@ EGS_Float EGS_AdvancedApplication::getNbEmin(int imed) {
 
 //return the_nist_brems->nb_xdata[i,j,imed]
 EGS_Float EGS_AdvancedApplication::getNbXdata(int i, int j, int imed) {
-    return the_nist_brems->nb_xdata[i,j,imed];
+    return the_nist_brems->nb_xdata[imed][j][i];
 }
 
 //return the_nist_brems->nb_fdata[i,j,imed]
 EGS_Float EGS_AdvancedApplication::getNbFdata(int i, int j, int imed) {
-    return the_nist_brems->nb_fdata[i,j,imed];
+    return the_nist_brems->nb_fdata[imed][j][i];
 }
 
 //return the_nist_brems->nb_wdata[i,j,imed]
 EGS_Float EGS_AdvancedApplication::getNbWdata(int i, int j, int imed) {
-    return the_nist_brems->nb_wdata[i,j,imed];
+    return the_nist_brems->nb_wdata[imed][j][i];
 }
 
 //return the_nist_brems->nb_idata[i,j,imed]
 int EGS_AdvancedApplication::getNbIdata(int i, int j, int imed) {
-    return the_nist_brems->nb_idata[i,j,imed];
+    return the_nist_brems->nb_idata[imed][j][i];
 }
 
 //return value of the_brempr->delcm[imed]
@@ -1409,28 +1416,24 @@ EGS_Float EGS_AdvancedApplication::getDelcm(int imed) {
 
 //functions below return value of the_brempr->dl1...dl6[i,imed]
 EGS_Float EGS_AdvancedApplication::getDl1(int i, int imed) {
-    return the_brempr->dl1[i,imed];
+    return the_brempr->dl1[imed][i];
 }
 EGS_Float EGS_AdvancedApplication::getDl2(int i, int imed) {
-    return the_brempr->dl2[i,imed];
+    return the_brempr->dl2[imed][i];
 }
 EGS_Float EGS_AdvancedApplication::getDl3(int i, int imed) {
-    return the_brempr->dl3[i,imed];
+    return the_brempr->dl3[imed][i];
 }
 EGS_Float EGS_AdvancedApplication::getDl4(int i, int imed) {
-    return the_brempr->dl4[i,imed];
+    return the_brempr->dl4[imed][i];
 }
 EGS_Float EGS_AdvancedApplication::getDl5(int i, int imed) {
-    return the_brempr->dl5[i,imed];
+    return the_brempr->dl5[imed][i];
 }
 EGS_Float EGS_AdvancedApplication::getDl6(int i, int imed) {
-    return the_brempr->dl6[i,imed];
+    return the_brempr->dl6[imed][i];
 }
 
-//return the_media->nmed
-int EGS_AdvancedApplication::getNmed() {
-    return the_media->nmed;
-}
 //calculate the value of cohfac for Rayleigh scattering
 EGS_Float EGS_AdvancedApplication::getCohfac(int imed, EGS_Float gle) {
     return i_cohe[imed].interpolateFast(gle);
@@ -1444,31 +1447,6 @@ EGS_Float EGS_AdvancedApplication::getEmax() {
 //get value of ZBRANG for medium
 EGS_Float EGS_AdvancedApplication::getZbrang(int imed) {
     return the_brempr->zbrang[imed];
-}
-
-//get value of DELCM for medium
-EGS_Float EGS_AdvancedApplication::getDelcm(int imed) {
-    return the_brempr->delcm[imed];
-}
-
-//get values of DL1...DL6 for medium
-EGS_Float EGS_AdvancedApplication::getDl1(int i, int imed) {
-    return the_brempr->dl1[i,imed];
-}
-EGS_Float EGS_AdvancedApplication::getDl2(int i, int imed) {
-    return the_brempr->dl2[i,imed];
-}
-EGS_Float EGS_AdvancedApplication::getDl3(int i, int imed) {
-    return the_brempr->dl3[i,imed];
-}
-EGS_Float EGS_AdvancedApplication::getDl4(int i, int imed) {
-    return the_brempr->dl4[i,imed];
-}
-EGS_Float EGS_AdvancedApplication::getDl5(int i, int imed) {
-    return the_brempr->dl5[i,imed];
-}
-EGS_Float EGS_AdvancedApplication::getDl6(int i, int imed) {
-    return the_brempr->dl6[i,imed];
 }
 
 extern __extc__ void egsHowfar() {

@@ -46,7 +46,7 @@
 #define EGS_RADIATIVE_SPLITTING_
 
 #include "egs_ausgab_object.h"
-#include "egs_advanced_application.h"
+#include "egs_application.h"
 #include "egs_scoring.h"
 #include "egs_base_geometry.h"
 #include "egs_rndm.h"
@@ -117,11 +117,11 @@ public:
 
     void setApplication(EGS_Application *App);
 
-    int doInteractions(int iarg, EGS_RandomGenerator *rndm, int &killed);
+    int doInteractions(int iarg, int &killed);
 
-    int doSmartBrems(EGS_RandomGenerator *rndm);
+    int doSmartBrems();
 
-    void doSmartCompton(int nsample, EGS_RandomGenerator *rndm);
+    void doSmartCompton(int nsample);
 
     void getCostMinMax(const EGS_Vector &xx, const EGS_Vector &uu,
                         EGS_Float &ro, EGS_Float &ct_min, EGS_Float &ct_max);
@@ -160,28 +160,28 @@ public:
     int processEvent(EGS_Application::AusgabCall iarg) {
         if (split_type >  EGS_RadiativeSplitting::URS && iarg > EGS_Application::AfterTransport)
         {
-            if( !doInteractions(iarg,rndm,killed) )
+            if( !doInteractions(iarg,killed) )
             {
             	return 0;
             }
         }
+        egsInformation("1 about to return\n");
         return 0;
     };
 
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
         if (split_type >  EGS_RadiativeSplitting::URS && iarg > EGS_Application::AfterTransport)
         {
-            if( !doInteractions(iarg,rndm,killed) )
+            if( !doInteractions(iarg,killed) )
             {
                 return 0;
             }
         }
+        egsInformation("2 about to return\n");
         return 0;
     };
 
 protected:
-
-    EGS_AdvancedApplication app1; //the application
 
     int split_type; //0 = uniform, 1 = DBS, 2 = BEAMnrc DBS
     /* Maximum splitting limited to 2,147,483,647 */
@@ -210,8 +210,6 @@ protected:
     vector<EGS_Float> dnear_stack; //similar for dnear
 
     int imed;
-
-    EGS_RandomGenerator *rndm; //RNG for DBS--passed from the application
 
     const char *dbs_err_msg =
 "Stack size exceeded in BEAMpp_DBS::%s()\n"
