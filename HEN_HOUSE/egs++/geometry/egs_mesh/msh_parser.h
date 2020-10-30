@@ -422,6 +422,67 @@ struct Tetrahedron {
     int d = -1;
 };
 
+std::vector<Tetrahedron> parse_msh4_element_bloc(std::istream& input, std::string& err_msg) {
+    std::vector<Tetrahedron> elts;
+    std::size_t num_elts = SIZET_MAX;
+    int entity = -1;
+    std::string line;
+    {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        int dim = -1;
+        int element_type = -1;
+        line_stream >> dim >> entity >> element_type >> num_elts;
+        if (line_stream.fail() || dim == -1 || entity == -1 || element_type == -1
+                || num_elts == SIZET_MAX)
+        {
+            err_msg = "Element bloc parsing failed";
+            return std::vector<Tetrahedron>{};
+        }
+        if (dim < 0 || dim > 3) {
+            err_msg = "Element bloc parsing failed for entity " + std::to_string(entity) + ", got dimension " + std::to_string(dim) + ", expected 0, 1, 2, or 3";
+            return std::vector<Tetrahedron>{};
+        }
+        // skip 0, 1, 2d element blocs
+        if (dim != 3) {
+            for (std::size_t i = 0; i < num_elts; ++i) {
+                std::getline(input, line);
+            }
+            return std::vector<Tetrahedron>{};
+        }
+        // If a mesh with 3d non-tetrahedral elements is provided, exit.
+        // The mesh may have some volumes that are supposed to be simulated but
+        // not represented by tetrahedrons, so they will be missing from the
+        // EGSnrc representation of the mesh.
+        const int TETRAHEDRON_TYPE = 4;
+        if (element_type != TETRAHEDRON_TYPE) {
+            err_msg = "Element bloc parsing failed for entity " + std::to_string(entity) +
+                ", got non-tetrahedral mesh element type " + std::to_string(element_type);
+            return std::vector<Tetrahedron>{};
+        }
+    }
+    elts.reserve(num_elts);
+
+    for (std::size_t i = 0; i < num_elts; ++i) {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        int tag = -1;
+        int a = -1;
+        int b = -1;
+        int c = -1;
+        int d = -1;
+        line_stream >> tag >> a >> b >> c >> d;
+        if (line_stream.fail() || tag == -1 || a == -1 || b == -1 ||
+                c == -1 || d == -1)
+        {
+            err_msg = "Element bloc parsing failed for entity " + std::to_string(entity);
+            return std::vector<Tetrahedron>{};
+        }
+        elts.push_back(Tetrahedron { tag, entity, a, b, c, d });
+    }
+    return elts;
+}
+
 std::vector<Tetrahedron> parse_msh2_elements(std::istream& input, std::string& err_msg) {
     std::vector<Tetrahedron> elts;
     // total number of elements, not just tetrahedrons
