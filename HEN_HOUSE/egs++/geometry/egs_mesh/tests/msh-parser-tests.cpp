@@ -964,6 +964,174 @@ int test_parse_msh4_element_bloc() {
     return 0;
 }
 
+int test_parse_msh4_elements() {
+    // bad input stream fails
+    {
+        std::ifstream input("bad-file");
+        std::string err_msg;
+        auto elts = parse_msh4_elements(input, err_msg);
+        assert(elts.size() == 0);
+        std::string expected = "$Elements section parsing failed, missing metadata";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // no elements fails
+    {
+         std::istringstream input(
+            "0 0 0 0\n"
+            "$EndElements\n"
+         );
+        std::string err_msg;
+        auto elts = parse_msh4_elements(input, err_msg);
+        assert(elts.size() == 0);
+        std::string expected = "$Elements section parsing failed, no tetrahedral elements were read";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // no tetrahedral elements fails
+    {
+        std::istringstream input(
+            "1 1 1 2\n"
+            "1 10 1 2\n"
+            "1 1 2\n"
+            "2 2 3\n"
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh4_elements(input, err_msg);
+        assert(elts.size() == 0);
+        std::string expected = "$Elements section parsing failed, no tetrahedral elements were read";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // missing $EndElements fails
+    {
+         std::istringstream input(
+            "1 2 1 2\n" // 1 bloc, 2 elements, min = 1, max = 2
+            "3 1 4 2\n"
+            "1 1 2 3 4\n"
+            "2 5 6 7 8\n"
+            // "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh4_elements(input, err_msg);
+        assert(elts.size() == 0);
+        std::string expected = "$Elements section parsing failed, expected $EndElements";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // skip lower-dimension elements
+    {
+         std::istringstream input(
+            "2 4 1 4\n" // 2 blocs, 4 elts, min = 1, max = 4
+            "1 10 1 2\n" // 1d element bloc should be skipped
+            "1 1 2\n"
+            "2 2 3\n"
+            "3 50 4 2\n" // tetrahedron bloc should be parsed
+            "1 1 2 3 4\n"
+            "2 5 6 7 8\n"
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh4_elements(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        if (elts.size() != 2) {
+            std::cerr << "expected 2 elements, got " << elts.size() << "\n";
+            return 1;
+        }
+        auto e0 = elts.at(0);
+        auto e1 = elts.at(1);
+        if (!(e0.tag == 1 && e0.volume == 50 &&
+               e0.a == 1 && e0.b == 2 && e0.c == 3 && e0.d == 4 &&
+              e1.tag == 2 && e1.volume == 50 &&
+               e1.a == 5 && e1.b == 6 && e1.c == 7 && e1.d == 8))
+        {
+            std::cerr << "parsed elements didn't match reference value\n";
+            return 1;
+        }
+    }
+    // duplicate tetrahedron tags are caught
+    {
+         std::istringstream input(
+            "2 4 1 4\n"
+            "3 1 4 2\n"
+            "1 1 2 3 4\n"
+            "2 5 6 7 8\n"
+            "3 2 4 2\n"
+            "1 1 2 3 4\n" // tag 1 again
+            "4 5 6 7 8\n"
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh4_elements(input, err_msg);
+        assert(elts.size() == 0);
+        std::string expected = "$Elements parsing failed, found duplicate tetrahedron tag 1";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // successfully parses multiple element blocs
+    {
+         std::istringstream input(
+            "3 6 1 6\n"
+            "1 10 1 2\n"
+            "1 1 2\n"
+            "2 2 3\n"
+            "3 1 4 2\n"   // tetrahedron bloc 1
+            "3 1 2 3 4\n"
+            "4 5 6 7 8\n"
+            "3 2 4 2\n"   // tetrahedron bloc 2
+            "5 1 2 3 5\n"
+            "6 5 6 7 1\n"
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        auto elts = parse_msh4_elements(input, err_msg);
+        if (!err_msg.empty()) {
+            std::cerr << "got error message: \"" << err_msg << "\"\n";
+            return 1;
+        }
+        if (elts.size() != 4) {
+            std::cerr << "expected 4 elements, got " << elts.size() << "\n";
+            return 1;
+        }
+        auto e0 = elts.at(0);
+        auto e1 = elts.at(1);
+        auto e2 = elts.at(2);
+        auto e3 = elts.at(3);
+        if (!(e0.tag == 3 && e0.volume == 1 &&
+               e0.a == 1 && e0.b == 2 && e0.c == 3 && e0.d == 4 &&
+              e1.tag == 4 && e1.volume == 1 &&
+               e1.a == 5 && e1.b == 6 && e1.c == 7 && e1.d == 8 &&
+              e2.tag == 5 && e2.volume == 2 &&
+               e2.a == 1 && e2.b == 2 && e2.c == 3 && e2.d == 5 &&
+              e3.tag == 6 && e3.volume == 2 &&
+               e3.a == 5 && e3.b == 6 && e3.c == 7 && e3.d == 1))
+        {
+            std::cerr << "parsed elements didn't match reference value\n";
+            return 1;
+        }
+    }
+    return 0;
+}
+
 // all test cases assume $Elements header has already been parsed
 int test_parse_msh2_elements() {
     // empty section
@@ -1193,8 +1361,8 @@ int main() {
         std::cerr << "test PASSED" << std::endl;
     }
 
-    std::cerr << "starting test parse_msh2_elements" << std::endl;
-    err = test_parse_msh2_elements();
+    std::cerr << "starting test parse_msh4_elements" << std::endl;
+    err = test_parse_msh4_elements();
     if (err) {
         std::cerr << "test FAILED" << std::endl;
         num_failed++;

@@ -483,6 +483,58 @@ std::vector<Tetrahedron> parse_msh4_element_bloc(std::istream& input, std::strin
     return elts;
 }
 
+std::vector<Tetrahedron> parse_msh4_elements(std::istream& input, std::string& err_msg) {
+    std::vector<Tetrahedron> elts;
+    std::size_t num_blocs = SIZET_MAX;
+    std::size_t num_elts = SIZET_MAX;
+    std::string line;
+    {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        std::size_t min_tag = SIZET_MAX;
+        std::size_t max_tag = SIZET_MAX;
+        line_stream >> num_blocs >> num_elts >> min_tag >> max_tag;
+        if (line_stream.fail() || num_blocs == SIZET_MAX || num_elts == SIZET_MAX ||
+                min_tag == SIZET_MAX || max_tag == SIZET_MAX)
+        {
+            err_msg = "$Elements section parsing failed, missing metadata";
+            return std::vector<Tetrahedron>{};
+        }
+    }
+    elts.reserve(num_elts);
+    for (std::size_t i = 0; i < num_blocs; ++i) {
+        std::string bloc_elt_err;
+        std::vector<Tetrahedron> bloc_elts = parse_msh4_element_bloc(input, bloc_elt_err);
+        if (!bloc_elt_err.empty()) {
+            err_msg = bloc_elt_err;
+            return std::vector<Tetrahedron>{};
+        }
+        elts.insert(elts.end(), bloc_elts.begin(), bloc_elts.end());
+    }
+    // can't check against num_elts because it counts all elements
+    std::getline(input, line);
+    rtrim(line);
+    if (line != "$EndElements") {
+        err_msg = "$Elements section parsing failed, expected $EndElements";
+        return std::vector<Tetrahedron>{};
+    }
+    if (elts.size() == 0) {
+        err_msg = "$Elements section parsing failed, no tetrahedral elements were read";
+        return std::vector<Tetrahedron>{};
+    }
+    // ensure element tags are unique
+    std::unordered_set<int> elt_tags;
+    elt_tags.reserve(elts.size());
+    for (const auto& e: elts) {
+        auto insert_res = elt_tags.insert(e.tag);
+        if (insert_res.second == false) {
+            err_msg = "$Elements parsing failed, found duplicate tetrahedron tag " + std::to_string(e.tag);
+            return std::vector<Tetrahedron>{};
+        }
+    }
+    return elts;
+}
+
 std::vector<Tetrahedron> parse_msh2_elements(std::istream& input, std::string& err_msg) {
     std::vector<Tetrahedron> elts;
     // total number of elements, not just tetrahedrons
@@ -569,9 +621,9 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
             groups = parse_msh4_groups(input, err_msg);
         } else if (input_line == "$Nodes") {
             nodes = parse_msh4_nodes(input, err_msg);
-        } /* else if (input_line == "$Elements") {
-            elements = parse_msh2_elements(input, err_msg);
-        } */
+        } else if (input_line == "$Elements") {
+            elements = parse_msh4_elements(input, err_msg);
+        }
     }
 
     err_msg = "unimplemented";
