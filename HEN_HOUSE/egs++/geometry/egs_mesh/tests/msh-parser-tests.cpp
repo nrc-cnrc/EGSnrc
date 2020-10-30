@@ -423,7 +423,7 @@ int test_parse_msh4_node_bloc() {
               n1.tag == 2 && n1.x == 0.0 && n1.y == 1.0 && n1.z == 0.0 &&
               n2.tag == 3 && n2.x == 0.0 && n2.y == 0.0 && n2.z == 1.0))
         {
-            std::cerr << "parsed entities didn't match reference value\n";
+            std::cerr << "parsed nodes didn't match reference value\n";
             return 1;
         }
     }
