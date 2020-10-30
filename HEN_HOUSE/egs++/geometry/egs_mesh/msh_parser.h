@@ -178,72 +178,6 @@ struct Node {
     double z = 0.0;
 };
 
-int get_int_line(std::istream& input, std::string& err_msg) {
-    std::string line;
-    std::getline(input, line);
-    rtrim(line);
-    std::istringstream line_stream(line);
-    int target;
-    line_stream >> target;
-    if (line_stream.fail()) {
-        err_msg = "integer parsing failed";
-        return -1;
-    }
-    // check for trailing data
-    std::string trailing;
-    line_stream >> trailing;
-    if (!trailing.empty()) {
-        err_msg = "unexpected trailing data";
-    }
-    return target;
-}
-
-std::vector<Node> parse_msh2_nodes(std::istream& input, std::string& err_msg) {
-    std::vector<Node> nodes;
-    int num_nodes = get_int_line(input, err_msg);
-    if (!err_msg.empty()) {
-        // todo add context to error message:
-        // -- failed to parse num_nodes
-        return std::vector<Node>{};
-    }
-    nodes.reserve(num_nodes);
-
-    int node_num = -1;
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
-
-    while (input >> node_num >> x >> y >> z) {
-        nodes.push_back(Node { node_num, x, y, z });
-    }
-
-    if (nodes.size() != static_cast<std::size_t>(num_nodes)) {
-        err_msg = "expected " + std::to_string(num_nodes) + " nodes, but read "
-            + std::to_string(nodes.size());
-        return std::vector<Node>{};
-    }
-
-    // clear error state to continue parsing and check if we hit $EndNodes
-    input.clear();
-    std::string end_nodes;
-    input >> end_nodes;
-    if (input.bad()) {
-        err_msg = "IO error during reading";
-        return std::vector<Node>{};
-    }
-    if (input.eof()) {
-        err_msg = "expected $EndNodes, got EOF";
-        return std::vector<Node>{};
-    }
-    rtrim(end_nodes);
-    if (end_nodes != "$EndNodes") {
-        err_msg = "expected $EndNodes, got " + end_nodes;
-        return std::vector<Node>{};
-    }
-
-    return nodes;
-}
-
 // Parse a single entity bloc of nodes.
 std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg) {
     std::vector<Node> nodes;
@@ -358,18 +292,23 @@ struct PhysicalGroup {
 
 std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& err_msg) {
     std::vector<PhysicalGroup> groups;
-    // this is the total number of physical groups, not just the number of 3D groups
-    int num_groups = get_int_line(input, err_msg);
-    if (!err_msg.empty()) {
-        // todo add context to error message:
-        // -- failed to parse num_groups
-        return groups;
+    // this is the total number of groups, not just 3D groups
+    int num_groups = -1;
+    std::string line;
+    {
+        std::getline(input, line);
+        std::istringstream line_stream(line);
+        line_stream >> num_groups;
+        if (line_stream.fail() || num_groups == -1)
+        {
+            err_msg = "$PhysicalNames parsing failed";
+            return std::vector<PhysicalGroup>{};
+        }
     }
     groups.reserve(num_groups);
 
     int dim = -1;
     int tag = -1;
-    std::string line;
     while (input) {
         std::getline(input, line);
         rtrim(line);
@@ -531,73 +470,6 @@ std::vector<Tetrahedron> parse_msh4_elements(std::istream& input, std::string& e
             err_msg = "$Elements parsing failed, found duplicate tetrahedron tag " + std::to_string(e.tag);
             return std::vector<Tetrahedron>{};
         }
-    }
-    return elts;
-}
-
-std::vector<Tetrahedron> parse_msh2_elements(std::istream& input, std::string& err_msg) {
-    std::vector<Tetrahedron> elts;
-    // total number of elements, not just tetrahedrons
-    int num_elts = get_int_line(input, err_msg);
-    if (!err_msg.empty()) {
-        // todo add context to error message:
-        // -- failed to parse num_elts
-        return elts;
-    }
-    elts.reserve(num_elts);
-
-    std::string line;
-    while (input) {
-        std::getline(input, line);
-        rtrim(line);
-        if (line == "$EndElements") {
-            break;
-        }
-        std::istringstream line_stream(line);
-
-        int tag = -1;
-        int elt_type = -1;
-        int num_following = -1;
-        line_stream >> tag;
-        line_stream >> elt_type;
-        line_stream >> num_following;
-        if (line_stream.eof()) {
-            err_msg = "unexpected end of file, expected $EndElements";
-            return std::vector<Tetrahedron>{};
-        }
-        if (line_stream.fail()) {
-            err_msg = "element parsing failed:\n " + line;
-            return std::vector<Tetrahedron>{};
-        }
-        if (elt_type != 4 /* tetrahedron type */) {
-            continue;
-        }
-        if (num_following == 0) {
-            err_msg = "got num_following = 0 which means no physical group. All elements must belong to a physical group";
-            return std::vector<Tetrahedron>{};
-        }
-        // parse physical group, skip the rest of num_following
-        int group = -1;
-        line_stream >> group;
-        int dummy = -1;
-        for (int i = 0; i < num_following - 1; ++i) {
-            line_stream >> dummy;
-        }
-        // parse the 4 nodes of this tetrahedron
-        int a = -1;
-        int b = -1;
-        int c = -1;
-        int d = -1;
-        line_stream >> a >> b >> c >> d;
-        if (line_stream.fail()) {
-            err_msg = "element parsing failed:\n " + line;
-            return std::vector<Tetrahedron>{};
-        }
-        if (group == 0) {
-            err_msg = "got physical group id of 0, all elements must have a nonzero physical group:\n " + line;
-            return std::vector<Tetrahedron>{};
-        }
-        elts.push_back(Tetrahedron { tag, group, a, b, c, d });
     }
     return elts;
 }
