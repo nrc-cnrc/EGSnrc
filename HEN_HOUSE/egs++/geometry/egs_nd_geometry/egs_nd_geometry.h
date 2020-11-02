@@ -588,6 +588,7 @@ private:
 
 #ifdef EXPLICIT_XYZ
 #include "../egs_planes/egs_planes.h"
+#include "egs_application.h"
 
 /*! \brief An XYZ-geometry
 
@@ -1123,8 +1124,38 @@ public:
             int ix = ir - iy*nx;
             EGS_Float vol = (xpos[ix+1]-xpos[ix])*(ypos[iy+1]-ypos[iy])*
                             (zpos[iz+1]-zpos[iz]);
-            EGS_Float dens = getRelativeRho(ireg);
+
+            EGS_Float dens;
+            if (has_rho_scaling) {
+                dens = getRelativeRho(ireg);
+            }
+            else {
+                // We should only get here for the XYZ geometry
+
+                // Calculate the voxel midpoint
+                EGS_Vector tp;
+                EGS_Float minx,maxx,miny,maxy,minz,maxz;
+                minx=getBound(0,ix);
+                maxx=getBound(0,ix+1);
+                miny=getBound(1,iy);
+                maxy=getBound(1,iy+1);
+                minz=getBound(2,iz);
+                maxz=getBound(2,iz+1);
+                tp.x=(minx+maxx)/2.;
+                tp.y=(miny+maxy)/2.;
+                tp.z=(minz+maxz)/2.;
+
+                // Get the global region number from the current voxel midpoint
+                int g_reg = app->isWhere(tp);
+
+                // Get the medium index for this region
+                int imed = app->getMedium(g_reg);
+
+                // Get the density
+                dens = app->getMediumRho(imed);
+            }
             EGS_Float mass = vol*dens;
+
             return mass;
         }
         else {
@@ -1239,6 +1270,10 @@ public:
     void getZLabelRegions(const string &str, vector<int> &regs) {
         zp->getLabelRegions(str, regs);
     }
+
+    void setApplication(EGS_Application *App) {
+        app = App;
+    };
 
 protected:
 
