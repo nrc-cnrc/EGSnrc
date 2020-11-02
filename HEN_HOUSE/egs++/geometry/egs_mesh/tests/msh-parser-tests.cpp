@@ -1061,6 +1061,13 @@ int test_parse_msh_file() {
         "4.1 0 8\n"
         "$EndMeshFormat\n";
 
+    std::string entities =
+        "$Entities\n"
+        "0 0 0 2\n"
+        "1 0 0 0 1.0 1.0 1.0 1 1 6 1 2 3 4 5 6\n"
+        "2 0 0 0 1.0 1.0 1.0 1 1 6 1 2 3 4 5 6\n"
+        "$EndEntities\n";
+
     std::string pgroups =
         "$PhysicalNames\n"
         "1\n"
@@ -1069,19 +1076,31 @@ int test_parse_msh_file() {
 
     std::string nodes =
         "$Nodes\n"
+        "2 5 1 5\n"
+        "1 1 0 2\n"
+        "1\n"
+        "2\n"
+        "0 0 0\n"
+        "0 1 0\n"
+        "1 2 0 3\n"
+        "3\n"
         "4\n"
-        "1 0 0 1\n"
-        "2 0 0 0\n"
-        "3 0 1 1\n"
-        "4 0 1 0\n"
+        "5\n"
+        "1 0 0\n"
+        "1 1 0\n"
+        "1 1 1\n"
         "$EndNodes\n";
 
     std::string elts =
         "$Elements\n"
-        "1160\n"
-        "1 4 2 1 1 1 2 3 4\n"
-        "$EndElements\n";
-
+         "2 2 1 2\n"
+         "3 1 4 2\n"
+         "1 1 2 3 4\n"
+         "2 1 2 3 5\n"
+         "3 2 4 2\n"
+         "3 1 2 4 5\n"
+         "4 2 3 4 5\n"
+         "$EndElements\n";
 
     // section errors bubble up
     {
@@ -1103,10 +1122,10 @@ int test_parse_msh_file() {
     }
     // minimum complete mesh file for EGSnrc
     {
-        std::istringstream input(header + pgroups + nodes + elts);
+        std::istringstream input(header + entities + pgroups + nodes + elts);
         std::string err_msg;
         parse_msh_file(input, err_msg);
-        if (err_msg != "") {
+        if (!err_msg.empty()) {
             std::cerr << "got error message: \"" << err_msg << "\"\n";
             return 1;
         }
