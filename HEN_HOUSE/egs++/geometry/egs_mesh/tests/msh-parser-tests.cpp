@@ -480,6 +480,26 @@ int test_parse_msh4_nodes() {
             return 1;
         }
     }
+    // node tags must fit into an int
+    {
+        std::size_t too_large = std::size_t(std::numeric_limits<int>::max());
+        too_large += 1;
+        std::istringstream input(
+            "2 1 1 " + std::to_string(too_large) + "\n"
+            "1 1 0 1\n"
+            "1\n"
+            "1 0 0\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_nodes(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "Max node tag is too large (2147483648), limit is 2147483647";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
     // wrong num_nodes fails
     {
         std::istringstream input(

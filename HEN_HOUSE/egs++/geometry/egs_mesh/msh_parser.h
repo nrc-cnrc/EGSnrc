@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <vector>
 #include <unordered_set>
@@ -15,7 +16,7 @@ static inline void rtrim(std::string &s) {
 }
 
 enum class MshVersion { v41, Failure };
-constexpr std::size_t SIZET_MAX = -1;
+constexpr std::size_t SIZET_MAX = std::numeric_limits<std::size_t>::max();
 
 MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
     if (!input) {
@@ -172,7 +173,7 @@ std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& er
 }
 
 struct Node {
-    int tag = -1;
+    int tag = -1; // TODO size_t?
     double x = 0.0;
     double y = 0.0;
     double z = 0.0;
@@ -256,6 +257,11 @@ std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
                 min_tag == SIZET_MAX || max_tag == SIZET_MAX)
         {
             err_msg = "$Nodes section parsing failed, missing metadata";
+            return std::vector<Node>{};
+        }
+        if (max_tag > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
+            err_msg = "Max node tag is too large (" + std::to_string(max_tag) + "), limit is "
+                + std::to_string(std::numeric_limits<int>::max());
             return std::vector<Node>{};
         }
     }
