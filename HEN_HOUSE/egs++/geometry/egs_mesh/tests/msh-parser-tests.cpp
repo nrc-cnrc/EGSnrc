@@ -1,45 +1,40 @@
 #include "msh_parser.h"
 #include <cassert>
 
+// exception test macros adapted from Arthur O'Dwyer's comment here:
+//   https://github.com/google/googletest/issues/952#issuecomment-521361666
+
+#define EXPECT_NO_ERROR(stmt) \
+    try { \
+        stmt; \
+    } catch (const std::runtime_error& err) { \
+        std::cerr << "got error message: \"" << err.what() << "\"\n"; \
+        return 1; \
+    }
+
+#define EXPECT_ERROR(stmt, err_msg) \
+    try { \
+        stmt; \
+        std::cerr << "expected exception with message: \"" << err_msg << "\"\n"; \
+        return 1; \
+    } catch (const std::runtime_error& err) { \
+        if (err.what() != std::string(err_msg)) { \
+            std::cerr << "got error message: \"" \
+                << err.what() << "\"\nbut expected: \"" << err_msg << "\"\n"; \
+            return 1; \
+        } \
+    }
+
 int test_parse_msh_version() {
     // catch empty inputs
     {
         std::istringstream input("");
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "unexpected end of input";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "unexpected end of input");
     }
     // bad format header
     {
         std::istringstream input("$MshFmt\n");
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "expected $MeshFormat, got $MshFmt";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
-    }
-    // windows line-endings
-    {
-        std::istringstream input("$MeshFormat\r\n");
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "failed to parse msh version";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "expected $MeshFormat, got $MshFmt");
     }
     // bad msh version line
     {
@@ -48,15 +43,7 @@ int test_parse_msh_version() {
             "0\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "failed to parse msh version";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "failed to parse msh version");
     }
     // unknown msh version
     {
@@ -65,15 +52,7 @@ int test_parse_msh_version() {
             "100.2 0 8\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "unsupported msh version `100.2`, the only supported version is 4.1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "unsupported msh version `100.2`, the only supported version is 4.1");
     }
     // binary files are unsupported
     {
@@ -82,15 +61,7 @@ int test_parse_msh_version() {
             "4.1 1 8\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "binary msh files are unsupported, please convert this file to ascii and try again";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "binary msh files are unsupported, please convert this file to ascii and try again");
     }
     // size_t != 8 is unsupported
     {
@@ -99,16 +70,7 @@ int test_parse_msh_version() {
             "4.1 0 4\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "msh file size_t must be 8";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
-
+        EXPECT_ERROR(parse_msh_version(input), "msh file size_t must be 8");
     }
     // eof after version line fails
     {
@@ -116,15 +78,7 @@ int test_parse_msh_version() {
             "$MeshFormat\n"
             "4.1 0 8\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "expected $EndMeshFormat, got ``";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "expected $EndMeshFormat, got ``");
     }
     // parse msh v4.1 successfully
     {
@@ -133,35 +87,35 @@ int test_parse_msh_version() {
             "4.1 0 8\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        if (err_msg != "") {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
-        if (vers != MshVersion::v41) {
-            std::cerr << "failed to parse mesh version 4.1\n";
-            return 1;
-        }
+        MshVersion vers;
+        EXPECT_NO_ERROR(vers = parse_msh_version(input));
+        assert(vers == MshVersion::v41);
+    }
+    // windows line-endings are OK
+    {
+        std::istringstream input(
+            "$MeshFormat\r\n"
+            "4.1 0 8\r\n"
+            "$EndMeshFormat\r\n"
+        );
+        MshVersion vers;
+        EXPECT_NO_ERROR(vers = parse_msh_version(input));
+        assert(vers == MshVersion::v41);
     }
     return 0;
 }
 
 // all test cases assume $PhysicalNames header has already been parsed
 int test_parse_msh4_groups() {
-    // empty section
+    // empty section is OK
     {
         std::istringstream input(
             "0\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
         assert(groups.size() == 0);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
     }
     // missing $EndPhysicalNames tag fails
     {
@@ -171,14 +125,8 @@ int test_parse_msh4_groups() {
             "2 2 \"a surface\"\n"
             "3 3 \"a volume\"\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "unexpected end of file, expected $EndPhysicalNames";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "unexpected end of file, expected $EndPhysicalNames");
     }
     // bad physical group line fails
     {
@@ -187,14 +135,8 @@ int test_parse_msh4_groups() {
             "1 \"a line\"\n" // missing tag
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "physical group parsing failed: 1 \"a line\"";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "physical group parsing failed: 1 \"a line\"");
     }
     // catch invalid physical group names
     {
@@ -203,14 +145,8 @@ int test_parse_msh4_groups() {
             "3 1 \"\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "empty physical group name: 3 1 \"\"";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "empty physical group name: 3 1 \"\"");
     }
     // physical group names are quoted
     {
@@ -219,14 +155,8 @@ int test_parse_msh4_groups() {
             "3 1 Steel\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "physical group names must be quoted: 3 1 Steel";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "physical group names must be quoted: 3 1 Steel");
     }
     // closing name quote is required
     {
@@ -235,14 +165,8 @@ int test_parse_msh4_groups() {
             "3 1 \"Steel\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "couldn't find closing quote for physical group: 3 1 \"Steel";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "couldn't find closing quote for physical group: 3 1 \"Steel");
     }
     // only 3D groups are returned
     {
@@ -253,18 +177,29 @@ int test_parse_msh4_groups() {
             "3 3 \"volume\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
+        assert(groups.size() == 1);
         std::string expected_name = "volume";
         if (groups.at(0).name != expected_name) {
             std::cerr << "bad physical name parse, expected: " << expected_name
                 << "but got: " << groups.at(0).name << "\n";
             return 1;
         }
+    }
+    // duplicate 3D group tags are caught
+    {
+         std::istringstream input(
+            "4\n"
+            "1 1 \"line\"\n"
+            "2 2 \"surface\"\n"
+            "3 3 \"volume\"\n"
+            "3 4 \"volume2\"\n"
+            "3 4 \"other volume\"\n" // tag 4 repeated
+            "$EndPhysicalNames\n"
+        );
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "$PhysicalNames section parsing failed, found duplicate tag 4");
     }
     // spaces in names are OK
     {
@@ -275,12 +210,9 @@ int test_parse_msh4_groups() {
             "3 3 \"a volume\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
+        assert(groups.size() == 1);
         std::string expected_name = "a volume";
         if (groups.at(0).name != expected_name) {
             std::cerr << "bad physical name parse, expected: " << expected_name
@@ -297,12 +229,9 @@ int test_parse_msh4_groups() {
             "3 3 \"a\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
+        assert(groups.size() == 1);
         std::string expected_name = "a";
         if (groups.at(0).name != expected_name) {
             std::cerr << "bad physical name parse, expected: " << expected_name
@@ -321,12 +250,8 @@ int test_parse_msh4_groups() {
             "3 5 \"Water\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
         if (groups.size() != 3) {
             std::cerr << "expected 3 groups, got " << groups.size() << "\n";
             return 1;
@@ -350,15 +275,7 @@ int test_parse_msh4_node_bloc() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_node_bloc(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_node_bloc(input), "Node bloc parsing failed");
     }
     // bad dimension value fails
     {
@@ -367,16 +284,9 @@ int test_parse_msh4_node_bloc() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_node_bloc(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed for entity 100, got dimension 4,"
-            " expected 0, 1, 2, or 3";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_node_bloc(input),
+            "Node bloc parsing failed for entity 100, got dimension 4,"
+            " expected 0, 1, 2, or 3");
     }
     // wrong number of nodes fails
     {
@@ -385,15 +295,8 @@ int test_parse_msh4_node_bloc() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_node_bloc(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed during node coordinate section of entity 100";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_node_bloc(input),
+            "Node bloc parsing failed during node coordinate section of entity 100");
     }
     // successfully parse a single node bloc
     {
@@ -407,11 +310,8 @@ int test_parse_msh4_node_bloc() {
             "0 0 1\n"
         );
         std::string err_msg;
-        auto nodes = parse_msh4_node_bloc(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Node> nodes;
+        EXPECT_NO_ERROR(nodes = parse_msh4_node_bloc(input));
         if (nodes.size() != 3) {
             std::cerr << "expected 3 nodes, got " << nodes.size() << "\n";
             return 1;
@@ -434,15 +334,8 @@ int test_parse_msh4_nodes() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "$Nodes section parsing failed, missing metadata";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed, missing metadata");
     }
     // missing section metadata fails eventually (is parsed as the first bloc metadata)
     {
@@ -452,15 +345,8 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed\nNode bloc parsing failed");
     }
     // wrong num_blocs fails
     {
@@ -470,15 +356,21 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed\nNode bloc parsing failed");
+    }
+    // node tags must fit into an int
+    {
+        std::size_t too_large = std::size_t(std::numeric_limits<int>::max());
+        too_large += 1;
+        std::istringstream input(
+            "2 1 1 " + std::to_string(too_large) + "\n"
+            "1 1 0 1\n"
+            "1\n"
+            "1 0 0\n"
+        );
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "Max node tag is too large (2147483648), limit is 2147483647");
     }
     // wrong num_nodes fails
     {
@@ -488,34 +380,35 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "$Nodes section parsing failed, expected 100 nodes but read 1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed, expected 100 nodes but read 1");
     }
     // missing $EndNodes fails
     {
          std::istringstream input(
-            "1 1 1 1\n" // 100 nodes
+            "1 1 1 1\n"
             "1 1 0 1\n"
             "1\n"
             "1 0 0\n"
             // "$EndNodes\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "$Nodes section parsing failed, expected $EndNodes";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed, expected $EndNodes");
+    }
+    // duplicate node tags are caught
+    {
+         std::istringstream input(
+            "2 2 1 2\n"
+            "1 1 0 1\n"
+            "1\n"
+            "1 0 0\n"
+            "1 2 0 1\n"
+            "1\n" // node tag 1 repeated
+            "1 0 0\n"
+            "$EndNodes\n"
+        );
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed, found duplicate node tag 1");
     }
     // parse multiple blocs successfully
     {
@@ -540,13 +433,9 @@ int test_parse_msh4_nodes() {
             "0 0 1\n"
             "$EndNodes\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
+        std::vector<Node> nodes;
+        EXPECT_NO_ERROR(nodes = parse_msh4_nodes(input));
         assert(nodes.size() == 7);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
         auto n0 = nodes.at(0);
         auto n1 = nodes.at(1);
         auto n6 = nodes.at(6);
@@ -565,15 +454,7 @@ int test_parse_msh4_entities() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input), "$Entities parsing failed");
     }
     // no 3d entities fails
     {
@@ -581,15 +462,7 @@ int test_parse_msh4_entities() {
             "2 1 1 0\n"
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, no volumes found";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input), "$Entities parsing failed, no volumes found");
     }
     // 3d entity without a physical group fails
     {
@@ -599,15 +472,8 @@ int test_parse_msh4_entities() {
             //                         ^-- num physical groups = 0
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, volume 1 was not assigned a physical group";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities parsing failed, volume 1 was not assigned a physical group");
     }
     // 3d entity with more than one physical group fails
     {
@@ -617,15 +483,8 @@ int test_parse_msh4_entities() {
             //                         ^-- num physical groups = 2
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, volume 2 has more than one physical group";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities parsing failed, volume 2 has more than one physical group");
     }
     // repeated 3d entity tags fails
     {
@@ -636,15 +495,8 @@ int test_parse_msh4_entities() {
         //   ^-- volume tag 1 appears twice
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, found duplicate volume tag 1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities section parsing failed, found duplicate volume tag 1");
     }
     // num entities mismatch fails
     {
@@ -653,15 +505,8 @@ int test_parse_msh4_entities() {
             "2 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, expected 2 volumes but got 1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities parsing failed, expected 2 volumes but got 1");
     }
     // catch duplicate volume tags
     {
@@ -671,15 +516,8 @@ int test_parse_msh4_entities() {
             "2 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, found duplicate volume tag 2";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities section parsing failed, found duplicate volume tag 2");
     }
     // successfully parse volumes, skipping 0, 1, 2d entities
     {
@@ -700,12 +538,8 @@ int test_parse_msh4_entities() {
             "2 -9.99e-008 -9.99e-008 -9.99e-008 1.0 1.0 1.0 1 200 6 1 2 3 4 5 6\n"
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<MeshVolume> vols;
+        EXPECT_NO_ERROR(vols = parse_msh4_entities(input));
         if (vols.size() != 2) {
             std::cerr << "expected 2 volumes, got " << vols.size() << "\n";
             return 1;
@@ -724,30 +558,18 @@ int test_parse_msh4_element_bloc() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "Element bloc parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_element_bloc(input), "Element bloc parsing failed");
     }
     // skip lower-dimension elements
     {
-         std::istringstream input(
-         //  v-- 2d shape
+        std::istringstream input(
+        //  v-- 2d shape
             "2 1 3 2\n"
             "1 1 2 3 4\n"
             "2 2 5 6 3\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Tetrahedron> elts;
+        EXPECT_NO_ERROR(elts = parse_msh4_element_bloc(input));
         if (elts.size() != 0) {
             std::cerr << "expected 0 elements, got " << elts.size() << "\n";
             return 1;
@@ -760,16 +582,8 @@ int test_parse_msh4_element_bloc() {
             //   ^-- 5 is code for hexahedron
             "1 1 2 3 4 5 6\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "Element bloc parsing failed for entity 1"
-            ", got non-tetrahedral mesh element type 5";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_element_bloc(input),
+            "Element bloc parsing failed for entity 1" ", got non-tetrahedral mesh element type 5");
     }
     // missing tetrahedron data fails
     {
@@ -779,15 +593,8 @@ int test_parse_msh4_element_bloc() {
             "10 10 20 30 40\n"
             "11 5 6 7 8\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "Element bloc parsing failed for entity 2";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_element_bloc(input),
+            "Element bloc parsing failed for entity 2");
     }
     // successfully parse a tetrahedron element bloc
     {
@@ -800,12 +607,8 @@ int test_parse_msh4_element_bloc() {
             "10 10 20 30 40\n"
             "11 5 6 7 8\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Tetrahedron> elts;
+        EXPECT_NO_ERROR(elts = parse_msh4_element_bloc(input));
         assert(elts.size() == 3);
         auto e0 = elts.at(0);
         auto e1 = elts.at(1);
@@ -828,15 +631,7 @@ int test_parse_msh4_elements() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements section parsing failed, missing metadata";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input), "$Elements section parsing failed, missing metadata");
     }
     // no elements fails
     {
@@ -844,15 +639,7 @@ int test_parse_msh4_elements() {
             "0 0 0 0\n"
             "$EndElements\n"
          );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements section parsing failed, no tetrahedral elements were read";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input), "$Elements section parsing failed, no tetrahedral elements were read");
     }
     // no tetrahedral elements fails
     {
@@ -863,15 +650,7 @@ int test_parse_msh4_elements() {
             "2 2 3\n"
             "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements section parsing failed, no tetrahedral elements were read";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input), "$Elements section parsing failed, no tetrahedral elements were read");
     }
     // missing $EndElements fails
     {
@@ -882,15 +661,7 @@ int test_parse_msh4_elements() {
             "2 5 6 7 8\n"
             // "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements section parsing failed, expected $EndElements";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input), "$Elements section parsing failed, expected $EndElements");
     }
     // skip lower-dimension elements
     {
@@ -904,12 +675,8 @@ int test_parse_msh4_elements() {
             "2 5 6 7 8\n"
             "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Tetrahedron> elts;
+        EXPECT_NO_ERROR(elts = parse_msh4_elements(input));
         if (elts.size() != 2) {
             std::cerr << "expected 2 elements, got " << elts.size() << "\n";
             return 1;
@@ -937,15 +704,8 @@ int test_parse_msh4_elements() {
             "4 5 6 7 8\n"
             "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements parsing failed, found duplicate tetrahedron tag 1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input),
+            "$Elements section parsing failed, found duplicate tetrahedron tag 1");
     }
     // successfully parses multiple element blocs
     {
@@ -962,12 +722,8 @@ int test_parse_msh4_elements() {
             "6 5 6 7 1\n"
             "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Tetrahedron> elts;
+        EXPECT_NO_ERROR(elts = parse_msh4_elements(input));
         if (elts.size() != 4) {
             std::cerr << "expected 4 elements, got " << elts.size() << "\n";
             return 1;
@@ -992,26 +748,26 @@ int test_parse_msh4_elements() {
     return 0;
 }
 
-int test_parse_msh_file() {
-    std::string header =
+namespace {
+    const std::string header =
         "$MeshFormat\n"
         "4.1 0 8\n"
         "$EndMeshFormat\n";
 
-    std::string entities =
+    const std::string entities =
         "$Entities\n"
         "0 0 0 2\n"
         "1 0 0 0 1.0 1.0 1.0 1 1 6 1 2 3 4 5 6\n"
         "2 0 0 0 1.0 1.0 1.0 1 1 6 1 2 3 4 5 6\n"
         "$EndEntities\n";
 
-    std::string pgroups =
+    const std::string pgroups =
         "$PhysicalNames\n"
         "1\n"
         "3 1 \"Steel\"\n"
         "$EndPhysicalNames\n";
 
-    std::string nodes =
+    const std::string nodes =
         "$Nodes\n"
         "2 5 1 5\n"
         "1 1 0 2\n"
@@ -1028,7 +784,7 @@ int test_parse_msh_file() {
         "1 1 1\n"
         "$EndNodes\n";
 
-    std::string elts =
+    const std::string elts =
         "$Elements\n"
          "2 2 1 2\n"
          "3 1 4 2\n"
@@ -1039,15 +795,68 @@ int test_parse_msh_file() {
          "4 2 3 4 5\n"
          "$EndElements\n";
 
+} // anonymous namespace
+
+int test_parse_msh_file_errors() {
+    // Unknown physical group tags assigned to entities are caught
+    {
+        std::istringstream input(
+            header + nodes + elts +
+            "$Entities\n"
+            "0 0 0 1\n"
+            "1 0.0 0.0 0.0 1.0 1.0 1.0 1 100\n"
+            //                           ^
+            // physical group tag 100 is not part of $PhysicalNames
+            "$EndEntities\n"
+            "$PhysicalNames\n"
+            "1\n"
+            "3 1 \"Steel\"\n"
+            // ^ expecting tag == 1
+            "$EndPhysicalNames\n"
+        );
+        EXPECT_ERROR(parse_msh_file(input),
+            "msh 4.1 parsing failed\nvolume 1 had unknown physical group tag 100");
+    }
+
+    // Unknown volume (entity) tags assigned to elements are caught
+    {
+        std::istringstream input(
+            header + nodes + pgroups +
+            "$Entities\n"
+            "0 0 0 1\n"
+            "1 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
+            "$EndEntities\n"
+            "$Elements\n"
+            "1 1 1 1\n"
+            "3 100 4 1\n"
+            // ^ entity tag 100 is not present in $Entities
+            "1 1 2 3 4\n"
+            "$EndElements\n"
+        );
+        EXPECT_ERROR(parse_msh_file(input),
+            "msh 4.1 parsing failed\ntetrahedron 1 had unknown volume tag 100");
+    }
+
+    return 0;
+}
+
+int test_parse_msh_file() {
+    // section errors bubble up
+    {
+        std::istringstream input(
+            "$MeshFormat\n"
+            "4.1 0 8\n"
+            "$EndMeshFormat\n"
+            "$PhysicalNames\n" // missing PhysicalNames content
+            "$EndPhysicalNames\n"
+        );
+        EXPECT_ERROR(parse_msh_file(input),
+            "msh 4.1 parsing failed\n$PhysicalNames parsing failed");
+    }
     // minimum complete mesh file for EGSnrc
     {
         std::istringstream input(header + entities + pgroups + nodes + elts);
-        std::string err_msg;
-        parse_msh_file(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        EXPECT_NO_ERROR(parse_msh_file(input));
     }
     return 0;
 }
@@ -1118,7 +927,15 @@ int main() {
         std::cerr << "test PASSED" << std::endl;
     }
 
-    /*
+    std::cerr << "starting test parse_msh_file_errors" << std::endl;
+    err = test_parse_msh_file_errors();
+    if (err) {
+        std::cerr << "test FAILED" << std::endl;
+        num_failed++;
+    } else {
+        std::cerr << "test PASSED" << std::endl;
+    }
+
     std::cerr << "starting test parse_msh_file" << std::endl;
     err = test_parse_msh_file();
     if (err) {
@@ -1127,6 +944,6 @@ int main() {
     } else {
         std::cerr << "test PASSED" << std::endl;
     }
-    */
+
     return num_failed;
 }
