@@ -89,6 +89,22 @@ struct MeshVolume {
     int group = -1;
 };
 
+// Checks whether a list of structs with "tag" members have unique tags.
+// Returns (false, <duplicate_tag>) if a duplicate was found, and returns
+// (true, 0) otherwise.
+template <typename T>
+std::pair<bool, int> check_unique_tags(const std::vector<T>& values) {
+    std::unordered_set<int> tags;
+    tags.reserve(values.size());
+    for (const auto& v: values) {
+        auto insert_res = tags.insert(v.tag);
+        if (insert_res.second == false) {
+            return std::make_pair(false, v.tag);
+        }
+    }
+    return std::make_pair(true, 0);
+}
+
 std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& err_msg) {
     std::vector<MeshVolume> volumes;
     int num_3d = -1;
@@ -159,15 +175,12 @@ std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& er
         err_msg = "$Entities parsing failed, expected " + std::to_string(num_3d) + " volumes but got " + std::to_string(volumes.size());
         return std::vector<MeshVolume>{};
     }
-    // ensure the volumes have unique tags
-    std::unordered_set<int> vol_tags;
-    vol_tags.reserve(num_3d);
-    for (const auto& v: volumes) {
-        auto insert_res = vol_tags.insert(v.tag);
-        if (insert_res.second == false) {
-            err_msg = "$Entities parsing failed, found duplicate volume tag " + std::to_string(v.tag);
-            return std::vector<MeshVolume>{};
-        }
+    // ensure volume tags are unique
+    auto unique_res = check_unique_tags(volumes);
+    if (!unique_res.first) {
+        err_msg = "$Entities section parsing failed, found duplicate volume tag "
+            + std::to_string(unique_res.second);
+       return std::vector<MeshVolume>{};
     }
     return volumes;
 }
@@ -286,7 +299,13 @@ std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
         err_msg = "$Nodes section parsing failed, expected $EndNodes";
         return std::vector<Node>{};
     }
-
+    // ensure node tags are unique
+    auto unique_res = check_unique_tags(nodes);
+    if (!unique_res.first) {
+        err_msg = "$Nodes section parsing failed, found duplicate node tag "
+            + std::to_string(unique_res.second);
+       return std::vector<Node>{};
+    }
     return nodes;
 }
 
@@ -353,6 +372,13 @@ std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& e
         }
         auto name_len = name_end - name_start - 1; // -1 to exclude closing quote
         groups.push_back(PhysicalGroup { tag, line.substr(name_start + 1, name_len) });
+    }
+    // ensure group tags are unique
+    auto unique_res = check_unique_tags(groups);
+    if (!unique_res.first) {
+        err_msg = "$PhysicalNames section parsing failed, found duplicate tag "
+            + std::to_string(unique_res.second);
+        return std::vector<PhysicalGroup>{};
     }
     return groups;
 }
@@ -468,14 +494,11 @@ std::vector<Tetrahedron> parse_msh4_elements(std::istream& input, std::string& e
         return std::vector<Tetrahedron>{};
     }
     // ensure element tags are unique
-    std::unordered_set<int> elt_tags;
-    elt_tags.reserve(elts.size());
-    for (const auto& e: elts) {
-        auto insert_res = elt_tags.insert(e.tag);
-        if (insert_res.second == false) {
-            err_msg = "$Elements parsing failed, found duplicate tetrahedron tag " + std::to_string(e.tag);
-            return std::vector<Tetrahedron>{};
-        }
+    auto unique_res = check_unique_tags(elts);
+    if (!unique_res.first) {
+        err_msg = "$Elements section parsing failed, found duplicate tetrahedron tag "
+            + std::to_string(unique_res.second);
+       return std::vector<Tetrahedron>{};
     }
     return elts;
 }

@@ -266,6 +266,27 @@ int test_parse_msh4_groups() {
             return 1;
         }
     }
+    // duplicate 3D group tags are caught
+    {
+         std::istringstream input(
+            "4\n"
+            "1 1 \"line\"\n"
+            "2 2 \"surface\"\n"
+            "3 3 \"volume\"\n"
+            "3 4 \"volume2\"\n"
+            "3 4 \"other volume\"\n" // tag 4 repeated
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        auto groups = parse_msh4_groups(input, err_msg);
+        assert(groups.size() == 0);
+        std::string expected = "$PhysicalNames section parsing failed, found duplicate tag 4";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
     // spaces in names are OK
     {
          std::istringstream input(
@@ -521,7 +542,7 @@ int test_parse_msh4_nodes() {
     // missing $EndNodes fails
     {
          std::istringstream input(
-            "1 1 1 1\n" // 100 nodes
+            "1 1 1 1\n"
             "1 1 0 1\n"
             "1\n"
             "1 0 0\n"
@@ -531,6 +552,28 @@ int test_parse_msh4_nodes() {
         auto nodes = parse_msh4_nodes(input, err_msg);
         assert(nodes.size() == 0);
         std::string expected = "$Nodes section parsing failed, expected $EndNodes";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+    // duplicate node tags are caught
+    {
+         std::istringstream input(
+            "2 2 1 2\n"
+            "1 1 0 1\n"
+            "1\n"
+            "1 0 0\n"
+            "1 2 0 1\n"
+            "1\n" // node tag 1 repeated
+            "1 0 0\n"
+            "$EndNodes\n"
+        );
+        std::string err_msg;
+        auto nodes = parse_msh4_nodes(input, err_msg);
+        assert(nodes.size() == 0);
+        std::string expected = "$Nodes section parsing failed, found duplicate node tag 1";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
                 << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
@@ -659,7 +702,7 @@ int test_parse_msh4_entities() {
         std::string err_msg;
         auto vols = parse_msh4_entities(input, err_msg);
         assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, found duplicate volume tag 1";
+        std::string expected = "$Entities section parsing failed, found duplicate volume tag 1";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
                 << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
@@ -694,7 +737,7 @@ int test_parse_msh4_entities() {
         std::string err_msg;
         auto vols = parse_msh4_entities(input, err_msg);
         assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, found duplicate volume tag 2";
+        std::string expected = "$Entities section parsing failed, found duplicate volume tag 2";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
                 << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
@@ -960,7 +1003,7 @@ int test_parse_msh4_elements() {
         std::string err_msg;
         auto elts = parse_msh4_elements(input, err_msg);
         assert(elts.size() == 0);
-        std::string expected = "$Elements parsing failed, found duplicate tetrahedron tag 1";
+        std::string expected = "$Elements section parsing failed, found duplicate tetrahedron tag 1";
         if (err_msg != expected) {
             std::cerr << "got error message: \""
                 << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
