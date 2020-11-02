@@ -509,23 +509,49 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
     std::vector<PhysicalGroup> groups;
     std::vector<Tetrahedron> elements;
 
+    std::string parse_err;
     std::string input_line;
     while (std::getline(input, input_line)) {
         rtrim(input_line);
         // stop reading if we hit another mesh file
         if (input_line == "$MeshFormat") {
             break;
-        }
-        if (input_line == "$Entities") {
-           volumes = parse_msh4_entities(input, err_msg);
+        } else if (input_line == "$Entities") {
+           volumes = parse_msh4_entities(input, parse_err);
         } else if (input_line == "$PhysicalNames") {
-            groups = parse_msh4_groups(input, err_msg);
+            groups = parse_msh4_groups(input, parse_err);
         } else if (input_line == "$Nodes") {
-            nodes = parse_msh4_nodes(input, err_msg);
+            nodes = parse_msh4_nodes(input, parse_err);
         } else if (input_line == "$Elements") {
-            elements = parse_msh4_elements(input, err_msg);
+            elements = parse_msh4_elements(input, parse_err);
+        }
+        if (!parse_err.empty()) {
+            err_msg = "msh 4.1 parsing failed:\n" + parse_err;
+            return;
         }
     }
+    if (volumes.empty()) {
+        err_msg = "No volumes were parsed";
+        return;
+    }
+    if (nodes.empty()) {
+        err_msg = "No nodes were parsed";
+        return;
+    }
+    if (groups.empty()) {
+        err_msg = "No groups were parsed";
+        return;
+    }
+    if (elements.empty()) {
+        err_msg = "No tetrahedrons were parsed";
+        return;
+    }
+
+    // ensure each element has a valid entity
+
+    // ensure each entity has a valid group
+
+    // ensure all element node tags are valid
 
     err_msg = "unimplemented";
 }

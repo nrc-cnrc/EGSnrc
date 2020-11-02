@@ -1083,6 +1083,24 @@ int test_parse_msh_file() {
         "$EndElements\n";
 
 
+    // section errors bubble up
+    {
+        std::istringstream input(
+            "$MeshFormat\n"
+            "4.1 0 8\n"
+            "$EndMeshFormat\n"
+            "$PhysicalNames\n" // missing PhysicalNames content
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        parse_msh_file(input, err_msg);
+        std::string expected = "msh 4.1 parsing failed:\n$PhysicalNames parsing failed";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
     // minimum complete mesh file for EGSnrc
     {
         std::istringstream input(header + pgroups + nodes + elts);
@@ -1162,7 +1180,6 @@ int main() {
         std::cerr << "test PASSED" << std::endl;
     }
 
-    /*
     std::cerr << "starting test parse_msh_file" << std::endl;
     err = test_parse_msh_file();
     if (err) {
@@ -1171,6 +1188,6 @@ int main() {
     } else {
         std::cerr << "test PASSED" << std::endl;
     }
-    */
+
     return num_failed;
 }
