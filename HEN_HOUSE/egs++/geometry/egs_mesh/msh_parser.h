@@ -105,6 +105,7 @@ std::pair<bool, int> check_unique_tags(const std::vector<T>& values) {
     return std::make_pair(true, 0);
 }
 
+/// Returns a list of volumes. Volume tags are unique.
 std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& err_msg) {
     std::vector<MeshVolume> volumes;
     int num_3d = -1;
@@ -254,7 +255,7 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg
     return nodes;
 }
 
-// Parse the entire $Nodes section
+/// Parse the entire $Nodes section and returns a list of Nodes. Node tags are unique.
 std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
     std::vector<Node> nodes;
     std::size_t num_blocs = SIZET_MAX;
@@ -315,6 +316,7 @@ struct PhysicalGroup {
     std::string name;
 };
 
+/// Returns a list of PhysicalGroups. PhysicalGroup tags are unique.
 std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& err_msg) {
     std::vector<PhysicalGroup> groups;
     // this is the total number of groups, not just 3D groups
@@ -454,6 +456,7 @@ std::vector<Tetrahedron> parse_msh4_element_bloc(std::istream& input, std::strin
     return elts;
 }
 
+/// Returns a list of tetrahedral elements. Element tags are unique.
 std::vector<Tetrahedron> parse_msh4_elements(std::istream& input, std::string& err_msg) {
     std::vector<Tetrahedron> elts;
     std::size_t num_blocs = SIZET_MAX;
