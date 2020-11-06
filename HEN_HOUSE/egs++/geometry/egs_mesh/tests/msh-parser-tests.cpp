@@ -1055,26 +1055,26 @@ int test_parse_msh4_elements() {
     return 0;
 }
 
-int test_parse_msh_file() {
-    std::string header =
+namespace {
+    const std::string header =
         "$MeshFormat\n"
         "4.1 0 8\n"
         "$EndMeshFormat\n";
 
-    std::string entities =
+    const std::string entities =
         "$Entities\n"
         "0 0 0 2\n"
         "1 0 0 0 1.0 1.0 1.0 1 1 6 1 2 3 4 5 6\n"
         "2 0 0 0 1.0 1.0 1.0 1 1 6 1 2 3 4 5 6\n"
         "$EndEntities\n";
 
-    std::string pgroups =
+    const std::string pgroups =
         "$PhysicalNames\n"
         "1\n"
         "3 1 \"Steel\"\n"
         "$EndPhysicalNames\n";
 
-    std::string nodes =
+    const std::string nodes =
         "$Nodes\n"
         "2 5 1 5\n"
         "1 1 0 2\n"
@@ -1091,7 +1091,7 @@ int test_parse_msh_file() {
         "1 1 1\n"
         "$EndNodes\n";
 
-    std::string elts =
+    const std::string elts =
         "$Elements\n"
          "2 2 1 2\n"
          "3 1 4 2\n"
@@ -1102,6 +1102,39 @@ int test_parse_msh_file() {
          "4 2 3 4 5\n"
          "$EndElements\n";
 
+} // anonymous namespace
+
+int test_parse_msh_file_errors() {
+    // Unknown physical group tags assigned to entities are caught
+    {
+        std::istringstream input(
+            header + nodes + elts +
+            "$Entities\n"
+            "0 0 0 1\n"
+            "1 0.0 0.0 0.0 1.0 1.0 1.0 1 100\n"
+            //                           ^
+            // physical group tag 100 is not part of $PhysicalNames
+            "$EndEntities\n"
+            "$PhysicalNames\n"
+            "1\n"
+            "3 1 \"Steel\"\n"
+            // ^ expecting tag == 1
+            "$EndPhysicalNames\n"
+        );
+        std::string err_msg;
+        parse_msh_file(input, err_msg);
+        std::string expected = "volume 1 had unknown physical group tag 100";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int test_parse_msh_file() {
     // section errors bubble up
     {
         std::istringstream input(
@@ -1192,6 +1225,15 @@ int main() {
 
     std::cerr << "starting test parse_msh4_elements" << std::endl;
     err = test_parse_msh4_elements();
+    if (err) {
+        std::cerr << "test FAILED" << std::endl;
+        num_failed++;
+    } else {
+        std::cerr << "test PASSED" << std::endl;
+    }
+
+    std::cerr << "starting test parse_msh_file_errors" << std::endl;
+    err = test_parse_msh_file_errors();
     if (err) {
         std::cerr << "test FAILED" << std::endl;
         num_failed++;

@@ -550,9 +550,20 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
         return;
     }
 
-    // ensure each element has a valid entity
-
     // ensure each entity has a valid group
+    std::unordered_set<int> group_tags;
+    group_tags.reserve(groups.size());
+    for (auto g: groups) {
+        group_tags.insert(g.tag);
+    }
+    for (auto v: volumes) {
+        if (group_tags.find(v.group) == group_tags.end()) {
+            err_msg = "volume " + std::to_string(v.tag) + " had unknown physical group tag " + std::to_string(v.group);
+            return;
+        }
+    }
+
+    // ensure each element has a valid entity
 
     // ensure all element node tags are valid
 
