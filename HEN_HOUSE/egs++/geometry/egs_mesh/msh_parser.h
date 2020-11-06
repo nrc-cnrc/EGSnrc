@@ -4,6 +4,7 @@
 #include <limits>
 #include <sstream>
 #include <vector>
+#include <unordered_map>
 #include <unordered_set>
 
 // todo namespace private
@@ -556,14 +557,27 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
     for (auto g: groups) {
         group_tags.insert(g.tag);
     }
+    std::unordered_map<int, int> volume_groups;
+    volume_groups.reserve(volumes.size());
     for (auto v: volumes) {
         if (group_tags.find(v.group) == group_tags.end()) {
             err_msg = "volume " + std::to_string(v.tag) + " had unknown physical group tag " + std::to_string(v.group);
             return;
         }
+        volume_groups.insert({ v.tag, v.group });
     }
 
-    // ensure each element has a valid entity
+    // ensure each element has a valid entity and therefore a valid physical group
+    std::vector<int> element_groups;
+    element_groups.reserve(elements.size());
+    for (auto e: elements) {
+        auto elt_group = volume_groups.find(e.volume);
+        if (elt_group == volume_groups.end()) {
+            err_msg = "tetrahedron " + std::to_string(e.tag) + " had unknown volume tag " + std::to_string(e.volume);
+            return;
+        }
+        element_groups.push_back(elt_group->second);
+    }
 
     // ensure all element node tags are valid
 

@@ -1131,6 +1131,31 @@ int test_parse_msh_file_errors() {
         }
     }
 
+    // Unknown volume (entity) tags assigned to elements are caught
+    {
+        std::istringstream input(
+            header + nodes + pgroups +
+            "$Entities\n"
+            "0 0 0 1\n"
+            "1 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
+            "$EndEntities\n"
+            "$Elements\n"
+            "1 1 1 1\n"
+            "3 100 4 1\n"
+            // ^ entity tag 100 is not present in $Entities
+            "1 1 2 3 4\n"
+            "$EndElements\n"
+        );
+        std::string err_msg;
+        parse_msh_file(input, err_msg);
+        std::string expected = "tetrahedron 1 had unknown volume tag 100";
+        if (err_msg != expected) {
+            std::cerr << "got error message: \""
+                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
+            return 1;
+        }
+    }
+
     return 0;
 }
 
