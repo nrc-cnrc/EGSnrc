@@ -3,6 +3,7 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
@@ -16,28 +17,25 @@ static inline void rtrim(std::string &s) {
     }).base(), s.end());
 }
 
-enum class MshVersion { v41, Failure };
+enum class MshVersion { v41 };
 constexpr std::size_t SIZET_MAX = std::numeric_limits<std::size_t>::max();
 
-MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
+/// Throws a std::runtime_error if parsing fails.
+MshVersion parse_msh_version(std::istream& input) {
     if (!input) {
-        err_msg = "bad input to parse_msh";
-        return MshVersion::Failure;
+        throw std::runtime_error("bad input to parse_msh");
     }
     std::string format_line;
     std::getline(input, format_line);
     if (input.bad()) {
-        err_msg = "IO error during reading";
-        return MshVersion::Failure;
+        throw std::runtime_error("IO error during reading");
     }
     if (input.eof()) {
-        err_msg = "unexpected end of input";
-        return MshVersion::Failure;
+        throw std::runtime_error("unexpected end of input");
     }
     rtrim(format_line);
     if (format_line != "$MeshFormat") {
-        err_msg = "expected $MeshFormat, got " + format_line;
-        return MshVersion::Failure;
+        throw std::runtime_error("expected $MeshFormat, got " + format_line);
     }
 
     std::string version;
@@ -48,24 +46,19 @@ MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
     input >> sizet;
 
     if (input.fail()) {
-        err_msg = "failed to parse msh version";
-        return MshVersion::Failure;
+        throw std::runtime_error("failed to parse msh version");
     }
     if (version != "4.1") {
-        err_msg = "unsupported msh version `" + version + "`, the only supported version is 4.1";
-        return MshVersion::Failure;
+        throw std::runtime_error("unsupported msh version `" + version + "`, the only supported version is 4.1");
     }
     if (binary_flag != 0) {
         if (binary_flag == 1) {
-            err_msg = "binary msh files are unsupported, please convert this file to ascii and try again";
-            return MshVersion::Failure;
+            throw std::runtime_error("binary msh files are unsupported, please convert this file to ascii and try again");
         }
-        err_msg = "failed to parse msh version";
-        return MshVersion::Failure;
+        throw std::runtime_error("failed to parse msh version");
     }
     if (sizet != 8) {
-        err_msg = "msh file size_t must be 8";
-        return MshVersion::Failure;
+        throw std::runtime_error("msh file size_t must be 8");
     }
     // eat newline
     std::getline(input, format_line);
@@ -73,15 +66,10 @@ MshVersion parse_msh_version(std::istream& input, std::string& err_msg) {
     std::getline(input, format_line);
     rtrim(format_line);
     if (format_line != "$EndMeshFormat") {
-        err_msg = "expected $EndMeshFormat, got `" + format_line + "`";
-        return MshVersion::Failure;
+        throw std::runtime_error("expected $EndMeshFormat, got `" + format_line + "`");
     }
 
-    if (version == "4.1") {
-        return MshVersion::v41;
-    }
-
-    return MshVersion::Failure;
+    return MshVersion::v41;
 }
 
 // A model volume (e.g. cube, cylinder, complex shape constructed by boolean operations).
@@ -585,7 +573,7 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
 }
 
 void parse_msh_file(std::istream& input, std::string& err_msg) {
-    auto version = parse_msh_version(input, err_msg);
+    auto version = parse_msh_version(input);
     // TODO auto mesh_data;
     switch(version) {
         case MshVersion::v41: parse_msh4_body(input, err_msg); break;

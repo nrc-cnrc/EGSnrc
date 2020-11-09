@@ -1,45 +1,40 @@
 #include "msh_parser.h"
 #include <cassert>
 
+// exception test macros adapted from Arthur O'Dwyer's comment here:
+//   https://github.com/google/googletest/issues/952#issuecomment-521361666
+
+#define EXPECT_NO_ERROR(stmt) \
+    try { \
+        stmt; \
+    } catch (const std::runtime_error& err) { \
+        std::cerr << "got error message: \"" << err.what() << "\"\n"; \
+        return 1; \
+    }
+
+#define EXPECT_ERROR(stmt, err_msg) \
+    try { \
+        stmt; \
+        std::cerr << "expected exception with message: \"" << err_msg << "\"\n"; \
+        return 1; \
+    } catch (const std::runtime_error& err) { \
+        if (err.what() != std::string(err_msg)) { \
+            std::cerr << "got error message: \"" \
+                << err.what() << "\"\nbut expected: \"" << err_msg << "\"\n"; \
+            return 1; \
+        } \
+    }
+
 int test_parse_msh_version() {
     // catch empty inputs
     {
         std::istringstream input("");
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "unexpected end of input";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "unexpected end of input");
     }
     // bad format header
     {
         std::istringstream input("$MshFmt\n");
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "expected $MeshFormat, got $MshFmt";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
-    }
-    // windows line-endings
-    {
-        std::istringstream input("$MeshFormat\r\n");
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "failed to parse msh version";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "expected $MeshFormat, got $MshFmt");
     }
     // bad msh version line
     {
@@ -48,15 +43,7 @@ int test_parse_msh_version() {
             "0\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "failed to parse msh version";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "failed to parse msh version");
     }
     // unknown msh version
     {
@@ -65,15 +52,7 @@ int test_parse_msh_version() {
             "100.2 0 8\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "unsupported msh version `100.2`, the only supported version is 4.1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "unsupported msh version `100.2`, the only supported version is 4.1");
     }
     // binary files are unsupported
     {
@@ -82,15 +61,7 @@ int test_parse_msh_version() {
             "4.1 1 8\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "binary msh files are unsupported, please convert this file to ascii and try again";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "binary msh files are unsupported, please convert this file to ascii and try again");
     }
     // size_t != 8 is unsupported
     {
@@ -99,16 +70,7 @@ int test_parse_msh_version() {
             "4.1 0 4\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "msh file size_t must be 8";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
-
+        EXPECT_ERROR(parse_msh_version(input), "msh file size_t must be 8");
     }
     // eof after version line fails
     {
@@ -116,15 +78,7 @@ int test_parse_msh_version() {
             "$MeshFormat\n"
             "4.1 0 8\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        assert(vers == MshVersion::Failure);
-        std::string expected = "expected $EndMeshFormat, got ``";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_version(input), "expected $EndMeshFormat, got ``");
     }
     // parse msh v4.1 successfully
     {
@@ -133,16 +87,20 @@ int test_parse_msh_version() {
             "4.1 0 8\n"
             "$EndMeshFormat\n"
         );
-        std::string err_msg;
-        auto vers = parse_msh_version(input, err_msg);
-        if (err_msg != "") {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
-        if (vers != MshVersion::v41) {
-            std::cerr << "failed to parse mesh version 4.1\n";
-            return 1;
-        }
+        MshVersion vers;
+        EXPECT_NO_ERROR(vers = parse_msh_version(input));
+        assert(vers == MshVersion::v41);
+    }
+    // windows line-endings are OK
+    {
+        std::istringstream input(
+            "$MeshFormat\r\n"
+            "4.1 0 8\r\n"
+            "$EndMeshFormat\r\n"
+        );
+        MshVersion vers;
+        EXPECT_NO_ERROR(vers = parse_msh_version(input));
+        assert(vers == MshVersion::v41);
     }
     return 0;
 }
