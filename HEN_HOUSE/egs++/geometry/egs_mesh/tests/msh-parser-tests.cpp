@@ -107,19 +107,15 @@ int test_parse_msh_version() {
 
 // all test cases assume $PhysicalNames header has already been parsed
 int test_parse_msh4_groups() {
-    // empty section
+    // empty section is OK
     {
         std::istringstream input(
             "0\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
         assert(groups.size() == 0);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
     }
     // missing $EndPhysicalNames tag fails
     {
@@ -129,14 +125,8 @@ int test_parse_msh4_groups() {
             "2 2 \"a surface\"\n"
             "3 3 \"a volume\"\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "unexpected end of file, expected $EndPhysicalNames";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "unexpected end of file, expected $EndPhysicalNames");
     }
     // bad physical group line fails
     {
@@ -145,14 +135,8 @@ int test_parse_msh4_groups() {
             "1 \"a line\"\n" // missing tag
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "physical group parsing failed: 1 \"a line\"";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "physical group parsing failed: 1 \"a line\"");
     }
     // catch invalid physical group names
     {
@@ -161,14 +145,8 @@ int test_parse_msh4_groups() {
             "3 1 \"\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "empty physical group name: 3 1 \"\"";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "empty physical group name: 3 1 \"\"");
     }
     // physical group names are quoted
     {
@@ -177,14 +155,8 @@ int test_parse_msh4_groups() {
             "3 1 Steel\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "physical group names must be quoted: 3 1 Steel";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "physical group names must be quoted: 3 1 Steel");
     }
     // closing name quote is required
     {
@@ -193,14 +165,8 @@ int test_parse_msh4_groups() {
             "3 1 \"Steel\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        std::string expected = "couldn't find closing quote for physical group: 3 1 \"Steel";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "couldn't find closing quote for physical group: 3 1 \"Steel");
     }
     // only 3D groups are returned
     {
@@ -211,12 +177,9 @@ int test_parse_msh4_groups() {
             "3 3 \"volume\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
+        assert(groups.size() == 1);
         std::string expected_name = "volume";
         if (groups.at(0).name != expected_name) {
             std::cerr << "bad physical name parse, expected: " << expected_name
@@ -235,15 +198,8 @@ int test_parse_msh4_groups() {
             "3 4 \"other volume\"\n" // tag 4 repeated
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        assert(groups.size() == 0);
-        std::string expected = "$PhysicalNames section parsing failed, found duplicate tag 4";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_groups(input),
+            "$PhysicalNames section parsing failed, found duplicate tag 4");
     }
     // spaces in names are OK
     {
@@ -254,12 +210,9 @@ int test_parse_msh4_groups() {
             "3 3 \"a volume\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
+        assert(groups.size() == 1);
         std::string expected_name = "a volume";
         if (groups.at(0).name != expected_name) {
             std::cerr << "bad physical name parse, expected: " << expected_name
@@ -276,12 +229,9 @@ int test_parse_msh4_groups() {
             "3 3 \"a\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
+        assert(groups.size() == 1);
         std::string expected_name = "a";
         if (groups.at(0).name != expected_name) {
             std::cerr << "bad physical name parse, expected: " << expected_name
@@ -300,12 +250,8 @@ int test_parse_msh4_groups() {
             "3 5 \"Water\"\n"
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        auto groups = parse_msh4_groups(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<PhysicalGroup> groups;
+        EXPECT_NO_ERROR(groups = parse_msh4_groups(input));
         if (groups.size() != 3) {
             std::cerr << "expected 3 groups, got " << groups.size() << "\n";
             return 1;

@@ -306,7 +306,9 @@ struct PhysicalGroup {
 };
 
 /// Returns a list of PhysicalGroups. PhysicalGroup tags are unique.
-std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& err_msg) {
+//
+/// Throws a std::runtime_error if parsing fails.
+std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input) {
     std::vector<PhysicalGroup> groups;
     // this is the total number of groups, not just 3D groups
     int num_groups = -1;
@@ -317,8 +319,7 @@ std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& e
         line_stream >> num_groups;
         if (line_stream.fail() || num_groups == -1)
         {
-            err_msg = "$PhysicalNames parsing failed";
-            return std::vector<PhysicalGroup>{};
+            throw std::runtime_error("$PhysicalNames parsing failed");
         }
     }
     groups.reserve(num_groups);
@@ -335,12 +336,10 @@ std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& e
         line_stream >> dim;
         line_stream >> tag;
         if (line_stream.eof()) {
-            err_msg = "unexpected end of file, expected $EndPhysicalNames";
-            return std::vector<PhysicalGroup>{};
+            throw std::runtime_error("unexpected end of file, expected $EndPhysicalNames");
         }
         if (line_stream.fail()) {
-            err_msg = "physical group parsing failed: " + line;
-            return std::vector<PhysicalGroup>{};
+            throw std::runtime_error("physical group parsing failed: " + line);
         }
         // only save 3D physical groups
         if (dim != 3) {
@@ -349,17 +348,14 @@ std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& e
         // find quoted group name
         auto name_start = line.find_first_of('"');
         if (name_start == std::string::npos) {
-            err_msg = "physical group names must be quoted: " + line;
-            return std::vector<PhysicalGroup>{};
+            throw std::runtime_error("physical group names must be quoted: " + line);
         }
         auto name_end = line.find_last_of('"');
         if (name_end == name_start) {
-            err_msg = "couldn't find closing quote for physical group: " + line;
-            return std::vector<PhysicalGroup>{};
+            throw std::runtime_error("couldn't find closing quote for physical group: " + line);
         }
         if (name_end - name_start == 1) {
-            err_msg = "empty physical group name: " + line;
-            return std::vector<PhysicalGroup>{};
+            throw std::runtime_error("empty physical group name: " + line);
         }
         auto name_len = name_end - name_start - 1; // -1 to exclude closing quote
         groups.push_back(PhysicalGroup { tag, line.substr(name_start + 1, name_len) });
@@ -367,9 +363,8 @@ std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input, std::string& e
     // ensure group tags are unique
     auto unique_res = check_unique_tags(groups);
     if (!unique_res.first) {
-        err_msg = "$PhysicalNames section parsing failed, found duplicate tag "
-            + std::to_string(unique_res.second);
-        return std::vector<PhysicalGroup>{};
+        throw std::runtime_error("$PhysicalNames section parsing failed, found duplicate tag "
+            + std::to_string(unique_res.second));
     }
     return groups;
 }
@@ -511,7 +506,7 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
         } else if (input_line == "$Entities") {
            volumes = parse_msh4_entities(input, parse_err);
         } else if (input_line == "$PhysicalNames") {
-            groups = parse_msh4_groups(input, parse_err);
+            groups = parse_msh4_groups(input);
         } else if (input_line == "$Nodes") {
             nodes = parse_msh4_nodes(input, parse_err);
         } else if (input_line == "$Elements") {
