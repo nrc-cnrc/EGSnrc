@@ -275,15 +275,7 @@ int test_parse_msh4_node_bloc() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_node_bloc(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_node_bloc(input), "Node bloc parsing failed");
     }
     // bad dimension value fails
     {
@@ -292,16 +284,9 @@ int test_parse_msh4_node_bloc() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_node_bloc(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed for entity 100, got dimension 4,"
-            " expected 0, 1, 2, or 3";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_node_bloc(input),
+            "Node bloc parsing failed for entity 100, got dimension 4,"
+            " expected 0, 1, 2, or 3");
     }
     // wrong number of nodes fails
     {
@@ -310,15 +295,8 @@ int test_parse_msh4_node_bloc() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_node_bloc(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed during node coordinate section of entity 100";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_node_bloc(input),
+            "Node bloc parsing failed during node coordinate section of entity 100");
     }
     // successfully parse a single node bloc
     {
@@ -332,11 +310,8 @@ int test_parse_msh4_node_bloc() {
             "0 0 1\n"
         );
         std::string err_msg;
-        auto nodes = parse_msh4_node_bloc(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Node> nodes;
+        EXPECT_NO_ERROR(nodes = parse_msh4_node_bloc(input));
         if (nodes.size() != 3) {
             std::cerr << "expected 3 nodes, got " << nodes.size() << "\n";
             return 1;

@@ -182,8 +182,10 @@ struct Node {
     double z = 0.0;
 };
 
-// Parse a single entity bloc of nodes.
-std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg) {
+/// Parse a single entity bloc of nodes.
+//
+/// Throws a std::runtime_error if parsing fails.
+std::vector<Node> parse_msh4_node_bloc(std::istream& input) {
     std::vector<Node> nodes;
     std::size_t num_nodes = SIZET_MAX;
     int entity = -1;
@@ -197,12 +199,10 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg
         if (line_stream.fail() || dim == -1 || entity == -1 || parametric == -1
                 || num_nodes == SIZET_MAX)
         {
-            err_msg = "Node bloc parsing failed";
-            return std::vector<Node>{};
+            throw std::runtime_error("Node bloc parsing failed");
         }
         if (dim < 0 || dim > 3) {
-            err_msg = "Node bloc parsing failed for entity " + std::to_string(entity) + ", got dimension " + std::to_string(dim) + ", expected 0, 1, 2, or 3";
-            return std::vector<Node>{};
+            throw std::runtime_error("Node bloc parsing failed for entity " + std::to_string(entity) + ", got dimension " + std::to_string(dim) + ", expected 0, 1, 2, or 3");
         }
     }
     nodes.reserve(num_nodes);
@@ -213,8 +213,7 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg
         std::size_t tag = SIZET_MAX;
         line_stream >> tag;
         if (line_stream.fail() || tag == SIZET_MAX) {
-            err_msg = "Node bloc parsing failed during node tag section of entity " + std::to_string(entity);
-            return std::vector<Node>{};
+            throw std::runtime_error("Node bloc parsing failed during node tag section of entity " + std::to_string(entity));
         }
         Node n;
         n.tag = tag;
@@ -229,17 +228,15 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input, std::string& err_msg
         double z = 0.0;
         line_stream >> x >> y >> z;
         if (line_stream.fail()) {
-            err_msg = "Node bloc parsing failed during node coordinate section of entity " + std::to_string(entity);
-            return std::vector<Node>{};
+            throw std::runtime_error("Node bloc parsing failed during node coordinate section of entity " + std::to_string(entity));
         }
         nodes.at(i).x = x;
         nodes.at(i).y = y;
         nodes.at(i).z = z;
     }
     if (nodes.size() != num_nodes) {
-        err_msg = "Node bloc parsing failed, expected " + std::to_string(num_nodes) + " nodes but read "
-            + std::to_string(nodes.size()) + " for entity " + std::to_string(entity);
-        return std::vector<Node>{};
+        throw std::runtime_error("Node bloc parsing failed, expected " + std::to_string(num_nodes) + " nodes but read "
+            + std::to_string(nodes.size()) + " for entity " + std::to_string(entity));
     }
     return nodes;
 }
@@ -270,11 +267,11 @@ std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
     }
     nodes.reserve(num_nodes);
     for (std::size_t i = 0; i < num_blocs; ++i) {
-        std::string bloc_node_err;
-        std::vector<Node> bloc_nodes = parse_msh4_node_bloc(input, bloc_node_err);
-        if (!bloc_node_err.empty()) {
-            err_msg = bloc_node_err;
-            return std::vector<Node>{};
+        std::vector<Node> bloc_nodes;
+        try {
+            bloc_nodes = parse_msh4_node_bloc(input);
+        } catch (const std::runtime_error& err) {
+            throw std::runtime_error("$Nodes section parsing failed\n" + std::string(err.what()));
         }
         nodes.insert(nodes.end(), bloc_nodes.begin(), bloc_nodes.end());
     }
