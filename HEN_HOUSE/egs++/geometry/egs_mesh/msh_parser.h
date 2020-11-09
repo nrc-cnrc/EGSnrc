@@ -183,7 +183,7 @@ struct Node {
 };
 
 /// Parse a single entity bloc of nodes.
-//
+///
 /// Throws a std::runtime_error if parsing fails.
 std::vector<Node> parse_msh4_node_bloc(std::istream& input) {
     std::vector<Node> nodes;
@@ -242,7 +242,9 @@ std::vector<Node> parse_msh4_node_bloc(std::istream& input) {
 }
 
 /// Parse the entire $Nodes section and returns a list of Nodes. Node tags are unique.
-std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
+///
+/// Throws a std::runtime_error if parsing fails.
+std::vector<Node> parse_msh4_nodes(std::istream& input) {
     std::vector<Node> nodes;
     std::size_t num_blocs = SIZET_MAX;
     std::size_t num_nodes = SIZET_MAX;
@@ -256,13 +258,11 @@ std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
         if (line_stream.fail() || num_blocs == SIZET_MAX || num_nodes == SIZET_MAX ||
                 min_tag == SIZET_MAX || max_tag == SIZET_MAX)
         {
-            err_msg = "$Nodes section parsing failed, missing metadata";
-            return std::vector<Node>{};
+            throw std::runtime_error("$Nodes section parsing failed, missing metadata");
         }
         if (max_tag > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
-            err_msg = "Max node tag is too large (" + std::to_string(max_tag) + "), limit is "
-                + std::to_string(std::numeric_limits<int>::max());
-            return std::vector<Node>{};
+            throw std::runtime_error("Max node tag is too large (" + std::to_string(max_tag) + "), limit is "
+                + std::to_string(std::numeric_limits<int>::max()));
         }
     }
     nodes.reserve(num_nodes);
@@ -276,22 +276,19 @@ std::vector<Node> parse_msh4_nodes(std::istream& input, std::string& err_msg) {
         nodes.insert(nodes.end(), bloc_nodes.begin(), bloc_nodes.end());
     }
     if (nodes.size() != num_nodes) {
-        err_msg = "$Nodes section parsing failed, expected " + std::to_string(num_nodes) + " nodes but read "
-            + std::to_string(nodes.size());
-        return std::vector<Node>{};
+        throw std::runtime_error("$Nodes section parsing failed, expected " + std::to_string(num_nodes) + " nodes but read "
+            + std::to_string(nodes.size()));
     }
     std::getline(input, line);
     rtrim(line);
     if (line != "$EndNodes") {
-        err_msg = "$Nodes section parsing failed, expected $EndNodes";
-        return std::vector<Node>{};
+        throw std::runtime_error("$Nodes section parsing failed, expected $EndNodes");
     }
     // ensure node tags are unique
     auto unique_res = check_unique_tags(nodes);
     if (!unique_res.first) {
-        err_msg = "$Nodes section parsing failed, found duplicate node tag "
-            + std::to_string(unique_res.second);
-       return std::vector<Node>{};
+        throw std::runtime_error("$Nodes section parsing failed, found duplicate node tag "
+            + std::to_string(unique_res.second));
     }
     return nodes;
 }
@@ -500,18 +497,19 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
         // stop reading if we hit another mesh file
         if (input_line == "$MeshFormat") {
             break;
-        } else if (input_line == "$Entities") {
-           volumes = parse_msh4_entities(input, parse_err);
-        } else if (input_line == "$PhysicalNames") {
-            groups = parse_msh4_groups(input);
-        } else if (input_line == "$Nodes") {
-            nodes = parse_msh4_nodes(input, parse_err);
-        } else if (input_line == "$Elements") {
-            elements = parse_msh4_elements(input, parse_err);
         }
-        if (!parse_err.empty()) {
-            err_msg = "msh 4.1 parsing failed:\n" + parse_err;
-            return;
+        try {
+            if (input_line == "$Entities") {
+               volumes = parse_msh4_entities(input, parse_err);
+            } else if (input_line == "$PhysicalNames") {
+                groups = parse_msh4_groups(input);
+            } else if (input_line == "$Nodes") {
+                nodes = parse_msh4_nodes(input);
+            } else if (input_line == "$Elements") {
+                elements = parse_msh4_elements(input, parse_err);
+            }
+        } catch (const std::runtime_error& err) {
+            throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
         }
     }
     if (volumes.empty()) {

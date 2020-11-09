@@ -334,15 +334,8 @@ int test_parse_msh4_nodes() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "$Nodes section parsing failed, missing metadata";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed, missing metadata");
     }
     // missing section metadata fails eventually (is parsed as the first bloc metadata)
     {
@@ -352,15 +345,8 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed\nNode bloc parsing failed");
     }
     // wrong num_blocs fails
     {
@@ -370,15 +356,8 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Node bloc parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed\nNode bloc parsing failed");
     }
     // node tags must fit into an int
     {
@@ -390,15 +369,8 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "Max node tag is too large (2147483648), limit is 2147483647";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "Max node tag is too large (2147483648), limit is 2147483647");
     }
     // wrong num_nodes fails
     {
@@ -408,15 +380,8 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "$Nodes section parsing failed, expected 100 nodes but read 1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed, expected 100 nodes but read 1");
     }
     // missing $EndNodes fails
     {
@@ -427,15 +392,8 @@ int test_parse_msh4_nodes() {
             "1 0 0\n"
             // "$EndNodes\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "$Nodes section parsing failed, expected $EndNodes";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed, expected $EndNodes");
     }
     // duplicate node tags are caught
     {
@@ -449,15 +407,8 @@ int test_parse_msh4_nodes() {
             "1 0 0\n"
             "$EndNodes\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
-        assert(nodes.size() == 0);
-        std::string expected = "$Nodes section parsing failed, found duplicate node tag 1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_nodes(input),
+            "$Nodes section parsing failed, found duplicate node tag 1");
     }
     // parse multiple blocs successfully
     {
@@ -482,13 +433,9 @@ int test_parse_msh4_nodes() {
             "0 0 1\n"
             "$EndNodes\n"
         );
-        std::string err_msg;
-        auto nodes = parse_msh4_nodes(input, err_msg);
+        std::vector<Node> nodes;
+        EXPECT_NO_ERROR(nodes = parse_msh4_nodes(input));
         assert(nodes.size() == 7);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
         auto n0 = nodes.at(0);
         auto n1 = nodes.at(1);
         auto n6 = nodes.at(6);
