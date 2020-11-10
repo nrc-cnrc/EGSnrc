@@ -454,15 +454,7 @@ int test_parse_msh4_entities() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input), "$Entities parsing failed");
     }
     // no 3d entities fails
     {
@@ -470,15 +462,7 @@ int test_parse_msh4_entities() {
             "2 1 1 0\n"
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, no volumes found";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input), "$Entities parsing failed, no volumes found");
     }
     // 3d entity without a physical group fails
     {
@@ -488,15 +472,8 @@ int test_parse_msh4_entities() {
             //                         ^-- num physical groups = 0
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, volume 1 was not assigned a physical group";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities parsing failed, volume 1 was not assigned a physical group");
     }
     // 3d entity with more than one physical group fails
     {
@@ -506,15 +483,8 @@ int test_parse_msh4_entities() {
             //                         ^-- num physical groups = 2
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, volume 2 has more than one physical group";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities parsing failed, volume 2 has more than one physical group");
     }
     // repeated 3d entity tags fails
     {
@@ -525,15 +495,8 @@ int test_parse_msh4_entities() {
         //   ^-- volume tag 1 appears twice
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities section parsing failed, found duplicate volume tag 1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities section parsing failed, found duplicate volume tag 1");
     }
     // num entities mismatch fails
     {
@@ -542,15 +505,8 @@ int test_parse_msh4_entities() {
             "2 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities parsing failed, expected 2 volumes but got 1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities parsing failed, expected 2 volumes but got 1");
     }
     // catch duplicate volume tags
     {
@@ -560,15 +516,8 @@ int test_parse_msh4_entities() {
             "2 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        assert(vols.size() == 0);
-        std::string expected = "$Entities section parsing failed, found duplicate volume tag 2";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_entities(input),
+            "$Entities section parsing failed, found duplicate volume tag 2");
     }
     // successfully parse volumes, skipping 0, 1, 2d entities
     {
@@ -589,12 +538,8 @@ int test_parse_msh4_entities() {
             "2 -9.99e-008 -9.99e-008 -9.99e-008 1.0 1.0 1.0 1 200 6 1 2 3 4 5 6\n"
             "$EndEntities\n"
         );
-        std::string err_msg;
-        auto vols = parse_msh4_entities(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<MeshVolume> vols;
+        EXPECT_NO_ERROR(vols = parse_msh4_entities(input));
         if (vols.size() != 2) {
             std::cerr << "expected 2 volumes, got " << vols.size() << "\n";
             return 1;

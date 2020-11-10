@@ -95,7 +95,9 @@ std::pair<bool, int> check_unique_tags(const std::vector<T>& values) {
 }
 
 /// Returns a list of volumes. Volume tags are unique.
-std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& err_msg) {
+///
+/// Throws a std::runtime_error if parsing fails.
+std::vector<MeshVolume> parse_msh4_entities(std::istream& input) {
     std::vector<MeshVolume> volumes;
     int num_3d = -1;
     // parse number of entities
@@ -110,12 +112,10 @@ std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& er
         if (input.fail()
            || num_0d < 0 || num_1d < 0 || num_2d < 0 || num_3d < 0)
         {
-            err_msg = "$Entities parsing failed";
-            return std::vector<MeshVolume>{};
+            throw std::runtime_error("$Entities parsing failed");
         }
         if (num_3d == 0) {
-            err_msg = "$Entities parsing failed, no volumes found";
-            return std::vector<MeshVolume>{};
+            throw std::runtime_error("$Entities parsing failed, no volumes found");
         }
         // skip to 3d entities
         for (int i = 0; i < (num_0d + num_1d + num_2d); ++i) {
@@ -148,29 +148,24 @@ std::vector<MeshVolume> parse_msh4_entities(std::istream& input, std::string& er
             max_x >> max_y >> max_z >>
             num_groups >> group;
         if (line_stream.fail()) {
-            err_msg = "$Entities parsing failed, 3d volume parsing failed";
-            return std::vector<MeshVolume>{};
+            throw std::runtime_error("$Entities parsing failed, 3d volume parsing failed");
         }
         if (num_groups == 0) {
-            err_msg = "$Entities parsing failed, volume " + std::to_string(tag) + " was not assigned a physical group";
-            return std::vector<MeshVolume>{};
+            throw std::runtime_error("$Entities parsing failed, volume " + std::to_string(tag) + " was not assigned a physical group");
         }
         if (num_groups != 1) {
-            err_msg = "$Entities parsing failed, volume " + std::to_string(tag) + " has more than one physical group";
-            return std::vector<MeshVolume>{};
+            throw std::runtime_error("$Entities parsing failed, volume " + std::to_string(tag) + " has more than one physical group");
         }
         volumes.push_back( MeshVolume { tag, group } );
     }
     if (volumes.size() != static_cast<std::size_t>(num_3d)) {
-        err_msg = "$Entities parsing failed, expected " + std::to_string(num_3d) + " volumes but got " + std::to_string(volumes.size());
-        return std::vector<MeshVolume>{};
+        throw std::runtime_error("$Entities parsing failed, expected " + std::to_string(num_3d) + " volumes but got " + std::to_string(volumes.size()));
     }
     // ensure volume tags are unique
     auto unique_res = check_unique_tags(volumes);
     if (!unique_res.first) {
-        err_msg = "$Entities section parsing failed, found duplicate volume tag "
-            + std::to_string(unique_res.second);
-       return std::vector<MeshVolume>{};
+        throw std::runtime_error("$Entities section parsing failed, found duplicate volume tag "
+            + std::to_string(unique_res.second));
     }
     return volumes;
 }
@@ -498,7 +493,7 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
         }
         try {
             if (input_line == "$Entities") {
-               volumes = parse_msh4_entities(input, parse_err);
+               volumes = parse_msh4_entities(input);
             } else if (input_line == "$PhysicalNames") {
                 groups = parse_msh4_groups(input);
             } else if (input_line == "$Nodes") {
