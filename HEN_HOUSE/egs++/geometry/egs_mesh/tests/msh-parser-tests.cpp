@@ -814,14 +814,8 @@ int test_parse_msh_file_errors() {
             // ^ expecting tag == 1
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        parse_msh_file(input, err_msg);
-        std::string expected = "volume 1 had unknown physical group tag 100";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_file(input),
+            "msh 4.1 parsing failed\nvolume 1 had unknown physical group tag 100");
     }
 
     // Unknown volume (entity) tags assigned to elements are caught
@@ -839,14 +833,8 @@ int test_parse_msh_file_errors() {
             "1 1 2 3 4\n"
             "$EndElements\n"
         );
-        std::string err_msg;
-        parse_msh_file(input, err_msg);
-        std::string expected = "tetrahedron 1 had unknown volume tag 100";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_file(input),
+            "msh 4.1 parsing failed\ntetrahedron 1 had unknown volume tag 100");
     }
 
     return 0;
@@ -862,24 +850,13 @@ int test_parse_msh_file() {
             "$PhysicalNames\n" // missing PhysicalNames content
             "$EndPhysicalNames\n"
         );
-        std::string err_msg;
-        parse_msh_file(input, err_msg);
-        std::string expected = "msh 4.1 parsing failed:\n$PhysicalNames parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh_file(input),
+            "msh 4.1 parsing failed\n$PhysicalNames parsing failed");
     }
     // minimum complete mesh file for EGSnrc
     {
         std::istringstream input(header + entities + pgroups + nodes + elts);
-        std::string err_msg;
-        parse_msh_file(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        EXPECT_NO_ERROR(parse_msh_file(input));
     }
     return 0;
 }

@@ -477,7 +477,10 @@ std::vector<Tetrahedron> parse_msh4_elements(std::istream& input) {
     return elts;
 }
 
-void parse_msh4_body(std::istream& input, std::string& err_msg) {
+/// Parse the body of a msh4.1 file.
+///
+/// Throws a std::runtime_error if parsing fails.
+void parse_msh4_body(std::istream& input) {
     std::vector<Node> nodes;
     std::vector<MeshVolume> volumes;
     std::vector<PhysicalGroup> groups;
@@ -491,35 +494,27 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
         if (input_line == "$MeshFormat") {
             break;
         }
-        try {
-            if (input_line == "$Entities") {
-               volumes = parse_msh4_entities(input);
-            } else if (input_line == "$PhysicalNames") {
-                groups = parse_msh4_groups(input);
-            } else if (input_line == "$Nodes") {
-                nodes = parse_msh4_nodes(input);
-            } else if (input_line == "$Elements") {
-                elements = parse_msh4_elements(input);
-            }
-        } catch (const std::runtime_error& err) {
-            throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
+        if (input_line == "$Entities") {
+           volumes = parse_msh4_entities(input);
+        } else if (input_line == "$PhysicalNames") {
+            groups = parse_msh4_groups(input);
+        } else if (input_line == "$Nodes") {
+            nodes = parse_msh4_nodes(input);
+        } else if (input_line == "$Elements") {
+            elements = parse_msh4_elements(input);
         }
     }
     if (volumes.empty()) {
-        err_msg = "No volumes were parsed";
-        return;
+        throw std::runtime_error("No volumes were parsed");
     }
     if (nodes.empty()) {
-        err_msg = "No nodes were parsed";
-        return;
+        throw std::runtime_error("No nodes were parsed");
     }
     if (groups.empty()) {
-        err_msg = "No groups were parsed";
-        return;
+        throw std::runtime_error("No groups were parsed");
     }
     if (elements.empty()) {
-        err_msg = "No tetrahedrons were parsed";
-        return;
+        throw std::runtime_error("No tetrahedrons were parsed");
     }
 
     // ensure each entity has a valid group
@@ -532,8 +527,7 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
     volume_groups.reserve(volumes.size());
     for (auto v: volumes) {
         if (group_tags.find(v.group) == group_tags.end()) {
-            err_msg = "volume " + std::to_string(v.tag) + " had unknown physical group tag " + std::to_string(v.group);
-            return;
+            throw std::runtime_error("volume " + std::to_string(v.tag) + " had unknown physical group tag " + std::to_string(v.group));
         }
         volume_groups.insert({ v.tag, v.group });
     }
@@ -544,22 +538,29 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
     for (auto e: elements) {
         auto elt_group = volume_groups.find(e.volume);
         if (elt_group == volume_groups.end()) {
-            err_msg = "tetrahedron " + std::to_string(e.tag) + " had unknown volume tag " + std::to_string(e.volume);
-            return;
+            throw std::runtime_error("tetrahedron " + std::to_string(e.tag) + " had unknown volume tag " + std::to_string(e.volume));
         }
         element_groups.push_back(elt_group->second);
     }
 
-    // ensure all element node tags are valid
+    // TODO: check all 3d physical groups were used by elements
 
-    err_msg = "unimplemented";
+    // TODO: ensure all element node tags are valid
+
+    throw std::runtime_error("unimplemented");
 }
 
-void parse_msh_file(std::istream& input, std::string& err_msg) {
+void parse_msh_file(std::istream& input) {
     auto version = parse_msh_version(input);
     // TODO auto mesh_data;
     switch(version) {
-        case MshVersion::v41: parse_msh4_body(input, err_msg); break;
+        case MshVersion::v41:
+            try {
+                parse_msh4_body(input);
+            } catch (const std::runtime_error& err) {
+                throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
+            }
+            break;
         default: break; // TODO couldn't parse msh file
     }
 }
