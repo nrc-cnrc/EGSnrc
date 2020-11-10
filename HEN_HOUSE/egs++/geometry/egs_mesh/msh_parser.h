@@ -20,10 +20,13 @@ static inline void rtrim(std::string &s) {
 enum class MshVersion { v41 };
 constexpr std::size_t SIZET_MAX = std::numeric_limits<std::size_t>::max();
 
+/// Parse a msh file header.
+///
 /// Throws a std::runtime_error if parsing fails.
+/// Only version 4.1 ascii is supported, any other version will throw.
 MshVersion parse_msh_version(std::istream& input) {
     if (!input) {
-        throw std::runtime_error("bad input to parse_msh");
+        throw std::runtime_error("bad input to parse_msh_version");
     }
     std::string format_line;
     std::getline(input, format_line);
@@ -295,7 +298,7 @@ struct PhysicalGroup {
 };
 
 /// Returns a list of PhysicalGroups. PhysicalGroup tags are unique.
-//
+///
 /// Throws a std::runtime_error if parsing fails.
 std::vector<PhysicalGroup> parse_msh4_groups(std::istream& input) {
     std::vector<PhysicalGroup> groups;
@@ -550,6 +553,9 @@ void parse_msh4_body(std::istream& input) {
     throw std::runtime_error("unimplemented");
 }
 
+/// Parse a msh file into an EGS_Mesh
+///
+/// Throws a std::runtime_error if parsing fails.
 void parse_msh_file(std::istream& input) {
     auto version = parse_msh_version(input);
     // TODO auto mesh_data;
