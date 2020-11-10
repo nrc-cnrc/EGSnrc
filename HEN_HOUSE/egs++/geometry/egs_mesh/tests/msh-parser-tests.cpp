@@ -613,30 +613,18 @@ int test_parse_msh4_element_bloc() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "Element bloc parsing failed";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_element_bloc(input), "Element bloc parsing failed");
     }
     // skip lower-dimension elements
     {
-         std::istringstream input(
-         //  v-- 2d shape
+        std::istringstream input(
+        //  v-- 2d shape
             "2 1 3 2\n"
             "1 1 2 3 4\n"
             "2 2 5 6 3\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Tetrahedron> elts;
+        EXPECT_NO_ERROR(elts = parse_msh4_element_bloc(input));
         if (elts.size() != 0) {
             std::cerr << "expected 0 elements, got " << elts.size() << "\n";
             return 1;
@@ -649,16 +637,8 @@ int test_parse_msh4_element_bloc() {
             //   ^-- 5 is code for hexahedron
             "1 1 2 3 4 5 6\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "Element bloc parsing failed for entity 1"
-            ", got non-tetrahedral mesh element type 5";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_element_bloc(input),
+            "Element bloc parsing failed for entity 1" ", got non-tetrahedral mesh element type 5");
     }
     // missing tetrahedron data fails
     {
@@ -668,15 +648,8 @@ int test_parse_msh4_element_bloc() {
             "10 10 20 30 40\n"
             "11 5 6 7 8\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "Element bloc parsing failed for entity 2";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_element_bloc(input),
+            "Element bloc parsing failed for entity 2");
     }
     // successfully parse a tetrahedron element bloc
     {
@@ -689,12 +662,8 @@ int test_parse_msh4_element_bloc() {
             "10 10 20 30 40\n"
             "11 5 6 7 8\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_element_bloc(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Tetrahedron> elts;
+        EXPECT_NO_ERROR(elts = parse_msh4_element_bloc(input));
         assert(elts.size() == 3);
         auto e0 = elts.at(0);
         auto e1 = elts.at(1);
