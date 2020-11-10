@@ -861,89 +861,32 @@ int test_parse_msh_file() {
     return 0;
 }
 
+#define RUN_TEST(test_fn) \
+    std::cerr << "starting test " << #test_fn << std::endl; \
+    err = test_fn; \
+    num_total++; \
+    if (err) { \
+        std::cerr << "test FAILED" << std::endl; \
+        num_failed++; \
+    } else { \
+        std::cerr << "test passed" << std::endl; \
+    }
+
 int main() {
     int num_failed = 0;
+    int num_total = 0;
+    int err = 0;
 
-    std::cerr << "starting test parse_msh_version" << std::endl;
-    int err = test_parse_msh_version();
-    if (err) {
-        std::cerr << "test FAILED" << std::endl;
-        num_failed++;
-    } else {
-        std::cerr << "test PASSED" << std::endl;
-    }
+    RUN_TEST(test_parse_msh_version());
+    RUN_TEST(test_parse_msh4_entities());
+    RUN_TEST(test_parse_msh4_node_bloc());
+    RUN_TEST(test_parse_msh4_nodes());
+    RUN_TEST(test_parse_msh4_groups());
+    RUN_TEST(test_parse_msh4_element_bloc());
+    RUN_TEST(test_parse_msh4_elements());
+    RUN_TEST(test_parse_msh_file_errors());
+    RUN_TEST(test_parse_msh_file());
 
-    std::cerr << "starting test parse_msh4_entities" << std::endl;
-    err = test_parse_msh4_entities();
-    if (err) {
-        std::cerr << "test FAILED" << std::endl;
-        num_failed++;
-    } else {
-        std::cerr << "test PASSED" << std::endl;
-    }
-
-    std::cerr << "starting test parse_msh4_node_bloc" << std::endl;
-    err = test_parse_msh4_node_bloc();
-    if (err) {
-        std::cerr << "test FAILED" << std::endl;
-        num_failed++;
-    } else {
-        std::cerr << "test PASSED" << std::endl;
-    }
-
-    std::cerr << "starting test parse_msh4_nodes" << std::endl;
-    err = test_parse_msh4_nodes();
-    if (err) {
-        std::cerr << "test FAILED" << std::endl;
-        num_failed++;
-    } else {
-        std::cerr << "test PASSED" << std::endl;
-    }
-
-    std::cerr << "starting test parse_msh4_groups" << std::endl;
-    err = test_parse_msh4_groups();
-    if (err) {
-        std::cerr << "test FAILED" << std::endl;
-        num_failed++;
-    } else {
-        std::cerr << "test PASSED" << std::endl;
-    }
-
-    std::cerr << "starting test parse_msh4_element_bloc" << std::endl;
-    err = test_parse_msh4_element_bloc();
-    if (err) {
-        std::cerr << "test FAILED" << std::endl;
-        num_failed++;
-    } else {
-        std::cerr << "test PASSED" << std::endl;
-    }
-
-    std::cerr << "starting test parse_msh4_elements" << std::endl;
-    err = test_parse_msh4_elements();
-    if (err) {
-        std::cerr << "test FAILED" << std::endl;
-        num_failed++;
-    } else {
-        std::cerr << "test PASSED" << std::endl;
-    }
-
-    std::cerr << "starting test parse_msh_file_errors" << std::endl;
-    err = test_parse_msh_file_errors();
-    if (err) {
-        std::cerr << "test FAILED" << std::endl;
-        num_failed++;
-    } else {
-        std::cerr << "test PASSED" << std::endl;
-    }
-
-    std::cerr << "starting test parse_msh_file" << std::endl;
-    err = test_parse_msh_file();
-    if (err) {
-        std::cerr << "test FAILED" << std::endl;
-        num_failed++;
-    } else {
-        std::cerr << "test PASSED" << std::endl;
-    }
-
+    std::cerr << num_failed << " out of " << num_total << " tests failed\n";
     return num_failed;
 }
