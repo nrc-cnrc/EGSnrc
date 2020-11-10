@@ -39,19 +39,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.js"></script>
     <script async src="http://cdn.jsdelivr.net/g/filesaver.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/dicom-parser@1.8.7/dist/dicomParser.min.js"></script>
   </head>
   <body>
     <div class="header">
       <h1>UVic Dose Dig</h1>
       <img src="./images/logo.jpg" alt="XCITE Lab logo" />
     </div>
-    <p class="description">Upload your own .egsphant and .3ddose files.</p>
+    <p class="description">Upload your own .egsphant, .3ddose, or .dcm files.</p>
     <div id="drop-area">
       <p>
-        Drop or select one or more .egsphant and .3ddose files or use existing
+        Drop or select one or more .egsphant, .3ddose, or .dcm files or use existing
         <button id="test-files" class="link-appearance">test files</button>.
       </p>
-      <input type="file" id="file-input" multiple accept=".egsphant, .3ddose" />
+      <input type="file" id="file-input" multiple accept=".egsphant, .3ddose, .dcm, .DCM" />
       <br />
       <progress id="progress-bar" max="100" value="0" class="hidden"></progress>
     </div>

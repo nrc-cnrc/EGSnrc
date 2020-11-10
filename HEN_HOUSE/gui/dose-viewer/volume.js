@@ -90,10 +90,10 @@ var drawAxes = (zoomTransform, svgAxis, slice) => {
     .attr(
       'transform',
       'translate(' +
-        slice.dimensions.width / 2 +
-        ' ,' +
-        (slice.dimensions.fullHeight - 25) +
-        ')'
+      slice.dimensions.width / 2 +
+      ' ,' +
+      (slice.dimensions.fullHeight - 25) +
+      ')'
     )
     .style('text-anchor', 'middle')
     .text(slice.axis[0] + ' (cm)')
@@ -106,10 +106,10 @@ var drawAxes = (zoomTransform, svgAxis, slice) => {
     .attr(
       'transform',
       'translate(' +
-        (25 - slice.dimensions.margin.left) +
-        ' ,' +
-        slice.dimensions.height / 2 +
-        ') rotate(-90)'
+      (25 - slice.dimensions.margin.left) +
+      ' ,' +
+      slice.dimensions.height / 2 +
+      ') rotate(-90)'
     )
     .style('text-anchor', 'middle')
     .text(slice.axis[1] + ' (cm)')
@@ -129,10 +129,11 @@ class Volume {
    * @param {Object} dimensions The pixel dimensions of the volume plots.
    * @param {Object} legendDimensions The pixel dimensions of legends.
    */
-  constructor (fileName, dimensions, legendDimensions) {
+  constructor (fileName, dimensions, legendDimensions, args) {
     this.fileName = fileName
     this.dimensions = dimensions
     this.legendDimensions = legendDimensions
+    this.args = args
     this.prevSlice = { xy: {}, yz: {}, xz: {} }
   }
 
@@ -294,20 +295,29 @@ class Volume {
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1999-L2034
     const sliceData = new Array(slice.xVoxels * slice.yVoxels)
 
-    for (let i = 0; i < slice.xVoxels; i++) {
-      for (let j = 0; j < slice.yVoxels; j++) {
-        let address
-        if (axis === 'xy') {
-          address = i + slice.xVoxels * (j + sliceNum * slice.yVoxels)
-        } else if (axis === 'yz') {
-          address =
-            sliceNum + this.data.voxelNumber.x * (i + j * slice.xVoxels)
-        } else if (axis === 'xz') {
-          address =
-            i + slice.xVoxels * (sliceNum + j * this.data.voxelNumber.y)
+    if ((this.args !== undefined) && (this.args.isDicom)) {
+      for (let i = 0; i < slice.xVoxels; i++) {
+        for (let j = 0; j < slice.yVoxels; j++) {
+          const address = i + slice.xVoxels * j
+          sliceData[address] = this.data[dataName][address]
         }
-        const newAddress = i + slice.xVoxels * j
-        sliceData[newAddress] = this.data[dataName][address]
+      }
+    } else {
+      for (let i = 0; i < slice.xVoxels; i++) {
+        for (let j = 0; j < slice.yVoxels; j++) {
+          let address
+          if (axis === 'xy') {
+            address = i + slice.xVoxels * (j + sliceNum * slice.yVoxels)
+          } else if (axis === 'yz') {
+            address =
+              sliceNum + this.data.voxelNumber.x * (i + j * slice.xVoxels)
+          } else if (axis === 'xz') {
+            address =
+              i + slice.xVoxels * (sliceNum + j * this.data.voxelNumber.y)
+          }
+          const newAddress = i + slice.xVoxels * j
+          sliceData[newAddress] = this.data[dataName][address]
+        }
       }
     }
 
@@ -351,9 +361,9 @@ class DoseVolume extends Volume {
    * @param {Object} legendDimensions The pixel dimensions of legends.
    * @param {Object} data The data from parsing the file.
    */
-  constructor (fileName, dimensions, legendDimensions, data) {
+  constructor (fileName, dimensions, legendDimensions, data, args) {
     // Call the super class constructor
-    super(fileName, dimensions, legendDimensions)
+    super(fileName, dimensions, legendDimensions, args)
     this.addData(data)
   }
 
@@ -725,9 +735,9 @@ class DoseComparisonVolume extends DoseVolume {
    * @param {Object} legendDimensions The pixel dimensions of legends.
    * @param {Object} data The data from parsing the file.
    */
-  constructor (fileName, dimensions, legendDimensions, data) {
+  constructor (fileName, dimensions, legendDimensions, data, args) {
     // Call the super class constructor
-    super(fileName, dimensions, legendDimensions)
+    super(fileName, dimensions, legendDimensions, args)
     this.addData(data)
   }
 
@@ -780,8 +790,8 @@ class DensityVolume extends Volume {
    * @param {Object} legendDimensions The pixel dimensions of legends.
    * @param {Object} data The data from parsing the file.
    */
-  constructor (fileName, dimensions, legendDimensions, data) {
-    super(fileName, dimensions, legendDimensions) // call the super class constructor
+  constructor (fileName, dimensions, legendDimensions, data, args) {
+    super(fileName, dimensions, legendDimensions, args) // call the super class constructor
     this.addData(data)
     this.prevSliceImg = { xy: {}, yz: {}, xz: {} }
   }

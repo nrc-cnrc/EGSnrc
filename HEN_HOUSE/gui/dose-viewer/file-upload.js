@@ -40,6 +40,7 @@ import {
 import { processDoseData, processPhantomData } from './read-data.js'
 import { VolumeViewer } from './volume-viewer.js'
 import { DensityVolume, DoseVolume } from './volume.js'
+import { processDICOMData } from './dicom.js'
 
 const dropArea = d3.select('#drop-area')
 const progressBar = d3.select('#progress-bar')
@@ -225,19 +226,30 @@ function readFile (file, fileNum, totalFiles) {
   // File is successfully read
   reader.addEventListener('load', function (e) {
     const result = e.target.result
-    const resultSplit = result.split('\n')
     let data
 
     if (ext === 'egsphant') {
+      const resultSplit = result.split('\n')
       data = processPhantomData(resultSplit)
 
       // Create density volume
       makeDensityVolume(fileName, data)
     } else if (ext === '3ddose') {
+      const resultSplit = result.split('\n')
       data = processDoseData(resultSplit)
 
       // Create dose volume
       makeDoseVolume(fileName, data)
+    } else if (ext === 'dcm' || ext === 'DCM') {
+      const DICOMdata = processDICOMData(result)
+
+      if (DICOMdata.type === 'dose') {
+        // Create dose volume
+        makeDoseVolume(fileName, DICOMdata.data)
+      } else if (DICOMdata.type === 'density') {
+        // Create density volume
+        makeDensityVolume(fileName, DICOMdata.data)
+      }
     } else {
       console.log('Unknown file extension')
       return true
@@ -276,6 +288,11 @@ function readFile (file, fileNum, totalFiles) {
     }
   })
 
-  // Read as text file
-  reader.readAsText(file)
+  if (ext === 'dcm' || ext === 'DCM') {
+    // Read as arrau buffer if DICOM
+    reader.readAsArrayBuffer(file)
+  } else {
+    // Otherwise read as text file
+    reader.readAsText(file)
+  }
 }
