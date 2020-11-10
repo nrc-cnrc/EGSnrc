@@ -686,15 +686,7 @@ int test_parse_msh4_elements() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements section parsing failed, missing metadata";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input), "$Elements section parsing failed, missing metadata");
     }
     // no elements fails
     {
@@ -702,15 +694,7 @@ int test_parse_msh4_elements() {
             "0 0 0 0\n"
             "$EndElements\n"
          );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements section parsing failed, no tetrahedral elements were read";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input), "$Elements section parsing failed, no tetrahedral elements were read");
     }
     // no tetrahedral elements fails
     {
@@ -721,15 +705,7 @@ int test_parse_msh4_elements() {
             "2 2 3\n"
             "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements section parsing failed, no tetrahedral elements were read";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input), "$Elements section parsing failed, no tetrahedral elements were read");
     }
     // missing $EndElements fails
     {
@@ -740,15 +716,7 @@ int test_parse_msh4_elements() {
             "2 5 6 7 8\n"
             // "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements section parsing failed, expected $EndElements";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input), "$Elements section parsing failed, expected $EndElements");
     }
     // skip lower-dimension elements
     {
@@ -762,12 +730,8 @@ int test_parse_msh4_elements() {
             "2 5 6 7 8\n"
             "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Tetrahedron> elts;
+        EXPECT_NO_ERROR(elts = parse_msh4_elements(input));
         if (elts.size() != 2) {
             std::cerr << "expected 2 elements, got " << elts.size() << "\n";
             return 1;
@@ -795,15 +759,8 @@ int test_parse_msh4_elements() {
             "4 5 6 7 8\n"
             "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        assert(elts.size() == 0);
-        std::string expected = "$Elements section parsing failed, found duplicate tetrahedron tag 1";
-        if (err_msg != expected) {
-            std::cerr << "got error message: \""
-                << err_msg << "\"\nbut expected: \"" << expected << "\"\n";
-            return 1;
-        }
+        EXPECT_ERROR(parse_msh4_elements(input),
+            "$Elements section parsing failed, found duplicate tetrahedron tag 1");
     }
     // successfully parses multiple element blocs
     {
@@ -820,12 +777,8 @@ int test_parse_msh4_elements() {
             "6 5 6 7 1\n"
             "$EndElements\n"
         );
-        std::string err_msg;
-        auto elts = parse_msh4_elements(input, err_msg);
-        if (!err_msg.empty()) {
-            std::cerr << "got error message: \"" << err_msg << "\"\n";
-            return 1;
-        }
+        std::vector<Tetrahedron> elts;
+        EXPECT_NO_ERROR(elts = parse_msh4_elements(input));
         if (elts.size() != 4) {
             std::cerr << "expected 4 elements, got " << elts.size() << "\n";
             return 1;

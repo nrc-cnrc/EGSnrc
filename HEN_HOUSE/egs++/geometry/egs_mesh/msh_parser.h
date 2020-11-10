@@ -435,7 +435,9 @@ std::vector<Tetrahedron> parse_msh4_element_bloc(std::istream& input) {
 }
 
 /// Returns a list of tetrahedral elements. Element tags are unique.
-std::vector<Tetrahedron> parse_msh4_elements(std::istream& input, std::string& err_msg) {
+///
+/// Throws a std::runtime_error if parsing fails.
+std::vector<Tetrahedron> parse_msh4_elements(std::istream& input) {
     std::vector<Tetrahedron> elts;
     std::size_t num_blocs = SIZET_MAX;
     std::size_t num_elts = SIZET_MAX;
@@ -449,8 +451,7 @@ std::vector<Tetrahedron> parse_msh4_elements(std::istream& input, std::string& e
         if (line_stream.fail() || num_blocs == SIZET_MAX || num_elts == SIZET_MAX ||
                 min_tag == SIZET_MAX || max_tag == SIZET_MAX)
         {
-            err_msg = "$Elements section parsing failed, missing metadata";
-            return std::vector<Tetrahedron>{};
+            throw std::runtime_error("$Elements section parsing failed, missing metadata");
         }
     }
     elts.reserve(num_elts);
@@ -467,19 +468,16 @@ std::vector<Tetrahedron> parse_msh4_elements(std::istream& input, std::string& e
     std::getline(input, line);
     rtrim(line);
     if (line != "$EndElements") {
-        err_msg = "$Elements section parsing failed, expected $EndElements";
-        return std::vector<Tetrahedron>{};
+        throw std::runtime_error("$Elements section parsing failed, expected $EndElements");
     }
     if (elts.size() == 0) {
-        err_msg = "$Elements section parsing failed, no tetrahedral elements were read";
-        return std::vector<Tetrahedron>{};
+        throw std::runtime_error("$Elements section parsing failed, no tetrahedral elements were read");
     }
     // ensure element tags are unique
     auto unique_res = check_unique_tags(elts);
     if (!unique_res.first) {
-        err_msg = "$Elements section parsing failed, found duplicate tetrahedron tag "
-            + std::to_string(unique_res.second);
-       return std::vector<Tetrahedron>{};
+        throw std::runtime_error("$Elements section parsing failed, found duplicate tetrahedron tag "
+            + std::to_string(unique_res.second));
     }
     return elts;
 }
@@ -506,7 +504,7 @@ void parse_msh4_body(std::istream& input, std::string& err_msg) {
             } else if (input_line == "$Nodes") {
                 nodes = parse_msh4_nodes(input);
             } else if (input_line == "$Elements") {
-                elements = parse_msh4_elements(input, parse_err);
+                elements = parse_msh4_elements(input);
             }
         } catch (const std::runtime_error& err) {
             throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
