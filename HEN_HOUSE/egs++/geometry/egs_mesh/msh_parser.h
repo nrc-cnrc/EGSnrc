@@ -42,6 +42,16 @@ public:
         // TODO find neighbours, construct value arrays
     }
 
+    const std::vector<EGS_Mesh::Tetrahedron>& elements() {
+        return _elements;
+    }
+    const std::vector<EGS_Mesh::Node>& nodes() {
+        return _nodes;
+    }
+    const std::vector<EGS_Mesh::Medium>& materials() {
+        return _materials;
+    }
+
 private:
     std::vector<EGS_Mesh::Tetrahedron> _elements;
     std::vector<EGS_Mesh::Node> _nodes;
@@ -517,6 +527,7 @@ std::vector<Tetrahedron> parse_msh4_elements(std::istream& input) {
         throw std::runtime_error("$Elements section parsing failed, found duplicate tetrahedron tag "
             + std::to_string(unique_res.second));
     }
+    // TODO check against min and max tag values
     return elts;
 }
 
@@ -586,11 +597,32 @@ EGS_Mesh parse_msh4_body(std::istream& input) {
         element_groups.push_back(elt_group->second);
     }
 
+    std::vector<EGS_Mesh::Tetrahedron> mesh_elts;
+    mesh_elts.reserve(elements.size());
+    for (std::size_t i = 0; i < elements.size(); ++i) {
+        const auto& elt = elements[i];
+        mesh_elts.push_back(EGS_Mesh::Tetrahedron {
+            element_groups[i], elt.a, elt.b, elt.c, elt.d
+        });
+    }
+
+    std::vector<EGS_Mesh::Node> mesh_nodes;
+    mesh_nodes.reserve(nodes.size());
+    for (const auto& n: nodes) {
+        mesh_nodes.push_back(EGS_Mesh::Node {
+            n.tag, n.x, n.y, n.z
+        });
+    }
+
+    std::vector<EGS_Mesh::Medium> media;
+    media.reserve(groups.size());
+    for (const auto& g: groups) {
+        media.push_back(EGS_Mesh::Medium { g.tag, g.name });
+    }
+
     // TODO: check all 3d physical groups were used by elements
-
     // TODO: ensure all element node tags are valid
-
-    throw std::runtime_error("unimplemented");
+    return EGS_Mesh(mesh_elts, mesh_nodes, media);
 }
 
 /// Parse a msh file into an EGS_Mesh
