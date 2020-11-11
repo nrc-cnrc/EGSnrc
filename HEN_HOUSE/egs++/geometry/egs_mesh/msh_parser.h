@@ -8,6 +8,46 @@
 #include <unordered_map>
 #include <unordered_set>
 
+class EGS_Mesh /* : public EGS_BaseGeometry */ {
+public:
+    /// A single tetrahedral mesh element
+    struct Tetrahedron {
+        int medium_tag = -1;
+        // nodes
+        int a = -1;
+        int b = -1;
+        int c = -1;
+        int d = -1;
+    };
+
+    /// A single 3D point
+    struct Node {
+        int tag = -1;
+        double x = 0.0;
+        double y = 0.0;
+        double z = 0.0;
+    };
+
+    /// A physical medium
+    struct Medium {
+        int tag = -1;
+        std::string medium_name;
+    };
+
+    EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
+        std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials) :
+        /* EGS_BaseGeometry("EGS_Mesh"), */ _elements(std::move(elements)),
+        _nodes(std::move(nodes)), _materials(std::move(materials))
+    {
+        // TODO find neighbours, construct value arrays
+    }
+
+private:
+    std::vector<EGS_Mesh::Tetrahedron> _elements;
+    std::vector<EGS_Mesh::Node> _nodes;
+    std::vector<EGS_Mesh::Medium> _materials;
+};
+
 // todo namespace private
 
 // trim function from https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
@@ -483,7 +523,7 @@ std::vector<Tetrahedron> parse_msh4_elements(std::istream& input) {
 /// Parse the body of a msh4.1 file.
 ///
 /// Throws a std::runtime_error if parsing fails.
-void parse_msh4_body(std::istream& input) {
+EGS_Mesh parse_msh4_body(std::istream& input) {
     std::vector<Node> nodes;
     std::vector<MeshVolume> volumes;
     std::vector<PhysicalGroup> groups;
@@ -556,17 +596,17 @@ void parse_msh4_body(std::istream& input) {
 /// Parse a msh file into an EGS_Mesh
 ///
 /// Throws a std::runtime_error if parsing fails.
-void parse_msh_file(std::istream& input) {
+EGS_Mesh parse_msh_file(std::istream& input) {
     auto version = parse_msh_version(input);
     // TODO auto mesh_data;
     switch(version) {
         case MshVersion::v41:
             try {
-                parse_msh4_body(input);
+                return parse_msh4_body(input);
             } catch (const std::runtime_error& err) {
                 throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
             }
             break;
-        default: break; // TODO couldn't parse msh file
+        default: throw std::runtime_error("couldn't parse msh file");
     }
 }
