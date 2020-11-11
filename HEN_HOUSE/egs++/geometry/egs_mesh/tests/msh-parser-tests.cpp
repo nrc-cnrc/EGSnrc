@@ -108,7 +108,7 @@ int test_parse_msh_version() {
 }
 
 // all test cases assume $PhysicalNames header has already been parsed
-int test_parse_msh4_groups() {
+int test_parse_msh41_groups() {
     // empty section is OK
     {
         std::istringstream input(
@@ -116,7 +116,7 @@ int test_parse_msh4_groups() {
             "$EndPhysicalNames\n"
         );
         std::vector<msh41::PhysicalGroup> groups;
-        EXPECT_NO_ERROR(groups = msh41::parse_msh4_groups(input));
+        EXPECT_NO_ERROR(groups = msh41::parse_groups(input));
         assert(groups.size() == 0);
     }
     // missing $EndPhysicalNames tag fails
@@ -127,7 +127,7 @@ int test_parse_msh4_groups() {
             "2 2 \"a surface\"\n"
             "3 3 \"a volume\"\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_groups(input),
+        EXPECT_ERROR(msh41::parse_groups(input),
             "unexpected end of file, expected $EndPhysicalNames");
     }
     // bad physical group line fails
@@ -137,7 +137,7 @@ int test_parse_msh4_groups() {
             "1 \"a line\"\n" // missing tag
             "$EndPhysicalNames\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_groups(input),
+        EXPECT_ERROR(msh41::parse_groups(input),
             "physical group parsing failed: 1 \"a line\"");
     }
     // catch invalid physical group names
@@ -147,7 +147,7 @@ int test_parse_msh4_groups() {
             "3 1 \"\"\n"
             "$EndPhysicalNames\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_groups(input),
+        EXPECT_ERROR(msh41::parse_groups(input),
             "empty physical group name: 3 1 \"\"");
     }
     // physical group names are quoted
@@ -157,7 +157,7 @@ int test_parse_msh4_groups() {
             "3 1 Steel\n"
             "$EndPhysicalNames\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_groups(input),
+        EXPECT_ERROR(msh41::parse_groups(input),
             "physical group names must be quoted: 3 1 Steel");
     }
     // closing name quote is required
@@ -167,7 +167,7 @@ int test_parse_msh4_groups() {
             "3 1 \"Steel\n"
             "$EndPhysicalNames\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_groups(input),
+        EXPECT_ERROR(msh41::parse_groups(input),
             "couldn't find closing quote for physical group: 3 1 \"Steel");
     }
     // only 3D groups are returned
@@ -180,7 +180,7 @@ int test_parse_msh4_groups() {
             "$EndPhysicalNames\n"
         );
         std::vector<msh41::PhysicalGroup> groups;
-        EXPECT_NO_ERROR(groups = msh41::parse_msh4_groups(input));
+        EXPECT_NO_ERROR(groups = msh41::parse_groups(input));
         assert(groups.size() == 1);
         std::string expected_name = "volume";
         if (groups.at(0).name != expected_name) {
@@ -200,7 +200,7 @@ int test_parse_msh4_groups() {
             "3 4 \"other volume\"\n" // tag 4 repeated
             "$EndPhysicalNames\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_groups(input),
+        EXPECT_ERROR(msh41::parse_groups(input),
             "$PhysicalNames section parsing failed, found duplicate tag 4");
     }
     // spaces in names are OK
@@ -213,7 +213,7 @@ int test_parse_msh4_groups() {
             "$EndPhysicalNames\n"
         );
         std::vector<msh41::PhysicalGroup> groups;
-        EXPECT_NO_ERROR(groups = msh41::parse_msh4_groups(input));
+        EXPECT_NO_ERROR(groups = msh41::parse_groups(input));
         assert(groups.size() == 1);
         std::string expected_name = "a volume";
         if (groups.at(0).name != expected_name) {
@@ -232,7 +232,7 @@ int test_parse_msh4_groups() {
             "$EndPhysicalNames\n"
         );
         std::vector<msh41::PhysicalGroup> groups;
-        EXPECT_NO_ERROR(groups = msh41::parse_msh4_groups(input));
+        EXPECT_NO_ERROR(groups = msh41::parse_groups(input));
         assert(groups.size() == 1);
         std::string expected_name = "a";
         if (groups.at(0).name != expected_name) {
@@ -253,7 +253,7 @@ int test_parse_msh4_groups() {
             "$EndPhysicalNames\n"
         );
         std::vector<msh41::PhysicalGroup> groups;
-        EXPECT_NO_ERROR(groups = msh41::parse_msh4_groups(input));
+        EXPECT_NO_ERROR(groups = msh41::parse_groups(input));
         if (groups.size() != 3) {
             std::cerr << "expected 3 groups, got " << groups.size() << "\n";
             return 1;
@@ -269,7 +269,7 @@ int test_parse_msh4_groups() {
     return 0;
 }
 
-int test_parse_msh4_node_bloc() {
+int test_parse_msh41_node_bloc() {
     // missing bloc metadata fails
     {
         std::istringstream input(
@@ -277,7 +277,7 @@ int test_parse_msh4_node_bloc() {
             "1\n"
             "1 0 0\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_node_bloc(input), "Node bloc parsing failed");
+        EXPECT_ERROR(msh41::parse_node_bloc(input), "Node bloc parsing failed");
     }
     // bad dimension value fails
     {
@@ -286,7 +286,7 @@ int test_parse_msh4_node_bloc() {
             "1\n"
             "1 0 0\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_node_bloc(input),
+        EXPECT_ERROR(msh41::parse_node_bloc(input),
             "Node bloc parsing failed for entity 100, got dimension 4,"
             " expected 0, 1, 2, or 3");
     }
@@ -297,7 +297,7 @@ int test_parse_msh4_node_bloc() {
             "1\n"
             "1 0 0\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_node_bloc(input),
+        EXPECT_ERROR(msh41::parse_node_bloc(input),
             "Node bloc parsing failed during node coordinate section of entity 100");
     }
     // successfully parse a single node bloc
@@ -313,7 +313,7 @@ int test_parse_msh4_node_bloc() {
         );
         std::string err_msg;
         std::vector<msh41::Node> nodes;
-        EXPECT_NO_ERROR(nodes = msh41::parse_msh4_node_bloc(input));
+        EXPECT_NO_ERROR(nodes = msh41::parse_node_bloc(input));
         if (nodes.size() != 3) {
             std::cerr << "expected 3 nodes, got " << nodes.size() << "\n";
             return 1;
@@ -332,11 +332,11 @@ int test_parse_msh4_node_bloc() {
     return 0;
 }
 
-int test_parse_msh4_nodes() {
+int test_parse_msh41_nodes() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        EXPECT_ERROR(msh41::parse_msh4_nodes(input),
+        EXPECT_ERROR(msh41::parse_nodes(input),
             "$Nodes section parsing failed, missing metadata");
     }
     // missing section metadata fails eventually (is parsed as the first bloc metadata)
@@ -347,7 +347,7 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_nodes(input),
+        EXPECT_ERROR(msh41::parse_nodes(input),
             "$Nodes section parsing failed\nNode bloc parsing failed");
     }
     // wrong num_blocs fails
@@ -358,7 +358,7 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_nodes(input),
+        EXPECT_ERROR(msh41::parse_nodes(input),
             "$Nodes section parsing failed\nNode bloc parsing failed");
     }
     // node tags must fit into an int
@@ -371,7 +371,7 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_nodes(input),
+        EXPECT_ERROR(msh41::parse_nodes(input),
             "Max node tag is too large (2147483648), limit is 2147483647");
     }
     // wrong num_nodes fails
@@ -382,7 +382,7 @@ int test_parse_msh4_nodes() {
             "1\n"
             "1 0 0\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_nodes(input),
+        EXPECT_ERROR(msh41::parse_nodes(input),
             "$Nodes section parsing failed, expected 100 nodes but read 1");
     }
     // missing $EndNodes fails
@@ -394,7 +394,7 @@ int test_parse_msh4_nodes() {
             "1 0 0\n"
             // "$EndNodes\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_nodes(input),
+        EXPECT_ERROR(msh41::parse_nodes(input),
             "$Nodes section parsing failed, expected $EndNodes");
     }
     // duplicate node tags are caught
@@ -409,7 +409,7 @@ int test_parse_msh4_nodes() {
             "1 0 0\n"
             "$EndNodes\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_nodes(input),
+        EXPECT_ERROR(msh41::parse_nodes(input),
             "$Nodes section parsing failed, found duplicate node tag 1");
     }
     // parse multiple blocs successfully
@@ -436,7 +436,7 @@ int test_parse_msh4_nodes() {
             "$EndNodes\n"
         );
         std::vector<msh41::Node> nodes;
-        EXPECT_NO_ERROR(nodes = msh41::parse_msh4_nodes(input));
+        EXPECT_NO_ERROR(nodes = msh41::parse_nodes(input));
         assert(nodes.size() == 7);
         auto n0 = nodes.at(0);
         auto n1 = nodes.at(1);
@@ -452,11 +452,11 @@ int test_parse_msh4_nodes() {
     return 0;
 }
 
-int test_parse_msh4_entities() {
+int test_parse_msh41_entities() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        EXPECT_ERROR(msh41::parse_msh4_entities(input), "$Entities parsing failed");
+        EXPECT_ERROR(msh41::parse_entities(input), "$Entities parsing failed");
     }
     // no 3d entities fails
     {
@@ -464,7 +464,7 @@ int test_parse_msh4_entities() {
             "2 1 1 0\n"
             "$EndEntities\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_entities(input), "$Entities parsing failed, no volumes found");
+        EXPECT_ERROR(msh41::parse_entities(input), "$Entities parsing failed, no volumes found");
     }
     // 3d entity without a physical group fails
     {
@@ -474,7 +474,7 @@ int test_parse_msh4_entities() {
             //                         ^-- num physical groups = 0
             "$EndEntities\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_entities(input),
+        EXPECT_ERROR(msh41::parse_entities(input),
             "$Entities parsing failed, volume 1 was not assigned a physical group");
     }
     // 3d entity with more than one physical group fails
@@ -485,7 +485,7 @@ int test_parse_msh4_entities() {
             //                         ^-- num physical groups = 2
             "$EndEntities\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_entities(input),
+        EXPECT_ERROR(msh41::parse_entities(input),
             "$Entities parsing failed, volume 2 has more than one physical group");
     }
     // repeated 3d entity tags fails
@@ -497,7 +497,7 @@ int test_parse_msh4_entities() {
         //   ^-- volume tag 1 appears twice
             "$EndEntities\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_entities(input),
+        EXPECT_ERROR(msh41::parse_entities(input),
             "$Entities section parsing failed, found duplicate volume tag 1");
     }
     // num entities mismatch fails
@@ -507,7 +507,7 @@ int test_parse_msh4_entities() {
             "2 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
             "$EndEntities\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_entities(input),
+        EXPECT_ERROR(msh41::parse_entities(input),
             "$Entities parsing failed, expected 2 volumes but got 1");
     }
     // catch duplicate volume tags
@@ -518,7 +518,7 @@ int test_parse_msh4_entities() {
             "2 0.0 0.0 0.0 1.0 1.0 1.0 1 1\n"
             "$EndEntities\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_entities(input),
+        EXPECT_ERROR(msh41::parse_entities(input),
             "$Entities section parsing failed, found duplicate volume tag 2");
     }
     // successfully parse volumes, skipping 0, 1, 2d entities
@@ -541,7 +541,7 @@ int test_parse_msh4_entities() {
             "$EndEntities\n"
         );
         std::vector<msh41::MeshVolume> vols;
-        EXPECT_NO_ERROR(vols = msh41::parse_msh4_entities(input));
+        EXPECT_NO_ERROR(vols = msh41::parse_entities(input));
         if (vols.size() != 2) {
             std::cerr << "expected 2 volumes, got " << vols.size() << "\n";
             return 1;
@@ -556,11 +556,11 @@ int test_parse_msh4_entities() {
     return 0;
 }
 
-int test_parse_msh4_element_bloc() {
+int test_parse_msh41_element_bloc() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        EXPECT_ERROR(msh41::parse_msh4_element_bloc(input), "Element bloc parsing failed");
+        EXPECT_ERROR(msh41::parse_element_bloc(input), "Element bloc parsing failed");
     }
     // skip lower-dimension elements
     {
@@ -571,7 +571,7 @@ int test_parse_msh4_element_bloc() {
             "2 2 5 6 3\n"
         );
         std::vector<msh41::Tetrahedron> elts;
-        EXPECT_NO_ERROR(elts = msh41::parse_msh4_element_bloc(input));
+        EXPECT_NO_ERROR(elts = msh41::parse_element_bloc(input));
         if (elts.size() != 0) {
             std::cerr << "expected 0 elements, got " << elts.size() << "\n";
             return 1;
@@ -584,7 +584,7 @@ int test_parse_msh4_element_bloc() {
             //   ^-- 5 is code for hexahedron
             "1 1 2 3 4 5 6\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_element_bloc(input),
+        EXPECT_ERROR(msh41::parse_element_bloc(input),
             "Element bloc parsing failed for entity 1" ", got non-tetrahedral mesh element type 5");
     }
     // missing tetrahedron data fails
@@ -595,7 +595,7 @@ int test_parse_msh4_element_bloc() {
             "10 10 20 30 40\n"
             "11 5 6 7 8\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_element_bloc(input),
+        EXPECT_ERROR(msh41::parse_element_bloc(input),
             "Element bloc parsing failed for entity 2");
     }
     // successfully parse a tetrahedron element bloc
@@ -610,7 +610,7 @@ int test_parse_msh4_element_bloc() {
             "11 5 6 7 8\n"
         );
         std::vector<msh41::Tetrahedron> elts;
-        EXPECT_NO_ERROR(elts = msh41::parse_msh4_element_bloc(input));
+        EXPECT_NO_ERROR(elts = msh41::parse_element_bloc(input));
         assert(elts.size() == 3);
         auto e0 = elts.at(0);
         auto e1 = elts.at(1);
@@ -629,11 +629,11 @@ int test_parse_msh4_element_bloc() {
     return 0;
 }
 
-int test_parse_msh4_elements() {
+int test_parse_msh41_elements() {
     // bad input stream fails
     {
         std::ifstream input("bad-file");
-        EXPECT_ERROR(msh41::parse_msh4_elements(input), "$Elements section parsing failed, missing metadata");
+        EXPECT_ERROR(msh41::parse_elements(input), "$Elements section parsing failed, missing metadata");
     }
     // no elements fails
     {
@@ -641,7 +641,7 @@ int test_parse_msh4_elements() {
             "0 0 0 0\n"
             "$EndElements\n"
          );
-        EXPECT_ERROR(msh41::parse_msh4_elements(input), "$Elements section parsing failed, no tetrahedral elements were read");
+        EXPECT_ERROR(msh41::parse_elements(input), "$Elements section parsing failed, no tetrahedral elements were read");
     }
     // no tetrahedral elements fails
     {
@@ -652,7 +652,7 @@ int test_parse_msh4_elements() {
             "2 2 3\n"
             "$EndElements\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_elements(input), "$Elements section parsing failed, no tetrahedral elements were read");
+        EXPECT_ERROR(msh41::parse_elements(input), "$Elements section parsing failed, no tetrahedral elements were read");
     }
     // missing $EndElements fails
     {
@@ -663,7 +663,7 @@ int test_parse_msh4_elements() {
             "2 5 6 7 8\n"
             // "$EndElements\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_elements(input), "$Elements section parsing failed, expected $EndElements");
+        EXPECT_ERROR(msh41::parse_elements(input), "$Elements section parsing failed, expected $EndElements");
     }
     // skip lower-dimension elements
     {
@@ -678,7 +678,7 @@ int test_parse_msh4_elements() {
             "$EndElements\n"
         );
         std::vector<msh41::Tetrahedron> elts;
-        EXPECT_NO_ERROR(elts = msh41::parse_msh4_elements(input));
+        EXPECT_NO_ERROR(elts = msh41::parse_elements(input));
         if (elts.size() != 2) {
             std::cerr << "expected 2 elements, got " << elts.size() << "\n";
             return 1;
@@ -706,7 +706,7 @@ int test_parse_msh4_elements() {
             "4 5 6 7 8\n"
             "$EndElements\n"
         );
-        EXPECT_ERROR(msh41::parse_msh4_elements(input),
+        EXPECT_ERROR(msh41::parse_elements(input),
             "$Elements section parsing failed, found duplicate tetrahedron tag 1");
     }
     // successfully parses multiple element blocs
@@ -725,7 +725,7 @@ int test_parse_msh4_elements() {
             "$EndElements\n"
         );
         std::vector<msh41::Tetrahedron> elts;
-        EXPECT_NO_ERROR(elts = msh41::parse_msh4_elements(input));
+        EXPECT_NO_ERROR(elts = msh41::parse_elements(input));
         if (elts.size() != 4) {
             std::cerr << "expected 4 elements, got " << elts.size() << "\n";
             return 1;
@@ -800,7 +800,7 @@ namespace {
 
 } // anonymous namespace
 
-int test_parse_msh_file_errors() {
+int test_parse_msh41_file_errors() {
     // Unknown physical group tags assigned to entities are caught
     {
         std::istringstream input(
@@ -843,7 +843,7 @@ int test_parse_msh_file_errors() {
     return 0;
 }
 
-int test_parse_msh_file() {
+int test_parse_msh41_file() {
     // section errors bubble up
     {
         std::istringstream input(
@@ -906,14 +906,14 @@ int main() {
     int err = 0;
 
     RUN_TEST(test_parse_msh_version());
-    RUN_TEST(test_parse_msh4_entities());
-    RUN_TEST(test_parse_msh4_node_bloc());
-    RUN_TEST(test_parse_msh4_nodes());
-    RUN_TEST(test_parse_msh4_groups());
-    RUN_TEST(test_parse_msh4_element_bloc());
-    RUN_TEST(test_parse_msh4_elements());
-    RUN_TEST(test_parse_msh_file_errors());
-    RUN_TEST(test_parse_msh_file());
+    RUN_TEST(test_parse_msh41_entities());
+    RUN_TEST(test_parse_msh41_node_bloc());
+    RUN_TEST(test_parse_msh41_nodes());
+    RUN_TEST(test_parse_msh41_groups());
+    RUN_TEST(test_parse_msh41_element_bloc());
+    RUN_TEST(test_parse_msh41_elements());
+    RUN_TEST(test_parse_msh41_file_errors());
+    RUN_TEST(test_parse_msh41_file());
 
     std::cerr << num_total - num_failed << " out of " << num_total << " tests passed\n";
     return num_failed;
