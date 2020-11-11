@@ -144,6 +144,30 @@ struct MeshVolume {
     int group = -1;
 };
 
+// A point in 3D space
+struct Node {
+    int tag = -1; // TODO size_t?
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+};
+
+// A tetrahedron composed of four nodes
+struct Tetrahedron {
+    int tag = -1;
+    int volume = -1;
+    int a = -1;
+    int b = -1;
+    int c = -1;
+    int d = -1;
+};
+
+// 3D Gmsh physical group
+struct PhysicalGroup {
+    int tag = -1;
+    std::string name;
+};
+
 // Checks whether a list of structs with "tag" members have unique tags.
 // Returns (false, <duplicate_tag>) if a duplicate was found, and returns
 // (true, 0) otherwise.
@@ -235,13 +259,6 @@ std::vector<MeshVolume> parse_entities(std::istream& input) {
     }
     return volumes;
 }
-
-struct Node {
-    int tag = -1; // TODO size_t?
-    double x = 0.0;
-    double y = 0.0;
-    double z = 0.0;
-};
 
 /// Parse a single entity bloc of nodes.
 ///
@@ -354,12 +371,6 @@ std::vector<Node> parse_nodes(std::istream& input) {
     return nodes;
 }
 
-// 3D Gmsh physical group
-struct PhysicalGroup {
-    int tag = -1;
-    std::string name;
-};
-
 /// Returns a list of PhysicalGroups. PhysicalGroup tags are unique.
 ///
 /// Throws a std::runtime_error if parsing fails.
@@ -423,16 +434,6 @@ std::vector<PhysicalGroup> parse_groups(std::istream& input) {
     }
     return groups;
 }
-
-// A tetrahedron composed of four nodes
-struct Tetrahedron {
-    int tag = -1;
-    int volume = -1;
-    int a = -1;
-    int b = -1;
-    int c = -1;
-    int d = -1;
-};
 
 /// Parse a single msh4 element bloc.
 ///
