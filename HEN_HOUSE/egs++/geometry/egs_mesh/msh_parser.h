@@ -58,7 +58,16 @@ private:
     std::vector<EGS_Mesh::Medium> _materials;
 };
 
-// todo namespace private
+namespace msh_parser {
+
+/// Parse a msh file into an EGS_Mesh
+///
+/// Throws a std::runtime_error if parsing fails.
+EGS_Mesh parse_msh_file(std::istream& input);
+
+/// The msh_parser::internal namespace is for internal API functions and is not
+/// part of the public API. Functions and types may change without warning.
+namespace internal {
 
 // trim function from https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
 static inline void rtrim(std::string &s) {
@@ -124,6 +133,10 @@ MshVersion parse_msh_version(std::istream& input) {
 
     return MshVersion::v41;
 }
+
+/// Types and functions specific to parsing msh4.1 files. This namespace is part
+/// of the private API and may change without warning.
+namespace msh41 {
 
 // A model volume (e.g. cube, cylinder, complex shape constructed by boolean operations).
 struct MeshVolume {
@@ -625,20 +638,26 @@ EGS_Mesh parse_msh4_body(std::istream& input) {
     return EGS_Mesh(mesh_elts, mesh_nodes, media);
 }
 
+} // namespace msh_parser::internal::msh41
+
+} // namespace msh_parser::internal
+
 /// Parse a msh file into an EGS_Mesh
 ///
 /// Throws a std::runtime_error if parsing fails.
 EGS_Mesh parse_msh_file(std::istream& input) {
-    auto version = parse_msh_version(input);
+    auto version = msh_parser::internal::parse_msh_version(input);
     // TODO auto mesh_data;
     switch(version) {
-        case MshVersion::v41:
+        case msh_parser::internal::MshVersion::v41:
             try {
-                return parse_msh4_body(input);
+                return msh_parser::internal::msh41::parse_msh4_body(input);
             } catch (const std::runtime_error& err) {
                 throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
             }
             break;
-        default: throw std::runtime_error("couldn't parse msh file");
     }
+    throw std::runtime_error("couldn't parse msh file");
 }
+
+} // namespace msh_parser
