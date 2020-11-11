@@ -758,13 +758,14 @@ namespace {
         "$Entities\n"
         "0 0 0 2\n"
         "1 0 0 0 1.0 1.0 1.0 1 1 6 1 2 3 4 5 6\n"
-        "2 0 0 0 1.0 1.0 1.0 1 1 6 1 2 3 4 5 6\n"
+        "2 0 0 0 1.0 1.0 1.0 1 2 6 1 2 3 4 5 6\n"
         "$EndEntities\n";
 
     const std::string pgroups =
         "$PhysicalNames\n"
-        "1\n"
+        "2\n"
         "3 1 \"Steel\"\n"
+        "3 2 \"Water\"\n"
         "$EndPhysicalNames\n";
 
     const std::string nodes =
@@ -786,7 +787,7 @@ namespace {
 
     const std::string elts =
         "$Elements\n"
-         "2 2 1 2\n"
+         "2 4 1 4\n"
          "3 1 4 2\n"
          "1 1 2 3 4\n"
          "2 1 2 3 5\n"
@@ -856,7 +857,32 @@ int test_parse_msh_file() {
     // minimum complete mesh file for EGSnrc
     {
         std::istringstream input(header + entities + pgroups + nodes + elts);
-        EXPECT_NO_ERROR(parse_msh_file(input));
+        EGS_Mesh mesh = parse_msh_file(input);
+        auto elts = mesh.elements();
+        assert(elts.size() == 4);
+        assert(elts[0].medium_tag == 1);
+        assert(elts[1].medium_tag == 1);
+        assert(elts[2].medium_tag == 2);
+        assert(elts[3].medium_tag == 2);
+        assert(elts[0].a == 1 && elts[0].b == 2 && elts[0].c == 3 && elts[0].d == 4);
+        assert(elts[1].a == 1 && elts[1].b == 2 && elts[1].c == 3 && elts[1].d == 5);
+        assert(elts[2].a == 1 && elts[2].b == 2 && elts[2].c == 4 && elts[2].d == 5);
+        assert(elts[3].a == 2 && elts[3].b == 3 && elts[3].c == 4 && elts[3].d == 5);
+
+        auto nodes = mesh.nodes();
+        assert(nodes.size() == 5);
+        assert(nodes[0].tag == 1 && nodes[0].x == 0.0 && nodes[0].y == 0.0 && nodes[0].z == 0.0);
+        assert(nodes[1].tag == 2 && nodes[1].x == 0.0 && nodes[1].y == 1.0 && nodes[1].z == 0.0);
+        assert(nodes[2].tag == 3 && nodes[2].x == 1.0 && nodes[2].y == 0.0 && nodes[2].z == 0.0);
+        assert(nodes[3].tag == 4 && nodes[3].x == 1.0 && nodes[3].y == 1.0 && nodes[3].z == 0.0);
+        assert(nodes[4].tag == 5 && nodes[4].x == 1.0 && nodes[4].y == 1.0 && nodes[4].z == 1.0);
+
+        auto materials = mesh.materials();
+        assert(materials.size() == 2);
+        assert(materials[0].tag == 1);
+        assert(materials[0].medium_name == "Steel");
+        assert(materials[1].tag == 2);
+        assert(materials[1].medium_name == "Water");
     }
     return 0;
 }
@@ -887,6 +913,6 @@ int main() {
     RUN_TEST(test_parse_msh_file_errors());
     RUN_TEST(test_parse_msh_file());
 
-    std::cerr << num_failed << " out of " << num_total << " tests failed\n";
+    std::cerr << num_total - num_failed << " out of " << num_total << " tests passed\n";
     return num_failed;
 }
