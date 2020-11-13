@@ -55,7 +55,7 @@ EGS_EXTRA_OBJECTS =
 #
 RANDOM = $(EGS_SOURCEDIR)ranmar
 
-# tutor7 needs a different set of mortran files than tutor1-6.
+# g needs a different set of mortran files.
 # => We must overwrite the SOURCES variable.
 # Note: order is important!
 # Note: don;t forget the leading tabs on continuation lines!
@@ -63,13 +63,13 @@ RANDOM = $(EGS_SOURCEDIR)ranmar
 SOURCES = \
        $(EGS_SOURCEDIR)egsnrc.macros \
        $(MACHINE_MACROS) \
-       $(RANDOM).macros\
-       $(EGS_SOURCEDIR)transportp.macros\
+       $(RANDOM).macros \
+       $(EGS_SOURCEDIR)transportp.macros \
        $(EGS_SOURCEDIR)pegs4_macros.mortran \
        $(USER_CODE).mortran \
        $(RANDOM).mortran \
-       $(EGS_SOURCEDIR)get_inputs.mortran\
-       $(EGS_SOURCEDIR)get_media_inputs.mortran\
+       $(EGS_SOURCEDIR)get_inputs.mortran \
+       $(EGS_SOURCEDIR)get_media_inputs.mortran \
        $(EGS_UTILS)nrcaux.mortran \
        $(MACHINE_MORTRAN) \
        $(EGS_SOURCEDIR)egs_utilities.mortran \

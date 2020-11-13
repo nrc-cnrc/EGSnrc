@@ -71,12 +71,16 @@ if [ -f Doxyfile ]
 then
     dochtml=${doc%-*}-html
     set -x
-    doxygen >doxygen.log
-    \mv html $dochtml
-    \zip -qr $dochtml.zip $dochtml
-    \rm -r $dochtml
-    \rm doxygen.log
-    \mv $dochtml.zip ..
+    if test "$doc" == "pirs3100-g-app"; then
+     ./makedoc eq=yes | tee doxygen.log
+    else
+     doxygen >doxygen.log
+	fi
+     \mv html $dochtml
+     \zip -qr $dochtml.zip $dochtml
+     \rm -r $dochtml
+     \rm doxygen.log
+     \mv $dochtml.zip ..
     { set +x; } 2>/dev/null
     exit
 fi
