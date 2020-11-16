@@ -1526,6 +1526,11 @@ extern __extc__ void egsAusgab(EGS_I32 *iarg) {
     app->top_p.latch = the_stack->latch[np];
     app->Np = the_stack->np-1;
     *iarg = app->userScoring(*iarg);
+    if (the_stack->wt[np] == 0) return; //allow code to force return to shower
+    egsInformation("back from userScoring\n");
+    egsInformation("iq,E,wt,x,y,z,u,v,w,ir,np %d %g %g %g %g %g %g %g %g %d %d\n",app->top_p.q,app->top_p.E,
+app->top_p.wt,app->top_p.x.x,app->top_p.x.y,app->top_p.x.z,app->top_p.u.x,app->top_p.u.y,app->top_p.u.z,app->top_p.ir,
+app->Np);
 }
 
 extern __extc__ void egsStartParticle() {
