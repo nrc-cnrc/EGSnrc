@@ -47,6 +47,10 @@ var initializeWindowAndLevelSlider = (
   densityVol,
   panels
 ) => {
+  // Clear level and window divs
+  levelParentDiv.selectAll('*').remove()
+  windowParentDiv.selectAll('*').remove()
+
   // Make level slider
   var levelSliderChangeCallback = (sliderVal) => {
     densityVol.setLevel(sliderVal)
