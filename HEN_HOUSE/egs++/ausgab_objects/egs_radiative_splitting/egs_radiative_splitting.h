@@ -165,7 +165,6 @@ public:
             	return 0;
             }
         }
-        egsInformation("1 about to return\n");
         return 0;
     };
 
@@ -177,7 +176,6 @@ public:
                 return 0;
             }
         }
-        egsInformation("2 about to return\n");
         return 0;
     };
 
