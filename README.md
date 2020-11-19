@@ -10,6 +10,8 @@ notably, EGSnrc incorporates crucial refinements in charged particle transport,
 better low energy cross sections, and the egs++ class library to model
 elaborate geometries and particle sources.
 
+DOI:  https://doi.org/10.4224/40001303
+
 
 ## Documentation
 
