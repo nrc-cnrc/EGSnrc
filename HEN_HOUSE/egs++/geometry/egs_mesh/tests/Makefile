@@ -2,7 +2,10 @@ include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
+include $(HEN_HOUSE)makefiles$(DSEP)cpp_makefile
+
 msh-parser-tests.exe: msh-parser-tests.cpp ../msh_parser.h
 		$(CXX) -std=c++11 -Wall -Wextra -I../ msh-parser-tests.cpp $(EOUT)$@
 
-include $(HEN_HOUSE)makefiles$(DSEP)cpp_makefile
+neighbour-test: neighbour-test.cpp ../neighbour.h
+	$(CXX) $(CXXFLAGS) neighbour-test.cpp -I../ -o neighbour-test
