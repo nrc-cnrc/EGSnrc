@@ -41,6 +41,10 @@ var processPhantomData = function (data) {
     return Math.max(...a.map((e) => (Array.isArray(e) ? getMax(e) : e)))
   }
 
+  var getMin = function (a) {
+    return Math.min(...a.map((e) => (Array.isArray(e) ? getMin(e) : e)))
+  }
+
   // The current line of the text file being read
   let curr = 0
 
@@ -96,6 +100,7 @@ var processPhantomData = function (data) {
       })
   })
 
+  const minDensity = getMin(densityGrid)
   const maxDensity = getMax(densityGrid)
 
   // TODO: .flat() does not work in Safari, find an alternative
@@ -120,6 +125,7 @@ var processPhantomData = function (data) {
     density: density, // The flattened density matrix
     materialList: materialList, // The materials in the phantom
     material: material, // The flattened material matrix
+    minDensity: minDensity, // The minimum density value
     maxDensity: maxDensity // The maximum density value
   }
 }

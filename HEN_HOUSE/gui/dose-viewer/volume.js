@@ -805,19 +805,7 @@ class DensityVolume extends Volume {
     this.data = data
     this.setWindow()
     this.setLevel()
-    this.addColourScheme()
-  }
-
-  /**
-   * Add the colour scheme used for the plots.
-   */
-  addColourScheme () {
-    super.addColourScheme(
-      d3.interpolateGreys,
-      this.level + this.window / 2.0,
-      this.level - this.window / 2.0,
-      true
-    )
+    super.addColourScheme(d3.interpolateGreys, this.data.maxDensityVar, this.data.minDensityVar, true)
   }
 
   /**
@@ -938,14 +926,15 @@ class DensityVolume extends Volume {
     const title = 'Density'
     const dims = this.legendDimensions
 
-    function gradientUrl (colour, height, width, max, n = 150) {
+    function gradientUrl (colour, height, width) {
       const canvas = document.createElement('canvas')
       const context = canvas.getContext('2d')
+      const [maxVal, minVal] = colour.domain()
 
       for (let i = 0; i < height; ++i) {
         context.fillStyle = 'black'
         context.fillRect(0, i, 1, 1)
-        context.fillStyle = colour(((n - i) / n) * max)
+        context.fillStyle = colour((i / height) * (maxVal - minVal) + minVal)
         context.fillRect(1, i, width - 1, 1)
       }
       return canvas.toDataURL()
@@ -975,8 +964,7 @@ class DensityVolume extends Volume {
     const gradUrl = gradientUrl(
       this.colour,
       dims.height - 20,
-      30,
-      this.data.maxDensity
+      30
     )
 
     // Set height of legend
@@ -985,7 +973,7 @@ class DensityVolume extends Volume {
     // Create scale for ticks
     const scale = d3
       .scaleLinear()
-      .domain([0, this.data.maxDensity])
+      .domain([this.data.minDensity, this.data.maxDensity])
       .range([legendHeight, 0])
 
     // Append title
