@@ -10,21 +10,22 @@ notably, EGSnrc incorporates crucial refinements in charged particle transport,
 better low energy cross sections, and the egs++ class library to model
 elaborate geometries and particle sources.
 
-DOI:  https://doi.org/10.4224/40001303
+DOI:  [10.4224/40001303](https://doi.org/10.4224/40001303)
 
 
 ## Documentation
 
-- [**Getting Started**](https://nrc-cnrc.github.io/EGSnrc/doc/getting-started.pdf) with guided tutorials
-- [**EGSnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs701-egsnrc.pdf) core manual (PIRS-701)
-- [**BEAMnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509a-beamnrc.pdf) accelerators (PIRS-509a)
-- [**DOSXYZnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs794-dosxyznrc.pdf) voxel dose (PIRS-794)
-- [**egs++**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs898/index.html) geometries, sources and applications (PIRS-898)
-- [**RZ and SPH apps**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs702-egsnrc-codes.pdf) user manual (PIRS-702)
-- [**RZ GUI**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs801-egsinprz.pdf) egs_inprz (PIRS-801)
-- [**BEAMDP basic**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509e-beamdp-utility.pdf) manual (PIRS-509e)
-- [**BEAMDP advanced**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509c-beamdp.pdf) manual (PIRS-509c)
-- [**STATDOSE**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509f-statdose.pdf) 3D dose processor (PIRS-509f)
+- [**Getting Started**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/getting-started.pdf) with guided tutorials
+- [**EGSnrc**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs701-egsnrc.pdf) core manual (PIRS-701)
+- [**BEAMnrc**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs509a-beamnrc.pdf) accelerators (PIRS-509a)
+- [**DOSXYZnrc**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs794-dosxyznrc.pdf) voxel dose (PIRS-794)
+- [**egs++**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs898/index.html) geometries, sources and applications (PIRS-898)
+- [**g**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs3100-g-refman.pdf) application reference manual (PIRS-3100)
+- [**RZ and SPH apps**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs702-egsnrc-codes.pdf) user manual (PIRS-702)
+- [**RZ GUI**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs801-egsinprz.pdf) egs_inprz (PIRS-801)
+- [**BEAMDP basic**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs509e-beamdp-utility.pdf) manual (PIRS-509e)
+- [**BEAMDP advanced**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs509c-beamdp.pdf) manual (PIRS-509c)
+- [**STATDOSE**](https://github.com/nrc-cnrc/EGSnrc/raw/gh-pages/doc/pirs509f-statdose.pdf) 3D dose processor (PIRS-509f)
 
 
 ## Licence
