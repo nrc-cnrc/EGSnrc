@@ -16,34 +16,22 @@ int test_node_renumbering() {
     return 0;
 }
 
-int test_triangle_neighbours() {
-    std::vector<int> disjoint_triangles {1, 2, 3, 4, 5, 6};
-    assert((mesh_neighbours::triangle_neighbours(disjoint_triangles) ==
-        std::vector<int>{
-            NONE, NONE, NONE,
-            NONE, NONE, NONE
-        }
-    ));
-
-    std::vector<int> two_triangles {1, 2, 3, 1, 2, 4};
-    assert((mesh_neighbours::triangle_neighbours(two_triangles) ==
-        std::vector<int>{
-            NONE, NONE, 1,
-            NONE, NONE, 0,
-        }
-    ));
-    return 0;
-}
-
 int test_tetrahedron_neighbours() {
-    std::vector<int> disjoint_tets {1, 2, 3, 4, 5, 6, 7, 8};
+    using mesh_neighbours::Tetrahedron;
+    std::vector<Tetrahedron> disjoint_tets {
+        Tetrahedron(1, 2, 3, 4),
+        Tetrahedron(5, 6, 7, 8)
+    };
     assert((mesh_neighbours::tetrahedron_neighbours(disjoint_tets) ==
         std::vector<int>{
             NONE, NONE, NONE, NONE,
             NONE, NONE, NONE, NONE
         }
     ));
-    std::vector<int> linked_tets {1, 2, 3, 4, 1, 2, 3, 5};
+    std::vector<Tetrahedron> linked_tets {
+        Tetrahedron(1, 2, 3, 4),
+        Tetrahedron(1, 2, 3, 5)
+    };
     assert((mesh_neighbours::tetrahedron_neighbours(linked_tets) ==
         std::vector<int>{
             NONE, NONE, NONE, 1,
@@ -51,11 +39,9 @@ int test_tetrahedron_neighbours() {
         }
     ));
     return 0;
-
 }
 
 int main() {
     test_node_renumbering();
     test_tetrahedron_neighbours();
-    test_triangle_neighbours();
 }
