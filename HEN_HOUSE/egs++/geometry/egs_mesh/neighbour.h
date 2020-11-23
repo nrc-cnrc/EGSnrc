@@ -5,25 +5,66 @@
 #include <array>
 #include <cassert>
 #include <iostream>
+#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace mesh_neighbours {
 
-// class Tetrahedron {
-// public:
-//     Tetrahedron(int a, int b, int c, int d) : _a(a), _b(b), _c(c), _d(d) {
-//         // if (_a < 0,
-//     }
-// private:
-//     int _a = -1;
-//     int _b = -1;
-//     int _c = -1;
-//     int _d = -1;
-// };
-
 constexpr int NONE = -1;
+
+class Tetrahedron {
+public:
+    // Make a tetrahedron from four nodes.
+    //
+    // Throws a std::invalid_argument exception if:
+    // * negative node tags are passed in or,
+    // * duplicate node tags are passed in.
+    Tetrahedron(int a, int b, int c, int d) : _a(a), _b(b), _c(c), _d(d) {
+        if (_a < 0) { throw std::invalid_argument("negative node " + std::to_string(_a)); }
+        if (_b < 0) { throw std::invalid_argument("negative node " + std::to_string(_b)); }
+        if (_c < 0) { throw std::invalid_argument("negative node " + std::to_string(_c)); }
+        if (_d < 0) { throw std::invalid_argument("negative node " + std::to_string(_d)); }
+        if (_a == _b || _a == _c || _a == _d) {
+            throw std::invalid_argument("duplicate node " + std::to_string(_a));
+        }
+        if (_b == _c || _b == _d) {
+            throw std::invalid_argument("duplicate node " + std::to_string(_b));
+        }
+        if (_c == _d) {
+            throw std::invalid_argument("duplicate node " + std::to_string(_c));
+        }
+    }
+    std::array<std::array<int, 3>, 4> faces() const {
+        return {
+            std::array<int, 3>{_b, _c, _d},
+            std::array<int, 3>{_a, _c, _d},
+            std::array<int, 3>{_a, _b, _d},
+            std::array<int, 3>{_a, _b, _c}
+        };
+    }
+
+private:
+    friend std::vector<int> flatten_tetrahedron_vector(const std::vector<Tetrahedron>& elements);
+
+    int _a = -1;
+    int _b = -1;
+    int _c = -1;
+    int _d = -1;
+};
+
+std::vector<int> flatten_tetrahedron_vector(const std::vector<Tetrahedron>& elements) {
+    std::vector<int> nodes;
+    nodes.reserve(elements.size() * 4);
+    for (const auto& e: elements) {
+        nodes.push_back(e._a);
+        nodes.push_back(e._b);
+        nodes.push_back(e._c);
+        nodes.push_back(e._d);
+    }
+    return nodes;
+}
 
 inline void print_vec(const std::vector<int>& vec) {
     for (auto v: vec) {
@@ -57,8 +98,8 @@ std::unordered_map<int, int> renumber_sparse_nodes(const std::vector<int>& nodes
 // Returns a list of elements and a list of indices into the elements.
 //
 // Adapted from Applied CFD Techniques section 2.2.1
-template<int NODES_PER_ELT>
 EltsAroundPoints elements_around_points(const std::vector<int>& nodes) {
+    constexpr int NODES_PER_ELT = 4;
     assert(nodes.size() % NODES_PER_ELT == 0);
     // the number of unique nodes is equal to the maximum node number
     // because the nodes are continuously numbered from 1..=max_node
@@ -116,12 +157,16 @@ EltsAroundPoints elements_around_points(const std::vector<int>& nodes) {
 // Given a list of node numbers starting from 1, returns the element neighbours.
 //
 // Adapted from Applied CFD Techniques section 2.2.3
-template<int NODES_PER_ELT, int FACES_PER_ELT, int NODES_PER_FACE>
-std::vector<int> element_neighbours(const std::vector<int>& element_nodes) {
+std::vector<int> tetrahedron_neighbours(const std::vector<mesh_neighbours::Tetrahedron>& elements) {
+    constexpr int NODES_PER_ELT = 4;
+    constexpr int FACES_PER_ELT = 4;
+    constexpr int NODES_PER_FACE = 3;
+    auto element_nodes = flatten_tetrahedron_vector(elements);
+
     // this implementation requires one less node per face than the number of element nodes
     assert(NODES_PER_FACE == NODES_PER_ELT - 1);
 
-    const auto elt_indices = elements_around_points<NODES_PER_ELT>(element_nodes);
+    const auto elt_indices = elements_around_points(element_nodes);
     const auto& eltList = elt_indices.elt_list;
     const auto& indices = elt_indices.list_indices;
     const int num_unique_nodes = indices.size() - 1;
@@ -193,18 +238,6 @@ std::vector<int> element_neighbours(const std::vector<int>& element_nodes) {
     }
     return neighbours;
 };
-
-const auto triangle_neighbours = element_neighbours<
-    3, // NODES_PER_ELT
-    3, // FACES_PER_ELT
-    2  // NODES_PER_FACE
->;
-
-const auto tetrahedron_neighbours = element_neighbours<
-    4, // NODES_PER_ELT
-    4, // FACES_PER_ELT
-    3  // NODES_PER_FACE
->;
 
 } // namespace mesh_neighbours
 #endif
