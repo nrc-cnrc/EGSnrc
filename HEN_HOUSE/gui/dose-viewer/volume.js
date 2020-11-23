@@ -803,29 +803,43 @@ class DensityVolume extends Volume {
    */
   addData (data) {
     this.data = data
-    this.setWindow()
-    this.setLevel()
-    super.addColourScheme(d3.interpolateGreys, this.data.maxDensityVar, this.data.minDensityVar, true)
+    this.maxDensityVar = parseFloat(this.data.maxDensity)
+    this.minDensityVar = parseFloat(this.data.minDensity)
+    super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true)
   }
 
   /**
-   * Set the window of density values displayed.
+   * Sets the maximum density value for density plots.
    *
-   * @param {number} width The size of the window of densities to display.
+   * @param {number} maxDensityVal The maximum density value.
+   * @param {Object} panels The panels for which to update the dose plots.
    */
-  setWindow (width) {
-    // Window is whole range
-    this.window = parseFloat(width) || this.data.maxDensity
-  }
+  setMaxDensityVar (maxDensityVal, panels) {
+    this.maxDensityVar = parseFloat(maxDensityVal)
+
+    // Update the colour scheme with the new max density variable
+    super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true);
+
+    ['xy', 'yz', 'xz'].forEach((axis) =>
+      this.drawDensity(this.prevSlice[axis], panels[axis].zoomTransform)
+    )
+  };
 
   /**
-   * Set the level of density values displayed.
-   *
-   * @param {number} level The midpoint of the window.
-   */
-  setLevel (level) {
-    // Level is mid level
-    this.level = parseFloat(level) || this.window / 2.0
+  * Sets the minimum density value for density plots.
+  *
+  * @param {number} minDensityVal The minimum density value.
+  * @param {Object} panels The panels for which to update the dose plots.
+  */
+  setMinDensityVar (minDensityVal, panels) {
+    this.minDensityVar = parseFloat(minDensityVal)
+
+    // Update the colour scheme with the new max density variable
+    super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true);
+
+    ['xy', 'yz', 'xz'].forEach((axis) =>
+      this.drawDensity(this.prevSlice[axis], panels[axis].zoomTransform)
+    )
   }
 
   /**
@@ -926,7 +940,7 @@ class DensityVolume extends Volume {
     const title = 'Density'
     const dims = this.legendDimensions
 
-    function gradientUrl (colour, height, width) {
+    function gradientUrl (colour, height, width, n = 150) {
       const canvas = document.createElement('canvas')
       const context = canvas.getContext('2d')
       const [maxVal, minVal] = colour.domain()
@@ -934,7 +948,7 @@ class DensityVolume extends Volume {
       for (let i = 0; i < height; ++i) {
         context.fillStyle = 'black'
         context.fillRect(0, i, 1, 1)
-        context.fillStyle = colour((i / height) * (maxVal - minVal) + minVal)
+        context.fillStyle = colour(((n - i) / n) * (maxVal - minVal) + minVal)
         context.fillRect(1, i, width - 1, 1)
       }
       return canvas.toDataURL()

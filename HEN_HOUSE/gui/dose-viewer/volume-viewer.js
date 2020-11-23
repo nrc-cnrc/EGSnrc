@@ -43,7 +43,7 @@ import { Panel } from './panel.js'
 import { Slider } from './slider.js'
 import { DoseComparisonVolume, drawAxes } from './volume.js'
 import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
-import { initializeWindowAndLevelSlider } from './window-level-slider.js'
+import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
 
 const AXES = ['xy', 'yz', 'xz']
 
@@ -205,12 +205,13 @@ class VolumeViewer {
     enableExportVisualizationButton()
     // TODO: Move this outside volume viewer and assume all loaded egsphants
     // have same density range
-    initializeWindowAndLevelSlider(
-      this.levelParentDiv,
-      this.windowParentDiv,
+    initializeMinMaxDensitySlider(
+      this.minParentDiv,
+      this.maxParentDiv,
       densityVol,
       this.panels
     )
+
     enableCheckboxForVoxelInformation()
   }
 
@@ -238,9 +239,9 @@ class VolumeViewer {
   removeDensityVolume () {
     this.densityVolume = null
 
-    // Remove the level and dose sliders
-    this.levelParentDiv.select('*').remove()
-    this.windowParentDiv.select('*').remove()
+    // Remove the min and max density sliders
+    this.minParentDiv.select('*').remove()
+    this.maxParentDiv.select('*').remove()
 
     // Remove the volume object from panels
     Object.values(this.panels).forEach((panel) => {
@@ -464,13 +465,13 @@ class VolumeViewer {
     // Set up the file selector dropdowns
     this.setUpFileSelectors()
 
-    // Add window and level sliders
-    this.levelParentDiv = this.volHolder
+    // Add min and max density sliders
+    this.minParentDiv = this.volHolder
       .append('div')
-      .attr('class', 'window-level-container')
-    this.windowParentDiv = this.volHolder
+      .attr('class', 'min-max-container')
+    this.maxParentDiv = this.volHolder
       .append('div')
-      .attr('class', 'window-level-container')
+      .attr('class', 'min-max-container')
 
     // Add voxel information
     buildVoxelInfoHtml(this.volHolder, id)

@@ -136,7 +136,6 @@ class Slider {
       .attr('type', 'range')
       .attr('class', 'slider')
       .attr('id', 'slider-range-' + id)
-      .attr('min', 0)
       .attr('disabled', disabled ? 'disabled' : null)
 
     // Slider maximum output
@@ -211,14 +210,20 @@ class Slider {
     // Set the slider step
     this.slider.attr('step', step)
 
-    // Set max and current value
-    this.slider.attr('max', maxVal).node().value = startingVal
+    // Set max
+    this.slider.attr('max', maxVal)
 
     // Show maximum value of slider
     this.sliderMax.text(format(maxVal))
 
+    // Set min
+    this.slider.attr('min', minVal)
+
     // Show minimum value of slider
     this.sliderMin.text(format(minVal))
+
+    // Set current value
+    this.slider.node().value = startingVal
 
     // Show current value of slider
     this.sliderValue.text(format(startingVal))
