@@ -1208,11 +1208,11 @@ public:
     virtual void setNpold(int npold) {};
     virtual void deleteParticleFromStack(int ip) {};
     virtual void getParticleFromStack(int ip, EGS_Particle p) {};
-    virtual EGS_Float getCohfac(int imed, EGS_Float gle) {
-       return 0.0;
-    }
     virtual EGS_Float getGle() {
        return 0.0;
+    }
+    virtual int getLgle(EGS_Float gle, int med) {
+       return 0;
     }
     virtual int getIbrdst() {
        return 0;

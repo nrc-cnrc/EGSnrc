@@ -669,6 +669,20 @@ struct EGS_Brempr {
    char asym[2][MXEL][MXMED][4];
 };
 
+/*! \brief A structure corresponding to the \c PHOTIN common block.
+
+  This common block contains variables used to calculate data used in
+  photon transport
+*/
+struct EGS_Photin {
+  EGS_Float ebinda[MXMED],ge0[MXMED],ge1[MXMED],gmfp1[MXMED][MXGE],gmfp2[MXMED][MXGE],
+  gbr10[MXMED][MXGE],gbr11[MXMED][MXGE],gbr20[MXMED][MXGE],gbr21[MXMED][MXGE],
+  rco0[MXMED],rco1[MXMED],rsct0[MXMED][MXRAYFF],rsct1[MXMED][MXRAYFF],
+  cohe0[MXMED][MXGE],cohe1[MXMED][MXGE],photonuc0[MXMED][MXGE],photonuc1[MXMED][MXGE],
+  dpmfp;
+  EGS_I32 mpgem[MXMED][MXSGE],ngr[MXMED];
+};
+
 
 /*! \brief The address of the mortran \c STACK common block as a
     pointer to a C-structure of type EGS_Stack */
@@ -725,6 +739,10 @@ extern __extc__ struct EGS_NistBrems *the_nist_brems;
 /*! \brief The address of the mortran BREMPR common block as a
   pointer to a C-structure of type EGS_Brempr */
 extern __extc__ struct EGS_Brempr *the_brempr;
+
+/*! \brief The address of the mortran PHOTIN common block as a
+  pointer to a C-structure of type EGS_Photin */
+extern __etc__ struct EGS_Photin *the_photin;
 
 /* ******************* EGSnrc interface functions *************************/
 

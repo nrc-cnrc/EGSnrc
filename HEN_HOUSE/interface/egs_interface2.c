@@ -56,6 +56,7 @@ extern __extc__ struct EGS_Rayleigh F77_OBJ_(rayleigh_inputs,RAYLEIGH_INPUTS);
 extern __extc__ struct EGS_emfInputs F77_OBJ_(emf_inputs,EMF_INPUTS);
 extern __extc__ struct EGS_NistBrems F77_OBJ_(nist_brems,NIST_BREMS);
 extern __extc__ struct EGS_Brempr F77_OBJ_(brempr,BREMPR);
+extern __extc__ struct EGS_Photin F77_OBJ_(photin,PHOTIN);
 
 struct EGS_Stack        *the_stack     = & F77_OBJ(stack,STACK);
 struct EGS_Bounds       *the_bounds    = & F77_OBJ(bounds,BOUNDS);
@@ -71,6 +72,7 @@ struct EGS_Rayleigh     *the_rayleigh   = & F77_OBJ_(rayleigh_inputs,RAYLEIGH_IN
 struct EGS_emfInputs    *the_emf        = & F77_OBJ_(emf_inputs,EMF_INPUTS);
 struct EGS_NistBrems    *the_nist_brems = & F77_OBJ_(nist_brems,NIST_BREMS);
 struct EGS_Brempr       *the_brempr     = & F77_OBJ_(brempr,BREMPR);
+struct EGS_Photin       *the_photin     = & F77_OBJ_(photin,PHOTIN);
 
 extern __extc__ void F77_OBJ_(egs_init_f,EGS_INIT_F)();
 extern __extc__ void F77_OBJ(electr,ELECTR)(int *);
