@@ -886,9 +886,7 @@ int EGS_AdvancedApplication::shower() {
 #ifdef GDEBUG
     steps_n = 0;
 #endif
-    egsInformation("Calling egsShower\n");
     egsShower();
-    egsInformation("Returning from egsShower\n");
     return 0;
 }
 
@@ -1354,6 +1352,11 @@ EGS_Float EGS_AdvancedApplication::getGle() {
     return the_epcont->gle;
 }
 
+//return lgle
+int EGS_AdvancedAppliction::getLgle(EGS_Float gle, int med) {
+    return the_photin->ge1[med]*gle+the_photin->ge0[med];
+}
+
 //return the value of the_xoptions->ibrdst
 int EGS_AdvancedApplication::getIbrdst() {
     return the_xoptions->ibrdst;
@@ -1434,10 +1437,6 @@ EGS_Float EGS_AdvancedApplication::getDl6(int i, int imed) {
     return the_brempr->dl6[imed][i];
 }
 
-//calculate the value of cohfac for Rayleigh scattering
-EGS_Float EGS_AdvancedApplication::getCohfac(int imed, EGS_Float gle) {
-    return i_cohe[imed].interpolateFast(gle);
-}
 
 //get max. energy of source from source
 EGS_Float EGS_AdvancedApplication::getEmax() {
@@ -1527,10 +1526,6 @@ extern __extc__ void egsAusgab(EGS_I32 *iarg) {
     app->Np = the_stack->np-1;
     *iarg = app->userScoring(*iarg);
     if (the_stack->wt[np] == 0) return; //allow code to force return to shower
-    egsInformation("back from userScoring\n");
-    egsInformation("iq,E,wt,x,y,z,u,v,w,ir,np %d %g %g %g %g %g %g %g %g %d %d\n",app->top_p.q,app->top_p.E,
-app->top_p.wt,app->top_p.x.x,app->top_p.x.y,app->top_p.x.z,app->top_p.u.x,app->top_p.u.y,app->top_p.u.z,app->top_p.ir,
-app->Np);
 }
 
 extern __extc__ void egsStartParticle() {
@@ -1543,6 +1538,5 @@ extern __extc__ void egsStartParticle() {
     }
     the_epcont->idisc = 0;
     the_useful->medium = app->getMedium(ir)+1;
-    //egsInformation("start particle: ir=%d medium=%d\n",ir,the_useful->medium);
     app->startNewParticle();
 }

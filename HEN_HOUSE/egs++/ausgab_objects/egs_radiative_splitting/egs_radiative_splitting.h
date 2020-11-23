@@ -136,6 +136,8 @@ public:
 
     void initSmartKM(EGS_Float Emax);
 
+    void doUphi21(EGS_Float sinthe, EGS_Float costhe, EGS_Vector u);
+
     void setSplitting(const int &n_s) {
         nsplit = n_s;
     };
