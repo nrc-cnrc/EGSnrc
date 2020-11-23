@@ -59,7 +59,7 @@ extern "C" void F77_OBJ_(annih_at_rest,ANNIH_AT_REST)(){;}
 extern "C" void F77_OBJ_(photo,PHOTO)(){;}
 extern "C" void F77_OBJ_(pair,PAIR)(){;}
 extern "C" void F77_OBJ_(compt,COMPT)(){;}
-extern "C" void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(EGS_I32 *medium, EGS_Float *e, EGS_Float *gle, EGS_I32 *lgle, EGS_Float *costhe, EGS_Float *sinthe){;}
+extern "C" void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(int &medium, EGS_Float &e, EGS_Float &gle, EGS_I32 &lgle, EGS_Float &costhe, EGS_Float &sinthe){;}
 extern "C" EGS_Float F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float &nb_xdata, EGS_Float &nb_fdata, EGS_Float &nb_wdata, EGS_Float &nb_idata){ return 0.0;}
 
 //local structures required
@@ -179,8 +179,6 @@ void EGS_RadiativeSplitting::initDBS(const float &field_rad, const float &field_
 int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 {
 
-    //egsInformation("iarg = %d\n",iarg);
-
     int check = 0; //set to 1 to return to shower
 
     killed = 0;
@@ -190,7 +188,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         app->setRadiativeSplitting(1); return 0;
     }
 
-    int np = app->Np; int np1 = np;
+    int np = app->Np;
 
     int latch = app->top_p.latch;
 
@@ -201,7 +199,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     if( iarg == EGS_Application::BeforeBrems ) {
         double E = app->top_p.E;
         EGS_Float wt = app->top_p.wt;
-        printf("\n is fat = %d\n",is_fat);
         if( is_fat ) {
             //clear bit 31
             latch = latch & ~(1 << 31);
@@ -310,23 +307,37 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 killThePhotons(fs,ssd,nint,nstart,aux);
             }
         }
-        //else if (app->the_xoptions->iraylr)
-        //{  //worry about this once we get this compiling/running
-           //before Rayleigh--this is currently kind of a hybrid routine
-          //May want to replace it with a C++ routine
-          //I think the $RAYLEIGH-CORRECTION has, in general, been called and cohfac defined
-          //but we need to recover it to determine if the interaction is going to happen or not
-            //EGS_Float cohfac = app->getCohfac(app->getMedium(app->isWhere(x), app->getGle());
-            //if (rndm->getUniform() < 1 - cohfac)
-            //{
-              // for (int i=0; i<nint; i++)
-               //{
-
-               //}
-               //int nstart = np+1; aux=0;
-               //killThePhotons(fs,ssd,nint,nstart,aux);
-            //}
-        //}
+        else if (iarg == EGS_Application::BeforeRayleigh)
+        {
+            //TODO: Put this in a doRayleigh function
+            EGS_Vector x = app->top_p.x;
+            EGS_Vector u = app->top_p.u;
+            EGS_Float E = app->top_p.E;
+            EGS_Float wt = app->top_p.wt/nint;
+            EGS_Float gle = app->getGle();
+            int imed = app->getMedium(app->isWhere(x));
+            int lgle = app->getLgle(gle,imed);
+            EGS_Float costhe, sinthe;
+            for (int i=0; i<nint; i++)
+            {
+                EGS_Particle p;
+                p.x = x;
+                p.E = E;
+                p.wt = wt;
+                p.u = u;
+                p.latch = latch;
+                EGS_Float dnear = app->getDnear(app->Np);
+                //call EGS rayleigh sampling routine to get scatter angles cost, sint
+                F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(imed,E,gle,lgle,costhe,sinthe);
+                //adjust scatter angles and apply to particle
+                doUphi21(sinthe,costhe,p.u);
+                //add the particle to the stack
+                app->addParticleToStack(p,dnear);
+                //now potentially kill it -- seems like we should kill the particle before adding to the stack
+                int nstart = app->Np, aux=0;
+                killThePhotons(fs,ssd,nint,nstart,aux);
+            }
+        }
         check = 1;
     }
     else if(iarg == EGS_Application::FluorescentEvent )
@@ -342,6 +353,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             int nstart=np+1, aux=0;
             killThePhotons(fs,ssd,nsplit,nstart,aux);
         }
+        //TODO: Ensure that below is correct, i.e. we don't want to go back to shower
         check = 2;
     }
 
@@ -360,7 +372,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
     return 1;
 }
-
 
 int EGS_RadiativeSplitting::doSmartBrems() {
     int np = app->Np;
@@ -847,10 +858,6 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
                       (app->getDl2(l,imed)+app->getDl3(l,imed));
                phi2 = app->getDl1(l1,imed)+delta*
                       (app->getDl2(l1,imed)+app->getDl3(l1,imed));
-          //egsInformation("l imed dl1 dl2 dl3 %d %d %g %g %g %g\n",l,imed,app->getDl1(l,imed),
-                         app->getDl2(l,imed),app->getDl3(l,imed));
-          //egsInformation("l1 imed dl1 dl2 dl3 %d %d %g %g %g %g\n",l1,imed,app->getDl1(l1,imed),
-                         app->getDl2(l1,imed),app->getDl3(l1,imed));
            }
            else
            {
@@ -1404,6 +1411,35 @@ void EGS_RadiativeSplitting::initSmartKM(EGS_Float Emax) {
     }
     nmed_KM = nmed;
     if( nsplit > 0 ) y2_KM = new EGS_Float [nsplit];
+}
+
+void EGS_RadiativeSplitting::doUphi21(EGS_Float sinthe, EGS_Float costhe, EGS_Vector u)
+{
+    //This is equivalent to calling the Mortran routine UPHI(2,1) and is used
+    //to adjust particle angles after a Rayleigh event
+    EGS_Float cosphi,sinphi;
+    selectAzimuthalAngle(cosphi,sinphi);
+    EGS_Float a=u.x; EGS_Float b=u.y; EGS_Float c=u.z;
+    EGS_Float sinps2 = a*a+b*b;
+    if (sinps2 < 1e-20)
+    {
+        //small polar angle case
+        u.x = sinthe*cosphi;
+        u.y = sinthe*sinphi;
+        u.z = c*costhe;
+    }
+    else
+    {
+        EGS_Float sinpsi = sqrt(sinps2);
+        EGS_Float us = sinthe*cosphi;
+        EGS_Float vs = sinthe*sinphi;
+        EGS_Float sindel = b/sinpsi;
+        EGS_Float cosdel = a/sinpsi;
+        u.x = c*cosdel*us - sindel*vs + a*costhe;
+        u.y = c*sindel*us + cosdel*vs + b*costhe;
+        u.z = -sinpsi*us + c*costhe;
+    }
+    return;
 }
 
 //*********************************************************************
