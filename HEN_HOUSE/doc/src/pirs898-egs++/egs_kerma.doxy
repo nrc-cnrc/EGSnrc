@@ -174,7 +174,7 @@ K_\mathrm{m}=\sum_{i=1}^{N} w_i \cdot \frac{l_i}{V_\mathrm{m}} \cdot E_i \cdot
 \left(\frac{\mu_\mathrm{en}}{\rho}\right)_{\mathrm{m},i}
 \f]
 
-with \f$l_i\f$ the path crossed by the \f$ i^\mathrm{th}\f$ photon of statistical weight \f$l_i\f$
+with \f$l_i\f$ the path crossed by the \f$ i^\mathrm{th}\f$ photon of statistical weight \f$w_i\f$
 through the scoring region.
 
 The example file <em>emuen_rho_air_1keV-1.5MeV.data</em> contains \f$ E \times \frac{\mu_{en}}{\rho} \f$
