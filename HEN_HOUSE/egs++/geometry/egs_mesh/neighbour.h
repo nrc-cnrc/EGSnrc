@@ -16,27 +16,35 @@ constexpr int NONE = -1;
 
 class Tetrahedron {
 public:
+    using Face = std::array<int, 3>;
+
     // Make a tetrahedron from four nodes.
     //
     // Throws a std::invalid_argument exception if:
     // * negative node tags are passed in or,
     // * duplicate node tags are passed in.
-    Tetrahedron(int a, int b, int c, int d) : _a(a), _b(b), _c(c), _d(d) {
-        if (_a < 0) { throw std::invalid_argument("negative node " + std::to_string(_a)); }
-        if (_b < 0) { throw std::invalid_argument("negative node " + std::to_string(_b)); }
-        if (_c < 0) { throw std::invalid_argument("negative node " + std::to_string(_c)); }
-        if (_d < 0) { throw std::invalid_argument("negative node " + std::to_string(_d)); }
-        if (_a == _b || _a == _c || _a == _d) {
-            throw std::invalid_argument("duplicate node " + std::to_string(_a));
+    Tetrahedron(int a, int b, int c, int d) {
+        if (a < 0) { throw std::invalid_argument("negative node " + std::to_string(a)); }
+        if (b < 0) { throw std::invalid_argument("negative node " + std::to_string(b)); }
+        if (c < 0) { throw std::invalid_argument("negative node " + std::to_string(c)); }
+        if (d < 0) { throw std::invalid_argument("negative node " + std::to_string(d)); }
+        if (a == b || a == c || a == d) {
+            throw std::invalid_argument("duplicate node " + std::to_string(a));
         }
-        if (_b == _c || _b == _d) {
-            throw std::invalid_argument("duplicate node " + std::to_string(_b));
+        if (b == c || b == d) {
+            throw std::invalid_argument("duplicate node " + std::to_string(b));
         }
-        if (_c == _d) {
-            throw std::invalid_argument("duplicate node " + std::to_string(_c));
+        if (c == d) {
+            throw std::invalid_argument("duplicate node " + std::to_string(c));
         }
+        std::vector<int> sorted {a, b, c, d};
+        std::sort(sorted.begin(), sorted.end());
+        _a = sorted[0];
+        _b = sorted[1];
+        _c = sorted[2];
+        _d = sorted[3];
     }
-    std::array<std::array<int, 3>, 4> faces() const {
+    std::array<Face, 4> faces() const {
         return {
             std::array<int, 3>{_b, _c, _d},
             std::array<int, 3>{_a, _c, _d},
