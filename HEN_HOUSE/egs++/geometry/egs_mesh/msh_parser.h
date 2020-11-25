@@ -43,6 +43,8 @@ class EGS_Mesh /* : public EGS_BaseGeometry */ {
 public:
     /// A single tetrahedral mesh element
     struct Tetrahedron {
+        Tetrahedron(int medium_tag, int a, int b, int c, int d) :
+            medium_tag(medium_tag), a(a), b(b), c(c), d(d) {}
         int medium_tag = -1;
         // nodes
         int a = -1;
@@ -53,6 +55,8 @@ public:
 
     /// A single 3D point
     struct Node {
+        Node(int tag, double x, double y, double z) :
+            tag(tag), x(x), y(y), z(z) {}
         int tag = -1;
         double x = 0.0;
         double y = 0.0;
@@ -61,6 +65,8 @@ public:
 
     /// A physical medium
     struct Medium {
+        Medium(int tag, std::string medium_name) :
+            tag(tag), medium_name(medium_name) {}
         int tag = -1;
         std::string medium_name;
     };
@@ -171,12 +177,14 @@ namespace msh41 {
 
 // A model volume (e.g. cube, cylinder, complex shape constructed by boolean operations).
 struct MeshVolume {
+    MeshVolume(int tag, int group) : tag(tag), group(group) {}
     int tag = -1;
     int group = -1;
 };
 
 // A point in 3D space
 struct Node {
+    Node(int tag, double x, double y, double z) : tag(tag), x(x), y(y), z(z) {}
     int tag = -1; // TODO size_t?
     double x = 0.0;
     double y = 0.0;
@@ -185,6 +193,8 @@ struct Node {
 
 // A tetrahedron composed of four nodes
 struct Tetrahedron {
+    Tetrahedron(int tag, int volume, int a, int b, int c, int d) :
+            tag(tag), volume(volume), a(a), b(b), c(c), d(d) {}
     int tag = -1;
     int volume = -1;
     int a = -1;
@@ -195,6 +205,7 @@ struct Tetrahedron {
 
 // 3D Gmsh physical group
 struct PhysicalGroup {
+    PhysicalGroup(int tag, std::string name) : tag(tag), name(name) {}
     int tag = -1;
     std::string name;
 };
@@ -277,7 +288,7 @@ std::vector<MeshVolume> parse_entities(std::istream& input) {
         if (num_groups != 1) {
             throw std::runtime_error("$Entities parsing failed, volume " + std::to_string(tag) + " has more than one physical group");
         }
-        volumes.push_back( MeshVolume { tag, group } );
+        volumes.push_back(MeshVolume(tag, group));
     }
     if (volumes.size() != static_cast<std::size_t>(num_3d)) {
         throw std::runtime_error("$Entities parsing failed, expected " + std::to_string(num_3d) + " volumes but got " + std::to_string(volumes.size()));
@@ -324,7 +335,7 @@ std::vector<Node> parse_node_bloc(std::istream& input) {
         if (line_stream.fail() || tag == SIZET_MAX) {
             throw std::runtime_error("Node bloc parsing failed during node tag section of entity " + std::to_string(entity));
         }
-        Node n;
+        Node n(-1, 0.0, 0.0, 0.0);
         n.tag = tag;
         nodes.push_back(n);
     }
@@ -455,7 +466,7 @@ std::vector<PhysicalGroup> parse_groups(std::istream& input) {
             throw std::runtime_error("empty physical group name: " + line);
         }
         auto name_len = name_end - name_start - 1; // -1 to exclude closing quote
-        groups.push_back(PhysicalGroup { tag, line.substr(name_start + 1, name_len) });
+        groups.push_back(PhysicalGroup(tag, line.substr(name_start + 1, name_len)));
     }
     // ensure group tags are unique
     auto unique_res = check_unique_tags(groups);
@@ -522,7 +533,7 @@ std::vector<Tetrahedron> parse_element_bloc(std::istream& input) {
         {
             throw std::runtime_error("Element bloc parsing failed for entity " + std::to_string(entity));
         }
-        elts.push_back(Tetrahedron { tag, entity, a, b, c, d });
+        elts.push_back(Tetrahedron(tag, entity, a, b, c, d));
     }
     return elts;
 }
@@ -646,23 +657,23 @@ EGS_Mesh parse_body(std::istream& input) {
     mesh_elts.reserve(elements.size());
     for (std::size_t i = 0; i < elements.size(); ++i) {
         const auto& elt = elements[i];
-        mesh_elts.push_back(EGS_Mesh::Tetrahedron {
+        mesh_elts.push_back(EGS_Mesh::Tetrahedron(
             element_groups[i], elt.a, elt.b, elt.c, elt.d
-        });
+        ));
     }
 
     std::vector<EGS_Mesh::Node> mesh_nodes;
     mesh_nodes.reserve(nodes.size());
     for (const auto& n: nodes) {
-        mesh_nodes.push_back(EGS_Mesh::Node {
+        mesh_nodes.push_back(EGS_Mesh::Node(
             n.tag, n.x, n.y, n.z
-        });
+        ));
     }
 
     std::vector<EGS_Mesh::Medium> media;
     media.reserve(groups.size());
     for (const auto& g: groups) {
-        media.push_back(EGS_Mesh::Medium { g.tag, g.name });
+        media.push_back(EGS_Mesh::Medium(g.tag, g.name));
     }
 
     // TODO: check all 3d physical groups were used by elements
