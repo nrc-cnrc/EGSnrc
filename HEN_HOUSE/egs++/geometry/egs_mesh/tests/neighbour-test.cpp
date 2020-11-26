@@ -70,9 +70,9 @@ int test_tetrahedron_neighbours() {
         Tetrahedron(5, 6, 7, 8)
     };
     assert((mesh_neighbours::tetrahedron_neighbours(disjoint_tets) ==
-        std::vector<std::array<int,4>>{
-            std::array<int, 4>{NONE, NONE, NONE, NONE},
-            std::array<int, 4>{NONE, NONE, NONE, NONE}
+        std::vector<std::array<std::size_t,4>>{
+            std::array<std::size_t, 4>{NONE, NONE, NONE, NONE},
+            std::array<std::size_t, 4>{NONE, NONE, NONE, NONE}
         }
     ));
     std::vector<Tetrahedron> linked_tets {
@@ -80,11 +80,23 @@ int test_tetrahedron_neighbours() {
         Tetrahedron(1, 2, 3, 5)
     };
     assert((mesh_neighbours::tetrahedron_neighbours(linked_tets) ==
-        std::vector<std::array<int,4>>{
-            std::array<int, 4>{NONE, NONE, NONE, 1},
-            std::array<int, 4>{NONE, NONE, NONE, 0}
+        std::vector<std::array<std::size_t,4>>{
+            std::array<std::size_t, 4>{NONE, NONE, NONE, 1},
+            std::array<std::size_t, 4>{NONE, NONE, NONE, 0}
         }
     ));
+    // 0 nodes are OK
+    std::vector<Tetrahedron> tets_with_0 {
+        Tetrahedron(0, 2, 3, 4),
+        Tetrahedron(1, 2, 3, 4)
+    };
+    assert((mesh_neighbours::tetrahedron_neighbours(tets_with_0) ==
+        std::vector<std::array<std::size_t,4>>{
+            std::array<std::size_t, 4>{1, NONE, NONE, NONE},
+            std::array<std::size_t, 4>{0, NONE, NONE, NONE}
+        }
+    ));
+
     return 0;
 }
 
