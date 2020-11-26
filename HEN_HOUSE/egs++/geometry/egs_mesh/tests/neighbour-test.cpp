@@ -60,6 +60,17 @@ int test_tetrahedron_errors() {
                 return 1;
             }
         }
+        try {
+            Tetrahedron(0, 1, 2, 3);
+            std::cerr << "expected exception on node < 1\n";
+            return 1;
+        } catch (const std::invalid_argument& err) {
+            std::string expected = "got node 0 < 1";
+            if (err.what() != expected) {
+                std::cerr << "expected \"" << expected << "\", got \"" << err.what() << "\"\n";
+                return 1;
+            }
+        }
     }
     return 0;
 }
