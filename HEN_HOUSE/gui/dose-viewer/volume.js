@@ -295,29 +295,20 @@ class Volume {
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1999-L2034
     const sliceData = new Array(slice.xVoxels * slice.yVoxels)
 
-    if ((this.args !== undefined) && (this.args.isDicom)) {
-      for (let i = 0; i < slice.xVoxels; i++) {
-        for (let j = 0; j < slice.yVoxels; j++) {
-          const address = i + slice.xVoxels * j
-          sliceData[address] = this.data[dataName][address]
+    for (let i = 0; i < slice.xVoxels; i++) {
+      for (let j = 0; j < slice.yVoxels; j++) {
+        let address
+        if (axis === 'xy') {
+          address = i + slice.xVoxels * (j + sliceNum * slice.yVoxels)
+        } else if (axis === 'yz') {
+          address =
+            sliceNum + this.data.voxelNumber.x * (i + j * slice.xVoxels)
+        } else if (axis === 'xz') {
+          address =
+            i + slice.xVoxels * (sliceNum + j * this.data.voxelNumber.y)
         }
-      }
-    } else {
-      for (let i = 0; i < slice.xVoxels; i++) {
-        for (let j = 0; j < slice.yVoxels; j++) {
-          let address
-          if (axis === 'xy') {
-            address = i + slice.xVoxels * (j + sliceNum * slice.yVoxels)
-          } else if (axis === 'yz') {
-            address =
-              sliceNum + this.data.voxelNumber.x * (i + j * slice.xVoxels)
-          } else if (axis === 'xz') {
-            address =
-              i + slice.xVoxels * (sliceNum + j * this.data.voxelNumber.y)
-          }
-          const newAddress = i + slice.xVoxels * j
-          sliceData[newAddress] = this.data[dataName][address]
-        }
+        const newAddress = i + slice.xVoxels * j
+        sliceData[newAddress] = this.data[dataName][address]
       }
     }
 
@@ -362,6 +353,7 @@ class DoseVolume extends Volume {
    * @param {Object} data The data from parsing the file.
    */
   constructor (fileName, dimensions, legendDimensions, data, args) {
+    // TODO: Remove args?
     // Call the super class constructor
     super(fileName, dimensions, legendDimensions, args)
     this.addData(data)

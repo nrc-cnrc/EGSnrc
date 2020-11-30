@@ -1,10 +1,60 @@
 /* global dicomParser */
 
+function combineDICOMData (DICOMList) {
+  // Sort in slice order
+  DICOMList.sort((a, b) => (a.content.data.zPos - b.content.data.zPos))
+
+  // Map out the positions of the z voxel centres
+  var zArrVoxelCenter = DICOMList.map((e) => (e.content.data.zPos))
+  var zVoxSize = zArrVoxelCenter[1] - zArrVoxelCenter[0]
+  var zArr = [zArrVoxelCenter[0] - zVoxSize * 0.5]
+
+  // Get the voxel boundary positions
+  zArrVoxelCenter.forEach((e, i) => { zArr.push(e + zVoxSize * 0.5) })
+
+  // Add the density matricies together
+  var densityArrays = DICOMList.map((e) => Array.from((e.content.data.density)))
+  var density = densityArrays.flat()
+  // TODO: Remove the use of flat to be compatible with Safari
+  // var density = densityArrays.reduce(function (a, b) {
+  //   return a.concat(b)
+  // })
+
+  var data = DICOMList[0].content.data
+
+  var DICOMData = {
+    voxelNumber: {
+      x: data.voxelNumber.x, // The number of x voxels
+      y: data.voxelNumber.y, // The number of y voxels
+      z: DICOMList.length // The number of z voxels
+    },
+    voxelArr: {
+      x: data.voxelArr.x, // The dimensions of x voxels
+      y: data.voxelArr.y, // The dimensions of y voxels
+      z: zArr // The dimensions of z voxels
+    },
+    voxelSize: {
+      x: data.voxelSize.x, // The voxel size in the x direction
+      y: data.voxelSize.y, // The voxel size in the y direction
+      z: zVoxSize // The voxel size in the z direction
+    },
+    density: density, // The flattened density matrix
+    // materialList: materialList, // The materials in the phantom
+    // material: material, // The flattened material matrix
+    maxDensity: 3071, // The maximum density value 3071 HU
+    minDensity: -1024 // The minimum density value -1024 HU
+  }
+
+  return DICOMData
+}
+
 const elementProperties = {
   // General Study
   x00081030: { tag: '(0008,1030)', type: '3', keyword: 'StudyDescription', vm: 1, vr: 'LO' }, // Institution-generated description or classification of the study
   // General Series
   x00085100: { tag: '(0018,5100)', type: '2C', keyword: 'PatientPosition', vm: 1, vr: 'CS' }, // Usually HFS, if another value might need to flip
+  // General Image
+  x00200013: { tag: '(0020,0013)', type: '2', keyword: 'InstanceNumber', vm: 1, vr: 'IS' }, // Gives the order of images, if empty, use ImagePositionPatient
   // Image Plane
   x00180050: { tag: '(0018,0050)', type: '2', keyword: 'SliceThickness', vm: 1, vr: 'DS' }, // Optional, the slice thickness in mm
   x00200032: { tag: '(0020,0032)', type: '1', keyword: 'ImagePositionPatient', vm: 3, vr: 'DS' }, // The position of the first voxel transmitted
@@ -69,7 +119,7 @@ var getVal = function (dataSet, vr, propertyAddress) {
   return val
 }
 
-function processDICOMData (arrayBuffer) {
+function processDICOMSlice (arrayBuffer) {
   var byteArray = new Uint8Array(arrayBuffer)
   var kb = byteArray.length / 1024
   var mb = kb / 1024
@@ -89,7 +139,7 @@ function processDICOMData (arrayBuffer) {
         var val = getVal(dataSet, property.vr, propertyAddress)
         if (val !== undefined) propertyValues[property.keyword] = val
       } else {
-        console.log(property.keyword + ' is undefined')
+        // console.log(property.keyword + ' is undefined')
       }
     }
 
@@ -98,7 +148,7 @@ function processDICOMData (arrayBuffer) {
     const nCols = parseInt(propertyValues.Columns)
 
     const [Sx, Sy, Sz] = propertyValues.ImagePositionPatient.split('\\').map((v) => {
-      return Number(v)
+      return Number(v) / 10.0
     })
     const XY = propertyValues.ImageOrientationPatient.split('\\').map((v) => {
       return Number(v)
@@ -111,11 +161,10 @@ function processDICOMData (arrayBuffer) {
     // var Py = (i, j) => Xy * xVoxSize * i + Yy * yVoxSize * j + Sy
     // var Pz = (i, j) => Xz * xVoxSize * i + Yz * yVoxSize * j + Sz
 
-    var xArr = [...Array(nCols)].map((e, i) => (XY[0] * xVoxSize * i + Sx) / 10.0)
-    var yArr = [...Array(nRows)].map((e, j) => (XY[4] * yVoxSize * j + Sy) / 10.0)
+    var xArr = [...Array(nCols + 1)].map((e, i) => (XY[0] * xVoxSize * (i - 0.5) + Sx))
+    var yArr = [...Array(nRows + 1)].map((e, j) => (XY[4] * yVoxSize * (j - 0.5) + Sy))
 
-    // Get the maximum density
-    var maxDensity = -100
+    // Rescale the density values
     var m = parseFloat(propertyValues.RescaleSlope)
     var b = parseFloat(propertyValues.RescaleIntercept)
 
@@ -124,39 +173,35 @@ function processDICOMData (arrayBuffer) {
     for (var i = 0; i < propertyValues.PixelData.length; i++) {
       val = m * propertyValues.PixelData[i] + b
       pixelDataScaled[i] = val
-
-      if (val > maxDensity) {
-        maxDensity = val
-      }
     }
 
-    var DICOMdata = {
+    var DICOMslice = {
+      sliceNum: parseInt(propertyValues.InstanceNumber),
       voxelNumber: {
         x: nCols, // The number of x voxels
-        y: nRows, // The number of y voxels
-        z: parseInt(propertyValues.NumberOfFrames) || 1 // The number of z voxels
+        y: nRows // The number of y voxels
       },
       voxelArr: {
-        x: xArr, // The dimensions of x voxels
-        y: yArr, // The dimensions of y voxels
-        z: [Sz / 10.0] // The dimensions of z voxels
+        x: xArr, // The dimensions of x voxels (length === voxelNumber.x + 1)
+        y: yArr // The dimensions of y voxels
       },
       voxelSize: {
         x: xVoxSize, // The voxel size in the x direction
         y: yVoxSize, // The voxel size in the y direction
         z: parseFloat(propertyValues.SliceThickness) / 10.0 || 0 // The voxel size in the z direction
       },
-      density: pixelDataScaled, // The flattened density matrix
+      zPos: Sz,
+      density: pixelDataScaled // The flattened density matrix
       // materialList: materialList, // The materials in the phantom
       // material: material, // The flattened material matrix
-      maxDensity: maxDensity // The maximum density value
+      // maxDensity: maxDensity // The maximum density value
     }
 
-    return { data: DICOMdata, type: 'density' }
+    return { data: DICOMslice, type: 'density' }
   } catch (ex) {
     console.log('Error parsing byte stream', ex)
     return true
   }
 }
 
-export { processDICOMData }
+export { combineDICOMData, processDICOMSlice }
