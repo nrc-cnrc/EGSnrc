@@ -142,7 +142,6 @@ class DoseProfile {
    * Initializes the zoom of the dose profile plot using functions from the zoom file.
    */
   initializeZoom () {
-    console.log('IS THIS EVEN CALLED???')
     // Zooming for dose profile
     doseProfileAxis.zoomObj = getZoom(
       DOSE_PROFILE_DIMENSIONS.width,
