@@ -679,13 +679,10 @@ $TYPE NAMESB(12),IDFNAM(6);
 $INTEGER NH(200);
 "*************************"
 "Fix errors for gcc > 10.0"
-"EXTERNAL ALKE,ALKEI,EFUNS,GFUNS,RFUNS,ALIN,ALINI,AFFACT;"
 "*************************"
-%F
-      REAL*4, EXTERNAL :: ALKE,ALKEI,ALIN,ALINI,AFFACT
-%M
-EXTERNAL EFUNS,GFUNS,RFUNS;
-"************************"
+$REAL ALKE,ALKEI,ALIN,ALINI,AFFACT;
+EXTERNAL ALKE,ALKEI,EFUNS,GFUNS,RFUNS,ALIN,ALINI,AFFACT;
+"*************************"
 $EXTERNAL ALOG,EXP;
 
 $INTEGER NOPT,NPTS,IDF,EPSTFL_old,IUNRST_old,IAPRIM_old;
@@ -2607,14 +2604,10 @@ $REAL    XL,XU,XR,EP,AX,BX;
 
 "*************************"
 "Fix errors for gcc > 10.0"
-"EXTERNAL XFUN,XFI,VFUNS;"
 "*************************"
-%F
-      REAL*4, EXTERNAL :: XFUN,XFI
-%M
-EXTERNAL VFUNS;
-"************************"
-
+$REAL XFUN,XFI;
+EXTERNAL XFUN,XFI,VFUNS;
+"*************************"
 $REAL AF(NALM,NFUN),BF(NALM,NFUN),ZTHR(NFUN),ZEP(NFUN);
 "   QFIT IS A LOGICAL FUNCTION WHICH IS TRUE IF THE STATED NUMBER    "
 "   OF INTERVALS GIVES A SUFFICIENTLY CLOSE FIT.                     "
@@ -3587,12 +3580,10 @@ implicit none;
 $REAL E,K1,K2;
 "*************************"
 "Fix errors for gcc > 10.0"
-"EXTERNAL BREMFR;"
 "*************************"
-%F
-      REAL*4, EXTERNAL :: BREMFR
-%M
-"************************"
+$REAL BREMFR;
+EXTERNAL BREMFR;
+"*************************"
 $REAL    DUMMY,QD,BREMDR;
 "     INITIALIZE BREMFR                                                "
 
@@ -3641,12 +3632,10 @@ implicit none;
 $REAL Z,E,K1,K2;
 "*************************"
 "Fix errors for gcc > 10.0"
-"EXTERNAL BREMFZ;"
 "*************************"
-%F
-      REAL*4, EXTERNAL :: BREMFZ
-%M
-"************************"
+$REAL BREMFZ;
+EXTERNAL BREMFZ;
+"*************************"
 $REAL  DUMMY,BREMDZ,QD;
 "     INITIALIZE BREMFZ                                                "
 
@@ -3774,12 +3763,10 @@ implicit none;
 $REAL Z,E,K1,K2;
 "*************************"
 "Fix errors for gcc > 10.0"
-"EXTERNAL BRMSFZ;"
 "*************************"
-%F
-      REAL*4, EXTERNAL :: BRMSFZ
-%M
-"************************"
+$REAL BRMSFZ;
+EXTERNAL BRMSFZ;
+"*************************"
 $REAL DUMMY,BRMSDZ,QD;
 "     INITIALIZE BRMSFZ                                                "
 
@@ -4031,12 +4018,10 @@ implicit none;
 
 "*************************"
 "Fix errors for gcc > 10.0"
-"EXTERNAL F;"
 "*************************"
-%F
-      REAL*4, EXTERNAL :: F
-%M
-"************************"
+$REAL F;
+EXTERNAL F;
+"*************************"
 DIMENSION T(10,10),R(10),AIT(10),DIF(10),RN(4),TS(2049);
 DIMENSION IBEGS(30),BEGIN(30),FINIS(30),EST(30);
 DIMENSION REGLSV(30);
