@@ -52,6 +52,12 @@ var initializeMinMaxDensitySlider = (
 
   // Make min slider
   var minSliderChangeCallback = (sliderVal) => {
+    if (parseFloat(sliderVal) > parseFloat(maxSlider.value)) {
+      minSlider.setCurrentValue(maxSlider.value)
+    }
+  }
+
+  var minSliderReleaseCallback = (sliderVal) => {
     densityVol.setMinDensityVar(sliderVal, panels)
   }
 
@@ -62,17 +68,24 @@ var initializeMinMaxDensitySlider = (
     startingVal: densityVol.minDensityVar,
     minVal: densityVol.data.minDensity,
     maxVal: densityVol.maxDensityVar,
-    step: 0.01 // TODO: Maybe divide range by 100?
+    step: densityVol.densityStep,
+    onSliderChangeCallback: minSliderChangeCallback,
+    onSliderReleaseCallback: minSliderReleaseCallback
   }
 
   const minSlider = new Slider( // eslint-disable-line no-unused-vars
     minParentDiv,
-    minSliderChangeCallback,
     minSliderParams
   )
 
   // Make max slider
   var maxSliderChangeCallback = (sliderVal) => {
+    if (parseFloat(sliderVal) < parseFloat(minSlider.value)) {
+      maxSlider.setCurrentValue(minSlider.value)
+    }
+  }
+
+  var maxSliderReleaseCallback = (sliderVal) => {
     densityVol.setMaxDensityVar(sliderVal, panels)
   }
 
@@ -83,12 +96,13 @@ var initializeMinMaxDensitySlider = (
     startingVal: densityVol.maxDensityVar,
     minVal: densityVol.minDensityVar,
     maxVal: densityVol.data.maxDensity,
-    step: 0.01
+    step: densityVol.densityStep,
+    onSliderChangeCallback: maxSliderChangeCallback,
+    onSliderReleaseCallback: maxSliderReleaseCallback
   }
 
   const maxSlider = new Slider( // eslint-disable-line no-unused-vars
     maxParentDiv,
-    maxSliderChangeCallback,
     maxSliderParams
   )
 }

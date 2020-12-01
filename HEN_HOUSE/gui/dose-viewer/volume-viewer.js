@@ -558,13 +558,13 @@ class VolumeViewer {
           bottom: 0,
           left: mainViewerDimensions.margin.left
         },
-        style: { 'text-align': 'center' }
+        style: { 'text-align': 'center' },
+        onSliderChangeCallback: onSliceChangeCallback
       }
 
       // Build new slider
       this.sliceSliders[axis] = new Slider(
         selectedDiv,
-        onSliceChangeCallback,
         sliceSliderParams
       )
 

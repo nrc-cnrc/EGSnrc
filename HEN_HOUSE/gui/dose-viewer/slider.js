@@ -42,9 +42,10 @@ class Slider {
    * @param {Object} params The parameters of the slider that includes id, label,
    * format, startingVal, minVal, maxVal, and step.
    */
-  constructor (parentDiv, onValChangeCallback, params) {
+  constructor (parentDiv, params) {
     this.format = params.format
-    this.onValChangeCallback = onValChangeCallback
+    this.onSliderChangeCallback = params.onSliderChangeCallback
+    this.onSliderReleaseCallback = params.onSliderReleaseCallback
     this.buildSliderHtml(
       parentDiv,
       params.id,
@@ -178,24 +179,38 @@ class Slider {
   initializeBehaviour (format, startingVal, minVal, maxVal, step) {
     const sliderNode = this.slider.node()
 
-    var updateSlider = (val) => {
+    var updateSliderOnChange = (val) => {
       // Update slider text
       this.sliderValue.text(format(val))
 
       // Call value callback
-      this.onValChangeCallback(val)
+      if (this.onSliderChangeCallback !== undefined) this.onSliderChangeCallback(val)
     }
 
-    // On slider input, update text
+    var updateSliderOnRelease = (val) => {
+      // Update slider text
+      this.sliderValue.text(format(val))
+
+      // Call value callback
+      if (this.onSliderReleaseCallback !== undefined) this.onSliderReleaseCallback(val)
+    }
+
+    // On slider change, update text
     this.slider.on('input', function () {
-      updateSlider(this.value)
+      updateSliderOnChange(this.value)
+    })
+
+    // On slider release, update slider
+    this.slider.on('change', function () {
+      updateSliderOnRelease(this.value)
     })
 
     if (this.incrementNode) {
       // On increment button push
       this.incrementNode.on('click', function () {
         sliderNode.stepUp(1)
-        updateSlider(sliderNode.value)
+        updateSliderOnRelease(sliderNode.value)
+        updateSliderOnChange(sliderNode.value)
       })
     }
 
@@ -203,7 +218,8 @@ class Slider {
       // On decrement button push
       this.decrementNode.on('click', function () {
         sliderNode.stepDown(1)
-        updateSlider(sliderNode.value)
+        updateSliderOnRelease(sliderNode.value)
+        updateSliderOnChange(sliderNode.value)
       })
     }
 

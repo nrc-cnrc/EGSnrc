@@ -687,6 +687,7 @@ class DoseVolume extends Volume {
     const parentDiv = d3.select('#axis-slider-container')
     var onMaxDoseChangeCallback = (sliderVal) =>
       this.setMaxDose(sliderVal, panels)
+
     const doseSliderParams = {
       id: 'max-dose',
       label: 'Max Dose',
@@ -694,7 +695,8 @@ class DoseVolume extends Volume {
       startingVal: 1.0,
       minVal: 0.0,
       maxVal: 1.5,
-      step: 0.01
+      step: 0.01,
+      onSliderChangeCallback: onMaxDoseChangeCallback
     }
 
     // Remove existing sliders
@@ -702,7 +704,6 @@ class DoseVolume extends Volume {
 
     const maxDoseSlider = new Slider( // eslint-disable-line no-unused-vars
       parentDiv,
-      onMaxDoseChangeCallback,
       doseSliderParams
     )
   }
@@ -791,6 +792,7 @@ class DensityVolume extends Volume {
     this.maxDensityVar = parseFloat(this.data.maxDensity)
     this.minDensityVar = parseFloat(this.data.minDensity)
     this.densityFormat = (args !== undefined) && (args.isDicom) ? d3.format('d') : d3.format('.2f')
+    this.densityStep = (args !== undefined) && (args.isDicom) ? 1.0 : 0.01
     super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true)
   }
 
