@@ -41,3 +41,7 @@ $(PEGS4_EXE): $(FORTRAN_FILE)
 $(FORTRAN_FILE): $(sources)
 	@echo "Generating $(FORTRAN_FILE) from pegs4.mortran"
 	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(sources) -o7 $@ -o8 pegs4_$(my_machine).mortlst
+
+clean:
+	@$(REMOVE) $(FORTRAN_FILE) $(HEN_HOUSE)/bin/$(my_machine)/pegs4.exe
+

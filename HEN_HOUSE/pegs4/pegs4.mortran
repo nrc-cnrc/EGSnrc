@@ -677,7 +677,15 @@ LOGICAL MEDSET,ENGSET;
 $TYPE OPTION(4,$MXOPT),OPT(4),BLKW,NAME(6);
 $TYPE NAMESB(12),IDFNAM(6);
 $INTEGER NH(200);
-EXTERNAL ALKE,ALKEI,EFUNS,GFUNS,RFUNS,ALIN,ALINI,AFFACT;
+"*************************"
+"Fix errors for gcc > 10.0"
+"EXTERNAL ALKE,ALKEI,EFUNS,GFUNS,RFUNS,ALIN,ALINI,AFFACT;"
+"*************************"
+%F
+      REAL*4, EXTERNAL :: ALKE,ALKEI,ALIN,ALINI,AFFACT
+%M
+EXTERNAL EFUNS,GFUNS,RFUNS;
+"************************"
 $EXTERNAL ALOG,EXP;
 
 $INTEGER NOPT,NPTS,IDF,EPSTFL_old,IUNRST_old,IAPRIM_old;
@@ -2596,7 +2604,17 @@ implicit none;
 
 $INTEGER NI,NIMX,NIP,NALM,NFUN;
 $REAL    XL,XU,XR,EP,AX,BX;
-EXTERNAL XFUN,XFI,VFUNS;
+
+"*************************"
+"Fix errors for gcc > 10.0"
+"EXTERNAL XFUN,XFI,VFUNS;"
+"*************************"
+%F
+      REAL*4, EXTERNAL :: XFUN,XFI
+%M
+EXTERNAL VFUNS;
+"************************"
+
 $REAL AF(NALM,NFUN),BF(NALM,NFUN),ZTHR(NFUN),ZEP(NFUN);
 "   QFIT IS A LOGICAL FUNCTION WHICH IS TRUE IF THE STATED NUMBER    "
 "   OF INTERVALS GIVES A SUFFICIENTLY CLOSE FIT.                     "
@@ -3567,7 +3585,14 @@ $REAL FUNCTION BREMRR(E,K1,K2);
 
 implicit none;
 $REAL E,K1,K2;
-EXTERNAL BREMFR;
+"*************************"
+"Fix errors for gcc > 10.0"
+"EXTERNAL BREMFR;"
+"*************************"
+%F
+      REAL*4, EXTERNAL :: BREMFR
+%M
+"************************"
 $REAL    DUMMY,QD,BREMDR;
 "     INITIALIZE BREMFR                                                "
 
@@ -3614,7 +3639,14 @@ $REAL FUNCTION BREMRZ(Z,E,K1,K2);
 
 implicit none;
 $REAL Z,E,K1,K2;
-EXTERNAL BREMFZ;
+"*************************"
+"Fix errors for gcc > 10.0"
+"EXTERNAL BREMFZ;"
+"*************************"
+%F
+      REAL*4, EXTERNAL :: BREMFZ
+%M
+"************************"
 $REAL  DUMMY,BREMDZ,QD;
 "     INITIALIZE BREMFZ                                                "
 
@@ -3740,7 +3772,14 @@ $REAL FUNCTION BRMSRZ(Z,E,K1,K2);
 
 implicit none;
 $REAL Z,E,K1,K2;
-EXTERNAL BRMSFZ;
+"*************************"
+"Fix errors for gcc > 10.0"
+"EXTERNAL BRMSFZ;"
+"*************************"
+%F
+      REAL*4, EXTERNAL :: BRMSFZ
+%M
+"************************"
 $REAL DUMMY,BRMSDZ,QD;
 "     INITIALIZE BRMSFZ                                                "
 
@@ -3990,8 +4029,14 @@ implicit none;
 "EXTERNAL F;"
 "FOR SUN AFB 89/12/27"
 
-EXTERNAL F;
-
+"*************************"
+"Fix errors for gcc > 10.0"
+"EXTERNAL F;"
+"*************************"
+%F
+      REAL*4, EXTERNAL :: F
+%M
+"************************"
 DIMENSION T(10,10),R(10),AIT(10),DIF(10),RN(4),TS(2049);
 DIMENSION IBEGS(30),BEGIN(30),FINIS(30),EST(30);
 DIMENSION REGLSV(30);
@@ -4018,7 +4063,8 @@ DOUBLE PRECISION ERRET,H2TFEX,FI;
 "REAL RVAL,F;"
 "FOR SUN AFB 89/12/27"
 
-REAL RVAL,F;
+"REAL RVAL,F;"
+REAL RVAL;
 
 $INTEGER IBEGS,IER,ISTAGE,IBEG,IEND,L,N,LM1,N2,ISTEP,II,III,I,ISTEP2,IT,NNLEFT;
 $INTEGER MAXTS,MAXTBL,MXSTGE;
@@ -4829,7 +4875,14 @@ $REAL FUNCTION PAIRRR(K,E1,E2);
 
 implicit none;
 $REAL K,E1,E2;
-EXTERNAL PAIRFR;
+"EXTERNAL PAIRFR;"
+%F
+      INTERFACE
+      REAL FUNCTION PAIRFR(X)
+      REAL, INTENT(IN) :: X
+      END FUNCTION PAIRFR
+      END INTERFACE
+%M
 $REAL DUMMY,PAIRDR,QD;
 "     INITIALIZE PAIRFR                                                "
 
@@ -4859,7 +4912,15 @@ $REAL FUNCTION PAIRRZ(Z,K,E1,E2);
 implicit none;
 $REAL Z,K,E1,E2;
 $REAL DUMMY,PAIRDZ,QD;
-EXTERNAL PAIRFZ;
+"EXTERNAL PAIRFZ;"
+%F
+      INTERFACE
+      REAL FUNCTION PAIRFZ(X)
+      REAL, INTENT(IN) :: X
+      END FUNCTION PAIRFZ
+      END INTERFACE
+%M
+
 "     INITIALIZE PAIRFZ                                                "
 
 "    CHANGED"
@@ -5087,7 +5148,14 @@ $REAL FUNCTION QD(F,A,B,MSG);
 implicit none;
 ;COMIN/FileNames/;
 " QD appears to be the only place where it is being written to unit 10"
-EXTERNAL F;
+"EXTERNAL F;"
+%F
+      INTERFACE
+      REAL FUNCTION F(X)
+      REAL, INTENT(IN) :: X
+      END FUNCTION F
+      END INTERFACE
+%M
 "$REAL    F;"
 $REAL    A,B;
 CHARACTER*6 MSG;
