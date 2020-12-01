@@ -687,23 +687,22 @@ class VolumeViewer {
           }
 
           // Convert voxel number to pixel value for both x and y coordinates
-          let xScale, yScale
-          if (panel.zoomTransform) {
-            xScale = panel.zoomTransform.rescaleX(
-              panel.volume.prevSlice[panel.axis].contourXScale
-            )
-            yScale = panel.zoomTransform.rescaleY(
-              panel.volume.prevSlice[panel.axis].contourYScale
-            )
-          } else {
-            xScale = panel.volume.prevSlice[panel.axis].contourXScale
-            yScale = panel.volume.prevSlice[panel.axis].contourYScale
-          }
+          const xScale = panel.volume.prevSlice[panel.axis].xPixelToVoxelScale.invertExtent
+          const yScale = panel.volume.prevSlice[panel.axis].yPixelToVoxelScale.invertExtent
 
-          const coords = [
-            Math.ceil(xScale(voxelNums[0])),
-            Math.ceil(yScale(voxelNums[1]))
-          ]
+          let coords
+
+          if (panel.zoomTransform) {
+            coords = panel.zoomTransform.apply([
+              Math.ceil(xScale(voxelNums[0]).reduce((total, num) => total + num) / 2),
+              Math.ceil(yScale(voxelNums[1]).reduce((total, num) => total + num) / 2)
+            ])
+          } else {
+            coords = [
+              Math.ceil(xScale(voxelNums[0]).reduce((total, num) => total + num) / 2),
+              Math.ceil(yScale(voxelNums[1]).reduce((total, num) => total + num) / 2)
+            ]
+          }
 
           panel.updateMarker(coords, false)
           panel.updateSlice(sliceNum)

@@ -200,31 +200,22 @@ class Volume {
     // Initialize variables to make slice scales
     let xDomain,
       yDomain,
-      xRangeContour,
-      yRangeContour,
-      yPixelToVoxelScale,
+      xRange,
+      yRange,
       contourYScaleDomain
 
     if (xLengthCm > yLengthCm) {
       xDomain = [x[0], x[x.length - 1]]
-      yDomain = [y[y.length - 1] - xLengthCm, y[y.length - 1]]
-      xRangeContour = [0, this.dimensions.width]
-      yRangeContour = [this.dimensions.height * (yLengthCm / xLengthCm), 0]
-      yPixelToVoxelScale = d3
-        .scaleQuantile()
-        .domain([yRangeContour[1], yRangeContour[0]])
-        .range(d3.range(this.data.voxelNumber[dim2], 0, -1))
-      contourYScaleDomain = [1, this.data.voxelNumber[dim2] + 1]
+      yDomain = axis === 'xy' ? [y[y.length - 1], y[y.length - 1] - xLengthCm] : [y[y.length - 1] - xLengthCm, y[y.length - 1]]
+      xRange = [0, this.dimensions.width]
+      yRange = axis === 'xy' ? [this.dimensions.height * (1 - (yLengthCm / xLengthCm)), this.dimensions.height] : [0, this.dimensions.height * (yLengthCm / xLengthCm)]
+      contourYScaleDomain = axis === 'xy' ? [this.data.voxelNumber[dim2], 0] : [0, this.data.voxelNumber[dim2]]
     } else {
       xDomain = [x[0], x[0] + yLengthCm]
-      yDomain = [y[0], y[y.length - 1]]
-      xRangeContour = [0, this.dimensions.width * (xLengthCm / yLengthCm)]
-      yRangeContour = [this.dimensions.height, 0]
-      yPixelToVoxelScale = d3
-        .scaleQuantile()
-        .domain([yRangeContour[1], yRangeContour[0]])
-        .range(d3.range(this.data.voxelNumber[dim2] - 1, -1, -1))
-      contourYScaleDomain = [0, this.data.voxelNumber[dim2]]
+      yDomain = axis === 'xy' ? [y[y.length - 1], y[0]] : [y[0], y[y.length - 1]]
+      xRange = [0, this.dimensions.width * (xLengthCm / yLengthCm)]
+      yRange = axis === 'xy' ? [0, this.dimensions.height] : [this.dimensions.height, 0]
+      contourYScaleDomain = axis === 'xy' ? [this.data.voxelNumber[dim2], 0] : [0, this.data.voxelNumber[dim2]]
     }
 
     // TODO: Clamp scales
@@ -232,18 +223,22 @@ class Volume {
     // Define the screen pixel to volume voxel mapping
     const xPixelToVoxelScale = d3
       .scaleQuantile()
-      .domain(xRangeContour)
+      .domain(xRange)
       .range(d3.range(0, this.data.voxelNumber[dim1], 1))
+    const yPixelToVoxelScale = d3
+      .scaleQuantile()
+      .domain(yRange)
+      .range(axis === 'xy' ? d3.range(0, this.data.voxelNumber[dim2], 1) : d3.range(this.data.voxelNumber[dim2], 0, -1))
+
+    // Define the voxel to screen mapping for dose contours
     const contourXScale = d3
       .scaleLinear()
       .domain([0, this.data.voxelNumber[dim1]])
-      .range(xRangeContour)
-
-    // Bump by 1 to fix misalignment after flipping y axis
+      .range(xRange)
     const contourYScale = d3
       .scaleLinear()
       .domain(contourYScaleDomain)
-      .range(yRangeContour)
+      .range(axis === 'xy' ? yRange.reverse() : yRange)
 
     // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
@@ -268,8 +263,6 @@ class Volume {
         .range([0, totalSlices]), // unit: pixels
       dimensions: this.dimensions,
       axis: axis,
-      contourXScale: contourXScale,
-      contourYScale: contourYScale,
       xPixelToVoxelScale: xPixelToVoxelScale,
       yPixelToVoxelScale: yPixelToVoxelScale,
       contourTransform: ({ type, value, coordinates }) => ({
@@ -892,7 +885,7 @@ class DensityVolume extends Volume {
         context.fillStyle = this.colour(slice.sliceData[newAddress])
         context.fillRect(
           Math.ceil(slice.xScale(slice.x[i])),
-          Math.ceil(slice.yScale(slice.y[j + 1])),
+          Math.ceil(slice.yScale(slice.y[j])),
           dxScaled,
           dyScaled
         )
