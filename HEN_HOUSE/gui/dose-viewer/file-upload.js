@@ -91,12 +91,13 @@ dropArea.on('dragleave drop', () => dropArea.classed('highlight', false))
  * @param {string} fileName The name of the .egsphant file.
  * @param {Object} data     The data object created from the .egsphant file.
  */
-var makeDensityVolume = (fileName, data) => {
+var makeDensityVolume = (fileName, data, args) => {
   const densityVol = new DensityVolume(
     fileName,
     MAIN_VIEWER_DIMENSIONS,
     LEGEND_DIMENSIONS,
-    data
+    data,
+    args
   )
 
   densityVolumeList.push(densityVol)
@@ -205,7 +206,7 @@ function handleFiles (files) {
       const DICOMData = combineDICOMData(files)
       // TODO: Have a naming system for dicom files, perhaps return name from combineDICOMData
       var fileName = 'DicomFiles'
-      makeDensityVolume(fileName, DICOMData)
+      makeDensityVolume(fileName, DICOMData, { isDicom: true })
     }
 
     // If egsphant files

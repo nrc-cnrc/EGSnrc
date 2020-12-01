@@ -29,7 +29,6 @@
 */
 
 // definitions for StandardJS formatter
-/* global d3 */
 
 import { Slider } from './slider.js'
 
@@ -47,7 +46,7 @@ var initializeMinMaxDensitySlider = (
   densityVol,
   panels
 ) => {
-  // Clear level and window divs
+  // Clear min and max divs
   minParentDiv.selectAll('*').remove()
   maxParentDiv.selectAll('*').remove()
 
@@ -59,7 +58,7 @@ var initializeMinMaxDensitySlider = (
   const minSliderParams = {
     id: 'min',
     label: 'Min',
-    format: d3.format('.2f'),
+    format: densityVol.densityFormat,
     startingVal: densityVol.minDensityVar,
     minVal: densityVol.data.minDensity,
     maxVal: densityVol.maxDensityVar,
@@ -80,7 +79,7 @@ var initializeMinMaxDensitySlider = (
   const maxSliderParams = {
     id: 'max',
     label: 'Max',
-    format: d3.format('.2f'),
+    format: densityVol.densityFormat,
     startingVal: densityVol.maxDensityVar,
     minVal: densityVol.minDensityVar,
     maxVal: densityVol.data.maxDensity,

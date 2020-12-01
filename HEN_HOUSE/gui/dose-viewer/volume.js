@@ -784,7 +784,7 @@ class DensityVolume extends Volume {
    */
   constructor (fileName, dimensions, legendDimensions, data, args) {
     super(fileName, dimensions, legendDimensions, args) // call the super class constructor
-    this.addData(data)
+    this.addData(data, args)
     this.prevSliceImg = { xy: {}, yz: {}, xz: {} }
   }
 
@@ -793,10 +793,11 @@ class DensityVolume extends Volume {
    *
    * @param {Object} data The data from parsing the file.
    */
-  addData (data) {
+  addData (data, args) {
     this.data = data
     this.maxDensityVar = parseFloat(this.data.maxDensity)
     this.minDensityVar = parseFloat(this.data.minDensity)
+    this.densityFormat = (args !== undefined) && (args.isDicom) ? d3.format('d') : d3.format('.2f')
     super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true)
   }
 
@@ -964,7 +965,7 @@ class DensityVolume extends Volume {
     const tickValues = d3
       .range(n)
       .map((i) => d3.quantile(this.colour.domain(), i / (n - 1)))
-    const tickFormat = d3.format('.3f')
+    const tickFormat = this.densityFormat
     const tickSize = 15
 
     const gradUrl = gradientUrl(
@@ -1036,17 +1037,20 @@ class DensityVolume extends Volume {
    * @returns {string}
    */
   getMaterialAtVoxelCoords (voxelCoords) {
-    const [x, y, z] = voxelCoords
-    const address =
-      z * (this.data.voxelNumber.x * this.data.voxelNumber.y) +
-      y * this.data.voxelNumber.x +
-      x
+    if (this.data.material) {
+      const [x, y, z] = voxelCoords
+      const address =
+        z * (this.data.voxelNumber.x * this.data.voxelNumber.y) +
+        y * this.data.voxelNumber.x +
+        x
 
-    const divisor = this.data.voxelNumber.x
-    const materialNumber = parseInt(
-      this.data.material[Math.floor(address / divisor)][address % divisor]
-    )
-    return this.data.materialList[materialNumber - 1]
+      const divisor = this.data.voxelNumber.x
+      const materialNumber = parseInt(
+        this.data.material[Math.floor(address / divisor)][address % divisor]
+      )
+      return this.data.materialList[materialNumber - 1]
+    }
+    return ''
   }
 }
 

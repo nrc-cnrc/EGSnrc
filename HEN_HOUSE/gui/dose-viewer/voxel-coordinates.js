@@ -236,8 +236,9 @@ function updateVoxelCoords (
 function updateVoxelInfo (voxelCoords, densityVol, doseVol, id) {
   if (densityVol) {
     const density = densityVol.getDataAtVoxelCoords(voxelCoords)
+    const densityUnits = (densityVol.args !== undefined && densityVol.args.isDicom) ? ' HU' : ' g/cm\u00B3'
     d3.select('#density-value-' + id).node().value =
-      d3.format('.3f')(density) + ' g/cm\u00B3'
+      densityVol.densityFormat(density) + densityUnits
 
     const material = densityVol.getMaterialAtVoxelCoords(voxelCoords)
     d3.select('#material-value-' + id).node().value = material
