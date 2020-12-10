@@ -1,4 +1,4 @@
-#include "neighbour.h"
+#include "mesh_neighbours.h"
 #include <cassert>
 
 using mesh_neighbours::NONE;
