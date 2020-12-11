@@ -40,7 +40,7 @@ import {
 import { processDoseData, processPhantomData } from './read-data.js'
 import { VolumeViewer } from './volume-viewer.js'
 import { DensityVolume, DoseVolume } from './volume.js'
-import { combineDICOMData, processDICOMSlice } from './dicom.js'
+import { combineDICOMDensityData, combineDICOMDoseData, processDICOMSlice } from './dicom.js'
 
 const dropArea = d3.select('#drop-area')
 const progressBar = d3.select('#progress-bar')
@@ -197,28 +197,34 @@ function handleFiles (files) {
   })
 
   Promise.all(promises).then(files => {
-    var dicomList = files.filter(file => file.ext === 'dcm' || file.ext === 'DCM')
-    var egsphantList = files.filter(file => file.ext === 'egsphant')
-    var doseList = files.filter(file => file.ext === '3ddose')
+    const dicomDensityList = files.filter(file => (file.ext === 'dcm' || file.ext === 'DCM') && file.data.type === 'CT Image Storage')
+    const dicomDoseList = files.filter(file => (file.ext === 'dcm' || file.ext === 'DCM') && file.data.type === 'RT Dose Storage')
+    const egsphantList = files.filter(file => file.ext === 'egsphant')
+    const doseList = files.filter(file => file.ext === '3ddose')
 
-    // If DICOM files
-    if (dicomList.length > 0) {
-      const DICOMData = combineDICOMData(files)
-      // TODO: Have a naming system for dicom files, perhaps return name from combineDICOMData
-      var fileName = 'DicomFiles'
-      makeDensityVolume(fileName, DICOMData, { isDicom: true })
+    // If DICOM density files
+    if (dicomDensityList.length > 0) {
+      const DICOMData = combineDICOMDensityData(dicomDensityList)
+      // TODO: Have a naming system for dicom files, perhaps return name from combineDICOMDensityData
+      makeDensityVolume(dicomDensityList[0].fileName.slice(0, 9), DICOMData, { isDicom: true })
+    }
+
+    // If DICOM dose files
+    if (dicomDoseList.length > 0) {
+      const DICOMData = combineDICOMDoseData(dicomDoseList)
+      makeDoseVolume(dicomDoseList[0].fileName.slice(0, 9), DICOMData, { isDicom: true })
     }
 
     // If egsphant files
     if (egsphantList.length > 0) {
       // Create density volume
-      egsphantList.forEach(file => makeDensityVolume(file.fileName, file.content))
+      egsphantList.forEach(file => makeDensityVolume(file.fileName.split('.')[0], file.data))
     }
 
     // If 3ddose files
     if (doseList.length > 0) {
       // Create dose volume
-      doseList.forEach(file => makeDoseVolume(file.fileName, file.content))
+      doseList.forEach(file => makeDoseVolume(file.fileName.split('.')[0], file.data))
     }
 
     // If this is the first volume uploaded, load into first volume viewer
@@ -295,7 +301,7 @@ function readFile (resolve, file, fileNum, totalFiles) {
       return true
     }
 
-    resolve({ content: data, ext: ext, fileName: fileName })
+    resolve({ data: data, ext: ext, fileName: fileName })
 
     console.log('Finished processing data')
     return true

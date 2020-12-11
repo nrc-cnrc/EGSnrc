@@ -1,28 +1,86 @@
 /* global dicomParser */
 
-function combineDICOMData (DICOMList) {
+function combineDICOMDoseData (DICOMList) {
+  // Use the first item in the list to fill in extra information
+  const sampleData = DICOMList[0].data
+  const numVox = sampleData.voxelNumber
+
   // Sort in slice order
-  DICOMList.sort((a, b) => (a.content.data.zPos - b.content.data.zPos))
+  DICOMList.sort((a, b) => (a.data.zPos - b.data.zPos))
 
   // Map out the positions of the z voxel centres
-  var zArrVoxelCenter = DICOMList.map((e) => (e.content.data.zPos))
-  var zVoxSize = zArrVoxelCenter[1] - zArrVoxelCenter[0]
-  var zArr = [zArrVoxelCenter[0] - zVoxSize * 0.5]
+  const zArrVoxelCenter = DICOMList.map((e) => (e.data.zPos))
+  const zVoxSize = zArrVoxelCenter[1] - zArrVoxelCenter[0]
+  const zArr = [zArrVoxelCenter[0] - zVoxSize * 0.5]
+
+  // Get the voxel boundary positions
+  zArrVoxelCenter.forEach((e, i) => { zArr.push(e + zVoxSize * 0.5) })
+
+  // Add the dose matricies together
+  const doseArrays = DICOMList.map((e) => Array.from((e.data.dose)))
+  const doseDense = doseArrays.flat()
+
+  // TODO: Change maxDose in DICOMData to calculated value
+  let maxDose = 0
+  const dose = new Array(numVox.x * numVox.y * DICOMList.length)
+
+  // Populate sparse dose array
+  doseDense.forEach((elem, i) => {
+    if (elem !== 0) {
+      dose[i] = elem
+      if (dose[i] > maxDose) {
+        maxDose = dose[i]
+      }
+    }
+  })
+
+  var DICOMData = {
+    voxelNumber: {
+      x: numVox.x, // The number of x voxels
+      y: numVox.y, // The number of y voxels
+      z: DICOMList.length // The number of z voxels
+    },
+    voxelArr: {
+      x: sampleData.voxelArr.x, // The dimensions of x voxels
+      y: sampleData.voxelArr.y, // The dimensions of y voxels
+      z: zArr // The dimensions of z voxels
+    },
+    voxelSize: {
+      x: sampleData.voxelSize.x, // The voxel size in the x direction
+      y: sampleData.voxelSize.y, // The voxel size in the y direction
+      z: zVoxSize // The voxel size in the z direction
+    },
+    dose: dose, // The flattened dose matrix
+    // error: error, // The flattened error matrix
+    maxDose: 5000 // The maximum dose value
+  }
+
+  return DICOMData
+}
+
+function combineDICOMDensityData (DICOMList) {
+  // Sort in slice order
+  DICOMList.sort((a, b) => (a.data.zPos - b.data.zPos))
+
+  // Map out the positions of the z voxel centres
+  const zArrVoxelCenter = DICOMList.map((e) => (e.data.zPos))
+  const zVoxSize = zArrVoxelCenter[1] - zArrVoxelCenter[0]
+  const zArr = [zArrVoxelCenter[0] - zVoxSize * 0.5]
 
   // Get the voxel boundary positions
   zArrVoxelCenter.forEach((e, i) => { zArr.push(e + zVoxSize * 0.5) })
 
   // Add the density matricies together
-  var densityArrays = DICOMList.map((e) => Array.from((e.content.data.density)))
-  var density = densityArrays.flat()
+  const densityArrays = DICOMList.map((e) => Array.from((e.data.density)))
+  const density = densityArrays.flat()
   // TODO: Remove the use of flat to be compatible with Safari
   // var density = densityArrays.reduce(function (a, b) {
   //   return a.concat(b)
   // })
 
-  var data = DICOMList[0].content.data
+  const data = DICOMList[0].data
 
-  var DICOMData = {
+  const DICOMData = {
     voxelNumber: {
       x: data.voxelNumber.x, // The number of x voxels
       y: data.voxelNumber.y, // The number of y voxels
@@ -48,6 +106,7 @@ function combineDICOMData (DICOMList) {
   return DICOMData
 }
 
+// TODO: Change object name to keyword
 const elementProperties = {
   // General Study
   x00081030: { tag: '(0008,1030)', type: '3', keyword: 'StudyDescription', vm: 1, vr: 'LO' }, // Institution-generated description or classification of the study
@@ -81,6 +140,11 @@ const elementProperties = {
   x00281053: { tag: '(0028,1053)', type: '1', keyword: 'RescaleSlope', vm: 1, vr: 'DS' } // The value m in the equation specified in Rescale Intercept
 }
 
+const dicomTypeDict = {
+  '1.2.840.10008.5.1.4.1.1.481.2': 'RT Dose Storage',
+  '1.2.840.10008.5.1.4.1.1.2': 'CT Image Storage'
+}
+
 var isStringVr = (vr) => !(vr === 'AT' ||
   vr === 'OB' ||
   vr === 'OW' ||
@@ -106,7 +170,15 @@ var getVal = function (dataSet, vr, propertyAddress) {
     // If the value representation is other byte string or other word string
   } else if (vr === 'OB' || vr === 'OW') {
     var dataElement = dataSet.elements[propertyAddress]
-    val = new Uint16Array(dataSet.byteArray.buffer, dataElement.dataOffset, dataElement.length / 2)
+    const bitsAllocated = dataSet.uint16('x00280100')
+
+    if (bitsAllocated === 16) {
+      val = new Uint16Array(dataSet.byteArray.buffer, dataElement.dataOffset, dataElement.length / 2)
+    } else if (bitsAllocated === 32) {
+      val = new Uint32Array(dataSet.byteArray.buffer, dataElement.dataOffset, dataElement.length / 4)
+    } else {
+      console.log('Unknown bits allocated')
+    }
 
     // If the value representation is an attribute tag
   } else if (vr === 'AT') {
@@ -120,15 +192,16 @@ var getVal = function (dataSet, vr, propertyAddress) {
 }
 
 function processDICOMSlice (arrayBuffer) {
-  var byteArray = new Uint8Array(arrayBuffer)
+  const byteArray = new Uint8Array(arrayBuffer)
   var kb = byteArray.length / 1024
   var mb = kb / 1024
   var byteStr = mb > 1 ? mb.toFixed(3) + ' MB' : kb.toFixed(0) + ' KB'
   console.log('Status: Parsing ' + byteStr + ' bytes, please wait..')
 
   try {
-    var dataSet = dicomParser.parseDicom(byteArray, { untilTag: 'x7fe00010' })
-    var propertyValues = {}
+    const dataSet = dicomParser.parseDicom(byteArray, { untilTag: 'x7fe00010' })
+    const dicomType = dicomTypeDict[dataSet.string('x00020002')]
+    const propertyValues = {}
 
     // Iterate through all element properties
     for (const propertyAddress in elementProperties) {
@@ -138,8 +211,6 @@ function processDICOMSlice (arrayBuffer) {
       if (element !== undefined) {
         var val = getVal(dataSet, property.vr, propertyAddress)
         if (val !== undefined) propertyValues[property.keyword] = val
-      } else {
-        // console.log(property.keyword + ' is undefined')
       }
     }
 
@@ -164,18 +235,8 @@ function processDICOMSlice (arrayBuffer) {
     var xArr = [...Array(nCols + 1)].map((e, i) => (XY[0] * xVoxSize * (i - 0.5) + Sx))
     var yArr = [...Array(nRows + 1)].map((e, j) => (XY[4] * yVoxSize * (j - 0.5) + Sy))
 
-    // Rescale the density values
-    var m = parseFloat(propertyValues.RescaleSlope)
-    var b = parseFloat(propertyValues.RescaleIntercept)
-
-    const pixelDataScaled = new Float32Array(propertyValues.PixelData.length)
-
-    for (var i = 0; i < propertyValues.PixelData.length; i++) {
-      val = m * propertyValues.PixelData[i] + b
-      pixelDataScaled[i] = val
-    }
-
     var DICOMslice = {
+      type: dicomType,
       sliceNum: parseInt(propertyValues.InstanceNumber),
       voxelNumber: {
         x: nCols, // The number of x voxels
@@ -190,18 +251,34 @@ function processDICOMSlice (arrayBuffer) {
         y: yVoxSize, // The voxel size in the y direction
         z: parseFloat(propertyValues.SliceThickness) / 10.0 || 0 // The voxel size in the z direction
       },
-      zPos: Sz,
-      density: pixelDataScaled // The flattened density matrix
+      zPos: Sz
+      // density: pixelDataScaled // The flattened density matrix
       // materialList: materialList, // The materials in the phantom
       // material: material, // The flattened material matrix
       // maxDensity: maxDensity // The maximum density value
     }
 
-    return { data: DICOMslice, type: 'density' }
+    if (dicomType === 'RT Dose Storage') {
+      DICOMslice.dose = propertyValues.PixelData
+      DICOMslice.units = propertyValues.DoseUnits
+    } else if (dicomType === 'CT Image Storage') {
+      // Rescale the density values
+      const m = parseFloat(propertyValues.RescaleSlope)
+      const b = parseFloat(propertyValues.RescaleIntercept)
+      const pixelDataScaled = new Float32Array(propertyValues.PixelData.length)
+
+      for (var i = 0; i < propertyValues.PixelData.length; i++) {
+        val = m * propertyValues.PixelData[i] + b
+        pixelDataScaled[i] = val
+
+        DICOMslice.density = pixelDataScaled
+      }
+    }
+    return DICOMslice
   } catch (ex) {
     console.log('Error parsing byte stream', ex)
     return true
   }
 }
 
-export { combineDICOMData, processDICOMSlice }
+export { combineDICOMDensityData, combineDICOMDoseData, processDICOMSlice }
