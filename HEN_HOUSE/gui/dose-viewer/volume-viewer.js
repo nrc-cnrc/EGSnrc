@@ -41,7 +41,7 @@ import {
 import { DoseProfile } from './dose-profile.js'
 import { Panel } from './panel.js'
 import { Slider } from './slider.js'
-import { DoseComparisonVolume, drawAxes } from './volume.js'
+import { DoseComparisonVolume } from './volume.js'
 import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
 import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
 
@@ -86,6 +86,89 @@ class VolumeViewer {
     this.initializeDispatch()
   }
 
+  drawAxes (zoomTransform, svgAxis, slice) {
+    // If density is already plotted, move dose slice?
+
+    svgAxis.selectAll('.x-axis, .y-axis, .x-axis-grid, .y-axis-grid').remove()
+
+    // TODO: Check for existing scale on axes
+    // If there is existing transformation, apply it
+    const xScale = zoomTransform
+      ? zoomTransform.rescaleX(slice.xScale)
+      : slice.xScale
+    const yScale = zoomTransform
+      ? zoomTransform.rescaleY(slice.yScale)
+      : slice.yScale
+
+    // Create and append the x and y axes
+    var xAxis = d3.axisBottom().scale(xScale).ticks(6)
+    var yAxis = d3.axisLeft().scale(yScale).ticks(6)
+
+    svgAxis
+      .append('g')
+      .attr('class', 'x-axis')
+      .attr('transform', 'translate(0,' + slice.dimensions.height + ')')
+      .style('font-size', '12px')
+      .call(xAxis)
+    svgAxis
+      .append('g')
+      .attr('class', 'y-axis')
+      .style('font-size', '12px')
+      .call(yAxis)
+
+    // Create and append the x and y grids
+    var xAxisGrid = d3
+      .axisBottom()
+      .scale(xScale)
+      .tickSize(-slice.dimensions.height)
+      .tickFormat('')
+      .ticks(6)
+    var yAxisGrid = d3
+      .axisLeft()
+      .scale(yScale)
+      .tickSize(-slice.dimensions.width)
+      .tickFormat('')
+      .ticks(6)
+
+    svgAxis
+      .append('g')
+      .attr('class', 'x-axis-grid')
+      .attr('transform', 'translate(0,' + slice.dimensions.height + ')')
+      .call(xAxisGrid)
+    svgAxis.append('g').attr('class', 'y-axis-grid').call(yAxisGrid)
+
+    // Label for x axis
+    svgAxis
+      .append('text')
+      .attr('class', 'x-axis')
+      .attr(
+        'transform',
+        'translate(' +
+        slice.dimensions.width / 2 +
+        ' ,' +
+        (slice.dimensions.fullHeight - 25) +
+        ')'
+      )
+      .style('text-anchor', 'middle')
+      .text(slice.axis[0] + ' (cm)')
+
+    // Label for y axis
+    svgAxis
+      .append('text')
+      .attr('class', 'y-axis')
+      .attr('transform', 'rotate(-90)')
+      .attr(
+        'transform',
+        'translate(' +
+        (25 - slice.dimensions.margin.left) +
+        ' ,' +
+        slice.dimensions.height / 2 +
+        ') rotate(-90)'
+      )
+      .style('text-anchor', 'middle')
+      .text(slice.axis[1] + ' (cm)')
+  }
+
   /**
    * Set the dose volume of the VolumeViewer.
    *
@@ -107,17 +190,23 @@ class VolumeViewer {
 
     const dims = 'zxy'
     const sliceNum = {}
+    const slicePos = {}
 
     AXES.forEach((axis, i) => {
-      // Get the correct slice number
+      // Get the correct slice number and position
+      var getPos = (arr, i) => (arr[i] + arr[i + 1]) / 2.0
       sliceNum[axis] = this.densityVolume
         ? this.densityVolume.prevSlice[axis].sliceNum
         : Math.floor(doseVol.data.voxelNumber[dims[i]] / 2)
+      slicePos[axis] = this.densityVolume
+        ? this.densityVolume.prevSlice[axis].slicePos
+        : getPos(doseVol.data.voxelArr[dims[i]], Math.floor(doseVol.data.voxelNumber[dims[i]] / 2))
 
-      const slice = doseVol.getSlice(axis, sliceNum[axis])
+      const args = this.densityVolume ? this.densityVolume.prevSlice : undefined
+      const slice = doseVol.getSlice(axis, slicePos[axis], args)
       doseVol.drawDose(slice, this.panels[axis].zoomTransform)
       // Update the axis
-      drawAxes(
+      this.drawAxes(
         this.panels[axis].zoomTransform,
         this.svgObjs['axis-svg'][axis],
         slice
@@ -166,6 +255,7 @@ class VolumeViewer {
     densityVol.initializeLegend()
     const dims = 'zxy'
     const sliceNum = {}
+    const slicePos = {}
 
     AXES.forEach((axis, i) => {
       // Get the correct slice number
@@ -173,10 +263,16 @@ class VolumeViewer {
         ? this.doseVolume.prevSlice[axis].sliceNum
         : Math.floor(densityVol.data.voxelNumber[dims[i]] / 2)
 
-      const slice = densityVol.getSlice(axis, sliceNum[axis])
+      var getPos = (arr, i) => (arr[i] + arr[i + 1]) / 2.0
+
+      slicePos[axis] = this.doseVolume
+        ? this.doseVolume.prevSlice[axis].slicePos
+        : getPos(densityVol.data.voxelArr[dims[i]], Math.floor(densityVol.data.voxelNumber[dims[i]] / 2))
+
+      const slice = densityVol.getSlice(axis, slicePos[axis])
       densityVol.drawDensity(slice, this.panels[axis].zoomTransform)
       // Update the axis
-      drawAxes(
+      this.drawAxes(
         this.panels[axis].zoomTransform,
         this.svgObjs['axis-svg'][axis],
         slice

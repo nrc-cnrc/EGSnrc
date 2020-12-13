@@ -150,11 +150,17 @@ class Panel {
     let slice
 
     if (this.densityVol) {
-      slice = this.densityVol.getSlice(this.axis, sliceNum)
+      const slicePos = this.densityVol.prevSlice[this.axis].zScale.invert(sliceNum)
+      slice = this.densityVol.getSlice(this.axis, slicePos)
       this.densityVol.drawDensity(slice, this.zoomTransform)
     }
     if (this.doseVol) {
-      slice = this.doseVol.getSlice(this.axis, sliceNum)
+      const args = this.densityVol ? this.densityVol.prevSlice : undefined
+      const slicePos = this.densityVol
+        ? this.densityVol.prevSlice[this.axis].zScale.invert(sliceNum)
+        : this.doseVol.prevSlice[this.axis].zScale.invert(sliceNum)
+
+      slice = this.doseVol.getSlice(this.axis, slicePos, args)
       this.doseVol.drawDose(slice, this.zoomTransform)
     }
   }
@@ -196,6 +202,7 @@ class Panel {
     function dragended () {
       d3.select(this).attr('cursor', 'grab')
 
+      // TODO: Use applyX and applyY
       const x = panel.zoomTransform
         ? applyTransform(d3.event.x, panel.zoomTransform, 'x')
         : d3.event.x

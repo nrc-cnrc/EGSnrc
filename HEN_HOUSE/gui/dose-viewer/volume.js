@@ -35,86 +35,6 @@
 import { volumeViewerList } from './index.js'
 import { Slider } from './slider.js'
 
-var drawAxes = (zoomTransform, svgAxis, slice) => {
-  svgAxis.selectAll('.x-axis, .y-axis, .x-axis-grid, .y-axis-grid').remove()
-
-  // If there is existing transformation, apply it
-  const xScale = zoomTransform
-    ? zoomTransform.rescaleX(slice.xScale)
-    : slice.xScale
-  const yScale = zoomTransform
-    ? zoomTransform.rescaleY(slice.yScale)
-    : slice.yScale
-
-  // Create and append the x and y axes
-  var xAxis = d3.axisBottom().scale(xScale).ticks(6)
-  var yAxis = d3.axisLeft().scale(yScale).ticks(6)
-
-  svgAxis
-    .append('g')
-    .attr('class', 'x-axis')
-    .attr('transform', 'translate(0,' + slice.dimensions.height + ')')
-    .style('font-size', '12px')
-    .call(xAxis)
-  svgAxis
-    .append('g')
-    .attr('class', 'y-axis')
-    .style('font-size', '12px')
-    .call(yAxis)
-
-  // Create and append the x and y grids
-  var xAxisGrid = d3
-    .axisBottom()
-    .scale(xScale)
-    .tickSize(-slice.dimensions.height)
-    .tickFormat('')
-    .ticks(6)
-  var yAxisGrid = d3
-    .axisLeft()
-    .scale(yScale)
-    .tickSize(-slice.dimensions.width)
-    .tickFormat('')
-    .ticks(6)
-
-  svgAxis
-    .append('g')
-    .attr('class', 'x-axis-grid')
-    .attr('transform', 'translate(0,' + slice.dimensions.height + ')')
-    .call(xAxisGrid)
-  svgAxis.append('g').attr('class', 'y-axis-grid').call(yAxisGrid)
-
-  // Label for x axis
-  svgAxis
-    .append('text')
-    .attr('class', 'x-axis')
-    .attr(
-      'transform',
-      'translate(' +
-      slice.dimensions.width / 2 +
-      ' ,' +
-      (slice.dimensions.fullHeight - 25) +
-      ')'
-    )
-    .style('text-anchor', 'middle')
-    .text(slice.axis[0] + ' (cm)')
-
-  // Label for y axis
-  svgAxis
-    .append('text')
-    .attr('class', 'y-axis')
-    .attr('transform', 'rotate(-90)')
-    .attr(
-      'transform',
-      'translate(' +
-      (25 - slice.dimensions.margin.left) +
-      ' ,' +
-      slice.dimensions.height / 2 +
-      ') rotate(-90)'
-    )
-    .style('text-anchor', 'middle')
-    .text(slice.axis[1] + ' (cm)')
-}
-
 /** @class Volume represents a dose or density file and includes classes the
  * get slices of data.  */
 class Volume {
@@ -173,7 +93,7 @@ class Volume {
    * @param {string} dataName The type of data, either "density" or "dose".
    * @returns {Object}
    */
-  getSlice (axis, sliceNum, dataName) {
+  getSlice (axis, slicePos, dataName, args) {
     // TODO: Cache previous slices
     // TODO: Only redefine slice attributes on axis change
     // For slice structure
@@ -201,24 +121,41 @@ class Volume {
     let xDomain,
       yDomain,
       xRange,
-      yRange,
-      contourYScaleDomain
+      yRange
 
-    if (xLengthCm > yLengthCm) {
-      xDomain = [x[0], x[x.length - 1]]
-      yDomain = axis === 'xy' ? [y[y.length - 1], y[y.length - 1] - xLengthCm] : [y[y.length - 1] - xLengthCm, y[y.length - 1]]
-      xRange = [0, this.dimensions.width]
-      yRange = axis === 'xy' ? [this.dimensions.height * (1 - (yLengthCm / xLengthCm)), this.dimensions.height] : [0, this.dimensions.height * (yLengthCm / xLengthCm)]
-      contourYScaleDomain = axis === 'xy' ? [this.data.voxelNumber[dim2], 0] : [0, this.data.voxelNumber[dim2]]
+    if (args !== undefined) {
+      xDomain = args[axis].xScale.domain()
+      yDomain = args[axis].yScale.domain()
+      xRange = [Math.round(args[axis].xScale(x[0])), Math.round(args[axis].xScale(x[x.length - 1]))]
+      yRange = [Math.round(args[axis].yScale(y[0])), Math.round(args[axis].yScale(y[y.length - 1]))]
     } else {
-      xDomain = [x[0], x[0] + yLengthCm]
-      yDomain = axis === 'xy' ? [y[y.length - 1], y[0]] : [y[0], y[y.length - 1]]
-      xRange = [0, this.dimensions.width * (xLengthCm / yLengthCm)]
-      yRange = axis === 'xy' ? [0, this.dimensions.height] : [this.dimensions.height, 0]
-      contourYScaleDomain = axis === 'xy' ? [this.data.voxelNumber[dim2], 0] : [0, this.data.voxelNumber[dim2]]
+      if (xLengthCm > yLengthCm) {
+        xDomain = [x[0], x[x.length - 1]]
+        yDomain = axis === 'xy' ? [y[y.length - 1], y[y.length - 1] - xLengthCm] : [y[y.length - 1] - xLengthCm, y[y.length - 1]]
+        xRange = [0, this.dimensions.width]
+        yRange = axis === 'xy' ? [this.dimensions.height * (1 - (yLengthCm / xLengthCm)), this.dimensions.height] : [0, this.dimensions.height * (yLengthCm / xLengthCm)]
+      } else {
+        xDomain = [x[0], x[0] + yLengthCm]
+        yDomain = axis === 'xy' ? [y[y.length - 1], y[0]] : [y[0], y[y.length - 1]]
+        xRange = [0, this.dimensions.width * (xLengthCm / yLengthCm)]
+        yRange = axis === 'xy' ? [0, this.dimensions.height] : [this.dimensions.height, 0]
+      }
     }
 
     // TODO: Clamp scales
+    // Define screen pixel to real length mapping
+    const xScale = d3
+      .scaleLinear()
+      .domain(xDomain)
+      .range([0, this.dimensions.width])
+    const yScale = d3
+      .scaleLinear()
+      .domain(yDomain)
+      .range([this.dimensions.height, 0])
+    const zScale = d3
+      .scaleLinear()
+      .domain([z[0], z[z.length - 1]])
+      .range([0, totalSlices])
 
     // Define the screen pixel to volume voxel mapping
     const xPixelToVoxelScale = d3
@@ -237,9 +174,10 @@ class Volume {
       .range(xRange)
     const contourYScale = d3
       .scaleLinear()
-      .domain(contourYScaleDomain)
+      .domain(axis === 'xy' ? [this.data.voxelNumber[dim2], 0] : [0, this.data.voxelNumber[dim2]])
       .range(axis === 'xy' ? yRange.reverse() : yRange)
 
+    var sliceNum = zScale(slicePos)
     // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
       dx: this.data.voxelSize[dim1],
@@ -249,18 +187,10 @@ class Volume {
       x: x,
       y: y,
       totalSlices: totalSlices,
-      xScale: d3
-        .scaleLinear()
-        .domain(xDomain)
-        .range([0, this.dimensions.width]),
-      yScale: d3
-        .scaleLinear()
-        .domain(yDomain)
-        .range([this.dimensions.height, 0]),
-      zScale: d3
-        .scaleLinear()
-        .domain([z[0], z[z.length - 1]])
-        .range([0, totalSlices]), // unit: pixels
+      xScale: xScale,
+      yScale: yScale,
+      zScale: zScale, // unit: pixels
+      slicePos: slicePos,
       dimensions: this.dimensions,
       axis: axis,
       xPixelToVoxelScale: xPixelToVoxelScale,
@@ -427,8 +357,8 @@ class DoseVolume extends Volume {
    * @param {number} sliceNum The number of the slice.
    * @returns {Object}
    */
-  getSlice (axis, sliceNum) {
-    return super.getSlice(axis, sliceNum, 'dose')
+  getSlice (axis, slicePos, args) {
+    return super.getSlice(axis, slicePos, 'dose', args)
   }
 
   /**
@@ -675,7 +605,7 @@ class DoseVolume extends Volume {
    * @returns {number}
    */
   getErrorAtVoxelCoords (voxelCoords) {
-    return super.getDataAtVoxelCoords(voxelCoords, 'error')
+    return this.error ? super.getDataAtVoxelCoords(voxelCoords, 'error') : 0
   }
 
   /**
@@ -837,8 +767,8 @@ class DensityVolume extends Volume {
    * @param {number} sliceNum The number of the slice.
    * @returns {Object}
    */
-  getSlice (axis, sliceNum) {
-    return super.getSlice(axis, sliceNum, 'density')
+  getSlice (axis, slicePos) {
+    return super.getSlice(axis, slicePos, 'density')
   }
 
   /**
@@ -1049,4 +979,4 @@ class DensityVolume extends Volume {
   }
 }
 
-export { DensityVolume, DoseComparisonVolume, DoseVolume, drawAxes }
+export { DensityVolume, DoseComparisonVolume, DoseVolume }
