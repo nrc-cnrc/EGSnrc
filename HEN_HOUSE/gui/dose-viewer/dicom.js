@@ -5,24 +5,33 @@ function combineDICOMDoseData (DICOMList) {
   const sampleData = DICOMList[0].data
   const numVox = sampleData.voxelNumber
 
-  // Sort in slice order
-  DICOMList.sort((a, b) => (a.data.zPos - b.data.zPos))
+  let zVoxNum, zVoxSize, zArr
+  if (numVox.z !== undefined) {
+    // If all frame data is given in the DICOM file, use data from sample
+    zVoxNum = numVox.z
+    zVoxSize = sampleData.voxelSize.z
+    zArr = sampleData.voxelArr.z
+  } else {
+    // Sort in slice order
+    DICOMList.sort((a, b) => (a.data.zPos - b.data.zPos))
 
-  // Map out the positions of the z voxel centres
-  const zArrVoxelCenter = DICOMList.map((e) => (e.data.zPos))
-  const zVoxSize = zArrVoxelCenter[1] - zArrVoxelCenter[0]
-  const zArr = [zArrVoxelCenter[0] - zVoxSize * 0.5]
+    // Map out the positions of the z voxel centres
+    const zArrVoxelCenter = DICOMList.map((e) => (e.data.zPos))
+    zVoxNum = DICOMList.length
+    zVoxSize = zArrVoxelCenter[1] - zArrVoxelCenter[0]
+    zArr = [zArrVoxelCenter[0] - zVoxSize * 0.5]
 
-  // Get the voxel boundary positions
-  zArrVoxelCenter.forEach((e, i) => { zArr.push(e + zVoxSize * 0.5) })
+    // Get the voxel boundary positions
+    zArrVoxelCenter.forEach((e, i) => { zArr.push(e + zVoxSize * 0.5) })
+  }
 
   // Add the dose matricies together
   const doseArrays = DICOMList.map((e) => Array.from((e.data.dose)))
   const doseDense = doseArrays.flat()
 
-  // TODO: Change maxDose in DICOMData to calculated value
+  // Find the max dose and create the dose matrix
   let maxDose = 0
-  const dose = new Array(numVox.x * numVox.y * DICOMList.length)
+  const dose = new Array(numVox.x * numVox.y * zVoxNum)
 
   // Populate sparse dose array
   doseDense.forEach((elem, i) => {
@@ -38,7 +47,7 @@ function combineDICOMDoseData (DICOMList) {
     voxelNumber: {
       x: numVox.x, // The number of x voxels
       y: numVox.y, // The number of y voxels
-      z: DICOMList.length // The number of z voxels
+      z: zVoxNum // The number of z voxels
     },
     voxelArr: {
       x: sampleData.voxelArr.x, // The dimensions of x voxels
@@ -52,7 +61,7 @@ function combineDICOMDoseData (DICOMList) {
     },
     dose: dose, // The flattened dose matrix
     // error: error, // The flattened error matrix
-    maxDose: 5000 // The maximum dose value
+    maxDose: maxDose // The maximum dose value
   }
 
   return DICOMData
@@ -135,6 +144,7 @@ const elementProperties = {
   // RT-Dose
   x30040002: { tag: '(3004,0002)', type: '1', keyword: 'DoseUnits', vm: 1, vr: 'CS' }, // Either GY or RELATIVE
   x30040004: { tag: '(3004,0004)', type: '1', keyword: 'DoseType', vm: 1, vr: 'CS' }, // Either PHYSICAL,  EFFECTIVE, or ERROR
+  x3004000c: { tag: '(3004,000C)', type: '1C', keyword: 'GridFrameOffsetVector', vm: '2-n', vr: 'DS' }, // Contains the dose image plane offsets in mm
   // CT Image
   x00281052: { tag: '(0028,1052)', type: '1', keyword: 'RescaleIntercept', vm: 1, vr: 'DS' }, // The value b in relationship between stored values (SV) and the output units
   x00281053: { tag: '(0028,1053)', type: '1', keyword: 'RescaleSlope', vm: 1, vr: 'DS' } // The value m in the equation specified in Rescale Intercept
@@ -248,20 +258,32 @@ function processDICOMSlice (arrayBuffer) {
       },
       voxelSize: {
         x: xVoxSize, // The voxel size in the x direction
-        y: yVoxSize, // The voxel size in the y direction
-        z: parseFloat(propertyValues.SliceThickness) / 10.0 || 0 // The voxel size in the z direction
+        y: yVoxSize // The voxel size in the y direction
       },
       zPos: Sz
-      // density: pixelDataScaled // The flattened density matrix
-      // materialList: materialList, // The materials in the phantom
-      // material: material, // The flattened material matrix
-      // maxDensity: maxDensity // The maximum density value
+    }
+
+    // If there are multiple frames
+    if (propertyValues.FrameIncrementPointer !== undefined) {
+      // Position relative to Image Position (patient)
+      const gridFrames = dataSet.string(propertyValues.FrameIncrementPointer).split('\\').map((v) => {
+        return Number(v) / 10.0
+      })
+      const nSlices = parseInt(propertyValues.NumberOfFrames)
+      const zVoxSize = Math.abs(gridFrames[1] - gridFrames[0])
+      const zArr = gridFrames.map((frameOffset) => (Sz + frameOffset + zVoxSize * 0.5))
+      zArr.unshift(Sz - zVoxSize * 0.5)
+
+      DICOMslice.voxelNumber.z = nSlices
+      DICOMslice.voxelArr.z = zArr
+      DICOMslice.voxelSize.z = zVoxSize
     }
 
     if (dicomType === 'RT Dose Storage') {
       DICOMslice.dose = propertyValues.PixelData
       DICOMslice.units = propertyValues.DoseUnits
     } else if (dicomType === 'CT Image Storage') {
+      // TODO: materialList and material matrix
       // Rescale the density values
       const m = parseFloat(propertyValues.RescaleSlope)
       const b = parseFloat(propertyValues.RescaleIntercept)
