@@ -742,7 +742,7 @@ extern __extc__ struct EGS_Brempr *the_brempr;
 
 /*! \brief The address of the mortran PHOTIN common block as a
   pointer to a C-structure of type EGS_Photin */
-extern __etc__ struct EGS_Photin *the_photin;
+extern __extc__ struct EGS_Photin *the_photin;
 
 /* ******************* EGSnrc interface functions *************************/
 
