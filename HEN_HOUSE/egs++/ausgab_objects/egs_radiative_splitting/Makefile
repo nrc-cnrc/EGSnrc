@@ -34,14 +34,47 @@ include $(SPEC_DIR)egspp_$(my_machine).conf
 
 DEFS = $(DEF1) -DBUILD_RADIATIVE_SPLITTING_DLL
 
+egs_interface = $(HEN_HOUSE)interface
+EGS_INTERFACE = $(egs_interface)$(DSEP)
+
+ABS_EGSPP = $(HEN_HOUSE)$(EGSPP)$(DSEP)
+
+#required mortran files
+CPP_SOURCES = $(EGS_SOURCEDIR)egsnrc.macros $(MACHINE_MACROS) \
+            $(EGS_SOURCEDIR)pegs4_macros.mortran \
+            $(EGS_INTERFACE)egs_c_interface2.macros \
+            $(EGSPP_USER_MACROS) \
+            $(MACHINE_MORTRAN) $(EGS_SOURCEDIR)egs_utilities.mortran \
+            $(EGS_INTERFACE)egs_c_interface2.mortran \
+            $(EGS_SOURCEDIR)transportp.macros \
+            $(EGS_SOURCEDIR)get_inputs.mortran\
+            $(EGS_SOURCEDIR)get_media_inputs.mortran \
+            $(EGS_SOURCEDIR)pegs4_routines.mortran \
+            $(EGS_SOURCEDIR)egsnrc.mortran
+
+dep_advanced_application = $(ABS_EGSPP)egs_advanced_application.cpp \
+        $(ABS_EGSPP)egs_advanced_application.h array_sizes.h \
+        $(ABS_EGSPP)egs_input.h $(ABS_EGSPP)egs_base_source.h \
+        $(ABS_EGSPP)egs_object_factory.h $(ABS_EGSPP)egs_timer.h \
+        $(ABS_EGSPP)egs_application.h $(ABS_EGSPP)egs_run_control.h
+
 library = egs_radiative_splitting
 lib_files = egs_radiative_splitting
 my_deps = $(common_ausgab_deps)
-extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
+extra_dep = $(addprefix $(DSOLIBS), $(my_deps)) egsnrc_$(my_machine).$(obje) egs_interface2_$(my_machine).$(obje) egs_advanced_application_lib_osx3.o
+extra = egsnrc_$(my_machine).$(obje) egs_interface2_$(my_machine).$(obje) egs_advanced_application_lib_osx3.o
+lib_link2 += $(fortran_libs)
+interface_incl = -I. -I$(HEN_HOUSE)lib$(DSEP)$(my_machine) -I$(egs_interface)
 
 include $(SPEC_DIR)egspp_libs.spec
 
 $(DSO2)$(library).$(obje): $(library).cpp $(library).h
+
+egs_advanced_application_lib_$(my_machine).$(obje): $(dep_advanced_application)
+	$(CXX) $(interface_incl) $(DEF1) $(DEF_USER) $(opt) -c $(COUT)$@ $<
+
+egs_interface2_$(my_machine).$(obje): $(EGS_INTERFACE)egs_interface2.c $(common_h_files1) array_sizes.h
+	$(CXX) $(interface_incl) $(DEF1) $(DEF_USER) $(opt) -c $(COUT)$@ $<
 
 egsnrc_$(my_machine).$(obje): egsnrc_$(my_machine).F array_sizes.h
 	$(F77) $(FC_FLAGS) $(FDEFS) -c $(FOUT)$@ $<
@@ -49,8 +82,15 @@ egsnrc_$(my_machine).$(obje): egsnrc_$(my_machine).F array_sizes.h
 egsnrc_$(my_machine).F: $(CPP_SOURCES)
 	@echo "Mortran compiling EGSnrc sources ..."
 	@$(MORTRAN_EXE) -s -i -d $(MORTRAN_DATA) -f $(CPP_SOURCES) -o7 $@ \
-	-o8 $(@:.F=.mortlst)
+           -o8 $(@:.F=.mortlst)
 
 test:
 	@echo "common_h2: $(common_h2)"
 	@echo "extra_dep: $(extra_dep)"
+	@echo "CPP_SOURCES: $(CPP_SOURCES)"
+	@echo "interface_incl: $(interface_incl)"
+	@echo "extra: $(extra)"
+	@echo "lib_objects: $(lib_objects)"
+	@echo "lib_link1: $(lib_link1)"
+	@echo "lib_link2: $(lib_link2)"
+

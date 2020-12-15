@@ -52,15 +52,16 @@
 #include "array_sizes.h"
 
 //subroutines and functions we need from egsnrc.mortran
-
-extern "C" void F77_OBJ_(brems,BREMS)(){;}
-extern "C" void F77_OBJ_(annih,ANNIH)(){;}
-extern "C" void F77_OBJ_(annih_at_rest,ANNIH_AT_REST)(){;}
-extern "C" void F77_OBJ_(photo,PHOTO)(){;}
-extern "C" void F77_OBJ_(pair,PAIR)(){;}
-extern "C" void F77_OBJ_(compt,COMPT)(){;}
-extern "C" void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(int &medium, EGS_Float &e, EGS_Float &gle, EGS_I32 &lgle, EGS_Float &costhe, EGS_Float &sinthe){;}
-extern "C" EGS_Float F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float &nb_xdata, EGS_Float &nb_fdata, EGS_Float &nb_wdata, EGS_Float &nb_idata){ return 0.0;}
+//TODO: figure out why these are not replaced by egsnrc routines when
+//linked to application
+extern "C" void F77_OBJ_(brems,BREMS)();
+extern "C" void F77_OBJ_(annih,ANNIH)();
+extern "C" void F77_OBJ_(annih_at_rest,ANNIH_AT_REST)();
+extern "C" void F77_OBJ_(photo,PHOTO)();
+extern "C" void F77_OBJ(pair,PAIR)();
+extern "C" void F77_OBJ_(compt,COMPT)();
+extern "C" void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(int &medium, EGS_Float &e, EGS_Float &gle, EGS_I32 &lgle, EGS_Float &costhe, EGS_Float &sinthe);
+extern "C" EGS_Float F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float &nb_xdata, EGS_Float &nb_fdata, EGS_Float &nb_wdata, EGS_Float &nb_idata);
 
 //local structures required
 struct DBS_Aux {
@@ -196,6 +197,8 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     //seems like a temporary solution
     int is_fat = (latch & (1 << 31));
 
+    egsInformation(" iarg = %d\n",iarg);
+
     if( iarg == EGS_Application::BeforeBrems ) {
         double E = app->top_p.E;
         EGS_Float wt = app->top_p.wt;
@@ -219,6 +222,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             app->setLatch(latch);
         }
         else {
+            egsInformation("E=%g, wt=%g\n",E,wt);
             app->setRadiativeSplitting(1);
             F77_OBJ(brems,BREMS)();
             int nstart = np+2, aux=0;
@@ -393,7 +397,7 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     egsInformation("smartBrems: E=%g be=%g x=(%g,%g,%g) wt=%g nspl=%d\n",ener,
             be_factor,x.x,x.y,x.z,the_stack->wt[np],nbrspl);
     */
-    //egsInformation("smartBrems: E=%g x=(%g,%g,%g) wt=%g nspl=%d\n",ener,x.x,x.y,x.z,app->top_p.wt,nbrspl);
+    egsInformation("smartBrems: E=%g x=(%g,%g,%g) wt=%g nspl=%d\n",ener,x.x,x.y,x.z,app->top_p.wt,nbrspl);
 
     EGS_Float ct_min,ct_max,ro;
     getCostMinMax(x,u,ro,ct_min,ct_max);
@@ -882,6 +886,7 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
 
 void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_split, int npstart, int kill_electrons) {
    //an adaptation of the Mortran subroutine kill_the_photons found in beamnrc.mortran, beampp.mortran
+   egsInformation("npstart=%d Np=%d\n",npstart,app->Np);
    if (npstart > app->Np) return;
    int i_playrr = 0;
    int idbs = npstart;
@@ -891,6 +896,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
       app->getParticleFromStack(idbs,p);
       //below is temporary until we figure out how to pass iweight
       int is_fat = (p.latch & (1 << 31));
+      egsInformation("E=%g iq=%d x=%g y=%g z=%g u=%g v=%g w=%g\n",p.E,p.q,p.x.x,p.x.y,p.x.z,p.u.x,p.u.y,p.u.z);
       if (p.q == 0)
       {
          i_playrr = 0;
