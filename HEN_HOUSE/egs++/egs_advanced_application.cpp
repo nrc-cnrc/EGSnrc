@@ -1215,6 +1215,7 @@ EGS_Float EGS_AdvancedApplication::getRM() {
 }
 // Turns ON/OFF radiative splitting
 void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
+    egsInformation("nsplit here = %d\n",nsplit);
     the_egsvr->nbr_split = nsplit;
 }
 
@@ -1353,7 +1354,7 @@ EGS_Float EGS_AdvancedApplication::getGle() {
 }
 
 //return lgle
-int EGS_AdvancedAppliction::getLgle(EGS_Float gle, int med) {
+int EGS_AdvancedApplication::getLgle(EGS_Float gle, int med) {
     return the_photin->ge1[med]*gle+the_photin->ge0[med];
 }
 
