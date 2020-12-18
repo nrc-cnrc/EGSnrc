@@ -261,6 +261,27 @@ class Volume {
 
     return this.data[dataName][address]
   }
+
+  /**
+   * Convert world coords to voxel coords of volume.
+   *
+   * @param {number[]} worldCoords The world position of the data.
+   * @returns {number[]}
+   */
+  worldToVoxelCoords (worldCoords) {
+    const voxelArr = this.data.voxelArr
+    const voxelNum = this.data.voxelNumber
+
+    const xWorldToVoxel = d3.scaleQuantile().domain(voxelArr.x).range(d3.range(0, voxelNum.x, 1))
+    const yWorldToVoxel = d3.scaleQuantile().domain(voxelArr.y).range(d3.range(0, voxelNum.y, 1))
+    const zWorldToVoxel = d3.scaleQuantile().domain(voxelArr.z).range(d3.range(0, voxelNum.z, 1))
+
+    const i = xWorldToVoxel(worldCoords[0])
+    const j = yWorldToVoxel(worldCoords[1])
+    const k = zWorldToVoxel(worldCoords[2])
+
+    return [i, j, k]
+  }
 }
 
 /** @class Volume represents a .3ddose file.  */

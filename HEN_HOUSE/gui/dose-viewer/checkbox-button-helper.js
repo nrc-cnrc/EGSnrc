@@ -113,13 +113,11 @@ d3.select("input[name='show-dose-profile-checkbox']").on('change', function () {
       // Only choose first panel because it will update all dose profiles
       const panel = volumeViewer.panels.xy
       if (panel.markerPosition) {
+        const worldCoords = panel.coordsToWorld(panel.markerPosition)
         updateVoxelCoords(
           panel.densityVol,
           panel.doseVol,
-          panel.markerPosition,
-          panel.axis,
-          panel.sliceNum,
-          panel.zoomTransform,
+          worldCoords,
           volumeViewer.id
         )
       }
@@ -153,14 +151,12 @@ d3.select("input[name='show-marker-checkbox']").on('change', function () {
       // Update voxel information
       volumeViewerList.forEach((volumeViewer) => {
         const panel = volumeViewer.panels.xy
+        const worldCoords = panel.coordsToWorld(panel.markerPosition)
         if (panel.markerPosition) {
           updateVoxelCoords(
             panel.densityVol,
             panel.doseVol,
-            panel.markerPosition,
-            panel.axis,
-            panel.sliceNum,
-            panel.zoomTransform,
+            worldCoords,
             panel.volumeViewerId
           )
         }

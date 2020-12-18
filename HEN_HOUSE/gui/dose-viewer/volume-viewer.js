@@ -808,13 +808,11 @@ class VolumeViewer {
     })
 
     this.dispatch.on('markerchange.voxelinfo', function (d) {
+      const worldCoords = d.panel.coordsToWorld(d.plotCoords)
       updateVoxelCoords(
         d.panel.densityVol,
         d.panel.doseVol,
-        d.plotCoords,
-        d.panel.axis,
-        d.panel.sliceNum,
-        d.panel.zoomTransform,
+        worldCoords,
         d.panel.volumeViewerId
       )
     })

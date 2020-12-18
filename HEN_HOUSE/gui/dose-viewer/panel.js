@@ -32,7 +32,7 @@
 /* global d3 */
 
 import { MAIN_VIEWER_DIMENSIONS } from './index.js'
-import { applyTransform, invertTransform, updateVoxelCoords } from './voxel-coordinates.js'
+import { invertTransform, updateVoxelCoords } from './voxel-coordinates.js'
 import { getZoom, zoomedAll } from './zoom.js'
 
 /** @class Panel holds one axis view and detects clicks, stores information, and
@@ -187,14 +187,11 @@ class Panel {
       d3.select(this).select('line.crosshairX').attr('x1', x).attr('x2', x)
       d3.select(this).select('line.crosshairY').attr('y1', y).attr('y2', y)
 
-      // The d3.event coords are same regardless of zoom, so pass in null as transform
+      const worldCoords = panel.coordsToWorld(panel.zoomTransform ? panel.zoomTransform.apply([x, y]) : [x, y])
       updateVoxelCoords(
         panel.densityVol,
         panel.doseVol,
-        [x, y],
-        panel.axis,
-        panel.sliceNum,
-        null,
+        worldCoords,
         panel.volumeViewerId
       )
     }
@@ -202,17 +199,11 @@ class Panel {
     function dragended () {
       d3.select(this).attr('cursor', 'grab')
 
-      // TODO: Use applyX and applyY
-      const x = panel.zoomTransform
-        ? applyTransform(d3.event.x, panel.zoomTransform, 'x')
-        : d3.event.x
-      const y = panel.zoomTransform
-        ? applyTransform(d3.event.y, panel.zoomTransform, 'y')
-        : d3.event.y
+      const plotCoords = panel.zoomTransform ? panel.zoomTransform.apply([d3.event.x, d3.event.y]) : [d3.event.x, d3.event.y]
 
       if (d3.event.defaultPrevented) return
       panel.dispatch.call('markerchange', this, {
-        plotCoords: [x, y],
+        plotCoords: plotCoords,
         panel: panel
       })
     }
@@ -304,6 +295,34 @@ class Panel {
    */
   updateSlider (sliceNum) {
     this.sliceSlider.setCurrentValue(sliceNum)
+  }
+
+  /**
+   * Convert the marker position coordinates to world coordinates.
+   *
+   * @param {number[]} coords The coordinates of the marker position.
+   */
+  coordsToWorld (coords) {
+    const volume = this.densityVol || this.doseVol
+    const axis = this.axis
+    const sliceNum = this.sliceNum
+    const transform = this.zoomTransform
+
+    // Invert transformation if applicable then invert scale to get world coordinate
+    const i = volume.prevSlice[axis].xScale.invert(
+      transform ? transform.invert(coords)[0] : coords[0]
+    )
+    const j = volume.prevSlice[axis].yScale.invert(
+      transform ? transform.invert(coords)[1] : coords[1]
+    )
+
+    // Add 0.5 to sliceNum in order to map values to center of voxel bondaries
+    // TODO: Perhaps fix scale to get rid of the 0.5 hack
+    const k = volume.prevSlice[axis].zScale.invert(parseInt(sliceNum) + 0.5)
+
+    const [xVal, yVal, zVal] =
+      axis === 'xy' ? [i, j, k] : axis === 'yz' ? [k, i, j] : [i, k, j]
+    return [xVal, yVal, zVal]
   }
 }
 
