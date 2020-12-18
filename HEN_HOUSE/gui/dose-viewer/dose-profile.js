@@ -111,12 +111,12 @@ class DoseProfile {
       .style(
         'transform',
         'translate(' +
-          dimensions.margin.left +
-          'px' +
-          ',' +
-          dimensions.margin.top +
-          'px' +
-          ')'
+        dimensions.margin.left +
+        'px' +
+        ',' +
+        dimensions.margin.top +
+        'px' +
+        ')'
       )
       .classed('dose-profile-plot', true)
 
@@ -203,7 +203,7 @@ class DoseProfile {
         address =
           i +
           parseInt(doseVol.data.voxelNumber.x) *
-            (coords[0] + coords[1] * xVoxels)
+          (coords[0] + coords[1] * xVoxels)
       } else if (profileDim === 'y') {
         address =
           coords[0] +
@@ -214,14 +214,15 @@ class DoseProfile {
         doseProfileData[i] = {
           position: position[i],
           value: doseVol.data.dose[address] || 0,
-          err: doseVol.data.error[address] || 0,
-          density: densityVol.data.density[address]
+          err: doseVol.data.error ? doseVol.data.error[address] || 0 : 0
+          // density: densityVol.data.density[address]
+          // TODO: Pass in the address for the density coordinates
         }
       } else {
         doseProfileData[i] = {
           position: position[i],
           value: doseVol.data.dose[address] || 0,
-          err: doseVol.data.error[address] || 0
+          err: doseVol.data.error ? doseVol.data.error[address] || 0 : 0
         }
       }
     }
@@ -301,10 +302,10 @@ class DoseProfile {
       .attr(
         'transform',
         'translate(' +
-          this.dimensions.width / 2 +
-          ' ,' +
-          (this.dimensions.height + this.dimensions.margin.top - 5) +
-          ')'
+        this.dimensions.width / 2 +
+        ' ,' +
+        (this.dimensions.height + this.dimensions.margin.top - 5) +
+        ')'
       )
       .style('text-anchor', 'middle')
       .text(this.profileDim + ' (cm)')
@@ -318,10 +319,10 @@ class DoseProfile {
       .attr(
         'transform',
         'translate(' +
-          (15 - this.dimensions.margin.left) +
-          ' ,' +
-          this.dimensions.height / 2 +
-          ') rotate(-90)'
+        (15 - this.dimensions.margin.left) +
+        ' ,' +
+        this.dimensions.height / 2 +
+        ') rotate(-90)'
       )
       .style('text-anchor', 'middle')
       .text('Dose')
@@ -353,10 +354,10 @@ class DoseProfile {
         .attr(
           'transform',
           'translate(' +
-            (this.dimensions.width + 45) +
-            ' ,' +
-            this.dimensions.height / 2 +
-            ') rotate(90)'
+          (this.dimensions.width + 45) +
+          ' ,' +
+          this.dimensions.height / 2 +
+          ') rotate(90)'
         )
         .style('text-anchor', 'middle')
         .text('Density (g/cm\u00B3)')
@@ -389,15 +390,15 @@ class DoseProfile {
       .style('text-decoration', 'underline')
       .text(
         this.profileDim +
-          ' Axis Dose at (' +
-          dim1 +
-          ', ' +
-          dim2 +
-          '): (' +
-          format(coords[0]) +
-          ' cm, ' +
-          format(coords[1]) +
-          ' cm)'
+        ' Axis Dose at (' +
+        dim1 +
+        ', ' +
+        dim2 +
+        '): (' +
+        format(coords[0]) +
+        ' cm, ' +
+        format(coords[1]) +
+        ' cm)'
       )
   }
 
