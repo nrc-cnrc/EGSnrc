@@ -216,10 +216,6 @@ var getVal = function (dataSet, vr, propertyAddress) {
 
 function processDICOMSlice (arrayBuffer) {
   const byteArray = new Uint8Array(arrayBuffer)
-  var kb = byteArray.length / 1024
-  var mb = kb / 1024
-  var byteStr = mb > 1 ? mb.toFixed(3) + ' MB' : kb.toFixed(0) + ' KB'
-  console.log('Status: Parsing ' + byteStr + ' bytes, please wait..')
 
   try {
     const dataSet = dicomParser.parseDicom(byteArray, { untilTag: 'x7fe00010' })
