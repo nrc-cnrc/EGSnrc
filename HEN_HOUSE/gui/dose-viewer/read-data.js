@@ -50,8 +50,9 @@ var processPhantomData = function (data) {
 
   // Get number and type of materials
   const numMaterials = parseInt(data[curr++])
-  const materialList = data.slice(curr, numMaterials + curr)
-  curr += numMaterials * 2
+  const materialList = data.slice(curr, numMaterials + curr).map(mat => mat.trim())
+  curr += numMaterials
+  curr += (data[curr].trim().split(/ +/).length === numMaterials) ? 1 : numMaterials
 
   // Get number of x, y, and z voxels
   const [numVoxX, numVoxY, numVoxZ] = data[curr++]
@@ -79,6 +80,7 @@ var processPhantomData = function (data) {
       curr,
       parseInt(curr) + parseInt(numVoxY) * parseInt(numVoxZ) + parseInt(numVoxZ)
     )
+    .map((subArr) => subArr.trim())
     .filter((subArr) => subArr.length > 0)
 
   curr += numVoxY * numVoxZ + numVoxZ + 1
@@ -89,6 +91,7 @@ var processPhantomData = function (data) {
       curr,
       parseInt(curr) + parseInt(numVoxY) * parseInt(numVoxZ) + parseInt(numVoxZ)
     )
+    .map((subArr) => subArr.trim())
     .filter((subArr) => subArr.length > 0)
 
   const densityGrid = lines.map((subArr) => {
