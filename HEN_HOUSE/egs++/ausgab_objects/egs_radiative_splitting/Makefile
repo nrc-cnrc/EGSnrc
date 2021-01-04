@@ -93,4 +93,6 @@ test:
 	@echo "lib_objects: $(lib_objects)"
 	@echo "lib_link1: $(lib_link1)"
 	@echo "lib_link2: $(lib_link2)"
-
+	@echo "def1: $(DEF1)"
+	@echo "def_user: $(DEF_USER)"
+	@echo "fc_flags: $(FC_FLAGS)"
