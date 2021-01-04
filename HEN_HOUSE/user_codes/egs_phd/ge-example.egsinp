@@ -1,0 +1,329 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ spectrum scoring application sample input
+#  Copyright (C) 2018 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Authors:         Frederic Tessier, 2018
+#
+#  Contributors:
+#
+###############################################################################
+
+
+###############################################################################
+### Run control and rng
+###############################################################################
+:start run control:
+    ncase                   = 1e5
+    geometry error limit    = 100
+:stop run control:
+
+:start rng definition:
+    initial seeds = 123 456
+:stop rng definition:
+
+
+###############################################################################
+### Geometry
+###############################################################################
+:start geometry definition:
+
+    ### ----------------------------------------------------------------------
+    ### Germanium detector
+    ### ----------------------------------------------------------------------
+    :start geometry:
+        name    = detector
+        library = egs_cones
+        type    = EGS_ConeStack
+        axis    = 0 0 -7.95  0 0 1
+
+        :start layer:
+            thickness    = 5
+            top radii    = 0.4  3.695  4.195  4.7625
+            bottom radii = 0.4  3.695  4.195  4.7625
+            media        = copper   germanium   vacuum   aluminum
+        :stop layer:
+
+        :start layer:
+            thickness    = 2.39
+            top radii    = 3.695  4.195  4.7625
+            bottom radii = 3.695  4.195  4.7625
+            media        = germanium   vacuum   aluminum
+        :stop layer:
+
+        :start layer:
+            thickness    = 0.5
+            top radii    = 4.195  4.7625
+            bottom radii = 4.195  4.7625
+            media        = vacuum   aluminum
+        :stop layer:
+
+        :start layer:
+            thickness    = 0.06
+            top radii    = 4.395  4.7625
+            bottom radii = 4.395  4.7625
+            media        = graphite   aluminum
+        :stop layer:
+
+        :start layer:
+            thickness    = 0.2
+            top radii    = 4.195  4.7625
+            bottom radii = 4.195  4.7625
+            media        = air   aluminum
+        :stop layer:
+
+        set label = detector 1 4
+
+    :stop geometry:
+
+
+    ### ----------------------------------------------------------------------
+    ### Lead shielding
+    ### ----------------------------------------------------------------------
+
+    ### huge box of air
+    :start geometry:
+        name     = air_box
+        library  = egs_box
+        box size = 1000
+        :start media input:
+            media = air
+        :stop media input:
+    :stop geometry:
+
+    ### huge shield cylinder
+    :start geometry:
+        name     = shield_cylinder
+        library  = egs_cylinders
+        type     = EGS_ZCylinders
+        radii    = 1000
+        :start media input:
+            media = lead
+        :stop media input:
+    :stop geometry:
+
+    ### huge shield cylinder with hole
+    :start geometry:
+        name     = shield_with_hole
+        library  = egs_cylinders
+        type     = EGS_ZCylinders
+        radii    = 0.45 1000
+        :start media input:
+            media = air lead
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    ### shield box template for cd geometry
+    :start geometry:
+        name     = shield_base
+        library  = egs_ndgeometry
+        type     = EGS_XYZGeometry
+        x-planes = -12.58  -7.5  7.5   12.58
+        y-planes = -16.08  -11   11    16.08
+        z-planes = -10      35   40.08
+    :stop geometry:
+
+    ### fill box template regions with geometries
+    :start geometry:
+        name    = shielding
+        library = egs_cdgeometry
+        base geometry = shield_base
+        set geometry = 0 4  shield_cylinder
+        set geometry = 5 18 shield_cylinder
+        set geometry = 4    air_box
+        set geometry = 13   shield_with_hole
+    :stop geometry:
+
+
+    ### ----------------------------------------------------------------------
+    ### Laboratory setup
+    ### ----------------------------------------------------------------------
+    :start geometry:
+        name     = lab
+        library  = egs_genvelope
+        base geometry        = shielding
+        inscribed geometries = detector
+    :stop geometry:
+
+
+    ### ----------------------------------------------------------------------
+    ### simulation geometry
+    ### ----------------------------------------------------------------------
+    simulation geometry = lab
+
+:stop geometry definition:
+
+
+###############################################################################
+### Media
+###############################################################################
+:start media definition:
+
+    ### cutoff energies
+    ae  = 0.521             # lowest  energy for electrons (kinetic+0.511)
+    ap  = 0.010             # lowest  energy for photons   (kinetic)
+    ue  = 50.511            # maximum energy for electrons (kinetic+0.511)
+    up  = 50                # maximum energy for photons   (kinetic)
+
+    :start air:
+        density correction file = air_dry_nearsealevel
+    :stop air:
+
+    :start water:
+        density correction file = water_liquid
+    :stop water:
+
+    :start germanium:
+        density correction file = germanium
+    :stop germanium:
+
+    :start copper:
+        density correction file = copper
+    :stop copper:
+
+    :start aluminum:
+        density correction file = aluminum
+    :stop aluminum:
+
+    :start lead:
+        density correction file = lead
+    :stop lead:
+
+    :start graphite:
+        density correction file = carbon_graphite_1.700g_cm3
+    :stop graphite:
+
+:stop media definition:
+
+
+###############################################################################
+### Source
+###############################################################################
+:start source definition:
+
+    ### ----------------------------------------------------------------------
+    ### collimated point source
+    ### ----------------------------------------------------------------------
+    :start source:
+        name     = collimated_point_source
+        library  = egs_collimated_source
+        charge   = 0
+        distance = 0.282094791774  ### 1/sqrt(4*pi), to normalized result per particle emitted in 4*pi
+
+        :start source shape:
+            type = point
+            position = 0 0 40
+       :stop source shape:
+
+       :start target shape:
+            library = egs_circle
+            radius = 2
+            :start transformation:
+                translation = 0 0 35
+            :stop transformation:
+       :stop target shape:
+
+       :start spectrum:
+            type = monoenergetic
+            energy = 0.846
+        :stop spectrum:
+
+    :stop source:
+
+
+    ### ----------------------------------------------------------------------
+    ### simulation source
+    ### ----------------------------------------------------------------------
+    simulation source = collimated_point_source
+
+:stop source definition:
+
+
+###############################################################################
+### Scoring
+###############################################################################
+:start scoring options:
+
+    ### spectrum scoring parameters
+    :start spectrum:
+        label = detector
+        Emin  = 0.0
+        Emax  = 1.0
+        bins  = 100
+        spectrum file = ge-example-spectrum.dat
+    :stop spectrum:
+
+:stop scoring options:
+
+
+###############################################################################
+### Transport parameters
+###############################################################################
+:start MC transport parameter:
+
+    # these are the input parameters to control the physics of the Monte Carlo
+    # simulation. There is little need to modify these inputs, essentially we
+    # are turning on the more accurate physcis models here, since the impact on
+    # computational time is not prohibitive.
+
+    Global ECUT                     = 0.521     # Global electron transport cutoff
+    Global PCUT                     = 0.010     # Global photon transport cutoff
+    Spin effects                    = On        # On (default),Off
+    Brems angular sampling          = KM        # Simple,KM (default)
+    Brems cross sections            = NRC       # BH (default),NIST
+    Pair angular sampling           = KM        # Off, Simple (default),KM
+    Bound Compton scattering        = On        # On (default) ,Off, norej
+    Radiative Compton corrections   = On        # On,  Off (default)
+    Photoelectron angular sampling  = On        # On (default),Off
+    Atomic relaxations              = On        # On (default),Off
+    Photon cross sections           = xcom      # xcom (default), epdl, si
+    Rayleigh scattering             = On
+
+:stop MC transport parameter:
+
+
+###############################################################################
+### Tracks
+###############################################################################
+:start ausgab object definition:
+
+    ### particle tracks
+    :start ausgab object:
+        library = egs_track_scoring
+        name    = tracks
+    :stop ausgab object:
+
+:stop ausgab object definition:
+
+
+###############################################################################
+### View control (just some color definitions)
+###############################################################################
+:start view control:
+    set color = aluminum        160 160 160 120
+    set color = air             0   255 0    50
+    set color = germanium       180 180 0   150
+    set color = graphite        30  30  30  230
+    set color = copper          230 145 90  200
+    set color = lead            200 200 200 200
+    set color = water           50 50   200 200
+:stop view control:

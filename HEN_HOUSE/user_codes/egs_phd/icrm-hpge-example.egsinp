@@ -1,0 +1,527 @@
+###############################################################################
+#
+#  EGSnrc egs++ ICRM HPGe detector
+#  Copyright (C) 2018 National Research Council Canada
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Authors:         Reid Townson
+#                   Frederic Tessier
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  Input file for simulation of a HPGe detector
+#  This input file was prepared for the Monte Carlo code comparison in 2018
+#  as a part of the ICRM Gamma-ray Spectrometry Working Group
+#
+#  This input file contains a number of variations of the geometry and source,
+#  that can be used to reproduce all the conditions in the ICRM study. These
+#  variations can be simply substituted by commenting out sections of the file.
+#
+#  This input file is compatible with egs_phd in EGSnrc
+#
+###############################################################################
+
+##############################################################################
+### RUN CONTROL
+##############################################################################
+:start run control:
+  ncase = 1e7 # The number of histories to run
+:stop run control:
+
+:start rng definition:
+    initial seeds = 4235 1293 # The initial random number seeds
+:stop rng definition:
+
+##############################################################################
+### GEOMETRY
+##############################################################################
+:start geometry definition:
+
+    # Lead shielding
+    :start geometry:
+        name = shielding
+        library = egs_cones
+        type = EGS_ConeStack
+
+        # Detector is positioned so that the top of the window
+        # is at the origin, and "down" is in the -z direction
+        axis = 0 0 15  0 0 -1
+
+        # Top of the lead shielding
+        :start layer:
+            thickness       = 5
+            top radii       = 20
+            bottom radii    = 20
+            media = lead
+        :stop layer:
+        :start layer:
+            thickness       = 30
+            top radii       = 15 20
+            bottom radii    = 15 20
+            media = air lead
+        :stop layer:
+        # Bottom of the lead shielding
+        :start layer:
+            thickness       = 5
+            top radii       = 20
+            bottom radii    = 20
+            media = lead
+        :stop layer:
+    :stop geometry:
+
+    ##################################
+    # Detector A
+    # The detector WITH dead layer
+    ##################################
+    # To use detector B, comment out the next line
+    :start geometry:
+        name = detector
+        library = egs_cones
+        type = EGS_ConeStack
+
+        # Detector is positioned so that the top of the window
+        # is at the origin, and "down" is in the -z direction
+        axis = 0 0 0  0 0 -1
+
+        # Detector window
+        :start layer:
+            thickness       = 0.1
+            top radii       = 4
+            bottom radii    = 4
+            media = aluminum
+        :stop layer:
+        # Gap above dead layer
+        :start layer:
+            thickness       = 0.5
+            top radii       = 3.9 4
+            bottom radii    = 3.9 4
+            media = vacuum aluminum
+        :stop layer:
+
+        # Top dead layer
+        :start layer:
+            thickness       = 0.1
+            top radii       = 3 3.9 4
+            bottom radii    = 3 3.9 4
+            media = germanium vacuum aluminum
+        :stop layer:
+
+        # Crystal above the void
+        :start layer:
+            thickness       = 2
+            top radii       = 2.9 3 3.9 4
+            bottom radii    = 2.9 3 3.9 4
+            media = germanium germanium vacuum aluminum
+        :stop layer:
+        # Crystal with the void
+        :start layer:
+            thickness       = 4
+            top radii       = 0.5 2.9 3 3.9 4
+            bottom radii    = 0.5 2.9 3 3.9 4
+            media = air germanium germanium vacuum aluminum
+        :stop layer:
+
+        # Gap below crystal
+        :start layer:
+            thickness       = 1.3
+            top radii       = 3.9 4
+            bottom radii    = 3.9 4
+            media = vacuum aluminum
+        :stop layer:
+        # Bottom housing
+        :start layer:
+            thickness       = 0.1
+            top radii       = 4
+            bottom radii    = 4
+            media = aluminum
+        :stop layer:
+
+        set label = crystal_with_dead_label 15 21
+    :stop geometry:
+
+
+    ##################################
+    # Detector B
+    # The detector WITHOUT dead layer
+    ##################################
+    # To use detector A, comment out the next line
+    #:start geometry:
+        name = detector
+        library = egs_cones
+        type = EGS_ConeStack
+
+        # Detector is positioned so that the top of the window
+        # is at the origin, and "down" is in the -z direction
+        axis = 0 0 0  0 0 -1
+
+        # Detector window
+        :start layer:
+            thickness       = 0.1
+            top radii       = 4
+            bottom radii    = 4
+            media = aluminum
+        :stop layer:
+        # Gap above crystal
+        :start layer:
+            thickness       = 0.5
+            top radii       = 3.9 4
+            bottom radii    = 3.9 4
+            media = vacuum aluminum
+        :stop layer:
+
+        # Crystal above the void
+        :start layer:
+            thickness       = 2.1
+            top radii       = 3 3.9 4
+            bottom radii    = 3 3.9 4
+            media = germanium vacuum aluminum
+        :stop layer:
+        # Crystal with the void
+        :start layer:
+            thickness       = 4
+            top radii       = 0.5 3 3.9 4
+            bottom radii    = 0.5 3 3.9 4
+            media = air germanium vacuum aluminum
+        :stop layer:
+
+        # Gap below crystal
+        :start layer:
+            thickness       = 1.3
+            top radii       = 3.9 4
+            bottom radii    = 3.9 4
+            media = vacuum aluminum
+        :stop layer:
+        # Bottom housing
+        :start layer:
+            thickness       = 0.1
+            top radii       = 4
+            bottom radii    = 4
+            media = aluminum
+        :stop layer:
+
+        set label = crystal_no_dead_label 8 13
+    :stop geometry:
+
+    ############################
+    # Source geometries
+    ############################
+
+    # The water source geometry
+    :start geometry:
+        name = water_source_geom
+        library = egs_cones
+        type = EGS_ConeStack
+
+        # Source is positioned 1mm above window
+        axis = 0 0 4.1  0 0 -1
+
+        # Top of the lead shielding
+        :start layer:
+            thickness       = 4
+            top radii       = 4.5
+            bottom radii    = 4.5
+            media = water
+        :stop layer:
+    :stop geometry:
+
+    # The soil source geometry
+    :start geometry:
+        name = soil_source_geom
+        library = egs_cones
+        type = EGS_ConeStack
+
+        # Source is positioned 1mm above window
+        axis = 0 0 2.1  0 0 -1
+
+        # Top of the lead shielding
+        :start layer:
+            thickness       = 2
+            top radii       = 3
+            bottom radii    = 3
+            media = dirt
+        :stop layer:
+    :stop geometry:
+
+    # The filter source geometry
+    :start geometry:
+        name = filter_source_geom
+        library = egs_cones
+        type = EGS_ConeStack
+
+        # Source is positioned 1mm above window
+        axis = 0 0 0.4  0 0 -1
+
+        # Top of the lead shielding
+        :start layer:
+            thickness       = 0.3
+            top radii       = 4
+            bottom radii    = 4
+            media = cellulose
+        :stop layer:
+    :stop geometry:
+
+
+    ##########################
+    # Combining geometries
+    ##########################
+
+    # Put the detector in the shielding (for point source)
+    :start geometry:
+        name     = detector_pointsource_shielding
+        library  = egs_genvelope
+        base geometry        = shielding
+        inscribed geometries = detector
+    :stop geometry:
+
+    # Put the water source and detector in the shielding
+    :start geometry:
+        name     = detector_watersource_shielding
+        library  = egs_genvelope
+        base geometry        = shielding
+        inscribed geometries = detector water_source_geom
+    :stop geometry:
+
+    # Put the soil source and detector in the shielding
+    :start geometry:
+        name     = detector_soilsource_shielding
+        library  = egs_genvelope
+        base geometry        = shielding
+        inscribed geometries = detector soil_source_geom
+    :stop geometry:
+
+    # Put the filter source and detector in the shielding
+    :start geometry:
+        name     = detector_filtersource_shielding
+        library  = egs_genvelope
+        base geometry        = shielding
+        inscribed geometries = detector filter_source_geom
+    :stop geometry:
+
+
+    #simulation geometry = detector_pointsource_shielding
+    simulation geometry = detector_watersource_shielding
+    #simulation geometry = detector_soilsource_shielding
+    #simulation geometry = detector_filtersource_shielding
+
+:stop geometry definition:
+
+##############################################################################
+### MEDIA
+##############################################################################
+:start media definition:
+
+    # Cutoff energies
+    ae  = 0.512             # lowest  energy for electrons (kinetic+0.511)
+    ap  = 0.01              # lowest  energy for photons   (kinetic)
+    ue  = 50.511            # maximum energy for electrons (kinetic+0.511)
+    up  = 50                # maximum energy for photons   (kinetic)
+
+    :start air:
+        density correction file     = air_dry_nearsealevel
+    :stop air:
+
+    :start aluminum:
+        density correction file     = aluminum
+    :stop aluminum:
+
+    :start lead:
+        density correction file     = lead
+    :stop lead:
+
+    :start germanium:
+        density correction file     = germanium
+    :stop germanium:
+
+    :start water:
+        density correction file     = water_icru90
+    :stop water:
+
+    :start cellulose:
+        density correction file     = icrm_cellulose
+    :stop cellulose:
+
+    :start dirt:
+        density correction file     = icrm_dirt
+    :stop dirt:
+
+:stop media definition:
+
+##############################################################################
+### SOURCE
+##############################################################################
+:start source definition:
+    # NOTE:
+    # When you change source energy also change scoring energy max
+
+    # Point source
+    #:start source:
+        library     = egs_point_source
+        name        = point_source
+
+        # Positioned 1mm above detector window
+        position    = 0 0 0.1
+
+        charge      = 0
+        :start spectrum:
+            type    = monoenergetic
+            energy  = 0.05
+#             energy  = 0.1
+#             energy  = 0.2
+#             energy  = 0.5
+#             energy  = 1.0
+        :stop spectrum:
+    :stop source:
+
+    # Water source
+    :start source:
+        name                = water_source
+        library             = egs_isotropic_source
+        charge              = 0
+        geometry            = water_source_geom
+        :start shape:
+            type     = cylinder
+            radius   = 4.5
+            height   = 4
+            axis     = 0 0 1
+            midpoint = 0 0 2.1
+        :stop shape:
+        :start spectrum:
+            type    = monoenergetic
+            energy  = 0.05
+#             energy  = 0.1
+#             energy  = 0.2
+#             energy  = 0.5
+#             energy  = 1.0
+        :stop spectrum:
+    :stop source:
+
+    # Soil source
+    #:start source:
+        name                = soil_source
+        library             = egs_isotropic_source
+        charge              = 0
+        geometry            = soil_source_geom
+        :start shape:
+            type     = cylinder
+            radius   = 3
+            height   = 2
+            axis     = 0 0 1
+            midpoint = 0 0 1.1
+        :stop shape:
+        :start spectrum:
+            type    = monoenergetic
+            energy  = 0.05
+#             energy  = 0.1
+#             energy  = 0.2
+#             energy  = 0.5
+#             energy  = 1.0
+        :stop spectrum:
+    :stop source:
+
+    # Filter source
+    #:start source:
+        name                = filter_source
+        library             = egs_isotropic_source
+        charge              = 0
+        geometry            = filter_source_geom
+        :start shape:
+            type     = cylinder
+            radius   = 4
+            height   = 0.3
+            axis     = 0 0 1
+            midpoint = 0 0 0.25
+        :stop shape:
+        :start spectrum:
+            type    = monoenergetic
+            energy  = 0.05
+#             energy  = 0.1
+#             energy  = 0.2
+#             energy  = 0.5
+#             energy  = 1.0
+        :stop spectrum:
+    :stop source:
+
+    simulation source = water_source
+
+:stop source definition:
+
+
+##############################################################################
+### AUSGAB
+##############################################################################
+
+:start ausgab object definition:
+    # Score tracks
+    #:start ausgab object:
+        name    = tracks
+        library = egs_track_scoring
+        stop scoring = 2000
+    :stop ausgab object:
+
+    # Score dose
+    :start ausgab object:
+        library      = egs_dose_scoring
+        name         = doseScoring
+        medium dose  = no # no  (default)
+        region dose  = yes  # yes (default)
+        volume       = 1 # in cm**3
+        dose regions = crystal_with_dead_label
+        #dose regions = crystal_no_dead_label
+    :stop ausgab object:
+:stop ausgab object definition:
+
+
+##############################################################################
+### SCORING OPTIONS
+##############################################################################
+
+# For egs_phd
+:start scoring options:
+
+    :start spectrum:
+        label = crystal_with_dead_label
+        Emin  = 0.0
+
+        # Adjust Emax for each source (E+1%)
+        Emax  = 0.0505 # E=0.05
+#         Emax  = 0.101 # E=0.1
+#         Emax  = 0.202 # E=0.2
+#         Emax  = 0.505 # E=0.5
+#         Emax  = 1.01 # E=1.0
+
+        bins  = 1000
+        spectrum file = icrm-hpge_water-50keV.dat
+    :stop spectrum:
+
+:stop scoring options:
+
+# For egs_chamber
+#:start scoring options:
+
+    silent = 0 # 0 (verbose output), >0 (short output)
+
+    :start calculation geometry:
+        geometry name = detector_watersource_shielding
+        cavity regions = crystal_with_dead_label
+        #cavity regions = crystal_no_dead_label
+        cavity mass = 1 # not the correct mass, dose will be wrong
+        cavity geometry = detector_watersource_shielding
+    :stop calculation geometry:
+
+:stop scoring options:

@@ -75,7 +75,7 @@ else
     test_egs_home=$(cd $my_dir/../..; pwd)/egs_home
 fi
 
-cpp_user_codes="cavity egs_app egs_cbct egs_chamber egs_fac egs_kerma tutor2pp tutor7pp"
+cpp_user_codes="cavity egs_app egs_cbct egs_chamber egs_fac egs_phd tutor2pp tutor7pp"
 # Now explain to the user what this script is going to do.
 #
 cat >&2 <<_ACEOF
