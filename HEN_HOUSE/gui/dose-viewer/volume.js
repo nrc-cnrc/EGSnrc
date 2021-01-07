@@ -55,6 +55,8 @@ class Volume {
     this.legendDimensions = legendDimensions
     this.args = args
     this.prevSlice = { xy: {}, yz: {}, xz: {} }
+    this.sliceCache = { xy: {}, yz: {}, xz: {} }
+    this.imageCache = { xy: {}, yz: {}, xz: {} }
   }
 
   /**
@@ -99,6 +101,16 @@ class Volume {
     // For slice structure
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1502-L1546
 
+    var sliceNum
+
+    // If slice is cached, return it
+    if (Object.keys(this.prevSlice[axis]).length !== 0) {
+      sliceNum = Math.round(this.prevSlice[axis].zScale(slicePos))
+      if (this.sliceCache[axis][sliceNum] !== undefined) {
+        return this.sliceCache[axis][sliceNum]
+      }
+    }
+
     // Get the axes and slice dimensions
     const [dim1, dim2, dim3] =
       axis === 'xy'
@@ -142,7 +154,6 @@ class Volume {
       }
     }
 
-    // TODO: Clamp scales
     // Define screen pixel to real length mapping
     const xScale = d3
       .scaleLinear()
@@ -177,7 +188,7 @@ class Volume {
       .domain(axis === 'xy' ? [this.data.voxelNumber[dim2], 0] : [0, this.data.voxelNumber[dim2]])
       .range(axis === 'xy' ? yRange.reverse() : yRange)
 
-    var sliceNum = zScale(slicePos)
+    sliceNum = zScale(slicePos)
     // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
       dx: this.data.voxelSize[dim1],
@@ -210,8 +221,8 @@ class Volume {
     // set slice number to last slice
     sliceNum =
       sliceNum >= slice.totalSlices
-        ? parseInt(slice.totalSlices - 1)
-        : parseInt(sliceNum)
+        ? Math.round(slice.totalSlices - 1)
+        : Math.round(sliceNum)
 
     // Get the slice data for the given axis and index
     // For address calculations:
@@ -241,7 +252,9 @@ class Volume {
       sliceNum: sliceNum
     }
 
+    // TODO: Change to prevSliceNum instead to save space
     this.prevSlice[axis] = slice
+    this.sliceCache[axis][sliceNum] = slice
     return slice
   }
 
@@ -813,40 +826,13 @@ class DensityVolume extends Volume {
    */
   drawDensity (slice, transform) {
     const svg = this.htmlElementObj[slice.axis]
-    // TODO: Make change slicenum function
-
-    // For axis structure
-    // https://bl.ocks.org/ejb/e2da5a23e9a09d494bd532803d8db61c
-
-    // Create new canvas element and set the dimensions
-    const canvas = document.createElement('canvas')
-    canvas.width = this.dimensions.width
-    canvas.height = this.dimensions.height
-
-    // Get and clear the canvas context
-    const context = canvas.getContext('2d')
-    context.clearRect(0, 0, this.dimensions.width, this.dimensions.height)
-
-    // Calcuate display pixel dimensions
-    const dxScaled = Math.ceil(this.dimensions.width / slice.xVoxels)
-    const dyScaled = Math.ceil(this.dimensions.height / slice.yVoxels)
-
-    // Draw the image voxel by voxel
-    for (let i = 0; i < slice.xVoxels; i++) {
-      for (let j = 0; j < slice.yVoxels; j++) {
-        const newAddress = i + slice.xVoxels * j
-        context.fillStyle = this.colour(slice.sliceData[newAddress])
-        context.fillRect(
-          Math.ceil(slice.xScale(slice.x[i])),
-          Math.ceil(slice.yScale(slice.y[j])),
-          dxScaled,
-          dyScaled
-        )
-      }
-    }
 
     // Create a new image to set the canvas data as the image source
     var image = new Image()
+
+    // Get the canvas and context in the webpage
+    const imgCanvas = svg.node()
+    const imgContext = imgCanvas.getContext('2d')
 
     // Once the image has loaded, draw it on the context
     image.addEventListener('load', (e) => {
@@ -861,11 +847,43 @@ class DensityVolume extends Volume {
       imgContext.restore()
     })
 
-    image.src = canvas.toDataURL()
+    if (this.imageCache[slice.axis][slice.sliceNum] !== undefined) {
+      image.src = this.imageCache[slice.axis][slice.sliceNum]
+    } else {
+      // TODO: Make change slicenum function
 
-    // Get the canvas and context in the webpage
-    const imgCanvas = svg.node()
-    const imgContext = imgCanvas.getContext('2d')
+      // For axis structure
+      // https://bl.ocks.org/ejb/e2da5a23e9a09d494bd532803d8db61c
+
+      // Create new canvas element and set the dimensions
+      const canvas = document.createElement('canvas')
+      canvas.width = this.dimensions.width
+      canvas.height = this.dimensions.height
+
+      // Get and clear the canvas context
+      const context = canvas.getContext('2d')
+      context.clearRect(0, 0, this.dimensions.width, this.dimensions.height)
+
+      // Calcuate display pixel dimensions
+      const dxScaled = Math.ceil(this.dimensions.width / slice.xVoxels)
+      const dyScaled = Math.ceil(this.dimensions.height / slice.yVoxels)
+
+      // Draw the image voxel by voxel
+      for (let i = 0; i < slice.xVoxels; i++) {
+        for (let j = 0; j < slice.yVoxels; j++) {
+          const newAddress = i + slice.xVoxels * j
+          context.fillStyle = this.colour(slice.sliceData[newAddress])
+          context.fillRect(
+            Math.ceil(slice.xScale(slice.x[i])),
+            Math.ceil(slice.yScale(slice.y[j])),
+            dxScaled,
+            dyScaled
+          )
+        }
+      }
+      image.src = canvas.toDataURL()
+      this.imageCache[slice.axis][slice.sliceNum] = image.src
+    }
 
     // Save the image as properties of the volume object
     this.prevSliceImg[slice.axis] = image
