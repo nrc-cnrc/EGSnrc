@@ -104,7 +104,7 @@ class Volume {
     var sliceNum
 
     // If slice is cached, return it
-    if (Object.keys(this.prevSlice[axis]).length !== 0) {
+    if ((this.prevSlice[axis] !== undefined) && (Object.keys(this.prevSlice[axis]).length !== 0)) {
       sliceNum = Math.round(this.prevSlice[axis].zScale(slicePos))
       if (this.sliceCache[axis][sliceNum] !== undefined) {
         return this.sliceCache[axis][sliceNum]
@@ -758,6 +758,33 @@ class DensityVolume extends Volume {
     this.densityFormat = (args !== undefined) && (args.isDicom) ? d3.format('d') : d3.format('.2f')
     this.densityStep = (args !== undefined) && (args.isDicom) ? 1.0 : 0.01
     super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true)
+    this.cacheAllImages(data)
+  }
+
+  /**
+   * Iterate through all density slices and cache them.
+   *
+   * @param {Object} data The data from parsing the file.
+   */
+  cacheAllImages (data) {
+    // Get all data slices
+    const dims = ['x', 'y', 'z']
+    const axes = ['yz', 'xz', 'xy']
+
+    axes.forEach((axis, i) => {
+      // Process position to get centre voxel position rather than boundaries
+      let position = data.voxelArr[dims[i]].slice()
+      position = position.map((val, i) => {
+        return val + (position[i + 1] - val) / 2
+      })
+      position.pop()
+
+      // Get and cache image for each slice in axis
+      position.forEach((slicePos) => {
+        const slice = this.getSlice(axis, slicePos)
+        this.imageCache[axis][slice.sliceNum] = this.getDataImageURL(slice)
+      })
+    })
   }
 
   /**
@@ -850,43 +877,48 @@ class DensityVolume extends Volume {
     if (this.imageCache[slice.axis][slice.sliceNum] !== undefined) {
       image.src = this.imageCache[slice.axis][slice.sliceNum]
     } else {
-      // TODO: Make change slicenum function
-
-      // For axis structure
-      // https://bl.ocks.org/ejb/e2da5a23e9a09d494bd532803d8db61c
-
-      // Create new canvas element and set the dimensions
-      const canvas = document.createElement('canvas')
-      canvas.width = this.dimensions.width
-      canvas.height = this.dimensions.height
-
-      // Get and clear the canvas context
-      const context = canvas.getContext('2d')
-      context.clearRect(0, 0, this.dimensions.width, this.dimensions.height)
-
-      // Calcuate display pixel dimensions
-      const dxScaled = Math.ceil(this.dimensions.width / slice.xVoxels)
-      const dyScaled = Math.ceil(this.dimensions.height / slice.yVoxels)
-
-      // Draw the image voxel by voxel
-      for (let i = 0; i < slice.xVoxels; i++) {
-        for (let j = 0; j < slice.yVoxels; j++) {
-          const newAddress = i + slice.xVoxels * j
-          context.fillStyle = this.colour(slice.sliceData[newAddress])
-          context.fillRect(
-            Math.ceil(slice.xScale(slice.x[i])),
-            Math.ceil(slice.yScale(slice.y[j])),
-            dxScaled,
-            dyScaled
-          )
-        }
-      }
-      image.src = canvas.toDataURL()
+      image.src = this.getDataImageURL(slice)
       this.imageCache[slice.axis][slice.sliceNum] = image.src
     }
 
     // Save the image as properties of the volume object
     this.prevSliceImg[slice.axis] = image
+  }
+
+  /**
+   * Create the data image of the slice and return the image URL
+   *
+   * @param {Object} slice The slice of the density data.
+   */
+  getDataImageURL (slice) {
+    // Create new canvas element and set the dimensions
+    const canvas = document.createElement('canvas')
+    canvas.width = this.dimensions.width
+    canvas.height = this.dimensions.height
+
+    // Get and clear the canvas context
+    const context = canvas.getContext('2d')
+    context.clearRect(0, 0, this.dimensions.width, this.dimensions.height)
+
+    // Calcuate display pixel dimensions
+    const dxScaled = Math.ceil(this.dimensions.width / slice.xVoxels)
+    const dyScaled = Math.ceil(this.dimensions.height / slice.yVoxels)
+
+    // Draw the image voxel by voxel
+    for (let i = 0; i < slice.xVoxels; i++) {
+      for (let j = 0; j < slice.yVoxels; j++) {
+        const newAddress = i + slice.xVoxels * j
+        context.fillStyle = this.colour(slice.sliceData[newAddress])
+        context.fillRect(
+          Math.ceil(slice.xScale(slice.x[i])),
+          Math.ceil(slice.yScale(slice.y[j])),
+          dxScaled,
+          dyScaled
+        )
+      }
+    }
+
+    return canvas.toDataURL()
   }
 
   /**
