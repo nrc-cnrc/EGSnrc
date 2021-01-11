@@ -29,6 +29,8 @@
 #ifndef MSH_PARSER_
 #define MSH_PARSER_
 
+#include "egs_mesh.h"
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -38,62 +40,6 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
-
-class EGS_Mesh /* : public EGS_BaseGeometry */ {
-public:
-    /// A single tetrahedral mesh element
-    struct Tetrahedron {
-        Tetrahedron(int medium_tag, int a, int b, int c, int d) :
-            medium_tag(medium_tag), a(a), b(b), c(c), d(d) {}
-        int medium_tag = -1;
-        // nodes
-        int a = -1;
-        int b = -1;
-        int c = -1;
-        int d = -1;
-    };
-
-    /// A single 3D point
-    struct Node {
-        Node(int tag, double x, double y, double z) :
-            tag(tag), x(x), y(y), z(z) {}
-        int tag = -1;
-        double x = 0.0;
-        double y = 0.0;
-        double z = 0.0;
-    };
-
-    /// A physical medium
-    struct Medium {
-        Medium(int tag, std::string medium_name) :
-            tag(tag), medium_name(medium_name) {}
-        int tag = -1;
-        std::string medium_name;
-    };
-
-    EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
-        std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials) :
-        /* EGS_BaseGeometry("EGS_Mesh"), */ _elements(std::move(elements)),
-        _nodes(std::move(nodes)), _materials(std::move(materials))
-    {
-        // TODO find neighbours, construct value arrays
-    }
-
-    const std::vector<EGS_Mesh::Tetrahedron>& elements() {
-        return _elements;
-    }
-    const std::vector<EGS_Mesh::Node>& nodes() {
-        return _nodes;
-    }
-    const std::vector<EGS_Mesh::Medium>& materials() {
-        return _materials;
-    }
-
-private:
-    std::vector<EGS_Mesh::Tetrahedron> _elements;
-    std::vector<EGS_Mesh::Node> _nodes;
-    std::vector<EGS_Mesh::Medium> _materials;
-};
 
 namespace msh_parser {
 
