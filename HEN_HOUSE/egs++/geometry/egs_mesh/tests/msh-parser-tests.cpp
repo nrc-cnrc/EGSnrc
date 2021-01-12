@@ -1,4 +1,5 @@
 #include "msh_parser.h"
+#include "egs_mesh.h"
 #include <cassert>
 
 // exception test macros adapted from Arthur O'Dwyer's comment here:
@@ -817,7 +818,7 @@ int test_parse_msh41_file_errors() {
             // ^ expecting tag == 1
             "$EndPhysicalNames\n"
         );
-        EXPECT_ERROR(msh_parser::parse_msh_file(input),
+        EXPECT_ERROR(EGS_Mesh::parse_msh_file(input),
             "msh 4.1 parsing failed\nvolume 1 had unknown physical group tag 100");
     }
 
@@ -836,7 +837,7 @@ int test_parse_msh41_file_errors() {
             "1 1 2 3 4\n"
             "$EndElements\n"
         );
-        EXPECT_ERROR(msh_parser::parse_msh_file(input),
+        EXPECT_ERROR(EGS_Mesh::parse_msh_file(input),
             "msh 4.1 parsing failed\ntetrahedron 1 had unknown volume tag 100");
     }
 
@@ -853,13 +854,13 @@ int test_parse_msh41_file() {
             "$PhysicalNames\n" // missing PhysicalNames content
             "$EndPhysicalNames\n"
         );
-        EXPECT_ERROR(msh_parser::parse_msh_file(input),
+        EXPECT_ERROR(EGS_Mesh::parse_msh_file(input),
             "msh 4.1 parsing failed\n$PhysicalNames parsing failed");
     }
     // minimum complete mesh file for EGSnrc
     {
         std::istringstream input(header + entities + pgroups + nodes + elts);
-        EGS_Mesh mesh = msh_parser::parse_msh_file(input);
+        EGS_Mesh mesh = EGS_Mesh::parse_msh_file(input);
         auto elts = mesh.elements();
         assert(elts.size() == 4);
         assert(elts[0].medium_tag == 1);

@@ -29,8 +29,6 @@
 #ifndef MSH_PARSER_
 #define MSH_PARSER_
 
-#include "egs_mesh.h"
-
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -42,11 +40,6 @@
 #include <unordered_set>
 
 namespace msh_parser {
-
-/// Parse a msh file into an EGS_Mesh
-///
-/// Throws a std::runtime_error if parsing fails.
-EGS_Mesh parse_msh_file(std::istream& input);
 
 /// The msh_parser::internal namespace is for internal API functions and is not
 /// part of the public API. Functions and types may change without warning.
@@ -66,7 +59,7 @@ constexpr std::size_t SIZET_MAX = std::numeric_limits<std::size_t>::max();
 ///
 /// Throws a std::runtime_error if parsing fails.
 /// Only version 4.1 ascii is supported, any other version will throw.
-MshVersion parse_msh_version(std::istream& input) {
+static MshVersion parse_msh_version(std::istream& input) {
     if (!input) {
         throw std::runtime_error("bad input to parse_msh_version");
     }
@@ -175,7 +168,7 @@ std::pair<bool, int> check_unique_tags(const std::vector<T>& values) {
 /// Returns a list of volumes. Volume tags are unique.
 ///
 /// Throws a std::runtime_error if parsing fails.
-std::vector<MeshVolume> parse_entities(std::istream& input) {
+static std::vector<MeshVolume> parse_entities(std::istream& input) {
     std::vector<MeshVolume> volumes;
     int num_3d = -1;
     // parse number of entities
@@ -251,7 +244,7 @@ std::vector<MeshVolume> parse_entities(std::istream& input) {
 /// Parse a single entity bloc of nodes.
 ///
 /// Throws a std::runtime_error if parsing fails.
-std::vector<Node> parse_node_bloc(std::istream& input) {
+static std::vector<Node> parse_node_bloc(std::istream& input) {
     std::vector<Node> nodes;
     std::size_t num_nodes = SIZET_MAX;
     int entity = -1;
@@ -310,7 +303,7 @@ std::vector<Node> parse_node_bloc(std::istream& input) {
 /// Parse the entire $Nodes section and returns a list of Nodes. Node tags are unique.
 ///
 /// Throws a std::runtime_error if parsing fails.
-std::vector<Node> parse_nodes(std::istream& input) {
+static std::vector<Node> parse_nodes(std::istream& input) {
     std::vector<Node> nodes;
     std::size_t num_blocs = SIZET_MAX;
     std::size_t num_nodes = SIZET_MAX;
@@ -362,7 +355,7 @@ std::vector<Node> parse_nodes(std::istream& input) {
 /// Returns a list of PhysicalGroups. PhysicalGroup tags are unique.
 ///
 /// Throws a std::runtime_error if parsing fails.
-std::vector<PhysicalGroup> parse_groups(std::istream& input) {
+static std::vector<PhysicalGroup> parse_groups(std::istream& input) {
     std::vector<PhysicalGroup> groups;
     // this is the total number of groups, not just 3D groups
     int num_groups = -1;
@@ -426,7 +419,7 @@ std::vector<PhysicalGroup> parse_groups(std::istream& input) {
 /// Parse a single msh4 element bloc.
 ///
 /// Throws a std::runtime_error if parsing fails.
-std::vector<Tetrahedron> parse_element_bloc(std::istream& input) {
+static std::vector<Tetrahedron> parse_element_bloc(std::istream& input) {
     std::vector<Tetrahedron> elts;
     std::size_t num_elts = SIZET_MAX;
     int entity = -1;
@@ -487,7 +480,7 @@ std::vector<Tetrahedron> parse_element_bloc(std::istream& input) {
 /// Returns a list of tetrahedral elements. Element tags are unique.
 ///
 /// Throws a std::runtime_error if parsing fails.
-std::vector<Tetrahedron> parse_elements(std::istream& input) {
+static std::vector<Tetrahedron> parse_elements(std::istream& input) {
     std::vector<Tetrahedron> elts;
     std::size_t num_blocs = SIZET_MAX;
     std::size_t num_elts = SIZET_MAX;
@@ -533,122 +526,8 @@ std::vector<Tetrahedron> parse_elements(std::istream& input) {
     return elts;
 }
 
-/// Parse the body of a msh4.1 file.
-///
-/// Throws a std::runtime_error if parsing fails.
-EGS_Mesh parse_body(std::istream& input) {
-    std::vector<Node> nodes;
-    std::vector<MeshVolume> volumes;
-    std::vector<PhysicalGroup> groups;
-    std::vector<Tetrahedron> elements;
-
-    std::string parse_err;
-    std::string input_line;
-    while (std::getline(input, input_line)) {
-        rtrim(input_line);
-        // stop reading if we hit another mesh file
-        if (input_line == "$MeshFormat") {
-            break;
-        }
-        if (input_line == "$Entities") {
-           volumes = parse_entities(input);
-        } else if (input_line == "$PhysicalNames") {
-            groups = parse_groups(input);
-        } else if (input_line == "$Nodes") {
-            nodes = parse_nodes(input);
-        } else if (input_line == "$Elements") {
-            elements = parse_elements(input);
-        }
-    }
-    if (volumes.empty()) {
-        throw std::runtime_error("No volumes were parsed");
-    }
-    if (nodes.empty()) {
-        throw std::runtime_error("No nodes were parsed");
-    }
-    if (groups.empty()) {
-        throw std::runtime_error("No groups were parsed");
-    }
-    if (elements.empty()) {
-        throw std::runtime_error("No tetrahedrons were parsed");
-    }
-
-    // ensure each entity has a valid group
-    std::unordered_set<int> group_tags;
-    group_tags.reserve(groups.size());
-    for (auto g: groups) {
-        group_tags.insert(g.tag);
-    }
-    std::unordered_map<int, int> volume_groups;
-    volume_groups.reserve(volumes.size());
-    for (auto v: volumes) {
-        if (group_tags.find(v.group) == group_tags.end()) {
-            throw std::runtime_error("volume " + std::to_string(v.tag) + " had unknown physical group tag " + std::to_string(v.group));
-        }
-        volume_groups.insert({ v.tag, v.group });
-    }
-
-    // ensure each element has a valid entity and therefore a valid physical group
-    std::vector<int> element_groups;
-    element_groups.reserve(elements.size());
-    for (auto e: elements) {
-        auto elt_group = volume_groups.find(e.volume);
-        if (elt_group == volume_groups.end()) {
-            throw std::runtime_error("tetrahedron " + std::to_string(e.tag) + " had unknown volume tag " + std::to_string(e.volume));
-        }
-        element_groups.push_back(elt_group->second);
-    }
-
-    std::vector<EGS_Mesh::Tetrahedron> mesh_elts;
-    mesh_elts.reserve(elements.size());
-    for (std::size_t i = 0; i < elements.size(); ++i) {
-        const auto& elt = elements[i];
-        mesh_elts.push_back(EGS_Mesh::Tetrahedron(
-            element_groups[i], elt.a, elt.b, elt.c, elt.d
-        ));
-    }
-
-    std::vector<EGS_Mesh::Node> mesh_nodes;
-    mesh_nodes.reserve(nodes.size());
-    for (const auto& n: nodes) {
-        mesh_nodes.push_back(EGS_Mesh::Node(
-            n.tag, n.x, n.y, n.z
-        ));
-    }
-
-    std::vector<EGS_Mesh::Medium> media;
-    media.reserve(groups.size());
-    for (const auto& g: groups) {
-        media.push_back(EGS_Mesh::Medium(g.tag, g.name));
-    }
-
-    // TODO: check all 3d physical groups were used by elements
-    // TODO: ensure all element node tags are valid
-    return EGS_Mesh(mesh_elts, mesh_nodes, media);
-}
-
 } // namespace msh_parser::internal::msh41
-
 } // namespace msh_parser::internal
-
-/// Parse a msh file into an EGS_Mesh
-///
-/// Throws a std::runtime_error if parsing fails.
-EGS_Mesh parse_msh_file(std::istream& input) {
-    auto version = msh_parser::internal::parse_msh_version(input);
-    // TODO auto mesh_data;
-    switch(version) {
-        case msh_parser::internal::MshVersion::v41:
-            try {
-                return msh_parser::internal::msh41::parse_body(input);
-            } catch (const std::runtime_error& err) {
-                throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
-            }
-            break;
-    }
-    throw std::runtime_error("couldn't parse msh file");
-}
-
 } // namespace msh_parser
 
 #endif // MSH_PARSER_

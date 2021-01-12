@@ -108,21 +108,27 @@ public:
     };
 
     EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
-        std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials) :
-        /* EGS_BaseGeometry("EGS_Mesh"), */ _elements(std::move(elements)), _nodes(std::move(nodes)),
-        _materials(std::move(materials))
-    {
-        // TODO find neighbours, construct value arrays
-    }
+        std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials);
 
-    const std::vector<EGS_Mesh::Tetrahedron>& elements() {
+    /// Parse a msh file into an EGS_Mesh
+    ///
+    /// Throws a std::runtime_error if parsing fails.
+    static EGS_Mesh parse_msh_file(std::istream& input);
+
+    std::size_t num_elements() const {
+        return _elt_points.size() / 4;
+    }
+    const std::vector<EGS_Mesh::Tetrahedron>& elements() const {
         return _elements;
     }
-    const std::vector<EGS_Mesh::Node>& nodes() {
+    const std::vector<EGS_Mesh::Node>& nodes() const {
         return _nodes;
     }
-    const std::vector<EGS_Mesh::Medium>& materials() {
+    const std::vector<EGS_Mesh::Medium>& materials() const {
         return _materials;
+    }
+    const std::vector<std::array<std::size_t, 4>>& neighbours() const {
+        return _neighbours;
     }
 
     // EGS_BaseGeometry interface
@@ -139,9 +145,13 @@ public:
     }
 
 private:
+    std::vector<EGS_Vector> _elt_points;
+
     std::vector<EGS_Mesh::Tetrahedron> _elements;
     std::vector<EGS_Mesh::Node> _nodes;
     std::vector<EGS_Mesh::Medium> _materials;
+
+    std::vector<std::array<std::size_t, 4>> _neighbours;
     const std::string type = "EGS_Mesh";
 };
 

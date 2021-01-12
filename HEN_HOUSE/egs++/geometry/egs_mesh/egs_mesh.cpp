@@ -41,6 +41,9 @@
 #include "egs_mesh.h"
 #include "egs_vector.h"
 
+#include "mesh_neighbours.h"
+#include "msh_parser.h"
+
 #include <limits>
 
 // anonymous namespace
@@ -148,9 +151,148 @@ EGS_Vector closest_point_tetrahedron(const EGS_Vector &P, const EGS_Vector &A, c
     return min_point;
 }
 
+/// Parse the body of a msh4.1 file into an EGS_Mesh using the msh_parser API.
+///
+/// Throws a std::runtime_error if parsing fails.
+EGS_Mesh parse_msh41_body(std::istream& input) {
+    std::vector<msh_parser::internal::msh41::Node> nodes;
+    std::vector<msh_parser::internal::msh41::MeshVolume> volumes;
+    std::vector<msh_parser::internal::msh41::PhysicalGroup> groups;
+    std::vector<msh_parser::internal::msh41::Tetrahedron> elements;
+
+    std::string parse_err;
+    std::string input_line;
+    while (std::getline(input, input_line)) {
+        msh_parser::internal::rtrim(input_line);
+        // stop reading if we hit another mesh file
+        if (input_line == "$MeshFormat") {
+            break;
+        }
+        if (input_line == "$Entities") {
+           volumes = msh_parser::internal::msh41::parse_entities(input);
+        } else if (input_line == "$PhysicalNames") {
+            groups = msh_parser::internal::msh41::parse_groups(input);
+        } else if (input_line == "$Nodes") {
+            nodes = msh_parser::internal::msh41::parse_nodes(input);
+        } else if (input_line == "$Elements") {
+            elements = msh_parser::internal::msh41::parse_elements(input);
+        }
+    }
+    if (volumes.empty()) {
+        throw std::runtime_error("No volumes were parsed");
+    }
+    if (nodes.empty()) {
+        throw std::runtime_error("No nodes were parsed");
+    }
+    if (groups.empty()) {
+        throw std::runtime_error("No groups were parsed");
+    }
+    if (elements.empty()) {
+        throw std::runtime_error("No tetrahedrons were parsed");
+    }
+
+    // ensure each entity has a valid group
+    std::unordered_set<int> group_tags;
+    group_tags.reserve(groups.size());
+    for (auto g: groups) {
+        group_tags.insert(g.tag);
+    }
+    std::unordered_map<int, int> volume_groups;
+    volume_groups.reserve(volumes.size());
+    for (auto v: volumes) {
+        if (group_tags.find(v.group) == group_tags.end()) {
+            throw std::runtime_error("volume " + std::to_string(v.tag) + " had unknown physical group tag " + std::to_string(v.group));
+        }
+        volume_groups.insert({ v.tag, v.group });
+    }
+
+    // ensure each element has a valid entity and therefore a valid physical group
+    std::vector<int> element_groups;
+    element_groups.reserve(elements.size());
+    for (auto e: elements) {
+        auto elt_group = volume_groups.find(e.volume);
+        if (elt_group == volume_groups.end()) {
+            throw std::runtime_error("tetrahedron " + std::to_string(e.tag) + " had unknown volume tag " + std::to_string(e.volume));
+        }
+        element_groups.push_back(elt_group->second);
+    }
+
+    std::vector<EGS_Mesh::Tetrahedron> mesh_elts;
+    mesh_elts.reserve(elements.size());
+    for (std::size_t i = 0; i < elements.size(); ++i) {
+        const auto& elt = elements[i];
+        mesh_elts.push_back(EGS_Mesh::Tetrahedron(
+            element_groups[i], elt.a, elt.b, elt.c, elt.d
+        ));
+    }
+
+    std::vector<EGS_Mesh::Node> mesh_nodes;
+    mesh_nodes.reserve(nodes.size());
+    for (const auto& n: nodes) {
+        mesh_nodes.push_back(EGS_Mesh::Node(
+            n.tag, n.x, n.y, n.z
+        ));
+    }
+
+    std::vector<EGS_Mesh::Medium> media;
+    media.reserve(groups.size());
+    for (const auto& g: groups) {
+        media.push_back(EGS_Mesh::Medium(g.tag, g.name));
+    }
+
+    // TODO: check all 3d physical groups were used by elements
+    // TODO: ensure all element node tags are valid
+    return EGS_Mesh(mesh_elts, mesh_nodes, media);
+}
 } // anonymous namespace
 
+// msh4.1 parsing
+EGS_Mesh EGS_Mesh::parse_msh_file(std::istream& input) {
+    auto version = msh_parser::internal::parse_msh_version(input);
+    // TODO auto mesh_data;
+    switch(version) {
+        case msh_parser::internal::MshVersion::v41:
+            try {
+                return parse_msh41_body(input);
+            } catch (const std::runtime_error& err) {
+                throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
+            }
+            break;
+    }
+    throw std::runtime_error("couldn't parse msh file");
+}
+
+EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
+    std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials) :
+    _elements(std::move(elements)), _nodes(std::move(nodes)), _materials(std::move(materials))
+{
+        // TODO find neighbours, construct value arrays
+        std::vector<mesh_neighbours::Tetrahedron> neighbour_elts;
+        neighbour_elts.reserve(elements.size());
+        for (const auto& e: elements) {
+            neighbour_elts.emplace_back(mesh_neighbours::Tetrahedron(e.a, e.b, e.c, e.d));
+        }
+        this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
+
+        //std::
+    }
+
 bool EGS_Mesh::isInside(const EGS_Vector &x) {
+    for (const auto& elt: _elements) {
+    //    if (point_outside_of_plane(x, A, B, C, D)) {
+    //        continue;
+    //    }
+    //    if (point_outside_of_plane(x, A, C, D, B)) {
+    //        continue;
+    //    }
+    //    if (point_outside_of_plane(x, A, B, D, C)) {
+    //        continue;
+    //    }
+    //    if (point_outside_of_plane(x, B, D, C, A)) {
+    //        continue;
+    //    }
+    //    return true;
+    }
     return false;
 }
 
