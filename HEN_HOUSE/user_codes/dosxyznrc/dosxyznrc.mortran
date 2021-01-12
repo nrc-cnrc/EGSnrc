@@ -853,9 +853,11 @@ IF( n_split > 1 ) [  "we use photon splitting"
               ]
               IF( medium ~= 0 ) dpmfp = dpmfp - ustep/gmfp;
               IF( irnew ~= irold ) [
-                  ir(np) = irnew; irl = irnew; irold = irnew;
+                  ir(np) = irnew; irl = irnew;
                   medium = med(irl);
               ]
+              $AUSCALL($TRANAUSA);
+              irold = ir(np);
               IF (IWATCH>0) CALL WATCH($TRANAUSA,IWATCH);
           ] UNTIL (medium ~= 0 & dpmfp < $EPSGMFP);
           x_save = x(np); y_save = y(np); z_save = z(np);
