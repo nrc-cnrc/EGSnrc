@@ -122,7 +122,7 @@ class Volume {
     const x = this.data.voxelArr[dim1]
     const y = this.data.voxelArr[dim2]
     const z = this.data.voxelArr[dim3]
-    const totalSlices = this.data.voxelNumber[dim3]
+    const totalSlices = this.data.voxelNumber[dim3] - 1
 
     // Get the length in cm of the x and y dimensions
     var getLengthCm = (voxelArrDim) =>
@@ -198,6 +198,10 @@ class Volume {
       x: x,
       y: y,
       totalSlices: totalSlices,
+      dxDraw: xRange[0],
+      dyDraw: yRange[0],
+      dWidthDraw: xRange[1] - xRange[0],
+      dHeightDraw: yRange[1] - yRange[0],
       xScale: xScale,
       yScale: yScale,
       zScale: zScale, // unit: pixels
@@ -758,7 +762,7 @@ class DensityVolume extends Volume {
     this.densityFormat = (args !== undefined) && (args.isDicom) ? d3.format('d') : d3.format('.2f')
     this.densityStep = (args !== undefined) && (args.isDicom) ? 1.0 : 0.01
     super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true)
-    this.cacheAllImages(data)
+    // this.cacheAllImages(data)
   }
 
   /**
@@ -870,7 +874,7 @@ class DensityVolume extends Volume {
         imgContext.translate(transform.x, transform.y)
         imgContext.scale(transform.k, transform.k)
       }
-      imgContext.drawImage(image, 0, 0)
+      imgContext.drawImage(image, 0, 0, slice.xVoxels, slice.yVoxels, slice.dxDraw, slice.dyDraw, slice.dWidthDraw, slice.dHeightDraw)
       imgContext.restore()
     })
 
@@ -889,36 +893,44 @@ class DensityVolume extends Volume {
    * Create the data image of the slice and return the image URL
    *
    * @param {Object} slice The slice of the density data.
+   * @returns {String}
    */
   getDataImageURL (slice) {
     // Create new canvas element and set the dimensions
-    const canvas = document.createElement('canvas')
-    canvas.width = this.dimensions.width
-    canvas.height = this.dimensions.height
+    var canvas = document.createElement('canvas')
+    canvas.width = slice.xVoxels
+    canvas.height = slice.yVoxels
 
-    // Get and clear the canvas context
+    // Get the canvas context
     const context = canvas.getContext('2d')
-    context.clearRect(0, 0, this.dimensions.width, this.dimensions.height)
 
-    // Calcuate display pixel dimensions
-    const dxScaled = Math.ceil(this.dimensions.width / slice.xVoxels)
-    const dyScaled = Math.ceil(this.dimensions.height / slice.yVoxels)
+    // Create the image data
+    var imageData = context.createImageData(slice.xVoxels, slice.yVoxels)
+    for (let i = 0; i < slice.sliceData.length; i++) {
+      const colour = d3.color(this.colour(slice.sliceData[i]))
 
-    // Draw the image voxel by voxel
-    for (let i = 0; i < slice.xVoxels; i++) {
-      for (let j = 0; j < slice.yVoxels; j++) {
-        const newAddress = i + slice.xVoxels * j
-        context.fillStyle = this.colour(slice.sliceData[newAddress])
-        context.fillRect(
-          Math.ceil(slice.xScale(slice.x[i])),
-          Math.ceil(slice.yScale(slice.y[j])),
-          dxScaled,
-          dyScaled
-        )
+      if (colour !== null) {
+        // Modify pixel data
+        imageData.data[4 * i] = colour.r // R value
+        imageData.data[4 * i + 1] = colour.g // G value
+        imageData.data[4 * i + 2] = colour.b // B value
+        imageData.data[4 * i + 3] = 255 // A value
       }
     }
 
-    return canvas.toDataURL()
+    // Add image data to canvas
+    context.save()
+    context.putImageData(imageData, 0, 0)
+    if (slice.axis !== 'xy') {
+      context.scale(1, -1)
+      context.drawImage(canvas, 0, -1 * slice.yVoxels)
+    }
+    context.restore()
+
+    // Return canvas image as data URL
+    const url = canvas.toDataURL()
+    canvas = null
+    return url
   }
 
   /**
@@ -1047,6 +1059,23 @@ class DensityVolume extends Volume {
       return this.data.materialList[materialNumber - 1]
     }
     return ''
+  }
+
+  /**
+  * Initialize the behaviour of the canvas density
+  */
+  initializeCanvas () {
+    Object.values(this.htmlElementObj).forEach((svg) => {
+      // Get the canvas and context in the webpage
+      const imgCanvas = svg.node()
+      const imgContext = imgCanvas.getContext('2d')
+
+      // Disable smoothing to clearly show pixels
+      imgContext.imageSmoothingEnabled = false
+      imgContext.mozImageSmoothingEnabled = false
+      imgContext.webkitImageSmoothingEnabled = false
+      imgContext.msImageSmoothingEnabled = false
+    })
   }
 }
 

@@ -253,6 +253,7 @@ class VolumeViewer {
     )
 
     densityVol.initializeLegend()
+    densityVol.initializeCanvas()
     const dims = 'zxy'
     const sliceNum = {}
     const slicePos = {}

@@ -111,15 +111,17 @@ function zoomedDoseProfile (transform, doseProfile) {
  */
 function zoomedCanvas (transform, densityVol, canvas, axis) {
   // Get the image to draw
+  // TODO: Use cached image URL instead
   const image = densityVol.prevSliceImg[axis]
+  const prevSlice = densityVol.prevSlice[axis]
   const context = canvas.node().getContext('2d')
 
   // Clear the canvas, apply transformations, and redraw
-  context.clearRect(0, 0, canvas.node().width, canvas.node().height)
   context.save()
+  context.clearRect(0, 0, canvas.node().width, canvas.node().height)
   context.translate(transform.x, transform.y)
   context.scale(transform.k, transform.k)
-  context.drawImage(image, 0, 0)
+  context.drawImage(image, 0, 0, prevSlice.xVoxels, prevSlice.yVoxels, prevSlice.dxDraw, prevSlice.dyDraw, prevSlice.dWidthDraw, prevSlice.dHeightDraw)
   context.restore()
 }
 
