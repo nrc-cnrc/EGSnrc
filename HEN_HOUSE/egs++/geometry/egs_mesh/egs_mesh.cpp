@@ -266,32 +266,56 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials) :
     _elements(std::move(elements)), _nodes(std::move(nodes)), _materials(std::move(materials))
 {
-        // TODO find neighbours, construct value arrays
-        std::vector<mesh_neighbours::Tetrahedron> neighbour_elts;
-        neighbour_elts.reserve(elements.size());
-        for (const auto& e: elements) {
-            neighbour_elts.emplace_back(mesh_neighbours::Tetrahedron(e.a, e.b, e.c, e.d));
+    _elt_points.reserve(_elements.size() * 4);
+    // Find the matching nodes for every tetrahedron
+    auto find_node = [&](int node_tag) -> EGS_Mesh::Node {
+        auto node_it = std::find_if(_nodes.begin(), _nodes.end(),
+            [&](const EGS_Mesh::Node& n) { return n.tag == node_tag; });
+        if (node_it == _nodes.end()) {
+            throw std::runtime_error("No mesh node with tag: " + std::to_string(node_tag));
         }
-        this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
-
-        //std::
+        return *node_it;
+    };
+    for (const auto& e: _elements) {
+        auto a = find_node(e.a);
+        auto b = find_node(e.b);
+        auto c = find_node(e.c);
+        auto d = find_node(e.d);
+        _elt_points.emplace_back(EGS_Vector(a.x, a.y, a.z));
+        _elt_points.emplace_back(EGS_Vector(b.x, b.y, b.z));
+        _elt_points.emplace_back(EGS_Vector(c.x, c.y, c.z));
+        _elt_points.emplace_back(EGS_Vector(d.x, d.y, d.z));
     }
 
+    std::vector<mesh_neighbours::Tetrahedron> neighbour_elts;
+    neighbour_elts.reserve(elements.size());
+    for (const auto& e: elements) {
+        neighbour_elts.emplace_back(mesh_neighbours::Tetrahedron(e.a, e.b, e.c, e.d));
+    }
+    this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
+
+    // TODO figure out materials
+}
+
 bool EGS_Mesh::isInside(const EGS_Vector &x) {
-    for (const auto& elt: _elements) {
-    //    if (point_outside_of_plane(x, A, B, C, D)) {
-    //        continue;
-    //    }
-    //    if (point_outside_of_plane(x, A, C, D, B)) {
-    //        continue;
-    //    }
-    //    if (point_outside_of_plane(x, A, B, D, C)) {
-    //        continue;
-    //    }
-    //    if (point_outside_of_plane(x, B, D, C, A)) {
-    //        continue;
-    //    }
-    //    return true;
+    for (std::size_t i = 0; i < num_elements(); i++) {
+        const auto& A = _elt_points.at(4*i);
+        const auto& B = _elt_points.at(4*i + 1);
+        const auto& C = _elt_points.at(4*i + 2);
+        const auto& D = _elt_points.at(4*i + 3);
+        if (point_outside_of_plane(x, A, B, C, D)) {
+            continue;
+        }
+        if (point_outside_of_plane(x, A, C, D, B)) {
+            continue;
+        }
+        if (point_outside_of_plane(x, A, B, D, C)) {
+            continue;
+        }
+        if (point_outside_of_plane(x, B, D, C, A)) {
+            continue;
+        }
+        return true;
     }
     return false;
 }
