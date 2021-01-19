@@ -615,8 +615,6 @@ class VolumeViewer {
       xz: {}
     }
 
-    const dispatch = this.dispatch
-
     // Add html for panels and slice sliders
     AXES.forEach((axis, i) => {
       const selectedDiv = this.viewerContainer
@@ -633,11 +631,56 @@ class VolumeViewer {
         // TODO: Fix this, bug after zooming/translating and changing slice
         // Update marker position, voxel information and dose profile
         const plotCoords = currPanel.markerPosition
-        if (plotCoords) {
-          dispatch.call('markerchange', this, {
-            plotCoords: plotCoords,
-            panel: currPanel
+        if (currPanel.showMarker()) {
+          // ISSUE HERE: don't need to redraw other panels on slider change,
+          // just marker position and voxel info
+          const voxelCoords = coordsToVoxel(
+            plotCoords,
+            currPanel.axis,
+            currPanel.sliceNum,
+            currPanel.volume,
+            currPanel.zoomTransform
+          )
+
+          Object.values(this.panels).forEach((panel) => {
+            if (panel.axis !== currPanel.axis) {
+              let voxelNums
+              if (panel.axis === 'xy') {
+                voxelNums = [voxelCoords[0], voxelCoords[1]]
+              } else if (panel.axis === 'yz') {
+                voxelNums = [voxelCoords[1], voxelCoords[2]]
+              } else {
+                voxelNums = [voxelCoords[0], voxelCoords[2]]
+              }
+
+              // Convert voxel number to pixel value for both x and y coordinates
+              const xScale = panel.volume.prevSlice[panel.axis].xPixelToVoxelScale.invertExtent
+              const yScale = panel.volume.prevSlice[panel.axis].yPixelToVoxelScale.invertExtent
+
+              let coords
+              if (panel.zoomTransform) {
+                coords = panel.zoomTransform.apply([
+                  Math.ceil(xScale(voxelNums[0]).reduce((total, num) => total + num) / 2),
+                  Math.ceil(yScale(voxelNums[1]).reduce((total, num) => total + num) / 2)
+                ])
+              } else {
+                coords = [
+                  Math.ceil(xScale(voxelNums[0]).reduce((total, num) => total + num) / 2),
+                  Math.ceil(yScale(voxelNums[1]).reduce((total, num) => total + num) / 2)
+                ]
+              }
+
+              panel.updateMarker(coords, false)
+            }
           })
+
+          const worldCoords = currPanel.coordsToWorld(plotCoords)
+          updateVoxelCoords(
+            currPanel.densityVol,
+            currPanel.doseVol,
+            worldCoords,
+            currPanel.volumeViewerId
+          )
         }
       }
 

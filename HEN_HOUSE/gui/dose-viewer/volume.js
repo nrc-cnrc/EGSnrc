@@ -31,6 +31,7 @@
 // definitions for StandardJS formatter
 /* global d3 */
 /* global Image */
+/* global Worker */
 
 import { volumeViewerList } from './index.js'
 import { Slider } from './slider.js'
@@ -56,7 +57,7 @@ class Volume {
     this.args = args
     this.prevSlice = { xy: {}, yz: {}, xz: {} }
     this.sliceCache = { xy: {}, yz: {}, xz: {} }
-    this.imageCache = { xy: {}, yz: {}, xz: {} }
+    this.imageCache = {}
   }
 
   /**
@@ -85,6 +86,126 @@ class Volume {
   addColourScheme (colourScheme, maxVal, minVal, invertScheme) {
     const domain = invertScheme ? [maxVal, minVal] : [minVal, maxVal]
     this.colour = d3.scaleSequentialSqrt(colourScheme).domain(domain)
+  }
+
+  /**
+* Create the scales for the x, y and z dimensions in each axis.
+*
+* @param {Object} data The data from parsing the file.
+*/
+  createBaseSlices (data) {
+    // TODO: Change scales to quantile to map exactly which pixels
+    this.baseSlice = {}
+    const AXES = ['xy', 'yz', 'xz']
+
+    AXES.forEach((axis) => {
+      // Get the axes and slice dimensions
+      const [dim1, dim2, dim3] =
+        axis === 'xy'
+          ? ['x', 'y', 'z']
+          : axis === 'yz'
+            ? ['y', 'z', 'x']
+            : ['x', 'z', 'y']
+
+      const x = data.voxelArr[dim1]
+      const y = data.voxelArr[dim2]
+      const z = data.voxelArr[dim3]
+      const xVoxels = data.voxelNumber[dim1]
+      const yVoxels = data.voxelNumber[dim2]
+      const totalSlices = data.voxelNumber[dim3]
+
+      // Get the length in cm of the x and y dimensions
+      var getLengthCm = (voxelArrDim) =>
+        Math.abs(voxelArrDim[voxelArrDim.length - 1] - voxelArrDim[0])
+      const [xLengthCm, yLengthCm] = [getLengthCm(x), getLengthCm(y)]
+
+      // Initialize variables to make slice scales
+      let xDomain,
+        yDomain,
+        xRange,
+        yRange
+
+      // if (args !== undefined) {
+      //   console.log(args)
+      //   xDomain = args[axis].xScale.domain()
+      //   yDomain = args[axis].yScale.domain()
+      //   xRange = [Math.round(args[axis].xScale(x[0])), Math.round(args[axis].xScale(x[x.length - 1]))]
+      //   yRange = [Math.round(args[axis].yScale(y[0])), Math.round(args[axis].yScale(y[y.length - 1]))]
+      // } else {
+      if (xLengthCm > yLengthCm) {
+        xDomain = [x[0], x[x.length - 1]]
+        yDomain = axis === 'xy' ? [y[y.length - 1], y[y.length - 1] - xLengthCm] : [y[y.length - 1] - xLengthCm, y[y.length - 1]]
+        xRange = [0, this.dimensions.width]
+        yRange = axis === 'xy' ? [this.dimensions.height * (1 - (yLengthCm / xLengthCm)), this.dimensions.height] : [0, this.dimensions.height * (yLengthCm / xLengthCm)]
+      } else {
+        xDomain = [x[0], x[0] + yLengthCm]
+        yDomain = axis === 'xy' ? [y[y.length - 1], y[0]] : [y[0], y[y.length - 1]]
+        xRange = [0, this.dimensions.width * (xLengthCm / yLengthCm)]
+        yRange = axis === 'xy' ? [0, this.dimensions.height] : [this.dimensions.height, 0]
+      }
+      // }
+
+      // TODO: Clamp scales
+      // Define screen pixel to real length mapping
+      const xScale = d3
+        .scaleLinear()
+        .domain(xDomain)
+        .range([0, this.dimensions.width])
+      const yScale = d3
+        .scaleLinear()
+        .domain(yDomain)
+        .range([this.dimensions.height, 0])
+      const zScale = d3
+        .scaleLinear()
+        .domain([z[0], z[z.length - 1]])
+        .range([0, totalSlices])
+
+      // Define the screen pixel to volume voxel mapping
+      const xPixelToVoxelScale = d3
+        .scaleQuantile()
+        .domain(xRange)
+        .range(d3.range(0, xVoxels, 1))
+      const yPixelToVoxelScale = d3
+        .scaleQuantile()
+        .domain(yRange)
+        .range(axis === 'xy' ? d3.range(0, yVoxels, 1) : d3.range(yVoxels, 0, -1))
+
+      // Define the voxel to screen mapping for dose contours
+      const contourXScale = d3
+        .scaleLinear()
+        .domain([0, xVoxels])
+        .range(xRange)
+      const contourYScale = d3
+        .scaleLinear()
+        .domain(axis === 'xy' ? [yVoxels, 0] : [0, yVoxels])
+        .range(axis === 'xy' ? yRange.reverse() : yRange)
+
+      this.baseSlice[axis] = {
+        dx: data.voxelSize[dim1],
+        dy: data.voxelSize[dim2],
+        xVoxels: xVoxels,
+        yVoxels: yVoxels,
+        x: x,
+        y: y,
+        totalSlices: totalSlices,
+        xScale: xScale,
+        yScale: yScale,
+        zScale: zScale, // unit: pixels
+        dimensions: this.dimensions,
+        axis: axis,
+        xPixelToVoxelScale: xPixelToVoxelScale,
+        yPixelToVoxelScale: yPixelToVoxelScale,
+        contourTransform: ({ type, value, coordinates }) => ({
+          type,
+          value,
+          coordinates: coordinates.map((rings) =>
+            rings.map((points) =>
+              points.map(([i, j]) => [contourXScale(i), contourYScale(j)])
+            )
+          )
+        })
+      }
+    })
   }
 
   /**
@@ -757,12 +878,13 @@ class DensityVolume extends Volume {
    */
   addData (data, args) {
     this.data = data
-    this.maxDensityVar = parseFloat(this.data.maxDensity)
-    this.minDensityVar = parseFloat(this.data.minDensity)
+    this.maxDensityVar = parseFloat(data.maxDensity)
+    this.minDensityVar = parseFloat(data.minDensity)
     this.densityFormat = (args !== undefined) && (args.isDicom) ? d3.format('d') : d3.format('.2f')
     this.densityStep = (args !== undefined) && (args.isDicom) ? 1.0 : 0.01
     super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true)
-    // this.cacheAllImages(data)
+    this.imageCache = { xy: new Array(data.voxelArr.z), yz: new Array(data.voxelArr.x), xz: new Array(data.voxelArr.y) }
+    this.cacheAllImages(data)
   }
 
   /**
@@ -774,21 +896,37 @@ class DensityVolume extends Volume {
     // Get all data slices
     const dims = ['x', 'y', 'z']
     const axes = ['yz', 'xz', 'xy']
+    const vol = this
 
-    axes.forEach((axis, i) => {
-      // Process position to get centre voxel position rather than boundaries
-      let position = data.voxelArr[dims[i]].slice()
-      position = position.map((val, i) => {
-        return val + (position[i + 1] - val) / 2
-      })
-      position.pop()
+    if (window.Worker) {
+      // If web workers are supported, cache images in the background
+      axes.forEach((axis, i) => {
+        var cacheWorker = new Worker('cache-worker.mjs')
 
-      // Get and cache image for each slice in axis
-      position.forEach((slicePos) => {
-        const slice = this.getSlice(axis, slicePos)
-        this.imageCache[axis][slice.sliceNum] = this.getDataImageURL(slice)
+        const e = {
+          axis: axis,
+          data: this.data,
+          dimensions: this.dimensions,
+          voxArr: data.voxelArr[dims[i]].slice(),
+          maxVal: this.maxDensityVar,
+          minVal: this.minDensityVar
+        }
+
+        function handleMessage (e) {
+          console.log('Message recieved from worker')
+          vol.imageCache[axis] = e.data
+
+          // Remove event listener
+          cacheWorker.removeEventListener('message', handleMessage)
+          cacheWorker.terminate()
+        }
+
+        cacheWorker.addEventListener('message', handleMessage)
+        cacheWorker.postMessage(e)
       })
-    })
+    } else {
+      console.log('Your browser doesn\'t support web workers.')
+    }
   }
 
   /**
@@ -863,7 +1001,7 @@ class DensityVolume extends Volume {
 
     // Get the canvas and context in the webpage
     const imgCanvas = svg.node()
-    const imgContext = imgCanvas.getContext('2d')
+    const imgContext = imgCanvas.getContext('2d', { alpha: false })
 
     // Once the image has loaded, draw it on the context
     image.addEventListener('load', (e) => {
@@ -878,7 +1016,7 @@ class DensityVolume extends Volume {
       imgContext.restore()
     })
 
-    if (this.imageCache[slice.axis][slice.sliceNum] !== undefined) {
+    if (this.imageCache[slice.axis] !== undefined && this.imageCache[slice.axis][slice.sliceNum] !== undefined) {
       image.src = this.imageCache[slice.axis][slice.sliceNum]
     } else {
       image.src = this.getDataImageURL(slice)
