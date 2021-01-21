@@ -994,36 +994,35 @@ class DensityVolume extends Volume {
    * @param {Object} [transform] The zoom transform of the plot.
    */
   drawDensity (slice, transform) {
-    const svg = this.htmlElementObj[slice.axis]
-
-    // Create a new image to set the canvas data as the image source
-    var image = new Image()
-
     // Get the canvas and context in the webpage
+    const svg = this.htmlElementObj[slice.axis]
     const imgCanvas = svg.node()
     const imgContext = imgCanvas.getContext('2d', { alpha: false })
+    const imageData = this.getImageData(slice)
 
-    // Once the image has loaded, draw it on the context
-    image.addEventListener('load', (e) => {
-      imgContext.clearRect(0, 0, this.dimensions.width, this.dimensions.height)
-      imgContext.save()
-      // Apply transforms if needed
-      if (transform) {
-        imgContext.translate(transform.x, transform.y)
-        imgContext.scale(transform.k, transform.k)
-      }
-      imgContext.drawImage(image, 0, 0, slice.xVoxels, slice.yVoxels, slice.dxDraw, slice.dyDraw, slice.dWidthDraw, slice.dHeightDraw)
-      imgContext.restore()
-    })
+    // Create the voxel canvas to draw the slice onto
+    const canvas = document.createElement('canvas')
+    canvas.width = slice.xVoxels
+    canvas.height = slice.yVoxels
+    const context = canvas.getContext('2d')
 
-    if (this.imageCache[slice.axis] !== undefined && this.imageCache[slice.axis][slice.sliceNum] !== undefined) {
-      image.src = this.imageCache[slice.axis][slice.sliceNum]
-    } else {
-      image.src = this.getDataImageURL(slice)
-      this.imageCache[slice.axis][slice.sliceNum] = image.src
+    // Draw the image data onto the voxel canvas
+    context.putImageData(imageData, 0, 0)
+
+    // Draw the voxel canvas onto the image canvas and zoom if needed
+    imgContext.clearRect(0, 0, this.dimensions.width, this.dimensions.height)
+    imgContext.save()
+    if (transform) {
+      imgContext.translate(transform.x, transform.y)
+      imgContext.scale(transform.k, transform.k)
     }
 
-    // Save the image as properties of the volume object
+    imgContext.drawImage(canvas, 0, 0, slice.xVoxels, slice.yVoxels, slice.dxDraw, slice.dyDraw, slice.dWidthDraw, slice.dHeightDraw)
+    imgContext.restore()
+
+    // TODO: Add event listener?
+    var image = new Image()
+    image.src = canvas.toDataURL()
     this.prevSliceImg[slice.axis] = image
   }
 
@@ -1033,7 +1032,7 @@ class DensityVolume extends Volume {
    * @param {Object} slice The slice of the density data.
    * @returns {String}
    */
-  getDataImageURL (slice) {
+  getImageData (slice) {
     // Create new canvas element and set the dimensions
     var canvas = document.createElement('canvas')
     canvas.width = slice.xVoxels
@@ -1044,31 +1043,34 @@ class DensityVolume extends Volume {
 
     // Create the image data
     var imageData = context.createImageData(slice.xVoxels, slice.yVoxels)
-    for (let i = 0; i < slice.sliceData.length; i++) {
-      const colour = d3.color(this.colour(slice.sliceData[i]))
 
-      if (colour !== null) {
-        // Modify pixel data
-        imageData.data[4 * i] = colour.r // R value
-        imageData.data[4 * i + 1] = colour.g // G value
-        imageData.data[4 * i + 2] = colour.b // B value
-        imageData.data[4 * i + 3] = 255 // A value
+    if (this.imageCache[slice.axis] !== undefined && this.imageCache[slice.axis][slice.sliceNum] !== undefined) {
+      imageData.data.set(this.imageCache[slice.axis][slice.sliceNum])
+    } else {
+      var j = 0
+      for (let i = 0; i < slice.sliceData.length; i++) {
+        const val = d3.color(this.colour(slice.sliceData[i]))
+
+        if (val !== null) {
+          // Modify pixel data
+          imageData.data[j++] = val.r // R value
+          imageData.data[j++] = val.g // G value
+          imageData.data[j++] = val.b // B value
+          imageData.data[j++] = 255 // A value
+        }
       }
+
+      this.imageCache[slice.axis][slice.sliceNum] = imageData.data
     }
 
-    // Add image data to canvas
-    context.save()
+    // Draw the image data onto the voxel canvas and scale it
     context.putImageData(imageData, 0, 0)
     if (slice.axis !== 'xy') {
       context.scale(1, -1)
       context.drawImage(canvas, 0, -1 * slice.yVoxels)
     }
-    context.restore()
-
-    // Return canvas image as data URL
-    const url = canvas.toDataURL()
-    canvas = null
-    return url
+    imageData = context.getImageData(0, 0, slice.xVoxels, slice.yVoxels)
+    return imageData
   }
 
   /**

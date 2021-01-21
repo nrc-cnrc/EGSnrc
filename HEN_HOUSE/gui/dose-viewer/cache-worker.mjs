@@ -1,9 +1,7 @@
 /* global addEventListener */
 /* global close */
 /* global d3 */
-/* global FileReaderSync */
 /* global importScripts */
-/* global OffscreenCanvas */
 /* global postMessage */
 /* global removeEventListener */
 
@@ -30,7 +28,7 @@ function handleMessage (e) {
   // Get and cache image for each slice in axis
   const promiseImgCache = position.map((slicePos) => {
     const slice = getSlice(e.data.data, e.data.dimensions, e.data.axis, slicePos, 'density')
-    return getDataImageURL(slice, colourFn)
+    return getDataArray(slice, colourFn)
   })
 
   Promise.all(promiseImgCache).then(imgCache => {
@@ -55,45 +53,28 @@ function getColourFunction (minVal, maxVal) {
 }
 
 /**
- * Create the data image of the slice and return the image URL
+ * Returns the data image of the slice
  *
  * @param {Object} slice The slice of the density data.
- * @returns {String}
+ * @returns {number[]}
  */
-function getDataImageURL (slice, colourFn) {
-  // Create new canvas element and set the dimensions
-  var canvas = new OffscreenCanvas(slice.xVoxels, slice.yVoxels)
-
-  // Get the canvas context
-  const context = canvas.getContext('2d', { alpha: false })
-
+function getDataArray (slice, colourFn) {
   // Create the image data
-  var imageData = context.createImageData(slice.xVoxels, slice.yVoxels)
+  var imageData = new Uint8ClampedArray(slice.xVoxels * slice.yVoxels * 4)
+  var j = 0
   for (let i = 0; i < slice.sliceData.length; i++) {
     const val = colourFn(slice.sliceData[i])
 
     if (val !== null) {
       // Modify pixel data
-      imageData.data[4 * i] = val.r // R value
-      imageData.data[4 * i + 1] = val.g // G value
-      imageData.data[4 * i + 2] = val.b // B value
-      imageData.data[4 * i + 3] = 255 // A value
+      imageData[j++] = val.r // R value
+      imageData[j++] = val.g // G value
+      imageData[j++] = val.b // B value
+      imageData[j++] = 255 // A value
     }
   }
 
-  // Add image data to canvas
-  context.save()
-  context.putImageData(imageData, 0, 0)
-  if (slice.axis !== 'xy') {
-    context.scale(1, -1)
-    context.drawImage(canvas, 0, -1 * slice.yVoxels)
-  }
-  context.restore()
-
-  // Return canvas image as data URL
-  const dataURL = canvas[canvas.convertToBlob ? 'convertToBlob' : 'toBlob']().then(blob => new FileReaderSync().readAsDataURL(blob))
-
-  return dataURL
+  return imageData
 }
 
 /**
