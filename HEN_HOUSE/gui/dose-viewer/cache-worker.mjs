@@ -46,10 +46,7 @@ function handleMessage (e) {
  * @returns {getColourFunction~colourFn}
  */
 function getColourFunction (minVal, maxVal) {
-  var colourScheme = d3.scaleSequentialSqrt(d3.interpolateGreys).domain([maxVal, minVal])
-
-  var colourFn = (val) => d3.color(colourScheme(val))
-  return colourFn
+  return d3.scaleSqrt().domain([minVal, maxVal]).range([0, 255])
 }
 
 /**
@@ -67,9 +64,9 @@ function getDataArray (slice, colourFn) {
 
     if (val !== null) {
       // Modify pixel data
-      imageData[j++] = val.r // R value
-      imageData[j++] = val.g // G value
-      imageData[j++] = val.b // B value
+      imageData[j++] = val // R value
+      imageData[j++] = val // G value
+      imageData[j++] = val // B value
       imageData[j++] = 255 // A value
     }
   }

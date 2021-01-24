@@ -585,6 +585,87 @@ class DoseVolume extends Volume {
   }
 
   /**
+ * Make a dose contour plot of the given slice.
+ *
+ * @param {Object} slice The slice of the dose data.
+ * @param {Object} [transform] The zoom transform of the plot.
+ */
+  drawDose2 (slice, transform) {
+    console.log('transform')
+    console.log(transform)
+    const svg = this.htmlElementObj[slice.axis]
+
+    // Clear dose plot
+    // svg.selectAll('path').remove()
+    var contourPaths
+
+    // if (this.imageCache[slice.axis][slice.sliceNum] !== undefined) {
+    //   const path = this.imageCache[slice.axis][slice.sliceNum]
+    //   console.log(slice.axis)
+    //   console.log(slice.sliceNum)
+    //   console.log('use cache')
+    //   console.log(path)
+    //   contourPaths = svg.append('path')
+    //     .attr('d', path.attr('d'))
+    //     .attr('fill', (d) => d.attr('fill'))
+    //     .attr('fill-opacity', 0.5)
+    //     .attr('class', path.attr('class'))
+
+    //   // var xml = new XMLSerializer().serializeToString(path)
+    //   // var blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' })
+    //   // var DOMURL = window.URL || window.webkitURL || window
+    //   // var url = DOMURL.createObjectURL(blob)
+    // } else {
+    // Draw contours
+
+    console.time('make contours')
+    var contours = d3
+      .contours()
+      .size([slice.xVoxels, slice.yVoxels])
+      .smooth(false)
+      .thresholds(this.thresholds)(slice.sliceData)
+      .map(slice.contourTransform)
+    console.timeEnd('make contours')
+
+    console.time('make svg')
+    contourPaths = svg
+      .append('g')
+      .attr('class', 'dose-contour')
+      .attr('width', this.dimensions.width)
+      .attr('height', this.dimensions.height)
+      .attr('fill', 'none')
+      .attr('stroke', '#fff')
+      .attr('stroke-opacity', 0.5)
+      .attr('stroke-width', 0.1)
+      .selectAll('path')
+      .data(contours)
+      .join('path')
+      .classed('contour-path', true)
+      .attr('class', (d, i) => 'contour-path' + ' ' + this.className(i))
+      .attr('fill', (d) => this.colour(d.value))
+      .attr('fill-opacity', 0.5)
+      .attr('d', d3.geoPath())
+
+    console.timeEnd('make svg')
+    // this.imageCache[slice.axis][slice.sliceNum] = contourPaths
+    // }
+
+    // Get list of class names of hidden contours
+    const hiddenContourClassList = this.getHiddenContourClassList()
+
+    if (hiddenContourClassList.length > 0) {
+      // Apply hidden class to hidden contours
+      contourPaths
+        .filter(hiddenContourClassList.join(','))
+        .classed('hidden', true)
+    }
+
+    if (transform) {
+      svg.select('g.dose-contour').attr('transform', transform.toString())
+    }
+  }
+
+  /**
    * Get a class list of all the hidden dose contours.
    *
    * @returns {string[]}
@@ -882,9 +963,13 @@ class DensityVolume extends Volume {
     this.minDensityVar = parseFloat(data.minDensity)
     this.densityFormat = (args !== undefined) && (args.isDicom) ? d3.format('d') : d3.format('.2f')
     this.densityStep = (args !== undefined) && (args.isDicom) ? 1.0 : 0.01
-    super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true)
+    this.addColourScheme(this.maxDensityVar, this.minDensityVar)
     this.imageCache = { xy: new Array(data.voxelArr.z), yz: new Array(data.voxelArr.x), xz: new Array(data.voxelArr.y) }
     this.cacheAllImages(data)
+  }
+
+  addColourScheme (maxVal, minVal) {
+    this.colour = d3.scaleSqrt().domain([minVal, maxVal]).range([0, 255])
   }
 
   /**
@@ -938,13 +1023,10 @@ class DensityVolume extends Volume {
   setMaxDensityVar (maxDensityVal, panels) {
     this.maxDensityVar = parseFloat(maxDensityVal)
 
-    // Update the colour scheme with the new max density variable
-    super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true);
-
-    ['xy', 'yz', 'xz'].forEach((axis) =>
-      this.drawDensity(this.prevSlice[axis], panels[axis].zoomTransform)
-    )
-  };
+    Object.values(panels).forEach((panel) => {
+      this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
+    })
+  }
 
   /**
   * Sets the minimum density value for density plots.
@@ -955,12 +1037,9 @@ class DensityVolume extends Volume {
   setMinDensityVar (minDensityVal, panels) {
     this.minDensityVar = parseFloat(minDensityVal)
 
-    // Update the colour scheme with the new max density variable
-    super.addColourScheme(d3.interpolateGreys, this.maxDensityVar, this.minDensityVar, true);
-
-    ['xy', 'yz', 'xz'].forEach((axis) =>
-      this.drawDensity(this.prevSlice[axis], panels[axis].zoomTransform)
-    )
+    Object.values(panels).forEach((panel) => {
+      this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
+    })
   }
 
   /**
@@ -999,6 +1078,23 @@ class DensityVolume extends Volume {
     const imgCanvas = svg.node()
     const imgContext = imgCanvas.getContext('2d', { alpha: false })
     const imageData = this.getImageData(slice)
+
+    // If the min and max density have been changed, apply colour map
+    if ((this.minDensityVar !== this.data.minDensity) || (this.maxDensityVar !== this.data.maxDensity)) {
+      const colourMap = d3.scaleSqrt().domain([this.minDensityVar, this.maxDensityVar]).range([0, 255])
+      const imageArray = imageData.data
+      let val
+
+      // Change colour mapping
+      for (var i = 0; i < imageArray.length; i += 4) {
+        val = colourMap(this.colour.invert(imageArray[i]))
+
+        imageArray[i] = val
+        imageArray[i + 1] = val
+        imageArray[i + 2] = val
+        // Alpha channel is ignored
+      }
+    }
 
     // Create the voxel canvas to draw the slice onto
     const canvas = document.createElement('canvas')
@@ -1049,13 +1145,13 @@ class DensityVolume extends Volume {
     } else {
       var j = 0
       for (let i = 0; i < slice.sliceData.length; i++) {
-        const val = d3.color(this.colour(slice.sliceData[i]))
+        const val = this.colour(slice.sliceData[i])
 
         if (val !== null) {
           // Modify pixel data
-          imageData.data[j++] = val.r // R value
-          imageData.data[j++] = val.g // G value
-          imageData.data[j++] = val.b // B value
+          imageData.data[j++] = val// R value
+          imageData.data[j++] = val // G value
+          imageData.data[j++] = val // B value
           imageData.data[j++] = 255 // A value
         }
       }
