@@ -223,7 +223,7 @@ class VolumeViewer {
         // Update the slider max values
         AXES.forEach((axis, i) => {
           this.sliceSliders[axis].setMaxValue(
-            doseVol.data.voxelNumber[dims[i]]
+            doseVol.data.voxelNumber[dims[i]] - 1
           )
           this.sliceSliders[axis].setCurrentValue(sliceNum[axis])
         })
@@ -289,7 +289,7 @@ class VolumeViewer {
         // Update the slider max values
         AXES.forEach((axis, i) => {
           this.sliceSliders[axis].setMaxValue(
-            densityVol.data.voxelNumber[dims[i]]
+            densityVol.data.voxelNumber[dims[i]] - 1
           )
           this.sliceSliders[axis].setCurrentValue(sliceNum[axis])
         })

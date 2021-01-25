@@ -132,7 +132,7 @@ function getSlice (data, dimensions, axis, slicePos, dataName) {
     zRange[0] + (zRange[1] - zRange[0]) * ((val - zDomain[0]) / (zDomain[1] - zDomain[0]))
   )
 
-  sliceNum = zScale(slicePos)
+  sliceNum = Math.round(zScale(slicePos))
   // TODO: Change scales to quantile to map exactly which pixels
   let slice = {
     dx: data.voxelSize[dim1],
@@ -150,13 +150,6 @@ function getSlice (data, dimensions, axis, slicePos, dataName) {
     dimensions: dimensions,
     axis: axis
   }
-
-  // If current slice number is larger than the total number of slices
-  // set slice number to last slice
-  sliceNum =
-    sliceNum >= slice.totalSlices
-      ? Math.round(slice.totalSlices - 1)
-      : Math.round(sliceNum)
 
   // Get the slice data for the given axis and index
   // For address calculations:

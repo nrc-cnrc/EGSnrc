@@ -168,7 +168,7 @@ class Volume {
       const yPixelToVoxelScale = d3
         .scaleQuantile()
         .domain(yRange)
-        .range(axis === 'xy' ? d3.range(0, yVoxels, 1) : d3.range(yVoxels, 0, -1))
+        .range(axis === 'xy' ? d3.range(0, yVoxels, 1) : d3.range(yVoxels - 1, -1, -1))
 
       // Define the voxel to screen mapping for dose contours
       const contourXScale = d3
@@ -297,7 +297,7 @@ class Volume {
     const yPixelToVoxelScale = d3
       .scaleQuantile()
       .domain(yRange)
-      .range(axis === 'xy' ? d3.range(0, this.data.voxelNumber[dim2], 1) : d3.range(this.data.voxelNumber[dim2], 0, -1))
+      .range(axis === 'xy' ? d3.range(0, this.data.voxelNumber[dim2], 1) : d3.range(this.data.voxelNumber[dim2] - 1, -1, -1))
 
     // Define the voxel to screen mapping for dose contours
     const contourXScale = d3
@@ -309,7 +309,8 @@ class Volume {
       .domain(axis === 'xy' ? [this.data.voxelNumber[dim2], 0] : [0, this.data.voxelNumber[dim2]])
       .range(axis === 'xy' ? yRange.reverse() : yRange)
 
-    sliceNum = zScale(slicePos)
+    sliceNum = Math.round(zScale(slicePos))
+
     // TODO: Change scales to quantile to map exactly which pixels
     let slice = {
       dx: this.data.voxelSize[dim1],
@@ -342,13 +343,6 @@ class Volume {
       })
     }
 
-    // If current slice number is larger than the total number of slices
-    // set slice number to last slice
-    sliceNum =
-      sliceNum >= slice.totalSlices
-        ? Math.round(slice.totalSlices - 1)
-        : Math.round(sliceNum)
-
     // Get the slice data for the given axis and index
     // For address calculations:
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1999-L2034
@@ -377,8 +371,6 @@ class Volume {
       sliceNum: sliceNum
     }
 
-    // TODO: Change to prevSliceNum instead to save space
-    this.prevSlice[axis] = slice
     this.sliceCache[axis][sliceNum] = slice
     return slice
   }
@@ -568,87 +560,6 @@ class DoseVolume extends Volume {
       .attr('fill', (d) => this.colour(d.value))
       .attr('fill-opacity', 0.5)
       .attr('d', d3.geoPath())
-
-    // Get list of class names of hidden contours
-    const hiddenContourClassList = this.getHiddenContourClassList()
-
-    if (hiddenContourClassList.length > 0) {
-      // Apply hidden class to hidden contours
-      contourPaths
-        .filter(hiddenContourClassList.join(','))
-        .classed('hidden', true)
-    }
-
-    if (transform) {
-      svg.select('g.dose-contour').attr('transform', transform.toString())
-    }
-  }
-
-  /**
- * Make a dose contour plot of the given slice.
- *
- * @param {Object} slice The slice of the dose data.
- * @param {Object} [transform] The zoom transform of the plot.
- */
-  drawDose2 (slice, transform) {
-    console.log('transform')
-    console.log(transform)
-    const svg = this.htmlElementObj[slice.axis]
-
-    // Clear dose plot
-    // svg.selectAll('path').remove()
-    var contourPaths
-
-    // if (this.imageCache[slice.axis][slice.sliceNum] !== undefined) {
-    //   const path = this.imageCache[slice.axis][slice.sliceNum]
-    //   console.log(slice.axis)
-    //   console.log(slice.sliceNum)
-    //   console.log('use cache')
-    //   console.log(path)
-    //   contourPaths = svg.append('path')
-    //     .attr('d', path.attr('d'))
-    //     .attr('fill', (d) => d.attr('fill'))
-    //     .attr('fill-opacity', 0.5)
-    //     .attr('class', path.attr('class'))
-
-    //   // var xml = new XMLSerializer().serializeToString(path)
-    //   // var blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' })
-    //   // var DOMURL = window.URL || window.webkitURL || window
-    //   // var url = DOMURL.createObjectURL(blob)
-    // } else {
-    // Draw contours
-
-    console.time('make contours')
-    var contours = d3
-      .contours()
-      .size([slice.xVoxels, slice.yVoxels])
-      .smooth(false)
-      .thresholds(this.thresholds)(slice.sliceData)
-      .map(slice.contourTransform)
-    console.timeEnd('make contours')
-
-    console.time('make svg')
-    contourPaths = svg
-      .append('g')
-      .attr('class', 'dose-contour')
-      .attr('width', this.dimensions.width)
-      .attr('height', this.dimensions.height)
-      .attr('fill', 'none')
-      .attr('stroke', '#fff')
-      .attr('stroke-opacity', 0.5)
-      .attr('stroke-width', 0.1)
-      .selectAll('path')
-      .data(contours)
-      .join('path')
-      .classed('contour-path', true)
-      .attr('class', (d, i) => 'contour-path' + ' ' + this.className(i))
-      .attr('fill', (d) => this.colour(d.value))
-      .attr('fill-opacity', 0.5)
-      .attr('d', d3.geoPath())
-
-    console.timeEnd('make svg')
-    // this.imageCache[slice.axis][slice.sliceNum] = contourPaths
-    // }
 
     // Get list of class names of hidden contours
     const hiddenContourClassList = this.getHiddenContourClassList()
@@ -1119,6 +1030,7 @@ class DensityVolume extends Volume {
     // TODO: Add event listener?
     var image = new Image()
     image.src = canvas.toDataURL()
+    this.prevSlice[slice.axis] = slice
     this.prevSliceImg[slice.axis] = image
   }
 

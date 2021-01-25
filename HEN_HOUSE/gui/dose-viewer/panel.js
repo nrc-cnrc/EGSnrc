@@ -316,9 +316,7 @@ class Panel {
       transform ? transform.invert(coords)[1] : coords[1]
     )
 
-    // Add 0.5 to sliceNum in order to map values to center of voxel bondaries
-    // TODO: Perhaps fix scale to get rid of the 0.5 hack
-    const k = volume.prevSlice[axis].zScale.invert(parseInt(sliceNum) + 0.5)
+    const k = volume.prevSlice[axis].zScale.invert(parseInt(sliceNum))
 
     const [xVal, yVal, zVal] =
       axis === 'xy' ? [i, j, k] : axis === 'yz' ? [k, i, j] : [i, k, j]
