@@ -771,7 +771,7 @@ X-OPTIONS/;
 " use the a lower threshold.
 "***************************************************************************"
 "============================================================"
-REPLACE {$RELAX-CUTOFF} WITH {0.001"threshold energy for outer shells"}
+REPLACE {$RELAX-CUTOFF} WITH {0.001D0"threshold energy for outer shells"}
 REPLACE {$MXPESHELL} WITH {16} "K,L1..L3,M1..M5,N1..N7 + outer shell"
 REPLACE {$MXNE} WITH {500}     "number of energy points per shell "
 "============================================================"
