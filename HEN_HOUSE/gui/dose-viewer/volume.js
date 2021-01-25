@@ -934,6 +934,9 @@ class DensityVolume extends Volume {
   setMaxDensityVar (maxDensityVal, panels) {
     this.maxDensityVar = parseFloat(maxDensityVal)
 
+    // Redraw legend
+    this.initializeLegend()
+
     Object.values(panels).forEach((panel) => {
       this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
     })
@@ -947,6 +950,9 @@ class DensityVolume extends Volume {
   */
   setMinDensityVar (minDensityVal, panels) {
     this.minDensityVar = parseFloat(minDensityVal)
+
+    // Redraw legend
+    this.initializeLegend()
 
     Object.values(panels).forEach((panel) => {
       this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
@@ -1088,24 +1094,25 @@ class DensityVolume extends Volume {
     const legendClass = 'densityLegend'
     const title = 'Density'
     const dims = this.legendDimensions
+    const colourMap = d3.scaleSqrt().domain([this.minDensityVar, this.maxDensityVar]).range([0, 255])
 
     function gradientUrl (colour, height, width, n = 150) {
       const canvas = document.createElement('canvas')
       const context = canvas.getContext('2d')
       const [maxVal, minVal] = colour.domain()
-
+      var val
       for (let i = 0; i < height; ++i) {
+        val = colourMap(((n - i) / n) * (maxVal - minVal) + minVal)
         context.fillStyle = 'black'
         context.fillRect(0, i, 1, 1)
-        context.fillStyle = colour(((n - i) / n) * (maxVal - minVal) + minVal)
+        context.fillStyle = 'rgb(' + val + ', ' + val + ', ' + val + ')'
         context.fillRect(1, i, width - 1, 1)
       }
       return canvas.toDataURL()
     }
 
-    // Remove old text
-    this.legendSvg.select('.' + legendClass).remove()
-    this.legendSvg.select('text').remove()
+    // Remove old data
+    this.legendSvg.selectAll('*').remove()
 
     // Set dimensions of svg
     this.legendSvg
