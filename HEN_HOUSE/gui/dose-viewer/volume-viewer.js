@@ -425,7 +425,7 @@ class VolumeViewer {
 
     // Add behaviour, when volume is selected, change the volume viewer property
     this.doseSelector.on('change', function () {
-      if (this.value === -1) {
+      if (parseInt(this.value) === -1) {
         // If the base text is chosen, remove dose volume if loaded
         volumeViewer.removeDoseVolume()
       } else {
@@ -434,7 +434,7 @@ class VolumeViewer {
     })
 
     this.densitySelector.on('change', function () {
-      if (this.value === -1) {
+      if (parseInt(this.value) === -1) {
         volumeViewer.removeDensityVolume()
       } else {
         volumeViewer.setDensityVolume(densityVolumeList[this.value])
@@ -443,7 +443,7 @@ class VolumeViewer {
 
     this.doseComparisonSelector.on('change', function () {
       if (volumeViewer.doseVolume) {
-        if (this.value === -1) {
+        if (parseInt(this.value) === -1) {
           // If the base text is chosen, remove density volume if loaded
           const volIndex = parseInt(
             volumeViewerList[0].doseSelector.node().value

@@ -147,19 +147,16 @@ class Panel {
    * @param {number} sliceNum The number of the current slice displayed in the panel.
    */
   updateSlice (sliceNum) {
-    let slice
+    let slicePos, slice
 
     if (this.densityVol) {
-      const slicePos = this.densityVol.prevSlice[this.axis].zScale.invert(sliceNum)
+      slicePos = this.densityVol.prevSlice[this.axis].zScale.invert(sliceNum)
       slice = this.densityVol.getSlice(this.axis, slicePos)
       this.densityVol.drawDensity(slice, this.zoomTransform)
     }
     if (this.doseVol) {
       const args = this.densityVol ? this.densityVol.prevSlice : undefined
-      const slicePos = this.densityVol
-        ? this.densityVol.prevSlice[this.axis].zScale.invert(sliceNum)
-        : this.doseVol.prevSlice[this.axis].zScale.invert(sliceNum)
-
+      slicePos = slicePos || this.doseVol.prevSlice[this.axis].zScale.invert(sliceNum)
       slice = this.doseVol.getSlice(this.axis, slicePos, args)
       this.doseVol.drawDose(slice, this.zoomTransform)
     }

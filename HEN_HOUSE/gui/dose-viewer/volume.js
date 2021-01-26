@@ -521,6 +521,12 @@ class DoseVolume extends Volume {
     const svg = this.htmlElementObj[axis]
     // Clear dose plot
     svg.selectAll('g').remove()
+
+    // Clear dose legend
+    this.legendSvg.selectAll('*').remove()
+
+    // Remove existing dose contour inputs
+    this.legendHolder.selectAll('input').remove()
   }
 
   /**
@@ -574,6 +580,8 @@ class DoseVolume extends Volume {
     if (transform) {
       svg.select('g.dose-contour').attr('transform', transform.toString())
     }
+
+    this.prevSlice[slice.axis] = slice
   }
 
   /**
@@ -981,6 +989,9 @@ class DensityVolume extends Volume {
     // Clear density plot
     const context = svg.getContext('2d')
     context.clearRect(0, 0, svg.width, svg.height)
+
+    // Clear density legend
+    this.legendSvg.selectAll('*').remove()
   }
 
   /**
