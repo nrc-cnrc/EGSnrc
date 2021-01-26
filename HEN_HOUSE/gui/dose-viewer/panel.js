@@ -32,7 +32,7 @@
 /* global d3 */
 
 import { MAIN_VIEWER_DIMENSIONS } from './index.js'
-import { invertTransform, updateVoxelCoords } from './voxel-coordinates.js'
+import { updateVoxelCoords } from './voxel-coordinates.js'
 import { getZoom, zoomedAll } from './zoom.js'
 
 /** @class Panel holds one axis view and detects clicks, stores information, and
@@ -226,12 +226,9 @@ class Panel {
     this.axisElements['plot-marker'].select('.marker').remove()
 
     // If there is existing transformation, calculate proper x and y coordinates
-    const x = this.zoomTransform
-      ? invertTransform(coords[0], this.zoomTransform, 'x')
-      : coords[0]
-    const y = this.zoomTransform
-      ? invertTransform(coords[1], this.zoomTransform, 'y')
-      : coords[1]
+    const [x, y] = this.zoomTransform
+      ? this.zoomTransform.invert(coords)
+      : coords
 
     // Add new marker with modified coordinates so it can smoothly transform with other elements
     var markerHolder = this.axisElements['plot-marker']

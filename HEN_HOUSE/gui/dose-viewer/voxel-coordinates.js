@@ -91,12 +91,13 @@ function buildVoxelInfoHtml (parentDiv, id) {
  * @returns {number[]}
  */
 function coordsToVoxel (coords, axis, sliceNum, volume, transform) {
-  // Invert transformation if applicable then apply scale to get voxel coordinate
+  // Invert transformation if applicable then apply scale to get voxel
+  // coordinate
   const i = volume.prevSlice[axis].xPixelToVoxelScale(
-    transform ? invertTransform(coords[0], transform, 'x') : coords[0]
+    transform ? transform.invertX(coords[0]) : coords[0]
   )
   const j = volume.prevSlice[axis].yPixelToVoxelScale(
-    transform ? invertTransform(coords[1], transform, 'y') : coords[1]
+    transform ? transform.invertY(coords[1]) : coords[1]
   )
   const k = parseInt(sliceNum)
 
@@ -127,19 +128,6 @@ function updateWorldLabels (coords, id) {
 // TODO: Either have separate dose and density voxel labels, or remove altogether
 function updateVoxelLabels (coords, id) {
   d3.select('#voxel-coords-' + id).node().value = '(' + coords.join(', ') + ')'
-}
-
-/**
- * Invert the zoom transform to get the coordinates as if no transformation had
- * been applied.
- *
- * @param {number} val The value to invert.
- * @param {Object} transform The zoom transform to reverse.
- * @param {string} dir The direction of the zoom transform (x or y) to reverse.
- * @returns {number}
- */
-function invertTransform (val, transform, dir) {
-  return (val - transform[dir]) / transform.k
 }
 
 /**
@@ -240,4 +228,4 @@ function updateDoseProfiles (voxelCoords, worldCoords) {
   })
 }
 
-export { buildVoxelInfoHtml, coordsToVoxel, invertTransform, updateVoxelCoords }
+export { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords }
