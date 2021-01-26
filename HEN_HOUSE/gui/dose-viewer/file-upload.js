@@ -237,10 +237,12 @@ function handleFiles (files) {
       )
       volumeViewerList.push(volViewer)
 
-      if (densityVolumeList.length === 1 && doseVolumeList.length === 0) {
+      if (densityVolumeList.length === 1) {
         volViewer.setDensityVolume(densityVolumeList[0])
         volViewer.densitySelector.node().selectedIndex = 1
-      } else {
+      }
+
+      if (doseVolumeList.length === 1) {
         volViewer.setDoseVolume(doseVolumeList[0])
         volViewer.doseSelector.node().selectedIndex = 1
       }
