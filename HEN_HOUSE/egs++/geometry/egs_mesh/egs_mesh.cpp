@@ -44,6 +44,7 @@
 #include "mesh_neighbours.h"
 #include "msh_parser.h"
 
+#include <cassert>
 #include <limits>
 
 // anonymous namespace
@@ -327,6 +328,48 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
         return i;
     }
     return -1;
+}
+
+EGS_Float EGS_Mesh::hownear(int ireg, const EGS_Vector& x) {
+    if (ireg >= num_elements() - 1) {
+        throw std::runtime_error("ireg " + std::to_string(ireg) + " out of bounds for mesh with " + std::to_string(num_elements()) + " regions");
+    }
+    // inside
+    if (ireg >= 0) {
+        return min_face_dist(ireg, x);
+    }
+    // outside
+    return min_boundary_dist(ireg, x);
+}
+
+EGS_Float EGS_Mesh::min_face_dist(int ireg, const EGS_Vector& x) {
+    assert(ireg >= 0);
+    EGS_Float min2 = std::numeric_limits<EGS_Float>::max();
+
+    auto maybe_update_min = [&](const EGS_Vector& A, const EGS_Vector& B, const EGS_Vector& C) {
+        EGS_Vector q = closest_point_triangle(x, A, B, C);
+        EGS_Float dis = distance2(q, x);
+        if (dis < min2) {
+            min2 = dis;
+        }
+    };
+
+    const auto& A = _elt_points.at(4*ireg);
+    const auto& B = _elt_points.at(4*ireg + 1);
+    const auto& C = _elt_points.at(4*ireg + 2);
+    const auto& D = _elt_points.at(4*ireg + 3);
+
+    maybe_update_min(A, B, C);
+    maybe_update_min(A, C, D);
+    maybe_update_min(A, B, D);
+    maybe_update_min(B, D, C);
+
+    return std::sqrt(min2);
+}
+
+EGS_Float EGS_Mesh::min_boundary_dist(int ireg, const EGS_Vector& x) {
+    assert(ireg < 0);
+    throw std::runtime_error("unimplemented!");
 }
 
 // TODO

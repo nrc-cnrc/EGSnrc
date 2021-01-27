@@ -116,6 +116,10 @@ int test_isWhere() {
     return 0;
 }
 
+int test_hownear() {
+    return 1;
+}
+
 int main() {
     int num_failed = 0;
     int num_total = 0;
@@ -123,6 +127,7 @@ int main() {
 
     RUN_TEST(test_unknown_node());
     RUN_TEST(test_isWhere());
+    RUN_TEST(test_hownear());
 
     std::cerr << num_total - num_failed << " out of " << num_total << " tests passed\n";
     return num_failed;

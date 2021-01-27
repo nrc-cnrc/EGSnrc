@@ -116,6 +116,7 @@ public:
     static EGS_Mesh parse_msh_file(std::istream& input);
 
     std::size_t num_elements() const {
+        // todo return nreg
         return _elt_points.size() / 4;
     }
     const std::vector<EGS_Mesh::Tetrahedron>& elements() const {
@@ -141,11 +142,15 @@ public:
         EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
         throw std::runtime_error("unimplemented!");
     }
-    EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        throw std::runtime_error("unimplemented!");
-    }
+    EGS_Float hownear(int ireg, const EGS_Vector &x);
 
 private:
+    // Given a tetrahedron ireg, find the minimum distance to a face in any direction.
+    EGS_Float min_face_dist(int ireg, const EGS_Vector& x);
+
+    // Outside the mesh, find the minimum distance to the mesh in any direction.
+    EGS_Float min_boundary_dist(int ireg, const EGS_Vector& x);
+
     std::vector<EGS_Vector> _elt_points;
 
     std::vector<EGS_Mesh::Tetrahedron> _elements;
