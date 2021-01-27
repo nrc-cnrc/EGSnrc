@@ -134,8 +134,9 @@ public:
     // EGS_BaseGeometry interface
     const std::string& getType() const { return type; }
     bool isInside(const EGS_Vector &x);
+    // todo figure out medium() / setMedia() situation
     int inside(const EGS_Vector &x);
-    int isWhere(const EGS_Vector &x) { throw std::runtime_error("unimplemented!"); }
+    int isWhere(const EGS_Vector &x);
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
         throw std::runtime_error("unimplemented!");

@@ -295,9 +295,18 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
 
     // TODO figure out materials
+    // TODO set EGS_BaseGeometry::nreg;
 }
 
 bool EGS_Mesh::isInside(const EGS_Vector &x) {
+    return isWhere(x) != -1;
+}
+
+int EGS_Mesh::inside(const EGS_Vector &x) {
+    return isInside(x) ? 0 : -1;
+}
+
+int EGS_Mesh::isWhere(const EGS_Vector &x) {
     for (std::size_t i = 0; i < num_elements(); i++) {
         const auto& A = _elt_points.at(4*i);
         const auto& B = _elt_points.at(4*i + 1);
@@ -315,13 +324,9 @@ bool EGS_Mesh::isInside(const EGS_Vector &x) {
         if (point_outside_of_plane(x, B, D, C, A)) {
             continue;
         }
-        return true;
+        return i;
     }
-    return false;
-}
-
-int EGS_Mesh::inside(const EGS_Vector &x) {
-    return isInside(x) ? 0 : -1;
+    return -1;
 }
 
 // TODO

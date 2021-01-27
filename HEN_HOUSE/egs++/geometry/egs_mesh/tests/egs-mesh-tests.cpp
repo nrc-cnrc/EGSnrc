@@ -41,7 +41,7 @@ int test_unknown_node() {
     return 0;
 }
 
-int test_isInside() {
+int test_isWhere() {
     EGS_Vector o(0, 0, 0);
     // single tetrahedron
     {
@@ -58,6 +58,14 @@ int test_isInside() {
         EGS_Vector in(0, 0, 0);
         EGS_Vector out(10.0, 10.0, 10.0);
 
+        if (mesh.isWhere(in) != 0) {
+            std::cerr << "expected point to be in tetrahedron 0, got: " << mesh.isWhere(in) << "\n";
+            return 1;
+        }
+        if (mesh.isWhere(out) != -1) {
+            std::cerr << "expected point to be outside (-1), got: " << mesh.isWhere(out) << "\n";
+            return 1;
+        }
         if (!mesh.isInside(in)) {
             std::cerr << "expected point to be inside\n";
             return 1;
@@ -87,6 +95,14 @@ int test_isInside() {
         EGS_Vector in(-0.5, -0.25, 0);
         EGS_Vector out(10.0, 10.0, 10.0);
 
+        if (mesh.isWhere(in) != 1) {
+            std::cerr << "expected point to be in tetrahedron 1, got: " << mesh.isWhere(in) << "\n";
+            return 1;
+        }
+        if (mesh.isWhere(out) != -1) {
+            std::cerr << "expected point to be outside (-1), got: " << mesh.isWhere(out) << "\n";
+            return 1;
+        }
         if (!mesh.isInside(in)) {
             std::cerr << "expected point to be inside\n";
             return 1;
@@ -106,7 +122,7 @@ int main() {
     int err = 0;
 
     RUN_TEST(test_unknown_node());
-    RUN_TEST(test_isInside());
+    RUN_TEST(test_isWhere());
 
     std::cerr << num_total - num_failed << " out of " << num_total << " tests passed\n";
     return num_failed;
