@@ -1358,8 +1358,8 @@ REPLACE {$VERSION} WITH {
 "  ESAVEIN             (R)  If ELECTRON RANGE REJECTION is on, discard an
 "                           electron  when E< ESAVEIN and RANGE < CDIST
 "                           where CDIST is closest distance to region of
-"                           interest specified below. This ignores bremsstrahlung
-"                           losses below ESAVEIN.
+"                           interest specified below (ignores bremsstrahlung
+"                           losses below ESAVEIN).
 "                           This parameter must be input even if not used.
 "                           ESAVEIN is a total energy.
 "
@@ -2583,6 +2583,7 @@ IF(IFULL = 1 | IFULL = 3 | IKERMA = 1) [
     iausfl(19) = 1; "after compt"
     iausfl(20) = 1; "before photo"
     iausfl(21) = 1; "after photo"
+    iausfl(25) = 1; "after Rayleigh"
     iausfl(32) = 1; "before eii"
     iausfl(33) = 1; "after eii"
     iausfl(34) = 1; "after sub-threshold fluorescent photon discarded"
@@ -3810,6 +3811,9 @@ ELSEIF(IFULL = 3)["score scattered dose separately"
           ]
       ]
    ]
+   ELSE IF( iarg = 24 ) [ "Raylegh scattering has occured"
+     latch(NP) = IBSET(latch(NP),7);  
+   ] "end iarg = 24 block"
 ] " end IFULL=3 "
 
 "IKERMA=1 option will not work with new photon physics!!!"
@@ -5067,7 +5071,7 @@ nbr_split =VALUE(NUM_BREMPEVEN,1);
 IF(IBRSPL = 1)["brems splitting requested"
     "default bremsstrahlung splitting to maximum"
     "IF((nbr_split  <= 0) | (nbr_split  > $MAXBRSPLIT)) nbr_split =$MAXBRSPLIT;"
-    "Changed to allow bremsstrahlung and annihilation radiation to be turned off"
+    "Now allows bremsstrahlung and annihilation radiation to be turned off"
     IF((nbr_split  > $MAXBRSPLIT)) nbr_split =$MAXBRSPLIT;"
 ]
 ELSE ["no bremsstrahlung splitting" nbr_split = 1;]
@@ -6926,7 +6930,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     "first get primary dose as  difference"
                     DO IZ = 1, NZDOSE [
                       XCOORD(IZ) = ZPLANE(IZ+NZDMIN);
-                      YCOORD(IZ) = SCDOSE(IZ,IX,1) - SCDOSE(IZ,IX,2);"tot-scatter"
+                      YCOORD(IZ) = SCDOSE(IZ,IX,1) - SCDOSE(IZ,IX,2);"tot-scat"
                       "following being lazy, just using uncert on total"
                       UNCERT(IZ) = SCDOSE2(IZ,IX,1)*SCDOSE(IZ,IX,1)/100.;
                       "absolute uncertainty needed for plotting"
