@@ -131,6 +131,9 @@ public:
     const std::vector<std::array<std::size_t, 4>>& neighbours() const {
         return _neighbours;
     }
+    const std::vector<bool>& is_boundary() const {
+        return _is_boundary;
+    }
 
     // EGS_BaseGeometry interface
     const std::string& getType() const { return type; }
@@ -145,13 +148,16 @@ public:
     EGS_Float hownear(int ireg, const EGS_Vector &x);
 
 private:
+    // `hownear` helper method
     // Given a tetrahedron ireg, find the minimum distance to a face in any direction.
-    EGS_Float min_face_dist(int ireg, const EGS_Vector& x);
+    EGS_Float min_interior_face_dist(int ireg, const EGS_Vector& x);
 
-    // Outside the mesh, find the minimum distance to the mesh in any direction.
-    EGS_Float min_boundary_dist(int ireg, const EGS_Vector& x);
+    // `hownear` helper method
+    // Outside the mesh, find the minimum distance to the mesh in any direction (ireg = -1)
+    EGS_Float min_exterior_face_dist(int ireg, const EGS_Vector& x);
 
     std::vector<EGS_Vector> _elt_points;
+    std::vector<bool> _is_boundary;
 
     std::vector<EGS_Mesh::Tetrahedron> _elements;
     std::vector<EGS_Mesh::Node> _nodes;

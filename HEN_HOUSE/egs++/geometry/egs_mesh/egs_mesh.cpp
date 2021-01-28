@@ -180,16 +180,16 @@ EGS_Mesh parse_msh41_body(std::istream& input) {
         }
     }
     if (volumes.empty()) {
-        throw std::runtime_error("No volumes were parsed");
+        throw std::runtime_error("No volumes were parsed from $Entities section");
     }
     if (nodes.empty()) {
-        throw std::runtime_error("No nodes were parsed");
+        throw std::runtime_error("No nodes were parsed, missing $Nodes section");
     }
     if (groups.empty()) {
-        throw std::runtime_error("No groups were parsed");
+        throw std::runtime_error("No groups were parsed from $PhysicalNames section");
     }
     if (elements.empty()) {
-        throw std::runtime_error("No tetrahedrons were parsed");
+        throw std::runtime_error("No tetrahedrons were parsed from $Elements section");
     }
 
     // ensure each entity has a valid group
@@ -289,11 +289,18 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     }
 
     std::vector<mesh_neighbours::Tetrahedron> neighbour_elts;
-    neighbour_elts.reserve(elements.size());
-    for (const auto& e: elements) {
+    neighbour_elts.reserve(_elements.size());
+    for (const auto& e: _elements) {
         neighbour_elts.emplace_back(mesh_neighbours::Tetrahedron(e.a, e.b, e.c, e.d));
     }
     this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
+
+    _is_boundary.reserve(_elements.size());
+    for (const auto& ns: _neighbours) {
+        _is_boundary.push_back(std::any_of(ns.begin(), ns.end(),
+            [](std::size_t n) { return n == mesh_neighbours::NONE; })
+        );
+    }
 
     // TODO figure out materials
     // TODO set EGS_BaseGeometry::nreg;
@@ -336,13 +343,13 @@ EGS_Float EGS_Mesh::hownear(int ireg, const EGS_Vector& x) {
     }
     // inside
     if (ireg >= 0) {
-        return min_face_dist(ireg, x);
+        return min_interior_face_dist(ireg, x);
     }
     // outside
-    return min_boundary_dist(ireg, x);
+    return min_exterior_face_dist(ireg, x);
 }
 
-EGS_Float EGS_Mesh::min_face_dist(int ireg, const EGS_Vector& x) {
+EGS_Float EGS_Mesh::min_interior_face_dist(int ireg, const EGS_Vector& x) {
     assert(ireg >= 0);
     EGS_Float min2 = std::numeric_limits<EGS_Float>::max();
 
@@ -367,9 +374,10 @@ EGS_Float EGS_Mesh::min_face_dist(int ireg, const EGS_Vector& x) {
     return std::sqrt(min2);
 }
 
-EGS_Float EGS_Mesh::min_boundary_dist(int ireg, const EGS_Vector& x) {
+EGS_Float EGS_Mesh::min_exterior_face_dist(int ireg, const EGS_Vector& x) {
     assert(ireg < 0);
     throw std::runtime_error("unimplemented!");
+    // loop over all boundary tetrahedrons and find the closest point to the tetrahedron
 }
 
 // TODO

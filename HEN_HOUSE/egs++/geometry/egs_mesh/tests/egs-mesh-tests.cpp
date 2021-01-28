@@ -1,7 +1,9 @@
 #include "egs_mesh.h"
 #include "egs_vector.h"
 
+#include <algorithm>
 #include <cassert>
+#include <fstream>
 
 #define RUN_TEST(test_fn) \
     std::cerr << "starting test " << #test_fn << std::endl; \
@@ -27,6 +29,9 @@
         } \
     }
 
+// we'll use a simple five-element mesh for smoke testing
+constexpr auto test_file = "five-tet.msh";
+
 int test_unknown_node() {
     std::vector<EGS_Mesh::Tetrahedron> elt { EGS_Mesh::Tetrahedron(0, 0, 1, 2, 100) };
     // no node 100 in nodes vector
@@ -38,6 +43,35 @@ int test_unknown_node() {
     };
     std::vector<EGS_Mesh::Medium> media { EGS_Mesh::Medium(1, "") };
     EXPECT_ERROR(EGS_Mesh mesh(elt, nodes, media), "No mesh node with tag: 100");
+    return 0;
+}
+
+int test_boundary() {
+    std::ifstream input(test_file);
+    auto mesh = EGS_Mesh::parse_msh_file(input);
+    // element 0 is surrounded by the other four elements
+    if (mesh.is_boundary() != std::vector<bool>{false, true, true, true, true}) {
+        return 1;
+    }
+    return 0;
+}
+
+int test_neighbours() {
+    std::ifstream input(test_file);
+    auto mesh = EGS_Mesh::parse_msh_file(input);
+    // element 0 is neighbours with the other four elements
+    auto neighbours = mesh.neighbours();
+    auto n0 = neighbours.at(0);
+    assert(std::count(n0.begin(), n0.end(), 1) == 1);
+    assert(std::count(n0.begin(), n0.end(), 2) == 1);
+    assert(std::count(n0.begin(), n0.end(), 3) == 1);
+    assert(std::count(n0.begin(), n0.end(), 4) == 1);
+
+    for (auto ns = neighbours.begin() + 1; ns != neighbours.end(); ns++) {
+        assert(std::count(ns->begin(), ns->end(), 0) == 1);
+        assert(std::count(ns->begin(), ns->end(), -1) == 3);
+    }
+
     return 0;
 }
 
@@ -127,6 +161,8 @@ int main() {
 
     RUN_TEST(test_unknown_node());
     RUN_TEST(test_isWhere());
+    RUN_TEST(test_boundary());
+    RUN_TEST(test_neighbours());
     RUN_TEST(test_hownear());
 
     std::cerr << num_total - num_failed << " out of " << num_total << " tests passed\n";
