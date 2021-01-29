@@ -150,6 +150,28 @@ int test_hownear_interior() {
     return 0;
 }
 
+int test_hownear_exterior() {
+    // known point 1.0 away from tetrahedron 1 with point (0.0, -1.0, 0.0)
+    {
+        EGS_Vector x(0.0, -2.0, 0.0);
+        auto dist = test_mesh.hownear(-1, x);
+        if (!approx_eq(1.0, dist)) {
+            std::cerr << "expected min distance to be 1.0, got: " << dist << "\n";
+            return 1;
+        }
+    }
+    // known point 10.0 away from tetrahedron 3 with point (0.0, 0.0, -1.0)
+    {
+        EGS_Vector x(0.0, 0.0, -11.0);
+        auto dist = test_mesh.hownear(-1, x);
+        if (!approx_eq(10.0, dist)) {
+            std::cerr << "expected min distance to be 10.0, got: " << dist << "\n";
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int main() {
     int num_failed = 0;
     int num_total = 0;
@@ -160,6 +182,7 @@ int main() {
     RUN_TEST(test_boundary());
     RUN_TEST(test_neighbours());
     RUN_TEST(test_hownear_interior());
+    RUN_TEST(test_hownear_exterior());
 
     std::cerr << num_total - num_failed << " out of " << num_total << " tests passed\n";
     return num_failed;

@@ -338,7 +338,7 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
 }
 
 EGS_Float EGS_Mesh::hownear(int ireg, const EGS_Vector& x) {
-    if (ireg > num_elements() - 1) {
+    if (ireg > 0 && ireg > num_elements() - 1) {
         throw std::runtime_error("ireg " + std::to_string(ireg) + " out of bounds for mesh with " + std::to_string(num_elements()) + " regions");
     }
     // inside
@@ -375,8 +375,22 @@ EGS_Float EGS_Mesh::min_interior_face_dist(int ireg, const EGS_Vector& x) {
 
 EGS_Float EGS_Mesh::min_exterior_face_dist(int ireg, const EGS_Vector& x) {
     assert(ireg < 0);
-    throw std::runtime_error("unimplemented!");
     // loop over all boundary tetrahedrons and find the closest point to the tetrahedron
+    EGS_Float min2 = std::numeric_limits<EGS_Float>::max();
+    for (std::size_t i = 0; i < num_elements(); i++) {
+        if (!_is_boundary[i]) {
+            continue;
+        }
+        const auto& A = _elt_points.at(4*i);
+        const auto& B = _elt_points.at(4*i + 1);
+        const auto& C = _elt_points.at(4*i + 2);
+        const auto& D = _elt_points.at(4*i + 3);
+        EGS_Float dis = distance2(x, closest_point_tetrahedron(x, A, B, C, D));
+        if (dis < min2) {
+            min2 = dis;
+        }
+    }
+    return std::sqrt(min2);
 }
 
 // TODO
