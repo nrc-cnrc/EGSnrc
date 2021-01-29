@@ -88,8 +88,6 @@ function getSlice (data, dimensions, axis, slicePos, dataName) {
   // For slice structure
   // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1502-L1546
 
-  var sliceNum
-
   // Get the axes and slice dimensions
   const [dim1, dim2, dim3] =
     axis === 'xy'
@@ -98,85 +96,48 @@ function getSlice (data, dimensions, axis, slicePos, dataName) {
         ? ['y', 'z', 'x']
         : ['x', 'z', 'y']
 
-  const x = data.voxelArr[dim1]
-  const y = data.voxelArr[dim2]
+  const xVoxels = data.voxelNumber[dim1]
+  const yVoxels = data.voxelNumber[dim2]
+
+  //  Find zScale to get sliceNum from slicePos
   const z = data.voxelArr[dim3]
   const totalSlices = data.voxelNumber[dim3] - 1
-
-  // Get the length in cm of the x and y dimensions
-  var getLengthCm = (voxelArrDim) =>
-    Math.abs(voxelArrDim[voxelArrDim.length - 1] - voxelArrDim[0])
-  const [xLengthCm, yLengthCm] = [getLengthCm(x), getLengthCm(y)]
-
-  // Initialize variables to make slice scales
-  let xRange, yRange
-
-  // if (args !== undefined) {
-  //   xDomain = args[axis].xScale.domain()
-  //   yDomain = args[axis].yScale.domain()
-  //   xRange = [Math.round(args[axis].xScale(x[0])), Math.round(args[axis].xScale(x[x.length - 1]))]
-  //   yRange = [Math.round(args[axis].yScale(y[0])), Math.round(args[axis].yScale(y[y.length - 1]))]
-  // } else {
-  if (xLengthCm > yLengthCm) {
-    xRange = [0, dimensions.width]
-    yRange = axis === 'xy' ? [dimensions.height * (1 - (yLengthCm / xLengthCm)), dimensions.height] : [0, dimensions.height * (yLengthCm / xLengthCm)]
-  } else {
-    xRange = [0, dimensions.width * (xLengthCm / yLengthCm)]
-    yRange = axis === 'xy' ? [0, dimensions.height] : [dimensions.height, 0]
-  }
-  // }
-
   const zDomain = [z[0], z[z.length - 1]]
   const zRange = [0, totalSlices]
   const zScale = (val) => (
     zRange[0] + (zRange[1] - zRange[0]) * ((val - zDomain[0]) / (zDomain[1] - zDomain[0]))
   )
-
-  sliceNum = Math.round(zScale(slicePos))
-  // TODO: Change scales to quantile to map exactly which pixels
-  let slice = {
-    dx: data.voxelSize[dim1],
-    dy: data.voxelSize[dim2],
-    xVoxels: data.voxelNumber[dim1],
-    yVoxels: data.voxelNumber[dim2],
-    x: x,
-    y: y,
-    totalSlices: totalSlices,
-    dxDraw: xRange[0],
-    dyDraw: yRange[0],
-    dWidthDraw: xRange[1] - xRange[0],
-    dHeightDraw: yRange[1] - yRange[0],
-    slicePos: slicePos,
-    dimensions: dimensions,
-    axis: axis
-  }
+  const sliceNum = Math.round(zScale(slicePos))
 
   // Get the slice data for the given axis and index
   // For address calculations:
   // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1999-L2034
-  const sliceData = new Array(slice.xVoxels * slice.yVoxels)
+  const sliceData = new Array(xVoxels * yVoxels)
 
-  for (let i = 0; i < slice.xVoxels; i++) {
-    for (let j = 0; j < slice.yVoxels; j++) {
+  for (let i = 0; i < xVoxels; i++) {
+    for (let j = 0; j < yVoxels; j++) {
       let address
       if (axis === 'xy') {
-        address = i + slice.xVoxels * (j + sliceNum * slice.yVoxels)
+        address = i + xVoxels * (j + sliceNum * yVoxels)
       } else if (axis === 'yz') {
         address =
-          sliceNum + data.voxelNumber.x * (i + j * slice.xVoxels)
+          sliceNum + data.voxelNumber.x * (i + j * xVoxels)
       } else if (axis === 'xz') {
         address =
-          i + slice.xVoxels * (sliceNum + j * data.voxelNumber.y)
+          i + xVoxels * (sliceNum + j * data.voxelNumber.y)
       }
-      const newAddress = i + slice.xVoxels * j
+      const newAddress = i + xVoxels * j
       sliceData[newAddress] = data[dataName][address]
     }
   }
 
-  slice = {
-    ...slice,
+  const slice = {
+    xVoxels: xVoxels,
+    yVoxels: yVoxels,
+    slicePos: slicePos,
     sliceData: sliceData,
-    sliceNum: sliceNum
+    sliceNum: sliceNum,
+    axis: axis
   }
 
   return slice

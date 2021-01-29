@@ -774,8 +774,8 @@ class DensityVolume extends Volume {
     this.densityStep = (args !== undefined) && (args.isDicom) ? 1.0 : 0.01
     this.addColourScheme(this.maxDensityVar, this.minDensityVar)
     this.imageCache = { xy: new Array(data.voxelNumber.z), yz: new Array(data.voxelNumber.x), xz: new Array(data.voxelNumber.y) }
-    // this.cacheAllImages(data)
     this.createBaseSlices(data, 'density')
+    this.cacheAllImages(data)
   }
 
   addColourScheme (maxVal, minVal) {
@@ -976,7 +976,7 @@ class DensityVolume extends Volume {
 
         if (val !== null) {
           // Modify pixel data
-          imageData.data[j++] = val// R value
+          imageData.data[j++] = val // R value
           imageData.data[j++] = val // G value
           imageData.data[j++] = val // B value
           imageData.data[j++] = 255 // A value
