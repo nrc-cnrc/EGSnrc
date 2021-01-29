@@ -3,7 +3,7 @@ $MeshFormat
 $EndMeshFormat
 $Entities
 0 0 0 1
-1 0 0 0 0 0 0 1 1
+1 0 0 0 0 0 0 1 1 0
 $EndEntities
 $PhysicalNames
 1
@@ -38,4 +38,3 @@ $Elements
 4 1 2 3 7
 5 2 3 4 8
 $EndElements
-

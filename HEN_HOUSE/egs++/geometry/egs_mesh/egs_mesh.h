@@ -134,6 +134,9 @@ public:
     const std::vector<bool>& is_boundary() const {
         return _is_boundary;
     }
+    const std::vector<EGS_Vector>& points() const {
+        return _elt_points;
+    }
 
     // EGS_BaseGeometry interface
     const std::string& getType() const { return type; }

@@ -29,8 +29,47 @@
         } \
     }
 
+bool approx_eq(double a, double b, double eps = 1e-6) {
+    return (std::abs(a - b) <= eps * (std::abs(a) + std::abs(b) + 1.0));
+}
+
 // we'll use a simple five-element mesh for smoke testing
-constexpr auto test_file = "five-tet.msh";
+static EGS_Mesh test_mesh = [](){
+    std::ifstream input("five-tet.msh");
+    return EGS_Mesh::parse_msh_file(input);
+}();
+
+class Tet {
+public:
+    Tet(EGS_Vector a, EGS_Vector b, EGS_Vector c, EGS_Vector d)
+        : a(a), b(b), c(c), d(d) {}
+    EGS_Vector centroid() const {
+        return EGS_Vector (
+            (a.x + b.x + c.x + d.x) / 4.0,
+            (a.y + b.y + c.y + d.y) / 4.0,
+            (a.z + b.z + c.z + d.z) / 4.0
+        );
+    }
+private:
+    EGS_Vector a;
+    EGS_Vector b;
+    EGS_Vector c;
+    EGS_Vector d;
+};
+
+std::vector<Tet> get_tetrahedrons(const EGS_Mesh& mesh) {
+    std::vector<Tet> elts;
+    elts.reserve(mesh.num_elements());
+    auto points = mesh.points();
+    for (int i = 0; i < (int)mesh.num_elements(); i++) {
+        elts.emplace_back(Tet(points[4*i], points[4*i+1], points[4*i+2], points[4*i+3]));
+    }
+    return elts;
+}
+
+void print_egsvec(const EGS_Vector& v) {
+    std::cout << "{\n  x: " << v.x << "\n  y: " << v.y << "\n  z: " << v.z << "\n}\n";
+}
 
 int test_unknown_node() {
     std::vector<EGS_Mesh::Tetrahedron> elt { EGS_Mesh::Tetrahedron(0, 0, 1, 2, 100) };
@@ -47,20 +86,16 @@ int test_unknown_node() {
 }
 
 int test_boundary() {
-    std::ifstream input(test_file);
-    auto mesh = EGS_Mesh::parse_msh_file(input);
     // element 0 is surrounded by the other four elements
-    if (mesh.is_boundary() != std::vector<bool>{false, true, true, true, true}) {
+    if (test_mesh.is_boundary() != std::vector<bool>{false, true, true, true, true}) {
         return 1;
     }
     return 0;
 }
 
 int test_neighbours() {
-    std::ifstream input(test_file);
-    auto mesh = EGS_Mesh::parse_msh_file(input);
     // element 0 is neighbours with the other four elements
-    auto neighbours = mesh.neighbours();
+    auto neighbours = test_mesh.neighbours();
     auto n0 = neighbours.at(0);
     assert(std::count(n0.begin(), n0.end(), 1) == 1);
     assert(std::count(n0.begin(), n0.end(), 2) == 1);
@@ -76,82 +111,43 @@ int test_neighbours() {
 }
 
 int test_isWhere() {
-    EGS_Vector o(0, 0, 0);
-    // single tetrahedron
-    {
-        std::vector<EGS_Mesh::Tetrahedron> elt { EGS_Mesh::Tetrahedron(0, 0, 1, 2, 3) };
-        std::vector<EGS_Mesh::Node> nodes {
-            EGS_Mesh::Node(0, 1.0, 1.0, -1.0),
-            EGS_Mesh::Node(1, -1.0, 1.0, -1.0),
-            EGS_Mesh::Node(2, 0.0, -1.0, -1.0),
-            EGS_Mesh::Node(3, 0.0, 0.0, 1.0)
-        };
-        std::vector<EGS_Mesh::Medium> media { EGS_Mesh::Medium(1, "") };
-        EGS_Mesh mesh(elt, nodes, media);
-
-        EGS_Vector in(0, 0, 0);
-        EGS_Vector out(10.0, 10.0, 10.0);
-
-        if (mesh.isWhere(in) != 0) {
-            std::cerr << "expected point to be in tetrahedron 0, got: " << mesh.isWhere(in) << "\n";
-            return 1;
-        }
-        if (mesh.isWhere(out) != -1) {
-            std::cerr << "expected point to be outside (-1), got: " << mesh.isWhere(out) << "\n";
-            return 1;
-        }
-        if (!mesh.isInside(in)) {
-            std::cerr << "expected point to be inside\n";
-            return 1;
-        }
-        if (mesh.isInside(out)) {
-            std::cerr << "expected point to be outside\n";
+    // test the centroid of each tetrahedron is inside the tetrahedron
+    auto elts = get_tetrahedrons(test_mesh);
+    for (int i = 0; i < (int)elts.size(); i++) {
+        auto c = elts.at(i).centroid();
+        auto in_tet = test_mesh.isWhere(c);
+        if (in_tet != i) {
+            std::cerr << "expected point to be in tetrahedron " << i << " got: " << in_tet << "\n";
             return 1;
         }
     }
-
-    // two tetrahedrons
-    {
-        std::vector<EGS_Mesh::Tetrahedron> elt {
-            EGS_Mesh::Tetrahedron(0, 0, 1, 2, 3),
-            EGS_Mesh::Tetrahedron(1, 1, 2, 3, 4),
-        };
-        std::vector<EGS_Mesh::Node> nodes {
-            EGS_Mesh::Node(0, 1.0, 1.0, -1.0),
-            EGS_Mesh::Node(1, -1.0, 1.0, -1.0),
-            EGS_Mesh::Node(2, 0.0, -1.0, -1.0),
-            EGS_Mesh::Node(3, 0.0, 0.0, 1.0),
-            EGS_Mesh::Node(4, -1.0, -1.0, 1.0)
-        };
-        std::vector<EGS_Mesh::Medium> media { EGS_Mesh::Medium(1, "") };
-        EGS_Mesh mesh(elt, nodes, media);
-
-        EGS_Vector in(-0.5, -0.25, 0);
-        EGS_Vector out(10.0, 10.0, 10.0);
-
-        if (mesh.isWhere(in) != 1) {
-            std::cerr << "expected point to be in tetrahedron 1, got: " << mesh.isWhere(in) << "\n";
-            return 1;
-        }
-        if (mesh.isWhere(out) != -1) {
-            std::cerr << "expected point to be outside (-1), got: " << mesh.isWhere(out) << "\n";
-            return 1;
-        }
-        if (!mesh.isInside(in)) {
-            std::cerr << "expected point to be inside\n";
-            return 1;
-        }
-        if (mesh.isInside(out)) {
-            std::cerr << "expected point to be outside\n";
-            return 1;
-        }
+    EGS_Vector out(10e10, 0, 0);
+    if (test_mesh.isWhere(out) != -1) {
+        std::cerr << "expected point to be outside (-1), got: " << test_mesh.isWhere(out) << "\n";
+        return 1;
     }
 
     return 0;
 }
 
-int test_hownear() {
-    return 1;
+int test_hownear_interior() {
+    auto elts = get_tetrahedrons(test_mesh);
+    for (int i = 0; i < (int)elts.size(); i++) {
+        auto c = elts.at(i).centroid();
+        auto dist = test_mesh.hownear(i, c);
+        if (i < 4 && !approx_eq(dist, 0.144338)) {
+            std::cerr << "expected min distance to be 0.144338, got: " << dist << "\n";
+            return 1;
+        } else if (i == 4 && !approx_eq(dist, 0.288675)) {
+            std::cerr << "expected min distance to be 0.288675, got: " << dist << "\n";
+            return 1;
+        } else if (i > 5) {
+            // test specific to five-tet.msh
+            std::cerr << "unknown mesh file for hownear test\n";
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int main() {
@@ -163,7 +159,7 @@ int main() {
     RUN_TEST(test_isWhere());
     RUN_TEST(test_boundary());
     RUN_TEST(test_neighbours());
-    RUN_TEST(test_hownear());
+    RUN_TEST(test_hownear_interior());
 
     std::cerr << num_total - num_failed << " out of " << num_total << " tests passed\n";
     return num_failed;

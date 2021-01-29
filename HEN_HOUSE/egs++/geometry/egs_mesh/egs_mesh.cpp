@@ -338,7 +338,7 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
 }
 
 EGS_Float EGS_Mesh::hownear(int ireg, const EGS_Vector& x) {
-    if (ireg >= num_elements() - 1) {
+    if (ireg > num_elements() - 1) {
         throw std::runtime_error("ireg " + std::to_string(ireg) + " out of bounds for mesh with " + std::to_string(num_elements()) + " regions");
     }
     // inside
@@ -354,8 +354,7 @@ EGS_Float EGS_Mesh::min_interior_face_dist(int ireg, const EGS_Vector& x) {
     EGS_Float min2 = std::numeric_limits<EGS_Float>::max();
 
     auto maybe_update_min = [&](const EGS_Vector& A, const EGS_Vector& B, const EGS_Vector& C) {
-        EGS_Vector q = closest_point_triangle(x, A, B, C);
-        EGS_Float dis = distance2(q, x);
+        EGS_Float dis = distance2(closest_point_triangle(x, A, B, C), x);
         if (dis < min2) {
             min2 = dis;
         }
