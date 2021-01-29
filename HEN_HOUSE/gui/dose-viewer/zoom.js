@@ -113,7 +113,7 @@ function zoomedCanvas (transform, densityVol, canvas, axis) {
   // Get the image to draw
   // TODO: Use cached image URL instead
   const image = densityVol.prevSliceImg[axis]
-  const prevSlice = densityVol.prevSlice[axis]
+  const baseSlice = densityVol.baseSlices[axis]
   const context = canvas.node().getContext('2d')
 
   // Clear the canvas, apply transformations, and redraw
@@ -121,7 +121,7 @@ function zoomedCanvas (transform, densityVol, canvas, axis) {
   context.clearRect(0, 0, canvas.node().width, canvas.node().height)
   context.translate(transform.x, transform.y)
   context.scale(transform.k, transform.k)
-  context.drawImage(image, 0, 0, prevSlice.xVoxels, prevSlice.yVoxels, prevSlice.dxDraw, prevSlice.dyDraw, prevSlice.dWidthDraw, prevSlice.dHeightDraw)
+  context.drawImage(image, 0, 0, baseSlice.xVoxels, baseSlice.yVoxels, baseSlice.dxDraw, baseSlice.dyDraw, baseSlice.dWidthDraw, baseSlice.dHeightDraw)
   context.restore()
 }
 
@@ -160,8 +160,8 @@ function zoomedAll (transform, panel) {
     .attr('transform', transform.toString())
 
   // Create new scale ojects based on event
-  var newxScale = transform.rescaleX(volume.prevSlice[panel.axis].xScale)
-  var newyScale = transform.rescaleY(volume.prevSlice[panel.axis].yScale)
+  var newxScale = transform.rescaleX(volume.baseSlices[panel.axis].xScale)
+  var newyScale = transform.rescaleY(volume.baseSlices[panel.axis].yScale)
 
   // Update axes
   axisElements['axis-svg']

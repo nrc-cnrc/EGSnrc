@@ -79,6 +79,9 @@ class Panel {
     this.volumeViewerId = id
     this.zoomTransform = zoomTransform
     this.markerPosition = markerPosition
+    this.densitySliceNum = null
+    this.doseSliceNum = null
+    this.slicePos = null
 
     // Properties to check values of voxel and dose profile checkboxes
     this.showMarker = () =>
@@ -115,15 +118,6 @@ class Panel {
   }
 
   /**
-   * Return the slice number of the current volume loaded in the panel.
-   *
-   * @returns {number}
-   */
-  get sliceNum () {
-    return this.volume.prevSlice[this.axis].sliceNum
-  }
-
-  /**
    * Show crosshairs if plot dose checkbox is selected.
    */
   updateCrosshairDisplay () {
@@ -150,16 +144,18 @@ class Panel {
     let slicePos, slice
 
     if (this.densityVol) {
-      slicePos = this.densityVol.prevSlice[this.axis].zScale.invert(sliceNum)
+      slicePos = this.densityVol.baseSlices[this.axis].zScale.invert(sliceNum)
       slice = this.densityVol.getSlice(this.axis, slicePos)
       this.densityVol.drawDensity(slice, this.zoomTransform)
+      this.densitySliceNum = sliceNum
     }
     if (this.doseVol) {
-      const args = this.densityVol ? this.densityVol.prevSlice : undefined
-      slicePos = slicePos || this.doseVol.prevSlice[this.axis].zScale.invert(sliceNum)
-      slice = this.doseVol.getSlice(this.axis, slicePos, args)
+      slicePos = slicePos || this.doseVol.baseSlices[this.axis].zScale.invert(sliceNum)
+      slice = this.doseVol.getSlice(this.axis, slicePos)
       this.doseVol.drawDose(slice, this.zoomTransform)
+      this.doseSliceNum = sliceNum
     }
+    this.slicePos = slicePos
   }
 
   /**
@@ -299,22 +295,34 @@ class Panel {
   coordsToWorld (coords) {
     const volume = this.densityVol || this.doseVol
     const axis = this.axis
-    const sliceNum = this.sliceNum
+    const sliceNum = this.densitySliceNum || this.doseSliceNum
     const transform = this.zoomTransform
 
     // Invert transformation if applicable then invert scale to get world coordinate
-    const i = volume.prevSlice[axis].xScale.invert(
+    const i = volume.baseSlices[axis].xScale.invert(
       transform ? transform.invert(coords)[0] : coords[0]
     )
-    const j = volume.prevSlice[axis].yScale.invert(
+    const j = volume.baseSlices[axis].yScale.invert(
       transform ? transform.invert(coords)[1] : coords[1]
     )
 
-    const k = volume.prevSlice[axis].zScale.invert(parseInt(sliceNum))
+    const k = volume.baseSlices[axis].zScale.invert(parseInt(sliceNum))
 
     const [xVal, yVal, zVal] =
       axis === 'xy' ? [i, j, k] : axis === 'yz' ? [k, i, j] : [i, k, j]
     return [xVal, yVal, zVal]
+  }
+
+  setDensityVolume (densityVol, sliceNum, slicePos) {
+    this.densityVol = densityVol
+    this.densitySliceNum = sliceNum
+    this.slicePos = slicePos
+  }
+
+  setDoseVolume (doseVol, sliceNum, slicePos) {
+    this.doseVol = doseVol
+    this.densitySliceNum = sliceNum
+    this.slicePos = slicePos
   }
 }
 

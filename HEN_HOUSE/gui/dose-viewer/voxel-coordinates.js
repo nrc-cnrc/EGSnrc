@@ -93,10 +93,10 @@ function buildVoxelInfoHtml (parentDiv, id) {
 function coordsToVoxel (coords, axis, sliceNum, volume, transform) {
   // Invert transformation if applicable then apply scale to get voxel
   // coordinate
-  const i = volume.prevSlice[axis].xPixelToVoxelScale(
+  const i = volume.baseSlices[axis].xPixelToVoxelScale(
     transform ? transform.invertX(coords[0]) : coords[0]
   )
-  const j = volume.prevSlice[axis].yPixelToVoxelScale(
+  const j = volume.baseSlices[axis].yPixelToVoxelScale(
     transform ? transform.invertY(coords[1]) : coords[1]
   )
   const k = parseInt(sliceNum)

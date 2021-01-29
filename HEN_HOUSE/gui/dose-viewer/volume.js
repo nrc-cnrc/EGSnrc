@@ -55,7 +55,7 @@ class Volume {
     this.dimensions = dimensions
     this.legendDimensions = legendDimensions
     this.args = args
-    this.prevSlice = { xy: {}, yz: {}, xz: {} }
+    this.baseSlices = { xy: {}, yz: {}, xz: {} }
     this.sliceCache = { xy: {}, yz: {}, xz: {} }
     this.imageCache = {}
   }
@@ -93,9 +93,8 @@ class Volume {
 *
 * @param {Object} data The data from parsing the file.
 */
-  createBaseSlices (data) {
+  createBaseSlices (data, type) {
     // TODO: Change scales to quantile to map exactly which pixels
-    this.baseSlice = {}
     const AXES = ['xy', 'yz', 'xz']
 
     AXES.forEach((axis) => {
@@ -110,9 +109,9 @@ class Volume {
       const x = data.voxelArr[dim1]
       const y = data.voxelArr[dim2]
       const z = data.voxelArr[dim3]
+      const totalSlices = data.voxelNumber[dim3] - 1
       const xVoxels = data.voxelNumber[dim1]
       const yVoxels = data.voxelNumber[dim2]
-      const totalSlices = data.voxelNumber[dim3]
 
       // Get the length in cm of the x and y dimensions
       var getLengthCm = (voxelArrDim) =>
@@ -125,13 +124,6 @@ class Volume {
         xRange,
         yRange
 
-      // if (args !== undefined) {
-      //   console.log(args)
-      //   xDomain = args[axis].xScale.domain()
-      //   yDomain = args[axis].yScale.domain()
-      //   xRange = [Math.round(args[axis].xScale(x[0])), Math.round(args[axis].xScale(x[x.length - 1]))]
-      //   yRange = [Math.round(args[axis].yScale(y[0])), Math.round(args[axis].yScale(y[y.length - 1]))]
-      // } else {
       if (xLengthCm > yLengthCm) {
         xDomain = [x[0], x[x.length - 1]]
         yDomain = axis === 'xy' ? [y[y.length - 1], y[y.length - 1] - xLengthCm] : [y[y.length - 1] - xLengthCm, y[y.length - 1]]
@@ -143,9 +135,7 @@ class Volume {
         xRange = [0, this.dimensions.width * (xLengthCm / yLengthCm)]
         yRange = axis === 'xy' ? [0, this.dimensions.height] : [this.dimensions.height, 0]
       }
-      // }
 
-      // TODO: Clamp scales
       // Define screen pixel to real length mapping
       const xScale = d3
         .scaleLinear()
@@ -159,6 +149,11 @@ class Volume {
         .scaleLinear()
         .domain([z[0], z[z.length - 1]])
         .range([0, totalSlices])
+
+      if (type === 'dose') {
+        xRange = [Math.round(xScale(x[0])), Math.round(xScale(x[x.length - 1]))]
+        yRange = [Math.round(yScale(y[0])), Math.round(yScale(y[y.length - 1]))]
+      }
 
       // Define the screen pixel to volume voxel mapping
       const xPixelToVoxelScale = d3
@@ -180,7 +175,7 @@ class Volume {
         .domain(axis === 'xy' ? [yVoxels, 0] : [0, yVoxels])
         .range(axis === 'xy' ? yRange.reverse() : yRange)
 
-      this.baseSlice[axis] = {
+      this.baseSlices[axis] = {
         dx: data.voxelSize[dim1],
         dy: data.voxelSize[dim2],
         xVoxels: xVoxels,
@@ -188,10 +183,13 @@ class Volume {
         x: x,
         y: y,
         totalSlices: totalSlices,
+        dxDraw: xRange[0],
+        dyDraw: yRange[0],
+        dWidthDraw: xRange[1] - xRange[0],
+        dHeightDraw: yRange[1] - yRange[0],
         xScale: xScale,
         yScale: yScale,
-        zScale: zScale, // unit: pixels
-        dimensions: this.dimensions,
+        zScale: zScale,
         axis: axis,
         xPixelToVoxelScale: xPixelToVoxelScale,
         yPixelToVoxelScale: yPixelToVoxelScale,
@@ -216,159 +214,47 @@ class Volume {
    * @param {string} dataName The type of data, either "density" or "dose".
    * @returns {Object}
    */
-  getSlice (axis, slicePos, dataName, args) {
+  getSlice (axis, slicePos, dataName) {
     // TODO: Cache previous slices
     // TODO: Only redefine slice attributes on axis change
     // For slice structure
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1502-L1546
 
-    var sliceNum
+    const baseSlice = this.baseSlices[axis]
+    const sliceNum = Math.round(baseSlice.zScale(slicePos))
 
     // If slice is cached, return it
-    if ((this.prevSlice[axis] !== undefined) && (Object.keys(this.prevSlice[axis]).length !== 0)) {
-      sliceNum = Math.round(this.prevSlice[axis].zScale(slicePos))
-      if (this.sliceCache[axis][sliceNum] !== undefined) {
-        return this.sliceCache[axis][sliceNum]
-      }
-    }
-
-    // Get the axes and slice dimensions
-    const [dim1, dim2, dim3] =
-      axis === 'xy'
-        ? ['x', 'y', 'z']
-        : axis === 'yz'
-          ? ['y', 'z', 'x']
-          : ['x', 'z', 'y']
-
-    const x = this.data.voxelArr[dim1]
-    const y = this.data.voxelArr[dim2]
-    const z = this.data.voxelArr[dim3]
-    const totalSlices = this.data.voxelNumber[dim3] - 1
-
-    // Get the length in cm of the x and y dimensions
-    var getLengthCm = (voxelArrDim) =>
-      Math.abs(voxelArrDim[voxelArrDim.length - 1] - voxelArrDim[0])
-    const [xLengthCm, yLengthCm] = [getLengthCm(x), getLengthCm(y)]
-
-    // Initialize variables to make slice scales
-    let xDomain,
-      yDomain,
-      xRange,
-      yRange
-
-    if (args !== undefined) {
-      xDomain = args[axis].xScale.domain()
-      yDomain = args[axis].yScale.domain()
-      xRange = [Math.round(args[axis].xScale(x[0])), Math.round(args[axis].xScale(x[x.length - 1]))]
-      yRange = [Math.round(args[axis].yScale(y[0])), Math.round(args[axis].yScale(y[y.length - 1]))]
-    } else {
-      if (xLengthCm > yLengthCm) {
-        xDomain = [x[0], x[x.length - 1]]
-        yDomain = axis === 'xy' ? [y[y.length - 1], y[y.length - 1] - xLengthCm] : [y[y.length - 1] - xLengthCm, y[y.length - 1]]
-        xRange = [0, this.dimensions.width]
-        yRange = axis === 'xy' ? [this.dimensions.height * (1 - (yLengthCm / xLengthCm)), this.dimensions.height] : [0, this.dimensions.height * (yLengthCm / xLengthCm)]
-      } else {
-        xDomain = [x[0], x[0] + yLengthCm]
-        yDomain = axis === 'xy' ? [y[y.length - 1], y[0]] : [y[0], y[y.length - 1]]
-        xRange = [0, this.dimensions.width * (xLengthCm / yLengthCm)]
-        yRange = axis === 'xy' ? [0, this.dimensions.height] : [this.dimensions.height, 0]
-      }
-    }
-
-    // Define screen pixel to real length mapping
-    const xScale = d3
-      .scaleLinear()
-      .domain(xDomain)
-      .range([0, this.dimensions.width])
-    const yScale = d3
-      .scaleLinear()
-      .domain(yDomain)
-      .range([this.dimensions.height, 0])
-    const zScale = d3
-      .scaleLinear()
-      .domain([z[0], z[z.length - 1]])
-      .range([0, totalSlices])
-
-    // Define the screen pixel to volume voxel mapping
-    const xPixelToVoxelScale = d3
-      .scaleQuantile()
-      .domain(xRange)
-      .range(d3.range(0, this.data.voxelNumber[dim1], 1))
-    const yPixelToVoxelScale = d3
-      .scaleQuantile()
-      .domain(yRange)
-      .range(axis === 'xy' ? d3.range(0, this.data.voxelNumber[dim2], 1) : d3.range(this.data.voxelNumber[dim2] - 1, -1, -1))
-
-    // Define the voxel to screen mapping for dose contours
-    const contourXScale = d3
-      .scaleLinear()
-      .domain([0, this.data.voxelNumber[dim1]])
-      .range(xRange)
-    const contourYScale = d3
-      .scaleLinear()
-      .domain(axis === 'xy' ? [this.data.voxelNumber[dim2], 0] : [0, this.data.voxelNumber[dim2]])
-      .range(axis === 'xy' ? yRange.reverse() : yRange)
-
-    sliceNum = Math.round(zScale(slicePos))
-
-    // TODO: Change scales to quantile to map exactly which pixels
-    let slice = {
-      dx: this.data.voxelSize[dim1],
-      dy: this.data.voxelSize[dim2],
-      xVoxels: this.data.voxelNumber[dim1],
-      yVoxels: this.data.voxelNumber[dim2],
-      x: x,
-      y: y,
-      totalSlices: totalSlices,
-      dxDraw: xRange[0],
-      dyDraw: yRange[0],
-      dWidthDraw: xRange[1] - xRange[0],
-      dHeightDraw: yRange[1] - yRange[0],
-      xScale: xScale,
-      yScale: yScale,
-      zScale: zScale, // unit: pixels
-      slicePos: slicePos,
-      dimensions: this.dimensions,
-      axis: axis,
-      xPixelToVoxelScale: xPixelToVoxelScale,
-      yPixelToVoxelScale: yPixelToVoxelScale,
-      contourTransform: ({ type, value, coordinates }) => ({
-        type,
-        value,
-        coordinates: coordinates.map((rings) =>
-          rings.map((points) =>
-            points.map(([i, j]) => [contourXScale(i), contourYScale(j)])
-          )
-        )
-      })
+    if ((this.sliceCache[axis] !== undefined) && (this.sliceCache[axis][sliceNum] !== undefined)) {
+      return this.sliceCache[axis][sliceNum]
     }
 
     // Get the slice data for the given axis and index
     // For address calculations:
     // https://github.com/nrc-cnrc/EGSnrc/blob/master/HEN_HOUSE/omega/progs/dosxyz_show/dosxyz_show.c#L1999-L2034
-    const sliceData = new Array(slice.xVoxels * slice.yVoxels)
+    const sliceData = new Array(baseSlice.xVoxels * baseSlice.yVoxels)
 
-    for (let i = 0; i < slice.xVoxels; i++) {
-      for (let j = 0; j < slice.yVoxels; j++) {
+    for (let i = 0; i < baseSlice.xVoxels; i++) {
+      for (let j = 0; j < baseSlice.yVoxels; j++) {
         let address
         if (axis === 'xy') {
-          address = i + slice.xVoxels * (j + sliceNum * slice.yVoxels)
+          address = i + baseSlice.xVoxels * (j + sliceNum * baseSlice.yVoxels)
         } else if (axis === 'yz') {
           address =
-            sliceNum + this.data.voxelNumber.x * (i + j * slice.xVoxels)
+            sliceNum + this.data.voxelNumber.x * (i + j * baseSlice.xVoxels)
         } else if (axis === 'xz') {
           address =
-            i + slice.xVoxels * (sliceNum + j * this.data.voxelNumber.y)
+            i + baseSlice.xVoxels * (sliceNum + j * this.data.voxelNumber.y)
         }
-        const newAddress = i + slice.xVoxels * j
+        const newAddress = i + baseSlice.xVoxels * j
         sliceData[newAddress] = this.data[dataName][address]
       }
     }
 
-    slice = {
-      ...slice,
+    const slice = {
+      slicePos: slicePos,
       sliceData: sliceData,
-      sliceNum: sliceNum
+      sliceNum: sliceNum,
+      axis: axis
     }
 
     this.sliceCache[axis][sliceNum] = slice
@@ -438,7 +324,7 @@ class DoseVolume extends Volume {
    *
    * @param {Object} data The data from parsing the file.
    */
-  // TODO: Remove maxDoseVar
+  // TODO : Remove maxDoseVar
   addData (data) {
     this.data = data
     // Max dose used for dose contour plot
@@ -451,6 +337,7 @@ class DoseVolume extends Volume {
     // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
     this.className = (i) =>
       'col-' + d3.format('d')(this.thresholdPercents[i] * 1000)
+    this.createBaseSlices(data, 'dose')
   }
 
   /**
@@ -459,15 +346,16 @@ class DoseVolume extends Volume {
    * @param {number} val The maximum dose percentage.
    * @param {Object} panels The panels for which to update the dose plots.
    */
+  // TODO: Move to panel
   setMaxDose (val, panels) {
     this.maxDoseVar = val * this.data.maxDose
     // Update the colour scheme and thresholds with the new max dose variable
     super.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0)
-    this.updateThresholds();
+    this.updateThresholds()
 
-    ['xy', 'yz', 'xz'].forEach((axis) =>
-      this.drawDose(this.prevSlice[axis], panels[axis].zoomTransform)
-    )
+    // ['xy', 'yz', 'xz'].forEach((axis) =>
+    //   this.drawDose(this.prevSlice[axis], panels[axis].zoomTransform)
+    // )
 
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
       volumeViewerList.forEach((volumeViewer) => {
@@ -491,14 +379,15 @@ class DoseVolume extends Volume {
    * @param {number} thresholdPercent The dose percentage to add.
    * @param {Object} panels The panels for which to update the dose plots.
    */
+  // TODO: Move to panel
   addThresholdPercent (thresholdPercent, panels) {
     this.thresholdPercents.push(thresholdPercent)
     this.thresholdPercents.sort()
     this.updateThresholds()
-    this.initializeLegend();
-    ['xy', 'yz', 'xz'].forEach((axis) =>
-      this.drawDose(this.prevSlice[axis], panels[axis].zoomTransform)
-    )
+    this.initializeLegend()
+    // ['xy', 'yz', 'xz'].forEach((axis) =>
+    //   this.drawDose(this.prevSlice[axis], panels[axis].zoomTransform)
+    // )
   }
 
   /**
@@ -537,6 +426,7 @@ class DoseVolume extends Volume {
    */
   drawDose (slice, transform) {
     const svg = this.htmlElementObj[slice.axis]
+    const baseSlice = this.baseSlices[slice.axis]
 
     // Clear dose plot
     svg.selectAll('g').remove()
@@ -544,10 +434,10 @@ class DoseVolume extends Volume {
     // Draw contours
     var contours = d3
       .contours()
-      .size([slice.xVoxels, slice.yVoxels])
+      .size([baseSlice.xVoxels, baseSlice.yVoxels])
       .smooth(false)
       .thresholds(this.thresholds)(slice.sliceData)
-      .map(slice.contourTransform)
+      .map(baseSlice.contourTransform)
 
     const contourPaths = svg
       .append('g')
@@ -580,8 +470,6 @@ class DoseVolume extends Volume {
     if (transform) {
       svg.select('g.dose-contour').attr('transform', transform.toString())
     }
-
-    this.prevSlice[slice.axis] = slice
   }
 
   /**
@@ -840,6 +728,8 @@ class DoseComparisonVolume extends DoseVolume {
     // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
     this.className = (i) =>
       'col-' + d3.format('d')(this.thresholdPercents[i] * 1000)
+
+    this.createBaseSlices(data, 'density')
   }
 
   /**
@@ -883,8 +773,9 @@ class DensityVolume extends Volume {
     this.densityFormat = (args !== undefined) && (args.isDicom) ? d3.format('d') : d3.format('.2f')
     this.densityStep = (args !== undefined) && (args.isDicom) ? 1.0 : 0.01
     this.addColourScheme(this.maxDensityVar, this.minDensityVar)
-    this.imageCache = { xy: new Array(data.voxelArr.z), yz: new Array(data.voxelArr.x), xz: new Array(data.voxelArr.y) }
-    this.cacheAllImages(data)
+    this.imageCache = { xy: new Array(data.voxelNumber.z), yz: new Array(data.voxelNumber.x), xz: new Array(data.voxelNumber.y) }
+    // this.cacheAllImages(data)
+    this.createBaseSlices(data, 'density')
   }
 
   addColourScheme (maxVal, minVal) {
@@ -939,15 +830,18 @@ class DensityVolume extends Volume {
    * @param {number} maxDensityVal The maximum density value.
    * @param {Object} panels The panels for which to update the dose plots.
    */
+  // TODO: Move to panel
   setMaxDensityVar (maxDensityVal, panels) {
     this.maxDensityVar = parseFloat(maxDensityVal)
 
     // Redraw legend
     this.initializeLegend()
 
-    Object.values(panels).forEach((panel) => {
-      this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
-    })
+    // Perhaps move this to the panels?? call initialize legend and make
+    // maxdensity var a panel attribute
+    // Object.values(panels).forEach((panel) => {
+    //   this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
+    // })
   }
 
   /**
@@ -956,15 +850,16 @@ class DensityVolume extends Volume {
   * @param {number} minDensityVal The minimum density value.
   * @param {Object} panels The panels for which to update the dose plots.
   */
+  // TODO: Move to panel
   setMinDensityVar (minDensityVal, panels) {
     this.minDensityVar = parseFloat(minDensityVal)
 
     // Redraw legend
     this.initializeLegend()
 
-    Object.values(panels).forEach((panel) => {
-      this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
-    })
+    // Object.values(panels).forEach((panel) => {
+    //   this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
+    // })
   }
 
   /**
@@ -1003,6 +898,7 @@ class DensityVolume extends Volume {
   drawDensity (slice, transform) {
     // Get the canvas and context in the webpage
     const svg = this.htmlElementObj[slice.axis]
+    const baseSlice = this.baseSlices[slice.axis]
     const imgCanvas = svg.node()
     const imgContext = imgCanvas.getContext('2d', { alpha: false })
     const imageData = this.getImageData(slice)
@@ -1026,8 +922,8 @@ class DensityVolume extends Volume {
 
     // Create the voxel canvas to draw the slice onto
     const canvas = document.createElement('canvas')
-    canvas.width = slice.xVoxels
-    canvas.height = slice.yVoxels
+    canvas.width = baseSlice.xVoxels
+    canvas.height = baseSlice.yVoxels
     const context = canvas.getContext('2d')
 
     // Draw the image data onto the voxel canvas
@@ -1041,13 +937,13 @@ class DensityVolume extends Volume {
       imgContext.scale(transform.k, transform.k)
     }
 
-    imgContext.drawImage(canvas, 0, 0, slice.xVoxels, slice.yVoxels, slice.dxDraw, slice.dyDraw, slice.dWidthDraw, slice.dHeightDraw)
+    imgContext.drawImage(canvas, 0, 0, baseSlice.xVoxels, baseSlice.yVoxels, baseSlice.dxDraw, baseSlice.dyDraw, baseSlice.dWidthDraw, baseSlice.dHeightDraw)
     imgContext.restore()
 
     // TODO: Add event listener?
     var image = new Image()
     image.src = canvas.toDataURL()
-    this.prevSlice[slice.axis] = slice
+    // TODO: Move prevSliceImg to panel
     this.prevSliceImg[slice.axis] = image
   }
 
@@ -1060,14 +956,16 @@ class DensityVolume extends Volume {
   getImageData (slice) {
     // Create new canvas element and set the dimensions
     var canvas = document.createElement('canvas')
-    canvas.width = slice.xVoxels
-    canvas.height = slice.yVoxels
+    const xVoxels = this.baseSlices[slice.axis].xVoxels
+    const yVoxels = this.baseSlices[slice.axis].yVoxels
+    canvas.width = xVoxels
+    canvas.height = yVoxels
 
     // Get the canvas context
     const context = canvas.getContext('2d')
 
     // Create the image data
-    var imageData = context.createImageData(slice.xVoxels, slice.yVoxels)
+    var imageData = context.createImageData(xVoxels, yVoxels)
 
     if (this.imageCache[slice.axis] !== undefined && this.imageCache[slice.axis][slice.sliceNum] !== undefined) {
       imageData.data.set(this.imageCache[slice.axis][slice.sliceNum])
@@ -1092,9 +990,10 @@ class DensityVolume extends Volume {
     context.putImageData(imageData, 0, 0)
     if (slice.axis !== 'xy') {
       context.scale(1, -1)
-      context.drawImage(canvas, 0, -1 * slice.yVoxels)
+      context.drawImage(canvas, 0, -1 * yVoxels)
     }
-    imageData = context.getImageData(0, 0, slice.xVoxels, slice.yVoxels)
+    imageData = context.getImageData(0, 0, xVoxels, yVoxels)
+
     return imageData
   }
 

@@ -88,17 +88,19 @@ class VolumeViewer {
 
   drawAxes (zoomTransform, svgAxis, slice) {
     // If density is already plotted, move dose slice?
+    const volume = this.densityVolume || this.doseVolume
+    const baseSlice = volume.baseSlices[slice.axis]
 
     svgAxis.selectAll('.x-axis, .y-axis, .x-axis-grid, .y-axis-grid').remove()
 
     // TODO: Check for existing scale on axes
     // If there is existing transformation, apply it
     const xScale = zoomTransform
-      ? zoomTransform.rescaleX(slice.xScale)
-      : slice.xScale
+      ? zoomTransform.rescaleX(baseSlice.xScale)
+      : baseSlice.xScale
     const yScale = zoomTransform
-      ? zoomTransform.rescaleY(slice.yScale)
-      : slice.yScale
+      ? zoomTransform.rescaleY(baseSlice.yScale)
+      : baseSlice.yScale
 
     // Create and append the x and y axes
     var xAxis = d3.axisBottom().scale(xScale).ticks(6)
@@ -107,7 +109,7 @@ class VolumeViewer {
     svgAxis
       .append('g')
       .attr('class', 'x-axis')
-      .attr('transform', 'translate(0,' + slice.dimensions.height + ')')
+      .attr('transform', 'translate(0,' + volume.dimensions.height + ')')
       .style('font-size', '12px')
       .call(xAxis)
     svgAxis
@@ -120,20 +122,20 @@ class VolumeViewer {
     var xAxisGrid = d3
       .axisBottom()
       .scale(xScale)
-      .tickSize(-slice.dimensions.height)
+      .tickSize(-volume.dimensions.height)
       .tickFormat('')
       .ticks(6)
     var yAxisGrid = d3
       .axisLeft()
       .scale(yScale)
-      .tickSize(-slice.dimensions.width)
+      .tickSize(-volume.dimensions.width)
       .tickFormat('')
       .ticks(6)
 
     svgAxis
       .append('g')
       .attr('class', 'x-axis-grid')
-      .attr('transform', 'translate(0,' + slice.dimensions.height + ')')
+      .attr('transform', 'translate(0,' + volume.dimensions.height + ')')
       .call(xAxisGrid)
     svgAxis.append('g').attr('class', 'y-axis-grid').call(yAxisGrid)
 
@@ -144,9 +146,9 @@ class VolumeViewer {
       .attr(
         'transform',
         'translate(' +
-        slice.dimensions.width / 2 +
+        volume.dimensions.width / 2 +
         ' ,' +
-        (slice.dimensions.fullHeight - 25) +
+        (volume.dimensions.fullHeight - 25) +
         ')'
       )
       .style('text-anchor', 'middle')
@@ -160,9 +162,9 @@ class VolumeViewer {
       .attr(
         'transform',
         'translate(' +
-        (25 - slice.dimensions.margin.left) +
+        (25 - volume.dimensions.margin.left) +
         ' ,' +
-        slice.dimensions.height / 2 +
+        volume.dimensions.height / 2 +
         ') rotate(-90)'
       )
       .style('text-anchor', 'middle')
@@ -195,15 +197,15 @@ class VolumeViewer {
     AXES.forEach((axis, i) => {
       // Get the correct slice number and position
       var getPos = (arr, i) => (arr[i] + arr[i + 1]) / 2.0
-      sliceNum[axis] = this.densityVolume
-        ? this.densityVolume.prevSlice[axis].sliceNum
+      sliceNum[axis] = this.panels[axis].densityVol
+        ? this.panels[axis].densitySliceNum
         : Math.floor(doseVol.data.voxelNumber[dims[i]] / 2)
-      slicePos[axis] = this.densityVolume
-        ? this.densityVolume.prevSlice[axis].slicePos
+      slicePos[axis] = this.panels[axis].densityVol
+        ? this.panels[axis].slicePos
         : getPos(doseVol.data.voxelArr[dims[i]], Math.floor(doseVol.data.voxelNumber[dims[i]] / 2))
 
-      const args = this.densityVolume ? this.densityVolume.prevSlice : undefined
-      const slice = doseVol.getSlice(axis, slicePos[axis], args)
+      // Make a function in panel to avoid calling get slice from here?
+      const slice = doseVol.getSlice(axis, slicePos[axis])
       doseVol.drawDose(slice, this.panels[axis].zoomTransform)
       // Update the axis
       this.drawAxes(
@@ -216,7 +218,7 @@ class VolumeViewer {
 
     // Set the panel doseVolume object
     Object.values(this.panels).forEach((panel) => {
-      panel.doseVol = doseVol
+      panel.setDoseVolume(doseVol, sliceNum[panel.axis], slicePos[panel.axis])
       if (!panel.volume) {
         panel.volume = doseVol
         panel.setupZoom()
@@ -259,15 +261,13 @@ class VolumeViewer {
     const slicePos = {}
 
     AXES.forEach((axis, i) => {
-      // Get the correct slice number
-      sliceNum[axis] = this.doseVolume
-        ? this.doseVolume.prevSlice[axis].sliceNum
-        : Math.floor(densityVol.data.voxelNumber[dims[i]] / 2)
-
+      // Get the correct slice number and position
       var getPos = (arr, i) => (arr[i] + arr[i + 1]) / 2.0
-
-      slicePos[axis] = this.doseVolume
-        ? this.doseVolume.prevSlice[axis].slicePos
+      sliceNum[axis] = this.panels[axis].doseVol
+        ? this.panels[axis].doseSliceNum
+        : Math.floor(densityVol.data.voxelNumber[dims[i]] / 2)
+      slicePos[axis] = this.panels[axis].doseVol
+        ? this.panels[axis].slicePos
         : getPos(densityVol.data.voxelArr[dims[i]], Math.floor(densityVol.data.voxelNumber[dims[i]] / 2))
 
       const slice = densityVol.getSlice(axis, slicePos[axis])
@@ -282,7 +282,7 @@ class VolumeViewer {
 
     // Set the panel densityVolume object
     Object.values(this.panels).forEach((panel) => {
-      panel.densityVol = densityVol
+      panel.setDensityVolume(densityVol, sliceNum[panel.axis], slicePos[panel.axis])
       if (!panel.volume) {
         panel.volume = densityVol
         panel.setupZoom()
@@ -637,7 +637,7 @@ class VolumeViewer {
           const voxelCoords = coordsToVoxel(
             plotCoords,
             currPanel.axis,
-            currPanel.sliceNum,
+            currPanel.densitySliceNum || currPanel.doseSliceNum,
             currPanel.volume,
             currPanel.zoomTransform
           )
@@ -654,8 +654,8 @@ class VolumeViewer {
               }
 
               // Convert voxel number to pixel value for both x and y coordinates
-              const xScale = panel.volume.prevSlice[panel.axis].xPixelToVoxelScale.invertExtent
-              const yScale = panel.volume.prevSlice[panel.axis].yPixelToVoxelScale.invertExtent
+              const xScale = panel.volume.baseSlices[panel.axis].xPixelToVoxelScale.invertExtent
+              const yScale = panel.volume.baseSlices[panel.axis].yPixelToVoxelScale.invertExtent
 
               let coords
               if (panel.zoomTransform) {
@@ -807,7 +807,7 @@ class VolumeViewer {
       const voxelCoords = coordsToVoxel(
         d.plotCoords,
         d.panel.axis,
-        d.panel.sliceNum,
+        d.panel.densitySliceNum || d.panel.doseSliceNum,
         d.panel.volume,
         d.panel.zoomTransform
       )
@@ -827,8 +827,8 @@ class VolumeViewer {
           }
 
           // Convert voxel number to pixel value for both x and y coordinates
-          const xScale = panel.volume.prevSlice[panel.axis].xPixelToVoxelScale.invertExtent
-          const yScale = panel.volume.prevSlice[panel.axis].yPixelToVoxelScale.invertExtent
+          const xScale = panel.volume.baseSlices[panel.axis].xPixelToVoxelScale.invertExtent
+          const yScale = panel.volume.baseSlices[panel.axis].yPixelToVoxelScale.invertExtent
 
           let coords
 
