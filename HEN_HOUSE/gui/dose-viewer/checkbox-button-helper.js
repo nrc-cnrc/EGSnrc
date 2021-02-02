@@ -93,82 +93,77 @@ d3.select('#add-volume-viewer').on('click', function () {
 /**
  * Define the behaviour of selecting the show dose profile checkbox.
  */
-d3.select("input[name='show-dose-profile-checkbox']").on('change', function () {
+var defineShowProfileCheckboxBehaviour = function (volumeViewer, checkbox) {
   // Call all panels to show/hide crosshairs
-  volumeViewerList.forEach((volumeViewer) => {
-    Object.values(volumeViewer.panels).forEach((panel) => {
-      panel.updateCrosshairDisplay()
+  Object.values(volumeViewer.panels).forEach((panel) => {
+    panel.updateCrosshairDisplay()
+  })
+
+  if (checkbox.checked) {
+    // Hide dose profile plots
+    volumeViewer.doseProfileList.forEach((doseProfile) =>
+      doseProfile.parentSvg.style('display', null)
+    )
+
+    // Enable saving dose profiles as csv
+    d3.select('#save-dose-profile').node().disabled = false
+
+    // Update dose profiles
+    // Only choose first panel because it will update all dose profiles
+    const panel = volumeViewer.panels.xy
+    if (panel.markerPosition) {
+      const worldCoords = panel.coordsToWorld(panel.markerPosition)
+      updateVoxelCoords(
+        panel.densityVol,
+        panel.doseVol,
+        worldCoords,
+        volumeViewer.id
+      )
+    }
+  } else {
+    // Show dose profile plots
+    volumeViewer.doseProfileList.forEach((doseProfile) => {
+      doseProfile.parentSvg.style('display', 'none')
     })
 
-    if (this.checked) {
-      // Hide dose profile plots
-      volumeViewer.doseProfileList.forEach((doseProfile) =>
-        doseProfile.parentSvg.style('display', null)
-      )
-
-      // Enable saving dose profiles as csv
-      d3.select('#save-dose-profile').node().disabled = false
-
-      // Update dose profiles
-      // Only choose first panel because it will update all dose profiles
-      const panel = volumeViewer.panels.xy
-      if (panel.markerPosition) {
-        const worldCoords = panel.coordsToWorld(panel.markerPosition)
-        updateVoxelCoords(
-          panel.densityVol,
-          panel.doseVol,
-          worldCoords,
-          volumeViewer.id
-        )
-      }
-    } else {
-      // Show dose profile plots
-      volumeViewer.doseProfileList.forEach((doseProfile) => {
-        doseProfile.parentSvg.style('display', 'none')
-      })
-
-      // Disable saving dose profiles as csv
-      d3.select('#save-dose-profile').node().disabled = true
-    }
-  })
-})
+    // Disable saving dose profiles as csv
+    d3.select('#save-dose-profile').node().disabled = true
+  }
+}
 
 /**
  * Define the behaviour of selecting the show voxel information checkbox.
  */
-d3.select("input[name='show-marker-checkbox']").on('change', function () {
+var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) {
   // Call all panels to show/hide circle marker
-  volumeViewerList.forEach((volumeViewer) => {
-    Object.values(volumeViewer.panels).forEach((panel) => {
-      panel.updateCircleMarkerDisplay()
-    })
-
-    const voxelInfo = d3.selectAll('div#voxel-info-' + volumeViewer.id)
-    if (this.checked) {
-      // Remove hidden class
-      voxelInfo.classed('hidden', false)
-
-      // Update voxel information
-      volumeViewerList.forEach((volumeViewer) => {
-        const panel = volumeViewer.panels.xy
-        const worldCoords = panel.coordsToWorld(panel.markerPosition)
-        if (panel.markerPosition) {
-          updateVoxelCoords(
-            panel.densityVol,
-            panel.doseVol,
-            worldCoords,
-            panel.volumeViewerId
-          )
-        }
-      })
-    } else {
-      // Add hidden class
-      voxelInfo.classed('hidden', true)
-    }
+  Object.values(volumeViewer.panels).forEach((panel) => {
+    panel.updateCircleMarkerDisplay()
   })
-})
+
+  const voxelInfo = d3.selectAll('div#voxel-info-' + volumeViewer.id)
+  if (checkbox.checked) {
+    // Remove hidden class
+    voxelInfo.classed('hidden', false)
+
+    // Update voxel information
+    const panel = volumeViewer.panels.xy
+    const worldCoords = panel.coordsToWorld(panel.markerPosition)
+    if (panel.markerPosition) {
+      updateVoxelCoords(
+        panel.densityVol,
+        panel.doseVol,
+        worldCoords,
+        panel.volumeViewerId
+      )
+    }
+  } else {
+    // Add hidden class
+    voxelInfo.classed('hidden', true)
+  }
+}
 
 export {
+  defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
   enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
   enableCheckboxForVoxelInformation, enableExportVisualizationButton
 }

@@ -98,8 +98,23 @@ div.file-selector {
   margin: 5px 0px 5px 10px;
 }
 
-div.min-max-container {
+div.slider-container {
   margin: 5px 0px 5px 10px;
+}
+
+div.option-holder {
+  display: flex;
+  flex-direction: row;
+}
+
+div.option {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px;
+}
+
+div.checkbox, button.button-text {
+  margin: 5px 0px;
 }
 
 /* Dose profile settings */

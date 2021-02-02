@@ -35,6 +35,7 @@ import {
   densityVolumeList, doseComparisonVolumeList, doseVolumeList, volumeViewerList
 } from './index.js'
 import {
+  defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
   enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
   enableCheckboxForVoxelInformation, enableExportVisualizationButton
 } from './checkbox-button-helper.js'
@@ -44,6 +45,7 @@ import { Slider } from './slider.js'
 import { DoseComparisonVolume } from './volume.js'
 import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
 import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
+import { defineExportCSVButtonBehaviour, defineExportPNGButtonBehaviour } from './export.mjs'
 
 const AXES = ['xy', 'yz', 'xz']
 
@@ -562,13 +564,62 @@ class VolumeViewer {
     // Set up the file selector dropdowns
     this.setUpFileSelectors()
 
+    // Put the checkboxes, buttons, and sliders in the option holder div
+    const optionHolder = this.volHolder.append('div').attr('class', 'option-holder')
+
+    // Add checkboxes for voxel information and dose profile plots
+    const checkboxHolder = optionHolder.append('div').attr('class', 'option')
+    const addCheckbox = (id, value, label, onChangeFunc) => {
+      const checkboxDiv = checkboxHolder.append('div').attr('class', 'checkbox')
+      const checkbox = checkboxDiv.append('input')
+        .attr('type', 'checkbox')
+        .attr('id', id)
+        .attr('name', id)
+        .attr('value', value)
+        .attr('disabled', 'disabled')
+
+      checkboxDiv.append('label')
+        .attr('for', id)
+        .text(label)
+
+      checkbox.on('change', () => onChangeFunc(this, checkbox.node()))
+    }
+
+    addCheckbox('show-marker-checkbox', 'ShowMarker', 'Show voxel information on click?',
+      defineShowMarkerCheckboxBehaviour)
+    addCheckbox('show-dose-profile-checkbox', 'ShowDoseProfile',
+      'Plot dose profile at crosshairs?', defineShowProfileCheckboxBehaviour)
+
+    // Add buttons to export visualization and export to csv
+    const buttonHolder = optionHolder.append('div').attr('class', 'option')
+    const addButtons = (id, label, onClickFunc) => {
+      const button = buttonHolder.append('button')
+        .attr('id', id)
+        .attr('class', 'button-text')
+        .attr('disabled', 'disabled')
+        .text(label)
+
+      button.on('click', () => onClickFunc(this))
+    }
+
+    addButtons('save-vis', 'Export visualization to PNG', defineExportPNGButtonBehaviour)
+    addButtons('save-dose-profile', 'Export dose profiles to CSV', defineExportCSVButtonBehaviour)
+
     // Add min and max density sliders
-    this.minParentDiv = this.volHolder
+    const minMaxSliderHolder = optionHolder.append('div').attr('class', 'option')
+    this.minParentDiv = minMaxSliderHolder
       .append('div')
       .attr('class', 'min-max-container')
-    this.maxParentDiv = this.volHolder
+    this.maxParentDiv = minMaxSliderHolder
       .append('div')
       .attr('class', 'min-max-container')
+
+    // Add max dose slider
+    const doseSliderHolder = optionHolder.append('div').attr('class', 'option')
+    doseSliderHolder
+      .append('div')
+      .attr('id', 'axis-slider-container')
+    // .attr('class', 'min-max-container')
 
     // Add voxel information
     buildVoxelInfoHtml(this.volHolder, id)
