@@ -313,16 +313,66 @@ class Panel {
     return [xVal, yVal, zVal]
   }
 
-  setDensityVolume (densityVol, sliceNum, slicePos) {
+  setDensityVolume (densityVol, slicePos) {
     this.densityVol = densityVol
-    this.densitySliceNum = sliceNum
     this.slicePos = slicePos
+
+    if (this.doseVol !== undefined) {
+      this.adjustDoseBaseSlices()
+    } else {
+      this.setupZoom()
+    }
+
+    this.densitySliceNum = Math.round(this.densityVol.baseSlices[this.axis].zScale(slicePos))
+    this.volume = densityVol
   }
 
-  setDoseVolume (doseVol, sliceNum, slicePos) {
+  setDoseVolume (doseVol, slicePos) {
     this.doseVol = doseVol
-    this.densitySliceNum = sliceNum
     this.slicePos = slicePos
+
+    // If existing density volume, adjust doseVol baseSlices
+    if (this.densityVol !== undefined) {
+      this.adjustDoseBaseSlices()
+    } else {
+      this.setupZoom()
+      this.volume = doseVol
+    }
+
+    this.doseSliceNum = Math.round(this.doseVol.baseSlices[this.axis].zScale(slicePos))
+  }
+
+  adjustDoseBaseSlices () {
+    const AXES = ['xy', 'yz', 'xz']
+
+    AXES.forEach((axis) => {
+      const densityBaseSlice = this.densityVol.baseSlices[axis]
+      const x = this.doseVol.baseSlices[axis].x
+      const y = this.doseVol.baseSlices[axis].y
+      const xVoxels = this.doseVol.baseSlices[axis].xVoxels
+      const yVoxels = this.doseVol.baseSlices[axis].yVoxels
+      const xRange = [Math.round(densityBaseSlice.xScale(x[0])), Math.round(densityBaseSlice.xScale(x[x.length - 1]))]
+      const yRange = [Math.round(densityBaseSlice.yScale(y[0])), Math.round(densityBaseSlice.yScale(y[y.length - 1]))]
+
+      const contourXScale = d3
+        .scaleLinear()
+        .domain([0, xVoxels])
+        .range(xRange)
+      const contourYScale = d3
+        .scaleLinear()
+        .domain(axis === 'xy' ? [yVoxels, 0] : [0, yVoxels])
+        .range(axis === 'xy' ? yRange.reverse() : yRange)
+
+      this.doseVol.baseSlices[axis].contourTransform = ({ type, value, coordinates }) => ({
+        type,
+        value,
+        coordinates: coordinates.map((rings) =>
+          rings.map((points) =>
+            points.map(([i, j]) => [contourXScale(i), contourYScale(j)])
+          )
+        )
+      })
+    })
   }
 }
 

@@ -193,44 +193,43 @@ class VolumeViewer {
     doseVol.initializeDoseContourInput(this.panels)
 
     const dims = 'zxy'
-    const sliceNum = {}
-    const slicePos = {}
+    var sliceNum, slicePos
 
-    AXES.forEach((axis, i) => {
-      // Get the correct slice number and position
-      var getPos = (arr, i) => (arr[i] + arr[i + 1]) / 2.0
-      sliceNum[axis] = this.panels[axis].densityVol
-        ? this.panels[axis].densitySliceNum
-        : Math.floor(doseVol.data.voxelNumber[dims[i]] / 2)
-      slicePos[axis] = this.panels[axis].densityVol
-        ? this.panels[axis].slicePos
-        : getPos(doseVol.data.voxelArr[dims[i]], Math.floor(doseVol.data.voxelNumber[dims[i]] / 2))
-
-      // Make a function in panel to avoid calling get slice from here?
-      const slice = doseVol.getSlice(axis, slicePos[axis])
-      doseVol.drawDose(slice, this.panels[axis].zoomTransform)
-      // Update the axis
-      this.drawAxes(
-        this.panels[axis].zoomTransform,
-        this.svgObjs['axis-svg'][axis],
-        slice
-      )
-      this.sliceSliders[axis].setCurrentValue(sliceNum[axis])
-    })
+    // Get the average of items at index i and i+1
+    const getPos = (arr, i) => (arr[i] + arr[i + 1]) / 2.0
 
     // Set the panel doseVolume object
-    Object.values(this.panels).forEach((panel) => {
-      panel.setDoseVolume(doseVol, sliceNum[panel.axis], slicePos[panel.axis])
-      if (!panel.volume) {
-        panel.volume = doseVol
-        panel.setupZoom()
+    Object.values(this.panels).forEach((panel, i) => {
+      // Get the slice position
+      slicePos = panel.densityVol
+        ? panel.slicePos
+        : getPos(doseVol.data.voxelArr[dims[i]], Math.floor(doseVol.data.voxelNumber[dims[i]] / 2))
+
+      // Set the dose volume in the panel
+      panel.setDoseVolume(doseVol, slicePos)
+
+      if (!panel.densityVol) {
         // Update the slider max values
-        AXES.forEach((axis, i) => {
-          this.sliceSliders[axis].setMaxValue(
-            doseVol.data.voxelNumber[dims[i]] - 1
-          )
-          this.sliceSliders[axis].setCurrentValue(sliceNum[axis])
-        })
+        sliceNum = Math.round(doseVol.baseSlices[panel.axis].zScale(slicePos))
+        this.sliceSliders[panel.axis].setMaxValue(
+          doseVol.data.voxelNumber[dims[i]] - 1
+        )
+        this.sliceSliders[panel.axis].setCurrentValue(sliceNum)
+
+        // Draw the slice
+        const slice = doseVol.getSlice(panel.axis, slicePos)
+        doseVol.drawDose(slice, panel.zoomTransform)
+
+        // Update the axis
+        this.drawAxes(
+          panel.zoomTransform,
+          this.svgObjs['axis-svg'][panel.axis],
+          slice
+        )
+      } else {
+        // Draw the slice
+        const slice = doseVol.getSlice(panel.axis, slicePos)
+        doseVol.drawDose(slice, panel.zoomTransform)
       }
     })
 
@@ -259,42 +258,43 @@ class VolumeViewer {
     densityVol.initializeLegend()
     densityVol.initializeCanvas()
     const dims = 'zxy'
-    const sliceNum = {}
-    const slicePos = {}
+    var sliceNum, slicePos
 
-    AXES.forEach((axis, i) => {
-      // Get the correct slice number and position
-      var getPos = (arr, i) => (arr[i] + arr[i + 1]) / 2.0
-      sliceNum[axis] = this.panels[axis].doseVol
-        ? this.panels[axis].doseSliceNum
-        : Math.floor(densityVol.data.voxelNumber[dims[i]] / 2)
-      slicePos[axis] = this.panels[axis].doseVol
-        ? this.panels[axis].slicePos
-        : getPos(densityVol.data.voxelArr[dims[i]], Math.floor(densityVol.data.voxelNumber[dims[i]] / 2))
-
-      const slice = densityVol.getSlice(axis, slicePos[axis])
-      densityVol.drawDensity(slice, this.panels[axis].zoomTransform)
-      // Update the axis
-      this.drawAxes(
-        this.panels[axis].zoomTransform,
-        this.svgObjs['axis-svg'][axis],
-        slice
-      )
-    })
+    // Get the average of items at index i and i+1
+    const getPos = (arr, i) => (arr[i] + arr[i + 1]) / 2.0
 
     // Set the panel densityVolume object
-    Object.values(this.panels).forEach((panel) => {
-      panel.setDensityVolume(densityVol, sliceNum[panel.axis], slicePos[panel.axis])
-      if (!panel.volume) {
-        panel.volume = densityVol
-        panel.setupZoom()
-        // Update the slider max values
-        AXES.forEach((axis, i) => {
-          this.sliceSliders[axis].setMaxValue(
-            densityVol.data.voxelNumber[dims[i]] - 1
-          )
-          this.sliceSliders[axis].setCurrentValue(sliceNum[axis])
-        })
+    Object.values(this.panels).forEach((panel, i) => {
+      // Get the slice position
+      slicePos = panel.doseVol
+        ? panel.slicePos
+        : getPos(densityVol.data.voxelArr[dims[i]], Math.floor(densityVol.data.voxelNumber[dims[i]] / 2))
+
+      // Set the density volume in the panel
+      panel.setDensityVolume(densityVol, slicePos)
+
+      // Update the slider max values
+      sliceNum = Math.round(densityVol.baseSlices[panel.axis].zScale(slicePos))
+      this.sliceSliders[panel.axis].setMaxValue(
+        densityVol.data.voxelNumber[dims[i]] - 1
+      )
+      this.sliceSliders[panel.axis].setCurrentValue(sliceNum)
+
+      // Draw the slice
+      const densitySlice = densityVol.getSlice(panel.axis, slicePos)
+      densityVol.drawDensity(densitySlice, panel.zoomTransform)
+
+      // Update the axis
+      this.drawAxes(
+        panel.zoomTransform,
+        this.svgObjs['axis-svg'][panel.axis],
+        densitySlice
+      )
+
+      if (panel.doseVol) {
+        // Redraw dose contours
+        const doseSlice = panel.doseVol.sliceCache[panel.axis][panel.doseSliceNum]
+        panel.doseVol.drawDose(doseSlice, panel.zoomTransform)
       }
     })
 

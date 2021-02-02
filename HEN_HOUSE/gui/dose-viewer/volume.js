@@ -354,7 +354,7 @@ class DoseVolume extends Volume {
     this.updateThresholds()
 
     Object.values(panels).forEach((panel) => {
-      this.drawDose(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform)
+      this.drawDose(this.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform)
     })
 
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
@@ -385,9 +385,10 @@ class DoseVolume extends Volume {
     this.thresholdPercents.sort()
     this.updateThresholds()
     this.initializeLegend()
-    // ['xy', 'yz', 'xz'].forEach((axis) =>
-    //   this.drawDose(this.prevSlice[axis], panels[axis].zoomTransform)
-    // )
+
+    Object.values(panels).forEach((panel) => {
+      this.drawDose(this.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform)
+    })
   }
 
   /**
