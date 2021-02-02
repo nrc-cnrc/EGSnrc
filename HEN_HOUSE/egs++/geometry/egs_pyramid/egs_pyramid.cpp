@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -45,6 +46,8 @@ static EGS_PYRAMID_LOCAL string __pyrX = "EGS_PyramidX";
 static EGS_PYRAMID_LOCAL string __pyrY = "EGS_PyramidY";
 static EGS_PYRAMID_LOCAL string __pyrZ = "EGS_PyramidZ";
 static EGS_PYRAMID_LOCAL string __pyr  = "EGS_Pyramid";
+
+static bool EGS_PYRAMID_LOCAL inputSet = false;
 
 template<class T>
 EGS_PyramidT<T>::EGS_PyramidT(T *P, const EGS_Vector &Xo, bool O,
@@ -93,6 +96,50 @@ void EGS_PyramidT<T>::printInfo() const {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Pyramid"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of pyramid", {"EGS_PyramidX", "EGS_PyramidY", "EGS_PyramidZ", "EGS_Pyramid"});
+
+        geomBlockInput->addSingleInput("points", true, "A list of 2D or 3D positions");
+        geomBlockInput->addSingleInput("tip", true, "The 3D position of the tip of the pyramid (x, y ,z)");
+        geomBlockInput->addSingleInput("closed", false, "0 (open) or 1 (closed)");
+    }
+
+    EGS_PYRAMID_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of egs_pyramid
+
+    # EGS_PyramidZ example
+    #:start geometry:
+        name = my_pyramid
+        library = egs_pyramid
+        type = EGS_PyramidZ
+        points = 1 1  -1 1  -1 -1  4 -1
+        tip = 0 0 7
+        closed = 0
+        :start media input:
+            media = air
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_PYRAMID_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_PYRAMID_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 

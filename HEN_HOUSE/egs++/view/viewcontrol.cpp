@@ -223,13 +223,13 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     lib_dir += CONFIG_NAME;
     lib_dir += fs;
 
-    EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
+    /*EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
     if (!app_lib.load()) egsFatal("\n%s: Failed to load the %s application library from %s\n\n",
                                       appv[0],app_name.c_str(),lib_dir.c_str());
 
     createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
     if (!createApp) egsFatal("\n%s: Failed to resolve the address of the 'createApplication' function"
-                                 " in the application library %s\n\n",appv[0],app_lib.libraryFile());
+                                 " in the application library %s\n\n",appv[0],app_lib.libraryFile()); */
 /*TODO left here crash 'cause tutor7pp isn't compiled <=======================
     EGS_Application *app = createApp(appc,appv);
     if (!app) {
@@ -267,7 +267,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     inputStruct = make_shared<EGS_InputStruct>();
 
     // Get the application level input blocks
-    getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
+    /*getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
     if(getAppInputs) {
         getAppInputs(inputStruct);
         if(inputStruct) {
@@ -284,7 +284,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                 }
             }
         }
-    }
+    } */
 
     // Geometry definition block
     auto geomDefPtr = inputStruct->addBlockInput("geometry definition");
@@ -302,14 +302,19 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         libName = libName.right(libName.length() - lib_prefix.length());
 
         egsInformation("testlib trying %s\n", libName.toLatin1().data());
+        if (lib.startsWith("Qt5")) {
+            continue;
+        }
 
         EGS_Library egs_lib(libName.toLatin1().data(),dso_dir.c_str());
         if (!egs_lib.load()) {
             continue;
         }
+        egsInformation("testlib2 trying %s\n", libName.toLatin1().data());
 
         // Geometries
         createGeomFunction isGeom = (createGeomFunction) egs_lib.resolve("createGeometry");
+        egsInformation("testlib4 trying \n");
         if (isGeom) {
             egsInformation(" testgeom %s\n",libName.toLatin1().data());
 
@@ -343,7 +348,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     }
                 }
             }
-
+            egsInformation("testlib5 trying \n");
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = geomMenu->addAction(libName);
@@ -353,6 +358,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         }
 
         // Sources
+        egsInformation("testlib6 trying \n");
         createSourceFunction isSource = (createSourceFunction) egs_lib.resolve("createSource");
         if (isSource) {
             egsInformation(" testsrc %s\n",libName.toLatin1().data());
@@ -387,7 +393,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     }
                 }
             }
-
+            //egsInformation("testlib7 trying \n");
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = sourceMenu->addAction(libName);
@@ -397,6 +403,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         }
 
         // Shapes
+        egsInformation("testlib8 trying \n");
         createShapeFunction isShape = (createShapeFunction) egs_lib.resolve("createShape");
         if (isShape) {
             egsInformation(" testshape %s\n",libName.toLatin1().data());
@@ -431,6 +438,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     }
                 }
             }
+            //egsInformation("testlib9 trying \n");
 
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
@@ -440,7 +448,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             }
         }
     }
-
+    egsInformation("testlib3 trying \n");
     egsinpEdit->setInputStruct(inputStruct);
 }
 

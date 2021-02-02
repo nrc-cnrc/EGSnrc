@@ -28,6 +28,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Hubert Ho
 #                   Randle Taylor
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -1076,494 +1077,634 @@ const char *err_msg1 = "createGeometry(EGS_XYZRepeater)";
 
 #endif
 
-string EGS_NDGeometry::type = "EGS_NDGeometry";
+static string EGS_NDG_LOCAL typeStr("EGS_NDGeometry");
+string EGS_NDGeometry::type(typeStr);
+
+static bool EGS_NDG_LOCAL inputSet = false;
 
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_NDGeometry"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", false, "type of nd_geometry", {"EGS_XYZGeometry", "EGS_XYZRepeater"});
+
+        auto dimPtr = geomBlockInput->addSingleInput("dimensions", true, "A list of previously defined geometries.");
+        dimPtr->addDependency(typePtr, "", true);
+        auto hownPtr = geomBlockInput->addSingleInput("hownear method", false, "0(for orthogonal constituent geometries) or 1");
+        hownPtr->addDependency(typePtr, "", true);
+
+        // EGS_XYZGeometry
+        // First method
+        auto xPtr = geomBlockInput->addSingleInput("x-planes", false, "A list of the x-plane positions");
+        xPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto yPtr = geomBlockInput->addSingleInput("y-planes", false, "A list of the y-plane positions");
+        yPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto zPtr = geomBlockInput->addSingleInput("z-planes", false, "A list of the z-plane positions");
+        zPtr->addDependency(typePtr, "EGS_XYZGeometry");
+
+        // Second method
+        auto densityPtr = geomBlockInput->addSingleInput("density matrix", false, "Density file");
+        densityPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto ctPtr = geomBlockInput->addSingleInput("ct ramp", false, "Ramp file");
+        ctPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto phantPtr = geomBlockInput->addSingleInput("egsphant file", false, "An egsphant file");
+        phantPtr->addDependency(typePtr, "EGS_XYZGeometry");
+
+        // For second method, must either use "ct ramp" or "egsphant file"
+        densityPtr->addDependency(phantPtr, "", true);
+        phantPtr->addDependency(densityPtr, "", true);
+
+        // Third method
+        auto xslabPtr = geomBlockInput->addSingleInput("x-slabs", false, "Xo Dx Nx");
+        xslabPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto yslabPtr = geomBlockInput->addSingleInput("y-slabs", false, "Yo Dy Ny");
+        yslabPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto zslabPtr = geomBlockInput->addSingleInput("z-slabs", false, "Zo Dz Nz");
+        zslabPtr->addDependency(typePtr, "EGS_XYZGeometry");
+
+        // Can only use one method
+        xPtr->addDependency(densityPtr, "", true);
+        yPtr->addDependency(densityPtr, "", true);
+        zPtr->addDependency(densityPtr, "", true);
+        xPtr->addDependency(ctPtr, "", true);
+        yPtr->addDependency(ctPtr, "", true);
+        zPtr->addDependency(ctPtr, "", true);
+        xPtr->addDependency(phantPtr, "", true);
+        yPtr->addDependency(phantPtr, "", true);
+        zPtr->addDependency(phantPtr, "", true);
+        xPtr->addDependency(xslabPtr, "", true);
+        yPtr->addDependency(xslabPtr, "", true);
+        zPtr->addDependency(xslabPtr, "", true);
+        xPtr->addDependency(yslabPtr, "", true);
+        yPtr->addDependency(yslabPtr, "", true);
+        zPtr->addDependency(yslabPtr, "", true);
+        xPtr->addDependency(zslabPtr, "", true);
+        yPtr->addDependency(zslabPtr, "", true);
+        zPtr->addDependency(zslabPtr, "", true);
+        densityPtr->addDependency(xPtr, "", true);
+        ctPtr->addDependency(xPtr, "", true);
+        phantPtr->addDependency(xPtr, "", true);
+        densityPtr->addDependency(yPtr, "", true);
+        ctPtr->addDependency(yPtr, "", true);
+        phantPtr->addDependency(yPtr, "", true);
+        densityPtr->addDependency(zPtr, "", true);
+        ctPtr->addDependency(zPtr, "", true);
+        phantPtr->addDependency(zPtr, "", true);
+        densityPtr->addDependency(xslabPtr, "", true);
+        ctPtr->addDependency(xslabPtr, "", true);
+        phantPtr->addDependency(xslabPtr, "", true);
+        densityPtr->addDependency(yslabPtr, "", true);
+        ctPtr->addDependency(yslabPtr, "", true);
+        phantPtr->addDependency(yslabPtr, "", true);
+        densityPtr->addDependency(zslabPtr, "", true);
+        ctPtr->addDependency(zslabPtr, "", true);
+        phantPtr->addDependency(zslabPtr, "", true);
+        xslabPtr->addDependency(xPtr, "", true);
+        xslabPtr->addDependency(yPtr, "", true);
+        xslabPtr->addDependency(zPtr, "", true);
+        xslabPtr->addDependency(densityPtr, "", true);
+        xslabPtr->addDependency(ctPtr, "", true);
+        xslabPtr->addDependency(phantPtr, "", true);
+        yslabPtr->addDependency(xPtr, "", true);
+        yslabPtr->addDependency(yPtr, "", true);
+        yslabPtr->addDependency(zPtr, "", true);
+        yslabPtr->addDependency(densityPtr, "", true);
+        yslabPtr->addDependency(ctPtr, "", true);
+        yslabPtr->addDependency(phantPtr, "", true);
+        zslabPtr->addDependency(xPtr, "", true);
+        zslabPtr->addDependency(yPtr, "", true);
+        zslabPtr->addDependency(zPtr, "", true);
+        zslabPtr->addDependency(densityPtr, "", true);
+        zslabPtr->addDependency(ctPtr, "", true);
+        zslabPtr->addDependency(phantPtr, "", true);
+
+
+        // EGS_XYZRepeater
+        auto regeomPtr = geomBlockInput->addSingleInput("repeated geometry", true, "The name of a previously defined geometry");
+        regeomPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto medPtr = geomBlockInput->addSingleInput("medium", false, "The medium the space between  xmin..xmax, ymin..ymax, and zmin..zmax is filled with");
+        medPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto rexPtr = geomBlockInput->addSingleInput("repeat x", true, "xmin xmax Nx");
+        rexPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto reyPtr = geomBlockInput->addSingleInput("repeat y", true, "ymin ymax Ny");
+        reyPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto rezPtr = geomBlockInput->addSingleInput("repeat z", true, "zmin zmax Nz");
+        rezPtr->addDependency(typePtr, "EGS_XYZRepeater");
+    }
+
+    EGS_NDG_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_ndgeometry
+    #:start geometry:
+        library = EGS_NDGeometry
+        name = my_ndgeometry
+        dimensions = geom1 geom2
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_NDG_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_NDG_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 #ifdef EXPLICIT_XYZ
         const static char *func = "createGeometry(XYZ)";
-        string type;
-        int is_xyz = input->getInput("type",type);
-        if (!is_xyz && input->compare("EGS_XYZRepeater",type)) {
-            string base,medium;
-            vector<EGS_Float> xr, yr, zr;
-            int err1 = input->getInput("repeated geometry",base);
-            int err2 = input->getInput("repeat x",xr);
-            int err3 = input->getInput("repeat y",yr);
-            int err4 = input->getInput("repeat z",zr);
-            int err5 = input->getInput("medium",medium);
-            EGS_BaseGeometry *g = 0;
-            if (err1) {
-                egsWarning("%s: missing 'repeated geometry' input\n",err_msg1);
-            }
-            else {
-                g = EGS_BaseGeometry::getGeometry(base);
-                if (!g) {
-                    egsWarning("%s: no geometry named %s exists\n",err_msg1,
-                               base.c_str());
+            string type;
+            int is_xyz = input->getInput("type",type);
+            if (!is_xyz && input->compare("EGS_XYZRepeater",type)) {
+                string base,medium;
+                vector<EGS_Float> xr, yr, zr;
+                int err1 = input->getInput("repeated geometry",base);
+                int err2 = input->getInput("repeat x",xr);
+                int err3 = input->getInput("repeat y",yr);
+                int err4 = input->getInput("repeat z",zr);
+                int err5 = input->getInput("medium",medium);
+                EGS_BaseGeometry *g = 0;
+                if (err1) {
+                    egsWarning("%s: missing 'repeated geometry' input\n",err_msg1);
+                }
+                else {
+                    g = EGS_BaseGeometry::getGeometry(base);
+                    if (!g) {
+                        egsWarning("%s: no geometry named %s exists\n",err_msg1,
+                                   base.c_str());
+                        err1 = 1;
+                    }
+                }
+                if (err2 || xr.size() != 3) {
+                    err1 = 1;
+                    egsWarning("%s: wrong/missing 'repeat x' input\n",err_msg1);
+                }
+                if (err3 || yr.size() != 3) {
+                    err1 = 1;
+                    egsWarning("%s: wrong/missing 'repeat y' input\n",err_msg1);
+                }
+                if (err4 || zr.size() != 3) {
+                    err1 = 1;
+                    egsWarning("%s: wrong/missing 'repeat z' input\n",err_msg1);
+                }
+                if (err1) {
+                    return 0;
+                }
+                EGS_Float xmin = xr[0], xmax = xr[1];
+                int nx = (int)(xr[2]+0.1);
+                if (xmin >= xmax || nx < 1) {
+                    egsWarning("%s: wrong 'repeat x' input xmin=%g xmax=%g nx=%d\n",
+                               xmin,xmax,nx);
                     err1 = 1;
                 }
-            }
-            if (err2 || xr.size() != 3) {
-                err1 = 1;
-                egsWarning("%s: wrong/missing 'repeat x' input\n",err_msg1);
-            }
-            if (err3 || yr.size() != 3) {
-                err1 = 1;
-                egsWarning("%s: wrong/missing 'repeat y' input\n",err_msg1);
-            }
-            if (err4 || zr.size() != 3) {
-                err1 = 1;
-                egsWarning("%s: wrong/missing 'repeat z' input\n",err_msg1);
-            }
-            if (err1) {
-                return 0;
-            }
-            EGS_Float xmin = xr[0], xmax = xr[1];
-            int nx = (int)(xr[2]+0.1);
-            if (xmin >= xmax || nx < 1) {
-                egsWarning("%s: wrong 'repeat x' input xmin=%g xmax=%g nx=%d\n",
-                           xmin,xmax,nx);
-                err1 = 1;
-            }
-            EGS_Float ymin = yr[0], ymax = yr[1];
-            int ny = (int)(yr[2]+0.1);
-            if (ymin >= ymax || ny < 1) {
-                egsWarning("%s: wrong 'repeat y' input ymin=%g ymax=%g ny=%d\n",
-                           ymin,ymax,ny);
-                err1 = 1;
-            }
-            EGS_Float zmin = zr[0], zmax = zr[1];
-            int nz = (int)(zr[2]+0.1);
-            if (zmin >= zmax || nz < 1) {
-                egsWarning("%s: wrong 'repeat z' input zmin=%g zmax=%g nz=%d\n",
-                           zmin,zmax,nz);
-                err1 = 1;
-            }
-            if (err1) {
-                return 0;
-            }
-
-            EGS_XYZRepeater *result =
-                new EGS_XYZRepeater(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,g);
-            result->setName(input);
-            result->setBoundaryTolerance(input);
-            if (!err5) {
-                result->setMedium(medium);
-            }
-            result->setXYZLabels(input);
-            result->setLabels(input);
-            return result;
-        }
-        else if (!is_xyz && input->compare("EGS_XYZGeometry",type)) {
-            string dens_file, ramp_file, egsphant_file, interfile_file;
-            int ierr1 = input->getInput("density matrix",dens_file);
-            int ierr2 = input->getInput("ct ramp",ramp_file);
-            int ierr3 = input->getInput("egsphant file",egsphant_file);
-            int ierr4 = input->getInput("interfile header",interfile_file);
-            int dens_or_egsphant_or_interfile = -1;
-            if (!ierr1) {
-                dens_or_egsphant_or_interfile = 0;
-            }
-            else if (!ierr3) {
-                dens_or_egsphant_or_interfile = 1;
-                dens_file = egsphant_file;
-            }
-            else if (!ierr4) {
-                dens_or_egsphant_or_interfile = 2;
-                dens_file = interfile_file;
-            }
-            if (dens_or_egsphant_or_interfile >= 0 || !ierr2) {
-                if (dens_or_egsphant_or_interfile < 0) {
-                    egsWarning("%s: no 'density matrix', 'egsphant file' or 'interfile header' input\n",func);
+                EGS_Float ymin = yr[0], ymax = yr[1];
+                int ny = (int)(yr[2]+0.1);
+                if (ymin >= ymax || ny < 1) {
+                    egsWarning("%s: wrong 'repeat y' input ymin=%g ymax=%g ny=%d\n",
+                               ymin,ymax,ny);
+                    err1 = 1;
+                }
+                EGS_Float zmin = zr[0], zmax = zr[1];
+                int nz = (int)(zr[2]+0.1);
+                if (zmin >= zmax || nz < 1) {
+                    egsWarning("%s: wrong 'repeat z' input zmin=%g zmax=%g nz=%d\n",
+                               zmin,zmax,nz);
+                    err1 = 1;
+                }
+                if (err1) {
                     return 0;
                 }
-                if (ierr2) {
-                    egsWarning("%s: no 'ct ramp' input\n",func);
-                    return 0;
-                }
-                EGS_XYZGeometry *result =
-                    EGS_XYZGeometry::constructGeometry(dens_file.c_str(),ramp_file.c_str(),dens_or_egsphant_or_interfile);
 
-                if (result) {
-                    result->setName(input);
-                    result->setBoundaryTolerance(input);
-                    result->setBScaling(input);
-                }
-
-                return result;
-            }
-            vector<EGS_Float> xpos, ypos, zpos, xslab, yslab, zslab;
-            int ix = input->getInput("x-planes",xpos);
-            int iy = input->getInput("y-planes",ypos);
-            int iz = input->getInput("z-planes",zpos);
-            int ix1 = input->getInput("x-slabs",xslab);
-            int iy1 = input->getInput("y-slabs",yslab);
-            int iz1 = input->getInput("z-slabs",zslab);
-            int nx=0, ny=0, nz=0;
-            if (!ix1) {
-                if (xslab.size() != 3) {
-                    egsWarning("createGeometry(XYZ): exactly 3 inputs are required"
-                               " when using 'x-slabs' input method\n");
-                    ix1 = 1;
-                }
-                else {
-                    nx = (int)(xslab[2]+0.1);
-                    if (nx < 1) {
-                        egsWarning("createGeometry(XYZ): number of slabs must be"
-                                   " positive!\n");
-                        ix1 = 1;
-                    }
-                    if (xslab[1] <= 0) {
-                        egsWarning("createGeometry(XYZ): slab thickness must be"
-                                   " positive!\n");
-                        ix1 = 1;
-                    }
-                }
-            }
-            if (ix && ix1) {
-                egsWarning("createGeometry(XYZ): wrong/missing 'x-planes' "
-                           "and 'x-slabs' input\n");
-                return 0;
-            }
-            if (!iy1) {
-                if (yslab.size() != 3) {
-                    egsWarning("createGeometry(XYZ): exactly 3 inputs are required"
-                               " when using 'y-slabs' input method\n");
-                    iy1 = 1;
-                }
-                else {
-                    ny = (int)(yslab[2]+0.1);
-                    if (ny < 1) {
-                        egsWarning("createGeometry(XYZ): number of slabs must be"
-                                   " positive!\n");
-                        iy1 = 1;
-                    }
-                    if (yslab[1] <= 0) {
-                        egsWarning("createGeometry(XYZ): slab thickness must be"
-                                   " positive!\n");
-                        iy1 = 1;
-                    }
-                }
-            }
-            if (iy && iy1) {
-                egsWarning("createGeometry(XYZ): wrong/missing 'y-planes' "
-                           "and 'y-slabs' input\n");
-                return 0;
-            }
-            if (!iz1) {
-                if (zslab.size() != 3) {
-                    egsWarning("createGeometry(XYZ): exactly 3 inputs are required"
-                               " when using 'z-slabs' input method\n");
-                    iz1 = 1;
-                }
-                else {
-                    nz = (int)(zslab[2]+0.1);
-                    if (nz < 1) {
-                        egsWarning("createGeometry(XYZ): number of slabs must be"
-                                   " positive!\n");
-                        iz1 = 1;
-                    }
-                    if (zslab[1] <= 0) {
-                        egsWarning("createGeometry(XYZ): slab thickness must be"
-                                   " positive!\n");
-                        iz1 = 1;
-                    }
-                }
-            }
-            if (iz && iz1) {
-                egsWarning("createGeometry(XYZ): wrong/missing 'z-planes' "
-                           "and 'z-slabs' input\n");
-                return 0;
-            }
-            EGS_PlanesX *xp = !ix1 ?
-                              new EGS_PlanesX(xslab[0],xslab[1],nx,"",EGS_XProjector("x-planes")) :
-                              new EGS_PlanesX(xpos,"",EGS_XProjector("x-planes"));
-            EGS_PlanesY *yp = !iy1 ?
-                              new EGS_PlanesY(yslab[0],yslab[1],ny,"",EGS_YProjector("y-planes")) :
-                              new EGS_PlanesY(ypos,"",EGS_YProjector("y-planes"));
-            EGS_PlanesZ *zp = !iz1 ?
-                              new EGS_PlanesZ(zslab[0],zslab[1],nz,"",EGS_ZProjector("z-planes")) :
-                              new EGS_PlanesZ(zpos,"",EGS_ZProjector("z-planes"));
-            EGS_XYZGeometry *result = new EGS_XYZGeometry(xp,yp,zp);
-
-            if (result) {
-                egsWarning("**********************************************\n");
-                EGS_BaseGeometry *g = result;
+                EGS_XYZRepeater *result =
+                    new EGS_XYZRepeater(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,g);
                 result->setName(input);
                 result->setBoundaryTolerance(input);
-                g->setMedia(input);
-                result->voxelizeGeometry(input);
-
-                // labels
+                if (!err5) {
+                    result->setMedium(medium);
+                }
                 result->setXYZLabels(input);
-                g->setLabels(input);
+                result->setLabels(input);
+                return result;
             }
-            return result;
-        }
+            else if (!is_xyz && input->compare("EGS_XYZGeometry",type)) {
+                string dens_file, ramp_file, egsphant_file, interfile_file;
+                int ierr1 = input->getInput("density matrix",dens_file);
+                int ierr2 = input->getInput("ct ramp",ramp_file);
+                int ierr3 = input->getInput("egsphant file",egsphant_file);
+                int ierr4 = input->getInput("interfile header",interfile_file);
+                int dens_or_egsphant_or_interfile = -1;
+                if (!ierr1) {
+                    dens_or_egsphant_or_interfile = 0;
+                }
+                else if (!ierr3) {
+                    dens_or_egsphant_or_interfile = 1;
+                    dens_file = egsphant_file;
+                }
+                else if (!ierr4) {
+                    dens_or_egsphant_or_interfile = 2;
+                    dens_file = interfile_file;
+                }
+                if (dens_or_egsphant_or_interfile >= 0 || !ierr2) {
+                    if (dens_or_egsphant_or_interfile < 0) {
+                        egsWarning("%s: no 'density matrix', 'egsphant file' or 'interfile header' input\n",func);
+                        return 0;
+                    }
+                    if (ierr2) {
+                        egsWarning("%s: no 'ct ramp' input\n",func);
+                        return 0;
+                    }
+                    EGS_XYZGeometry *result =
+                        EGS_XYZGeometry::constructGeometry(dens_file.c_str(),ramp_file.c_str(),dens_or_egsphant_or_interfile);
+
+                    if (result) {
+                        result->setName(input);
+                        result->setBoundaryTolerance(input);
+                        result->setBScaling(input);
+                    }
+
+                    return result;
+                }
+                vector<EGS_Float> xpos, ypos, zpos, xslab, yslab, zslab;
+                int ix = input->getInput("x-planes",xpos);
+                int iy = input->getInput("y-planes",ypos);
+                int iz = input->getInput("z-planes",zpos);
+                int ix1 = input->getInput("x-slabs",xslab);
+                int iy1 = input->getInput("y-slabs",yslab);
+                int iz1 = input->getInput("z-slabs",zslab);
+                int nx=0, ny=0, nz=0;
+                if (!ix1) {
+                    if (xslab.size() != 3) {
+                        egsWarning("createGeometry(XYZ): exactly 3 inputs are required"
+                                   " when using 'x-slabs' input method\n");
+                        ix1 = 1;
+                    }
+                    else {
+                        nx = (int)(xslab[2]+0.1);
+                        if (nx < 1) {
+                            egsWarning("createGeometry(XYZ): number of slabs must be"
+                                       " positive!\n");
+                            ix1 = 1;
+                        }
+                        if (xslab[1] <= 0) {
+                            egsWarning("createGeometry(XYZ): slab thickness must be"
+                                       " positive!\n");
+                            ix1 = 1;
+                        }
+                    }
+                }
+                if (ix && ix1) {
+                    egsWarning("createGeometry(XYZ): wrong/missing 'x-planes' "
+                               "and 'x-slabs' input\n");
+                    return 0;
+                }
+                if (!iy1) {
+                    if (yslab.size() != 3) {
+                        egsWarning("createGeometry(XYZ): exactly 3 inputs are required"
+                                   " when using 'y-slabs' input method\n");
+                        iy1 = 1;
+                    }
+                    else {
+                        ny = (int)(yslab[2]+0.1);
+                        if (ny < 1) {
+                            egsWarning("createGeometry(XYZ): number of slabs must be"
+                                       " positive!\n");
+                            iy1 = 1;
+                        }
+                        if (yslab[1] <= 0) {
+                            egsWarning("createGeometry(XYZ): slab thickness must be"
+                                       " positive!\n");
+                            iy1 = 1;
+                        }
+                    }
+                }
+                if (iy && iy1) {
+                    egsWarning("createGeometry(XYZ): wrong/missing 'y-planes' "
+                               "and 'y-slabs' input\n");
+                    return 0;
+                }
+                if (!iz1) {
+                    if (zslab.size() != 3) {
+                        egsWarning("createGeometry(XYZ): exactly 3 inputs are required"
+                                   " when using 'z-slabs' input method\n");
+                        iz1 = 1;
+                    }
+                    else {
+                        nz = (int)(zslab[2]+0.1);
+                        if (nz < 1) {
+                            egsWarning("createGeometry(XYZ): number of slabs must be"
+                                       " positive!\n");
+                            iz1 = 1;
+                        }
+                        if (zslab[1] <= 0) {
+                            egsWarning("createGeometry(XYZ): slab thickness must be"
+                                       " positive!\n");
+                            iz1 = 1;
+                        }
+                    }
+                }
+                if (iz && iz1) {
+                    egsWarning("createGeometry(XYZ): wrong/missing 'z-planes' "
+                               "and 'z-slabs' input\n");
+                    return 0;
+                }
+                EGS_PlanesX *xp = !ix1 ?
+                                  new EGS_PlanesX(xslab[0],xslab[1],nx,"",EGS_XProjector("x-planes")) :
+                                  new EGS_PlanesX(xpos,"",EGS_XProjector("x-planes"));
+                EGS_PlanesY *yp = !iy1 ?
+                                  new EGS_PlanesY(yslab[0],yslab[1],ny,"",EGS_YProjector("y-planes")) :
+                                  new EGS_PlanesY(ypos,"",EGS_YProjector("y-planes"));
+                EGS_PlanesZ *zp = !iz1 ?
+                                  new EGS_PlanesZ(zslab[0],zslab[1],nz,"",EGS_ZProjector("z-planes")) :
+                                  new EGS_PlanesZ(zpos,"",EGS_ZProjector("z-planes"));
+                EGS_XYZGeometry *result = new EGS_XYZGeometry(xp,yp,zp);
+
+                if (result) {
+                    egsWarning("**********************************************\n");
+                    EGS_BaseGeometry *g = result;
+                    result->setName(input);
+                    result->setBoundaryTolerance(input);
+                    g->setMedia(input);
+                    result->voxelizeGeometry(input);
+
+                    // labels
+                    result->setXYZLabels(input);
+                    g->setLabels(input);
+                }
+                return result;
+            }
 #endif
-        vector<EGS_BaseGeometry *> dims;
-        EGS_Input *ij;
-        int error = 0;
-        while ((ij = input->takeInputItem("geometry",false)) != 0) {
-            EGS_BaseGeometry *g = EGS_BaseGeometry::createSingleGeometry(ij);
-            if (g) {
-                dims.push_back(g);
-                g->ref();
-            }
-            else {
-                error++;
-            }
-            delete ij;
-        }
-        vector<string> gnames;
-        int err1 = input->getInput("dimensions",gnames);
-        if (!err1) {
-            for (unsigned int j=0; j<gnames.size(); j++) {
-                EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gnames[j]);
+            vector<EGS_BaseGeometry *> dims;
+            EGS_Input *ij;
+            int error = 0;
+            while ((ij = input->takeInputItem("geometry",false)) != 0) {
+                EGS_BaseGeometry *g = EGS_BaseGeometry::createSingleGeometry(ij);
                 if (g) {
                     dims.push_back(g);
                     g->ref();
                 }
                 else {
-                    egsWarning("Geometry %s does not exist\n",gnames[j].c_str());
                     error++;
                 }
+                delete ij;
             }
-        }
-        if (error) {
-            egsWarning("createGeometry(ND_Geometry): %d errors while "
-                       "creating/geting geometries defining individual dimensions\n",error);
-            return 0;
-        }
-        if (dims.size() < 2) {
-            egsWarning("createGeometry(ND_Geometry): why do you want to "
-                       "construct a ND geometry with a single dimension?\n");
-            input->print(0,cerr);
-            for (int j=0; j<gnames.size(); j++) egsWarning("dimension %d: %s\n",
-                        j+1,gnames[j].c_str());
-        }
-        int n_concav = 0;
-        for (int j=0; j<dims.size(); j++) if (!dims[j]->isConvex()) {
-                n_concav++;
+            vector<string> gnames;
+            int err1 = input->getInput("dimensions",gnames);
+            if (!err1) {
+                for (unsigned int j=0; j<gnames.size(); j++) {
+                    EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gnames[j]);
+                    if (g) {
+                        dims.push_back(g);
+                        g->ref();
+                    }
+                    else {
+                        egsWarning("Geometry %s does not exist\n",gnames[j].c_str());
+                        error++;
+                    }
+                }
             }
-        bool is_ok = true;
-        if (n_concav > 1) {
-            egsWarning("createGeometry(ND_Geometry): a ND geometry can not have "
-                       " more than one non-convex dimension, yours has %d\n",n_concav);
-            is_ok = false;
-        }
-        else if (n_concav == 1) {
-            if (dims[dims.size()-1]->isConvex()) {
-                egsWarning("createGeometry(ND_Geometry): the non-convex "
-                           "dimension must be the last dimension\n");
+            if (error) {
+                egsWarning("createGeometry(ND_Geometry): %d errors while "
+                           "creating/geting geometries defining individual dimensions\n",error);
+                return 0;
+            }
+            if (dims.size() < 2) {
+                egsWarning("createGeometry(ND_Geometry): why do you want to "
+                           "construct a ND geometry with a single dimension?\n");
+                input->print(0,cerr);
+                for (int j=0; j<gnames.size(); j++) egsWarning("dimension %d: %s\n",
+                            j+1,gnames[j].c_str());
+            }
+            int n_concav = 0;
+            for (int j=0; j<dims.size(); j++) if (!dims[j]->isConvex()) {
+                    n_concav++;
+                }
+            bool is_ok = true;
+            if (n_concav > 1) {
+                egsWarning("createGeometry(ND_Geometry): a ND geometry can not have "
+                           " more than one non-convex dimension, yours has %d\n",n_concav);
                 is_ok = false;
             }
-        }
-        if (!is_ok) {
-            for (int j=0; j<dims.size(); j++)
-                if (dims[j]->deref()) {
-                    delete dims[j];
+            else if (n_concav == 1) {
+                if (dims[dims.size()-1]->isConvex()) {
+                    egsWarning("createGeometry(ND_Geometry): the non-convex "
+                               "dimension must be the last dimension\n");
+                    is_ok = false;
                 }
-            return 0;
-        }
-        int hn_method=0;
-        err1 = input->getInput("hownear method",hn_method);
-        EGS_BaseGeometry *result;
-        if (!err1 && hn_method == 1) {
-            result = new EGS_NDGeometry(dims,"",false);
-        }
-        else {
-            result = new EGS_NDGeometry(dims);
-        }
-        result->setName(input);
-        result->setBoundaryTolerance(input);
-        result->setMedia(input);
-        result->setLabels(input);
-        return result;
-    }
-
-
-    void EGS_XYZGeometry::setXYZLabels(EGS_Input *input) {
-
-        // x,y,z labels
-        string inp;
-        int err;
-
-        err = input->getInput("set x label", inp);
-        if (!err) {
-            xp->setLabels(inp);
-        }
-
-        err = input->getInput("set y label", inp);
-        if (!err) {
-            yp->setLabels(inp);
-        }
-
-        err = input->getInput("set z label", inp);
-        if (!err) {
-            zp->setLabels(inp);
-        }
-    }
-
-
-    void EGS_NDGeometry::ndRegions(int r, int dim, int dimk, int k, vector<int> &regs) {
-
-        // skip looping over selected dimension
-        if (dim == dimk) {
-            r += k*n[dimk];
-            if (dim == N-1) {
-                regs.push_back(r);
+            }
+            if (!is_ok) {
+                for (int j=0; j<dims.size(); j++)
+                    if (dims[j]->deref()) {
+                        delete dims[j];
+                    }
+                return 0;
+            }
+            int hn_method=0;
+            err1 = input->getInput("hownear method",hn_method);
+            EGS_BaseGeometry *result;
+            if (!err1 && hn_method == 1) {
+                result = new EGS_NDGeometry(dims,"",false);
             }
             else {
-                ndRegions(r, dim+1, dimk, k, regs);
+                result = new EGS_NDGeometry(dims);
+            }
+            result->setName(input);
+            result->setBoundaryTolerance(input);
+            result->setMedia(input);
+            result->setLabels(input);
+            return result;
+        }
+
+
+        void EGS_XYZGeometry::setXYZLabels(EGS_Input *input) {
+
+            // x,y,z labels
+            string inp;
+            int err;
+
+            err = input->getInput("set x label", inp);
+            if (!err) {
+                xp->setLabels(inp);
+            }
+
+            err = input->getInput("set y label", inp);
+            if (!err) {
+                yp->setLabels(inp);
+            }
+
+            err = input->getInput("set z label", inp);
+            if (!err) {
+                zp->setLabels(inp);
             }
         }
 
-        // last dimension: end recursion and record global region number
-        else if (dim == N-1) {
-            for (int j=0; j<g[dim]->regions(); j++) {
-                regs.push_back(r+j*n[dim]);
+
+        void EGS_NDGeometry::ndRegions(int r, int dim, int dimk, int k, vector<int> &regs) {
+
+            // skip looping over selected dimension
+            if (dim == dimk) {
+                r += k*n[dimk];
+                if (dim == N-1) {
+                    regs.push_back(r);
+                }
+                else {
+                    ndRegions(r, dim+1, dimk, k, regs);
+                }
+            }
+
+            // last dimension: end recursion and record global region number
+            else if (dim == N-1) {
+                for (int j=0; j<g[dim]->regions(); j++) {
+                    regs.push_back(r+j*n[dim]);
+                }
+            }
+
+            // keep collecting by recursion
+            else {
+                for (int j=0; j<g[dim]->regions(); j++) {
+                    ndRegions(r + j*n[dim], dim+1, dimk, k, regs);
+                }
             }
         }
 
-        // keep collecting by recursion
-        else {
-            for (int j=0; j<g[dim]->regions(); j++) {
-                ndRegions(r + j*n[dim], dim+1, dimk, k, regs);
+
+        void EGS_NDGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+
+            // label defined in the sub-geometries
+            vector<int> local_regs;
+            for (int i=0; i<N; i++) {
+                local_regs.clear();
+                if (g[i]) {
+                    g[i]->getLabelRegions(str, local_regs);
+                }
+                if (local_regs.size() == 0) {
+                    continue;
+                }
+
+                // recurse to collect all global regions comprised in each local region
+                for (int j=0; j<local_regs.size(); j++) {
+                    ndRegions(0, 0, i, local_regs[j], regs);
+                }
             }
+
+            // label defined in self (nd input block)
+            EGS_BaseGeometry::getLabelRegions(str, regs);
+
         }
-    }
 
 
-    void EGS_NDGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+        void EGS_XYZGeometry::getLabelRegions(const string &str, vector<int> &regs) {
 
-        // label defined in the sub-geometries
-        vector<int> local_regs;
-        for (int i=0; i<N; i++) {
+            vector<int> local_regs;
+
+            // x plane labels
             local_regs.clear();
-            if (g[i]) {
-                g[i]->getLabelRegions(str, local_regs);
-            }
-            if (local_regs.size() == 0) {
-                continue;
+            xp->getLabelRegions(str, local_regs);
+            for (int i=0; i<local_regs.size(); i++) {
+                for (int j=0; j<ny; j++) {
+                    for (int k=0; k<nz; k++) {
+                        regs.push_back(local_regs[i] + nx*j + nxy*k);
+                    }
+                }
             }
 
-            // recurse to collect all global regions comprised in each local region
+            // y plane labels
+            local_regs.clear();
+            yp->getLabelRegions(str, local_regs);
             for (int j=0; j<local_regs.size(); j++) {
-                ndRegions(0, 0, i, local_regs[j], regs);
-            }
-        }
-
-        // label defined in self (nd input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
-
-    }
-
-
-    void EGS_XYZGeometry::getLabelRegions(const string &str, vector<int> &regs) {
-
-        vector<int> local_regs;
-
-        // x plane labels
-        local_regs.clear();
-        xp->getLabelRegions(str, local_regs);
-        for (int i=0; i<local_regs.size(); i++) {
-            for (int j=0; j<ny; j++) {
-                for (int k=0; k<nz; k++) {
-                    regs.push_back(local_regs[i] + nx*j + nxy*k);
+                for (int i=0; i<nx; i++) {
+                    for (int k=0; k<nz; k++) {
+                        regs.push_back(i + nx*local_regs[j] + nxy*k);
+                    }
                 }
             }
-        }
 
-        // y plane labels
-        local_regs.clear();
-        yp->getLabelRegions(str, local_regs);
-        for (int j=0; j<local_regs.size(); j++) {
-            for (int i=0; i<nx; i++) {
-                for (int k=0; k<nz; k++) {
-                    regs.push_back(i + nx*local_regs[j] + nxy*k);
+            // z plane labels
+            local_regs.clear();
+            zp->getLabelRegions(str, local_regs);
+            for (int k=0; k<local_regs.size(); k++) {
+                for (int i=0; i<nx; i++) {
+                    for (int j=0; j<ny; j++) {
+                        regs.push_back(i + nx*j + nxy*local_regs[k]);
+                    }
                 }
             }
+
+            // label defined in self (xyz input block)
+            EGS_BaseGeometry::getLabelRegions(str, regs);
+
         }
 
-        // z plane labels
-        local_regs.clear();
-        zp->getLabelRegions(str, local_regs);
-        for (int k=0; k<local_regs.size(); k++) {
+
+        void EGS_XYZRepeater::getLabelRegions(const string &str, vector<int> &regs) {
+
+            vector<int> local_regs;
+
+            // label in repeated geometry
+            local_regs.clear();
+            g->getLabelRegions(str, local_regs);
             for (int i=0; i<nx; i++) {
                 for (int j=0; j<ny; j++) {
-                    regs.push_back(i + nx*j + nxy*local_regs[k]);
-                }
-            }
-        }
-
-        // label defined in self (xyz input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
-
-    }
-
-
-    void EGS_XYZRepeater::getLabelRegions(const string &str, vector<int> &regs) {
-
-        vector<int> local_regs;
-
-        // label in repeated geometry
-        local_regs.clear();
-        g->getLabelRegions(str, local_regs);
-        for (int i=0; i<nx; i++) {
-            for (int j=0; j<ny; j++) {
-                for (int k=0; k<nz; k++) {
-                    for (int r=0; r<local_regs.size(); r++) {
-                        regs.push_back(ng*(i + nx*j + nxy*k) + local_regs[r]);
+                    for (int k=0; k<nz; k++) {
+                        for (int r=0; r<local_regs.size(); r++) {
+                            regs.push_back(ng*(i + nx*j + nxy*k) + local_regs[r]);
+                        }
                     }
                 }
             }
-        }
 
-        // x plane labels
-        local_regs.clear();
-        xyz->getXLabelRegions(str, local_regs);
-        for (int i=0; i<local_regs.size(); i++) {
-            for (int j=0; j<ny; j++) {
-                for (int k=0; k<nz; k++) {
-                    for (int r=0; r<ng; r++) {
-                        regs.push_back(ng*(local_regs[i] + nx*j + nxy*k) + r);
-                    }
-                }
-            }
-        }
-
-        // y plane labels
-        local_regs.clear();
-        xyz->getYLabelRegions(str, local_regs);
-        for (int j=0; j<local_regs.size(); j++) {
-            for (int i=0; i<nx; i++) {
-                for (int k=0; k<nz; k++) {
-                    for (int r=0; r<ng; r++) {
-                        regs.push_back(ng*(i + nx*local_regs[j] + nxy*k) + r);
-                    }
-                }
-            }
-        }
-
-        // z plane labels
-        local_regs.clear();
-        xyz->getZLabelRegions(str, local_regs);
-        for (int k=0; k<local_regs.size(); k++) {
-            for (int i=0; i<nx; i++) {
+            // x plane labels
+            local_regs.clear();
+            xyz->getXLabelRegions(str, local_regs);
+            for (int i=0; i<local_regs.size(); i++) {
                 for (int j=0; j<ny; j++) {
-                    for (int r=0; r<ng; r++) {
-                        regs.push_back(ng*(i + nx*j + nxy*local_regs[k]) + r);
+                    for (int k=0; k<nz; k++) {
+                        for (int r=0; r<ng; r++) {
+                            regs.push_back(ng*(local_regs[i] + nx*j + nxy*k) + r);
+                        }
                     }
                 }
             }
+
+            // y plane labels
+            local_regs.clear();
+            xyz->getYLabelRegions(str, local_regs);
+            for (int j=0; j<local_regs.size(); j++) {
+                for (int i=0; i<nx; i++) {
+                    for (int k=0; k<nz; k++) {
+                        for (int r=0; r<ng; r++) {
+                            regs.push_back(ng*(i + nx*local_regs[j] + nxy*k) + r);
+                        }
+                    }
+                }
+            }
+
+            // z plane labels
+            local_regs.clear();
+            xyz->getZLabelRegions(str, local_regs);
+            for (int k=0; k<local_regs.size(); k++) {
+                for (int i=0; i<nx; i++) {
+                    for (int j=0; j<ny; j++) {
+                        for (int r=0; r<ng; r++) {
+                            regs.push_back(ng*(i + nx*j + nxy*local_regs[k]) + r);
+                        }
+                    }
+                }
+            }
+
+            // label defined in self (repeater input block)
+            EGS_BaseGeometry::getLabelRegions(str, regs);
+
         }
 
-        // label defined in self (repeater input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
-
     }
-
-}

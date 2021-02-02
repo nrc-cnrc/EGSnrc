@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -45,6 +46,8 @@ using namespace std;
 
 string EGS_ENVELOPEG_LOCAL EGS_EnvelopeGeometry::type = "EGS_EnvelopeGeometry";
 string EGS_ENVELOPEG_LOCAL EGS_FastEnvelope::type = "EGS_FastEnvelope";
+
+static bool EGS_ENVELOPEG_LOCAL inputSet = false;
 
 void EGS_EnvelopeGeometry::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_EnvelopeGeometry::setMedia: don't use this method. Use the\n"
@@ -358,6 +361,41 @@ static char EGS_ENVELOPEG_LOCAL eeg_keyword2[] = "geometry";
 static char EGS_ENVELOPEG_LOCAL eeg_keyword3[] = "inscribed geometries";
 
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_GEnvelope"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", false, "The type of envelope", {"EGS_FastEnvelope"});
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry");
+        geomBlockInput->addSingleInput("inscribed geometries", true, "A list of names of previously defined geometries, must be stictly inside the envelope");
+    }
+
+    EGS_ENVELOPEG_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of egs_genvelope
+    #:start geometry:
+        name = my_envelope
+        library = egs_genvelope
+        base_geometry = my_box
+        inscribed geometries: geom1 geom2
+        # create geometries geom1 geom2
+    #:stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_ENVELOPEG_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_ENVELOPEG_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
