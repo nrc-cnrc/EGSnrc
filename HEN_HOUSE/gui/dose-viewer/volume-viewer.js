@@ -619,7 +619,6 @@ class VolumeViewer {
     doseSliderHolder
       .append('div')
       .attr('id', 'axis-slider-container')
-    // .attr('class', 'min-max-container')
 
     // Add voxel information
     buildVoxelInfoHtml(this.volHolder, id)

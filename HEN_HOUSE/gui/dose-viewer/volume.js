@@ -353,9 +353,9 @@ class DoseVolume extends Volume {
     super.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0)
     this.updateThresholds()
 
-    // ['xy', 'yz', 'xz'].forEach((axis) =>
-    //   this.drawDose(this.prevSlice[axis], panels[axis].zoomTransform)
-    // )
+    Object.values(panels).forEach((panel) => {
+      this.drawDose(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform)
+    })
 
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
       volumeViewerList.forEach((volumeViewer) => {
@@ -837,11 +837,11 @@ class DensityVolume extends Volume {
     // Redraw legend
     this.initializeLegend()
 
-    // Perhaps move this to the panels?? call initialize legend and make
+    // TODO: Perhaps move this to the panels?? call initialize legend and make
     // maxdensity var a panel attribute
-    // Object.values(panels).forEach((panel) => {
-    //   this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
-    // })
+    Object.values(panels).forEach((panel) => {
+      this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform)
+    })
   }
 
   /**
@@ -857,9 +857,9 @@ class DensityVolume extends Volume {
     // Redraw legend
     this.initializeLegend()
 
-    // Object.values(panels).forEach((panel) => {
-    //   this.drawDensity(this.prevSlice[panel.axis], panel.zoomTransform)
-    // })
+    Object.values(panels).forEach((panel) => {
+      this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform)
+    })
   }
 
   /**
