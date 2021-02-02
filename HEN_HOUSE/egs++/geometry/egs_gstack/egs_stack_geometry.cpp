@@ -27,6 +27,7 @@
 #                   Marc Chamberland
 #                   Ernesto Mainegra-Hing
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -43,6 +44,8 @@
 #include "egs_functions.h"
 
 string EGS_StackGeometry::type = "EGS_StackGeometry";
+
+static bool EGS_STACKG_LOCAL inputSet = false;
 
 EGS_StackGeometry::EGS_StackGeometry(const vector<EGS_BaseGeometry *> &geoms,
                                      const string &Name) : EGS_BaseGeometry(Name) {
@@ -122,6 +125,41 @@ void EGS_StackGeometry::setBScaling(EGS_Input *) {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_GStack"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("geometries", true, "A list of names of previously defined geometries");
+        geomBlockInput->addSingleInput("tolerance", false, "A small floating number boundaryTolerance");
+    }
+
+    EGS_STACKG_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of egs_gstack
+    :start geometry:
+        name = my_gstack
+        library = egs_gstack
+        geometries = geom1 geom2
+        # create geometries called geom1 geom2
+        tolerance = 1e-4
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_STACKG_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_STACKG_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
