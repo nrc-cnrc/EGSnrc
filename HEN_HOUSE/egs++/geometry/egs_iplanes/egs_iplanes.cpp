@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -46,6 +47,8 @@ using namespace std;
 
 string EGS_IPlanes::type = "EGS_IPlanes";
 string EGS_RadialRepeater::type = "EGS_RadialRepeater";
+
+static bool EGS_IPLANES_LOCAL inputSet = false;
 
 EGS_IPlanes::EGS_IPlanes(const EGS_Vector &Xo, const EGS_Vector &A, int np,
                          const EGS_Float *angles, const string &Name, bool degree) :
@@ -257,6 +260,68 @@ void EGS_RadialRepeater::printInfo() const {
 }
 
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_IPlanes"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", false, "The type of iplane", {"EGS_RadialRepeater"});
+
+        geomBlockInput->addSingleInput("axis", true, "A list of three coordinates of a point on the axis and three direction cosines defining the axis direction");
+
+        // EGS_IPlane
+        auto anglesPtr = geomBlockInput->addSingleInput("angles", false, "A list of angles of rotation around the axis for the planes in degrees, must be in increasing order and between 0 and 180");
+        auto anglesRadPtr = geomBlockInput->addSingleInput("angles in radian", false, "A list of angles of ratation around the axis for the planes in degrees, in increasing order");
+        // Only one of these two inputs can be included
+        anglesRadPtr->addDependency(anglesPtr, "", true);
+        anglesRadPtr->addDependency(typePtr, "", true);
+        anglesPtr->addDependency(anglesRadPtr, "", true);
+        anglesPtr->addDependency(typePtr, "", true);
+
+        // EGS_RadialRepeater
+        auto geoPtr = geomBlockInput->addSingleInput("repeated geometry", true, "The exsisting geometry that is repeated");
+        geoPtr->addDependency(typePtr, "EGS_RadialRepeater");
+        auto numPtr = geomBlockInput->addSingleInput("number of repetitions", true, "The number of times the geometry is repeated");
+        numPtr->addDependency(typePtr, "EGS_RadialRepeater");
+        auto medPtr = geomBlockInput->addSingleInput("medium", false, "The medium with which the space outside the replicated geometry is filled");
+        medPtr->addDependency(typePtr, "EGS_RadialRepeater");
+        auto firstanglePtr = geomBlockInput->addSingleInput("first angle", false, "First angle, phi_o");
+        firstanglePtr->addDependency(typePtr, "EGS_RadialRepeater");
+    }
+
+    EGS_IPLANES_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of egs_iplanes
+    #:start geometry:
+        library = egs_iplanes
+        name = my_iplane
+        axis = 0 0 0   0 0 1
+        angles = 0 30 60 90 120 150
+    :stop geometry:
+
+    # Example of EGS_RadialRepeater
+    #:start geometry:
+        library = egs_iplanes
+        type = EGS_RadialRepeater
+        axis = 0 0 1 0 0 1
+        number of repetitions = 5
+        repeated geometry = my_geom
+        # use with geometry called my_geom
+)"};
+        return example;
+    }
+
+    EGS_IPLANES_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_IPLANES_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {

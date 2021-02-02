@@ -70,6 +70,7 @@ static char EGS_AENVELOPE_LOCAL transformations_keyword[] = "transformations";
 static char EGS_AENVELOPE_LOCAL type_keyword[] = "type";
 static char EGS_AENVELOPE_LOCAL transformation_keyword[] = "transformation";
 
+static bool EGS_AENVELOPE_LOCAL inputSet = false;
 
 EGS_AEnvelope::EGS_AEnvelope(EGS_BaseGeometry *base_geom,
                              const vector<AEnvelopeAux> inscribed, const string &Name, bool debug, string output_vc_file) :
@@ -803,7 +804,7 @@ EGS_ASwitchedEnvelope::EGS_ASwitchedEnvelope(EGS_BaseGeometry *base_geom,
 };
 
 
-//TODO: this gets called a lot and is probably quite slow.  Instead fo doing a
+//TODO: this gets called a lot and is probably quite slow.  Instead of doing a
 //set intersection on every call we can probably do it once when activated
 //geometries change and cache it
 vector<EGS_BaseGeometry *> EGS_ASwitchedEnvelope::getGeomsInRegion(int ireg) {
@@ -932,6 +933,32 @@ vector<EGS_AffineTransform *> EGS_AEnvelope::createTransforms(EGS_Input *input) 
 
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_AEnvelope"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("type", false, "The type of auto envelope", {"EGS_ASwitchedEnvelope"});
+
+        geomBlockInput->addSingleInput("incribed geometries", true, "A list of predefined geometries");
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a predefined geometry");
+
+        auto blockPtr = geomBlockInput->addBlockInput("transformation");
+        blockPtr->addSingleInput("translation", false, "The translation for the geometry (x, y ,z)");
+        auto rotPtr = blockPtr->addSingleInput("rotation", false, "2, 3, or 9 floating point numbers");
+        auto vectPtr = blockPtr->addSingleInput("rotation vector", false, "3 floating point numbers");
+    }
+
+    EGS_AENVELOPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_AENVELOPE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 

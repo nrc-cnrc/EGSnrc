@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -39,7 +40,24 @@
 
 string EGS_Space::type = "EGS_Space";
 
+static bool EGS_SPACE_LOCAL inputSet = false;
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Space"});
+    }
+
+    EGS_SPACE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_SPACE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         EGS_Space *g = new EGS_Space("");
