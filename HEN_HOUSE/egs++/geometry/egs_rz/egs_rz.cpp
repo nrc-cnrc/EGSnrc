@@ -28,6 +28,7 @@
 #                   Rowan Thomson
 #                   Dave Rogers
 #                   Martin Martinov
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -48,6 +49,7 @@
 #include "../egs_cylinders/egs_cylinders.h"
 #include "../egs_planes/egs_planes.h"
 
+static bool EGS_RZ_LOCAL inputSet = false;
 
 string EGS_RZGeometry::RZType = "EGS_RZ";
 
@@ -225,6 +227,72 @@ bool allIncreasing(vector<EGS_Float> vec) {
 };
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_RZ"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto  radPtr = geomBlockInput->addSingleInput("radii", false, "A list of radii, must be in increasing order");
+        auto planePtr = geomBlockInput->addSingleInput("z-planes", false, "Input for z-planes");
+
+        // Or can define using slabs and shells
+        auto num_shellPtr = geomBlockInput->addSingleInput("number of shells", false, "A list of the number of shells");
+        auto shellPtr = geomBlockInput->addSingleInput("shell thickness", false, "A list of shell thicknesses");
+        auto firstPtr = geomBlockInput->addSingleInput("first plane", false, "first plane");
+        auto num_slabPtr = geomBlockInput->addSingleInput("number of slabs", false, "A list of the number of slabs");
+        auto slabPtr = geomBlockInput->addSingleInput("slab thickness", false, "A list of the slab thicknesses");
+
+        // Can only use one method
+        radPtr->addDependency(num_shellPtr, "", true);
+        radPtr->addDependency(shellPtr, "", true);
+        radPtr->addDependency(firstPtr, "", true);
+        radPtr->addDependency(num_slabPtr, "", true);
+        radPtr->addDependency(slabPtr, "", true);
+        planePtr->addDependency(num_shellPtr, "", true);
+        planePtr->addDependency(shellPtr, "", true);
+        planePtr->addDependency(firstPtr, "", true);
+        planePtr->addDependency(num_slabPtr, "", true);
+        planePtr->addDependency(slabPtr, "", true);
+        num_shellPtr->addDependency(radPtr, "", true);
+        num_shellPtr->addDependency(planePtr, "", true);
+        shellPtr->addDependency(radPtr, "", true);
+        shellPtr->addDependency(planePtr, "", true);
+        firstPtr->addDependency(radPtr, "", true);
+        firstPtr->addDependency(planePtr, "", true);
+        num_slabPtr->addDependency(radPtr, "", true);
+        num_slabPtr->addDependency(planePtr, "", true);
+        slabPtr->addDependency(radPtr, "", true);
+        slabPtr->addDependency(planePtr, "", true);
+    }
+
+    EGS_RZ_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of egs_rz
+    :start geometry:
+        name = my_rz
+        library = egs_rz
+        radii = 1 2 3
+        z-planes= -4 -3 -2 -1 0 1 2 3 4
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_RZ_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_RZ_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 

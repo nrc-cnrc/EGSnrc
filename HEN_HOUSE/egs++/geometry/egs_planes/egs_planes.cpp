@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Marc Chamberland
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -48,6 +49,8 @@ const string EGS_PLANES_LOCAL xproj_type("EGS_Xplanes");
 const string EGS_PLANES_LOCAL yproj_type("EGS_Yplanes");
 const string EGS_PLANES_LOCAL zproj_type("EGS_Zplanes");
 const string EGS_PLANES_LOCAL proj_type("EGS_Planes");
+
+static bool EGS_PLANES_LOCAL inputSet = false;
 
 string EGS_PlaneCollection::type = "EGS_PlaneCollection";
 
@@ -89,6 +92,78 @@ void EGS_PlaneCollection::printInfo() const {
 }
 
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Planes"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of plane.", {"EGS_XPlanes", "EGS_YPlanes", "EGS_ZPlanes", "EGS_Planes", "EGS_PlaneCollection"});
+
+        auto posPtr = geomBlockInput->addSingleInput("positions", false, "A list of plane co-ordinates");
+
+        // EGS_Planes
+        auto norPtr = geomBlockInput->addSingleInput("normal", true, "The plane normal (x, y, z)");
+        norPtr->addDependency(typePtr, "EGS_Planes");
+
+        // EGS_PlaneCollection
+        auto normsPtr = geomBlockInput->addSingleInput("normals", true, "3N number inputs For each plane's normal");
+        normsPtr->addDependency(typePtr, "EGS_PlaneCollection");
+
+        // Alternative definition of the plane position
+        auto fpPtr = geomBlockInput->addSingleInput("first plane", false, "The position of the first plane.");
+        auto slabPtr = geomBlockInput->addSingleInput("slab thickness", false, "A list of the thickness between each set of planes");
+        auto numPtr = geomBlockInput->addSingleInput("number of slabs", false, "A list of the number of slabs");
+
+        // Either positions or the alternatives must be used, not both
+        fpPtr->addDependency(posPtr, "", true);
+        slabPtr->addDependency(posPtr, "", true);
+        numPtr->addDependency(posPtr, "", true);
+        posPtr->addDependency(fpPtr, "", true);
+        posPtr->addDependency(slabPtr, "", true);
+        posPtr->addDependency(numPtr, "", true);
+    }
+
+    EGS_PLANES_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Examples of the egs_planes
+
+    # EGS_Plane example
+    #:start geometry:
+        library = egs_planes
+        type = EGS_Planes
+        name = my_plane
+        positions = 2 2 2
+        normal = 0
+    :stop geometry:
+
+   # EGS_PlaneCollection example
+   #:start geometry:
+        library = egs_planes
+        type = EGS_PlaneCollection
+        name = my_plane_collection
+        normals = 0 0 1 0.1  -0.1 1  -0.1 -0.3 1  0 0 1
+        positions = -5 -2 2 12
+        :start media input:
+            media = air water air
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_PLANES_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_PLANES_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         string type;
