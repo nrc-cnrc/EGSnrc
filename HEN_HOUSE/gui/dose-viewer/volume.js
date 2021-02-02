@@ -1012,7 +1012,7 @@ class DensityVolume extends Volume {
       const [maxVal, minVal] = colour.domain()
       var val
       for (let i = 0; i < height; ++i) {
-        val = colourMap(((n - i) / n) * (maxVal - minVal) + minVal)
+        val = colour(((n - i) / n) * (maxVal - minVal) + minVal)
         context.fillStyle = 'black'
         context.fillRect(0, i, 1, 1)
         context.fillStyle = 'rgb(' + val + ', ' + val + ', ' + val + ')'
@@ -1037,12 +1037,12 @@ class DensityVolume extends Volume {
     const n = Math.round(ticks + 1)
     const tickValues = d3
       .range(n)
-      .map((i) => d3.quantile(this.colour.domain(), i / (n - 1)))
+      .map((i) => d3.quantile(colourMap.domain(), i / (n - 1)))
     const tickFormat = this.densityFormat
     const tickSize = 15
 
     const gradUrl = gradientUrl(
-      this.colour,
+      colourMap,
       dims.height - 20,
       30
     )
@@ -1053,7 +1053,7 @@ class DensityVolume extends Volume {
     // Create scale for ticks
     const scale = d3
       .scaleLinear()
-      .domain([this.data.minDensity, this.data.maxDensity])
+      .domain([this.minDensityVar, this.maxDensityVar])
       .range([legendHeight, 0])
 
     // Append title
