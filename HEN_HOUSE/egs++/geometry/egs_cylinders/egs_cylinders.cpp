@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Marc Chamberland
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -39,7 +40,70 @@
 #include "egs_cylinders.h"
 #include "egs_input.h"
 
+static bool EGS_CYLINDERS_LOCAL inputSet = false;
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Cylinders"});
+
+        // Format: name, isRequired, description, vector string of allowd values
+        auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of cylinder.", {"EGS_XCylinders", "EGS_YCylinders", "EGS_ZCylinders", "EGS_Cylinders"});
+
+        geomBlockInput->addSingleInput("radii", true, "A list of cylinder radii, must be in increasing order");
+        geomBlockInput->addSingleInput("midpoint", false, "The position of the midpoint of the cylinder (x, y, z)");
+
+        // EGS_Cylinders
+        auto inpPtr = geomBlockInput->addSingleInput("axis", true, "The unit vector defining the axis along the length of the cylinder.");
+        inpPtr->addDependency(typePtr, "EGS_Cylinders");
+    }
+
+    EGS_CYLINDERS_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Examples of the egs_cylinders to follow
+
+    # EGS_XCylinder example
+    #:start geometry:
+        library = egs_cylinders
+        type = EGS_XCylinders
+        name = my_xcylinders
+        radii = 1 2 3
+        midpoint = 0
+        :start media input:
+            media = water air water
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+
+    # EGS_Cylinder example
+    #:start geometry:
+        library = egs_cylinders
+        type = EGS_Cylinders
+        name = my_cylinder
+        radii = 7
+        axis = 4 3 2
+        midpoint = 0 0 0
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_CYLINDERS_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_CYLINDERS_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         // check for valid input

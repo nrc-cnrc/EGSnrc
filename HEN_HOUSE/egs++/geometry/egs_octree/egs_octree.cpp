@@ -26,6 +26,7 @@
 #  Contributors:    Iwan Kawrakow
 #                   Hubert Ho
 #                   Marc Chamberland
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -195,7 +196,7 @@ static char EGS_OCTREE_LOCAL eoctree_message2[]  = "null input?";
 static char EGS_OCTREE_LOCAL eoctree_message5[]  = "wrong/missing 'min' or input?";
 static char EGS_OCTREE_LOCAL eoctree_message6[]  = "expecting 3 float inputs for 'box min' input";
 static char EGS_OCTREE_LOCAL eoctree_message7[]  = "wrong/missing 'max' or input?";
-static char EGS_OCTREE_LOCAL eoctree_message8[]  = "expecting 3 float inputs for 'max max' input";
+static char EGS_OCTREE_LOCAL eoctree_message8[]  = "expecting 3 float inputs for 'box max' input";
 static char EGS_OCTREE_LOCAL eoctree_message9[]  = "wrong or missing 'resolution' input?";
 static char EGS_OCTREE_LOCAL eoctree_message10[] = "expecting 3 integer inputs for 'resolution' input";
 static char EGS_OCTREE_LOCAL eoctree_message11[] = "wrong or missing 'discard child' input?";
@@ -213,7 +214,34 @@ static char EGS_OCTREE_LOCAL eoctree_key4[] = "child geometry";
 static char EGS_OCTREE_LOCAL eoctree_key5[] = "discard child";
 static char EGS_OCTREE_LOCAL eoctree_key6[] = "prune tree";
 
+static bool EGS_OCTREE_LOCAL inputSet = false;
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Octree"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("child geometry", true, "The name of child geometry");
+        geomBlockInput->addSingleInput("discard child", true, "yes or no");
+        geomBlockInput->addSingleInput("prune tree", false, "yes or no");
+
+        auto blockPtr = geomBlockInput->addBlockInput("octree box");
+        blockPtr->addSingleInput("box min", true, "(x, y, z)");
+        blockPtr->addSingleInput("box max", true, "(x, y, z)");
+        blockPtr->addSingleInput("resolution", true, "A specified resolution (x, y, z)");
+    }
+
+    EGS_OCTREE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_OCTREE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 

@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Hubert Ho
 #                   Marc Chamberland
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -44,6 +45,8 @@
 using namespace std;
 
 string EGS_UNIONG_LOCAL EGS_UnionGeometry::type = "EGS_UnionGeometry";
+
+static bool EGS_UNIONG_LOCAL inputSet = false;
 
 void EGS_UnionGeometry::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_UnionGeometry::setMedia: don't use this method. Use the\n"
@@ -168,6 +171,38 @@ void EGS_UnionGeometry::printInfo() const {
 }
 
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_gunion"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("geometries", true, "A list of names of previously defined geometries");
+        geomBlockInput->addSingleInput("priorities", false, "A list of integers defining the geometry priorities");
+    }
+
+    EGS_UNIONG_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of egs_gunion
+    #:start geometry:
+        name = my_union
+        library = egs_union
+        geometries = my_box my_sphere
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_UNIONG_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_UNIONG_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
@@ -204,8 +239,8 @@ extern "C" {
                 }
             }
             else egsWarning("createGeometry(union): the number of priorities (%d)"
-                                " is not the same as the number of geometries (%d) => ignoring\n",
-                                pri.size(),geoms.size());
+            " is not the same as the number of geometries (%d) => ignoring\n",
+            pri.size(),geoms.size());
         }
         EGS_BaseGeometry *result = new EGS_UnionGeometry(geoms,p);
         result->setName(input);
