@@ -51,7 +51,7 @@ const progressBarNode = progressBar.node()
  *
  * @param {number} numfiles The number of files being uploaded.
  */
-function initializeProgress() {
+function initializeProgress () {
   progressBarNode.value = 0
   // Show the progress bar
   progressBar.classed('hidden', false)
@@ -62,14 +62,14 @@ function initializeProgress() {
  *
  * @param {number} numfiles The number of files being uploaded.
  */
-function updateProgress(percent, fileNum, totalFiles) {
+function updateProgress (percent, fileNum, totalFiles) {
   progressBarNode.value = percent * (fileNum / totalFiles)
 }
 
 /**
  * Once files are uploaded, end progress by hiding the bar.
  */
-function endProgress() {
+function endProgress () {
   progressBar.classed('hidden', true)
 }
 
@@ -155,27 +155,46 @@ d3.select('#file-input').on('change', function () {
  * If the test files link is pressed, process test files.
  */
 d3.select('#test-files').on('click', function () {
-  // Add a new volume viewer
-  const volViewer = new VolumeViewer(
-    MAIN_VIEWER_DIMENSIONS,
-    LEGEND_DIMENSIONS,
-    DOSE_PROFILE_DIMENSIONS,
-    'vol-' + volumeViewerList.length
-  )
-  volumeViewerList.push(volViewer)
+  var volViewer
+  if (volumeViewerList.length === 0) {
+    // Add a new volume viewer
+    volViewer = new VolumeViewer(
+      MAIN_VIEWER_DIMENSIONS,
+      LEGEND_DIMENSIONS,
+      DOSE_PROFILE_DIMENSIONS,
+      'vol-' + volumeViewerList.length
+    )
+    volumeViewerList.push(volViewer)
+  } else {
+    volViewer = volumeViewerList[0]
+  }
 
   // Read the JSON density file from the test files directory
   d3.json('./test-files/ismail-density.json').then((densityData) => {
-    makeDensityVolume('ismail.egsphant', densityData)
-    volViewer.setDensityVolume(densityVolumeList[0])
-    volViewer.densitySelector.node().selectedIndex = 1
+    var testfileIndex = densityVolumeList.findIndex((densityVol, i) => densityVol.fileName === 'ismail.egsphant')
+
+    if (testfileIndex !== -1) {
+      volViewer.setDensityVolume(densityVolumeList[testfileIndex])
+      volViewer.densitySelector.node().selectedIndex = testfileIndex + 1
+    } else {
+      makeDensityVolume('ismail.egsphant', densityData)
+      volViewer.setDensityVolume(densityVolumeList[densityVolumeList.length - 1])
+      volViewer.densitySelector.node().selectedIndex = densityVolumeList.length
+    }
   })
 
   // Read the JSON dose file from the test files directory
   d3.json('./test-files/ismail100-dose.json').then((doseData) => {
-    makeDoseVolume('ismail100.3ddose', doseData)
-    volViewer.setDoseVolume(doseVolumeList[0])
-    volViewer.doseSelector.node().selectedIndex = 1
+    var testfileIndex = doseVolumeList.findIndex((doseVol, i) => doseVol.fileName === 'ismail100.3ddose')
+
+    if (testfileIndex !== -1) {
+      volViewer.setDoseVolume(doseVolumeList[testfileIndex])
+      volViewer.doseSelector.node().selectedIndex = testfileIndex + 1
+    } else {
+      makeDoseVolume('ismail100.3ddose', doseData)
+      volViewer.setDoseVolume(doseVolumeList[doseVolumeList.length - 1])
+      volViewer.doseSelector.node().selectedIndex = doseVolumeList.length
+    }
   })
 })
 
@@ -184,7 +203,7 @@ d3.select('#test-files').on('click', function () {
  *
  * @param {File[]} files  The list of files to be processed.
  */
-function handleFiles(files) {
+function handleFiles (files) {
   initializeProgress()
   const promises = []
 
@@ -259,7 +278,7 @@ function handleFiles(files) {
  * @param {number} fileNum  The index of the file to be processed.
  * @param {File} totalFiles The total number of files to be processed.
  */
-function readFile(resolve, file, fileNum, totalFiles) {
+function readFile (resolve, file, fileNum, totalFiles) {
   const reader = new FileReader()
   const fileName = file.name
   const ext = fileName.split('.').pop()
