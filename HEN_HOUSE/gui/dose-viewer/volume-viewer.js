@@ -31,21 +31,21 @@
 // definitions for StandardJS formatter
 /* global d3 */
 
-import {
-  densityVolumeList, doseComparisonVolumeList, doseVolumeList, volumeViewerList
-} from './index.js'
-import {
-  defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
-  enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
-  enableCheckboxForVoxelInformation, enableExportVisualizationButton
-} from './checkbox-button-helper.js'
-import { DoseProfile } from './dose-profile.js'
-import { Panel } from './panel.js'
-import { Slider } from './slider.js'
-import { DoseComparisonVolume } from './volume.js'
-import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
-import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
-import { defineExportCSVButtonBehaviour, defineExportPNGButtonBehaviour } from './export.mjs'
+// import {
+//   densityVolumeList, doseComparisonVolumeList, doseVolumeList, volumeViewerList
+// } from './index.js'
+// import {
+//   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
+//   enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
+//   enableCheckboxForVoxelInformation, enableExportVisualizationButton
+// } from './checkbox-button-helper.js'
+// import { DoseProfile } from './dose-profile.js'
+// import { Panel } from './panel.js'
+// import { Slider } from './slider.js'
+// import { DoseComparisonVolume } from './volume.js'
+// import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
+// import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
+// import { defineExportCSVButtonBehaviour, defineExportPNGButtonBehaviour } from './export.mjs'
 
 const AXES = ['xy', 'yz', 'xz']
 
@@ -913,4 +913,4 @@ class VolumeViewer {
   }
 }
 
-export { VolumeViewer }
+// export { VolumeViewer }

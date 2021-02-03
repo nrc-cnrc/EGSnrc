@@ -96,7 +96,7 @@ var defineExportPNGButtonBehaviour = function (volumeViewer) {
   imageName += volumeViewer.id + '.' + format
 
   // Optional: Define elements to exclude from png image
-  function filter (node) { // eslint-disable-line no-unused-vars
+  function filter(node) { // eslint-disable-line no-unused-vars
     return node.tagName !== 'input'
   }
 
@@ -130,7 +130,7 @@ var defineExportPNGButtonBehaviour = function (volumeViewer) {
  * @param {string} uri  The URI of the resource to download.
  * @param {string} name The name given to the downloaded file.
  */
-function downloadURI (uri, name) {
+function downloadURI(uri, name) {
   var link = document.createElement('a')
 
   link.download = name
@@ -145,7 +145,7 @@ function downloadURI (uri, name) {
  *
  * @param {Object} node The element node to get a string representation of.
  */
-function getImgString (node) {
+function getImgString(node) {
   // Extract all CSS Rules
   // From https://developer.mozilla.org/en-US/docs/Web/API/StyleSheetList
   const allCSS = [...document.styleSheets]
@@ -176,4 +176,4 @@ function getImgString (node) {
   return svgString
 }
 
-export { defineExportCSVButtonBehaviour, defineExportPNGButtonBehaviour }
+// export { defineExportCSVButtonBehaviour, defineExportPNGButtonBehaviour }

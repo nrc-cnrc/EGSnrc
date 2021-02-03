@@ -232,4 +232,4 @@ var processDoseData = function (data) {
   }
 }
 
-export { processDoseData, processPhantomData }
+// export { processDoseData, processPhantomData }

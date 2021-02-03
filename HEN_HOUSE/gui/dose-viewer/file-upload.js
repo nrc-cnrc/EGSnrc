@@ -33,14 +33,14 @@
 /* global FileReader */
 /* global alert */
 
-import {
-  DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
-  densityVolumeList, doseVolumeList, volumeViewerList
-} from './index.js'
-import { processDoseData, processPhantomData } from './read-data.js'
-import { VolumeViewer } from './volume-viewer.js'
-import { DensityVolume, DoseVolume } from './volume.js'
-import { combineDICOMDensityData, combineDICOMDoseData, processDICOMSlice } from './dicom.js'
+// import {
+//   DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
+//   densityVolumeList, doseVolumeList, volumeViewerList
+// } from './index.js'
+// import { processDoseData, processPhantomData } from './read-data.js'
+// import { VolumeViewer } from './volume-viewer.js'
+// import { DensityVolume, DoseVolume } from './volume.js'
+// import { combineDICOMDensityData, combineDICOMDoseData, processDICOMSlice } from './dicom.js'
 
 const dropArea = d3.select('#drop-area')
 const progressBar = d3.select('#progress-bar')
@@ -51,7 +51,7 @@ const progressBarNode = progressBar.node()
  *
  * @param {number} numfiles The number of files being uploaded.
  */
-function initializeProgress () {
+function initializeProgress() {
   progressBarNode.value = 0
   // Show the progress bar
   progressBar.classed('hidden', false)
@@ -62,14 +62,14 @@ function initializeProgress () {
  *
  * @param {number} numfiles The number of files being uploaded.
  */
-function updateProgress (percent, fileNum, totalFiles) {
+function updateProgress(percent, fileNum, totalFiles) {
   progressBarNode.value = percent * (fileNum / totalFiles)
 }
 
 /**
  * Once files are uploaded, end progress by hiding the bar.
  */
-function endProgress () {
+function endProgress() {
   progressBar.classed('hidden', true)
 }
 
@@ -184,7 +184,7 @@ d3.select('#test-files').on('click', function () {
  *
  * @param {File[]} files  The list of files to be processed.
  */
-function handleFiles (files) {
+function handleFiles(files) {
   initializeProgress()
   const promises = []
 
@@ -259,7 +259,7 @@ function handleFiles (files) {
  * @param {number} fileNum  The index of the file to be processed.
  * @param {File} totalFiles The total number of files to be processed.
  */
-function readFile (resolve, file, fileNum, totalFiles) {
+function readFile(resolve, file, fileNum, totalFiles) {
   const reader = new FileReader()
   const fileName = file.name
   const ext = fileName.split('.').pop()

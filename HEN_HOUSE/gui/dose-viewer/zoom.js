@@ -31,7 +31,7 @@
 // definitions for StandardJS formatter
 /* global d3 */
 
-import { MAIN_VIEWER_DIMENSIONS } from './index.js'
+// import { MAIN_VIEWER_DIMENSIONS } from './index.js'
 
 /**
  * Builds a zoom object according to the specs and callback passed in.
@@ -194,4 +194,4 @@ function zoomedAll (transform, panel) {
     )
 }
 
-export { getZoom, zoomedAll, zoomedDoseProfile }
+// export { getZoom, zoomedAll, zoomedDoseProfile }

@@ -42,7 +42,7 @@ class Slider {
    * @param {Object} params The parameters of the slider that includes id, label,
    * format, startingVal, minVal, maxVal, and step.
    */
-  constructor (parentDiv, params) {
+  constructor(parentDiv, params) {
     this.format = params.format
     this.onSliderChangeCallback = params.onSliderChangeCallback
     this.onSliderReleaseCallback = params.onSliderReleaseCallback
@@ -67,7 +67,7 @@ class Slider {
    *
    * @returns {number}
    */
-  get value () {
+  get value() {
     return this.slider.node().value
   }
 
@@ -83,7 +83,7 @@ class Slider {
    * and decrement buttons.
    * @params {boolean} [disabled = true] Whether or not the slider is initially disabled.
    */
-  buildSliderHtml (
+  buildSliderHtml(
     parentDiv,
     id,
     labelStr,
@@ -176,7 +176,7 @@ class Slider {
    * @params {number} maxVal The maximum value of the slider.
    * @params {number} step The interval between two values on the slider.
    */
-  initializeBehaviour (format, startingVal, minVal, maxVal, step) {
+  initializeBehaviour(format, startingVal, minVal, maxVal, step) {
     const sliderNode = this.slider.node()
 
     var updateSliderOnChange = (val) => {
@@ -248,7 +248,7 @@ class Slider {
   /**
    * Enable the slider if disabled.
    */
-  enableSlider () {
+  enableSlider() {
     if (this.slider.attr('disabled')) this.slider.attr('disabled', null)
   }
 
@@ -257,7 +257,7 @@ class Slider {
    *
    * @params {number} minVal The minimum value of the slider.
    */
-  setMinValue (minVal) {
+  setMinValue(minVal) {
     // Set min value
     this.slider.attr('min', minVal)
 
@@ -275,7 +275,7 @@ class Slider {
    *
    * @params {number} maxVal The maximum value of the slider.
    */
-  setMaxValue (maxVal) {
+  setMaxValue(maxVal) {
     // Set max value
     this.slider.attr('max', maxVal)
 
@@ -293,7 +293,7 @@ class Slider {
    *
    * @params {number} val The value of the slider to be set to.
    */
-  setCurrentValue (val) {
+  setCurrentValue(val) {
     // Update slider range
     this.slider.node().value = val
 
@@ -302,4 +302,4 @@ class Slider {
   }
 }
 
-export { Slider }
+// export { Slider }

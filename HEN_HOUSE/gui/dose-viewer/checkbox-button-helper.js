@@ -31,12 +31,12 @@
 // definitions for StandardJS formatter
 /* global d3 */
 
-import {
-  DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
-  volumeViewerList
-} from './index.js'
-import { VolumeViewer } from './volume-viewer.js'
-import { updateVoxelCoords } from './voxel-coordinates.js'
+// import {
+//   DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
+//   volumeViewerList
+// } from './index.js'
+// import { VolumeViewer } from './volume-viewer.js'
+// import { updateVoxelCoords } from './voxel-coordinates.js'
 
 /**
  * Enable the plot density checkbox for the dose profile plots.
@@ -162,8 +162,8 @@ var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) {
   }
 }
 
-export {
-  defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
-  enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
-  enableCheckboxForVoxelInformation, enableExportVisualizationButton
-}
+// export {
+//   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
+//   enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
+//   enableCheckboxForVoxelInformation, enableExportVisualizationButton
+// }

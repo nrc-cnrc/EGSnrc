@@ -30,7 +30,7 @@
 
 // definitions for StandardJS formatter
 
-import { Slider } from './slider.js'
+// import { Slider } from './slider.js'
 
 /**
  * Initialize the min and max density sliders.
@@ -107,4 +107,4 @@ var initializeMinMaxDensitySlider = (
   )
 }
 
-export { initializeMinMaxDensitySlider }
+// export { initializeMinMaxDensitySlider }

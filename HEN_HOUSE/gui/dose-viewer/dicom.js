@@ -1,6 +1,6 @@
 /* global dicomParser */
 
-function combineDICOMDoseData (DICOMList) {
+function combineDICOMDoseData(DICOMList) {
   // Use the first item in the list to fill in extra information
   const sampleData = DICOMList[0].data
   const numVox = sampleData.voxelNumber
@@ -67,7 +67,7 @@ function combineDICOMDoseData (DICOMList) {
   return DICOMData
 }
 
-function combineDICOMDensityData (DICOMList) {
+function combineDICOMDensityData(DICOMList) {
   // Sort in slice order
   DICOMList.sort((a, b) => (a.data.zPos - b.data.zPos))
 
@@ -214,7 +214,7 @@ var getVal = function (dataSet, vr, propertyAddress) {
   return val
 }
 
-function processDICOMSlice (arrayBuffer) {
+function processDICOMSlice(arrayBuffer) {
   const byteArray = new Uint8Array(arrayBuffer)
 
   try {
@@ -312,4 +312,4 @@ function processDICOMSlice (arrayBuffer) {
   }
 }
 
-export { combineDICOMDensityData, combineDICOMDoseData, processDICOMSlice }
+// export { combineDICOMDensityData, combineDICOMDoseData, processDICOMSlice }

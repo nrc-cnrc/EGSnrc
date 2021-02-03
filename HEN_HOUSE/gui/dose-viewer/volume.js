@@ -33,8 +33,8 @@
 /* global Image */
 /* global Worker */
 
-import { volumeViewerList } from './index.js'
-import { Slider } from './slider.js'
+// import { volumeViewerList } from './index.js'
+// import { Slider } from './slider.js'
 
 /** @class Volume represents a dose or density file and includes classes the
  * get slices of data.  */
@@ -796,30 +796,34 @@ class DensityVolume extends Volume {
 
     if (window.Worker) {
       // If web workers are supported, cache images in the background
-      axes.forEach((axis, i) => {
-        var cacheWorker = new Worker('cache-worker.mjs')
+      try {
+        axes.forEach((axis, i) => {
+          var cacheWorker = new Worker('cache-worker.mjs')
 
-        const e = {
-          axis: axis,
-          data: this.data,
-          dimensions: this.dimensions,
-          voxArr: data.voxelArr[dims[i]].slice(),
-          maxVal: this.maxDensityVar,
-          minVal: this.minDensityVar
-        }
+          const e = {
+            axis: axis,
+            data: this.data,
+            dimensions: this.dimensions,
+            voxArr: data.voxelArr[dims[i]].slice(),
+            maxVal: this.maxDensityVar,
+            minVal: this.minDensityVar
+          }
 
-        function handleMessage (e) {
-          console.log('Message recieved from worker')
-          vol.imageCache[axis] = e.data
+          function handleMessage (e) {
+            console.log('Message recieved from worker')
+            vol.imageCache[axis] = e.data
 
-          // Remove event listener
-          cacheWorker.removeEventListener('message', handleMessage)
-          cacheWorker.terminate()
-        }
+            // Remove event listener
+            cacheWorker.removeEventListener('message', handleMessage)
+            cacheWorker.terminate()
+          }
 
-        cacheWorker.addEventListener('message', handleMessage)
-        cacheWorker.postMessage(e)
-      })
+          cacheWorker.addEventListener('message', handleMessage)
+          cacheWorker.postMessage(e)
+        })
+      } catch (err) {
+        console.log('Web workers not available.')
+      }
     } else {
       console.log('Your browser doesn\'t support web workers.')
     }
@@ -1145,4 +1149,4 @@ class DensityVolume extends Volume {
   }
 }
 
-export { DensityVolume, DoseComparisonVolume, DoseVolume }
+// export { DensityVolume, DoseComparisonVolume, DoseVolume }

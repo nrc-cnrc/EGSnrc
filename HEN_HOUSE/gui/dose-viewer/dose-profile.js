@@ -31,8 +31,8 @@
 // definitions for StandardJS formatter
 /* global d3 */
 /* global doseProfileAxis */
-import { getZoom, zoomedDoseProfile } from './zoom.js'
-import { DOSE_PROFILE_DIMENSIONS } from './index.js'
+// import { getZoom, zoomedDoseProfile } from './zoom.js'
+// import { DOSE_PROFILE_DIMENSIONS } from './index.js'
 
 /** @class DoseProfile contains all information to build a dose profile at a line through a dose volume. */
 class DoseProfile {
@@ -44,7 +44,7 @@ class DoseProfile {
    * @param {Object} parentDiv  The svg that holds the dose profile.
    * @param {String} id         The id of the dose profile (used mostly for bounding boxes).
    */
-  constructor (dimensions, parentDiv, id) {
+  constructor(dimensions, parentDiv, id) {
     this.dimensions = dimensions
     this.id = id
 
@@ -80,14 +80,14 @@ class DoseProfile {
   /**
    * Set the transform variable used for zooming.
    */
-  set zoomTransform (val) {
+  set zoomTransform(val) {
     this.transform = val
   }
 
   /**
    * Get the transform variable used for zooming.
    */
-  get zoomTransform () {
+  get zoomTransform() {
     return this.transform
   }
 
@@ -98,7 +98,7 @@ class DoseProfile {
    * @param {Object} parentDiv  The svg that holds the dose profile.
    * @param {String} id         The id of the dose profile (used mostly for bounding boxes).
    */
-  buildSvg (dimensions, parentDiv, id) {
+  buildSvg(dimensions, parentDiv, id) {
     // Initializing svgs for dose profile plots
     this.parentSvg = parentDiv
       .append('svg')
@@ -141,7 +141,7 @@ class DoseProfile {
   /**
    * Initializes the zoom of the dose profile plot using functions from the zoom file.
    */
-  initializeZoom () {
+  initializeZoom() {
     // Zooming for dose profile
     doseProfileAxis.zoomObj = getZoom(
       DOSE_PROFILE_DIMENSIONS.width,
@@ -159,7 +159,7 @@ class DoseProfile {
   /**
    * Resets the zoom of the dose profile plot.
    */
-  resetZoomTransform () {
+  resetZoomTransform() {
     this.svg
       .select('rect.bounding-box')
       .call(this.zoomObj.transform, d3.zoomIdentity.scale(1))
@@ -173,7 +173,7 @@ class DoseProfile {
    * @param {String} profileDim         The dimension (x, y, z) of the dose profile.
    * @param {number[]} coords              The voxel position of the line through the volumes.
    */
-  setDoseProfileData (doseVol, densityVol, profileDim, coords) {
+  setDoseProfileData(doseVol, densityVol, profileDim, coords) {
     const [dim1, dim2, dim3] =
       profileDim === 'x'
         ? ['x', 'y', 'z']
@@ -234,7 +234,7 @@ class DoseProfile {
   /**
    * Set the dose scales based on the loaded data.
    * */
-  setDoseScales () {
+  setDoseScales() {
     const [minPos, maxPos] = [
       this.data[0].position,
       this.data[this.data.length - 1].position
@@ -268,7 +268,7 @@ class DoseProfile {
   /**
    * Create the x and y axes for the dose profile plot.
    */
-  plotAxes () {
+  plotAxes() {
     // Clear existing axes and labels
     this.svg.selectAll('.profile-x-axis').remove()
     this.svg.selectAll('.profile-y-dose-axis').remove()
@@ -367,7 +367,7 @@ class DoseProfile {
   /**
    * Create the title of the plot with the correct coordinates.
    */
-  makeTitle (coords) {
+  makeTitle(coords) {
     // Clear existing title
     this.svg.select('.title').remove()
 
@@ -405,7 +405,7 @@ class DoseProfile {
   /**
    * Plot the dose profile data.
    */
-  plotData () {
+  plotData() {
     const data = this.data
     const preYDoseScale = d3
       .scaleLinear()
@@ -496,7 +496,7 @@ class DoseProfile {
   /**
    * Update the x,y scales and axes.
    */
-  updateAxes () {
+  updateAxes() {
     this.setDoseScales()
     this.plotAxes()
     if (this.zoomObj !== null) this.resetZoomTransform()
@@ -506,7 +506,7 @@ class DoseProfile {
    * Check if the axes need an update, then plot the data at the specified coordinates.
    */
   // TODO: Either combine this with getting the data or pass it in to reduce confusion
-  plotDoseProfile (coords) {
+  plotDoseProfile(coords) {
     if (this.xScale === null) {
       this.updateAxes()
     }
@@ -516,4 +516,4 @@ class DoseProfile {
   }
 }
 
-export { DoseProfile }
+// export { DoseProfile }

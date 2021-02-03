@@ -31,7 +31,7 @@
 // definitions for StandardJS formatter
 /* global d3 */
 
-import { volumeViewerList } from './index.js'
+// import { volumeViewerList } from './index.js'
 
 // TODO: Make voxel information a class
 /**
@@ -40,7 +40,7 @@ import { volumeViewerList } from './index.js'
  * @param {Object} parentDiv The HTML parent div.
  * @param {string} id The unique ID of the volume viewers voxel info.
  */
-function buildVoxelInfoHtml (parentDiv, id) {
+function buildVoxelInfoHtml(parentDiv, id) {
   // Define label texts and tags
   const labelName = [
     'World Coordinates (cm):',
@@ -90,7 +90,7 @@ function buildVoxelInfoHtml (parentDiv, id) {
  * @param {Object} transform The zoom transform of the panel.
  * @returns {number[]}
  */
-function coordsToVoxel (coords, axis, sliceNum, volume, transform) {
+function coordsToVoxel(coords, axis, sliceNum, volume, transform) {
   // Invert transformation if applicable then apply scale to get voxel
   // coordinate
   const i = volume.baseSlices[axis].xPixelToVoxelScale(
@@ -112,7 +112,7 @@ function coordsToVoxel (coords, axis, sliceNum, volume, transform) {
  * @param {number[]} coords The worlds coordinates to show.
  * @param {string} id  The unique ID of the volume viewers voxel info.
  */
-function updateWorldLabels (coords, id) {
+function updateWorldLabels(coords, id) {
   const format = d3.format('.2f')
   const formattedCoords = coords.map((coord) => format(coord))
   d3.select('#world-coords-' + id).node().value =
@@ -126,7 +126,7 @@ function updateWorldLabels (coords, id) {
  * @param {string} id The unique ID of the volume viewers voxel info.
  */
 // TODO: Either have separate dose and density voxel labels, or remove altogether
-function updateVoxelLabels (coords, id) {
+function updateVoxelLabels(coords, id) {
   d3.select('#voxel-coords-' + id).node().value = '(' + coords.join(', ') + ')'
 }
 
@@ -138,7 +138,7 @@ function updateVoxelLabels (coords, id) {
  * @param {number[]} worldCoords The world coordinates.
  * @param {string} id The unique ID of the volume viewers voxel info.
  */
-function updateVoxelCoords (
+function updateVoxelCoords(
   densityVol,
   doseVol,
   worldCoords,
@@ -174,7 +174,7 @@ function updateVoxelCoords (
  * @param {DoseVolume} doseVol The dose volume of the volume viewer.
  * @param {string} id The unique ID of the volume viewers voxel info.
  */
-function updateVoxelInfo (worldCoords, densityVol, doseVol, densityVoxelCoords, doseVoxelCoords, id) {
+function updateVoxelInfo(worldCoords, densityVol, doseVol, densityVoxelCoords, doseVoxelCoords, id) {
   if (densityVol) {
     const density = densityVol.getDataAtVoxelCoords(densityVoxelCoords)
     const densityUnits = (densityVol.args !== undefined && densityVol.args.isDicom) ? ' HU' : ' g/cm\u00B3'
@@ -199,7 +199,7 @@ function updateVoxelInfo (worldCoords, densityVol, doseVol, densityVoxelCoords, 
  * @param {number[]} voxelCoords The voxel coordinates of the data.
  * @param {number[]} worldCoords The world coordinates of the data.
  */
-function updateDoseProfiles (voxelCoords, worldCoords) {
+function updateDoseProfiles(voxelCoords, worldCoords) {
   var getCoords = (coords) => [
     [coords[0], coords[1]],
     [coords[1], coords[2]],
@@ -228,4 +228,4 @@ function updateDoseProfiles (voxelCoords, worldCoords) {
   })
 }
 
-export { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords }
+// export { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords }
