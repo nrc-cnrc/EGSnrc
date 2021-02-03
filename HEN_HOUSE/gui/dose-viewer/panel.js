@@ -56,7 +56,7 @@ class Panel {
    * of the slice.
    * @param {number[]} markerPosition The current position of the marker.
    */
-  constructor(
+  constructor (
     dimensions,
     densityVol,
     doseVol,
@@ -107,7 +107,7 @@ class Panel {
   /**
    * Set up zoom for panel.
    */
-  setupZoom() {
+  setupZoom () {
     const mainViewerZoom = getZoom(
       MAIN_VIEWER_DIMENSIONS.width,
       MAIN_VIEWER_DIMENSIONS.height,
@@ -120,7 +120,7 @@ class Panel {
   /**
    * Show crosshairs if plot dose checkbox is selected.
    */
-  updateCrosshairDisplay() {
+  updateCrosshairDisplay () {
     this.axisElements['plot-marker']
       .selectAll('line.crosshair')
       .style('display', this.showCrosshairs() ? '' : 'none')
@@ -129,7 +129,7 @@ class Panel {
   /**
    * Show circle marker if show voxel info checkbox is selected.
    */
-  updateCircleMarkerDisplay() {
+  updateCircleMarkerDisplay () {
     this.axisElements['plot-marker']
       .select('circle.crosshair')
       .style('display', this.showMarker() ? '' : 'none')
@@ -140,7 +140,7 @@ class Panel {
    *
    * @param {number} sliceNum The number of the current slice displayed in the panel.
    */
-  updateSlice(sliceNum) {
+  updateSlice (sliceNum) {
     let slicePos, slice
 
     if (this.densityVol) {
@@ -153,7 +153,7 @@ class Panel {
       slicePos = slicePos || this.doseVol.baseSlices[this.axis].zScale.invert(sliceNum)
       slice = this.doseVol.getSlice(this.axis, slicePos)
       this.doseVol.drawDose(slice, this.zoomTransform)
-      this.doseSliceNum = sliceNum
+      this.doseSliceNum = slice.sliceNum
     }
     this.slicePos = slicePos
   }
@@ -163,16 +163,16 @@ class Panel {
    *
    * @returns {Object}
    */
-  getDrag() {
+  getDrag () {
     const panel = this
 
     // Define the drag attributes
-    function dragstarted() {
+    function dragstarted () {
       d3.select(this).raise()
       d3.select(this).attr('cursor', 'grabbing')
     }
 
-    function dragged() {
+    function dragged () {
       var x = d3.event.x
       var y = d3.event.y
 
@@ -189,7 +189,7 @@ class Panel {
       )
     }
 
-    function dragended() {
+    function dragended () {
       d3.select(this).attr('cursor', 'grab')
 
       const plotCoords = panel.zoomTransform ? panel.zoomTransform.apply([d3.event.x, d3.event.y]) : [d3.event.x, d3.event.y]
@@ -215,7 +215,7 @@ class Panel {
    * @param {boolean} [activePanel = true] Whether it is the active panel (i.e.
    * most recently interacted with)
    */
-  updateMarker(coords, activePanel = true) {
+  updateMarker (coords, activePanel = true) {
     this.markerPosition = coords
 
     // Remove old marker and crosshairs
@@ -283,7 +283,7 @@ class Panel {
    *
    * @param {number} sliceNum The number of the current slice displayed in the panel.
    */
-  updateSlider(sliceNum) {
+  updateSlider (sliceNum) {
     this.sliceSlider.setCurrentValue(sliceNum)
   }
 
@@ -292,7 +292,7 @@ class Panel {
    *
    * @param {number[]} coords The coordinates of the marker position.
    */
-  coordsToWorld(coords) {
+  coordsToWorld (coords) {
     const volume = this.densityVol || this.doseVol
     const axis = this.axis
     const sliceNum = this.densitySliceNum || this.doseSliceNum
@@ -313,7 +313,7 @@ class Panel {
     return [xVal, yVal, zVal]
   }
 
-  setDensityVolume(densityVol, slicePos) {
+  setDensityVolume (densityVol, slicePos) {
     this.densityVol = densityVol
     this.slicePos = slicePos
 
@@ -327,7 +327,7 @@ class Panel {
     this.volume = densityVol
   }
 
-  setDoseVolume(doseVol, slicePos) {
+  setDoseVolume (doseVol, slicePos) {
     this.doseVol = doseVol
     this.slicePos = slicePos
 
@@ -342,7 +342,7 @@ class Panel {
     this.doseSliceNum = Math.round(this.doseVol.baseSlices[this.axis].zScale(slicePos))
   }
 
-  adjustDoseBaseSlices() {
+  adjustDoseBaseSlices () {
     const AXES = ['xy', 'yz', 'xz']
 
     AXES.forEach((axis) => {
