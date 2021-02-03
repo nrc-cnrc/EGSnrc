@@ -33,6 +33,21 @@
 /* global FileReader */
 /* global alert */
 
+/* global MAIN_VIEWER_DIMENSIONS */
+/* global LEGEND_DIMENSIONS */
+/* global DOSE_PROFILE_DIMENSIONS */
+/* global volumeViewerList */
+/* global densityVolumeList */
+/* global doseVolumeList */
+/* global VolumeViewer */
+/* global DensityVolume */
+/* global DoseVolume */
+/* global combineDICOMDensityData */
+/* global combineDICOMDoseData */
+/* global processPhantomData */
+/* global processDoseData */
+/* global processDICOMSlice */
+
 // import {
 //   DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
 //   densityVolumeList, doseVolumeList, volumeViewerList
