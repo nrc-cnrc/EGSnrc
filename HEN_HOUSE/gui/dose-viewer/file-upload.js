@@ -236,16 +236,18 @@ function handleFiles (files) {
         'vol-' + volumeViewerList.length
       )
       volumeViewerList.push(volViewer)
+    }
 
-      if (densityVolumeList.length === 1) {
-        volViewer.setDensityVolume(densityVolumeList[0])
-        volViewer.densitySelector.node().selectedIndex = 1
-      }
+    const volViewer = volumeViewerList[0]
 
-      if (doseVolumeList.length === 1) {
-        volViewer.setDoseVolume(doseVolumeList[0])
-        volViewer.doseSelector.node().selectedIndex = 1
-      }
+    if (doseVolumeList.length >= 1 && volViewer.doseVolume === null) {
+      volViewer.setDoseVolume(doseVolumeList[0])
+      volViewer.doseSelector.node().selectedIndex = 1
+    }
+
+    if (densityVolumeList.length >= 1 && volViewer.densityVolume === null) {
+      volViewer.setDensityVolume(densityVolumeList[0])
+      volViewer.densitySelector.node().selectedIndex = 1
     }
   })
 }
