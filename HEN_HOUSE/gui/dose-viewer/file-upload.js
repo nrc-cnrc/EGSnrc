@@ -223,67 +223,70 @@ function handleFiles (files) {
   const promises = []
 
   files.forEach((file, i) => {
-    const filePromise = new Promise(resolve => {
-      readFile(resolve, file, i + 1, files.length)
+    const filePromise = new Promise((resolve, reject) => {
+      readFile(resolve, reject, file, i + 1, files.length)
     })
 
     promises.push(filePromise)
   })
 
-  Promise.all(promises).then(files => {
-    const dicomDensityList = files.filter(file => (file.ext === 'dcm' || file.ext === 'DCM') && file.data.type === 'CT Image Storage')
-    const dicomDoseList = files.filter(file => (file.ext === 'dcm' || file.ext === 'DCM') && file.data.type === 'RT Dose Storage')
-    const egsphantList = files.filter(file => file.ext === 'egsphant')
-    const doseList = files.filter(file => file.ext === '3ddose')
+  Promise.allSettled(promises)
+    .then((results) => results.filter(result => result.status === 'fulfilled')) // Filter out rejected files
+    .then((results) => results.map(result => result.value)) // Replace the promise with value
+    .then(files => {
+      const dicomDensityList = files.filter(file => (file.ext === 'dcm' || file.ext === 'DCM') && file.data.type === 'CT Image Storage')
+      const dicomDoseList = files.filter(file => (file.ext === 'dcm' || file.ext === 'DCM') && file.data.type === 'RT Dose Storage')
+      const egsphantList = files.filter(file => file.ext === 'egsphant')
+      const doseList = files.filter(file => file.ext === '3ddose')
 
-    // If DICOM density files
-    if (dicomDensityList.length > 0) {
-      const DICOMData = combineDICOMDensityData(dicomDensityList)
-      // TODO: Have a naming system for dicom files, perhaps return name from combineDICOMDensityData
-      makeDensityVolume(dicomDensityList[0].fileName.slice(0, 9), DICOMData, { isDicom: true })
-    }
+      // If DICOM density files
+      if (dicomDensityList.length > 0) {
+        const DICOMData = combineDICOMDensityData(dicomDensityList)
+        // TODO: Have a naming system for dicom files, perhaps return name from combineDICOMDensityData
+        makeDensityVolume(dicomDensityList[0].fileName.slice(0, 9), DICOMData, { isDicom: true })
+      }
 
-    // If DICOM dose files
-    if (dicomDoseList.length > 0) {
-      const DICOMData = combineDICOMDoseData(dicomDoseList)
-      makeDoseVolume(dicomDoseList[0].fileName.slice(0, 9), DICOMData, { isDicom: true })
-    }
+      // If DICOM dose files
+      if (dicomDoseList.length > 0) {
+        const DICOMData = combineDICOMDoseData(dicomDoseList)
+        makeDoseVolume(dicomDoseList[0].fileName.slice(0, 9), DICOMData, { isDicom: true })
+      }
 
-    // If egsphant files
-    if (egsphantList.length > 0) {
-      // Create density volume
-      egsphantList.forEach(file => makeDensityVolume(file.fileName.split('.')[0], file.data))
-    }
+      // If egsphant files
+      if (egsphantList.length > 0) {
+        // Create density volume
+        egsphantList.forEach(file => makeDensityVolume(file.fileName.split('.')[0], file.data))
+      }
 
-    // If 3ddose files
-    if (doseList.length > 0) {
-      // Create dose volume
-      doseList.forEach(file => makeDoseVolume(file.fileName.split('.')[0], file.data))
-    }
+      // If 3ddose files
+      if (doseList.length > 0) {
+        // Create dose volume
+        doseList.forEach(file => makeDoseVolume(file.fileName.split('.')[0], file.data))
+      }
 
-    // If this is the first volume uploaded, load into first volume viewer
-    if (volumeViewerList.length === 0) {
-      const volViewer = new VolumeViewer(
-        MAIN_VIEWER_DIMENSIONS,
-        LEGEND_DIMENSIONS,
-        DOSE_PROFILE_DIMENSIONS,
-        'vol-' + volumeViewerList.length
-      )
-      volumeViewerList.push(volViewer)
-    }
+      // If this is the first volume uploaded, load into first volume viewer
+      if (volumeViewerList.length === 0) {
+        const volViewer = new VolumeViewer(
+          MAIN_VIEWER_DIMENSIONS,
+          LEGEND_DIMENSIONS,
+          DOSE_PROFILE_DIMENSIONS,
+          'vol-' + volumeViewerList.length
+        )
+        volumeViewerList.push(volViewer)
+      }
 
-    const volViewer = volumeViewerList[0]
+      const volViewer = volumeViewerList[0]
 
-    if (doseVolumeList.length >= 1 && volViewer.doseVolume === null) {
-      volViewer.setDoseVolume(doseVolumeList[0])
-      volViewer.doseSelector.node().selectedIndex = 1
-    }
+      if (doseVolumeList.length >= 1 && volViewer.doseVolume === null) {
+        volViewer.setDoseVolume(doseVolumeList[0])
+        volViewer.doseSelector.node().selectedIndex = 1
+      }
 
-    if (densityVolumeList.length >= 1 && volViewer.densityVolume === null) {
-      volViewer.setDensityVolume(densityVolumeList[0])
-      volViewer.densitySelector.node().selectedIndex = 1
-    }
-  })
+      if (densityVolumeList.length >= 1 && volViewer.densityVolume === null) {
+        volViewer.setDensityVolume(densityVolumeList[0])
+        volViewer.densitySelector.node().selectedIndex = 1
+      }
+    })
 }
 
 /**
@@ -293,7 +296,7 @@ function handleFiles (files) {
  * @param {number} fileNum  The index of the file to be processed.
  * @param {File} totalFiles The total number of files to be processed.
  */
-function readFile (resolve, file, fileNum, totalFiles) {
+function readFile (resolve, reject, file, fileNum, totalFiles) {
   const reader = new FileReader()
   const fileName = file.name
   const ext = fileName.split('.').pop()
@@ -336,6 +339,7 @@ function readFile (resolve, file, fileNum, totalFiles) {
       data = processDICOMSlice(result)
     } else {
       console.log('Unknown file extension')
+      reject('Unknown file extension')
       return true
     }
 
