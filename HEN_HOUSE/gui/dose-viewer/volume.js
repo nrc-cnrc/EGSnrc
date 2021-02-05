@@ -70,6 +70,7 @@ class Volume {
    */
   // TODO: Remove html elements as properties and just pass them in
   setHtmlObjects (htmlElementObj, legendHolder, legendSvg) {
+    // TODO: Remove DOM references in volume
     this.htmlElementObj = htmlElementObj
     this.legendHolder = legendHolder
     this.legendSvg = legendSvg
@@ -89,11 +90,12 @@ class Volume {
   }
 
   /**
-* Create the scales for the x, y and z dimensions in each axis.
-*
-* @param {Object} data The data from parsing the file.
-*/
+   * Create the scales for the x, y and z dimensions in each axis.
+   *
+   * @param {Object} data The data from parsing the file.
+   */
   createBaseSlices (data, type) {
+    // TODO: depending on the type, leave some data out
     // TODO: Change scales to quantile to map exactly which pixels
     const AXES = ['xy', 'yz', 'xz']
 
@@ -354,7 +356,7 @@ class DoseVolume extends Volume {
     this.updateThresholds()
 
     Object.values(panels).forEach((panel) => {
-      this.drawDose(this.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform)
+      this.drawDose(this.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'])
     })
 
     if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
@@ -387,7 +389,7 @@ class DoseVolume extends Volume {
     this.initializeLegend()
 
     Object.values(panels).forEach((panel) => {
-      this.drawDose(this.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform)
+      this.drawDose(this.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'])
     })
   }
 
@@ -407,8 +409,7 @@ class DoseVolume extends Volume {
    *
    * @param {string} axis The axis of the slice (xy, yz, or xz).
    */
-  clearDose (axis) {
-    const svg = this.htmlElementObj[axis]
+  clearDose (axis, svg) {
     // Clear dose plot
     svg.selectAll('g').remove()
 
@@ -425,8 +426,7 @@ class DoseVolume extends Volume {
    * @param {Object} slice The slice of the dose data.
    * @param {Object} [transform] The zoom transform of the plot.
    */
-  drawDose (slice, transform) {
-    const svg = this.htmlElementObj[slice.axis]
+  drawDose (slice, transform, svg) {
     const baseSlice = this.baseSlices[slice.axis]
 
     // Clear dose plot
@@ -491,6 +491,7 @@ class DoseVolume extends Volume {
   /**
    * Create the dose legend.
    */
+  // TODO: Move to volume viewer
   initializeLegend () {
     // Get list of class names of hidden contours
     const hiddenContourClassList = this.getHiddenContourClassList()
@@ -845,7 +846,7 @@ class DensityVolume extends Volume {
     // TODO: Perhaps move this to the panels?? call initialize legend and make
     // maxdensity var a panel attribute
     Object.values(panels).forEach((panel) => {
-      this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform)
+      this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform, panel.axisElements['plot-density'])
     })
   }
 
@@ -863,7 +864,7 @@ class DensityVolume extends Volume {
     this.initializeLegend()
 
     Object.values(panels).forEach((panel) => {
-      this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform)
+      this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform, panel.axisElements['plot-density'])
     })
   }
 
@@ -883,9 +884,8 @@ class DensityVolume extends Volume {
    *
    * @param {string} axis The axis of the slice (xy, yz, or xz).
    */
-  clearDensity (axis) {
-    const svg = this.htmlElementObj[axis].node()
-
+  // TODO: Move clearDose and clearDensity panel functions
+  clearDensity (axis, svg) {
     // Clear density plot
     const context = svg.getContext('2d')
     context.clearRect(0, 0, svg.width, svg.height)
@@ -900,9 +900,8 @@ class DensityVolume extends Volume {
    * @param {Object} slice The slice of the density data.
    * @param {Object} [transform] The zoom transform of the plot.
    */
-  drawDensity (slice, transform) {
+  drawDensity (slice, transform, svg) {
     // Get the canvas and context in the webpage
-    const svg = this.htmlElementObj[slice.axis]
     const baseSlice = this.baseSlices[slice.axis]
     const imgCanvas = svg.node()
     const imgContext = imgCanvas.getContext('2d', { alpha: false })

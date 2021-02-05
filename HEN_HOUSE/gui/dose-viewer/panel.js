@@ -146,13 +146,13 @@ class Panel {
     if (this.densityVol) {
       slicePos = this.densityVol.baseSlices[this.axis].zScale.invert(sliceNum)
       slice = this.densityVol.getSlice(this.axis, slicePos)
-      this.densityVol.drawDensity(slice, this.zoomTransform)
+      this.densityVol.drawDensity(slice, this.zoomTransform, this.axisElements['plot-density'])
       this.densitySliceNum = sliceNum
     }
     if (this.doseVol) {
       slicePos = slicePos || this.doseVol.baseSlices[this.axis].zScale.invert(sliceNum)
       slice = this.doseVol.getSlice(this.axis, slicePos)
-      this.doseVol.drawDose(slice, this.zoomTransform)
+      this.doseVol.drawDose(slice, this.zoomTransform, this.axisElements['plot-dose'])
       this.doseSliceNum = slice.sliceNum
     }
     this.slicePos = slicePos

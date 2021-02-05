@@ -218,7 +218,7 @@ class VolumeViewer {
 
         // Draw the slice
         const slice = doseVol.getSlice(panel.axis, slicePos)
-        doseVol.drawDose(slice, panel.zoomTransform)
+        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'])
 
         // Update the axis
         this.drawAxes(
@@ -229,7 +229,7 @@ class VolumeViewer {
       } else {
         // Draw the slice
         const slice = doseVol.getSlice(panel.axis, slicePos)
-        doseVol.drawDose(slice, panel.zoomTransform)
+        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'])
       }
     })
 
@@ -282,7 +282,7 @@ class VolumeViewer {
 
       // Draw the slice
       const densitySlice = densityVol.getSlice(panel.axis, slicePos)
-      densityVol.drawDensity(densitySlice, panel.zoomTransform)
+      densityVol.drawDensity(densitySlice, panel.zoomTransform, panel.axisElements['plot-density'])
 
       // Update the axis
       this.drawAxes(
@@ -294,7 +294,7 @@ class VolumeViewer {
       if (panel.doseVol) {
         // Redraw dose contours
         const doseSlice = panel.doseVol.sliceCache[panel.axis][panel.doseSliceNum]
-        panel.doseVol.drawDose(doseSlice, panel.zoomTransform)
+        panel.doseVol.drawDose(doseSlice, panel.zoomTransform, panel.axisElements['plot-dose'])
       }
     })
 
@@ -323,7 +323,7 @@ class VolumeViewer {
     // Remove the volume object from panels
     Object.values(this.panels).forEach((panel) => {
       // Clear the panel
-      if (panel.doseVol) panel.doseVol.clearDose(panel.axis)
+      if (panel.doseVol) panel.doseVol.clearDose(panel.axis, panel.axisElements['plot-dose'])
 
       // Set the volume object to density vol if need be
       if (panel.volume === panel.doseVol) panel.volume = panel.densityVol
@@ -345,7 +345,7 @@ class VolumeViewer {
     // Remove the volume object from panels
     Object.values(this.panels).forEach((panel) => {
       // Clear the panel
-      if (panel.densityVol) panel.densityVol.clearDensity(panel.axis)
+      if (panel.densityVol) panel.densityVol.clearDensity(panel.axis, panel.axisElements['plot-density'])
 
       // Set the volume object to density vol if need be
       if (panel.volume === panel.densityVol) panel.volume = panel.doseVol
