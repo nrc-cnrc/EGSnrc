@@ -82,6 +82,7 @@ class Panel {
     this.densitySliceNum = null
     this.doseSliceNum = null
     this.slicePos = null
+    this.prevSliceImg = null
 
     // Properties to check values of voxel and dose profile checkboxes
     this.showMarker = () =>
@@ -146,7 +147,7 @@ class Panel {
     if (this.densityVol) {
       slicePos = this.densityVol.baseSlices[this.axis].zScale.invert(sliceNum)
       slice = this.densityVol.getSlice(this.axis, slicePos)
-      this.densityVol.drawDensity(slice, this.zoomTransform, this.axisElements['plot-density'])
+      this.prevSliceImg = this.densityVol.drawDensity(slice, this.zoomTransform, this.axisElements['plot-density'])
       this.densitySliceNum = sliceNum
     }
     if (this.doseVol) {

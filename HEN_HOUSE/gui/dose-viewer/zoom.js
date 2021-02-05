@@ -106,13 +106,12 @@ function zoomedDoseProfile (transform, doseProfile) {
  *
  * @param {Object} transform The zoom transform object.
  * @param {DensityProfile} densityVol The density profile to be zoomed.
+ * @param {Object} sliceImg The image of the slice to be zoomed.
  * @param {Object} canvas The canvas element to be zoomed.
  * @param {string} axis The axis of the slice to be zoomed.
  */
-function zoomedCanvas (transform, densityVol, canvas, axis) {
+function zoomedCanvas (transform, densityVol, sliceImg, canvas, axis) {
   // Get the image to draw
-  // TODO: Use cached image URL instead
-  const image = densityVol.prevSliceImg[axis]
   const baseSlice = densityVol.baseSlices[axis]
   const context = canvas.node().getContext('2d')
 
@@ -121,7 +120,7 @@ function zoomedCanvas (transform, densityVol, canvas, axis) {
   context.clearRect(0, 0, canvas.node().width, canvas.node().height)
   context.translate(transform.x, transform.y)
   context.scale(transform.k, transform.k)
-  context.drawImage(image, 0, 0, baseSlice.xVoxels, baseSlice.yVoxels, baseSlice.dxDraw, baseSlice.dyDraw, baseSlice.dWidthDraw, baseSlice.dHeightDraw)
+  context.drawImage(sliceImg, 0, 0, baseSlice.xVoxels, baseSlice.yVoxels, baseSlice.dxDraw, baseSlice.dyDraw, baseSlice.dWidthDraw, baseSlice.dHeightDraw)
   context.restore()
 }
 
@@ -142,6 +141,7 @@ function zoomedAll (transform, panel) {
     zoomedCanvas(
       transform,
       panel.densityVol,
+      panel.prevSliceImg,
       axisElements['plot-density'],
       axis
     )

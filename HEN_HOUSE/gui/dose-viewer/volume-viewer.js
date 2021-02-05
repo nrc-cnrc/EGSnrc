@@ -282,7 +282,7 @@ class VolumeViewer {
 
       // Draw the slice
       const densitySlice = densityVol.getSlice(panel.axis, slicePos)
-      densityVol.drawDensity(densitySlice, panel.zoomTransform, panel.axisElements['plot-density'])
+      panel.prevSliceImg = densityVol.drawDensity(densitySlice, panel.zoomTransform, panel.axisElements['plot-density'])
 
       // Update the axis
       this.drawAxes(

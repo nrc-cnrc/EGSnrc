@@ -760,7 +760,6 @@ class DensityVolume extends Volume {
   constructor (fileName, dimensions, legendDimensions, data, args) {
     super(fileName, dimensions, legendDimensions, args) // call the super class constructor
     this.addData(data, args)
-    this.prevSliceImg = { xy: {}, yz: {}, xz: {} }
   }
 
   /**
@@ -846,7 +845,7 @@ class DensityVolume extends Volume {
     // TODO: Perhaps move this to the panels?? call initialize legend and make
     // maxdensity var a panel attribute
     Object.values(panels).forEach((panel) => {
-      this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform, panel.axisElements['plot-density'])
+      panel.prevSliceImg = this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform, panel.axisElements['plot-density'])
     })
   }
 
@@ -864,7 +863,7 @@ class DensityVolume extends Volume {
     this.initializeLegend()
 
     Object.values(panels).forEach((panel) => {
-      this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform, panel.axisElements['plot-density'])
+      panel.prevSliceImg = this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform, panel.axisElements['plot-density'])
     })
   }
 
@@ -899,6 +898,7 @@ class DensityVolume extends Volume {
    *
    * @param {Object} slice The slice of the density data.
    * @param {Object} [transform] The zoom transform of the plot.
+   * @returns {Object}
    */
   drawDensity (slice, transform, svg) {
     // Get the canvas and context in the webpage
@@ -947,8 +947,7 @@ class DensityVolume extends Volume {
     // TODO: Add event listener?
     var image = new Image()
     image.src = canvas.toDataURL()
-    // TODO: Move prevSliceImg to panel
-    this.prevSliceImg[slice.axis] = image
+    return image
   }
 
   /**
