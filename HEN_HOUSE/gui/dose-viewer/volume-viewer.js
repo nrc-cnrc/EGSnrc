@@ -31,6 +31,28 @@
 // definitions for StandardJS formatter
 /* global d3 */
 
+// REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
+/* global enableCheckboxForDensityPlot */
+/* global enableCheckboxForDoseProfilePlot */
+/* global enableExportVisualizationButton */
+/* global enableCheckboxForVoxelInformation */
+/* global initializeMinMaxDensitySlider */
+/* global doseVolumeList */
+/* global densityVolumeList */
+/* global doseComparisonVolumeList */
+/* global volumeViewerList */
+/* global DoseComparisonVolume */
+/* global defineShowMarkerCheckboxBehaviour */
+/* global defineShowProfileCheckboxBehaviour */
+/* global defineExportPNGButtonBehaviour */
+/* global defineExportCSVButtonBehaviour */
+/* global buildVoxelInfoHtml */
+/* global coordsToVoxel */
+/* global updateVoxelCoords */
+/* global DoseProfile */
+/* global Panel */
+/* global Slider */
+
 // import {
 //   densityVolumeList, doseComparisonVolumeList, doseVolumeList, volumeViewerList
 // } from './index.js'
@@ -51,7 +73,7 @@ const AXES = ['xy', 'yz', 'xz']
 
 /** @class VolumeViewer combines a density and/or dose file, three panels for
  * the three axes views, and three dose profile plots. */
-class VolumeViewer {
+class VolumeViewer { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a VolumeViewer.
    *

@@ -36,7 +36,7 @@
  * @param {Object} data The .egsphant file read as text.
  * @returns {Object}
  */
-var processPhantomData = function (data) {
+var processPhantomData = function (data) { // eslint-disable-line no-unused-vars
   var getMax = function (a) {
     return Math.max(...a.map((e) => (Array.isArray(e) ? getMax(e) : e)))
   }
@@ -139,7 +139,7 @@ var processPhantomData = function (data) {
  * @param {Object} data The .3ddose file read as text.
  * @returns {Object}
  */
-var processDoseData = function (data) {
+var processDoseData = function (data) { // eslint-disable-line no-unused-vars
   // The current line of the text file being read
   let curr = 0
 

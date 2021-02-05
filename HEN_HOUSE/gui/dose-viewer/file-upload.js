@@ -33,6 +33,7 @@
 /* global FileReader */
 /* global alert */
 
+// REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
 /* global MAIN_VIEWER_DIMENSIONS */
 /* global LEGEND_DIMENSIONS */
 /* global DOSE_PROFILE_DIMENSIONS */

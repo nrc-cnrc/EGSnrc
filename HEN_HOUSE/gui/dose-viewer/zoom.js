@@ -31,6 +31,9 @@
 // definitions for StandardJS formatter
 /* global d3 */
 
+// REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
+/* global MAIN_VIEWER_DIMENSIONS */
+
 // import { MAIN_VIEWER_DIMENSIONS } from './index.js'
 
 /**
@@ -43,7 +46,7 @@
  * @param {Array} args Any arguments to be passed into zoomCallback.
  * @returns {Object}
  */
-var getZoom = (width, height, zoomCallback, args) =>
+var getZoom = (width, height, zoomCallback, args) => // eslint-disable-line no-unused-vars
   d3
     .zoom()
     .extent([
@@ -59,7 +62,7 @@ var getZoom = (width, height, zoomCallback, args) =>
  * @param {Object} transform The zoom transform object.
  * @param {DoseProfile} doseProfile The dose profile to be zoomed.
  */
-function zoomedDoseProfile (transform, doseProfile) {
+function zoomedDoseProfile (transform, doseProfile) { // eslint-disable-line no-unused-vars
   doseProfile.zoomTransform = transform
   doseProfile.svg
     .selectAll('path.lines')
@@ -130,7 +133,7 @@ function zoomedCanvas (transform, densityVol, sliceImg, canvas, axis) {
  * @param {Object} transform The zoom transform object.
  * @param {Panel} panel The panel to be zoomed on.
  */
-function zoomedAll (transform, panel) {
+function zoomedAll (transform, panel) { // eslint-disable-line no-unused-vars
   panel.zoomTransform = transform
   const axisElements = panel.axisElements
   const volume = panel.volume

@@ -41,7 +41,7 @@
  * profile (x, y, z) of the volume viewer.
  */
 // TODO: If plot density is selected, download density information as well.
-var defineExportCSVButtonBehaviour = function (volumeViewer) {
+var defineExportCSVButtonBehaviour = function (volumeViewer) { // eslint-disable-line no-unused-vars
   volumeViewer.doseProfileList.forEach((doseProfile) => {
     // Check that dose profile data exists
     if (doseProfile.data) {
@@ -74,7 +74,7 @@ var defineExportCSVButtonBehaviour = function (volumeViewer) {
  * Part from http://bl.ocks.org/Rokotyan/0556f8facbaf344507cdc45dc3622177
  * https://github.com/aces/brainbrowser/blob/master/examples/volume-viewer-demo.js#L194-L248
  */
-var defineExportPNGButtonBehaviour = function (volumeViewer) {
+var defineExportPNGButtonBehaviour = function (volumeViewer) { // eslint-disable-line no-unused-vars
   const node = volumeViewer.volHolder.node()
 
   // TODO: Let user choose between png and svg
@@ -96,7 +96,7 @@ var defineExportPNGButtonBehaviour = function (volumeViewer) {
   imageName += volumeViewer.id + '.' + format
 
   // Optional: Define elements to exclude from png image
-  function filter(node) { // eslint-disable-line no-unused-vars
+  function filter (node) { // eslint-disable-line no-unused-vars
     return node.tagName !== 'input'
   }
 
@@ -130,7 +130,7 @@ var defineExportPNGButtonBehaviour = function (volumeViewer) {
  * @param {string} uri  The URI of the resource to download.
  * @param {string} name The name given to the downloaded file.
  */
-function downloadURI(uri, name) {
+function downloadURI (uri, name) {
   var link = document.createElement('a')
 
   link.download = name
@@ -145,7 +145,7 @@ function downloadURI(uri, name) {
  *
  * @param {Object} node The element node to get a string representation of.
  */
-function getImgString(node) {
+function getImgString (node) {
   // Extract all CSS Rules
   // From https://developer.mozilla.org/en-US/docs/Web/API/StyleSheetList
   const allCSS = [...document.styleSheets]

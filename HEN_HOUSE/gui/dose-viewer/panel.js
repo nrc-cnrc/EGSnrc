@@ -31,6 +31,12 @@
 // definitions for StandardJS formatter
 /* global d3 */
 
+// REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
+/* global getZoom */
+/* global MAIN_VIEWER_DIMENSIONS */
+/* global zoomedAll */
+/* global updateVoxelCoords */
+
 // import { MAIN_VIEWER_DIMENSIONS } from './index.js'
 // import { updateVoxelCoords } from './voxel-coordinates.js'
 // import { getZoom, zoomedAll } from './zoom.js'
@@ -38,7 +44,7 @@
 /** @class Panel holds one axis view and detects clicks, stores information, and
  * updates plots */
 // TODO: Build panel HTML inside panel object
-class Panel {
+class Panel { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a Panel.
    *

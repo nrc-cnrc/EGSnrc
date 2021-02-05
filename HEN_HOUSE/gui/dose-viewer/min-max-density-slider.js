@@ -30,6 +30,9 @@
 
 // definitions for StandardJS formatter
 
+// REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
+/* global Slider */
+
 // import { Slider } from './slider.js'
 
 /**
@@ -40,7 +43,7 @@
  * @param {DensityVolume} densityVol The density volume the sliders control.
  * @param {Object} panels The panel for each axis.
  */
-var initializeMinMaxDensitySlider = (
+var initializeMinMaxDensitySlider = ( // eslint-disable-line no-unused-vars
   minParentDiv,
   maxParentDiv,
   densityVol,

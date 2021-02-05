@@ -31,6 +31,14 @@
 // definitions for StandardJS formatter
 /* global d3 */
 
+// REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
+/* global VolumeViewer */
+/* global volumeViewerList */
+/* global MAIN_VIEWER_DIMENSIONS */
+/* global LEGEND_DIMENSIONS */
+/* global DOSE_PROFILE_DIMENSIONS */
+/* global updateVoxelCoords */
+
 // import {
 //   DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
 //   volumeViewerList
@@ -41,7 +49,7 @@
 /**
  * Enable the plot density checkbox for the dose profile plots.
  */
-var enableCheckboxForDensityPlot = () => {
+var enableCheckboxForDensityPlot = () => { // eslint-disable-line no-unused-vars
   const densityCheckbox = d3
     .select("input[name='density-profile-checkbox']")
     .node()
@@ -51,7 +59,7 @@ var enableCheckboxForDensityPlot = () => {
 /**
  * Enable the checkbox for the dose profile plots.
  */
-var enableCheckboxForDoseProfilePlot = () => {
+var enableCheckboxForDoseProfilePlot = () => { // eslint-disable-line no-unused-vars
   const showDoseProfileCheckbox = d3
     .select("input[name='show-dose-profile-checkbox']")
     .node()
@@ -61,7 +69,7 @@ var enableCheckboxForDoseProfilePlot = () => {
 /**
  * Enable the export visualization to png button.
  */
-var enableExportVisualizationButton = () => {
+var enableExportVisualizationButton = () => { // eslint-disable-line no-unused-vars
   const exportVisualizationButton = d3.select('button#save-vis').node()
   if (exportVisualizationButton.disabled) { exportVisualizationButton.disabled = false }
 }
@@ -69,7 +77,7 @@ var enableExportVisualizationButton = () => {
 /**
  * Enable the checkbox to view voxel information on click.
  */
-var enableCheckboxForVoxelInformation = () => {
+var enableCheckboxForVoxelInformation = () => { // eslint-disable-line no-unused-vars
   const showMarkerCheckbox = d3
     .select("input[name='show-marker-checkbox']")
     .node()
@@ -93,7 +101,7 @@ d3.select('#add-volume-viewer').on('click', function () {
 /**
  * Define the behaviour of selecting the show dose profile checkbox.
  */
-var defineShowProfileCheckboxBehaviour = function (volumeViewer, checkbox) {
+var defineShowProfileCheckboxBehaviour = function (volumeViewer, checkbox) { // eslint-disable-line no-unused-vars
   // Call all panels to show/hide crosshairs
   Object.values(volumeViewer.panels).forEach((panel) => {
     panel.updateCrosshairDisplay()
@@ -134,7 +142,7 @@ var defineShowProfileCheckboxBehaviour = function (volumeViewer, checkbox) {
 /**
  * Define the behaviour of selecting the show voxel information checkbox.
  */
-var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) {
+var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) { // eslint-disable-line no-unused-vars
   // Call all panels to show/hide circle marker
   Object.values(volumeViewer.panels).forEach((panel) => {
     panel.updateCircleMarkerDisplay()

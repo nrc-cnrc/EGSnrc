@@ -33,6 +33,10 @@
 /* global Image */
 /* global Worker */
 
+// REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
+/* global volumeViewerList */
+/* global Slider */
+
 // import { volumeViewerList } from './index.js'
 // import { Slider } from './slider.js'
 
@@ -689,7 +693,7 @@ class DoseVolume extends Volume {
 }
 
 /** @class Volume represents the difference between two .3ddose files.  */
-class DoseComparisonVolume extends DoseVolume {
+class DoseComparisonVolume extends DoseVolume { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a DoseComparisonVolume.
    *
@@ -746,7 +750,7 @@ class DoseComparisonVolume extends DoseVolume {
 }
 
 /** @class Volume represents a .egsphant file.  */
-class DensityVolume extends Volume {
+class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a DoseVolume.
    *
