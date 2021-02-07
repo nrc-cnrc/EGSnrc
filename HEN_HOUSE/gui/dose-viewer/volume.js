@@ -361,15 +361,12 @@ class DoseVolume extends Volume {
 
     Object.values(panels).forEach((panel) => {
       this.drawDose(this.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'])
-    })
-
-    if (d3.select("input[name='show-dose-profile-checkbox']").node().checked) {
-      volumeViewerList.forEach((volumeViewer) => {
-        volumeViewer.doseProfileList.forEach((doseProfile) =>
+      if (panel.showDoseProfile()) {
+        volumeViewerList[panel.volumeViewerId].doseProfileList.forEach((doseProfile) =>
           doseProfile.plotData()
         )
-      })
-    }
+      }
+    })
   }
 
   /**

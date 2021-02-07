@@ -58,8 +58,7 @@
 // } from './index.js'
 // import {
 //   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
-//   enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
-//   enableCheckboxForVoxelInformation, enableExportVisualizationButton
+//   enableCheckboxForDensityPlot, enableExportVisualizationButton
 // } from './checkbox-button-helper.js'
 // import { DoseProfile } from './dose-profile.js'
 // import { Panel } from './panel.js'
@@ -105,6 +104,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.sliceSliders = {}
     this.doseProfileList = new Array(3)
     this.dispatch = d3.dispatch('markerchange')
+    this.voxelInfoDiv = null
 
     this.buildBaseHtml(id)
     this.initializeDispatch()
@@ -258,9 +258,9 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     if (this.densityVolume) {
       enableCheckboxForDensityPlot()
     }
-    enableCheckboxForDoseProfilePlot()
+    this.enableCheckboxForDoseProfilePlot()
     enableExportVisualizationButton()
-    enableCheckboxForVoxelInformation()
+    this.enableCheckboxForVoxelInformation()
   }
 
   /**
@@ -333,7 +333,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       this.panels
     )
 
-    enableCheckboxForVoxelInformation()
+    this.enableCheckboxForVoxelInformation()
   }
 
   /**
@@ -605,11 +605,12 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         .text(label)
 
       checkbox.on('change', () => onChangeFunc(this, checkbox.node()))
+      return checkbox
     }
 
-    addCheckbox('show-marker-checkbox', 'ShowMarker', 'Show voxel information on click?',
+    this.showVoxelInfoCheckbox = addCheckbox('show-marker-checkbox', 'ShowMarker', 'Show voxel information on click?',
       defineShowMarkerCheckboxBehaviour)
-    addCheckbox('show-dose-profile-checkbox', 'ShowDoseProfile',
+    this.showDoseProfileCheckbox = addCheckbox('show-dose-profile-checkbox', 'ShowDoseProfile',
       'Plot dose profile at crosshairs?', defineShowProfileCheckboxBehaviour)
 
     // Add buttons to export visualization and export to csv
@@ -643,7 +644,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .attr('id', 'axis-slider-container')
 
     // Add voxel information
-    buildVoxelInfoHtml(this.volHolder, id)
+    this.voxelInfoDiv = buildVoxelInfoHtml(this.volHolder, id)
 
     // Append div to hold the panels
     this.viewerContainer = this.volHolder
@@ -751,7 +752,9 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
             currPanel.densityVol,
             currPanel.doseVol,
             worldCoords,
-            currPanel.volumeViewerId
+            currPanel.volumeViewerId,
+            currPanel.showMarker,
+            currPanel.showDoseProfile
           )
         }
       }
@@ -858,6 +861,8 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
           axis,
           this.axisObjs[axis],
           this.sliceSliders[axis],
+          this.showVoxelInfoCheckbox,
+          this.showDoseProfileCheckbox,
           this.dispatch,
           this.id
         )
@@ -929,9 +934,25 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         d.panel.densityVol,
         d.panel.doseVol,
         worldCoords,
-        d.panel.volumeViewerId
+        d.panel.volumeViewerId,
+        d.panel.showMarker,
+        d.panel.showDoseProfile
       )
     })
+  }
+
+  /**
+   * Enable the checkbox to view voxel information on click.
+   */
+  enableCheckboxForVoxelInformation () {
+    if (this.showVoxelInfoCheckbox.node().disabled) this.showVoxelInfoCheckbox.node().disabled = false
+  }
+
+  /**
+   * Enable the checkbox for the dose profile plots.
+   */
+  enableCheckboxForDoseProfilePlot () {
+    if (this.showDoseProfileCheckbox.node().disabled) this.showDoseProfileCheckbox.node().disabled = false
   }
 }
 

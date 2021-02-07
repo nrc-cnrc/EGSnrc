@@ -57,31 +57,11 @@ var enableCheckboxForDensityPlot = () => { // eslint-disable-line no-unused-vars
 }
 
 /**
- * Enable the checkbox for the dose profile plots.
- */
-var enableCheckboxForDoseProfilePlot = () => { // eslint-disable-line no-unused-vars
-  const showDoseProfileCheckbox = d3
-    .select("input[name='show-dose-profile-checkbox']")
-    .node()
-  if (showDoseProfileCheckbox.disabled) { showDoseProfileCheckbox.disabled = false }
-}
-
-/**
  * Enable the export visualization to png button.
  */
 var enableExportVisualizationButton = () => { // eslint-disable-line no-unused-vars
   const exportVisualizationButton = d3.select('button#save-vis').node()
   if (exportVisualizationButton.disabled) { exportVisualizationButton.disabled = false }
-}
-
-/**
- * Enable the checkbox to view voxel information on click.
- */
-var enableCheckboxForVoxelInformation = () => { // eslint-disable-line no-unused-vars
-  const showMarkerCheckbox = d3
-    .select("input[name='show-marker-checkbox']")
-    .node()
-  if (showMarkerCheckbox.disabled) showMarkerCheckbox.disabled = false
 }
 
 /**
@@ -125,7 +105,9 @@ var defineShowProfileCheckboxBehaviour = function (volumeViewer, checkbox) { // 
         panel.densityVol,
         panel.doseVol,
         worldCoords,
-        volumeViewer.id
+        volumeViewer.id,
+        panel.showMarker,
+        panel.showDoseProfile
       )
     }
   } else {
@@ -148,10 +130,9 @@ var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) { // e
     panel.updateCircleMarkerDisplay()
   })
 
-  const voxelInfo = d3.selectAll('div#voxel-info-' + volumeViewer.id)
   if (checkbox.checked) {
     // Remove hidden class
-    voxelInfo.classed('hidden', false)
+    volumeViewer.voxelInfoDiv.classed('hidden', false)
 
     // Update voxel information
     const panel = volumeViewer.panels.xy
@@ -161,17 +142,18 @@ var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) { // e
         panel.densityVol,
         panel.doseVol,
         worldCoords,
-        panel.volumeViewerId
+        panel.volumeViewerId,
+        panel.showMarker,
+        panel.showDoseProfile
       )
     }
   } else {
     // Add hidden class
-    voxelInfo.classed('hidden', true)
+    volumeViewer.voxelInfoDiv.classed('hidden', true)
   }
 }
 
 // export {
 //   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
-//   enableCheckboxForDensityPlot, enableCheckboxForDoseProfilePlot,
-//   enableCheckboxForVoxelInformation, enableExportVisualizationButton
+//   enableCheckboxForDensityPlot, enableExportVisualizationButton
 // }

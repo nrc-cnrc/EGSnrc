@@ -42,6 +42,7 @@
  *
  * @param {Object} parentDiv The HTML parent div.
  * @param {string} id The unique ID of the volume viewers voxel info.
+ * @returns {Object}
  */
 function buildVoxelInfoHtml (parentDiv, id) { // eslint-disable-line no-unused-vars
   // Define label texts and tags
@@ -81,6 +82,8 @@ function buildVoxelInfoHtml (parentDiv, id) { // eslint-disable-line no-unused-v
       .attr('class', 'voxel-info-output')
       .attr('id', tag + '-' + id)
   })
+
+  return voxelInfoHolder
 }
 
 /**
@@ -145,7 +148,9 @@ function updateVoxelCoords ( // eslint-disable-line no-unused-vars
   densityVol,
   doseVol,
   worldCoords,
-  id
+  id,
+  showMarker,
+  showDoseProfile
 ) {
   const vol = densityVol || doseVol
   const densityVoxelCoords = densityVol ? densityVol.worldToVoxelCoords(worldCoords) : null
@@ -153,7 +158,7 @@ function updateVoxelCoords ( // eslint-disable-line no-unused-vars
 
   if (vol) {
     // Update voxel info if checkbox is checked
-    if (d3.select("input[name='show-marker-checkbox']").node().checked) {
+    if (showMarker()) {
       updateWorldLabels(worldCoords, id)
       updateVoxelLabels(densityVoxelCoords || doseVoxelCoords, id)
       updateVoxelInfo(worldCoords, densityVol, doseVol, densityVoxelCoords, doseVoxelCoords, id)
@@ -161,10 +166,9 @@ function updateVoxelCoords ( // eslint-disable-line no-unused-vars
 
     // Update dose profiles if checkbox is checked
     if (
-      doseVol &&
-      d3.select("input[name='show-dose-profile-checkbox']").node().checked
+      doseVol && showDoseProfile()
     ) {
-      updateDoseProfiles(doseVoxelCoords, worldCoords)
+      updateDoseProfiles(doseVoxelCoords, worldCoords, id)
     }
   }
 }
@@ -201,8 +205,9 @@ function updateVoxelInfo (worldCoords, densityVol, doseVol, densityVoxelCoords, 
  *
  * @param {number[]} voxelCoords The voxel coordinates of the data.
  * @param {number[]} worldCoords The world coordinates of the data.
+ * @param {number} id The id of the volume viewer to update the dose profile.
  */
-function updateDoseProfiles (voxelCoords, worldCoords) {
+function updateDoseProfiles (voxelCoords, worldCoords, id) {
   var getCoords = (coords) => [
     [coords[0], coords[1]],
     [coords[1], coords[2]],
@@ -213,21 +218,20 @@ function updateDoseProfiles (voxelCoords, worldCoords) {
   const worldCoordsList = getCoords(worldCoords)
   const dimensionsList = ['z', 'x', 'y']
 
-  volumeViewerList.forEach((volumeViewer) => {
-    volumeViewer.doseProfileList.forEach((doseProfile, i) => {
-      if (volumeViewer.doseVolume) {
-        // Set the data
-        doseProfile.setDoseProfileData(
-          volumeViewer.doseVolume,
-          volumeViewer.densityVolume,
-          dimensionsList[i],
-          voxelCoordsList[i]
-        )
+  const volumeViewer = volumeViewerList[id.substring(4)]
+  volumeViewer.doseProfileList.forEach((doseProfile, i) => {
+    if (volumeViewer.doseVolume) {
+      // Set the data
+      doseProfile.setDoseProfileData(
+        volumeViewer.doseVolume,
+        volumeViewer.densityVolume,
+        dimensionsList[i],
+        voxelCoordsList[i]
+      )
 
-        // Plot the dose profile
-        doseProfile.plotDoseProfile(worldCoordsList[i])
-      }
-    })
+      // Plot the dose profile
+      doseProfile.plotDoseProfile(worldCoordsList[i])
+    }
   })
 }
 

@@ -69,6 +69,8 @@ class Panel { // eslint-disable-line no-unused-vars
     axis,
     axisElements,
     sliceSlider,
+    showVoxelInfoCheckbox,
+    showDoseProfileCheckbox,
     dispatch,
     id,
     zoomTransform = null,
@@ -91,10 +93,8 @@ class Panel { // eslint-disable-line no-unused-vars
     this.prevSliceImg = null
 
     // Properties to check values of voxel and dose profile checkboxes
-    this.showMarker = () =>
-      d3.select("input[name='show-marker-checkbox']").node().checked
-    this.showCrosshairs = () =>
-      d3.select("input[name='show-dose-profile-checkbox']").node().checked
+    this.showMarker = () => showVoxelInfoCheckbox.node().checked
+    this.showDoseProfile = () => showDoseProfileCheckbox.node().checked
 
     // Update circle marker position and voxel coords on click
     const panel = this
@@ -130,7 +130,7 @@ class Panel { // eslint-disable-line no-unused-vars
   updateCrosshairDisplay () {
     this.axisElements['plot-marker']
       .selectAll('line.crosshair')
-      .style('display', this.showCrosshairs() ? '' : 'none')
+      .style('display', this.showDoseProfile() ? '' : 'none')
   }
 
   /**
@@ -192,7 +192,9 @@ class Panel { // eslint-disable-line no-unused-vars
         panel.densityVol,
         panel.doseVol,
         worldCoords,
-        panel.volumeViewerId
+        panel.volumeViewerId,
+        panel.showMarker,
+        panel.showDoseProfile
       )
     }
 
@@ -269,7 +271,7 @@ class Panel { // eslint-disable-line no-unused-vars
       .attr('y1', 0)
       .attr('x2', x)
       .attr('y2', MAIN_VIEWER_DIMENSIONS.height)
-      .style('display', this.showCrosshairs() ? '' : 'none')
+      .style('display', this.showDoseProfile() ? '' : 'none')
       .classed('active', activePanel)
 
     // Create vertical line
@@ -281,7 +283,7 @@ class Panel { // eslint-disable-line no-unused-vars
       .attr('y1', y)
       .attr('x2', MAIN_VIEWER_DIMENSIONS.width)
       .attr('y2', y)
-      .style('display', this.showCrosshairs() ? '' : 'none')
+      .style('display', this.showDoseProfile() ? '' : 'none')
       .classed('active', activePanel)
   }
 
@@ -349,6 +351,7 @@ class Panel { // eslint-disable-line no-unused-vars
     this.doseSliceNum = Math.round(this.doseVol.baseSlices[this.axis].zScale(slicePos))
   }
 
+  // TODO: Move to volume class
   adjustDoseBaseSlices () {
     const AXES = ['xy', 'yz', 'xz']
 
