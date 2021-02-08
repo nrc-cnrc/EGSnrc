@@ -115,7 +115,7 @@ public:
     /// Throws a std::runtime_error if parsing fails.
     static EGS_Mesh parse_msh_file(std::istream& input);
 
-    std::size_t num_elements() const {
+    int num_elements() const {
         // todo return nreg
         return _elt_points.size() / 4;
     }

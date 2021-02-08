@@ -64,7 +64,7 @@ std::vector<Tet> get_tetrahedrons(const EGS_Mesh& mesh) {
     std::vector<Tet> elts;
     elts.reserve(mesh.num_elements());
     auto points = mesh.points();
-    for (int i = 0; i < (int)mesh.num_elements(); i++) {
+    for (auto i = 0; i < mesh.num_elements(); i++) {
         elts.emplace_back(Tet(points[4*i], points[4*i+1], points[4*i+2], points[4*i+3]));
     }
     return elts;
@@ -176,7 +176,7 @@ int test_hownear_exterior() {
 }
 
 int test_medium() {
-    for (std::size_t i = 0; i < test_mesh.num_elements(); i++) {
+    for (auto i = 0; i < test_mesh.num_elements(); i++) {
         if (0 != test_mesh.medium(i)) {
             std::cerr << "expected medium index to be 0, got: " << test_mesh.medium(i) << "\n";
             return 1;

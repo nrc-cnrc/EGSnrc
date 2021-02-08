@@ -268,6 +268,11 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials) :
     _elements(std::move(elements)), _nodes(std::move(nodes)), _materials(std::move(materials))
 {
+    std::size_t max_elts = std::numeric_limits<int>::max();
+    if (_elements.size() >= max_elts) {
+        throw std::runtime_error("maximum number of elements (" +
+            std::to_string(max_elts) + ") exceeded (" + std::to_string(_elements.size()) + ")");
+    }
     // TODO EGS_BaseGeometry::nreg = _elements.size();
 
     _elt_points.reserve(_elements.size() * 4);
@@ -340,7 +345,7 @@ int EGS_Mesh::medium(int ireg) const {
 }
 
 int EGS_Mesh::isWhere(const EGS_Vector &x) {
-    for (std::size_t i = 0; i < num_elements(); i++) {
+    for (auto i = 0; i < num_elements(); i++) {
         const auto& A = _elt_points.at(4*i);
         const auto& B = _elt_points.at(4*i + 1);
         const auto& C = _elt_points.at(4*i + 2);
@@ -402,7 +407,7 @@ EGS_Float EGS_Mesh::min_exterior_face_dist(int ireg, const EGS_Vector& x) {
     assert(ireg < 0);
     // loop over all boundary tetrahedrons and find the closest point to the tetrahedron
     EGS_Float min2 = std::numeric_limits<EGS_Float>::max();
-    for (std::size_t i = 0; i < num_elements(); i++) {
+    for (auto i = 0; i < num_elements(); i++) {
         if (!_is_boundary[i]) {
             continue;
         }
