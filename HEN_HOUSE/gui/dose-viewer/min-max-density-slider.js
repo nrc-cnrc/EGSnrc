@@ -36,18 +36,18 @@
 // import { Slider } from './slider.js'
 
 /**
- * Initialize the min and max density sliders.
+ * Initialize the min and max density sliders for the given volume viewer.
  *
  * @param {Object} minParentDiv The parent div of the min slider.
  * @param {Object} maxParentDiv The parent div of the max slider.
  * @param {DensityVolume} densityVol The density volume the sliders control.
- * @param {Object} panels The panel for each axis.
+ * @param {VolumeViewer} volumeViewer The volumeViewer to initialize the slider.
  */
 var initializeMinMaxDensitySlider = ( // eslint-disable-line no-unused-vars
   minParentDiv,
   maxParentDiv,
   densityVol,
-  panels
+  volumeViewer
 ) => {
   // Clear min and max divs
   minParentDiv.selectAll('*').remove()
@@ -61,16 +61,16 @@ var initializeMinMaxDensitySlider = ( // eslint-disable-line no-unused-vars
   }
 
   var minSliderReleaseCallback = (sliderVal) => {
-    densityVol.setMinDensityVar(sliderVal, panels)
+    volumeViewer.setMinDensityVar(sliderVal)
   }
 
   const minSliderParams = {
     id: 'min',
     label: 'Min',
     format: densityVol.densityFormat,
-    startingVal: densityVol.minDensityVar,
+    startingVal: densityVol.data.minDensity,
     minVal: densityVol.data.minDensity,
-    maxVal: densityVol.maxDensityVar,
+    maxVal: densityVol.data.maxDensity,
     step: densityVol.densityStep,
     onSliderChangeCallback: minSliderChangeCallback,
     onSliderReleaseCallback: minSliderReleaseCallback
@@ -89,15 +89,15 @@ var initializeMinMaxDensitySlider = ( // eslint-disable-line no-unused-vars
   }
 
   var maxSliderReleaseCallback = (sliderVal) => {
-    densityVol.setMaxDensityVar(sliderVal, panels)
+    volumeViewer.setMaxDensityVar(sliderVal)
   }
 
   const maxSliderParams = {
     id: 'max',
     label: 'Max',
     format: densityVol.densityFormat,
-    startingVal: densityVol.maxDensityVar,
-    minVal: densityVol.minDensityVar,
+    startingVal: densityVol.data.maxDensity,
+    minVal: densityVol.data.minDensity,
     maxVal: densityVol.data.maxDensity,
     step: densityVol.densityStep,
     onSliderChangeCallback: maxSliderChangeCallback,

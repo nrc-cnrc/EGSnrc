@@ -146,14 +146,16 @@ class Panel { // eslint-disable-line no-unused-vars
    * Change the slice of the loaded volumes in the panel.
    *
    * @param {number} sliceNum The number of the current slice displayed in the panel.
+   * @param {number} minDensityVar The minimum density to scale the image with.
+   * @param {number} maxDensityVar The maximum density to scale the image with.
    */
-  updateSlice (sliceNum) {
+  updateSlice (sliceNum, minDensityVar, maxDensityVar) {
     let slicePos, slice
 
     if (this.densityVol) {
       slicePos = this.densityVol.baseSlices[this.axis].zScale.invert(sliceNum)
       slice = this.densityVol.getSlice(this.axis, slicePos)
-      this.prevSliceImg = this.densityVol.drawDensity(slice, this.zoomTransform, this.axisElements['plot-density'])
+      this.prevSliceImg = this.densityVol.drawDensity(slice, this.zoomTransform, this.axisElements['plot-density'], minDensityVar, maxDensityVar)
       this.densitySliceNum = sliceNum
     }
     if (this.doseVol) {

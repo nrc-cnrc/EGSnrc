@@ -271,13 +271,17 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   setDensityVolume (densityVol) {
     this.densityVolume = densityVol
 
+    // Set the min and max density variables
+    this.maxDensityVar = parseFloat(densityVol.data.maxDensity)
+    this.minDensityVar = parseFloat(densityVol.data.minDensity)
+
     densityVol.setHtmlObjects(
       this.svgObjs['plot-density'],
       this.densityLegendHolder,
       this.densityLegendSvg
     )
 
-    densityVol.initializeLegend()
+    densityVol.initializeLegend(this.minDensityVar, this.maxDensityVar)
     densityVol.initializeCanvas()
     const dims = 'zxy'
     var sliceNum, slicePos
@@ -304,7 +308,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
       // Draw the slice
       const densitySlice = densityVol.getSlice(panel.axis, slicePos)
-      panel.prevSliceImg = densityVol.drawDensity(densitySlice, panel.zoomTransform, panel.axisElements['plot-density'])
+      panel.prevSliceImg = densityVol.drawDensity(densitySlice, panel.zoomTransform, panel.axisElements['plot-density'], this.minDensityVar, this.maxDensityVar)
 
       // Update the axis
       this.drawAxes(
@@ -330,7 +334,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       this.minParentDiv,
       this.maxParentDiv,
       densityVol,
-      this.panels
+      this
     )
 
     this.enableCheckboxForVoxelInformation()
@@ -699,7 +703,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       var onSliceChangeCallback = (sliderVal) => {
         const currPanel = this.panels[axis]
         // Update slice of current panel
-        currPanel.updateSlice(parseInt(sliderVal))
+        currPanel.updateSlice(parseInt(sliderVal), this.minDensityVar, this.maxDensityVar)
 
         // TODO: Fix this, bug after zooming/translating and changing slice
         // Update marker position, voxel information and dose profile
@@ -876,6 +880,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   initializeDispatch () {
     // Set up marker coord change event
     const panels = this.panels
+    const volumeViewer = this
 
     this.dispatch.on('markerchange.panels', function (d) {
       d.panel.updateMarker(d.plotCoords)
@@ -922,7 +927,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
           }
 
           panel.updateMarker(coords, false)
-          panel.updateSlice(sliceNum)
+          panel.updateSlice(sliceNum, volumeViewer.minDensityVar, volumeViewer.maxDensityVar)
           panel.updateSlider(sliceNum)
         }
       })
@@ -953,6 +958,40 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
    */
   enableCheckboxForDoseProfilePlot () {
     if (this.showDoseProfileCheckbox.node().disabled) this.showDoseProfileCheckbox.node().disabled = false
+  }
+
+  /**
+   * Sets the maximum density value for density plots.
+   *
+   * @param {number} maxDensityVal The maximum density value.
+   */
+  setMaxDensityVar (maxDensityVal) {
+    this.maxDensityVar = parseFloat(maxDensityVal)
+
+    // Redraw legend
+    this.densityVolume.initializeLegend(this.minDensityVar, this.maxDensityVar)
+
+    Object.values(this.panels).forEach((panel) => {
+      panel.prevSliceImg = this.densityVolume.drawDensity(this.densityVolume.sliceCache[panel.axis][panel.densitySliceNum],
+        panel.zoomTransform, panel.axisElements['plot-density'], this.minDensityVar, this.maxDensityVar)
+    })
+  }
+
+  /**
+   * Sets the minimum density value for density plots.
+   *
+   * @param {number} minDensityVal The minimum density value.
+   */
+  setMinDensityVar (minDensityVal) {
+    this.minDensityVar = parseFloat(minDensityVal)
+
+    // Redraw legend
+    this.densityVolume.initializeLegend(this.minDensityVar, this.maxDensityVar)
+
+    Object.values(this.panels).forEach((panel) => {
+      panel.prevSliceImg = this.densityVolume.drawDensity(this.densityVolume.sliceCache[panel.axis][panel.densitySliceNum],
+        panel.zoomTransform, panel.axisElements['plot-density'], this.minDensityVar, this.maxDensityVar)
+    })
   }
 }
 

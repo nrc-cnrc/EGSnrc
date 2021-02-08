@@ -770,11 +770,9 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
    */
   addData (data, args) {
     this.data = data
-    this.maxDensityVar = parseFloat(data.maxDensity)
-    this.minDensityVar = parseFloat(data.minDensity)
     this.densityFormat = (args !== undefined) && (args.isDicom) ? d3.format('d') : d3.format('.2f')
     this.densityStep = (args !== undefined) && (args.isDicom) ? 1.0 : 0.01
-    this.addColourScheme(this.maxDensityVar, this.minDensityVar)
+    this.addColourScheme(this.data.maxDensity, this.data.minDensity)
     this.imageCache = { xy: new Array(data.voxelNumber.z), yz: new Array(data.voxelNumber.x), xz: new Array(data.voxelNumber.y) }
     this.createBaseSlices(data, 'density')
     this.cacheAllImages(data)
@@ -806,8 +804,8 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
             data: this.data,
             dimensions: this.dimensions,
             voxArr: data.voxelArr[dims[i]].slice(),
-            maxVal: this.maxDensityVar,
-            minVal: this.minDensityVar
+            maxVal: this.data.maxDensity,
+            minVal: this.data.minDensity
           }
 
           function handleMessage (e) {
@@ -828,44 +826,6 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
     } else {
       console.log('Your browser doesn\'t support web workers.')
     }
-  }
-
-  /**
-   * Sets the maximum density value for density plots.
-   *
-   * @param {number} maxDensityVal The maximum density value.
-   * @param {Object} panels The panels for which to update the dose plots.
-   */
-  // TODO: Move to panel
-  setMaxDensityVar (maxDensityVal, panels) {
-    this.maxDensityVar = parseFloat(maxDensityVal)
-
-    // Redraw legend
-    this.initializeLegend()
-
-    // TODO: Perhaps move this to the panels?? call initialize legend and make
-    // maxdensity var a panel attribute
-    Object.values(panels).forEach((panel) => {
-      panel.prevSliceImg = this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform, panel.axisElements['plot-density'])
-    })
-  }
-
-  /**
-  * Sets the minimum density value for density plots.
-  *
-  * @param {number} minDensityVal The minimum density value.
-  * @param {Object} panels The panels for which to update the dose plots.
-  */
-  // TODO: Move to panel
-  setMinDensityVar (minDensityVal, panels) {
-    this.minDensityVar = parseFloat(minDensityVal)
-
-    // Redraw legend
-    this.initializeLegend()
-
-    Object.values(panels).forEach((panel) => {
-      panel.prevSliceImg = this.drawDensity(this.sliceCache[panel.axis][panel.densitySliceNum], panel.zoomTransform, panel.axisElements['plot-density'])
-    })
   }
 
   /**
@@ -899,9 +859,12 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
    *
    * @param {Object} slice The slice of the density data.
    * @param {Object} [transform] The zoom transform of the plot.
+   * @param {Object} svg The svg plot element.
+   * @param {number} minDensityVar The minimum density to scale the image with.
+   * @param {number} maxDensityVar The maximum density to scale the image with.
    * @returns {Object}
    */
-  drawDensity (slice, transform, svg) {
+  drawDensity (slice, transform, svg, minDensityVar, maxDensityVar) {
     // Get the canvas and context in the webpage
     const baseSlice = this.baseSlices[slice.axis]
     const imgCanvas = svg.node()
@@ -909,8 +872,8 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
     const imageData = this.getImageData(slice)
 
     // If the min and max density have been changed, apply colour map
-    if ((this.minDensityVar !== this.data.minDensity) || (this.maxDensityVar !== this.data.maxDensity)) {
-      const colourMap = d3.scaleSqrt().domain([this.minDensityVar, this.maxDensityVar]).range([0, 255])
+    if ((minDensityVar !== this.data.minDensity) || (maxDensityVar !== this.data.maxDensity)) {
+      const colourMap = d3.scaleSqrt().domain([minDensityVar, maxDensityVar]).range([0, 255])
       const imageArray = imageData.data
       let val
 
@@ -1003,12 +966,15 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
 
   /**
    * Create the density legend.
+   *
+   * @param {number} minDensityVar The minimum density to scale the image with.
+   * @param {number} maxDensityVar The maximum density to scale the image with.
    */
-  initializeLegend () {
+  initializeLegend (minDensityVar = this.minDensity, maxDensityVar = this.maxDensity) {
     const legendClass = 'densityLegend'
     const title = 'Density'
     const dims = this.legendDimensions
-    const colourMap = d3.scaleSqrt().domain([this.minDensityVar, this.maxDensityVar]).range([0, 255])
+    const colourMap = d3.scaleSqrt().domain([minDensityVar, maxDensityVar]).range([0, 255])
 
     function gradientUrl (colour, height, width, n = 150) {
       const canvas = document.createElement('canvas')
@@ -1057,7 +1023,7 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
     // Create scale for ticks
     const scale = d3
       .scaleLinear()
-      .domain([this.minDensityVar, this.maxDensityVar])
+      .domain([minDensityVar, maxDensityVar])
       .range([legendHeight, 0])
 
     // Append title
