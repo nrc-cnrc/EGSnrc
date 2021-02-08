@@ -46,6 +46,7 @@
 
 #include <cassert>
 #include <limits>
+#include <unordered_map>
 
 // anonymous namespace
 namespace {
@@ -267,6 +268,8 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials) :
     _elements(std::move(elements)), _nodes(std::move(nodes)), _materials(std::move(materials))
 {
+    // TODO EGS_BaseGeometry::nreg = _elements.size();
+
     _elt_points.reserve(_elements.size() * 4);
     // Find the matching nodes for every tetrahedron
     auto find_node = [&](int node_tag) -> EGS_Mesh::Node {
@@ -302,8 +305,26 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         );
     }
 
-    // TODO figure out materials
-    // TODO set EGS_BaseGeometry::nreg;
+    // TODO figure out materials setup (override setMedia?) with egsinp
+
+    // map from medium tags to offsets
+    std::unordered_map<int, int> medium_offsets;
+    medium_offsets.reserve(_materials.size());
+    for (std::size_t i = 0; i < _materials.size(); i++) {
+        // TODO use EGS_BaseGeometry tracker
+        // auto med = EGS_BaseGeometry::addMedium(m.medium_name);
+        auto material_tag = _materials[i].tag;
+        bool inserted = medium_offsets.insert({material_tag, i}).second;
+        if (!inserted) {
+            throw std::runtime_error("duplicate medium tag: " + std::to_string(material_tag));
+        }
+    }
+
+    _medium_indices.reserve(_elements.size());
+    for (const auto& e: _elements) {
+        // TODO handle vacuum tag (-1)?
+        _medium_indices.push_back(medium_offsets.at(e.medium_tag));
+    }
 }
 
 bool EGS_Mesh::isInside(const EGS_Vector &x) {
@@ -312,6 +333,10 @@ bool EGS_Mesh::isInside(const EGS_Vector &x) {
 
 int EGS_Mesh::inside(const EGS_Vector &x) {
     return isInside(x) ? 0 : -1;
+}
+
+int EGS_Mesh::medium(int ireg) const {
+    return _medium_indices.at(ireg);
 }
 
 int EGS_Mesh::isWhere(const EGS_Vector &x) {

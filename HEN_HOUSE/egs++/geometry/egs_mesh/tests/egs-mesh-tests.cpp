@@ -34,6 +34,9 @@ bool approx_eq(double a, double b, double eps = 1e-6) {
 }
 
 // we'll use a simple five-element mesh for smoke testing
+//
+// Not declared const because of EGS_BaseGeometry method requirements but
+// isn't mutated at any point.
 static EGS_Mesh test_mesh = [](){
     std::ifstream input("five-tet.msh");
     return EGS_Mesh::parse_msh_file(input);
@@ -172,6 +175,16 @@ int test_hownear_exterior() {
     return 0;
 }
 
+int test_medium() {
+    for (std::size_t i = 0; i < test_mesh.num_elements(); i++) {
+        if (0 != test_mesh.medium(i)) {
+            std::cerr << "expected medium index to be 0, got: " << test_mesh.medium(i) << "\n";
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int main() {
     int num_failed = 0;
     int num_total = 0;
@@ -179,6 +192,7 @@ int main() {
 
     RUN_TEST(test_unknown_node());
     RUN_TEST(test_isWhere());
+    RUN_TEST(test_medium());
     RUN_TEST(test_boundary());
     RUN_TEST(test_neighbours());
     RUN_TEST(test_hownear_interior());

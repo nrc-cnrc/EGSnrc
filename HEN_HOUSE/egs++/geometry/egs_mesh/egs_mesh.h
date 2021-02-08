@@ -141,8 +141,9 @@ public:
     // EGS_BaseGeometry interface
     const std::string& getType() const { return type; }
     bool isInside(const EGS_Vector &x);
-    // todo figure out medium() / setMedia() situation
     int inside(const EGS_Vector &x);
+    // TODO figure out setMedia() situation
+    int medium(int ireg) const;
     int isWhere(const EGS_Vector &x);
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
@@ -161,6 +162,7 @@ private:
 
     std::vector<EGS_Vector> _elt_points;
     std::vector<bool> _is_boundary;
+    std::vector<int> _medium_indices;
 
     std::vector<EGS_Mesh::Tetrahedron> _elements;
     std::vector<EGS_Mesh::Node> _nodes;
