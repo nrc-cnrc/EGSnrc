@@ -51,6 +51,9 @@
 #include "egs_functions.h"
 #include "array_sizes.h"
 
+//a global application definition--dangerous?
+EGS_Application *appg;
+
 //subroutines and functions we need from egsnrc.mortran
 //TODO: figure out why these are not replaced by egsnrc routines when
 //linked to application
@@ -62,6 +65,15 @@ extern "C" void F77_OBJ(pair,PAIR)();
 extern "C" void F77_OBJ_(compt,COMPT)();
 extern "C" void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(int &medium, EGS_Float &e, EGS_Float &gle, EGS_I32 &lgle, EGS_Float &costhe, EGS_Float &sinthe);
 extern "C" EGS_Float F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float &nb_xdata, EGS_Float &nb_fdata, EGS_Float &nb_wdata, EGS_Float &nb_idata);
+
+extern "C" void F77_OBJ_(egs_fill_rndm_array,EGS_FILL_RNDM_ARRAY)(const EGS_I32 *n, EGS_Float *rarray) {
+   appg->fillRandomArray(*n,rarray);
+};
+
+extern "C" void F77_OBJ_(egs_ausgab,EGS_AUSGAB)(EGS_I32 *iarg) {
+    *iarg = appg->userScoring(*iarg);
+    if (appg->top_p.wt == 0) return; //allow code to force return to shower
+};
 
 //local structures required
 struct DBS_Aux {
@@ -139,6 +151,9 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
         return;
     }
 
+    //set global application
+    appg = app;
+
     char buf[32];
 
     // Set EGSnrc internal radiative splitting number .
@@ -193,18 +208,16 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
     int latch = app->top_p.latch;
 
-    //use bit 31 to mark phat particles
+    //use bit 0 to mark phat particles
     //seems like a temporary solution
-    int is_fat = (latch & (1 << 31));
-
-    egsInformation(" iarg = %d\n",iarg);
+    int is_fat = (latch & (1 << 0));
 
     if( iarg == EGS_Application::BeforeBrems ) {
         double E = app->top_p.E;
         EGS_Float wt = app->top_p.wt;
         if( is_fat ) {
-            //clear bit 31
-            latch = latch & ~(1 << 31);
+            //clear bit 0
+            latch = latch & ~(1 << 0);
             //reset latch value of top particle
             app->setLatch(latch);
             //is the next line necessary?
@@ -218,7 +231,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             }
             //we need to relable the interacting e- as fat
             //TODO: Check that this is in fact the e-
-            latch = latch | (1 << 31);
+            latch = latch | (1 << 0);
             app->setLatch(latch);
         }
         else {
@@ -237,7 +250,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             //set interacting particle to nonphat so this is
             //passed on to resultant photons
             //TODO: figure out a better way to do this that does not use latch
-            latch = latch & ~(1 << 31);
+            latch = latch & ~(1 << 0);
             app->setLatch(latch);
             app->setRadiativeSplitting(nsplit);
         }
@@ -253,7 +266,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             app->setRadiativeSplitting(nsplit);
             int nsamp = 2*nsplit;
             //label photons as nonphat
-            latch = latch & ~(1 << 31);
+            latch = latch & ~(1 << 0);
             app->setLatch(latch);
             uniformPhotons(nsamp,nsplit,fs,ssd,app->getRM());
             //uniformPhotons(nsamp,2,the_useful->rm);
@@ -292,14 +305,14 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             if(is_fat && !app->getIbcmp())
             {
                 //label as nonphat to be passed on to descendents
-                latch = latch & ~(1 << 31);
+                latch = latch & ~(1 << 0);
                 app->setLatch(latch);
                 doSmartCompton(nint);
             }
             else //straight-up compton
             {
                 if (is_fat) {
-                    latch = latch & ~(1 << 31);
+                    latch = latch & ~(1 << 0);
                     app->setLatch(latch);
                 }
                 for (int i=0; i<nint; i++)
@@ -349,7 +362,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         if( is_fat ) {
             EGS_Float ener = app->top_p.E;
             //label photons as nonphat
-            latch = latch & ~(1 << 31);
+            latch = latch & ~(1 << 0);
             app->setLatch(latch);
             uniformPhotons(nsplit,nsplit,fs,ssd,ener);
         }
@@ -895,7 +908,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
       EGS_Particle p;
       app->getParticleFromStack(idbs,p);
       //below is temporary until we figure out how to pass iweight
-      int is_fat = (p.latch & (1 << 31));
+      int is_fat = (p.latch & (1 << 0));
       egsInformation("E=%g iq=%d x=%g y=%g z=%g u=%g v=%g w=%g\n",p.E,p.q,p.x.x,p.x.y,p.x.z,p.u.x,p.u.y,p.u.z);
       if (p.q == 0)
       {
@@ -928,8 +941,8 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
                 EGS_Particle p1;
                 app->getParticleFromStack(idbs,p1);
                 p1.wt = p1.wt*n_split;
-                //set bit 31 of latch to mark as phat--temporary
-                p1.latch = p1.latch | (1 << 31);
+                //set bit 0 of latch to mark as phat--temporary
+                p1.latch = p1.latch | (1 << 0);
                 app->deleteParticleFromStack(idbs);
                 app->addParticleToStack(p1,dnear);
                 idbs++;
@@ -1115,7 +1128,7 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
            EGS_Particle p_ip,p;
            app->getParticleFromStack(ip,p_ip);
            //label particle as phat
-           p.latch = p_ip.latch | (1 << 31);
+           p.latch = p_ip.latch | (1 << 0);
            p.ir = p_ip.ir;
            p.x = p_ip.x;
            //stuff that we do not inherit
@@ -1328,7 +1341,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
            p.ir = irl;
            //restore weight and label particle as phat
            p.wt=wt*nint;
-           p.latch = latch | (1 << 31);
+           p.latch = latch | (1 << 0);
            p.q = 0;
            p.E = E*br;
            app->addParticleToStack(p,dnear);
@@ -1354,7 +1367,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
       p.u = EGS_Vector(un,vn,wn);
       p.ir = irl;
       p.wt = wt*nint;
-      p.latch = latch | (1 << 31);
+      p.latch = latch | (1 << 0);
       p.q = -1;
       p.E = Eelec + app->getRM();
       app->addParticleToStack(p,dnear);
@@ -1446,6 +1459,12 @@ void EGS_RadiativeSplitting::doUphi21(EGS_Float sinthe, EGS_Float costhe, EGS_Ve
         u.z = -sinpsi*us + c*costhe;
     }
     return;
+}
+
+void EGS_RadiativeSplitting::reportResults()
+{
+    egsInformation("\n here?\n");
+    delete appg;
 }
 
 //*********************************************************************
