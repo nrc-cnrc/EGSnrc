@@ -43,7 +43,7 @@ ABS_EGSPP = $(HEN_HOUSE)$(EGSPP)$(DSEP)
 CPP_SOURCES = $(EGS_SOURCEDIR)egsnrc.macros $(MACHINE_MACROS) \
             $(EGS_SOURCEDIR)pegs4_macros.mortran \
             $(EGS_INTERFACE)egs_c_interface2.macros \
-            $(EGSPP_USER_MACROS) \
+            egs_radiative_splitting.macros \
             $(MACHINE_MORTRAN) $(EGS_SOURCEDIR)egs_utilities.mortran \
             $(EGS_INTERFACE)egs_c_interface2.mortran \
             $(EGS_SOURCEDIR)transportp.macros \
@@ -52,26 +52,17 @@ CPP_SOURCES = $(EGS_SOURCEDIR)egsnrc.macros $(MACHINE_MACROS) \
             $(EGS_SOURCEDIR)pegs4_routines.mortran \
             $(EGS_SOURCEDIR)egsnrc.mortran
 
-dep_advanced_application = $(ABS_EGSPP)egs_advanced_application.cpp \
-        $(ABS_EGSPP)egs_advanced_application.h array_sizes.h \
-        $(ABS_EGSPP)egs_input.h $(ABS_EGSPP)egs_base_source.h \
-        $(ABS_EGSPP)egs_object_factory.h $(ABS_EGSPP)egs_timer.h \
-        $(ABS_EGSPP)egs_application.h $(ABS_EGSPP)egs_run_control.h
-
 library = egs_radiative_splitting
 lib_files = egs_radiative_splitting
 my_deps = $(common_ausgab_deps)
-extra_dep = $(addprefix $(DSOLIBS), $(my_deps)) egsnrc_$(my_machine).$(obje) egs_interface2_$(my_machine).$(obje) egs_advanced_application_lib_osx3.o
-extra = egsnrc_$(my_machine).$(obje) egs_interface2_$(my_machine).$(obje) egs_advanced_application_lib_osx3.o
+extra_dep = $(addprefix $(DSOLIBS), $(my_deps)) egsnrc_$(my_machine).$(obje) egs_interface2_$(my_machine).$(obje)
+extra = egsnrc_$(my_machine).$(obje) egs_interface2_$(my_machine).$(obje)
 lib_link2 += $(fortran_libs)
 interface_incl = -I. -I$(HEN_HOUSE)lib$(DSEP)$(my_machine) -I$(egs_interface)
 
 include $(SPEC_DIR)egspp_libs.spec
 
 $(DSO2)$(library).$(obje): $(library).cpp $(library).h
-
-egs_advanced_application_lib_$(my_machine).$(obje): $(dep_advanced_application)
-	$(CXX) $(interface_incl) $(DEF1) $(DEF_USER) $(opt) -c $(COUT)$@ $<
 
 egs_interface2_$(my_machine).$(obje): $(EGS_INTERFACE)egs_interface2.c $(common_h_files1) array_sizes.h
 	$(CXX) $(interface_incl) $(DEF1) $(DEF_USER) $(opt) -c $(COUT)$@ $<

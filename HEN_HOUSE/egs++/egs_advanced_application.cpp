@@ -886,11 +886,16 @@ int EGS_AdvancedApplication::shower() {
 #ifdef GDEBUG
     steps_n = 0;
 #endif
+    for (int j=0; j<a_objects_list.size(); ++j) {
+         egsInformation("\n initialize j %d\n",j);
+            a_objects_list[j]->initializeData();
+    }
     egsShower();
     return 0;
 }
 
 void EGS_AdvancedApplication::finishRun() {
+    egsInformation("\n About to finish run.\n");
     egsFinish();
     //egsSetDefaultIOFunctions();
     io_flag = 0;
@@ -900,6 +905,7 @@ void EGS_AdvancedApplication::finishRun() {
 }
 
 int EGS_AdvancedApplication::finishSimulation() {
+    egsInformation("whats doing here?\n");
     int err = EGS_Application::finishSimulation();
     egsInformation("finishSimulation(%s) %d\n",app_name.c_str(),err);
     if (err <= 0) {
@@ -935,11 +941,15 @@ int EGS_AdvancedApplication::finishSimulation() {
     if (err) {
         return err;
     }
+    egsInformation("\nAbout to finishSimulation\n");
     run->finishSimulation();
     for (int j=0; j<a_objects_list.size(); ++j) {
+        egsInformation("\n reporting ausgab object j=%d\n",j);
         a_objects_list[j]->reportResults();
     }
+    egsInformation("\nAbout to outputResults\n");
     outputResults();
+    egsInformation("\nAbout to finishRun\n");
     finishRun();
     return 0;
 }

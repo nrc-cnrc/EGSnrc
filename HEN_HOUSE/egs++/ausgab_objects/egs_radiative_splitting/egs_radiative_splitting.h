@@ -117,6 +117,20 @@ public:
 
     void setApplication(EGS_Application *App);
 
+    void initializeData() {
+        //set bit 0 of the first particle in each history to 1
+        //currently and until a more general solution is found, this
+        //bit determines whether the particle (and its descendents) has(ve)
+        //been split (i.e. is/are phat) or not
+        //Note: This means we now lose the ability of this bit as a flag for
+        //brem events
+        int latch = app->top_p.latch;
+        latch = latch | (1 << 0);
+        app->setLatch(latch);
+    }
+
+    void reportResults();
+
     int doInteractions(int iarg, int &killed);
 
     int doSmartBrems();
