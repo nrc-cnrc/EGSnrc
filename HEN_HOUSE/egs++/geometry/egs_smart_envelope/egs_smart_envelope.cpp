@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Marc Chamberland
+#                   Hannah Gallop
 #
 ###############################################################################
 #
