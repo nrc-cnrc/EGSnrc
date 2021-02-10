@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -39,6 +39,9 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 #include "egs_math.h"
+
+static bool EGS_POLYGON_SHAPE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_POLYGON_SHAPE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 EGS_TriangleShape::EGS_TriangleShape(const vector<EGS_Float> &points,
                                      const string &Name, EGS_ObjectFactory *f) : EGS_SurfaceShape(Name,f) {
@@ -139,6 +142,32 @@ EGS_PolygonShape::EGS_PolygonShape(const vector<EGS_Float> &points,
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Polygon_Shape"});
+        shapeBlockInput->addSingleInput("points", true, "A list of at least 3 2D points (at least 6 floating numbers)");
+    }
+
+    EGS_POLYGON_SHAPE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_polygon_shape
+    #:start shape:
+        library = egs_polygon_shape
+        points = list of 2D points
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_POLYGON_SHAPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_POLYGON_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {
