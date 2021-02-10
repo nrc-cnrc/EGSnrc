@@ -23,7 +23,7 @@
 #
 #  Author:          Ernesto Mainegra-Hing, 2018
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 #
@@ -49,6 +49,8 @@
 #include "egs_radiative_splitting.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_RADIATIVE_SPLITTING_LOCAL inputSet = false;
 
 EGS_RadiativeSplitting::EGS_RadiativeSplitting(const string &Name,
         EGS_ObjectFactory *f) :
@@ -94,6 +96,24 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
 //
 //**********************************************************************
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseAusgabObjectInputs();
+
+        ausBlockInput->getSingleInput("library")->setValues({"EGS_Radiative_Splitting"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        ausBlockInput->addSingleInput("splitting", false, "N-split");
+    }
+
+    EGS_RADIATIVE_SPLITTING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return ausBlockInput;
+    }
 
     EGS_RADIATIVE_SPLITTING_EXPORT EGS_AusgabObject *createAusgabObject(EGS_Input *input,
             EGS_ObjectFactory *f) {

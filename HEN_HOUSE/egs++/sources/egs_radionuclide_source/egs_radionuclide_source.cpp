@@ -23,7 +23,7 @@
 #
 #  Author:          Reid Townson, 2016
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -38,6 +38,8 @@
 #include "egs_input.h"
 #include "egs_math.h"
 #include "egs_application.h"
+
+static bool EGS_RADIONUCLIDE_SOURCE_LOCAL inputSet = false;
 
 EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSource(input,f),
@@ -571,6 +573,83 @@ bool EGS_RadionuclideSource::setState(istream &data) {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs();
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Radionuclide_Source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("activity", false, "The total activity of mixture, assumed constant.");
+        srcBlockInput->addSingleInput("experiment time", false, "Time length of the experiment");
+        auto srcPtr = srcBlockInput->addSingleInput("source type", false, "Either isotropic or collimated", {"isotropic", "collimated"});
+
+        // If source type is isotropic
+        auto geomPtr = srcBlockInput->addSingleInput("geometry", false, "The name of a geometry, used for complex source shapes. Only particles generated inside the geometry or some of its regions are used.");
+        geomPtr->addDependency(srcPtr, "isotropic");
+        geomPtr->addDependency(srcPtr, "");
+        auto regPtr = srcBlockInput->addSingleInput("region selection", false, "Include or exclude regions from the named geometry, to define a volume for source particle generation.", {"IncludeAll", "ExcludeAll","IncludeSelected","ExcludeSelected"});
+        regPtr->addDependency(geomPtr);
+        auto selPtr = srcBlockInput->addSingleInput("selected regions", false, "If region selection = IncludeSelected or ExcludeSelected, then this is a list of the regions in the named geometry to include or exclude.");
+        selPtr->addDependency(geomPtr);
+        selPtr->addDependency(regPtr, "IncludeSelected");
+        selPtr->addDependency(regPtr, "ExcludeSelected");
+
+        auto shapePtr = srcBlockInput->addBlockInput("shape");
+        shapePtr->addDependency(srcPtr, "isotropic");
+
+        setShapeInputs(shapePtr);
+
+        // If source is collimated
+        auto disPtr = srcBlockInput->addSingleInput("distance", false, "The source-target minimum distance");
+        disPtr->addDependency(srcPtr, "collimated");
+
+        auto src_shapePtr = srcBlockInput->addBlockInput("source shape");
+        src_shapePtr->addDependency(srcPtr, "collimated");
+        auto targetPtr = srcBlockInput->addBlockInput("target shape");
+        targetPtr->addDependency(srcPtr, "collimated");
+
+        setShapeInputs(src_shapePtr);
+        setShapeInputs(targetPtr);
+    }
+
+    EGS_RADIONUCLIDE_SOURCE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_radionuclide_source
+    #:start source:
+        name = my_source
+        library = egs_radionuclide_source
+        activity = 28e6
+        geometry = my_envelope
+        #create geometry called my_envelope
+        region selection = IncludeSelected
+        selected regions = 1 2
+        :start shape:
+            type = box
+            box size = 1 2 3
+            :start media input:
+                media = H2O521ICRU
+            :stop media input:
+        :stop shape:
+        :start spectrum:
+            type = radionuclide
+            nuclide = Ir-192
+        :stop spectrum:
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_RADIONUCLIDE_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input
             *input, EGS_ObjectFactory *f) {
