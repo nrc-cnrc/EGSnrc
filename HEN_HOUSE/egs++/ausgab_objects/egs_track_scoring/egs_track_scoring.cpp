@@ -39,6 +39,8 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
+static bool EGS_TRACK_SCORING_LOCAL inputSet = false;
+
 EGS_TrackScoring::EGS_TrackScoring(const string &Name, EGS_ObjectFactory *f) :
     EGS_AusgabObject(Name,f), m_pts(0), m_start(0), m_stop(1024), m_lastCase(-1),
     m_nScore(0), m_bufSize(16), m_score(false), m_didScore(false),
@@ -127,7 +129,50 @@ void EGS_TrackScoring::reportResults() {
     }
 }
 
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseAusgabObjectInputs();
+
+        ausBlockInput->getSingleInput("library")->setValues({"EGS_Track_Scoring"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        ausBlockInput->addSingleInput("score photons", false, "Score photons? Default is yes.", {"yes", "no"});
+        ausBlockInput->addSingleInput("score electrons", false, "Score the elctrons? Default is yes.", {"yes", "no"});
+        ausBlockInput->addSingleInput("score positrons", false, "Score positrons? Default is yes.", {"yes", "no"});
+        ausBlockInput->addSingleInput("start scoring", false, "Event_number, default is 0.");
+        ausBlockInput->addSingleInput("stop scoring", false, "Event_number, default is 1024.");
+        ausBlockInput->addSingleInput("buffer size", false, "Size, default is 1024.");
+        ausBlockInput->addSingleInput("file name addition", false, "A string that constructs the output file name");
+    }
+
+    EGS_TRACK_SCORING_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_track_scoring
+    #:start ausgab object:
+        library = egs_track_scoring
+        name = my_score
+        score photons = yes
+        score electrons = yes
+        score positrons = yes
+        start scoring = 0
+        stop scoring = 1024
+    :stop ausgab object:
+)"};
+        return example;
+    }
+
+    EGS_TRACK_SCORING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return ausBlockInput;
+    }
 
     EGS_TRACK_SCORING_EXPORT EGS_AusgabObject *createAusgabObject(EGS_Input *input,
             EGS_ObjectFactory *f) {

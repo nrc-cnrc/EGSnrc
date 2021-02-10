@@ -25,6 +25,7 @@
 #
 #  Contributors:    Hubert Ho
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -37,6 +38,8 @@
 
 #include "egs_collimated_source.h"
 #include "egs_input.h"
+
+static bool EGS_COLLIMATED_SOURCE_LOCAL inputSet = false;
 
 EGS_CollimatedSource::EGS_CollimatedSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSimpleSource(input,f),
@@ -120,6 +123,57 @@ void EGS_CollimatedSource::setUp() {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs();
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Collimated_Source"});
+
+        // Format: name,  isRequired, description, vector string of allowed values
+        auto source_shapePtr = srcBlockInput->addBlockInput("source shape");
+        auto target_shapePtr = srcBlockInput->addBlockInput("target shape");
+
+        setShapeInputs(source_shapePtr);
+        setShapeInputs(target_shapePtr);
+
+        srcBlockInput->addSingleInput("distance", false, "source-target minimum distance");
+    }
+
+    EGS_COLLIMATED_SOURCE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_collimated_source
+    #:start source:
+        library = egs_collimated_source
+        name = my_source
+        :start source shape:
+            type = point
+            position = 0 0 5
+        :stop source shape:
+        :start target shape:
+            library = egs_rectangle
+            rectangle = -1 -1 1 1
+        :stop target shape:
+        distance = 5
+        charge = -1
+        :start spectrum:
+            type = monoenergetic
+            energy = 20
+        :stop spectrum:
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_COLLIMATED_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_COLLIMATED_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

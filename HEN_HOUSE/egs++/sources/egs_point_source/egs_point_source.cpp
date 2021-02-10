@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -36,6 +36,8 @@
 
 #include "egs_point_source.h"
 #include "egs_input.h"
+
+static bool EGS_POINT_SOURCE_LOCAL inputSet = false;
 
 EGS_PointSource::EGS_PointSource(EGS_Input *input, EGS_ObjectFactory *f) :
     EGS_BaseSimpleSource(input,f), xo(), valid(true) {
@@ -76,6 +78,43 @@ void EGS_PointSource::setUp() {
 
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs();
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Point_Source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("position", true, "The position of the point source, (x, y, z)");
+    }
+
+    EGS_POINT_SOURCE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_point_source
+    #:start source:
+        library = egs_point_source
+        name = my_source
+        position = 0 0 0
+        :start spectrum:
+            type = monoenergetic
+            energy = 1
+        :stop spectrum:
+        charge = 0
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_POINT_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_POINT_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

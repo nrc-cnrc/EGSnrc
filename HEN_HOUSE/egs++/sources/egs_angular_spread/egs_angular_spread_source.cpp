@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2009
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -37,6 +37,8 @@
 #include "egs_angular_spread_source.h"
 #include "egs_input.h"
 #include "egs_math.h"
+
+static bool EGS_ANGULAR_SPREAD_SOURCE_LOCAL inputSet = false;
 
 EGS_AngularSpreadSource::EGS_AngularSpreadSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSource(input,f), source(0), sigma(0) {
@@ -80,6 +82,41 @@ void EGS_AngularSpreadSource::setUp() {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs(false, false);
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Angular_Spread_Source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("source name", true, "The name of a previously defined source.");
+        srcBlockInput->addSingleInput("sigma", false, "Angular spread in degrees.");
+    }
+
+    EGS_ANGULAR_SPREAD_SOURCE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_angular_spread_source
+    #:start source:
+        library = egs_angular_spread_source
+        name = my_source
+        sigma = 10
+        source name = my_parallel_source
+        #create source called my_parallel_source
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_ANGULAR_SPREAD_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_ANGULAR_SPREAD_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

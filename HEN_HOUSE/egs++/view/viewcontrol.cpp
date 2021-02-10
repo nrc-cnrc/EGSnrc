@@ -28,6 +28,7 @@
 #                   Manuel Stoeckl
 #                   Reid Townson
 #                   Alexandre Demelo
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -83,6 +84,7 @@ typedef EGS_Application *(*createAppFunction)(int argc, char **argv);
 typedef EGS_BaseGeometry *(*createGeomFunction)();
 typedef EGS_BaseSource *(*createSourceFunction)();
 typedef EGS_BaseShape *(*createShapeFunction)();
+typedef EGS_AusgabObject *(*createAusgabObjectFunction)();
 typedef void (*getAppInputsFunction)(shared_ptr<EGS_InputStruct> inpPtr);
 typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
 typedef string (*getExampleFunction)();
@@ -304,6 +306,10 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     auto srcDefPtr = inputStruct->addBlockInput("source definition");
     srcDefPtr->addSingleInput("simulation source", true, "The name of the source that will be used in the simulation. If you have created a composite source using many other sources, name the final composite source here.");
 
+    // Ausgab Object definition block
+    auto ausDefPtr = inputStruct->addBlockInput("ausgab object definition");
+    ausDefPtr->addSingleInput("simulation ausgab object", true, "The name of the ausgab object that will be used in the simulation.");
+
     // For each library, try to load it and determine if it is geometry or source
     for (const auto &lib : libraries) {
         // Remove the extension
@@ -455,6 +461,45 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                 QAction *action = shapeMenu->addAction(libName);
                 action->setData(QString::fromStdString(getExample()));
                 connect(action,  &QAction::triggered, this, [this]{ insertInputExample(); });
+            }
+        }
+
+        // Ausgab Objects
+        createAusgabObjectFunction isAusgabObject = (createAusgabObjectFunction) egs_lib.resolve("createAusgabObject");
+        if (isAusgabObject) {
+
+            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+            if (getInputs) {
+
+                shared_ptr<EGS_BlockInput> aus = getInputs();
+                if(aus){
+                    ausDefPtr->addBlockInput(aus);
+
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = aus->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+                        for (auto&& val : vals) {
+                            egsInformation("      %s\n", val.c_str());
+                        }
+                    }
+
+                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = aus->getBlockInputs();
+                    for (auto &block : inputBlocks) {
+                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                        for (auto &inp : singleInputs) {
+                            const vector<string> vals = inp->getValues();
+                            for (auto&& val : vals) {
+                                egsInformation("      %s\n", val.c_str());
+                            }
+                        }
+                    }
+                }
+            }
+            getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
+            if (getExample) {
+                QAction *action = sourceMenu->addAction(libName);
+                action->setData(QString::fromStdString(getExample()));
+                connect(action, &QAction::triggered, this, [this]{ insertInputExample(); });
             }
         }
     }
