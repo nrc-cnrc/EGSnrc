@@ -39,6 +39,7 @@
 
 #include "egs_application.h"
 #include "egs_object_factory.h"
+#include "egs_input_struct.h"
 
 #include <string>
 #include <iostream>
@@ -60,6 +61,12 @@ using namespace std;
 
 class EGS_Input;
 class EGS_Application;
+
+static shared_ptr<EGS_BlockInput> ausBlockInput = make_shared<EGS_BlockInput>("ausgab object");
+static void setBaseAusgabObjectInputs() {
+    ausBlockInput->addSingleInput("library", true, "The type of ausgab object, loaded by shared library in egs++/dso.");
+    ausBlockInput->addSingleInput("name", true, "The user-declared unique name of this ausgab object. This is the name you may refer to elsewhere in the input file.");
+}
 
 class EGS_EXPORT EGS_AusgabObject : public EGS_Object {
 

@@ -63,7 +63,7 @@ static void setBaseSourceInputs(bool isSimpleSource = true, bool includeSpectrum
 
     if(isSimpleSource) {
         includeSpectrumBlock = true;
-        srcBlockInput->addSingleInput("charge", true, "The type of particle to emit from the source, as defined by the charge. Use 0 for photons, -1 for electrons and 1 for positrons.");
+        srcBlockInput->addSingleInput("charge", true, "The type of particle to emit from the source, as defined by the charge. Use 0 for photons, -1 for electrons and 1 for positrons.", {"0", "1", "-1"});
     }
     if(includeSpectrumBlock) {
         shared_ptr<EGS_BlockInput> specBlock = srcBlockInput->addBlockInput("spectrum");

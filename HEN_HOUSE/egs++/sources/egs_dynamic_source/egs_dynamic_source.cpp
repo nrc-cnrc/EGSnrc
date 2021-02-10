@@ -23,7 +23,7 @@
 #
 #  Author:         Blake Walters, 2017
 #
-#  Contributors:
+#  Contributors:   Hannah Gallop
 #
 ###############################################################################
 */
@@ -36,6 +36,8 @@
 
 #include "egs_dynamic_source.h"
 #include "egs_input.h"
+
+static bool EGS_DYNAMIC_SOURCE_LOCAL inputSet = false;
 
 EGS_DynamicSource::EGS_DynamicSource(EGS_Input *input,
                                      EGS_ObjectFactory *f) : EGS_BaseSource(input,f), source(0), valid(true) {
@@ -179,6 +181,49 @@ int EGS_DynamicSource::getCoord(EGS_Float rand, EGS_ControlPoint &ipt) {
 };
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs(false, false);
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Dynamic_Source"});
+
+        // Format:name, isRequired, description, vector string of allowed
+        srcBlockInput->addSingleInput("source name", true, "The name of a previously defined source");
+        srcBlockInput->addSingleInput("synchronize motion", false, "yes or no", {"yes", "no"});
+
+        auto motionPtr = srcBlockInput->addBlockInput("motion");
+        motionPtr->addSingleInput("control point 1", false, "xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) mu(1)");
+    }
+
+    EGS_DYNAMIC_SOURCE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_dynamic_source
+    #:start source:
+        library = egs_dynamic_source
+        name = my_source
+        source name = my_parallel_source
+        #create a soource called my_parallel_source
+        :start motion:
+            control point 1 = 0 0 0 100 0 0 0 0
+            control point 2 = 0 0 0 100 360 0 0 0.5
+            control point 3 = 0 0 0 100 90 0 0 0.5
+            control point 4 = 0 0 0 100 90 360 0 1.0
+        :stop motion:
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_DYNAMIC_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_DYNAMIC_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {
