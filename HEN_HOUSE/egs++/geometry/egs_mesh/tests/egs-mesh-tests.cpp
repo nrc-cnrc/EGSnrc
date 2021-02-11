@@ -185,6 +185,81 @@ int test_medium() {
     return 0;
 }
 
+int test_howfar_interior() {
+    {
+    // Element 3 (ireg = 3-1 = 2) of the test mesh has a boundary face at x = 0
+    // For a point inside element 3, the distance along the x-axis to a boundary face is -p.x
+    // and the new region index is 0 (element 1)
+        auto reg = 2;
+        const EGS_Vector p(-0.1, 0.1, 0.1);
+        const EGS_Vector u(1.0, 0.0, 0.0);
+        auto dist = 1e20;
+        int newmed = -100;
+        auto new_reg = test_mesh.howfar(reg, p, u, dist, &newmed);
+        if (new_reg != 0) {
+            std::cerr << "expected new region index to be 0, got: " << new_reg << "\n";
+            return 1;
+        }
+        if (!approx_eq(dist, 0.1)) {
+            std::cerr << "expected distance to be 0.1, got: " << dist << "\n";
+            return 1;
+        }
+        if (newmed != 0) {
+            std::cerr << "expected medium index to be 0, got: " << newmed << "\n";
+            return 1;
+        }
+    }
+    {
+    // Element 3 (ireg = 3-1 = 2) of the test mesh has an outside boundary face at y = 0
+    // For a point inside element 3, the distance along the y-axis to a boundary face is -p.y
+    // and the new region index is -1 (vacuum)
+        auto reg = 2;
+        const EGS_Vector p(-0.1, 0.1, 0.1);
+        const EGS_Vector u(0.0, -1.0, 0.0);
+        auto dist = 1e20;
+        int newmed = -100;
+        auto new_reg = test_mesh.howfar(reg, p, u, dist, &newmed);
+        if (new_reg != -1) {
+            std::cerr << "expected new region index to be -1, got: " << new_reg << "\n";
+            return 1;
+        }
+        if (!approx_eq(dist, 0.1)) {
+            std::cerr << "expected distance to be 0.1, got: " << dist << "\n";
+            return 1;
+        }
+        if (newmed != -1) {
+            std::cerr << "expected medium to be -1, got: " << newmed << "\n";
+            return 1;
+        }
+    }
+    {
+    // Element 1 (ireg = 0) of the test mesh has a boundary face at z = 0 with elt 4
+        auto reg = 0;
+        const EGS_Vector p(0.1, 0.1, 0.3);
+        const EGS_Vector u(0.0, 0.0, -1.0);
+        auto dist = 1e20;
+        int newmed = -100;
+        auto new_reg = test_mesh.howfar(reg, p, u, dist, &newmed);
+        if (new_reg != 3) {
+            std::cerr << "expected new region index to be -1, got: " << new_reg << "\n";
+            return 1;
+        }
+        if (!approx_eq(dist, 0.3)) {
+            std::cerr << "expected distance to be 0.3, got: " << dist << "\n";
+            return 1;
+        }
+        if (newmed != 0) {
+            std::cerr << "expected medium to be 0, got: " << newmed << "\n";
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int test_howfar_exterior() {
+    return 1;
+}
+
 int main() {
     int num_failed = 0;
     int num_total = 0;
@@ -197,6 +272,8 @@ int main() {
     RUN_TEST(test_neighbours());
     RUN_TEST(test_hownear_interior());
     RUN_TEST(test_hownear_exterior());
+    RUN_TEST(test_howfar_interior());
+    RUN_TEST(test_howfar_exterior());
 
     std::cerr << num_total - num_failed << " out of " << num_total << " tests passed\n";
     return num_failed;

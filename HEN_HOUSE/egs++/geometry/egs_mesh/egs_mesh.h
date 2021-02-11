@@ -146,9 +146,7 @@ public:
     int medium(int ireg) const;
     int isWhere(const EGS_Vector &x);
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-        EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
-        throw std::runtime_error("unimplemented!");
-    }
+        EGS_Float &t, int *newmed=0, EGS_Vector *normal=0);
     EGS_Float hownear(int ireg, const EGS_Vector &x);
 
 private:
@@ -159,6 +157,14 @@ private:
     // `hownear` helper method
     // Outside the mesh, find the minimum distance to the mesh in any direction (ireg = -1)
     EGS_Float min_exterior_face_dist(int ireg, const EGS_Vector& x);
+
+    // `howfar` helper method inside a given tetrahedron
+    int howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
+        EGS_Float &t, int *newmed, EGS_Vector *normal);
+
+    // `howfar` helper method outside the mesh
+    int howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
+        EGS_Float &t, int *newmed, EGS_Vector *normal);
 
     std::vector<EGS_Vector> _elt_points;
     std::vector<bool> _is_boundary;

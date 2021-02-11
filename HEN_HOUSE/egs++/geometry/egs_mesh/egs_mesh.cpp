@@ -51,6 +51,10 @@
 // anonymous namespace
 namespace {
 
+void print_egsvec(const EGS_Vector& v) {
+    std::cout << "{\n  x: " << v.x << "\n  y: " << v.y << "\n  z: " << v.z << "\n}\n";
+}
+
 inline EGS_Float dot(const EGS_Vector &x, const EGS_Vector &y) {
     return x * y;
 }
@@ -151,6 +155,45 @@ EGS_Vector closest_point_tetrahedron(const EGS_Vector &P, const EGS_Vector &A, c
     }
 
     return min_point;
+}
+
+// Inputs:
+// * particle position p,
+// * normalized velocity v_norm
+// * triangle points A, B, C (any ordering)
+//
+// Returns 1 if there is an intersection and 0 if not. If there is an intersection,
+// the out parameter dist will be the distance along v_norm to the intersection point.
+//
+// Implementation of double-sided Möller-Trumbore ray-triangle intersection
+// <http://www.graphics.cornell.edu/pubs/1997/MT97.pdf>
+int triangle_ray_intersection(const EGS_Vector &p, const EGS_Vector &v_norm,
+    const EGS_Vector& a, const EGS_Vector& b, const EGS_Vector& c, EGS_Float& dist)
+{
+    const EGS_Float eps = 1e-10;
+    EGS_Vector ab = b - a;
+    EGS_Vector ac = c - a;
+
+    EGS_Vector pvec = cross(v_norm, ac);
+    EGS_Float det = dot(ab, pvec);
+
+    if (det > -eps && det < eps) {
+        return 0;
+    }
+    EGS_Float inv_det = 1.0 / det;
+    EGS_Vector tvec = p - a;
+    EGS_Float u = dot(tvec, pvec) * inv_det;
+    if (u < 0.0 || u > 1.0) {
+        return 0;
+    }
+    EGS_Vector qvec = cross(tvec, ab);
+    EGS_Float v = dot(v_norm, qvec) * inv_det;
+    if (v < 0.0 || u + v > 1.0) {
+        return 0;
+    }
+    // intersection found
+    dist = dot(ac, qvec) * inv_det;
+    return 1;
 }
 
 /// Parse the body of a msh4.1 file into an EGS_Mesh using the msh_parser API.
@@ -421,6 +464,108 @@ EGS_Float EGS_Mesh::min_exterior_face_dist(int ireg, const EGS_Vector& x) {
         }
     }
     return std::sqrt(min2);
+}
+
+int EGS_Mesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
+    EGS_Float &t, int *newmed /* =0 */, EGS_Vector *normal /* =0 */)
+{
+    if (ireg < 0) {
+        return howfar_exterior(ireg, x, u, t, newmed, normal);
+    }
+    return howfar_interior(ireg, x, u, t, newmed, normal);
+}
+
+int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
+    EGS_Float &t, int *newmed, EGS_Vector *normal)
+{
+    assert(ireg >= 0 && ireg < num_elements());
+    EGS_Vector u_norm = u;
+    u_norm.normalize();
+
+    const auto& A = _elt_points.at(4*ireg);
+    const auto& B = _elt_points.at(4*ireg + 1);
+    const auto& C = _elt_points.at(4*ireg + 2);
+    const auto& D = _elt_points.at(4*ireg + 3);
+
+    std::cout << "A "; print_egsvec(A);
+    std::cout << "B "; print_egsvec(B);
+    std::cout << "C "; print_egsvec(C);
+    std::cout << "D "; print_egsvec(D);
+
+    std::cout << "neighbour 0: " << _neighbours[ireg][0] << "\n";
+    std::cout << "neighbour 1: " << _neighbours[ireg][1] << "\n";
+    std::cout << "neighbour 2: " << _neighbours[ireg][2] << "\n";
+    std::cout << "neighbour 3: " << _neighbours[ireg][3] << "\n";
+
+    auto update_media_and_normal = [&](const EGS_Vector &A, const EGS_Vector &B,
+        const EGS_Vector &C, int new_reg)
+    {
+        if (newmed) {
+            if (new_reg == -1) {
+                *newmed = -1; // vacuum
+            } else {
+                *newmed = medium(new_reg);
+            }
+        }
+        if (normal) {
+            EGS_Vector ab = B - A;
+            EGS_Vector ac = C - A;
+            *normal = cross(ab, ac);
+        }
+    };
+
+    EGS_Float dist = 1e30;
+    if (triangle_ray_intersection(x, u_norm, A, B, C, dist)) {
+        // too far away to intersect
+        if (dist > t) {
+            return ireg;
+        }
+        t = dist;
+        // index 3 = excluding last point D = face ABC
+        auto new_reg = _neighbours[ireg][3];
+        update_media_and_normal(A, B, C, new_reg);
+        return new_reg;
+    }
+    if (triangle_ray_intersection(x, u_norm, A, C, D, dist)) {
+        // too far away to intersect
+        if (dist > t) {
+            return ireg;
+        }
+        t = dist;
+        // index 1 = excluding point B = face ACD
+        auto new_reg = _neighbours[ireg][1];
+        update_media_and_normal(A, C, D, new_reg);
+        return new_reg;
+    }
+    if (triangle_ray_intersection(x, u_norm, A, B, D, dist)) {
+        // too far away to intersect
+        if (dist > t) {
+            return ireg;
+        }
+        t = dist;
+        // index 2 = excluding point C = face ABD
+        auto new_reg = _neighbours[ireg][2];
+        update_media_and_normal(A, B, D, new_reg);
+        return new_reg;
+    }
+    if (triangle_ray_intersection(x, u_norm, B, C, D, dist)) {
+        if (dist > t) {
+            return ireg;
+        }
+        t = dist;
+        // index 0 = excluding point A = face ACD
+        auto new_reg = _neighbours[ireg][0];
+        update_media_and_normal(B, C, D, new_reg);
+        return new_reg;
+    }
+
+    return ireg;
+}
+
+int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
+    EGS_Float &t, int *newmed, EGS_Vector *normal)
+{
+    throw std::runtime_error("unimplemented!");
 }
 
 // TODO
