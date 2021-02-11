@@ -330,68 +330,12 @@ class DoseVolume extends Volume {
    *
    * @param {Object} data The data from parsing the file.
    */
-  // TODO : Remove maxDoseVar
   addData (data) {
     this.data = data
     // Max dose used for dose contour plot
-    this.maxDoseVar = data.maxDose
     super.addColourScheme(d3.interpolateViridis, data.maxDose, 0)
-    // Calculate the contour thresholds
-    const contourInt = 0.1
-    this.thresholdPercents = d3.range(contourInt, 1.0 + contourInt, contourInt)
-    this.updateThresholds()
-    // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
-    this.className = (i) =>
-      'col-' + d3.format('d')(this.thresholdPercents[i] * 1000)
+
     this.createBaseSlices(data, 'dose')
-  }
-
-  /**
-   * Sets the maximum dose value for dose contour plots.
-   *
-   * @param {number} val The maximum dose percentage.
-   * @param {Object} panels The panels for which to update the dose plots.
-   */
-  // TODO: Move to panel
-  setMaxDose (val, panels) {
-    this.maxDoseVar = val * this.data.maxDose
-    // Update the colour scheme and thresholds with the new max dose variable
-    super.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0)
-    this.updateThresholds()
-
-    Object.values(panels).forEach((panel) => {
-      this.drawDose(this.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'])
-      if (panel.showDoseProfile()) {
-        volumeViewerList[panel.volumeViewerId].doseProfileList.forEach((doseProfile) =>
-          doseProfile.plotData()
-        )
-      }
-    })
-  }
-
-  /**
-   * Updates the threshold values used for creating the dose contours.
-   */
-  updateThresholds () {
-    this.thresholds = this.thresholdPercents.map((i) => i * this.maxDoseVar)
-  }
-
-  /**
-   * Add a new threshold value to create a new contour in the dose contour plots.
-   *
-   * @param {number} thresholdPercent The dose percentage to add.
-   * @param {Object} panels The panels for which to update the dose plots.
-   */
-  // TODO: Move to panel
-  addThresholdPercent (thresholdPercent, panels) {
-    this.thresholdPercents.push(thresholdPercent)
-    this.thresholdPercents.sort()
-    this.updateThresholds()
-    this.initializeLegend()
-
-    Object.values(panels).forEach((panel) => {
-      this.drawDose(this.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'])
-    })
   }
 
   /**
@@ -426,8 +370,13 @@ class DoseVolume extends Volume {
    *
    * @param {Object} slice The slice of the dose data.
    * @param {Object} [transform] The zoom transform of the plot.
+   * @param {Object} svg The svg plot element.
+   * @param {number[]} thresholds The contour thresholds.
+   * @param {function} classNameFcn Returns the DOM class name.
    */
-  drawDose (slice, transform, svg) {
+  drawDose (slice, transform, svg, thresholds, classNameFcn, maxDose) {
+    const colourFcn =
+      d3.scaleSequentialSqrt(d3.interpolateViridis).domain([0, maxDose])
     const baseSlice = this.baseSlices[slice.axis]
 
     // Clear dose plot
@@ -438,7 +387,7 @@ class DoseVolume extends Volume {
       .contours()
       .size([baseSlice.xVoxels, baseSlice.yVoxels])
       .smooth(false)
-      .thresholds(this.thresholds)(slice.sliceData)
+      .thresholds(thresholds)(slice.sliceData)
       .map(baseSlice.contourTransform)
 
     const contourPaths = svg
@@ -454,8 +403,8 @@ class DoseVolume extends Volume {
       .data(contours)
       .join('path')
       .classed('contour-path', true)
-      .attr('class', (d, i) => 'contour-path' + ' ' + this.className(i))
-      .attr('fill', (d) => this.colour(d.value))
+      .attr('class', (d, i) => 'contour-path' + ' ' + classNameFcn(i))
+      .attr('fill', (d) => colourFcn(d.value))
       .attr('fill-opacity', 0.5)
       .attr('d', d3.geoPath())
 
@@ -490,155 +439,6 @@ class DoseVolume extends Volume {
   }
 
   /**
-   * Create the dose legend.
-   */
-  // TODO: Move to volume viewer
-  initializeLegend () {
-    // Get list of class names of hidden contours
-    const hiddenContourClassList = this.getHiddenContourClassList()
-    const legendClass = 'doseLegend'
-    const parameters = {
-      labels: [
-        this.thresholds.map((e) => d3.format('.0%')(e / this.maxDoseVar))
-      ],
-      cells: [this.thresholds],
-      on: [
-        'cellclick',
-        function (d) {
-          const legendCell = d3.select(this)
-          toggleContour(legendCell.attr('class').split(' ')[1])
-          legendCell.classed('hidden', !legendCell.classed('hidden'))
-        }
-      ]
-    }
-
-    var toggleContour = (className) => {
-      Object.values(this.htmlElementObj).forEach((svg) => {
-        svg
-          .selectAll('path.contour-path.' + className)
-          .classed('hidden', function () {
-            return !d3.select(this).classed('hidden')
-          })
-      })
-    }
-
-    // Clear and redraw current legend
-    this.legendSvg.select('.' + legendClass).remove()
-    this.legendSvg.select('text').remove()
-
-    // Make space for legend title
-    this.legendSvg
-      .append('g')
-      .attr('class', legendClass)
-      .style('transform', 'translate(0px,' + 20 + 'px)')
-
-    // Append title
-    this.legendSvg
-      .append('text')
-      .attr('class', legendClass)
-      .attr('x', this.legendDimensions.width / 2)
-      .attr('y', this.legendDimensions.margin.top / 2)
-      .attr('text-anchor', 'middle')
-      .style('font-size', '14px')
-      .text('Dose')
-
-    // Create legend
-    var legend = d3
-      .legendColor()
-      .shapeWidth(10)
-      .ascending(true)
-      .orient('vertical')
-      .scale(this.colour)
-
-    // Apply all the parameters
-    Object.entries(parameters).forEach(([name, val]) => {
-      legend[name](...val)
-    })
-
-    this.legendSvg.select('.' + legendClass).call(legend)
-
-    // Set the height of the svg so the div can scroll if need be
-    const height =
-      this.legendSvg
-        .select('.' + legendClass)
-        .node()
-        .getBoundingClientRect().height + 20
-    this.legendSvg.attr('height', height)
-
-    // Add the appropriate classnames to each legend cell
-    const len = this.thresholdPercents.length - 1
-    this.legendSvg
-      .selectAll('g.cell')
-      .attr('class', (d, i) => 'cell ' + this.className(len - i))
-
-    if (hiddenContourClassList.length > 0) {
-      // Apply hidden class to hidden contours
-      const hiddenLegendCells = this.legendSvg
-        .selectAll('g.cell')
-        .filter(hiddenContourClassList.join(','))
-      hiddenLegendCells.classed('hidden', !hiddenLegendCells.classed('hidden'))
-    }
-  }
-
-  /**
-   * Create the input box to add new dose contour thresholds.
-   *
-   * @param {Object} panels The panels to update when a dose contour is added.
-   */
-  initializeDoseContourInput (panels) {
-    var addNewThresholdPercent = () => {
-      const val = parseFloat(submitDoseContour.node().value)
-      const newPercentage = val / 100.0
-      if (!Number.isNaN(newPercentage)) {
-        // Check if valid or if percentage already exists
-        if (
-          val < 0 ||
-          val > 100 ||
-          !Number.isInteger(val) ||
-          this.thresholdPercents.includes(newPercentage)
-        ) {
-          console.log('Invalid value or value already exists on plot')
-          // Flash the submit box red
-          submitDoseContour
-            .transition()
-            .duration(200)
-            .style('background-color', 'red')
-            .transition()
-            .duration(300)
-            .style('background-color', 'white')
-        } else {
-          this.addThresholdPercent(newPercentage, panels)
-        }
-      }
-    }
-
-    // Remove existing dose contour inputs
-    this.legendHolder.selectAll('input').remove()
-
-    const doseContourInputWidth = 45
-
-    // Add number input box
-    const submitDoseContour = this.legendHolder
-      .append('input')
-      .attr('type', 'number')
-      .attr('name', 'add-dose-contour-line')
-      .attr('id', 'add-dose-contour-line')
-      .attr('min', 0)
-      .attr('max', 100)
-      .attr('step', 1)
-      .style('width', doseContourInputWidth + 'px')
-
-    // Add submit button
-    this.legendHolder
-      .append('input')
-      .attr('type', 'submit')
-      .attr('name', 'submit-dose-contour-line')
-      .attr('id', 'submit-dose-contour-line')
-      .attr('value', '+')
-      .on('click', addNewThresholdPercent)
-  }
-
-  /**
    * Get the dose value at the given coordinates.
    *
    * @param {number[]} voxelCoords The voxel position of the data.
@@ -656,36 +456,6 @@ class DoseVolume extends Volume {
    */
   getErrorAtVoxelCoords (voxelCoords) {
     return this.error ? super.getDataAtVoxelCoords(voxelCoords, 'error') : 0
-  }
-
-  /**
-   * Create the max dose slider to choose the maximum dose in the contour plots.
-   *
-   * @param {Object} panels The panels for which to update on maximum dose change.
-   */
-  initializeMaxDoseSlider (panels) {
-    const parentDiv = d3.select('#axis-slider-container')
-    var onMaxDoseChangeCallback = (sliderVal) =>
-      this.setMaxDose(sliderVal, panels)
-
-    const doseSliderParams = {
-      id: 'max-dose',
-      label: 'Max Dose',
-      format: d3.format('.0%'),
-      startingVal: 1.0,
-      minVal: 0.0,
-      maxVal: 1.5,
-      step: 0.01,
-      onSliderChangeCallback: onMaxDoseChangeCallback
-    }
-
-    // Remove existing sliders
-    parentDiv.selectAll('.slider-container').remove()
-
-    const maxDoseSlider = new Slider( // eslint-disable-line no-unused-vars
-      parentDiv,
-      doseSliderParams
-    )
   }
 }
 
@@ -715,7 +485,6 @@ class DoseComparisonVolume extends DoseVolume { // eslint-disable-line no-unused
   addData (data) {
     this.data = data
     // Max dose used for dose contour plot
-    this.maxDoseVar = 1.0
     super.addColourScheme(d3.interpolateViridis, 1.0, -1.0)
 
     // Calculate the contour thresholds
@@ -726,7 +495,7 @@ class DoseComparisonVolume extends DoseVolume { // eslint-disable-line no-unused
       contourInt
     )
     // Thresholds and thresholdPercents are the same
-    super.updateThresholds()
+    // super.updateThresholds()
 
     // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
     this.className = (i) =>

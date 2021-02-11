@@ -52,6 +52,7 @@
 /* global DoseProfile */
 /* global Panel */
 /* global Slider */
+/* global initializeMaxDoseSlider */
 
 // import {
 //   densityVolumeList, doseComparisonVolumeList, doseVolumeList, volumeViewerList
@@ -67,6 +68,7 @@
 // import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
 // import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
 // import { defineExportCSVButtonBehaviour, defineExportPNGButtonBehaviour } from './export.mjs'
+// import {initializeMaxDoseSlider} from './max-dose-slider.js'
 
 const AXES = ['xy', 'yz', 'xz']
 
@@ -203,6 +205,10 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   setDoseVolume (doseVol) {
     this.doseVolume = doseVol
 
+    // Set the max dose variable
+    this.maxDoseVar = parseFloat(doseVol.data.maxDose)
+    this.initializeThresholds()
+
     // Set dose volume html elements
     doseVol.setHtmlObjects(
       this.svgObjs['plot-dose'],
@@ -210,9 +216,8 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       this.doseLegendSvg
     )
 
-    doseVol.initializeMaxDoseSlider(this.panels)
-    doseVol.initializeLegend()
-    doseVol.initializeDoseContourInput(this.panels)
+    this.initializeDoseLegend(this.maxDoseVar, this.thresholds)
+    this.initializeDoseContourInput()
 
     const dims = 'zxy'
     var sliceNum, slicePos
@@ -240,7 +245,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
         // Draw the slice
         const slice = doseVol.getSlice(panel.axis, slicePos)
-        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'])
+        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
 
         // Update the axis
         this.drawAxes(
@@ -251,7 +256,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       } else {
         // Draw the slice
         const slice = doseVol.getSlice(panel.axis, slicePos)
-        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'])
+        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
       }
     })
 
@@ -261,6 +266,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.enableCheckboxForDoseProfilePlot()
     enableExportVisualizationButton()
     this.enableCheckboxForVoxelInformation()
+    initializeMaxDoseSlider(this.maxDoseParentDiv, doseVol, this)
   }
 
   /**
@@ -320,7 +326,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       if (panel.doseVol) {
         // Redraw dose contours
         const doseSlice = panel.doseVol.sliceCache[panel.axis][panel.doseSliceNum]
-        panel.doseVol.drawDose(doseSlice, panel.zoomTransform, panel.axisElements['plot-dose'])
+        panel.doseVol.drawDose(doseSlice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
       }
     })
 
@@ -643,7 +649,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
     // Add max dose slider
     const doseSliderHolder = optionHolder.append('div').attr('class', 'option')
-    doseSliderHolder
+    this.maxDoseParentDiv = doseSliderHolder
       .append('div')
       .attr('id', 'axis-slider-container')
 
@@ -703,7 +709,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       var onSliceChangeCallback = (sliderVal) => {
         const currPanel = this.panels[axis]
         // Update slice of current panel
-        currPanel.updateSlice(parseInt(sliderVal), this.minDensityVar, this.maxDensityVar)
+        this.updateSlice(axis, parseInt(sliderVal))
 
         // TODO: Fix this, bug after zooming/translating and changing slice
         // Update marker position, voxel information and dose profile
@@ -927,7 +933,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
           }
 
           panel.updateMarker(coords, false)
-          panel.updateSlice(sliceNum, volumeViewer.minDensityVar, volumeViewer.maxDensityVar)
+          volumeViewer.updateSlice(panel.axis, sliceNum)
           panel.updateSlider(sliceNum)
         }
       })
@@ -992,6 +998,237 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       panel.prevSliceImg = this.densityVolume.drawDensity(this.densityVolume.sliceCache[panel.axis][panel.densitySliceNum],
         panel.zoomTransform, panel.axisElements['plot-density'], this.minDensityVar, this.maxDensityVar)
     })
+  }
+
+  /**
+   * Sets the maximum dose value for dose contour plots.
+   *
+   * @param {number} val The maximum dose percentage.
+   */
+  setMaxDose (val) {
+    this.maxDoseVar = val * this.doseVolume.data.maxDose
+    // Update the colour scheme and thresholds with the new max dose variable
+    this.doseVolume.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0)
+    this.updateThresholds()
+
+    Object.values(this.panels).forEach((panel) => {
+      this.doseVolume.drawDose(this.doseVolume.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
+      if (panel.showDoseProfile()) {
+        this.doseProfileList.forEach((doseProfile) =>
+          doseProfile.plotData()
+        )
+      }
+    })
+  }
+
+  initializeThresholds () {
+    // Calculate the contour thresholds
+    const contourInt = 0.1
+    this.thresholdPercents = d3.range(contourInt, 1.0 + contourInt, contourInt)
+    this.updateThresholds()
+    // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
+    this.className = (i) =>
+      'col-' + this.id + '-' + d3.format('d')(this.thresholdPercents[i] * 1000)
+  }
+
+  /**
+   * Updates the threshold values used for creating the dose contours.
+   */
+  updateThresholds () {
+    this.thresholds = this.thresholdPercents.map((i) => i * this.maxDoseVar)
+  }
+
+  /**
+   * Add a new threshold value to create a new contour in the dose contour plots.
+   *
+   * @param {number} thresholdPercent The dose percentage to add.
+   */
+  addThresholdPercent (thresholdPercent) {
+    this.thresholdPercents.push(thresholdPercent)
+    this.thresholdPercents.sort()
+    this.updateThresholds()
+    this.initializeDoseLegend(this.maxDoseVar, this.thresholds)
+
+    Object.values(this.panels).forEach((panel) => {
+      this.doseVolume.drawDose(this.doseVolume.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
+    })
+  }
+
+  /**
+ * Create the dose legend.
+ *
+ * @param {number} maxDoseVar The maximum dose to scale the contours with.
+ * @param {number[]} thresholds The contour thresholds.
+ */
+  initializeDoseLegend (maxDoseVar = this.doseVolume.data.maxDose, thresholds) {
+    // Get list of class names of hidden contours
+    const colourFcn = d3.scaleSequentialSqrt(d3.interpolateViridis).domain([0, maxDoseVar])
+
+    const hiddenContourClassList = this.doseVolume.getHiddenContourClassList()
+    const legendSvg = this.doseLegendSvg
+    const legendClass = 'doseLegend'
+    const parameters = {
+      labels: [
+        this.thresholds.map((e) => d3.format('.0%')(e / maxDoseVar))
+      ],
+      cells: [this.thresholds],
+      on: [
+        'cellclick',
+        function (d) {
+          const legendCell = d3.select(this)
+          toggleContour(legendCell.attr('class').split(' ')[1])
+          legendCell.classed('hidden', !legendCell.classed('hidden'))
+        }
+      ]
+    }
+
+    var toggleContour = (className) => {
+      Object.values(this.svgObjs['plot-dose']).forEach((svg) => {
+        svg.selectAll('path.contour-path.' + className)
+          .classed('hidden', function () {
+            return !d3.select(this).classed('hidden')
+          })
+      })
+    }
+
+    // Clear and redraw current legend
+    legendSvg.select('.' + legendClass).remove()
+    legendSvg.select('text').remove()
+
+    // Make space for legend title
+    legendSvg
+      .append('g')
+      .attr('class', legendClass)
+      .style('transform', 'translate(0px,' + 20 + 'px)')
+
+    // Append title
+    legendSvg
+      .append('text')
+      .attr('class', legendClass)
+      .attr('x', this.legendDimensions.width / 2)
+      .attr('y', this.legendDimensions.margin.top / 2)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '14px')
+      .text('Dose')
+
+    // Create legend
+    var legend = d3
+      .legendColor()
+      .shapeWidth(10)
+      .ascending(true)
+      .orient('vertical')
+      .scale(colourFcn)
+
+    // Apply all the parameters
+    Object.entries(parameters).forEach(([name, val]) => {
+      legend[name](...val)
+    })
+
+    legendSvg.select('.' + legendClass).call(legend)
+
+    // Set the height of the svg so the div can scroll if need be
+    const height =
+      legendSvg
+        .select('.' + legendClass)
+        .node()
+        .getBoundingClientRect().height + 20
+    legendSvg.attr('height', height)
+
+    // Add the appropriate classnames to each legend cell
+    const len = this.thresholds.length - 1
+    legendSvg
+      .selectAll('g.cell')
+      .attr('class', (d, i) => 'cell ' + this.className(len - i))
+
+    if (hiddenContourClassList.length > 0) {
+      // Apply hidden class to hidden contours
+      const hiddenLegendCells = legendSvg
+        .selectAll('g.cell')
+        .filter(hiddenContourClassList.join(','))
+      hiddenLegendCells.classed('hidden', !hiddenLegendCells.classed('hidden'))
+    }
+  }
+
+  /**
+   * Create the input box to add new dose contour thresholds.
+   */
+  initializeDoseContourInput () {
+    const legendHolder = this.doseLegendHolder
+    var addNewThresholdPercent = () => {
+      const val = parseFloat(submitDoseContour.node().value)
+      const newPercentage = val / 100.0
+      if (!Number.isNaN(newPercentage)) {
+        // Check if valid or if percentage already exists
+        if (
+          val < 0 ||
+          val > 100 ||
+          !Number.isInteger(val) ||
+          this.thresholdPercents.includes(newPercentage)
+        ) {
+          console.log('Invalid value or value already exists on plot')
+          // Flash the submit box red
+          submitDoseContour
+            .transition()
+            .duration(200)
+            .style('background-color', 'red')
+            .transition()
+            .duration(300)
+            .style('background-color', 'white')
+        } else {
+          this.addThresholdPercent(newPercentage)
+        }
+      }
+    }
+
+    // Remove existing dose contour inputs
+    legendHolder.selectAll('input').remove()
+
+    const doseContourInputWidth = 45
+
+    // Add number input box
+    const submitDoseContour = legendHolder
+      .append('input')
+      .attr('type', 'number')
+      .attr('name', 'add-dose-contour-line')
+      .attr('id', 'add-dose-contour-line')
+      .attr('min', 0)
+      .attr('max', 100)
+      .attr('step', 1)
+      .style('width', doseContourInputWidth + 'px')
+
+    // Add submit button
+    legendHolder
+      .append('input')
+      .attr('type', 'submit')
+      .attr('name', 'submit-dose-contour-line')
+      .attr('id', 'submit-dose-contour-line')
+      .attr('value', '+')
+      .on('click', addNewThresholdPercent)
+  }
+
+  /**
+ * Change the slice of the loaded volumes in the panel.
+ *
+ * @param {string} axis The axis of the current panel.
+ * @param {number} sliceNum The number of the current slice displayed in the panel.
+ */
+  updateSlice (axis, sliceNum) {
+    const panel = this.panels[axis]
+    let slicePos, slice
+
+    if (this.densityVolume) {
+      slicePos = this.densityVolume.baseSlices[axis].zScale.invert(sliceNum)
+      slice = this.densityVolume.getSlice(axis, slicePos)
+      panel.prevSliceImg = this.densityVolume.drawDensity(slice, panel.zoomTransform, panel.axisElements['plot-density'], this.minDensityVar, this.maxDensityVar)
+      panel.densitySliceNum = sliceNum
+    }
+    if (this.doseVolume) {
+      slicePos = slicePos || this.doseVolume.baseSlices[axis].zScale.invert(sliceNum)
+      slice = this.doseVolume.getSlice(axis, slicePos)
+      this.doseVolume.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
+      panel.doseSliceNum = slice.sliceNum
+    }
+    panel.slicePos = slicePos
   }
 }
 
