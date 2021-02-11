@@ -57,11 +57,10 @@ var enableCheckboxForDensityPlot = () => { // eslint-disable-line no-unused-vars
 }
 
 /**
- * Enable the export visualization to png button.
+ * Enable a button.
  */
-var enableExportVisualizationButton = () => { // eslint-disable-line no-unused-vars
-  const exportVisualizationButton = d3.select('button#save-vis').node()
-  if (exportVisualizationButton.disabled) { exportVisualizationButton.disabled = false }
+var enableButton = (button) => { // eslint-disable-line no-unused-vars
+  if (button.node().disabled) { button.node().disabled = false }
 }
 
 /**
@@ -94,7 +93,7 @@ var defineShowProfileCheckboxBehaviour = function (volumeViewer, checkbox) { // 
     )
 
     // Enable saving dose profiles as csv
-    d3.select('#save-dose-profile').node().disabled = false
+    volumeViewer.saveDoseProfileButton.node().disabled = false
 
     // Update dose profiles
     // Only choose first panel because it will update all dose profiles
@@ -117,7 +116,7 @@ var defineShowProfileCheckboxBehaviour = function (volumeViewer, checkbox) { // 
     })
 
     // Disable saving dose profiles as csv
-    d3.select('#save-dose-profile').node().disabled = true
+    volumeViewer.saveDoseProfileButton.node().disabled = true
   }
 }
 
@@ -155,5 +154,5 @@ var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) { // e
 
 // export {
 //   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
-//   enableCheckboxForDensityPlot, enableExportVisualizationButton
+//   enableCheckboxForDensityPlot, enableButton
 // }

@@ -34,7 +34,7 @@
 // REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
 /* global enableCheckboxForDensityPlot */
 /* global enableCheckboxForDoseProfilePlot */
-/* global enableExportVisualizationButton */
+/* global enableButton */
 /* global enableCheckboxForVoxelInformation */
 /* global initializeMinMaxDensitySlider */
 /* global doseVolumeList */
@@ -59,7 +59,7 @@
 // } from './index.js'
 // import {
 //   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
-//   enableCheckboxForDensityPlot, enableExportVisualizationButton
+//   enableCheckboxForDensityPlot, enableButton
 // } from './checkbox-button-helper.js'
 // import { DoseProfile } from './dose-profile.js'
 // import { Panel } from './panel.js'
@@ -264,7 +264,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       enableCheckboxForDensityPlot()
     }
     this.enableCheckboxForDoseProfilePlot()
-    enableExportVisualizationButton()
+    enableButton(this.saveVisButton)
     this.enableCheckboxForVoxelInformation()
     initializeMaxDoseSlider(this.maxDoseParentDiv, doseVol, this)
   }
@@ -333,7 +333,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     if (this.doseVolume) {
       enableCheckboxForDensityPlot()
     }
-    enableExportVisualizationButton()
+    enableButton(this.saveVisButton)
     // TODO: Move this outside volume viewer and assume all loaded egsphants
     // have same density range
     initializeMinMaxDensitySlider(
@@ -618,9 +618,9 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       return checkbox
     }
 
-    this.showVoxelInfoCheckbox = addCheckbox('show-marker-checkbox', 'ShowMarker', 'Show voxel information on click?',
+    this.showVoxelInfoCheckbox = addCheckbox('show-marker-checkbox' + this.id, 'ShowMarker', 'Show voxel information on click?',
       defineShowMarkerCheckboxBehaviour)
-    this.showDoseProfileCheckbox = addCheckbox('show-dose-profile-checkbox', 'ShowDoseProfile',
+    this.showDoseProfileCheckbox = addCheckbox('show-dose-profile-checkbox' + this.id, 'ShowDoseProfile',
       'Plot dose profile at crosshairs?', defineShowProfileCheckboxBehaviour)
 
     // Add buttons to export visualization and export to csv
@@ -633,10 +633,11 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         .text(label)
 
       button.on('click', () => onClickFunc(this))
+      return button
     }
 
-    addButtons('save-vis', 'Export visualization to PNG', defineExportPNGButtonBehaviour)
-    addButtons('save-dose-profile', 'Export dose profiles to CSV', defineExportCSVButtonBehaviour)
+    this.saveVisButton = addButtons('save-vis', 'Export visualization to PNG', defineExportPNGButtonBehaviour)
+    this.saveDoseProfileButton = addButtons('save-dose-profile', 'Export dose profiles to CSV', defineExportCSVButtonBehaviour)
 
     // Add min and max density sliders
     const minMaxSliderHolder = optionHolder.append('div').attr('class', 'option')
