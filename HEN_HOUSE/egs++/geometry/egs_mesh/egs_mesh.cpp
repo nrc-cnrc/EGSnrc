@@ -346,11 +346,11 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     }
     this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
 
-    _is_boundary.reserve(_elements.size());
+    _boundary_faces.reserve(_elements.size() * 4);
     for (const auto& ns: _neighbours) {
-        _is_boundary.push_back(std::any_of(ns.begin(), ns.end(),
-            [](std::size_t n) { return n == mesh_neighbours::NONE; })
-        );
+        for (const auto& n: ns) {
+            _boundary_faces.push_back(n == mesh_neighbours::NONE);
+        }
     }
 
     // TODO figure out materials setup (override setMedia?) with egsinp
@@ -374,6 +374,16 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         _medium_indices.push_back(medium_offsets.at(e.medium_tag));
     }
 }
+
+bool EGS_Mesh::is_boundary(int reg) const {
+    assert(reg >= 0);
+    assert(reg < num_elements());
+    return _boundary_faces[4 * reg]
+        || _boundary_faces[4 * reg + 1]
+        || _boundary_faces[4 * reg + 2]
+        || _boundary_faces[4 * reg + 3];
+}
+
 
 bool EGS_Mesh::isInside(const EGS_Vector &x) {
     return isWhere(x) != -1;
@@ -402,7 +412,7 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
         if (point_outside_of_plane(x, A, B, D, C)) {
             continue;
         }
-        if (point_outside_of_plane(x, B, D, C, A)) {
+        if (point_outside_of_plane(x, B, C, D, A)) {
             continue;
         }
         return i;
@@ -441,7 +451,7 @@ EGS_Float EGS_Mesh::min_interior_face_dist(int ireg, const EGS_Vector& x) {
     maybe_update_min(A, B, C);
     maybe_update_min(A, C, D);
     maybe_update_min(A, B, D);
-    maybe_update_min(B, D, C);
+    maybe_update_min(B, C, D);
 
     return std::sqrt(min2);
 }
@@ -451,7 +461,7 @@ EGS_Float EGS_Mesh::min_exterior_face_dist(int ireg, const EGS_Vector& x) {
     // loop over all boundary tetrahedrons and find the closest point to the tetrahedron
     EGS_Float min2 = std::numeric_limits<EGS_Float>::max();
     for (auto i = 0; i < num_elements(); i++) {
-        if (!_is_boundary[i]) {
+        if (!is_boundary(i)) {
             continue;
         }
         const auto& A = _elt_points.at(4*i);

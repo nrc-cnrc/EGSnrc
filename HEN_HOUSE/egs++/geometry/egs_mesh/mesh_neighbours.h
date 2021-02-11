@@ -42,16 +42,34 @@
 namespace mesh_neighbours {
 
 // Magic number for no neighbour.
-constexpr std::size_t NONE = -1;
+constexpr int NONE = -1;
 
 class Tetrahedron {
 public:
-    using Face = std::array<std::size_t, 3>;
+    class Face {
+    public:
+        Face(){}
+        Face(std::size_t a, std::size_t b, std::size_t c) {
+            std::vector<std::size_t> sorted {a, b, c};
+            // sort to ease comparison between faces
+            std::sort(sorted.begin(), sorted.end());
+            _nodes = {sorted[0], sorted[1], sorted[2]};
+        }
+        std::size_t node0() const {
+            return _nodes[0];
+        }
+        friend bool operator==(const Face& a, const Face& b);
+        friend bool operator!=(const Face& a, const Face& b);
+    private:
+        std::array<std::size_t, 3> _nodes;
+    };
 
     // Make a tetrahedron from four nodes.
     //
     // Throws a std::invalid_argument exception if duplicate node tags are passed in.
-    Tetrahedron(std::size_t a, std::size_t b, std::size_t c, std::size_t d) {
+    Tetrahedron(std::size_t a, std::size_t b, std::size_t c, std::size_t d)
+        : _nodes({a, b, c, d})
+    {
         if (a == b || a == c || a == d) {
             throw std::invalid_argument("duplicate node " + std::to_string(a));
         }
@@ -61,34 +79,38 @@ public:
         if (c == d) {
             throw std::invalid_argument("duplicate node " + std::to_string(c));
         }
-        std::vector<std::size_t> sorted {a, b, c, d};
-        std::sort(sorted.begin(), sorted.end());
-        _a = sorted[0];
-        _b = sorted[1];
-        _c = sorted[2];
-        _d = sorted[3];
+        // Node ordering is important here. Face 0 is missing node 1, Face 1
+        // is missing node 2, etc. This will be used later in the particle
+        // transport methods EGS_Mesh::howfar and EGS_Mesh::hownear.
+        _faces = {
+            Face(b, c, d),
+            Face(a, c, d),
+            Face(a, b, d),
+            Face(a, b, c)
+        };
     }
     std::array<std::size_t, 4> nodes() const {
-        return std::array<std::size_t, 4> {_a, _b, _c, _d};
+        return _nodes;
     }
     std::size_t max_node() const {
-        return _d;
+        return *std::max_element(_nodes.begin(), _nodes.end());
     }
     std::array<Face, 4> faces() const {
-        return {
-            std::array<std::size_t, 3>{_b, _c, _d},
-            std::array<std::size_t, 3>{_a, _c, _d},
-            std::array<std::size_t, 3>{_a, _b, _d},
-            std::array<std::size_t, 3>{_a, _b, _c}
-        };
+        return _faces;
     }
 
 private:
-    std::size_t _a;
-    std::size_t _b;
-    std::size_t _c;
-    std::size_t _d;
+    std::array<std::size_t, 4> _nodes;
+    std::array<Face, 4> _faces;
 };
+
+bool operator==(const Tetrahedron::Face& a, const Tetrahedron::Face& b) {
+    return a._nodes == b._nodes;
+}
+
+bool operator!=(const Tetrahedron::Face& a, const Tetrahedron::Face& b) {
+    return a._nodes != b._nodes;
+}
 
 /// The mesh_neighbours::internal namespace is for internal API functions and is not
 /// part of the public API. Functions and types may change without warning.
@@ -128,14 +150,14 @@ SharedNodes elements_around_nodes(const std::vector<mesh_neighbours::Tetrahedron
 } // namespace internal
 
 // Given a list of tetrahedrons, returns the indices of neighbouring tetrahedrons.
-std::vector<std::array<std::size_t,4>> tetrahedron_neighbours(
+std::vector<std::array<int, 4>> tetrahedron_neighbours(
         const std::vector<mesh_neighbours::Tetrahedron>& elements)
 {
     const std::size_t NUM_FACES = 4;
     const auto shared_nodes = mesh_neighbours::internal::elements_around_nodes(elements);
 
     // initialize neighbour element index vector with "no neighbour" constant
-    std::vector<std::array<std::size_t, 4>> neighbours(elements.size(), {NONE, NONE, NONE, NONE});
+    std::vector<std::array<int, 4>> neighbours(elements.size(), {NONE, NONE, NONE, NONE});
 
     for (std::size_t i = 0; i < elements.size(); i++) {
         auto elt_faces = elements[i].faces();
@@ -146,7 +168,7 @@ std::vector<std::array<std::size_t,4>> tetrahedron_neighbours(
             }
             auto face = elt_faces[f];
             // select a face node and loop through the other elements that share it
-            const auto& elts_sharing_node = shared_nodes.elements_around_node(face[0]);
+            const auto& elts_sharing_node = shared_nodes.elements_around_node(face.node0());
             for (auto j: elts_sharing_node) {
                 if (j == i) {
                     // elt can't be a neighbour of itself, skip it

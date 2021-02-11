@@ -90,8 +90,9 @@ int test_unknown_node() {
 
 int test_boundary() {
     // element 0 is surrounded by the other four elements
-    if (test_mesh.is_boundary() != std::vector<bool>{false, true, true, true, true}) {
-        return 1;
+    assert(!test_mesh.is_boundary(0));
+    for (auto i = 1; i < test_mesh.num_elements(); i++) {
+        assert(test_mesh.is_boundary(i));
     }
     return 0;
 }
