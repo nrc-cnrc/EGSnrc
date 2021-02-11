@@ -226,7 +226,8 @@ function updateDoseProfiles (voxelCoords, worldCoords, id) {
         volumeViewer.doseVolume,
         volumeViewer.densityVolume,
         dimensionsList[i],
-        voxelCoordsList[i]
+        voxelCoordsList[i],
+        volumeViewer.maxDoseVar
       )
 
       // Plot the dose profile

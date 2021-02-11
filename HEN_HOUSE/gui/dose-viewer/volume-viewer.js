@@ -1011,12 +1011,12 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.doseVolume.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0)
     this.updateThresholds()
 
-    Object.values(this.panels).forEach((panel) => {
+    Object.values(this.panels).forEach((panel, i) => {
       this.doseVolume.drawDose(this.doseVolume.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
       if (panel.showDoseProfile()) {
-        this.doseProfileList.forEach((doseProfile) =>
-          doseProfile.plotData()
-        )
+        // Update dose profile
+        this.doseProfileList[i].maxDoseVar = this.maxDoseVar
+        this.doseProfileList[i].plotData()
       }
     })
   }
