@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2009
 #
 #  Contributors:    Frederic Tessier
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -40,6 +41,9 @@
 
 #include <fstream>
 using namespace std;
+
+static bool EGS_VOXELIZED_SHAPE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_VOXELIZED_SHAPE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 void EGS_VoxelizedShape::EGS_VoxelizedShapeFormat0(const char *fname,
         const string &Name,EGS_ObjectFactory *f) {
@@ -367,6 +371,33 @@ EGS_VoxelizedShape::~EGS_VoxelizedShape() {
 
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Voxelized_Shape"});
+        shapeBlockInput->addSingleInput("file name", true, "The name of a file that is in binary");
+    }
+
+    EGS_VOXELIZED_SHAPE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_voxelized_shape
+    #:start shape:
+        library = egs_voxelized_shape
+        file name = some_file
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_VOXELIZED_SHAPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_VOXELIZED_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {
