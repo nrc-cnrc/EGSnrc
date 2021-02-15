@@ -27,6 +27,7 @@
 #  Contributors:    Marc Chamberland
 #                   Rowan Thomson
 #                   Dave Rogers
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -48,6 +49,8 @@
 #include <iostream>
 #include <fstream>
 
+static bool EGS_CONICAL_SHELL_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_CONICAL_SHELL_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 CSSSLayer::CSSSLayer(EGS_Float t, EGS_Float rit, EGS_Float rot, EGS_Float rib, EGS_Float rob, EGS_Float z):
     thick(t), ri_top(rit), ro_top(rot), ri_bot(rib), ro_bot(rob), zo(z) {
@@ -190,6 +193,56 @@ void EGS_ConicalShellStackShape::setLayerSampler() {
 
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Conical_Shell"});
+        shapeBlockInput->addSingleInput("radius", false, "The radius");
+        shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the concical shell.");
+
+        auto blockPtr = shapeBlockInput->addBlockInput("layer");
+        blockPtr->addSingleInput("thickness", true, "The thickness of the layer");
+        blockPtr->addSingleInput("top radii", false, "1 (outer radius, inner radius assumed to be 0) or 2 (outer and inner radius) inputs, only required for top layer");
+        blockPtr->addSingleInput("bottom radii", true, "1 (outer radius, inner radius assumed to be 0) or 2 (outer and inner radius) inputs");
+    }
+
+    EGS_CONICAL_SHELL_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_conical_shell
+    #:start shape:
+        library = egs_conical_shell
+        midpoint = 0 0 -1
+        :start layer:
+            thickness = 0.5
+            top radii = 0 1
+            bottom radii = 0.5 2
+        :stop layer:
+        :start layer:
+            thickness = 0.5
+            bottom radii = 0.25 1
+        :stop layer:
+        :start layer:
+            thickness = 0.5
+            bottom radii = 0.5
+        :stop layer:
+        :start layer:
+            thickness = 0.5
+            bottom radii = 2
+        :stop layer:
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_CONICAL_SHELL_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_CONICAL_SHELL_EXPORT EGS_BaseShape *createShape(EGS_Input *input, EGS_ObjectFactory *f) {
 
