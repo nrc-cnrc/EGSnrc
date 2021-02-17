@@ -33,10 +33,6 @@
 /* global Image */
 /* global Worker */
 
-// REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
-/* global volumeViewerList */
-/* global Slider */
-
 // import { volumeViewerList } from './index.js'
 // import { Slider } from './slider.js'
 
@@ -307,7 +303,7 @@ class Volume {
 }
 
 /** @class Volume represents a .3ddose file.  */
-class DoseVolume extends Volume {
+class DoseVolume extends Volume { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a DoseVolume.
    *
@@ -369,14 +365,16 @@ class DoseVolume extends Volume {
    * Make a dose contour plot of the given slice.
    *
    * @param {Object} slice The slice of the dose data.
-   * @param {Object} [transform] The zoom transform of the plot.
+   * @param {Object} transform The zoom transform of the plot.
    * @param {Object} svg The svg plot element.
    * @param {number[]} thresholds The contour thresholds.
    * @param {function} classNameFcn Returns the DOM class name.
+   * @param {number} minDose The minimum dose to scale the dose profiles with.
+   * @param {number} maxDose The maximum dose to scale the dose profiles with.
    */
-  drawDose (slice, transform, svg, thresholds, classNameFcn, maxDose) {
+  drawDose (slice, transform, svg, thresholds, classNameFcn, minDose, maxDose) {
     const colourFcn =
-      d3.scaleSequentialSqrt(d3.interpolateViridis).domain([0, maxDose])
+      d3.scaleSequentialSqrt(d3.interpolateViridis).domain([minDose, maxDose])
     const baseSlice = this.baseSlices[slice.axis]
 
     // Clear dose plot
@@ -460,48 +458,65 @@ class DoseVolume extends Volume {
 }
 
 /** @class Volume represents the difference between two .3ddose files.  */
-class DoseComparisonVolume extends DoseVolume { // eslint-disable-line no-unused-vars
+class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-vars
   /**
    * Creates an instance of a DoseComparisonVolume.
    *
    * @constructor
-   * @extends DoseVolume
    * @param {string} fileName The name of the file.
    * @param {Object} dimensions The pixel dimensions of the volume plots.
    * @param {Object} legendDimensions The pixel dimensions of legends.
-   * @param {Object} data The data from parsing the file.
+   * @param {DoseVolume} doseVol1 The first dose volume to compare.
+   * @param {DoseVolume} doseVol2 The second dose volume to compare.
    */
-  constructor (fileName, dimensions, legendDimensions, data, args) {
+  // TODO: Extend DoseVolume instead of Volume to avoid duplicating functions
+  constructor (fileName, dimensions, legendDimensions, doseVol1, doseVol2) {
     // Call the super class constructor
-    super(fileName, dimensions, legendDimensions, args)
-    this.addData(data)
+    super(fileName, dimensions, legendDimensions)
+    this.addData(doseVol1, doseVol2)
   }
 
   /**
    * Adds data to the DoseComparisonVolume object.
    *
-   * @param {Object} data The difference of the data from the two dose files.
+   * @param {DoseVolume} doseVol1 The first dose volume to compare.
+   * @param {DoseVolume} doseVol2 The second dose volume to compare.
    */
-  addData (data) {
-    this.data = data
+  addData (doseVol1, doseVol2) {
+    // First normalize the dose data to turn into a percentage
+    const doseArr1 = doseVol1.data.dose.map(
+      (doseVal) => doseVal / doseVol1.data.maxDose
+    )
+    const doseArr2 = doseVol2.data.dose.map(
+      (doseVal) => doseVal / doseVol2.data.maxDose
+    )
+
+    // Take the difference
+    const doseDiff = new Array(doseArr1.length)
+    for (let i = 0; i < doseArr1.length; i++) {
+      if (doseArr1[i] || doseArr2[i]) {
+        doseDiff[i] = (doseArr1[i] || 0) - (doseArr2[i] || 0)
+      }
+    }
+    // Calculate the error for each
+    const errArr2 = doseVol2.data.error
+    const error = doseVol1.data.error.map((err1, i) =>
+      Math.sqrt(err1 * err1 + errArr2[i] * errArr2[i])
+    )
+
+    // Set base slices
+    this.baseSlices = doseVol1.baseSlices
+
+    // Make new volume
+    this.data = {
+      ...doseVol1.data, // For voxelArr, voxelNumber, and voxelSize
+      dose: doseDiff,
+      error: error,
+      maxDose: 1.0
+    }
+
     // Max dose used for dose contour plot
     super.addColourScheme(d3.interpolateViridis, 1.0, -1.0)
-
-    // Calculate the contour thresholds
-    const contourInt = 0.2
-    this.thresholdPercents = d3.range(
-      -1.0 + contourInt,
-      1.0 + contourInt,
-      contourInt
-    )
-    // Thresholds and thresholdPercents are the same
-    // super.updateThresholds()
-
-    // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
-    this.className = (i) =>
-      'col-' + d3.format('d')(this.thresholdPercents[i] * 1000)
-
-    this.createBaseSlices(data, 'density')
   }
 
   /**
@@ -512,6 +527,120 @@ class DoseComparisonVolume extends DoseVolume { // eslint-disable-line no-unused
    */
   getDataAtVoxelCoords (voxelCoords) {
     return super.getDataAtVoxelCoords(voxelCoords, 'dose')
+  }
+
+  /**
+   * Get a slice of dose data for a given axis and slice index.
+   *
+   * @param {string} axis The axis of the slice (xy, yz, or xz).
+   * @param {number} sliceNum The number of the slice.
+   * @param {Array} args Any arguments to be passed into getSlice.
+   * @returns {Object}
+   */
+  getSlice (axis, slicePos, args) {
+    return super.getSlice(axis, slicePos, 'dose', args)
+  }
+
+  /**
+   * Clear the current dose plot.
+   *
+   * @param {string} axis The axis of the slice (xy, yz, or xz).
+   * @param {Object} svg The svg plot element.
+   */
+  clearDose (axis, svg) {
+    // Clear dose plot
+    svg.selectAll('g').remove()
+
+    // Clear dose legend
+    this.legendSvg.selectAll('*').remove()
+
+    // Remove existing dose contour inputs
+    this.legendHolder.selectAll('input').remove()
+  }
+
+  /**
+   * Make a dose contour plot of the given slice.
+   *
+   * @param {Object} slice The slice of the dose data.
+   * @param {Object} transform The zoom transform of the plot.
+   * @param {Object} svg The svg plot element.
+   * @param {number[]} thresholds The contour thresholds.
+   * @param {function} classNameFcn Returns the DOM class name.
+   * @param {number} minDose The minimum dose to scale the dose profiles with.
+   * @param {number} maxDose The maximum dose to scale the dose profiles with.
+   */
+  drawDose (slice, transform, svg, thresholds, classNameFcn, minDose, maxDose) {
+    const colourFcn =
+      d3.scaleSequentialSqrt(d3.interpolateViridis).domain([minDose, maxDose])
+    const baseSlice = this.baseSlices[slice.axis]
+
+    // Clear dose plot
+    svg.selectAll('g').remove()
+
+    // Draw contours
+    var contours = d3
+      .contours()
+      .size([baseSlice.xVoxels, baseSlice.yVoxels])
+      .smooth(false)
+      .thresholds(thresholds)(slice.sliceData)
+      .map(baseSlice.contourTransform)
+
+    const contourPaths = svg
+      .append('g')
+      .attr('class', 'dose-contour')
+      .attr('width', this.dimensions.width)
+      .attr('height', this.dimensions.height)
+      .attr('fill', 'none')
+      .attr('stroke', '#fff')
+      .attr('stroke-opacity', 0.5)
+      .attr('stroke-width', 0.1)
+      .selectAll('path')
+      .data(contours)
+      .join('path')
+      .classed('contour-path', true)
+      .attr('class', (d, i) => 'contour-path' + ' ' + classNameFcn(i))
+      .attr('fill', (d) => colourFcn(d.value))
+      .attr('fill-opacity', 0.5)
+      .attr('d', d3.geoPath())
+
+    // Get list of class names of hidden contours
+    const hiddenContourClassList = this.getHiddenContourClassList()
+
+    if (hiddenContourClassList.length > 0) {
+      // Apply hidden class to hidden contours
+      contourPaths
+        .filter(hiddenContourClassList.join(','))
+        .classed('hidden', true)
+    }
+
+    if (transform) {
+      svg.select('g.dose-contour').attr('transform', transform.toString())
+    }
+  }
+
+  /**
+   * Get a class list of all the hidden dose contours.
+   *
+   * @returns {string[]}
+   */
+  getHiddenContourClassList () {
+    const hiddenContourClassList = []
+    this.legendSvg.selectAll('g.cell.hidden').each(function (d, i) {
+      hiddenContourClassList[i] =
+        '.' + d3.select(this).attr('class').split(' ')[1]
+    })
+
+    return hiddenContourClassList
+  }
+
+  /**
+   * Get the dose error value at the given coordinates.
+   *
+   * @param {number[]} voxelCoords The voxel position of the data.
+   * @returns {number}
+   */
+  getErrorAtVoxelCoords (voxelCoords) {
+    return this.error ? super.getDataAtVoxelCoords(voxelCoords, 'error') : 0
   }
 }
 

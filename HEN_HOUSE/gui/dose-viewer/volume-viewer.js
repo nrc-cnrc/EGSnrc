@@ -33,9 +33,7 @@
 
 // REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
 /* global enableCheckboxForDensityPlot */
-/* global enableCheckboxForDoseProfilePlot */
 /* global enableButton */
-/* global enableCheckboxForVoxelInformation */
 /* global initializeMinMaxDensitySlider */
 /* global doseVolumeList */
 /* global densityVolumeList */
@@ -205,7 +203,8 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   setDoseVolume (doseVol) {
     this.doseVolume = doseVol
 
-    // Set the max dose variable
+    // Set the min and max dose variable
+    this.minDoseVar = 0
     this.maxDoseVar = parseFloat(doseVol.data.maxDose)
     this.initializeThresholds()
 
@@ -216,7 +215,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       this.doseLegendSvg
     )
 
-    this.initializeDoseLegend(this.maxDoseVar, this.thresholds)
+    this.initializeDoseLegend(this.thresholds, this.minDoseVar, this.maxDoseVar)
     this.initializeDoseContourInput()
 
     const dims = 'zxy'
@@ -245,7 +244,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
         // Draw the slice
         const slice = doseVol.getSlice(panel.axis, slicePos)
-        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
+        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
 
         // Update the axis
         this.drawAxes(
@@ -256,7 +255,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       } else {
         // Draw the slice
         const slice = doseVol.getSlice(panel.axis, slicePos)
-        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
+        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
       }
     })
 
@@ -326,7 +325,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       if (panel.doseVol) {
         // Redraw dose contours
         const doseSlice = panel.doseVol.sliceCache[panel.axis][panel.doseSliceNum]
-        panel.doseVol.drawDose(doseSlice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
+        panel.doseVol.drawDose(doseSlice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
       }
     })
 
@@ -487,7 +486,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
           } else {
             volumeViewer.removeDoseVolume()
           }
-        } else if (volumeViewer.doseVolume === doseVolumeList[this.value]) {
+        } else if (volumeViewer.doseSelector.node().value === this.value) {
           console.log(
             'Select a different dose volume than one that is already loaded'
           )
@@ -507,50 +506,21 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
    * @param {DoseVolume} doseVol1 The first dose volume to compare.
    * @param {DoseVolume} doseVol2 The second dose volume to compare.
    */
-  // TODO: Move this logic to DoseComparisonVolume class
   makeDoseComparison (doseVol1, doseVol2) {
-    // First normalize the dose data to turn into a percentage
-    const doseArr1 = doseVol1.data.dose.map(
-      (doseVal) => doseVal / doseVol1.data.maxDose
-    )
-    const doseArr2 = doseVol2.data.dose.map(
-      (doseVal) => doseVal / doseVol2.data.maxDose
-    )
-
-    // Take the difference
-    const doseDiff = new Array(doseArr1.length)
-    for (let i = 0; i < doseArr1.length; i++) {
-      if (doseArr1[i] || doseArr2[i]) {
-        doseDiff[i] = (doseArr1[i] || 0) - (doseArr2[i] || 0)
-      }
-    }
-    // Calculate the error for each
-    const errArr2 = doseVol2.data.error
-    const error = doseVol1.data.error.map((err1, i) =>
-      Math.sqrt(err1 * err1 + errArr2[i] * errArr2[i])
-    )
-
-    // Make new volume
-    const newData = {
-      ...doseVol1.data,
-      dose: doseDiff,
-      error: error,
-      maxDose: 1.0
-    }
-
     const combinedFileName = doseVol1.fileName + '_' + doseVol2.fileName
 
     const doseComparisonVol = new DoseComparisonVolume(
       combinedFileName,
       this.mainViewerDimensions,
       this.legendDimensions,
-      newData
+      doseVol1,
+      doseVol2
     )
 
     doseComparisonVolumeList.push(doseComparisonVol)
 
     // Set dose to new difference volume
-    this.setDoseVolume(doseComparisonVol)
+    this.setDoseComparisonVolume(doseComparisonVol)
   }
 
   /**
@@ -1009,23 +979,30 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   setMaxDose (val) {
     this.maxDoseVar = val * this.doseVolume.data.maxDose
     // Update the colour scheme and thresholds with the new max dose variable
-    this.doseVolume.addColourScheme(d3.interpolateViridis, this.maxDoseVar, 0)
+    this.doseVolume.addColourScheme(d3.interpolateViridis, this.maxDoseVar, this.minDoseVar)
     this.updateThresholds()
 
     Object.values(this.panels).forEach((panel, i) => {
-      this.doseVolume.drawDose(this.doseVolume.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
+      this.doseVolume.drawDose(this.doseVolume.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
       if (panel.showDoseProfile()) {
         // Update dose profile
+        this.doseProfileList[i].minDoseVar = this.minDoseVar
         this.doseProfileList[i].maxDoseVar = this.maxDoseVar
         this.doseProfileList[i].plotData()
       }
     })
   }
 
-  initializeThresholds () {
+  /**
+   * Intialize the thresholds for the dose contour plots.
+   *
+   * @param {number} min The minimum threshold value.
+   * @param {number} max The maximum threshold value.
+   * @param {number} contourInt The interval between each threshold.
+   */
+  initializeThresholds (min = 0.0, max = 1.0, contourInt = 0.1) {
     // Calculate the contour thresholds
-    const contourInt = 0.1
-    this.thresholdPercents = d3.range(contourInt, 1.0 + contourInt, contourInt)
+    this.thresholdPercents = d3.range(min + contourInt, max + contourInt, contourInt)
     this.updateThresholds()
     // The className function multiplies by 1000 and rounds because decimals are not allowed in class names
     this.className = (i) =>
@@ -1048,22 +1025,23 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.thresholdPercents.push(thresholdPercent)
     this.thresholdPercents.sort()
     this.updateThresholds()
-    this.initializeDoseLegend(this.maxDoseVar, this.thresholds)
+    this.initializeDoseLegend(this.thresholds, this.minDoseVar, this.maxDoseVar)
 
     Object.values(this.panels).forEach((panel) => {
-      this.doseVolume.drawDose(this.doseVolume.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
+      this.doseVolume.drawDose(this.doseVolume.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
     })
   }
 
   /**
- * Create the dose legend.
- *
- * @param {number} maxDoseVar The maximum dose to scale the contours with.
- * @param {number[]} thresholds The contour thresholds.
- */
-  initializeDoseLegend (maxDoseVar = this.doseVolume.data.maxDose, thresholds) {
+  * Create the dose legend.
+  *
+  * @param {number[]} thresholds The contour thresholds.
+  * @param {number} minDoseVar The minimum dose to scale the contours with.
+  * @param {number} maxDoseVar The maximum dose to scale the contours with.
+  */
+  initializeDoseLegend (thresholds, minDoseVar = 0, maxDoseVar = this.doseVolume.data.maxDose) {
     // Get list of class names of hidden contours
-    const colourFcn = d3.scaleSequentialSqrt(d3.interpolateViridis).domain([0, maxDoseVar])
+    const colourFcn = d3.scaleSequentialSqrt(d3.interpolateViridis).domain([minDoseVar, maxDoseVar])
 
     const hiddenContourClassList = this.doseVolume.getHiddenContourClassList()
     const legendSvg = this.doseLegendSvg
@@ -1208,11 +1186,11 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   }
 
   /**
- * Change the slice of the loaded volumes in the panel.
- *
- * @param {string} axis The axis of the current panel.
- * @param {number} sliceNum The number of the current slice displayed in the panel.
- */
+  * Change the slice of the loaded volumes in the panel.
+  *
+  * @param {string} axis The axis of the current panel.
+  * @param {number} sliceNum The number of the current slice displayed in the panel.
+  */
   updateSlice (axis, sliceNum) {
     const panel = this.panels[axis]
     let slicePos, slice
@@ -1226,10 +1204,83 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     if (this.doseVolume) {
       slicePos = slicePos || this.doseVolume.baseSlices[axis].zScale.invert(sliceNum)
       slice = this.doseVolume.getSlice(axis, slicePos)
-      this.doseVolume.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.maxDoseVar)
+      this.doseVolume.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
       panel.doseSliceNum = slice.sliceNum
     }
     panel.slicePos = slicePos
+  }
+
+  /**
+  * Set the dose volume of the VolumeViewer.
+  *
+  * @param {DoseVolume} doseVol The dose volume to be set.
+  */
+  setDoseComparisonVolume (doseVol) {
+    this.doseVolume = doseVol
+
+    // Set the max dose variable
+    this.maxDoseVar = parseFloat(doseVol.data.maxDose)
+    this.minDoseVar = -1.0
+    this.initializeThresholds(-1.0, 1.0, 0.2)
+
+    // Set dose volume html elements
+    doseVol.setHtmlObjects(
+      this.svgObjs['plot-dose'],
+      this.doseLegendHolder,
+      this.doseLegendSvg
+    )
+
+    this.initializeDoseLegend(this.thresholds, this.minDoseVar, this.maxDoseVar)
+    this.initializeDoseContourInput()
+
+    const dims = 'zxy'
+    var sliceNum, slicePos
+
+    // Get the average of items at index i and i+1
+    const getPos = (arr, i) => (arr[i] + arr[i + 1]) / 2.0
+
+    // Set the panel doseVolume object
+    Object.values(this.panels).forEach((panel, i) => {
+      // Get the slice position
+      slicePos = panel.densityVol
+        ? panel.slicePos
+        : getPos(doseVol.data.voxelArr[dims[i]], Math.floor(doseVol.data.voxelNumber[dims[i]] / 2))
+
+      // Set the dose volume in the panel
+      panel.setDoseVolume(doseVol, slicePos)
+
+      if (!panel.densityVol) {
+        // Update the slider max values
+        sliceNum = Math.round(doseVol.baseSlices[panel.axis].zScale(slicePos))
+        this.sliceSliders[panel.axis].setMaxValue(
+          doseVol.data.voxelNumber[dims[i]] - 1
+        )
+        this.sliceSliders[panel.axis].setCurrentValue(sliceNum)
+
+        // Draw the slice
+        const slice = doseVol.getSlice(panel.axis, slicePos)
+        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
+
+        // Update the axis
+        this.drawAxes(
+          panel.zoomTransform,
+          this.svgObjs['axis-svg'][panel.axis],
+          slice
+        )
+      } else {
+        // Draw the slice
+        const slice = doseVol.getSlice(panel.axis, slicePos)
+        doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
+      }
+    })
+
+    if (this.densityVolume) {
+      enableCheckboxForDensityPlot()
+    }
+    this.enableCheckboxForDoseProfilePlot()
+    enableButton(this.saveVisButton)
+    this.enableCheckboxForVoxelInformation()
+    initializeMaxDoseSlider(this.maxDoseParentDiv, doseVol, this)
   }
 }
 

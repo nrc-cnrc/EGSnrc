@@ -81,6 +81,7 @@ class DoseProfile { // eslint-disable-line no-unused-vars
     this.doseVol = null
     this.yTicks = 6
     this.profileDim = null
+    this.minDoseVar = null
     this.maxDoseVar = null
   }
 
@@ -179,9 +180,10 @@ class DoseProfile { // eslint-disable-line no-unused-vars
    * @param {DensityVolume} densityVol  The density volume object (fine if undefined, only used if density checkbox is checked).
    * @param {String} profileDim         The dimension (x, y, z) of the dose profile.
    * @param {number[]} coords           The voxel position of the line through the volumes.
+   * @param {number} minDoseVar         The minimum dose to scale the dose profiles with.
    * @param {number} maxDoseVar         The maximum dose to scale the dose profiles with.
    */
-  setDoseProfileData (doseVol, densityVol, profileDim, coords, maxDoseVar) {
+  setDoseProfileData (doseVol, densityVol, profileDim, coords, minDoseVar, maxDoseVar) {
     const [dim1, dim2, dim3] =
       profileDim === 'x'
         ? ['x', 'y', 'z']
@@ -237,6 +239,7 @@ class DoseProfile { // eslint-disable-line no-unused-vars
     this.data = doseProfileData
     this.doseVol = doseVol
     this.profileDim = profileDim
+    this.minDoseVar = minDoseVar
     this.maxDoseVar = maxDoseVar
   }
 
@@ -414,11 +417,11 @@ class DoseProfile { // eslint-disable-line no-unused-vars
   /**
    * Plot the dose profile data.
    */
-  plotData () {
+  plotData (minDose, maxDose) {
     const data = this.data
     const preYDoseScale = d3
       .scaleLinear()
-      .domain([0, this.maxDoseVar * 1.1])
+      .domain([this.minDoseVar, this.maxDoseVar * 1.1])
       .range([0, 1.1])
 
     // Clear all existing elements

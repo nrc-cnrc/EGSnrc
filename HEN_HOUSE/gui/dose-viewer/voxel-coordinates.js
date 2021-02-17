@@ -227,6 +227,7 @@ function updateDoseProfiles (voxelCoords, worldCoords, id) {
         volumeViewer.densityVolume,
         dimensionsList[i],
         voxelCoordsList[i],
+        volumeViewer.minDoseVar,
         volumeViewer.maxDoseVar
       )
 
