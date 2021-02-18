@@ -264,7 +264,7 @@ class DoseProfile { // eslint-disable-line no-unused-vars
 
     this.yDoseScale = d3
       .scaleLinear()
-      .domain([0, 1.0])
+      .domain([this.minDoseVar >= 0 ? 0 : -1.0, 1.0])
       .range([this.dimensions.height, 0])
 
     if (this.densityChecked()) {
@@ -417,12 +417,12 @@ class DoseProfile { // eslint-disable-line no-unused-vars
   /**
    * Plot the dose profile data.
    */
-  plotData (minDose, maxDose) {
+  plotData () {
     const data = this.data
     const preYDoseScale = d3
       .scaleLinear()
       .domain([this.minDoseVar, this.maxDoseVar * 1.1])
-      .range([0, 1.1])
+      .range([this.minDoseVar >= 0 ? 0 : -1.0, 1.1])
 
     // Clear all existing elements
     this.svg.selectAll('.plotting-area').remove()
@@ -519,10 +519,6 @@ class DoseProfile { // eslint-disable-line no-unused-vars
    */
   // TODO: Either combine this with getting the data or pass it in to reduce confusion
   plotDoseProfile (coords) {
-    if (this.xScale === null) {
-      this.updateAxes()
-    }
-
     this.makeTitle(coords)
     this.plotData()
   }
