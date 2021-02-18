@@ -196,6 +196,33 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   }
 
   /**
+   * Set the dose comparison selector to only show dose volume not already loaded.
+   *
+   * @param {number} idx The index of the dose volume already loaded in the viewer.
+   */
+  initializeDoseComparisonSelector (idx) {
+    // Enable the dose comparison selector
+    this.doseComparisonSelector.attr('disabled', null)
+
+    // Remove the existing nodes
+    this.doseComparisonSelector.selectAll('option').nodes().forEach((element, i) => {
+      if (i !== 0) {
+        element.remove()
+      }
+    })
+
+    // Add all but the selected dose volume as options for the dose comparison selector
+    doseVolumeList.forEach((vol, i) => {
+      if (i !== idx) {
+        this.doseComparisonSelector
+          .append('option')
+          .attr('value', i)
+          .text(vol.fileName)
+      }
+    })
+  }
+
+  /**
    * Set the dose volume of the VolumeViewer.
    *
    * @param {DoseVolume} doseVol The dose volume to be set.
@@ -217,6 +244,11 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
     this.initializeDoseLegend(this.thresholds, this.minDoseVar, this.maxDoseVar)
     this.initializeDoseContourInput()
+
+    if (doseVolumeList.length >= 2) {
+      const idx = doseVolumeList.findIndex((vol) => vol.fileName === doseVol.fileName)
+      this.initializeDoseComparisonSelector(idx)
+    }
 
     const dims = 'zxy'
     var sliceNum, slicePos
@@ -415,17 +447,8 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
    */
   // TODO: Create event listeners instead of calling this every time
   updateDoseFileSelector (doseVol, i) {
+    // TODO: Don;t show selected dose in dose Comparison selector!!!!
     this.doseSelector.append('option').attr('value', i).text(doseVol.fileName)
-
-    this.doseComparisonSelector
-      .append('option')
-      .attr('value', i)
-      .text(doseVol.fileName)
-
-    // TODO: Wait until first dose selector has dose loaded to enable
-    if (doseVolumeList.length >= 2) {
-      this.doseComparisonSelector.attr('disabled', null)
-    }
   }
 
   /**
