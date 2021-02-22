@@ -164,6 +164,18 @@ private:
     int howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         EGS_Float &t, int *newmed, EGS_Vector *normal);
 
+    struct Intersection {
+        Intersection(EGS_Float dist, int face_index)
+            : dist(dist), face_index(face_index) {}
+        /// Intersection distance
+        EGS_Float dist;
+        /// Face index
+        int face_index;
+    };
+
+    // `howfar` helper: Determine the closest boundary face intersection
+    Intersection closest_boundary_face(int ireg, const EGS_Vector& x, const EGS_Vector& u);
+
     std::vector<EGS_Vector> _elt_points;
     std::vector<bool> _boundary_faces;
     std::vector<int> _medium_indices;

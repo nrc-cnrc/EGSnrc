@@ -258,7 +258,28 @@ int test_howfar_interior() {
 }
 
 int test_howfar_exterior() {
-    return 1;
+    {
+    // Element 3 (ireg = 2) has an exterior boundary with a point at x = -1
+        auto reg = -1; // outside the mesh
+        const EGS_Vector p(-2.0, 0.0, 0.0);
+        const EGS_Vector u(1.0, 0.0, 0.0);
+        auto dist = 1e20;
+        int newmed = -100;
+        auto new_reg = test_mesh.howfar(reg, p, u, dist, &newmed);
+        if (new_reg != 2) {
+            std::cerr << "expected new region index to be 2, got: " << new_reg << "\n";
+            return 1;
+        }
+        if (!approx_eq(dist, 1.0)) {
+            std::cerr << "expected distance to be 1.0, got: " << dist << "\n";
+            return 1;
+        }
+        if (newmed != 0) {
+            std::cerr << "expected medium index to be 0, got: " << newmed << "\n";
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int main() {

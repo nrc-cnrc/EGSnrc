@@ -461,6 +461,7 @@ EGS_Float EGS_Mesh::min_exterior_face_dist(int ireg, const EGS_Vector& x) {
     // loop over all boundary tetrahedrons and find the closest point to the tetrahedron
     EGS_Float min2 = std::numeric_limits<EGS_Float>::max();
     for (auto i = 0; i < num_elements(); i++) {
+        // TODO check for guaranteed exterior face, not just exterior element?
         if (!is_boundary(i)) {
             continue;
         }
@@ -563,7 +564,7 @@ int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u
             return ireg;
         }
         t = dist;
-        // index 0 = excluding point A = face ACD
+        // index 0 = excluding point A = face BCD
         auto new_reg = _neighbours[ireg][0];
         update_media_and_normal(B, C, D, new_reg);
         return new_reg;
@@ -572,10 +573,87 @@ int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     return ireg;
 }
 
+EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vector &x,
+    const EGS_Vector &u)
+{
+    assert(is_boundary(ireg));
+    EGS_Float min_dist = std::numeric_limits<EGS_Float>::max();
+
+    auto dist = min_dist;
+    auto closest_face = -1;
+
+    auto check_face_intersection = [&](int face, const  EGS_Vector& p1, const EGS_Vector& p2,
+            const EGS_Vector& p3)
+    {
+        if (_boundary_faces[4*ireg + face] &&
+            triangle_ray_intersection(x, u, p1, p2, p3, dist) && dist < min_dist)
+        {
+            min_dist = dist;
+            closest_face = face;
+        }
+    };
+
+    const auto& A = _elt_points.at(4*ireg);
+    const auto& B = _elt_points.at(4*ireg + 1);
+    const auto& C = _elt_points.at(4*ireg + 2);
+    const auto& D = _elt_points.at(4*ireg + 3);
+
+    // face 0 (BCD), face 1 (ACD) etc.
+    check_face_intersection(0, B, C, D);
+    check_face_intersection(1, A, C, D);
+    check_face_intersection(2, A, B, D);
+    check_face_intersection(3, A, B, C);
+
+    return EGS_Mesh::Intersection(min_dist, closest_face);
+}
+
 int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed, EGS_Vector *normal)
 {
-    throw std::runtime_error("unimplemented!");
+    assert(ireg == -1);
+
+    // loop over all boundary tetrahedrons and find the closest point to the tetrahedron
+    EGS_Float min_dist = 1e30;
+    int min_reg = -1;
+    int min_reg_face = -1;
+
+    for (auto i = 0; i < num_elements(); i++) {
+        std::cout << "elt " << i << "\n";
+        if (!is_boundary(i)) {
+            std::cout << "not a boundary\n";
+            continue;
+        }
+        auto intersection = closest_boundary_face(i, x, u);
+        if (intersection.dist < min_dist) {
+            min_dist = intersection.dist;
+            min_reg_face = intersection.face_index;
+            min_reg = i;
+        }
+    }
+    // no intersection
+    if (min_dist > t) {
+        return -1;
+    }
+    // intersection found, update out parameters
+    t = min_dist;
+    if (newmed) {
+        *newmed = medium(min_reg);
+    }
+    if (normal) {
+        const auto& A = _elt_points.at(4*ireg);
+        const auto& B = _elt_points.at(4*ireg + 1);
+        const auto& C = _elt_points.at(4*ireg + 2);
+        const auto& D = _elt_points.at(4*ireg + 3);
+        switch(min_reg_face) {
+            case 0: *normal = cross(C - B, D - B); break;
+            case 1: *normal = cross(C - A, D - A); break;
+            case 2: *normal = cross(B - A, D - A); break;
+            case 3: *normal = cross(B - A, C - A); break;
+            default: throw std::runtime_error("Bad intersection, got face index: " +
+                std::to_string(min_reg_face));
+        }
+    }
+    return min_reg;
 }
 
 // TODO
