@@ -98,12 +98,11 @@ var defineShowProfileCheckboxBehaviour = function (volumeViewer, checkbox) { // 
     // Update dose profiles
     // Only choose first panel because it will update all dose profiles
     const panel = volumeViewer.panels.xy
-    if (panel.markerPosition) {
-      const worldCoords = panel.coordsToWorld(panel.markerPosition)
+    if (volumeViewer.worldCoords) {
       updateVoxelCoords(
         panel.densityVol,
         panel.doseVol,
-        worldCoords,
+        volumeViewer.worldCoords,
         volumeViewer.id,
         panel.showMarker,
         panel.showDoseProfile
@@ -135,13 +134,12 @@ var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) { // e
 
     // Update voxel information
     const panel = volumeViewer.panels.xy
-    const worldCoords = panel.coordsToWorld(panel.markerPosition)
-    if (panel.markerPosition) {
+    if (volumeViewer.worldCoords) {
       updateVoxelCoords(
         panel.densityVol,
         panel.doseVol,
-        worldCoords,
-        panel.volumeViewerId,
+        volumeViewer.worldCoords,
+        volumeViewer.id,
         panel.showMarker,
         panel.showDoseProfile
       )

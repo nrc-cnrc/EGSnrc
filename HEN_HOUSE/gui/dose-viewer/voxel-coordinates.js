@@ -155,6 +155,9 @@ function updateVoxelCoords ( // eslint-disable-line no-unused-vars
   const vol = densityVol || doseVol
   const densityVoxelCoords = densityVol ? densityVol.worldToVoxelCoords(worldCoords) : null
   const doseVoxelCoords = doseVol ? doseVol.worldToVoxelCoords(worldCoords) : null
+  const volumeViewer = volumeViewerList[id.substring(4)]
+
+  volumeViewer.worldCoords = worldCoords
 
   if (vol) {
     // Update voxel info if checkbox is checked

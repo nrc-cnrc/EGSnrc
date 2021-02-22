@@ -105,6 +105,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.doseProfileList = new Array(3)
     this.dispatch = d3.dispatch('markerchange')
     this.voxelInfoDiv = null
+    this.worldCoords = null // TODO: Initialize this value
 
     this.buildBaseHtml(id)
     this.initializeDispatch()
@@ -265,6 +266,22 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
       // Set the dose volume in the panel
       panel.setDoseVolume(doseVol, slicePos)
+
+      if (this.showDoseProfileCheckbox.node().checked || this.showVoxelInfoCheckbox.node().checked) {
+        // Only choose first panel because it will update all dose profiles
+        const panel = this.panels.xy
+
+        if (this.worldCoords) {
+          updateVoxelCoords(
+            panel.densityVol,
+            panel.doseVol,
+            this.worldCoords,
+            this.id,
+            panel.showMarker,
+            panel.showDoseProfile
+          )
+        }
+      }
 
       if (!panel.densityVol) {
         // Update the slider max values
@@ -756,7 +773,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
             currPanel.densityVol,
             currPanel.doseVol,
             worldCoords,
-            currPanel.volumeViewerId,
+            this.id,
             currPanel.showMarker,
             currPanel.showDoseProfile
           )
@@ -1271,6 +1288,21 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
       // Set the dose volume in the panel
       panel.setDoseVolume(doseVol, slicePos)
+
+      if (this.showDoseProfileCheckbox.node().checked || this.showVoxelInfoCheckbox.node().checked) {
+        // Only choose first panel because it will update all dose profiles
+        if (this.worldCoords) {
+          const panel = this.panels.xy
+          updateVoxelCoords(
+            panel.densityVol,
+            panel.doseVol,
+            this.worldCoords,
+            this.id,
+            panel.showMarker,
+            panel.showDoseProfile
+          )
+        }
+      }
 
       if (!panel.densityVol) {
         // Update the slider max values
