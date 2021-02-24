@@ -483,6 +483,15 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
    * @param {DoseVolume} doseVol2 The second dose volume to compare.
    */
   addData (doseVol1, doseVol2) {
+    // Check if dimensions are compatible
+    var compatibleDims = (voxArr1, voxArr2) => (
+      Object.keys(voxArr1).every((axis) => {
+        const len1 = voxArr1[axis].length
+        const len2 = voxArr2[axis].length
+        return (len1 === len2) && (voxArr1[axis][0] === voxArr2[axis][0]) && (voxArr1[axis][len1 - 1] === voxArr2[axis][len2 - 1])
+      })
+    )
+
     // First normalize the dose data to turn into a percentage
     const doseArr1 = doseVol1.data.dose.map(
       (doseVal) => doseVal / doseVol1.data.maxDose
@@ -491,18 +500,65 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
       (doseVal) => doseVal / doseVol2.data.maxDose
     )
 
-    // Take the difference
+    // Initialize dose difference and error arrays
     const doseDiff = new Array(doseArr1.length)
-    for (let i = 0; i < doseArr1.length; i++) {
-      if (doseArr1[i] || doseArr2[i]) {
-        doseDiff[i] = (doseArr1[i] || 0) - (doseArr2[i] || 0)
+    const error = new Array(doseArr1.length)
+
+    // If both dose volumes have same dimensions
+    if (compatibleDims(doseVol1.data.voxelArr, doseVol2.data.voxelArr)) {
+      // Take the difference
+      for (let i = 0; i < doseArr1.length; i++) {
+        if (doseArr1[i] || doseArr2[i]) {
+          doseDiff[i] = (doseArr1[i] || 0) - (doseArr2[i] || 0)
+        }
+
+        // Calculate the error for each
+        error[i] = Math.sqrt(Math.pow(doseVol1.data.error[i], 2) * Math.pow(doseVol2.data.error[i], 2))
+      }
+    } else {
+      let x, y, z, doseVal1, doseVal2, vol1Address, vol2Address, errorVal1, errorVal2
+
+      // Define the mapping from position to voxel index for the second dose volume
+      const [xScale, yScale, zScale] = ['x', 'y', 'z'].map((dim) => {
+        const domain = [doseVol2.data.voxelArr[dim][0] - doseVol2.data.voxelSize[dim] / 2, doseVol2.data.voxelArr[dim][doseVol2.data.voxelArr[dim].length - 1] + doseVol2.data.voxelSize[dim] / 2]
+        return d3
+          .scaleQuantile()
+          .domain(domain)
+          .range(d3.range(0, doseVol2.data.voxelArr[dim].length, 1))
+      })
+
+      // For each voxel position in the first dose volume
+      for (let i = 0; i < doseVol1.data.voxelNumber.x; i++) {
+        for (let j = 0; j < doseVol1.data.voxelNumber.y; j++) {
+          for (let k = 0; k < doseVol1.data.voxelNumber.z; k++) {
+            // Calculate the corresponding voxel coordinates in the second dose volume
+            x = xScale(doseVol1.data.voxelArr.x[i])
+            y = yScale(doseVol1.data.voxelArr.y[j])
+            z = zScale(doseVol1.data.voxelArr.z[k])
+
+            // Calculate the index for each of the dose volumes
+            vol1Address = i + doseVol1.baseSlices.xy.xVoxels * (j + k * doseVol1.baseSlices.xy.yVoxels)
+            vol2Address = x + doseVol2.data.voxelNumber.x * (y + z * doseVol2.data.voxelNumber.y)
+
+            // Set the dose values
+            doseVal1 = doseArr1[vol1Address] || 0
+            doseVal2 = doseArr2[vol2Address] || 0
+
+            // Calculate the dose difference
+            if (doseVal1 || doseVal2) {
+              doseDiff[vol1Address] = doseVal1 - doseVal2
+            }
+
+            // Set the error values
+            errorVal1 = doseVol1.data.error ? doseVol1.data.error[vol1Address] || 0 : 0
+            errorVal2 = doseVol2.data.error ? doseVol2.data.error[vol2Address] || 0 : 0
+
+            // Calculate the combined error
+            error[vol1Address] = Math.sqrt(Math.pow(errorVal1, 2) * Math.pow(errorVal2, 2))
+          }
+        }
       }
     }
-    // Calculate the error for each
-    const errArr2 = doseVol2.data.error
-    const error = doseVol1.data.error.map((err1, i) =>
-      Math.sqrt(err1 * err1 + errArr2[i] * errArr2[i])
-    )
 
     // Set base slices
     this.baseSlices = doseVol1.baseSlices
