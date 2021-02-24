@@ -37,7 +37,7 @@
 */
 
 // TODO
-// #include "egs_input.h"
+#include "egs_input.h"
 #include "egs_mesh.h"
 #include "egs_vector.h"
 
@@ -199,7 +199,7 @@ int triangle_ray_intersection(const EGS_Vector &p, const EGS_Vector &v_norm,
 /// Parse the body of a msh4.1 file into an EGS_Mesh using the msh_parser API.
 ///
 /// Throws a std::runtime_error if parsing fails.
-EGS_Mesh parse_msh41_body(std::istream& input) {
+EGS_Mesh* parse_msh41_body(std::istream& input) {
     std::vector<msh_parser::internal::msh41::Node> nodes;
     std::vector<msh_parser::internal::msh41::MeshVolume> volumes;
     std::vector<msh_parser::internal::msh41::PhysicalGroup> groups;
@@ -287,12 +287,12 @@ EGS_Mesh parse_msh41_body(std::istream& input) {
 
     // TODO: check all 3d physical groups were used by elements
     // TODO: ensure all element node tags are valid
-    return EGS_Mesh(mesh_elts, mesh_nodes, media);
+    return new EGS_Mesh(mesh_elts, mesh_nodes, media);
 }
 } // anonymous namespace
 
 // msh4.1 parsing
-EGS_Mesh EGS_Mesh::parse_msh_file(std::istream& input) {
+EGS_Mesh* EGS_Mesh::parse_msh_file(std::istream& input) {
     auto version = msh_parser::internal::parse_msh_version(input);
     // TODO auto mesh_data;
     switch(version) {
@@ -309,14 +309,14 @@ EGS_Mesh EGS_Mesh::parse_msh_file(std::istream& input) {
 
 EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials) :
-    _elements(std::move(elements)), _nodes(std::move(nodes)), _materials(std::move(materials))
+    EGS_BaseGeometry("EGS_Mesh"), _elements(std::move(elements)), _nodes(std::move(nodes)), _materials(std::move(materials))
 {
     std::size_t max_elts = std::numeric_limits<int>::max();
     if (_elements.size() >= max_elts) {
         throw std::runtime_error("maximum number of elements (" +
             std::to_string(max_elts) + ") exceeded (" + std::to_string(_elements.size()) + ")");
     }
-    // TODO EGS_BaseGeometry::nreg = _elements.size();
+    EGS_BaseGeometry::nreg = _elements.size();
 
     _elt_points.reserve(_elements.size() * 4);
     // Find the matching nodes for every tetrahedron
@@ -657,7 +657,6 @@ int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u
 }
 
 // TODO
-/*
 static char EGS_MESH_LOCAL geom_class_msg[] = "createGeometry(Mesh): %s\n";
 
 extern "C" {
@@ -674,13 +673,17 @@ extern "C" {
         }
         if (mesh_file.length() >= 4 && mesh_file.rfind(".msh") == mesh_file.length() - 4)
         {
-            // std::ifstream input(mesh_file);
-            // EGS_Mesh *mesh = new parse_msh_file(input);
-            EGS_Mesh *mesh = nullptr;
+            std::ifstream input_file(mesh_file);
+            if (!input_file) {
+                egsWarning("unable to open file: `%s`", mesh_file.c_str());
+                return nullptr;
+            }
+            EGS_Mesh* mesh = EGS_Mesh::parse_msh_file(input_file);
             if (!mesh) {
                 egsWarning("EGS_Mesh::from_file: Gmsh msh file parsing failed\n");
                 return nullptr;
             }
+            mesh->setName(input);
             return mesh;
         }
         egsWarning("EGS_Mesh::from_file: unknown file extension for file `%s`,"
@@ -688,4 +691,3 @@ extern "C" {
         return nullptr;
     }
 }
-*/

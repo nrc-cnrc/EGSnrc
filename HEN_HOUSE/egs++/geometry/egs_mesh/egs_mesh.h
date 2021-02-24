@@ -43,39 +43,36 @@
 #include <sstream>
 #include <vector>
 
-// TODO
-// #include "egs_base_geometry.h"
+#include "egs_base_geometry.h"
 #include "egs_vector.h"
 
-// #ifdef WIN32
-//
-//     #ifdef BUILD_EGS_MESH_DLL
-//         #define EGS_MESH_EXPORT __declspec(dllexport)
-//     #else
-//         #define EGS_MESH_EXPORT __declspec(dllimport)
-//     #endif
-//     #define EGS_MESH_LOCAL
-//
-// #else
-//
-//     #ifdef HAVE_VISIBILITY
-//         #define EGS_MESH_EXPORT __attribute__ ((visibility ("default")))
-//         #define EGS_MESH_LOCAL  __attribute__ ((visibility ("hidden")))
-//     #else
-//         #define EGS_MESH_EXPORT
-//         #define EGS_MESH_LOCAL
-//     #endif
-//
-// #endif
+#ifdef WIN32
+
+    #ifdef BUILD_EGS_MESH_DLL
+        #define EGS_MESH_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_MESH_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_MESH_LOCAL
+
+#else
+
+    #ifdef HAVE_VISIBILITY
+        #define EGS_MESH_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_MESH_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_MESH_EXPORT
+        #define EGS_MESH_LOCAL
+    #endif
+
+#endif
 
 /*! \brief A tetrahedral mesh geometry
   \ingroup Geometry
   \ingroup ElementaryG
 */
 
-// TODO
-// class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
-class EGS_Mesh {
+class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
 public:
     /// A single tetrahedral mesh element
     struct Tetrahedron {
@@ -110,10 +107,10 @@ public:
     EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials);
 
-    /// Parse a msh file into an EGS_Mesh
+    /// Parse a msh file into an owned EGS_Mesh allocated using new.
     ///
     /// Throws a std::runtime_error if parsing fails.
-    static EGS_Mesh parse_msh_file(std::istream& input);
+    static EGS_Mesh* parse_msh_file(std::istream& input);
 
     int num_elements() const {
         // todo return nreg
@@ -139,8 +136,7 @@ public:
     // EGS_BaseGeometry interface
     const std::string& getType() const { return type; }
     bool isInside(const EGS_Vector &x);
-    int inside(const EGS_Vector &x);
-    // TODO figure out setMedia() situation
+    int inside(const EGS_Vector &x); // TODO figure out setMedia() situation
     int medium(int ireg) const;
     int isWhere(const EGS_Vector &x);
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
