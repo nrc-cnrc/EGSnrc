@@ -453,7 +453,7 @@ class DoseVolume extends Volume { // eslint-disable-line no-unused-vars
    * @returns {number}
    */
   getErrorAtVoxelCoords (voxelCoords) {
-    return this.error ? super.getDataAtVoxelCoords(voxelCoords, 'error') : 0
+    return this.data.error ? super.getDataAtVoxelCoords(voxelCoords, 'error') : 0
   }
 }
 
@@ -696,7 +696,7 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
    * @returns {number}
    */
   getErrorAtVoxelCoords (voxelCoords) {
-    return this.error ? super.getDataAtVoxelCoords(voxelCoords, 'error') : 0
+    return this.data.error ? super.getDataAtVoxelCoords(voxelCoords, 'error') : 0
   }
 }
 
