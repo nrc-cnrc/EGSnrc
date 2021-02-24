@@ -116,6 +116,9 @@ public:
         // todo return nreg
         return _elt_points.size() / 4;
     }
+    const std::vector<std::string>& medium_names() const {
+        return _medium_names;
+    }
     const std::vector<EGS_Mesh::Tetrahedron>& elements() const {
         return _elements;
     }
@@ -175,6 +178,7 @@ private:
     std::vector<EGS_Vector> _elt_points;
     std::vector<bool> _boundary_faces;
     std::vector<int> _medium_indices;
+    std::vector<std::string> _medium_names;
 
     std::vector<EGS_Mesh::Tetrahedron> _elements;
     std::vector<EGS_Mesh::Node> _nodes;

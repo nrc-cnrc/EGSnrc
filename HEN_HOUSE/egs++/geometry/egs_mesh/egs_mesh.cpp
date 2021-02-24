@@ -357,10 +357,10 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
 
     // map from medium tags to offsets
     std::unordered_map<int, int> medium_offsets;
-    medium_offsets.reserve(_materials.size());
     for (std::size_t i = 0; i < _materials.size(); i++) {
         // TODO use EGS_BaseGeometry tracker
         // auto med = EGS_BaseGeometry::addMedium(m.medium_name);
+        _medium_names.push_back(_materials[i].medium_name);
         auto material_tag = _materials[i].tag;
         bool inserted = medium_offsets.insert({material_tag, i}).second;
         if (!inserted) {
@@ -684,6 +684,9 @@ extern "C" {
                 return nullptr;
             }
             mesh->setName(input);
+            for (const auto& medium: mesh->medium_names()) {
+                mesh->addMedium(medium);
+            }
             return mesh;
         }
         egsWarning("EGS_Mesh::from_file: unknown file extension for file `%s`,"
