@@ -464,7 +464,6 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
    */
   // TODO: Create event listeners instead of calling this every time
   updateDoseFileSelector (doseVol, i) {
-    // TODO: Don;t show selected dose in dose Comparison selector!!!!
     this.doseSelector.append('option').attr('value', i).text(doseVol.fileName)
   }
 
@@ -501,6 +500,9 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       if (parseInt(this.value) === -1) {
         // If the base text is chosen, remove dose volume if loaded
         volumeViewer.removeDoseVolume()
+        // Disable the dose comparison drop down
+        volumeViewer.doseComparisonSelector.node().value = '-1'
+        volumeViewer.doseComparisonSelector.node().disabled = true
       } else {
         volumeViewer.setDoseVolume(doseVolumeList[this.value])
       }

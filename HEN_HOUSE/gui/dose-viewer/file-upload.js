@@ -278,15 +278,25 @@ function handleFiles (files) {
 
       const volViewer = volumeViewerList[0]
 
+      // If this is the first dose file uploaded, display on first volume viewer
       if (doseVolumeList.length >= 1 && volViewer.doseVolume === null) {
         volViewer.setDoseVolume(doseVolumeList[0])
         volViewer.doseSelector.node().selectedIndex = 1
       }
 
+      // If this is the first density uploaded, display on first volume viewer
       if (densityVolumeList.length >= 1 && volViewer.densityVolume === null) {
         volViewer.setDensityVolume(densityVolumeList[0])
         volViewer.densitySelector.node().selectedIndex = 1
       }
+
+      // Update the dose comparison selectors
+      volumeViewerList.forEach(volViewer => {
+        if (doseVolumeList.length >= 2) {
+          const idx = doseVolumeList.findIndex((vol) => vol.fileName === volViewer.doseVolume.fileName)
+          volViewer.initializeDoseComparisonSelector(idx)
+        }
+      })
     })
 }
 
