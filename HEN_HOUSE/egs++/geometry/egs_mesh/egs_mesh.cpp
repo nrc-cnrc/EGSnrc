@@ -193,6 +193,9 @@ int triangle_ray_intersection(const EGS_Vector &p, const EGS_Vector &v_norm,
     }
     // intersection found
     dist = dot(ac, qvec) * inv_det;
+    if (dist < eps) {
+        return 0;
+    }
     return 1;
 }
 
