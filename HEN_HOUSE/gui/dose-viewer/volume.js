@@ -933,7 +933,7 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
     function gradientUrl (colour, height, width, n = 150) {
       const canvas = document.createElement('canvas')
       const context = canvas.getContext('2d')
-      const [maxVal, minVal] = colour.domain()
+      const [minVal, maxVal] = colour.domain()
       var val
       for (let i = 0; i < height; ++i) {
         val = colour(((n - i) / n) * (maxVal - minVal) + minVal)
