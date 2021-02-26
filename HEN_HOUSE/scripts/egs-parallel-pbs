@@ -124,6 +124,10 @@ trim=$(( $(echo $jobname | wc -c) - 14 ))
 if [ $trim -gt 0 ]; then
     jobname=$(echo $jobname | cut -c $trim-)
 fi
+### job names can't start with a '.', hopefully the next character is OK
+if [[ ${jobname::1} == "." ]]; then
+    jobname="${jobname:1}"
+fi
 log "job name: $jobname"
 
 ### remove existing egsjob and lock files
