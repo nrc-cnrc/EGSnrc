@@ -61,8 +61,9 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
     popup->setSelectionBehavior(QAbstractItemView::SelectRows);
     popup->setSelectionMode(QAbstractItemView::SingleSelection);
     popup->setParent(nullptr);
-    popup->setFocusPolicy(Qt::NoFocus);
+    popup->setFocusPolicy(Qt::StrongFocus);
     popup->installEventFilter(this);
+
 
     // The Qt::Popup option seems to take control of mouse + key inputs
     // essentially locking up the computer, beware!
@@ -78,11 +79,11 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(autoComplete()));
     connect(popup, SIGNAL(clicked(QModelIndex)), this, SLOT(insertCompletion(QModelIndex)));
-
+    connect(popup, SIGNAL(activated(QModelIndex)), this, SLOT(insertCompletion(QModelIndex)));
 //
 //         QObject::connect(popup->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
 //                         this, SLOT(_q_completionSelected(QItemSelection)));
-
+    //connect(this, SIGNAL(keyboardGrabber()), this, SIGNAL(QAbstractItemView::MoveDown));
 
 }
 
@@ -634,6 +635,7 @@ void EGS_Editor::insertCompletion(QModelIndex index) {
     this->moveCursor(QTextCursor::EndOfBlock);
     insertPlainText(model->data(index).toString());
     cursor.endEditBlock();
+    popup->QWidget::releaseKeyboard();
 }
 
 shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextCursor cursor) {
@@ -951,7 +953,6 @@ bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QText
                 satisfied = false;
             }
         }
-
         // Look ahead, if the following inputs have the same tag as this one (i)
         for(size_t j = i+1; j < dependencyInp.size(); ++j) {
             if(egsEquivStr(dependencyInp[j]->getTag(), depTag)) {
@@ -1120,8 +1121,10 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
 
         // Insert 4 spaces instead of tabs
         if (keyEvent->key() == Qt::Key_Tab) {
-            insertPlainText("    ");
-            return true;
+            if (!popup->isVisible()) {
+                insertPlainText("    ");
+                return true;
+            }
         } else if(keyEvent->key() == Qt::Key_Backtab) {
             // Delete 4 spaces from the front of the line
             QTextCursor cursor = textCursor();
@@ -1137,48 +1140,59 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
             }
             return true;
         } else if(keyEvent->key() == Qt::Key_Return) {
-            QTextCursor cursor = textCursor();
-            QString line = cursor.block().text();
+            if (!popup->isVisible()) {
 
-            // Get the current indentation amount
-            QString indentation;
-            for(size_t i = 0; i < line.size(); ++i) {
-                if(line.at(i) == ' ') {
-                    indentation += ' ';
-                } else if(line.at(i) == '\t') {
-                    indentation += "    ";
-                } else {
-                    break;
+                QTextCursor cursor = textCursor();
+                QString line = cursor.block().text();
+
+                // Get the current indentation amount
+                QString indentation;
+                for(size_t i = 0; i < line.size(); ++i) {
+                    if(line.at(i) == ' ') {
+                        indentation += ' ';
+                   } else if(line.at(i) == '\t') {
+                        indentation += "    ";
+                   } else {
+                        break;
+                   }
                 }
+
+                QString stopLine;
+                int pos = line.lastIndexOf(":start ");
+                int posInBlock = cursor.positionInBlock();
+                if(pos > -1 && posInBlock > pos) {
+                    stopLine = line.replace(pos, 7, ":stop ");
+                }
+
+                // If we inserted the ":stop" line, then also insert a line between
+                // and leave the cursor there
+                if(stopLine.size() > 0) {
+                    insertPlainText("\n" + indentation + "    ");
+                    insertPlainText("\n" + stopLine);
+                    cursor.movePosition(QTextCursor::PreviousBlock);
+                    cursor.movePosition(QTextCursor::EndOfBlock);
+                    setTextCursor(cursor);
+
+                // Normally, we just insert a new line with matching indentation
+                } else {
+                    insertPlainText("\n" + indentation);
+                }
+
+                // Skip the usual return event! So we have to handle it here
+                return true;
             }
-
-            QString stopLine;
-            int pos = line.lastIndexOf(":start ");
-            int posInBlock = cursor.positionInBlock();
-            if(pos > -1 && posInBlock > pos) {
-                stopLine = line.replace(pos, 7, ":stop ");
+        } else if(keyEvent->key() == Qt::Key_Escape) {
+            popup->QWidget::releaseKeyboard();
+        } else if(keyEvent->key() == Qt::Key_Right) {
+            if (popup->isVisible()) {
+                popup->QWidget::grabKeyboard();
+                return true;
             }
-
-            // If we inserted the ":stop" line, then also insert a line between
-            // and leave the cursor there
-            if(stopLine.size() > 0) {
-                insertPlainText("\n" + indentation + "    ");
-                insertPlainText("\n" + stopLine);
-                cursor.movePosition(QTextCursor::PreviousBlock);
-                cursor.movePosition(QTextCursor::EndOfBlock);
-                setTextCursor(cursor);
-
-            // Normally, we just insert a new line with matching indentation
-            } else {
-                insertPlainText("\n" + indentation);
-            }
-
-            // Skip the usual return event! So we have to handle it here
-            return true;
         }
     //} else if(event->type() == QEvent::Wheel || event->type() == QEvent::FocusOut) {
     } else if(event->type() == QEvent::FocusOut) {
         popup->hide();
+        popup->QWidget::releaseKeyboard();
     }
 
     return QPlainTextEdit::eventFilter(obj, event);
