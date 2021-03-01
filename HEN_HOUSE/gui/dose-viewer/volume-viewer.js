@@ -1263,7 +1263,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     // Set the max dose variable
     this.maxDoseVar = parseFloat(doseVol.data.maxDose)
     this.minDoseVar = -1.0
-    this.initializeThresholds(-1.0, 1.0, 0.2)
+    this.initializeThresholds(-1.2, 1.0, 0.2)
 
     // Set dose volume html elements
     doseVol.setHtmlObjects(

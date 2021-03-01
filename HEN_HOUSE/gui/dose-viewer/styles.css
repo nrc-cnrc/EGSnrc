@@ -84,6 +84,10 @@ svg.axis-svg {
   overflow: visible;
 }
 
+g.dose-contour {
+  opacity: 0.6
+}
+
 /* Styling the div to hold the panels, legends, and dose profiles */
 div.volume-holder {
   border: 2px solid #ccc;
