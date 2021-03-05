@@ -501,7 +501,7 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
     )
 
     // Initialize dose difference and error arrays
-    const doseDiff = new Array(doseArr1.length)
+    var doseDiff = new Array(doseArr1.length)
     const error = new Array(doseArr1.length)
 
     // If both dose volumes have same dimensions
@@ -516,48 +516,13 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
         error[i] = Math.sqrt(Math.pow(doseVol1.data.error[i], 2) * Math.pow(doseVol2.data.error[i], 2))
       }
     } else {
-      let x, y, z, doseVal1, doseVal2, vol1Address, vol2Address, errorVal1, errorVal2
+      var grid = { x: null, y: null, z: null }
+      var voxelArr = { x: null, y: null, z: null }
+      Object.keys(doseVol1.data.voxelArr).forEach((dim) => { grid[dim] = getVoxelCenter(doseVol1.data.voxelArr[dim]) })
+      Object.keys(doseVol2.data.voxelArr).forEach((dim) => { voxelArr[dim] = getVoxelCenter(doseVol2.data.voxelArr[dim]) })
 
-      // Define the mapping from position to voxel index for the second dose volume
-      const [xScale, yScale, zScale] = ['x', 'y', 'z'].map((dim) => {
-        const domain = [doseVol2.data.voxelArr[dim][0] - doseVol2.data.voxelSize[dim] / 2, doseVol2.data.voxelArr[dim][doseVol2.data.voxelArr[dim].length - 1] + doseVol2.data.voxelSize[dim] / 2]
-        return d3
-          .scaleQuantile()
-          .domain(domain)
-          .range(d3.range(0, doseVol2.data.voxelArr[dim].length, 1))
-      })
-
-      // For each voxel position in the first dose volume
-      for (let i = 0; i < doseVol1.data.voxelNumber.x; i++) {
-        for (let j = 0; j < doseVol1.data.voxelNumber.y; j++) {
-          for (let k = 0; k < doseVol1.data.voxelNumber.z; k++) {
-            // Calculate the corresponding voxel coordinates in the second dose volume
-            x = xScale(doseVol1.data.voxelArr.x[i])
-            y = yScale(doseVol1.data.voxelArr.y[j])
-            z = zScale(doseVol1.data.voxelArr.z[k])
-
-            // Calculate the index for each of the dose volumes
-            vol1Address = i + doseVol1.baseSlices.xy.xVoxels * (j + k * doseVol1.baseSlices.xy.yVoxels)
-            vol2Address = x + doseVol2.data.voxelNumber.x * (y + z * doseVol2.data.voxelNumber.y)
-
-            // Set the dose values
-            doseVal1 = doseArr1[vol1Address] || 0
-            doseVal2 = doseArr2[vol2Address] || 0
-
-            // Calculate the dose difference
-            if (doseVal1 || doseVal2) {
-              doseDiff[vol1Address] = doseVal1 - doseVal2
-            }
-
-            // Set the error values
-            errorVal1 = doseVol1.data.error ? doseVol1.data.error[vol1Address] || 0 : 0
-            errorVal2 = doseVol2.data.error ? doseVol2.data.error[vol2Address] || 0 : 0
-
-            // Calculate the combined error
-            error[vol1Address] = Math.sqrt(Math.pow(errorVal1, 2) * Math.pow(errorVal2, 2))
-          }
-        }
-      }
+      const interpolatedDose = trilinearInterpolation(voxelArr, doseArr2, grid)
+      doseDiff = interpolatedDose.map((interpDose, i) => (doseArr1[i] - interpDose))
     }
 
     // Set base slices
@@ -1066,6 +1031,88 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
       imgContext.msImageSmoothingEnabled = false
     })
   }
+}
+
+/**
+ * Interpolate from a source grid and data to a target grid.
+ *
+ * @param {number[]} voxelArr The voxel center positions of the source data
+ * @param {number[]} data  The source data values
+ * @param {number[]} grid2 The positions of the data to interpolate to
+ * @returns {number[]}
+ */
+// TODO: Simplify
+function trilinearInterpolation (voxelArr, data, grid) {
+  const [xScale, yScale, zScale] = ['x', 'y', 'z'].map((dim) => {
+    const domain = [voxelArr[dim][0], voxelArr[dim][voxelArr[dim].length - 1]]
+    return d3
+      .scaleQuantize()
+      .domain(domain)
+      .range(d3.range(0, voxelArr[dim].length - 1, 1))
+  })
+
+  let address
+  const xVoxels = voxelArr.x.length
+  const yVoxels = voxelArr.y.length
+
+  // Initialize the interpolation array
+  const c = new Array(grid.x.length * grid.y.length * grid.z.length)
+
+  for (let xi = 0; xi < grid.x.length; xi++) {
+    for (let yi = 0; yi < grid.y.length; yi++) {
+      for (let zi = 0; zi < grid.z.length; zi++) {
+        // Get the nearest voxel indices of the target location
+        const [i, j, k] = [xScale(grid.x[xi]), yScale(grid.y[yi]), zScale(grid.z[zi])]
+
+        // Get the space between the source grid and target location
+        const [xd, yd, zd] = [(grid.x[xi] - voxelArr.x[i]) / (voxelArr.x[i + 1] - voxelArr.x[i]),
+          (grid.y[yi] - voxelArr.y[j]) / (voxelArr.y[j + 1] - voxelArr.y[j]),
+          (grid.z[zi] - voxelArr.z[k]) / (voxelArr.z[k + 1] - voxelArr.z[k])]
+
+        // Continue if at the end of the voxel array or distance difference is negative
+        if (i >= (voxelArr.x.length - 2) || j >= (voxelArr.y.length - 2) || k >= (voxelArr.z.length - 2) || xd < 0 || yd < 0 || zd < 0) {
+          continue
+        }
+
+        // Get the values for the 8 nearest points
+        const c000 = data[i + xVoxels * (j + k * yVoxels)]
+        const c001 = data[i + xVoxels * (j + (k + 1) * yVoxels)]
+        const c010 = data[i + xVoxels * ((j + 1) + k * yVoxels)]
+        const c011 = data[i + xVoxels * ((j + 1) + (k + 1) * yVoxels)]
+        const c100 = data[(i + 1) + xVoxels * (j + k * yVoxels)]
+        const c101 = data[(i + 1) + xVoxels * (j + (k + 1) * yVoxels)]
+        const c110 = data[(i + 1) + xVoxels * ((j + 1) + k * yVoxels)]
+        const c111 = data[(i + 1) + xVoxels * ((j + 1) + (k + 1) * yVoxels)]
+
+        // Interpolate along x
+        const c00 = c000 * (1 - xd) + c100 * xd
+        const c01 = c001 * (1 - xd) + c101 * xd
+        const c10 = c010 * (1 - xd) + c110 * xd
+        const c11 = c011 * (1 - xd) + c111 * xd
+
+        // Interpolate along y
+        const c0 = c00 * (1 - yd) + c10 * yd
+        const c1 = c01 * (1 - yd) + c11 * yd
+
+        // Interpolate along z
+        address = xi + grid.x.length * (yi + zi * grid.y.length)
+
+        // Set the interpolated value
+        c[address] = (c0 * (1 - zd)) + (c1 * zd)
+      }
+    }
+  }
+  return c
+}
+
+function getVoxelCenter (voxArr) {
+  var position = voxArr
+  position = position.map((val, i) => {
+    return val + (voxArr[i + 1] - val) / 2
+  })
+  position.pop()
+
+  return position
 }
 
 // export { DensityVolume, DoseComparisonVolume, DoseVolume }
