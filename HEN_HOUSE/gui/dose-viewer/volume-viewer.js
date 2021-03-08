@@ -336,7 +336,6 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     )
 
     densityVol.initializeLegend(this.minDensityVar, this.maxDensityVar)
-    densityVol.initializeCanvas()
     const dims = 'zxy'
     var sliceNum, slicePos
 
@@ -345,6 +344,9 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
     // Set the panel densityVolume object
     Object.values(this.panels).forEach((panel, i) => {
+      // Initialize the canvas
+      panel.initializeCanvas()
+
       // Get the slice position
       slicePos = panel.doseVol
         ? panel.slicePos

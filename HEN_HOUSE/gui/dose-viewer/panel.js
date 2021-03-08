@@ -375,9 +375,24 @@ class Panel { // eslint-disable-line no-unused-vars
    */
   clearDensityPlot () {
     // Clear density plot
-    const svg = this.axisElements['plot-density'].node()
-    const context = svg.getContext('2d')
-    context.clearRect(0, 0, svg.width, svg.height)
+    const canvas = this.axisElements['plot-density'].node()
+    const context = canvas.getContext('2d')
+    context.clearRect(0, 0, canvas.width, canvas.height)
+  }
+
+  /**
+  * Initialize the behaviour of the canvas
+  */
+  initializeCanvas () {
+    // Get the canvas and context in the webpage
+    const canvas = this.axisElements['plot-density'].node()
+    const context = canvas.getContext('2d')
+
+    // Disable smoothing to clearly show pixels
+    context.imageSmoothingEnabled = false
+    context.mozImageSmoothingEnabled = false
+    context.webkitImageSmoothingEnabled = false
+    context.msImageSmoothingEnabled = false
   }
 }
 

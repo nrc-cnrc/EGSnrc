@@ -966,23 +966,6 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
     }
     return ''
   }
-
-  /**
-  * Initialize the behaviour of the canvas density
-  */
-  initializeCanvas () {
-    Object.values(this.htmlElementObj).forEach((svg) => {
-      // Get the canvas and context in the webpage
-      const imgCanvas = svg.node()
-      const imgContext = imgCanvas.getContext('2d')
-
-      // Disable smoothing to clearly show pixels
-      imgContext.imageSmoothingEnabled = false
-      imgContext.mozImageSmoothingEnabled = false
-      imgContext.webkitImageSmoothingEnabled = false
-      imgContext.msImageSmoothingEnabled = false
-    })
-  }
 }
 
 /**
