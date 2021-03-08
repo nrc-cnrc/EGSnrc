@@ -400,10 +400,16 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   removeDoseVolume () {
     this.doseVolume = null
 
+    // Clear dose legend
+    this.doseLegendSvg.selectAll('*').remove()
+
+    // Remove existing dose contour inputs
+    this.doseLegendHolder.selectAll('input').remove()
+
     // Remove the volume object from panels
     Object.values(this.panels).forEach((panel) => {
       // Clear the panel
-      if (panel.doseVol) panel.doseVol.clearDose(panel.axis, panel.axisElements['plot-dose'])
+      if (panel.doseVol) panel.clearDosePlot()
 
       // Set the volume object to density vol if need be
       if (panel.volume === panel.doseVol) panel.volume = panel.densityVol
@@ -422,10 +428,13 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.minParentDiv.select('*').remove()
     this.maxParentDiv.select('*').remove()
 
+    // Clear density legend
+    this.densityLegendSvg.selectAll('*').remove()
+
     // Remove the volume object from panels
     Object.values(this.panels).forEach((panel) => {
       // Clear the panel
-      if (panel.densityVol) panel.densityVol.clearDensity(panel.axis, panel.axisElements['plot-density'])
+      if (panel.densityVol) panel.clearDensityPlot()
 
       // Set the volume object to density vol if need be
       if (panel.volume === panel.densityVol) panel.volume = panel.doseVol

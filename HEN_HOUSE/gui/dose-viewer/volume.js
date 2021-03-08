@@ -346,22 +346,6 @@ class DoseVolume extends Volume { // eslint-disable-line no-unused-vars
   }
 
   /**
-   * Clear the current dose plot.
-   *
-   * @param {string} axis The axis of the slice (xy, yz, or xz).
-   */
-  clearDose (axis, svg) {
-    // Clear dose plot
-    svg.selectAll('g').remove()
-
-    // Clear dose legend
-    this.legendSvg.selectAll('*').remove()
-
-    // Remove existing dose contour inputs
-    this.legendHolder.selectAll('input').remove()
-  }
-
-  /**
    * Make a dose contour plot of the given slice.
    *
    * @param {Object} slice The slice of the dose data.
@@ -563,23 +547,6 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
   }
 
   /**
-   * Clear the current dose plot.
-   *
-   * @param {string} axis The axis of the slice (xy, yz, or xz).
-   * @param {Object} svg The svg plot element.
-   */
-  clearDose (axis, svg) {
-    // Clear dose plot
-    svg.selectAll('g').remove()
-
-    // Clear dose legend
-    this.legendSvg.selectAll('*').remove()
-
-    // Remove existing dose contour inputs
-    this.legendHolder.selectAll('input').remove()
-  }
-
-  /**
    * Make a dose contour plot of the given slice.
    *
    * @param {Object} slice The slice of the dose data.
@@ -756,21 +723,6 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
    */
   getSlice (axis, slicePos) {
     return super.getSlice(axis, slicePos, 'density')
-  }
-
-  /**
-   * Clear the current density plot.
-   *
-   * @param {string} axis The axis of the slice (xy, yz, or xz).
-   */
-  // TODO: Move clearDose and clearDensity panel functions
-  clearDensity (axis, svg) {
-    // Clear density plot
-    const context = svg.getContext('2d')
-    context.clearRect(0, 0, svg.width, svg.height)
-
-    // Clear density legend
-    this.legendSvg.selectAll('*').remove()
   }
 
   /**

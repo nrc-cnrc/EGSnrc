@@ -361,6 +361,24 @@ class Panel { // eslint-disable-line no-unused-vars
       })
     })
   }
+
+  /**
+   * Clear the current dose plot.
+   */
+  clearDosePlot () {
+    // Clear dose plot
+    this.axisElements['plot-dose'].selectAll('g').remove()
+  }
+
+  /**
+   * Clear the current density plot.
+   */
+  clearDensityPlot () {
+    // Clear density plot
+    const svg = this.axisElements['plot-density'].node()
+    const context = svg.getContext('2d')
+    context.clearRect(0, 0, svg.width, svg.height)
+  }
 }
 
 // export { Panel }
