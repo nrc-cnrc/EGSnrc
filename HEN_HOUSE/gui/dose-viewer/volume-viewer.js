@@ -335,7 +335,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       this.densityLegendSvg
     )
 
-    densityVol.initializeLegend(this.minDensityVar, this.maxDensityVar)
+    this.initializeDensityLegend(this.minDensityVar, this.maxDensityVar)
     const dims = 'zxy'
     var sliceNum, slicePos
 
@@ -999,7 +999,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.maxDensityVar = parseFloat(maxDensityVal)
 
     // Redraw legend
-    this.densityVolume.initializeLegend(this.minDensityVar, this.maxDensityVar)
+    this.initializeDensityLegend(this.minDensityVar, this.maxDensityVar)
 
     Object.values(this.panels).forEach((panel) => {
       panel.prevSliceImg = this.densityVolume.drawDensity(this.densityVolume.sliceCache[panel.axis][panel.densitySliceNum],
@@ -1016,7 +1016,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.minDensityVar = parseFloat(minDensityVal)
 
     // Redraw legend
-    this.densityVolume.initializeLegend(this.minDensityVar, this.maxDensityVar)
+    this.initializeDensityLegend(this.minDensityVar, this.maxDensityVar)
 
     Object.values(this.panels).forEach((panel) => {
       panel.prevSliceImg = this.densityVolume.drawDensity(this.densityVolume.sliceCache[panel.axis][panel.densitySliceNum],
@@ -1236,6 +1236,105 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .attr('id', 'submit-dose-contour-line')
       .attr('value', '+')
       .on('click', addNewThresholdPercent)
+  }
+
+  /**
+   * Create the density legend.
+   *
+   * @param {number} minDensityVar The minimum density to scale the image with.
+   * @param {number} maxDensityVar The maximum density to scale the image with.
+   */
+  initializeDensityLegend (minDensityVar = this.minDensityVar, maxDensityVar = this.maxDensityVar) {
+    const legendClass = 'densityLegend'
+    const title = 'Density'
+    const dims = this.legendDimensions
+    const colourMap = d3.scaleSqrt().domain([minDensityVar, maxDensityVar]).range([0, 255])
+
+    function gradientUrl (colour, height, width, n = 150) {
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+      const [minVal, maxVal] = colour.domain()
+      var val
+      for (let i = 0; i < height; ++i) {
+        val = colour(((n - i) / n) * (maxVal - minVal) + minVal)
+        context.fillStyle = 'black'
+        context.fillRect(0, i, 1, 1)
+        context.fillStyle = 'rgb(' + val + ', ' + val + ', ' + val + ')'
+        context.fillRect(1, i, width - 1, 1)
+      }
+      return canvas.toDataURL()
+    }
+
+    // Remove old data
+    this.densityLegendSvg.selectAll('*').remove()
+
+    // Set dimensions of svg
+    this.densityLegendSvg
+      .attr('width', dims.width)
+      .attr('height', dims.height)
+      .attr('viewBox', [0, 0, dims.width, dims.height])
+      .style('overflow', 'visible')
+      .style('display', 'block')
+
+    // Define parameters for ticks
+    const ticks = 4
+    const n = Math.round(ticks + 1)
+    const tickValues = d3
+      .range(n)
+      .map((i) => d3.quantile(colourMap.domain(), i / (n - 1)))
+    const tickFormat = maxDensityVar > 10 ? d3.format('d') : d3.format('.2f')
+    const tickSize = 15
+
+    const gradUrl = gradientUrl(
+      colourMap,
+      dims.height - 20,
+      30
+    )
+
+    // Set height of legend
+    const legendHeight = dims.height - 80
+
+    // Create scale for ticks
+    const scale = d3
+      .scaleLinear()
+      .domain([minDensityVar, maxDensityVar])
+      .range([legendHeight, 0])
+
+    // Append title
+    this.densityLegendSvg
+      .append('text')
+      .attr('class', legendClass)
+      .attr('x', dims.width / 2)
+      .attr('y', dims.margin.top / 2)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '14px')
+      .text(title)
+
+    // Append gradient image
+    this.densityLegendSvg
+      .append('g')
+      .attr('class', legendClass)
+      .append('image')
+      .attr('y', dims.margin.top)
+      .attr('width', dims.width)
+      .attr('height', legendHeight)
+      .attr('preserveAspectRatio', 'none')
+      .attr('xlink:href', gradUrl)
+
+    // Append ticks
+    this.densityLegendSvg
+      .append('g')
+      .attr('transform', 'translate(' + 0 + ', ' + dims.margin.top + ')')
+      .classed('label', true)
+      .call(
+        d3
+          .axisRight()
+          .ticks(ticks, tickFormat)
+          .tickFormat(tickFormat)
+          .tickSize(tickSize)
+          .tickValues(tickValues)
+          .scale(scale)
+      )
   }
 
   /**
