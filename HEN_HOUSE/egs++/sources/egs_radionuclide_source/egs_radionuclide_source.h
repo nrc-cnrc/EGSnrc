@@ -23,7 +23,7 @@
 #
 #  Author:          Reid Townson, 2016
 #
-#  Contributors:	Martin Martinov, 2021
+#  Contributors:
 #
 ###############################################################################
 */
@@ -137,19 +137,20 @@ on the number of disintegration events (tracked by <b> \c ishower </b>). This
 is distinct from the <b> \c ncase </b> input parameter, which is the
 number of particles returned by the source (includes relaxations etc.).
 
-A radionuclide source is defined using the following input. It imports a base
-source and uses the base source getNextParticle() invocation to determine decay
-location. This implementation leads to increased random number sampling than
-that strictly required in the simulation, due to the information generated in
-the base source beyond particle position that is not used in
-egs_radionuclide_source.  Thus, its probably best, though not required, that
-the base source use a monoenergetic spectrum to avoid oversampling.
-
+A radionuclide source is defined using the following input. Notice that the
+format is similar to \ref EGS_IsotropicSource or \ref EGS_CollimatedSource.
+Be <b>careful using a collimated source</b> - it may neglect effects from the physical
+source on the spectrum, and neglect potential contributions from surrounding
+structures. Restricting the emission angles by collimation generally constitutes
+a physical approximation of your geometry and is an approximate efficiency
+enhancement technique. It is also important to note that the collimated source
+determines the fluence with \f$N/d^2\f$, where \c N is the number of
+disintegrations sampled and \c d is the user-defined minimum distance between the
+source and target shapes.
 \verbatim
 :start source:
     name                = my_mixture
     library             = egs_radionuclide_source
-	base source 		= name of the source used to generate decay locations
     activity            = [optional, default=1] total activity of mixture,
                           assumed constant. The activity only affects the
                           emission times assigned to particles.
@@ -163,6 +164,26 @@ the base source use a monoenergetic spectrum to avoid oversampling.
     experiment time     = [optional, default=0] time length of the experiment,
                           set to 0 for no time limit. Source particles generated
                           after the experiment time are not transported.
+
+    # If source type = isotropic
+    geometry            = [optional] my_geometry # see egs_isotropic_source
+    region selection    = [optional] geometry confinement option
+                          one of IncludeAll, ExcludeAll,
+                          IncludeSelected, ExcludeSelected
+    selected regions    = [required for IncludeSelected, ExcludeSelected]
+                          regions to apply geometry confinement
+    :start shape:
+        definition of the isotropic source shape
+    :stop shape:
+
+    # If source type = collimated (beware of its limitations)
+    :start source shape:
+        definition of the source shape
+    :stop source shape:
+    :start target shape:
+        definition of the target shape
+    :stop target shape:
+    distance = source-target shape min. distance
 
     :start spectrum:
         definition of an EGS_RadionuclideSpectrum (see link below)
@@ -234,8 +255,9 @@ results for non-disintegration emissions.
 :stop geometry definition:
 :start source definition:
     :start source:
-        name                = source_location
-        library             = egs_isotropic_source
+        name                = my_source
+        library             = egs_radionuclide_source
+        activity            = 28e6
         geometry            = my_envelope
         region selection    = IncludeSelected
         selected regions    = 1 2
@@ -246,17 +268,6 @@ results for non-disintegration emissions.
                 media   = H2O521ICRU
             :stop media input:
         :stop shape:
-		:start spectrum:
-			type   = monoenergetic # Input is ignored
-			energy = 1.0 # Input is ignored
-		:stop spectrum:
-    :stop source:
-	
-    :start source:
-        name                = my_source
-        library             = egs_radionuclide_source
-		base source 		= source_location
-        activity            = 28e6
         :start spectrum:
             type        = radionuclide
             nuclide     = Ir-192
@@ -272,30 +283,28 @@ class EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_RadionuclideSource :
     public EGS_BaseSource {
 
 public:
-
     /*! \brief Constructor from input file */
     EGS_RadionuclideSource(EGS_Input *, EGS_ObjectFactory *f=0);
 
     /*! \brief Destructor */
     ~EGS_RadionuclideSource() {		
-        if (baseSource)
+		if (baseSource)
 			if (!baseSource->deref()) {
 				delete baseSource;
 			}
 
-        for (vector<EGS_RadionuclideSpectrum * >::iterator it =
-                    decays.begin();
-                it!=decays.end(); it++) {
-            delete *it;
-            *it=0;
-        }
-        decays.clear();
+		for (vector<EGS_RadionuclideSpectrum * >::iterator it =
+			decays.begin(); it!=decays.end(); it++) {
+			delete *it;
+			*it=0;
+		}
+		decays.clear();
     };
 
     /*! \brief Gets the next particle from the radionuclide spectra */
     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
-                            EGS_Vector &x, EGS_Vector &u);
+                            EGS_Vector &x, EGS_Vector &u); 
 
     /*! \brief Returns the maximum energy out of all the spectra */
     EGS_Float getEmax() const {
@@ -304,7 +313,8 @@ public:
 
     /*! \brief Returns the current fluence (number of disintegrations) */
     EGS_Float getFluence() const {
-        return (ishower+1)*(baseSource->getFluence()/sCount); //!< Scale ishower+1 return by fluence ratio returned by file
+        return (ishower+1)*(baseSource->getFluence()/sCount);
+		//!< Scale ishower+1 return by fluence ratio returned by file
     };
 
     /*! \brief Returns the emission time of the most recent particle */
