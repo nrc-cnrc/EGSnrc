@@ -121,6 +121,7 @@ const elementProperties = {
   // x00080060: { tag: '(0008,0060)', type: '1', keyword: 'Modality', vm: 1, vr: 'CS' }, // Institution-generated description or classification of the study
   // General Study
   x00081030: { tag: '(0008,1030)', type: '3', keyword: 'StudyDescription', vm: 1, vr: 'LO' }, // Institution-generated description or classification of the study
+  x0020000d: { tag: '(0020,000D)', type: '1', keyword: 'StudyInstanceUID', vm: 1, vr: 'UI' }, // Unique identifier for the study
   // General Series
   x00085100: { tag: '(0018,5100)', type: '2C', keyword: 'PatientPosition', vm: 1, vr: 'CS' }, // Usually HFS, if another value might need to flip
   // General Image
@@ -149,17 +150,43 @@ const elementProperties = {
   x3004000c: { tag: '(3004,000C)', type: '1C', keyword: 'GridFrameOffsetVector', vm: '2-n', vr: 'DS' }, // Contains the dose image plane offsets in mm
   // CT Image
   x00281052: { tag: '(0028,1052)', type: '1', keyword: 'RescaleIntercept', vm: 1, vr: 'DS' }, // The value b in relationship between stored values (SV) and the output units
-  x00281053: { tag: '(0028,1053)', type: '1', keyword: 'RescaleSlope', vm: 1, vr: 'DS' } // The value m in the equation specified in Rescale Intercept
+  x00281053: { tag: '(0028,1053)', type: '1', keyword: 'RescaleSlope', vm: 1, vr: 'DS' }, // The value m in the equation specified in Rescale Intercept
+  // RT Series
+  x0020000e: { tag: '(0020,000E)', type: '1', keyword: 'SeriesInstanceUID', vm: 1, vr: 'UI' }, // Unique identifier of the series
+  x00080060: { tag: '(0008,0060)', type: '1', keyword: 'Modality', vm: 1, vr: 'CS' }, // Type of equipment that originally acquired the data
+  // Structure Set
+  x30060002: { tag: '(3006,0002)', type: '1', keyword: 'StructureSetLabel', vm: 1, vr: 'SH' }, // User-defined label for Structure Set
+  x30060020: { tag: '(3006,0020)', type: '1', keyword: 'StructureSetROISequence', vm: 1, vr: 'SQ' }, // ROIs for current Structure Set
+  x30060022: { tag: '(3006,0022)', type: '1', keyword: 'ROINumber', vm: 1, vr: 'IS' }, // Identification number of the ROI
+  x30060024: { tag: '(3006,0024)', type: '1', keyword: 'ReferencedFrameOfReferenceUID', vm: 1, vr: 'UI' }, // Sequence describing Frames of Reference in which the ROIs are defined
+  x30060026: { tag: '(3006,0026)', type: '2', keyword: 'ROIName', vm: 1, vr: 'LO' }, // User-defined name for ROI
+  // ROI Contour
+  x30060039: { tag: '(3006,0039)', type: '1', keyword: 'ROIContourSequence', vm: 1, vr: 'SQ' }, // Sequence of Contour Sequences defining ROIs
+  x3006002a: { tag: '(3006,002A)', type: '3', keyword: 'ROIDisplayColor', vm: 3, vr: 'IS' }, // RGB triplet color representation for ROI, specified using the range 0-255
+  x30060040: { tag: '(3006,0040)', type: '3', keyword: 'ContourSequence', vm: 1, vr: 'SQ' }, // Sequence of Contours defining ROI
+  x30060042: { tag: '(3006,0042)', type: '1', keyword: 'ContourGeometricType', vm: 1, vr: 'CS' }, // Geometric type of contour
+  x30060046: { tag: '(3006,0046)', type: '1', keyword: 'NumberOfContourPoints', vm: 1, vr: 'IS' }, // Number of points (triplets) in Contour Data
+  x30060050: { tag: '(3006,0050)', type: '1', keyword: 'ContourData', vm: '3-3n', vr: 'DS' }, // Sequence of (x,y,z) triplets defining a contour
+  // RT ROI Observations
+  x30060080: { tag: '(3006,0080)', type: '1', keyword: 'RTROIObservationsSequence', vm: 1, vr: 'SQ' }, // Sequence of observations related to ROIs defined in the ROI Module
+  x30060082: { tag: '(3006,0082)', type: '1', keyword: 'ObservationNumber', vm: 1, vr: 'IS' }, // Identification number of the Observation
+  x30060084: { tag: '(3006,0084)', type: '1', keyword: 'ReferencedROINumber', vm: 1, vr: 'IS' }, // Uniquely identifies the referenced ROI described in the Structure Set ROI Sequence
+  x30060085: { tag: '(3006,0085)', type: '3', keyword: 'ROIObservationLabel', vm: 1, vr: 'SH' }, // User-defined label for ROI Observation
+  x300600a4: { tag: '(3006,00A4)', type: '2', keyword: 'RTROIInterpretedType', vm: 1, vr: 'CS' }, // User-defined label for ROI Observation
+  xfffee000: { tag: '(FFFE,E000)', type: '1', keyword: 'Item', vm: 1, vr: '' } // An item in a sequence
 }
 
-const dicomTypeDict = {
+const uids = {
+  '1.2.840.10008.5.1.4.1.1.2': 'CT Image Storage',
   '1.2.840.10008.5.1.4.1.1.481.2': 'RT Dose Storage',
-  '1.2.840.10008.5.1.4.1.1.2': 'CT Image Storage'
+  '1.2.840.10008.5.1.4.1.1.481.3': 'RT Structure Set Storage'
 }
 
-var isStringVr = (vr) => !(vr === 'AT' ||
+var isStringVr = (vr) => !(
+  vr === 'AT' ||
   vr === 'OB' ||
   vr === 'OW' ||
+  vr === 'SQ' ||
   vr === 'US'
 )
 
@@ -171,13 +198,13 @@ var getVal = function (dataSet, vr, propertyAddress) {
   if (isStringVr(vr)) {
     val = dataSet.string(propertyAddress)
 
-    // If the value representation is unsigned short
-  } else if (vr === 'US') {
-    text += dataSet.uint16(propertyAddress)
-    for (var i = 1; i < dataSet.elements[propertyAddress].length / 2; i++) {
-      text += '\\' + dataSet.uint16(propertyAddress, i)
-    }
-    val = text
+    // If the value representation is an attribute tag
+  } else if (vr === 'AT') {
+    var group = dataSet.uint16(propertyAddress, 0)
+    var groupHexStr = ('0000' + group.toString(16)).substr(-4)
+    var xelement = dataSet.uint16(propertyAddress, 1)
+    var elementHexStr = ('0000' + xelement.toString(16)).substr(-4)
+    val = 'x' + groupHexStr + elementHexStr
 
     // If the value representation is other byte string or other word string
   } else if (vr === 'OB' || vr === 'OW') {
@@ -203,15 +230,46 @@ var getVal = function (dataSet, vr, propertyAddress) {
       console.log('Unknown bits allocated')
     }
 
-    // If the value representation is an attribute tag
-  } else if (vr === 'AT') {
-    var group = dataSet.uint16(propertyAddress, 0)
-    var groupHexStr = ('0000' + group.toString(16)).substr(-4)
-    var xelement = dataSet.uint16(propertyAddress, 1)
-    var elementHexStr = ('0000' + xelement.toString(16)).substr(-4)
-    val = 'x' + groupHexStr + elementHexStr
+    // If the value representation is unsigned short
+  } else if (vr === 'US') {
+    text += dataSet.uint16(propertyAddress)
+    for (var i = 1; i < dataSet.elements[propertyAddress].length / 2; i++) {
+      text += '\\' + dataSet.uint16(propertyAddress, i)
+    }
+    val = text
   }
   return val
+}
+
+function getTag (tag) {
+  var group = tag.substring(1, 5).toLowerCase()
+  var element = tag.substring(5, 9).toLowerCase()
+  var tagIndex = 'x' + group + element
+  var attr = elementProperties[tagIndex]
+  return attr
+}
+
+function dumpDataSet (dataSet, values) {
+  for (const elementAddress in dataSet.elements) {
+    var element = dataSet.elements[elementAddress]
+    var property = elementProperties[elementAddress]
+    var tag = getTag(element.tag)
+    if (tag === undefined) {
+      continue
+    }
+    if (element.items) {
+      values[property.keyword] = new Array(element.items.length)
+      element.items.forEach((item, i) => {
+        values[property.keyword][i] = {}
+        dumpDataSet(item.dataSet, values[property.keyword][i])
+      })
+    } else {
+      var vr = (element.vr !== undefined) ? element.vr : tag.vr
+      values[property.keyword] = getVal(dataSet, vr, elementAddress)
+    }
+  }
+
+  return values
 }
 
 function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
@@ -219,93 +277,103 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
 
   try {
     const dataSet = dicomParser.parseDicom(byteArray, { untilTag: 'x7fe00010' })
-    const dicomType = dicomTypeDict[dataSet.string('x00020002')]
+    const dicomType = uids[dataSet.string('x00020002')]
+
     const propertyValues = {}
+    dumpDataSet(dataSet, propertyValues)
 
-    // Iterate through all element properties
-    for (const propertyAddress in elementProperties) {
-      var element = dataSet.elements[propertyAddress]
-      var property = elementProperties[propertyAddress]
-
-      if (element !== undefined) {
-        var val = getVal(dataSet, property.vr, propertyAddress)
-        if (val !== undefined) propertyValues[property.keyword] = val
-      }
-    }
-
+    if (dicomType === 'CT Image Storage' || dicomType === 'RT Dose Storage') {
     // Map the values gathered from the DICOM file to the slice info
-    const nRows = parseInt(propertyValues.Rows)
-    const nCols = parseInt(propertyValues.Columns)
+      const nRows = parseInt(propertyValues.Rows)
+      const nCols = parseInt(propertyValues.Columns)
 
-    const [Sx, Sy, Sz] = propertyValues.ImagePositionPatient.split('\\').map((v) => {
-      return Number(v) / 10.0
-    })
-    const XY = propertyValues.ImageOrientationPatient.split('\\').map((v) => {
-      return Number(v)
-    })
-    const [xVoxSize, yVoxSize] = propertyValues.PixelSpacing.split('\\').map((v) => {
-      return Number(v) / 10.0
-    })
-
-    // var Px = (i, j) => Xx * xVoxSize * i + Yx * yVoxSize * j + Sx
-    // var Py = (i, j) => Xy * xVoxSize * i + Yy * yVoxSize * j + Sy
-    // var Pz = (i, j) => Xz * xVoxSize * i + Yz * yVoxSize * j + Sz
-
-    var xArr = [...Array(nCols + 1)].map((e, i) => (XY[0] * xVoxSize * (i - 0.5) + Sx))
-    var yArr = [...Array(nRows + 1)].map((e, j) => (XY[4] * yVoxSize * (j - 0.5) + Sy))
-
-    var DICOMslice = {
-      type: dicomType,
-      sliceNum: parseInt(propertyValues.InstanceNumber),
-      voxelNumber: {
-        x: nCols, // The number of x voxels
-        y: nRows // The number of y voxels
-      },
-      voxelArr: {
-        x: xArr, // The dimensions of x voxels (length === voxelNumber.x + 1)
-        y: yArr // The dimensions of y voxels
-      },
-      voxelSize: {
-        x: xVoxSize, // The voxel size in the x direction
-        y: yVoxSize // The voxel size in the y direction
-      },
-      zPos: Sz
-    }
-
-    // If there are multiple frames
-    if (propertyValues.FrameIncrementPointer !== undefined) {
-      // Position relative to Image Position (patient)
-      const gridFrames = dataSet.string(propertyValues.FrameIncrementPointer).split('\\').map((v) => {
+      const [Sx, Sy, Sz] = propertyValues.ImagePositionPatient.split('\\').map((v) => {
         return Number(v) / 10.0
       })
-      const nSlices = parseInt(propertyValues.NumberOfFrames)
-      const zVoxSize = Math.abs(gridFrames[1] - gridFrames[0])
-      const zArr = gridFrames.map((frameOffset) => (Sz + frameOffset + zVoxSize * 0.5))
-      zArr.unshift(Sz - zVoxSize * 0.5)
+      const XY = propertyValues.ImageOrientationPatient.split('\\').map((v) => {
+        return Number(v)
+      })
+      const [xVoxSize, yVoxSize] = propertyValues.PixelSpacing.split('\\').map((v) => {
+        return Number(v) / 10.0
+      })
 
-      DICOMslice.voxelNumber.z = nSlices
-      DICOMslice.voxelArr.z = zArr
-      DICOMslice.voxelSize.z = zVoxSize
-    }
+      // var Px = (i, j) => Xx * xVoxSize * i + Yx * yVoxSize * j + Sx
+      // var Py = (i, j) => Xy * xVoxSize * i + Yy * yVoxSize * j + Sy
+      // var Pz = (i, j) => Xz * xVoxSize * i + Yz * yVoxSize * j + Sz
 
-    if (dicomType === 'RT Dose Storage') {
-      DICOMslice.dose = propertyValues.PixelData
-      DICOMslice.units = propertyValues.DoseUnits
-    } else if (dicomType === 'CT Image Storage') {
+      var xArr = [...Array(nCols + 1)].map((e, i) => (XY[0] * xVoxSize * (i - 0.5) + Sx))
+      var yArr = [...Array(nRows + 1)].map((e, j) => (XY[4] * yVoxSize * (j - 0.5) + Sy))
+
+      var DICOMslice = {
+        type: dicomType,
+        sliceNum: parseInt(propertyValues.InstanceNumber),
+        voxelNumber: {
+          x: nCols, // The number of x voxels
+          y: nRows // The number of y voxels
+        },
+        voxelArr: {
+          x: xArr, // The dimensions of x voxels (length === voxelNumber.x + 1)
+          y: yArr // The dimensions of y voxels
+        },
+        voxelSize: {
+          x: xVoxSize, // The voxel size in the x direction
+          y: yVoxSize // The voxel size in the y direction
+        },
+        zPos: Sz
+      }
+
+      // If there are multiple frames
+      if (propertyValues.FrameIncrementPointer !== undefined) {
+      // Position relative to Image Position (patient)
+        const gridFrames = dataSet.string(propertyValues.FrameIncrementPointer).split('\\').map((v) => {
+          return Number(v) / 10.0
+        })
+        const nSlices = parseInt(propertyValues.NumberOfFrames)
+        const zVoxSize = Math.abs(gridFrames[1] - gridFrames[0])
+        const zArr = gridFrames.map((frameOffset) => (Sz + frameOffset + zVoxSize * 0.5))
+        zArr.unshift(Sz - zVoxSize * 0.5)
+
+        DICOMslice.voxelNumber.z = nSlices
+        DICOMslice.voxelArr.z = zArr
+        DICOMslice.voxelSize.z = zVoxSize
+      }
+
+      if (dicomType === 'RT Dose Storage') {
+        DICOMslice.dose = propertyValues.PixelData
+        DICOMslice.units = propertyValues.DoseUnits
+      } else if (dicomType === 'CT Image Storage') {
       // TODO: materialList and material matrix
       // Rescale the density values
-      const m = parseFloat(propertyValues.RescaleSlope)
-      const b = parseFloat(propertyValues.RescaleIntercept)
-      const pixelDataScaled = new Float32Array(propertyValues.PixelData.length)
+        const m = parseFloat(propertyValues.RescaleSlope)
+        const b = parseFloat(propertyValues.RescaleIntercept)
+        const pixelDataScaled = new Float32Array(propertyValues.PixelData.length)
 
-      for (var i = 0; i < propertyValues.PixelData.length; i++) {
-        val = m * propertyValues.PixelData[i] + b
-        pixelDataScaled[i] = val
+        for (let i = 0; i < propertyValues.PixelData.length; i++) {
+          pixelDataScaled[i] = m * propertyValues.PixelData[i] + b
 
-        DICOMslice.density = pixelDataScaled
+          DICOMslice.density = pixelDataScaled
+        }
       }
+      return DICOMslice
+    } else if (dicomType === 'RT Structure Set Storage') {
+      const numROIs = propertyValues.ROIContourSequence.length
+      const ROIs = new Array(numROIs)
+      for (let i = 1; i <= numROIs; i++) {
+        const contourSequence = propertyValues.ROIContourSequence.find((item) => {
+          if (parseInt(item.ReferencedROINumber) === i) return true
+        })
+        const structureSetSequence = propertyValues.StructureSetROISequence.find((item) => {
+          if (parseInt(item.ROINumber) === i) return true
+        })
+
+        const RTROIObservationsSequence = propertyValues.RTROIObservationsSequence.find((item) => {
+          if (parseInt(item.ReferencedROINumber) === i) return true
+        })
+
+        ROIs[i - 1] = { type: dicomType, ...contourSequence, ...structureSetSequence, ...RTROIObservationsSequence }
+      }
+      return { type: dicomType, ROIs: ROIs }
     }
-    return DICOMslice
   } catch (ex) {
     console.log('Error parsing byte stream', ex)
     return true
