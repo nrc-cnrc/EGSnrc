@@ -686,6 +686,7 @@ extern "C" {
                 egsWarning("EGS_Mesh::from_file: Gmsh msh file parsing failed\n");
                 return nullptr;
             }
+            mesh->setFilename(mesh_file);
             mesh->setName(input);
             for (const auto& medium: mesh->medium_names()) {
                 mesh->addMedium(medium);

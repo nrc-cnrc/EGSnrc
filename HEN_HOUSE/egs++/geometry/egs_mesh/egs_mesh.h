@@ -134,8 +134,25 @@ public:
     const std::vector<EGS_Vector>& points() const {
         return _elt_points;
     }
+    std::vector<EGS_Float> volumes() const {
+        std::vector<EGS_Float> volumes;
+        volumes.reserve(num_elements());
+        for (int i = 0; i < num_elements(); i++) {
+            volumes.push_back(std::abs(
+                (_elt_points[4*i] - _elt_points[4*i+3]) *
+                    ((_elt_points[4*i+1] - _elt_points[4*i+3])
+                        % (_elt_points[4*i+2] - _elt_points[4*i+3]))) / 6.0);
+        }
+        return volumes;
+    }
     bool is_boundary(int reg) const;
 
+    const std::string& filename() const {
+        return _filename;
+    }
+    void setFilename(std::string filename) {
+        _filename = filename;
+    }
     // EGS_BaseGeometry interface
     const std::string& getType() const { return type; }
     bool isInside(const EGS_Vector &x);
@@ -179,6 +196,7 @@ private:
     std::vector<bool> _boundary_faces;
     std::vector<int> _medium_indices;
     std::vector<std::string> _medium_names;
+    std::string _filename;
 
     std::vector<EGS_Mesh::Tetrahedron> _elements;
     std::vector<EGS_Mesh::Node> _nodes;
