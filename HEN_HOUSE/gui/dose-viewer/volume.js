@@ -32,6 +32,7 @@
 /* global d3 */
 /* global Image */
 /* global Worker */
+/* global structureSetList */
 
 // import { volumeViewerList } from './index.js'
 // import { Slider } from './slider.js'
@@ -299,6 +300,131 @@ class Volume {
     const k = zWorldToVoxel(worldCoords[2])
 
     return [i, j, k]
+  }
+}
+
+class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
+  /**
+   * Creates an instance of a StructureSetVolume.
+   *
+   * @constructor
+   * @extends Volume
+   * @param {string} fileName The name of the file.
+   * @param {Object} dimensions The pixel dimensions of the volume plots.
+   * @param {Object} legendDimensions The pixel dimensions of legends.
+   * @param {Object} data The data from parsing the file.
+   */
+  constructor (fileName, dimensions, legendDimensions, data, args) {
+    // TODO: Remove args?
+    // Call the super class constructor
+    super(fileName, dimensions, legendDimensions, args)
+    this.addData(data)
+  }
+
+  /**
+   * Adds data to the StructureSetVolume object.
+   *
+   * @param {Object} data The data from parsing the file.
+   */
+  addData (data) {
+    this.data = data
+    this.ROIoutlines = this.makeOutlines(data)
+  }
+
+  /**
+   * Turns raw ROI data into useable outlines.
+   *
+   * @param {Object} data The data from parsing the file.
+   */
+  makeOutlines (data) {
+    const ROIoutlines = []
+    var ROI
+
+    const toCm = (val) => parseFloat(val) / 10.0
+
+    // For each region of ROI
+    for (let i = 0; i < data.ROIs.length; i++) {
+      ROI = data.ROIs[i]
+
+      // If the ROI has contour data
+      if (ROI.ContourSequence !== undefined) {
+        const contourData = []
+
+        // For each slice of the contour data
+        ROI.ContourSequence.forEach((sequence) => {
+          var values = sequence.ContourData.split('\\')
+          var sliceContourData = []
+
+          // The z value should be constant for each slice
+          const z = toCm(values[2])
+
+          // For each coordinate in the slice
+          for (let i = 0; i < values.length; i += 3) {
+            sliceContourData.push({ x: toCm(values[i]), y: toCm(values[i + 1]) })
+          }
+          contourData.push({ z: z, vals: sliceContourData })
+        })
+
+        ROIoutlines.push({
+          label: ROI.ROIName || ROI.ROIObservationLabel,
+          colour: 'rgb(' + ROI.ROIDisplayColor.replaceAll('\\', ', ') + ')',
+          // contourGeometricType: ROI.ContourSequence.ContourGeometricType,
+          contourData: contourData
+        })
+      }
+    }
+    return ROIoutlines
+  }
+
+  /**
+   * Plot the ROI outlines of the current position.
+   *
+   * @param {string} axis The axis of the slice (xy, yz, or xz).
+   * @param {number} slicePos The position of the slice.
+   * @param {Object} svg The svg plot element.
+   * @param {Volume} volume The correponding Volume object.
+   * @param {Object} zoomTransform Holds information about the current transform
+   * of the slice.
+   */
+  plotStructureSet (axis, slicePos, svg, volume, zoomTransform) {
+    var posInRange = (slicePos, contourData) => ((slicePos >= contourData[0].z) && (slicePos <= contourData[contourData.length - 1].z)) ||
+                                                ((slicePos <= contourData[0].z) && (slicePos >= contourData[contourData.length - 1].z))
+
+    // const volume = this.densityVolume || this.doseVolume
+    const baseSlice = volume.baseSlices[axis]
+
+    // If there is existing transformation, apply it
+    const xScale = zoomTransform
+      ? zoomTransform.rescaleX(baseSlice.xScale)
+      : baseSlice.xScale
+    const yScale = zoomTransform
+      ? zoomTransform.rescaleY(baseSlice.yScale)
+      : baseSlice.yScale
+
+    // Clear plot
+    svg.selectAll('path').remove()
+
+    if (axis === 'xy') {
+      // Get nearest z pos for each ROI
+      this.ROIoutlines.forEach((ROIoutline) => {
+        if (posInRange(slicePos, ROIoutline.contourData)) {
+          var closest = ROIoutline.contourData.reduce(function (prev, curr) {
+            return (Math.abs(curr.z - slicePos) < Math.abs(prev.z - slicePos) ? curr : prev)
+          })
+
+          // prepare a helper function
+          var lineFunc = d3.line()
+            .x(function (d) { return xScale(d.x) })
+            .y(function (d) { return yScale(d.y) })
+
+          // Add the path using this helper function
+          svg.append('path')
+            .attr('d', lineFunc(closest.vals))
+            .attr('stroke', d3.color(ROIoutline.colour))
+            .attr('fill', 'none')
+        }
+      })
+    }
   }
 }
 
@@ -951,4 +1077,4 @@ function getVoxelCenter (voxArr) {
   return position
 }
 
-// export { DensityVolume, DoseComparisonVolume, DoseVolume }
+// export { DensityVolume, DoseComparisonVolume, DoseVolume, StructureSetVolume }
