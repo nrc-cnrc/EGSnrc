@@ -157,6 +157,10 @@ function zoomedAll (transform, panel) { // eslint-disable-line no-unused-vars
       .attr('transform', transform.toString())
   }
 
+  axisElements['plot-dose']
+    .selectAll('g.roi-contour')
+    .attr('transform', transform.toString())
+
   // Zoom marker
   axisElements['plot-marker']
     .select('g.marker')

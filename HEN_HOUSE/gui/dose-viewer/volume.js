@@ -511,24 +511,16 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
     const baseSlice = volume.baseSlices[axis]
     const contourPathsList = []
 
-    // If there is existing transformation, apply it
-    const baseXScale = zoomTransform
-      ? zoomTransform.rescaleX(baseSlice.xScale)
-      : baseSlice.xScale
-    const baseYScale = zoomTransform
-      ? zoomTransform.rescaleY(baseSlice.yScale)
-      : baseSlice.yScale
-
     // Clear plot
     svg.selectAll('g.roi-contour').remove()
 
     slices.forEach((slice) => {
       // Create contour transform
-      const yRange = [baseYScale(slice.yRange[0]), baseYScale(slice.yRange[1])]
+      const yRange = [baseSlice.yScale(slice.yRange[0]), baseSlice.yScale(slice.yRange[1])]
       const xScale = d3
         .scaleLinear()
         .domain([0, slice.xVoxels])
-        .range([baseXScale(slice.xRange[0]), baseXScale(slice.xRange[1])])
+        .range([baseSlice.xScale(slice.xRange[0]), baseSlice.xScale(slice.xRange[1])])
       const yScale = d3
         .scaleLinear()
         .domain(axis === 'xy' ? [slice.yVoxels, 0] : [0, slice.yVoxels])
@@ -577,6 +569,10 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         contourPaths.filter(hiddenClassList.join(','))
           .classed('hidden', true)
       ])
+    }
+
+    if (zoomTransform) {
+      svg.selectAll('g.roi-contour').attr('transform', zoomTransform.toString())
     }
   }
 }
