@@ -32,7 +32,6 @@
 /* global d3 */
 /* global Image */
 /* global Worker */
-/* global structureSetList */
 
 // import { volumeViewerList } from './index.js'
 // import { Slider } from './slider.js'
@@ -340,6 +339,22 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
     const ROIoutlines = []
     var ROI
 
+    // If val is smaller than range min or larger than range max, update range
+    const setExtrema = (val, range) => {
+      if (range[0] === undefined || val < range[0]) {
+        range[0] = val
+      } else if (range[1] === undefined || val > range[1]) {
+        range[1] = val
+      }
+    }
+
+    // Get the min and max values and update rangeVals accordingly
+    const updateRange = (vals, rangeVals) => {
+      setExtrema(vals[0], rangeVals.x)
+      setExtrema(vals[1], rangeVals.y)
+      setExtrema(vals[2], rangeVals.z)
+    }
+
     const toCm = (val) => parseFloat(val) / 10.0
 
     // For each region of ROI
@@ -349,6 +364,8 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
       // If the ROI has contour data
       if (ROI.ContourSequence !== undefined) {
         const contourData = []
+        const rangeVals = { x: [], y: [], z: [] }
+        const contourGeometricType = new Set()
 
         // For each slice of the contour data
         ROI.ContourSequence.forEach((sequence) => {
@@ -360,20 +377,120 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
 
           // For each coordinate in the slice
           for (let i = 0; i < values.length; i += 3) {
+            updateRange(values.slice(i, i + 3).map((val) => toCm(val)), rangeVals)
             sliceContourData.push({ x: toCm(values[i]), y: toCm(values[i + 1]) })
           }
           contourData.push({ z: z, vals: sliceContourData })
+          contourGeometricType.add(sequence.ContourGeometricType)
         })
+
+        // Find the voxel positions of the grid to overlay the ROI data on
+        const voxArr = Object.values(rangeVals).map((range) => {
+          const increments = 0.2
+          const divider = 1 / increments
+          const min = Math.floor(range[0] * divider) / divider
+          const max = Math.ceil(range[1] * divider) / divider
+          const items = Math.round((max - min) / increments)
+          return [...Array(items + 1)].map((x, y) => min + increments * y)
+        })
+
+        const [xVoxels, yVoxels, zVoxels] = voxArr.map((arr) => arr.length)
+        const [xPosToVox, yPosToVox, zPosToVox] = voxArr.map((arr) => d3.scaleQuantize().domain([arr[0] - 0.1, arr[arr.length - 1] + 0.1]).range(d3.range(0, arr.length, 1)))
+        const ROIarray = new Array(xVoxels * yVoxels * zVoxels)
+
+        // Build the array that represents the ROI polygons as a matrix mask
+        for (let k = 0; k < contourData.length; k++) {
+          const polygon = contourData[k].vals.map((val) => [val.x, val.y])
+          for (let i = 0; i < xVoxels; i++) {
+            for (let j = 0; j < yVoxels; j++) {
+              if (d3.polygonContains(polygon, [voxArr[0][i], voxArr[1][j]])) {
+                const address = i + xVoxels * (j + k * yVoxels)
+                ROIarray[address] = 1
+              }
+            }
+          }
+        }
 
         ROIoutlines.push({
           label: ROI.ROIName || ROI.ROIObservationLabel,
           colour: 'rgb(' + ROI.ROIDisplayColor.replaceAll('\\', ', ') + ')',
-          // contourGeometricType: ROI.ContourSequence.ContourGeometricType,
-          contourData: contourData
+          contourData: contourData,
+          contourGeometricType: contourGeometricType,
+          voxelNumber: { x: xVoxels, y: yVoxels, z: zVoxels },
+          scales: { x: xPosToVox, y: yPosToVox, z: zPosToVox },
+          ROIarray: ROIarray,
+          rangeVals: rangeVals
         })
       }
     }
     return ROIoutlines
+  }
+
+  /**
+   * Get all ROI data slices through an axis.
+   *
+   * @param {string} axis The axis of the slice (xy, yz, or xz).
+   * @param {number} slicePos The position of the slice.
+   * @returns {Object[]}
+   */
+  getSlices (axis, slicePos) {
+    // Collect all ROIs that contain a point at slicePos
+    var insideRange = (range, val) => (val > range[0] && val < range[1]) || (val < range[0] && val > range[1])
+    const ROIOutlinesInRange = this.ROIoutlines.filter((ROIOutline) => ((axis === 'xy' && insideRange(ROIOutline.scales.z.domain(), slicePos)) ||
+    (axis === 'yz' && insideRange(ROIOutline.scales.x.domain(), slicePos)) ||
+    (axis === 'xz' && insideRange(ROIOutline.scales.y.domain(), slicePos)))
+    )
+
+    // For each ROI in the range, calculate the data slice that intersects slicePos
+    const slices = ROIOutlinesInRange.map((ROIOutline) => {
+      const sliceNum = axis === 'xy' ? ROIOutline.scales.z(slicePos) : axis === 'yz' ? ROIOutline.scales.x(slicePos) : ROIOutline.scales.y(slicePos)
+      const [xVoxels, yVoxels] = axis === 'xy' ? [ROIOutline.voxelNumber.x, ROIOutline.voxelNumber.y]
+        : axis === 'yz' ? [ROIOutline.voxelNumber.y, ROIOutline.voxelNumber.z]
+          : [ROIOutline.voxelNumber.x, ROIOutline.voxelNumber.z]
+
+      const [xRange, yRange] = axis === 'xy' ? [ROIOutline.rangeVals.x, ROIOutline.rangeVals.y] : axis === 'yz' ? [ROIOutline.rangeVals.y, ROIOutline.rangeVals.z] : [ROIOutline.rangeVals.x, ROIOutline.rangeVals.z]
+
+      // Get the slice data for the given axis and index
+      const sliceData = new Array(xVoxels * yVoxels)
+
+      for (let i = 0; i < xVoxels; i++) {
+        for (let j = 0; j < yVoxels; j++) {
+          let address
+          if (axis === 'xy') {
+            address = i + xVoxels * (j + sliceNum * yVoxels)
+          } else if (axis === 'yz') {
+            address =
+            sliceNum + ROIOutline.voxelNumber.x * (i + j * xVoxels)
+          } else if (axis === 'xz') {
+            address =
+            i + xVoxels * (sliceNum + j * ROIOutline.voxelNumber.y)
+          }
+          const newAddress = i + xVoxels * j
+          sliceData[newAddress] = ROIOutline.ROIarray[address] || 0
+        }
+      }
+
+      return {
+        slicePos: slicePos,
+        sliceData: sliceData,
+        sliceNum: sliceNum,
+        axis: axis,
+        xVoxels: xVoxels,
+        yVoxels: yVoxels,
+        colour: d3.color(ROIOutline.colour),
+        xRange: xRange,
+        yRange: yRange
+      }
+    })
+
+    // TODO: Cache slices
+    // // If slice is cached, return it
+    // if ((this.sliceCache[axis] !== undefined) && (this.sliceCache[axis][sliceNum] !== undefined)) {
+    //   return this.sliceCache[axis][sliceNum]
+    // }
+
+    // this.sliceCache[axis][sliceNum] = slice
+    return slices
   }
 
   /**
@@ -387,44 +504,65 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
    * of the slice.
    */
   plotStructureSet (axis, slicePos, svg, volume, zoomTransform) {
-    var posInRange = (slicePos, contourData) => ((slicePos >= contourData[0].z) && (slicePos <= contourData[contourData.length - 1].z)) ||
-                                                ((slicePos <= contourData[0].z) && (slicePos >= contourData[contourData.length - 1].z))
-
-    // const volume = this.densityVolume || this.doseVolume
+    const slices = this.getSlices(axis, slicePos)
     const baseSlice = volume.baseSlices[axis]
 
     // If there is existing transformation, apply it
-    const xScale = zoomTransform
+    const baseXScale = zoomTransform
       ? zoomTransform.rescaleX(baseSlice.xScale)
       : baseSlice.xScale
-    const yScale = zoomTransform
+    const baseYScale = zoomTransform
       ? zoomTransform.rescaleY(baseSlice.yScale)
       : baseSlice.yScale
 
     // Clear plot
-    svg.selectAll('path').remove()
+    svg.selectAll('g').remove()
+    slices.forEach((slice) => {
+      // Create contour transform
+      const yRange = [baseYScale(slice.yRange[0]), baseYScale(slice.yRange[1])]
+      const xScale = d3
+        .scaleLinear()
+        .domain([0, slice.xVoxels])
+        .range([baseXScale(slice.xRange[0]), baseXScale(slice.xRange[1])])
+      const yScale = d3
+        .scaleLinear()
+        .domain(axis === 'xy' ? [slice.yVoxels, 0] : [0, slice.yVoxels])
+        .range(axis === 'xy' ? yRange.reverse() : yRange)
 
-    if (axis === 'xy') {
-      // Get nearest z pos for each ROI
-      this.ROIoutlines.forEach((ROIoutline) => {
-        if (posInRange(slicePos, ROIoutline.contourData)) {
-          var closest = ROIoutline.contourData.reduce(function (prev, curr) {
-            return (Math.abs(curr.z - slicePos) < Math.abs(prev.z - slicePos) ? curr : prev)
-          })
-
-          // prepare a helper function
-          var lineFunc = d3.line()
-            .x(function (d) { return xScale(d.x) })
-            .y(function (d) { return yScale(d.y) })
-
-          // Add the path using this helper function
-          svg.append('path')
-            .attr('d', lineFunc(closest.vals))
-            .attr('stroke', d3.color(ROIoutline.colour))
-            .attr('fill', 'none')
-        }
+      const contourTransform = ({ type, value, coordinates }) => ({
+        type,
+        value,
+        coordinates: coordinates.map((rings) =>
+          rings.map((points) =>
+            points.map(([i, j]) => [xScale(i), yScale(j)])
+          )
+        )
       })
-    }
+
+      // Draw contours
+      var contours = d3
+        .contours()
+        .size([slice.xVoxels, slice.yVoxels])
+        .thresholds([0.5])
+        .smooth(true)(slice.sliceData)
+        .map(contourTransform)
+
+      svg
+        .append('g')
+        .attr('class', 'dose-contour')
+        .attr('width', svg.node().clientWidth)
+        .attr('height', svg.node().clientHeight)
+        .attr('fill', 'none')
+        .attr('stroke', slice.colour)
+        .attr('stroke-opacity', 1.0)
+        .attr('stroke-width', 1.0)
+        .selectAll('path')
+        .data(contours)
+        .join('path')
+        // .classed('contour-path', true)
+        // .attr('class', (d, i) => 'contour-path' + ' ' + classNameFcn(i))
+        .attr('d', d3.geoPath())
+    })
   }
 }
 

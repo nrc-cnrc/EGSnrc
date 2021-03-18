@@ -43,6 +43,8 @@
 /* global VolumeViewer */
 /* global DensityVolume */
 /* global DoseVolume */
+/* global StructureSetVolume */
+/* global structureSetVolumeList */
 /* global combineDICOMDensityData */
 /* global combineDICOMDoseData */
 /* global processPhantomData */
@@ -51,11 +53,11 @@
 
 // import {
 //   DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
-//   densityVolumeList, doseVolumeList, volumeViewerList
+//   densityVolumeList, doseVolumeList, volumeViewerList, structureSetVolumeList
 // } from './index.js'
 // import { processDoseData, processPhantomData } from './read-data.js'
 // import { VolumeViewer } from './volume-viewer.js'
-// import { DensityVolume, DoseVolume } from './volume.js'
+// import { DensityVolume, DoseVolume, StructureSetVolume } from './volume.js'
 // import { combineDICOMDensityData, combineDICOMDoseData, processDICOMSlice } from './dicom.js'
 
 const dropArea = d3.select('#drop-area')
@@ -104,8 +106,8 @@ dropArea.on('dragleave drop', () => dropArea.classed('highlight', false))
 /**
  * Make a DensityVolume object and add it to the density volume list.
  *
- * @param {string} fileName The name of the .egsphant file.
- * @param {Object} data     The data object created from the .egsphant file.
+ * @param {string} fileName The name of the .egsphant or DICOM file.
+ * @param {Object} data     The data object created from the .egsphant or DICOM file.
  */
 var makeDensityVolume = (fileName, data, args) => {
   const densityVol = new DensityVolume(
@@ -143,6 +145,23 @@ var makeDoseVolume = (fileName, data) => {
   volumeViewerList.forEach((volumeViewer) =>
     volumeViewer.updateDoseFileSelector(doseVol, doseVolumeList.length - 1)
   )
+}
+
+/**
+ * Make a StructureSetVolume object and add it to the density volume list.
+ *
+ * @param {string} fileName The name of the DICOM file.
+ * @param {Object} data     The data object created from the DICOM file.
+ */
+var makeStructureSetVolume = (fileName, data) => {
+  const structureSetVol = new StructureSetVolume(
+    fileName,
+    MAIN_VIEWER_DIMENSIONS,
+    LEGEND_DIMENSIONS,
+    data
+  )
+
+  structureSetVolumeList.push(structureSetVol)
 }
 
 /**
@@ -239,6 +258,7 @@ function handleFiles (files) {
       const dicomDoseList = files.filter(file => (file.ext === 'dcm' || file.ext === 'DCM') && file.data.type === 'RT Dose Storage')
       const egsphantList = files.filter(file => file.ext === 'egsphant')
       const doseList = files.filter(file => file.ext === '3ddose')
+      const structureSetList = files.filter(file => (file.ext === 'dcm' || file.ext === 'DCM') && file.data.type === 'RT Structure Set Storage')
 
       // If DICOM density files
       if (dicomDensityList.length > 0) {
@@ -263,6 +283,12 @@ function handleFiles (files) {
       if (doseList.length > 0) {
         // Create dose volume
         doseList.forEach(file => makeDoseVolume(file.fileName.split('.')[0], file.data))
+      }
+
+      // If structure set files
+      if (structureSetList.length > 0) {
+        // Create structure set volume
+        structureSetList.forEach(file => makeStructureSetVolume(file.fileName.split('.')[0], file.data))
       }
 
       // If this is the first volume uploaded, load into first volume viewer
@@ -297,6 +323,8 @@ function handleFiles (files) {
           volViewer.initializeDoseComparisonSelector(idx)
         }
       })
+
+      volViewer.structureSetVolume = structureSetVolumeList[0]
     })
 }
 

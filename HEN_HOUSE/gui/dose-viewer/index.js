@@ -45,8 +45,10 @@ var densityVolumeList = [] // eslint-disable-line no-unused-vars
 var doseVolumeList = [] // eslint-disable-line no-unused-vars
 var doseComparisonVolumeList = [] // eslint-disable-line no-unused-vars
 var volumeViewerList = [] // eslint-disable-line no-unused-vars
+var structureSetVolumeList = [] // eslint-disable-line no-unused-vars
 
 // export {
 //   DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
-//   densityVolumeList, doseComparisonVolumeList, doseVolumeList, volumeViewerList
+//   densityVolumeList, doseComparisonVolumeList, doseVolumeList,
+//   volumeViewerList, structureSetVolumeList
 // }
