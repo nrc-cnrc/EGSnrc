@@ -322,9 +322,11 @@ function handleFiles (files) {
           const idx = doseVolumeList.findIndex((vol) => vol.fileName === volViewer.doseVolume.fileName)
           volViewer.initializeDoseComparisonSelector(idx)
         }
-      })
 
-      volViewer.structureSetVolume = structureSetVolumeList[0]
+        if (structureSetVolumeList.length > 0) {
+          volViewer.enableCheckboxForROIOutlines()
+        }
+      })
     })
 }
 

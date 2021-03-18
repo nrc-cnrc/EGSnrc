@@ -211,7 +211,8 @@ progress {
 
 /* Defining the hidden class */
 progress.hidden,
-.contour-path.hidden {
+.contour-path.hidden,
+.roi-outline.hidden {
   opacity: 0;
 }
 

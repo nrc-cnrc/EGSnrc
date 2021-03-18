@@ -42,6 +42,7 @@
 /* global DoseComparisonVolume */
 /* global defineShowMarkerCheckboxBehaviour */
 /* global defineShowProfileCheckboxBehaviour */
+/* global defineShowROICheckboxBehaviour */
 /* global defineExportPNGButtonBehaviour */
 /* global defineExportCSVButtonBehaviour */
 /* global buildVoxelInfoHtml */
@@ -51,12 +52,14 @@
 /* global Panel */
 /* global Slider */
 /* global initializeMaxDoseSlider */
+/* global structureSetVolumeList */
 
 // import {
-//   densityVolumeList, doseComparisonVolumeList, doseVolumeList, volumeViewerList
+//   densityVolumeList, doseComparisonVolumeList, doseVolumeList,
+//   volumeViewerList, structureSetVolumeList
 // } from './index.js'
 // import {
-//   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
+//   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour, defineShowROICheckboxBehaviour
 //   enableCheckboxForDensityPlot, enableButton
 // } from './checkbox-button-helper.js'
 // import { DoseProfile } from './dose-profile.js'
@@ -100,6 +103,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     // Initialize class properties
     this.doseVolume = null
     this.densityVolume = null
+    this.structureSetVolume = null
     this.panels = null
     this.sliceSliders = {}
     this.doseProfileList = new Array(3)
@@ -378,6 +382,12 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         const doseSlice = panel.doseVol.sliceCache[panel.axis][panel.doseSliceNum]
         panel.doseVol.drawDose(doseSlice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
       }
+
+      if (this.structureSetVolume) {
+        // Get list of class names of hidden contours
+        const hiddenROIClassList = this.getHiddenClassList(this.ROILegendSvg)
+        this.structureSetVolume.plotStructureSet(densitySlice.axis, densitySlice.slicePos, panel.axisElements['plot-dose'], densityVol, panel.zoomTransform, hiddenROIClassList)
+      }
     })
 
     if (this.doseVolume) {
@@ -394,6 +404,141 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     )
 
     this.enableCheckboxForVoxelInformation()
+  }
+
+  /**
+   * Set the structure set volume of the VolumeViewer.
+   *
+   * @param {StructureSetVolume} structureSetVolume The structure set volume to be set.
+   */
+  setStructureSetVolume (structureSetVolume) {
+    this.structureSetVolume = structureSetVolume
+
+    this.initializeStructureSetLegend(structureSetVolume)
+
+    // Update the plots
+    // Get list of class names of hidden contours
+    const hiddenROIClassList = this.getHiddenClassList(this.ROILegendSvg)
+    Object.values(this.panels).forEach((panel) => {
+      this.structureSetVolume.plotStructureSet(panel.axis, panel.slicePos, panel.axisElements['plot-dose'], panel.volume, panel.zoomTransform, hiddenROIClassList)
+    })
+  }
+
+  /**
+  * Create the structure set legend.
+  *
+  * @param {StructureSetVolume} structureSetVolume The structure set volume to
+  * create the legend with
+  */
+  // TODO: Make a common function for the dose and structure set legends
+  initializeStructureSetLegend (structureSetVolume) {
+    // Define variables
+    const toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '')
+    const hiddenClassList = this.getHiddenClassList(this.ROILegendSvg)
+    const legendSvg = this.ROILegendSvg
+    const legendClass = 'ROILegend'
+    const baseClassName = 'roi-outline.'
+    const svgList = Object.values(this.svgObjs['plot-dose'])
+    const legendTitle = 'ROIs'
+    const labels = structureSetVolume.ROIoutlines.map((ROIoutline) => ROIoutline.label)
+    const colours = structureSetVolume.ROIoutlines.map((ROIoutline) => d3.color(ROIoutline.colour))
+    const colourFcn = d3.scaleOrdinal().domain(labels).range(colours)
+    const ascending = false
+
+    const parameters = {
+      labels: [labels],
+      cells: [labels],
+      on: [
+        'cellclick',
+        function (d) {
+          const legendCell = d3.select(this)
+          toggleContour(legendCell.attr('class').split(' ')[1])
+          legendCell.classed('hidden', !legendCell.classed('hidden'))
+        }
+      ]
+    }
+
+    var toggleContour = (className) => {
+      svgList.forEach((svg) => {
+        svg.selectAll('path.' + baseClassName + className)
+          .classed('hidden', function () {
+            return !d3.select(this).classed('hidden')
+          })
+      })
+    }
+
+    // Clear and redraw current legend
+    legendSvg.select('.' + legendClass).remove()
+    legendSvg.select('text').remove()
+
+    // Make space for legend title
+    legendSvg
+      .append('g')
+      .attr('class', legendClass)
+      .style('transform', 'translate(0px,' + 20 + 'px)')
+
+    // Append title
+    legendSvg
+      .append('text')
+      .attr('class', legendClass)
+      .attr('x', this.legendDimensions.width / 2)
+      .attr('y', this.legendDimensions.margin.top / 2)
+      .attr('text-anchor', 'middle')
+      .style('font-size', '14px')
+      .text(legendTitle)
+
+    // Create legend
+    var legend = d3
+      .legendColor()
+      .shapeWidth(10)
+      .ascending(ascending)
+      .orient('vertical')
+      .scale(colourFcn)
+
+    // Apply all the parameters
+    Object.entries(parameters).forEach(([name, val]) => {
+      legend[name](...val)
+    })
+
+    legendSvg.select('.' + legendClass).call(legend)
+
+    // Set the height of the svg so the div can scroll if need be
+    const height =
+      legendSvg
+        .select('.' + legendClass)
+        .node()
+        .getBoundingClientRect().height + 20
+    legendSvg.attr('height', height)
+
+    // Add the appropriate classnames to each legend cell
+    legendSvg
+      .selectAll('g.cell')
+      .attr('class', (d, i) => 'cell ' + toCSSClass(labels[i]))
+
+    if (hiddenClassList.length > 0) {
+      // Apply hidden class to hidden contours
+      const hiddenLegendCells = legendSvg
+        .selectAll('g.cell')
+        .filter(hiddenClassList.join(','))
+      hiddenLegendCells.classed('hidden', !hiddenLegendCells.classed('hidden'))
+    }
+  }
+
+  /**
+   * Get a class list of all the hidden ROI contours.
+   *
+   * @param {Object} legendSvg The svg element of the legend.
+   * @returns {string[]}
+   */
+  getHiddenClassList (legendSvg) {
+    const hiddenClassList = []
+
+    legendSvg.selectAll('g.cell.hidden').each(function (d, i) {
+      hiddenClassList[i] =
+        '.' + d3.select(this).attr('class').split(' ')[1]
+    })
+
+    return hiddenClassList
   }
 
   /**
@@ -645,6 +790,12 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       defineShowMarkerCheckboxBehaviour)
     this.showDoseProfileCheckbox = addCheckbox('show-dose-profile-checkbox' + this.id, 'ShowDoseProfile',
       'Plot dose profile at crosshairs?', defineShowProfileCheckboxBehaviour)
+    this.showROIOutlinesCheckbox = addCheckbox('show-roi-outlines-checkbox' + this.id, 'ShowROIOutlines',
+      'Show ROI outlines?', defineShowROICheckboxBehaviour)
+
+    if (structureSetVolumeList.length > 0) {
+      this.enableCheckboxForROIOutlines()
+    }
 
     // Add buttons to export visualization and export to csv
     const buttonHolder = optionHolder.append('div').attr('class', 'option')
@@ -876,7 +1027,8 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     [this.doseLegendHolder, this.doseLegendSvg] = getLegendHolderAndSvg('dose');
     [this.densityLegendHolder, this.densityLegendSvg] = getLegendHolderAndSvg(
       'density'
-    )
+    );
+    [this.ROILegendHolder, this.ROILegendSvg] = getLegendHolderAndSvg('roi')
   }
 
   /**
@@ -988,6 +1140,13 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
    */
   enableCheckboxForDoseProfilePlot () {
     if (this.showDoseProfileCheckbox.node().disabled) this.showDoseProfileCheckbox.node().disabled = false
+  }
+
+  /**
+   * Enable the checkbox for the dose profile plots.
+   */
+  enableCheckboxForROIOutlines () {
+    if (this.showROIOutlinesCheckbox.node().disabled) this.showROIOutlinesCheckbox.node().disabled = false
   }
 
   /**
@@ -1359,6 +1518,13 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       this.doseVolume.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
       panel.doseSliceNum = slice.sliceNum
     }
+
+    if ((this.densityVolume || this.doseVolume) && this.structureSetVolume) {
+    // Get list of class names of hidden contours
+      const hiddenROIClassList = this.getHiddenClassList(this.ROILegendSvg)
+      this.structureSetVolume.plotStructureSet(axis, slicePos, panel.axisElements['plot-dose'], this.densityVolume || this.doseVolume, panel.zoomTransform, hiddenROIClassList)
+    }
+
     panel.slicePos = slicePos
   }
 

@@ -385,9 +385,9 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         })
 
         // Find the voxel positions of the grid to overlay the ROI data on
+        const increments = 0.2
+        const divider = 1 / increments
         const voxArr = Object.values(rangeVals).map((range) => {
-          const increments = 0.2
-          const divider = 1 / increments
           const min = Math.floor(range[0] * divider) / divider
           const max = Math.ceil(range[1] * divider) / divider
           const items = Math.round((max - min) / increments)
@@ -395,7 +395,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         })
 
         const [xVoxels, yVoxels, zVoxels] = voxArr.map((arr) => arr.length)
-        const [xPosToVox, yPosToVox, zPosToVox] = voxArr.map((arr) => d3.scaleQuantize().domain([arr[0] - 0.1, arr[arr.length - 1] + 0.1]).range(d3.range(0, arr.length, 1)))
+        const [xPosToVox, yPosToVox, zPosToVox] = voxArr.map((arr) => d3.scaleQuantize().domain([arr[0] - increments / 2, arr[arr.length - 1] + increments / 2]).range(d3.range(0, arr.length, 1)))
         const ROIarray = new Array(xVoxels * yVoxels * zVoxels)
 
         // Build the array that represents the ROI polygons as a matrix mask
@@ -479,7 +479,8 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         yVoxels: yVoxels,
         colour: d3.color(ROIOutline.colour),
         xRange: xRange,
-        yRange: yRange
+        yRange: yRange,
+        label: ROIOutline.label
       }
     })
 
@@ -503,9 +504,12 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
    * @param {Object} zoomTransform Holds information about the current transform
    * of the slice.
    */
-  plotStructureSet (axis, slicePos, svg, volume, zoomTransform) {
+  plotStructureSet (axis, slicePos, svg, volume, zoomTransform, hiddenClassList) {
+    var toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '')
+
     const slices = this.getSlices(axis, slicePos)
     const baseSlice = volume.baseSlices[axis]
+    const contourPathsList = []
 
     // If there is existing transformation, apply it
     const baseXScale = zoomTransform
@@ -516,7 +520,8 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
       : baseSlice.yScale
 
     // Clear plot
-    svg.selectAll('g').remove()
+    svg.selectAll('g.roi-contour').remove()
+
     slices.forEach((slice) => {
       // Create contour transform
       const yRange = [baseYScale(slice.yRange[0]), baseYScale(slice.yRange[1])]
@@ -547,9 +552,9 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         .smooth(true)(slice.sliceData)
         .map(contourTransform)
 
-      svg
+      const contourPaths = svg
         .append('g')
-        .attr('class', 'dose-contour')
+        .attr('class', 'roi-contour')
         .attr('width', svg.node().clientWidth)
         .attr('height', svg.node().clientHeight)
         .attr('fill', 'none')
@@ -559,10 +564,20 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         .selectAll('path')
         .data(contours)
         .join('path')
-        // .classed('contour-path', true)
-        // .attr('class', (d, i) => 'contour-path' + ' ' + classNameFcn(i))
+        .classed('roi-outline', true)
+        .attr('class', (d, i) => 'roi-outline' + ' ' + toCSSClass(slice.label))
         .attr('d', d3.geoPath())
+
+      contourPathsList.push(contourPaths)
     })
+
+    if (hiddenClassList.length > 0) {
+      // Apply hidden class to hidden contours
+      contourPathsList.forEach((contourPaths) => [
+        contourPaths.filter(hiddenClassList.join(','))
+          .classed('hidden', true)
+      ])
+    }
   }
 }
 

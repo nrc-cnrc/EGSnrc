@@ -38,10 +38,11 @@
 /* global LEGEND_DIMENSIONS */
 /* global DOSE_PROFILE_DIMENSIONS */
 /* global updateVoxelCoords */
+/* global structureSetVolumeList */
 
 // import {
 //   DOSE_PROFILE_DIMENSIONS, LEGEND_DIMENSIONS, MAIN_VIEWER_DIMENSIONS,
-//   volumeViewerList
+//   volumeViewerList, structureSetVolumeList
 // } from './index.js'
 // import { VolumeViewer } from './volume-viewer.js'
 // import { updateVoxelCoords } from './voxel-coordinates.js'
@@ -150,7 +151,25 @@ var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) { // e
   }
 }
 
+/**
+ * Define the behaviour of selecting the show ROI outlines checkbox.
+ */
+var defineShowROICheckboxBehaviour = function (volumeViewer, checkbox) { // eslint-disable-line no-unused-vars
+  if (checkbox.checked) {
+    // Set volume viewer structure set to the set most recently added
+    volumeViewer.setStructureSetVolume(structureSetVolumeList[structureSetVolumeList.length - 1])
+  } else {
+    // Set volume viewer structure set to null
+    volumeViewer.structureSetVolume = null
+
+    // Update the plots
+    Object.values(volumeViewer.panels).forEach((panel) => {
+      panel.axisElements['plot-dose'].selectAll('g.roi-contour').remove()
+    })
+  }
+}
+
 // export {
 //   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
-//   enableCheckboxForDensityPlot, enableButton
+//   enableCheckboxForDensityPlot, defineShowROICheckboxBehaviour, enableButton
 // }
