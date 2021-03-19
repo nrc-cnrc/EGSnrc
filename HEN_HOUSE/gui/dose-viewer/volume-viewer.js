@@ -290,9 +290,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       if (!panel.densityVol) {
         // Update the slider max values
         sliceNum = Math.round(doseVol.baseSlices[panel.axis].zScale(slicePos))
-        this.sliceSliders[panel.axis].setMaxValue(
-          doseVol.data.voxelNumber[dims[i]] - 1
-        )
+        this.sliceSliders[panel.axis].setMaxValue(doseVol.data.voxelNumber[dims[i]])
         this.sliceSliders[panel.axis].setCurrentValue(sliceNum)
 
         // Draw the slice
@@ -361,9 +359,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
       // Update the slider max values
       sliceNum = Math.round(densityVol.baseSlices[panel.axis].zScale(slicePos))
-      this.sliceSliders[panel.axis].setMaxValue(
-        densityVol.data.voxelNumber[dims[i]] - 1
-      )
+      this.sliceSliders[panel.axis].setMaxValue(densityVol.data.voxelNumber[dims[i]])
       this.sliceSliders[panel.axis].setCurrentValue(sliceNum)
 
       // Draw the slice
@@ -784,7 +780,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       var onSliceChangeCallback = (sliderVal) => {
         const currPanel = this.panels[axis]
         // Update slice of current panel
-        this.updateSlice(axis, parseInt(sliderVal))
+        this.updateSlice(axis, parseInt(sliderVal) - 1)
 
         // TODO: Fix this, bug after zooming/translating and changing slice
         // Update marker position, voxel information and dose profile
@@ -849,7 +845,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         label: 'Slice Number',
         format: d3.format('d'),
         startingVal: 0,
-        minVal: 0,
+        minVal: 1,
         maxVal: 1,
         step: 1,
         margin: {
@@ -1535,9 +1531,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       if (!panel.densityVol) {
         // Update the slider max values
         sliceNum = Math.round(doseVol.baseSlices[panel.axis].zScale(slicePos))
-        this.sliceSliders[panel.axis].setMaxValue(
-          doseVol.data.voxelNumber[dims[i]] - 1
-        )
+        this.sliceSliders[panel.axis].setMaxValue(doseVol.data.voxelNumber[dims[i]])
         this.sliceSliders[panel.axis].setCurrentValue(sliceNum)
 
         // Draw the slice
