@@ -425,106 +425,6 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   }
 
   /**
-  * Create the structure set legend.
-  *
-  * @param {StructureSetVolume} structureSetVolume The structure set volume to
-  * create the legend with
-  */
-  // TODO: Make a common function for the dose and structure set legends
-  initializeStructureSetLegend (structureSetVolume) {
-    // Define variables
-    const toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '')
-    const hiddenClassList = this.getHiddenClassList(this.ROILegendSvg)
-    const legendSvg = this.ROILegendSvg
-    const legendClass = 'ROILegend'
-    const baseClassName = 'roi-outline.'
-    const svgList = Object.values(this.svgObjs['plot-dose'])
-    const legendTitle = 'ROIs'
-    const labels = structureSetVolume.ROIoutlines.map((ROIoutline) => ROIoutline.label)
-    const colours = structureSetVolume.ROIoutlines.map((ROIoutline) => d3.color(ROIoutline.colour))
-    const colourFcn = d3.scaleOrdinal().domain(labels).range(colours)
-    const ascending = false
-
-    const parameters = {
-      labels: [labels],
-      cells: [labels],
-      on: [
-        'cellclick',
-        function (d) {
-          const legendCell = d3.select(this)
-          toggleContour(legendCell.attr('class').split(' ')[1])
-          legendCell.classed('hidden', !legendCell.classed('hidden'))
-        }
-      ]
-    }
-
-    var toggleContour = (className) => {
-      svgList.forEach((svg) => {
-        svg.selectAll('path.' + baseClassName + className)
-          .classed('hidden', function () {
-            return !d3.select(this).classed('hidden')
-          })
-      })
-    }
-
-    // Clear and redraw current legend
-    legendSvg.select('.' + legendClass).remove()
-    legendSvg.select('text').remove()
-
-    // Make space for legend title
-    legendSvg
-      .append('g')
-      .attr('class', legendClass)
-      .style('transform', 'translate(0px,' + 20 + 'px)')
-
-    // Append title
-    legendSvg
-      .append('text')
-      .attr('class', legendClass)
-      .attr('x', this.legendDimensions.width / 2)
-      .attr('y', this.legendDimensions.margin.top / 2)
-      .attr('text-anchor', 'middle')
-      .style('font-size', '14px')
-      .text(legendTitle)
-
-    // Create legend
-    var legend = d3
-      .legendColor()
-      .shapeWidth(10)
-      .ascending(ascending)
-      .orient('vertical')
-      .scale(colourFcn)
-
-    // Apply all the parameters
-    Object.entries(parameters).forEach(([name, val]) => {
-      legend[name](...val)
-    })
-
-    legendSvg.select('.' + legendClass).call(legend)
-
-    // Set the height of the svg so the div can scroll if need be
-    const height =
-      legendSvg
-        .select('.' + legendClass)
-        .node()
-        .getBoundingClientRect().height + 20
-    legendSvg.attr('height', height)
-
-    // Add the appropriate classnames to each legend cell
-    legendSvg
-      .selectAll('g.cell')
-      .attr('class', (d, i) => 'cell ' + toCSSClass(labels[i]))
-
-    if (hiddenClassList.length > 0) {
-      // Apply hidden class to hidden contours
-      const hiddenLegendCells = legendSvg
-        .selectAll('g.cell')
-        .filter(hiddenClassList.join(','))
-      hiddenLegendCells.classed('hidden', !hiddenLegendCells.classed('hidden'))
-    }
-  }
-
-  /**
    * Get a class list of all the hidden ROI contours.
    *
    * @param {Object} legendSvg The svg element of the legend.
@@ -1245,24 +1145,28 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   }
 
   /**
-  * Create the dose legend.
-  *
-  * @param {number[]} thresholds The contour thresholds.
-  * @param {number} minDoseVar The minimum dose to scale the contours with.
-  * @param {number} maxDoseVar The maximum dose to scale the contours with.
-  */
-  initializeDoseLegend (thresholds, minDoseVar = 0, maxDoseVar = this.doseVolume.data.maxDose) {
-    // Get list of class names of hidden contours
-    const colourFcn = d3.scaleSequentialSqrt(d3.interpolateViridis).domain([minDoseVar, maxDoseVar])
+   * Add a colour legend with a toggle function to turn on and off labels on the
+   * plot.
+   *
+   * @param {number} params An object that hold the legendSvg, legendClass,
+   * baseClassName, svgList, legendTitle, labels, cells, colourFcn, and
+   * ascending properties
+   */
+  initializeColourLegend (params) {
+    const toggleContour = (className) => {
+      params.svgList.forEach((svg) => {
+        svg.selectAll('path.' + params.baseClassName + className)
+          .classed('hidden', function () {
+            return !d3.select(this).classed('hidden')
+          })
+      })
+    }
 
-    const hiddenContourClassList = this.doseVolume.getHiddenContourClassList()
-    const legendSvg = this.doseLegendSvg
-    const legendClass = 'doseLegend'
+    const hiddenClassList = this.getHiddenClassList(params.legendSvg)
+
     const parameters = {
-      labels: [
-        this.thresholds.map((e) => d3.format('.0%')(e / maxDoseVar))
-      ],
-      cells: [this.thresholds],
+      labels: [params.labels],
+      cells: [params.cells],
       on: [
         'cellclick',
         function (d) {
@@ -1273,71 +1177,117 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       ]
     }
 
-    var toggleContour = (className) => {
-      Object.values(this.svgObjs['plot-dose']).forEach((svg) => {
-        svg.selectAll('path.contour-path.' + className)
-          .classed('hidden', function () {
-            return !d3.select(this).classed('hidden')
-          })
-      })
-    }
-
     // Clear and redraw current legend
-    legendSvg.select('.' + legendClass).remove()
-    legendSvg.select('text').remove()
+    params.legendSvg.select('.' + params.legendClass).remove()
+    params.legendSvg.select('text').remove()
 
     // Make space for legend title
-    legendSvg
+    params.legendSvg
       .append('g')
-      .attr('class', legendClass)
+      .attr('class', params.legendClass)
       .style('transform', 'translate(0px,' + 20 + 'px)')
 
     // Append title
-    legendSvg
+    params.legendSvg
       .append('text')
-      .attr('class', legendClass)
+      .attr('class', params.legendClass)
       .attr('x', this.legendDimensions.width / 2)
       .attr('y', this.legendDimensions.margin.top / 2)
       .attr('text-anchor', 'middle')
       .style('font-size', '14px')
-      .text('Dose')
+      .text(params.legendTitle)
 
     // Create legend
     var legend = d3
       .legendColor()
       .shapeWidth(10)
-      .ascending(true)
+      .ascending(params.ascending)
       .orient('vertical')
-      .scale(colourFcn)
+      .scale(params.colourFcn)
 
     // Apply all the parameters
     Object.entries(parameters).forEach(([name, val]) => {
       legend[name](...val)
     })
 
-    legendSvg.select('.' + legendClass).call(legend)
+    params.legendSvg.select('.' + params.legendClass).call(legend)
 
     // Set the height of the svg so the div can scroll if need be
     const height =
-      legendSvg
-        .select('.' + legendClass)
+      params.legendSvg
+        .select('.' + params.legendClass)
         .node()
         .getBoundingClientRect().height + 20
-    legendSvg.attr('height', height)
+    params.legendSvg.attr('height', height)
 
     // Add the appropriate classnames to each legend cell
-    const len = this.thresholds.length - 1
-    legendSvg
+    params.legendSvg
       .selectAll('g.cell')
-      .attr('class', (d, i) => 'cell ' + this.className(len - i))
+      .attr('class', (d, i) => 'cell ' + params.classNames[i])
 
-    if (hiddenContourClassList.length > 0) {
+    if (hiddenClassList.length > 0) {
       // Apply hidden class to hidden contours
-      const hiddenLegendCells = legendSvg
+      const hiddenLegendCells = params.legendSvg
         .selectAll('g.cell')
-        .filter(hiddenContourClassList.join(','))
+        .filter(hiddenClassList.join(','))
       hiddenLegendCells.classed('hidden', !hiddenLegendCells.classed('hidden'))
     }
+  }
+
+  /**
+  * Create the structure set legend.
+  *
+  * @param {StructureSetVolume} structureSetVolume The structure set volume to
+  * create the legend with
+  */
+  initializeStructureSetLegend (structureSetVolume) {
+    const toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '') // eslint-disable-line no-useless-escape
+    const colours = structureSetVolume.ROIoutlines.map((ROIoutline) => d3.color(ROIoutline.colour))
+    const labels = structureSetVolume.ROIoutlines.map((ROIoutline) => ROIoutline.label)
+
+    // Define variables
+    const structureSetLegendParams = {
+      legendSvg: this.ROILegendSvg,
+      legendClass: 'ROILegend',
+      baseClassName: 'roi-outline.',
+      svgList: Object.values(this.svgObjs['plot-dose']),
+      legendTitle: 'ROIs',
+      labels: labels,
+      cells: labels,
+      colourFcn: d3.scaleOrdinal().domain(labels).range(colours),
+      ascending: false,
+      classNames: labels.map((label) => toCSSClass(label))
+    }
+
+    this.initializeColourLegend(structureSetLegendParams)
+  }
+
+  /**
+  * Create the dose legend.
+  *
+  * @param {number[]} thresholds The contour thresholds.
+  * @param {number} minDoseVar The minimum dose to scale the contours with.
+  * @param {number} maxDoseVar The maximum dose to scale the contours with.
+  */
+  initializeDoseLegend (thresholds, minDoseVar = 0, maxDoseVar = this.doseVolume.data.maxDose) {
+    // Define variables
+    const classNames = this.thresholds.map((thres, i) => this.className(this.thresholds.length - 1 - i))
+    const doseLegendParams = {
+      legendSvg: this.doseLegendSvg,
+      legendClass: 'doseLegend',
+      baseClassName: 'contour-path.',
+      svgList: Object.values(this.svgObjs['plot-dose']),
+      legendTitle: 'Dose',
+      labels: this.thresholds.map((e) => d3.format('.0%')(e / maxDoseVar)),
+      cells: this.thresholds,
+      colourFcn: d3.scaleSequentialSqrt(d3.interpolateViridis).domain([minDoseVar, maxDoseVar]),
+      ascending: true,
+      classNames: classNames
+    }
+
+    // Get list of class names of hidden contours
+
+    this.initializeColourLegend(doseLegendParams)
   }
 
   /**
