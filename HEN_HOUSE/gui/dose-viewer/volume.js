@@ -385,25 +385,29 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         })
 
         // Find the voxel positions of the grid to overlay the ROI data on
-        const increments = 0.2
-        const divider = 1 / increments
-        const voxArr = Object.values(rangeVals).map((range) => {
+        const increments = { x: 0.2, y: 0.2, z: 0.25 }
+        const voxArr = {}
+        Object.entries(rangeVals).forEach(([dim, range]) => {
+          const divider = 1 / increments[dim]
           const min = Math.floor(range[0] * divider) / divider
           const max = Math.ceil(range[1] * divider) / divider
-          const items = Math.round((max - min) / increments)
-          return [...Array(items + 1)].map((x, y) => min + increments * y)
+          const items = Math.round((max - min) / increments[dim])
+          voxArr[dim] = [...Array(items + 1)].map((x, y) => min + increments[dim] * y)
         })
 
-        const [xVoxels, yVoxels, zVoxels] = voxArr.map((arr) => arr.length)
-        const [xPosToVox, yPosToVox, zPosToVox] = voxArr.map((arr) => d3.scaleQuantize().domain([arr[0] - increments / 2, arr[arr.length - 1] + increments / 2]).range(d3.range(0, arr.length, 1)))
+        const [xVoxels, yVoxels, zVoxels] = Object.values(voxArr).map((arr) => arr.length)
+        const [xPosToVox, yPosToVox, zPosToVox] = Object.entries(voxArr).map(([dim, arr]) => d3.scaleQuantize().domain([arr[0] - increments[dim] / 2, arr[arr.length - 1] + increments[dim] / 2]).range(d3.range(0, arr.length, 1)))
         const ROIarray = new Array(xVoxels * yVoxels * zVoxels)
 
         // Build the array that represents the ROI polygons as a matrix mask
-        for (let k = 0; k < contourData.length; k++) {
-          const polygon = contourData[k].vals.map((val) => [val.x, val.y])
+        var slicePos, closestContour, polygon
+        for (let k = 0; k < zVoxels; k++) {
+          slicePos = voxArr.z[k]
+          closestContour = contourData.reduce((prev, curr) => (Math.abs(curr.z - slicePos) < Math.abs(prev.z - slicePos) ? curr : prev))
+          polygon = closestContour.vals.map((val) => [val.x, val.y])
           for (let i = 0; i < xVoxels; i++) {
             for (let j = 0; j < yVoxels; j++) {
-              if (d3.polygonContains(polygon, [voxArr[0][i], voxArr[1][j]])) {
+              if (d3.polygonContains(polygon, [voxArr.x[i], voxArr.y[j]])) {
                 const address = i + xVoxels * (j + k * yVoxels)
                 ROIarray[address] = 1
               }
@@ -505,7 +509,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
    * of the slice.
    */
   plotStructureSet (axis, slicePos, svg, volume, zoomTransform, hiddenClassList) {
-    var toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '')
+    var toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '') // eslint-disable-line no-useless-escape
 
     const slices = this.getSlices(axis, slicePos)
     const baseSlice = volume.baseSlices[axis]
@@ -540,7 +544,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
       var contours = d3
         .contours()
         .size([slice.xVoxels, slice.yVoxels])
-        .thresholds([0.5])
+        .thresholds([1])
         .smooth(true)(slice.sliceData)
         .map(contourTransform)
 
