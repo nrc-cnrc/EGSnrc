@@ -687,7 +687,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.showDoseProfileCheckbox = addCheckbox('show-dose-profile-checkbox' + this.id, 'ShowDoseProfile',
       'Plot dose profile at crosshairs?', defineShowProfileCheckboxBehaviour)
     this.showROIOutlinesCheckbox = addCheckbox('show-roi-outlines-checkbox' + this.id, 'ShowROIOutlines',
-      'Show ROI outlines?', defineShowROICheckboxBehaviour)
+      'Show ROI contours?', defineShowROICheckboxBehaviour)
 
     if (structureSetVolumeList.length > 0) {
       this.enableCheckboxForROIOutlines()
