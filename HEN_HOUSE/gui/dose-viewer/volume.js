@@ -99,6 +99,9 @@ class Volume {
     // TODO: Change scales to quantile to map exactly which pixels
     const AXES = ['xy', 'yz', 'xz']
 
+    // Create scales to map world coordinates to voxel
+    this.buildWorldToVoxelScales(data)
+
     AXES.forEach((axis) => {
       // Get the axes and slice dimensions
       const [dim1, dim2, dim3] =
@@ -209,6 +212,20 @@ class Volume {
   }
 
   /**
+   * Create the scales for the x, y and z dimensions to map world coordinates to
+   * voxel coordinates.
+   *
+   * @param {Object} data The data from parsing the file.
+   */
+  buildWorldToVoxelScales (data) {
+    this.worldToVoxel = {
+      x: d3.scaleQuantile().domain(data.voxelArr.x).range(d3.range(0, data.voxelNumber.x, 1)),
+      y: d3.scaleQuantile().domain(data.voxelArr.y).range(d3.range(0, data.voxelNumber.y, 1)),
+      z: d3.scaleQuantile().domain(data.voxelArr.z).range(d3.range(0, data.voxelNumber.z, 1))
+    }
+  }
+
+  /**
    * Get a slice of data through an axis.
    *
    * @param {string} axis The axis of the slice (xy, yz, or xz).
@@ -287,18 +304,19 @@ class Volume {
    * @returns {number[]}
    */
   worldToVoxelCoords (worldCoords) {
-    const voxelArr = this.data.voxelArr
-    const voxelNum = this.data.voxelNumber
+    return [this.worldToVoxel.x(worldCoords[0]), this.worldToVoxel.y(worldCoords[1]), this.worldToVoxel.z(worldCoords[2])]
+  }
 
-    const xWorldToVoxel = d3.scaleQuantile().domain(voxelArr.x).range(d3.range(0, voxelNum.x, 1))
-    const yWorldToVoxel = d3.scaleQuantile().domain(voxelArr.y).range(d3.range(0, voxelNum.y, 1))
-    const zWorldToVoxel = d3.scaleQuantile().domain(voxelArr.z).range(d3.range(0, voxelNum.z, 1))
-
-    const i = xWorldToVoxel(worldCoords[0])
-    const j = yWorldToVoxel(worldCoords[1])
-    const k = zWorldToVoxel(worldCoords[2])
-
-    return [i, j, k]
+  /**
+   * Get the dose value at the given world coordinates.
+   *
+   * @param {number[]} coords The world position of the data.
+   * @param {string} dataName The type of data, either "density" or "dose".
+   * @returns {number}
+   */
+  getDataAtPosition (coords, dataName) {
+    const voxelCoords = this.worldToVoxelCoords(coords)
+    return this.getDataAtVoxelCoords(voxelCoords, dataName)
   }
 }
 
@@ -717,6 +735,16 @@ class DoseVolume extends Volume { // eslint-disable-line no-unused-vars
    */
   getErrorAtVoxelCoords (voxelCoords) {
     return this.data.error ? super.getDataAtVoxelCoords(voxelCoords, 'error') : 0
+  }
+
+  /**
+   * Get the dose value at the given world coordinates.
+   *
+   * @param {number[]} coords The world position of the data.
+   * @returns {number}
+   */
+  getDataAtPosition (coords) {
+    return super.getDataAtPosition(coords, 'dose')
   }
 }
 
