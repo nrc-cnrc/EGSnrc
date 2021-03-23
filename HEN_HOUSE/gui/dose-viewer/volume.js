@@ -441,7 +441,8 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
           voxelNumber: { x: xVoxels, y: yVoxels, z: zVoxels },
           scales: { x: xPosToVox, y: yPosToVox, z: zPosToVox },
           ROIarray: ROIarray,
-          rangeVals: rangeVals
+          rangeVals: rangeVals,
+          voxelArr: voxArr
         })
       }
     }
@@ -596,6 +597,53 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
     if (zoomTransform) {
       svg.selectAll('g.roi-contour').attr('transform', zoomTransform.toString())
     }
+  }
+
+  /**
+   * Calculates the dose volume histogram for each of the ROIs.
+   *
+   * @param {DoseVolume} doseVolume The dose volume to use for DVH calculations.
+   */
+  calculateDVH (doseVolume) {
+    // Convert index in 1D array to x, y, z coords
+    var to3d = (idx, voxelNumber) => {
+      const k = Math.floor(idx / (voxelNumber.y * voxelNumber.x))
+      idx -= (k * voxelNumber.y * voxelNumber.x) // = idx % voxelNumber.y
+      const j = Math.floor(idx / voxelNumber.x)
+      const i = idx % voxelNumber.x
+      return [i, j, k]
+    }
+
+    // Convert x, y, z coords to world coords
+    var toPos = ([i, j, k], voxelArr) => [voxelArr.x[i], voxelArr.y[j], voxelArr.z[k]]
+
+    // Set the parameters for the histogram
+    var histogram = d3.histogram()
+      .domain([0, 1])
+      .thresholds(100)
+
+    // Initialize ROIHistograms
+    const ROIHistograms = []
+
+    // For each ROI
+    this.ROIoutlines.forEach((ROIOutline) => {
+      // Initialize histogramList
+      const doseList = []
+      let coords, pos, dose
+
+      // Go through each element in the ROI array
+      ROIOutline.ROIarray.forEach((val, i) => {
+        coords = to3d(i, ROIOutline.voxelNumber)
+        pos = toPos(coords, ROIOutline.voxelArr)
+        dose = doseVolume.getDataAtPosition(pos) || 0
+        doseList.push(dose)
+      })
+
+      // Create and add ROI histogram to list
+      var bins = histogram(doseList)
+      ROIHistograms.push(bins)
+    })
+    return ROIHistograms
   }
 }
 
