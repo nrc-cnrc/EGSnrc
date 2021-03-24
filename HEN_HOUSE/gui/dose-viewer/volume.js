@@ -353,6 +353,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
    *
    * @param {Object} data The data from parsing the file.
    */
+  // TODO: Speed this function up
   makeOutlines (data) {
     const ROIoutlines = []
     var ROI
@@ -376,34 +377,44 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
     const toCm = (val) => parseFloat(val) / 10.0
 
     // For each region of ROI
-    for (let i = 0; i < data.ROIs.length; i++) {
-      ROI = data.ROIs[i]
+    for (let idx = 0; idx < data.ROIs.length; idx++) {
+      ROI = data.ROIs[idx]
 
       // If the ROI has contour data
       if (ROI.ContourSequence !== undefined) {
         const contourData = []
         const rangeVals = { x: [], y: [], z: [] }
-        const contourGeometricType = new Set()
+        // const contourGeometricType = new Set()
+        var prevZ = 0
+        var values, sliceContourData, z
 
         // For each slice of the contour data
         ROI.ContourSequence.forEach((sequence) => {
-          var values = sequence.ContourData.split('\\')
-          var sliceContourData = []
+          values = sequence.ContourData.split('\\')
+          sliceContourData = []
 
           // The z value should be constant for each slice
-          const z = toCm(values[2])
+          z = toCm(values[2])
 
           // For each coordinate in the slice
           for (let i = 0; i < values.length; i += 3) {
             updateRange(values.slice(i, i + 3).map((val) => toCm(val)), rangeVals)
             sliceContourData.push({ x: toCm(values[i]), y: toCm(values[i + 1]) })
           }
-          contourData.push({ z: z, vals: sliceContourData })
-          contourGeometricType.add(sequence.ContourGeometricType)
+
+          // Add sliceContourData to contourData list
+          if (prevZ === undefined || prevZ !== z) {
+            contourData.push({ z: z, vals: [sliceContourData] })
+            prevZ = z
+          } else {
+            contourData[contourData.length - 1].vals.push(sliceContourData)
+          }
+          // contourGeometricType.add(sequence.ContourGeometricType)
         })
 
         // Find the voxel positions of the grid to overlay the ROI data on
-        const increments = { x: 0.2, y: 0.2, z: 0.25 }
+        // Increments for z array is the space between the slices
+        const increments = { x: 0.2, y: 0.2, z: (rangeVals.z[1] - rangeVals.z[0]) / contourData.length }
         const voxArr = {}
         Object.entries(rangeVals).forEach(([dim, range]) => {
           const divider = 1 / increments[dim]
@@ -413,6 +424,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
           voxArr[dim] = [...Array(items + 1)].map((x, y) => min + increments[dim] * y)
         })
 
+        // Build the ROI array
         const [xVoxels, yVoxels, zVoxels] = Object.values(voxArr).map((arr) => arr.length)
         const [xPosToVox, yPosToVox, zPosToVox] = Object.entries(voxArr).map(([dim, arr]) => d3.scaleQuantize().domain([arr[0] - increments[dim] / 2, arr[arr.length - 1] + increments[dim] / 2]).range(d3.range(0, arr.length, 1)))
         const ROIarray = new Array(xVoxels * yVoxels * zVoxels)
@@ -421,14 +433,18 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         var slicePos, closestContour, polygon
         for (let k = 0; k < zVoxels; k++) {
           slicePos = voxArr.z[k]
+          // Get contour slice closest to z slice position
           closestContour = contourData.reduce((prev, curr) => (Math.abs(curr.z - slicePos) < Math.abs(prev.z - slicePos) ? curr : prev))
-          polygon = closestContour.vals.map((val) => [val.x, val.y])
+
           for (let i = 0; i < xVoxels; i++) {
             for (let j = 0; j < yVoxels; j++) {
-              if (d3.polygonContains(polygon, [voxArr.x[i], voxArr.y[j]])) {
-                const address = i + xVoxels * (j + k * yVoxels)
-                ROIarray[address] = 1
-              }
+              // Iterate through polygons in each slice to build a slice of the ROI array
+              closestContour.vals.forEach((polygonVals) => {
+                polygon = polygonVals.map((val) => [val.x, val.y])
+                if (d3.polygonContains(polygon, [voxArr.x[i], voxArr.y[j]])) {
+                  ROIarray[i + xVoxels * (j + k * yVoxels)] = 1
+                }
+              })
             }
           }
         }
@@ -437,7 +453,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
           label: ROI.ROIName || ROI.ROIObservationLabel,
           colour: 'rgb(' + ROI.ROIDisplayColor.replaceAll('\\', ', ') + ')',
           contourData: contourData,
-          contourGeometricType: contourGeometricType,
+          // contourGeometricType: contourGeometricType,
           voxelNumber: { x: xVoxels, y: yVoxels, z: zVoxels },
           scales: { x: xPosToVox, y: yPosToVox, z: zPosToVox },
           ROIarray: ROIarray,
@@ -464,14 +480,14 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
     (axis === 'xz' && insideRange(ROIOutline.scales.y.domain(), slicePos)))
     )
 
+    var getArrRange = (arr) => ([arr[0], [arr[arr.length - 1]]])
+    var getXYRange = (axis, voxArr) => ([getArrRange(voxArr[axis[0]]), getArrRange(voxArr[axis[1]])])
+
     // For each ROI in the range, calculate the data slice that intersects slicePos
     const slices = ROIOutlinesInRange.map((ROIOutline) => {
       const sliceNum = axis === 'xy' ? ROIOutline.scales.z(slicePos) : axis === 'yz' ? ROIOutline.scales.x(slicePos) : ROIOutline.scales.y(slicePos)
-      const [xVoxels, yVoxels] = axis === 'xy' ? [ROIOutline.voxelNumber.x, ROIOutline.voxelNumber.y]
-        : axis === 'yz' ? [ROIOutline.voxelNumber.y, ROIOutline.voxelNumber.z]
-          : [ROIOutline.voxelNumber.x, ROIOutline.voxelNumber.z]
-
-      const [xRange, yRange] = axis === 'xy' ? [ROIOutline.rangeVals.x, ROIOutline.rangeVals.y] : axis === 'yz' ? [ROIOutline.rangeVals.y, ROIOutline.rangeVals.z] : [ROIOutline.rangeVals.x, ROIOutline.rangeVals.z]
+      const [xVoxels, yVoxels] = [ROIOutline.voxelNumber[axis[0]], ROIOutline.voxelNumber[axis[1]]]
+      const [xRange, yRange] = getXYRange(axis, ROIOutline.voxelArr)
 
       // Get the slice data for the given axis and index
       const sliceData = new Array(xVoxels * yVoxels)
