@@ -904,7 +904,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
    */
   buildLegend (legendDimensions) {
     // Set up legends
-    var getLegendHolderAndSvg = (className) => {
+    var getLegendHolderAndSvg = (className, legendDimensions) => {
       const legendHolder = this.legendHolder
         .append('span')
         .attr('id', className + '-legend-holder')
@@ -918,13 +918,11 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         .attr('class', 'legend')
 
       return [legendHolder, legendSvg]
-    };
-
-    [this.doseLegendHolder, this.doseLegendSvg] = getLegendHolderAndSvg('dose');
-    [this.densityLegendHolder, this.densityLegendSvg] = getLegendHolderAndSvg(
-      'density'
-    );
-    [this.ROILegendHolder, this.ROILegendSvg] = getLegendHolderAndSvg('roi')
+    }
+    const roiLegendDimensions = { ...legendDimensions, fullWidth: 180, width: 180 - legendDimensions.margin.left - legendDimensions.margin.right };
+    [this.doseLegendHolder, this.doseLegendSvg] = getLegendHolderAndSvg('dose', legendDimensions);
+    [this.densityLegendHolder, this.densityLegendSvg] = getLegendHolderAndSvg('density', legendDimensions);
+    [this.ROILegendHolder, this.ROILegendSvg] = getLegendHolderAndSvg('roi', roiLegendDimensions)
   }
 
   /**
