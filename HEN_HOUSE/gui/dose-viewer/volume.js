@@ -399,7 +399,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
           // For each coordinate in the slice
           for (let i = 0; i < values.length; i += 3) {
             updateRange(values.slice(i, i + 3).map((val) => toCm(val)), rangeVals)
-            sliceContourData.push({ x: toCm(values[i]), y: toCm(values[i + 1]) })
+            sliceContourData.push([toCm(values[i]), toCm(values[i + 1])])
           }
 
           // Add sliceContourData to contourData list
@@ -430,7 +430,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         const ROIarray = new Array(xVoxels * yVoxels * zVoxels)
 
         // Build the array that represents the ROI polygons as a matrix mask
-        var slicePos, closestContour, polygon
+        var slicePos, closestContour
         for (let k = 0; k < zVoxels; k++) {
           slicePos = voxArr.z[k]
           // Get contour slice closest to z slice position
@@ -439,11 +439,8 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
           for (let i = 0; i < xVoxels; i++) {
             for (let j = 0; j < yVoxels; j++) {
               // Iterate through polygons in each slice to build a slice of the ROI array
-              closestContour.vals.forEach((polygonVals) => {
-                polygon = polygonVals.map((val) => [val.x, val.y])
-                if (d3.polygonContains(polygon, [voxArr.x[i], voxArr.y[j]])) {
-                  ROIarray[i + xVoxels * (j + k * yVoxels)] = 1
-                }
+              closestContour.vals.forEach((polygon) => {
+                if (d3.polygonContains(polygon, [voxArr.x[i], voxArr.y[j]])) ROIarray[i + xVoxels * (j + k * yVoxels)] = 1
               })
             }
           }
@@ -452,12 +449,10 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         ROIoutlines.push({
           label: ROI.ROIName || ROI.ROIObservationLabel,
           colour: 'rgb(' + ROI.ROIDisplayColor.replaceAll('\\', ', ') + ')',
-          contourData: contourData,
           // contourGeometricType: contourGeometricType,
           voxelNumber: { x: xVoxels, y: yVoxels, z: zVoxels },
           scales: { x: xPosToVox, y: yPosToVox, z: zPosToVox },
           ROIarray: ROIarray,
-          rangeVals: rangeVals,
           voxelArr: voxArr
         })
       }
