@@ -107,6 +107,8 @@ public:
     EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials);
 
+    ~EGS_Mesh() = default;
+
     /// Parse a msh file into an owned EGS_Mesh allocated using new.
     ///
     /// Throws a std::runtime_error if parsing fails.
@@ -145,6 +147,16 @@ public:
         }
         return volumes;
     }
+    // Return element densities [g/cm3].
+    std::vector<EGS_Float> densities() const {
+        std::vector<EGS_Float> densities;
+        densities.reserve(num_elements());
+        for (int i = 0; i < num_elements(); i++) {
+            densities.push_back(getMediumRho(_medium_indices[i]));
+        }
+        return densities;
+    }
+
     bool is_boundary(int reg) const;
 
     const std::string& filename() const {
@@ -153,15 +165,33 @@ public:
     void setFilename(std::string filename) {
         _filename = filename;
     }
+    void printElement(int i, std::ostream& elt_info = std::cout) const {
+      elt_info << "Tetrahedron " << i << ":\n"
+          << "\tNode coordinates (cm):\n"
+          << "\t0: " << _elt_points[4*i].x << " " << _elt_points[4*i].y << " " << _elt_points[4*i].z << "\n"
+          << "\t1: " << _elt_points[4*i+1].x << " " << _elt_points[4*i+1].y << " " << _elt_points[4*i+1].z << "\n"
+          << "\t2: " << _elt_points[4*i+2].x << " " << _elt_points[4*i+2].y << " " << _elt_points[4*i+2].z << "\n"
+          << "\t3: " << _elt_points[4*i+3].x << " " << _elt_points[4*i+3].y << " " << _elt_points[4*i+3].z << "\n"
+          << "\tNeighbour elements:\n"
+          << "\t\tOn face 0: " << _neighbours[i][0] << "\n"
+          << "\t\tOn face 1: " << _neighbours[i][1] << "\n"
+          << "\t\tOn face 2: " << _neighbours[i][2] << "\n"
+          << "\t\tOn face 3: " << _neighbours[i][3] << "\n"
+          << std::boolalpha
+          << "\tBoundary element: " << is_boundary(i) << "\n"
+          << "\tMedia index: "<< _medium_indices[i] << "\n";
+    }
+
     // EGS_BaseGeometry interface
-    const std::string& getType() const { return type; }
-    bool isInside(const EGS_Vector &x);
-    int inside(const EGS_Vector &x); // TODO figure out setMedia() situation
-    int medium(int ireg) const;
-    int isWhere(const EGS_Vector &x);
+    const std::string& getType() const override { return type; }
+    bool isInside(const EGS_Vector &x) override;
+    int inside(const EGS_Vector &x) override; // TODO figure out setMedia() situation
+    int medium(int ireg) const override;
+    int isWhere(const EGS_Vector &x) override;
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-        EGS_Float &t, int *newmed=0, EGS_Vector *normal=0);
-    EGS_Float hownear(int ireg, const EGS_Vector &x);
+        EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) override;
+    EGS_Float hownear(int ireg, const EGS_Vector &x) override;
+    void printInfo() const override;
 
 private:
     // `hownear` helper method

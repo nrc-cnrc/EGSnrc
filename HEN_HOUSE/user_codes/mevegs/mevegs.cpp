@@ -530,9 +530,9 @@ void Mevegs_Application::outputResults() {
     egsInformation(" Energy fractions\n");
     egsInformation("======================================================\n");
     egsInformation("The first and last items in the following list of energy fractions are the reflected and transmitted energy, respectively. These two values are only meaningful if the source is directed in the positive z-direction. The remaining values are the deposited energy fractions in the regions of the geometry, but notice that the identifying index is the region number offset by 1 (ir+1).");
-    //score->reportResults(norm,
-    //                     "ir+1 | Reflected, deposited, or transmitted energy fraction",false,
-    //                     "  %d  %12.6e +/- %12.6e %c\n");
+    score->reportResults(norm,
+                         "ir+1 | Reflected, deposited, or transmitted energy fraction",false,
+                         "  %d  %12.6e +/- %12.6e %c\n");
     if (nph > 0) {
         if (nph > 1) {
             egsInformation("\n\n======================================================\n");
@@ -601,28 +601,52 @@ void appendGmshData(std::ostream& out_file, std::string title, const std::vector
     }
     out_file << "$EndElementData\n"; // footer
 }
+
+// convert absolute values to percentages
+EGS_Float abs_to_percent(EGS_Float val, EGS_Float uncert) {
+    if (val > 1e-6) {
+        return uncert / val * 100.0;
+    }
+    return 100.0;
+}
+
 } // anonymous namespace
 
 void Mevegs_Application::writeGmshResults(std::ostream& out, const EGS_Mesh& mesh) {
+    // convert absolute uncertainty to percent uncertainty
     auto n_elts = mesh.num_elements();
-    std::vector<double> e_deps(n_elts);
-    std::vector<double> uncerts(n_elts);
+    std::vector<double> e_deps;
+    std::vector<double> uncerts;
+    e_deps.reserve(n_elts);
+    uncerts.reserve(n_elts);
     // the score array is mesh size + 2, first elt is reflected, last is transmitted
     // start at 1 to skip reflected energy reflected, stop 1 before end to skip transmitted
     assert(score->regions() == n_elts + 2);
     for (int i = 1; i < n_elts + 1; ++i) {
         double e_dep, uncert;
         score->currentResult(i, e_dep, uncert);
-        e_deps[i] = e_dep;
-        uncerts[i] = uncert;
+        e_deps.push_back(e_dep);
+        uncerts.push_back(abs_to_percent(e_dep, uncert));
+    }
+
+    // calculate doses [Gy]
+    const double JOULES_PER_MEV = 1.602e-13;
+    const auto densities = mesh.densities();
+    const auto volumes = mesh.volumes();
+    std::vector<double> doses;
+    doses.reserve(n_elts);
+    for (int i = 0; i < n_elts; i++) {
+        auto mass_kg = densities[i] * volumes[i] / 1000.0;
+        doses.push_back(JOULES_PER_MEV * e_deps[i] / mass_kg);
     }
 
     // append simulation data
     appendGmshData(out, "Energy deposition per particle [MeV]", e_deps);
     //appendGmshData(out, "energy fraction per particle", fractions);
-    //appendGmshData(out, "Energy uncertainty [%]", this->uncerts);
-    appendGmshData(out, "Volume [cm^3]", mesh.volumes());
-    //appendGmshData(out, "Density [g/cm^3]", this->getGeometry()->element_densities());
+    appendGmshData(out, "Energy uncertainty [%]", uncerts);
+    appendGmshData(out, "Volume [cm^3]", volumes);
+    appendGmshData(out, "Density [g/cm^3]", densities);
+    appendGmshData(out, "Dose [Gy]", doses);
 }
 
 void Mevegs_Application::getCurrentResult(double &sum, double &sum2,
