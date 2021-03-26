@@ -172,7 +172,8 @@ const elementProperties = {
   x30060082: { tag: '(3006,0082)', type: '1', keyword: 'ObservationNumber', vm: 1, vr: 'IS' }, // Identification number of the Observation
   x30060084: { tag: '(3006,0084)', type: '1', keyword: 'ReferencedROINumber', vm: 1, vr: 'IS' }, // Uniquely identifies the referenced ROI described in the Structure Set ROI Sequence
   x30060085: { tag: '(3006,0085)', type: '3', keyword: 'ROIObservationLabel', vm: 1, vr: 'SH' }, // User-defined label for ROI Observation
-  x300600a4: { tag: '(3006,00A4)', type: '2', keyword: 'RTROIInterpretedType', vm: 1, vr: 'CS' }, // User-defined label for ROI Observation
+  // x30060086: { tag: '(3006,0086)', type: '3', keyword: 'RTROIIdentificationCodeSequence', vm: 1, vr: 'SQ' }, // Sequence containing Code used to identify ROI
+  // x300600a4: { tag: '(3006,00A4)', type: '2', keyword: 'RTROIInterpretedType', vm: 1, vr: 'CS' }, // Type of ROI
   xfffee000: { tag: '(FFFE,E000)', type: '1', keyword: 'Item', vm: 1, vr: '' } // An item in a sequence
 }
 
@@ -276,7 +277,7 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
   const byteArray = new Uint8Array(arrayBuffer)
 
   try {
-    const dataSet = dicomParser.parseDicom(byteArray, { untilTag: 'x7fe00010' })
+    const dataSet = dicomParser.parseDicom(byteArray) //, { untilTag: 'x7fe00010' })
     const dicomType = uids[dataSet.string('x00020002')]
 
     const propertyValues = {}
@@ -358,19 +359,20 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
     } else if (dicomType === 'RT Structure Set Storage') {
       const numROIs = propertyValues.ROIContourSequence.length
       const ROIs = new Array(numROIs)
-      for (let i = 1; i <= numROIs; i++) {
-        const contourSequence = propertyValues.ROIContourSequence.find((item) => {
-          if (parseInt(item.ReferencedROINumber) === i) return true
-        })
+      for (let i = 0; i < numROIs; i++) {
+        const contourSequence = propertyValues.ROIContourSequence[i]
+
+        const ROINum = parseInt(contourSequence.ReferencedROINumber)
+
         const structureSetSequence = propertyValues.StructureSetROISequence.find((item) => {
-          if (parseInt(item.ROINumber) === i) return true
+          if (parseInt(item.ROINumber) === ROINum) return true
         })
 
         const RTROIObservationsSequence = propertyValues.RTROIObservationsSequence.find((item) => {
-          if (parseInt(item.ReferencedROINumber) === i) return true
+          if (parseInt(item.ReferencedROINumber) === ROINum) return true
         })
 
-        ROIs[i - 1] = { type: dicomType, ...contourSequence, ...structureSetSequence, ...RTROIObservationsSequence }
+        ROIs[i] = { type: dicomType, ...contourSequence, ...structureSetSequence, ...RTROIObservationsSequence }
       }
       return { type: dicomType, ROIs: ROIs }
     }
