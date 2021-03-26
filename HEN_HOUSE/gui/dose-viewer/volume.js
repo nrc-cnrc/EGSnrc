@@ -506,9 +506,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         }
       })
 
-      meet.sort()
-
-      return meet
+      return meet.sort((a, b) => (a - b))
     }
 
     // Initialize the ROI array
