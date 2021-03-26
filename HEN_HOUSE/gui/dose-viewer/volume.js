@@ -415,49 +415,140 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         // Find the voxel positions of the grid to overlay the ROI data on
         // Increments for z array is the space between the slices
         const increments = { x: 0.2, y: 0.2, z: (rangeVals.z[1] - rangeVals.z[0]) / contourData.length }
-        const voxArr = {}
+        const voxelArr = {}
         Object.entries(rangeVals).forEach(([dim, range]) => {
           const divider = 1 / increments[dim]
           const min = Math.floor(range[0] * divider) / divider
           const max = Math.ceil(range[1] * divider) / divider
           const items = Math.round((max - min) / increments[dim])
-          voxArr[dim] = [...Array(items + 1)].map((x, y) => min + increments[dim] * y)
+          voxelArr[dim] = [...Array(items + 1)].map((x, y) => min + increments[dim] * y)
+        })
+        // Replace the z voxel array with the actual z values in the contour data
+        voxelArr.z = contourData.map((e) => e.z)
+
+        // Build the voxel information for the ROI array
+        const voxelNumber = {}
+        const scales = {}
+        Object.entries(voxelArr).map(([dim, arr]) => {
+          voxelNumber[dim] = arr.length
+          scales[dim] = d3.scaleQuantize().domain([arr[0] - increments[dim] / 2, arr[arr.length - 1] + increments[dim] / 2]).range(d3.range(0, arr.length, 1))
         })
 
         // Build the ROI array
-        const [xVoxels, yVoxels, zVoxels] = Object.values(voxArr).map((arr) => arr.length)
-        const [xPosToVox, yPosToVox, zPosToVox] = Object.entries(voxArr).map(([dim, arr]) => d3.scaleQuantize().domain([arr[0] - increments[dim] / 2, arr[arr.length - 1] + increments[dim] / 2]).range(d3.range(0, arr.length, 1)))
-        const ROIarray = new Array(xVoxels * yVoxels * zVoxels)
-
-        // Build the array that represents the ROI polygons as a matrix mask
-        var slicePos, closestContour
-        for (let k = 0; k < zVoxels; k++) {
-          slicePos = voxArr.z[k]
-          // Get contour slice closest to z slice position
-          closestContour = contourData.reduce((prev, curr) => (Math.abs(curr.z - slicePos) < Math.abs(prev.z - slicePos) ? curr : prev))
-
-          for (let i = 0; i < xVoxels; i++) {
-            for (let j = 0; j < yVoxels; j++) {
-              // Iterate through polygons in each slice to build a slice of the ROI array
-              closestContour.vals.forEach((polygon) => {
-                if (d3.polygonContains(polygon, [voxArr.x[i], voxArr.y[j]])) ROIarray[i + xVoxels * (j + k * yVoxels)] = 1
-              })
-            }
-          }
-        }
+        var ROIarray = this.makeROIArray(contourData, voxelNumber, voxelArr, scales)
 
         ROIoutlines.push({
           label: ROI.ROIName || ROI.ROIObservationLabel,
           colour: 'rgb(' + ROI.ROIDisplayColor.replaceAll('\\', ', ') + ')',
           // contourGeometricType: contourGeometricType,
-          voxelNumber: { x: xVoxels, y: yVoxels, z: zVoxels },
-          scales: { x: xPosToVox, y: yPosToVox, z: zPosToVox },
+          voxelNumber: voxelNumber,
+          scales: scales,
           ROIarray: ROIarray,
-          voxelArr: voxArr
+          voxelArr: voxelArr
         })
       }
     }
     return ROIoutlines
+  }
+
+  /**
+   * Turns the polygon data into an array
+   *
+   * @param {Object} contourData The contour data of an ROI at each z position
+   * @param {Object} voxelNumber The number of voxels for each axis in the ROI array
+   * @param {Object} voxelArr The center position of voxels for each axis in the
+   * ROI array
+   * @param {Object} scales The d3 scale from position to index of the voxel array
+   */
+  makeROIArray (contourData, voxelNumber, voxelArr, scales) {
+    // The constructor function for the line object
+    function Line (start, end) {
+      this.x0 = start[0]
+      this.x1 = end[0]
+      this.y0 = start[1]
+      this.y1 = end[1]
+      this.m = (this.y1 - this.y0) / (this.x1 - this.x0)
+
+      this.getX = function (y) {
+        return 1 / this.m * (y - this.y0) + this.x0
+      }
+
+      this.isValidY = function (y) {
+        if (y >= this.y0 && y < this.y1) {
+          return true
+        }
+        if (y >= this.y1 && y < this.y0) {
+          return true
+        }
+
+        return false
+      }
+    }
+
+    // Returns the y range of the polygon
+    const polygonYRange = (polygon) => {
+      var minY = polygon[0][1]; var maxY = polygon[0][1]
+
+      polygon.forEach((point) => {
+        if (point[1] < minY) minY = point[1]
+        else if (point[1] > maxY) maxY = point[1]
+      })
+      return [minY, maxY]
+    }
+
+    // Returns the x position of the intersection of the lines with the y position
+    const getMeetPoints = (y, lines) => {
+      var meet = []
+
+      lines.forEach((line) => {
+        if (line.isValidY(y)) {
+          meet.push(line.getX(y))
+        }
+      })
+
+      meet.sort()
+
+      return meet
+    }
+
+    // Initialize the ROI array
+    const ROIarray = new Array(voxelNumber.x * voxelNumber.y * voxelNumber.z)
+
+    // Build the array that represents the ROI polygons as a matrix mask
+    for (let k = 0; k < voxelNumber.z; k++) {
+      // For each contour slice
+      contourData[k].vals.forEach((polygon) => {
+        var [minY, maxY] = polygonYRange(polygon)
+
+        // Build a list of edges between each vertex in the polygon
+        var lines = []
+        for (let i = 1; i < polygon.length; i++) {
+          lines.push(new Line(polygon[i - 1], polygon[i]))
+        }
+        lines.push(new Line(polygon[polygon.length - 1], polygon[0]))
+
+        // Move the scan line step by step from the smallest to the biggest
+        // y-coordinate (voxArr.y is already sorted)
+        voxelArr.y.forEach((yVal, j) => {
+          var i0, i1
+
+          if ((minY <= yVal) && (maxY >= yVal)) {
+            // Get the x coordinate of polygon intersections with the scan line
+            var meetPoints = getMeetPoints(yVal, lines)
+            // For each pair of intersections
+            for (let idx = 1; idx < meetPoints.length; idx += 2) {
+              i0 = scales.x(meetPoints[idx - 1])
+              i1 = scales.x(meetPoints[idx])
+              // Fill in the ROI array between the points
+              for (let i = i0; i <= i1; i++) {
+                ROIarray[i + voxelNumber.x * (j + k * voxelNumber.y)] = 1
+              }
+            }
+          }
+        })
+      })
+    }
+    return ROIarray
   }
 
   /**
