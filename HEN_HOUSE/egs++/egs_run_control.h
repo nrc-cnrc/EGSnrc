@@ -49,6 +49,13 @@ using namespace std;
 class EGS_Application;
 class EGS_Input;
 
+/*! \brief Define RCO types */
+enum RCOType {
+    rco_simple,   //!< single job or multiple independent jobs
+    rco_uniform,  //!< parallel jobs with same numbe of histories
+    rco_balanced  //!< parallel jobs with balanced load via JCF
+};
+
 /*! \brief A simple run control object for advanced EGSnrc C++ applications.
 
   \ingroup egspp_main
@@ -220,13 +227,6 @@ public:
 
     virtual EGS_Float getCPUTime() const {
         return cpu_time+previous_cpu_time;
-    };
-
-    /*! \brief Define RCO types */
-    enum RCOType {
-        simple,   //!< single job or multiple independent jobs
-        uniform,  //!< parallel jobs with same numbe of histories
-        balanced  //!< parallel jobs with balanced load via JCF
     };
 
     static EGS_RunControl *getRunControlObject(EGS_Application *);

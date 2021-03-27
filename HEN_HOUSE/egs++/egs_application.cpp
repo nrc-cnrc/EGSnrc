@@ -226,7 +226,7 @@ void EGS_Application::storeGeometryStep(int ireg, int inew,
 }
 
 EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
-    source(0), rndm(0), run(0), simple_run(false), uniform_run(false), current_case(0),
+    source(0), rndm(0), run(0), rco_type(rco_balanced), current_case(0),
     last_case(0), data_out(0), data_in(0), a_objects(0),
     ghistory(new EGS_GeometryHistory) {
 
@@ -398,11 +398,11 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     else if (have_np && !have_ip) { // user wants to reset n_parallel
         // and combine parallel jobs
         n_parallel = ::strtol(npar.c_str(),0,10);
-        simple_run = true;
+        rco_type = rco_simple;
     }
     else if (n_parallel && !have_ip) { // user wants to combine
         // parallel jobs
-        simple_run = true;
+        rco_type = rco_simple;
     }
     else if (!have_np && have_ip) {
         egsWarning("\n%s\n  to specify a parallel run you need both,"
@@ -415,7 +415,7 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     for (int j=1; j<argc; j++) {
         string tmp = argv[j];
         if (tmp == "-s" || tmp == "--simple-run") {
-            simple_run = true;
+            rco_type = rco_simple;
             //for(int i=j; i<argc-1; i++) argv[i] = argv[i+1];
             //argc--;
             break;
@@ -428,9 +428,8 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     //
     for (int j=1; j<argc; j++) {
         string tmp = argv[j];
-        if (tmp == "-u" || tmp == "--urc") {
-            uniform_run = true;
-            simple_run  = false;
+        if (tmp == "-u" || tmp == "--uniform-run") {
+            rco_type = rco_uniform;
             break;
         }
     }
@@ -713,10 +712,10 @@ int EGS_Application::initRunControl() {
     if (run) {
         delete run;
     }
-    if (simple_run) {
+    if (rco_type == rco_simple) {
         run = new EGS_RunControl(this);
     }
-    else if (uniform_run) {
+    else if (rco_type == rco_uniform) {
         run = new EGS_UniformRunControl(this);
     }
     else {

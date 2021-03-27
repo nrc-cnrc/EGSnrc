@@ -83,7 +83,7 @@
 #               input file.
 #
 #  It is possible to use a simple control object for parallel runs by giving
-#  the -s or --simple command line option. In this case, each parallel job
+#  the -s or --simple-run command line option. In this case, each parallel job
 #  will run the number of histories specified in the input file but
 #  automatically adjust the initial random number seed(s) with the job index.
 #  This additional possibility has been implemented because several users have
@@ -106,7 +106,7 @@
 #
 #  - A simple RCO is used for single job runs.
 #
-#  - A JCF RCO is used by default for parallel runs, unless -s or --simple
+#  - A JCF RCO is used by default for parallel runs, unless -s or --simple-run
 #    is specified on the command line.
 #
 #  - A simple RCO understands the following keys:

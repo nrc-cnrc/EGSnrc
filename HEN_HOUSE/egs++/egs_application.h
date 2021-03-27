@@ -45,6 +45,7 @@
 #include "egs_base_source.h"
 #include "egs_simple_container.h"
 #include "egs_interpolator.h"
+#include "egs_run_control.h"
 
 #include <string>
 #include <iostream>
@@ -1082,8 +1083,7 @@ protected:
             i_parallel,  //!< Job index in parallel runs
             first_parallel; //!< first parallel job number
     bool    batch_run;   //!< Interactive or batch run.
-    bool    simple_run;  //!< Use a simple run control object for parallel runs
-    bool    uniform_run; //!< Use a uniform run control object for parallel runs
+    RCOType rco_type;
     bool    is_pegsless; //!< set to true if a pegsless run
 
     EGS_Particle p;      /*!< Parameters of the particle that just
