@@ -210,6 +210,16 @@ int EGS_AdvancedApplication::initEGSnrcBackEnd() {
     return 0;
 }
 
+//EGSnrc functions needed for radiative splitting ausgab object
+extern __extc__ void F77_OBJ_(brems,BREMS)();
+extern __extc__ void F77_OBJ_(annih,ANNIH)();
+extern __extc__ void F77_OBJ_(annih_at_rest,ANNIH_AT_REST)();
+extern __extc__ void F77_OBJ_(photo,PHOTO)();
+extern __extc__ void F77_OBJ(pair,PAIR)();
+extern __extc__ void F77_OBJ_(compt,COMPT)();
+extern __extc__ void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(int &medium, EGS_Float &e, EGS_Float &gle, EGS_I32 &lgle, EGS_Float &costhe, EGS_Float &sinthe);
+extern __extc__ EGS_Float F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float &nb_xdata, EGS_Float &nb_fdata, EGS_Float &nb_wdata, EGS_Float &nb_idata);
+
 /* The following 2 functions were used in an attempt to redirect
    all fortran I/O to use egsInformationn a degsWarning.
    Unfortunately, there were segmentation violations in the
@@ -886,10 +896,6 @@ int EGS_AdvancedApplication::shower() {
 #ifdef GDEBUG
     steps_n = 0;
 #endif
-    for (int j=0; j<a_objects_list.size(); ++j) {
-         egsInformation("\n initialize j %d\n",j);
-            a_objects_list[j]->initializeData();
-    }
     egsShower();
     return 0;
 }
@@ -1225,7 +1231,7 @@ EGS_Float EGS_AdvancedApplication::getRM() {
 }
 // Turns ON/OFF radiative splitting
 void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
-    egsInformation("nsplit here = %d\n",nsplit);
+    egsInformation("nsplit here = %g\n",nsplit);
     the_egsvr->nbr_split = nsplit;
 }
 
@@ -1318,6 +1324,11 @@ int EGS_AdvancedApplication::getNpold(){
     return the_stack->npold-1;
 }
 
+//get current value of np from stack
+int EGS_AdvancedApplication::getNp(){
+    return the_stack->np-1;
+}
+
 //get total no. of media in simulation
 int EGS_AdvancedApplication::getNmed(){
     return nmed;
@@ -1347,9 +1358,10 @@ void EGS_AdvancedApplication::deleteParticleFromStack(int ip) {
 }
 
 //retrieve particle information at stack position ip
-void EGS_AdvancedApplication::getParticleFromStack(int ip,EGS_Particle p) {
+void EGS_AdvancedApplication::getParticleFromStack(int ip,EGS_Particle &p) {
     p.q = the_stack->iq[ip+1];
     p.E = the_stack->E[ip+1];
+    egsInformation(" ip=%d p.E=%g the_stack->E=%g\n",ip,p.E,the_stack->E[ip]);
     p.latch = the_stack->latch[ip+1];
     p.ir = the_stack->latch[ip+1];
     p.wt = the_stack->wt[ip+1];
@@ -1447,7 +1459,31 @@ EGS_Float EGS_AdvancedApplication::getDl5(int i, int imed) {
 EGS_Float EGS_AdvancedApplication::getDl6(int i, int imed) {
     return the_brempr->dl6[imed][i];
 }
-
+//EGSnrc Mortran calls used in radiative splitting
+void EGS_AdvancedApplication::callBrems() {
+    F77_OBJ_(brems,BREMS)();
+}
+void EGS_AdvancedApplication::callAnnih() {
+    F77_OBJ_(annih,ANNIH)();
+}
+void EGS_AdvancedApplication::callAnnihAtRest() {
+    F77_OBJ_(annih_at_rest,ANNIH_AT_REST)();
+}
+void EGS_AdvancedApplication::callPhoto() {
+    F77_OBJ_(photo,PHOTO)();
+}
+void EGS_AdvancedApplication::callPair() {
+    F77_OBJ_(pair,PAIR)();
+}
+void EGS_AdvancedApplication::callCompt() {
+    F77_OBJ_(compt,COMPT)();
+}
+void EGS_AdvancedApplication::callEgsRayleighSampling(int imed, EGS_Float E, EGS_Float gle, EGS_I32 lgle, EGS_Float costhe, EGS_Float sinthe) {
+    F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(imed,E,gle,lgle,costhe,sinthe);
+}
+EGS_Float EGS_AdvancedApplication::callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, EGS_Float nb_idata) {
+    return F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(mxbrxs,nb_xdata,nb_fdata,nb_wdata,nb_idata);
+}
 
 //get max. energy of source from source
 EGS_Float EGS_AdvancedApplication::getEmax() {
