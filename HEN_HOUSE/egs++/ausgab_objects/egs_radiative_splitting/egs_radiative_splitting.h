@@ -129,8 +129,6 @@ public:
         app->setLatch(latch);
     }
 
-    void reportResults();
-
     int doInteractions(int iarg, int &killed);
 
     int doSmartBrems();

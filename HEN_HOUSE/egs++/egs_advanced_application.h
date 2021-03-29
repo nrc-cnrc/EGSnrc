@@ -236,9 +236,10 @@ public:
     EGS_Float getDnear(int np);
     int getNmed();
     int getNpold();
+    int getNp();
     void setNpold(int npold);
     void deleteParticleFromStack(int ip);
-    void getParticleFromStack(int ip,EGS_Particle p);
+    void getParticleFromStack(int ip,EGS_Particle &p);
     EGS_Float getGle();
     int getLgle(EGS_Float gle, int med);
     int getIbrdst();
@@ -261,6 +262,14 @@ public:
     EGS_Float getDl4(int i, int imed);
     EGS_Float getDl5(int i, int imed);
     EGS_Float getDl6(int i, int imed);
+    void callBrems();
+    void callAnnih();
+    void callAnnihAtRest();
+    void callPhoto();
+    void callPair();
+    void callCompt();
+    void callEgsRayleighSampling(int imed, EGS_Float e, EGS_Float gle, EGS_I32 lgle, EGS_Float costhe, EGS_Float sinthe);
+    EGS_Float callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, EGS_Float nb_idata);
 
     /* Needed by some sources */
     EGS_Float getRM();

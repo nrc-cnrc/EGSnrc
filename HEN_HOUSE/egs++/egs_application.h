@@ -1205,9 +1205,12 @@ public:
     virtual int getNpold() {
        return 0;
     }
+    virtual int getNp() {
+       return 0;
+    }
     virtual void setNpold(int npold) {};
     virtual void deleteParticleFromStack(int ip) {};
-    virtual void getParticleFromStack(int ip, EGS_Particle p) {};
+    virtual void getParticleFromStack(int ip, EGS_Particle &p) {};
     virtual EGS_Float getGle() {
        return 0.0;
     }
@@ -1272,6 +1275,16 @@ public:
        return 0.0;
     }
     virtual EGS_Float getDl6(int i, int imed) {
+       return 0.0;
+    }
+    virtual void callBrems() {};
+    virtual void callAnnih() {};
+    virtual void callAnnihAtRest() {};
+    virtual void callPhoto() {};
+    virtual void callPair() {};
+    virtual void callCompt() {};
+    virtual void callEgsRayleighSampling(int imed, EGS_Float e, EGS_Float gle, EGS_I32 lgle, EGS_Float costhe, EGS_Float sinthe) {};
+    virtual EGS_Float callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, EGS_Float nb_idata) {
        return 0.0;
     }
 };
