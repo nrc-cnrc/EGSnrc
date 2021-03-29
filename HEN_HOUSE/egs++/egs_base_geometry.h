@@ -428,7 +428,7 @@ public:
 
     EGS_Float getMediumRho(int ind) const;
 
-    void setApplication(EGS_Application *app);
+    virtual void setApplication(EGS_Application *app);
 
     /*! \brief Does this geometry object have a B field scaling feature?
      */
@@ -855,6 +855,9 @@ protected:
         are also useful to track region numbers upon modyfying the geometry.
      */
     vector<label> labels;
+
+    /*! \brief The application this object belongs to */
+    EGS_Application *app;
 
 private:
 

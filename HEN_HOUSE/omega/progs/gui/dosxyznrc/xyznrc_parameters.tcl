@@ -682,6 +682,19 @@ set dflagopt(0) "uniform"
 set dflagopt(1) "non-uniform"
 set dflag $dflagopt(0)
 
+set help_text(iphspout) {
+For outputting IAEA format phase space data on exit\
+from the phantom geometry (i_phsp_out). If i_phsp_out=1, then data\
+is output in DOSXYZnrc coordinates. If i_phsp_out=2\
+data is output in BEAMnrc coordinates. This option is\
+only available for phase space or BEAMnrc simulation\
+sources (which have a region surrounding the phantom).\
+The default is i_phsp_out=0: no phase space\
+output. If you are using source 20 or source 21\
+(synchronized sources) then you also have the option of\
+storing the MU index (frMU_indx) in the phase space file (see source inputs).
+}
+
 set phspoutopt(0) "none"
 set phspoutopt(1) "in DOSXYZnrc coordinates"
 set phspoutopt(2) "in BEAMnrc coordinates"

@@ -25,14 +25,22 @@
 #
 ###############################################################################
 #
+<<<<<<< HEAD
 #  Input file for simulation of a HPGe detector
 #  This input file was prepared for the Monte Carlo code comparison in 2018
 #  as a part of the ICRM Gamma-ray Spectrometry Working Group
+=======
+#  Input file for simulation of a HPGe detector.
+#
+#  This input file was prepared for the Monte Carlo code comparison in 2018
+#  as a part of the ICRM Gamma-ray Spectrometry Working Group.
+>>>>>>> b6763088faecb01cb3ab277afca990eb3af535a9
 #
 #  This input file contains a number of variations of the geometry and source,
 #  that can be used to reproduce all the conditions in the ICRM study. These
 #  variations can be simply substituted by commenting out sections of the file.
 #
+<<<<<<< HEAD
 #  This input file is compatible with egs_phd in EGSnrc
 #
 ###############################################################################
@@ -40,6 +48,16 @@
 ##############################################################################
 ### RUN CONTROL
 ##############################################################################
+=======
+#  This input file is compatible with egs_phd in EGSnrc.
+#
+###############################################################################
+
+
+###############################################################################
+### RUN CONTROL
+###############################################################################
+>>>>>>> b6763088faecb01cb3ab277afca990eb3af535a9
 :start run control:
   ncase = 1e7 # The number of histories to run
 :stop run control:
@@ -48,9 +66,15 @@
     initial seeds = 4235 1293 # The initial random number seeds
 :stop rng definition:
 
+<<<<<<< HEAD
 ##############################################################################
 ### GEOMETRY
 ##############################################################################
+=======
+###############################################################################
+### GEOMETRY
+###############################################################################
+>>>>>>> b6763088faecb01cb3ab277afca990eb3af535a9
 :start geometry definition:
 
     # Lead shielding
@@ -85,10 +109,17 @@
         :stop layer:
     :stop geometry:
 
+<<<<<<< HEAD
     ##################################
     # Detector A
     # The detector WITH dead layer
     ##################################
+=======
+    ###########################################################################
+    # Detector A
+    # The detector WITH dead layer
+    ###########################################################################
+>>>>>>> b6763088faecb01cb3ab277afca990eb3af535a9
     # To use detector B, comment out the next line
     :start geometry:
         name = detector
@@ -156,10 +187,17 @@
     :stop geometry:
 
 
+<<<<<<< HEAD
     ##################################
     # Detector B
     # The detector WITHOUT dead layer
     ##################################
+=======
+    ###########################################################################
+    # Detector B
+    # The detector WITHOUT dead layer
+    ###########################################################################
+>>>>>>> b6763088faecb01cb3ab277afca990eb3af535a9
     # To use detector A, comment out the next line
     #:start geometry:
         name = detector
@@ -218,9 +256,15 @@
         set label = crystal_no_dead_label 8 13
     :stop geometry:
 
+<<<<<<< HEAD
     ############################
     # Source geometries
     ############################
+=======
+    ###########################################################################
+    # Source geometries
+    ###########################################################################
+>>>>>>> b6763088faecb01cb3ab277afca990eb3af535a9
 
     # The water source geometry
     :start geometry:

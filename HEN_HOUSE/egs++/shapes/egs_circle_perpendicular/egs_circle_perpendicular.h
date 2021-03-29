@@ -77,19 +77,19 @@ This shape is specified via
 :stop shape:
 \endverbatim
 and delivers points uniformly distributed within a circle.
-The surface of this circle is always perpendicular to a ray based on the 
+The surface of this circle is always perpendicular to a ray based on the
 source particle position,
 when this shape is used as the target in a source that calls the
-getPointSourceDirection() function. For example, in a 
+getPointSourceDirection() function. For example, in a
 \link EGS_CollimatedSource collimated source \endlink
 when a source shape and target shape are defined, the special properties
 of this circle only apply when it is used as the target shape. Otherwise,
 it behaves like an \link EGS_CircleShape egs_circle \endlink.
 
-For each source particle, when getPointSourceDirection() is called, the 
-circle shape is rotated so that the circle surface is perpendicular to the 
-vector between the source particle location and the origin of the circle. In 
-effect this means that the source particles see a sphere instead of a 
+For each source particle, when getPointSourceDirection() is called, the
+circle shape is rotated so that the circle surface is perpendicular to the
+vector between the source particle location and the origin of the circle. In
+effect this means that the source particles see a sphere instead of a
 circle, except that for a given particle, the possible target locations
 are on the surface of a circle rather than within a sphere.
 
@@ -132,7 +132,6 @@ public:
 
     void getPointSourceDirection(const EGS_Vector &Xo,
                                  EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
-                                     
         // Perform user requested transformations to a point on the source surface
         // This is effectively the same as transforming the target position
         // because we're just calculating the direction between the two
