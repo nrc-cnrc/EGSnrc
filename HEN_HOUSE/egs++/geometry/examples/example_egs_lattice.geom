@@ -7,30 +7,23 @@
 #  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
-#  the terms of the GNU Affero General Public License as published by the Free
-#  Software Foundation, either version 3 of the License, or (at your option)
-#  any later version.
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
 #
-#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT
-#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License
-#  for more details.
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
 #
-#  To see the GNU Affero General Public License at:
-# <http://www.gnu.org/licenses/>.
-#
-################################################################################
-#
-#  When egs_lattice is used for publications, please cite the following paper:
-#  
-#  Martinov, Martin P., and Rowan M. Thomson.
-#  "Taking EGSnrc to new lows: Development of egs++ lattice geometry
-#  and testing with microscopic geometries."
-#  Medical Physics (2020).
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
 #
 #  Author:          Martin Martinov, 2019
+#
+#  Contributors:
 #
 ###############################################################################
 #
@@ -38,10 +31,17 @@
 #  spheres, cubic lattice of gold spheres, and hexagonal lattice of silver
 #  spheres) set up in three different regions in a large cube of water.
 #
+#  When egs_lattice is used for publications, please cite the following paper:
+#
+#  Martinov, Martin P., and Rowan M. Thomson. Taking EGSnrc to new lows:
+#  Development of egs++ lattice geometry and testing with microscopic
+#  geometries. Medical Physics 47, 3225-3232 (2020).
+#
 ###############################################################################
 */
 
-:start geometry definition:		
+
+:start geometry definition:
 	:start geometry:
 		library  = egs_spheres
 		type     = EGS_cSpheres
@@ -84,7 +84,7 @@
 			media = WATER
 		:stop media input:
 	:stop geometry:
-	
+
 	:start geometry:
 		library           = egs_lattice
 		name              = phantom_w_Bravais
@@ -110,6 +110,6 @@
 		subgeometry index = 3
 		spacing           = 1
 	:stop geometry:
-	
+
 	simulation geometry = phantom_w_Bravais_Cubic_Hex
 :stop geometry definition:

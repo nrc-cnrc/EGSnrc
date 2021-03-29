@@ -1,36 +1,37 @@
 /*
 ###############################################################################
 #
-#  EGSnrc egs++ lattice geometry
+#  EGSnrc egs++ lattice geometry headers
 #  Copyright (C) 2019 Rowan Thomson and Martin Martinov
 #
 #  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
-#  the terms of the GNU Affero General Public License as published by the Free
-#  Software Foundation, either version 3 of the License, or (at your option)
-#  any later version.
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
 #
-#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT
-#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-#  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License
-#  for more details.
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
 #
-#  To see the GNU Affero General Public License at:
-# <http://www.gnu.org/licenses/>.
-#
-################################################################################
-#
-#  When egs_lattice is used for publications, please cite the following paper:
-#  
-#  Martinov, Martin P., and Rowan M. Thomson.
-#  "Taking EGSnrc to new lows: Development of egs++ lattice geometry
-#  and testing with microscopic geometries."
-#  Medical Physics (2020).
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
 #
 #  Author:          Martin Martinov, 2019
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  When egs_lattice is used for publications, please cite the following paper:
+#
+#  Martinov, Martin P., and Rowan M. Thomson. Taking EGSnrc to new lows:
+#  Development of egs++ lattice geometry and testing with microscopic
+#  geometries. Medical Physics 47, 3225-3232 (2020).
 #
 ###############################################################################
 */
@@ -43,35 +44,37 @@
   \ingroup CompositeG
 
 A geometry which embeds a lattice of one geometry (named subgeometry below)
-into one region of a second geometry (named base geometry).  This geometry
+into one region of a second geometry (named base geometry). This geometry
 effectively recurses the subgeometry at every position defined by a Bravais,
-cubic, or hexagonal lattice.  As such, you can model an infinite amount of
+cubic, or hexagonal lattice. As such, you can model an infinite amount of
 subgeometries (e.g., region 0 of egs_space) and the only slow down to your
 simulation would depend on how many subgeometries you would expect over a
 particle track.
-As this geometry only stores a single subgeometry in memory, it can only
-score in ALL subgeometries (or rather, the single subgeometry at all lattice
-positions) at once.  Therefore, dose to the subgeometry at different
-locations cannot be discerned.  Final geometry regions are numbered as
-all base geometry regions first, then enumerating all subgeometry regions
-afterwards.  A more complete description can be found in the paper
-referenced in the header.
+
+As this geometry only stores a single subgeometry in memory, it can only score
+in ALL subgeometries (or rather, the single subgeometry at all lattice
+positions) at once. Therefore, dose to the subgeometry at different locations
+cannot be discerned. Final geometry regions are numbered as all base geometry
+regions first, then enumerating all subgeometry regions afterwards. A more
+complete description can be found in the paper referenced in the header.
 
 All egs_lattice geometries require a base geometry, a subgeometry, and a
-subgeometry index.  The base geometry is the larger geometry into which
-the lattice will be embedded.  The subgeometry is the geometry which will
-be placed at each lattice position.  The subgeometry index will be the
-base geometry region in which the lattice is placed.  Any geometries at
-the boundary will be partially modelled (only the fraction in the selected
-region).  The spacing and type of geometry can be defined in one of three
-ways:
-    1) Bravais Lattice: Define spacing in x, y, and z using the three
-    inputs for spacing, respectively.
-    2) Cubic Lattice: Define the same spacing in x, y, and z using a 
-    single input for spacing.
-    3) Hexagonal Lattice: Define the type as hexagonal, then spacing
-    defines the hexagonal close-packed lattice nearest neighbour distance.
-    
+subgeometry index. The base geometry is the larger geometry into which the
+lattice will be embedded. The subgeometry is the geometry which will be placed
+at each lattice position. The subgeometry index will be the base geometry
+region in which the lattice is placed. Any geometries at the boundary will be
+partially modelled (only the fraction in the selected region). The spacing and
+type of geometry can be defined in one of three ways:
+
+    1) Bravais Lattice: Define spacing in x, y, and z using the three inputs
+    for spacing, respectively.
+
+    2) Cubic Lattice: Define the same spacing in x, y, and z using a single
+    input for spacing.
+
+    3) Hexagonal Lattice: Define the type as hexagonal, then spacing defines
+    the hexagonal close-packed lattice nearest neighbour distance.
+
 #Example Bravais lattice with spacings 1, 2 and 3
 \verbatim
     :start geometry:
@@ -118,22 +121,22 @@ ways:
 
 #ifdef WIN32
 
-#ifdef BUILD_LATTICE_DLL
-#define EGS_LATTICE_EXPORT __declspec(dllexport)
-#else
-#define EGS_LATTICE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_LATTICE_LOCAL
+    #ifdef BUILD_LATTICE_DLL
+        #define EGS_LATTICE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_LATTICE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_LATTICE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_LATTICE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_LATTICE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_LATTICE_EXPORT
-#define EGS_LATTICE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_LATTICE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_LATTICE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_LATTICE_EXPORT
+        #define EGS_LATTICE_LOCAL
+    #endif
 
 #endif
 
