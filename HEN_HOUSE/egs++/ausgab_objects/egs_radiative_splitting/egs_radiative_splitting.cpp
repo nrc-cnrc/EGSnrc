@@ -23,7 +23,7 @@
 #
 #  Author:          Ernesto Mainegra-Hing, 2018
 #
-#  Contributors:
+#  Contributors:    Blake Walters, 2021
 #
 ###############################################################################
 #
@@ -50,30 +50,6 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 #include "array_sizes.h"
-
-//a global application definition--dangerous?
-EGS_Application *appg;
-
-//subroutines and functions we need from egsnrc.mortran
-//TODO: figure out why these are not replaced by egsnrc routines when
-//linked to application
-extern "C" void F77_OBJ_(brems,BREMS)();
-extern "C" void F77_OBJ_(annih,ANNIH)();
-extern "C" void F77_OBJ_(annih_at_rest,ANNIH_AT_REST)();
-extern "C" void F77_OBJ_(photo,PHOTO)();
-extern "C" void F77_OBJ(pair,PAIR)();
-extern "C" void F77_OBJ_(compt,COMPT)();
-extern "C" void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(int &medium, EGS_Float &e, EGS_Float &gle, EGS_I32 &lgle, EGS_Float &costhe, EGS_Float &sinthe);
-extern "C" EGS_Float F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float &nb_xdata, EGS_Float &nb_fdata, EGS_Float &nb_wdata, EGS_Float &nb_idata);
-
-extern "C" void F77_OBJ_(egs_fill_rndm_array,EGS_FILL_RNDM_ARRAY)(const EGS_I32 *n, EGS_Float *rarray) {
-   appg->fillRandomArray(*n,rarray);
-};
-
-extern "C" void F77_OBJ_(egs_ausgab,EGS_AUSGAB)(EGS_I32 *iarg) {
-    *iarg = appg->userScoring(*iarg);
-    if (appg->top_p.wt == 0) return; //allow code to force return to shower
-};
 
 //local structures required
 struct DBS_Aux {
@@ -151,9 +127,6 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
         return;
     }
 
-    //set global application
-    appg = app;
-
     char buf[32];
 
     // Set EGSnrc internal radiative splitting number .
@@ -204,6 +177,9 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         app->setRadiativeSplitting(1); return 0;
     }
 
+    //TODO: ensure that we are using app->top_p and app->Np correctly
+    //Remember these are only updated on entry to ausgab
+
     int np = app->Np;
 
     int latch = app->top_p.latch;
@@ -223,10 +199,9 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             //is the next line necessary?
             app->setRadiativeSplitting(nsplit);
             int res = doSmartBrems();
-            //egsInformation("res %d\n",res);
             if( res ) {
-                F77_OBJ(brems,BREMS)();
-                int nstart = np+2, aux=0;
+                app->callBrems();
+                int nstart = np+1, aux=0;
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
             }
             //we need to relable the interacting e- as fat
@@ -235,10 +210,13 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             app->setLatch(latch);
         }
         else {
-            egsInformation("E=%g, wt=%g\n",E,wt);
+            egsInformation("np=%d, E=%g, wt=%g\n",app->Np,E,wt);
             app->setRadiativeSplitting(1);
-            F77_OBJ(brems,BREMS)();
-            int nstart = np+2, aux=0;
+            app->callBrems();
+            EGS_Particle p_test;
+            app->getParticleFromStack(0,p_test);
+            egsInformation("p_test.E=%g% p_test.q=%d%\n",p_test.E,p_test.q);
+            int nstart = np+1, aux=0;
             killThePhotons(fs,ssd,nsplit,nstart,aux);
         }
         check = 1;
@@ -255,7 +233,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             app->setRadiativeSplitting(nsplit);
         }
         else app->setRadiativeSplitting(1);
-        F77_OBJ_(annih,ANNIH)();
+        app->callAnnih();
         int nstart=np+1,aux=0;
         killThePhotons(fs,ssd,nsplit,nstart,aux);
         check = 1;
@@ -273,7 +251,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         }
         else {
             app->setRadiativeSplitting(1);
-            F77_OBJ_(annih_at_rest,ANNIH_AT_REST)();
+            app->callAnnihAtRest();
             int nstart=np+1,aux=0;
             killThePhotons(fs,ssd,nsplit,nstart,aux);
         }
@@ -292,13 +270,13 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         {
             //for now don't split the interaction
             //what happens to nonfat charged particles?
-            F77_OBJ(pair,PAIR)();
+            app->callPair();
         }
         else if(iarg == EGS_Application::BeforePhoto)
         {
             //for now don't split the interaction
             //what happens to nonfat charged particles?
-            F77_OBJ(photo,PHOTO)();
+            app->callPhoto();
         }
         else if(iarg == EGS_Application::BeforeCompton)
         {
@@ -317,7 +295,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 }
                 for (int i=0; i<nint; i++)
                 {
-                    F77_OBJ(compt,COMPT)();
+                    app->callCompt();
                 }
                 // kill photons not aimed into the field and any electrons
                 int nstart = np+1, aux=1;
@@ -345,13 +323,13 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 p.latch = latch;
                 EGS_Float dnear = app->getDnear(app->Np);
                 //call EGS rayleigh sampling routine to get scatter angles cost, sint
-                F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(imed,E,gle,lgle,costhe,sinthe);
+                app->callEgsRayleighSampling(imed,E,gle,lgle,costhe,sinthe);
                 //adjust scatter angles and apply to particle
                 doUphi21(sinthe,costhe,p.u);
                 //add the particle to the stack
                 app->addParticleToStack(p,dnear);
                 //now potentially kill it -- seems like we should kill the particle before adding to the stack
-                int nstart = app->Np, aux=0;
+                int nstart = app->getNp(), aux=0;
                 killThePhotons(fs,ssd,nint,nstart,aux);
             }
         }
@@ -376,7 +354,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
     if( check ) {
         if( check == 1 ) {
-            if( app->Np >= MXSTACK ) egsFatal("Stack size exceeded "
+            if( app->getNp() >= MXSTACK ) egsFatal("Stack size exceeded "
               "in EGS_RadiativeSplitting::doInteractions()\n");
             //set weight of particle on top of stack to 0
             EGS_Particle p = app->top_p;
@@ -843,7 +821,7 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
               EGS_Float f2 = app->getNbFdata(0,j,imed);
               EGS_Float f3 = app->getNbWdata(1,j,imed);
               EGS_Float f4 = app->getNbIdata(1,j,imed);
-              br = F77_OBJ(alias_sample1,ALIAS_SAMPLE1)(mxbrxs,f1,f2,f3,f4);
+              br = app->callAliasSample1(mxbrxs,f1,f2,f3,f4);
             }
             else
             {
@@ -899,8 +877,8 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
 
 void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_split, int npstart, int kill_electrons) {
    //an adaptation of the Mortran subroutine kill_the_photons found in beamnrc.mortran, beampp.mortran
-   egsInformation("npstart=%d Np=%d\n",npstart,app->Np);
-   if (npstart > app->Np) return;
+   egsInformation("npstart=%d Np=%d\n",npstart,app->getNp());
+   if (npstart > app->getNp()) return;
    int i_playrr = 0;
    int idbs = npstart;
    EGS_Float dnear = app->getDnear(idbs);
@@ -909,7 +887,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
       app->getParticleFromStack(idbs,p);
       //below is temporary until we figure out how to pass iweight
       int is_fat = (p.latch & (1 << 0));
-      egsInformation("E=%g iq=%d x=%g y=%g z=%g u=%g v=%g w=%g\n",p.E,p.q,p.x.x,p.x.y,p.x.z,p.u.x,p.u.y,p.u.z);
+      egsInformation("ktp: E=%g iq=%d x=%g y=%g z=%g u=%g v=%g w=%g\n",p.E,p.q,p.x.x,p.x.y,p.x.z,p.u.x,p.u.y,p.u.z);
       if (p.q == 0)
       {
          i_playrr = 0;
@@ -981,7 +959,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
             }
          }
       }
-   } while (idbs <= app->Np);
+   } while (idbs <= app->getNp());
 
    return;
 }
@@ -1459,12 +1437,6 @@ void EGS_RadiativeSplitting::doUphi21(EGS_Float sinthe, EGS_Float costhe, EGS_Ve
         u.z = -sinpsi*us + c*costhe;
     }
     return;
-}
-
-void EGS_RadiativeSplitting::reportResults()
-{
-    egsInformation("\n here?\n");
-    delete appg;
 }
 
 //*********************************************************************
