@@ -308,6 +308,15 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         const slice = doseVol.getSlice(panel.axis, slicePos)
         doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
       }
+
+      if (this.structureSetVolume) {
+        // Update the plots
+        // Get list of class names of hidden contours
+        const hiddenROIClassList = this.getHiddenClassList(this.ROILegendSvg)
+        Object.values(this.panels).forEach((panel) => {
+          this.structureSetVolume.plotStructureSet(panel.axis, panel.slicePos, panel.axisElements['plot-dose'], panel.volume, panel.zoomTransform, hiddenROIClassList)
+        })
+      }
     })
 
     if (this.densityVolume) {
