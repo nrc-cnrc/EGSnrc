@@ -975,6 +975,8 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
       maxDose: 1.0
     }
 
+    super.buildWorldToVoxelScales(this.data)
+
     // Max dose used for dose contour plot
     super.addColourScheme(d3.interpolateViridis, 1.0, -1.0)
   }
