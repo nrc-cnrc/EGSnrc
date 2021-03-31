@@ -111,7 +111,11 @@ exec 3>>$basename.egsparallel
 log "BEGIN $0"
 
 ### restrict number of jobs to the number of cpu threads
-cpu_nthread=$(grep -c processor /proc/cpuinfo)
+os_name="$(uname -s)"
+case "$os_name" in
+   Darwin)  cpu_nthread=$(sysctl -n hw.ncpu);;
+   *)       cpu_nthread=$(grep -c processor /proc/cpuinfo);;
+esac
 if [ $nthread -gt $cpu_nthread ]; then
     log "reduce requested threads ($nthread) to match available cpu threads ($cpu_nthread)"
     nthread=$cpu_nthread
