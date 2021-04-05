@@ -316,15 +316,17 @@ function handleFiles (files) {
         volViewer.densitySelector.node().selectedIndex = 1
       }
 
-      // Update the dose comparison selectors
       volumeViewerList.forEach(volViewer => {
+        // Update the dose comparison selectors
         if (doseVolumeList.length >= 2) {
           const idx = doseVolumeList.findIndex((vol) => vol.fileName === volViewer.doseVolume.fileName)
           volViewer.initializeDoseComparisonSelector(idx)
         }
 
+        // Update the ROI checkboxes
         if (structureSetVolumeList.length > 0) {
           volViewer.enableCheckboxForROIOutlines()
+          volViewer.enableCheckboxForDVHPlot()
         }
       })
     })

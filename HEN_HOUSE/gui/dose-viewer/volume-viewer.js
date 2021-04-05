@@ -45,6 +45,7 @@
 /* global defineShowROICheckboxBehaviour */
 /* global defineExportPNGButtonBehaviour */
 /* global defineExportCSVButtonBehaviour */
+/* global defineShowDVHCheckboxBehaviour */
 /* global buildVoxelInfoHtml */
 /* global coordsToVoxel */
 /* global updateVoxelCoords */
@@ -53,6 +54,7 @@
 /* global Slider */
 /* global initializeMaxDoseSlider */
 /* global structureSetVolumeList */
+/* global DoseVolumeHistogram */
 
 // import {
 //   densityVolumeList, doseComparisonVolumeList, doseVolumeList,
@@ -60,7 +62,7 @@
 // } from './index.js'
 // import {
 //   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour, defineShowROICheckboxBehaviour
-//   enableCheckboxForDensityPlot, enableButton
+//   enableCheckboxForDensityPlot, enableButton, defineShowDVHCheckboxBehaviour
 // } from './checkbox-button-helper.js'
 // import { DoseProfile } from './dose-profile.js'
 // import { Panel } from './panel.js'
@@ -70,6 +72,7 @@
 // import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
 // import { defineExportCSVButtonBehaviour, defineExportPNGButtonBehaviour } from './export.mjs'
 // import {initializeMaxDoseSlider} from './max-dose-slider.js'
+// import { DoseVolumeHistogram } from './dose-volume-histogram.js'
 
 const AXES = ['xy', 'yz', 'xz']
 
@@ -697,9 +700,12 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       'Plot dose profile at crosshairs?', defineShowProfileCheckboxBehaviour)
     this.showROIOutlinesCheckbox = addCheckbox('show-roi-outlines-checkbox' + this.id, 'ShowROIOutlines',
       'Show ROI contours?', defineShowROICheckboxBehaviour)
+    this.showDVHCheckbox = addCheckbox('show-dvh-checkbox' + this.id, 'ShowDVH',
+      'Show DVH?', defineShowDVHCheckboxBehaviour)
 
     if (structureSetVolumeList.length > 0) {
       this.enableCheckboxForROIOutlines()
+      this.enableCheckboxForDVHPlot()
     }
 
     // Add buttons to export visualization and export to csv
@@ -904,6 +910,12 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         this.id + '-' + dimensions[i]
       )
     })
+
+    const selectedDiv = this.viewerContainer.append('div')
+    this.DVH = new DoseVolumeHistogram(this.sideDoseProfileDimensions,
+      selectedDiv,
+      this.id,
+      this)
   }
 
   /**
@@ -1050,6 +1062,13 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
    */
   enableCheckboxForROIOutlines () {
     if (this.showROIOutlinesCheckbox.node().disabled) this.showROIOutlinesCheckbox.node().disabled = false
+  }
+
+  /**
+   * Enable the checkbox for the dose profile plots.
+   */
+  enableCheckboxForDVHPlot () {
+    if (this.showDVHCheckbox.node().disabled) this.showDVHCheckbox.node().disabled = false
   }
 
   /**
@@ -1247,13 +1266,15 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     const toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '') // eslint-disable-line no-useless-escape
     const colours = structureSetVolume.ROIoutlines.map((ROIoutline) => d3.color(ROIoutline.colour))
     const labels = structureSetVolume.ROIoutlines.map((ROIoutline) => ROIoutline.label)
+    const svgList = Object.values(this.svgObjs['plot-dose'])
+    svgList.push(this.DVH.svg)
 
     // Define variables
     const structureSetLegendParams = {
       legendSvg: this.ROILegendSvg,
       legendClass: 'ROILegend',
       baseClassName: 'roi-outline.',
-      svgList: Object.values(this.svgObjs['plot-dose']),
+      svgList: svgList,
       legendTitle: 'ROIs',
       labels: labels,
       cells: labels,

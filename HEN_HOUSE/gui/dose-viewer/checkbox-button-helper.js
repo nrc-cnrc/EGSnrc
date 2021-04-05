@@ -169,7 +169,24 @@ var defineShowROICheckboxBehaviour = function (volumeViewer, checkbox) { // esli
   }
 }
 
+/**
+ * Define the behaviour of selecting the show DVH checkbox.
+ */
+var defineShowDVHCheckboxBehaviour = function (volumeViewer, checkbox) { // eslint-disable-line no-unused-vars
+  if (checkbox.checked) {
+    if (volumeViewer.structureSetVolume && volumeViewer.DVH && volumeViewer.doseVolume) {
+      // Show DVH plots
+      volumeViewer.DVH.parentSvg.style('display', null)
+      volumeViewer.DVH.setDVHData(volumeViewer.structureSetVolume, volumeViewer.doseVolume)
+      volumeViewer.DVH.plotData()
+    }
+  } else {
+    volumeViewer.DVH.parentSvg.style('display', 'none')
+  }
+}
+
 // export {
 //   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
-//   enableCheckboxForDensityPlot, defineShowROICheckboxBehaviour, enableButton
+//   enableCheckboxForDensityPlot, defineShowROICheckboxBehaviour, enableButton,
+//   defineShowDVHCheckboxBehaviour
 // }
