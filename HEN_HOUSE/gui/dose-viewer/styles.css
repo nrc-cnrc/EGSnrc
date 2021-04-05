@@ -76,7 +76,9 @@ p.description {
 }
 
 .x-axis-grid,
-.y-axis-grid {
+.y-axis-grid,
+.dvh-x-axis,
+.dvh-y-axis  {
   color: grey;
 }
 

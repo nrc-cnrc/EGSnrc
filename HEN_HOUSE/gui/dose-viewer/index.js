@@ -40,6 +40,19 @@ const DOSE_PROFILE_DIMENSIONS = { // eslint-disable-line no-unused-vars
   }
 }
 
+// Define dose volume histogram size variables
+const DVH_DIMENSIONS = { // eslint-disable-line no-unused-vars
+  fullWidth: MAIN_VIEWER_DIMENSIONS.fullWidth * 3,
+  fullHeight: MAIN_VIEWER_DIMENSIONS.fullHeight * 0.8,
+  margin: DOSE_PROFILE_DIMENSIONS.margin,
+  get width () {
+    return this.fullWidth - this.margin.left - this.margin.right
+  },
+  get height () {
+    return this.fullHeight - this.margin.top - this.margin.bottom
+  }
+}
+
 // Global variables
 var densityVolumeList = [] // eslint-disable-line no-unused-vars
 var doseVolumeList = [] // eslint-disable-line no-unused-vars
