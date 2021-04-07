@@ -179,9 +179,15 @@ var defineShowDVHCheckboxBehaviour = function (volumeViewer, checkbox) { // esli
       volumeViewer.DVH.parentSvg.style('display', null)
       volumeViewer.DVH.setDVHData(volumeViewer.structureSetVolume, volumeViewer.doseVolume)
       volumeViewer.DVH.plotData()
+
+      // Enable saving DVH as csv
+      volumeViewer.saveDVHButton.node().disabled = false
     }
   } else {
     volumeViewer.DVH.parentSvg.style('display', 'none')
+
+    // Disable saving DVH as csv
+    volumeViewer.saveDVHButton.node().disabled = true
   }
 }
 

@@ -36,12 +36,25 @@
 /* global btoa */
 /* global XMLSerializer */
 
+const makeAndDownloadCsv = (data, name) => {
+  // Create data blob
+  var csvBlob = new Blob([d3.csvFormat(data)], {
+    type: 'text/csv;charset=utf-8;'
+  })
+
+  // Get data url for blob
+  const csvString = (URL || webkitURL).createObjectURL(csvBlob)
+
+  // Download the file
+  downloadURI(csvString, name)
+}
+
 /**
- * Set up the export to csv button behaviour. Downloads a csv for each dose
+ * Set up the export dose profile to csv button behaviour. Downloads a csv for each dose
  * profile (x, y, z) of the volume viewer.
  */
 // TODO: If plot density is selected, download density information as well.
-var defineExportCSVButtonBehaviour = function (volumeViewer) { // eslint-disable-line no-unused-vars
+var defineExportDoseProfileCSVButtonBehaviour = function (volumeViewer) { // eslint-disable-line no-unused-vars
   volumeViewer.doseProfileList.forEach((doseProfile) => {
     // Check that dose profile data exists
     if (doseProfile.data) {
@@ -49,24 +62,33 @@ var defineExportCSVButtonBehaviour = function (volumeViewer) { // eslint-disable
       var csvName =
         volumeViewer.id + '-' + doseProfile.profileDim + '-dose-profile.csv'
 
-      var makeAndDownloadCsv = (data, name) => {
-        // Create data blob
-        var csvBlob = new Blob([d3.csvFormat(data)], {
-          type: 'text/csv;charset=utf-8;'
-        })
-
-        // Get data url for blob
-        const csvString = (URL || webkitURL).createObjectURL(csvBlob)
-
-        // Download the file
-        downloadURI(csvString, name)
-      }
-
       makeAndDownloadCsv(doseProfile.data, csvName)
     }
   })
 }
 
+/**
+ * Set up the export DVH to csv button behaviour. Downloads a csv for the DVH of
+ * the volume viewer.
+ */
+var defineExportDVHToCSVButtonBehaviour = function (volumeViewer) { // eslint-disable-line no-unused-vars
+  if (volumeViewer.DVH) {
+    // Create csv name
+    const csvName = volumeViewer.id + '-DVH.csv'
+
+    // Put data in desired format before converting to csv
+    const ROIs = volumeViewer.DVH.data
+    const DVHData = ROIs[0].values.map((val, idx) => {
+      var obj = { dose: val.x }
+      ROIs.forEach((ROI) => {
+        obj[ROI.key] = ROI.values[idx].y
+      })
+      return obj
+    })
+
+    makeAndDownloadCsv(DVHData, csvName)
+  }
+}
 /**
  * Set-up the export to png button behaviour. Takes a screenshot of the volume
  * viewer.
@@ -176,4 +198,5 @@ function getImgString (node) {
   return svgString
 }
 
-// export { defineExportCSVButtonBehaviour, defineExportPNGButtonBehaviour }
+// export { defineExportDoseProfileCSVButtonBehaviour,
+// defineExportDVHToCSVButtonBehaviour, defineExportPNGButtonBehaviour }

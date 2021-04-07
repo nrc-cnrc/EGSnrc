@@ -703,8 +703,10 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
    * Calculates the dose volume histogram for each of the ROIs.
    *
    * @param {DoseVolume} doseVolume The dose volume to use for DVH calculations.
+   * @param {number} nThresholds    The number of thresholds/bins to use for
+   * histogram calculations.
    */
-  calculateDVH (doseVolume) {
+  calculateDVH (doseVolume, nThresholds = 250) {
     // Convert index in 1D array to x, y, z coords
     var to3d = (idx, voxelNumber) => {
       const k = Math.floor(idx / (voxelNumber.y * voxelNumber.x))
@@ -720,7 +722,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
     // Set the parameters for the histogram
     var histogram = d3.histogram()
       .domain([0, 1])
-      .thresholds(100)
+      .thresholds(nThresholds)
 
     // Initialize ROIHistograms
     const ROIHistograms = []
@@ -730,6 +732,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
       // Initialize histogramList
       const doseList = []
       let coords, pos, dose
+      var nVals = 0
 
       // Go through each element in the ROI array
       ROIOutline.ROIarray.forEach((val, i) => {
@@ -737,11 +740,13 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         pos = toPos(coords, ROIOutline.voxelArr)
         dose = doseVolume.getDataAtPosition(pos) || 0
         doseList.push(dose)
+        nVals++
       })
 
       // Create and add ROI histogram to list
       var bins = histogram(doseList)
-      ROIHistograms.push(bins)
+      var binLength = bins.map((binList) => binList.length / nVals)
+      ROIHistograms.push(binLength)
     })
     return ROIHistograms
   }

@@ -44,7 +44,8 @@
 /* global defineShowProfileCheckboxBehaviour */
 /* global defineShowROICheckboxBehaviour */
 /* global defineExportPNGButtonBehaviour */
-/* global defineExportCSVButtonBehaviour */
+/* global defineExportDoseProfileCSVButtonBehaviour */
+/* global defineExportDVHToCSVButtonBehaviour */
 /* global defineShowDVHCheckboxBehaviour */
 /* global buildVoxelInfoHtml */
 /* global coordsToVoxel */
@@ -70,7 +71,9 @@
 // import { DoseComparisonVolume } from './volume.js'
 // import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
 // import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
-// import { defineExportCSVButtonBehaviour, defineExportPNGButtonBehaviour } from './export.mjs'
+//   import { defineExportDoseProfileCSVButtonBehaviour,
+//   defineExportDVHToCSVButtonBehaviour, defineExportPNGButtonBehaviour } from
+//   './export.mjs'
 // import {initializeMaxDoseSlider} from './max-dose-slider.js'
 // import { DoseVolumeHistogram } from './dose-volume-histogram.js'
 
@@ -722,7 +725,8 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     }
 
     this.saveVisButton = addButtons('save-vis', 'Export visualization to PNG', defineExportPNGButtonBehaviour)
-    this.saveDoseProfileButton = addButtons('save-dose-profile', 'Export dose profiles to CSV', defineExportCSVButtonBehaviour)
+    this.saveDoseProfileButton = addButtons('save-dose-profile', 'Export dose profiles to CSV', defineExportDoseProfileCSVButtonBehaviour)
+    this.saveDVHButton = addButtons('save-dvh', 'Export DVH to CSV', defineExportDVHToCSVButtonBehaviour)
 
     // Add min and max density sliders
     const minMaxSliderHolder = optionHolder.append('div').attr('class', 'option')
