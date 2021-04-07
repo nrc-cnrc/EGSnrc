@@ -74,8 +74,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
     this.xDoseScale = null
     this.yVolumeScale = null
     this.transform = null
-    this.dataList = null
-    this.ROIData = null
+    this.data = null
   }
 
   /**
@@ -152,11 +151,24 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
    */
   setDVHData (structureSetVol, doseVol) {
     const ROIHistograms = structureSetVol.calculateDVH(doseVol)
-    this.dataList = ROIHistograms.map((histogram, idx) => ({
-      histogram: histogram,
-      label: structureSetVol.ROIoutlines[idx].label,
-      colour: structureSetVol.ROIoutlines[idx].colour
-    }))
+    // Calculate the cumulative dose for each ROI
+    this.data = ROIHistograms.map((histogram, idx) => {
+      var cumSum = 0
+      var cumulativeHistogram = histogram
+        .reverse()
+        .map((val) => {
+          cumSum += val
+          return cumSum
+        })
+        .reverse()
+        .map((val, i) => ({ x: i / histogram.length, y: val }))
+
+      return {
+        key: structureSetVol.ROIoutlines[idx].label,
+        colour: structureSetVol.ROIoutlines[idx].colour,
+        values: cumulativeHistogram
+      }
+    })
 
     // Build the scales
     this.xDoseScale = d3.scaleLinear().domain([0, 1]).range([0, this.dimensions.width])
@@ -262,24 +274,9 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
       .x((d) => this.xDoseScale(d.x))
       .y((d) => this.yVolumeScale(d.y))
 
-    // Calculate the cumulative dose for each ROI
-    const cumData = this.dataList.map((data) => {
-      var cumSum = 0
-      var cumHistogram = data.histogram
-        .reverse()
-        .map((val) => {
-          cumSum += val
-          return cumSum
-        })
-        .reverse()
-        .map((val, i) => ({ x: i / data.histogram.length, y: val }))
-
-      return { key: data.label, colour: data.colour, values: cumHistogram }
-    })
-
     // Plot the DVH lines
     const DVHLines = plotArea.selectAll('.line')
-      .data(cumData)
+      .data(this.data)
       .enter()
       .append('path')
       .attr('fill', 'none')
