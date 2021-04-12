@@ -36,6 +36,12 @@ RANDOM = $(EGS_SOURCEDIR)ranlux
 #
 EGS_EXTRA_OBJECTS =
 
+# We use #ifdef ... #endif for parallel processing implementation
+# => Fortran file extension must be .F so that the C-preprocessor is
+# automatically invoked.
+#
+FEXT = F
+
 # The mortran sources
 # Note: order is important!
 # Note: don't forget the leading tabs on continuation lines!

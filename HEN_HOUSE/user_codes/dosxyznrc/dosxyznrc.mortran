@@ -3388,6 +3388,8 @@ IF( n_parallel > 0 & ~is_finished ) [
         ainflu=temp2; "need to define this because it is used to normalize dose"
         IF((isource = 0 | isource = 1 | isource = 3 | isource = 7) &
            beamarea>0.) ainflu=ainflu/beamarea;
+        call show_transport_parameter(iout);
+        call srcout;
         goto :ANALYZE-PARALLEL:;
     ]
 ]

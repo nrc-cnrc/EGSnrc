@@ -232,11 +232,8 @@ DO I = 1, NVALUE(NUM_CONES)[
     STOP;
    ]
 ]
-OUTPUT NCONE;(/'NUMBER OF ANGLES TO BE INPUT NCONE = ',I5);
+OUTPUT NCONE;(/'Conical dimension [NCONE] : ',I5,' cones in the problem');
 NC = NCONE + 1;"number of conical sections = total number of cones + 1"
-
-
-
 
 IF(NC = 1)["PURE SPHERICAL GEOMETRY"
     ALPHA(1)=180.0; "NONE CONES"
@@ -378,7 +375,7 @@ ELSEIF(NC > 1)[
     $SKIP-LINE;
 ]
 OUTPUT NC;(/'NUMBER OF CONICAL REGIONS NC = ',I5);
-OUTPUT NPLAN1;(/'REGION WHERE 90 deg IS UPPER CONE :',I5);
+OUTPUT NPLAN1;(/'REGION WHERE 90 deg IS UPPER CONE :',I5,/);
 
 
 IVAL=IVAL+1;
@@ -403,7 +400,9 @@ DO I = 1, NVALUE(NUM_RADII)[
      STOP;
    ]
 ]
-OUTPUT NR;(I6,' spheres in the problem ...');
+IF (NR > 0)[
+   OUTPUT NR;(/'Spherical dimension: ',I6,' spheres in the problem ...');
+]
 
 IVAL = IVAL + 1;
 NUM_RSPH = IVAL;
@@ -415,7 +414,7 @@ DEFAULT(IVAL)=1.0;
 $GET_INPUT(NUM_RSPH);
 IF (NR = 0) [
  NR = NVALUE(NUM_RSPH);
- OUTPUT NR;(I6,' spheres in the problem ...');
+   OUTPUT NR;(/'Spherical dimension: ',I6,' spheres in the problem ...');
 ]
 
 
@@ -458,6 +457,7 @@ DO IX=1,I [
     ]
     OUTPUT IX,RSPH(IX);(' RING RADIUS #',I6,':',T60,F12.6,' cms');
 ]
+OUTPUT; (/);
 
 NREG=NR*NC+1;
 
@@ -472,14 +472,14 @@ VALUE_MAX(IVAL)=999999;
 DEFAULT(IVAL)=1;
 $GET_INPUT(IVAL);
 numcavreg = NVALUE(IVAL);
-OUTPUT numcavreg;(' number of cavity regions: ', I4 );
+OUTPUT numcavreg;(/' number of cavity regions: ', I4 );
 
 DO IX=1,numcavreg [ cavreg(IX) = VALUE(IVAL,IX); ]
 
 "CHECK THAT THE NUMBER OF CAVITY ZONES DOES NOT EXCEED ITS BOUNDS"
 IF(numcavreg.LE.0)["no cavity defined, just dose in all the regions desired"
     DO I=1,NREG[cavreg(I)=0;]
-    OUTPUT; (' **** no cavity regions defined ****');
+    OUTPUT; (' **** no cavity regions defined ****'/);
 ]
 ELSEIF(numcavreg.GE.NREG)[
     "IF IT DOES, REVERT TO THE STANDARD CHAMBER CONFIGURATION"
@@ -589,12 +589,12 @@ IF (VALUE(NUM_MEDNUM,1) >= 0) [
       NREGHI=VALUE(NUM_NREGHI,I);
       IF (NREGHI<=NREGLO) [
          MED(NREGLO)=MEDNUM;
-         OUTPUT NREGLO,MEDNUM;(' REGION(',I3,') = MATERIAL(',I2,')');
+         OUTPUT NREGLO,MEDNUM;(' REGION(',I4,') = MATERIAL(',I3,')');
       ]
       ELSE [
          DO K=NREGLO,NREGHI [MED(K)=MEDNUM;]
          OUTPUT NREGLO,NREGHI,MEDNUM;
-         (' REGION(',I3,') TO REGION(',I3,') = MATERIAL(',I2,')');
+         (' REGION(',I4,') TO REGION(',I4,') = MATERIAL(',I3,')');
       ]
    ] "end do I"
 ] "end IF ~=0"

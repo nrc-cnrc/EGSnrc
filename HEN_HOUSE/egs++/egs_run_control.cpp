@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Hubert Ho
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -44,6 +45,7 @@
 #include <vector>
 #include <ctime>
 #include <cstdio>
+
 using namespace std;
 
 vector<EGS_Library *> rc_libs;
@@ -51,7 +53,8 @@ static int n_run_controls = 0;
 
 EGS_RunControl::EGS_RunControl(EGS_Application *a) : geomErrorCount(0),
     geomErrorMax(0), app(a), input(0), ncase(0), ndone(0), maxt(-1), accu(-1),
-    nbatch(10), restart(0), nchunk(1), cpu_time(0), previous_cpu_time(0) {
+    nbatch(10), restart(0), nchunk(1), cpu_time(0), previous_cpu_time(0),
+    rco_type(simple) {
     n_run_controls++;
     if (!app) egsFatal("EGS_RunControl::EGS_RunControl: it is not allowed\n"
                            " to construct a run control object on a NULL application\n");
@@ -76,6 +79,15 @@ EGS_RunControl::EGS_RunControl(EGS_Application *a) : geomErrorCount(0),
                        "'number of histories' input\n");
     }
     ncase = EGS_I64(ncase_double);
+    /*****************************************************
+     * Split histories into different parallel jobs.
+     * For the JCFO ncase reset to total as it is handled
+     * via the lock file mechanism dispatching smaller
+     * of histories chunks.
+     *****************************************************/
+    if (app->getNparallel()) {
+        ncase /= app->getNparallel();
+    }
     err = input->getInput("nbatch",nbatch);
     if (err) {
         nbatch = 10;
@@ -92,6 +104,7 @@ EGS_RunControl::EGS_RunControl(EGS_Application *a) : geomErrorCount(0),
     if (err) {
         geomErrorMax = 0;
     }
+
     vector<string> ctype;
     ctype.push_back("first");
     ctype.push_back("restart");
@@ -110,6 +123,23 @@ EGS_RunControl::~EGS_RunControl() {
             delete rc_libs[rc_libs.size()-1];
             rc_libs.pop_back();
         }
+    }
+}
+
+void EGS_RunControl::describeRCO() {
+    egsInformation(
+        "Run Control Object (RCO):\n"
+        "=========================\n");
+    switch (rco_type) {
+    case simple:
+        egsInformation("  type = simple\n");
+        break;
+    case balanced:
+        egsInformation("  type = balanced (JCF)\n");
+        break;
+    case uniform:
+        egsInformation("  type = uniform\n");
+        break;
     }
 }
 
@@ -234,6 +264,106 @@ bool EGS_RunControl::finishBatch() {
     return true;
 }
 
+EGS_UniformRunControl::EGS_UniformRunControl(EGS_Application *a) :
+    EGS_RunControl(a), njob(0), npar(app->getNparallel()),
+    ipar(app->getIparallel()), ifirst(app->getFirstParallel()),
+    milliseconds(1000), check_intervals(5), check_egsdat(true),
+    watcher_job(false) {
+
+    rco_type = uniform;
+
+    if (input) {
+
+        /*Change waiting time to check for parallel run completion*/
+        int dummy;
+        int err = input->getInput("interval wait time", dummy);
+        if (!err) {
+            milliseconds = dummy;
+        }
+
+        /*Change how many times to check for parallel run completion*/
+        err = input->getInput("number of intervals", dummy);
+        if (!err) {
+            check_intervals = dummy;
+        }
+
+        /* Define watcher jobs to check for parallel run completion*/
+        vector<int> w_jobs;
+        err = input->getInput("watcher jobs", w_jobs);
+        if (!err) {
+            for (int i = 0; i < w_jobs.size(); i++) {
+                if (ipar == w_jobs[i]) {
+                    watcher_job = true;
+                    break;
+                }
+            }
+        }
+        else { // use defaults
+            /* last job is watcher job */
+            if (ipar == ifirst + npar - 1) {
+                watcher_job = true;
+            }
+            else {
+                watcher_job = false;
+            }
+        }
+
+        /* Request checking parallel run completion */
+        vector<string> check_options;
+        check_options.push_back("yes");
+        check_options.push_back("no");
+        int ichk = input->getInput("check jobs completed",check_options,0);
+        if (ichk != 0) {
+            check_egsdat = false;    // true by default
+        }
+
+    }
+    else { // use defaults if no RCO input found
+        /* last job is watcher job */
+        if (ipar == ifirst + npar - 1) {
+            watcher_job = true;
+        }
+    }
+}
+
+int EGS_UniformRunControl::startSimulation() {
+
+
+    /* Check run completion based on *egsdat files requires erasing
+       existing files from previous runs.
+     */
+    if (check_egsdat) {
+        char buf[512];
+        sprintf(buf,"%s_w%d.egsdat",app->getFinalOutputFile().c_str(), ipar);
+        string datFile = egsJoinPath(app->getAppDir(),buf);
+        if (remove(datFile.c_str()) == 0) {
+            egsWarning("EGS_UniformRunControl: %s deleted\n",
+                       datFile.c_str());
+        }
+    }
+
+    return EGS_RunControl::startSimulation();
+}
+
+void EGS_UniformRunControl::describeRCO() {
+
+    EGS_RunControl::describeRCO();
+
+    if (watcher_job) {
+        if (check_egsdat) {
+            egsInformation(
+                "   Watcher job: remains running after completion checking\n"
+                "                for other jobs finishing every %d s for %d s!\n",
+                milliseconds/1000, check_intervals*milliseconds/1000);
+        }
+        else {
+            egsInformation(
+                "   Option to check for finishing jobs is OFF!\n\n");
+        }
+    }
+
+}
+
 #ifdef WIN32
 
     #include <io.h>
@@ -242,6 +372,7 @@ bool EGS_RunControl::finishBatch() {
     #include <sys/types.h>
     #include <sys/stat.h>
     #include <sys/locking.h>
+    #include <windows.h>
 
     #define OPEN_FILE _open
     #define CLOSE_FILE _close
@@ -421,6 +552,14 @@ EGS_JCFControl::EGS_JCFControl(EGS_Application *a, int Nbuf) :
     last_sum2(0), last_count(0), njob(0), npar(app->getNparallel()),
     ipar(app->getIparallel()), ifirst(app->getFirstParallel()),
     first_time(true), removed_jcf(false), nbuf(Nbuf), p(new EGS_FileLocking) {
+
+    rco_type = balanced;
+
+    /* Recover initial number of histories */
+    if (npar) {
+        ncase *= npar;
+    }
+
     if (input) {
         int err = input->getInput("nchunk",nchunk);
         if (err) {
@@ -660,6 +799,27 @@ EGS_I64 EGS_JCFControl::getNextChunk() {
     return nrun;
 }
 
+/*! \brief Suspend execution for a given time (in ms)
+
+ Called from the uniform RCO to wait for all jobs to
+ finish. Time is set by default to 1s, but user can
+ change it using the input key
+
+ interval wait time = time in ms
+
+ in the run control input block.
+
+
+void rco_sleep(const int& mscnds);
+*/
+void rco_sleep(const int &mscnds) {
+#ifdef WIN32
+    Sleep(mscnds);
+#else
+    usleep(mscnds * 1000);
+#endif
+}
+
 int EGS_RunControl::finishSimulation() {
     cpu_time = timer.time();
     egsInformation("\n\nFinished simulation\n\n");
@@ -683,6 +843,43 @@ int EGS_RunControl::finishSimulation() {
     //        all_steps);
     egsInformation("%-40s","Number of all electron steps:");
     egsInformation("%-14g\n",all_steps);
+
+    int n_par   = app->getNparallel(),
+        i_par   = app->getIparallel(),
+        i_first = app->getFirstParallel();
+    /* If parallel run and last job, trigger the app combineResults method */
+    return (n_par && i_par == i_first + n_par - 1) ? 1 : 0;
+}
+
+int EGS_UniformRunControl::finishSimulation() {
+    int err = EGS_RunControl::finishSimulation();
+    if (err < 0) {
+        return err;
+    }
+    /* Check and wait for all jobs to finish */
+    if (watcher_job) {
+        int interval = 0, njobs_done = 0, njobs_done_old= 0;
+        while (interval < check_intervals) {
+            rco_sleep(milliseconds);
+            if (check_egsdat) {
+                njobs_done = app->howManyJobsDone();
+                //egsInformation("\n-> Finished %d jobs...\n",njobs_done);
+                if (njobs_done == npar - 1) {
+                    watcher_job=false;//don't enter this after all jobs done!
+                    break;
+                }
+                // Only combine if new jobs finished
+                if (njobs_done_old < njobs_done) {
+                    egsInformation("=> Combining %d jobs ...\n",njobs_done);
+                    app->combinePartialResults();
+                }
+                njobs_done_old = njobs_done;
+            }
+            interval++;
+        }
+        return 1;
+    }
+    /*I am not a watcher job, do not combine results yet!*/
     return 0;
 }
 
@@ -749,6 +946,9 @@ EGS_RunControl *EGS_RunControl::getRunControlObject(EGS_Application *a) {
     if (inp) {
         irc = inp->getInputItem("run control");
     }
+    /* If no input file, defaults to simple RCO for single runs and
+       to JCF RCO for parallel runs.
+    */
     if (!irc) {
         /*
         egsWarning("EGS_RunControl::getRunControlObject(): "
@@ -810,7 +1010,24 @@ EGS_RunControl *EGS_RunControl::getRunControlObject(EGS_Application *a) {
     }
     else {
         if (a->getNparallel() > 0) {
-            result = new EGS_JCFControl(a);
+            vector<string> allowed_types;
+            allowed_types.push_back("simple");
+            allowed_types.push_back("uniform");
+            allowed_types.push_back("balanced");
+            int rco_t = irc->getInput("rco type",allowed_types,2);
+            switch (rco_t) {
+            case 0:
+                result = new EGS_RunControl(a);
+                break;
+            case 1:
+                result = new EGS_UniformRunControl(a);
+                break;
+            case 2:
+                result = new EGS_JCFControl(a);
+                break;
+            default:
+                result = new EGS_JCFControl(a);
+            }
         }
         else {
             result = new EGS_RunControl(a);

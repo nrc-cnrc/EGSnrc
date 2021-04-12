@@ -419,6 +419,24 @@ public:
     */
     virtual int combineResults();
 
+    /*! \brief Combine intermediate results from parallel runs.
+
+      Calls combineResults, followed by the output of intermediate
+      results. Currently used by the uniform RCO while a watcher job
+      is waiting for all jobs to complete.
+    */
+    virtual int combinePartialResults();
+
+    /*! \brief Counts how many *.egsdat files in app folder.
+
+     Used by the uniform RCO to estimate how many parallel runs
+     completed. This RCO initially deletes existing *.egsdat files
+     to avoid counting files from previous runs. It is an estimate
+     since some jobs might have failed.
+    */
+    int howManyJobsDone();
+
+
     /*! \brief Output intermediate results.
 
      This function stores the state of the application to a data
@@ -1053,7 +1071,8 @@ protected:
             i_parallel,  //!< Job index in parallel runs
             first_parallel; //!< first parallel job number
     bool    batch_run;   //!< Interactive or batch run.
-    bool    simple_run;  //!< Use a simple run control even for parallel runs
+    bool    simple_run;  //!< Use a simple run control object for parallel runs
+    bool    uniform_run; //!< Use a uniform run control object for parallel runs
     bool    is_pegsless; //!< set to true if a pegsless run
 
     EGS_Particle p;      /*!< Parameters of the particle that just
