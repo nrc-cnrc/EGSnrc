@@ -721,7 +721,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
 
     // Set the parameters for the histogram
     var histogram = d3.histogram()
-      .domain([0, 1])
+      .domain([0, doseVolume.data.maxDose])
       .thresholds(nThresholds)
 
     // Initialize ROIHistograms

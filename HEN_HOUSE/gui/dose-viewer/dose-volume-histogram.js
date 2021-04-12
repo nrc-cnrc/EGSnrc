@@ -161,7 +161,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
           return cumSum
         })
         .reverse()
-        .map((val, i) => ({ x: i / histogram.length, y: val }))
+        .map((val, i) => ({ x: doseVol.data.maxDose * (i / histogram.length), y: val }))
 
       return {
         key: structureSetVol.ROIoutlines[idx].label,
@@ -171,7 +171,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
     })
 
     // Build the scales
-    this.xDoseScale = d3.scaleLinear().domain([0, 1]).range([0, this.dimensions.width])
+    this.xDoseScale = d3.scaleLinear().domain([0, doseVol.data.maxDose]).range([0, this.dimensions.width])
     this.yVolumeScale = d3.scaleLinear().domain([0, 1]).range([this.dimensions.height, 0])
   }
 
@@ -187,7 +187,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
     const xAxis = d3
       .axisBottom()
       .scale(this.xDoseScale)
-      .tickFormat(d3.format('.0%'))
+      .tickFormat(d3.format('.0f'))
       .tickSize(-this.dimensions.height)
 
     const yAxis = d3
@@ -219,7 +219,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
           ')'
       )
       .style('text-anchor', 'middle')
-      .text('% Dose')
+      .text('Dose (cGy)')
 
     // Label for volume y axis
     this.svg
