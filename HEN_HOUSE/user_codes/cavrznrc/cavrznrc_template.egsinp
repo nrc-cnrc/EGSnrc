@@ -299,7 +299,7 @@ Brems cross sections= BH           # BH (default),NIST;
                                    # BH: Bethe-Heitler cross-sections used
                                    # NIST: NIST cross-sections used
 
-Atomic relaxations= Off            # On (EADL) or Off 
+Atomic relaxations= Off            # On (EADL) or Off
 
 Bound Compton scattering= Off      # Off, On, simple or norej (default);
                                    # Off: Klein-Nishina used for Compton

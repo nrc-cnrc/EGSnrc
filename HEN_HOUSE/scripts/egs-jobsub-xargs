@@ -29,6 +29,8 @@
 #                   Blake Walters
 #
 ###############################################################################
+
+
 #
 # Check enough arguments provided
 #
@@ -38,9 +40,9 @@ if test $# -lt 3; then
 
 Usage: $my_name app inp pegs|pegsless [p=N] [config=xxx] [eh=xxx] [hh=xxx] [cpu_t=t] [email=xxx]
 
-$my_name runs app using inp as input file (use two double quotes if 
+$my_name runs app using inp as input file (use two double quotes if
 there is no input file needed) and pegs as pegs4 data file.
-Using config=xxx you can use a configuration different from the one 
+Using config=xxx you can use a configuration different from the one
 specified by the environment variable EGS_CONFIG.
 
 For parallel job submission one needs to pass the number of jobs
@@ -51,7 +53,7 @@ EOF
 fi
 
 
-# 
+#
 # Initialization
 #
 app=$1
@@ -139,7 +141,7 @@ if test "x$egs_home" = x; then
        cat >&2 <<EOF
 
 The environment variable EGS_HOME is not set. You have to either
-define EGS_HOME to point to a valid location or you must run this 
+define EGS_HOME to point to a valid location or you must run this
 script as
     $my_name ... eh=path_to_work_area
 
@@ -338,7 +340,7 @@ if test $n_parallel -gt 0; then
 #$ -v EGS_HOME=$egs_home
 #$ -v TZ=America/Toronto
 # Call your program
-for i in \$(seq $job $top_job);do 
+for i in \$(seq $job $top_job);do
     echo \$i;
 done | xargs -P${cpus} -n1 -I{} sh -c '$command -j \$1 -f $first_job'  - {}
 EOF
@@ -364,7 +366,7 @@ EOF
 #$ -v EGS_HOME=$egs_home
 #$ -v TZ=America/Toronto
 # Call your program
-for i in \$(seq $job $top_job);do 
+for i in \$(seq $job $top_job);do
     echo \$i;
 done | xargs -P${cpus} -n1 -I{} sh -c '$command -j \$1 -f $first_job'  - {}
 EOF
@@ -413,7 +415,7 @@ else
 
  # Call your program
 
-$command 
+$command
 EOF
     fi
 fi

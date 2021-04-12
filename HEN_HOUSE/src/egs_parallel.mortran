@@ -25,6 +25,7 @@
 "                                                                             "
 "  Contributors:    Blake Walters                                             "
 "                   Frederic Tessier                                          "
+"                   Ernesto Mainegra-Hing                                     "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -181,7 +182,7 @@ save first_time,n_last;
 /*********************************/
 IF( is_uniform_run ) [
     IF (first_time)[
-       n_run = ncase/n_parallel; 
+       n_run = ncase/n_parallel;
        first_time = .false.;
     ]
     ELSE[
@@ -339,12 +340,12 @@ character control_string*256;
 /****************************/
 IF( is_uniform_run )[
     IF( i_parallel = n_parallel )[
-      n_job = 0;"I am the last job!!!"  
+      n_job = 0;"I am the last job!!!"
       goto :complete_calculation:;
     ]
     ELSE ["nothing to do here"
       n_job = 1;"Only last job allowed to finish!"
-      return;  
+      return;
     ]
 ]
 
