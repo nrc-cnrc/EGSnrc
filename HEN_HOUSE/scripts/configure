@@ -142,7 +142,7 @@ for prog in gmake make make.exe gmake.exe mingw32-make.exe; do
         IFS=$save_IFS
         $as_executable "$make_dir/$prog" || continue
         have_make=yes
-        make_prog="$prog -j12"
+        make_prog="$prog"
         abs_make="$make_dir/$prog"
         break
     done
