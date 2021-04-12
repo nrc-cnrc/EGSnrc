@@ -46,6 +46,7 @@ setenv OMEGA_HOME $HEN_HOUSE/omega
 
 # Path
 #
+setenv PATH "${HEN_HOUSE}scripts/bin:${PATH}"
 setenv PATH "${HEN_HOUSE}bin/${my_machine}:${PATH}"
 if (-d ${EGS_HOME}bin/$my_machine) then
     setenv PATH "${EGS_HOME}bin/${my_machine}:${PATH}"
