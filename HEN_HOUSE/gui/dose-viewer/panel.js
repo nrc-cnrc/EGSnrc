@@ -367,7 +367,7 @@ class Panel { // eslint-disable-line no-unused-vars
    */
   clearDosePlot () {
     // Clear dose plot
-    this.axisElements['plot-dose'].selectAll('g').remove()
+    this.axisElements['plot-dose'].selectAll('g.dose-contour').remove()
   }
 
   /**

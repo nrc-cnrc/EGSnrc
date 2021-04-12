@@ -812,7 +812,7 @@ class DoseVolume extends Volume { // eslint-disable-line no-unused-vars
     const baseSlice = this.baseSlices[slice.axis]
 
     // Clear dose plot
-    svg.selectAll('g').remove()
+    svg.selectAll('g.dose-contour').remove()
 
     // Draw contours
     var contours = d3
@@ -853,6 +853,8 @@ class DoseVolume extends Volume { // eslint-disable-line no-unused-vars
     if (transform) {
       svg.select('g.dose-contour').attr('transform', transform.toString())
     }
+
+    svg.selectAll('g.dose-contour').lower()
   }
 
   /**
@@ -1025,7 +1027,7 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
     const baseSlice = this.baseSlices[slice.axis]
 
     // Clear dose plot
-    svg.selectAll('g').remove()
+    svg.selectAll('g.dose-contour').remove()
 
     // Draw contours
     var contours = d3
@@ -1066,6 +1068,8 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
     if (transform) {
       svg.select('g.dose-contour').attr('transform', transform.toString())
     }
+
+    svg.selectAll('g.dose-contour').lower()
   }
 
   /**
