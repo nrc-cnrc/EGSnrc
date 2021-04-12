@@ -877,7 +877,7 @@ class DoseVolume extends Volume { // eslint-disable-line no-unused-vars
    * @returns {number}
    */
   getDataAtVoxelCoords (voxelCoords) {
-    return super.getDataAtVoxelCoords(voxelCoords, 'dose') / this.data.maxDose
+    return super.getDataAtVoxelCoords(voxelCoords, 'dose')
   }
 
   /**

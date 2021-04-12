@@ -196,7 +196,7 @@ function updateVoxelInfo (worldCoords, densityVol, doseVol, densityVoxelCoords, 
   }
 
   if (doseVol) {
-    const dose = doseVol.getDataAtVoxelCoords(doseVoxelCoords) || 0
+    const dose = doseVol.getDataAtVoxelCoords(doseVoxelCoords) / doseVol.data.maxDose || 0
     const error = doseVol.getErrorAtVoxelCoords(doseVoxelCoords) || 0
     d3.select('#dose-value-' + id).node().value =
       d3.format('.1%')(dose) + ' \u00B1 ' + d3.format('.1%')(error)
