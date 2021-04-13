@@ -328,9 +328,10 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     if (this.densityVolume) {
       enableCheckboxForDensityPlot()
     }
-    this.enableCheckboxForDoseProfilePlot()
     enableButton(this.saveVisButton)
-    this.enableCheckboxForVoxelInformation()
+    this.enableCheckbox(this.showDoseProfileCheckbox)
+    this.enableCheckbox(this.showVoxelInfoCheckbox)
+    this.enableCheckbox(this.normalizeDoseCheckbox)
     initializeMaxDoseSlider(this.maxDoseParentDiv, doseVol, this)
   }
 
@@ -414,7 +415,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       this
     )
 
-    this.enableCheckboxForVoxelInformation()
+    this.enableCheckbox(this.showVoxelInfoCheckbox)
   }
 
   /**
@@ -707,8 +708,8 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       'Show DVH?', defineShowDVHCheckboxBehaviour)
 
     if (structureSetVolumeList.length > 0) {
-      this.enableCheckboxForROIOutlines()
-      this.enableCheckboxForDVHPlot()
+      this.enableCheckbox(this.showROIOutlinesCheckbox)
+      this.enableCheckbox(this.showDVHCheckbox)
     }
 
     // Add buttons to export visualization and export to csv
@@ -1048,31 +1049,25 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   }
 
   /**
-   * Enable the checkbox to view voxel information on click.
+   * Generic function to enable the checkbox and remove the hidden class.
+   *
+   * @param {Object} checkbox The checkbox to enable.
    */
-  enableCheckboxForVoxelInformation () {
-    if (this.showVoxelInfoCheckbox.node().disabled) this.showVoxelInfoCheckbox.node().disabled = false
+  enableCheckbox (checkbox) {
+    if (checkbox.node().disabled) checkbox.node().disabled = false
+    const parentNode = d3.select(checkbox.node().parentNode)
+    parentNode.classed('hidden', false)
   }
 
   /**
-   * Enable the checkbox for the dose profile plots.
+   * Generic function to disable the checkbox and add the hidden class.
+   *
+   * @param {Object} checkbox The checkbox to disable.
    */
-  enableCheckboxForDoseProfilePlot () {
-    if (this.showDoseProfileCheckbox.node().disabled) this.showDoseProfileCheckbox.node().disabled = false
-  }
-
-  /**
-   * Enable the checkbox for the dose profile plots.
-   */
-  enableCheckboxForROIOutlines () {
-    if (this.showROIOutlinesCheckbox.node().disabled) this.showROIOutlinesCheckbox.node().disabled = false
-  }
-
-  /**
-   * Enable the checkbox for the dose profile plots.
-   */
-  enableCheckboxForDVHPlot () {
-    if (this.showDVHCheckbox.node().disabled) this.showDVHCheckbox.node().disabled = false
+  disableCheckbox (checkbox) {
+    if (!checkbox.node().disabled) checkbox.node().disabled = true
+    const parentNode = d3.select(checkbox.node().parentNode)
+    parentNode.classed('hidden', true)
   }
 
   /**
@@ -1586,9 +1581,10 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     if (this.densityVolume) {
       enableCheckboxForDensityPlot()
     }
-    this.enableCheckboxForDoseProfilePlot()
     enableButton(this.saveVisButton)
-    this.enableCheckboxForVoxelInformation()
+    this.enableCheckbox(this.showDoseProfileCheckbox)
+    this.enableCheckbox(this.showVoxelInfoCheckbox)
+    this.enableCheckbox(this.normalizeDoseCheckbox)
     initializeMaxDoseSlider(this.maxDoseParentDiv, doseVol, this)
   }
 }
