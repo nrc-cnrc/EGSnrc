@@ -46,6 +46,7 @@
 /* global defineExportPNGButtonBehaviour */
 /* global defineExportDoseProfileCSVButtonBehaviour */
 /* global defineExportDVHToCSVButtonBehaviour */
+/* global defineNormalizeDoseCheckboxBehaviour */
 /* global defineShowDVHCheckboxBehaviour */
 /* global buildVoxelInfoHtml */
 /* global coordsToVoxel */
@@ -63,7 +64,8 @@
 // } from './index.js'
 // import {
 //   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour, defineShowROICheckboxBehaviour
-//   enableCheckboxForDensityPlot, enableButton, defineShowDVHCheckboxBehaviour
+//   enableCheckboxForDensityPlot, enableButton, defineShowDVHCheckboxBehaviour,
+//   defineNormalizeDoseCheckboxBehaviour
 // } from './checkbox-button-helper.js'
 // import { DoseProfile } from './dose-profile.js'
 // import { Panel } from './panel.js'
@@ -682,7 +684,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     // Add checkboxes for voxel information and dose profile plots
     const checkboxHolder = optionHolder.append('div').attr('class', 'option')
     const addCheckbox = (id, value, label, onChangeFunc) => {
-      const checkboxDiv = checkboxHolder.append('div').attr('class', 'checkbox')
+      const checkboxDiv = checkboxHolder.append('div').attr('class', 'checkbox').classed('hidden', true)
       const checkbox = checkboxDiv.append('input')
         .attr('type', 'checkbox')
         .attr('id', id)
@@ -697,6 +699,59 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       checkbox.on('change', () => onChangeFunc(this, checkbox.node()))
       return checkbox
     }
+
+    // Add checkbox and input boxes for dose normalization
+    this.normalizeDoseCheckbox = addCheckbox('normalize-dose-checkbox' + this.id, 'NormDose', 'Normalize dose file?',
+      defineNormalizeDoseCheckboxBehaviour)
+
+    const parentNode = d3.select(this.normalizeDoseCheckbox.node().parentNode)
+
+    const volViewer = this
+
+    // Add number input box
+    this.doseNormValInput = parentNode
+      .append('span')
+      .attr('class', 'dose-norm')
+
+    this.doseNormValInput.append('input')
+      .attr('type', 'number')
+      .attr('name', 'add-dose-val-norm')
+      .attr('id', 'add-dose-val-norm')
+      .attr('step', 1)
+      .style('width', 45 + 'px')
+      .attr('disabled', 'disabled').on('change', function () {
+        const doseNormVal = parseFloat(this.value) * 100 // Convert from cGy to Gy
+        const doseNormPercent = parseFloat(volViewer.doseNormPercentInput.select('input').node().value) / 100 // Convert from percent to decimal
+
+        if (doseNormPercent) volViewer.normalizeDoseValues(doseNormVal, doseNormPercent)
+      })
+
+    this.doseNormValInput.append('label')
+      .attr('for', 'add-dose-val-norm')
+      .text(' cGy ')
+
+    // Add number input box
+    this.doseNormPercentInput = parentNode
+      .append('span')
+      .attr('class', 'dose-norm')
+
+    this.doseNormPercentInput
+      .append('input')
+      .attr('type', 'number')
+      .attr('name', 'add-dose-percent-norm')
+      .attr('id', 'add-dose-percent-norm')
+      .attr('step', 1)
+      .style('width', 45 + 'px')
+      .attr('disabled', 'disabled').on('change', function () {
+        const doseNormVal = parseFloat(volViewer.doseNormValInput.select('input').node().value) * 100 // Convert from cGy to Gy
+        const doseNormPercent = parseFloat(this.value) / 100 // Convert from percent to decimal
+
+        if (doseNormVal) volViewer.normalizeDoseValues(doseNormVal, doseNormPercent)
+      })
+
+    this.doseNormPercentInput.append('label')
+      .attr('for', 'add-dose-percent-norm')
+      .text(' % ')
 
     this.showVoxelInfoCheckbox = addCheckbox('show-marker-checkbox' + this.id, 'ShowMarker', 'Show voxel information on click?',
       defineShowMarkerCheckboxBehaviour)
@@ -1124,6 +1179,22 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         this.doseProfileList[i].plotData()
       }
     })
+  }
+
+  /**
+   * Normalize DICOM or 3ddose files to the given values.
+   *
+   * @param {number} val      The dose in cGy.
+   * @param {number} percent  The percent dose.
+   */
+  // TODO: Get this working
+  normalizeDoseValues (val, percent) {
+    // if (this.doseVolume instanceof DoseComparisonVolume) {
+    //   ...
+    // } else if {
+    //   ...
+    // }
+    // const doseNorm = (val / percent) / this.doseVolume.data.maxDose
   }
 
   /**

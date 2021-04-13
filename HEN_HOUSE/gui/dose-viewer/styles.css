@@ -140,6 +140,10 @@ text.dose-profile-axis-label {
   color: grey;
 }
 
+span.dose-norm {
+  padding-left: 15px;
+}
+
 /* Styling the voxel information */
 div.voxel-info {
   font-size: 13px;

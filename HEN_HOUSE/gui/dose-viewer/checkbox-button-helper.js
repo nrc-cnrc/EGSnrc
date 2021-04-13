@@ -191,8 +191,25 @@ var defineShowDVHCheckboxBehaviour = function (volumeViewer, checkbox) { // esli
   }
 }
 
+/**
+ * Define the behaviour of selecting the normalize DICOM checkbox.
+ */
+var defineNormalizeDoseCheckboxBehaviour = function (volumeViewer, checkbox) { // eslint-disable-line no-unused-vars
+  if (checkbox.checked) {
+    // Enable the input boxes
+    volumeViewer.doseNormValInput.select('input').attr('disabled', null)
+    volumeViewer.doseNormPercentInput.select('input').attr('disabled', null)
+  } else {
+    // Disable the input boxes and clear the values
+    volumeViewer.doseNormValInput.select('input').node().value = null
+    volumeViewer.doseNormPercentInput.select('input').node().value = null
+    volumeViewer.doseNormValInput.select('input').attr('disabled', 'disabled')
+    volumeViewer.doseNormPercentInput.select('input').attr('disabled', 'disabled')
+  }
+}
+
 // export {
 //   defineShowMarkerCheckboxBehaviour, defineShowProfileCheckboxBehaviour,
 //   enableCheckboxForDensityPlot, defineShowROICheckboxBehaviour, enableButton,
-//   defineShowDVHCheckboxBehaviour
+//   defineShowDVHCheckboxBehaviour, defineNormalizeDoseCheckboxBehaviour
 // }
