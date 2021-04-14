@@ -38,7 +38,7 @@ PROJECT_NAME           = "EGSnrc C++ class library"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = "Report PIRS-898 (2019)"
+PROJECT_NUMBER         = "Report PIRS-898 (2021)"
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
