@@ -365,7 +365,7 @@ protected:
         int err = input->getInput("density of random points (cm^-3)", density);
         if (err) {
             egsWarning("The volume correction 'density of random points (cm^-3)' input was not found\n");
-            density =  (EGS_Float)DEFAULT_RAND_POINT_DENSITY;
+            density = (EGS_Float)DEFAULT_RAND_POINT_DENSITY;
         }
 
         npoints = max(1., density*bounds_volume);

@@ -294,7 +294,7 @@
   Photon cross sections    = xcom  # epdl (or xcom)
 
   Bound Compton scattering = off
-  
+
   Rayleigh scattering      = off
 
   Atomic relaxations       = off
@@ -302,5 +302,3 @@
 :stop MC transport parameter:
 
 ##############################
-
-
