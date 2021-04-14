@@ -20,7 +20,7 @@ elaborate geometries and particle sources.
 - [**BEAMnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509a-beamnrc.pdf) accelerators (PIRS-509a)
 - [**DOSXYZnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs794-dosxyznrc.pdf) voxel dose (PIRS-794)
 - [**egs++**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs898/index.html) geometries, sources and applications (PIRS-898)
-- [**g**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs3100-g-refman.pdf) application reference manual (PIRS-3100)
+- [**g**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs3100-g-html/) application reference manual (PIRS-3100) ([pdf](https://nrc-cnrc.github.io/EGSnrc/doc/pirs3100-g-refman.pdf/))
 - [**RZ and SPH apps**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs702-egsnrc-codes.pdf) user manual (PIRS-702)
 - [**RZ GUI**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs801-egsinprz.pdf) egs_inprz (PIRS-801)
 - [**BEAMDP basic**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509e-beamdp-utility.pdf) manual (PIRS-509e)
