@@ -1,7 +1,7 @@
 title: EGSnrc
 description: Toolkit for Monte Carlo simulation of ionizing radiation transport
 google_analytics: UA-70777104-1
-show_downloads: true
+show_downloads: false
 theme: jekyll-theme-slate
 
 gems:
