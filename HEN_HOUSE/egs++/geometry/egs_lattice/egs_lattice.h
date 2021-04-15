@@ -37,9 +37,38 @@
 */
 
 
-/*! \file egs_lattice.cpp
- *  \brief A Bravais, cubic, and hexagonal lattice geometry
+/*! \file egs_lattice.h
+ *  \brief Lattice geometries: header
+*/
 
+#include "egs_base_geometry.h"
+#include "../egs_gtransformed/egs_gtransformed.h"
+
+#ifndef EGS_LATTICE_GEOMETRY_
+#define EGS_LATTICE_GEOMETRY_
+
+#ifdef WIN32
+
+    #ifdef BUILD_LATTICE_DLL
+        #define EGS_LATTICE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_LATTICE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_LATTICE_LOCAL
+
+#else
+
+    #ifdef HAVE_VISIBILITY
+        #define EGS_LATTICE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_LATTICE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_LATTICE_EXPORT
+        #define EGS_LATTICE_LOCAL
+    #endif
+
+#endif
+
+/*! \brief A Bravais, cubic, and hexagonal lattice geometry
   \ingroup Geometry
   \ingroup CompositeG
 
@@ -75,8 +104,8 @@ type of geometry can be defined in one of three ways:
     3) Hexagonal Lattice: Define the type as hexagonal, then spacing defines
     the hexagonal close-packed lattice nearest neighbour distance.
 
-#Example Bravais lattice with spacings 1, 2 and 3
 \verbatim
+    #Example Bravais lattice with spacings 1, 2 and 3
     :start geometry:
         library           = egs_lattice
         name              = phantom_w_microcavity
@@ -87,8 +116,8 @@ type of geometry can be defined in one of three ways:
     :stop geometry:
 \endverbatim
 
-#Example cubic lattice with spacings 1
 \verbatim
+    #Example cubic lattice with spacings 1
     :start geometry:
         library           = egs_lattice
         name              = phantom_w_microcavity
@@ -99,8 +128,8 @@ type of geometry can be defined in one of three ways:
     :stop geometry:
 \endverbatim
 
-#Example hexagonal lattice with nearest neighbour distance 1
 \verbatim
+    #Example hexagonal lattice with nearest neighbour distance 1
     :start geometry:
         library           = egs_lattice
         type              = hexagonal
@@ -112,33 +141,6 @@ type of geometry can be defined in one of three ways:
     :stop geometry:
 \endverbatim
 */
-
-#include "egs_base_geometry.h"
-#include "../egs_gtransformed/egs_gtransformed.h"
-
-#ifndef EGS_LATTICE_GEOMETRY_
-#define EGS_LATTICE_GEOMETRY_
-
-#ifdef WIN32
-
-    #ifdef BUILD_LATTICE_DLL
-        #define EGS_LATTICE_EXPORT __declspec(dllexport)
-    #else
-        #define EGS_LATTICE_EXPORT __declspec(dllimport)
-    #endif
-    #define EGS_LATTICE_LOCAL
-
-#else
-
-    #ifdef HAVE_VISIBILITY
-        #define EGS_LATTICE_EXPORT __attribute__ ((visibility ("default")))
-        #define EGS_LATTICE_LOCAL  __attribute__ ((visibility ("hidden")))
-    #else
-        #define EGS_LATTICE_EXPORT
-        #define EGS_LATTICE_LOCAL
-    #endif
-
-#endif
 
 class EGS_LATTICE_EXPORT EGS_Lattice : public EGS_BaseGeometry {
 protected:

@@ -699,7 +699,7 @@ The other new possibility to define a XYZ geometry is
 where, along the x axis, \c Xo is the position of the minimum boundary of the
 geometry, \c Dx is the uniform slab thickness, and \c Nx is the number of slabs
 (similarly for the y and z axes). The number of regions along x is \c Nx and
-the maximum x boundary is thus \code{Xo + Nx*Dx}.
+the maximum x boundary is thus <code>Xo + Nx*Dx</code>.
 
 A simple example:
 \verbatim

@@ -62,7 +62,7 @@ using namespace std;
 #endif
 
 /*! \brief The distanceEpsilon constant for physical distance
-/* comparisons
+* comparisons
  *
  * \ingroup egspp_main
  *
