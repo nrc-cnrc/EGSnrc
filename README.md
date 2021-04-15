@@ -10,20 +10,22 @@ notably, EGSnrc incorporates crucial refinements in charged particle transport,
 better low energy cross sections, and the egs++ class library to model
 elaborate geometries and particle sources.
 
+[doi:10.4224/40001303](https://doi.org/10.4224/40001303)
 
 ## Documentation
 
+- [**Citing EGSnrc**](https://github.com/nrc-cnrc/EGSnrc/wiki/Citing-EGSnrc)
 - [**Getting Started**](https://nrc-cnrc.github.io/EGSnrc/doc/getting-started.pdf) with guided tutorials
 - [**EGSnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs701-egsnrc.pdf) core manual (PIRS-701)
 - [**BEAMnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509a-beamnrc.pdf) accelerators (PIRS-509a)
 - [**DOSXYZnrc**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs794-dosxyznrc.pdf) voxel dose (PIRS-794)
-- [**egs++**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs898/index.html) geometries, sources and applications (PIRS-898)
+- [**egs++**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs898/) geometries, sources and applications (PIRS-898)
+- [**g**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs3100/) application reference manual (PIRS-3100) ([pdf](https://nrc-cnrc.github.io/EGSnrc/doc/pirs3100-g-refman.pdf))
 - [**RZ and SPH apps**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs702-egsnrc-codes.pdf) user manual (PIRS-702)
 - [**RZ GUI**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs801-egsinprz.pdf) egs_inprz (PIRS-801)
 - [**BEAMDP basic**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509e-beamdp-utility.pdf) manual (PIRS-509e)
 - [**BEAMDP advanced**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509c-beamdp.pdf) manual (PIRS-509c)
 - [**STATDOSE**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509f-statdose.pdf) 3D dose processor (PIRS-509f)
-
 
 ## Licence
 
@@ -37,7 +39,6 @@ EGSnrc component (including any such work operated remotely over a
 network), you must do so under the same licence terms.
 [Contact NRC](https://nrc.canada.ca/en/research-development/products-services/software-applications/egsnrc-software-tool-model-radiation-transport)
 if you wish to licence EGSnrc under different terms.
-
 
 ## Prerequisites
 
@@ -58,7 +59,6 @@ Please read the
 [installation instructions](https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview) in the
 wiki for more details about these software components.
 
-
 ## Installation
 
 Installation involves downloading the EGSnrc source code, and then configuring
@@ -78,13 +78,11 @@ for your computer. Please read the full
 [installation instructions](https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview)
 for more details on how to download and configure EGSnrc.
 
-
 ## Support
 
 For technical support, consider the
 [EGSnrc reddit community](https://www.reddit.com/r/EGSnrc), or
 [contact NRC](https://nrc.canada.ca/en/research-development/products-services/software-applications/egsnrc-software-tool-model-radiation-transport).
-
 
 ## Issues
 
@@ -94,7 +92,6 @@ tracker lets you browse and search all documented issues, comment on open
 issues, and track their progress. Note that issues are **not meant for
 technical support;** open an issue only for an error which is precise and
 reproducible.
-
 
 ## Contributing
 
