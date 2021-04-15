@@ -38,6 +38,7 @@
 #ifndef EGS_MESH
 #define EGS_MESH
 
+#include <cstdint>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -157,7 +158,9 @@ public:
         return densities;
     }
 
-    bool is_boundary(int reg) const;
+    inline bool is_boundary(int reg) const {
+        return _boundary_elts[reg];
+    }
 
     const std::string& filename() const {
         return _filename;
@@ -243,6 +246,7 @@ private:
 
     std::vector<EGS_Vector> _elt_points;
     std::vector<bool> _boundary_faces;
+    std::vector<std::uint8_t> _boundary_elts;
     std::vector<int> _medium_indices;
     std::vector<std::string> _medium_names;
     std::string _filename;

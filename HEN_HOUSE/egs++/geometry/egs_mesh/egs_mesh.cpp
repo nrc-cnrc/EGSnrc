@@ -350,7 +350,11 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
 
     _boundary_faces.reserve(_elements.size() * 4);
+    _boundary_elts.reserve(_elements.size());
     for (const auto& ns: _neighbours) {
+        _boundary_elts.push_back(std::any_of(begin(ns), end(ns),
+            [](int n){ return n == mesh_neighbours::NONE; }
+        ));
         for (const auto& n: ns) {
             _boundary_faces.push_back(n == mesh_neighbours::NONE);
         }
@@ -377,16 +381,6 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         _medium_indices.push_back(medium_offsets.at(e.medium_tag));
     }
 }
-
-bool EGS_Mesh::is_boundary(int reg) const {
-    assert(reg >= 0);
-    assert(reg < num_elements());
-    return _boundary_faces[4 * reg]
-        || _boundary_faces[4 * reg + 1]
-        || _boundary_faces[4 * reg + 2]
-        || _boundary_faces[4 * reg + 3];
-}
-
 
 bool EGS_Mesh::isInside(const EGS_Vector &x) {
     return isWhere(x) != -1;
