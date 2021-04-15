@@ -81,24 +81,26 @@ for more details on how to download and configure EGSnrc.
 ## Support
 
 For technical support, consider the
-[EGSnrc reddit community](https://www.reddit.com/r/EGSnrc), or
+[EGSnrc reddit community](https://www.reddit.com/r/EGSnrc), the EGSnrc
+[Discussions](https://github.com/nrc-cnrc/EGSnrc/discussions), or
 [contact us](https://nrc.canada.ca/en/research-development/products-services/software-applications/egsnrc-software-tool-model-radiation-transport).
 
 ## Issues
 
-Use the [issue tracker](https://github.com/nrc-cnrc/EGSnrc/issues) to report
+Post [Issues](https://github.com/nrc-cnrc/EGSnrc/issues) to report
 genuine bugs, mistakes or even small typos in the EGSnrc project files. The
 tracker lets you browse and search all documented issues, comment on open
 issues, and track their progress. Note that issues are **not meant for
-technical support;** open an issue only for an error which is precise and
+technical support;** open an issue only for an error which is specific and
 reproducible.
 
 ## Contributing
 
 You can contribute to the EGSnrc project by implementing new features,
 creating new data sets, correcting errors, or improving documentation.
-Feel free to submit small corrections and contributions as issues in the
-[issue tracker](https://github.com/nrc-cnrc/EGSnrc/issues). For more
+Feel free to submit small corrections and contributions as
+[Issues](https://github.com/nrc-cnrc/EGSnrc/issues), and propose new features in
+[Discussions](https://github.com/nrc-cnrc/EGSnrc/discussions). For more
 extensive contributions, familiarize yourself with git and github,
-work on your own EGSnrc fork and submit your changes via a
-[pull request](https://github.com/nrc-cnrc/EGSnrc/pulls).
+work on your own EGSnrc fork and submit your changes via
+[Pull requests](https://github.com/nrc-cnrc/EGSnrc/pulls).
