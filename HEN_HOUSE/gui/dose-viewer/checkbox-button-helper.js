@@ -158,9 +158,15 @@ var defineShowROICheckboxBehaviour = function (volumeViewer, checkbox) { // esli
   if (checkbox.checked) {
     // Set volume viewer structure set to the set most recently added
     volumeViewer.setStructureSetVolume(structureSetVolumeList[structureSetVolumeList.length - 1])
+    volumeViewer.enableCheckbox(volumeViewer.showDVHCheckbox)
   } else {
     // Set volume viewer structure set to null
     volumeViewer.structureSetVolume = null
+
+    // Uncheck show DVH checkbox and disable
+    volumeViewer.showDVHCheckbox.node().checked = false
+    volumeViewer.DVH.parentSvg.style('display', 'none')
+    volumeViewer.disableCheckbox(volumeViewer.showDVHCheckbox)
 
     // Update the plots
     Object.values(volumeViewer.panels).forEach((panel) => {
