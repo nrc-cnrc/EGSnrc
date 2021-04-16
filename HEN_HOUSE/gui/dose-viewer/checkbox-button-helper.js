@@ -158,7 +158,7 @@ var defineShowROICheckboxBehaviour = function (volumeViewer, checkbox) { // esli
   if (checkbox.checked) {
     // Set volume viewer structure set to the set most recently added
     volumeViewer.setStructureSetVolume(structureSetVolumeList[structureSetVolumeList.length - 1])
-    volumeViewer.enableCheckbox(volumeViewer.showDVHCheckbox)
+    if (volumeViewer.doseVolume && volumeViewer.showROIOutlinesCheckbox.node().checked) volumeViewer.enableCheckbox(volumeViewer.showDVHCheckbox)
   } else {
     // Set volume viewer structure set to null
     volumeViewer.structureSetVolume = null

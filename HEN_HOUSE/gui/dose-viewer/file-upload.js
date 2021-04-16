@@ -326,7 +326,7 @@ function handleFiles (files) {
         // Update the ROI checkboxes
         if (structureSetVolumeList.length > 0) {
           volViewer.enableCheckbox(volViewer.showROIOutlinesCheckbox)
-          volViewer.enableCheckbox(volViewer.showDVHCheckbox)
+          if (volViewer.doseVolume && volViewer.showROIOutlinesCheckbox.node().checked) volViewer.enableCheckbox(volViewer.showDVHCheckbox)
         }
       })
     })

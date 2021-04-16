@@ -335,6 +335,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.enableCheckbox(this.showDoseProfileCheckbox)
     this.enableCheckbox(this.showVoxelInfoCheckbox)
     this.enableCheckbox(this.normalizeDoseCheckbox)
+    if (this.showROIOutlinesCheckbox.node().checked) this.enableCheckbox(this.showDVHCheckbox)
     initializeMaxDoseSlider(this.maxDoseParentDiv, doseVol, this)
   }
 
@@ -478,6 +479,11 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
       panel.doseVol = null
     })
+
+    // Uncheck show DVH checkbox and disable
+    this.showDVHCheckbox.node().checked = false
+    this.DVH.parentSvg.style('display', 'none')
+    this.disableCheckbox(this.showDVHCheckbox)
   }
 
   /**
@@ -765,7 +771,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
     if (structureSetVolumeList.length > 0) {
       this.enableCheckbox(this.showROIOutlinesCheckbox)
-      this.enableCheckbox(this.showDVHCheckbox)
+      if (this.doseVolume && this.showROIOutlinesCheckbox.node().checked) this.enableCheckbox(this.showDVHCheckbox)
     }
 
     // Add buttons to export visualization and export to csv
