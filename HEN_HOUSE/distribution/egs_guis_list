@@ -92,6 +92,7 @@ unix:pieces/linux/egs_view_64
 unix:egs++/dso/linux-static/libegs_autoenvelope.so
 unix:egs++/dso/linux-static/libegs_box.so
 unix:egs++/dso/linux-static/libegs_cdgeometry.so
+unix:egs++/dso/linux-static/libegs_circle_perpendicular.so
 unix:egs++/dso/linux-static/libegs_circle.so
 unix:egs++/dso/linux-static/libegs_cones.so
 unix:egs++/dso/linux-static/libegs_conez.so
@@ -108,6 +109,7 @@ unix:egs++/dso/linux-static/libegs_gstack.so
 unix:egs++/dso/linux-static/libegs_gtransformed.so
 unix:egs++/dso/linux-static/libegs_gunion.so
 unix:egs++/dso/linux-static/libegs_iplanes.so
+unix:egs++/dso/linux-static/libegs_lattice.so
 unix:egs++/dso/linux-static/libegs_line_shape.so
 unix:egs++/dso/linux-static/libegs_ndgeometry.so
 unix:egs++/dso/linux-static/libegs_octree.so
@@ -142,6 +144,7 @@ win:egs++/dso/win-static/egs_autoenvelope.dll
 win:egs++/dso/win-static/egs_box.dll
 win:egs++/dso/win-static/egs_cdgeometry.dll
 win:egs++/dso/win-static/egs_circle.dll
+win:egs++/dso/win-static/egs_circle_perpendicular.dll
 win:egs++/dso/win-static/egs_cones.dll
 win:egs++/dso/win-static/egs_conez.dll
 win:egs++/dso/win-static/egs_conical_shell.dll
@@ -157,6 +160,7 @@ win:egs++/dso/win-static/egs_gstack.dll
 win:egs++/dso/win-static/egs_gtransformed.dll
 win:egs++/dso/win-static/egs_gunion.dll
 win:egs++/dso/win-static/egs_iplanes.dll
+win:egs++/dso/win-static/egs_lattice.dll
 win:egs++/dso/win-static/egs_line_shape.dll
 win:egs++/dso/win-static/egs_ndgeometry.dll
 win:egs++/dso/win-static/egs_octree.dll
@@ -181,7 +185,7 @@ win:egs++/dso/win-static/egs_view.exe
 ####
 # Needed when deploying on Windows with different GNU compiler
 ####
-win:egs++/dso/win-static/libgcc_s_dw2-1.dll
+win:egs++/dso/win-static/libgcc_s_seh-1.dll
 win:egs++/dso/win-static/libstdc++-6.dll
 win:egs++/dso/win-static/libwinpthread-1.dll
 
