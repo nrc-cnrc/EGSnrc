@@ -178,7 +178,8 @@ var defineShowDVHCheckboxBehaviour = function (volumeViewer, checkbox) { // esli
       // Show DVH plots
       volumeViewer.DVH.parentSvg.style('display', null)
       volumeViewer.DVH.setDVHData(volumeViewer.structureSetVolume, volumeViewer.doseVolume)
-      volumeViewer.DVH.plotData()
+      volumeViewer.DVH.createPlots()
+      volumeViewer.DVH.plotDVH(volumeViewer.doseNorm)
 
       // Enable saving DVH as csv
       volumeViewer.saveDVHButton.node().disabled = false
@@ -201,6 +202,8 @@ var defineNormalizeDoseCheckboxBehaviour = function (volumeViewer, checkbox) { /
     volumeViewer.doseNormPercentInput.select('input').attr('disabled', null)
   } else {
     // Disable the input boxes and clear the values
+    volumeViewer.doseNorm = 1
+    volumeViewer.DVH.plotDVH(volumeViewer.doseNorm)
     volumeViewer.doseNormValInput.select('input').node().value = null
     volumeViewer.doseNormPercentInput.select('input').node().value = null
     volumeViewer.doseNormValInput.select('input').attr('disabled', 'disabled')

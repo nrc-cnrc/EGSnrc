@@ -73,6 +73,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
     // Initialize all properties
     this.xDoseScale = null
     this.yVolumeScale = null
+    this.maxDose = null
     this.transform = null
     this.data = null
   }
@@ -151,6 +152,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
    */
   setDVHData (structureSetVol, doseVol) {
     const ROIHistograms = structureSetVol.calculateDVH(doseVol)
+    const maxDose = doseVol.data.maxDose // Max dose in cGy
     // Calculate the cumulative dose for each ROI
     this.data = ROIHistograms.map((histogram, idx) => {
       var cumSum = 0
@@ -161,7 +163,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
           return cumSum
         })
         .reverse()
-        .map((val, i) => ({ x: doseVol.data.maxDose * (i / histogram.length), y: val }))
+        .map((val, i) => ({ x: maxDose * (i / histogram.length), y: val }))
 
       return {
         key: structureSetVol.ROIoutlines[idx].label,
@@ -171,8 +173,9 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
     })
 
     // Build the scales
-    this.xDoseScale = d3.scaleLinear().domain([0, doseVol.data.maxDose]).range([0, this.dimensions.width])
+    this.xDoseScale = d3.scaleLinear().domain([0, maxDose]).range([0, this.dimensions.width])
     this.yVolumeScale = d3.scaleLinear().domain([0, 1]).range([this.dimensions.height, 0])
+    this.maxDose = maxDose
   }
 
   /**
@@ -180,8 +183,8 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
    */
   plotAxes () {
     // Clear existing axes and labels
-    this.svg.selectAll('.dvh-x-axis').remove()
-    this.svg.selectAll('.dvh-y-axis').remove()
+    this.svg.selectAll('g.dvh-x-axis').remove()
+    this.svg.selectAll('g.dvh-y-axis').remove()
 
     // Create and append x and dose y axes
     const xAxis = d3
@@ -240,21 +243,14 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
   }
 
   /**
-   * Plot the DVH data.
+   * Create the plot axes and plotting area.
    */
-  // TODO: Add tooltip
-  plotData () {
-    // Function to convert ROI label to a valid CSS class
-    const toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '') // eslint-disable-line no-useless-escape
-
-    // A list of ROI classes that should be hidden
-    const hiddenClassList = this.volumeViewer.getHiddenClassList(this.volumeViewer.ROILegendSvg)
-
+  createPlots () {
     // Plot the x and y axes
     this.plotAxes()
 
     // TODO: Is there a simpler way to clip the plot? clip-path: margin-box; ???
-    const plotArea = this.svg
+    this.svg
       .append('g')
       .attr('class', 'plotting-area')
       // .attr('clip-path', 'margin-box')
@@ -267,6 +263,20 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
       .attr('fill', 'none')
       .attr('width', this.dimensions.width)
       .attr('height', this.dimensions.height)
+  }
+
+  /**
+   * Plot the DVH data.
+   *
+   * @param {number} doseNorm The dose normalization factor.
+   */
+  // TODO: Add tooltip
+  plotDVH (doseNorm) {
+    // Function to convert ROI label to a valid CSS class
+    const toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '') // eslint-disable-line no-useless-escape
+
+    // A list of ROI classes that should be hidden
+    const hiddenClassList = this.volumeViewer.getHiddenClassList(this.volumeViewer.ROILegendSvg)
 
     // Create the dose line
     const line = d3
@@ -274,9 +284,28 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
       .x((d) => this.xDoseScale(d.x))
       .y((d) => this.yVolumeScale(d.y))
 
+    // Normalize the data if needed
+    const data = doseNorm ? this.data.map((item) => ({ ...item, values: item.values.map((val) => ({ x: val.x * doseNorm, y: val.y })) })) : this.data
+
+    if (doseNorm) {
+      // Update the x axis
+      this.xDoseScale = this.xDoseScale.domain([0, this.maxDose * doseNorm])
+
+      const newXAxis = d3
+        .axisBottom()
+        .scale(this.xDoseScale)
+        .tickFormat(d3.format('.0f'))
+        .tickSize(-this.dimensions.height)
+
+      this.svg.selectAll('g.dvh-x-axis').call(newXAxis)
+    }
+
+    // Clear the plotting area
+    this.svg.select('g.plotting-area').selectAll('path').remove()
+
     // Plot the DVH lines
-    const DVHLines = plotArea.selectAll('.line')
-      .data(this.data)
+    const DVHLines = this.svg.select('g.plotting-area').selectAll('.line')
+      .data(data)
       .enter()
       .append('path')
       .attr('fill', 'none')
