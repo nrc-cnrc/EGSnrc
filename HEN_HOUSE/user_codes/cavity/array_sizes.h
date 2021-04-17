@@ -42,6 +42,6 @@
 #define ARRAY_SIZES_
 
 #define MXMED   20
-#define MXSTACK 10000
+#define MXSTACK 900000
 
 #endif

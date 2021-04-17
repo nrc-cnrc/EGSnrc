@@ -267,8 +267,8 @@ subroutine beamlib_finish;
 implicit none;
 "write .egsdat file if requested"
 call beam_write_dat;
-call beam_finish(1);
-"call with 1 to signify end of beam lib run"
+call beam_finish(3);
+"call with 3 to signify end of beam lib run"
 return; end;
 
 "below is a dummy xvgrplot subroutine for use with BEAM shared

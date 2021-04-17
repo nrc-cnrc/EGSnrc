@@ -94,7 +94,7 @@ numarg=iargc();
 IF(numarg<3)[
   OUTPUT;(/' Usage: '//
 ' addphsp infile(no ext.) outfile(no ext.) ipar [istart] [iscore] [i_iaea]'//
-' infile  = BEAM input file'/
+' infile  = phsp file base name (excluding the trailing _w*.*)'/
 ' outfile = output file for summed phsp data.  Extension .egsphsp(iscore)'/
 '           gets added automatically.'/
 ' ipar    = no. of parallel runs to be added'/

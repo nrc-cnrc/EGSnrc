@@ -1,0 +1,251 @@
+#!/bin/bash
+###############################################################################
+#
+#  EGSnrc script to submit parallel jobs
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Frederic Tessier, 2020
+#
+#  Contributors:
+#
+###############################################################################
+
+
+### help function
+function help {
+    log "HELP"
+    cat <<EOF
+
+    usage:
+
+        $(basename $0) [options] --command 'command'
+
+    options:
+
+        -h | --help         show this help
+        -b | --batch        batch system to use ("cpu" by default)
+        -d | --delay        delay in seconds between individual jobs
+        -q | --queue        scheduler queue ("long" by default)
+        -n | --nthread      number of threads ("8" by default)
+        -o | --option       option(s) to pass to job scheduler, in quotes
+        -f | --force        force run, even if lock or egsjob file present
+        -v | --verbose      echo detailed egs-parallel log messages to terminal
+        -c | --command      command to run, given in quotes
+
+    example:
+
+        $(basename $0) --batch cpu -q short -n12 -v -c 'egs_chamber -i slab -p 521icru'
+
+EOF
+}
+
+### timestamp function
+function timestamp {
+    printf "EGSnrc egs-parallel $(date -u "+%Y-%m-%d (UTC) %H:%M:%S.%N")"
+}
+
+### log function to write messages to log file and standard output
+function log {
+    msg="$(timestamp): $1\n"
+    printf "$msg" >&3
+    if [ "$verbosity" = "verbose" ]; then
+        printf "$msg"
+    fi
+}
+
+### quit function for errors, with source, line, message and command
+function quit {
+    lineno=$1
+    msg=$2
+    case $3 in
+        help)  cmd="help";;
+        *)     cmd="";;
+    esac
+    verbosity="verbose"
+    log "$(basename $0): line $lineno: $msg"; $cmd; log "QUIT."; exit 1
+}
+
+### link file descriptor 3 to egs-parallel log file
+exec 3>egs-parallel-$$.log
+
+### default option values
+opt_batch="cpu"
+opt_queue="long"
+opt_nthread="8"
+opt_delay="0"
+opt_command=""
+opt_options=""
+opt_force="no"
+verbosity="silent"
+declare -a opt_options_array
+
+### parse command-line options
+while [ "$#" -gt 0 ]; do
+
+    # consume next command-line token
+    opt=$1; shift
+
+    # options without arguments
+    case $opt in
+        -h|--help)      help; exit;;
+        -f|--force)     opt_force="yes"; continue;;
+        -v|--verbose)   verbosity="verbose"; continue;;
+    esac
+
+    # allow joined single-letter options and argument (no space in between)
+    if [ -n "${opt:2}" ] && [ "${opt:0:1}" = "-" ] && ! [ "${opt:0:2}" = "--" ]; then
+        arg="${opt:2}"
+        opt="${opt:0:2}"
+    else
+        arg=$1; shift;
+    fi
+
+    # options with arguments
+    case $opt in
+        -b|--batch)     opt_batch="$arg";;
+        -q|--queue)     opt_queue="$arg";;
+        -n|--nthread)   opt_nthread="$arg";;
+        -d|--delay)     opt_delay="$arg";;
+        -c|--command)   opt_cmd="$arg";;
+        -o|--option)    opt_options_array+=("$arg"); arg="parsed";;
+        *)              quit $LINENO "unknown option: $opt" help;;
+    esac
+    if [ -z "$arg" ] || [ "${arg:0:1}" = "-" ]; then
+        quit $LINENO "missing argument to $opt option" help
+    fi
+done
+opt_options="${opt_options_array[@]}"
+
+### begin script
+log "BEGIN $(basename $0)"
+
+### EGSnrc environment variables
+log "EGSnrc environment:"
+log "    HEN_HOUSE  = $HEN_HOUSE"
+log "    EGS_HOME   = $EGS_HOME"
+log "    EGS_CONFIG = $EGS_CONFIG"
+hen_house=${HEN_HOUSE%/}
+egs_home=${EGS_HOME%/}
+
+### check that the batch option command exists and is executable
+batch_script=$hen_house/scripts/egs-parallel-${opt_batch}
+if ! [ -x "$(command -v ${batch_script})" ]; then
+    quit $LINENO "batch script not found: ${batch_script}"
+fi
+
+### check that nthread is an integer
+if ! [[ "$opt_nthread" =~ ^[0-9]+$ ]] ; then
+    quit $LINENO "number of threads (-n option) is not an integer: $opt_nthread"
+fi
+
+### check that delay is an integer
+if ! [[ "$opt_delay" =~ ^[0-9]+$ ]] ; then
+    quit $LINENO "the delay (-d option) is not an integer: $opt_delay"
+fi
+
+### trap empty run command
+if [ -z "$opt_cmd" ]; then
+    quit $LINENO "missing command to run (-c option)" help
+fi
+
+### check run command and its arguments for input file and first job index
+set -- $opt_cmd
+cmd_app=$1
+cmd_input=""
+cmd_first="1"
+if ! [ -x "$(command -v $cmd_app)" ]; then
+    quit $LINENO "no such egsnrc executable found: $cmd_app"
+fi
+while [[ "$#" -gt 0 ]]; do
+    opt=$1; shift
+    case $opt in
+        -i) arg=$1; cmd_input=$1; shift;;
+        -f) arg=$1; cmd_first=$1; shift;;
+        *)  arg="skip";;
+    esac
+    if [ -z "$arg" ] || [ "${arg:0:1}" = "-" ]; then
+        quit $LINENO "missing argument to $opt option in run command: $opt_cmd"
+    fi
+done
+
+### check that first job index is an integer
+if ! [[ $cmd_first =~ ^[0-9]+$ ]] ; then
+    quit $LINENO "first job index (-f option) is not an integer: $opt_cmd"
+fi
+
+### check that an egs input filename is provided
+if [ -z "$cmd_input" ]; then
+    quit $LINENO "missing input file (-i option) in run command: $opt_cmd"
+fi
+
+### set simulation basename from input file
+basename="$(basename "$cmd_input" .egsinp)"
+
+### check that the egs input file exists and is readable
+egsinp=$egs_home/$cmd_app/$basename.egsinp
+if ! [ -r $egsinp ]; then
+    quit $LINENO "cannot access input file: $egsinp.egsinp"
+fi
+
+### prevent the run if lock file or egsjob file present (unless forced)
+if [ "$opt_force" == "no" ]; then
+
+    # check lock file
+    lock=$egs_home/$cmd_app/$basename.lock
+    if [ -e $lock ]; then
+        log "existing lock file: $lock"
+        quit $LINENO "prevent erasing lock file (override with --force)"
+    fi
+
+    # check egsjob file
+    egsjob=$egs_home/$cmd_app/$basename.egsjob
+    if [ -e $egsjob ]; then
+        log  "existing egsjob file: $egsjob"
+        quit $LINENO "prevent erasing egsjob file (override with --force)"
+    fi
+
+fi
+
+### report command-line options
+log "parallel options:"
+log "    batch      = $opt_batch"
+log "    queue      = $opt_queue"
+log "    nthread    = $opt_nthread"
+log "    delay      = $opt_delay"
+log "    command    = $opt_cmd"
+log "    basename   = $basename"
+log "    first job  = $cmd_first"
+log "    options    = $opt_options"
+
+### redirect egs-parallel log file to application directory
+logfile=$egs_home/$cmd_app/$basename.egsparallel
+/bin/mv egs-parallel-$$.log $logfile
+exec 3>>$logfile
+log "log file: $logfile"
+
+### go to egs application directory
+log "cd $egs_home/$cmd_app"
+cd $egs_home/$cmd_app
+
+### log script specific for this batch system
+log "EXEC egs-parallel-$opt_batch $opt_queue $opt_nthread $opt_delay $cmd_first $basename '$opt_cmd' '$opt_options' $verbosity"
+
+### exec script specific for this batch system
+exec $batch_script $opt_queue $opt_nthread $opt_delay $cmd_first $basename $opt_silent "$opt_cmd" "$opt_options" $verbosity

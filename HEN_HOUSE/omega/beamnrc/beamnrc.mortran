@@ -3381,7 +3381,7 @@ $INTEGER ircode,IERR;
 ;COMIN/BOUNDS, BREMPR, CMs, EDGE, ELECIN, ENERGYSRC, EPCONT, GEOM,
   IO_INFO,MEDIA, MISC, PHOTIN, SCORE, SOURCE, STACK, THRESH, UPHIOT,
   USEFUL, USER, RANDOM, BMODEL, RWPHSP, EGS-VARIANCE-REDUCTION, CH-Steps,
-  EGS-IO,TIMING-INFO,GetInput/;
+  EGS-IO,TIMING-INFO,GetInput,EII-DATA/;
 "V>**************************
 "T>TYPE DECLARATIONS FOR MAIN
 "T>**************************
@@ -4291,6 +4291,9 @@ IF(IBRSPL=1)[IAUSFL(26)=1; "to split eii relaxation photons in UBS"]
                            "regardless of the use of BCSE         "
 IF(USE_BCSE)[/IAUSFL(7),IAUSFL(8),IAUSFL(26)/=1;]
 
+IF(eii_flag > 0)[iausfl($EIIA+1)=1;] "to mark fluorescent photon secondaries"
+                                "even if splitting is off"
+
 "*******************************************************************************
 "
 "                     INITIALIZATION FOR SHOWER                        ""toc:
@@ -5013,10 +5016,10 @@ ITMAX=3+LNEXC+LNINC;
 
 return; end;
 
-subroutine beam_finish(ientry);
+subroutine beam_finish(i_entry);
 implicit none;
 
-$INTEGER ientry,egs_open_file;
+$INTEGER i_entry, ientry, egs_open_file;
 
 ;COMIN/SCORE,SOURCE,STACK,IO_INFO,RANDOM,USER,CMs,EGS-IO,UPHIOT,TIMING-INFO,
        RWPHSP/;
@@ -5035,6 +5038,8 @@ $INTEGER I,I1,I2,I3,I4,IT,ITMAX,IERR,NUMIND,COVIND;
 
 $DECLARE_TIMING_VARIABLES;
 
+$LOGICAL is_beam_src;
+
 external combine_results;
 
 #ifdef HAVE_C_COMPILER;
@@ -5043,6 +5048,16 @@ integer n_job;
 #endif;
 
 is_finished = .false.;
+is_beam_src = .false.;
+
+"Calling from a BEAM source library"
+IF (i_entry = 3)[
+   is_beam_src = .true.;
+   ientry = 1;
+]
+ELSE["Proceed as usual"
+  ientry = i_entry;
+]
 
 "*******************************************************************************
 "
@@ -5482,7 +5497,7 @@ call egs_finish;     " Finish the simulation "
 
 #ifdef HAVE_C_COMPILER;
 ;
-IF( n_parallel > 0 & ~is_finished ) [
+IF( n_parallel > 0 & ~is_finished & ~is_beam_src ) [
     call egs_pjob_finish(n_job);
     IOUTLIST=egs_open_file(IOUTLIST,0,1,'.egslst');
     IF( n_job = 0 ) [
@@ -5736,6 +5751,14 @@ IF( use_bcse & ibrspl < 2 ) [
 
 IF((IBRSPL=1 | (USE_BCSE & IBRSPL<2)) & IARG=25 & WT(NP)=1.0)[
    NPOLD=NP;
+   "label fluorescent photons as secondary"
+   IF(latch(np)>=LNOB29)["parent e- was secondary particle"
+      latch(np)=latch(np)+
+                 (IREGION_TO_BIT(IRL)- INT(latch(np)/LNOB29))*LNOB29;
+   ]
+   ELSE["The parent is a primary."
+      latch(np) =  latch(np)+IREGION_TO_BIT(IRL)*LNOB29;
+   ]
    CALL UNIFORM_PHOTONS_4PI(NBRSPL,E(NP));
 ]
 
@@ -6558,6 +6581,17 @@ ELSEIF(IBRSPL=2) ["directional bremsstrahlung splitting"
 
    IF( iarg = 25 ) [ "a fluorescent photon has just been put on the stack "
                      "split it"
+       "label all fluorescent photons as secondary"
+       "Note: Necessary for eii relaxations"
+       "For Compton and photoelectric relaxations it is overkill since"
+       "latch is set for secondaries before the interaction happens"
+       IF(latch(np)>=LNOB29)["parent e- was secondary particle"
+            latch(np)=latch(np)+
+                 (IREGION_TO_BIT(IRL)- INT(latch(np)/LNOB29))*LNOB29;
+       ]
+       ELSE["The parent is a primary."
+            latch(np) =  latch(np)+IREGION_TO_BIT(IRL)*LNOB29;
+       ]
        IF( iphat(np) = nbrspl ) [
            ener = e(np);
            npold=np;
@@ -6624,6 +6658,10 @@ IF(IZLAST = 1)[
            ZLAST(I)=Z(I); "mark Z of creation of e- and e+"
       ]
   ]
+  ELSEIF(IARG=25)[ "fluorescent photon: this is necessary if it arose"
+                   "from a split eii relaxation"
+      zlast(np)=z(np);
+  ]
 ]" END IF FOR IZLAST=1"
 
 ELSEIF(IZLAST = 2)["store x and y for display too"
@@ -6673,6 +6711,12 @@ ELSEIF(IZLAST = 2)["store x and y for display too"
            YLAST(I)=Y(I);
            ZLAST(I)=Z(I);
       ]
+  ]
+  ELSEIF(IARG = 25)[ "fluorescent photon: necessary if it arose after a split"
+                    "eii relaxation"
+      xlast(np)=x(np);
+      ylast(np)=y(np);
+      zlast(np)=z(np);
   ]
 ]" END IF FOR IZLAST = 2"
 
@@ -6903,6 +6947,21 @@ REPLACE {$RESTORE_LATCH_BIT30I;} WITH {LATCH(I)=LATCH(I)+IBITH30;}
     ]
   ] "End of photo"
 
+  ELSEIF(IARG = $EIIA)[ "electron impact ionization -- label fluorescent"
+                        "photons as secondaries"
+    DO i=npold,np[
+      IF(iq(i)=0)[
+        IF(latch(i) >= LNOB29)["parent is a secondary. "
+           latch(i) = latch(i)+(IREGION_TO_BIT(IRL)-
+                      INT(latch(i)/LNOB29))*LNOB29;
+        ]
+        ELSE["the parent is a primary"
+           latch(i) = latch(i)+IREGION_TO_BIT(IRL)*LNOB29;
+        ]
+      ]
+    ]
+  ] "end of eii"
+
 ]         "End of LATCH option = 2,   "
 "
 "*******************************************************************************
@@ -7097,6 +7156,21 @@ ELSEIF(LATCH_OPTION  = 3 & IARG > 6)[
       $RESTORE_LATCH_BIT30I;
     ]
   ] "End of Annih"
+
+  ELSEIF(IARG = $EIIA)[ "electron impact ionization -- label fluorescent"
+                        "photons as secondaries"
+    DO i=npold,np[
+      IF(iq(i)=0)[
+        IF(latch(i) >= LNOB29)["parent is a secondary. "
+           latch(i) = latch(i)+(IREGION_TO_BIT(IRL)-
+                      INT(latch(i)/LNOB29))*LNOB29;
+        ]
+        ELSE["the parent is a primary"
+           latch(i) = latch(i)+IREGION_TO_BIT(IRL)*LNOB29;
+        ]
+      ]
+    ]
+  ] "end of eii"
 ]         "End of LATCH option = 3,   "
 
 
@@ -9190,8 +9264,10 @@ IF (NSC_PLANES >  0) [
 " Dose zone results
 " *****************
 IF (NDOSE_ZONE ~= 0) [
-   WRITE(IOUTLIST,'(/T30,'' DOSE RESULTS''/
+   WRITE(IOUTLIST,'(/T30,'' DOSE RESULTS*''/
                  T30,'' ************''/)');
+   WRITE(IOUTLIST,
+      '('' *Dose will not be output for zones with zero mass.''/)');
    IF(OLDSRC=1|OLDSRC=2) [
                WRITE(IOUTLIST,
        '('' ***WARNING: DOSES ARE NORMALIZED per PARTICLE INCIDENT FROM''/
@@ -9210,23 +9286,33 @@ IF (NDOSE_ZONE ~= 0) [
 
    "Print a summary of the dose zone results"
    WRITE(IOUTLIST,300);
-   WRITE(IOUTLIST,302)
-      (ID,AMASS(ID),SCDOSE(ID,1),SCDOSE2(ID,1),(AMASS(ID)/1000.)*SCDOSE(ID,1),
-      SCDOSE2(ID,1),ID=1,NDOSE_ZONE);
+   DO ID=1,NDOSE_ZONE[
+      IF(AMASS(ID)>0.0)[
+         WRITE(IOUTLIST,302) ID,AMASS(ID),SCDOSE(ID,1),SCDOSE2(ID,1),
+         (AMASS(ID)/1000.)*SCDOSE(ID,1),SCDOSE2(ID,1);
+      ]
+   ]
    IF(IBRSPL=2)["print total non-fat dose for DBS"
      WRITE(IOUTLIST, *);
      WRITE(IOUTLIST,305);
-     WRITE(IOUTLIST,302)
-      (ID,AMASS(ID),SCDOSE(ID,2),SCDOSE2(ID,2),(AMASS(ID)/1000.)*SCDOSE(ID,2),
-      SCDOSE2(ID,2),ID=1,NDOSE_ZONE);
+     DO ID=1,NDOSE_ZONE[
+      IF(AMASS(ID)>0.0)[
+         WRITE(IOUTLIST,302) ID,AMASS(ID),SCDOSE(ID,1),SCDOSE2(ID,1),
+         (AMASS(ID)/1000.)*SCDOSE(ID,1),SCDOSE2(ID,1);
+      ]
+     ]
    ]
    IF( ITDOSE_ON=1) [
 
       IF( ICM_CONTAM >= 1) [
          WRITE(IOUTLIST, *);
          WRITE(IOUTLIST,304)ICM_CONTAM;
-         WRITE(IOUTLIST,302)(ID,AMASS(ID),SCDOSE(ID,3),SCDOSE2(ID,3),
-             (AMASS(ID)/1000.)*SCDOSE(ID,3),SCDOSE2(ID,3),ID=1,NDOSE_ZONE);
+         DO ID=1,NDOSE_ZONE[
+            IF(AMASS(ID)>0.0)[
+              WRITE(IOUTLIST,302) ID,AMASS(ID),SCDOSE(ID,1),SCDOSE2(ID,1),
+              (AMASS(ID)/1000.)*SCDOSE(ID,1),SCDOSE2(ID,1);
+            ]
+         ]
       ]
       WRITE(IOUTLIST, *);
       IF(LNEXC+LNINC>0)[
@@ -9300,6 +9386,7 @@ IF (NDOSE_ZONE ~= 0) [
           ]
           WRITE(IOUTLIST, *);
           DO ID=1,NDOSE_ZONE [
+           IF(AMASS(ID)>0.0)[
             WRITE(IOUTLIST, '(/I4,$ )' ) ID;
             WRITE(IOUTLIST, '(1X,1PE10.3, "+/-",0PF4.1,"%", $ )')
             SCDOSE(ID,1), SCDOSE2(ID,1);
@@ -9307,6 +9394,7 @@ IF (NDOSE_ZONE ~= 0) [
                WRITE(IOUTLIST, '(1X,1PE10.3, "+/-",0PF4.1,"%", $ )')
                SCDOSE(ID,IT+IT2), SCDOSE2(ID,IT+IT2)
             ]
+           ]
           ]   " end of the do id loop "
           WRITE(IOUTLIST,*);
           WRITE(IOUTLIST,*);

@@ -46,9 +46,9 @@ set -x my_machine (cat $EGS_CONFIG | grep "my_machine =" | sed "s/my_machine = /
 set -x HEN_HOUSE (cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed "s/HEN_HOUSE = //")
 set -x OMEGA_HOME {$HEN_HOUSE}omega
 
-# Add HEN_HOUSE bin area to the path
+# Add HEN_HOUSE bin and scripts/bin to the path
 #
-set -x PATH $PATH {$HEN_HOUSE}bin/$my_machine
+set -x PATH $PATH {$HEN_HOUSE}bin/$my_machine {$HEN_HOUSE}scripts/bin
 
 # Now check for EGS_HOME.
 # If EGS_HOME is not empty and exists, check for $EGS_HOME/bin and

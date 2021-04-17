@@ -37,7 +37,7 @@
 
 <ul>
 <li> \ref egs_fac_intro </li>
-<li> \ref common_intro </li>
+<li> \ref common_intro "Common inputs" </li>
 <li> \ref egs_fac_options </li>
 <li> \ref egs_fac_vr </li>
 <li> \ref common_mc </li>

@@ -142,7 +142,7 @@ for prog in gmake make make.exe gmake.exe mingw32-make.exe; do
         IFS=$save_IFS
         $as_executable "$make_dir/$prog" || continue
         have_make=yes
-        make_prog="$prog -j12"
+        make_prog="$prog"
         abs_make="$make_dir/$prog"
         break
     done
@@ -1195,7 +1195,7 @@ _ACEOF
   if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
     test_run=$(./conftest$test_exeext)
     if test "x$test_run" = xyes; then
-      junk_size=$(ls -al junk_file | awk '{print $5}')
+      junk_size=$(printf %d $(wc -c <junk_file))
       if test "x$junk_size" = x4; then
         know_recl=yes
         recl_size=$recl

@@ -1,0 +1,205 @@
+
+#!/bin/bash
+###############################################################################
+#
+#  EGSnrc script to generate muen or mutr databases on a logarithmic grid.
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2020
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  Linux script to create input files on-the-fly for the g-app
+#  to generate databases of muen or mutr values on a logarithmic grid.
+#
+###############################################################################
+#
+#############################################
+# Set defaults
+#############################################
+n=10
+Emin=0.001
+Emax=1.0
+accu=0.001 # 0.1% stat. accuracy
+prefix=muen_rho
+pe_xsections=xcom
+medium=air
+E=0.01
+#---------------------------------
+# Parse command line for arguments
+#---------------------------------
+while test $# -gt 0; do
+    case "$1" in
+      min=*)  Emin=`echo $1  | sed 's/min=//'` ;;
+      max=*)  Emax=`echo $1  | sed 's/max=//'` ;;
+        n=*)     n=`echo $1  | sed 's/n=//'` ;;
+     accu=*)  accu=`echo $1  | sed 's/accu=//'` ;;
+   medium=*) medium=`echo $1 | sed 's/medium=//'` ;;
+   prefix=*) prefix=`echo $1 | sed 's/prefix=//'` ;;
+       pe=*) pe_xsections=`echo $1 | sed 's/pe=//'` ;;
+    esac
+    shift
+done
+
+#---------------------
+# get energy limits
+#---------------------
+AP=$(echo "scale=3; $Emin" | bc)
+UP=$(echo "scale=3; $Emax" | bc)
+AE=$(echo "scale=3; $AP+0.511" | bc)
+UE=$(echo "scale=3; $UP+0.511" | bc)
+#---------------------
+# prepend leading zero
+#---------------------
+printf -v AP "%0.3f" ${AP}
+printf -v UP "%0.3f" ${UP}
+printf -v AE "%0.3f" ${AE}
+printf -v UE "%0.3f" ${UE}
+
+echo 'lower photon energy cut-off:' $AP
+echo 'upper photon energy cut-off:' $UP
+echo 'lower electron energy cut-off:' $AE
+echo 'upper electron energy cut-off:' $UE
+
+typeset -i i # Let's be explicit
+let "n -= 1"
+Dlog1=$(echo "l(${Emax}) - l(${Emin})" | bc -l)
+Dlog=$(echo "${Dlog1} / $n" | bc -l)
+printf 'Dlog = %.5f\n' "$Dlog"
+
+for ((i=0;i<=n;i++))
+do
+  E=$(echo "e(l(${Emin})+$i*${Dlog})" | bc -l)
+  # Protect against round-off at 1 keV
+  if (( $(echo "$E == 0.001" | bc -l) )); then
+     E=$(echo "e(l(${Emin})+0.0000000001+$i*${Dlog})" | bc -l)
+  fi
+  printf -v Ename "%0.8f" ${E}
+  echo E = ${E}
+  name=${prefix}_${medium}_${pe_xsections}_${Ename}_MeV
+    cat >${name}.egsinp <<EOF
+
+##############################
+ :Start MC Transport Parameter:
+
+ Global ECUT=                    $AE
+ Global PCUT=                    $AP
+ Global SMAX=                    1e10
+ Spin effects=                   On
+
+ Rayleigh scattering   = On
+ Photon cross sections  = $pe_xsections
+ Pair cross sections = nrc
+ Triplet production = On
+ Bound Compton Scattering = norej
+ Radiative Compton corrections = ON
+ Atomic relaxations=             On
+ Photoelectron angular sampling= On
+
+ Brems angular sampling=         KM
+ Brems cross sections= nrc
+ Pair angular sampling=          KM
+ ESTEPE=                         0.25
+ XIMAX=                          0.5
+ Electron Impact Ionization=     On
+ Skin depth for BCA=             3
+ Boundary crossing algorithm=    exact
+ Electron-step algorithm=        default
+
+ :Stop MC Transport Parameter:
+ #############################
+
+ media=  $medium
+ INITIAL RANDOM NO. SEEDS= 97, 33
+ Number of HISTORIES= 2000000000000
+ accuracy= $accu # relative accuracy
+ calculation type= 1
+ verbose = yes
+
+ :Start Source Input:
+ --------------------
+
+ INCIDENT SPECTRUM=       mono-energy
+ INCIDENT KINETIC ENERGY= ${E}
+ Incident Charge=         0
+
+ :Stop Source Input:
+ -------------------
+################################################################################
+### PEGS PARAMETERS
+################################################################################
+
+:start media definition:
+
+    ### energy transport cutoffs
+    ae = $AE
+    ue = $UE
+    ap = $AP
+    up = $UP
+
+
+    :start air:
+      density correction file     = air_dry_nearsealevel
+      bremsstrahlung correction= NRC
+    :stop air:
+
+    :start water:
+      density correction file     = water_icru90
+      bremsstrahlung correction= NRC
+    :stop water:
+
+:stop media definition:
+
+EOF
+########################################################################
+#
+# Example of the command to submit the calculations to the cores of a
+# Unix/Linux computer cluster running a PBS job scheduler.
+# Uncomment the two lines below and comment out the subsequent lines to
+# submit to a cluster:
+#
+#echo Submitting $name to the queue user1...
+#${HEN_HOUSE}scripts/run_user_code_batch g ${name} pegsless batch=pbs user1
+#
+########################################################################
+#
+# Submission to the available logical threads of a multicore PC:
+#
+# Comment out the 4 lines below if using the command above for submission
+# to a cluster!
+#
+########################################################################
+command="g -i $name"
+$command -b -P 1 -j 1 >/dev/null 2>&1 &
+processid=`printf %5d $!`
+echo "LAUNCHED $processid: $command -b -P 1 -j 1 &"
+########################################################################
+done
+# wait for completion and report
+# Comment out the 4 lines below if using the command for submission
+# to a cluster!
+wait
+echo --------------------------------------------------------------------------------
+echo "SIMULATION COMPLETED"
+echo
+########################################################################
+exit 0

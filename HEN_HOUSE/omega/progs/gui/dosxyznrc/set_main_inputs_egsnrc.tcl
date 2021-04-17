@@ -338,7 +338,7 @@ proc edit_parameters {} {
 
     # option to score IAEA phase space data if isource=2,4,8,9,10,20,21
     frame $w2.dflag.phsp
-    button $w2.dflag.phsp.help -text "?" -command "help dflag"
+    button $w2.dflag.phsp.help -text "?" -command "help iphspout"
     label $w2.dflag.phsp.lab -text "Phase space output on exiting phantom"
     menubutton $w2.dflag.phsp.inp -text $phspoutopt($iphspout) -width 20\
                 -menu $w2.dflag.phsp.inp.m -bd 1 -relief raised -indicatoron 1

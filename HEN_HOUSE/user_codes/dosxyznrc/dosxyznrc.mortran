@@ -404,8 +404,9 @@
 "                      histories by this number.
 "
 "        The n_split algorithm works as follows:
-"         * dpmfp_i = -log(1 - (eta+i)/n_split)
+"         * dpmfp_i = -log(1 - (eta+i-1)/n_split)
 "           where dpmfp_i is MFP to the next interaction for the i-th sub-photon
+"           (i=1,2,...n_split)
 "           eta is a random number (the same for all n_split sub-photons)
 "         * Once at the interaction site, the i'th sub-photon produces
 "           electrons and/or scattered photons. Scattered photons are
@@ -853,9 +854,11 @@ IF( n_split > 1 ) [  "we use photon splitting"
               ]
               IF( medium ~= 0 ) dpmfp = dpmfp - ustep/gmfp;
               IF( irnew ~= irold ) [
-                  ir(np) = irnew; irl = irnew; irold = irnew;
+                  ir(np) = irnew; irl = irnew;
                   medium = med(irl);
               ]
+              $AUSCALL($TRANAUSA);
+              irold = ir(np);
               IF (IWATCH>0) CALL WATCH($TRANAUSA,IWATCH);
           ] UNTIL (medium ~= 0 & dpmfp < $EPSGMFP);
           x_save = x(np); y_save = y(np); z_save = z(np);
@@ -1349,6 +1352,8 @@ REAL z_score_tmp; "dummy variable passed to IAEA phsp file opening macro"
 
 external combine_results;
 
+character medChar($IMAX);
+
 #ifdef HAVE_C_COMPILER;
 $REAL   part_dose, part2_dose, current_result, current_uncertainty;
 $LONG_INT n_run,n_tot,n_last,n_left,other_num_1,other_num_2,p_per_phsp_chunk;
@@ -1511,14 +1516,21 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
     (/' x range : ',F12.5,' - ',F12.5,' cm'/
       ' y range : ',F12.5,' - ',F12.5,' cm'/
       ' z range : ',F12.5,' - ',F12.5,' cm');
+
     "input the media numbers"
     DO k=1,KMAX[
        DO j=1,JMAX[
-          read($CTUnitNumber,:medformat:) (med($IR(i,j,k)),i=1,IMAX);
+          "Read in the characters that correspond to medium numbers"
+          read($CTUnitNumber,:medformat:) (medChar(i),i=1,IMAX);
+          "Convert from ASCII to a number"
+          DO i=1,IMAX[
+            med($IR(i,j,k)) = mod((iachar(medChar(i)) + 47), 95);
+          ]
        ]
        read($CTUnitNumber,*);
     ]
-    :medformat: FORMAT($IMAXi1);
+    :medformat: FORMAT($IMAXa1);
+
     "input the densities"
     maxrhor=0.;
     minrhor=999.;
@@ -1995,28 +2007,23 @@ call show_transport_parameter(iout); " print the transport parameter settings"
 "=========================================================================="
 
 "now check to see if ECUTIN>ECUT or PCUTIN>PCUT"
-"or, in the case where GUI inputs for ECUT/PCUT were left blank and"
-"ECUT/PCUT defaulted to AE/AP in hatch, ECUT>ECUTIN or PCUT>PCUTIN"
-IF(ECUTIN>ECUT)[ "reset ecut in all regions to ecutin"
-   OUTPUT ECUT;
-    (/' ****WARNING****'/
-      ' ECUTIN > ECUT input in EGSnrc parameters ( ',F10.4,' MeV).'/
-      ' ECUT defaults to ECUTIN.'/);
-   ECUT=ECUTIN;
+IF(ECUTIN > ECUT + 1e-10)[ "reset ecut in all regions to ecutin"
+  OUTPUT ECUTIN,ECUT;
+  (/' WARNING'/
+    ' ECUTIN(=',F13.9,') > ECUT(=',F13.9,') input in EGSnrc parameters'/
+    ' ECUT defaults to ECUTIN.'/);
+  ECUT=ECUTIN;
 ]
-ELSE[
-   ECUTIN=ECUT;
+ELSE[ ECUTIN=ECUT; ]
+
+IF(PCUTIN > PCUT + 1e-10)[ "reset pcut in all regions to pcutin"
+  OUTPUT PCUTIN,PCUT;
+  (/' WARNING'/
+    ' PCUTIN(=',F13.9,') > PCUT(=',F13.9,') input in EGSnrc parameters'/
+    ' PCUT defaults to PCUTIN.'/);
+  PCUT=PCUTIN;
 ]
-IF(PCUTIN>PCUT)[ "reset ecut in all regions to ecutin"
-   OUTPUT PCUT;
-    (/' ****WARNING****'/
-      ' PCUTIN > PCUT input in EGSnrc parameters ( ',F10.4,' MeV).'/
-      ' PCUT defaults to PCUTIN.'/);
-   PCUT=PCUTIN;
-]
-ELSE[
-   ECUTIN=ECUT;
-]
+ELSE[ PCUTIN=PCUT; ]
 
 "call this here so that BEAM simulation source can get i_parallel if"
 "pprocess is used"
@@ -3382,6 +3389,8 @@ IF( n_parallel > 0 & ~is_finished ) [
         ainflu=temp2; "need to define this because it is used to normalize dose"
         IF((isource = 0 | isource = 1 | isource = 3 | isource = 7) &
            beamarea>0.) ainflu=ainflu/beamarea;
+        call show_transport_parameter(iout);
+        call srcout;
         goto :ANALYZE-PARALLEL:;
     ]
 ]
@@ -4537,11 +4546,12 @@ WRITE(iunit,*) (ybnd(jj),jj=1,jjmax+1);
 WRITE(iunit,*) (zbnd(kk),kk=1,kkmax+1);
 DO kk=1,kkmax[
     DO jj=1,jjmax[
-        WRITE(iunit,1399) (med($IRWP(ii,jj,kk)),ii=1,iimax);
+        WRITE(iunit,1399) (achar(MOD((med($IRWP(ii,jj,kk))+16),95) + 32),
+            ii=1,iimax);
     ]
     WRITE(iunit,*);
 ]
-1399 FORMAT($IMAXi1);
+1399 FORMAT($IMAXa1);
 DO kk=1,kkmax[
     DO jj=1,jjmax[
         WRITE(iunit,*) (rho($IRWP(ii,jj,kk)),ii=1,iimax);

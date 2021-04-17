@@ -42,7 +42,7 @@ EGS_EXTRA_LIBS = $(FLIBS) $(BEAMLIB_EXTRA_LIBS)
 RANDOM = $(EGS_SOURCEDIR)ranmar
 
 # We use #ifdef ... #endif for parallel processing implementation
-# => Fortran file extension must me .F so that the C-preprocessor is
+# => Fortran file extension must be .F so that the C-preprocessor is
 # automatically invoked.
 #
 FEXT = F

@@ -73,6 +73,9 @@ using namespace std;
     #include <sys/statvfs.h>
 #endif
 
+#define MAXIMUM_JOB_NUMBER 8192 // GPSC1: 256 nodes with 16 cores (32 threads)
+//#define MAXIMUM_JOB_NUMBER 1024
+
 static char __egs_app_msg1[] = "EGS_Application::EGS_Application(int,char**):";
 static char __egs_app_msg2[] = "EGS_Application::initSimulation():";
 static char __egs_app_msg3[] = "EGS_Application::runSimulation():";
@@ -220,7 +223,7 @@ void EGS_Application::storeGeometryStep(int ireg, int inew,
 }
 
 EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
-    source(0), rndm(0), run(0), simple_run(false), current_case(0),
+    source(0), rndm(0), run(0), simple_run(false), uniform_run(false), current_case(0),
     last_case(0), data_out(0), data_in(0), a_objects(0),
     ghistory(new EGS_GeometryHistory) {
 
@@ -389,22 +392,43 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
             i_parallel = 0;
         }
     }
-    else if (have_np || have_ip)
-        egsWarning("%s\n  to specify a parallel run you need both,"
-                   " the -P and -j command line options\n",__egs_app_msg1);
+    else if (have_np && !have_ip) { // user wants to reset n_parallel
+        // and combine parallel jobs
+        n_parallel = ::strtol(npar.c_str(),0,10);
+        simple_run = true;
+    }
+    else if (n_parallel && !have_ip) { // user wants to combine
+        // parallel jobs
+        simple_run = true;
+    }
+    else if (!have_np && have_ip) {
+        egsWarning("\n%s\n  to specify a parallel run you need both,"
+                   " the -P and -j command line options\n\n",__egs_app_msg1);
+    }
 
     //
     // *** see if user wants simple job control
     //
-    {
-        for (int j=1; j<argc; j++) {
-            string tmp = argv[j];
-            if (tmp == "-s" || tmp == "--simple-run") {
-                simple_run = true;
-                //for(int i=j; i<argc-1; i++) argv[i] = argv[i+1];
-                //argc--;
-                break;
-            }
+    for (int j=1; j<argc; j++) {
+        string tmp = argv[j];
+        if (tmp == "-s" || tmp == "--simple-run") {
+            simple_run = true;
+            //for(int i=j; i<argc-1; i++) argv[i] = argv[i+1];
+            //argc--;
+            break;
+        }
+    }
+
+    //
+    // *** See if user wants uniform job control.
+    //     (Takes precedence over simple job control)
+    //
+    for (int j=1; j<argc; j++) {
+        string tmp = argv[j];
+        if (tmp == "-u" || tmp == "--urc") {
+            uniform_run = true;
+            simple_run  = false;
+            break;
         }
     }
 
@@ -561,6 +585,39 @@ int EGS_Application::addState(istream &data) {
     return 0;
 }
 
+bool fileExists(const string &name) {
+    struct stat buffer;
+    return (stat(name.c_str(), &buffer) == 0);
+}
+
+int EGS_Application::howManyJobsDone() {
+
+    char buf[512];
+    int  n_of_egsdat = 0;
+
+    for (int i = first_parallel; i < first_parallel + n_parallel; i++) {
+        sprintf(buf,"%s_w%d.egsdat",final_output_file.c_str(),i);
+        string dfile = egsJoinPath(app_dir,buf);
+        if (fileExists(dfile)) {
+            n_of_egsdat++;
+        }
+    }
+
+    return n_of_egsdat;
+}
+
+int EGS_Application::combinePartialResults() {
+    int err = combineResults();
+    if (err) {
+        return err;
+    }
+    for (int j=0; j<a_objects_list.size(); ++j) {
+        a_objects_list[j]->reportResults();
+    }
+    outputResults();
+    return 0;
+}
+
 int EGS_Application::combineResults() {
     egsInformation(
         "\n                      Suming the following .egsdat files:\n"
@@ -571,8 +628,16 @@ int EGS_Application::combineResults() {
     EGS_I64 last_ncase = 0;
     int ndat = 0;
     bool ok = true;
-    for (int j=1; j<500; j++) {
-        sprintf(buf,"%s_w%d.egsdat",output_file.c_str(),j);
+    /*
+       If trying to combine results and n_parallel set to 0,
+       use a hard-coded value for number of jobs.This is possible
+       if -P njobs was not passed as argument.
+     */
+    if (!n_parallel) {
+        n_parallel = MAXIMUM_JOB_NUMBER;
+    }
+    for (int j=first_parallel; j < first_parallel + n_parallel; j++) {
+        sprintf(buf,"%s_w%d.egsdat",final_output_file.c_str(),j);
         string dfile = egsJoinPath(app_dir,buf);
         ifstream data(dfile.c_str());
         if (data) {
@@ -647,6 +712,9 @@ int EGS_Application::initRunControl() {
     }
     if (simple_run) {
         run = new EGS_RunControl(this);
+    }
+    else if (uniform_run) {
+        run = new EGS_UniformRunControl(this);
     }
     else {
         run = EGS_RunControl::getRunControlObject(this);
@@ -749,6 +817,10 @@ void EGS_Application::describeSimulation() {
                                    "\n %s\n\n\n",source->getSourceDescription());
     if (rndm) {
         rndm->describeRNG();
+        egsInformation("\n\n");
+    }
+    if (run) {
+        run->describeRCO();
         egsInformation("\n\n");
     }
     if (a_objects_list.size() > 0) {

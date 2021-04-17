@@ -236,7 +236,7 @@ if( lRes == ERROR_SUCCESS ){
 
     RegCloseKey( hKey );
 
-    unsigned long lpdwResult;
+    unsigned long long lpdwResult;
     if ( ! SendMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
                                (LPARAM) "Environment", SMTO_ABORTIFHUNG,
                                9000, &lpdwResult) )
@@ -338,7 +338,7 @@ if( lRes == ERROR_SUCCESS ){
 
     RegCloseKey( hKey );
 
-    ulong lpdwResult;
+    unsigned long long lpdwResult;
     if ( ! SendMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
                                (LPARAM) "Environment", SMTO_ABORTIFHUNG,
                                9000, &lpdwResult) )

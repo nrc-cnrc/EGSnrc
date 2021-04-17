@@ -91,7 +91,7 @@ REPLACE {;COMIN/my_times/;} WITH {;
 "       -b or --batch                Specify a 'batch' run. The difference
 "                                    between a 'batch' run and an interactive
 "                                    run is that in 'batch' mode unit 6 is
-"                                    connected to a file, whereas in intarctive
+"                                    connected to a file, whereas in interactive
 "                                    mode unit 6 goes to the standard output.
 "                                    The file name in batch run is determined
 "                                    as follows:
@@ -449,6 +449,12 @@ IF( n_parallel > 0 ) [
 ]
 $egs_info('(a)',line);
 
+IF (is_uniform_run)[
+   $egs_info('(//a,i0,a,i0,a//)',
+   '-> User requests uniform run control. I am job # ',
+   i_parallel,' of ',n_parallel,' jobs');
+]
+
 return;
 
 " Errors "
@@ -577,6 +583,10 @@ IF( n_parallel > 0 | i_parallel > 0 ) [
         first_parallel = i_parallel;
     ]
 ]
+
+" Check for run control option "
+$check_argument('-u','--urc',arg);
+IF( have_arg ) is_uniform_run = .true.;
 
 $egs_debug('(a,a)','HEN_HOUSE is ',$cstring(hen_house));
 
@@ -984,6 +994,7 @@ $set_string(pegs_file,' ');
 $set_string(host_name,' ');
 n_parallel = 0; i_parallel = 0; n_chunk = 0; is_batch = .false.;
 first_parallel = 1;
+is_uniform_run = $URC-DEFAULT;
 return; end;
 
 "*****************************************************************************
@@ -1001,9 +1012,13 @@ character*1024 tmp_string,base,command,outfile,parfile_name,base1,
            text_string;
 integer  lnblnk1,istat,ipar,egs_system,egs_open_file;
 $INTEGER i,k,j,numparfiles,textindex;
+integer urcSleep, urcCheckIntervals;
 $LOGICAL ex,iwin;
 
 iwin=.false.; "start off assuming a non-Windows system"
+
+urcSleep          = $URC-SLEEP;    "Set to 1 s in egsnrc.macros"
+urcCheckIntervals = $URC-INTERVALS;"Set to 1 in egsnrc.macros"
 
 $set_string(base,' ');
 base = $cstring(egs_home) // $cstring(user_code) // $file_sep //
@@ -1017,6 +1032,8 @@ base1 = $cstring(egs_home) // $cstring(user_code) // $file_sep //
 $set_string(outfile,' ');
 outfile = $cstring(egs_home) // $cstring(user_code) // $file_sep //
        'parfiles_tmp';
+
+:check-output-files:;
 "try Unix/Linux first"
 $set_string(command,' ');
 command = 'ls ' // $cstring(base1) // ' | wc -l > ' // $cstring(outfile);
@@ -1026,7 +1043,8 @@ IF(istat~=0)["now assume a Windows system"
    $cstring(outfile);
    istat = egs_system($cstring(command));
    IF(istat~=0)[
-$egs_fatal(*,' Failed to write number of output files from parallel runs.');
+     $egs_fatal(*,
+     ' Failed to write number of output files from parallel runs.');
    ]
    ELSE [
      iwin=.true.;
@@ -1048,6 +1066,14 @@ ELSE[
   read(ipar,'(i256)',err=:end_of_parfile:,end=:end_of_parfile:) numparfiles;
 ]
 close(ipar);
+
+#ifdef HAVE_C_COMPILER;
+IF ( is_uniform_run & numparfiles < n_parallel & urcCheckIntervals > 0 ) [
+   call egs_sleep(urcSleep);"sleep for urcSleep seconds"
+   urcCheckIntervals -= 1;
+   goto :check-output-files:;
+]
+#endif;
 
 "now remove parfiles_tmp"
 $set_string(command,' ');

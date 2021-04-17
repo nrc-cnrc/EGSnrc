@@ -2,7 +2,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %  EGSnrc BEAMnrc manual
-%  Copyright (C) 2015 National Research Council Canada
+%  Copyright (C) 2021 National Research Council Canada
 %
 %  This file is part of EGSnrc.
 %
@@ -71,7 +71,11 @@
 \rfoot[{\sffamily {\rightmark}}]{{\sffamily {\rightmark}}}
 \lfoot[{\sffamily {\leftmark}}]{{}}
 \cfoot{}
-\usepackage[breaklinks]{hyperref}
+%\usepackage[breaklinks]{hyperref}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, citecolor=blue, linkcolor=blue, filecolor=blue, urlcolor=blue}
+\urlstyle{same}
+
 \usepackage{html}
 \begin{latexonly}
 \typeout{***Have turned off overfull and underfull messages****}
@@ -113,7 +117,7 @@ Use the Up button to get back to this page from within the document.
 \begin{rawhtml}
 <BR> <HR> <P>
 \end{rawhtml}
-\copyright Copyright 2015, National Research Council of Canada
+\copyright Copyright 2021, National Research Council of Canada
 Ottawa}
 \begin{rawhtml}
 <BR> <HR> <P>
@@ -156,7 +160,7 @@ Printed: \today
 \begin{center}
 
 \vfill
-\copyright NRC Canada, 2015
+\copyright NRC Canada, 2021
 \end{center}
 
 \setlength{\baselineskip}{0.5cm}
@@ -4161,7 +4165,7 @@ For more detailed information about DSB, see the directional source biasing pape
 \index{x-ray tubes!variance reduction}
 
 The Bremsstrahlung Cross Section Enhancement (BCSE) variance reduction
-technique is introduced into BEAMnrc in the Fall of 2007 to improve
+technique is introduced into BEAMnrc in 2007 to improve
 the efficiency of simulations that involve x-ray production from
 bremsstrahlung targets (e.g. x-ray tubes and clinical linear
 accelerators), both in the kilovoltage and megavoltage range. The
@@ -4198,30 +4202,52 @@ preceding it).
 \noindent {\tt Use BCSE= ON} (could be {\tt OFF}, internal variable {\tt
 USE\_BCSE} is 0 or 1 for {\tt OFF} or {\tt ON}, respectively).
 \index{USE\_BCSE}
-\index{Use BCSE}
-
+\index{Use BCSE}\\~~\\
 \noindent {\tt Medium to enhance= med} ({\tt med} is the name of
 the medium in which to enhance the bremsstrahlung cross
 section (internal variable {\tt BCSE\_MEDNAME}).  The medium must exist
 in the accelerator, otherwise BCSE will not be done.
 \index{BCSE\_MEDNAME}
-\index{Medium number to enhance}
-
-
-\noindent {\tt Enhancement factor= $n_{2}$} ($n_{2}$ is an integer number
-representing the factor by which the bremsstrahlung cross section is
-enhanced (internal variable {\tt BCSE\_FACTOR}) )
-\index{BCSE\_FACTOR}
-\index{Enhancement factor}
-
+\index{Medium number to enhance}\\~~\\
+\noindent {\tt Enhancement constant= C}, where {\tt C} is a real number $\ge$0
+(internal variable {\tt BCSE\_FACTOR\_C})
+\index{BCSE\_FACTOR\_C}
+\index{Enhancement constant}\\
+\noindent {\tt Enhancement power= N}, where {\tt N} is a real number
+(internal variable {\tt BCSE\_POWER\_N})
+\index{BCSE\_POWER\_N}
+\index{Enhancement power}\\~~\\
 \noindent {\tt Russian Roulette= ON} (could be {\tt OFF}. If the focus of
 the simulation
 is on the photons, it is strongly recommended to set Russian Roulette
 {\tt ON}. (internal variable {\tt IRRLTT} which is 0 if {\tt OFF} and 2 if
-{\tt ON}.))
+{\tt ON}.)
 \index{IRRLTT}
 
 \noindent {\tt :Stop BCSE:}
+
+The {\tt Enhancement constant} ({\tt C}) and {\tt Enhancement power} ({\tt N})
+inputs determine the bremsstrahlung cross-section enhancement factor, {\tt BCSE\_FACTOR},
+which is given by:
+\begin{equation}
+{\tt BCSE\_FACTOR}=
+\begin{cases}
+{\tt C} & \text{if {\tt N} is set $\leq$0}\\
+1+{\tt C} \times E^{\tt N} & \text{if {\tt N} is set $>$0}\\
+\end{cases}
+\label{bcse_enhancement_factor_eqn}
+\end{equation}
+\index{BCSE!Energy-dependent enhancement factor}
+where E is the kinetic energy of the electron undergoing a bremsstrahlung event.
+
+While an energy-dependent enhancement factor
+(lower part of Equation~\ref{bcse_enhancement_factor_eqn}) can achieve a further $\sim$20\%
+increase in efficiency over a constant enhancement factor (Equation~\ref{bcse_enhancement_factor_eqn}
+upper part), it requires a judicious choice of both {\tt C} and {\tt N}.  Thus, unless you are prepared to do a detailed
+study of simulation efficiency, we recommend setting {\tt N}$\leq$0 and using a constant enhancement factor,
+{\tt BCSE\_FACTOR}={\tt C}.
+The
+discussion on optimizing BCSE below assumes you are using a constant enhancement factor.
 
 \subsubsection{Simulation optimization with BCSE}
 
@@ -8025,31 +8051,26 @@ Rotation angle and translation distance are determined by user
 inputs which define the spacing between the
 centres of the leaf cross-sections, {\tt SPACE},
 as projected down to {\tt SSD} and the requirement that the leaf sides
-focus to Z=0.   Leaves are first rotated about the X=0 ({\tt ORIENT}=0)
+focus to Z=0.   For leaf $I$=1,2,...,{\tt NUM\_LEAF}, the cross-section
+is first rotated about X=0 ({\tt ORIENT}=0)
 or Y=0 ({\tt ORIENT}=1), Z={\tt ZMIN} using:
 \begin{equation}
 rotation=
-\begin{cases}
-ATAN\left[-\left(2I-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right)\right] &
-\text{for 1$\leq I\leq\frac{NUM\_LEAF}{2}$},\\
-ATAN\left[\left(2I-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right)\right] &
-\text{for $\frac{NUM\_LEAF}{2}+1\leq I\leq NUM\_LEAF$}.
-\end{cases}
+ATAN\left[\left(2I-NUM\_LEAF-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{1}{SSD}\right)\right]
+\label{mlce_rotation_equation}
 \end{equation}
-Then they are translated in the X ({\tt ORIENT}=0) or Y
+and then translated in the X ({\tt ORIENT}=0) or Y
 ({\tt ORIENT}=1) direction using:
 \begin{equation}
 translation=
-\begin{cases}
--\left(2I-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right) &
-\text{for 1$\leq I\leq\frac{NUM\_LEAF}{2}$},\\
-\left(2I-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right) &
-\text{for $\frac{NUM\_LEAF}{2}+1\leq I\leq NUM\_LEAF$}.
-\end{cases}
+\left(2I-NUM\_LEAF-1\right)\left(\frac{SPACE}{2}\right)\left(\frac{ZMIN}{SSD}\right)
+\label{mlce_translation_equation}
 \end{equation}
-Note the restriction that {\tt NUM\_LEAF} must be an even number.
-After the leaves have been rotated/translated according to the above equations,
-their cross-sections are symmetric about the Z axis.
+where {\tt NUM\_LEAF} must be an even number.  Note that the result of
+applying Equations~\ref{mlce_rotation_equation} and \ref{mlce_translation_equation} is that cross-sections for
+leaves 1 - {\tt NUM\_LEAF}/2 are rotated/translated in the negative sense with respect to the Z-axis
+while cross-sections for leaves {\tt NUM\_LEAF}/2+1 - {\tt NUM\_LEAF} are rotated/translated in the positive
+sense and the cross-section of the leaf bank is symmetric about the Z-axis.
 
 The user also has
 the option to rotate the entire leaf bank about the axis
@@ -8507,6 +8528,48 @@ are used closer to middle of the mlc, and, while their Z-dimensions are similar 
 are significantly thinner in the X- ({\tt ORIENT}=0) or Y- ({\tt ORIENT}=1)
 dimension.
 
+\index{SYNCHDMLC!Relaxation of leaf cross-section input restrictions}
+In general, SYNCHDMLC is similar to DYNVMLC and SYNCVMLC in that leaf cross-section dimensions must be defined so that
+the grid lines shown in Figure~\ref{synchdmlc_fig}, defining the cross-section regions, remain in the same order
+shown in the figure.  This should allow modeling of the HD120 based on manufacturer specifications assuming either
+non-divergent leaves ({\em i.e.,} leaves in which the vertical cross-section boundaries are parallel as opposed
+to intersecting at some value of Z$<${\tt ZMIN}), as shown in
+Figure~\ref{synchdmlc_fig}, or else minimal divergence.  Leaves may diverge to a significant extent, however,
+and it has
+come to our attention that, in an effort to more accurately model this, users may project manufacturer-specified
+cross-section widths ({\em e.g.,} {\tt wtip}, {\tt wts}, {\tt wbs}, etc) from the Z values at which they are defined
+back to {\tt ZMIN}.  This results in a change in order in some of the vertical cross-section boundaries.  In an effort
+to accommodate this in SYNCHDMLC, we have recently introduced the following relaxations of prior input restrictions:
+\begin{enumerate}
+\item {\bf For HALF TARGET and QUARTER TARGET leaves}: The bottom of the support rail can extend to the left of the
+leaf tip ({\tt wbs} $>$ {\tt wg} + {\tt wtip}), changing the
+order of the 3rd and 4th (counting from the right) vertical cross-section boundaries shown in Figure~\ref{synchdmlc_fig}.
+\item {\bf For HALF TARGET and QUARTER TARGET leaves}: The top of the support rail can extend past the right edge
+of the leaf ({\tt wts} $>$ {\tt wbs}), changing the order of the
+6th and 7th vertical cross-section boundaries.
+\item {\bf For QUARTER TARGET leaves}: The top of the support rail need not extend past the beginning (left edge)
+of the groove ({\tt wts} $<$ {\tt wbs} - {\tt wg}),
+effectively changing the order of vertical boundries 5 and
+6, provided that, if relaxation 1 above is in effect, it does extend past the left edge of the leaf tip.
+\item {\bf For HALF ISOCENTER leaves}: The bottom of the support rail can extend past the left edge of the leaf
+({\tt wbs} $>$ {\tt wts}), changing the order of the 1st and 2nd vertical cross-section boundaries.
+\item {\bf For QUARTER ISOCENTER leaves}: The bottom of the support rail need not extend (to the right) as far as
+the right edge of the tongue ({\tt wbs} $<$ {\tt wts} - {\tt wt}), changing
+the order of the 2nd and 3rd vertical cross-section boundaries, provided that it still extends past the
+right edge of the leaf tip.
+\item {\bf For QUARTER ISOCENTER leaves}: The Z-position of the groove, {\tt zg}, can be greater than that of the tongue,
+{\tt zt}, allowing for duelling interpretations of manufacturer specifications for this leaf type in which the
+relative Z-positions of these structures are not entirely clear.
+\end{enumerate}
+If user input dimensions require any of the above relaxations, a warning message will be output stating which restriction
+is being relaxed and indicating that the input cross-section differs from that shown in this manual.
+It is important to note that, while these relaxations in boundary ordering may allow the user to input
+accurate dimensions consistent with divergent MLC leaves, leaves are still modeled as if they are non-divergent,
+with all side surfaces focused at {\tt ZFOCUS(1)}, and, thus, the geometry remains an approximation.
+Many thanks to Dr. Jarkko Ojala at Tampere University
+Hospital, Finland, who, through detailed examination of manufacturer specifications and measurement of MLC leaves,
+determined which restrictions needed to be relaxed and who helped test the modified code.
+
 \index{SYNCHDMLC!restrictions on leaf dimensions}
 Similar to DYNVMLC, leaf cross-section dimensions must be defined so that the Z and X ({\tt ORIENT}=0) or Y ({\tt ORIENT}=1) grid lines
 shown on the cross-sections at the top of Figure~\ref{synchdmlc_fig} do not change order.
@@ -8522,6 +8585,8 @@ QUARTER TARGET/QUARTER ISOCENTER ({\tt zg}$_{QUARTER~TARGET}$ $\leq$ {\tt zt}$_{
 QUARTER ISOCENTER/QUARTER TARGET ({\tt zg}$_{QUARTER~ISOCENTER}$ $\geq$ {\tt zt}$_{QUARTER~TARGET}$)\\
 QUARTER ISOCENTER/HALF TARGET ({\tt zg}$_{QUARTER~ISOCENTER}$ $\geq$ {\tt zt}$_{HALF~TARGET}$)\\
 and HALF ISOCENTER/FULL (ie {\tt zg}$_{HALF~ISOCENTER}$ $\geq$ {\tt zt}$_{FULL}$).
+
+
 
 As in DYNVMLC and SYNCVMLC, rather than specifying the type of each leaf in the MLC, the user is able to specify groups
 of adjacent leaves of the same type.  Since TARGET leaves always alternate with ISOCENTER leaves within a group,

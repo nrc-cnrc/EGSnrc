@@ -2074,11 +2074,11 @@ WRITE(15,*) (ybnd(jj),jj=1,jjmax+1);
 WRITE(15,*) (zbnd(kk),kk=1,kkmax+1);
 DO kk=1,kkmax[
     DO jj=1,jjmax[
-        WRITE(15,1399) (med($IR(ii,jj,kk)),ii=1,iimax);
+        WRITE(15,1399) (achar(MOD((med($IR(ii,jj,kk))+16),95) + 32),ii=1,iimax);
     ]
     WRITE(15,*);
 ]
-1399 FORMAT($IMAXi1);
+1399 FORMAT($IMAXa1);
 DO kk=1,kkmax[
     DO jj=1,jjmax[
         WRITE(15,*) (rho($IR(ii,jj,kk)),ii=1,iimax);

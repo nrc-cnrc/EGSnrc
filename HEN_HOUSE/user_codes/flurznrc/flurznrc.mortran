@@ -1369,7 +1369,7 @@ REPLACE {$NSWTCH} WITH {7}      "# OF NRC SWITCHES FOR CONTROLLING SCATTERING"
 REPLACE {$MXMED} WITH {6}       "#MEDIA"
 REPLACE {$NBATCH} WITH {10}     "# OUTPUT BATCHES"
 REPLACE {$NCASEMIN} WITH {10}  "min. no. of histories"
-REPLACE {$MXSTACK} WITH {150}   "MAXIMUM STACK"
+REPLACE {$MXSTACK} WITH {900000}   "MAXIMUM STACK"
 REPLACE {$MAXZREG} WITH {500}    "MAX # OF FLUENCE SCORING PLANAR ZONES
 REPLACE {$MAXRADII} WITH {4}    "MAX # OF FLUENCE SCORING RADIAL ZONES"
 REPLACE {$MAXRZ} WITH {$MAXZREG} "MAX($MAXZREG,$MAXRADII)"
@@ -2668,6 +2668,8 @@ DO IX=1,NR[
    ]
 ]
 
+:output-results:;
+
 write(6,'(/a,$)') '********* FINAL RANDOM NUMBER STATE:';
 $SHOW-RNG-STATE(6); write(6,'(a)') '  *********';
 write(iout,'(/a,$)') '********* FINAL RANDOM NUMBER STATE:';
@@ -2920,10 +2922,11 @@ IF( n_parallel > 0 & ~is_finished ) [
     call egs_pjob_finish(n_job);
     IF( n_job = 0 ) [
         is_finished = .true.;
+        call isumry;
         call egs_combine_runs(combine_results,'.egsdat');
         NCASET=NCASEO;  IHSTRY=NCASET;
         CALL SRCOTO(WEIGHT);
-        goto :STATS-ANAL:;
+        goto :output-results:;
     ]
 ]
 #endif;

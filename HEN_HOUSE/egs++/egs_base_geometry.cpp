@@ -430,7 +430,7 @@ EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
     region_media(0), med(-1), has_rho_scaling(false), rhor(0),
     has_B_scaling(false), has_Ref_rho(false), bfactor(0), rhoRef(1.0),
     nref(0), debug(false), is_convex(true), bproperty(0), bp_array(0),
-    boundaryTolerance(epsilon) {
+    boundaryTolerance(distanceEpsilon) {
 
     halfBoundaryTolerance = boundaryTolerance/2.;
     if (!egs_geometries.size()) {

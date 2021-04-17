@@ -1,0 +1,235 @@
+#!/bin/bash
+###############################################################################
+#
+#  EGSnrc script to clean up temporary files and logs from parallel jobs
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Frederic Tessier, 2020
+#
+#  Contributors:
+#
+###############################################################################
+
+
+### help function
+function help {
+    cat <<EOF
+
+    usage:
+
+        $(basename $0)  [options]  { -f | -n }  basename [ basename2 ... ]
+
+    options and arguments:
+
+        -l | --list     only list the .egslog files in directory and exit
+        -f | --force    remove temporary files (using /bin/rm -r)
+        -n | --dry-run  show which files would be removed with -f flag
+        -x | --extra    extra clean: also remove egs-parallel log files
+        -v | --verbose  log the commands executed, instead of concise log messages
+        basename        input file name, with or without the ".egsinp" extension
+
+    description:
+
+        With -f flag, remove temporary files created by EGSnrc simulations for
+        input files basename.egsinp basename2.egsinp, etc. Run with -n flag to
+        check which files would be deleted. Unless the -x option is given, also
+        sort and merge the output from egs-parallel output into a .egsparallel
+        log file, and merge the outputs from all the scheduler .eo files into a
+        .egsparallel-eo file
+
+        Note that the list of basenames can also be given as a glob pattern
+        within quotes, as in $(basename $0) "myinput*", for example.
+
+EOF
+}
+
+### log function to write messages to log file and standard output (export to sub-scripts)
+function log {
+    printf "$tab$1\n"
+}
+
+### quit function for errors, with source, line, message and command (export to sub-scripts)
+function quit {
+    lineno=$1
+    msg=$2
+    case $3 in
+        help)  cmd="help";;
+        *)     cmd="";;
+    esac
+    log "$(basename $0): line $lineno: $msg"; $cmd; log "QUIT."; exit 1
+}
+
+### list or delete the file passed as the first argument
+function action {
+
+    # process specific log message for the action
+    option_log=$1
+    option_msg=$2
+    if [ "$option_log" = "--log" ]; then
+        msg=$option_msg
+        if [ "$msg" = "--none" ]; then
+            msg=""
+        fi
+        shift 2;
+    else
+        msg="$@"
+    fi
+
+    # if verbose option is invoked, log the actual command that will be run
+    if [ "$opt_verbose" = "yes" ]; then
+        msg="$@"
+    fi
+
+    # perform action if -f (--force) option is invoked
+    if [ "$opt_force" = "yes" ]; then
+        eval "$@"
+    fi
+    dirty="yes"
+
+    # log action
+    if ! [ -z "$msg" ]; then
+        log "$msg"
+    fi
+
+}
+
+### default option values
+opt_force=""
+opt_listonly="no"
+opt_extra="no"
+opt_verbose="no"
+declare -a opt_names
+
+### parse command-line arguments (simplistic)
+while [ "$#" -gt 0 ]; do
+    opt=$1; shift
+    case $opt in
+        -h|--help)      help; exit;;
+        -f|--force)     if [ -z "$opt_force" ]; then
+                            opt_force="yes"
+                        fi;;
+        -l|--list)      opt_listonly="yes";;
+        -n|--dry-run)   opt_force="no";;
+        -x|--extra)     opt_extra="yes";;
+        -v|--verbose)   opt_verbose="yes";;
+        *)              opt_names+=("${opt%.egsinp}");;
+    esac
+done
+
+### begin script
+log "$(basename $0)"
+log "current directory: $PWD/\n"
+
+
+### just list the egslog basenames  and exit if option -l is invoked
+if [ "$opt_listonly" = "yes" ]; then
+    log "LIST of .egslog basenames:"
+    tab="    "
+    for f in $(ls -1dF *.egslog); do
+        if ! [[ "$f" =~ _w[0-9]+.egslog ]]; then
+            log "${f%.egslog}"
+        fi
+    done
+    printf "\nDONE.\n"
+    exit 0
+fi
+
+### ensure either -f or -n is specified
+if [ -z "$opt_force" ]; then
+    quit $LINENO "either option -f (--force) or -n (--dry-run) must be specified" help
+fi
+
+### ensure there is at least one basename provided
+names="${opt_names[@]}"
+if [ -z "$names" ]; then
+    quit $LINENO "at least one simulation basename must be specified" help
+fi
+
+### define filename extension to clean
+clean_extensions=".lock .mederr .eo .e .o .pbsdsh .egsjob .egsparallel"
+
+### loop over all names
+for name in "${opt_names[@]}"; do
+
+    ### log name and indentation
+    tab=""
+    log "CLEANING ${name} ..."
+    tab="    "
+
+    ### dirty flag and log tabulation
+    dirty="no"
+
+    ### log dry run
+    if [ "$opt_force" = "no" ]; then
+        tab="    ! "
+        log "TESTING only: with the -f (--force) option, $(basename $0) WOULD:"
+    fi
+
+    ### clean .egsparallel and .eo log files if -x (--extra) is invoked, otherwise catenate them
+    if [ "$opt_extra" = "yes" ]; then
+        clean_extensions="$clean_extensions .egsparallel .egsparallel-log .egsparallel-out"
+    else
+        for f in ${name}.egsparallel; do
+            f=${f%.egsparallel}
+            files=($f.egsjob $f.o $f.eo ${f}_w*.o ${f}_w*.eo)
+            lsfiles=$(/bin/ls -d ${files[@]} 2>/dev/null)
+            if ! [ -z "$lsfiles" ]; then
+                action --log "create $f.egsparallel-log (merged egs-parallel log messages)"    "cat $f.egsparallel ${files[@]} 2>/dev/null | grep 'EGSnrc egs-parallel' | sort >$f.egsparallel-log"
+                action --log "create $f.egsparallel-out (merged parallel jobs output streams)" "cat $f.egsparallel ${files[@]} 2>/dev/null | grep -v 'EGSnrc egs-parallel' >$f.egsparallel-out"
+            fi
+        done
+    fi
+
+    ### loop over file extensions
+    for ext in $clean_extensions; do
+
+        # remove files
+        count=$( find -maxdepth 1 -name "${name}${ext}" | wc -l )
+        if [ $count -gt 0 ]; then
+            for f in ${name}${ext}; do
+                if [ -d $f ]; then
+                    f="${f%/}/"
+                fi
+                action --log "remove $f" "/bin/rm -r $f"
+            done
+        fi
+    done
+
+    ### remove work files
+    count=$( find -maxdepth 1 -name "${name}_w*" | wc -l )
+    if [ $count -gt 0 ]; then
+        action --log "remove ${name}_w*" "/bin/rm -r ${name}_w*"
+    fi
+
+    ### remove egsrun directories
+    count=$( find -maxdepth 1 -name "egsrun_*_${name}_*" | wc -l )
+    if [ $count -gt 0 ]; then
+        action --log "remove egsrun_*_${name}_*/" "/bin/rm -r egsrun_*_${name}_*"
+    fi
+
+    ### report if there is nothing to clean
+    if [ "$dirty" = "no" ]; then
+        log "(nothing to clean)"
+    fi
+
+    printf "\n"
+
+done
+printf "DONE.\n"

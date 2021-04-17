@@ -36,6 +36,6 @@
 #
 #
 #
-1  .egslst
+#1  .egslst
 # Unit 15 opened by get_inputs
 #15 .errors

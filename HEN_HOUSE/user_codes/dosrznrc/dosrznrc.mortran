@@ -1,3 +1,6 @@
+"Aug 2020 fluor discards included in K during_pe_compt"
+"during_pe_compt and during_eii   and IDC are here
+"also includes hack to print primary and scatter components for IFULL=3 "
 %C80
 "#############################################################################"
 "                                                                             "
@@ -1355,7 +1358,7 @@ REPLACE {$VERSION} WITH {
 "  ESAVEIN             (R)  If ELECTRON RANGE REJECTION is on, discard an
 "                           electron  when E< ESAVEIN and RANGE < CDIST
 "                           where CDIST is closest distance to region of
-"                           interest specified below. This ignores brem
+"                           interest specified. This ignores bremsstrahlung
 "                           losses below ESAVEIN.
 "                           This parameter must be input even if not used.
 "                           ESAVEIN is a total energy.
@@ -1512,9 +1515,9 @@ REPLACE {$ONE-EPS} WITH {0.9999} "USED TO KEEP THE BEAM INSIDE THE TARGET      "
 REPLACE {$NSWTCH} WITH {8}       "# OF NRC SWITCHES FOR CONTROLLING SCATTERING "
 REPLACE {$MXMED} WITH {10}       "MAX # OF MEDIA                               "
 REPLACE {$NCASEMIN} WITH {100}   "min. no. of histories                        "
-REPLACE {$NBATCH} WITH {10}     "# BATCHES FOR OUTPUT                          "
-REPLACE {$MXSTACK} WITH {500}    "MAXIMUM STACK                                "
-REPLACE {$MAXZREG} WITH {200}     "MAX # OF DOSE SCORING PLANAR ZONES          "
+REPLACE {$NBATCH} WITH {10}      "# BATCHES FOR OUTPUT                         "
+REPLACE {$MXSTACK} WITH {900000} "MAXIMUM STACK                                "
+REPLACE {$MAXZREG} WITH {200}    "MAX # OF DOSE SCORING PLANAR ZONES           "
 REPLACE {$MAXRADII} WITH {60}    "MAX # OF DOSE SCORING RADIAL ZONES           "
 REPLACE {$MAXRZ} WITH {$MAXZREG} "MAX($MAXRADII,$MAXZREG)                      "
 REPLACE {$MXRDIST} WITH {100}    "# OF POINTS IN RADIAL DISTRIBUTION FIT       "
@@ -1701,7 +1704,7 @@ ELSE[
             IF(NFTIME.EQ.1)EXPMFP=EPSLON*ARG;
         ]
     ]
-    ELSE[
+    ELSE["CEXPTR non-zero"
         TEMP=CEXPTR*W(NP);TEMP1=1.0-TEMP;
         PATHLT=PATHL*TEMP1;
         IF(ABS(PATHLT).LE.1.0E-3)[
@@ -2084,7 +2087,7 @@ SCKERMA_TMP($MAXZREG,$MAXRADII,$MAXIT),
 SCKERMA_TMPOLD($MAXZREG,$MAXRADII,$MAXIT),
 SCSTP_TMP,SCDSTP_TMP,
 MXNP,IFULL,ISTORE,IKERMA, IWATCH,IOOPTN,IOUTSP,
-IPHR($MXREG),MAXBIN,NCOMPT,during_pe_compt,during_eii;
+IPHR($MXREG),MAXBIN,NCOMPT,during_pe_compt,during_eii,IDC;
 real*8 SCDOSE,SCDOSE2,SCKERMA,SCKERMA2,SCDOSEtoKERMA2,SCPDST,SCPDST2,
        SCPCUM,SCPCUM2,SCPTOT,SCPTOT2,SCPHEN,SCPHEN2,
        SCDFBK,SCDFBK2,SCDFEP,SCDFEP2,SCDFDIFF,SCDFDIFF2,
@@ -2096,6 +2099,7 @@ $REAL DFEN, PHENER,WT1OLD,BINTOP,SLOTE,DELTAE,
 $INTEGER MXNP,IFULL,ISTORE,IKERMA,
           IWATCH,IOOPTN,IOUTSP,
           IPHR,MAXBIN,NCOMPT,during_pe_compt,during_eii;
+LOGICAL IDC;
 }
 "
 "SCDOSE(2)       accumulates energy deposited (energy deposited^2),
@@ -2387,6 +2391,19 @@ $LOGICAL is_finished;
 
 call egs_init;
 
+"following from egsnrc_git/dosrznrc_DR_IDCtrue.mortran - added Oct 2018"
+"IDC is a hack to allow compilation with or without counting kerma from"
+"         photons from radiative events   I Double Count"
+"         passed in comin score so it can be printed in isumry"
+"         only active in ausgab
+
+IDC = .true.;    "false means there is no double counting (bit 8 set)"
+                 "true means there is double counting of e-+ set in motion by"
+                 "photons created by e-+ already counted in kerma "
+                 "(i.e. bit 8 not set)"
+
+
+
 ;
 "INITIALIZE THE CHARACTER ARRAY"
 BLANK=' ';     ASTER='*';     ACHAR='A';     BCHAR='B';
@@ -2560,15 +2577,17 @@ IF(IFULL = 1 | IFULL = 3 | IKERMA = 1) [
    "IKERMA=1 means scoring KERMA"
    "for KERMA, rayleigh scatter has no effect"
     iausfl(6) = 1; "after each step"
+    iausfl(10) = 1; "after Moller (to count radiative losses due to EII)"
     iausfl(17) = 1; "after pair"
     iausfl(18) = 1; "before compt"
     iausfl(19) = 1; "after compt"
     iausfl(20) = 1; "before photo"
     iausfl(21) = 1; "after photo"
-    iausfl(10) = 1; "after Moller (to count radiative losses due to EII)"
-    iausfl(35) = 1; "after sub-threshold Auger"
+    iausfl(25) = 1; "after Rayleigh"
     iausfl(32) = 1; "before eii"
     iausfl(33) = 1; "after eii"
+    iausfl(34) = 1; "after sub-threshold fluorescent photon discarded"
+    iausfl(35) = 1; "after sub-threshold Auger"
 ]
 
 IF(IFULL = 4) [
@@ -2903,8 +2922,8 @@ DO IBATCH=1,$NBATCH[
 
     ] "END OF THE ICASE LOOP"
 
-    "SUCCESFUL COMPLETION OF A BATCH. DELETE THE RAW DATA FROM THE LAST BATCH"
-    "AND RECORD THE NEW BATCH ONLY IF REQUESTED"
+    "Succesful completion of a batch. Delete the raw data from the last batch"
+    "and record the new batch only if requested"
     IF(IDAT.EQ.0)[
         "add unscored portions of _TMP arrays before writing"
         SCSTP=SCSTP+SCSTP_TMP;
@@ -3010,7 +3029,7 @@ DO IBATCH=1,$NBATCH[
            WRITE(data_unit,*)(SCDFBK(IPK),SCDFBK2(IPK),IPK=1,4);
            WRITE(data_unit,*)(SCDFDIFF(IPK),SCDFDIFF2(IPK),IPK=1,4);
         ]
-    ]"END OF CONDITIONAL DATA STORAGE"
+    ]"end of conditional data storage"
 
     $SET_ELAPSED_CPUTIME(CPUT2);
     TIMCPU=CPUT2-CPUT1+TMCPUO;
@@ -3021,7 +3040,7 @@ DO IBATCH=1,$NBATCH[
         "IK: don't need to close, see ebove. CLOSE(UNIT=4);"
     ]
 
-    "DO STATISTICAL ANALYSIS ON THE PEAK DOSE REGION TO SEE IF WE QUIT EARLY"
+    "Do statistical analysis on the peak dose region to see if we quit early"
     TDSMAX=0.0;
     DO IRL=2,NREG[
         IF(CDSTBL(IRL).EQ.DCHAR)[
@@ -3033,7 +3052,7 @@ DO IBATCH=1,$NBATCH[
             ]
          ]
     ]
-    "NOW DO STATS ON THE PEAK REGION"
+    "Now do stats on the peak region"
     IF(TDSMAX.GT.0.0)[
         IZD=IDSTBL(IDSMAX,1);IXD=IDSTBL(IDSMAX,2);
         TDOS=SCDOSE(IZD,IXD,1)+SCDOSE_TMP(IZD,IXD,1);
@@ -3054,7 +3073,7 @@ DO IBATCH=1,$NBATCH[
           TDOS2=MIN(TDOS2/TDOS*100.,99.9);
 
           IF( (TDOS2 <= STATLM) & (STATLM ~= 0.0) )[
-        "REACHED OBJECTIVE - PRINT MESSAGE AND JUMP OUT OF SIMULATION LOOP"
+        "Reached objective - Print message and jump out of simulation loop"
              WRITE(6,230)IDSMAX,TDOS2,IBTCH;WRITE(IOUT,230)IDSMAX,TDOS2,IBTCH;
             "EMH: Must be at the end of all possible exits from the shower loop"
              "AINFLU=AINFLU*dble(IHSTRY)/dble(NCASET); FIX NORM ON EARLY EXIT"
@@ -3212,6 +3231,8 @@ IF(IDAT=1)["add unscored portions to _TMP arrays"
 
 "FOR ISOURC=4 WE NEED THE DATA FOR CIRCLES, NOT RINGS, SO ADD IT UP"
 IF((ISOURC.EQ.4).AND.(NR.GT.1))[
+        OUTPUT AINFLU,NCASET,SCORE_NORM_NUM;
+        ('ISOURC 4 AINFLU,NCASET,SCORE_NORM_NUM:',1PE10.3,I12,1PE10.3);
         DO IT=1,ITMAX[
             DO IX=2,NRDOSE[
                 DO IZ=1,NZDOSE[
@@ -3246,6 +3267,10 @@ IF(IFULL.EQ.2)[
 ] "END OF IFULL = 2 BLOCK"
 
 "STATISTICAL ANALYSES ON THE RAW DATA"
+IF(ISOURC = 4)[ OUTPUT AINFLU,NCASET,SCORE_NORM_NUM;
+  ('ISOURC 4 before ANALYZE:AINFLU,NCASET,SCORE_NORM_NUM:',
+   1PE10.3,I12,1PE10.3);
+]
 
 DO IT=1,ITMAX[
       DO IX=1,NRDOSE[
@@ -3456,10 +3481,11 @@ IF( n_parallel > 0 & ~is_finished ) [
     call egs_pjob_finish(n_job);
     IF( n_job = 0 ) [
         is_finished = .true.;
+        call isumry;
         call egs_combine_runs(combine_results,'.egsdat');
         NCASET=NCASEO;  IHSTRY=NCASET;
         CALL SRCOTO(WEIGHT);
-        goto :STATS-ANAL:;
+        goto :END-SIM:;
     ]
 ]
 #endif;
@@ -3564,7 +3590,16 @@ END; "END OF MAIN ROUTINE-DOSRZ"
 "     Some of the logic
 "             Bit 6 of latch is set for all photons scattered after Compton
 "             Bit 7 of LATCH is set for all photons after photoeffect
-"             Bit 8 of LATCH is no longer set. Not clear what it was for
+"   XXX       Bit 8 of LATCH is no longer set. Not clear what it was for
+"             Bit 8 of LATCH is set for any charged particle created.
+"                            This is done to optionally be able to avoid
+"                            including k.e. released by any bremsstrahlung
+"                            or 511 photons.
+"                            This was originally always done but I(DR) removed
+"                            it in 2011 as I didn't understand what it was for.
+"                            I have made a hack so if IDC=.false., this is not
+"                            included but if IDC=.true. it is.
+"                            IDC  I double count.
 "
 "******************************************************************************
 ;
@@ -3589,10 +3624,10 @@ INTEGER IBSET,IBCLR;
 
 "I don't know about the purpose of IGBUG1,2 but they should be declared,"
 "make static and initialized to zero as they seem to count bugs, IK"
-$INTEGER  IGBUG1,IGBUG2;
-save      IGBUG1,IGBUG2;
+$INTEGER  IGBUG1,IGBUG2,count_strange;
+save      IGBUG1,IGBUG2,count_strange;
 
-data      IGBUG1/0/,IGBUG2/0/;
+data      IGBUG1/0/,IGBUG2/0/,count_strange/0/;
 
 MXNP=MAX(MXNP,NP);"keep track of how deep stack is"
                   "should print out MXNP"
@@ -3687,8 +3722,8 @@ IF(IARG = 0)["about to transport a particle"
                     ELSE["discard it on next call to HOWFAR" WT(NP)=0.0;]
                 ] "end test if crosses russian roulette plane"
             ] "end test for playing russian roulette"
-        ] "end test for photon step"
-    ] "end test for IARG = 0"
+    ] "end test for photon step"
+] "end test for IARG = 0"
 
 IF(IWATCH.GT.0) CALL WATCH(IARG,IWATCH); "signal WATCH routine if active"
 
@@ -3777,6 +3812,9 @@ ELSEIF(IFULL = 3)["score scattered dose separately"
           ]
       ]
    ]
+   ELSE IF( iarg = 24 ) [ "Raylegh scattering has occured"
+     latch(NP) = IBSET(latch(NP),7);
+   ] "end iarg = 24 block"
 ] " end IFULL=3 "
 
 "IKERMA=1 option will not work with new photon physics!!!"
@@ -3791,12 +3829,12 @@ IF (IKERMA = 1) ["want to score KERMA"
     "Here we keep track of whether we are currently inside a PE/Compton"
     "event, or EII. This lets us use edep_local to account for kerma"
     "contributions below threshold energies depending on the interaction type."
-    IF( iarg = 19 | iarg = 17 ) [
+    IF( iarg = 19 | iarg = 17 ) [ "before photoelectric or compton interaction"
         during_pe_compt = 1;
         return;
     ]
-    IF( iarg = 20 | iarg = 18 ) [
-        during_pe_compt = 0;
+    IF( iarg = 20 | iarg = 18 ) ["after photoelectric or compton interaction"
+        during_pe_compt = 0;   "clear flag"
     ]
     IF( iarg = 31 ) [
         during_eii = 1;
@@ -3807,30 +3845,30 @@ IF (IKERMA = 1) ["want to score KERMA"
         return;
     ]
 
-   IF (IARG = 4 & ~BTEST(LATCH(NP),8) & during_eii = 0 & during_pe_compt = 0)[
-      "local energy deposition"
-      "include deposited energy as kerma"
-      " I am not sure why the BTEST was there??? Currently bit 8 is"
-      "not set, but was there some reason for it to be there??  DR"
-      $SCOREDK(SCKERMA,(IZD,IXD,1):WT(NP)*EDEP);
-      IF(IFULL=3 & (BTEST(LATCH(NP),6) | BTEST(LATCH(NP),7)))[
-         $SCOREDK(SCKERMA,(IZD,IXD,2):WT(NP)*EDEP);
-      ]
-   ]
-
     "depositing sub-threshold energy for PE & Compton"
     "Auger only"
-    IF( iarg = 34 ) [
-        IF( during_pe_compt = 1 ) [
+    IF( iarg = 33 | iarg = 34 ) [
+        "33=>sub-threshold fluorescence being deposited"
+        "34=>sub-threshold Auger being deposited"
+        "if as a result of pe or compt this is k.e. transferred to e-"
+        "in case of fluorescence, think of what would happen if the photon
+        "was abve PCUT, then it would mostly have a pe event and create an e-
+        "and its energy would be part of kerma
+        "The iarg=33 was only added in Aug 2020"
+
+        "test on latch bit 8 is to see if this is from a radiative event"
+        "bit 8 of LATCH  is set for every created charged particle after any
+        "      photon interaction, BUT only if IDC is false
+        "If IDC is true, bit 8 is not set and any subsequent bremm etc is
+        "      counted in the kerma.
+        IF( during_pe_compt = 1 & ~BTEST(LATCH(NP),8) ) [
             $SCOREDK(SCKERMA,(IZD,IXD,1):WT(NP)*edep_local);
             IF(IFULL=3 & (BTEST(LATCH(NP),6) | BTEST(LATCH(NP),7)))[
                 $SCOREDK(SCKERMA,(IZD,IXD,2):WT(NP)*edep_local);
             ]
             return;
-        ] ELSE [
-            return;
-        ]
-    ]
+        ] ELSE [ return; ]
+    ] "end iarg=33 or 34 block"
 
    IF (IARG = 16)["pair event just occured"
       IF(NP>NPold | i_survived_rr > 0)[
@@ -3846,10 +3884,11 @@ IF (IKERMA = 1) ["want to score KERMA"
                IF (IFULL = 3 & (BTEST(LATCH(IP),6) | BTEST(LATCH(IP),7)))[
                   $SCOREDK(SCKERMA,(IZD,IXD,2):WT(IP)*(E(IP)-PRM));
                ]
-               "LATCH(IP)=IBSET(LATCH(IP),8);"
-               "DR July 2011 I don't understand why the above was here:
-               "it caused the other member of the pair to be missed"
-               "But do we need it somewhere else? -for the IARG=4 above?"
+               IF(~IDC)["if IDC is false, we don't double count so we"
+                  "set bit 8 which is tested for whenever kerma is scored"
+                  LATCH(IP)=IBSET(LATCH(IP),8);" Flag to avoid double counting"
+               ]
+
            ]
          ]
       ]
@@ -3862,12 +3901,17 @@ IF (IKERMA = 1) ["want to score KERMA"
                   "also, if bound compton and rejected NP=NPOLD"
                   "note any relaxation particles are included in NP"
       DO IP=NPold,NP[
-        IF(IQ(IP) ~= 0 & ~BTEST(LATCH(IP),8)) ["score kerma for the electron"
+        IF(IQ(IP) ~= 0 & ~BTEST(LATCH(IP),8)) ["score kerma for e+- only if"
+          "bit 8 not set, i.e., if this is not from a photon created by"
+          "an earlier e- or e+ and if IDC is false.
           $SCOREDK(SCKERMA,(IZD,IXD,1):WT(IP)*(E(IP) - PRM));
           IF(IFULL=3 & (BTEST(LATCH(IP),6) | BTEST(LATCH(IP),7)))[
              $SCOREDK(SCKERMA,(IZD,IXD,2):WT(IP)*(E(IP)-PRM));
           ] "end IFULL block"
-          "LATCH(IP)=IBSET(LATCH(IP),8);  Commented out as above"
+          IF(~IDC)["if IDC is false, we don't double count so we"
+                  "set bit 8 which is tested for whenever kerma is scored"
+                  LATCH(IP)=IBSET(LATCH(IP),8);" Flag to avoid double counting"
+          ]"end IDC block"
         ]"end charged particle block"
       ]"end loop on IP"
      ]"end block with some e- on stack"
@@ -3880,9 +3924,12 @@ IF (IKERMA = 1) ["want to score KERMA"
            IF(IFULL = 3 & (BTEST(LATCH(IP),6) | BTEST(LATCH(IP),7)))[
               $SCOREDK(SCKERMA,(IZD,IXD,2):WT(IP)*(E(IP)-PRM));
            ]
-          "LATCH(IP)=IBSET(LATCH(IP),8);  Commented out as above"
+           IF(~IDC)["if IDC is false, we don't double count so we"
+                  "set bit 8 which is tested for whenever kerma is scored"
+                   LATCH(IP)=IBSET(LATCH(IP),8);" Flag to avoid double counting"
         ]
      ]
+     ]"end loop on IP"
    ]"end of photoelectric case"
 ]"end of IKERMA = 1, kerma scoring block"
 
@@ -5025,7 +5072,7 @@ nbr_split =VALUE(NUM_BREMPEVEN,1);
 IF(IBRSPL = 1)["brems splitting requested"
     "default bremsstrahlung splitting to maximum"
     "IF((nbr_split  <= 0) | (nbr_split  > $MAXBRSPLIT)) nbr_split =$MAXBRSPLIT;"
-    "Changed to allow brem and annihilation radiation to be turned off"
+    "To allow bremsstrahlung and annihilation radiation to be turned off"
     IF((nbr_split  > $MAXBRSPLIT)) nbr_split =$MAXBRSPLIT;"
 ]
 ELSE ["no bremsstrahlung splitting" nbr_split = 1;]
@@ -5117,7 +5164,15 @@ IF(RUSROU)[
 ]
 ELSE [OUTPUT;(' RUSSIAN ROULETTE WILL NOT BE PLAYED'/);]
 IF (CEXPTR.EQ.0) [OUTPUT;(' NO PATHLENGTH BIASING TO BE DONE'/);]
-ELSE [OUTPUT CEXPTR;(' CEXPTR PARAMATER:',T30,E14.7/);]
+ELSEIF(CEXPTR.GE.1) [
+    OUTPUT;(//' *****************ERROR******************'/
+                    ' INVALID  PATHLENGTH BIASING EXPONENTIAL TRANSFORM C'/
+                    ' C must be < 1'//);
+    OUTPUT CEXPTR;(' CEXPTR PARAMETER:',T30,E14.7/);
+    ERROR_FLAG=1;
+    GOTO :FINISHED:;
+]
+ELSE [OUTPUT CEXPTR;(' CEXPTR PARAMETER:',T30,E14.7/);]
 
 IF(IFULL=2 & RUSROU)[
    OUTPUT;(//' ****WARNING****'/
@@ -5592,6 +5647,9 @@ IF( start_fluor ) write(iout,'(24x,i5,a,i5)') i_start,' -- ',i_stop;
 
 ]
 
+IF(IDC)[write(iout,203);]
+ELSE [write(iout,204);]
+
 EK0=EIN;
 $PRESTA-INPUT-SUMMARY; "OUTPUT THE PRESTA INPUT VARIABLES"
 
@@ -5633,6 +5691,11 @@ RETURN;
     ' ',T20,'INCIDENT CHARGE',T63,I2);
 201  FORMAT(' ',T20,'INCIDENT KINETIC ENERGY',T57,F9.3,' (MeV)');
 202  FORMAT(' ',T20,'MAXIMUM INCIDENT KINETIC ENERGY',T57,F9.3,' (MeV)');
+203  FORMAT(/' ',T10,'IDC true=> kerma scored following radiative',
+            ' events'/);
+204  FORMAT(/' ',T10,'IDC false=> kerma not scored following radiative',
+            ' events'/);
+
 210  FORMAT(' ',T20,'FRACTIONAL ELECTRON ENERGY/STEP',T60,'DEFAULT');
 211  FORMAT(' ',T20,'FRACTIONAL ELECTRON ENERGY/STEP',T60,F5.3);
 220  FORMAT(' ',T20,'GLOBAL ELECTRON TRANSPORT CUT-OFF',
@@ -6710,7 +6773,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                   YTITLE='dose per incident particle/Gy';
                 ]
                 ELSE[
-                  YTITLE='dose per incident fluence/Gy cm\\S2\\N';
+                  YTITLE='dose per incident fluence/Gy cm\S2\N';
                 ]
                 " --------------------------> "
                 call egs_get_fdate(SUBTITLE);
@@ -6800,7 +6863,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                   YTITLE='dose per incident particle/Gy';
                 ]
                 ELSE[
-                  YTITLE='dose per incident fluence/Gy cm\\S2\\N';
+                  YTITLE='dose per incident fluence/Gy cm\S2\N';
                 ]
                 " ----------------------- >
                 call egs_get_fdate(SUBTITLE);
@@ -6862,6 +6925,49 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     CURVENUM=CURVENUM+1;
 
                 ]"end of kerma output"
+
+                IF(IFULL = 3)[  "plot scatter primary results"
+                    "set up the arrays that are to be passed to XVGR"
+                    "first get primary dose as  difference"
+                    DO IZ = 1, NZDOSE [
+                      XCOORD(IZ) = ZPLANE(IZ+NZDMIN);
+                      YCOORD(IZ) = SCDOSE(IZ,IX,1) - SCDOSE(IZ,IX,2);"tot-scat"
+                      "following being lazy, just using uncert on total"
+                      UNCERT(IZ) = SCDOSE2(IZ,IX,1)*SCDOSE(IZ,IX,1)/100.;
+                      "absolute uncertainty needed for plotting"
+                    ]
+                    NPTS=NZDOSE;
+                    SERIESTITLE='primary dose at r # ' // CH_IX;
+
+                    "plot histogram"
+                    CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
+                               NPTS, CURVENUM, SERIESTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
+                               UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
+
+                    CURVENUM=CURVENUM+1;
+                    "now get just scatter dose"
+                    DO IZ = 1, NZDOSE [
+                      XCOORD(IZ) = ZPLANE(IZ+NZDMIN);
+                      YCOORD(IZ) = SCDOSE(IZ,IX,2);
+                      UNCERT(IZ) = SCDOSE2(IZ,IX,2)*SCDOSE(IZ,IX,2)/100.;
+                      "absolute uncertainty needed for plotting"
+                    ]
+
+                    NPTS=NZDOSE;
+                    SERIESTITLE='scatter dose at r # ' // CH_IX;
+
+                    "plot histogram"
+                    CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
+                               NPTS, CURVENUM, SERIESTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
+                               UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
+
+                    CURVENUM=CURVENUM+1;
+
+                ]"end of primary/scatter components output"
+
+
            ] "END OF IPLPHB=2 OR 3"
          ] "END OF IF IX>0"
        ] "END OF IXR LOOP"
@@ -6901,7 +7007,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                   YTITLE='dose per incident particle/Gy';
                 ]
                 ELSE[
-                  YTITLE='dose per incident fluence/Gy cm\\S2\\N';
+                  YTITLE='dose per incident fluence/Gy cm\S2\N';
                 ]
                 " -------------------------- >
                 call egs_get_fdate(SUBTITLE);
@@ -6985,7 +7091,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                   YTITLE='dose per incident particle/Gy';
                 ]
                 ELSE[
-                  YTITLE='dose per incident fluence/Gy cm\\S2\\N';
+                  YTITLE='dose per incident fluence/Gy cm\S2\N';
                 ]
                 " ------------------------- >
                 call egs_get_fdate(SUBTITLE);

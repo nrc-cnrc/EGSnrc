@@ -25,6 +25,7 @@
 "                                                                             "
 "  Contributors:    Blake Walters                                             "
 "                   Frederic Tessier                                          "
+"                   Ernesto Mainegra-Hing                                     "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -116,7 +117,7 @@ subroutine egs_pjob_control(ncase,n_run,n_left,n_tot,sum,sum2,res,dres);
 " n_left  no. of histories left to run after current job has been submitted
 " n_tot:  should be set to number of histories from previous runs (if any)
 "         for first call from job number 1. For all other jobs and for all
-"         other calls from job 1, it is set by egs_pjob_control to the the
+"         other calls from job 1, it is set by egs_pjob_control to the
 "         number of histories run so far (including previous runs and other
 "         parallel jobs).
 "         Note: n_case, n_run and n_tot are $LONG_INT
@@ -175,6 +176,21 @@ $LOGICAL first_time;
 character control_string*256;
 data first_time/.true./;
 save first_time,n_last;
+
+/*********************************/
+/* Option to not use a lock file */
+/*********************************/
+IF( is_uniform_run ) [
+    IF (first_time)[
+       n_run = ncase/n_parallel;
+       first_time = .false.;
+    ]
+    ELSE[
+       n_run = 0;
+    ]
+    n_left = 0;
+    return;
+]
 
 IF( n_parallel <= 0 ) [
     n_run = ncase; return;
@@ -319,6 +335,20 @@ $REAL     tmp,tmp2,res,dres,t_run;
 real      egs_time_diff;
 character control_string*256;
 
+/****************************/
+/* Option without lock file */
+/****************************/
+IF( is_uniform_run )[
+    IF( i_parallel = n_parallel )[
+      n_job = 0;"I am the last job!!!"
+      goto :complete_calculation:;
+    ]
+    ELSE ["nothing to do here"
+      n_job = 1;"Only last job allowed to finish!"
+      return;
+    ]
+]
+
 " Lock and rewind the job control file "
 call egs_rewind_control_file(istat);
 IF( istat ~= 0 ) [
@@ -359,15 +389,25 @@ IF( n_job > 0 ) [  " Other jobs still running "
 /* call egs_unlock_control_file(istat); */
 call egs_close_control_file(istat);
 call egs_remove_lockfile(istat);
+
+:complete_calculation:;
 i_parallel = 0; call egs_open_units(.false.);
-call egs_date_and_time(t_end);
-t_run = egs_time_diff(t_start,t_end);
-$egs_info('(/a/,a,t55,i3/,a,t55,i3/,a,f9.1,a,f9.4,a/,a//)',
-'**************** finished parallel execution ******************',
-' number of parallel jobs requested: ',n_parallel,
-' max. number of jobs executing simultaneously: ',n_max_parallel,
-' elapsed time since first job started: ',t_run,' s (',t_run/3600,' h)',
-'***************************************************************');
+IF ( is_uniform_run )[
+   $egs_info('(/a/,a,t55,i3/,a//)',
+   '**************** finished parallel execution ******************',
+   ' number of parallel jobs requested: ',n_parallel,
+   '***************************************************************');
+]
+ELSE[
+  call egs_date_and_time(t_end);
+  t_run = egs_time_diff(t_start,t_end);
+  $egs_info('(/a/,a,t55,i3/,a,t55,i3/,a,f9.1,a,f9.4,a/,a//)',
+  '**************** finished parallel execution ******************',
+  ' number of parallel jobs requested: ',n_parallel,
+  ' max. number of jobs executing simultaneously: ',n_max_parallel,
+  ' elapsed time since first job started: ',t_run,' s (',t_run/3600,' h)',
+  '***************************************************************');
+]
 return;
 
 :error2_lockfile_read:;

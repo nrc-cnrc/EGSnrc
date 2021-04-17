@@ -957,8 +957,9 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
                       histories by this number.
 
         The n_split algorithm works as follows:
-         * dpmfp_i = -log(1 - (eta+i)/n_split)
+         * dpmfp_i = -log(1 - (eta+i-1)/n_split)
            where dpmfp_i is MFP to the next interaction for the i-th sub-photon
+           (i=1,2,...,n_split)
            eta is a random number (the same for all n_split sub-photons)
          * Once at the interaction site, the i'th sub-photon produces
            electrons and/or scattered photons. Scattered photons are

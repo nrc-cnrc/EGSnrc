@@ -51,6 +51,10 @@
 \newcommand{\eg}{{\em e.g.}}
 \newcommand{\ie}{{\em i.e.}}
 
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, citecolor=blue, linkcolor=blue, filecolor=blue, urlcolor=blue}
+\urlstyle{same}
+
 \usepackage{float}
 \usepackage{amsmath}
 \usepackage{graphicx}
@@ -257,9 +261,10 @@ EGSnrc github page:
 
 \href{https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview}{https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview}
 
-If you have any issues with the installation process, the google+ community is a good place to seek support:
 
-\href{https://plus.google.com/communities/106437507294474212197}{https://plus.google.com/communities/106437507294474212197}
+If you have any issues with the installation process, the EGSnrc reddit community is a good place to seek support:
+
+\href{https://www.reddit.com/r/EGSnrc/}{https://www.reddit.com/r/EGSnrc/}
 
 \addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
 % From this point on, only show up to \subsection in the ToC
@@ -512,7 +517,9 @@ You may consider it a bit of a cheat - we are using the defined function macro
 Compile your application with the \,\Verb|make|\, command, which builds the
 executable \,\Verb|myapp|\, and saves it under \,\Verb|$EGS_HOME/bin/|. For a
 given application, you only need to run \,\Verb|make|\, once
-(unless you modify the source code).
+(unless you modify the source code). Note that on Windows (if you are using
+mingw as the compiler) the compilation command will likely be
+\,\Verb|mingw32-make|\, instead.
 \begin{lstlisting}
 $ make
 \end{lstlisting}
@@ -2771,9 +2778,13 @@ pre-compiled GUIs, manuals and sample data are available:
 \end{itemize}
 
 \subsection{How to get support}
-If you have a question, or encounter problems while using EGSnrc, seek support on the EGSnrc google+ community! This is the best place to get answers to questions ranging from the very simple to quite complex. There are 800+ members who regularly answer questions, and the EGSnrc developers also contribute frequently.
+If you have a question, or encounter problems while using EGSnrc,
+seek support on the EGSnrc reddit community! This is the best place
+to get answers to questions ranging from the very simple to quite
+complex. There are 200+ members who regularly answer questions, and
+the EGSnrc developers also contribute frequently.
 
-\href{https://plus.google.com/communities/106437507294474212197}{https://plus.google.com/communities/106437507294474212197}
+\href{https://www.reddit.com/r/EGSnrc/}{https://www.reddit.com/r/EGSnrc/}
 
 To increase your chances of getting an answer, make sure to include as much information as possible in your original post. This should include:
 \begin{itemize}

@@ -51,6 +51,12 @@
 #
 EGS_EXTRA_OBJECTS =
 
+# We use #ifdef ... #endif for parallel processing implementation
+# => Fortran file extension must be .F so that the C-preprocessor is
+# automatically invoked.
+#
+FEXT = F
+
 # We prefer using the ranmar generator => we overwrite the
 # default from $HEN_HOUSE/specs/all_common.spec
 #

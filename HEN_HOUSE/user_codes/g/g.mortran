@@ -28,23 +28,6 @@
 "                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
-"                                                                             "
-"  An EGSnrc application to calculate the energy fraction lost to radiation   "
-"  when electrons slow down (if the incident beam is photons, or the          "
-"  radiative yield (if the incident beam is electrons). Calculates quantities "
-"  such as mu_tr, mu_en and g-bar (the average fraction of energy lost to     "
-"  radiation needed for the calculation of mu_en).                            "
-"                                                                             "
-"  Implemented a type=1 calculation that can run until a prescribed accuracy  "
-"  is reached at any stage during the calculation. In a type=1 calculation    "
-"  mu_tr is calculated first, then mu_en is obtained from mu_en = mu_tr*(1-g),"
-"  where g is the fraction lost to radiation from slowing down electrons. The "
-"  advantage is that when g is small, mu_en converges much faster to the      "
-"  desired accuracy compared to a type=0 calculation.                         "
-"                                                                             "
-"#############################################################################"
-
-
 %L
 %E
 !INDENT M 4;    "indent each mortran nesting level by 4"
@@ -69,59 +52,191 @@
 " Version 1.0  I. Kawrakow, January 2000                              "
 " Version 1.1  I. Kawrakow, March 2002 (added E*mu_tr and E*mu_en)    "
 " Version 1.2  D. Rogers, June 2002 (get mu_tr and mu_en )            "
-" Version 1.3  D. Rogers, Aug 2002 (account for fluorescent phtons in "
-"                                  g and mu_tr correctly )            "
+" Version 1.3  D. Rogers, Aug 2002 (account for fluorescent photons   "
+"                                  in g and mu_tr correctly )         "
 " Version 1.4  R. Townson, December 2016                              "
 "  Energy depositions for kerma calculations below the cut-off are    "
 "  now sorted out using AUSGAB to include only Auger from relaxations,"
 "  not fluorescence.                                                  "
 "                                                                     "
+" Version 1.5  E. Mainegra-Hing, January 2020                         "
+"  The g calculation for spectra was missing a factor mu/rho for both "
+"  calculation types. This factor is now included when scoring e_tot  "
+"  and e_rad. Bug reported by D. Rogers. The output has been made more"
+"  informative and a verbose option added for the type 1 calculation. "
+"  Code has been extensively documented and a doxygen based user's    "
+"  manual created.                                                    "
+"                                                                     "
+" Version 1.6  E. Mainegra-Hing, August 2020                          "
+"  Adjust original algorithm to ensure a desired precision in muen.   "
+"  Option to speed up calculation type 1 in MeV range added. It has   "
+"  been made independent of NCASE and precision defaults to 1%.       "
+"  Improved calculation progress messages for type 1 calculations.    "
+"                                                                     "
 "*********************************************************************"
+!COMMENTS;
+%F
+C> @file g.f
+C> @brief Application for radiative energy loss calculations
+C>
+C>  EGSnrc application to calculate \f$\mathrm{\overline{g}}\f$,
+C>  the average fraction of kinetic
+C>  energy transferred to charged particles by photons lost to radiation when
+C>  electrons slow down, or the radiative yield Y for electron beams.
+C>  For photons, quantities such as kerma, collision kerma,
+C>  \f$\left<\mu_\mathrm{tr}/\rho\right>_\psi\f$ and
+C>  \f$\left<\mu_\mathrm{en}/\rho\right>_\psi\f$ are also calculated.
+C>
+C>  Implemented a type=1 calculation that can run until a prescribed precision
+C>  is reached at any stage during the calculation. In a type=1 calculation
+C>  \f$\mu_\mathrm{tr}/\rho\f$ is calculated first,
+C>  then \f$\mu_\mathrm{en}/\rho\f$ is obtained as
+C>  \f$\mu_\mathrm{tr}/\rho\cdot\left(1-\mathrm{\overline{g}}\right)\f$,
+C>  where \f$\mathrm{\overline{g}}\f$ is the fraction lost to radiation from
+C>  slowing down electrons. The advantage is that when
+C>  \f$\mathrm{\overline{g}}\f$ is small, \f$\mu_\mathrm{en}/\rho\f$
+C>  converges much faster to the desired precision compared to a type=0
+C>  calculation.
+C>
+C>  Revision History
+C>
+C>  Version 1.0 (I. Kawrakow, January 2000): Initial version.
+C>
+C>  Version 1.1 (I. Kawrakow, March 2002):
+C>  Added \f$E\cdot\mu_\mathrm{tr}/\rho\f$ and \f$E\cdot\mu_\mathrm{en}\f$.
+C>
+C>  Version 1.2 (D. Rogers, June 2002):
+C>  Get \f$\mu_\mathrm{tr}/\rho\f$ and \f$\mu_\mathrm{en}/\rho\f$.
+C>
+C>  Version 1.3 (D. Rogers, Aug 2002):
+C>  Account for fluorescent photons in \f$\mathrm{\overline{g}}\f$ and
+C>  \f$\mu_\mathrm{tr}/\rho\f$ correctly.
+C>
+C>  Version 1.4 (R. Townson, December 2016):
+C>  Energy depositions for kerma calculations below the cut-off are
+C>  now sorted out using AUSGAB to include only Auger from relaxations,
+C>  not fluorescence.
+C>
+C>  Version 1.5 (E. Mainegra-Hing, January 2020):
+C>  The @g calculation for spectra was missing a
+C>  factor \f$\mu/\rho\f$ for both calculation types. This factor is now
+C>  included when scoring \f$\mathrm{e_{tot}}\f$ and \f$\mathrm{e_{rad}}\f$.
+C>  Bug reported by D. Rogers.
+C>  The output has been made more informative and a verbose option added
+C>  for type 1 calculation.
+C>  Code has been extensively documented and a doxygen based user's
+C>  manual created.
+C>
+C>  Version 1.6 (E. Mainegra-Hing, August 2020):
+C>  Calculation type 1 has been made independent of NCASE and the target
+C>  precision now defaults to 1%. Algorithm now ensures @muen_rho
+C>  is calculated to the  user-requested precision @accu by computing @mutr_rho
+C>  down to @accu/\f$\sqrt{4/3}\f$ and 1-@g to @accu/2.
+C>  For calculations in the megavoltage range (for Ir-192, Co-60)
+C>  one can modify the target precision of mutr and 1-g to save substantial
+C>  time in the fairly time consuming calculations above 1 MeV. To this end
+C>  the uncertainty in @mutr_rho and 1-@g can be modified so that the
+C>  \muen_rho value has an precision \accu according to:
+C>
+C>  \f$\sigma(\mu_\mathrm{tr}) = \frac{\sigma}{\sqrt{m}} \qquad \textrm{and}
+C>  \qquad \sigma(1-\overline{g})  = \frac{\sigma}{\sqrt{m/(m-1)}}\f$
+C>
+C>  where m can be 2, 3, 4, etc. A value of m =1 indicates the original
+C>  implementation should be used. For megavoltage
+C>  energies around 1 MeV, m = 2 is recommended.
+C>  Calculation progress messages during a type 1 calculation
+C>  have been made clearer and the code has been further documented.
+C>  The documentation has been also updated to reflect these changes.
+C>
+C>  @IK
+C>  @date 2000
+C>  @copyright National Research Council Canada
+%M
+!NOCOMMENTS;
 
 "Variables definitions
 "
-"g              e_brem/e_tot  and e_rad/e_tot
-"               from NIST web page:the average fraction of the kinetic energy
-"               of secondary charged particles (produced in all the types of
-"               interactions) that is subsequently lost in radiative (photon-
-"               emitting) energy-loss processes as the particles slow to rest
-"               in the medium.
-"               http://physics.nist.gov/PhysRefData/XrayMassCoef/chap3.html
-"e_brem         average energy lost to bremsstrahlung
-"ebrem_tmp
-"e_rad          average energy lost to bremsstrahlung & kinetic energy
-"               transferred in annihilation radiation (ie only annihilation
-"               in flight. Note this used to include fluorescent photons, but
-"               they should be excluded from e_tot as well.
-"erad_tmp
-"etot_tmp       includes subthreshold energy (iarg=4)
-"
-"e_tot          average energy released per particle
-"e_radc = sum (etot_tmp*erad_tmp)
-"e_bremc= sum (etot_tmp*ebrem_tmp)
-"anorm
-"npgi
-"npei
-"E_ave
-"factor     1.602176462E-13 J/MeV *1000 g/kg =160.2176E-12 Gy cm^2
-"           to convert e_mutr and e_muen scored as MeV cm^2/g
-"de_pulsei
-"e_mutr
-"e_muen
-"mutr
-"muen
-"Eave    average energy of incident spectrum: either actual or sampled
+!COMMENTS;
+%F
+C> @param[out] g average fraction of the kinetic energy of secondary charged
+C>             particles (produced in all the types of interactions) that is
+C>             subsequently lost in radiative (photon-emitting) energy-loss
+C>             processes as the particles slow to rest in the medium.
+C> (Taken from the
+C> <a href="http://physics.nist.gov/PhysRefData/XrayMassCoef/chap3.html">
+C> NIST web page</a>)
+C> @param e_brem    Average energy lost to bremsstrahlung
+C> @param ebrem_tmp As above for the current history
+C> @param e_rad  Average energy lost to bremsstrahlung & kinetic energy
+C>               transferred in annihilation radiation (ie only annihilation
+C>               in flight. Note this used to include fluorescent photons, but
+C>               they should be excluded from e_tot as well.
+C> @param erad_tmp As above for the current history
+C> @param e_tot  average energy released per particle
+C>               includes subthreshold energy (iarg=4)
+C> @param etot_tmp  As above for the current history
+C> @param e_radc  = sum (etot_tmp*erad_tmp)
+C> @param e_bremc = sum (etot_tmp*ebrem_tmp)
+C> @param[out] e_brem/e_tot the average fraction of the kinetic energy
+C>             subsequently lost in bremsstrahlung (photon-emitting) events
+C> @param[out] e_rad/e_tot same as g above
+C> @param anorm
+C> @param npgi
+C> @param npei
+C> @param E_ave   Average spectrum energy
+C> @param factor  Converts e_mutr and e_muen scored as
+C>                \f$\mathrm{MeV}\,\mathrm{cm}^2/\mathrm{g}\f$
+C>                to \f$\mathrm{Gy}\,\mathrm{cm}^2\f$
+C> @param de_pulsei
+C> @param mutr The correct definition for a spectrum is that given by Attix
+C>             of an energy fluence weighted average mass transfer coefficient
+C>  \f[
+C>    \left<\mu_\mathrm{tr}/\rho\right>_{\psi} =
+C>     \int \psi(E) \mu_\mathrm{tr}(E)/\rho dE/\int \psi(E) dE
+C>  \f]
+C>  This is equivalent to the ICRU60/ICRU85 definition as long as one sums
+C>  the total energy transferred from the spectrum and then divides by the
+C>  average energy incident.
+C>  For a while we scored <mu_tr/rho> directly, but this can differ
+C>  substantially from the correct results and amounts to averaging
+C>  over the fluence, not the energy fluence
+C> @param muen Similarly, the energy fluence weighted average mass
+C>             absorption coefficient is given by
+C>  \f[
+C>    \left<\mu_\mathrm{en}/\rho\right>_{\psi} =
+C>    \int \psi(E) \mu_\mathrm{en}(E)/\rho dE/\int \psi(E) dE =
+C>    \left<\mu_\mathrm{tr}/\rho\right>\,\left(1-\overline{g}\right)
+C>  \f]
+C> @param e_mutr Fluence averaged product
+C>        \f$\left<E\,\mu_\mathrm{tr}/\rho\right>_{\phi}\f$
+C> @param e_muen Fluence averaged product
+C>       \f$\left<E\,\mu_\mathrm{en}/\rho\right>_{\phi}\f$
+C> @param Eave  average energy of incident spectrum: either actual or sampled
+%M
+!NOCOMMENTS;
 
+REPLACE {$VERSION} WITH {'1.6'}
 "---------------------------------------------------------------------"
 "STEP 1:  USER-OVERRIDE-OF-EGSnrc-MACROS                              "
 "---------------------------------------------------------------------"
 REPLACE {$MXMED} WITH {1}    "we need just one medium                 "
 REPLACE {$MXREG} WITH {1}    "and just one geometrical region         "
 REPLACE {$MXSTACK} WITH {50} "this should be enough for any purposes  "
+REPLACE {$MXSAMPLE} WITH {1000000} "Max. failed attempts to sample photon"
+                                   "energy above AP(medium)"
 
 REPLACE {$DEBUGIT} WITH {.false.} "that can be used for debugging purposes"
 
 REPLACE {$MXGE} WITH {2000}
+REPLACE {$MXCHUNK} WITH {10000}
+
+"Round-off errors produce wrong results for a 1 keV energy value."
+"The quick fix is to add an epsilon equal to or larger than 1.0D-12 eV."
+"Using here a slightly larger epsilon of 1.0D-4 eV to account for "
+"machine precision differences. This should still be negligible in "
+"the keV energy range."
+REPLACE {$E_THRESHOLD} WITH {1.0D-3}; "Minimum energy in EGSnrc"
+REPLACE {$E_EPS}       WITH {1.0D-10};"Shifted by small epsilon"
 
 "Replace the $CALL-HOWNEAR macro for an infinite homogeneous geometry"
 REPLACE {$CALL-HOWNEAR(#);} WITH {;
@@ -138,16 +253,17 @@ REPLACE {$CALL-HOWFAR-IN-PHOTON;} WITH {;
 REPLACE {;COMIN/SCORE/;} WITH {;
   common/score/ e_tot,e_tot2,e_brem,e_brem2,e_bremc,e_rad,e_rad2,e_radc,
                 etot_tmp,ebrem_tmp,erad_tmp,my_gle,accu,ncase,calc_type,
-                during_pe_compt,during_eii;
+                during_pe_compt,during_eii,verbose,m_balance;
                 "It is always a good idea to score in double precision!"
   real*8        e_tot,e_tot2,e_brem,e_brem2,e_rad,e_rad2,
                 etot_tmp,ebrem_tmp,erad_tmp,e_radc,e_bremc;
-  $REAL         my_gle,accu;
-  $INTEGER      calc_type,during_pe_compt,during_eii;
   $LONG_INT     ncase;
+  $REAL         my_gle,accu;
+  $INTEGER      calc_type,during_pe_compt,during_eii,m_balance;
+  $LOGICAL      verbose;
 };
 
-REPLACE {$MXENE} WITH {200};  "maximum number of energies to be looped over"
+REPLACE {$MXENE} WITH {2000};  "maximum number of energies to be looped over"
 
 "Define a common for energies"
 REPLACE {;COMIN/ENERGIES/;} WITH {;
@@ -187,29 +303,39 @@ $IMPLICIT-NONE;
        ENERGIES
       /;
 
-$INTEGER nbatch,        "$INTEGER and $REAL are defined in egsnrc.macros"
-         nperbatch,     "they can be used (if employed consistently throughout"
-         ibatch,        "the user code) e.g. to switch to double precision"
-         i,j;
-
-$INTEGER itimes, ntimes;"loop through different energies"
-real*8   aux,aux2,total,anorm,sum,sum2,xtest,xtest2;
-real*4   cpu,etime,time_array(2);
 character*80 datfile(50);
-$INTEGER     datcount;
-$INTEGER     ncasei,npgi,npei,nspliti,nbini;
-$REAL        de_pulsei, Eave, err_Eave,factor;
-
-$REAL        gmfp;
-$INTEGER     lmy_gle;
+real*8       aux,aux2,total,anorm,sum,sum2,xtest,xtest2;
+!COMMENTS;
+%F
+C> The correct definition of mu_tr/rho for a spectrum is that given by
+C> Attix = int[psi mu_tr/rho dE]/int[psi dE]  This is equivalent to the
+C> ICRU60 defn as long as one sums the total energy transferred from
+C> the spectrum and then divides by the average energy incident
+C> For a while we scored <mu_tr/rho> directly, but this can differ
+C> substantially from the correct results and amounts to averaging
+C> over the fluence, not the energy fluence
+%M
+!NOCOMMENTS;
 real*8       e_mutr, e_mutr2, e_muen, e_muen2, mutr, mutr2, muen, muen2;
-real*8       ert, ert2, ett, ett2;
-
+real*8       ert, ert2, ett, ett2, g, g_rel_err;
+real*8       accu0, m;
+$REAL        weight,weight2,cov,covt,rel_e;
+$LONG_INT    nperbatch,ncasei,icase,nmutr,nmuen;
+$REAL        de_pulsei, Eave, err_Eave,factor,gmfp;
+$REAL        t_mutr, t_muen;
 "For interacting with the source routine and shower"
-$INTEGER       iqin,irin,ip;
-$REAL          ein,uin,vin,win,wtin,xin,yin,zin,ecut_ask,pcut_ask;
-$REAL          gbr1,gbr2,rnno,err_frac;
-$LONG_INT      nmutr,nmuen,icase;
+$REAL        ein,uin,vin,win,wtin,xin,yin,zin,ecut_ask,pcut_ask;
+$REAL        gbr1,gbr2,rnno,err_frac;
+$INTEGER     iqin,irin,ip;
+$INTEGER     itimes, ntimes;"loop through different energies"
+real*4       cpu,etime,time_array(2);
+$INTEGER     datcount;
+$INTEGER     npgi,npei,nspliti,nbini,lmy_gle;
+$INTEGER     nbatch, "$INTEGER and $REAL are defined in egsnrc.macros"
+             ibatch, "they can be used (if employed consistently throughout"
+             i,j,i_log;    "the user code) e.g. to switch to double precision"
+$INTEGER ifailed;    "Number of failed attempts to sample energy above AP"
+$REAL ekmax;
 
 "---------------------------------------------------------------------"
 " Steps 2 (pre-hatch initializations),                                "
@@ -218,6 +344,8 @@ $LONG_INT      nmutr,nmuen,icase;
 "       6 (determination of incident particle parameters)             "
 " are done in subroutine inputs                                       "
 "---------------------------------------------------------------------"
+
+i_log = 6;
 
 call egs_init;
 
@@ -233,7 +361,10 @@ pcut_ask = pcut(1);
 OUTPUT; (' CALL HATCH to get cross-section data'/);
 CALL HATCH;
 
-;OUTPUT;('\f Start g value calculation: Version 1.14 '//);
+write(*,'(//)');
+write(*,*) '************************************';
+write(*,*) '* Start g calculation: Version '//$VERSION//' *';
+write(*,*) '************************************';
 OUTPUT (media(j,1),j=1,24);(/'          MEDIUM is: ',24A1/);
 ;OUTPUT AE(1)-PRM, AP(1);
 (' knock-on electrons can be created and any electron followed down to'
@@ -245,9 +376,9 @@ OUTPUT (media(j,1),j=1,24);(/'          MEDIUM is: ',24A1/);
   (' electron and photon upper kinetic energies are:',F8.3,F11.3,
    ' MeV respectively');
 
-"a common problem has been to ask for a lower ecut or pcut than the
-"data set covers.  Prevent this by exiting if it occurs.  The
-"user is then forced to fix the data set or the asked for cut-offs.
+"a common problem has been to ask for a lower ecut or pcut than the "
+"data set covers.  Prevent this by exiting if it occurs.  The user  "
+"is then forced to fix the data set or the asked for cut-offs. "
 
 IF(ecut_ask < ae(1)   | pcut_ask < ap(1) )[
    OUTPUT ecut_ask, AE(1), pcut_ask, AP(1);
@@ -260,6 +391,26 @@ IF(ecut_ask < ae(1)   | pcut_ask < ap(1) )[
    STOP;
 ]
 
+"Also, check that max. energy of particle source is not > ue, up"
+call source_get_emax(iqin,ekmax);
+IF((iqin~=0 & ekmax+rm > ue(1)) | (iqin=0 & ekmax > up(1)))[
+   OUTPUT ekmax+abs(iqin)*rm;
+   (//'**************************************************************'/
+'The max. total energy of source particles exceeds that of cross-section data '/
+'Max. E of source particles = ',F10.4,' MeV');
+   IF(iqin ~=0)[
+      OUTPUT ue(1);('UE = ',F10.4,' MeV');
+   ]
+   ELSE[
+      OUTPUT up(1);('UP = ',F10.4,' MeV');
+   ]
+   OUTPUT;('**************************************************************'/);
+   STOP;
+]
+
+"Increase minimum energy by small epsilon to prevent round-off errors"
+"at 1 keV and below"
+call source_check_emin();
 
 "---------------------------------------------------------------------"
 "STEP 7   SHOWER-CALL                                                 "
@@ -280,18 +431,30 @@ IF(nperbatch = 0) nperbatch = 1;
 
 call source_sumry(6);
 
-write(6,*) 'Number of histories to simulate = ',ncase;
-
-IF( accu > 0 & calc_type = 1) [
-  write(6,*) 'Will interrupt any calculation loop when accuracy better than '
-             ,accu;
+IF( calc_type = 1) [
+  write(*,*)
+  '-------------------';
+  write(6,'(a,0Pf7.4,a)')
+  ' Calculation type 1: Calculation interrupted when muen precision <= ',
+  accu*100.,'%.';
+  IF (m_balance = 1)[
+     write(*,*) '-------------------';
+  ]
+  ELSE[
+     write(*,'(a,i0)')
+     '-------------------  Precision balance factor m = ',m_balance;
+  ]
+]
+ELSE[
+  write(*,*);
+  write(6,'(a,i0)') 'Number of histories to simulate = ',ncase;
 ]
 
+factor = 160.2176462;"e_mutr and e_muen scored as MeV cm^2/g"
+                     "*1.602176462E-13 J/MeV *1000 g/kg =160.2176E-12 Gy cm^2"
+                     "Note, this is used elsewhere too"
 
-
-factor = 160.2176462;  "e_mutr and e_muen scored as MeV cm^2/g"
-                    "*1.602176462E-13 J/MeV *1000 g/kg =160.2176E-12 Gy cm^2"
-                    "Note, this is used elsewhere too"
+ifailed = 0;
 
 IF (neis>1)[
   ntimes = neis;
@@ -309,19 +472,65 @@ DO itimes=1,ntimes[ "start of loop over different initial energies"
 /e_mutr,e_mutr2,e_muen,e_muen2,mutr,mutr2,muen,muen2/ = 0.0;
 /nmutr,nmuen/ = 0;
 
+call source_get_eave(Eave);
+
 call source_switch_energy(itimes);
 "above gets initial energy from those we loop over"
 "returns ei"
 
-IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
+IF( calc_type = 1 ) [  "will seek a given precision -- default does not do this"
 
-    write(6,*); write(6,*) '=> First calculating mutr only'; write(6,*);
-    /x(1),y(1),z(1)/=0; wt(1)=1; ir(1)=1; medium=1;
-    DO icase=1,ncase [
+   /*********************************************************************
+       Precision balancing can be used to speed up calculations
+       for energies above 1 MeV. Most times the kerma approximation
+       is used for energies under 100 keV where the original
+       implementation is more efficient. An exception would be Ir-192.
+    **********************************************************************/
+    IF (itimes = 1) ["Only do this on 1st energy"
+       accu0 = accu; m = m_balance;
+    ]"end itimes = 1 block"
+
+    "Update for each energy since accu "
+    "changes in the 1-g calculation block"
+    IF (m > 1)[
+       accu = accu0/sqrt(m);
+    ]
+    ELSE[
+       accu = accu0/sqrt(4./3.);
+    ]
+    write(6,*);
+    write(6,'(a,0Pf7.4,a)') '=> First calculating mutr to <= ',accu*100.,
+                             '% statistical precision';
+    write(6,*);
+    /x(1),y(1),z(1)/=0; wt(1) = 1; ir(1) = 1; medium = 1;
+    ibatch = 1; icase = 1;
+    "initiate mutr timer"
+    t_mutr = etime(time_array);
+    "DO icase=1,ncase ["
+    LOOP [
+        icase += 1;
         call source_sample(iqin,irin,ein,xin,yin,zin,uin,vin,win,wtin);
         IF( iqin ~= 0 ) [
             write(6,*) 'type=1 calculation only works for photons!';
             $CALL_EXIT(1);
+        ]
+        IF( ein < ap(1))[
+            OUTPUT ein, pcut_ask;
+            (/' -> Photon energy of ' , f10.5,' MeV '/
+              '    below cut-off AP = ',f10.5,' MeV.'/
+              '    Discard and resample source.');
+            ifailed += 1;
+            IF (ifailed > $MXSAMPLE)[
+             $egs_fatal('(/,a,i9)',
+             'Too many failed attempts sampling a valid photon energy:',
+             ifailed);
+            ]
+            ELSE[
+             $egs_warning('(a,i9)',
+             'Failed attempts sampling a valid photon energy:',
+             ifailed);
+             NEXT;"i.e. go to the next icase in the loop"
+            ]
         ]
         my_gle = log(ein); gle = my_gle;
         $SET INTERVAL my_gle,ge;
@@ -330,11 +539,25 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
         $EVALUATE gbr2 USING gbr2(my_gle);
         np = 1; e(np) = ein; u(np)=0; v(np)=0; w(np)=1; iq(np) = 0;
         $RANDOMSET rnno; edep = 0;
-        IF( rnno < gbr1 & ein > rmt2 )      [ call pair;  ]
-        ELSE IF( rnno < gbr2 )              [ call compt; ]
-        ELSE                                [ call photo; ]
+        IF( rnno < gbr1 & ein > rmt2 )[
+                 call pair;
+        ]
+        ELSE IF( rnno < gbr2 )        [
+                 call compt;
+        ]
+        ELSE [
+                 call photo;
+        ]
+        /****************************************************
+          Collects photons' kinetic energy transferred to e-
+          above the threshold. Sub-threshold energy transfer
+          is added directly to edep for Compton, photoeffect
+          and atomic relaxations. Since only total energy
+          transfer is of interest in this block, there is no need
+          for further classification.
+        *******************************************************/
         DO ip=1,np [
-            IF( iq(ip) ~= 0 ) edep = edep + e(ip)-prm;
+           IF( iq(ip) ~= 0 ) edep = edep + e(ip)-prm;
         ]
         nmutr = nmutr + 1;
         IF(gmfp > 0) [
@@ -343,92 +566,321 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
             aux = 0;
         ]
         e_mutr = e_mutr + aux; e_mutr2 = e_mutr2 + aux*aux;
-        IF( mod(icase,10000) = 0 & accu > 0 ) [
+        /*********************************************
+         Only check after certain number of histories,
+         this number is arbitrarily set to $MXCHUNK.
+        **********************************************/
+        IF( mod(icase,$MXCHUNK) = 0 ) [
             xtest = e_mutr; xtest2 = e_mutr2;
             $ANALYZE xtest(nmutr);
             "write(6,*) icase,xtest2/xtest;"
             IF( xtest2/xtest < accu ) EXIT;
+            /*****************************************************************
+             Display calculation progress starting at 10X the target precision
+             reporting the time it takes to get 10X, 9X,..the target precision.
+             Since this check is done after an arbitrary number of histories,
+             the progress will show a statistical precision that is at or below
+             a multiple of the target.
+            *****************************************************************/
+            IF( xtest2/xtest/(nbatch-ibatch+1) < accu) [
+              write(6,'(a,i2,a,a,f8.2,a,f11.8,a,f8.4,a)')
+              '+ Reached ',nbatch-ibatch+1,'X target precision ',
+              ', cpu time = ',etime(time_array)-cpu,
+              ' sec. <mu_tr/rho> = ', xtest/Eave,' cm^2/g [',
+              100*xtest2/xtest,'%]';
+              $FLUSH_UNIT(6);  "so the log file is updated each time"
+              ibatch +=1;
+            ]
         ]
-    ] "end of icase loop for calc_type=1 seeking a given accuracy"
-
+    ] REPEAT; "end of icase loop for calc_type=1 seeking a given precision"
+    $FLUSH_UNIT(6);  "so the log file is updated each time"
     xtest = e_mutr; xtest2 = e_mutr2; $ANALYZE xtest(nmutr);
-    IF( accu > 0 & xtest2/xtest < accu ) [
-        write(6,*) 'mu_tr converged after ',nmutr,' histories'; write(6,*);
+    IF( xtest2/xtest < accu ) [
+        write(6,'(a,f8.2,a,f11.8,a,f8.4,a)')
+            '+ Reached     target precision , cpu time = ',
+            etime(time_array)-cpu,
+            ' sec. <mu_tr/rho> = ', xtest/Eave,' cm^2/g [',
+            100*xtest2/xtest,'%]';
+        write(6,*);
+        write(6,'(a,i0,a)')
+        ' mu_tr attained desired precision after ',nmutr,' histories';
+        write(6,*);
     ]
-    write(6,*) ' <E*mu_tr/rho>     = ',factor*xtest,' 10^-12 Gy cm^2  +/- ',
+    ELSE[
+        write(6,*);
+        write(6,'(a,i0,a)')
+       ' mu_tr did not reach target precision after ',
+       nmutr,' histories';
+        write(6,*);
+    ]
+    write(6,:KERMAFORMAT:) ' <E*mu_tr/rho>     = ',factor*xtest,
+               ' 10^-12 Gy cm^2  +/- ',
                100*xtest2/xtest,'%';
     write(6,*);
 
-    write(6,*); write(6,*) '=> Now calculating g and muen'; write(6,*);
+    IF (m > 1)[
+       accu = accu0/sqrt(m/(m-1.));
+    ]
+    ELSE["Original implementation"
+       accu = accu0/2.;
+    ]
+
+    write(6,*);
+    write(6,'(a,0Pf7.4,a)') '=> Now calculating 1-g to <= ',accu*100.,
+                             '% statistical precision';
+    write(6,*);
+    $FLUSH_UNIT(6);  "so the log file is updated each time"
 
     "we are in the calc_type = 1 block photons only"
-    "     -quits when accuracy reached"
-    DO icase=1,ncase [
+    "     -quits when precision reached"
+    ibatch = 1; icase = 0;
+    "initiate muen timer"
+    t_muen = etime(time_array);
+    "DO icase=1,ncase ["
+    LOOP [
+        icase += 1;
         call source_sample(iqin,irin,ein,xin,yin,zin,uin,vin,win,wtin);
+        IF( iqin ~= 0 ) [
+            write(6,*) 'type=1 calculation only works for photons!';
+            $CALL_EXIT(1);
+        ]
+
+        IF( ein < ap(1))[
+            OUTPUT ein, pcut_ask;
+            (/' -> Photon energy of ' , f10.5,' MeV '/
+              '    below cut-off AP = ',f10.5,' MeV.'/
+              '    Discard and resample source.');
+            ifailed += 1;
+            IF (ifailed > $MXSAMPLE)[
+             $egs_fatal('(/,a,i9)',
+             'Too many failed attempts sampling a valid photon energy:',
+             ifailed);
+            ]
+            ELSE[
+             $egs_warning('(a,i9)',
+             'Failed attempts sampling a valid photon energy:',
+             ifailed);
+             NEXT;"i.e. go to the next icase in the loop"
+            ]
+        ]
+
         /ebrem_tmp,erad_tmp,etot_tmp/ = 0.0;
+
         call shower(iqin,ein,xin,yin,zin,uin,vin,win,irin,wtin);
+
+        my_gle = log(ein); gle = my_gle;
         $SET INTERVAL my_gle,ge;
         $EVALUATE gmfp USING gmfp(my_gle);
+        weight = 0.0; weight2 = 0.0; aux = 0.0;
+        "Score mass-energy transfer"
         IF(gmfp > 0) [
-            aux = etot_tmp/gmfp/rho(1);
-        ] ELSE [
-            aux = 0;
+            weight  = 1./gmfp/rho(1);
+            weight2 = weight*weight;
+            aux = etot_tmp*weight;
         ]
         e_mutr = e_mutr + aux; e_mutr2 = e_mutr2 + aux*aux;
+        "Score mass-energy absorption"
+        IF(gmfp > 0) [
+          aux = (etot_tmp - erad_tmp)*weight;
+        ]
+        ELSE [
+          aux = 0;
+        ]
+        e_muen = e_muen + aux; e_muen2 = e_muen2 + aux*aux;
+
         nmutr = nmutr+1; nmuen = nmuen + 1;
-        e_tot = e_tot + etot_tmp;
-        e_tot2 = e_tot2 + etot_tmp*etot_tmp;
-        e_brem = e_brem + ebrem_tmp;
-        e_brem2 = e_brem2 + ebrem_tmp*ebrem_tmp;
-        e_rad = e_rad + erad_tmp;
-        e_rad2 = e_rad2 + erad_tmp*erad_tmp;
-        e_radc = e_radc + etot_tmp*erad_tmp;
-        IF( mod(icase,10000) = 0 & accu > 0 ) [
+        e_tot = e_tot + etot_tmp*weight;
+        e_tot2 = e_tot2 + etot_tmp*etot_tmp*weight2;
+        e_rad = e_rad + erad_tmp*weight;
+        e_rad2 = e_rad2 + erad_tmp*erad_tmp*weight2;
+        e_radc = e_radc + etot_tmp*erad_tmp*weight2;
+        /*********************************************
+         Only check after certain number of histories,
+         this number is arbitrarily set to $MXCHUNK.
+        **********************************************/
+        IF( mod(icase,$MXCHUNK) = 0 & accu > 0 ) [
+        "IF( mod(icase,100) = 0 ) ["
             IF( e_rad > 0 ) [
                 ert = e_rad; ert2 = e_rad2; $ANALYZE ert(nmuen);
                 ett = e_tot; ett2 = e_tot2; $ANALYZE ett(nmuen);
-                ert2 = ert*sqrt((ert2/ert)**2+(ett2/ett)**2)/(ett-ert);
-                IF( ert2 < accu/2 ) EXIT;
+                /***********************************************
+                   Covariance includes a division by nmuen since
+                   the uncertainties provided by $ANALYZE are
+                   std dev of the mean not the sample std dev
+                 **********************************************/
+                cov = (e_radc/nmuen-ert*ett)/nmuen;"Covariance"
+                covt= 2*(e_radc/nmuen/ert/ett-1)/nmuen;"Covariance term"
+                rel_e = ert*sqrt((ert2/ert)**2+(ett2/ett)**2-covt)/(ett-ert);
+                IF( rel_e < accu ) EXIT;
             ]
             ELSE [
                 IF( icase > 100000 ) [
-                    ert2 = 0; EXIT;
+                    rel_e = 0; EXIT;
                 ]
             ]
+            /*****************************************************************
+             Display calculation progress starting at 10X the target precision
+             reporting the time it takes to get 10X, 9X,..the target precision.
+             Since this check is done after an arbitrary number of histories,
+             the progress will show a statistical precision that is at or below
+             a multiple of the target.
+            *****************************************************************/
+            IF( rel_e/(nbatch-ibatch+1) < accu) [
+              IF (verbose & ert2 > 0 & ett2 > 0)[
+                 write(6,'(a,i2,a,a,f8.2,a,f11.8,a,f8.4,a,a,f8.4)')
+                 '+ Reached ',nbatch-ibatch+1,'X target precision ',
+                 ', cpu time = ',etime(time_array)-cpu,' sec. 1-g = ',
+                 1-e_rad/e_tot,' [',100*rel_e,'%]',
+                 ' Corr = Cov/s_rad/s_tot =',cov/ert2/ett2;
+              ]
+              ELSE[
+                 write(6,'(a,i2,a,a,f8.2,a,f11.8,a,f8.4,a)')
+                 '+ Reached ',nbatch-ibatch+1,'X target precision ',
+                 ', cpu time = ',etime(time_array)-cpu,' sec. 1-g = ',
+                 1-e_rad/e_tot,' [',100*rel_e,'%]';
+              ]
+              $FLUSH_UNIT(6);  "so the log file is updated each time"
+              ibatch += 1;
+            ]
         ]
-    ] " end of icase loop"
-    IF( accu > 0 & ert2 < accu ) [
-        write(6,*) '1-g converged after ',nmuen,' histories'; write(6,*);
+
+    ] REPEAT; " end of icase loop"
+
+    $FLUSH_UNIT(6);  "so the log file is updated each time"
+
+    t_mutr = etime(time_array)-t_mutr;
+    t_muen = etime(time_array)-t_muen;
+
+    IF( ert2 < accu ) [
+        IF (verbose & ert2 > 0 & ett2 > 0)[
+            write(6,'(a,f8.2,a,f11.8,a,f8.4,a,a,f8.4)')
+            '+ Reached     target precision , cpu time = ',
+            etime(time_array)-cpu,' sec. 1-g = ',
+            1-e_rad/e_tot,' [',100*rel_e,'%]',
+            ' Corr = Cov/s_rad/s_tot =',cov/ert2/ett2;
+        ]
+        ELSE[
+            write(6,'(a,f8.2,a,f11.8,a,f8.4,a)')
+            '+ Reached     target precision , cpu time = ',
+            etime(time_array)-cpu,' sec. 1-g = ',
+            1-e_rad/e_tot,' [',100*rel_e,'%]';
+        ]
+        write(6,*);
+        write(6,'(a,i0,a)') ' 1-g attained desired precision after ',
+                   nmuen,' histories';
+        write(6,*);
+        write(6,*);
+    ]
+    ELSE[
+        write(6,*);
+        write(6,'(a,i0,a)')
+       ' 1-g did not reach target precision after ',
+       nmuen,' histories';
+        write(6,*);
     ]
 
-    $ANALYZE e_mutr(nmutr); $ANALYZE e_tot(nmuen); $ANALYZE e_rad(nmuen);
+    $ANALYZE e_mutr(nmutr); $ANALYZE e_muen(nmuen);
+    $ANALYZE e_tot(nmuen);  $ANALYZE e_rad(nmuen);
     IF( e_rad < 1e-15*e_tot ) e_rad = 1e-15*e_tot;
-    write(6,*) 'Final:';
-    write(6,*)' <E*mu_tr/rho> i.e., K   =',factor*e_mutr,' 10^-12 Gy cm^2 +/- ',
-               100*e_mutr2/e_mutr,'%';
-    e_rad2 = e_rad*sqrt((e_rad2/e_rad)**2+(e_tot2/e_tot)**2)/(e_tot-e_rad);
-    write(6,*) ' <E*mu_en/rho> i.e., Kcol=',factor*e_mutr*(1-e_rad/e_tot),
-       ' 10^-12 Gy cm^2  +/- ',100*sqrt((e_mutr2/e_mutr)**2+e_rad2**2),'%';
-    write(6,*) ' g                 = ',e_rad/e_tot,' +/- ',
-        100*e_rad2*(e_tot/e_rad-1),'%';
+
+    write(6,'(a)')  '-----------------------------';
+    write(6,'(a)')  'Final results (calc. type 1):';
+    write(6,'(a/)') '-----------------------------';
+
+    call source_get_eave(Eave);
+    write(6,'(a,f10.5,a)') ' Average spectrum energy: ',Eave,' MeV';
+    call source_get_samplede(Eave,err_Eave);
+    err_Eave = err_Eave/Eave;
+    write(6,'(a,f10.5,a,f8.4,a/)') ' Average sampled energy : ',
+          Eave,' MeV [',100*err_Eave,'%]';
+
+    write(6,:KERMAFORMAT:) ' K/phi    = <E*mu_tr/rho>         = ',
+               factor*e_mutr,
+               ' 10^-12 Gy cm^2 [',100*e_mutr2/e_mutr,'%]';
+
+    /***********************************************
+       Covariance includes a division by nmuen since
+       the uncertainties provided by $ANALYZE are
+       std dev of the mean not the sample std dev
+     **********************************************/
+    covt = 2*(e_radc/nmuen/e_rad/e_tot-1)/nmuen;"Covariance term"
+    g_rel_err = sqrt((e_rad2/e_rad)**2+(e_tot2/e_tot)**2-covt);
+    g = e_rad/e_tot;
+    e_rad2=e_rad*g_rel_err/(e_tot-e_rad);
+    "e_rad2=e_rad*sqrt((e_rad2/e_rad)**2+(e_tot2/e_tot)**2)/(e_tot-e_rad);"
+
+    write(6,:KERMAFORMAT:) ' Kcol/phi = <E*mu_tr/rho>*(1-<g>) = ',
+              factor*e_mutr*(1-e_rad/e_tot), ' 10^-12 Gy cm^2 [',
+              100*sqrt((e_mutr2/e_mutr)**2+e_rad2**2),'%]';
     write(6,*);
 
-    goto :the_end:;
+    write(6,'(a,1PE12.4,a,0PF8.4,a)')
+      ' <g>                              = ',
+         g,' [',100*g_rel_err,'%]';
+    write(6,'(a,F12.6,a,0PF8.4,a)')
+      ' 1-<g>                            = ',
+        1-e_rad/e_tot,' [',100*e_rad2,'%]';
+    write(6,*);
 
-]  "end of calc_type = 1 block seeking a specified accuracy"
+    write(6,:KERMAFORMAT:) '<mu_tr/rho> = <E*mu_tr/rho>/Eave         = ',
+               e_mutr/Eave,'   cm^2/g [',
+               100*sqrt((e_mutr2/e_mutr)**2+err_Eave**2),'%]';
+    write(6,:KERMAFORMAT:) '<mu_en/rho> = <E*mu_tr/rho>*(1-<g>)/Eave = ',
+               e_mutr*(1-e_rad/e_tot)/Eave,'   cm^2/g [',
+               100*sqrt((e_mutr2/e_mutr)**2+e_rad2**2+err_Eave**2),'%]';
+    write(6,'(a,1PE12.6,a)') '<E*mu_en/rho>                            = ',
+             e_mutr*(1-e_rad/e_tot),'   MeV cm^2/g';
+
+    IF (verbose)[
+
+        write(*,*) ;
+        write(*,*) '--------------------------';
+        write(*,*) 'Calculation type 0 results:';
+        write(*,*) '--------------------------';
+        write(*,*) ;
+
+        write(6,:KERMAFORMAT:) ' Kcol/phi   = <E*mu_en/rho>      = ',
+                  factor*e_muen,' 10^-12 Gy cm^2       [',
+                  100*e_muen2/e_muen,'%]';
+
+        write(6,:KERMAFORMAT:) '<mu_en/rho> = <E*mu_en/rho>/Eave = ',
+              e_muen/Eave,'   cm^2/g             [',
+              100*sqrt((e_muen2/e_muen)**2+err_Eave**2),'%]';
+
+        write(*,'(/a,f12.1,a/)')
+        '-> Efficiency gain over calculation type 0: ',
+        ((e_muen2/e_muen)**2+err_Eave**2)*t_muen/
+        ((e_mutr2/e_mutr)**2+e_rad2**2+err_Eave**2)/t_mutr,
+        ' times';
+        write(*,*) '--------------------------';
+    ]
+
+goto :the_end:;
+
+:KERMAFORMAT: FORMAT(a,1PE12.6,a,0PF7.4,a);
+
+]  "end of calc_type = 1 block seeking a specified precision"
 
 $FLUSH_UNIT(6);
 
-"############################################################################
-"	start calc_type = 0, fixed number of histories
-"############################################################################
+"############################################################################"
+"   start calc_type = 0, fixed number of histories                           "
+"############################################################################"
 
+write(6,*);
+write(6,*) '-------------------------------------------------';
+write(6,*) '=> Fixed number of histories (calculation type 0)';
+write(6,*) '-------------------------------------------------';
+write(6,*);
+"Initialize weight to 1 so that's not undefined for charged particles"
+weight = 1.0; weight2 = 1.0;
 DO icase=1,ncase [
+
   call source_sample(iqin,irin,ein,xin,yin,zin,uin,vin,win,wtin);
   IF( $DEBUGIT ) [
     write(18,*) ' ******* new shower, e = ',ein,' iq = ',iqin;
   ]
-  ebrem_tmp = 0.0;           "keeps track of ke of charged particeles lost"
+  ebrem_tmp = 0.0;           "keeps track of ke of charged particles lost"
                              "to brem and annihilation events"
   erad_tmp = 0.0;            "loses just to annihilation"
   "initialize etot_tmp differently for photons and electrons"
@@ -450,30 +902,31 @@ DO icase=1,ncase [
       "when doing bound compton, the above is not the correct cross-section"
       "but we also throw out the uncollided photons, so it works out"
 
+      weight = 0.0; weight2 = 0.0; aux = 0.0;
       IF(gmfp > 0) [
-          aux = (etot_tmp/gmfp)/rho(1);  "energy per g/cm^2"
-      ] ELSE [
-          aux = 0;
+          weight  = 1./gmfp/rho(1);
+          weight2 = weight*weight;
+          aux = etot_tmp*weight; "energy per g/cm^2"
       ]
       e_mutr = e_mutr + aux; e_mutr2 = e_mutr2 + aux*aux;
-      "mutr = mutr + aux/ein; mutr2   = mutr2 +aux*aux/(ein**2);
+      "mutr = mutr + aux/ein; mutr2   = mutr2 +aux*aux/(ein**2);"
       IF(gmfp > 0) [
-          aux = ((etot_tmp - erad_tmp)/gmfp)/rho(1);
+          aux = (etot_tmp - erad_tmp)*weight;
       ] ELSE [
           aux = 0;
       ]
       e_muen = e_muen + aux; e_muen2 = e_muen2 + aux*aux;
-      "muen = muen + aux/ein; muen2   = muen2 +aux*aux/(ein**2);
+      "muen = muen + aux/ein; muen2   = muen2 +aux*aux/(ein**2);"
   ] "end of photon only block"
 
-  e_tot = e_tot + etot_tmp;
-  e_tot2 = e_tot2 + etot_tmp*etot_tmp;
-  e_brem = e_brem + ebrem_tmp;
-  e_brem2 = e_brem2 + ebrem_tmp*ebrem_tmp;
-  e_rad = e_rad + erad_tmp;
-  e_rad2 = e_rad2 + erad_tmp*erad_tmp;
-  e_radc = e_radc + etot_tmp*erad_tmp;
-  e_bremc = e_bremc + etot_tmp*ebrem_tmp;
+  e_tot = e_tot + etot_tmp*weight;
+  e_tot2 = e_tot2 + etot_tmp*etot_tmp*weight2;
+  e_brem = e_brem + ebrem_tmp*weight;
+  e_brem2 = e_brem2 + ebrem_tmp*ebrem_tmp*weight2;
+  e_rad = e_rad + erad_tmp*weight;
+  e_rad2 = e_rad2 + erad_tmp*erad_tmp*weight2;
+  e_radc = e_radc + etot_tmp*erad_tmp*weight2;
+  e_bremc = e_bremc + etot_tmp*ebrem_tmp*weight2;
   ibatch = icase/nperbatch;
   IF( ibatch*nperbatch = icase ) [
     write(6,'(a,i2,a,i2,a,f9.2,a)')
@@ -489,6 +942,11 @@ DO icase=1,ncase [
 "STEP 8   OUTPUT-OF-RESULTS                                       "
 "-----------------------------------------------------------------"
 
+write(*,*);
+write(6,'(a)')  '-----------------------------';
+write(6,'(a)')  'Final results (calc. type 0):';
+write(6,'(a/)') '-----------------------------';
+
 call source_get_eave(Eave);
 write(6,*);
 write(6,'('' Average spectrum energy: '',1PE10.4, '' MeV'')') Eave;
@@ -497,14 +955,7 @@ err_Eave = max(0.0, err_Eave);   "to take care of -ve errors from roundoff"
 write(6,'('' Average sampled energy: '',1PE10.4, '' +/-'',1PE10.2,
       ''  MeV'')') Eave,err_Eave;
 
-"The correct definition of mu/rho for a spectrum is that given by"
-"Attix = int[psi mu/rho dE]/int[psi dE]  This is equivalent to the"
-"ICRU60 defn as long as one sums the total energy transferred from"
-"the spectrum and then divides by the average energy incident"
-"For a while we scored <mu/rho> directly, but this can differ"
-"substantially from the correct results and amounts to averaging"
-"over the fluence, not the energy fluence"
-"These incorrect values are now commented out"
+"Incorrect values (averaging over fluence, not energy fluence) commented out"
 $ANALYZE e_tot(ncase);
 $ANALYZE e_brem(ncase);
 $ANALYZE e_rad(ncase);
@@ -518,42 +969,43 @@ IF( e_mutr > 0 ) [
     write(6,'(/)');
     $ANALYZE e_mutr(ncase);
     write(6,800)factor*e_mutr, 100*e_mutr2/e_mutr;
-800 format(' <E*mu_tr/rho> i.e., K   =',1PE12.4,'    10^-12 Gy cm^2 +/-',
+800 format(' <E*mu_tr/rho> i.e., K/phi =',1PE12.4,'    10^-12 Gy cm^2 +/-',
             0PF7.3,' %');
     write(6,801)e_mutr/Eave;
-801  format(' <E*mu_tr/rho>/Eave      =',1PE12.4,'    cm^2/g');
+801  format(' <E*mu_tr/rho>/Eave        =',1PE12.4,'    cm^2/g');
 
     write(6,*) 'The above is the spectrum averaged coefficient';
-    "write(6,*) ' difference        = ',(e_mutr/Eave - mutr)/mutr*100.,'%';
+    "write(6,*) ' difference        = ',(e_mutr/Eave - mutr)/mutr*100.,'%';"
 ]
 IF( e_muen > 0 ) [
     $ANALYZE e_muen(ncase);
     write(6,*);
-    write(6,'('' <E*mu_en/rho> i.e., Kcol='',1PE12.4,''    10^-12 Gy cm^2 +/-'',
+    write(6,'('' <E*mu_en/rho> i.e., Kcol/phi ='',
+       1PE12.4,''    10^-12 Gy cm^2 +/-'',
        0PF7.3,'' %'')') factor*e_muen, 100*e_muen2/e_muen;
-    write(6,'('' <E*mu_en/rho>/Eave      = '',1PE12.4,''    cm^2/g'')')
+    write(6,'('' <E*mu_en/rho>/Eave           ='',1PE12.4,''    cm^2/g'')')
          e_muen/Eave;
     write(6,*) 'The above is the spectrum averaged coefficient';
-    "write(6,*) ' difference        = ',(e_muen/Eave - muen)/muen*100.,'%';
+    "write(6,*) ' difference        = ',(e_muen/Eave - muen)/muen*100.,'%';"
     write(6,'(/)');
 ]
 
 OUTPUT e_tot,e_tot2, 100*e_tot2/e_tot;
   (' Ave energy released per particle:  ',1PE12.4, ' MeV +/-', 1PE10.3,
-  ' =', 0PF7.3,' %');
+  ' [', 0PF7.3,' %]');
 OUTPUT e_brem,e_brem2, 100*e_brem2/e_brem;
   (' Ave energy lost to bremsstrahlung: ',1PE12.4, ' MeV +/-', 1PE10.3,
-  ' =', 0PF7.3,' %');
+  ' [', 0PF7.3,' %]');
 OUTPUT e_rad,e_rad2, 100*e_rad2/e_rad;
   (' Ave energy lost to all radiation:  ',1PE12.4, ' MeV +/-', 1PE10.3,
-  ' =', 0PF7.3,' %');
+  ' [', 0PF7.3,' %]');
 
 err_frac = sqrt((e_brem2/e_brem)**2+(e_tot2/e_tot)**2);
 OUTPUT e_brem/e_tot, err_frac*(e_brem/e_tot), 100.*err_frac;
-   (/'fractions   g(brem) = ',F8.4,' +/-',F8.4,' =',F6.3,' %');
+   (/'fractions   g(brem) = ',1PE12.4,' +/-',1PE12.4,' [',0PF7.3,' %]');
 err_frac = sqrt((e_rad2/e_rad)**2+(e_tot2/e_tot)**2);
 OUTPUT e_rad/e_tot,err_frac*(e_rad/e_tot),100*err_frac;
-   ( '         g(all rad) = ',F8.4,' +/-',F8.4,' =',F6.3,' %'/);
+   ( '         g(all rad) = ',1PE12.4,' +/-',1PE12.4,' [',0PF7.3,' %]'/);
 
 write(6,*) 'The above fraction error estimates are made ignoring correlations';
 write(6,*) ' between energy released and energy lost to radiation ';
@@ -584,6 +1036,11 @@ end;
 ;
 "**********************************************************************"
 "                                                                      "
+!COMMENTS;
+%F
+C> Subroutine to read user inputs and transport parameters
+%M
+!NOCOMMENTS;
   subroutine inputs;
 "                                                                      "
 "**********************************************************************"
@@ -613,6 +1070,7 @@ $IMPLICIT-NONE;
        GetInput,     "for interaction with the get_input routine"
        MEDIA,        "to get access to nmed and media"
        MISC,         "to get access to the array med"
+       UPHIOT,       "to get PI (for the incident angle conversion)"
        USEFUL,       "to get electron rest energy RM"
        RANDOM,       "to be able to set the initial rng seeds"
        BREMPR,       "to be able to turn off brems angle selection"
@@ -632,8 +1090,10 @@ integer*4 lnblnk;
 
 call get_transport_parameter(6); "read transport parameter settings and"
 
-accu = -1;
-calc_type = 0;
+accu = 0.01;
+m_balance = 1;
+calc_type = 0;"Defaults to allow photon/electron calculations"
+verbose = .false.;
                                  "print a summary on unit 6"
 ival = 0;
 delimeter = 'NONE';
@@ -683,7 +1143,7 @@ values_sought(ival)    = 'NUMBER OF HISTORIES';
 type(ival)             = 0;
 nvalue(ival)           = 1;
 value_min(ival)        = 2;
-value_max(ival)        = 2147483647;
+"value_max(ival)        = 2147483647;
 default(ival)          = 10000;
 $GET_INPUT(IVAL);
 ncase = value(ival,1);
@@ -698,19 +1158,36 @@ $GET_INPUT(IVAL);
 IF( error_flag = 0 ) [
     IF( value(ival,1) > 0 ) ibrdst=-1;
 ]
+ELSE                 [ error_flag = 0; ]
 
 "----------------------------------------------------------------------"
-"accuracy sought and calculation type                                  "
+" precision sought and calculation type                                 "
 "----------------------------------------------------------------------"
 ival                   = ival + 1;
-values_sought(ival)    = 'ACCURACY';
+values_sought(ival)    = 'PRECISION';
 type(ival)             = 0;
 nvalue(ival)           = 1;
 value_min(ival)        = -1e30;
-value_max(ival)        = 0.1;
-default(ival)          = -1;
+value_max(ival)        = 1.0;
+default(ival)          = 0.01;
 $GET_INPUT(IVAL);
-IF( error_flag = 0 ) [ accu = value(ival,1); ]
+IF( error_flag = 0 )    [ accu = value(ival,1); ]
+ELSE["Backwards compatible"
+   values_sought(ival) = 'ACCURACY';
+   $GET_INPUT(IVAL);
+   IF( error_flag = 0 ) [ accu = value(ival,1); ]
+   ELSE                 [ error_flag = 0; ]
+]
+
+ival                   = ival + 1;
+values_sought(ival)    = 'PRECISION BALANCE';
+type(ival)             = 0;
+nvalue(ival)           = 1;
+value_min(ival)        = 1;
+value_max(ival)        = 100;
+default(ival)          = 1;
+$GET_INPUT(IVAL);
+IF( error_flag = 0 ) [ m_balance  = value(ival,1); ]
 ELSE                 [ error_flag = 0; ]
 
 ival                   = ival + 1;
@@ -722,6 +1199,23 @@ value_max(ival)        = 1;
 default(ival)          = 0;
 $GET_INPUT(IVAL);
 IF( error_flag = 0 ) [ calc_type = value(ival,1); ]
+ELSE                 [ error_flag = 0; ]
+
+"-------------------------------------------------"
+"       verbose output?                           "
+"-------------------------------------------------"
+ival                = ival + 1;
+values_sought(ival) = 'VERBOSE';
+nvalue(ival)        = 1;
+type(ival)          = 3;
+allowed_inputs(ival,0) = 'NO';
+allowed_inputs(ival,1) = 'YES';
+$GET_INPUT(IVAL);
+IF( error_flag = 0 ) [
+    IF( value(ival,1) = 1 )[
+      verbose = .true.;
+    ]
+]
 ELSE                 [ error_flag = 0; ]
 
 "---------------------------------------------------------------------"
@@ -748,6 +1242,7 @@ iausfl(18) = 1; "before compt"
 iausfl(19) = 1; "after compt"
 iausfl(20) = 1; "before photo"
 iausfl(21) = 1; "after photo"
+/*iausfl(25) = 1; "after Rayleigh"*/
 iausfl(34) = 1; "after sub-threshold fluorescence"
 iausfl(35) = 1; "after sub-threshold Auger"
 iausfl(32) = 1; "before eii"
@@ -839,6 +1334,8 @@ IF( iarg = 33 ) ["after sub-threshold fluorescence"
 ] "end iarg 33 block"
 
 
+/*IF( iarg = 16 | iarg = 18 | iarg = 20 | iarg = 24)
+  ["after a photon interaction"*/
 IF( iarg = 16 | iarg = 18 | iarg = 20 ) ["after a photon interaction"
     IF( $DEBUGIT ) [ write(18,*) ' iarg = ',iarg,' np = ',np; ]
 
@@ -912,13 +1409,13 @@ $IMPLICIT-NONE;
 
 $INTEGER ival;
 
-REPLACE {$NENSRC} WITH {250};
+REPLACE {$NENSRC} WITH {1000};
 
 $INTEGER mono;
 $INTEGER nensrc,mode,iqi;
 $REAL    ensrcd(0:$NENSRC),srcpdf($NENSRC),srcpdf_at($NENSRC);
 $INTEGER srcbin_at($NENSRC);
-$INTEGER i;
+$INTEGER i,j;
 $REAL    ei,eave,sum,ui,vi,wi;
 real*8   esum,esum2,ecount,aux,aux2;
 
@@ -939,7 +1436,7 @@ $INTEGER itimes;
 save     mono,nensrc,mode,ensrcd,srcpdf,srcpdf_at,srcbin_at,eave,sum,
          esum,esum2,ecount,ei,iqi,ui,vi,wi,eik;
 
-character*80 spec_file;
+character*256 spec_file;
 
 ival = 0;
 
@@ -989,7 +1486,7 @@ IF( mono = 0 ) ["one or more individual energy values"
     write(6,*) 'number of energies = ', neis;
     DO i=1,neis[ "convert incident k.e. to total energies"
      eis(i)=value(ival,i)+rm*abs(iqi);
-     write(6,'(A,I2,A,f8.5)') 'E(',i,')=', value(ival,i);
+     write(6,'(A,I5,A,f8.5)') 'E(',i,')=', value(ival,i);
     ]
 ]
 ELSE IF (mono = 2)["lin grid, reading: Emin, emax, bwidth"
@@ -1023,7 +1520,7 @@ ELSE IF (mono = 2)["lin grid, reading: Emin, emax, bwidth"
 
     DO i=0,neis-1[
      eis(i+1)=value(ival,1)+i*bwidth+rm*abs(iqi);
-     write(6,'(A,I3,A,f8.5)')'E(',i+1,')=', eis(i+1);
+     write(6,'(A,I5,A,f8.5)')'E(',i+1,')=', eis(i+1);
     ]
 ]
 ELSE IF (mono = 3)["log grid, reading: Emin, Emax, npoints"
@@ -1059,7 +1556,7 @@ ELSE IF (mono = 3)["log grid, reading: Emin, Emax, npoints"
 
     DO i=0,neis-1[
      eis(i+1)=exp(log(e_min)+i*bwidth);
-     write(6,'(A,I3,A,f8.5)')'E(',i+1,')=', eis(i+1);
+     write(6,'(A,I5,A,f15.8)')'E(',i+1,')=', eis(i+1);
     ]
 ]
 ELSE [
@@ -1072,6 +1569,7 @@ ELSE [
     nvalue(ival)           = 1;
     $GET_INPUT(ival);
     read(char_value(ival,1),'(a)') spec_file;
+    call replace_env(spec_file);
     open(9,file=spec_file,status='old');
     read(9,*); "i.e. ignore the title"
     read(9,*) nensrc,ensrcd(0),mode;
@@ -1109,35 +1607,74 @@ write(ounit,'(a,$)')
 IF( iqi = -1 )     [ write(ounit,'(a)') 'Electron'; ]
 ELSE IF( iqi = 0 ) [ write(ounit,'(a)') 'Photon'; ]
 ELSE               [ write(ounit,'(a)') 'Positron'; ]
-write(ounit,'(a,i2)')
-  ' Incident spectrum            : ',mono;
 IF( mono ~= 1 ) [
+ write(ounit,'(a)')
+  ' Incident beam                : monoenergetic';
  IF (neis = 1)[
   write(ounit,'(a,$)')
   ' Incident kinetic energy (MeV): ';
-  write(ounit,'(f15.8)') ei-rm*abs(iqi);
+  write(ounit,'(f0.8)') ei-rm*abs(iqi);
  ]
 ]
 ELSE [
-write(ounit,'(a,f10.5)')
- ' Average spectrum energy       : ',eave;
-write(ounit,'(a,f10.5)')
- ' Maximum spectrum energy       : ',ensrcd(nensrc);
+ write(ounit,'(a)')
+  ' Incident beam                : spectrum';
+ write(ounit,'(a,f10.5)')
+ ' Average energy (MeV): ',eave;
+ write(ounit,'(a,f10.5)')
+ ' Maximum energy (MeV): ',ensrcd(nensrc);
 ] "end of spectrum block"
 
 write(ounit,'(//)');
 
 return;
 
-entry source_get_emax(emax);
+entry source_get_emax(iqin,emax);
 "=========================="
-
-IF( mono = 0 | mono = 2  | mono = 3 ) [
-    IF( iqi = 0 ) [ emax = ei; ]
-    ELSE          [ emax = ei-rm; ]
+"Note: emax = max. KE"
+iqin = iqi;
+IF( mono = 0 ) [
+    emax = eis(1);
+    DO i=2,neis[
+       IF( eis(i) > emax ) [
+         emax = eis(i);
+       ]
+    ]
+    emax = emax - abs(iqi)*rm;
+]
+ELSE IF( mono = 2 | mono = 3 ) [
+    emax = eis(neis) - abs(iqi)*rm;
 ]
 ELSE [
     emax = ensrcd(nensrc);
+]
+return;
+
+entry source_check_emin();
+"=========================="
+"Set to 1 keV plus a small epsilon"
+"if minimum energy is 1 keV or less"
+IF( mono = 0 ) [
+  j = 1;
+  DO i=2,neis[
+     IF( eis(i) < eis(j) ) [
+       j = i;
+     ]
+  ]
+  IF ( eis(j) - abs(iqi)*rm <= $E_THRESHOLD)[
+       eis(j) = $E_THRESHOLD + $E_EPS + abs(iqi)*rm;
+  ]
+]
+ELSE IF( mono = 2 | mono = 3 ) [
+  IF ( eis(1) - abs(iqi)*rm <= $E_THRESHOLD)[
+       eis(1) = $E_THRESHOLD + $E_EPS + abs(iqi)*rm;
+  ]
+]
+ELSE [
+    emax = ensrcd(nensrc);
+  IF ( ensrcd(0) - abs(iqi)*rm <= $E_THRESHOLD)[
+       ensrcd(0) = $E_THRESHOLD + $E_EPS + abs(iqi)*rm;
+  ]
 ]
 return;
 
@@ -1287,9 +1824,9 @@ DO icase=1,ncase [
     ee = ee*(gbr2-gbr1) + (1-gbr2)*ein;
     IF( ein > 2*prm & gbr1 > 0 ) [ ee = ee + gbr1*(ein-2*prm); ]
     IF(gmfp > 0) [
-        ee = ee/gmfp/rho(medium);
+       ee = ee/gmfp/rho(medium);
     ] ELSE [
-        ee = 0;
+       ee = 0;
     ]
     sumtr = sumtr + ee; sumtr2 = sumtr2 + ee*ee;
   ]
@@ -1308,3 +1845,12 @@ write(6,*) ' mutr: ',factor*sumtr,' +/- ',factor*sumtr2;
 stop;
 return;
 end;
+"####################################################"
+" Skip rest of Fortran source from doxygen processing"
+"####################################################"
+!COMMENTS;
+%F
+C> @cond
+%M
+!NOCOMMENTS;
+"####################################################"

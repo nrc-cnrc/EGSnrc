@@ -609,7 +609,7 @@ struct EGS_IO {
     EGS_I32 n_parallel, i_parallel, first_parallel, n_max_parallel,
             n_chunk, n_files, i_input, i_log, i_incoh, i_nist_data,
             i_mscat, i_photo_cs, i_photo_relax, xsec_out, is_batch,
-            is_pegsless;
+            is_uniform_run, is_pegsless;
 };
 
 

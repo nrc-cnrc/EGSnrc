@@ -30,6 +30,7 @@
 
  ##############################
  :Start MC Transport Parameter:
+ ##############################
 
  Global ECUT=                    0.521
  Global PCUT=                    0.01
@@ -49,22 +50,121 @@
  Electron-step algorithm=        default
  Spin effects=                   Off
 
+ ##############################
  :Stop MC Transport Parameter:
  #############################
 
- media=  AIR521ICRU
- INITIAL RANDOM NO. SEEDS= 97, 33
- Number of HISTORIES=       400000
+#################################################################
+### Simulation parameters
+#################################################################
+  media=  AIR521ICRU
+  INITIAL RANDOM NO. SEEDS= 97, 33
+  ###############################################################
+  # For calculation type 1 select number of histories large enough
+  # that desired accuraccy can be reached!!
+  ################################################################
+  Number of HISTORIES=       400000
+  ###############################################################
+  # Option to turn off sampling angle of bremsstrahlung photons.
+  # Bremsstrahlung photons inherit the direction from the electron.
+  # This option is given so that a user can implement their own
+  # bremsstrahlung angle schemes via a call to ausgab
+  #
+  # TURN OFF BREMS ANGLES = YES # Default: NO
+  ###############################################################
 
+  ####################################
+  # calculation types
+  #
+  # 0 (default)     : Executes fixed number of histories
+  #
+  # 1 (photon only) : Runs to desired accuracy or total number
+  #                   of histories if no accuracy specified or
+  #                   number of histories not large enough.
+  ####################################
+  #
+  # Uncomment line below for type 1 calculation!
+  #
+  # calculation type = 1
+
+  ##################################
+  # Desired accuracy for mutr, muen, and 1-g
+  # (relevant only for calculation type 1)
+  ##################################
+  # accuracy = 0.0001
+
+  #####################################################################
+  # Option to provide extra information such as a efficiency gain
+  # of calculation type 1 over 0, correlation between total and radiative
+  # energy losses. Only relevant for type 1 calculations.
+  # Defaults to 'no'.
+  ####################################################################
+  # verbose = yes
+
+#########################################################################
+### SOURCE DEFINITION
+#########################################################################
  :Start Source Input:
- --------------------
+#####################
 
- INCIDENT SPECTRUM=       SPECTRUM
- Incident Charge=         0
- SPECTRUM FILE=           $HEN_HOUSE/spectra/co60.spectrum
- SOURCE TYPE=             0
- Incident Angle=          0
+ Incident Charge=   0 # -1 or 1 for e- or e+
+ ##############################
+ # Co-60 polyenergetic source
+ ##############################
+ INCIDENT SPECTRUM= SPECTRUM
+ SPECTRUM FILE=     $HEN_HOUSE/spectra/egsnrc/co60.spectrum
+
+ ################################
+ # 1.25 MeV monoenergetic source
+ ################################
+ # INCIDENT SPECTRUM=       mono-energy
+ # INCIDENT KINETIC ENERGY= 1.25
+
+ ################################
+ # Multiple monoenergetic sources
+ ################################
+ # INCIDENT SPECTRUM=       mono-energy
+ # INCIDENT KINETIC ENERGY= 0.1, 0.2, 0.3, 0.4, 0.5
+
+################################
+ # Multiple energies on a linear grid
+ # from 100 keV to 500 keV in 100 keV intervals
+ ################################
+ # INCIDENT SPECTRUM=       mono-energy-lin-range
+ # INCIDENT KINETIC ENERGY= 0.1, 0.5, 0.1 # Emin, Emax, bin-width
+
+ ################################
+ # Multiple energies on a logarithmic grid
+ # from 100 keV to 500 keV with 10 points
+ ################################
+ # INCIDENT SPECTRUM=       mono-energy-log-range
+ # INCIDENT KINETIC ENERGY= 0.1, 0.5, 10 # Emin, Emax, Npoints
 
  :Stop Source Input:
- -------------------
+####################
+
+#########################################################################
+### PEGSLESS MEDIA DEFINITION: see PIRS-701 section 7 for more details
+#########################################################################
+
+:start media definition:
+
+    ### simulation data energy range
+    ae =  0.521 # charged particle production energy threshold (total)
+    ue = 55.511 # maximum charged particle energy (total)
+    ap =  0.010 # secondary photon production threshold
+    up = 55.000 # maximum photon energy
+
+    :start AIR521ICRU:
+      density correction file     = air_dry_nearsealevel
+      bremsstrahlung correction= NRC
+    :stop AIR521ICRU:
+
+:stop media definition:
+####################
+
+
+
+
+
 
