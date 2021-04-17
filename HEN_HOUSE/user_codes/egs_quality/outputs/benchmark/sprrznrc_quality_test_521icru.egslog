@@ -1,0 +1,424 @@
+================================================================================
+EGSnrc version 4 for x86_64-unknown-linux-gnu          Thu Aug 23 18:19:54 2018
+================================================================================
+configuration...............................................test
+user code...................................................sprrznrc
+pegs file...................................................521icru on HEN_HOUSE
+using host..................................................irs25
+input file..................................................quality_test
+output file(s)..............................................quality_test
+================================================================================
+
+
+ Retrieving file: /home/rwtownson/EGSnrc/HEN_HOUSE//spectra/egsnrc/mohan6.spectrum
+
+ ===> Photonuclear flag:   0
+ Found medium with gas pressure
+ Rayleigh data available for medium  1 in PEGS4 data set.
+
+(Re)-initializing photon cross sections with files from the series: xcom
+
+ Compton cross sections: default
+ Using Compton cross sections from /home/rwtownson/EGSnrc/HEN_HOUSE/data/compton_sigma.data
+ Working on medium   1 ... OK
+ Working on medium   2 ... OK
+
+Reading screened Rutherford MS data ...............  done 
+
+
+Reading spin data base from /home/rwtownson/EGSnrc/HEN_HOUSE/data/spinms.data
+EGSnrc spin data, version 2.0   
+Data generated on a machine with 1234 endianess
+The endianess of this CPU is 1234
+=> will need to do byte swaping
+Ranges:      1.00   100.00  0.30054  1.00000
+
+
+  medium    1 .....................  done
+  medium    2 .....................  done
+  
+  Medium            1  sige =    6.3784170227787529        6.1807995067678911       monotone =  F F
+  Medium            2  sige =    6.4595132015164030        6.2354615343201143       monotone =  F F
+  
+  Initializing tmxs for estepe =   0.25000000000000000       and ximax =   0.50000000000000000     
+  
+
+Bound Compton scattering requested, reading data ......  Done
+
+ Initializing Bound Compton scattering ......
+ Medium   1 has   5 shells: 
+   1    1   1  0.20000 0.116E+03     0.014
+   2   17   1  0.20000 0.155E+02     0.543
+   3   18   2  0.20000 0.793E+02     0.024
+   4   19   3  0.20000 0.479E+02     0.014
+   5   20   4  0.20000 0.479E+02     0.014
+ Medium   2 has  18 shells: 
+   1   10   1  0.00004 0.210E+02     0.285
+   2   11   2  0.00004 0.110E+03     0.011
+   3   12   3  0.00004 0.669E+02     0.011
+   4   13   1  0.21603 0.178E+02     0.410
+   5   14   2  0.21603 0.921E+02     0.015
+   6   15   3  0.21603 0.558E+02     0.014
+   7   16   4  0.10801 0.558E+02     0.014
+   8   17   1  0.05805 0.155E+02     0.543
+   9   18   2  0.05805 0.793E+02     0.024
+  10   19   3  0.05805 0.479E+02     0.014
+  11   20   4  0.05805 0.479E+02     0.014
+  12   72   1  0.00129 0.671E+01     3.203
+  13   73   2  0.00129 0.271E+02     0.326
+  14   74   3  0.00129 0.142E+02     0.251
+  15   75   4  0.00257 0.142E+02     0.249
+  16   76   5  0.00129 0.889E+02     0.029
+  17   77   6  0.00129 0.606E+02     0.016
+  18   78   7  0.00257 0.606E+02     0.016
+ ...... Done.
+
+Output from subroutine EDGSET:
+==============================
+ Atomic relaxations requested! 
+
+ Reading simplified photo-absorption data ..... Done
+
+ Reading simplified relaxation data ..... Done
+
+ Reading parametrized XCOM photo cross section data ..... Done
+
+ Reading EADL relaxation data ......
+  Z =   1 has  1 shells
+  Z =   8 has  4 shells
+  Z =   6 has  4 shells
+  Z =   7 has  4 shells
+  Z =  18 has  7 shells
+ ...... Done.
+
+EGSnrc SUCCESSFULLY 'HATCHED' FOR     2 MEDIA.
+ quality_test                                                                    
+ *******************************************************************************
+ *                                                                             *
+ *                                                                             *
+ *                               ************                                  *
+ *                               *          *                                  *
+ *                               * SPRRZnrc *                                  *
+ *                               *          *                                  *
+ *                               ************                                  *
+ *                                                                             *
+ * Cylindrical-geometryEGSnrc user-code for scoring stopping power ratios      *
+ *                                                                             *
+ *   SPRRZnrc was developed by the National Research Council of Canada         *
+ *                                                                             *
+ *     It uses the EGSnrc Code System developed at NRC                         *
+ *     (based on theEGS4 Code System Carlo developed by SLAC and NRC)          *
+ *           running on linux (test)                                           *
+ *                                                                             *
+ *                                                    Thu Aug 23 18:19:55 2018 *
+ *******************************************************************************
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon cross sections                                      si
+ Compton cross sections                                     default
+ Photon transport cutoff(MeV)                                Set in regions
+ Pair angular sampling                                       SIM
+ Pair cross sections                                         BH 
+ Triplet production                                          Off
+ Bound Compton scattering                                    ON            
+ Radiative Compton corrections                               Off           
+ Rayleigh scattering                                         OFF           
+ Atomic relaxations                                          EADL          
+ Photoelectron angular sampling                              ON            
+
+ Electron transport cutoff(MeV)                              Set in regions
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             KM 
+ Spin effects                                                On
+ Electron Impact Ionization                                  Off
+ Maxium electron step in cm (SMAX)                           Set in regions
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 EXACT     
+ Skin-depth for boundary crossing (MFP)                      3.000    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+
+ *******************************************************************************
+
+                   MONTE CARLO, TRANSPORT, AND SCATTER CONTROLS
+
+ *******************************************************************************
+
+                   Max # of histories to run             1000000
+                   Max # of histories to analyze         1000000
+                   incident charge                             0
+                   spr scored in all regions
+                   spr plotted in cylinders:
+                              1
+                   spr plotted in slabs:
+                              1
+                   Spectrum file and title:
+                  /home/rwtownson/EGSnrc/HEN_HOUSE//spectra/egsnrc/mohan6.spectrum
+                   Mohan et al 6 MV spectrum: cts/bin or /MeV
+                     Average spectrum energy is     1.8985
+                     Counts/MeV assumed
+                   Energy dist'n, # of incident energy bins 24
+                    Lower energy of first bin:               0.000 (MeV)
+                   bin    kinetic energy     probability  at prob   at bin
+                     1       0.250           1.027E-03      0.0245      3
+                     2       0.500           3.238E-02      0.7723      3
+                     3       0.750           1.152E-01      0.5985      4
+                     4       1.000           1.152E-01      0.5102      5
+                     5       1.250           1.109E-01      0.6910      6
+                     6       1.500           1.021E-01      0.3854      7
+                     7       1.750           1.021E-01      0.8926      8
+                     8       2.000           6.241E-02      0.4750      9
+                     9       2.250           5.919E-02      0.8867     10
+                    10       2.500           4.668E-02      1.0000      1
+                    11       2.750           3.457E-02      0.8244      3
+                    12       3.000           3.261E-02      0.7778      3
+                    13       3.250           3.711E-02      0.8851      3
+                    14       3.500           2.374E-02      0.5662      3
+                    15       3.750           3.116E-02      0.7433      4
+                    16       4.000           2.443E-02      0.5827      4
+                    17       4.250           2.223E-02      0.5302      4
+                    18       4.500           1.289E-02      0.3074      4
+                    19       4.750           1.046E-02      0.2495      5
+                    20       5.000           1.201E-02      0.2864      5
+                    21       5.250           4.062E-03      0.0969      6
+                    22       5.500           6.788E-03      0.1619      6
+                    23       5.750           2.998E-03      0.0715      7
+                    24       6.000           3.934E-03      0.0938      8
+
+                   Maximum global electron step size        6.940E+00 (cm)
+                   Global electron transport cut-off = AE for each material
+                   Global photon transport cut-off         0.010(MeV)
+                   Min/max photon step forced                   1/     1
+                   Range rejection OFF
+                   Maximum cputime allowed                90.00 (hrs)
+                   Stats in peak region objective           0.00 %
+                     Initial RNG state:            ixx jxx =   97  33
+                   Normal transport without photon regeneration
+                   Atomic relaxations are modelled 
+ *******************************************************************************
+
+                   MATERIAL SUMMARY   2 MATERIALSUSED
+
+ *******************************************************************************
+
+ # MATERIAL  DENSITY(g/cm**3)      AE(MeV)    AP(MeV)         UE(MeV)    UP(MeV)
+ - --------  ----------------      -------    -------         -------    -------
+ 1   H2O521     1.000E+00           0.521      0.010          55.511     55.000
+ 2   AIR521     1.205E-03           0.521      0.010          55.511     55.000
+
+ *******************************************************************************
+
+                             SOURCE PARAMETERS
+
+ *******************************************************************************
+
+    Point source on cyl axis     5.0 cm away, collimated to R =  14.998 cm
+    Incident fluence(at front face on axis) * Solid angle=     4.000E+04
+ \f
+
+                                                      Thu Aug 23 18:19:55 2018
+
+
+ quality_test                                                                   
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+         MASS = MASS OF EACH REGION IN GRAMS                                
+
+         0.0000                 1.0000                15.0000
+    0.0000---------------------------------------------
+          |IRL  2 IZ   1 IX   1 |IRL  8 IZ   1 IX   2 |
+          | / / / /H2O521ICRU   | / / / /H2O521ICRU   |
+          |  MASS   1.571E+01   |  MASS   3.519E+03   |
+    5.0000---------------------------------------------
+          |IRL  3 IZ   2 IX   1 |IRL  9 IZ   2 IX   2 |
+          | / / / /H2O521ICRU   | / / / /H2O521ICRU   |
+          |  MASS   1.571E+01   |  MASS   3.519E+03   |
+   10.0000---------------------------------------------
+          |IRL  4 IZ   3 IX   1 |IRL 10 IZ   3 IX   2 |
+          | / / / /H2O521ICRU   | / / / /H2O521ICRU   |
+          |  MASS   1.571E+01   |  MASS   3.519E+03   |
+   15.0000---------------------------------------------
+          |IRL  5 IZ   4 IX   1 |IRL 11 IZ   4 IX   2 |
+          | / / / /H2O521ICRU   | / / / /H2O521ICRU   |
+          |  MASS   1.571E+01   |  MASS   3.519E+03   |
+   20.0000---------------------------------------------
+          |IRL  6 IZ   5 IX   1 |IRL 12 IZ   5 IX   2 |
+          | / / / /H2O521ICRU   | / / / /H2O521ICRU   |
+          |  MASS   1.571E+01   |  MASS   3.519E+03   |
+   25.0000---------------------------------------------
+          |IRL  7 IZ   6 IX   1 |IRL 13 IZ   6 IX   2 |
+          | / / / /H2O521ICRU   | / / / /H2O521ICRU   |
+          |  MASS   1.571E+01   |  MASS   3.519E+03   |
+   30.0000---------------------------------------------
+ \f
+1 
+Thu Aug 23 18:19:55 2018
+ *******************************************************************************
+                   EXECUTION INFORMATION AND WARNING MESSAGES
+ *******************************************************************************
+
+ SPRRZnrc(EGSnrc)  
+     on linux(test) 
+
+ ********* NEW INPUT FILE *********
+
+
+********* FINAL RANDOM NUMBER STATE: ixx jxx =   80  16  *********
+
+ Finished simulations:
+   Elapsed, CPU times,ratio=     35.9    35.5 (   0.010 hr)       1.01
+                              Histories per hour=    101329890.0
+1quality_test                                                                    
+
+ SPRRZnrc(EGSnrc)   
+     on linux(test)                                   Thu Aug 23 18:20:30 2018
+
+                         Total # charged particle steps   3.828E+07 +/- 0.081%
+            # of charged particle steps/initial history   3.828E+01 +/- 0.081%
+ # of presta-II steps/total # of charged particle steps       0.975 +/- 0.081%
+ \f
+                                                      Thu Aug 23 18:20:30 2018
+
+
+ quality_test                                                                   
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+             spr: spr local medium/medium 2 (with TE)                         
+             ste: spr sans TRACK ENDS                                         
+
+         0.0000                 1.0000                15.0000
+    0.0000----------------------------------------------
+          |IRL  2 IZ   1 IX   1  |IRL  8 IZ   1 IX   2 |
+          |spr: 1.122E+00+- 0.1% |spr: 1.121E+00+- 0.0%|
+          |ste: 1.121E+00+- 0.1% |ste: 1.120E+00+- 0.0%|
+    5.0000----------------------------------------------
+          |IRL  3 IZ   2 IX   1  |IRL  9 IZ   2 IX   2 |
+          |spr: 1.121E+00+- 0.2% |spr: 1.122E+00+- 0.0%|
+          |ste: 1.119E+00+- 0.2% |ste: 1.120E+00+- 0.0%|
+   10.0000----------------------------------------------
+          |IRL  4 IZ   3 IX   1  |IRL 10 IZ   3 IX   2 |
+          |spr: 1.121E+00+- 0.2% |spr: 1.122E+00+- 0.0%|
+          |ste: 1.120E+00+- 0.2% |ste: 1.120E+00+- 0.0%|
+   15.0000----------------------------------------------
+          |IRL  5 IZ   4 IX   1  |IRL 11 IZ   4 IX   2 |
+          |spr: 1.126E+00+- 0.3% |spr: 1.122E+00+- 0.0%|
+          |ste: 1.125E+00+- 0.3% |ste: 1.121E+00+- 0.0%|
+   20.0000----------------------------------------------
+          |IRL  6 IZ   5 IX   1  |IRL 12 IZ   5 IX   2 |
+          |spr: 1.122E+00+- 0.3% |spr: 1.123E+00+- 0.0%|
+          |ste: 1.120E+00+- 0.3% |ste: 1.121E+00+- 0.0%|
+   25.0000----------------------------------------------
+          |IRL  7 IZ   6 IX   1  |IRL 13 IZ   6 IX   2 |
+          |spr: 1.122E+00+- 0.4% |spr: 1.122E+00+- 0.0%|
+          |ste: 1.121E+00+- 0.4% |ste: 1.120E+00+- 0.0%|
+   30.0000----------------------------------------------
+ \f
+1quality_test                                                                    
+
+ SPRRZnrc(EGSnrc)   
+     on linux(test)                                   Thu Aug 23 18:20:30 2018
+
+               ***** spr with track ends *****
+
+ Region           depth (cm)       spr (medium / med2)   dose/inc flu. Gy.cm**2
+
+ NZ,NR=  1,  1   0.000 -   5.000   1.12216 (+/- 0.00088)    3.141E-12(+/- 4.6%)
+ NZ,NR=  2,  1   5.000 -  10.000   1.12078 (+/- 0.00183)    1.143E-12(+/- 7.7%)
+ NZ,NR=  3,  1  10.000 -  15.000   1.12127 (+/- 0.00258)    5.016E-13(+/-11.9%)
+ NZ,NR=  4,  1  15.000 -  20.000   1.12615 (+/- 0.00283)    2.231E-13(+/-15.2%)
+ NZ,NR=  5,  1  20.000 -  25.000   1.12178 (+/- 0.00344)    1.327E-13(+/-21.6%)
+ NZ,NR=  6,  1  25.000 -  30.000   1.12232 (+/- 0.00441)    1.185E-13(+/-22.0%)
+ NZ,NR=  1,  2   0.000 -   5.000   1.12114 (+/- 0.00005)    1.246E-12(+/- 0.3%)
+ NZ,NR=  2,  2   5.000 -  10.000   1.12152 (+/- 0.00009)    6.281E-13(+/- 0.5%)
+ NZ,NR=  3,  2  10.000 -  15.000   1.12181 (+/- 0.00015)    3.425E-13(+/- 0.8%)
+ NZ,NR=  4,  2  15.000 -  20.000   1.12244 (+/- 0.00021)    1.990E-13(+/- 1.1%)
+ NZ,NR=  5,  2  20.000 -  25.000   1.12262 (+/- 0.00029)    1.180E-13(+/- 1.5%)
+ NZ,NR=  6,  2  25.000 -  30.000   1.12204 (+/- 0.00037)    7.633E-14(+/- 2.0%)
+
+
+
+               ***** spr without track ends *****
+
+ Region           depth (cm)       spr (medium / med2)   dose/inc flu. Gy.cm**2
+
+ NZ,NR=  1,  1   0.000 -   5.000   1.12077 (+/- 0.00094)
+ NZ,NR=  2,  1   5.000 -  10.000   1.11919 (+/- 0.00194)
+ NZ,NR=  3,  1  10.000 -  15.000   1.11968 (+/- 0.00275)
+ NZ,NR=  4,  1  15.000 -  20.000   1.12471 (+/- 0.00305)
+ NZ,NR=  5,  1  20.000 -  25.000   1.12012 (+/- 0.00363)
+ NZ,NR=  6,  1  25.000 -  30.000   1.12082 (+/- 0.00465)
+ NZ,NR=  1,  2   0.000 -   5.000   1.11966 (+/- 0.00006)
+ NZ,NR=  2,  2   5.000 -  10.000   1.11999 (+/- 0.00010)
+ NZ,NR=  3,  2  10.000 -  15.000   1.12023 (+/- 0.00016)
+ NZ,NR=  4,  2  15.000 -  20.000   1.12087 (+/- 0.00022)
+ NZ,NR=  5,  2  20.000 -  25.000   1.12103 (+/- 0.00031)
+ NZ,NR=  6,  2  25.000 -  30.000   1.12045 (+/- 0.00040)
+1quality_test                                                                    
+
+ SPRRZnrc(EGSnrc)   
+     on linux(test)                                   Thu Aug 23 18:20:30 2018
+
+         **** percentage of dose in local medium from stoppers  ****
+
+ Included fraction of stoppers includes thosestoppers that come from
+                   electrons/positronsslowing down across delta.
+ Excluded fraction of stoppers are those electrons created below delta
+                   and photons created below AP
+
+   Region         depth (cm)            included         excluded
+
+ NZ,NR=  1,  1    0.00 -    5.00    6.600 (+/-  0.097 )  0.113 (+/-  0.010 )
+ NZ,NR=  2,  1    5.00 -   10.00    7.035 (+/-  0.178 )  0.253 (+/-  0.029 )
+ NZ,NR=  3,  1   10.00 -   15.00    7.201 (+/-  0.267 )  0.402 (+/-  0.061 )
+ NZ,NR=  4,  1   15.00 -   20.00    8.358 (+/-  0.464 )  0.760 (+/-  0.148 )
+ NZ,NR=  5,  1   20.00 -   25.00    7.641 (+/-  0.604 )  0.741 (+/-  0.197 )
+ NZ,NR=  6,  1   25.00 -   30.00    7.123 (+/-  0.600 )  0.451 (+/-  0.143 )
+ NZ,NR=  1,  2    0.00 -    5.00    6.701 (+/-  0.006 )  0.138 (+/-  0.001 )
+ NZ,NR=  2,  2    5.00 -   10.00    7.044 (+/-  0.011 )  0.262 (+/-  0.003 )
+ NZ,NR=  3,  2   10.00 -   15.00    7.317 (+/-  0.019 )  0.383 (+/-  0.005 )
+ NZ,NR=  4,  2   15.00 -   20.00    7.504 (+/-  0.027 )  0.457 (+/-  0.008 )
+ NZ,NR=  5,  2   20.00 -   25.00    7.607 (+/-  0.038 )  0.512 (+/-  0.011 )
+ NZ,NR=  6,  2   25.00 -   30.00    7.435 (+/-  0.046 )  0.405 (+/-  0.012 )
+\f
+
+
+
+ Fraction of tracks treated as trackends which were
+                    really steps crossing DELTA =     0.500
+ Usually close to 0.5 because each crosser turns into a stopper
+
+
+ END OF RUN           Thu Aug 23 18:20:30 2018
+1
+
+
+================================================================================
+Finished simulation
+
+  Elapsed time:                   36.1 s (  0.010 h)
+  CPU time:                       35.6 s (  0.010 h)
+  Ratio:                          1.012
+
+
+End of run                                             Thu Aug 23 18:20:30 2018
+================================================================================

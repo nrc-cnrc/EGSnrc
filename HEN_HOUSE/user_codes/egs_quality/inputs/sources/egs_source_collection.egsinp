@@ -1,0 +1,64 @@
+###############################################################################
+#
+#  EGSnrc egs_quality input
+#  Copyright (C) 2017 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Reid Townson, 2017
+#
+#  Contributors:
+#
+###############################################################################
+#
+#
+#
+#
+###############################################################################
+
+:start source definition:
+    :start source:
+        library     = egs_point_source
+        name        = p1
+        position    = -2 0 0
+        :start spectrum:
+            type    = monoenergetic
+            energy  = 1
+        :stop spectrum:
+        charge      = 0
+    :stop source:
+    :start source:
+        library     = egs_point_source
+        name        = p2
+        position    = 2 0 0
+        :start spectrum:
+            type    = monoenergetic
+            energy  = 1
+        :stop spectrum:
+        charge      = 0
+    :stop source:
+    :start source:
+        library = egs_source_collection
+        name = quality_source
+        source names = p1 p2
+        weights = 0.1 0.9
+    :stop source:
+
+    simulation source = quality_source
+
+:stop source definition:

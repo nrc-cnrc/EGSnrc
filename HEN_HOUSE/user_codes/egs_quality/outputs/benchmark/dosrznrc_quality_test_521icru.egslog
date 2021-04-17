@@ -1,0 +1,1463 @@
+ \f
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                         
+ *******************************************************************************
+ *                                                                             *
+ *                                                                             *
+ *                               ************                                  *
+ *                               *          *                                  *
+ *                               * DOSRZnrc *                                  *
+ *                               *          *                                  *
+ *                               ************                                  *
+ *                                                                             *
+ *           Cylindrical-geometry dose-scoring EGSnrc user-code                *
+ *                                                                             *
+ *   DOSRZnrc was developed by the National Research Council of Canada         *
+ *                                                                             *
+ *     It uses the EGSnrc CodeSystem developed at NRC                          *
+ *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)         *
+ *  running on linux (test)                                                    *
+ *                                                                             *
+ *                                                    Thu Aug 23 18:19:40 2018 *
+ *******************************************************************************
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon cross sections                                      xcom
+ Compton cross sections                                     default
+ Photon transport cutoff(MeV)                                    0.1000E-01
+ Pair angular sampling                                       SIM
+ Pair cross sections                                         BH 
+ Triplet production                                          OFF
+ Bound Compton scattering                                    NOREJ         
+ Radiative Compton corrections                               OFF           
+ Rayleigh scattering                                         ON            
+ Atomic relaxations                                          EADL          
+ Photoelectron angular sampling                              ON            
+
+ Electron transport cutoff(MeV)                               0.5210
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             KM 
+ Spin effects                                                On
+ Electron Impact Ionization                                  Off
+ Maxium electron step in cm (SMAX)                               0.1000E+11
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 EXACT     
+ Skin-depth for boundary crossing (MFP)                      3.000    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+                   MONTE CARLO, TRANSPORT, AND SCATTER CONTROLS
+
+ *******************************************************************************
+
+                   MAX # OF HISTORIES TO RUN              100000
+                   MAX # OF HISTORIES TO ANALYZE          100000
+                   INCIDENT CHARGE                             0
+                   INCIDENT KINETIC ENERGY                  1.250 (MeV)
+                   GLOBAL ELECTRON TRANSPORT CUT-OFF       0.521 (MeV)
+                   GLOBAL PHOTON TRANSPORT CUT-OFF         0.010 (MeV)
+                   MIN/MAX PHOTON STEP FORCED                   1/     1
+                   No cross section enhancement used
+                   RANGE REJECTION SWITCH                  OFF
+                   RAYLEIGH SCATTERING INCLUDED
+                   MAXIMUM CPUTIME ALLOWED                90.00 (HRS)
+                   STATS IN PEAK REGION OBJECTIVE           0.00 %
+                   1ST INITIAL RANDOM NUMBER SEED                  1
+                   2ND INITIAL RANDOM NUMBER SEED                  4
+                   Bremsstrahlung splitting                OFF
+                   Charged particle Russian Roulette       OFF
+                   # ZONES ELEC ENERGY LOSS/STEP ALTERED   NONE
+                   # ZONES MAX ELEC STEP SIZE ALTERED      NONE
+                   NORMAL ELECTRON TRANSPORT WITH DISCRETE INTERACTIONS
+                    The following regions have atomic relaxations on: 
+                            1 --   301
+ *******************************************************************************
+
+                   MATERIAL SUMMARY   2 MATERIALS USED
+
+ *******************************************************************************
+
+ # MATERIAL  DENSITY(g/cm**3)      AE(MeV)    AP(MeV)         UE(MeV)    UP(MeV)
+ - --------  ----------------      -------    -------         -------    -------
+ 1   H2O521     1.000E+00           0.521      0.010          55.511     55.000
+ 2   AIR521     1.205E-03           0.521      0.010          55.511     55.000
+
+ *******************************************************************************
+
+                             SOURCE PARAMETERS
+
+ *******************************************************************************
+
+                   Parallel beam on front face, radius=   4.999cm
+                              X-axis direction cosine=    0.0000
+                              Y-axis direction cosine=    0.0000
+                              Z-axis direction cosine=    1.0000
+                              Incident fluence=    1.273E+03/cm**2
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+         MASS = MASS OF EACH REGION IN GRAMS                                
+
+         0.0000                 1.0000                 2.0000           5.0000
+    0.0000-------------------------------------------------------------------
+          |IRL  2 IZ   1 IX   1 |IRL 62 IZ   1 IX   2 |IRL122 IZ   1 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+    1.0000-------------------------------------------------------------------
+          |IRL  3 IZ   2 IX   1 |IRL 63 IZ   2 IX   2 |IRL123 IZ   2 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+    2.0000-------------------------------------------------------------------
+          |IRL  4 IZ   3 IX   1 |IRL 64 IZ   3 IX   2 |IRL124 IZ   3 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+    3.0000-------------------------------------------------------------------
+          |IRL  5 IZ   4 IX   1 |IRL 65 IZ   4 IX   2 |IRL125 IZ   4 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+    4.0000-------------------------------------------------------------------
+          |IRL  6 IZ   5 IX   1 |IRL 66 IZ   5 IX   2 |IRL126 IZ   5 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+    5.0000-------------------------------------------------------------------
+          |IRL  7 IZ   6 IX   1 |IRL 67 IZ   6 IX   2 |IRL127 IZ   6 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+    6.0000-------------------------------------------------------------------
+          |IRL  8 IZ   7 IX   1 |IRL 68 IZ   7 IX   2 |IRL128 IZ   7 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+    7.0000-------------------------------------------------------------------
+          |IRL  9 IZ   8 IX   1 |IRL 69 IZ   8 IX   2 |IRL129 IZ   8 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+    8.0000-------------------------------------------------------------------
+          |IRL 10 IZ   9 IX   1 |IRL 70 IZ   9 IX   2 |IRL130 IZ   9 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+    9.0000-------------------------------------------------------------------
+          |IRL 11 IZ  10 IX   1 |IRL 71 IZ  10 IX   2 |IRL131 IZ  10 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   3.142E+00   |  MASS   9.425E+00   |  MASS   6.597E+01   |
+   10.0000-------------------------------------------------------------------
+          |IRL 12 IZ  11 IX   1 |IRL 72 IZ  11 IX   2 |IRL132 IZ  11 IX   3 |
+          | /D/ / /AIR521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   7.570E-03   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   12.0000-------------------------------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         0.0000                 1.0000                 2.0000           5.0000
+   12.0000-------------------------------------------------------------------
+          |IRL 13 IZ  12 IX   1 |IRL 73 IZ  12 IX   2 |IRL133 IZ  12 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   14.0000-------------------------------------------------------------------
+          |IRL 14 IZ  13 IX   1 |IRL 74 IZ  13 IX   2 |IRL134 IZ  13 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   16.0000-------------------------------------------------------------------
+          |IRL 15 IZ  14 IX   1 |IRL 75 IZ  14 IX   2 |IRL135 IZ  14 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   18.0000-------------------------------------------------------------------
+          |IRL 16 IZ  15 IX   1 |IRL 76 IZ  15 IX   2 |IRL136 IZ  15 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   20.0000-------------------------------------------------------------------
+          |IRL 17 IZ  16 IX   1 |IRL 77 IZ  16 IX   2 |IRL137 IZ  16 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   22.0000-------------------------------------------------------------------
+          |IRL 18 IZ  17 IX   1 |IRL 78 IZ  17 IX   2 |IRL138 IZ  17 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   24.0000-------------------------------------------------------------------
+          |IRL 19 IZ  18 IX   1 |IRL 79 IZ  18 IX   2 |IRL139 IZ  18 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   26.0000-------------------------------------------------------------------
+          |IRL 20 IZ  19 IX   1 |IRL 80 IZ  19 IX   2 |IRL140 IZ  19 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   28.0000-------------------------------------------------------------------
+          |IRL 21 IZ  20 IX   1 |IRL 81 IZ  20 IX   2 |IRL141 IZ  20 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   30.0000-------------------------------------------------------------------
+          |IRL 22 IZ  21 IX   1 |IRL 82 IZ  21 IX   2 |IRL142 IZ  21 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   32.0000-------------------------------------------------------------------
+          |IRL 23 IZ  22 IX   1 |IRL 83 IZ  22 IX   2 |IRL143 IZ  22 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   34.0000-------------------------------------------------------------------
+          |IRL 24 IZ  23 IX   1 |IRL 84 IZ  23 IX   2 |IRL144 IZ  23 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   36.0000-------------------------------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         0.0000                 1.0000                 2.0000           5.0000
+   36.0000-------------------------------------------------------------------
+          |IRL 25 IZ  24 IX   1 |IRL 85 IZ  24 IX   2 |IRL145 IZ  24 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   38.0000-------------------------------------------------------------------
+          |IRL 26 IZ  25 IX   1 |IRL 86 IZ  25 IX   2 |IRL146 IZ  25 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   40.0000-------------------------------------------------------------------
+          |IRL 27 IZ  26 IX   1 |IRL 87 IZ  26 IX   2 |IRL147 IZ  26 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   42.0000-------------------------------------------------------------------
+          |IRL 28 IZ  27 IX   1 |IRL 88 IZ  27 IX   2 |IRL148 IZ  27 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   44.0000-------------------------------------------------------------------
+          |IRL 29 IZ  28 IX   1 |IRL 89 IZ  28 IX   2 |IRL149 IZ  28 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   46.0000-------------------------------------------------------------------
+          |IRL 30 IZ  29 IX   1 |IRL 90 IZ  29 IX   2 |IRL150 IZ  29 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   48.0000-------------------------------------------------------------------
+          |IRL 31 IZ  30 IX   1 |IRL 91 IZ  30 IX   2 |IRL151 IZ  30 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   50.0000-------------------------------------------------------------------
+          |IRL 32 IZ  31 IX   1 |IRL 92 IZ  31 IX   2 |IRL152 IZ  31 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   52.0000-------------------------------------------------------------------
+          |IRL 33 IZ  32 IX   1 |IRL 93 IZ  32 IX   2 |IRL153 IZ  32 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   54.0000-------------------------------------------------------------------
+          |IRL 34 IZ  33 IX   1 |IRL 94 IZ  33 IX   2 |IRL154 IZ  33 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   56.0000-------------------------------------------------------------------
+          |IRL 35 IZ  34 IX   1 |IRL 95 IZ  34 IX   2 |IRL155 IZ  34 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   58.0000-------------------------------------------------------------------
+          |IRL 36 IZ  35 IX   1 |IRL 96 IZ  35 IX   2 |IRL156 IZ  35 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   60.0000-------------------------------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         0.0000                 1.0000                 2.0000           5.0000
+   60.0000-------------------------------------------------------------------
+          |IRL 37 IZ  36 IX   1 |IRL 97 IZ  36 IX   2 |IRL157 IZ  36 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   62.0000-------------------------------------------------------------------
+          |IRL 38 IZ  37 IX   1 |IRL 98 IZ  37 IX   2 |IRL158 IZ  37 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   64.0000-------------------------------------------------------------------
+          |IRL 39 IZ  38 IX   1 |IRL 99 IZ  38 IX   2 |IRL159 IZ  38 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   66.0000-------------------------------------------------------------------
+          |IRL 40 IZ  39 IX   1 |IRL100 IZ  39 IX   2 |IRL160 IZ  39 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   68.0000-------------------------------------------------------------------
+          |IRL 41 IZ  40 IX   1 |IRL101 IZ  40 IX   2 |IRL161 IZ  40 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   70.0000-------------------------------------------------------------------
+          |IRL 42 IZ  41 IX   1 |IRL102 IZ  41 IX   2 |IRL162 IZ  41 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   72.0000-------------------------------------------------------------------
+          |IRL 43 IZ  42 IX   1 |IRL103 IZ  42 IX   2 |IRL163 IZ  42 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   74.0000-------------------------------------------------------------------
+          |IRL 44 IZ  43 IX   1 |IRL104 IZ  43 IX   2 |IRL164 IZ  43 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   76.0000-------------------------------------------------------------------
+          |IRL 45 IZ  44 IX   1 |IRL105 IZ  44 IX   2 |IRL165 IZ  44 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   78.0000-------------------------------------------------------------------
+          |IRL 46 IZ  45 IX   1 |IRL106 IZ  45 IX   2 |IRL166 IZ  45 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   80.0000-------------------------------------------------------------------
+          |IRL 47 IZ  46 IX   1 |IRL107 IZ  46 IX   2 |IRL167 IZ  46 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   82.0000-------------------------------------------------------------------
+          |IRL 48 IZ  47 IX   1 |IRL108 IZ  47 IX   2 |IRL168 IZ  47 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   84.0000-------------------------------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         0.0000                 1.0000                 2.0000           5.0000
+   84.0000-------------------------------------------------------------------
+          |IRL 49 IZ  48 IX   1 |IRL109 IZ  48 IX   2 |IRL169 IZ  48 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   86.0000-------------------------------------------------------------------
+          |IRL 50 IZ  49 IX   1 |IRL110 IZ  49 IX   2 |IRL170 IZ  49 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   88.0000-------------------------------------------------------------------
+          |IRL 51 IZ  50 IX   1 |IRL111 IZ  50 IX   2 |IRL171 IZ  50 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   90.0000-------------------------------------------------------------------
+          |IRL 52 IZ  51 IX   1 |IRL112 IZ  51 IX   2 |IRL172 IZ  51 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   92.0000-------------------------------------------------------------------
+          |IRL 53 IZ  52 IX   1 |IRL113 IZ  52 IX   2 |IRL173 IZ  52 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   94.0000-------------------------------------------------------------------
+          |IRL 54 IZ  53 IX   1 |IRL114 IZ  53 IX   2 |IRL174 IZ  53 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   96.0000-------------------------------------------------------------------
+          |IRL 55 IZ  54 IX   1 |IRL115 IZ  54 IX   2 |IRL175 IZ  54 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+   98.0000-------------------------------------------------------------------
+          |IRL 56 IZ  55 IX   1 |IRL116 IZ  55 IX   2 |IRL176 IZ  55 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+  100.0000-------------------------------------------------------------------
+          |IRL 57 IZ  56 IX   1 |IRL117 IZ  56 IX   2 |IRL177 IZ  56 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+  102.0000-------------------------------------------------------------------
+          |IRL 58 IZ  57 IX   1 |IRL118 IZ  57 IX   2 |IRL178 IZ  57 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+  104.0000-------------------------------------------------------------------
+          |IRL 59 IZ  58 IX   1 |IRL119 IZ  58 IX   2 |IRL179 IZ  58 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+  106.0000-------------------------------------------------------------------
+          |IRL 60 IZ  59 IX   1 |IRL120 IZ  59 IX   2 |IRL180 IZ  59 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+  108.0000-------------------------------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         0.0000                 1.0000                 2.0000           5.0000
+  108.0000-------------------------------------------------------------------
+          |IRL 61 IZ  60 IX   1 |IRL121 IZ  60 IX   2 |IRL181 IZ  60 IX   3 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   6.283E+00   |  MASS   1.885E+01   |  MASS   1.319E+02   |
+  110.0000-------------------------------------------------------------------
+
+         5.0000                10.0000               100.0000
+    0.0000---------------------------------------------
+          |IRL182 IZ   1 IX   4 |IRL242 IZ   1 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+    1.0000---------------------------------------------
+          |IRL183 IZ   2 IX   4 |IRL243 IZ   2 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+    2.0000---------------------------------------------
+          |IRL184 IZ   3 IX   4 |IRL244 IZ   3 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+    3.0000---------------------------------------------
+          |IRL185 IZ   4 IX   4 |IRL245 IZ   4 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+    4.0000---------------------------------------------
+          |IRL186 IZ   5 IX   4 |IRL246 IZ   5 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+    5.0000---------------------------------------------
+          |IRL187 IZ   6 IX   4 |IRL247 IZ   6 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+    6.0000---------------------------------------------
+          |IRL188 IZ   7 IX   4 |IRL248 IZ   7 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+    7.0000---------------------------------------------
+          |IRL189 IZ   8 IX   4 |IRL249 IZ   8 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+    8.0000---------------------------------------------
+          |IRL190 IZ   9 IX   4 |IRL250 IZ   9 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+    9.0000---------------------------------------------
+          |IRL191 IZ  10 IX   4 |IRL251 IZ  10 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   2.356E+02   |  MASS   3.110E+04   |
+   10.0000---------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         5.0000                10.0000               100.0000
+   10.0000---------------------------------------------
+          |IRL192 IZ  11 IX   4 |IRL252 IZ  11 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   12.0000---------------------------------------------
+          |IRL193 IZ  12 IX   4 |IRL253 IZ  12 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   14.0000---------------------------------------------
+          |IRL194 IZ  13 IX   4 |IRL254 IZ  13 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   16.0000---------------------------------------------
+          |IRL195 IZ  14 IX   4 |IRL255 IZ  14 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   18.0000---------------------------------------------
+          |IRL196 IZ  15 IX   4 |IRL256 IZ  15 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   20.0000---------------------------------------------
+          |IRL197 IZ  16 IX   4 |IRL257 IZ  16 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   22.0000---------------------------------------------
+          |IRL198 IZ  17 IX   4 |IRL258 IZ  17 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   24.0000---------------------------------------------
+          |IRL199 IZ  18 IX   4 |IRL259 IZ  18 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   26.0000---------------------------------------------
+          |IRL200 IZ  19 IX   4 |IRL260 IZ  19 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   28.0000---------------------------------------------
+          |IRL201 IZ  20 IX   4 |IRL261 IZ  20 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   30.0000---------------------------------------------
+          |IRL202 IZ  21 IX   4 |IRL262 IZ  21 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   32.0000---------------------------------------------
+          |IRL203 IZ  22 IX   4 |IRL263 IZ  22 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   34.0000---------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         5.0000                10.0000               100.0000
+   34.0000---------------------------------------------
+          |IRL204 IZ  23 IX   4 |IRL264 IZ  23 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   36.0000---------------------------------------------
+          |IRL205 IZ  24 IX   4 |IRL265 IZ  24 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   38.0000---------------------------------------------
+          |IRL206 IZ  25 IX   4 |IRL266 IZ  25 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   40.0000---------------------------------------------
+          |IRL207 IZ  26 IX   4 |IRL267 IZ  26 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   42.0000---------------------------------------------
+          |IRL208 IZ  27 IX   4 |IRL268 IZ  27 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   44.0000---------------------------------------------
+          |IRL209 IZ  28 IX   4 |IRL269 IZ  28 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   46.0000---------------------------------------------
+          |IRL210 IZ  29 IX   4 |IRL270 IZ  29 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   48.0000---------------------------------------------
+          |IRL211 IZ  30 IX   4 |IRL271 IZ  30 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   50.0000---------------------------------------------
+          |IRL212 IZ  31 IX   4 |IRL272 IZ  31 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   52.0000---------------------------------------------
+          |IRL213 IZ  32 IX   4 |IRL273 IZ  32 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   54.0000---------------------------------------------
+          |IRL214 IZ  33 IX   4 |IRL274 IZ  33 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   56.0000---------------------------------------------
+          |IRL215 IZ  34 IX   4 |IRL275 IZ  34 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   58.0000---------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         5.0000                10.0000               100.0000
+   58.0000---------------------------------------------
+          |IRL216 IZ  35 IX   4 |IRL276 IZ  35 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   60.0000---------------------------------------------
+          |IRL217 IZ  36 IX   4 |IRL277 IZ  36 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   62.0000---------------------------------------------
+          |IRL218 IZ  37 IX   4 |IRL278 IZ  37 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   64.0000---------------------------------------------
+          |IRL219 IZ  38 IX   4 |IRL279 IZ  38 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   66.0000---------------------------------------------
+          |IRL220 IZ  39 IX   4 |IRL280 IZ  39 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   68.0000---------------------------------------------
+          |IRL221 IZ  40 IX   4 |IRL281 IZ  40 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   70.0000---------------------------------------------
+          |IRL222 IZ  41 IX   4 |IRL282 IZ  41 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   72.0000---------------------------------------------
+          |IRL223 IZ  42 IX   4 |IRL283 IZ  42 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   74.0000---------------------------------------------
+          |IRL224 IZ  43 IX   4 |IRL284 IZ  43 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   76.0000---------------------------------------------
+          |IRL225 IZ  44 IX   4 |IRL285 IZ  44 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   78.0000---------------------------------------------
+          |IRL226 IZ  45 IX   4 |IRL286 IZ  45 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   80.0000---------------------------------------------
+          |IRL227 IZ  46 IX   4 |IRL287 IZ  46 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   82.0000---------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         5.0000                10.0000               100.0000
+   82.0000---------------------------------------------
+          |IRL228 IZ  47 IX   4 |IRL288 IZ  47 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   84.0000---------------------------------------------
+          |IRL229 IZ  48 IX   4 |IRL289 IZ  48 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   86.0000---------------------------------------------
+          |IRL230 IZ  49 IX   4 |IRL290 IZ  49 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   88.0000---------------------------------------------
+          |IRL231 IZ  50 IX   4 |IRL291 IZ  50 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   90.0000---------------------------------------------
+          |IRL232 IZ  51 IX   4 |IRL292 IZ  51 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   92.0000---------------------------------------------
+          |IRL233 IZ  52 IX   4 |IRL293 IZ  52 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   94.0000---------------------------------------------
+          |IRL234 IZ  53 IX   4 |IRL294 IZ  53 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   96.0000---------------------------------------------
+          |IRL235 IZ  54 IX   4 |IRL295 IZ  54 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+   98.0000---------------------------------------------
+          |IRL236 IZ  55 IX   4 |IRL296 IZ  55 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+  100.0000---------------------------------------------
+          |IRL237 IZ  56 IX   4 |IRL297 IZ  56 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+  102.0000---------------------------------------------
+          |IRL238 IZ  57 IX   4 |IRL298 IZ  57 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+  104.0000---------------------------------------------
+          |IRL239 IZ  58 IX   4 |IRL299 IZ  58 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+  106.0000---------------------------------------------
+ \f
+
+                                                      Thu Aug 23 18:19:40 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+
+         5.0000                10.0000               100.0000
+  106.0000---------------------------------------------
+          |IRL240 IZ  59 IX   4 |IRL300 IZ  59 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+  108.0000---------------------------------------------
+          |IRL241 IZ  60 IX   4 |IRL301 IZ  60 IX   5 |
+          | /D/ / /H2O521ICRU   | /D/ / /H2O521ICRU   |
+          |  MASS   4.712E+02   |  MASS   6.220E+04   |
+  110.0000---------------------------------------------
+ \f
+  
+Thu Aug 23 18:19:40 2018
+
+ *******************************************************************************
+
+                   EXECUTION INFORMATION AND WARNING MESSAGES
+
+ *******************************************************************************
+
+ USING DOSRZnrc(EGSnrc)   
+
+ ********* NEW INPUT FILE *********
+
+
+ *********DESIRED STATISTICAL ACCURACY OF  0.000% NOT REACHED*********
+ STATS IN PEAK DOSE REGION=  6.506 % AFTER 10 BATCHES
+
+********* FINAL RANDOM NUMBER STATE: ixx jxx =   33  66  *********
+
+ Finished simulations: elapsed,cputime,ratio=      7.4     6.9(= 0.00h)    1.08
+
+ cputime per history =   0.00007 sec. number of historiesper  hour =   52301997.
+\f
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                         
+ Thu Aug 23 18:19:47 2018
+
+
+                             SUMMARY OF DOSE REGION RESULTS
+                             ******************************
+
+                         Total # charged particle steps   7.263E+06 +/- 0.100%
+            # of charged particle steps/initial history   7.263E+01 +/- 0.100%
+ # of presta-II steps/total # of charged particle steps       0.961 +/- 0.100%
+
+                  # charged particle steps in dose reg.   7.263E+06 +/- 0.100%
+                # of steps in dose reg./initial history   7.263E+01 +/- 0.100%
+           # of presta-II steps/# of steps in dose reg.       0.961 +/- 0.100%
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+             T  : Total dose (Gray/incident fluence)                          
+             T-S: Total dose minus stoppers                                   
+
+         0.0000                 1.0000                 2.0000           5.0000
+    0.0000---------------------------------------------------------------------
+          |IRL  2 IZ   1 IX   1  |IRL 62 IZ   1 IX   2  |IRL122 IZ   1 IX   3 |
+          |T  : 5.339E-12+- 7.2% |T  : 5.169E-12+- 4.2% |T  : 5.330E-12+- 1.6%|
+          |T-S: 4.974E-12+- 7.3% |T-S: 4.815E-12+- 4.2% |T-S: 4.963E-12+- 1.6%|
+    1.0000---------------------------------------------------------------------
+          |IRL  3 IZ   2 IX   1  |IRL 63 IZ   2 IX   2  |IRL123 IZ   2 IX   3 |
+          |T  : 6.692E-12+- 6.5% |T  : 6.027E-12+- 3.9% |T  : 5.812E-12+- 1.5%|
+          |T-S: 6.232E-12+- 6.6% |T-S: 5.610E-12+- 3.9% |T-S: 5.410E-12+- 1.5%|
+    2.0000---------------------------------------------------------------------
+          |IRL  4 IZ   3 IX   1  |IRL 64 IZ   3 IX   2  |IRL124 IZ   3 IX   3 |
+          |T  : 6.083E-12+- 6.5% |T  : 5.801E-12+- 3.9% |T  : 5.499E-12+- 1.5%|
+          |T-S: 5.644E-12+- 6.6% |T-S: 5.391E-12+- 3.9% |T-S: 5.115E-12+- 1.5%|
+    3.0000---------------------------------------------------------------------
+          |IRL  5 IZ   4 IX   1  |IRL 65 IZ   4 IX   2  |IRL125 IZ   4 IX   3 |
+          |T  : 5.827E-12+- 6.6% |T  : 5.918E-12+- 3.8% |T  : 5.337E-12+- 1.5%|
+          |T-S: 5.402E-12+- 6.7% |T-S: 5.494E-12+- 3.9% |T-S: 4.955E-12+- 1.6%|
+    4.0000---------------------------------------------------------------------
+          |IRL  6 IZ   5 IX   1  |IRL 66 IZ   5 IX   2  |IRL126 IZ   5 IX   3 |
+          |T  : 5.588E-12+- 6.6% |T  : 5.489E-12+- 4.0% |T  : 5.138E-12+- 1.6%|
+          |T-S: 5.210E-12+- 6.7% |T-S: 5.086E-12+- 4.0% |T-S: 4.773E-12+- 1.6%|
+    5.0000---------------------------------------------------------------------
+          |IRL  7 IZ   6 IX   1  |IRL 67 IZ   6 IX   2  |IRL127 IZ   6 IX   3 |
+          |T  : 5.370E-12+- 7.0% |T  : 5.209E-12+- 4.0% |T  : 5.075E-12+- 1.6%|
+          |T-S: 4.966E-12+- 7.1% |T-S: 4.831E-12+- 4.1% |T-S: 4.716E-12+- 1.6%|
+    6.0000---------------------------------------------------------------------
+          |IRL  8 IZ   7 IX   1  |IRL 68 IZ   7 IX   2  |IRL128 IZ   7 IX   3 |
+          |T  : 5.081E-12+- 7.1% |T  : 5.179E-12+- 4.1% |T  : 4.738E-12+- 1.6%|
+          |T-S: 4.718E-12+- 7.2% |T-S: 4.799E-12+- 4.1% |T-S: 4.398E-12+- 1.6%|
+    7.0000---------------------------------------------------------------------
+          |IRL  9 IZ   8 IX   1  |IRL 69 IZ   8 IX   2  |IRL129 IZ   8 IX   3 |
+          |T  : 4.889E-12+- 7.1% |T  : 4.854E-12+- 4.3% |T  : 4.377E-12+- 1.7%|
+          |T-S: 4.541E-12+- 7.1% |T-S: 4.506E-12+- 4.3% |T-S: 4.061E-12+- 1.7%|
+    8.0000---------------------------------------------------------------------
+          |IRL 10 IZ   9 IX   1  |IRL 70 IZ   9 IX   2  |IRL130 IZ   9 IX   3 |
+          |T  : 5.031E-12+- 7.1% |T  : 4.357E-12+- 4.4% |T  : 4.184E-12+- 1.7%|
+          |T-S: 4.662E-12+- 7.1% |T-S: 4.036E-12+- 4.4% |T-S: 3.881E-12+- 1.8%|
+    9.0000---------------------------------------------------------------------
+          |IRL 11 IZ  10 IX   1  |IRL 71 IZ  10 IX   2  |IRL131 IZ  10 IX   3 |
+          |T  : 4.799E-12+- 7.2% |T  : 4.531E-12+- 4.3% |T  : 4.087E-12+- 1.8%|
+          |T-S: 4.444E-12+- 7.3% |T-S: 4.193E-12+- 4.3% |T-S: 3.789E-12+- 1.8%|
+   10.0000---------------------------------------------------------------------
+          |IRL 12 IZ  11 IX   1  |IRL 72 IZ  11 IX   2  |IRL132 IZ  11 IX   3 |
+          |T  : 5.137E-12+-26.3% |T  : 4.052E-12+- 3.3% |T  : 3.700E-12+- 1.3%|
+          |T-S: 4.637E-12+-26.6% |T-S: 3.758E-12+- 3.4% |T-S: 3.432E-12+- 1.3%|
+   12.0000---------------------------------------------------------------------
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+
+         0.0000                 1.0000                 2.0000           5.0000
+   12.0000---------------------------------------------------------------------
+          |IRL 13 IZ  12 IX   1  |IRL 73 IZ  12 IX   2  |IRL133 IZ  12 IX   3 |
+          |T  : 4.071E-12+- 5.6% |T  : 3.639E-12+- 3.5% |T  : 3.396E-12+- 1.4%|
+          |T-S: 3.768E-12+- 5.7% |T-S: 3.370E-12+- 3.5% |T-S: 3.148E-12+- 1.4%|
+   14.0000---------------------------------------------------------------------
+          |IRL 14 IZ  13 IX   1  |IRL 74 IZ  13 IX   2  |IRL134 IZ  13 IX   3 |
+          |T  : 3.714E-12+- 6.0% |T  : 3.331E-12+- 3.7% |T  : 2.976E-12+- 1.5%|
+          |T-S: 3.432E-12+- 6.0% |T-S: 3.084E-12+- 3.7% |T-S: 2.758E-12+- 1.5%|
+   16.0000---------------------------------------------------------------------
+          |IRL 15 IZ  14 IX   1  |IRL 75 IZ  14 IX   2  |IRL135 IZ  14 IX   3 |
+          |T  : 3.299E-12+- 6.3% |T  : 2.880E-12+- 3.9% |T  : 2.667E-12+- 1.6%|
+          |T-S: 3.048E-12+- 6.3% |T-S: 2.660E-12+- 3.9% |T-S: 2.469E-12+- 1.6%|
+   18.0000---------------------------------------------------------------------
+          |IRL 16 IZ  15 IX   1  |IRL 76 IZ  15 IX   2  |IRL136 IZ  15 IX   3 |
+          |T  : 2.843E-12+- 6.8% |T  : 2.836E-12+- 3.9% |T  : 2.439E-12+- 1.6%|
+          |T-S: 2.628E-12+- 6.9% |T-S: 2.626E-12+- 4.0% |T-S: 2.257E-12+- 1.6%|
+   20.0000---------------------------------------------------------------------
+          |IRL 17 IZ  16 IX   1  |IRL 77 IZ  16 IX   2  |IRL137 IZ  16 IX   3 |
+          |T  : 2.543E-12+- 7.2% |T  : 2.248E-12+- 4.4% |T  : 2.126E-12+- 1.7%|
+          |T-S: 2.355E-12+- 7.3% |T-S: 2.078E-12+- 4.4% |T-S: 1.968E-12+- 1.8%|
+   22.0000---------------------------------------------------------------------
+          |IRL 18 IZ  17 IX   1  |IRL 78 IZ  17 IX   2  |IRL138 IZ  17 IX   3 |
+          |T  : 2.199E-12+- 7.9% |T  : 1.994E-12+- 4.6% |T  : 1.880E-12+- 1.9%|
+          |T-S: 2.025E-12+- 8.0% |T-S: 1.840E-12+- 4.7% |T-S: 1.739E-12+- 1.9%|
+   24.0000---------------------------------------------------------------------
+          |IRL 19 IZ  18 IX   1  |IRL 79 IZ  18 IX   2  |IRL139 IZ  18 IX   3 |
+          |T  : 1.968E-12+- 8.3% |T  : 1.898E-12+- 4.8% |T  : 1.722E-12+- 1.9%|
+          |T-S: 1.818E-12+- 8.4% |T-S: 1.753E-12+- 4.9% |T-S: 1.591E-12+- 2.0%|
+   26.0000---------------------------------------------------------------------
+          |IRL 20 IZ  19 IX   1  |IRL 80 IZ  19 IX   2  |IRL140 IZ  19 IX   3 |
+          |T  : 1.777E-12+- 8.4% |T  : 1.608E-12+- 5.1% |T  : 1.487E-12+- 2.1%|
+          |T-S: 1.641E-12+- 8.6% |T-S: 1.484E-12+- 5.1% |T-S: 1.374E-12+- 2.1%|
+   28.0000---------------------------------------------------------------------
+          |IRL 21 IZ  20 IX   1  |IRL 81 IZ  20 IX   2  |IRL141 IZ  20 IX   3 |
+          |T  : 1.659E-12+- 8.9% |T  : 1.399E-12+- 5.6% |T  : 1.344E-12+- 2.2%|
+          |T-S: 1.535E-12+- 9.0% |T-S: 1.293E-12+- 5.7% |T-S: 1.241E-12+- 2.2%|
+   30.0000---------------------------------------------------------------------
+          |IRL 22 IZ  21 IX   1  |IRL 82 IZ  21 IX   2  |IRL142 IZ  21 IX   3 |
+          |T  : 1.400E-12+- 9.7% |T  : 1.100E-12+- 6.2% |T  : 1.127E-12+- 2.4%|
+          |T-S: 1.287E-12+- 9.9% |T-S: 1.012E-12+- 6.3% |T-S: 1.041E-12+- 2.4%|
+   32.0000---------------------------------------------------------------------
+          |IRL 23 IZ  22 IX   1  |IRL 83 IZ  22 IX   2  |IRL143 IZ  22 IX   3 |
+          |T  : 1.071E-12+-10.6% |T  : 1.173E-12+- 6.1% |T  : 1.047E-12+- 2.5%|
+          |T-S: 9.846E-13+-10.7% |T-S: 1.081E-12+- 6.2% |T-S: 9.663E-13+- 2.5%|
+   34.0000---------------------------------------------------------------------
+          |IRL 24 IZ  23 IX   1  |IRL 84 IZ  23 IX   2  |IRL144 IZ  23 IX   3 |
+          |T  : 1.183E-12+-10.5% |T  : 1.003E-12+- 6.4% |T  : 9.578E-13+- 2.6%|
+          |T-S: 1.096E-12+-10.6% |T-S: 9.221E-13+- 6.5% |T-S: 8.846E-13+- 2.6%|
+   36.0000---------------------------------------------------------------------
+          |IRL 25 IZ  24 IX   1  |IRL 85 IZ  24 IX   2  |IRL145 IZ  24 IX   3 |
+          |T  : 1.169E-12+-11.0% |T  : 8.420E-13+- 7.1% |T  : 8.227E-13+- 2.8%|
+          |T-S: 1.083E-12+-11.1% |T-S: 7.773E-13+- 7.2% |T-S: 7.587E-13+- 2.9%|
+   38.0000---------------------------------------------------------------------
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+
+         0.0000                 1.0000                 2.0000           5.0000
+   38.0000---------------------------------------------------------------------
+          |IRL 26 IZ  25 IX   1  |IRL 86 IZ  25 IX   2  |IRL146 IZ  25 IX   3 |
+          |T  : 1.050E-12+-11.3% |T  : 8.932E-13+- 7.1% |T  : 7.365E-13+- 3.0%|
+          |T-S: 9.686E-13+-11.4% |T-S: 8.260E-13+- 7.1% |T-S: 6.800E-13+- 3.0%|
+   40.0000---------------------------------------------------------------------
+          |IRL 27 IZ  26 IX   1  |IRL 87 IZ  26 IX   2  |IRL147 IZ  26 IX   3 |
+          |T  : 9.112E-13+-12.0% |T  : 6.295E-13+- 8.0% |T  : 6.388E-13+- 3.2%|
+          |T-S: 8.375E-13+-12.2% |T-S: 5.790E-13+- 8.1% |T-S: 5.887E-13+- 3.2%|
+   42.0000---------------------------------------------------------------------
+          |IRL 28 IZ  27 IX   1  |IRL 88 IZ  27 IX   2  |IRL148 IZ  27 IX   3 |
+          |T  : 8.029E-13+-12.8% |T  : 6.725E-13+- 8.1% |T  : 6.023E-13+- 3.3%|
+          |T-S: 7.398E-13+-13.0% |T-S: 6.220E-13+- 8.2% |T-S: 5.559E-13+- 3.4%|
+   44.0000---------------------------------------------------------------------
+          |IRL 29 IZ  28 IX   1  |IRL 89 IZ  28 IX   2  |IRL149 IZ  28 IX   3 |
+          |T  : 5.696E-13+-14.7% |T  : 5.241E-13+- 9.4% |T  : 5.393E-13+- 3.5%|
+          |T-S: 5.238E-13+-15.0% |T-S: 4.839E-13+- 9.5% |T-S: 4.976E-13+- 3.5%|
+   46.0000---------------------------------------------------------------------
+          |IRL 30 IZ  29 IX   1  |IRL 90 IZ  29 IX   2  |IRL150 IZ  29 IX   3 |
+          |T  : 3.581E-13+-18.0% |T  : 4.810E-13+- 9.5% |T  : 4.515E-13+- 3.8%|
+          |T-S: 3.216E-13+-18.5% |T-S: 4.446E-13+- 9.6% |T-S: 4.163E-13+- 3.9%|
+   48.0000---------------------------------------------------------------------
+          |IRL 31 IZ  30 IX   1  |IRL 91 IZ  30 IX   2  |IRL151 IZ  30 IX   3 |
+          |T  : 4.161E-13+-17.7% |T  : 4.206E-13+-10.1% |T  : 3.561E-13+- 4.2%|
+          |T-S: 3.826E-13+-18.0% |T-S: 3.869E-13+-10.2% |T-S: 3.274E-13+- 4.3%|
+   50.0000---------------------------------------------------------------------
+          |IRL 32 IZ  31 IX   1  |IRL 92 IZ  31 IX   2  |IRL152 IZ  31 IX   3 |
+          |T  : 3.230E-13+-19.4% |T  : 4.004E-13+-10.1% |T  : 3.470E-13+- 4.4%|
+          |T-S: 2.980E-13+-19.8% |T-S: 3.696E-13+-10.3% |T-S: 3.193E-13+- 4.4%|
+   52.0000---------------------------------------------------------------------
+          |IRL 33 IZ  32 IX   1  |IRL 93 IZ  32 IX   2  |IRL153 IZ  32 IX   3 |
+          |T  : 4.117E-13+-17.8% |T  : 3.809E-13+-10.5% |T  : 3.017E-13+- 4.6%|
+          |T-S: 3.807E-13+-17.9% |T-S: 3.510E-13+-10.7% |T-S: 2.778E-13+- 4.7%|
+   54.0000---------------------------------------------------------------------
+          |IRL 34 IZ  33 IX   1  |IRL 94 IZ  33 IX   2  |IRL154 IZ  33 IX   3 |
+          |T  : 2.670E-13+-23.2% |T  : 3.082E-13+-11.9% |T  : 2.786E-13+- 4.8%|
+          |T-S: 2.483E-13+-23.7% |T-S: 2.839E-13+-12.1% |T-S: 2.566E-13+- 4.9%|
+   56.0000---------------------------------------------------------------------
+          |IRL 35 IZ  34 IX   1  |IRL 95 IZ  34 IX   2  |IRL155 IZ  34 IX   3 |
+          |T  : 4.150E-13+-18.0% |T  : 2.479E-13+-12.7% |T  : 2.414E-13+- 5.3%|
+          |T-S: 3.852E-13+-18.2% |T-S: 2.283E-13+-12.9% |T-S: 2.228E-13+- 5.3%|
+   58.0000---------------------------------------------------------------------
+          |IRL 36 IZ  35 IX   1  |IRL 96 IZ  35 IX   2  |IRL156 IZ  35 IX   3 |
+          |T  : 1.634E-13+-25.5% |T  : 2.359E-13+-13.6% |T  : 2.238E-13+- 5.4%|
+          |T-S: 1.463E-13+-26.0% |T-S: 2.168E-13+-13.7% |T-S: 2.060E-13+- 5.5%|
+   60.0000---------------------------------------------------------------------
+          |IRL 37 IZ  36 IX   1  |IRL 97 IZ  36 IX   2  |IRL157 IZ  36 IX   3 |
+          |T  : 2.675E-13+-21.9% |T  : 2.175E-13+-13.6% |T  : 1.909E-13+- 5.7%|
+          |T-S: 2.478E-13+-22.3% |T-S: 1.999E-13+-13.9% |T-S: 1.752E-13+- 5.8%|
+   62.0000---------------------------------------------------------------------
+          |IRL 38 IZ  37 IX   1  |IRL 98 IZ  37 IX   2  |IRL158 IZ  37 IX   3 |
+          |T  : 1.810E-13+-25.7% |T  : 1.813E-13+-15.4% |T  : 1.849E-13+- 6.1%|
+          |T-S: 1.662E-13+-26.0% |T-S: 1.665E-13+-15.7% |T-S: 1.703E-13+- 6.2%|
+   64.0000---------------------------------------------------------------------
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+
+         0.0000                 1.0000                 2.0000           5.0000
+   64.0000---------------------------------------------------------------------
+          |IRL 39 IZ  38 IX   1  |IRL 99 IZ  38 IX   2  |IRL159 IZ  38 IX   3 |
+          |T  : 2.296E-13+-23.8% |T  : 1.674E-13+-15.7% |T  : 1.591E-13+- 6.4%|
+          |T-S: 2.116E-13+-24.1% |T-S: 1.534E-13+-16.1% |T-S: 1.465E-13+- 6.5%|
+   66.0000---------------------------------------------------------------------
+          |IRL 40 IZ  39 IX   1  |IRL100 IZ  39 IX   2  |IRL160 IZ  39 IX   3 |
+          |T  : 1.848E-13+-25.1% |T  : 1.691E-13+-15.9% |T  : 1.196E-13+- 7.2%|
+          |T-S: 1.692E-13+-25.4% |T-S: 1.555E-13+-16.2% |T-S: 1.097E-13+- 7.4%|
+   68.0000---------------------------------------------------------------------
+          |IRL 41 IZ  40 IX   1  |IRL101 IZ  40 IX   2  |IRL161 IZ  40 IX   3 |
+          |T  : 1.660E-13+-27.9% |T  : 1.342E-13+-18.0% |T  : 1.219E-13+- 7.2%|
+          |T-S: 1.545E-13+-28.3% |T-S: 1.228E-13+-18.2% |T-S: 1.119E-13+- 7.3%|
+   70.0000---------------------------------------------------------------------
+          |IRL 42 IZ  41 IX   1  |IRL102 IZ  41 IX   2  |IRL162 IZ  41 IX   3 |
+          |T  : 8.342E-14+-31.4% |T  : 1.004E-13+-18.8% |T  : 9.403E-14+- 8.3%|
+          |T-S: 7.491E-14+-32.3% |T-S: 9.121E-14+-19.2% |T-S: 8.603E-14+- 8.4%|
+   72.0000---------------------------------------------------------------------
+          |IRL 43 IZ  42 IX   1  |IRL103 IZ  42 IX   2  |IRL163 IZ  42 IX   3 |
+          |T  : 6.676E-14+-38.4% |T  : 8.554E-14+-21.0% |T  : 9.707E-14+- 8.4%|
+          |T-S: 6.033E-14+-39.3% |T-S: 7.822E-14+-21.4% |T-S: 8.975E-14+- 8.5%|
+   74.0000---------------------------------------------------------------------
+          |IRL 44 IZ  43 IX   1  |IRL104 IZ  43 IX   2  |IRL164 IZ  43 IX   3 |
+          |T  : 7.555E-14+-44.7% |T  : 5.693E-14+-25.6% |T  : 7.766E-14+- 8.9%|
+          |T-S: 6.965E-14+-45.6% |T-S: 5.225E-14+-26.2% |T-S: 7.147E-14+- 9.1%|
+   76.0000---------------------------------------------------------------------
+          |IRL 45 IZ  44 IX   1  |IRL105 IZ  44 IX   2  |IRL165 IZ  44 IX   3 |
+          |T  : 7.826E-14+-34.8% |T  : 6.448E-14+-24.1% |T  : 6.177E-14+-10.0%|
+          |T-S: 7.074E-14+-35.2% |T-S: 5.915E-14+-24.5% |T-S: 5.649E-14+-10.1%|
+   78.0000---------------------------------------------------------------------
+          |IRL 46 IZ  45 IX   1  |IRL106 IZ  45 IX   2  |IRL166 IZ  45 IX   3 |
+          |T  : 2.376E-14+-44.9% |T  : 5.352E-14+-27.4% |T  : 6.421E-14+-10.3%|
+          |T-S: 2.117E-14+-47.5% |T-S: 4.858E-14+-27.8% |T-S: 5.914E-14+-10.4%|
+   80.0000---------------------------------------------------------------------
+          |IRL 47 IZ  46 IX   1  |IRL107 IZ  46 IX   2  |IRL167 IZ  46 IX   3 |
+          |T  : 2.287E-14+-77.0% |T  : 6.935E-14+-23.6% |T  : 4.973E-14+-11.0%|
+          |T-S: 2.076E-14+-80.7% |T-S: 6.375E-14+-24.0% |T-S: 4.560E-14+-11.2%|
+   82.0000---------------------------------------------------------------------
+          |IRL 48 IZ  47 IX   1  |IRL108 IZ  47 IX   2  |IRL168 IZ  47 IX   3 |
+          |T  : 2.378E-14+-73.7% |T  : 5.672E-14+-29.7% |T  : 4.637E-14+-11.8%|
+          |T-S: 2.144E-14+-76.6% |T-S: 5.224E-14+-30.2% |T-S: 4.254E-14+-12.0%|
+   84.0000---------------------------------------------------------------------
+          |IRL 49 IZ  48 IX   1  |IRL109 IZ  48 IX   2  |IRL169 IZ  48 IX   3 |
+          |T  : 3.366E-14+-51.0% |T  : 2.484E-14+-45.0% |T  : 4.775E-14+-11.6%|
+          |T-S: 3.000E-14+-53.5% |T-S: 2.224E-14+-47.1% |T-S: 4.397E-14+-11.8%|
+   86.0000---------------------------------------------------------------------
+          |IRL 50 IZ  49 IX   1  |IRL110 IZ  49 IX   2  |IRL170 IZ  49 IX   3 |
+          |T  : 2.210E-14+-82.1% |T  : 3.552E-14+-33.6% |T  : 4.003E-14+-12.5%|
+          |T-S: 2.052E-14+-82.8% |T-S: 3.266E-14+-34.0% |T-S: 3.681E-14+-12.7%|
+   88.0000---------------------------------------------------------------------
+          |IRL 51 IZ  50 IX   1  |IRL111 IZ  50 IX   2  |IRL171 IZ  50 IX   3 |
+          |T  : 2.318E-14+-81.4% |T  : 2.471E-14+-36.0% |T  : 3.106E-14+-14.5%|
+          |T-S: 2.125E-14+-82.1% |T-S: 2.267E-14+-36.8% |T-S: 2.860E-14+-14.7%|
+   90.0000---------------------------------------------------------------------
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+
+         0.0000                 1.0000                 2.0000           5.0000
+   90.0000---------------------------------------------------------------------
+          |IRL 52 IZ  51 IX   1  |IRL112 IZ  51 IX   2  |IRL172 IZ  51 IX   3 |
+          |T  : 6.041E-14+-51.3% |T  : 3.406E-14+-34.2% |T  : 3.432E-14+-13.5%|
+          |T-S: 5.629E-14+-51.4% |T-S: 3.166E-14+-34.8% |T-S: 3.155E-14+-13.7%|
+   92.0000---------------------------------------------------------------------
+          |IRL 53 IZ  52 IX   1  |IRL113 IZ  52 IX   2  |IRL173 IZ  52 IX   3 |
+          |T  : 6.731E-15+-88.6% |T  : 3.853E-14+-37.0% |T  : 2.790E-14+-14.7%|
+          |T-S: 6.141E-15+-90.4% |T-S: 3.594E-14+-37.3% |T-S: 2.559E-14+-14.9%|
+   94.0000---------------------------------------------------------------------
+          |IRL 54 IZ  53 IX   1  |IRL114 IZ  53 IX   2  |IRL174 IZ  53 IX   3 |
+          |T  : 5.783E-14+-48.6% |T  : 3.237E-14+-34.6% |T  : 1.899E-14+-17.0%|
+          |T-S: 5.515E-14+-49.0% |T-S: 2.968E-14+-35.0% |T-S: 1.731E-14+-17.5%|
+   96.0000---------------------------------------------------------------------
+          |IRL 55 IZ  54 IX   1  |IRL115 IZ  54 IX   2  |IRL175 IZ  54 IX   3 |
+          |T  : 1.017E-14+-59.4% |T  : 1.083E-14+-54.8% |T  : 1.865E-14+-17.9%|
+          |T-S: 8.869E-15+-62.7% |T-S: 9.531E-15+-57.8% |T-S: 1.704E-14+-18.4%|
+   98.0000---------------------------------------------------------------------
+          |IRL 56 IZ  55 IX   1  |IRL116 IZ  55 IX   2  |IRL176 IZ  55 IX   3 |
+          |T  : 1.130E-14+-96.4% |T  : 4.572E-15+-59.6% |T  : 1.013E-14+-22.3%|
+          |T-S: 1.068E-14+-98.2% |T-S: 3.922E-15+-60.9% |T-S: 9.163E-15+-23.0%|
+  100.0000---------------------------------------------------------------------
+          |IRL 57 IZ  56 IX   1  |IRL117 IZ  56 IX   2  |IRL177 IZ  56 IX   3 |
+          |T  : 1.431E-14+-87.9% |T  : 3.209E-14+-37.3% |T  : 1.686E-14+-19.2%|
+          |T-S: 1.280E-14+-88.9% |T-S: 2.942E-14+-37.9% |T-S: 1.549E-14+-19.6%|
+  102.0000---------------------------------------------------------------------
+          |IRL 58 IZ  57 IX   1  |IRL118 IZ  57 IX   2  |IRL178 IZ  57 IX   3 |
+          |T  : 8.438E-15+-87.3% |T  : 1.483E-14+-42.4% |T  : 1.413E-14+-21.1%|
+          |T-S: 8.028E-15+-88.8% |T-S: 1.346E-14+-43.3% |T-S: 1.296E-14+-21.4%|
+  104.0000---------------------------------------------------------------------
+          |IRL 59 IZ  58 IX   1  |IRL119 IZ  58 IX   2  |IRL179 IZ  58 IX   3 |
+          |T  : 1.761E-14+-67.0% |T  : 2.371E-14+-42.2% |T  : 1.049E-14+-26.0%|
+          |T-S: 1.580E-14+-68.3% |T-S: 2.173E-14+-42.4% |T-S: 9.489E-15+-26.4%|
+  106.0000---------------------------------------------------------------------
+          |IRL 60 IZ  59 IX   1  |IRL120 IZ  59 IX   2  |IRL180 IZ  59 IX   3 |
+          |T  : 2.002E-14+-90.3% |T  : 1.901E-14+-37.3% |T  : 1.116E-14+-23.6%|
+          |T-S: 1.845E-14+-92.5% |T-S: 1.712E-14+-37.8% |T-S: 1.026E-14+-23.7%|
+  108.0000---------------------------------------------------------------------
+          |IRL 61 IZ  60 IX   1  |IRL121 IZ  60 IX   2  |IRL181 IZ  60 IX   3 |
+          |T  : 2.252E-14+-71.9% |T  : 1.682E-14+-47.7% |T  : 1.183E-14+-22.9%|
+          |T-S: 2.073E-14+-72.9% |T-S: 1.513E-14+-48.7% |T-S: 1.094E-14+-23.2%|
+  110.0000---------------------------------------------------------------------
+
+         5.0000                10.0000               100.0000
+    0.0000----------------------------------------------
+          |IRL182 IZ   1 IX   4  |IRL242 IZ   1 IX   5 |
+          |T  : 6.302E-14+- 4.3% |T  : 6.407E-16+- 2.4%|
+          |T-S: 5.152E-14+- 4.8% |T-S: 4.651E-16+- 2.8%|
+    1.0000----------------------------------------------
+          |IRL183 IZ   2 IX   4  |IRL243 IZ   2 IX   5 |
+          |T  : 8.465E-14+- 3.8% |T  : 7.483E-16+- 2.2%|
+          |T-S: 7.004E-14+- 4.2% |T-S: 5.347E-16+- 2.6%|
+    2.0000----------------------------------------------
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+
+         5.0000                10.0000               100.0000
+    2.0000----------------------------------------------
+          |IRL184 IZ   3 IX   4  |IRL244 IZ   3 IX   5 |
+          |T  : 1.089E-13+- 3.5% |T  : 8.978E-16+- 2.1%|
+          |T-S: 9.110E-14+- 3.8% |T-S: 6.453E-16+- 2.5%|
+    3.0000----------------------------------------------
+          |IRL185 IZ   4 IX   4  |IRL245 IZ   4 IX   5 |
+          |T  : 1.246E-13+- 3.3% |T  : 9.851E-16+- 2.0%|
+          |T-S: 1.045E-13+- 3.6% |T-S: 6.979E-16+- 2.3%|
+    4.0000----------------------------------------------
+          |IRL186 IZ   5 IX   4  |IRL246 IZ   5 IX   5 |
+          |T  : 1.433E-13+- 3.2% |T  : 1.165E-15+- 1.9%|
+          |T-S: 1.216E-13+- 3.4% |T-S: 8.451E-16+- 2.3%|
+    5.0000----------------------------------------------
+          |IRL187 IZ   6 IX   4  |IRL247 IZ   6 IX   5 |
+          |T  : 1.614E-13+- 3.1% |T  : 1.225E-15+- 1.9%|
+          |T-S: 1.377E-13+- 3.3% |T-S: 8.874E-16+- 2.2%|
+    6.0000----------------------------------------------
+          |IRL188 IZ   7 IX   4  |IRL248 IZ   7 IX   5 |
+          |T  : 1.721E-13+- 3.0% |T  : 1.347E-15+- 1.9%|
+          |T-S: 1.470E-13+- 3.2% |T-S: 9.753E-16+- 2.2%|
+    7.0000----------------------------------------------
+          |IRL189 IZ   8 IX   4  |IRL249 IZ   8 IX   5 |
+          |T  : 1.903E-13+- 2.9% |T  : 1.442E-15+- 1.8%|
+          |T-S: 1.629E-13+- 3.1% |T-S: 1.057E-15+- 2.2%|
+    8.0000----------------------------------------------
+          |IRL190 IZ   9 IX   4  |IRL250 IZ   9 IX   5 |
+          |T  : 1.980E-13+- 2.9% |T  : 1.497E-15+- 1.8%|
+          |T-S: 1.703E-13+- 3.1% |T-S: 1.094E-15+- 2.2%|
+    9.0000----------------------------------------------
+          |IRL191 IZ  10 IX   4  |IRL251 IZ  10 IX   5 |
+          |T  : 2.069E-13+- 2.9% |T  : 1.670E-15+- 1.8%|
+          |T-S: 1.787E-13+- 3.1% |T-S: 1.238E-15+- 2.1%|
+   10.0000----------------------------------------------
+          |IRL192 IZ  11 IX   4  |IRL252 IZ  11 IX   5 |
+          |T  : 2.197E-13+- 2.1% |T  : 1.828E-15+- 1.3%|
+          |T-S: 1.902E-13+- 2.2% |T-S: 1.370E-15+- 1.6%|
+   12.0000----------------------------------------------
+          |IRL193 IZ  12 IX   4  |IRL253 IZ  12 IX   5 |
+          |T  : 2.202E-13+- 2.1% |T  : 1.961E-15+- 1.3%|
+          |T-S: 1.914E-13+- 2.3% |T-S: 1.480E-15+- 1.6%|
+   14.0000----------------------------------------------
+          |IRL194 IZ  13 IX   4  |IRL254 IZ  13 IX   5 |
+          |T  : 2.194E-13+- 2.2% |T  : 2.107E-15+- 1.4%|
+          |T-S: 1.911E-13+- 2.3% |T-S: 1.606E-15+- 1.6%|
+   16.0000----------------------------------------------
+          |IRL195 IZ  14 IX   4  |IRL255 IZ  14 IX   5 |
+          |T  : 2.089E-13+- 2.2% |T  : 2.112E-15+- 1.4%|
+          |T-S: 1.815E-13+- 2.4% |T-S: 1.612E-15+- 1.6%|
+   18.0000----------------------------------------------
+          |IRL196 IZ  15 IX   4  |IRL256 IZ  15 IX   5 |
+          |T  : 2.085E-13+- 2.3% |T  : 2.237E-15+- 1.4%|
+          |T-S: 1.821E-13+- 2.4% |T-S: 1.725E-15+- 1.6%|
+   20.0000----------------------------------------------
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+
+         5.0000                10.0000               100.0000
+   20.0000----------------------------------------------
+          |IRL197 IZ  16 IX   4  |IRL257 IZ  16 IX   5 |
+          |T  : 1.940E-13+- 2.4% |T  : 2.350E-15+- 1.4%|
+          |T-S: 1.693E-13+- 2.5% |T-S: 1.831E-15+- 1.6%|
+   22.0000----------------------------------------------
+          |IRL198 IZ  17 IX   4  |IRL258 IZ  17 IX   5 |
+          |T  : 1.827E-13+- 2.5% |T  : 2.286E-15+- 1.4%|
+          |T-S: 1.594E-13+- 2.6% |T-S: 1.780E-15+- 1.6%|
+   24.0000----------------------------------------------
+          |IRL199 IZ  18 IX   4  |IRL259 IZ  18 IX   5 |
+          |T  : 1.843E-13+- 2.5% |T  : 2.296E-15+- 1.4%|
+          |T-S: 1.614E-13+- 2.6% |T-S: 1.795E-15+- 1.6%|
+   26.0000----------------------------------------------
+          |IRL200 IZ  19 IX   4  |IRL260 IZ  19 IX   5 |
+          |T  : 1.692E-13+- 2.6% |T  : 2.281E-15+- 1.5%|
+          |T-S: 1.483E-13+- 2.8% |T-S: 1.788E-15+- 1.7%|
+   28.0000----------------------------------------------
+          |IRL201 IZ  20 IX   4  |IRL261 IZ  20 IX   5 |
+          |T  : 1.555E-13+- 2.7% |T  : 2.194E-15+- 1.5%|
+          |T-S: 1.361E-13+- 2.8% |T-S: 1.725E-15+- 1.7%|
+   30.0000----------------------------------------------
+          |IRL202 IZ  21 IX   4  |IRL262 IZ  21 IX   5 |
+          |T  : 1.415E-13+- 2.9% |T  : 2.167E-15+- 1.5%|
+          |T-S: 1.236E-13+- 3.0% |T-S: 1.710E-15+- 1.7%|
+   32.0000----------------------------------------------
+          |IRL203 IZ  22 IX   4  |IRL263 IZ  22 IX   5 |
+          |T  : 1.272E-13+- 3.0% |T  : 2.102E-15+- 1.6%|
+          |T-S: 1.111E-13+- 3.2% |T-S: 1.666E-15+- 1.8%|
+   34.0000----------------------------------------------
+          |IRL204 IZ  23 IX   4  |IRL264 IZ  23 IX   5 |
+          |T  : 1.191E-13+- 3.1% |T  : 2.017E-15+- 1.6%|
+          |T-S: 1.040E-13+- 3.3% |T-S: 1.602E-15+- 1.9%|
+   36.0000----------------------------------------------
+          |IRL205 IZ  24 IX   4  |IRL265 IZ  24 IX   5 |
+          |T  : 1.116E-13+- 3.2% |T  : 1.926E-15+- 1.7%|
+          |T-S: 9.736E-14+- 3.4% |T-S: 1.531E-15+- 1.9%|
+   38.0000----------------------------------------------
+          |IRL206 IZ  25 IX   4  |IRL266 IZ  25 IX   5 |
+          |T  : 1.022E-13+- 3.4% |T  : 1.851E-15+- 1.7%|
+          |T-S: 8.972E-14+- 3.6% |T-S: 1.476E-15+- 2.0%|
+   40.0000----------------------------------------------
+          |IRL207 IZ  26 IX   4  |IRL267 IZ  26 IX   5 |
+          |T  : 9.255E-14+- 3.6% |T  : 1.806E-15+- 1.8%|
+          |T-S: 8.117E-14+- 3.8% |T-S: 1.446E-15+- 2.0%|
+   42.0000----------------------------------------------
+          |IRL208 IZ  27 IX   4  |IRL268 IZ  27 IX   5 |
+          |T  : 8.484E-14+- 3.8% |T  : 1.643E-15+- 1.8%|
+          |T-S: 7.442E-14+- 4.0% |T-S: 1.305E-15+- 2.1%|
+   44.0000----------------------------------------------
+          |IRL209 IZ  28 IX   4  |IRL269 IZ  28 IX   5 |
+          |T  : 7.256E-14+- 4.1% |T  : 1.579E-15+- 1.9%|
+          |T-S: 6.325E-14+- 4.3% |T-S: 1.259E-15+- 2.2%|
+   46.0000----------------------------------------------
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+
+         5.0000                10.0000               100.0000
+   46.0000----------------------------------------------
+          |IRL210 IZ  29 IX   4  |IRL270 IZ  29 IX   5 |
+          |T  : 6.626E-14+- 4.2% |T  : 1.516E-15+- 2.0%|
+          |T-S: 5.761E-14+- 4.5% |T-S: 1.220E-15+- 2.3%|
+   48.0000----------------------------------------------
+          |IRL211 IZ  30 IX   4  |IRL271 IZ  30 IX   5 |
+          |T  : 5.890E-14+- 4.4% |T  : 1.393E-15+- 2.1%|
+          |T-S: 5.117E-14+- 4.7% |T-S: 1.115E-15+- 2.3%|
+   50.0000----------------------------------------------
+          |IRL212 IZ  31 IX   4  |IRL272 IZ  31 IX   5 |
+          |T  : 5.525E-14+- 4.6% |T  : 1.272E-15+- 2.2%|
+          |T-S: 4.808E-14+- 4.9% |T-S: 1.016E-15+- 2.5%|
+   52.0000----------------------------------------------
+          |IRL213 IZ  32 IX   4  |IRL273 IZ  32 IX   5 |
+          |T  : 5.063E-14+- 4.8% |T  : 1.169E-15+- 2.3%|
+          |T-S: 4.422E-14+- 5.1% |T-S: 9.339E-16+- 2.5%|
+   54.0000----------------------------------------------
+          |IRL214 IZ  33 IX   4  |IRL274 IZ  33 IX   5 |
+          |T  : 4.340E-14+- 5.3% |T  : 1.144E-15+- 2.3%|
+          |T-S: 3.782E-14+- 5.6% |T-S: 9.205E-16+- 2.6%|
+   56.0000----------------------------------------------
+          |IRL215 IZ  34 IX   4  |IRL275 IZ  34 IX   5 |
+          |T  : 3.918E-14+- 5.4% |T  : 1.106E-15+- 2.4%|
+          |T-S: 3.394E-14+- 5.7% |T-S: 8.899E-16+- 2.7%|
+   58.0000----------------------------------------------
+          |IRL216 IZ  35 IX   4  |IRL276 IZ  35 IX   5 |
+          |T  : 3.252E-14+- 5.9% |T  : 9.314E-16+- 2.5%|
+          |T-S: 2.820E-14+- 6.3% |T-S: 7.428E-16+- 2.8%|
+   60.0000----------------------------------------------
+          |IRL217 IZ  36 IX   4  |IRL277 IZ  36 IX   5 |
+          |T  : 3.279E-14+- 6.1% |T  : 9.247E-16+- 2.6%|
+          |T-S: 2.864E-14+- 6.4% |T-S: 7.436E-16+- 2.9%|
+   62.0000----------------------------------------------
+          |IRL218 IZ  37 IX   4  |IRL278 IZ  37 IX   5 |
+          |T  : 3.127E-14+- 6.3% |T  : 8.557E-16+- 2.8%|
+          |T-S: 2.741E-14+- 6.6% |T-S: 6.881E-16+- 3.1%|
+   64.0000----------------------------------------------
+          |IRL219 IZ  38 IX   4  |IRL279 IZ  38 IX   5 |
+          |T  : 2.858E-14+- 6.7% |T  : 7.591E-16+- 2.9%|
+          |T-S: 2.497E-14+- 7.1% |T-S: 6.082E-16+- 3.2%|
+   66.0000----------------------------------------------
+          |IRL220 IZ  39 IX   4  |IRL280 IZ  39 IX   5 |
+          |T  : 2.339E-14+- 7.1% |T  : 7.264E-16+- 3.0%|
+          |T-S: 2.040E-14+- 7.5% |T-S: 5.870E-16+- 3.4%|
+   68.0000----------------------------------------------
+          |IRL221 IZ  40 IX   4  |IRL281 IZ  40 IX   5 |
+          |T  : 2.096E-14+- 7.6% |T  : 6.543E-16+- 3.1%|
+          |T-S: 1.827E-14+- 8.1% |T-S: 5.243E-16+- 3.5%|
+   70.0000----------------------------------------------
+          |IRL222 IZ  41 IX   4  |IRL282 IZ  41 IX   5 |
+          |T  : 2.085E-14+- 8.0% |T  : 5.991E-16+- 3.2%|
+          |T-S: 1.823E-14+- 8.5% |T-S: 4.820E-16+- 3.6%|
+   72.0000----------------------------------------------
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+
+         5.0000                10.0000               100.0000
+   72.0000----------------------------------------------
+          |IRL223 IZ  42 IX   4  |IRL283 IZ  42 IX   5 |
+          |T  : 1.559E-14+- 8.5% |T  : 5.666E-16+- 3.4%|
+          |T-S: 1.343E-14+- 9.1% |T-S: 4.600E-16+- 3.8%|
+   74.0000----------------------------------------------
+          |IRL224 IZ  43 IX   4  |IRL284 IZ  43 IX   5 |
+          |T  : 1.576E-14+- 8.7% |T  : 4.973E-16+- 3.6%|
+          |T-S: 1.372E-14+- 9.2% |T-S: 3.998E-16+- 4.1%|
+   76.0000----------------------------------------------
+          |IRL225 IZ  44 IX   4  |IRL285 IZ  44 IX   5 |
+          |T  : 1.372E-14+- 9.0% |T  : 4.755E-16+- 3.6%|
+          |T-S: 1.193E-14+- 9.5% |T-S: 3.828E-16+- 4.1%|
+   78.0000----------------------------------------------
+          |IRL226 IZ  45 IX   4  |IRL286 IZ  45 IX   5 |
+          |T  : 1.187E-14+-10.0% |T  : 4.036E-16+- 4.1%|
+          |T-S: 1.036E-14+-10.7% |T-S: 3.251E-16+- 4.6%|
+   80.0000----------------------------------------------
+          |IRL227 IZ  46 IX   4  |IRL287 IZ  46 IX   5 |
+          |T  : 8.967E-15+-11.3% |T  : 3.939E-16+- 4.1%|
+          |T-S: 7.705E-15+-12.1% |T-S: 3.172E-16+- 4.6%|
+   82.0000----------------------------------------------
+          |IRL228 IZ  47 IX   4  |IRL288 IZ  47 IX   5 |
+          |T  : 8.430E-15+-10.9% |T  : 3.503E-16+- 4.3%|
+          |T-S: 7.240E-15+-11.7% |T-S: 2.810E-16+- 4.8%|
+   84.0000----------------------------------------------
+          |IRL229 IZ  48 IX   4  |IRL289 IZ  48 IX   5 |
+          |T  : 7.763E-15+-11.7% |T  : 3.141E-16+- 4.5%|
+          |T-S: 6.696E-15+-12.5% |T-S: 2.526E-16+- 5.0%|
+   86.0000----------------------------------------------
+          |IRL230 IZ  49 IX   4  |IRL290 IZ  49 IX   5 |
+          |T  : 9.315E-15+-12.3% |T  : 2.821E-16+- 4.7%|
+          |T-S: 8.212E-15+-12.9% |T-S: 2.258E-16+- 5.3%|
+   88.0000----------------------------------------------
+          |IRL231 IZ  50 IX   4  |IRL291 IZ  50 IX   5 |
+          |T  : 7.762E-15+-13.4% |T  : 2.513E-16+- 5.1%|
+          |T-S: 6.844E-15+-14.2% |T-S: 2.025E-16+- 5.7%|
+   90.0000----------------------------------------------
+          |IRL232 IZ  51 IX   4  |IRL292 IZ  51 IX   5 |
+          |T  : 5.852E-15+-14.2% |T  : 2.343E-16+- 5.3%|
+          |T-S: 5.106E-15+-15.1% |T-S: 1.888E-16+- 5.9%|
+   92.0000----------------------------------------------
+          |IRL233 IZ  52 IX   4  |IRL293 IZ  52 IX   5 |
+          |T  : 5.372E-15+-15.7% |T  : 2.148E-16+- 5.4%|
+          |T-S: 4.698E-15+-16.4% |T-S: 1.727E-16+- 6.0%|
+   94.0000----------------------------------------------
+          |IRL234 IZ  53 IX   4  |IRL294 IZ  53 IX   5 |
+          |T  : 4.620E-15+-15.4% |T  : 1.969E-16+- 5.6%|
+          |T-S: 4.051E-15+-16.3% |T-S: 1.589E-16+- 6.2%|
+   96.0000----------------------------------------------
+          |IRL235 IZ  54 IX   4  |IRL295 IZ  54 IX   5 |
+          |T  : 3.737E-15+-17.3% |T  : 1.850E-16+- 6.1%|
+          |T-S: 3.274E-15+-18.3% |T-S: 1.508E-16+- 6.8%|
+   98.0000----------------------------------------------
+ \f
+                                                      Thu Aug 23 18:19:47 2018
+
+
+ dosrznrc_template--depth dose in H2O due to Cobalt beam                        
+
+                   ZONAL OUTPUT GRID: NON-ROTATED
+                   ******************************
+  
+
+         5.0000                10.0000               100.0000
+   98.0000----------------------------------------------
+          |IRL236 IZ  55 IX   4  |IRL296 IZ  55 IX   5 |
+          |T  : 3.466E-15+-18.7% |T  : 1.782E-16+- 6.4%|
+          |T-S: 2.974E-15+-19.8% |T-S: 1.464E-16+- 7.1%|
+  100.0000----------------------------------------------
+          |IRL237 IZ  56 IX   4  |IRL297 IZ  56 IX   5 |
+          |T  : 3.803E-15+-17.8% |T  : 1.372E-16+- 6.8%|
+          |T-S: 3.361E-15+-18.7% |T-S: 1.124E-16+- 7.5%|
+  102.0000----------------------------------------------
+          |IRL238 IZ  57 IX   4  |IRL298 IZ  57 IX   5 |
+          |T  : 2.183E-15+-23.0% |T  : 1.263E-16+- 7.4%|
+          |T-S: 1.899E-15+-24.3% |T-S: 1.038E-16+- 8.2%|
+  104.0000----------------------------------------------
+          |IRL239 IZ  58 IX   4  |IRL299 IZ  58 IX   5 |
+          |T  : 2.390E-15+-25.9% |T  : 1.031E-16+- 8.4%|
+          |T-S: 2.112E-15+-27.2% |T-S: 8.464E-17+- 9.2%|
+  106.0000----------------------------------------------
+          |IRL240 IZ  59 IX   4  |IRL300 IZ  59 IX   5 |
+          |T  : 1.881E-15+-25.5% |T  : 9.409E-17+- 8.8%|
+          |T-S: 1.631E-15+-27.3% |T-S: 7.874E-17+- 9.6%|
+  108.0000----------------------------------------------
+          |IRL241 IZ  60 IX   4  |IRL301 IZ  60 IX   5 |
+          |T  : 2.764E-15+-24.4% |T  : 7.765E-17+- 9.5%|
+          |T-S: 2.508E-15+-24.9% |T-S: 6.546E-17+-10.3%|
+  110.0000----------------------------------------------
+\f
+
+ 
+Thu Aug 23 18:19:47 2018

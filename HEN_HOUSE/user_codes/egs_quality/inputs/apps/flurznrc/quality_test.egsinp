@@ -1,0 +1,139 @@
+TITLE= flurznrc_template
+
+##########################
+:start I/O control:
+
+IWATCH= off
+STORE INITIAL RANDOM NUMBERS= no
+IRESTART= first
+STORE DATA ARRAYS= yes
+PRINT FLUENCE SPECTRA= specified
+LIST FLUENCE START REGION= 12, 72, 132, 192, 252
+LIST FLUENCE STOP REGION= 12, 72, 132, 192, 252
+IPRIMARY= total fluence
+SLOTE= 0.1
+
+:stop I/O control:
+#########################
+
+##########################
+:start Monte Carlo inputs:
+
+NUMBER OF HISTORIES= 10000
+INITIAL RANDOM NO. SEEDS= 1, 3
+MAX CPU HOURS ALLOWED= 90.000
+IFULL= dose and stoppers
+STATISTICAL ACCURACY SOUGHT= 0.0000
+
+:stop Monte Carlo inputs:
+#########################
+
+##########################
+:start geometrical inputs:
+
+METHOD OF INPUT= groups
+Z OF FRONT FACE= 0.
+NSLAB= 10, 5
+SLAB THICKNESS= 0.5, 1
+RADII= 3, 5, 10, 100
+MEDIA= H2O700ICRU,
+ AIR700ICRU;
+
+DESCRIPTION BY= planes
+MEDNUM= 1, 2
+START ZSLAB= 1, 11
+STOP ZSLAB= 15, 11
+START RING= 1, 1
+STOP RING= 4, 1
+
+:stop geometrical inputs:
+#########################
+
+##########################
+:start source inputs:
+
+INCIDENT PARTICLE= photon
+SOURCE NUMBER= 0
+SOURCE OPTIONS= 5, 0, 0, 1
+INCIDENT ENERGY= monoenergetic
+INCIDENT KINETIC ENERGY(MEV)= 1.25
+
+:stop source inputs:
+#########################
+
+##########################
+:start MC transport parameter:
+
+Global ECUT= 0.700
+Global PCUT= 0.010
+Global SMAX= 1e10
+ESTEPE= 0.25
+XImax= 0.5
+Skin depth for BCA= 3
+Boundary crossing algorithm= EXACT
+Electron-step algorithm= PRESTA-II
+Spin effects= on
+Brems angular sampling= KM
+Brems cross sections= BH
+Photon cross sections= si
+Electron Impact Ionization= Off
+Photon cross-sections output= off
+Bound Compton scattering= On
+Pair angular sampling= Simple
+Photoelectron angular sampling= On
+Rayleigh scattering= Off
+Atomic relaxations= On
+Set PCUT= 0
+Set PCUT start region= 1
+Set PCUT stop region= 1
+Set ECUT= 0
+Set ECUT start region= 1
+Set ECUT stop region= 1
+Set SMAX= 0
+Set SMAX start region= 1
+Set SMAX stop region= 1
+
+:stop MC transport parameter:
+#########################
+
+##########################
+:start media definition:
+
+
+
+:stop media definition:
+#########################
+
+##########################
+:start variance reduction:
+
+BREM SPLITTING= off
+NUMBER OF BREMS PER EVENT= 1
+CHARGED PARTICLE RUSSIAN ROULETTE= off
+ELECTRON RANGE REJECTION= off
+ESAVEIN= 0.0
+PHOTON FORCING= on
+START FORCING= 1
+STOP FORCING AFTER= 1
+
+:stop variance reduction:
+#########################
+
+##########################
+:start plot control:
+
+PLOTTING= on
+EXTERNAL PLOT TYPE= Histogram
+PLOT RADIAL REGION IX= 0
+PLOT PLANAR REGION IZ= 1, 6
+DRAW FLUENCE PLOTS= Total
+PLOTS FOR ELECTRONS= on
+PLOTS FOR POSITRONS= off
+PLOTS FOR PHOTONS= on
+PLOTS FOR E- AND E+= off
+START SPECTRAL PLOT IN REGION= 2, 10
+STOP SPECTRAL PLOT IN REGION= 2, 10
+
+:stop plot control:
+#########################
+

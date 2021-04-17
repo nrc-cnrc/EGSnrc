@@ -1,0 +1,341 @@
+================================================================================
+EGSnrc version 4 for x86_64-unknown-linux-gnu          Thu Aug 23 18:19:48 2018
+================================================================================
+configuration...............................................test
+user code...................................................cavrznrc
+pegs file...................................................521icru on HEN_HOUSE
+using host..................................................irs25
+input file..................................................quality_test
+output file(s)..............................................quality_test
+================================================================================
+
+
+ Retrieving file: /home/rwtownson/EGSnrc/HEN_HOUSE//spectra/egsnrc/co60.spectrum
+
+ ===> Photonuclear flag:   0
+ RAYLEIGH OPTION REQUESTED FOR MEDIUM NUMBER  1
+
+ RAYLEIGH OPTION REQUESTED FOR MEDIUM NUMBER  2
+
+ Found medium with gas pressure
+
+(Re)-initializing photon cross sections with files from the series: xcom
+
+ Compton cross sections: default
+ Using Compton cross sections from /home/rwtownson/EGSnrc/HEN_HOUSE/data/compton_sigma.data
+ Working on medium   1 ... 
+  ->  100 atomic ff values computed!
+OK
+ Working on medium   2 ... 
+  ->  100 atomic ff values computed!
+OK
+
+Reading screened Rutherford MS data ...............  done 
+
+
+Reading spin data base from /home/rwtownson/EGSnrc/HEN_HOUSE/data/spinms.data
+EGSnrc spin data, version 2.0   
+Data generated on a machine with 1234 endianess
+The endianess of this CPU is 1234
+=> will need to do byte swaping
+Ranges:      1.00   100.00  0.30054  1.00000
+
+
+  medium    1 .....................  done
+  medium    2 .....................  done
+  
+  Medium            1  sige =    6.6086390682093805        6.3869707911872187       monotone =  F F
+  Medium            2  sige =    6.4595132015164030        6.2354615343201143       monotone =  F F
+  
+  Initializing tmxs for estepe =   0.25000000000000000       and ximax =   0.50000000000000000     
+  
+
+Bound Compton scattering requested, reading data ......  Done
+
+ Initializing Bound Compton scattering ......
+ Medium   1 has   3 shells: 
+   1   10   1  0.33333 0.210E+02     0.285
+   2   11   2  0.33333 0.110E+03     0.011
+   3   12   3  0.33333 0.669E+02     0.011
+ Medium   2 has  18 shells: 
+   1   10   1  0.00004 0.210E+02     0.285
+   2   11   2  0.00004 0.110E+03     0.011
+   3   12   3  0.00004 0.669E+02     0.011
+   4   13   1  0.21603 0.178E+02     0.410
+   5   14   2  0.21603 0.921E+02     0.015
+   6   15   3  0.21603 0.558E+02     0.014
+   7   16   4  0.10801 0.558E+02     0.014
+   8   17   1  0.05805 0.155E+02     0.543
+   9   18   2  0.05805 0.793E+02     0.024
+  10   19   3  0.05805 0.479E+02     0.014
+  11   20   4  0.05805 0.479E+02     0.014
+  12   72   1  0.00129 0.671E+01     3.203
+  13   73   2  0.00129 0.271E+02     0.326
+  14   74   3  0.00129 0.142E+02     0.251
+  15   75   4  0.00257 0.142E+02     0.249
+  16   76   5  0.00129 0.889E+02     0.029
+  17   77   6  0.00129 0.606E+02     0.016
+  18   78   7  0.00257 0.606E+02     0.016
+ ...... Done.
+
+Output from subroutine EDGSET:
+==============================
+ Atomic relaxations requested! 
+
+ Reading simplified photo-absorption data ..... Done
+
+ Reading simplified relaxation data ..... Done
+
+ Reading parametrized XCOM photo cross section data ..... Done
+
+ Reading EADL relaxation data ......
+  Z =   6 has  4 shells
+  Z =   7 has  4 shells
+  Z =   8 has  4 shells
+  Z =  18 has  7 shells
+ ...... Done.
+
+EGSnrc SUCCESSFULLY 'HATCHED' FOR     2 MEDIA.
+ Lab-03-cavrz-psplit                                                             
+ *******************************************************************************
+ *                                                                             *
+ *                                                                             *
+ *                               ************                                  *
+ *                               *          *                                  *
+ *                               * CAVRZnrc *                                  *
+ *                               *          *                                  *
+ *                               ************                                  *
+ *                                                                             *
+ *   Cylindrical-geometry EGSnrc user-code for scoring cavity details          *
+ *                                                                             *
+ *   CAVRZnrc was developed by the National Research Council of Canada         *
+ *                                                                             *
+ *     It uses the EGSnrc Code System developed at NRC                         *
+ *     (based on the EGS4Code System Carlo developed by SLAC and NRC)          *
+ *     This is version                                                         *
+ *             running on linux (test)                                         *
+ *                                                                             *
+ *                                                   Thu Aug 23 18:19:48 2018  *
+ *******************************************************************************
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon cross sections                                      xcom
+ Compton cross sections                                     default
+ Photon transport cutoff(MeV)                                Set in regions
+ Pair angular sampling                                       SIM
+ Pair cross sections                                         BH 
+ Triplet production                                          Off
+ Bound Compton scattering                                    NOREJ         
+ Radiative Compton corrections                               Off           
+ Rayleigh scattering                                         ON            
+ Atomic relaxations                                          EADL          
+ Photoelectron angular sampling                              ON            
+
+ Electron transport cutoff(MeV)                              Set in regions
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             KM 
+ Spin effects                                                On
+ Electron Impact Ionization                                  Off
+ Maxium electron step in cm (SMAX)                           Set in regions
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 EXACT     
+ Skin-depth for boundary crossing (MFP)                      3.000    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+********************************************************************************
+
+                   MONTE CARLO, TRANSPORT, AND SCATTER CONTROLS
+
+********************************************************************************
+
+
+                   max # of histories to RUN                   500000
+                   Max # of histories to ANALYZe               500000
+                   Incident Charge                         photons
+                   Spectrum file and title:
+                  /home/rwtownson/EGSnrc/HEN_HOUSE//spectra/egsnrc/co60.spectrum
+                    60-Co  spectrum source capsule and collimators Rogers et al 87
+                     Average spectrum energy is     1.0555
+                     Counts/bin assumed
+                   Energy dist'n, # of incident energy bins 27
+                    Lower energy of first bin:               0.010 (MeV)
+                   bin    kinetic energy     probability  at prob   at bin
+                     1       0.050           3.620E-05      0.0006     25
+                     2       0.100           1.320E-03      0.0221     25
+                     3       0.150           1.301E-02      0.2177     25
+                     4       0.200           2.561E-02      0.4285     25
+                     5       0.250           3.763E-02      0.6296     25
+                     6       0.300           3.554E-02      0.5947     25
+                     7       0.350           2.971E-02      0.4971     25
+                     8       0.400           2.459E-02      0.4114     25
+                     9       0.450           2.027E-02      0.3392     25
+                    10       0.500           2.115E-02      0.3539     25
+                    11       0.550           2.289E-02      0.3830     25
+                    12       0.600           1.879E-02      0.3144     25
+                    13       0.650           1.763E-02      0.2950     25
+                    14       0.700           1.677E-02      0.2806     27
+                    15       0.750           1.813E-02      0.3034     27
+                    16       0.800           1.827E-02      0.3057     27
+                    17       0.850           1.972E-02      0.3300     27
+                    18       0.900           2.157E-02      0.3609     27
+                    19       0.950           2.222E-02      0.3718     27
+                    20       1.000           2.756E-02      0.4611     27
+                    21       1.050           3.000E-02      0.5020     27
+                    22       1.100           2.879E-02      0.4817     27
+                    23       1.150           2.588E-02      0.4330     27
+                    24       1.165           3.660E-03      0.0612     27
+                    25       1.175           5.381E-01      0.4913     27
+                    26       1.325           3.665E-02      0.6132     27
+                    27       1.335           5.381E-01      1.0000      1
+                   GLOBAL ELECTRON TRANSPORT CUT-OFF       0.521 (MeV)
+                   GLOBAL PHOTON TRANSPORT CUT-OFF         0.010 (MeV)
+                   Min/max photon step forced                   1/     1
+                   Range rejection on a region by region basis
+                   Also globally to region between z=   -0.8067 &    0.8067 cm
+                      and inside radius=      0.7919 cm
+                   Range rejection only for electrons < ESAVEIN=     1.000 MeV
+                   Maximum cputime allowed                90.00 (hrs)
+                   Stats in cavity objective               0.000 %
+                   1ST INITIALRANDOM NUMBER SEED                   1
+                   2ND INITIAL RANDOM NUMBER SEED                  4
+                   Initial RNG state:     ixx jxx =   97  33
+                   ** No regeneration requested (IFANO set to 0)! ** 
+********************************************************************************
+
+
+                   MATERIAL SUMMARY   2 MATERIALS USED
+
+
+********************************************************************************
+
+
+# MATERIAL  DENSITY(g/cm**3)      AE(MeV)    AP(MeV)         UE(MeV)    UP(MeV)
+ - --------  ----------------      -------    -------         -------    -------
+ 1   170C52     1.700E+00           0.521      0.010          55.511     55.000
+ 2   AIR521     1.205E-03           0.521      0.010          55.511     55.000
+
+ *******************************************************************************
+
+                             SOURCE PARAMETERS
+
+ *******************************************************************************
+
+                   PARALLEL BEAM INCIDENT ON CYLINDRICAL WALL
+                    RADIAL DIMENSION=   1.175 cm, HALF-LENGTH=   1.263 cm
+ \f
+
+                                                      Thu Aug 23 18:19:48 2018
+
+
+ Lab-03-cavrz-psplit                                                            
+
+                   ZONAL MATERIAL GRID: NON-ROTATED
+                    ******************************
+
+   /X/Y/Z/MED :  X = " "IS DEFAULT: OPTION NOT USED
+                   = "D" IF DOSE SCORING REGION
+                   = "C" IF CAVITY REGION
+                   = "S" IF SPR SCORING REGION
+                 Y = "T" IF TRACKING REGION
+                 Z = "A" IF TOTALLY ABSORBING REGION
+               MED = MEDIUM NAME, 11 CHARACTER ABREVIATION
+  
+         MASS = MASS OF EACH REGION IN GRAMS                                
+
+         0.0000                 0.3352                 0.7919           1.1750
+   -1.2628-------------------------------------------------------------------
+          |IRL  2 IZ   1 IX   1 |IRL  6 IZ   1 IX   2 |IRL 10 IZ   1 IX   3 |
+          | / / / /170C521ICRU  | / / / /170C521ICRU  | / / / /170C521ICRU  |
+          |  MASS   2.736E-01   |  MASS   1.254E+00   |  MASS   1.835E+00   |
+   -0.8067-------------------------------------------------------------------
+          |IRL  3 IZ   2 IX   1 |IRL  7 IZ   2 IX   2 |IRL 11 IZ   2 IX   3 |
+          | / / / /AIR521ICRU   | / / / /AIR521ICRU   | / / / /170C521ICRU  |
+          |  MASS   1.758E-04   |  MASS   8.052E-04   |  MASS   1.663E+00   |
+   -0.3935-------------------------------------------------------------------
+          |IRL  4 IZ   3 IX   1 |IRL  8 IZ   3 IX   2 |IRL 12 IZ   3 IX   3 |
+          | / / / /170C521ICRU  | / / / /AIR521ICRU   | / / / /170C521ICRU  |
+          |  MASS   7.202E-01   |  MASS   2.338E-03   |  MASS   4.830E+00   |
+    0.8067-------------------------------------------------------------------
+          |IRL  5 IZ   4 IX   1 |IRL  9 IZ   4 IX   2 |IRL 13 IZ   4 IX   3 |
+          | / / / /170C521ICRU  | / / / /170C521ICRU  | / / / /170C521ICRU  |
+          |  MASS   2.736E-01   |  MASS   1.254E+00   |  MASS   1.835E+00   |
+    1.2628-------------------------------------------------------------------
+ \f
+Lab-03-cavrz-psplit                                                             
+
+Calculation using CAVRZnrc(EGSnrc)   
+ ONlinux (test)                                        Thu Aug 23 18:19:48 2018
+
+
+*******************************************************************************
+
+
+                   EXECUTION INFORMATION AND WARNING MESSAGES
+
+
+*******************************************************************************
+
+
+USING CAVRZnrc(EGSnrc)   ON linux(test) 
+
+********* NEW INPUT FILE *********
+
+
+*********DESIRED STATISTICAL ACCURACY OF  0.00% NOT REACHED*********
+ STATS IN CAVITY=  0.70 % AFTER 10 BATCHES
+
+********* FINAL RANDOM NUMBER STATE: ixx jxx =   97  33  *********
+
+Finished simulations:
+     time elapsed,cputime,ratio=      5.7     5.6(= 0.00hr)    1.01
+
+    CPUtime/history=   0.00001  sec.  Histories/hour=  320812442.
+
+
+                     # primary charged particle steps     0.000E+00 +/- 99.900%
+      # primary charged particle steps/initial history    0.000E+00 +/- 99.900%
+ # of presta-II steps/# primary charged particle steps     Infinity +/- 99.900%
+
+
+    # primary charged particle steps in cavity region     0.000E+00 +/- 99.900%
+     # primary steps in cavity region/initial history     0.000E+00 +/- 99.900%
+
+
+                   SUM OF RESULTS FOR THE CAVITY:  3 REGIONS
+                   *****************************************
+
+                   This calculation was performed using photon splitting 
+                     splitting number was     20
+                   ===================================================== 
+
+
+TOTAL DOSE (GRAYS/INCIDENT FLUENCE):              4.4518E-12 +/-   0.70%
+ TOTAL DOSE/Awall:                                4.5456E-12 +/-   0.69%
+ Awall:                                           0.97937    +/-  0.24%
+ Kwall:                                           1.02106    +/-  0.25%
+
+END OF RUN          Thu Aug 23 18:19:54 2018
+
+
+
+
+
+
+================================================================================
+Finished simulation
+
+  Elapsed time:                    5.9 s (  0.002 h)
+  CPU time:                        5.7 s (  0.002 h)
+  Ratio:                          1.032
+
+
+End of run                                             Thu Aug 23 18:19:54 2018
+================================================================================

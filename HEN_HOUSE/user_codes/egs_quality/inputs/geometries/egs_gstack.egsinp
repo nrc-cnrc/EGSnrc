@@ -1,0 +1,86 @@
+###############################################################################
+#
+#  EGSnrc egs_quality input
+#  Copyright (C) 2017 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Reid Townson, 2017
+#
+#  Contributors:
+#
+###############################################################################
+#
+#
+#
+#
+###############################################################################
+
+:start geometry definition:
+
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 2 2 1
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = my_conestack
+        axis = 0 0 -0.5 0 0 -1
+        :start layer:
+            thickness = 0.1
+            top radii = 1
+            bottom radii = 0.5
+            media = water
+        :stop layer:
+        :start layer:
+            thickness = 0.1
+            top radii = 0. 0.5
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 0.2
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 2
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = water air water
+        :stop layer:
+    :stop geometry:
+
+    :start geometry:
+        name            = quality_geom
+        library         = egs_gstack
+        geometries      = my_box my_conestack
+        tolerance       = 1e-4
+
+        set label = quality_doseLabel 0
+    :stop geometry:
+
+    simulation geometry = quality_geom
+
+:stop geometry definition:
