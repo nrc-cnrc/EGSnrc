@@ -181,7 +181,7 @@ var defineShowROICheckboxBehaviour = function (volumeViewer, checkbox) { // esli
 var defineShowDVHCheckboxBehaviour = function (volumeViewer, checkbox) { // eslint-disable-line no-unused-vars
   if (checkbox.checked) {
     if (volumeViewer.structureSetVolume && volumeViewer.DVH && volumeViewer.doseVolume) {
-      // Show DVH plots
+      // Show DVH plot
       volumeViewer.DVH.parentSvg.style('display', null)
       volumeViewer.DVH.setDVHData(volumeViewer.structureSetVolume, volumeViewer.doseVolume)
       volumeViewer.DVH.createPlots()
@@ -191,6 +191,8 @@ var defineShowDVHCheckboxBehaviour = function (volumeViewer, checkbox) { // esli
       volumeViewer.saveDVHButton.node().disabled = false
     }
   } else {
+    // Reset the zoom and hide the plot
+    volumeViewer.DVH.resetZoomTransform()
     volumeViewer.DVH.parentSvg.style('display', 'none')
 
     // Disable saving DVH as csv
@@ -206,14 +208,24 @@ var defineNormalizeDoseCheckboxBehaviour = function (volumeViewer, checkbox) { /
     // Enable the input boxes
     volumeViewer.doseNormValInput.select('input').attr('disabled', null)
     volumeViewer.doseNormPercentInput.select('input').attr('disabled', null)
+
+    // Reset the zoom on the DVH
+    if (volumeViewer.showROIOutlinesCheckbox.node().checked) {
+      volumeViewer.DVH.resetZoomTransform()
+    }
   } else {
     // Disable the input boxes and clear the values
     volumeViewer.doseNorm = 1
-    volumeViewer.DVH.plotDVH(volumeViewer.doseNorm)
     volumeViewer.doseNormValInput.select('input').node().value = null
     volumeViewer.doseNormPercentInput.select('input').node().value = null
     volumeViewer.doseNormValInput.select('input').attr('disabled', 'disabled')
     volumeViewer.doseNormPercentInput.select('input').attr('disabled', 'disabled')
+
+    // Update the normalization for the DVH
+    if (volumeViewer.showROIOutlinesCheckbox.node().checked) {
+      volumeViewer.DVH.resetZoomTransform()
+      volumeViewer.DVH.plotDVH(volumeViewer.doseNorm)
+    }
   }
 }
 

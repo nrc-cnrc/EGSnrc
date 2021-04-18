@@ -32,11 +32,8 @@
 /* global d3 */
 
 // REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
-/* global getZoom */
-/* global zoomedDoseProfile */
 /* global DVH_DIMENSIONS */
 
-// import { getZoom, zoomedDoseProfile } from './zoom.js'
 // import { DOSE_PROFILE_DIMENSIONS } from './index.js'
 /** @class DoseVolumeHistogram contains all information to build a dose volume
  * histogram from a given structure set volume and dose volume. */
@@ -59,22 +56,23 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
     this.parentSvg = this.buildParentSvg(DVH_DIMENSIONS, parentDiv)
     this.svg = this.buildPlottingSvg(DVH_DIMENSIONS, this.parentSvg, id)
 
-    // // Set up zoom object
-    // this.zoomObj = getZoom(
-    //   dimensions.width,
-    //   dimensions.height,
-    //   zoomedDoseProfile,
-    //   [this]
-    // )
+    // Set up zoom object
+    this.zoomObj = d3
+      .zoom()
+      .extent([
+        [0, 0],
+        [dimensions.width, dimensions.height]
+      ])
+      .scaleExtent([1, 8])
+      .on('zoom', () => this.zoomedDVH(d3.event.transform))
 
-    // // Enable zooming
-    // this.svg.select('rect.bounding-box').call(this.zoomObj)
+    // Enable zooming
+    this.svg.select('rect.bounding-box').call(this.zoomObj)
 
     // Initialize all properties
     this.xDoseScale = null
     this.yVolumeScale = null
     this.maxDose = null
-    this.transform = null
     this.data = null
   }
 
@@ -145,6 +143,53 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
   }
 
   /**
+ * The zoom callback function for DVH plots.
+ *
+ * @param {Object} transform The zoom transform object.
+ */
+  zoomedDVH (transform) {
+    this.svg
+      .selectAll('path.roi-outline')
+      .attr('transform', transform.toString())
+
+    // Create new scale objects based on event
+    var newxDoseScale = transform.rescaleX(this.xDoseScale)
+    var newyVolumeScale = transform.rescaleY(this.yVolumeScale)
+
+    // Create and append x and y axes
+    const xAxis = d3
+      .axisBottom()
+      .scale(newxDoseScale)
+      .tickFormat(d3.format('.0f'))
+      .tickSize(-this.dimensions.height)
+
+    const yAxis = d3
+      .axisLeft()
+      .scale(newyVolumeScale)
+      .ticks(6)
+      .tickFormat(d3.format('.0%'))
+      .tickSize(-this.dimensions.width)
+
+    // Update axes
+    this.svg
+      .select('g.dvh-x-axis')
+      .call(xAxis)
+
+    this.svg
+      .select('g.dvh-y-axis')
+      .call(yAxis)
+  }
+
+  /**
+     * Resets the zoom of the DVH plot.
+     */
+  resetZoomTransform () {
+    this.svg
+      .select('rect.bounding-box')
+      .call(this.zoomObj.transform, d3.zoomIdentity.scale(1))
+  }
+
+  /**
    * Set the dose profile data for the current slice
    *
    * @param {DoseVolume} structureSetVol The structure set volume object.
@@ -186,7 +231,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
     this.svg.selectAll('g.dvh-x-axis').remove()
     this.svg.selectAll('g.dvh-y-axis').remove()
 
-    // Create and append x and dose y axes
+    // Create and append x and y axes
     const xAxis = d3
       .axisBottom()
       .scale(this.xDoseScale)
