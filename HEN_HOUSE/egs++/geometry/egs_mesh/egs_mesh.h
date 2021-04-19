@@ -246,7 +246,7 @@ private:
 
     std::vector<EGS_Vector> _elt_points;
     std::vector<bool> _boundary_faces;
-    std::vector<std::uint8_t> _boundary_elts;
+    std::vector<bool> _boundary_elts;
     std::vector<int> _medium_indices;
     std::vector<std::string> _medium_names;
     std::string _filename;
