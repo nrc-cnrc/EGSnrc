@@ -156,8 +156,57 @@ var defineShowMarkerCheckboxBehaviour = function (volumeViewer, checkbox) { // e
  */
 var defineShowROICheckboxBehaviour = function (volumeViewer, checkbox) { // eslint-disable-line no-unused-vars
   if (checkbox.checked) {
-    // Set volume viewer structure set to the set most recently added
-    volumeViewer.setStructureSetVolume(structureSetVolumeList[structureSetVolumeList.length - 1])
+    // Given the voxel array, return the range of values for each dimension
+    const getRange = (voxArr) => {
+      var range = {}
+      Object.entries(voxArr).forEach(([dim, vals]) => {
+        range[dim] = [vals[0], vals[vals.length - 1]]
+      })
+      return range
+    }
+
+    // Returns true if ROIOutlines overlap with voxelArr
+    const overlap = (ROIOutlines, voxelArr) => {
+      // First get ROI range
+      const ROIRange = getRange(ROIOutlines[0].voxelArr)
+      ROIOutlines.forEach((ROIOutline) => {
+        const range = getRange(ROIOutline.voxelArr)
+        Object.entries(range).forEach(([dim, vals]) => {
+          if (range[dim][0] < ROIRange[dim][0]) ROIRange[dim][0] = range[dim][0]
+          if (range[dim][1] > ROIRange[dim][1]) ROIRange[dim][1] = range[dim][1]
+        })
+      })
+
+      // Get density or dose range
+      const voxelRange = getRange(voxelArr)
+
+      // Determine if the areas overlap
+      const overlap = Object.entries(ROIRange).reduce((acc, [dim, range]) => {
+        return (acc && (voxelRange[dim][0] <= range[1]) && (range[0] <= voxelRange[dim][1]))
+      }, 1)
+
+      return overlap
+    }
+
+    // Set volume viewer structure set to the set that overlaps with the current
+    // files displayed
+    var structureSetVol
+    for (let i = 0; i < structureSetVolumeList.length; i++) {
+      structureSetVol = structureSetVolumeList[i]
+      // Check if studyInstanceUID matches or areas overlap
+      if ((volumeViewer.densityVolume &&
+           ((structureSetVol.data.studyInstanceUID === volumeViewer.densityVolume.data.studyInstanceUID) ||
+           overlap(structureSetVol.ROIoutlines, volumeViewer.densityVolume.data.voxelArr))) ||
+          (volumeViewer.doseVolume &&
+            ((structureSetVol.data.studyInstanceUID === volumeViewer.doseVolume.data.studyInstanceUID) ||
+            overlap(structureSetVol.ROIoutlines, volumeViewer.doseVolume.data.voxelArr)))) {
+        volumeViewer.setStructureSetVolume(structureSetVol)
+      } else {
+        console.log('No structure set matches current dose/density files')
+        checkbox.checked = false
+      }
+    }
+
     if (volumeViewer.doseVolume && volumeViewer.showROIOutlinesCheckbox.node().checked) volumeViewer.enableCheckbox(volumeViewer.showDVHCheckbox)
   } else {
     // Set volume viewer structure set to null
