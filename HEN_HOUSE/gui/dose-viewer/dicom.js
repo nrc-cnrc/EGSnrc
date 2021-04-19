@@ -61,7 +61,8 @@ function combineDICOMDoseData (DICOMList) { // eslint-disable-line no-unused-var
     },
     dose: dose, // The flattened dose matrix
     // error: error, // The flattened error matrix
-    maxDose: maxDose // The maximum dose value
+    maxDose: maxDose, // The maximum dose value
+    studyInstanceUID: sampleData.studyInstanceUID // The study instance identifier
   }
 
   return DICOMData
@@ -109,7 +110,8 @@ function combineDICOMDensityData (DICOMList) { // eslint-disable-line no-unused-
     // materialList: materialList, // The materials in the phantom
     // material: material, // The flattened material matrix
     maxDensity: 3071, // The maximum density value 3071 HU
-    minDensity: -1024 // The minimum density value -1024 HU
+    minDensity: -1024, // The minimum density value -1024 HU
+    studyInstanceUID: data.studyInstanceUID // The study instance identifier
   }
 
   return DICOMData
@@ -320,7 +322,8 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
           x: xVoxSize, // The voxel size in the x direction
           y: yVoxSize // The voxel size in the y direction
         },
-        zPos: Sz
+        zPos: Sz,
+        studyInstanceUID: propertyValues.StudyInstanceUID
       }
 
       // If there are multiple frames
@@ -374,7 +377,7 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
 
         ROIs[i] = { type: dicomType, ...contourSequence, ...structureSetSequence, ...RTROIObservationsSequence }
       }
-      return { type: dicomType, ROIs: ROIs }
+      return { type: dicomType, ROIs: ROIs, studyInstanceUID: propertyValues.StudyInstanceUID }
     }
   } catch (ex) {
     console.log('Error parsing byte stream', ex)
