@@ -727,7 +727,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .attr('step', 1)
       .style('width', 45 + 'px')
       .attr('disabled', 'disabled').on('change', function () {
-        const doseNormVal = parseFloat(this.value)
+        const doseNormVal = parseFloat(this.value) * 100 // Convert from cGy to Gy
         const doseNormPercent = parseFloat(volViewer.doseNormPercentInput.select('input').node().value) / 100 // Convert from percent to decimal
 
         if (doseNormPercent) volViewer.normalizeDoseValues(doseNormVal, doseNormPercent)
@@ -750,7 +750,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .attr('step', 1)
       .style('width', 45 + 'px')
       .attr('disabled', 'disabled').on('change', function () {
-        const doseNormVal = parseFloat(volViewer.doseNormValInput.select('input').node().value)
+        const doseNormVal = parseFloat(volViewer.doseNormValInput.select('input').node().value) * 100 // Convert from cGy to Gy
         const doseNormPercent = parseFloat(this.value) / 100 // Convert from percent to decimal
 
         if (doseNormVal) volViewer.normalizeDoseValues(doseNormVal, doseNormPercent)
@@ -1204,17 +1204,6 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     if (this.showDVHCheckbox.node().checked) {
       this.DVH.plotDVH(this.doseNorm)
     }
-
-    // Update dose volume
-    Object.values(this.panels).forEach((panel, i) => {
-      this.doseVolume.drawDose(this.doseVolume.sliceCache[panel.axis][panel.doseSliceNum], panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
-      // if (panel.showDoseProfile()) {
-      //   // Update dose profile
-      //   this.doseProfileList[i].minDoseVar = this.minDoseVar
-      //   this.doseProfileList[i].maxDoseVar = this.maxDoseVar
-      //   this.doseProfileList[i].plotData()
-      // }
-    })
 
     // if (this.doseVolume instanceof DoseComparisonVolume) {
     //   ...
