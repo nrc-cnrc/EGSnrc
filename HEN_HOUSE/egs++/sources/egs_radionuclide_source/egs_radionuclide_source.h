@@ -283,51 +283,28 @@ class EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_RadionuclideSource :
     public EGS_BaseSource {
 
 public:
-
-    /*! \brief Geometry confinement options */
-    enum GeometryConfinement {
-        IncludeAll      = 0,
-        ExcludeAll      = 1,
-        IncludeSelected = 2,
-        ExcludeSelected = 3
-    };
-
     /*! \brief Constructor from input file */
     EGS_RadionuclideSource(EGS_Input *, EGS_ObjectFactory *f=0);
 
     /*! \brief Destructor */
-    ~EGS_RadionuclideSource() {
-        if (shape) {
-            EGS_Object::deleteObject(shape);
-        }
-        if (geom) {
-            if (!geom->deref()) {
-                delete geom;
-            }
-        }
-        if (nrs > 0 && regions) {
-            delete [] regions;
-        }
-        if (source_shape) {
-            EGS_Object::deleteObject(source_shape);
-        }
-        if (target_shape) {
-            EGS_Object::deleteObject(target_shape);
-        }
+    ~EGS_RadionuclideSource() {		
+		if (baseSource)
+			if (!baseSource->deref()) {
+				delete baseSource;
+			}
 
-        for (vector<EGS_RadionuclideSpectrum * >::iterator it =
-                    decays.begin();
-                it!=decays.end(); it++) {
-            delete *it;
-            *it=0;
-        }
-        decays.clear();
+		for (vector<EGS_RadionuclideSpectrum * >::iterator it =
+			decays.begin(); it!=decays.end(); it++) {
+			delete *it;
+			*it=0;
+		}
+		decays.clear();
     };
 
     /*! \brief Gets the next particle from the radionuclide spectra */
     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
-                            EGS_Vector &x, EGS_Vector &u);
+                            EGS_Vector &x, EGS_Vector &u); 
 
     /*! \brief Returns the maximum energy out of all the spectra */
     EGS_Float getEmax() const {
@@ -336,15 +313,8 @@ public:
 
     /*! \brief Returns the current fluence (number of disintegrations) */
     EGS_Float getFluence() const {
-        if (sourceType == "isotropic") {
-            return ishower+1;
-        }
-        else if (sourceType == "collimated") {
-            double res = ctry + ishower+1;
-            return res/(dist*dist);
-        }
-
-        return ishower+1;
+        return (ishower+1)*(baseSource->getFluence()/sCount);
+		//!< Scale ishower+1 return by fluence ratio returned by file
     };
 
     /*! \brief Returns the emission time of the most recent particle */
@@ -382,22 +352,9 @@ public:
         egsInformation("======================================================\n\n");
     };
 
-    /*! \brief Calculates the position and direction of a new source particle */
-    void getPositionDirection(EGS_RandomGenerator *rndm,
-                              EGS_Vector &x, EGS_Vector &u, EGS_Float &wt);
-
     /*! \brief Checks the validity of the source */
     bool isValid() const {
-        if (sourceType == "isotropic") {
-            return (decays.size() != 0 && shape != 0);
-        }
-        else if (sourceType == "collimated") {
-            return (decays.size() != 0 && source_shape != 0 &&
-                    target_shape != 0 &&
-                    target_shape->supportsDirectionMethod());
-        }
-
-        return false;
+        return baseSource;
     };
 
     /*! \brief Store the source state to the data stream \a data_out.
@@ -439,23 +396,9 @@ private:
 
     void setUp();
 
-    string sourceType;
-
-    // Isotropic source inputs
-    EGS_BaseShape *shape;  //!< The shape from which particles are emitted.
-    EGS_BaseGeometry    *geom; //!< A reference geometry for the source shape
-    int                 *regions; //!< Regions to include/exclude from the reference geometry
-    int       nrs; //!< Number of reference regions
-    EGS_Float min_theta, max_theta; //!< Minimum and maximum theta angle of emission
-    EGS_Float min_phi, max_phi; //!< Minimum and maximum phi angle of emission
-    EGS_Float buf_1, buf_2;
-    GeometryConfinement gc; //!< The geometry confinement mode
-
-    // Collimated source inputs
-    EGS_BaseShape *source_shape,  //!< The source shape
-                  *target_shape;  //!< The target shape
-    EGS_I64       ctry;           //!< Number of attempts to sample a particle
-    EGS_Float     dist;           //!< Source-target shape min. distance
+    string sName; //!< Name of the base source
+    EGS_I64 sCount; //!< Name of the base source
+    EGS_BaseSource *baseSource; //!< Pointer to the base source
 
     vector<int>         q_allowed; //!< A list of allowed charges
     vector<EGS_RadionuclideSpectrum *> decays; //!< The radionuclide decay structure
