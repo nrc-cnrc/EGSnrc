@@ -6703,30 +6703,9 @@ IF (IQI = 2) ["PI-ZERO OPTION"
   CALL UPHI(3,2);
 ]"end of pi-zero option"
 
-"The following convoluted logic is difficult to follow"
-"when one modifies the outcome of certain interactions"
-"using nbr_split, Russian Roulette, or one of the     "
-"particle selection macros. I'm simplifying it        "
-"so that ircode becomes irrelevant. IK, August 2002   "
-":TOPSTACK:"
-"LOOP["
-"   $KERMA-INSERT;"
-"   IF(IQ(NP) = 0) GO TO :PHOTON:;"
-"   LOOP ["
-"      :ELECTRON:"
-"      CALL ELECTR(IRCODE);"
-"      IF(IRCODE.EQ.2) EXIT; "
-"      :PHOTON:"
-"      CALL PHOTON(IRCODE);"
-"      IF(IRCODE.EQ.2) EXIT;"
-"   ]REPEAT"
-"   IF(NP <= 0) EXIT;"
-"]REPEAT "
-
 LOOP [
     ;
     IF( np <= 0 ) EXIT;
-    $KERMA-INSERT;  " DEFAULT FOR $KERMA-INSERT; IS ; (NULL)"
     IF( iq(np) = 0 ) [ call photon(ircode); ]
     ELSE             [ call electr(ircode); ]
 
