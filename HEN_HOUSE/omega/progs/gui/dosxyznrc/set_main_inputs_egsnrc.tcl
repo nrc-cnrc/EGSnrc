@@ -256,7 +256,7 @@ proc edit_parameters {} {
     frame $w
     frame $w1
     frame $w2
-    foreach j { 5 6 7 8 9 10 12 ihowfarless } {
+    foreach j { 5 6 7 8 9 10 12 ihowfarless ibindos } {
 	frame $w1.inp$j -bd 4
 	button $w1.inp$j.help -text "?"	-command "help $j"
 	label $w1.inp$j.label -text $names($j) -anchor w
