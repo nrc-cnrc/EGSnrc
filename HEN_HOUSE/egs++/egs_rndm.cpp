@@ -249,7 +249,7 @@ void EGS_Ranmar::setState(EGS_RandomGenerator *r) {
     copyBaseState(*r);
     EGS_Ranmar *r1 = dynamic_cast<EGS_Ranmar *>(r);
     if (!r1) {
-        egsFatal("EGS_Ranmar::setState: attampt to set my state by a non EGS_Ranmar RNG!\n");
+        egsFatal("EGS_Ranmar::setState: attempt to set my state by a non EGS_Ranmar RNG!\n");
     }
     ix = r1->ix;
     jx = r1->jx;
@@ -404,6 +404,230 @@ void EGS_Ranmar::fillArray(int n, EGS_Float *array) {
     count += n;
 }
 
+/* end of class EGS_Ranmar */
+
+/*! \brief A ranlux RNG class.
+ *
+ * This RNG class implements the RANLUX generator by Luescher.
+ * This generator has proven mathematical properties and
+ * provides increasing levels of decorrelation (luxury).
+ */
+class EGS_LOCAL EGS_Ranlux : public EGS_RandomGenerator {
+    
+public:
+
+    EGS_Ranlux(int luxury=1, unsigned long int seedin=0, int n=24) :
+        EGS_RandomGenerator(n), copy(0) {
+        setState(luxury,seedin);
+    };
+
+    EGS_Ranlux(const EGS_Ranlux &r) : EGS_RandomGenerator(r),
+        i(r.i), j(r.j), n(r.n), skip(r.skip), carry(r.carry) {
+        for (int j=0; j<24; j++) {
+            u[j] = r.u[j];
+        }
+    };
+
+    ~EGS_Ranlux() {
+        if (copy) {
+            delete copy;
+        }
+    };
+
+    void fillArray(int n, EGS_Float *array);
+
+    void describeRNG() const;
+
+    EGS_RandomGenerator *getCopy();
+
+    void setState(EGS_RandomGenerator *r);
+
+    void saveState();
+    void resetState();
+
+    int rngSize() const {
+        return baseSize() + 5*sizeof(unsigned int) + 24*sizeof(unsigned long int);
+    };
+
+protected:
+
+    bool storePrivateState(ostream &data);
+
+    bool setPrivateState(istream &data);
+
+    void set(const EGS_Ranlux &r) {
+        copyBaseState(r);
+        i = r.i;
+        j = r.j;
+        n = r.n;
+        skip = r.skip;
+        carry = r.carry;
+        for (int j=0; j<24; j++) {
+            u[j] = r.u[j];
+        }
+    };
+
+private:
+
+    void setState(int luxury, unsigned long int seedin);
+    unsigned long int incrState();
+    unsigned long int getSingle();
+
+    unsigned int i,j,n,skip,carry;
+    unsigned long int u[24];
+
+    unsigned int iseed1, iseed2;
+
+    static const unsigned long int mask_lo,mask_hi,twop24;
+    static const int skip_lux[5];
+    static const int next[24];
+
+    EGS_Ranlux *copy;
+
+};
+
+void EGS_Ranlux::saveState() {
+    if (copy) {
+        copy->set(*this);
+    }
+    else {
+        copy = new EGS_Ranlux(*this);
+    }
+    copy->copy = 0;
+}
+
+void EGS_Ranlux::resetState() {
+    if (copy) {
+        EGS_Ranlux *tmp = copy;
+        set(*copy);
+        copy = tmp;
+    }
+}
+
+EGS_RandomGenerator *EGS_Ranlux::getCopy() {
+    EGS_Ranlux *c = new EGS_Ranlux(*this);
+    c->np = 0;
+    c->copy = 0;
+    c->copyBaseState(*this);
+    return c;
+}
+
+void EGS_Ranlux::setState(EGS_RandomGenerator *r) {
+    copyBaseState(*r);
+    EGS_Ranlux *r1 = dynamic_cast<EGS_Ranlux *>(r);
+    if (!r1) {
+        egsFatal("EGS_Ranlux::setState: attempt to set my state by a non EGS_Ranlux RNG\n!");
+    }
+    i = r1->i;
+    j = r1->j;
+    n = r1->n;
+    skip = r1->skip;
+    carry = r1->carry;
+    for (int j=0; j<24; j++) {
+        u[j] = r1->u[j];
+    }
+}
+
+bool EGS_Ranlux::storePrivateState(ostream &data) {
+    data << i << " " << j << " " << n << " " << skip << " " << carry << endl;
+    for (int j=0; j<24; j++) {
+        data << u[j] << " ";
+    }
+    data << endl;
+    return data.good();
+}
+
+bool EGS_Ranlux::setPrivateState(istream &data) {
+    data >> i >> j >> n >> skip >> carry;
+    for (int j=0; j<24; j++) {
+        data >> u[j];
+    }
+    return data.good();
+}
+
+const unsigned long int EGS_Ranlux::mask_lo =  0x00ffffffUL;
+const unsigned long int EGS_Ranlux::mask_hi = ~0x00ffffffUL;
+const unsigned long int EGS_Ranlux::twop24  =  0x01000000UL;
+const int EGS_Ranlux::skip_lux[5] = {0,24,73,199,365}; /* p - 24 */
+const int EGS_Ranlux::next[24] = {23,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22};
+
+void EGS_Ranlux::describeRNG() const {
+    egsInformation("Random number generator:\n"
+                   "============================================\n");
+    egsInformation("  type                = ranlux\n");
+    egsInformation("  luxury level        = %d\n",iseed1);
+    egsInformation("  initial seed        = %d\n",iseed2);
+    egsInformation("  numbers used so far = %lld\n",count);
+}
+
+void EGS_Ranlux::setState(int luxury, unsigned long int seedin) {
+    unsigned long int k;
+    long int seed;
+    int j;
+
+    seed = seedin;
+    if( seed == 0 ) seed = 314159265;
+    if( luxury < 0 || luxury > 4 ) luxury = 1;
+
+    iseed1 = luxury;
+    iseed2 = seedin;
+
+    for (j=0; j<24; j++) {
+        k = seed / 53668;
+        seed = 40014 * (seed - k * 53668) - k * 12211;
+        if( seed < 0 ) seed += 2147483563;
+        u[j] = seed % twop24;
+    }
+
+    i = 23;
+    j = 9;
+    n = 0;
+    skip = skip_lux[luxury];
+    carry = (u[23] & mask_hi) ? 1 : 0;
+}
+
+inline unsigned long int EGS_Ranlux::incrState() {
+    long int delta = u[j] - u[i] - carry;
+
+    if (delta & mask_hi) {
+        carry = 1;
+        delta &= mask_lo;
+    }
+    else {
+        carry = 0;
+    }
+
+    u[i] = delta;
+
+    i = next[i];
+    j = next[j];
+
+    return delta;
+}
+
+inline unsigned long int EGS_Ranlux::getSingle() {
+    unsigned long int r = incrState();
+
+    n++;
+
+    if (n == 24) {
+        n = 0;
+        for (unsigned int i=0; i<skip; i++) {
+            incrState();
+        }
+    }
+
+    return r;
+}
+
+void EGS_Ranlux::fillArray(int nn, EGS_Float *array) {
+    for(int j=0; j<nn; j++) {
+        array[j] = getSingle() / 16777216.0;
+    }
+    count += nn;
+}
+
+/* end of class EGS_Ranlux */
 
 EGS_RandomGenerator *EGS_RandomGenerator::createRNG(EGS_Input *input,
         int sequence) {
@@ -448,6 +672,18 @@ EGS_RandomGenerator *EGS_RandomGenerator::createRNG(EGS_Input *input,
         hr_options.push_back("yes");
         bool hr = i->getInput("high resolution",hr_options,0);
         res->setHighResolution(hr);
+        result = res;
+    }
+    else if (i->compare(type,"ranlux")) {
+        vector<int> seeds;
+        err = i->getInput("initial seeds",seeds);
+        EGS_Ranlux *res;
+        if (!err && seeds.size() == 2) {
+            res = new EGS_Ranlux(seeds[0],seeds[1] + sequence);
+        }
+        else {
+            res = new EGS_Ranlux(1,314159265+sequence);
+        }
         result = res;
     }
     else {
