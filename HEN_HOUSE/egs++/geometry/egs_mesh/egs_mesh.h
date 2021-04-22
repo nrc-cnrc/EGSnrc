@@ -210,6 +210,9 @@ private:
     int howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         EGS_Float &t, int *newmed, EGS_Vector *normal);
 
+    // `isWhere` helper method to check if a point x is inside element i
+    bool insideElement(int i, const EGS_Vector &x);
+
     struct Intersection {
         Intersection(EGS_Float dist, int face_index)
             : dist(dist), face_index(face_index) {}
@@ -218,6 +221,22 @@ private:
         /// Face index
         int face_index;
     };
+
+    struct Nodes {
+        const EGS_Vector& A;
+        const EGS_Vector& B;
+        const EGS_Vector& C;
+        const EGS_Vector& D;
+    };
+
+    Nodes element_nodes(int element) const {
+        return Nodes {
+            _elt_points.at(4*element),
+            _elt_points.at(4*element + 1),
+            _elt_points.at(4*element + 2),
+            _elt_points.at(4*element + 3),
+        };
+    }
 
     // `howfar` helper: Determine the closest boundary face intersection
     Intersection closest_boundary_face(int ireg, const EGS_Vector& x, const EGS_Vector& u);
