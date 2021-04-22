@@ -57,54 +57,6 @@ var getZoom = (width, height, zoomCallback, args) => // eslint-disable-line no-u
     .on('zoom', () => zoomCallback(d3.event.transform, ...args))
 
 /**
- * The zoom callback function for dose profiles.
- *
- * @param {Object} transform The zoom transform object.
- * @param {DoseProfile} doseProfile The dose profile to be zoomed.
- */
-function zoomedDoseProfile (transform, doseProfile) { // eslint-disable-line no-unused-vars
-  doseProfile.zoomTransform = transform
-  doseProfile.svg
-    .selectAll('path.lines')
-    .attr('transform', transform.toString())
-
-  // Create new scale objects based on event
-  var newxScale = transform.rescaleX(doseProfile.xScale)
-  var newyDoseScale = transform.rescaleY(doseProfile.yDoseScale)
-
-  // Update axes
-  doseProfile.svg
-    .select('.profile-x-axis')
-    .call(
-      d3.axisBottom().scale(newxScale).tickSize(-doseProfile.dimensions.height)
-    )
-
-  doseProfile.svg
-    .select('.profile-y-dose-axis')
-    .call(
-      d3
-        .axisLeft()
-        .scale(newyDoseScale)
-        .ticks(doseProfile.yTicks)
-        .tickFormat(d3.format('.0%'))
-        .tickSize(-doseProfile.dimensions.width)
-    )
-
-  if (doseProfile.densityChecked()) {
-    var newyDensityScale = transform.rescaleY(doseProfile.yDensityScale)
-    doseProfile.svg
-      .select('.profile-y-density-axis')
-      .call(
-        d3
-          .axisLeft()
-          .scale(newyDensityScale)
-          .ticks(doseProfile.yTicks)
-          .tickSize(-doseProfile.dimensions.width)
-      )
-  }
-}
-
-/**
  * The zoom callback function for the density plots.
  *
  * @param {Object} transform The zoom transform object.

@@ -30,14 +30,10 @@
 
 // definitions for StandardJS formatter
 /* global d3 */
-/* global doseProfileAxis */
 
 // REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
-/* global getZoom */
-/* global zoomedDoseProfile */
 /* global DOSE_PROFILE_DIMENSIONS */
 
-// import { getZoom, zoomedDoseProfile } from './zoom.js'
 // import { DOSE_PROFILE_DIMENSIONS } from './index.js'
 
 /** @class DoseProfile contains all information to build a dose profile at a line through a dose volume. */
@@ -58,12 +54,14 @@ class DoseProfile { // eslint-disable-line no-unused-vars
     this.buildSvg(dimensions, parentDiv, id)
 
     // Set up zoom object
-    this.zoomObj = getZoom(
-      dimensions.width,
-      dimensions.height,
-      zoomedDoseProfile,
-      [this]
-    )
+    this.zoomObj = d3
+      .zoom()
+      .extent([
+        [0, 0],
+        [dimensions.width, dimensions.height]
+      ])
+      .scaleExtent([1, 8])
+      .on('zoom', () => this.zoomedDoseProfile(d3.event.transform))
 
     // Enable zooming
     this.svg.select('rect.bounding-box').call(this.zoomObj)
@@ -83,20 +81,6 @@ class DoseProfile { // eslint-disable-line no-unused-vars
     this.profileDim = null
     this.minDoseVar = null
     this.maxDoseVar = null
-  }
-
-  /**
-   * Set the transform variable used for zooming.
-   */
-  set zoomTransform (val) {
-    this.transform = val
-  }
-
-  /**
-   * Get the transform variable used for zooming.
-   */
-  get zoomTransform () {
-    return this.transform
   }
 
   /**
@@ -147,21 +131,49 @@ class DoseProfile { // eslint-disable-line no-unused-vars
   }
 
   /**
-   * Initializes the zoom of the dose profile plot using functions from the zoom file.
+   * The zoom callback function for dose profiles.
+   *
+   * @param {Object} transform The zoom transform object.
    */
-  initializeZoom () {
-    // Zooming for dose profile
-    doseProfileAxis.zoomObj = getZoom(
-      DOSE_PROFILE_DIMENSIONS.width,
-      DOSE_PROFILE_DIMENSIONS.height,
-      zoomedDoseProfile,
-      [doseProfileAxis]
-    )
+  zoomedDoseProfile (transform) {
+    this.svg
+      .selectAll('path.lines')
+      .attr('transform', transform.toString())
 
-    // Enable zooming
-    doseProfileAxis.svg
-      .select('rect.bounding-box')
-      .call(doseProfileAxis.zoomObj)
+    // Create new scale objects based on event
+    var newXScale = transform.rescaleX(this.xScale)
+    var newYDoseScale = transform.rescaleY(this.yDoseScale)
+
+    // Update axes
+    this.svg
+      .select('.profile-x-axis')
+      .call(
+        d3.axisBottom().scale(newXScale).tickSize(-this.dimensions.height)
+      )
+
+    this.svg
+      .select('.profile-y-dose-axis')
+      .call(
+        d3
+          .axisLeft()
+          .scale(newYDoseScale)
+          .ticks(this.yTicks)
+          .tickFormat(d3.format('.0%'))
+          .tickSize(-this.dimensions.width)
+      )
+
+    if (this.densityChecked()) {
+      var newYDensityScale = transform.rescaleY(this.yDensityScale)
+      this.svg
+        .select('.profile-y-density-axis')
+        .call(
+          d3
+            .axisLeft()
+            .scale(newYDensityScale)
+            .ticks(this.yTicks)
+            .tickSize(-this.dimensions.width)
+        )
+    }
   }
 
   /**
