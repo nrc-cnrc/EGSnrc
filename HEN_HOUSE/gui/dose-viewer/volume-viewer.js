@@ -328,6 +328,27 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       }
     })
 
+    // If dose normalization is checked
+    if (this.normalizeDoseCheckbox.node().checked) {
+      const doseNormVal = parseFloat(this.doseNormValInput.select('input').node().value) * 100 // Convert from cGy to Gy
+      const doseNormPercent = parseFloat(this.doseNormPercentInput.select('input').node().value) / 100 // Convert from percent to decimal
+      this.normalizeDoseValues(doseNormVal, doseNormPercent)
+    }
+
+    // If show DVH is checked
+    if (this.showDVHCheckbox.node().checked) {
+      if (this.isDVHAllowed()) {
+        // Update DVH plot
+        this.DVH.setDVHData(this.structureSetVolume, this.doseVolume)
+        this.DVH.plotDVH(this.doseNorm)
+      } else {
+        // Uncheck show DVH checkbox and disable
+        this.showDVHCheckbox.node().checked = false
+        this.DVH.parentSvg.style('display', 'none')
+        this.disableCheckbox(this.showDVHCheckbox)
+      }
+    }
+
     if (this.densityVolume) {
       enableCheckboxForDensityPlot()
     }
@@ -335,8 +356,13 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.enableCheckbox(this.showDoseProfileCheckbox)
     this.enableCheckbox(this.showVoxelInfoCheckbox)
     this.enableCheckbox(this.normalizeDoseCheckbox)
-    if (this.showROIOutlinesCheckbox.node().checked) this.enableCheckbox(this.showDVHCheckbox)
+    if (this.isDVHAllowed()) this.enableCheckbox(this.showDVHCheckbox)
     initializeMaxDoseSlider(this.maxDoseParentDiv, doseVol, this)
+  }
+
+  isDVHAllowed () {
+    const isNormalized = () => (this.normalizeDoseCheckbox.node().checked && this.doseNormValInput.select('input').node().value && this.doseNormPercentInput.select('input').node().value)
+    return this.doseVolume && this.showROIOutlinesCheckbox.node().checked && ((this.doseVolume.data.units === 'GY' || (this.doseVolume.data.units === 'RELATIVE' && isNormalized())))
   }
 
   /**
@@ -479,6 +505,14 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
       panel.doseVol = null
     })
+
+    // Uncheck normalize dose file and disable
+    this.normalizeDoseCheckbox.node().checked = false
+    this.disableCheckbox(this.normalizeDoseCheckbox)
+
+    // Uncheck plot dose profile and disable
+    this.showDoseProfileCheckbox.node().checked = false
+    this.disableCheckbox(this.showDoseProfileCheckbox)
 
     // Uncheck show DVH checkbox and disable
     this.showDVHCheckbox.node().checked = false
@@ -771,7 +805,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
     if (structureSetVolumeList.length > 0) {
       this.enableCheckbox(this.showROIOutlinesCheckbox)
-      if (this.doseVolume && this.showROIOutlinesCheckbox.node().checked) this.enableCheckbox(this.showDVHCheckbox)
+      if (this.isDVHAllowed()) this.enableCheckbox(this.showDVHCheckbox)
     }
 
     // Add buttons to export visualization and export to csv
@@ -1199,6 +1233,9 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     // Calculate dose normalization factor
     const maxDose = this.doseVolume.data.maxDose
     this.doseNorm = (val / percent) / maxDose
+
+    // Show DVH checkbox
+    if (this.isDVHAllowed()) this.enableCheckbox(this.showDVHCheckbox)
 
     // Update dose volume histogram
     if (this.showDVHCheckbox.node().checked) {

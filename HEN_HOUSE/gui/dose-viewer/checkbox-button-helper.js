@@ -207,7 +207,7 @@ var defineShowROICheckboxBehaviour = function (volumeViewer, checkbox) { // esli
       }
     }
 
-    if (volumeViewer.doseVolume && volumeViewer.showROIOutlinesCheckbox.node().checked) volumeViewer.enableCheckbox(volumeViewer.showDVHCheckbox)
+    if (volumeViewer.isDVHAllowed()) volumeViewer.enableCheckbox(volumeViewer.showDVHCheckbox)
   } else {
     // Set volume viewer structure set to null
     volumeViewer.structureSetVolume = null
@@ -258,23 +258,28 @@ var defineNormalizeDoseCheckboxBehaviour = function (volumeViewer, checkbox) { /
     volumeViewer.doseNormValInput.select('input').attr('disabled', null)
     volumeViewer.doseNormPercentInput.select('input').attr('disabled', null)
 
-    // Reset the zoom on the DVH
-    if (volumeViewer.showROIOutlinesCheckbox.node().checked) {
-      volumeViewer.DVH.resetZoomTransform()
-    }
+    // If existing values in boxes, update doseNorm
+    const doseNormVal = parseFloat(volumeViewer.doseNormValInput.select('input').node().value) * 100 // Convert from cGy to Gy
+    const doseNormPercent = parseFloat(volumeViewer.doseNormPercentInput.select('input').node().value) / 100 // Convert from percent to decimal
+    if (doseNormVal && doseNormPercent) volumeViewer.normalizeDoseValues(doseNormVal, doseNormPercent)
   } else {
-    // Disable the input boxes and clear the values
-    volumeViewer.doseNorm = 1
-    volumeViewer.doseNormValInput.select('input').node().value = null
-    volumeViewer.doseNormPercentInput.select('input').node().value = null
+    // Disable the input boxes
     volumeViewer.doseNormValInput.select('input').attr('disabled', 'disabled')
     volumeViewer.doseNormPercentInput.select('input').attr('disabled', 'disabled')
 
-    // Update the normalization for the DVH
-    if (volumeViewer.showROIOutlinesCheckbox.node().checked) {
-      volumeViewer.DVH.resetZoomTransform()
-      volumeViewer.DVH.plotDVH(volumeViewer.doseNorm)
+    // Reset doseNorm
+    volumeViewer.normalizeDoseValues(volumeViewer.doseVolume.data.maxDose, 1)
+
+    if (!volumeViewer.isDVHAllowed()) {
+      // If dose is relative, uncheck and disable show DVH checkbox
+      volumeViewer.showDVHCheckbox.node().checked = false
+      volumeViewer.DVH.parentSvg.style('display', 'none')
+      volumeViewer.disableCheckbox(volumeViewer.showDVHCheckbox)
     }
+  }
+  // Reset the zoom on the DVH
+  if (volumeViewer.showDVHCheckbox.node().checked) {
+    volumeViewer.DVH.resetZoomTransform()
   }
 }
 
