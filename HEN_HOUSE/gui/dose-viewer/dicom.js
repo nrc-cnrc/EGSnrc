@@ -62,7 +62,8 @@ function combineDICOMDoseData (DICOMList) { // eslint-disable-line no-unused-var
     dose: dose, // The flattened dose matrix
     // error: error, // The flattened error matrix
     maxDose: maxDose, // The maximum dose value
-    studyInstanceUID: sampleData.studyInstanceUID // The study instance identifier
+    studyInstanceUID: sampleData.studyInstanceUID, // The study instance identifier
+    units: sampleData.units // The dose units, either GY or RELATIVE
   }
 
   return DICOMData

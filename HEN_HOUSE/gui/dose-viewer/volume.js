@@ -979,7 +979,8 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
       ...doseVol1.data, // For voxelArr, voxelNumber, and voxelSize
       dose: doseDiff,
       error: error,
-      maxDose: 1.0
+      maxDose: 1.0,
+      units: 'RELATIVE'
     }
 
     super.buildWorldToVoxelScales(this.data)

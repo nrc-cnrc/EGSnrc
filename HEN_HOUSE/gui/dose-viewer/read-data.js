@@ -228,7 +228,8 @@ var processDoseData = function (data) { // eslint-disable-line no-unused-vars
     },
     dose: dose, // The flattened dose matrix
     error: error, // The flattened error matrix
-    maxDose: maxDose // The maximum dose value
+    maxDose: maxDose, // The maximum dose value
+    units: 'RELATIVE' // The dose units
   }
 }
 
