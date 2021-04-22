@@ -940,14 +940,14 @@ void MCompiler::setUpCPPCompiler(const QString& link_to_name){
     vopt = QString();
   }
   else if ( the_name.contains("g++") ){
-    optimiz  = "-O2 -mtune=native -DWIN32";
+    optimiz  = "-O2 -mtune=native -std=c++14 -DWIN32";
   }
   else if (the_name.toLower()== "icpc"){
     optimiz  = "-O2 -no-prec-div -fp-model fast=2 -DWIN32";
   }
 #else
   if ( the_name.contains("g++") ){
-    optimiz  = "-O2 -mtune=native";
+    optimiz  = "-O2 -mtune=native -std=c++14";
   }
   else if (the_name.toLower()== "icpc"){
     optimiz  = "-O2 -no-prec-div -fp-model fast=2";
