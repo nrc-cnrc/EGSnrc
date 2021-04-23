@@ -135,6 +135,7 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     char buf[32];
     int count = 0;
     int imed=0;
+    max_medl = 6;  // length of the string "medium" is the minimum
     for (imed=0; imed < nmedia; imed++) {
         sprintf(buf,"%s%n",app->getMediumName(imed),&count);
         if (count > max_medl) {
@@ -256,14 +257,14 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         description += " - Medium dose will be calculated\n";
     }
     description += "\n--------------------------------------\n";
-    sprintf(buf,"%*s %*s rho/[g/cm**3]\n",max_medl/2,"medium",max_medl/2," ");
+    sprintf(buf,"%*s  rho (g/cm^3)\n",max_medl,"medium");
     description += buf;
     description += "--------------------------------------\n";
     for (imed=0; imed < nmedia; imed++) {
         sprintf(buf,"%-*s",max_medl,app->getMediumName(imed));
         description += buf;
-        description += " ";
-        sprintf(buf,"%5.2f",app->getMediumRho(imed));
+        description += "  ";
+        sprintf(buf,"%11.8f",app->getMediumRho(imed));
         description += buf;
         description += "\n";
     }
@@ -315,20 +316,23 @@ void EGS_DoseScoring::reportResults() {
     normE = m_lastCase/F*norm_u;
     normD = 1.602e-10*normE;
     int irmax_digits = getDigits(max_dreg);
+    if (irmax_digits < 2) {
+        irmax_digits = 2;
+    }
     string line;
     double r,dr;
     if (dose) {
         if (normE==1) {
-            egsInformation("\n\n==> Summary of region dosimetry (per particle)\n");
+            egsInformation("\n\n==> Summary of region dosimetry (per particle)\n\n");
             egsInformation(
-                "%*s %*s %*s rho/[g/cm3]  V/cm3      Edep/[MeV]              D/[Gy]            %n\n",
-                irmax_digits,"ir",max_medl/2,"medium",max_medl/2," ",&count);
+                "%*s  %*s  %12s  %12s   Edep (MeV)                   D (Gy)                   %n\n",
+                irmax_digits,"ir",max_medl,"medium","rho (g/cm^3)","Volume (cm^3)",&count);
         }
         else {
             egsInformation("\n==> Summary of region dosimetry (per fluence)\n");
             egsInformation(
-                "%*s %*s %*s rho/[g/cm3]  V/cm3    Edep/[MeV*cm2]            D/[Gy*cm2]         %n\n",
-                irmax_digits,"ir",max_medl/2,"medium",max_medl/2," ",&count);
+                "%*s  %*s  %12s  %12s   Edep (MeV*cm^2)              D (Gy*cm^2)              %n\n",
+                irmax_digits,"ir",max_medl,"medium","rho (g/cm^3)","Volume (cm^3)",&count);
         }
         line.append(count,'-');
         egsInformation("%s\n",line.c_str());
@@ -349,7 +353,7 @@ void EGS_DoseScoring::reportResults() {
                 else {
                     dr=1;
                 }
-                egsInformation("%*d %-*s %7.3f   %8.4f %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
+                egsInformation("%*d  %-*s  %11.8f  %13.6f  %12.4e  +/-  %-7.3f%%    %10.4e  +/-  %-7.3f%%\n",
                                irmax_digits,ireg,max_medl,app->getMediumName(imed),rho,vol[ireg],r*normE,dr*100.,r*normD/mass,dr*100.);
             }
         }
