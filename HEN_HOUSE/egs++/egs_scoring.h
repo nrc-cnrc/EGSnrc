@@ -145,7 +145,7 @@ public:
         //sum += tmp; sum2 += tmp*tmp; tmp = 0;
         //data << current_ncase << "  " << sum << "  " << sum2 << endl;
         data << current_ncase << "  " << sum+tmp << "  " << sum2+tmp *tmp
-             << endl;
+             << "\n";
         return data.good();
     };
 
@@ -314,14 +314,14 @@ public:
       EGS_ScoringSingle::storeData function.
     */
     bool storeState(ostream &data) {
-        data << nreg << "  " << current_ncase_short << endl;
+        data << nreg << "  " << current_ncase_short << "\n";
         if (!egsStoreI64(data,current_ncase)) {
             return false;
         }
         if (!egsStoreI64(data,current_ncase_65536)) {
             return false;
         }
-        data << endl;
+        data << "\n";
         for (int j=0; j<nreg; j++) {
             if (!result[j].storeState(data)) {
                 return false;
