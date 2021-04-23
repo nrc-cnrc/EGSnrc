@@ -429,7 +429,7 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
         int ny=dose_geom->getNRegDir(1);
         int nz=dose_geom->getNRegDir(2);
         //output no. of voxels in x,y,z
-        df_out << nx << " " << ny << " " << nz << endl;
+        df_out << nx << " " << ny << " " << nz << "\n";
         //use single precision real for output
         float bound, dose, doseun;
         //output voxel boundaries
@@ -437,17 +437,17 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
             bound=dose_geom->getBound(0,i);
             df_out << bound << " ";
         }
-        df_out << endl;
+        df_out << "\n";
         for (int j=0; j<=ny; j++) {
             bound=dose_geom->getBound(1,j);
             df_out << bound << " ";
         }
-        df_out << endl;
+        df_out << "\n";
         for (int k=0; k<=nz; k++) {
             bound=dose_geom->getBound(2,k);
             df_out << bound << " ";
         }
-        df_out << endl;
+        df_out << "\n";
         //divide dose by mass and output
         for (int i=0; i<nx*ny*nz; i++) {
             doseF->currentResult(i,r,dr);
@@ -455,7 +455,7 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
             dose=r*normD/mass;
             df_out << dose << " ";
         }
-        df_out << endl;
+        df_out << "\n";
         //output uncertainties
         for (int i=0; i<nx*ny*nz; i++) {
             doseF->currentResult(i,r,dr);
@@ -468,7 +468,7 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
             doseun=dr;
             df_out << doseun << " ";
         }
-        df_out << endl;
+        df_out << "\n";
         df_out.close();
     }
     else {
