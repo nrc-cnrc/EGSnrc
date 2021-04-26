@@ -33,7 +33,7 @@
 // REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
 /* global Slider */
 
-// import { Slider } from './slider.js'
+// import { Slider } from './sliders/slider.js'
 
 /**
  * Initialize the min and max density sliders for the given volume viewer.

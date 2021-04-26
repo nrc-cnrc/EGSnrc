@@ -70,15 +70,16 @@
 // } from './checkbox-button-helper.js'
 // import { DoseProfile } from './dose-profile.js'
 // import { Panel } from './panel.js'
-// import { Slider } from './slider.js'
+// import { Slider } from './sliders/slider.js'
+//   import { initializeMinMaxDensitySlider } from
+//   './sliders/min-max-density-slider.js'
+// import {initializeMaxDoseSlider} from './sliders/max-dose-slider.js'
+// import {initializeDoseCompNormSlider} from './sliders/dose-comp-normalization-slider.js'
 // import { DoseComparisonVolume } from './volumes/dose-comparison-volume.js'
 // import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
-// import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
 //   import { defineExportDoseProfileCSVButtonBehaviour,
 //   defineExportDVHToCSVButtonBehaviour, defineExportPNGButtonBehaviour } from
 //   './export.mjs'
-// import {initializeMaxDoseSlider} from './max-dose-slider.js'
-// import {initializeDoseCompNormSlider} from '.dose-comp-normalization-slider.js'
 // import { DoseVolumeHistogram } from './dose-volume-histogram.js'
 
 const AXES = ['xy', 'yz', 'xz']

@@ -34,7 +34,7 @@
 // REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
 /* global Slider */
 
-// import { Slider } from './slider.js'
+// import { Slider } from './sliders/slider.js'
 
 /**
  * Initialize the dose comparison normalization slider for the given volume viewer.
