@@ -110,6 +110,7 @@ public slots:
     virtual void phiRotation(int Phi);
     virtual void changeAmbientLight(int alight);
     virtual void changeTransparency(int t);
+    virtual void changeGlobalTransparency(int t);
     virtual void moveLightChanged(int toggle);
     virtual void setLightPosition();
     virtual void setLookAt();
