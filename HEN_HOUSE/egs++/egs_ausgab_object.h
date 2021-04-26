@@ -109,6 +109,9 @@ public:
     /*! \brief Set the current event */
     virtual void setCurrentCase(EGS_I64 ncase) {};
 
+    /*! \brief Initialize variables at the beginning of each shower */
+    virtual void initializeData() {};
+
     /*!  \brief Get a short description of this ausgab object.
      *
      *   Derived classes should set #description to a short

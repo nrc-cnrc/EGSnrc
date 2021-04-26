@@ -896,12 +896,14 @@ int EGS_AdvancedApplication::shower() {
 #ifdef GDEBUG
     steps_n = 0;
 #endif
+    for (int j=0; j<a_objects_list.size(); ++j) {
+        a_objects_list[j]->initializeData();
+    }
     egsShower();
     return 0;
 }
 
 void EGS_AdvancedApplication::finishRun() {
-    egsInformation("\n About to finish run.\n");
     egsFinish();
     //egsSetDefaultIOFunctions();
     io_flag = 0;
@@ -911,7 +913,6 @@ void EGS_AdvancedApplication::finishRun() {
 }
 
 int EGS_AdvancedApplication::finishSimulation() {
-    egsInformation("whats doing here?\n");
     int err = EGS_Application::finishSimulation();
     egsInformation("finishSimulation(%s) %d\n",app_name.c_str(),err);
     if (err <= 0) {
@@ -947,15 +948,11 @@ int EGS_AdvancedApplication::finishSimulation() {
     if (err) {
         return err;
     }
-    egsInformation("\nAbout to finishSimulation\n");
     run->finishSimulation();
     for (int j=0; j<a_objects_list.size(); ++j) {
-        egsInformation("\n reporting ausgab object j=%d\n",j);
         a_objects_list[j]->reportResults();
     }
-    egsInformation("\nAbout to outputResults\n");
     outputResults();
-    egsInformation("\nAbout to finishRun\n");
     finishRun();
     return 0;
 }
@@ -1231,7 +1228,6 @@ EGS_Float EGS_AdvancedApplication::getRM() {
 }
 // Turns ON/OFF radiative splitting
 void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
-    egsInformation("nsplit here = %g\n",nsplit);
     the_egsvr->nbr_split = nsplit;
 }
 
@@ -1311,7 +1307,7 @@ void EGS_AdvancedApplication::addParticleToStack(EGS_Particle p, EGS_Float dnear
 
 //get dnear from position np in the stack
 EGS_Float EGS_AdvancedApplication::getDnear(int np) {
-    return the_stack->dnear[np+1];
+    return the_stack->dnear[np];
 }
 
 //set npold of stack
@@ -1337,21 +1333,21 @@ int EGS_AdvancedApplication::getNmed(){
 //delete particle at stack position ip
 //replace with data at position np and reduce np by 1
 void EGS_AdvancedApplication::deleteParticleFromStack(int ip) {
-    int np = the_stack->np;
-    if (ip+1 < np)
+    int np = the_stack->np-1;
+    if (ip < np)
     {
-    	the_stack->iq[ip+1] = the_stack->iq[np];
-    	the_stack->E[ip+1] = the_stack->E[np];
-    	the_stack->x[ip+1] = the_stack->x[np];
-    	the_stack->y[ip+1] = the_stack->y[np];
-    	the_stack->z[ip+1] = the_stack->z[np];
-    	the_stack->u[ip+1] = the_stack->u[np];
-    	the_stack->v[ip+1] = the_stack->v[np];
-    	the_stack->w[ip+1] = the_stack->w[np];
-    	the_stack->wt[ip+1] = the_stack->wt[np];
-    	the_stack->ir[ip+1] = the_stack->ir[np];
-    	the_stack->latch[ip+1] = the_stack->latch[np];
-    	the_stack->dnear[ip+1] = the_stack->dnear[np];
+    	the_stack->iq[ip] = the_stack->iq[np];
+    	the_stack->E[ip] = the_stack->E[np];
+    	the_stack->x[ip] = the_stack->x[np];
+    	the_stack->y[ip] = the_stack->y[np];
+    	the_stack->z[ip] = the_stack->z[np];
+    	the_stack->u[ip] = the_stack->u[np];
+    	the_stack->v[ip] = the_stack->v[np];
+    	the_stack->w[ip] = the_stack->w[np];
+    	the_stack->wt[ip] = the_stack->wt[np];
+    	the_stack->ir[ip] = the_stack->ir[np];
+    	the_stack->latch[ip] = the_stack->latch[np];
+    	the_stack->dnear[ip] = the_stack->dnear[np];
     }
     the_stack->np--;
     return;
@@ -1359,14 +1355,30 @@ void EGS_AdvancedApplication::deleteParticleFromStack(int ip) {
 
 //retrieve particle information at stack position ip
 void EGS_AdvancedApplication::getParticleFromStack(int ip,EGS_Particle &p) {
-    p.q = the_stack->iq[ip+1];
-    p.E = the_stack->E[ip+1];
-    egsInformation(" ip=%d p.E=%g the_stack->E=%g\n",ip,p.E,the_stack->E[ip]);
-    p.latch = the_stack->latch[ip+1];
-    p.ir = the_stack->latch[ip+1];
-    p.wt = the_stack->wt[ip+1];
-    p.x = EGS_Vector(the_stack->x[ip+1],the_stack->y[ip+1],the_stack->z[ip+1]);
-    p.u = EGS_Vector(the_stack->u[ip+1],the_stack->v[ip+1],the_stack->w[ip+1]);
+    p.q = the_stack->iq[ip];
+    p.E = the_stack->E[ip];
+    p.latch = the_stack->latch[ip];
+    p.ir = the_stack->ir[ip];
+    p.wt = the_stack->wt[ip];
+    p.x = EGS_Vector(the_stack->x[ip],the_stack->y[ip],the_stack->z[ip]);
+    p.u = EGS_Vector(the_stack->u[ip],the_stack->v[ip],the_stack->w[ip]);
+    return;
+}
+
+//update particle info (+ dnear) at stack position ip
+void EGS_AdvancedApplication::updateParticleOnStack(int ip, EGS_Particle p, EGS_Float dnear) {
+    the_stack->iq[ip] = p.q;
+    the_stack->E[ip] = p.E;
+    the_stack->latch[ip] = p.latch;
+    the_stack->ir[ip] = p.ir;
+    the_stack->wt[ip] = p.wt;
+    the_stack->x[ip] = p.x.x;
+    the_stack->y[ip] = p.x.y;
+    the_stack->z[ip] = p.x.z;
+    the_stack->u[ip] = p.u.x;
+    the_stack->v[ip] = p.u.y;
+    the_stack->w[ip] = p.u.z;
+    the_stack->dnear[ip] = dnear;
     return;
 }
 
@@ -1479,7 +1491,8 @@ void EGS_AdvancedApplication::callCompt() {
     F77_OBJ_(compt,COMPT)();
 }
 void EGS_AdvancedApplication::callEgsRayleighSampling(int imed, EGS_Float E, EGS_Float gle, EGS_I32 lgle, EGS_Float costhe, EGS_Float sinthe) {
-    F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(imed,E,gle,lgle,costhe,sinthe);
+    int f_imed=imed+1;
+    F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(f_imed,E,gle,lgle,costhe,sinthe);
 }
 EGS_Float EGS_AdvancedApplication::callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, EGS_Float nb_idata) {
     return F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(mxbrxs,nb_xdata,nb_fdata,nb_wdata,nb_idata);
