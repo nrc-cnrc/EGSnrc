@@ -225,20 +225,20 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     lib_dir += CONFIG_NAME;
     lib_dir += fs;
 
-    /*EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
+    EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
     if (!app_lib.load()) egsFatal("\n%s: Failed to load the %s application library from %s\n\n",
                                       appv[0],app_name.c_str(),lib_dir.c_str());
 
     createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
     if (!createApp) egsFatal("\n%s: Failed to resolve the address of the 'createApplication' function"
-                                 " in the application library %s\n\n",appv[0],app_lib.libraryFile()); */
-/*TODO left here crash 'cause tutor7pp isn't compiled <=======================
+                                 " in the application library %s\n\n",appv[0],app_lib.libraryFile());
+//TODO left here crash 'cause tutor7pp isn't compiled <=======================
     EGS_Application *app = createApp(appc,appv);
     if (!app) {
         egsFatal("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
     }
     egsInformation("Testapp %f\n",app->getRM());
-    */
+
 
     // Get a list of all the libraries in the dso directory
     string dso_dir;
@@ -263,13 +263,14 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QMenu *ausgabMenu = exampleMenu->addMenu("Ausgab/Output");
     QMenu *mediaMenu = exampleMenu->addMenu("Media");
     QMenu *runMenu = exampleMenu->addMenu("Run Control");
+    QMenu *appMenu = exampleMenu->addMenu("Applications");
     editorLayout->setMenuBar(menuBar);
 
     // The input template structure
     inputStruct = make_shared<EGS_InputStruct>();
 
     // Get the application level input blocks
-    /*getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
+    getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
     if(getAppInputs) {
         getAppInputs(inputStruct);
         if(inputStruct) {
@@ -286,7 +287,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                 }
             }
         }
-    } */
+    }
 
     // Geometry definition block
     auto geomDefPtr = inputStruct->addBlockInput("geometry definition");
@@ -316,11 +317,9 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         if (!egs_lib.load()) {
             continue;
         }
-        egsInformation("testlib2 trying %s\n", libName.toLatin1().data());
 
         // Geometries
         createGeomFunction isGeom = (createGeomFunction) egs_lib.resolve("createGeometry");
-        egsInformation("testlib4 trying \n");
         if (isGeom) {
             egsInformation(" testgeom %s\n",libName.toLatin1().data());
 
@@ -354,7 +353,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     }
                 }
             }
-            egsInformation("testlib5 trying \n");
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = geomMenu->addAction(libName);
@@ -364,7 +362,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         }
 
         // Sources
-        egsInformation("testlib6 trying \n");
         createSourceFunction isSource = (createSourceFunction) egs_lib.resolve("createSource");
         if (isSource) {
             egsInformation(" testsrc %s\n",libName.toLatin1().data());
@@ -399,7 +396,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     }
                 }
             }
-            //egsInformation("testlib7 trying \n");
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = sourceMenu->addAction(libName);
@@ -409,7 +405,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         }
 
         // Shapes
-        egsInformation("testlib8 trying \n");
         createShapeFunction isShape = (createShapeFunction) egs_lib.resolve("createShape");
         if (isShape) {
             egsInformation(" testshape %s\n",libName.toLatin1().data());
@@ -444,7 +439,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     }
                 }
             }
-            //egsInformation("testlib9 trying \n");
 
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
@@ -493,7 +487,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             }
         }
     }
-    egsInformation("testlib3 trying \n");
     egsinpEdit->setInputStruct(inputStruct);
 }
 
@@ -1015,6 +1008,8 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     }
 
     // Load the particle track options
+    label_particles->hide();
+    label_particle_colours->hide();
     EGS_Input *iTracks = input->takeInputItem("tracks");
     if (iTracks) {
         int show;
@@ -1052,8 +1047,25 @@ void GeometryViewControl::loadConfig(QString configFilename) {
                 showPositronsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
-
         delete iTracks;
+    }
+    else {
+        label_particles->show();
+        spin_tmaxp->hide();
+        showPositronsCheckbox->hide();
+        showPhotonsCheckbox->hide();
+        showElectronsCheckbox->hide();
+        spin_tminp->hide();
+        spin_tmine->hide();
+        spin_tmaxe->hide();
+        spin_tminpo->hide();
+        spin_tmaxpo->hide();
+
+        label_particle_colours->show();
+        cPhotonsButton->hide();
+        cElectronsButton->hide();
+        cPositronsButton->hide();
+        energyScalingCheckbox->hide();
     }
 
     // Load the overlay options
@@ -1235,6 +1247,22 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load the clipping planes
     EGS_Input *iClip = input->takeInputItem("clipping planes");
+    // Set default clipped planes, along each axis
+    cplanes->setCell(0,0,1);
+    cplanes->setCell(0,1, 0);
+    cplanes->setCell(0,2,0);
+    cplanes->setCell(0,3,0);
+    cplanes->setCell(0,4,Qt::Unchecked);
+    cplanes->setCell(1,0,0);
+    cplanes->setCell(1,1,1);
+    cplanes->setCell(1,2,0);
+    cplanes->setCell(1,3,0);
+    cplanes->setCell(1,4,Qt::Unchecked);
+    cplanes->setCell(2,0,0);
+    cplanes->setCell(2,1,0);
+    cplanes->setCell(2,2,1);
+    cplanes->setCell(2,3,0);
+    cplanes->setCell(2,4,Qt::Unchecked);
     if (iClip) {
         for (int i=0; i<cplanes->numPlanes(); i++) {
             EGS_Input *iPlane = iClip->takeInputItem("plane");
@@ -1249,6 +1277,9 @@ void GeometryViewControl::loadConfig(QString configFilename) {
             if (!err) {
                 cplanes->setCell(i,0,ax);
             }
+            /*else if (i == 0) {
+                cplanes->setCell(0, 0, 1);
+            }*/
             else {
                 cplanes->clearCell(i,0);
             }
@@ -2063,6 +2094,16 @@ void GeometryViewControl::changeTransparency(int t) {
     updateView(true);
 }
 
+void GeometryViewControl::changeGlobalTransparency(int t) {
+    int test = materialCB->count();
+    for (int i = 0; i <= test; i++ ) {
+        int med = materialCB->count() - i;
+        QRgb c = m_colors[med];
+        m_colors[med] = qRgba(qRed(c), qGreen(c), qBlue(c), t);
+    }
+    updateView(true);
+}
+
 void GeometryViewControl::changeDoseTransparency(int t) {
 #ifdef VIEW_DEBUG
     egsWarning("In changeDoseTransparency(%d)\n",t);
@@ -2243,7 +2284,6 @@ void GeometryViewControl::loadTracksDialog() {
     if (filename_tracks.isEmpty()) {
         return;
     }
-
     gview->loadTracks(filename_tracks);
 }
 
@@ -2255,6 +2295,22 @@ void GeometryViewControl::updateTracks(vector<size_t> ntracks) {
 #ifdef VIEW_DEBUG
     egsWarning("In updateTracks(%d %d %d)\n",ntracks[0], ntracks[1], ntracks[2]);
 #endif
+    label_particles->hide();
+    spin_tmaxp->show();
+    showPositronsCheckbox->show();
+    showPhotonsCheckbox->show();
+    showElectronsCheckbox->show();
+    spin_tminp->show();
+    spin_tmine->show();
+    spin_tmaxe->show();
+    spin_tminpo->show();
+    spin_tmaxpo->show();
+
+    label_particle_colours->hide();
+    cPhotonsButton->show();
+    cElectronsButton->show();
+    cPositronsButton->show();
+    energyScalingCheckbox->show();
 
     // Update maximum values for the track selection
     spin_tminp->setMaximum(ntracks[0]);
