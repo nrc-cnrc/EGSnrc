@@ -179,6 +179,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
     //TODO: ensure that we are using app->top_p and app->Np correctly
     //Remember these are only updated on entry to ausgab
+    //It is probably safer to use app->getParticleFromStack(app->getNp(),p)
 
     int np = app->Np;
 
@@ -188,6 +189,8 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     //seems like a temporary solution
     int is_fat = (latch & (1 << 0));
 
+    if(app->top_p.wt < 1 && is_fat) exit(1);
+
     if( iarg == EGS_Application::BeforeBrems ) {
         double E = app->top_p.E;
         EGS_Float wt = app->top_p.wt;
@@ -196,6 +199,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             latch = latch & ~(1 << 0);
             //reset latch value of top particle
             app->setLatch(latch);
+            app->top_p.latch=latch; //have to set this because it is used in doSmartBrems
             //is the next line necessary?
             app->setRadiativeSplitting(nsplit);
             int res = doSmartBrems();
@@ -205,17 +209,15 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
             }
             //we need to relable the interacting e- as fat
-            //TODO: Check that this is in fact the e-
+            EGS_Particle p = app->top_p;
             latch = latch | (1 << 0);
-            app->setLatch(latch);
+            p.latch = latch;
+            EGS_Float dnear = app->getDnear(app->Np);
+            app->updateParticleOnStack(np,p,dnear);
         }
         else {
-            egsInformation("np=%d, E=%g, wt=%g\n",app->Np,E,wt);
             app->setRadiativeSplitting(1);
             app->callBrems();
-            EGS_Particle p_test;
-            app->getParticleFromStack(0,p_test);
-            egsInformation("p_test.E=%g% p_test.q=%d%\n",p_test.E,p_test.q);
             int nstart = np+1, aux=0;
             killThePhotons(fs,ssd,nsplit,nstart,aux);
         }
@@ -240,8 +242,10 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     }
     else if( iarg == EGS_Application::BeforeAnnihRest ) {
         if( is_fat ) {
-            app->setNpold(np);
-            app->setRadiativeSplitting(nsplit);
+            //app->setNpold(np);not sure why this is necessary--unless it is intended to ensure
+                              //overwriting of the annihilated positron, in which case, we should
+                              //actually be setting npold=np-1
+            app->setRadiativeSplitting(nsplit);//this also seems like a formality
             int nsamp = 2*nsplit;
             //label photons as nonphat
             latch = latch & ~(1 << 0);
@@ -285,6 +289,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 //label as nonphat to be passed on to descendents
                 latch = latch & ~(1 << 0);
                 app->setLatch(latch);
+                app->top_p.latch=latch; //have to set this because it is used in doSmartCompton
                 doSmartCompton(nint);
             }
             else //straight-up compton
@@ -299,15 +304,20 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 }
                 // kill photons not aimed into the field and any electrons
                 int nstart = np+1, aux=1;
-                killThePhotons(fs,ssd,nint,nstart,aux);
+                killThePhotons(fs,ssd,nsplit,nstart,aux);
             }
         }
         else if (iarg == EGS_Application::BeforeRayleigh)
         {
             //TODO: Put this in a doRayleigh function
+            if (is_fat) {
+                    latch = latch & ~(1 << 0);
+                    app->setLatch(latch);
+            }
             EGS_Vector x = app->top_p.x;
             EGS_Vector u = app->top_p.u;
             EGS_Float E = app->top_p.E;
+            int iq = app->top_p.q;
             EGS_Float wt = app->top_p.wt/nint;
             EGS_Float gle = app->getGle();
             int imed = app->getMedium(app->isWhere(x));
@@ -321,6 +331,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 p.wt = wt;
                 p.u = u;
                 p.latch = latch;
+                p.q = iq;
                 EGS_Float dnear = app->getDnear(app->Np);
                 //call EGS rayleigh sampling routine to get scatter angles cost, sint
                 app->callEgsRayleighSampling(imed,E,gle,lgle,costhe,sinthe);
@@ -330,7 +341,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 app->addParticleToStack(p,dnear);
                 //now potentially kill it -- seems like we should kill the particle before adding to the stack
                 int nstart = app->getNp(), aux=0;
-                killThePhotons(fs,ssd,nint,nstart,aux);
+                killThePhotons(fs,ssd,nsplit,nstart,aux);
             }
         }
         check = 1;
@@ -388,8 +399,6 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     egsInformation("smartBrems: E=%g be=%g x=(%g,%g,%g) wt=%g nspl=%d\n",ener,
             be_factor,x.x,x.y,x.z,the_stack->wt[np],nbrspl);
     */
-    egsInformation("smartBrems: E=%g x=(%g,%g,%g) wt=%g nspl=%d\n",ener,x.x,x.y,x.z,app->top_p.wt,nbrspl);
-
     EGS_Float ct_min,ct_max,ro;
     getCostMinMax(x,u,ro,ct_min,ct_max);
     imed = app->getMedium(app->isWhere(x));
@@ -426,17 +435,13 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     }
     w2 *= f_max_KM;
     EGS_Float wprob = min(w1,w2);
-    //egsInformation("\nw1 = %g, w2 = %g, ibrdst = %d\n",w1,w2,app->getIbrdst());
     if( wprob >= 1 && app->getIbrdst() == 1 ) return 1;
     int nsample;
     if( wprob > 1 ) { ct_min = -1; ct_max = 1; wprob = 1; }
     //EGS_Float asample = wprob*nbrspl/be_factor;
     EGS_Float asample = wprob*nbrspl;
     nsample = (int) asample; asample -= nsample;
-    //egsInformation("\nnsample here = %d\n",nsample);
     if( app->getRngUniform() < asample ) ++nsample;
-
-    //egsInformation("\nnsample = %d\n",nsample);
 
     EGS_Float aux1 = ct_max - ct_min, aux2 = 1 - beta*ct_max;
     EGS_Float wt = app->top_p.wt/nbrspl;
@@ -496,8 +501,6 @@ int EGS_RadiativeSplitting::doSmartBrems() {
                 p.latch = latch;
                 p.q = 0;
 
-                //egsInformation("P: E=%g x=(%g,%g,%g) u=(%g,%g,%g) wt=%g\n",p.E,p.x.x,p.x.y,p.x.z,p.u.x,p.u.y,p.u.z,p.wt);
-
                 particle_stack.emplace_back(p);
                 dnear_stack.emplace_back(dnear);
 
@@ -533,6 +536,7 @@ int EGS_RadiativeSplitting::doSmartBrems() {
                 rejf = aux2/(1-beta*cost)*aux;
                 rejf *= rejf*aux;
             }
+
             if( app->getRngUniform() < rejf ) {
                 if( ++ip >= MXSTACK ) egsFatal(dbs_err_msg,
                         "smartBrems",MXSTACK);
@@ -589,17 +593,22 @@ int EGS_RadiativeSplitting::doSmartBrems() {
         }
         if( take_it ) {
             //put a high-weight particle directed away from the splitting field
-            //on the stack?
+            //on the stack if IBRDST!=1
+            //otherwise, put a high weight photon on the stack with
+            //u=0, v=0, w=1 (i.e. directed into the splitting field) as in beampp_dbs!
+            //TODO: Figure out if this is correct or if this should go inside the
+            //condition, if ibrdst!=1
             if( ++ip >= MXSTACK ) egsFatal(dbs_err_msg,
                     "smartBrems",MXSTACK);
-            ireal = ip;
+            ireal = ip-np-1; //index of this high weight particle in the local particle_stack
 
             EGS_Particle p;
             p.x = x;
             p.u = EGS_Vector(un,vn,wn);
             p.ir = irl;
             p.wt = wt*nbrspl;
-            p.latch = latch;
+            //label the particle as phat
+            p.latch = latch | (1 << 0);
             p.q = 0;
 
             particle_stack.emplace_back(p);
@@ -623,7 +632,7 @@ int EGS_RadiativeSplitting::doSmartBrems() {
             ib = 0; EGS_Float E = tau+1; EGS_Float unorm = log(0.5*(E+1));
             for(int j=0; j<ip-np; j++) {
                 //note that this loop potentially includes high-weight particle put on stack
-                //above.  Why?
+                //above. Should reassign direction if ibrdst=1, right?
                 EGS_Float k = particle_stack[j].E/app->getRM();
                 EGS_Float Ep = E - k;
                 EGS_Float r = Ep/E; EGS_Float delta = k/(2*E*Ep);
@@ -649,11 +658,11 @@ int EGS_RadiativeSplitting::doSmartBrems() {
                     if( rejf > 1 ) egsInformation("rejf=%g for y2=%g\n",
                             rejf,y2);
                     if( app->getRngUniform() > rejf ) {
-                        //egsInformation("here is a zero particle\n");
                         particle_stack[j].wt = 0; particle_stack[j].E = 0;
                     }
                 }
                 else {
+                    // this is the single high-weight photon
                     // now that we know the photon energy, we must sample
                     // a direction for this photon from 2BS
                     EGS_Float arg3 = -log(delta+zbr_KM[imed]);
@@ -709,16 +718,11 @@ int EGS_RadiativeSplitting::doSmartBrems() {
         for (int i=0; i<ip-np; i++)
         {
             app->addParticleToStack(particle_stack[i],dnear_stack[i]);
+            EGS_Particle p;
+            int pp = app->getNp();
+            app->getParticleFromStack(pp,p);
         }
     }
-
-    /*
-    egsInformation("Particles:\n");
-    for(int j=np; j<the_stack->np; j++) egsInformation("%d E=%g q=%d wt=%g"
-           " iwt=%d u=(%g,%g,%g)\n",j,the_stack->E[j],the_stack->iq[j],
-           the_stack->wt[j],the_extra_stack->iweight[j],
-           the_stack->u[j],the_stack->v[j],the_stack->w[j]);
-     */
 
     return 0;
 }
@@ -788,8 +792,6 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
     ekin = peie - app->getRM(); brmin = app->getAp(imed)/ekin;
     waux = log(ekin) - log(app->getAp(imed));
 
-    //egsInformation("\nibrnist=%d\n",app->getIbrnist());
-
     if (app->getIbrnist() == 1)
     {
         ajj = 1 + (waux + log(app->getAp(imed)) - app->getNbLemin(imed))*app->getNbDlei(imed);
@@ -799,10 +801,9 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
            ajj = -1;
         }
     }
-    ip = npold;
+    ip = 0;
     for (int ibr = 0; ibr < nsample; ibr++)
     {
-        ip++;
         if (app->getIbrnist() == 1)
         {
             if (ekin > app->getNbEmin(imed))
@@ -845,7 +846,6 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
            pese = peie - pesg;
            ese = pese;
            delta = esg/eie/ese*app->getDelcm(imed);
-     //egsInformation("esg ekin br peie %g %g %g %g\n",esg,ekin,br,peie);
            aux = ese/eie;
            if (delta < 1)
            {
@@ -860,24 +860,24 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
                       log(delta + app->getDl6(l,imed));
                phi2 = phi1;
            }
-    //egsInformation("aux phi1 phi2 %g %g %g\n",aux,phi1,phi2);
            rejf = (1+aux*aux)*phi1 - 2*aux*phi2/3;
-     //egsInformation("rnno07 rejf %g %g\n",rnno07,rejf);
          } while (rnno07 >= rejf);
        }
-       if (ip <= np)
+       if (ip+npold <= np)
        {
           particle_stack[ip].E = pesg;
-          //egsInformation("ip pesg = %d %g\n",ip,pesg);
        }
+       ip++; //why use this counter in particular
    }
-   particle_stack[npold].E = pese;
-   //egsInformation("npold pese = %d %g\n",npold,pese);
+   //now set energy of initiating e-
+   EGS_Particle p = app->top_p;
+   p.E = pese;
+   EGS_Float dnear = app->getDnear(app->Np);
+   app->updateParticleOnStack(npold,p,dnear);
 }
 
 void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_split, int npstart, int kill_electrons) {
    //an adaptation of the Mortran subroutine kill_the_photons found in beamnrc.mortran, beampp.mortran
-   egsInformation("npstart=%d Np=%d\n",npstart,app->getNp());
    if (npstart > app->getNp()) return;
    int i_playrr = 0;
    int idbs = npstart;
@@ -887,7 +887,6 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
       app->getParticleFromStack(idbs,p);
       //below is temporary until we figure out how to pass iweight
       int is_fat = (p.latch & (1 << 0));
-      egsInformation("ktp: E=%g iq=%d x=%g y=%g z=%g u=%g v=%g w=%g\n",p.E,p.q,p.x.x,p.x.y,p.x.z,p.u.x,p.u.y,p.u.z);
       if (p.q == 0)
       {
          i_playrr = 0;
@@ -921,8 +920,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
                 p1.wt = p1.wt*n_split;
                 //set bit 0 of latch to mark as phat--temporary
                 p1.latch = p1.latch | (1 << 0);
-                app->deleteParticleFromStack(idbs);
-                app->addParticleToStack(p1,dnear);
+                app->updateParticleOnStack(idbs,p1,dnear);
                 idbs++;
             }
          }
@@ -954,8 +952,8 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
                 EGS_Particle p2;
                 app->getParticleFromStack(idbs,p2);
                 p2.wt = p2.wt*kill_electrons;
-                app->deleteParticleFromStack(idbs);
-                app->addParticleToStack(p2,dnear);
+                app->updateParticleOnStack(idbs,p2,dnear);
+                idbs++;
             }
          }
       }
@@ -990,9 +988,15 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
    //field defined by fs, ssd
    //modeled after the Mortran routine used in beamnrc, beampp
 
+   //get properties of interacting particle (annihilating positron or radiative photon being split)
+   EGS_Particle p_ip;
+   app->getParticleFromStack(app->getNp(),p_ip);
+   EGS_Float x = p_ip.x.x;
+   EGS_Float y = p_ip.x.y;
+   EGS_Float dnear = app->getDnear(app->Np);
+   EGS_Float weight = p_ip.wt/n_split;
+
    //calculate min/max polar angles subtended by the splitting field
-   EGS_Float x = app->top_p.x.x;
-   EGS_Float y = app->top_p.x.y;
    EGS_Float ro = sqrt(x*x+y*y);
    EGS_Float d = ssd - app->top_p.x.z;
    EGS_Float aux = (ro + fs)/d;
@@ -1016,13 +1020,11 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
 
    //now create the num_split photons
    //note: not all photons will go towards the circle and we will have to play russian roulette with these
-   EGS_Particle p_old;
-   EGS_Float dnear = app->getDnear(app->getNpold());
-   app->getParticleFromStack(app->getNpold(),p_old);
-   EGS_Float weight = p_old.wt/n_split;
    EGS_Float cost, sint, cphi, sphi;
    int ns,ip;
-   int np = app->Np-1;
+   //delete interacting particle on stack so that we overwrite it
+   app->deleteParticleFromStack(app->getNp());
+   int np = app->getNp()-1;
    for (int i=0; i< num_split; i++)
    {
        EGS_Particle p;
@@ -1038,8 +1040,8 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
        }
        selectAzimuthalAngle(cphi,sphi);
        aux = d/cost*sint;
-       x = p_old.x.x + aux*cphi;
-       y = p_old.x.y + aux*sphi;
+       x = x + aux*cphi;
+       y = y + aux*sphi;
        ns = 0;
        if (x*x + y*y < fs*fs)
        {
@@ -1052,16 +1054,6 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
        if (ns > 0)
        {
            np++;
-           if (np > app->getNpold())
-           {
-              ip = np-1;
-           }
-           else
-           {
-              ip = app->getNpold();
-           }
-           EGS_Particle p_ip;
-           app->getParticleFromStack(ip,p_ip);
            p.latch = p_ip.latch;
            p.ir = p_ip.ir;
            p.x = p_ip.x;
@@ -1095,16 +1087,7 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
            }
            selectAzimuthalAngle(cphi,sphi);
            np++;
-           if (np > app->getNpold())
-           {
-              ip = np-1;
-           }
-           else
-           {
-              ip = app->getNpold();
-           }
-           EGS_Particle p_ip,p;
-           app->getParticleFromStack(ip,p_ip);
+           EGS_Particle p;
            //label particle as phat
            p.latch = p_ip.latch | (1 << 0);
            p.ir = p_ip.ir;
@@ -1191,7 +1174,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    //
    imed = app->getMedium(app->isWhere(x));
    EGS_Float AP = app->getAp(imed);
-   int irl=app->top_p.ir,latch=app->top_p.latch;
+   int irl=app->top_p.ir, latch=app->top_p.latch;
    EGS_Float dnear = app->getDnear(np); int ip = np-1;
 
    if(method1)
@@ -1462,7 +1445,6 @@ extern "C" {
         string str;
         if(input->getInput("splitting type",str) < 0)
 	{
-		//egsInformation("\nEGS_RadiativeSplitting: No input for splitting type.  Will default to uniform.\n");
 		split_type = EGS_RadiativeSplitting::URS;
 	}
 	else

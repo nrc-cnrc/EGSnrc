@@ -119,12 +119,14 @@ public:
 
     void initializeData() {
         //set bit 0 of the first particle in each history to 1
-        //currently and until a more general solution is found, this
+        //Until a more general solution is implemented (extra_stack), this
         //bit determines whether the particle (and its descendents) has(ve)
         //been split (i.e. is/are phat) or not
-        //Note: This means we now lose the ability of this bit as a flag for
+        //Note: This means we lose the ability of this bit as a flag for
         //brem events
-        int latch = app->top_p.latch;
+        EGS_Particle p;
+        app->getParticleFromStack(0,p);
+        int latch = p.latch;
         latch = latch | (1 << 0);
         app->setLatch(latch);
     }
