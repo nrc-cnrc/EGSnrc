@@ -179,7 +179,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
     //TODO: ensure that we are using app->top_p and app->Np correctly
     //Remember these are only updated on entry to ausgab
-    //It is probably safer to use app->getParticleFromStack(app->getNp(),p)
+    //It is probably safer to use app->getParticleFromStack(app->getNp())
 
     int np = app->Np;
 
@@ -718,9 +718,6 @@ int EGS_RadiativeSplitting::doSmartBrems() {
         for (int i=0; i<ip-np; i++)
         {
             app->addParticleToStack(particle_stack[i],dnear_stack[i]);
-            EGS_Particle p;
-            int pp = app->getNp();
-            app->getParticleFromStack(pp,p);
         }
     }
 
@@ -883,8 +880,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
    int idbs = npstart;
    EGS_Float dnear = app->getDnear(idbs);
    do {
-      EGS_Particle p;
-      app->getParticleFromStack(idbs,p);
+      EGS_Particle p = app->getParticleFromStack(idbs);
       //below is temporary until we figure out how to pass iweight
       int is_fat = (p.latch & (1 << 0));
       if (p.q == 0)
@@ -915,8 +911,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
                 //keep the particle and increase weight
                 //do this by saving the particle info, deleting the particle, changing the weight and adding it
                 //back to the stack
-                EGS_Particle p1;
-                app->getParticleFromStack(idbs,p1);
+                EGS_Particle p1 = app->getParticleFromStack(idbs);
                 p1.wt = p1.wt*n_split;
                 //set bit 0 of latch to mark as phat--temporary
                 p1.latch = p1.latch | (1 << 0);
@@ -949,8 +944,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
             else
             {
                 //keep the particle and increase weight
-                EGS_Particle p2;
-                app->getParticleFromStack(idbs,p2);
+                EGS_Particle p2 = app->getParticleFromStack(idbs);
                 p2.wt = p2.wt*kill_electrons;
                 app->updateParticleOnStack(idbs,p2,dnear);
                 idbs++;
@@ -989,8 +983,7 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
    //modeled after the Mortran routine used in beamnrc, beampp
 
    //get properties of interacting particle (annihilating positron or radiative photon being split)
-   EGS_Particle p_ip;
-   app->getParticleFromStack(app->getNp(),p_ip);
+   EGS_Particle p_ip = app->getParticleFromStack(app->getNp());
    EGS_Float x = p_ip.x.x;
    EGS_Float y = p_ip.x.y;
    EGS_Float dnear = app->getDnear(app->Np);
