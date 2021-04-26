@@ -52,8 +52,12 @@ var initializeDoseCompNormSlider = ( // eslint-disable-line no-unused-vars
   doseCompNormParentDiv.selectAll('*').remove()
 
   // Make dose comparison normalization slider
-  var onMaxDoseChangeCallback = (sliderVal) =>
+  var onMaxDoseChangeCallback = (sliderVal) => {
     volumeViewer.setDoseComparisonNormFactor(sliderVal)
+
+    // Update voxel info
+    if (volumeViewer.worldCoords) volumeViewer.updateVoxelInfo(volumeViewer.worldCoords)
+  }
 
   const doseCompNormSliderParams = {
     id: 'dose-comp-norm',

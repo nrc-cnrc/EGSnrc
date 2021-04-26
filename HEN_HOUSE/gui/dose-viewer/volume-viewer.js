@@ -282,22 +282,6 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       // Set the dose volume in the panel
       panel.setDoseVolume(doseVol, slicePos)
 
-      if (this.showDoseProfileCheckbox.node().checked || this.showVoxelInfoCheckbox.node().checked) {
-        // Only choose first panel because it will update all dose profiles
-        const panel = this.panels.xy
-
-        if (this.worldCoords) {
-          updateVoxelCoords(
-            panel.densityVol,
-            panel.doseVol,
-            this.worldCoords,
-            this.id,
-            panel.showMarker,
-            panel.showDoseProfile
-          )
-        }
-      }
-
       if (!panel.densityVol) {
         // Update the slider max values
         sliceNum = Math.round(doseVol.baseSlices[panel.axis].zScale(slicePos))
@@ -329,6 +313,9 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         })
       }
     })
+
+    // Update the voxel info
+    if (this.worldCoords) this.updateVoxelInfo(this.worldCoords)
 
     // If dose normalization is checked
     if (this.normalizeDoseCheckbox.node().checked) {
@@ -922,6 +909,10 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
             currPanel.zoomTransform
           )
 
+          // Update voxel info
+          const worldCoords = currPanel.coordsToWorld(plotCoords)
+          this.updateVoxelInfo(worldCoords)
+
           Object.values(this.panels).forEach((panel) => {
             if (panel.axis !== currPanel.axis) {
               let voxelNums
@@ -953,16 +944,6 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
               panel.updateMarker(coords, false)
             }
           })
-
-          const worldCoords = currPanel.coordsToWorld(plotCoords)
-          updateVoxelCoords(
-            currPanel.densityVol,
-            currPanel.doseVol,
-            worldCoords,
-            this.id,
-            currPanel.showMarker,
-            currPanel.showDoseProfile
-          )
         }
       }
 
@@ -1673,21 +1654,6 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       // Set the dose volume in the panel
       panel.setDoseVolume(doseVol, slicePos)
 
-      if (this.showDoseProfileCheckbox.node().checked || this.showVoxelInfoCheckbox.node().checked) {
-        // Only choose first panel because it will update all dose profiles
-        if (this.worldCoords) {
-          const panel = this.panels.xy
-          updateVoxelCoords(
-            panel.densityVol,
-            panel.doseVol,
-            this.worldCoords,
-            this.id,
-            panel.showMarker,
-            panel.showDoseProfile
-          )
-        }
-      }
-
       if (!panel.densityVol) {
         // Update the slider max values
         sliceNum = Math.round(doseVol.baseSlices[panel.axis].zScale(slicePos))
@@ -1710,6 +1676,9 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         doseVol.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
       }
     })
+
+    // Update the voxel info
+    if (this.worldCoords) this.updateVoxelInfo(this.worldCoords)
 
     if (this.densityVolume) {
       enableCheckboxForDensityPlot()
@@ -1736,6 +1705,28 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       const slice = this.doseVolume.getSlice(panel.axis, panel.slicePos)
       this.doseVolume.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
     })
+  }
+
+  /**
+  * Update the voxel information in the volume viewer.
+  *
+  * @param {number[]} worldCoords The world coordinates of the data.
+  */
+  updateVoxelInfo (worldCoords) {
+    if (this.showDoseProfileCheckbox.node().checked || this.showVoxelInfoCheckbox.node().checked) {
+      // Only choose first panel because it will update all dose profiles
+      if (worldCoords) {
+        const panel = this.panels.xy
+        updateVoxelCoords(
+          panel.densityVol,
+          panel.doseVol,
+          worldCoords,
+          this.id,
+          panel.showMarker,
+          panel.showDoseProfile
+        )
+      }
+    }
   }
 }
 
