@@ -124,8 +124,7 @@ public:
         //been split (i.e. is/are phat) or not
         //Note: This means we lose the ability of this bit as a flag for
         //brem events
-        EGS_Particle p;
-        app->getParticleFromStack(0,p);
+        EGS_Particle p = app->getParticleFromStack(0);
         int latch = p.latch;
         latch = latch | (1 << 0);
         app->setLatch(latch);

@@ -1354,7 +1354,8 @@ void EGS_AdvancedApplication::deleteParticleFromStack(int ip) {
 }
 
 //retrieve particle information at stack position ip
-void EGS_AdvancedApplication::getParticleFromStack(int ip,EGS_Particle &p) {
+EGS_Particle EGS_AdvancedApplication::getParticleFromStack(int ip) {
+    EGS_Particle p;
     p.q = the_stack->iq[ip];
     p.E = the_stack->E[ip];
     p.latch = the_stack->latch[ip];
@@ -1362,7 +1363,7 @@ void EGS_AdvancedApplication::getParticleFromStack(int ip,EGS_Particle &p) {
     p.wt = the_stack->wt[ip];
     p.x = EGS_Vector(the_stack->x[ip],the_stack->y[ip],the_stack->z[ip]);
     p.u = EGS_Vector(the_stack->u[ip],the_stack->v[ip],the_stack->w[ip]);
-    return;
+    return p;
 }
 
 //update particle info (+ dnear) at stack position ip
