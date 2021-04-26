@@ -57,6 +57,7 @@
 /* global initializeMaxDoseSlider */
 /* global structureSetVolumeList */
 /* global DoseVolumeHistogram */
+/* global initializeDoseCompNormSlider */
 
 // import {
 //   densityVolumeList, doseComparisonVolumeList, doseVolumeList,
@@ -77,6 +78,7 @@
 //   defineExportDVHToCSVButtonBehaviour, defineExportPNGButtonBehaviour } from
 //   './export.mjs'
 // import {initializeMaxDoseSlider} from './max-dose-slider.js'
+// import {initializeDoseCompNormSlider} from '.dose-comp-normalization-slider.js'
 // import { DoseVolumeHistogram } from './dose-volume-histogram.js'
 
 const AXES = ['xy', 'yz', 'xz']
@@ -834,11 +836,14 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .append('div')
       .attr('class', 'min-max-container')
 
-    // Add max dose slider
-    const doseSliderHolder = optionHolder.append('div').attr('class', 'option')
-    this.maxDoseParentDiv = doseSliderHolder
+    // Add max dose and dose comparison normalization sliders
+    const doseOptionsSliderHolder = optionHolder.append('div').attr('class', 'option')
+    this.maxDoseParentDiv = doseOptionsSliderHolder
       .append('div')
-      .attr('id', 'axis-slider-container')
+      .attr('id', 'max-dose-slider-container')
+    this.doseCompNormParentDiv = doseOptionsSliderHolder
+      .append('div')
+      .attr('id', 'dose-comp-norm-slider-container')
 
     // Add voxel information
     this.voxelInfoDiv = buildVoxelInfoHtml(this.volHolder, id)
@@ -1709,6 +1714,23 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.enableCheckbox(this.showVoxelInfoCheckbox)
     this.enableCheckbox(this.normalizeDoseCheckbox)
     initializeMaxDoseSlider(this.maxDoseParentDiv, doseVol, this)
+    initializeDoseCompNormSlider(this.doseCompNormParentDiv, doseVol, this)
+  }
+
+  /**
+  * Normalize the second dose volume data and recalculate the dose comparison.
+  *
+  * @param {number} normVal The value to normalize the second volume with.
+  */
+  setDoseComparisonNormFactor (normVal) {
+    // Calculate the adjusted dose comparison data
+    this.doseVolume.normalizeDose(normVal)
+
+    // Redraw dose contours
+    Object.values(this.panels).forEach((panel, i) => {
+      const slice = this.doseVolume.getSlice(panel.axis, panel.slicePos)
+      this.doseVolume.drawDose(slice, panel.zoomTransform, panel.axisElements['plot-dose'], this.thresholds, this.className, this.minDoseVar, this.maxDoseVar)
+    })
   }
 }
 

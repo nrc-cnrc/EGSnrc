@@ -949,6 +949,7 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
     // Initialize dose difference and error arrays
     var doseDiff = new Array(doseArr1.length)
     const error = new Array(doseArr1.length)
+    var interpolatedDose
 
     // If both dose volumes have same dimensions
     if (compatibleDims(doseVol1.data.voxelArr, doseVol2.data.voxelArr)) {
@@ -967,7 +968,7 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
       Object.keys(doseVol1.data.voxelArr).forEach((dim) => { grid[dim] = getVoxelCenter(doseVol1.data.voxelArr[dim]) })
       Object.keys(doseVol2.data.voxelArr).forEach((dim) => { voxelArr[dim] = getVoxelCenter(doseVol2.data.voxelArr[dim]) })
 
-      const interpolatedDose = trilinearInterpolation(voxelArr, doseArr2, grid)
+      interpolatedDose = trilinearInterpolation(voxelArr, doseArr2, grid)
       doseDiff = interpolatedDose.map((interpDose, i) => (doseArr1[i] - interpDose))
     }
 
@@ -977,6 +978,8 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
     // Make new volume
     this.data = {
       ...doseVol1.data, // For voxelArr, voxelNumber, and voxelSize
+      dose1: doseArr1,
+      dose2: interpolatedDose || doseArr2,
       dose: doseDiff,
       error: error,
       maxDose: 1.0,
@@ -987,6 +990,36 @@ class DoseComparisonVolume extends Volume { // eslint-disable-line no-unused-var
 
     // Max dose used for dose contour plot
     super.addColourScheme(d3.interpolateViridis, 1.0, -1.0)
+  }
+
+  /**
+   * Normalize the second dose volume according to the given normFactor and
+   * update the Dose Comparison Volume data.
+   *
+   * @param {number} normFactor The factor to normalize the second dose volume by.
+   */
+  normalizeDose (normFactor) {
+    // Initialize dose difference array
+    var doseDiff = new Array(this.data.dose1.length)
+
+    // Take the difference
+    for (let i = 0; i < this.data.dose1.length; i++) {
+      if (this.data.dose1[i] || this.data.dose2[i]) {
+        doseDiff[i] = (this.data.dose1[i] || 0) - (this.data.dose2[i] * normFactor || 0)
+      }
+    }
+
+    // Adjust data
+    // We can adjust the actual data of the volume because a new Dose Comparison
+    // Volume is created each time it is selected, so we are not messing with
+    // the raw data
+    this.data = {
+      ...this.data, // For voxelArr, voxelNumber, and voxelSize
+      dose: doseDiff
+    }
+
+    // Clear the slice cache
+    this.sliceCache = { xy: {}, yz: {}, xz: {} }
   }
 
   /**
