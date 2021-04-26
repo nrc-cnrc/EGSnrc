@@ -212,6 +212,9 @@ var defineShowROICheckboxBehaviour = function (volumeViewer, checkbox) { // esli
     // Set volume viewer structure set to null
     volumeViewer.structureSetVolume = null
 
+    // Remove ROI legend
+    volumeViewer.ROILegendSvg.selectAll('*').remove()
+
     // Uncheck show DVH checkbox and disable
     volumeViewer.showDVHCheckbox.node().checked = false
     volumeViewer.DVH.parentSvg.style('display', 'none')

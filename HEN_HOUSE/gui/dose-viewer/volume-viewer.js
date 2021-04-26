@@ -360,6 +360,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.enableCheckbox(this.normalizeDoseCheckbox)
     if (this.isDVHAllowed()) this.enableCheckbox(this.showDVHCheckbox)
     initializeMaxDoseSlider(this.maxDoseParentDiv, doseVol, this)
+    this.doseCompNormParentDiv.selectAll('*').remove()
   }
 
   isDVHAllowed () {
@@ -520,6 +521,10 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     this.showDVHCheckbox.node().checked = false
     this.DVH.parentSvg.style('display', 'none')
     this.disableCheckbox(this.showDVHCheckbox)
+
+    // Remove dose sliders
+    this.maxDoseParentDiv.selectAll('*').remove()
+    this.doseCompNormParentDiv.selectAll('*').remove()
   }
 
   /**
