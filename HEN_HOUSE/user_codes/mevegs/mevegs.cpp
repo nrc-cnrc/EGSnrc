@@ -14,6 +14,7 @@
 //! To get EGS_Mesh quantities
 #include "egs_mesh.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <cassert>
 #include <fstream>
@@ -189,6 +190,14 @@ void Mevegs_Application::describeUserCode() const {
 }
 
 int Mevegs_Application::initScoring() {
+    // Reorder the mesh so elements closest to the source are first in memory.
+    EGS_Mesh *mesh = dynamic_cast<EGS_Mesh*>(geometry);
+    if (mesh) {
+        // TODO use rndm and source to find a good starting point
+        EGS_Vector x(15.0, 15.0, 0.0);
+        mesh->reorderMesh(x);
+    }
+
     // Get the numner of regions in the geometry.
     nreg = geometry->regions();
     score = new EGS_ScoringArray(nreg+2);
@@ -587,17 +596,26 @@ void Mevegs_Application::writeGmsh() {
 
 namespace {
 // Helper function to append output data to a Gmsh file.
-void appendGmshData(std::ostream& out_file, std::string title, const std::vector<double>& data)
+void appendGmshData(std::ostream& out_file, std::string title, const std::vector<int>& tags,
+    const std::vector<double>& data)
 {
+    assert(data.size() == tags.size());
+    std::vector<std::pair<int, double>> zipped;
+    zipped.reserve(tags.size());
+    for (std::size_t i = 0; i < data.size(); i++) {
+        zipped.push_back({tags.at(i), data.at(i)});
+    }
+    // sort in order of element tag
+    std::sort(begin(zipped), end(zipped));
+
     // Gmsh's ElementData section is the same for msh versions 2.2 and 4.1
     out_file << "$ElementData\n"; // header
     out_file << "1\n" << "\"" << title << "\"\n"; // one string, the view title
     out_file << "1\n0.0\n"; // one float, the time (dummy 0.0)
     // three ints, timestep 0, 1 value per elt, number of elts
-    out_file << "3\n0\n1\n" << data.size() << "\n";
-    for (std::size_t i = 0; i < data.size(); i++) {
-        // TODO add element tags to EGS_Mesh
-        out_file << i + 1 << " " << data[i] << "\n";
+    out_file << "3\n0\n1\n" << zipped.size() << "\n";
+    for (std::size_t i = 0; i < zipped.size(); i++) {
+        out_file << zipped.at(i).first + 1 << " " << zipped.at(i).second << "\n";
     }
     out_file << "$EndElementData\n"; // footer
 }
@@ -613,7 +631,6 @@ EGS_Float abs_to_percent(EGS_Float val, EGS_Float uncert) {
 } // anonymous namespace
 
 void Mevegs_Application::writeGmshResults(std::ostream& out, const EGS_Mesh& mesh) {
-    // convert absolute uncertainty to percent uncertainty
     auto n_elts = mesh.num_elements();
     std::vector<double> e_deps;
     std::vector<double> uncerts;
@@ -641,12 +658,13 @@ void Mevegs_Application::writeGmshResults(std::ostream& out, const EGS_Mesh& mes
     }
 
     // append simulation data
-    appendGmshData(out, "Energy deposition per particle [MeV]", e_deps);
+    auto tags = mesh.tags();
+    appendGmshData(out, "Energy deposition per particle [MeV]", tags, e_deps);
     //appendGmshData(out, "energy fraction per particle", fractions);
-    appendGmshData(out, "Energy uncertainty [%]", uncerts);
-    appendGmshData(out, "Volume [cm^3]", volumes);
-    appendGmshData(out, "Density [g/cm^3]", densities);
-    appendGmshData(out, "Dose [Gy]", doses);
+    appendGmshData(out, "Energy uncertainty [%]", tags, uncerts);
+    appendGmshData(out, "Volume [cm^3]", tags, volumes);
+    appendGmshData(out, "Density [g/cm^3]", tags, densities);
+    appendGmshData(out, "Dose [Gy]", tags, doses);
 }
 
 void Mevegs_Application::getCurrentResult(double &sum, double &sum2,

@@ -157,6 +157,9 @@ public:
         }
         return densities;
     }
+    std::vector<int> tags() const {
+        return _elt_tags;
+    }
 
     inline bool is_boundary(int reg) const {
         return _boundary_elts[reg];
@@ -184,6 +187,12 @@ public:
           << "\tBoundary element: " << is_boundary(i) << "\n"
           << "\tMedia index: "<< _medium_indices[i] << "\n";
     }
+
+    // Order the mesh elements by their distance to x to improve performance.
+    void reorderMesh(const EGS_Vector &x);
+
+    // reorderMesh helper: renumber all the internal data vectors.
+    void renumberMesh(const std::vector<int>& reordered_tags);
 
     // EGS_BaseGeometry interface
     const std::string& getType() const override { return type; }
@@ -244,6 +253,7 @@ private:
     // `howfar` helper: Determine the closest boundary face intersection
     Intersection closest_boundary_face(int ireg, const EGS_Vector& x, const EGS_Vector& u);
 
+    std::vector<int> _elt_tags;
     std::vector<EGS_Vector> _elt_points;
     std::vector<bool> _boundary_faces;
     std::vector<bool> _boundary_elts;

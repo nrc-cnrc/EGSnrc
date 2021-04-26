@@ -199,6 +199,16 @@ int triangle_ray_intersection(const EGS_Vector &p, const EGS_Vector &v_norm,
     return 1;
 }
 
+EGS_Vector centroid(const EGS_Vector& a, const EGS_Vector& b, const EGS_Vector& c,
+    const EGS_Vector& d)
+{
+    return EGS_Vector(
+        (a.x + b.x + c.x + d.x) / 4.0,
+        (a.y + b.y + c.y + d.y) / 4.0,
+        (a.z + b.z + c.z + d.z) / 4.0
+    );
+}
+
 /// Parse the body of a msh4.1 file into an EGS_Mesh using the msh_parser API.
 ///
 /// Throws a std::runtime_error if parsing fails.
@@ -321,6 +331,7 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     }
     EGS_BaseGeometry::nreg = _elements.size();
 
+    _elt_tags.reserve(_elements.size());
     _elt_points.reserve(_elements.size() * 4);
     // Find the matching nodes for every tetrahedron
     auto find_node = [&](int node_tag) -> EGS_Mesh::Node {
@@ -331,7 +342,9 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         }
         return *node_it;
     };
-    for (const auto& e: _elements) {
+    for (int i = 0; i < _elements.size(); i++) {
+        _elt_tags.push_back(i);
+        const auto& e = _elements[i];
         auto a = find_node(e.a);
         auto b = find_node(e.b);
         auto c = find_node(e.c);
@@ -674,5 +687,68 @@ extern "C" {
         egsWarning("EGS_Mesh::from_file: unknown file extension for file `%s`,"
             "only `.msh` is allowed\n", mesh_file.c_str());
         return nullptr;
+    }
+}
+
+void EGS_Mesh::reorderMesh(const EGS_Vector &x) {
+
+    std::vector<std::pair<int, EGS_Vector>> elt_centroids;
+    elt_centroids.reserve(num_elements());
+    for (int i = 0; i < num_elements(); i++) {
+        auto n = element_nodes(i);
+        elt_centroids.push_back(std::make_pair(i, centroid(n.A, n.B, n.C, n.D)));
+    }
+    std::sort(begin(elt_centroids), end(elt_centroids),
+        [&](const std::pair<int, EGS_Vector>& A, const std::pair<int, EGS_Vector>& B) {
+        return (A.second - x).length2() < (B.second - x).length2();
+    });
+    std::vector<int> reordered_tags;
+    reordered_tags.reserve(num_elements());
+    for (const auto& pair: elt_centroids) {
+        reordered_tags.push_back(pair.first);
+    }
+    //for (int i = 0; i < 5; i++) {
+    //    std::cout << "tet " << elt_centroids[i].first << "\nwith centroid:\n";
+    //    print_egsvec(elt_centroids[i].second);
+    //}
+    renumberMesh(reordered_tags);
+}
+
+void EGS_Mesh::renumberMesh(const std::vector<int>& reordered_tags) {
+    if (reordered_tags.size() != _elt_tags.size()) {
+        throw std::runtime_error("renumberMesh: tag vector length mismatch");
+    }
+
+    // map from old numbering to new numbering
+    std::unordered_map<int, int> renum;
+    renum.reserve(num_elements());
+    for (int i = 0; i < num_elements(); i++) {
+        renum.insert({reordered_tags[i], i});
+    }
+
+    auto old_tags = _elt_tags;
+    auto old_points = _elt_points;
+    auto old_b_faces = _boundary_faces;
+    auto old_b_elts = _boundary_elts;
+    auto old_media = _medium_indices;
+    auto old_neighbours = _neighbours;
+
+    for (std::size_t i = 0; i < reordered_tags.size(); i++) {
+        auto old = reordered_tags.at(i);
+        _elt_tags.at(i) = old;
+        for (int j = 0; j < 4; j++) {
+            _elt_points.at(4*i+j) = old_points.at(4*old+j);
+            _boundary_faces.at(4*i+j) = old_b_faces.at(4*old+j);
+        }
+        _boundary_elts.at(i) = old_b_elts.at(old);
+        _medium_indices.at(i) = old_media.at(old);
+        for (int j = 0; j < 4; j++) {
+            auto old_n = old_neighbours.at(old).at(j);
+            if (old_n == -1) {
+                _neighbours.at(i).at(j) = -1;
+            } else {
+                _neighbours.at(i).at(j) = renum.at(old_n);
+            }
+        }
     }
 }
