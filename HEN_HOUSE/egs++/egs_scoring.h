@@ -40,6 +40,7 @@
 #include "egs_libconfig.h"
 #include "egs_functions.h"
 #include "egs_math.h"
+#include "stdio.h"
 
 #include <iostream>
 using namespace std;
@@ -147,6 +148,13 @@ public:
         data << current_ncase << "  " << sum+tmp << "  " << sum2+tmp *tmp
              << "\n";
         return data.good();
+    };
+    bool storeState(FILE *data) {
+        int err = fprintf(data, "%hu %f %f\n", current_ncase, sum+tmp, sum2+tmp*tmp);
+        if(err < 0) {
+            return false;
+        }
+        return true;
     };
 
     /*! \brief Set the state of the scoring object from the data stream \a data.
@@ -322,6 +330,25 @@ public:
             return false;
         }
         data << "\n";
+
+        for (int j=0; j<nreg; j++) {
+            if (!result[j].storeState(data)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    bool storeState(FILE *data) {
+        fprintf(data, "%d %hu\n", nreg, current_ncase_short);
+        if(!egsStoreI64(data,current_ncase)) {
+            return false;
+        }
+        if (!egsStoreI64(data,current_ncase_65536)) {
+            return false;
+        }
+        fprintf(data, "\n");
+
         for (int j=0; j<nreg; j++) {
             if (!result[j].storeState(data)) {
                 return false;

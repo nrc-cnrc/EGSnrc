@@ -66,6 +66,17 @@ bool EGS_EXPORT egsStoreI64(ostream &data, EGS_I64 n) {
     return true;
 }
 
+bool EGS_EXPORT egsStoreI64(FILE *data, EGS_I64 n) {
+    EGS_I64 i1 = n;
+    i1 /= 1000000000;
+    EGS_I64 i2 = n % 1000000000;
+    int err = fprintf(data, " %d %d", (int)i1, (int)i2);
+    if(err < 0) {
+        return false;
+    }
+    return true;
+}
+
 bool EGS_EXPORT egsGetI64(istream &data, EGS_I64 &n) {
     int i1, i2;
     data >> i1 >> i2;

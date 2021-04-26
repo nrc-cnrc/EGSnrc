@@ -115,6 +115,7 @@ const EGS_Float veryFar = 1e30;
  * integers.
  */
 bool EGS_EXPORT egsStoreI64(ostream &data, EGS_I64 n);
+bool EGS_EXPORT egsStoreI64(FILE *data, EGS_I64 n);
 
 /*! \brief Reads a 64 bit integer from the stream \a data and assigns it
  * to \a n. Returns \c true on success, \c false on failure.

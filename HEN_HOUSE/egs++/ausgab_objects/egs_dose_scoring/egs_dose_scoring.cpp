@@ -479,20 +479,41 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
 }
 
 bool EGS_DoseScoring::storeState(ostream &data) const {
+    // Convert the ostream to FILE * before writing data
+    // This might seem like a hack, but improves efficiency for writing
+    // very large arrays (like 3ddose) to egsdat
+    // It's otherwise fine (or better) to use ostream elsewhere
+
+    // Get the position from the stream
+    long pos = data.tellp();
+    data.flush();
+
+    string ofile = app->constructIOFileName(".egsdat",true);
+    FILE *fp = fopen( ofile.c_str(), "w" );
+    fseek(fp, pos, SEEK_SET);
+
     //egsInformation("Storing EGS_DoseScoring...\n");
-    if (!egsStoreI64(data,m_lastCase)) {
+    if (!egsStoreI64(fp,m_lastCase)) {
         return false;
     }
-    data << endl;
-    if (dose  && !dose->storeState(data)) {
+    fprintf(fp, "\n");
+
+    if (dose  && !dose->storeState(fp)) {
         return false;
     }
-    if (doseM && !doseM->storeState(data)) {
+    if (doseM && !doseM->storeState(fp)) {
         return false;
     }
-    if (doseF && !doseF->storeState(data)) {
+    if (doseF && !doseF->storeState(fp)) {
         return false;
     }
+
+    pos = ftell(fp);
+    fclose(fp);
+
+    // Update the stream position
+    data.seekp(pos);
+
     return true;
 }
 
