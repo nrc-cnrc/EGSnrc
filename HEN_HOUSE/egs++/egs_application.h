@@ -1210,7 +1210,10 @@ public:
     }
     virtual void setNpold(int npold) {};
     virtual void deleteParticleFromStack(int ip) {};
-    virtual void getParticleFromStack(int ip, EGS_Particle &p) {};
+    virtual EGS_Particle getParticleFromStack(int ip) {
+       EGS_Particle p;
+       return p;
+    };
     virtual void updateParticleOnStack(int ip, EGS_Particle p, EGS_Float dnear) {};
     virtual EGS_Float getGle() {
        return 0.0;
