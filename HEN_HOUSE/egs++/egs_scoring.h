@@ -40,6 +40,7 @@
 #include "egs_libconfig.h"
 #include "egs_functions.h"
 #include "egs_math.h"
+#include "stdio.h"
 
 #include <iostream>
 using namespace std;
@@ -145,8 +146,15 @@ public:
         //sum += tmp; sum2 += tmp*tmp; tmp = 0;
         //data << current_ncase << "  " << sum << "  " << sum2 << endl;
         data << current_ncase << "  " << sum+tmp << "  " << sum2+tmp *tmp
-             << endl;
+             << "\n";
         return data.good();
+    };
+    bool storeState(FILE *data) {
+        int err = fprintf(data, "%hu %f %f\n", current_ncase, sum+tmp, sum2+tmp*tmp);
+        if(err < 0) {
+            return false;
+        }
+        return true;
     };
 
     /*! \brief Set the state of the scoring object from the data stream \a data.
@@ -314,14 +322,33 @@ public:
       EGS_ScoringSingle::storeData function.
     */
     bool storeState(ostream &data) {
-        data << nreg << "  " << current_ncase_short << endl;
+        data << nreg << "  " << current_ncase_short << "\n";
         if (!egsStoreI64(data,current_ncase)) {
             return false;
         }
         if (!egsStoreI64(data,current_ncase_65536)) {
             return false;
         }
-        data << endl;
+        data << "\n";
+
+        for (int j=0; j<nreg; j++) {
+            if (!result[j].storeState(data)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    bool storeState(FILE *data) {
+        fprintf(data, "%d %hu\n", nreg, current_ncase_short);
+        if(!egsStoreI64(data,current_ncase)) {
+            return false;
+        }
+        if (!egsStoreI64(data,current_ncase_65536)) {
+            return false;
+        }
+        fprintf(data, "\n");
+
         for (int j=0; j<nreg; j++) {
             if (!result[j].storeState(data)) {
                 return false;
