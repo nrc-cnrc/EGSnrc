@@ -71,7 +71,7 @@
 // import { DoseProfile } from './dose-profile.js'
 // import { Panel } from './panel.js'
 // import { Slider } from './slider.js'
-// import { DoseComparisonVolume } from './volume.js'
+// import { DoseComparisonVolume } from './volumes/dose-comparison-volume.js'
 // import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
 // import { initializeMinMaxDensitySlider } from './min-max-density-slider.js'
 //   import { defineExportDoseProfileCSVButtonBehaviour,

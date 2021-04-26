@@ -57,7 +57,9 @@
 // } from './index.js'
 // import { processDoseData, processPhantomData } from './read-data.js'
 // import { VolumeViewer } from './volume-viewer.js'
-// import { DensityVolume, DoseVolume, StructureSetVolume } from './volume.js'
+// import { DensityVolume } from './volumes/density-volume.js'
+// import { DoseVolume } from './volumes/dose-volume.js'
+// import { StructureSetVolume } from './volumes/structure-set-volume.js'
 // import { combineDICOMDensityData, combineDICOMDoseData, processDICOMSlice } from './dicom.js'
 
 const dropArea = d3.select('#drop-area')
