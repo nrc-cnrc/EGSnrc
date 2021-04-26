@@ -28,6 +28,7 @@
 #                   Blake Walters
 #                   Reid Townson
 #                   Alexandre Demelo
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -47,6 +48,7 @@
 #include "egs_interpolator.h"
 #include "egs_input_struct.h"
 #include "egs_run_control.h"
+#include "egs_scoring.h"
 
 #include <memory>
 #include <string>
@@ -61,6 +63,47 @@ class EGS_GeometryHistory;
 class EGS_AusgabObject;
 class EGS_Interpolator;
 //template <class T> class EGS_SimpleContainer;
+
+static void addmcBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+    shared_ptr<EGS_BlockInput> mcBlock = blockPtr->addBlockInput("MC transport parameter");
+    mcBlock->addSingleInput("Global ECUT", false, "Global electron transport cutoff");
+    mcBlock->addSingleInput("Global PCUT", false, "Global photon transport cutoff");
+    mcBlock->addSingleInput("Global SMAX", false, "Global maximum step-size restriction for e-transport");
+    mcBlock->addSingleInput("ESTEPE", false, "Default is 0.25");
+    mcBlock->addSingleInput("XIMAX", false, "Default is 0.5, maximum value is 1.");
+    mcBlock->addSingleInput("Boundary crossing algorithm", false, "exact is default", {"exact", "PRESTA-I"});
+    mcBlock->addSingleInput("Skin depth for BCA", false, "Default value is 3 for exact boundary crossing");
+    mcBlock->addSingleInput("Electron-step algorithm", false, "Default is PRESTA-II", {"PRESTA_II", "PRESTA_I"});
+    mcBlock->addSingleInput("Spin effects", false, "Default is On", {"On", "Off"});
+    mcBlock->addSingleInput("Brems angular sampling", false, "Default is KM", {"KM", "Simple"});
+    mcBlock->addSingleInput("Brems cross sections", false, "Default is BH", {"BH", "NIST"});
+    mcBlock->addSingleInput("Pair angular crossing", false, "Default is Simple", {"Simple", "Off", "KM"});
+    mcBlock->addSingleInput("Triplet production", false, "Default is On", {"On", "Off"});
+    mcBlock->addSingleInput("Electron Impact Ionization", false, "Default is Off", {"On", "Off", "casnati", "kolbenstvedt", "gryzinski"});
+    mcBlock->addSingleInput("Bound Compton scattering", false, "Default is norej", {"On", "Off", "Simple", "norej"});
+    mcBlock->addSingleInput("Radiative Compton corrections", false, "Default is Off", {"On", "Off"});
+    mcBlock->addSingleInput("Rayleigh scattering", false, "Default is off", {"On", "Off", "custom"});
+    mcBlock->addSingleInput("Photoelectron angular sampling", false, "Default is on", {"On", "Off"});
+    mcBlock->addSingleInput("Atomic relaxations", false, "Default is on", {"On", "Off"});
+    mcBlock->addSingleInput("Photon cross sections", false, "Default is xcom, can also be user-supplied", {"si", "epdl", "xcom"});
+    mcBlock->addSingleInput("Photon cross-sections output", false, "Default is off", {"On", "Off"});
+    mcBlock->addSingleInput("Compton cross sections", false, "User-supplied, default is comp-xsections");
+    mcBlock->addSingleInput("Photonuclear attenuation", false, "Default is off", {"On", "Off"});
+    mcBlock->addSingleInput("Photonuclear cross sections", false, "Default is default, or is user-supplied", {"default"});
+}
+
+static void addvrBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+    shared_ptr<EGS_BlockInput> vrBlock = blockPtr->addBlockInput("variance reduction");
+    vrBlock->addSingleInput("photon splitting", false, "N_split");
+    vrBlock->addSingleInput("TmpPhsp", false, "Score phase space, use once in each geometry");
+    vrBlock->addSingleInput("cs enhancement", false, "0 (XCSE off) or >0 (XCSE on)");
+
+    shared_ptr<EGS_BlockInput> rangePtr = vrBlock->addBlockInput("range rejection");
+    rangePtr->addSingleInput("rejection", false, "N_r");
+    rangePtr->addSingleInput("Esave", false, "E_save");
+    rangePtr->addSingleInput("cavity geometry", false, "The name of a previously defined geometry");
+    rangePtr->addSingleInput("rejection range medium", false, "index of the medium to calculate electron ranges");
+}
 
 /*! \brief A structure holding the information of one particle
   \ingroup egspp_main
@@ -1246,6 +1289,9 @@ public:
         }\
         APP_EXPORT void getAppInputs(shared_ptr<EGS_InputStruct> inpPtr) {\
             addRunControlBlock(inpPtr);\
+            addmcBlock(inpPtr);\
+            addvrBlock(inpPtr);\
+            addScoringBlock(inpPtr);\
         }\
     }
 
