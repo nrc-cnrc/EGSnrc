@@ -262,7 +262,7 @@ var defineNormalizeDoseCheckboxBehaviour = function (volumeViewer, checkbox) { /
     volumeViewer.doseNormPercentInput.select('input').attr('disabled', null)
 
     // If existing values in boxes, update doseNorm
-    const doseNormVal = parseFloat(volumeViewer.doseNormValInput.select('input').node().value) * 100 // Convert from cGy to Gy
+    const doseNormVal = parseFloat(volumeViewer.doseNormValInput.select('input').node().value) / 100 // Convert from cGy to Gy
     const doseNormPercent = parseFloat(volumeViewer.doseNormPercentInput.select('input').node().value) / 100 // Convert from percent to decimal
     if (doseNormVal && doseNormPercent) volumeViewer.normalizeDoseValues(doseNormVal, doseNormPercent)
   } else {

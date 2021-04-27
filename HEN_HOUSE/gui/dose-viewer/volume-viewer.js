@@ -322,7 +322,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
     // If dose normalization is checked
     if (this.normalizeDoseCheckbox.node().checked) {
-      const doseNormVal = parseFloat(this.doseNormValInput.select('input').node().value) * 100 // Convert from cGy to Gy
+      const doseNormVal = parseFloat(this.doseNormValInput.select('input').node().value) / 100 // Convert from cGy to Gy
       const doseNormPercent = parseFloat(this.doseNormPercentInput.select('input').node().value) / 100 // Convert from percent to decimal
       this.normalizeDoseValues(doseNormVal, doseNormPercent)
     }
@@ -758,7 +758,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .attr('step', 1)
       .style('width', 45 + 'px')
       .attr('disabled', 'disabled').on('change', function () {
-        const doseNormVal = parseFloat(this.value) * 100 // Convert from cGy to Gy
+        const doseNormVal = parseFloat(this.value) / 100 // Convert from cGy to Gy
         const doseNormPercent = parseFloat(volViewer.doseNormPercentInput.select('input').node().value) / 100 // Convert from percent to decimal
 
         if (doseNormPercent) volViewer.normalizeDoseValues(doseNormVal, doseNormPercent)
@@ -781,7 +781,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .attr('step', 1)
       .style('width', 45 + 'px')
       .attr('disabled', 'disabled').on('change', function () {
-        const doseNormVal = parseFloat(volViewer.doseNormValInput.select('input').node().value) * 100 // Convert from cGy to Gy
+        const doseNormVal = parseFloat(volViewer.doseNormValInput.select('input').node().value) / 100 // Convert from cGy to Gy
         const doseNormPercent = parseFloat(this.value) / 100 // Convert from percent to decimal
 
         if (doseNormVal) volViewer.normalizeDoseValues(doseNormVal, doseNormPercent)

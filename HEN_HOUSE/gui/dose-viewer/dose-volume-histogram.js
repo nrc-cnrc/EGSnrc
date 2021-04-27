@@ -197,7 +197,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
    */
   setDVHData (structureSetVol, doseVol) {
     const ROIHistograms = structureSetVol.calculateDVH(doseVol)
-    const maxDose = doseVol.data.maxDose // Max dose in cGy
+    const maxDose = doseVol.data.maxDose * 100 // Max dose in cGy
     // Calculate the cumulative dose for each ROI
     this.data = ROIHistograms.map((histogram, idx) => {
       var cumSum = 0
@@ -330,11 +330,11 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
       .y((d) => this.yVolumeScale(d.y))
 
     // Normalize the data if needed
-    const data = doseNorm ? this.data.map((item) => ({ ...item, values: item.values.map((val) => ({ x: val.x * doseNorm / 100, y: val.y })) })) : this.data
+    const data = doseNorm ? this.data.map((item) => ({ ...item, values: item.values.map((val) => ({ x: val.x * doseNorm, y: val.y })) })) : this.data
 
     if (doseNorm) {
       // Update the x axis
-      this.xDoseScale = this.xDoseScale.domain([0, this.maxDose * doseNorm / 100])
+      this.xDoseScale = this.xDoseScale.domain([0, this.maxDose * doseNorm])
 
       const newXAxis = d3
         .axisBottom()

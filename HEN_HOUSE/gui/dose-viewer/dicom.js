@@ -151,6 +151,7 @@ const elementProperties = {
   x30040002: { tag: '(3004,0002)', type: '1', keyword: 'DoseUnits', vm: 1, vr: 'CS' }, // Either GY or RELATIVE
   x30040004: { tag: '(3004,0004)', type: '1', keyword: 'DoseType', vm: 1, vr: 'CS' }, // Either PHYSICAL,  EFFECTIVE, or ERROR
   x3004000c: { tag: '(3004,000C)', type: '1C', keyword: 'GridFrameOffsetVector', vm: '2-n', vr: 'DS' }, // Contains the dose image plane offsets in mm
+  x3004000e: { tag: '(3004,000E)', type: '1C', keyword: 'DoseGridScaling', vm: '1', vr: 'DS' }, // Scaling factor for the Pixel Data
   // CT Image
   x00281052: { tag: '(0028,1052)', type: '1', keyword: 'RescaleIntercept', vm: 1, vr: 'DS' }, // The value b in relationship between stored values (SV) and the output units
   x00281053: { tag: '(0028,1053)', type: '1', keyword: 'RescaleSlope', vm: 1, vr: 'DS' }, // The value m in the equation specified in Rescale Intercept
@@ -344,7 +345,14 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
       }
 
       if (dicomType === 'RT Dose Storage') {
-        DICOMSlice.dose = propertyValues.PixelData
+        const scalingFactor = parseFloat(propertyValues.DoseGridScaling)
+        const pixelDataScaled = new Float32Array(propertyValues.PixelData.length)
+
+        for (let i = 0; i < propertyValues.PixelData.length; i++) {
+          pixelDataScaled[i] = propertyValues.PixelData[i] * scalingFactor
+        }
+
+        DICOMSlice.dose = pixelDataScaled
         DICOMSlice.units = propertyValues.DoseUnits
       } else if (dicomType === 'CT Image Storage') {
       // TODO: materialList and material matrix
@@ -355,9 +363,8 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
 
         for (let i = 0; i < propertyValues.PixelData.length; i++) {
           pixelDataScaled[i] = m * propertyValues.PixelData[i] + b
-
-          DICOMSlice.density = pixelDataScaled
         }
+        DICOMSlice.density = pixelDataScaled
       }
       return DICOMSlice
     } else if (dicomType === 'RT Structure Set Storage') {
