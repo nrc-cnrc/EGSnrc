@@ -53,11 +53,11 @@
 /* global updateVoxelCoords */
 /* global DoseProfile */
 /* global Panel */
-/* global Slider */
 /* global initializeMaxDoseSlider */
 /* global structureSetVolumeList */
 /* global DoseVolumeHistogram */
 /* global initializeDoseCompNormSlider */
+/* global initializeSliceSlider */
 
 // import {
 //   densityVolumeList, doseComparisonVolumeList, doseVolumeList,
@@ -74,7 +74,9 @@
 //   import { initializeMinMaxDensitySlider } from
 //   './sliders/min-max-density-slider.js'
 // import {initializeMaxDoseSlider} from './sliders/max-dose-slider.js'
-// import {initializeDoseCompNormSlider} from './sliders/dose-comp-normalization-slider.js'
+//   import {initializeDoseCompNormSlider} from
+//   './sliders/dose-comp-normalization-slider.js'
+// import {initializeSliceSlider} from './sliders/slice-slider.js'
 // import { DoseComparisonVolume } from './volumes/dose-comparison-volume.js'
 // import { buildVoxelInfoHtml, coordsToVoxel, updateVoxelCoords } from './voxel-coordinates.js'
 //   import { defineExportDoseProfileCSVButtonBehaviour,
@@ -890,87 +892,8 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         .classed('panel-' + axis, true)
         .style('display', 'inline-block')
 
-      // Slice slider callback and parameters
-      var onSliceChangeCallback = (sliderVal) => {
-        const currPanel = this.panels[axis]
-        // Update slice of current panel
-        this.updateSlice(axis, parseInt(sliderVal) - 1)
-
-        // TODO: Fix this, bug after zooming/translating and changing slice
-        // Update marker position, voxel information and dose profile
-        const plotCoords = currPanel.markerPosition
-        if (currPanel.showMarker()) {
-          // ISSUE HERE: don't need to redraw other panels on slider change,
-          // just marker position and voxel info
-          const voxelCoords = coordsToVoxel(
-            plotCoords,
-            currPanel.axis,
-            currPanel.densitySliceNum || currPanel.doseSliceNum,
-            currPanel.volume,
-            currPanel.zoomTransform
-          )
-
-          // Update voxel info
-          const worldCoords = currPanel.coordsToWorld(plotCoords)
-          this.updateVoxelInfo(worldCoords)
-
-          Object.values(this.panels).forEach((panel) => {
-            if (panel.axis !== currPanel.axis) {
-              let voxelNums
-              if (panel.axis === 'xy') {
-                voxelNums = [voxelCoords[0], voxelCoords[1]]
-              } else if (panel.axis === 'yz') {
-                voxelNums = [voxelCoords[1], voxelCoords[2]]
-              } else {
-                voxelNums = [voxelCoords[0], voxelCoords[2]]
-              }
-
-              // Convert voxel number to pixel value for both x and y coordinates
-              const xScale = panel.volume.baseSlices[panel.axis].xPixelToVoxelScale.invertExtent
-              const yScale = panel.volume.baseSlices[panel.axis].yPixelToVoxelScale.invertExtent
-
-              let coords
-              if (panel.zoomTransform) {
-                coords = panel.zoomTransform.apply([
-                  Math.ceil(xScale(voxelNums[0]).reduce((total, num) => total + num) / 2),
-                  Math.ceil(yScale(voxelNums[1]).reduce((total, num) => total + num) / 2)
-                ])
-              } else {
-                coords = [
-                  Math.ceil(xScale(voxelNums[0]).reduce((total, num) => total + num) / 2),
-                  Math.ceil(yScale(voxelNums[1]).reduce((total, num) => total + num) / 2)
-                ]
-              }
-
-              panel.updateMarker(coords, false)
-            }
-          })
-        }
-      }
-
-      const sliceSliderParams = {
-        id: 'slice-number-' + axis,
-        label: 'Slice Number',
-        format: d3.format('d'),
-        startingVal: 0,
-        minVal: 1,
-        maxVal: 1,
-        step: 1,
-        margin: {
-          top: 0,
-          right: mainViewerDimensions.margin.right,
-          bottom: 0,
-          left: mainViewerDimensions.margin.left
-        },
-        style: { 'text-align': 'center' },
-        onSliderChangeCallback: onSliceChangeCallback
-      }
-
       // Build new slider
-      this.sliceSliders[axis] = new Slider(
-        selectedDiv,
-        sliceSliderParams
-      )
+      this.sliceSliders[axis] = initializeSliceSlider(selectedDiv, axis, this)
 
       // Build div to hold the panel
       const imageHolder = selectedDiv
