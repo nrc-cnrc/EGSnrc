@@ -139,10 +139,10 @@ var defineExportPNGButtonBehaviour = function (volumeViewer) { // eslint-disable
     var imgString = getImgString(node)
 
     // Convert img string to data URL
-    var imgsrc =
+    var imgSrc =
       'data:image/svg+xml;base64,' +
       btoa(unescape(encodeURIComponent(imgString)))
-    downloadURI(imgsrc, imageName + '.png')
+    downloadURI(imgSrc, imageName + '.png')
   }
 }
 

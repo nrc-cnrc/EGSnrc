@@ -118,17 +118,17 @@ function zoomedAll (transform, panel) { // eslint-disable-line no-unused-vars
     .select('g.marker')
     .attr('transform', transform.toString())
 
-  // Create new scale ojects based on event
-  var newxScale = transform.rescaleX(volume.baseSlices[panel.axis].xScale)
-  var newyScale = transform.rescaleY(volume.baseSlices[panel.axis].yScale)
+  // Create new scale objects based on event
+  var newXScale = transform.rescaleX(volume.baseSlices[panel.axis].xScale)
+  var newYScale = transform.rescaleY(volume.baseSlices[panel.axis].yScale)
 
   // Update axes
   axisElements['axis-svg']
     .select('.x-axis')
-    .call(d3.axisBottom().scale(newxScale).ticks(6))
+    .call(d3.axisBottom().scale(newXScale).ticks(6))
   axisElements['axis-svg']
     .select('.y-axis')
-    .call(d3.axisLeft().scale(newyScale).ticks(6))
+    .call(d3.axisLeft().scale(newYScale).ticks(6))
 
   // Update grid
   axisElements['axis-svg']
@@ -136,7 +136,7 @@ function zoomedAll (transform, panel) { // eslint-disable-line no-unused-vars
     .call(
       d3
         .axisBottom()
-        .scale(newxScale)
+        .scale(newXScale)
         .tickSize(-MAIN_VIEWER_DIMENSIONS.height)
         .tickFormat('')
         .ticks(6)
@@ -146,7 +146,7 @@ function zoomedAll (transform, panel) { // eslint-disable-line no-unused-vars
     .call(
       d3
         .axisLeft()
-        .scale(newyScale)
+        .scale(newYScale)
         .tickSize(-MAIN_VIEWER_DIMENSIONS.width)
         .tickFormat('')
         .ticks(6)

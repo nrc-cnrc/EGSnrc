@@ -68,8 +68,6 @@ const progressBarNode = progressBar.node()
 
 /**
  * Initialize the progress bar for a new round of uploading files.
- *
- * @param {number} numfiles The number of files being uploaded.
  */
 function initializeProgress () {
   progressBarNode.value = 0
@@ -80,7 +78,9 @@ function initializeProgress () {
 /**
  * Initialize the progress bar for a new round of uploading files.
  *
- * @param {number} numfiles The number of files being uploaded.
+ * @param {number} percent    The percent progress completed of the current file.
+ * @param {number} fileNum    The number of the current file.
+ * @param {number} totalFiles The total number of files.
  */
 function updateProgress (percent, fileNum, totalFiles) {
   progressBarNode.value = percent * (fileNum / totalFiles)
@@ -208,11 +208,11 @@ d3.select('#test-files').on('click', function () {
 
   // Read the JSON density file from the test files directory
   d3.json('./test-files/ismail-density.json').then((densityData) => {
-    var testfileIndex = densityVolumeList.findIndex((densityVol, i) => densityVol.fileName === 'ismail.egsphant')
+    var testFileIndex = densityVolumeList.findIndex((densityVol, i) => densityVol.fileName === 'ismail.egsphant')
 
-    if (testfileIndex !== -1) {
-      volViewer.setDensityVolume(densityVolumeList[testfileIndex])
-      volViewer.densitySelector.node().selectedIndex = testfileIndex + 1
+    if (testFileIndex !== -1) {
+      volViewer.setDensityVolume(densityVolumeList[testFileIndex])
+      volViewer.densitySelector.node().selectedIndex = testFileIndex + 1
     } else {
       makeDensityVolume('ismail.egsphant', densityData)
       volViewer.setDensityVolume(densityVolumeList[densityVolumeList.length - 1])
@@ -222,11 +222,11 @@ d3.select('#test-files').on('click', function () {
 
   // Read the JSON dose file from the test files directory
   d3.json('./test-files/ismail100-dose.json').then((doseData) => {
-    var testfileIndex = doseVolumeList.findIndex((doseVol, i) => doseVol.fileName === 'ismail100.3ddose')
+    var testFileIndex = doseVolumeList.findIndex((doseVol, i) => doseVol.fileName === 'ismail100.3ddose')
 
-    if (testfileIndex !== -1) {
-      volViewer.setDoseVolume(doseVolumeList[testfileIndex])
-      volViewer.doseSelector.node().selectedIndex = testfileIndex + 1
+    if (testFileIndex !== -1) {
+      volViewer.setDoseVolume(doseVolumeList[testFileIndex])
+      volViewer.doseSelector.node().selectedIndex = testFileIndex + 1
     } else {
       makeDoseVolume('ismail100.3ddose', doseData)
       volViewer.setDoseVolume(doseVolumeList[doseVolumeList.length - 1])
@@ -405,7 +405,7 @@ function readFile (resolve, reject, file, fileNum, totalFiles) {
   })
 
   if (ext === 'dcm' || ext === 'DCM') {
-    // Read as arrau buffer if DICOM
+    // Read as array buffer if DICOM
     reader.readAsArrayBuffer(file)
   } else {
     // Otherwise read as text file

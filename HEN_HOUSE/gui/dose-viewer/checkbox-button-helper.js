@@ -196,10 +196,10 @@ var defineShowROICheckboxBehaviour = function (volumeViewer, checkbox) { // esli
       // Check if studyInstanceUID matches or areas overlap
       if ((volumeViewer.densityVolume &&
            ((structureSetVol.data.studyInstanceUID === volumeViewer.densityVolume.data.studyInstanceUID) ||
-           overlap(structureSetVol.ROIoutlines, volumeViewer.densityVolume.data.voxelArr))) ||
+           overlap(structureSetVol.ROIOutlines, volumeViewer.densityVolume.data.voxelArr))) ||
           (volumeViewer.doseVolume &&
             ((structureSetVol.data.studyInstanceUID === volumeViewer.doseVolume.data.studyInstanceUID) ||
-            overlap(structureSetVol.ROIoutlines, volumeViewer.doseVolume.data.voxelArr)))) {
+            overlap(structureSetVol.ROIOutlines, volumeViewer.doseVolume.data.voxelArr)))) {
         volumeViewer.setStructureSetVolume(structureSetVol)
       } else {
         console.log('No structure set matches current dose/density files')

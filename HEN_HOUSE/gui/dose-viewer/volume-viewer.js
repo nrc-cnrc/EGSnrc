@@ -975,7 +975,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       // Build div to hold the panel
       const imageHolder = selectedDiv
         .append('div')
-        .classed('imageholder-' + axis, true)
+        .classed('image-holder-' + axis, true)
         .classed('parent', true)
 
       classes.forEach((className, i) => {
@@ -1068,7 +1068,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
    * Set up the event dispatcher.
    */
   initializeDispatch () {
-    // Set up marker coord change event
+    // Set up marker coordinate change event
     const panels = this.panels
     const volumeViewer = this
 
@@ -1242,7 +1242,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   }
 
   /**
-   * Intialize the thresholds for the dose contour plots.
+   * Initialize the thresholds for the dose contour plots.
    *
    * @param {number} min The minimum threshold value.
    * @param {number} max The maximum threshold value.
@@ -1378,8 +1378,8 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   */
   initializeStructureSetLegend (structureSetVolume) {
     const toCSSClass = (className) => className.replace(/[|~ ! @ $ % ^ & * ( ) + = , . / ' ; : " ? > < \[ \] \ \{ \} | ]/g, '') // eslint-disable-line no-useless-escape
-    const colours = structureSetVolume.ROIoutlines.map((ROIoutline) => d3.color(ROIoutline.colour))
-    const labels = structureSetVolume.ROIoutlines.map((ROIoutline) => ROIoutline.label)
+    const colours = structureSetVolume.ROIOutlines.map((ROIOutline) => d3.color(ROIOutline.colour))
+    const labels = structureSetVolume.ROIOutlines.map((ROIOutline) => ROIOutline.label)
     const svgList = Object.values(this.svgObjs['plot-dose'])
     svgList.push(this.DVH.svg)
 
@@ -1409,7 +1409,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   */
   initializeDoseLegend (thresholds, minDoseVar = 0, maxDoseVar = this.doseVolume.data.maxDose) {
     // Define variables
-    const classNames = this.thresholds.map((thres, i) => this.className(this.thresholds.length - 1 - i))
+    const classNames = this.thresholds.map((threshold, i) => this.className(this.thresholds.length - 1 - i))
     const doseLegendParams = {
       legendSvg: this.doseLegendSvg,
       legendClass: 'doseLegend',

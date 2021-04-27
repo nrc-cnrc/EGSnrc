@@ -25,7 +25,7 @@ function combineDICOMDoseData (DICOMList) { // eslint-disable-line no-unused-var
     zArrVoxelCenter.forEach((e, i) => { zArr.push(e + zVoxSize * 0.5) })
   }
 
-  // Add the dose matricies together
+  // Add the dose matrices together
   const doseArrays = DICOMList.map((e) => Array.from((e.data.dose)))
   const doseDense = doseArrays.flat()
 
@@ -81,7 +81,7 @@ function combineDICOMDensityData (DICOMList) { // eslint-disable-line no-unused-
   // Get the voxel boundary positions
   zArrVoxelCenter.forEach((e, i) => { zArr.push(e + zVoxSize * 0.5) })
 
-  // Add the density matricies together
+  // Add the density matrices together
   const densityArrays = DICOMList.map((e) => Array.from((e.data.density)))
   const density = densityArrays.flat()
   // TODO: Remove the use of flat to be compatible with Safari
@@ -180,7 +180,7 @@ const elementProperties = {
   xfffee000: { tag: '(FFFE,E000)', type: '1', keyword: 'Item', vm: 1, vr: '' } // An item in a sequence
 }
 
-const uids = {
+const UIDs = {
   '1.2.840.10008.5.1.4.1.1.2': 'CT Image Storage',
   '1.2.840.10008.5.1.4.1.1.481.2': 'RT Dose Storage',
   '1.2.840.10008.5.1.4.1.1.481.3': 'RT Structure Set Storage'
@@ -206,8 +206,8 @@ var getVal = function (dataSet, vr, propertyAddress) {
   } else if (vr === 'AT') {
     var group = dataSet.uint16(propertyAddress, 0)
     var groupHexStr = ('0000' + group.toString(16)).substr(-4)
-    var xelement = dataSet.uint16(propertyAddress, 1)
-    var elementHexStr = ('0000' + xelement.toString(16)).substr(-4)
+    var xElement = dataSet.uint16(propertyAddress, 1)
+    var elementHexStr = ('0000' + xElement.toString(16)).substr(-4)
     val = 'x' + groupHexStr + elementHexStr
 
     // If the value representation is other byte string or other word string
@@ -281,7 +281,7 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
 
   try {
     const dataSet = dicomParser.parseDicom(byteArray) //, { untilTag: 'x7fe00010' })
-    const dicomType = uids[dataSet.string('x00020002')]
+    const dicomType = UIDs[dataSet.string('x00020002')]
 
     const propertyValues = {}
     dumpDataSet(dataSet, propertyValues)
@@ -308,7 +308,7 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
       var xArr = [...Array(nCols + 1)].map((e, i) => (XY[0] * xVoxSize * (i - 0.5) + Sx))
       var yArr = [...Array(nRows + 1)].map((e, j) => (XY[4] * yVoxSize * (j - 0.5) + Sy))
 
-      var DICOMslice = {
+      var DICOMSlice = {
         type: dicomType,
         sliceNum: parseInt(propertyValues.InstanceNumber),
         voxelNumber: {
@@ -338,14 +338,14 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
         const zArr = gridFrames.map((frameOffset) => (Sz + frameOffset + zVoxSize * 0.5))
         zArr.unshift(Sz - zVoxSize * 0.5)
 
-        DICOMslice.voxelNumber.z = nSlices
-        DICOMslice.voxelArr.z = zArr
-        DICOMslice.voxelSize.z = zVoxSize
+        DICOMSlice.voxelNumber.z = nSlices
+        DICOMSlice.voxelArr.z = zArr
+        DICOMSlice.voxelSize.z = zVoxSize
       }
 
       if (dicomType === 'RT Dose Storage') {
-        DICOMslice.dose = propertyValues.PixelData
-        DICOMslice.units = propertyValues.DoseUnits
+        DICOMSlice.dose = propertyValues.PixelData
+        DICOMSlice.units = propertyValues.DoseUnits
       } else if (dicomType === 'CT Image Storage') {
       // TODO: materialList and material matrix
       // Rescale the density values
@@ -356,10 +356,10 @@ function processDICOMSlice (arrayBuffer) { // eslint-disable-line no-unused-vars
         for (let i = 0; i < propertyValues.PixelData.length; i++) {
           pixelDataScaled[i] = m * propertyValues.PixelData[i] + b
 
-          DICOMslice.density = pixelDataScaled
+          DICOMSlice.density = pixelDataScaled
         }
       }
-      return DICOMslice
+      return DICOMSlice
     } else if (dicomType === 'RT Structure Set Storage') {
       const numROIs = propertyValues.ROIContourSequence.length
       const ROIs = new Array(numROIs)

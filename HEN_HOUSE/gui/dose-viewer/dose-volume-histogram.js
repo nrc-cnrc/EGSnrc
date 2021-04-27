@@ -153,19 +153,19 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
       .attr('transform', transform.toString())
 
     // Create new scale objects based on event
-    var newxDoseScale = transform.rescaleX(this.xDoseScale)
-    var newyVolumeScale = transform.rescaleY(this.yVolumeScale)
+    var newXDoseScale = transform.rescaleX(this.xDoseScale)
+    var newYVolumeScale = transform.rescaleY(this.yVolumeScale)
 
     // Create and append x and y axes
     const xAxis = d3
       .axisBottom()
-      .scale(newxDoseScale)
+      .scale(newXDoseScale)
       .tickFormat(d3.format('.0f'))
       .tickSize(-this.dimensions.height)
 
     const yAxis = d3
       .axisLeft()
-      .scale(newyVolumeScale)
+      .scale(newYVolumeScale)
       .ticks(6)
       .tickFormat(d3.format('.0%'))
       .tickSize(-this.dimensions.width)
@@ -211,8 +211,8 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
         .map((val, i) => ({ x: maxDose * (i / histogram.length), y: val }))
 
       return {
-        key: structureSetVol.ROIoutlines[idx].label,
-        colour: structureSetVol.ROIoutlines[idx].colour,
+        key: structureSetVol.ROIOutlines[idx].label,
+        colour: structureSetVol.ROIOutlines[idx].colour,
         values: cumulativeHistogram
       }
     })

@@ -151,7 +151,7 @@ class Panel { // eslint-disable-line no-unused-vars
     const panel = this
 
     // Define the drag attributes
-    function dragstarted () {
+    function dragStarted () {
       d3.select(this).raise()
       d3.select(this).attr('cursor', 'grabbing')
     }
@@ -175,7 +175,7 @@ class Panel { // eslint-disable-line no-unused-vars
       )
     }
 
-    function dragended () {
+    function dragEnded () {
       d3.select(this).attr('cursor', 'grab')
 
       const plotCoords = panel.zoomTransform ? panel.zoomTransform.apply([d3.event.x, d3.event.y]) : [d3.event.x, d3.event.y]
@@ -189,9 +189,9 @@ class Panel { // eslint-disable-line no-unused-vars
 
     return d3
       .drag()
-      .on('start', dragstarted)
+      .on('start', dragStarted)
       .on('drag', dragged)
-      .on('end', dragended)
+      .on('end', dragEnded)
   }
 
   /**

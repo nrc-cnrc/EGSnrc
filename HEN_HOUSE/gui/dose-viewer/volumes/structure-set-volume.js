@@ -61,7 +61,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
      */
   addData (data) {
     this.data = data
-    this.ROIoutlines = this.makeOutlines(data)
+    this.ROIOutlines = this.makeOutlines(data)
   }
 
   /**
@@ -71,7 +71,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
      */
   // TODO: Speed this function up
   makeOutlines (data) {
-    const ROIoutlines = []
+    const ROIOutlines = []
     var ROI
 
     // If val is smaller than range min or larger than range max, update range
@@ -151,20 +151,20 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
         })
 
         // Build the ROI array
-        var ROIarray = this.makeROIArray(contourData, voxelNumber, voxelArr, scales)
+        var ROIArray = this.makeROIArray(contourData, voxelNumber, voxelArr, scales)
 
-        ROIoutlines.push({
+        ROIOutlines.push({
           label: ROI.ROIName || ROI.ROIObservationLabel,
           colour: 'rgb(' + ROI.ROIDisplayColor.replaceAll('\\', ', ') + ')',
           // contourGeometricType: contourGeometricType,
           voxelNumber: voxelNumber,
           scales: scales,
-          ROIarray: ROIarray,
+          ROIArray: ROIArray,
           voxelArr: voxelArr
         })
       }
     }
-    return ROIoutlines
+    return ROIOutlines
   }
 
   /**
@@ -226,7 +226,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
     }
 
     // Initialize the ROI array
-    const ROIarray = new Array(voxelNumber.x * voxelNumber.y * voxelNumber.z)
+    const ROIArray = new Array(voxelNumber.x * voxelNumber.y * voxelNumber.z)
 
     // Build the array that represents the ROI polygons as a matrix mask
     for (let k = 0; k < voxelNumber.z; k++) {
@@ -255,14 +255,14 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
               i1 = scales.x(meetPoints[idx])
               // Fill in the ROI array between the points
               for (let i = i0; i <= i1; i++) {
-                ROIarray[i + voxelNumber.x * (j + k * voxelNumber.y)] = 1
+                ROIArray[i + voxelNumber.x * (j + k * voxelNumber.y)] = 1
               }
             }
           }
         })
       })
     }
-    return ROIarray
+    return ROIArray
   }
 
   /**
@@ -275,7 +275,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
   getSlices (axis, slicePos) {
     // Collect all ROIs that contain a point at slicePos
     var insideRange = (range, val) => (val > range[0] && val < range[1]) || (val < range[0] && val > range[1])
-    const ROIOutlinesInRange = this.ROIoutlines.filter((ROIOutline) => ((axis === 'xy' && insideRange(ROIOutline.scales.z.domain(), slicePos)) ||
+    const ROIOutlinesInRange = this.ROIOutlines.filter((ROIOutline) => ((axis === 'xy' && insideRange(ROIOutline.scales.z.domain(), slicePos)) ||
       (axis === 'yz' && insideRange(ROIOutline.scales.x.domain(), slicePos)) ||
       (axis === 'xz' && insideRange(ROIOutline.scales.y.domain(), slicePos)))
     )
@@ -305,7 +305,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
               i + xVoxels * (sliceNum + j * ROIOutline.voxelNumber.y)
           }
           const newAddress = i + xVoxels * j
-          sliceData[newAddress] = ROIOutline.ROIarray[address] || 0
+          sliceData[newAddress] = ROIOutline.ROIArray[address] || 0
         }
       }
 
@@ -339,7 +339,7 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
      * @param {string} axis The axis of the slice (xy, yz, or xz).
      * @param {number} slicePos The position of the slice.
      * @param {Object} svg The svg plot element.
-     * @param {Volume} volume The correponding Volume object.
+     * @param {Volume} volume The corresponding Volume object.
      * @param {Object} zoomTransform Holds information about the current transform
      * of the slice.
      */
@@ -444,14 +444,14 @@ class StructureSetVolume extends Volume { // eslint-disable-line no-unused-vars
     const ROIHistograms = []
 
     // For each ROI
-    this.ROIoutlines.forEach((ROIOutline) => {
+    this.ROIOutlines.forEach((ROIOutline) => {
       // Initialize histogramList
       const doseList = []
       let coords, pos, dose
       var nVals = 0
 
       // Go through each element in the ROI array
-      ROIOutline.ROIarray.forEach((val, i) => {
+      ROIOutline.ROIArray.forEach((val, i) => {
         coords = to3d(i, ROIOutline.voxelNumber)
         pos = toPos(coords, ROIOutline.voxelArr)
         dose = doseVolume.getDataAtPosition(pos) || 0
