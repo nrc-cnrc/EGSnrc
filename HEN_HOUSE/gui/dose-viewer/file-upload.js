@@ -32,6 +32,7 @@
 /* global d3 */
 /* global FileReader */
 /* global alert */
+/* global XMLHttpRequest */
 
 // REMOVE THESE GLOBAL IMPORTS ONCE MODULES RE-IMPLEMENTED
 /* global MAIN_VIEWER_DIMENSIONS */
@@ -192,6 +193,10 @@ d3.select('#file-input').on('change', function () {
  * If the test files link is pressed, process test files.
  */
 d3.select('#test-files').on('click', function () {
+  const testFiles = ['pediatric.egsphant',
+    'RD.2.16.840.1.114362.1.5.6.1.121121.6102256374.313565332.637.1446.dcm',
+    'RS.2.16.840.1.114362.1.5.6.1.121121.6102256374.313565331.1073.1444.dcm']
+
   var volViewer
   if (volumeViewerList.length === 0) {
     // Add a new volume viewer
@@ -206,32 +211,54 @@ d3.select('#test-files').on('click', function () {
     volViewer = volumeViewerList[0]
   }
 
-  // Read the JSON density file from the test files directory
-  d3.json('./test-files/ismail-density.json').then((densityData) => {
-    var testFileIndex = densityVolumeList.findIndex((densityVol, i) => densityVol.fileName === 'ismail.egsphant')
+  testFiles.forEach((testFile, i) => {
+    const request = new XMLHttpRequest()
+    if (i !== 0) request.responseType = 'arraybuffer'
 
-    if (testFileIndex !== -1) {
-      volViewer.setDensityVolume(densityVolumeList[testFileIndex])
-      volViewer.densitySelector.node().selectedIndex = testFileIndex + 1
-    } else {
-      makeDensityVolume('ismail.egsphant', densityData)
-      volViewer.setDensityVolume(densityVolumeList[densityVolumeList.length - 1])
-      volViewer.densitySelector.node().selectedIndex = densityVolumeList.length
+    // Get each of the test files
+    request.open('GET', './test-files/' + testFile, true)
+
+    request.onreadystatechange = function () {
+      if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+        // Extract extension and file name
+        const ext = request.responseURL.split('.').pop()
+        const fileName = request.responseURL.split('/').pop()
+
+        var response, data
+
+        if (i === 0) { // If the egsphant test file
+          // Make density volume
+          response = request.response.split('\n')
+          data = processPhantomData(response)
+          makeDensityVolume(fileName.split('.')[0], data)
+
+          // Set volume viewer selector to test file
+          volViewer.setDensityVolume(densityVolumeList[densityVolumeList.length - 1])
+          volViewer.densitySelector.node().selectedIndex = densityVolumeList.length
+        } else if (i === 1) { // If the DICOM dose file
+          // Make dose volume
+          response = request.response
+          data = processDICOMSlice(response)
+          const DICOMData = combineDICOMDoseData([{ data: data, ext: ext, fileName: fileName }])
+
+          // Set volume viewer selector to test file
+          makeDoseVolume(fileName.slice(0, 9), DICOMData, { isDicom: true })
+          volViewer.setDoseVolume(doseVolumeList[doseVolumeList.length - 1])
+          volViewer.doseSelector.node().selectedIndex = doseVolumeList.length
+        } else { // If the DICOM structure set file
+          // Make structure set volume
+          response = request.response
+          data = processDICOMSlice(response)
+          makeStructureSetVolume(fileName.split('.')[0], data)
+
+          // Enable ROI checkboxes
+          volViewer.enableCheckbox(volViewer.showROIOutlinesCheckbox)
+          if (volViewer.isDVHAllowed()) volViewer.enableCheckbox(volViewer.showDVHCheckbox)
+        }
+      }
     }
-  })
 
-  // Read the JSON dose file from the test files directory
-  d3.json('./test-files/ismail100-dose.json').then((doseData) => {
-    var testFileIndex = doseVolumeList.findIndex((doseVol, i) => doseVol.fileName === 'ismail100.3ddose')
-
-    if (testFileIndex !== -1) {
-      volViewer.setDoseVolume(doseVolumeList[testFileIndex])
-      volViewer.doseSelector.node().selectedIndex = testFileIndex + 1
-    } else {
-      makeDoseVolume('ismail100.3ddose', doseData)
-      volViewer.setDoseVolume(doseVolumeList[doseVolumeList.length - 1])
-      volViewer.doseSelector.node().selectedIndex = doseVolumeList.length
-    }
+    request.send()
   })
 })
 
