@@ -179,8 +179,11 @@ div.voxel-info {
 .legend-holder {
   vertical-align: top;
   display: inline-flex;
-  overflow-y: auto;
+}
+
+span.roi-legend-holder {
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .legend {

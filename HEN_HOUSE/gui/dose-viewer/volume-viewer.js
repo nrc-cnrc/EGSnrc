@@ -942,19 +942,19 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
     var getLegendHolderAndSvg = (className, legendDimensions) => {
       const legendHolder = this.legendHolder
         .append('span')
-        .attr('id', className + '-legend-holder')
+        .attr('class', className + '-legend-holder')
         .style('width', legendDimensions.width + 'px')
         .style('height', legendDimensions.height + 'px')
         .style('margin', this.getMarginStr(legendDimensions.margin))
 
       const legendSvg = legendHolder
         .append('svg')
-        .attr('id', className + '-legend-svg')
-        .attr('class', 'legend')
+        .attr('class', className + '-legend-svg')
+        .classed('legend', true)
 
       return [legendHolder, legendSvg]
     }
-    const roiLegendDimensions = { ...legendDimensions, fullWidth: 180, width: 180 - legendDimensions.margin.left - legendDimensions.margin.right };
+    const roiLegendDimensions = { ...legendDimensions, fullWidth: 160, width: 160 - legendDimensions.margin.left - legendDimensions.margin.right };
     [this.doseLegendHolder, this.doseLegendSvg] = getLegendHolderAndSvg('dose', legendDimensions);
     [this.densityLegendHolder, this.densityLegendSvg] = getLegendHolderAndSvg('density', legendDimensions);
     [this.ROILegendHolder, this.ROILegendSvg] = getLegendHolderAndSvg('roi', roiLegendDimensions)

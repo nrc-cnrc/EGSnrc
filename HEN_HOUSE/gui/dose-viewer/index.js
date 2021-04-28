@@ -18,7 +18,7 @@ const MAIN_VIEWER_DIMENSIONS = {
 const LEGEND_DIMENSIONS = { // eslint-disable-line no-unused-vars
   fullWidth: 90,
   fullHeight: MAIN_VIEWER_DIMENSIONS.fullHeight,
-  margin: { top: 25, right: 10, bottom: 25, left: 10 },
+  margin: { top: 25, right: 10, bottom: 5, left: 10 },
   get width () {
     return this.fullWidth - this.margin.left - this.margin.right
   },
