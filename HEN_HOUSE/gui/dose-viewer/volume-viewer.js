@@ -175,10 +175,10 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
     svgAxis
       .append('g')
-      .attr('class', 'x-axis-grid')
+      .attr('class', 'x-axis-grid grid')
       .attr('transform', 'translate(0,' + volume.dimensions.height + ')')
       .call(xAxisGrid)
-    svgAxis.append('g').attr('class', 'y-axis-grid').call(yAxisGrid)
+    svgAxis.append('g').attr('class', 'y-axis-grid grid').call(yAxisGrid)
 
     // Label for x axis
     svgAxis

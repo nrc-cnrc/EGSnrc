@@ -80,13 +80,6 @@ p.description {
   grid-column-start: 1;
 }
 
-.x-axis-grid,
-.y-axis-grid,
-.dvh-x-axis,
-.dvh-y-axis  {
-  color: grey;
-}
-
 svg.axis-svg {
   overflow: visible;
 }
@@ -94,6 +87,20 @@ svg.axis-svg {
 g.dose-contour {
   opacity: 0.6
 }
+
+/* Styling the grid and labels for all plots */
+g.grid,
+g.x-axis,
+g.y-axis {
+  color: lightgrey;
+}
+
+g.grid text,
+g.x-axis text,
+g.y-axis text {
+  color: grey;
+}
+
 
 /* Styling the div to hold the panels, legends, and dose profiles */
 div.volume-holder {
@@ -135,18 +142,26 @@ span.dose-profile-holder {
   vertical-align: bottom;
 }
 
-.profile-x-axis,
-.profile-y-dose-axis,
-.profile-y-density-axis {
-  color: grey;
-}
-
 text.dose-profile-axis-label {
   color: grey;
 }
 
 span.dose-norm {
   padding-left: 15px;
+}
+
+path.dose-profile-error {
+  fill: grey
+}
+
+path.dose-profile-dose {
+  fill: none;
+  stroke: black
+}
+
+path.dose-profile-density {
+  fill: none;
+  stroke: red
 }
 
 /* Styling the voxel information */

@@ -312,16 +312,16 @@ class DoseProfile { // eslint-disable-line no-unused-vars
 
     this.svg
       .append('g')
-      .attr('class', 'profile-x-axis')
+      .attr('class', 'profile-x-axis grid')
       .attr('transform', 'translate(0,' + this.dimensions.height + ')')
       .call(xAxis)
 
-    this.svg.append('g').attr('class', 'profile-y-dose-axis').call(yDoseAxis)
+    this.svg.append('g').attr('class', 'profile-y-dose-axis grid').call(yDoseAxis)
 
     // Label for position x axis
     this.svg
       .append('text')
-      .attr('class', 'profile-x-axis')
+      .attr('class', 'profile-x-axis grid')
       .classed('dose-profile-axis-label', true)
       .attr(
         'transform',
@@ -337,7 +337,7 @@ class DoseProfile { // eslint-disable-line no-unused-vars
     // Label for dose y axis
     this.svg
       .append('text')
-      .attr('class', 'profile-y-dose-axis')
+      .attr('class', 'profile-y-dose-axis grid')
       .classed('dose-profile-axis-label', true)
       .attr('transform', 'rotate(-90)')
       .attr(
@@ -365,14 +365,14 @@ class DoseProfile { // eslint-disable-line no-unused-vars
 
       this.svg
         .append('g')
-        .attr('class', 'profile-y-density-axis')
+        .attr('class', 'profile-y-density-axis grid')
         .attr('transform', 'translate(' + this.dimensions.width + ',0)')
         .call(yDensityAxis)
 
       // Label for density y axis
       this.svg
         .append('text')
-        .attr('class', 'profile-y-density-axis')
+        .attr('class', 'profile-y-density-axis grid')
         .classed('dose-profile-axis-label', true)
         .attr('transform', 'rotate(-90)')
         .attr(
@@ -473,20 +473,17 @@ class DoseProfile { // eslint-disable-line no-unused-vars
     plotArea
       .append('path')
       .datum(data)
-      .attr('fill', 'lightblue')
-      .attr('class', 'lines')
+      .attr('class', 'lines dose-profile-error')
       .attr('d', errorArea)
 
     // Plot dose
     plotArea
       .append('path')
       .datum(data)
-      .attr('fill', 'none')
-      .attr('stroke', 'steelblue')
       .attr('stroke-width', 1.5)
       .attr('stroke-linejoin', 'round')
       .attr('stroke-linecap', 'round')
-      .attr('class', 'lines')
+      .attr('class', 'lines dose-profile-dose')
       .attr('d', line)
 
     if (this.densityChecked()) {
@@ -500,12 +497,10 @@ class DoseProfile { // eslint-disable-line no-unused-vars
       plotArea
         .append('path')
         .datum(data)
-        .attr('fill', 'none')
-        .attr('stroke', 'red')
         .attr('stroke-width', 1.5)
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round')
-        .attr('class', 'lines')
+        .attr('class', 'lines dose-profile-density')
         .classed('density', true)
         .attr('d', densityLine)
     }

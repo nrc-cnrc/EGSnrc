@@ -247,16 +247,16 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
 
     this.svg
       .append('g')
-      .attr('class', 'dvh-x-axis')
+      .attr('class', 'dvh-x-axis grid')
       .attr('transform', 'translate(0,' + this.dimensions.height + ')')
       .call(xAxis)
 
-    this.svg.append('g').attr('class', 'dvh-y-axis').call(yAxis)
+    this.svg.append('g').attr('class', 'dvh-y-axis grid').call(yAxis)
 
     // Label for dose x axis
     this.svg
       .append('text')
-      .attr('class', 'dvh-x-axis')
+      .attr('class', 'dvh-x-axis grid')
       .classed('dvh-axis-label', true)
       .attr(
         'transform',
@@ -272,7 +272,7 @@ class DoseVolumeHistogram { // eslint-disable-line no-unused-vars
     // Label for volume y axis
     this.svg
       .append('text')
-      .attr('class', 'dvh-y-axis')
+      .attr('class', 'dvh-y-axis grid')
       .classed('dvh-axis-label', true)
       .attr('transform', 'rotate(-90)')
       .attr(
