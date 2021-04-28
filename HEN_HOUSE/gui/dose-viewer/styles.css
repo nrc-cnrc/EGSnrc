@@ -56,6 +56,10 @@ div.header {
   border-bottom: 3px solid black;
 }
 
+text, text.tick, .label {
+  font-size: 12px;
+}
+
 /* Text related */
 p.description {
   color: grey;
@@ -138,7 +142,6 @@ span.dose-profile-holder {
 }
 
 text.dose-profile-axis-label {
-  font-size: 12px;
   color: grey;
 }
 
@@ -184,9 +187,6 @@ div.voxel-info {
   display: block;
 }
 
-.label {
-  font-size: 12px;
-}
 
 /* Styling the file upload drag and drop area */
 #drop-area {

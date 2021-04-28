@@ -153,12 +153,10 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .append('g')
       .attr('class', 'x-axis')
       .attr('transform', 'translate(0,' + volume.dimensions.height + ')')
-      .style('font-size', '12px')
       .call(xAxis)
     svgAxis
       .append('g')
       .attr('class', 'y-axis')
-      .style('font-size', '12px')
       .call(yAxis)
 
     // Create and append the x and y grids
@@ -191,7 +189,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
         'translate(' +
         volume.dimensions.width / 2 +
         ' ,' +
-        (volume.dimensions.fullHeight - 25) +
+        (volume.dimensions.fullHeight - 30) +
         ')'
       )
       .style('text-anchor', 'middle')
@@ -205,7 +203,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .attr(
         'transform',
         'translate(' +
-        (25 - volume.dimensions.margin.left) +
+        (20 - volume.dimensions.margin.left) +
         ' ,' +
         volume.dimensions.height / 2 +
         ') rotate(-90)'
