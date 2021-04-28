@@ -940,21 +940,20 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
   buildLegend (legendDimensions) {
     // Set up legends
     var getLegendHolderAndSvg = (className, legendDimensions) => {
-      const legendHolder = this.legendHolder
+      const legendHolderSpan = this.legendHolder
         .append('span')
         .attr('class', className + '-legend-holder')
-        .style('width', legendDimensions.width + 'px')
-        .style('height', legendDimensions.height + 'px')
-        .style('margin', this.getMarginStr(legendDimensions.margin))
+        .style('width', legendDimensions.fullWidth + 'px')
+        .style('height', legendDimensions.fullHeight + 'px')
 
-      const legendSvg = legendHolder
+      const legendSvg = legendHolderSpan
         .append('svg')
-        .attr('class', className + '-legend-svg')
-        .classed('legend', true)
+        .attr('class', className + '-legend-svg legend')
 
-      return [legendHolder, legendSvg]
+      return [legendHolderSpan, legendSvg]
     }
-    const roiLegendDimensions = { ...legendDimensions, fullWidth: 160, width: 160 - legendDimensions.margin.left - legendDimensions.margin.right };
+
+    const roiLegendDimensions = { ...legendDimensions, fullWidth: 140, width: 140 - legendDimensions.margin.left - legendDimensions.margin.right };
     [this.doseLegendHolder, this.doseLegendSvg] = getLegendHolderAndSvg('dose', legendDimensions);
     [this.densityLegendHolder, this.densityLegendSvg] = getLegendHolderAndSvg('density', legendDimensions);
     [this.ROILegendHolder, this.ROILegendSvg] = getLegendHolderAndSvg('roi', roiLegendDimensions)
@@ -1394,6 +1393,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .attr('min', 0)
       .attr('max', 100)
       .attr('step', 1)
+      .style('margin-top', '4px')
       .style('width', doseContourInputWidth + 'px')
 
     // Add submit button
@@ -1455,18 +1455,15 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
 
     const gradUrl = gradientUrl(
       colourMap,
-      dims.height - 20,
+      dims.height,
       30
     )
-
-    // Set height of legend
-    const legendHeight = dims.height - 80
 
     // Create scale for ticks
     const scale = d3
       .scaleLinear()
       .domain([minDensityVar, maxDensityVar])
-      .range([legendHeight, 0])
+      .range([dims.height, 0])
 
     // Append title
     this.densityLegendSvg
@@ -1485,7 +1482,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
       .append('image')
       .attr('y', dims.margin.top)
       .attr('width', dims.width)
-      .attr('height', legendHeight)
+      .attr('height', dims.height)
       .attr('preserveAspectRatio', 'none')
       .attr('xlink:href', gradUrl)
 

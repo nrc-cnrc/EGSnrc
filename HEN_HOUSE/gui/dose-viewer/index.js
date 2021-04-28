@@ -17,7 +17,7 @@ const MAIN_VIEWER_DIMENSIONS = {
 // Define legend size variables
 const LEGEND_DIMENSIONS = { // eslint-disable-line no-unused-vars
   fullWidth: 90,
-  fullHeight: MAIN_VIEWER_DIMENSIONS.fullHeight,
+  fullHeight: 215,
   margin: { top: 25, right: 10, bottom: 5, left: 10 },
   get width () {
     return this.fullWidth - this.margin.left - this.margin.right

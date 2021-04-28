@@ -193,6 +193,7 @@ div.voxel-info {
 /* Styling the dose and density legends */
 .legend-holder {
   vertical-align: top;
+  margin-top: 60px;
   display: inline-flex;
 }
 
