@@ -193,6 +193,10 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
         return;
     }
 
+    if(selectedText.startsWith("#")) {
+        return;
+    }
+
     // Check the validity of the inputs
     // If this line contains an "=" then it should match a single input
     int equalsPos = selectedText.indexOf("=");
@@ -228,6 +232,7 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
             if(!inputPtr) {
                 // Red underline the input tag
                 // Select the input tag
+
                 selection.cursor.movePosition(QTextCursor::StartOfBlock);
 
                 // If whitespace was trimmed from the start of the line,
