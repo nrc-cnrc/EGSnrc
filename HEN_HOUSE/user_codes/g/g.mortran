@@ -1671,7 +1671,6 @@ ELSE IF( mono = 2 | mono = 3 ) [
   ]
 ]
 ELSE [
-    emax = ensrcd(nensrc);
   IF ( ensrcd(0) - abs(iqi)*rm <= $E_THRESHOLD)[
        ensrcd(0) = $E_THRESHOLD + $E_EPS + abs(iqi)*rm;
   ]
