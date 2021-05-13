@@ -193,9 +193,9 @@ int Mevegs_Application::initScoring() {
     // Reorder the mesh so elements closest to the source are first in memory.
     EGS_Mesh *mesh = dynamic_cast<EGS_Mesh*>(geometry);
     if (mesh) {
-        // TODO use rndm and source to find a good starting point
-        EGS_Vector x(15.0, 15.0, 0.0);
-        mesh->reorderMesh(x);
+        //// TODO use rndm and source to find a good starting point
+        //EGS_Vector x(15.0, 15.0, 0.0);
+        //mesh->reorderMesh(x);
     }
 
     // Get the numner of regions in the geometry.

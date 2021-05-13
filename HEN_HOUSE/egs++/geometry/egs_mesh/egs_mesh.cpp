@@ -45,6 +45,7 @@
 #include "msh_parser.h"
 
 #include <cassert>
+#include <deque>
 #include <limits>
 #include <unordered_map>
 
@@ -393,6 +394,14 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         // TODO handle vacuum tag (-1)?
         _medium_indices.push_back(medium_offsets.at(e.medium_tag));
     }
+
+    std::vector<EGS_Vector> centroids;
+    centroids.reserve(num_elements());
+    for (int i = 0; i < num_elements(); i++) {
+        auto n = element_nodes(i);
+        centroids.push_back(centroid(n.A, n.B, n.C, n.D));
+    }
+    _lookup_tree = kdtree(centroids.begin(), centroids.end());
 }
 
 bool EGS_Mesh::isInside(const EGS_Vector &x) {
@@ -424,7 +433,48 @@ bool EGS_Mesh::insideElement(int i, const EGS_Vector &x) {
     return true;
 }
 
+std::vector<int> EGS_Mesh::findNeighbourhood(int elt) {
+    auto sz = 128;
+    std::vector<int> hood;
+    hood.reserve(sz);
+    std::deque<int> to_search;
+    to_search.push_back(elt);
+    while (!to_search.empty() && hood.size() <= 128) {
+        int elt = to_search.front();
+        to_search.pop_front();
+        std::array<int, 4> neighbours = _neighbours[elt];
+        for (auto n : neighbours) {
+            if (n == mesh_neighbours::NONE) {
+                continue;
+            }
+            if (std::find(begin(hood), end(hood), n) == hood.end()) {
+                hood.push_back(n);
+                to_search.push_back(n);
+            }
+        }
+    }
+    return hood;
+}
+
 int EGS_Mesh::isWhere(const EGS_Vector &x) {
+    //static int num_calls = 0;
+    //static int num_hits = 0;
+    //num_calls++;
+    //if (num_calls && num_calls % 1000 == 0) {
+    //    egsInformation("%d of %d\n", num_hits, num_calls);
+    //}
+    auto closest_elt = _lookup_tree.nearest(x).offset_;
+    auto neighbourhood = findNeighbourhood(closest_elt);
+    //std::array<int, 5> neighbourhood { closest_elt,
+    //    _neighbours[closest_elt][0], _neighbours[closest_elt][1],
+    //    _neighbours[closest_elt][2], _neighbours[closest_elt][3]
+    //};
+    for (auto n : neighbourhood) {
+        if (n != mesh_neighbours::NONE && insideElement(n, x)) {
+    //        num_hits++;
+            return n;
+        }
+    }
     for (auto i = 0; i < num_elements(); i++) {
         if (insideElement(i, x)) {
             return i;
