@@ -2961,6 +2961,8 @@ IF(NSUMCV>1)["store data for individual cavity regions"
     ] ]
 ]
 
+:output-results:;
+
 write(6,'(/a,$)') '****** FINAL RANDOM NUMBER STATE:';
 $SHOW-RNG-STATE(6); write(6,'(a)') '  ******';
 write(iout,'(/a,$)') '********* FINAL RANDOM NUMBER STATE:';
@@ -2968,7 +2970,7 @@ $SHOW-RNG-STATE(iout); write(iout,'(a)') '  *********';
 $SET_ELAPSED_TOTAL_TIME(TIMEB);
 ETIMETOT=ETIMETOT+TIMEB;
 $SET_ELAPSED_CPUTIME(CPUT2);
-TIMCPU=CPUT2-CPUT1;
+TIMCPU=CPUT2-CPUT1+TMCPUO;
 IF(IRESTART=3)["just analyzing data--no elapsed time"
   WRITE(IOUT,250)TMCPUO,TMCPUO/3600;
   WRITE(6,250)TMCPUO,TMCPUO/3600;
@@ -2983,17 +2985,22 @@ ELSEIF(IRESTART=5)["output time results for parallel runs"
 ]
 ELSE[
   IF(TMCPUO.EQ.0)["This is first run"
-   RATIO=ETIMETOT/TIMCPU;
-   WRITE(IOUT,260)ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
-   WRITE(6,260)ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
+    RATIO=ETIMETOT/TIMCPU;
+    WRITE(IOUT,260)ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
+    WRITE(6,260)ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
+    IF(IHSTRY.NE.0 .AND. TIMCPU.NE.0.0) ["this should always happen"
+      WRITE(IOUT,280) TIMCPU/dble(IHSTRY),3600.*dble(IHSTRY)/TIMCPU;
+      WRITE(6,280)    TIMCPU/dble(IHSTRY),3600.*dble(IHSTRY)/TIMCPU;
+    ]
   ]
   ELSE[ "There was previous run, but don't have elapsed time for it"
-   RATIO = ETIMETOT/(TIMCPU-TMCPUO); "ratio this run only"
-   WRITE(IOUT,261) ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
-   WRITE(6,261) ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
-  ]
-  IF(IHSTRY.NE.0 .AND. TIMCPU.NE.0.0) ["this should always happen"
-   WRITE(IOUT,280) TIMCPU/dble(IHSTRY),3600.*dble(IHSTRY)/TIMCPU;
+    RATIO = ETIMETOT/(TIMCPU-TMCPUO); "ratio this run only"
+    WRITE(IOUT,261) ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
+    WRITE(6,261) ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
+    IF(IHSTRY.NE.0 .AND. TIMCPU.NE.0.0) ["this should always happen"
+      WRITE(IOUT,280) TMCPUO/dble(IHSTRY),3600.*dble(IHSTRY)/TMCPUO;
+      WRITE(6,280)    TMCPUO/dble(IHSTRY),3600.*dble(IHSTRY)/TMCPUO;
+    ]
   ]
 ]
 
@@ -3252,10 +3259,11 @@ IF( n_parallel > 0 & ~is_finished ) [
     call egs_pjob_finish(n_job);
     IF( n_job = 0 ) [
         is_finished = .true.;
+        call isumry;
         call egs_combine_runs(combine_results,'.egsdat');
         NCASET=NCASEO;  IHSTRY=NCASET;
         CALL SRCOTO(WEIGHT);
-        goto :STATS-ANAL:;
+        goto :output-results:;
     ]
 ]
 #endif;

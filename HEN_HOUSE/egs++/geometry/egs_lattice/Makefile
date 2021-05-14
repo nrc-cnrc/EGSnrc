@@ -1,8 +1,7 @@
-
 ###############################################################################
 #
-#  EGSnrc tutor2 application make definitions
-#  Copyright (C) 2015 National Research Council Canada
+#  EGSnrc egs++ lattice geometry
+#  Copyright (C) 2019 Rowan Thomson and Martin Martinov
 #
 #  This file is part of EGSnrc.
 #
@@ -21,38 +20,34 @@
 #
 ###############################################################################
 #
-#  Author:          Iwan Kawrakow, 2003
+#  Author:          Martin Martinov, 2019
 #
 #  Contributors:
 #
 ###############################################################################
 #
-#  The .make file MUST be present in the user code directory, even if it is
-#  just an empty file.
+#  When egs_lattice is used for publications, please cite the following paper:
 #
-#  The .make file can be used to
-#
-#  - change the standard set of files needed to build a user code by including
-#    a "SOURCES = ..." statement.
-#
-#  - modify the compilation options, e.g.,
-#    FCFLAS = -fno-automatic -finit-local-zero
-#    to make all local variables static with G77.
-#
-#  - Pass C preprocessor directive on the command line, e.g.,
-#    FCFLAGS = $(FCFLAGS) -Dmy_code
+#  Martinov, Martin P., and Rowan M. Thomson. Taking EGSnrc to new lows:
+#  Development of egs++ lattice geometry and testing with microscopic
+#  geometries. Medical Physics 47, 3225-3232 (2020).
 #
 ###############################################################################
 
 
-# In the case of the tutor 1-7 codes, we use the .make file to remove the
-# egs_c_utils.o file from the link step (because no parallel processing is
-# being used).
-#
-EGS_EXTRA_OBJECTS =
+include $(EGS_CONFIG)
+include $(SPEC_DIR)egspp.spec
+include $(SPEC_DIR)egspp_$(my_machine).conf
 
-# We use #ifdef ... #endif for parallel processing implementation
-# => Fortran file extension must be .F so that the C-preprocessor is
-# automatically invoked.
-#
-FEXT = F
+DEFS = $(DEF1) -DBUILD_LATTICE_DLL
+
+library = egs_lattice
+lib_files = egs_lattice
+
+link2_libs = egspp egs_gtransformed
+
+include $(SPEC_DIR)egspp_libs.spec
+
+$(make_depend)
+
+$(DSO2)egs_lattice.$(obje): ..$(DSEP)egs_gtransformed$(DSEP)egs_gtransformed.h

@@ -1856,7 +1856,7 @@ $SET_ELAPSED_CPUTIME(CPUT0); "obtain the initial starting time"
 
 OUTPUT $MAXZPLANE,$MAXRADII;
 (//' SPRRZnrc(EGSnrc) '$VERSION /
-   ' on '$MACHINE' with',I3, ' depth regions &', I3,
+   ' on '$MACHINE' with ',I0, ' depth regions & ', I0,
    ' radial regions'//);
 
 "******************************************************************************
@@ -2351,11 +2351,12 @@ DO IX=1,NR[
    ]
 ]
 
+:output-results:;
+
 write(6,'(/a)') '********* final random number state:';
 $SHOW-RNG-STATE(6); write(6,'(a)') '  *********';
 write(iout,'(/a,$)') '********* FINAL RANDOM NUMBER STATE:';
 $SHOW-RNG-STATE(iout); write(iout,'(a)') '  *********';
-
 $SET_ELAPSED_TOTAL_TIME(TIMEB);
 ETIMETOT=ETIMETOT+TIMEB;
 $SET_ELAPSED_CPUTIME(CPUT2);
@@ -2364,7 +2365,6 @@ IF(TMCPUO = 0)[RATIO=ETIMETOT/TIMCPU;]ELSE[RATIO=0.;] "ONLY FOR SINGLE RUN"
 IF(TIMCPU.NE.0.0) [FHPH=3600./TIMCPU*dble(IHSTRY);"HISTORIES PER HOUR"]
 WRITE(IOUT,261)ETIMETOT,TIMCPU,TIMCPU/3600., RATIO,FHPH;
 WRITE(6,261)ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO,FHPH;
-
 
 
 "******************************************************************************
@@ -2605,10 +2605,11 @@ IF( n_parallel > 0 & ~is_finished ) [
     call egs_pjob_finish(n_job);
     IF( n_job = 0 ) [
         is_finished = .true.;
+        CALL ISUMRY;
         call egs_combine_runs(combine_results,'.egsdat');
         NCASET=NCASEO;  IHSTRY=NCASET;
         CALL SRCOTO(WEIGHT);
-        goto :STATS-ANAL:;
+        goto :output-results:;
     ]
 ]
 #endif;
@@ -3596,10 +3597,6 @@ ERROR_FLAG=0;   "Initialization of bad input flag"
 
 DO J=1, $NMAX [NVALUE(J)=0;]  "Initialization of Nvalue Array"
 
-OUTPUT $MAXRADII,$MAXZPLANE;
-(//' SPRRZnrc(EGSnrc) '$VERSION /' On '$MACHINE' .',
-4x,'Max no of radial/ depth zones=',2I4);
-
 "*********************************************************"
 "* set up the values_sought(i) and echo inputs to screen *"
 "*********************************************************"
@@ -4286,6 +4283,7 @@ write(iout,'(" *"/1X,79("*"))');
   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
                                                                        T80,'*'/
+  ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
   ' *',T80, '*'/
   ' *',  T54,' ',$);
@@ -4309,6 +4307,7 @@ write(iout,'(" *"/1X,79("*"))');
 " ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
 " ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
 "                                                                      T80,'*'/
+" ' *            This is version '$VERSION' ',T80,'*'/
 " ' *             running on '$MACHINE' ',T80,'*'/
 " ' *',T80, '*'/
 " ' *',  T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT,T80,'*'/1X,79('*'));
@@ -4668,8 +4667,8 @@ IF(ISPRREG=1)["create the .plotdat file"
     AXISTYPE=0;             "0 for no logs"
     DO IX=1, NR [
        XCOORD(IX) = RCYL(IX);
-       YCOORD(IX) = SCDOSE(IZ,IX,3)/Dmax;
-       UNCERT(IX) = SCDOSE(IZ,IX,3)*SCDOSE2(IZ,IX,3)/(Dmax*100.);
+       YCOORD(IZ) = SCDOSE(IZ,IX,3)/Dmax;
+       UNCERT(IZ) = SCDOSE(IZ,IX,3)*SCDOSE2(IZ,IX,3)/(Dmax*100.);
     ]
     "Convert slab number(IZ) to a character string"
     $CONVERT_INT(IZ)_TO_CHAR(CH_IZ);

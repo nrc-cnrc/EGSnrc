@@ -130,7 +130,7 @@ Input for this geometry looks like:
  \endverbatim
 
 The above geometry would have two regions, region 0 being `1 <= R <= 2` (medium
-M0), and region 1 being 2 <= R <= 3 (medium M1).  \Particles with `R < 1` and
+M0), and region 1 being 2 <= R <= 3 (medium M1). Particles with `R < 1` and
 `R > 3` would be considered outside the geometry.
 
 */

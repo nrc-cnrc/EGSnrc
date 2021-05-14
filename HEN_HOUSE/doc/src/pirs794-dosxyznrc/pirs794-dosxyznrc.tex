@@ -2,7 +2,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %  EGSnrc dosxyznrc manual
-%  Copyright (C) 2015 National Research Council Canada
+%  Copyright (C) 2021 National Research Council Canada
 %
 %  This file is part of EGSnrc.
 %
@@ -38,7 +38,11 @@
 \documentclass[12pt,twoside]{article}      %twoside messes up indexm and keys
 %\usepackage{showkeys}   %this messes up some split commands
 
-\usepackage[breaklinks]{hyperref}
+%\usepackage[breaklinks]{hyperref}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, citecolor=blue, linkcolor=blue, filecolor=blue, urlcolor=blue}
+\urlstyle{same}
+
 \usepackage{html}
 \usepackage{fancyhdr}
 \usepackage{amsmath}  %changed from amstex which is now obsolete
@@ -117,7 +121,7 @@ Use the Up button to get back to this page from within the document.
 <BR> <HR> <P>
 \end{rawhtml}
 \copyright
-Copyright 1995-2013, National Research Council of Canada
+Copyright 1995-2021, National Research Council of Canada
 Ottawa
 \begin{rawhtml}
 <BR> <HR> <P>
@@ -162,7 +166,7 @@ Printed: \today  \vspace{7mm}\\
 
 
 \vfill
-\copyright NRC Canada, 2015
+\copyright NRC Canada, 2021
 \end{center}
 
 \newpage
@@ -3296,13 +3300,13 @@ bremsstrahlung.
 If {\tt n\_split} is set $>$ 1 all photons are split
 into {\tt n\_split} photons, each with a weight equal to
 $\frac{1}{{\tt n\_split}}$ times the weight of the original photon.  For each
-photon, i:
+photon, i, where i=1,2,...,{\tt n\_split}:
 \begin{itemize}
-\item The mean free path to its next interaction, DPMFP$_i$, given by
+\item The mean free path to its next interaction, $DPMFP_i$, given by
 \begin{equation}
-DPMFP_i=-log\left(1-\frac{\eta+i}{{\tt n\_split}}\right)
+DPMFP_i=-{\tt ln}\left(1-\frac{\eta+i-1}{{\tt n\_split}}\right)
 \end{equation}
-where $\eta$ is a random number (the same for all {\tt n\_split} photons).
+where $\eta$ is a random number, chosen once for all {\tt n\_split} photons.
 \item At the interaction site, each photon i produces charged particles and/or
 scattered
 photons.  Russian roulette is played on all scattered photons with a

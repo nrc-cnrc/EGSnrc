@@ -300,7 +300,7 @@ as the contribution from the fat electron.
 
 <em>IPSS</em> is turned on/off by means of the input key
 <b><code>TmpPhsp</code></b>. Setting <b><code>TmpPhsp</code></b>
-to 0 turns this VRT on and greater than 0 turns <em>IPSS</em> on.
+to 0 turns this VRT off and greater than 0 turns <em>IPSS</em> on.
 If <b><code>TmpPhsp</code></b> is greater than 1, then it indicates
 the number of times to recycle the phase space. For this reason it
 must be a divisor of the XCSE factors. <b>However</b>, no gain in

@@ -106,6 +106,8 @@ fi
 # the following is for testing the distribution.
 alias test_distribution='$HEN_HOUSE/scripts/test_egsnrcmp_distribution'
 
+export dcpath=$HEN_HOUSE/pegs4/density_corrections
+
 export HEN_HOUSE PATH
 
 # Now check for local system wide sh additions
