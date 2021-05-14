@@ -334,14 +334,22 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
 
     _elt_tags.reserve(_elements.size());
     _elt_points.reserve(_elements.size() * 4);
+
+    std::unordered_map<int, EGS_Mesh::Node> node_map;
+    node_map.reserve(_nodes.size());
+    for (const auto& n : _nodes) {
+        node_map.insert({n.tag, n});
+    }
+    if (node_map.size() != _nodes.size()) {
+        throw std::runtime_error("duplicate nodes in node list");
+    }
     // Find the matching nodes for every tetrahedron
     auto find_node = [&](int node_tag) -> EGS_Mesh::Node {
-        auto node_it = std::find_if(_nodes.begin(), _nodes.end(),
-            [&](const EGS_Mesh::Node& n) { return n.tag == node_tag; });
-        if (node_it == _nodes.end()) {
+        auto node_it = node_map.find(node_tag);
+        if (node_it == node_map.end()) {
             throw std::runtime_error("No mesh node with tag: " + std::to_string(node_tag));
         }
-        return *node_it;
+        return node_it->second;
     };
     for (int i = 0; i < _elements.size(); i++) {
         _elt_tags.push_back(i);
