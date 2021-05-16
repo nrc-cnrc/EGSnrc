@@ -25,6 +25,7 @@
 #
 #  Contributors:    Blake Walters
 #                   Iwan Kawrakow
+#                   Matjaz Payrits @mpayrits
 #
 ###############################################################################
 #
@@ -72,6 +73,12 @@
 were collected on, 1 = little endian (the usual case).  If
 you collected data on a big endian machine, change this to 0 */
 #define DICOM_ENDIAN 1
+
+/* MAX_CT_ROW_SIZE must exactly equal $CTIMAX in ctcreate.mortran. */
+#define MAX_CT_ROW_SIZE 512
+
+/* MAX_CT_COL_SIZE must exactly equal $CTJMAX in ctcreate.mortran. */
+#define MAX_CT_COL_SIZE 512
 
 /*****************************************************************\
 |*                                                               *|
@@ -574,6 +581,7 @@ F77_OBJ_(readct_dicom,READCT_DICOM)(char *ct_filename, int ct_arraysize[3],
   num_slices-=num_overlap;
   ct_arraysize[2]=num_slices;
   slice=first_slice;
+  count = 0;
   do
   {
       printf("-------------------------------\n");
@@ -749,7 +757,7 @@ F77_OBJ_(readct_dicom,READCT_DICOM)(char *ct_filename, int ct_arraysize[3],
             {
              for(j=0;j<ncolumns;j++)
              {
-	      jtel++;
+	      jtel = j + MAX_CT_ROW_SIZE * (i + MAX_CT_COL_SIZE * count);
 	      ij=i*ncolumns+j;
 	      ctdata[jtel]=buffle2[ij];
               if(swap==1)
@@ -832,7 +840,7 @@ F77_OBJ_(readct_dicom,READCT_DICOM)(char *ct_filename, int ct_arraysize[3],
              for(j=0;j<ncolumns;j++)
              {
 	      ij=i*ncolumns+j;
-              jtel++;
+	      jtel = j + MAX_CT_ROW_SIZE * (i + MAX_CT_COL_SIZE * count);
 	      ctdata[jtel]=buffle2[ij];
               if(swap==1)
               {
@@ -862,6 +870,7 @@ F77_OBJ_(readct_dicom,READCT_DICOM)(char *ct_filename, int ct_arraysize[3],
     }
     prev=slice;
     slice=next_slice[slice];
+    count++;
  } while (next_slice[prev] != -2);
 
 /*
