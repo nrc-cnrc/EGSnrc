@@ -323,6 +323,8 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             int imed = app->getMedium(app->isWhere(x));
             int lgle = app->getLgle(gle,imed);
             EGS_Float costhe, sinthe;
+            //delete the particle from the top of the stack because we are going to replace it
+            app->deleteParticleFromStack(np);
             for (int i=0; i<nint; i++)
             {
                 EGS_Particle p;
@@ -1101,7 +1103,6 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
 {
 
    //need to set variable iwt=nsplit or iwt=nint
-   app->setNpold(app->Np);
    int np = app->Np;
    EGS_Vector x = app->top_p.x;
    EGS_Vector u = app->top_p.u;
@@ -1150,7 +1151,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    bool method1; EGS_Float wprob;
    if( wnew <= wc ) { method1 = true; wprob = wnew; }
    else { method1 = false; wprob = wc; }
-   EGS_Float asample = wprob*wt; int nsample = (int) asample;
+   EGS_Float asample = wprob*nint; int nsample = (int) asample;
    asample -= nsample; if( app->getRngUniform() < asample ) ++nsample;
 
    // prepare rotations--not totally sure why this is needed
@@ -1169,6 +1170,9 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    EGS_Float AP = app->getAp(imed);
    int irl=app->top_p.ir, latch=app->top_p.latch;
    EGS_Float dnear = app->getDnear(np); int ip = np-1;
+
+   //delete top (interacting) particle since we are about to overwrite it
+   app->deleteParticleFromStack(np);
 
    if(method1)
    {
