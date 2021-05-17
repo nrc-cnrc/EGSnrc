@@ -123,6 +123,7 @@ jobname=$(echo "${basename}[$nthread]" | sed 's/^[^[:alnum:]]*//')
 trim=$(( $(echo $jobname | wc -c) - 14 ))
 if [ $trim -gt 0 ]; then
     jobname=$(echo $jobname | cut -c $trim-)
+    jobname=$(echo $jobname | sed 's/^[^[:alnum:]]*//')
 fi
 log "job name: $jobname"
 
