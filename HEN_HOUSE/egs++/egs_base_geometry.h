@@ -231,7 +231,7 @@ public:
      */
     virtual EGS_Float hownear(int ireg, const EGS_Vector &x) = 0;
 
-    /*! \brief Calculates the volume*relative rho (rhor) of region ireg.
+    /*! \brief Calculates the mass of region ireg.
 
       Currently only implemented in EGS_XYZGeometry
     */
