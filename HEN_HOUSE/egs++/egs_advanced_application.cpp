@@ -1171,7 +1171,7 @@ void EGS_AdvancedApplication::resetRNGState() {
 //************************************************************
 // Returns density for medium ind
 EGS_Float EGS_AdvancedApplication::getMediumRho(int ind) {
-    return the_media->rho[ind];
+    return ind < 0 ? 0.0 : the_media->rho[ind];
 }
 // Returns edep
 EGS_Float EGS_AdvancedApplication::getEdep() {
