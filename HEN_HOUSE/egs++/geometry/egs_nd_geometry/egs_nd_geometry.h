@@ -646,7 +646,11 @@ medium2  min_density2 max_density2 default_density2
 and defines that <code>medium1</code> is to be used for all voxels
 with a mass density between <code>min_density1</code> and
 <code>max_density1</code>, etc., assuming <code>default_density1</code>, etc.,
-id the default mass density for this medium.
+is the default mass density for this medium. These default densities must 
+exactly match the densitites, in g/cm3, in their media's respective PEGS4 data
+or density correction files. Stating them is necessary and is a workaround for
+the fact that the PEGS system is not yet hatched at egs++ geometry
+initialization time and cannot yet be used to retrieve the default densities.
 There can be an arbitrary number of
 lines in the ct ramp file. The <code>density_file</code> is a binary
 file that contains: 1 byte set to 0 or 1 for data written on a big- or
