@@ -55,16 +55,30 @@ const makeAndDownloadCsv = (data, name) => {
  */
 // TODO: If plot density is selected, download density information as well.
 var defineExportDoseProfileCSVButtonBehaviour = function (volumeViewer) { // eslint-disable-line no-unused-vars
-  volumeViewer.doseProfileList.forEach((doseProfile) => {
-    // Check that dose profile data exists
-    if (doseProfile.data) {
-      // Create csv name
-      var csvName =
-        volumeViewer.id + '-' + doseProfile.profileDim + '-dose-profile.csv'
+  const dims = ['Z', 'X', 'Y']
+  var doseProfiles = volumeViewer.doseProfileList.map((doseProfile) => doseProfile.data)
+  var n = Math.max(...doseProfiles.map((doseProfile) => doseProfile.length))
+  var doseProfileData = []
 
-      makeAndDownloadCsv(doseProfile.data, csvName)
-    }
-  })
+  // Iterate through each element of the X, Y, and Z dose profiles
+  for (let i = 0; i < n; i++) {
+    var item
+    var data = {}
+    dims.forEach((dim, j) => {
+      item = doseProfiles[j][i]
+      data['position' + dim] = item ? item.position : null
+      data['value' + dim] = item ? item.value : null
+      data['error' + dim] = item ? item.err : null
+    })
+
+    doseProfileData.push(data)
+  }
+
+  // Create csv name
+  var csvName =
+        volumeViewer.id + '-dose-profile.csv'
+
+  makeAndDownloadCsv(doseProfileData, csvName)
 }
 
 /**
