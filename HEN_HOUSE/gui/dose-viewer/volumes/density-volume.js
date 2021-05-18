@@ -63,7 +63,7 @@ class DensityVolume extends Volume { // eslint-disable-line no-unused-vars
   addData (data, args) {
     this.data = data
     this.densityFormat = (args !== undefined) && (args.isDicom) ? d3.format('d') : d3.format('.2f')
-    this.densityStep = (args !== undefined) && (args.isDicom) ? 1.0 : 0.01
+    this.isDicom = (args !== undefined && args.isDicom) || false
     this.addColourScheme(this.data.maxDensity, this.data.minDensity)
     this.imageCache = { xy: new Array(data.voxelNumber.z), yz: new Array(data.voxelNumber.x), xz: new Array(data.voxelNumber.y) }
     this.createBaseSlices(data, 'density')

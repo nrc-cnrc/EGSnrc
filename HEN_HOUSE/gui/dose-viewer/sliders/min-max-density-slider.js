@@ -66,12 +66,12 @@ var initializeMinMaxDensitySlider = ( // eslint-disable-line no-unused-vars
 
   const minSliderParams = {
     id: 'min',
-    label: 'Min',
+    label: densityVol.isDicom ? 'Min HU' : 'Min density',
     format: densityVol.densityFormat,
     startingVal: densityVol.data.minDensity,
     minVal: densityVol.data.minDensity,
     maxVal: densityVol.data.maxDensity,
-    step: densityVol.densityStep,
+    step: densityVol.isDicom ? 1.0 : 0.01,
     onSliderChangeCallback: minSliderChangeCallback,
     onSliderReleaseCallback: minSliderReleaseCallback
   }
@@ -94,12 +94,12 @@ var initializeMinMaxDensitySlider = ( // eslint-disable-line no-unused-vars
 
   const maxSliderParams = {
     id: 'max',
-    label: 'Max',
+    label: densityVol.isDicom ? 'Max HU' : 'Max density',
     format: densityVol.densityFormat,
     startingVal: densityVol.data.maxDensity,
     minVal: densityVol.data.minDensity,
     maxVal: densityVol.data.maxDensity,
-    step: densityVol.densityStep,
+    step: densityVol.isDicom ? 1.0 : 0.01,
     onSliderChangeCallback: maxSliderChangeCallback,
     onSliderReleaseCallback: maxSliderReleaseCallback
   }
