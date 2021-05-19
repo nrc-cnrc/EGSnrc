@@ -357,11 +357,11 @@
     :stop water:
 
     :start cellulose:
-        density correction file = icrm_cellulose
+        density correction file = cellulose
     :stop cellulose:
 
     :start dirt:
-        density correction file = icrm_dirt
+        density correction file = silicondioxide_1.4g_cm3
     :stop dirt:
 
 :stop media definition:
