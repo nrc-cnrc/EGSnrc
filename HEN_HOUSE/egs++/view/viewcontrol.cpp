@@ -204,6 +204,10 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // method in trackview to set the time index lists in this class
     connect(gview, SIGNAL(tracksLoaded(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>)), this, SLOT(updateTracks(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>)));
 
+    connect(global_transparency, SIGNAL(sliderReleased()), this, SLOT(endTransformation()));
+    connect(global_transparency, SIGNAL(sliderPressed()), this, SLOT(startTransformation()));
+    connect(global_transparency, SIGNAL(valueChanged(int)), this, SLOT(changeGlobalTransparency(int)));
+
     save_image = new SaveImage(this,"save image");
 
     cplanes = new ClippingPlanesWidget;
@@ -235,19 +239,29 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     lib_dir += CONFIG_NAME;
     lib_dir += fs;
 
+    // Load the application library
+    // We don't require the application to be compiled, just give a warning if it isn't.
     EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
-    if (!app_lib.load()) egsFatal("\n%s: Failed to load the %s application library from %s\n\n",
-                                      appv[0],app_name.c_str(),lib_dir.c_str());
-
-    createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
-    if (!createApp) egsFatal("\n%s: Failed to resolve the address of the 'createApplication' function"
-                                 " in the application library %s\n\n",appv[0],app_lib.libraryFile());
-//TODO left here crash 'cause tutor7pp isn't compiled <=======================
-    EGS_Application *app = createApp(appc,appv);
-    if (!app) {
-        egsFatal("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
+    bool app_loaded = true;
+    if (!app_lib.load()) {
+        egsWarning("\n%s: Failed to load the %s application library from %s\n\n", appv[0],app_name.c_str(),lib_dir.c_str());
+        app_loaded = false;
+    } else {
+        createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
+        if (!createApp) {
+            egsWarning("\n%s: Failed to resolve the address of the 'createApplication' function in the application library %s\n\n",appv[0],app_lib.libraryFile());
+            app_loaded = false;
+        } else {
+            EGS_Application *app = createApp(appc,appv);
+            if (!app) {
+                egsWarning("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
+                app_loaded = false;
+            }
+            egsInformation("Testapp %f\n",app->getRM());
+        }
     }
-    egsInformation("Testapp %f\n",app->getRM());
+
+
 
 
     // Get a list of all the libraries in the dso directory
@@ -280,19 +294,21 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     inputStruct = make_shared<EGS_InputStruct>();
 
     // Get the application level input blocks
-    getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
-    if(getAppInputs) {
-        getAppInputs(inputStruct);
-        if(inputStruct) {
-            vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputStruct->getBlockInputs();
-            for (auto &block : inputBlocks) {
-                egsInformation("  block %s\n", block->getTitle().c_str());
-                vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-                for (auto &inp : singleInputs) {
-                    const vector<string> vals = inp->getValues();
-                    egsInformation("   single %s\n", inp->getTag().c_str());
-                    for (auto&& val : vals) {
-                        egsInformation("      %s\n", val.c_str());
+    if(app_loaded) {
+        getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
+        if(getAppInputs) {
+            getAppInputs(inputStruct);
+            if(inputStruct) {
+                vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputStruct->getBlockInputs();
+                for (auto &block : inputBlocks) {
+                    egsInformation("  block %s\n", block->getTitle().c_str());
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+                        egsInformation("   single %s\n", inp->getTag().c_str());
+                        for (auto&& val : vals) {
+                            egsInformation("      %s\n", val.c_str());
+                        }
                     }
                 }
             }
@@ -319,7 +335,9 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         libName = libName.right(libName.length() - lib_prefix.length());
 
         egsInformation("testlib trying %s\n", libName.toLatin1().data());
-        if (lib.startsWith("Qt5")) {
+        // Skip any library files that start with Qt
+        // For dynamic builds, there may be QtCore, QtWidgets, etc. files in the dso directory
+        if (lib.startsWith("Qt")) {
             continue;
         }
 
