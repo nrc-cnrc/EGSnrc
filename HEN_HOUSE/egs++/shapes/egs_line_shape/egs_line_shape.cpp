@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -37,6 +37,9 @@
 #include "egs_line_shape.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_LINE_SHAPE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_LINE_SHAPE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 EGS_LineShape::EGS_LineShape(const vector<EGS_Float> &points,
                              const string &Name, EGS_ObjectFactory *f) : EGS_BaseShape(Name,f) {
@@ -62,6 +65,33 @@ EGS_LineShape::EGS_LineShape(const vector<EGS_Float> &points,
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Line_Shape"});
+        shapeBlockInput->addSingleInput("points", true, "A list of 2D positions, at least 2 required");
+    }
+
+    EGS_LINE_SHAPE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_line_shape
+    :start shape:
+        library = egs_line_shape
+        points = list of 2D positions
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_LINE_SHAPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_LINE_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {

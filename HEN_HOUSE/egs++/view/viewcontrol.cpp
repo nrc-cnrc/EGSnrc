@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Manuel Stoeckl
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -76,6 +77,7 @@ typedef EGS_Application *(*createAppFunction)(int argc, char **argv);
 typedef EGS_BaseGeometry *(*createGeomFunction)();
 typedef EGS_BaseSource *(*createSourceFunction)();
 typedef EGS_BaseShape *(*createShapeFunction)();
+typedef EGS_AusgabObject *(*createAusgabObjectFunction)();
 typedef void (*getAppInputsFunction)(shared_ptr<EGS_InputStruct> inpPtr);
 typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
 typedef string (*getExampleFunction)();
@@ -191,6 +193,9 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
     connect(gview, SIGNAL(leftDoubleClick(EGS_Vector)), this, SLOT(setRotationPoint(EGS_Vector)));
     connect(gview, SIGNAL(tracksLoaded(vector<size_t>)), this, SLOT(updateTracks(vector<size_t>)));
+    connect(global_transparency, SIGNAL(sliderReleased()), this, SLOT(endTransformation()));
+    connect(global_transparency, SIGNAL(sliderPressed()), this, SLOT(startTransformation()));
+    connect(global_transparency, SIGNAL(valueChanged(int)), this, SLOT(changeGlobalTransparency(int)));
 
     save_image = new SaveImage(this,"save image");
 
@@ -223,20 +228,30 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     lib_dir += CONFIG_NAME;
     lib_dir += fs;
 
+    // Load the application library
+    // We don't require the application to be compiled, just give a warning if it isn't.
     EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
-    if (!app_lib.load()) egsFatal("\n%s: Failed to load the %s application library from %s\n\n",
-                                      appv[0],app_name.c_str(),lib_dir.c_str());
-
-    createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
-    if (!createApp) egsFatal("\n%s: Failed to resolve the address of the 'createApplication' function"
-                                 " in the application library %s\n\n",appv[0],app_lib.libraryFile());
-/*TODO left here crash 'cause tutor7pp isn't compiled <=======================
-    EGS_Application *app = createApp(appc,appv);
-    if (!app) {
-        egsFatal("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
+    bool app_loaded = true;
+    if (!app_lib.load()) {
+        egsWarning("\n%s: Failed to load the %s application library from %s\n\n", appv[0],app_name.c_str(),lib_dir.c_str());
+        app_loaded = false;
+    } else {
+        createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
+        if (!createApp) {
+            egsWarning("\n%s: Failed to resolve the address of the 'createApplication' function in the application library %s\n\n",appv[0],app_lib.libraryFile());
+            app_loaded = false;
+        } else {
+            EGS_Application *app = createApp(appc,appv);
+            if (!app) {
+                egsWarning("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
+                app_loaded = false;
+            }
+            egsInformation("Testapp %f\n",app->getRM());
+        }
     }
-    egsInformation("Testapp %f\n",app->getRM());
-    */
+
+
+
 
     // Get a list of all the libraries in the dso directory
     string dso_dir;
@@ -261,25 +276,28 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QMenu *ausgabMenu = exampleMenu->addMenu("Ausgab/Output");
     QMenu *mediaMenu = exampleMenu->addMenu("Media");
     QMenu *runMenu = exampleMenu->addMenu("Run Control");
+    QMenu *appMenu = exampleMenu->addMenu("Applications");
     editorLayout->setMenuBar(menuBar);
 
     // The input template structure
     inputStruct = make_shared<EGS_InputStruct>();
 
     // Get the application level input blocks
-    getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
-    if(getAppInputs) {
-        getAppInputs(inputStruct);
-        if(inputStruct) {
-            vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputStruct->getBlockInputs();
-            for (auto &block : inputBlocks) {
-                egsInformation("  block %s\n", block->getTitle().c_str());
-                vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-                for (auto &inp : singleInputs) {
-                    const vector<string> vals = inp->getValues();
-                    egsInformation("   single %s\n", inp->getTag().c_str());
-                    for (auto&& val : vals) {
-                        egsInformation("      %s\n", val.c_str());
+    if(app_loaded) {
+        getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
+        if(getAppInputs) {
+            getAppInputs(inputStruct);
+            if(inputStruct) {
+                vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputStruct->getBlockInputs();
+                for (auto &block : inputBlocks) {
+                    egsInformation("  block %s\n", block->getTitle().c_str());
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+                        egsInformation("   single %s\n", inp->getTag().c_str());
+                        for (auto&& val : vals) {
+                            egsInformation("      %s\n", val.c_str());
+                        }
                     }
                 }
             }
@@ -294,6 +312,10 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     auto srcDefPtr = inputStruct->addBlockInput("source definition");
     srcDefPtr->addSingleInput("simulation source", true, "The name of the source that will be used in the simulation. If you have created a composite source using many other sources, name the final composite source here.");
 
+    // Ausgab Object definition block
+    auto ausDefPtr = inputStruct->addBlockInput("ausgab object definition");
+    ausDefPtr->addSingleInput("simulation ausgab object", true, "The name of the ausgab object that will be used in the simulation.");
+
     // For each library, try to load it and determine if it is geometry or source
     for (const auto &lib : libraries) {
         // Remove the extension
@@ -302,6 +324,11 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         libName = libName.right(libName.length() - lib_prefix.length());
 
         egsInformation("testlib trying %s\n", libName.toLatin1().data());
+        // Skip any library files that start with Qt
+        // For dynamic builds, there may be QtCore, QtWidgets, etc. files in the dso directory
+        if (lib.startsWith("Qt")) {
+            continue;
+        }
 
         EGS_Library egs_lib(libName.toLatin1().data(),dso_dir.c_str());
         if (!egs_lib.load()) {
@@ -343,7 +370,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     }
                 }
             }
-
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = geomMenu->addAction(libName);
@@ -387,7 +413,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     }
                 }
             }
-
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = sourceMenu->addAction(libName);
@@ -439,8 +464,46 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                 connect(action,  &QAction::triggered, this, [this]{ insertInputExample(); });
             }
         }
-    }
 
+        // Ausgab Objects
+        createAusgabObjectFunction isAusgabObject = (createAusgabObjectFunction) egs_lib.resolve("createAusgabObject");
+        if (isAusgabObject) {
+
+            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+            if (getInputs) {
+
+                shared_ptr<EGS_BlockInput> aus = getInputs();
+                if(aus){
+                    ausDefPtr->addBlockInput(aus);
+
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = aus->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+                        for (auto&& val : vals) {
+                            egsInformation("      %s\n", val.c_str());
+                        }
+                    }
+
+                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = aus->getBlockInputs();
+                    for (auto &block : inputBlocks) {
+                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                        for (auto &inp : singleInputs) {
+                            const vector<string> vals = inp->getValues();
+                            for (auto&& val : vals) {
+                                egsInformation("      %s\n", val.c_str());
+                            }
+                        }
+                    }
+                }
+            }
+            getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
+            if (getExample) {
+                QAction *action = sourceMenu->addAction(libName);
+                action->setData(QString::fromStdString(getExample()));
+                connect(action, &QAction::triggered, this, [this]{ insertInputExample(); });
+            }
+        }
+    }
     egsinpEdit->setInputStruct(inputStruct);
 }
 
@@ -962,6 +1025,8 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     }
 
     // Load the particle track options
+    label_particles->hide();
+    label_particle_colours->hide();
     EGS_Input *iTracks = input->takeInputItem("tracks");
     if (iTracks) {
         int show;
@@ -999,8 +1064,25 @@ void GeometryViewControl::loadConfig(QString configFilename) {
                 showPositronsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
-
         delete iTracks;
+    }
+    else {
+        label_particles->show();
+        spin_tmaxp->hide();
+        showPositronsCheckbox->hide();
+        showPhotonsCheckbox->hide();
+        showElectronsCheckbox->hide();
+        spin_tminp->hide();
+        spin_tmine->hide();
+        spin_tmaxe->hide();
+        spin_tminpo->hide();
+        spin_tmaxpo->hide();
+
+        label_particle_colours->show();
+        cPhotonsButton->hide();
+        cElectronsButton->hide();
+        cPositronsButton->hide();
+        energyScalingCheckbox->hide();
     }
 
     // Load the overlay options
@@ -1182,6 +1264,22 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load the clipping planes
     EGS_Input *iClip = input->takeInputItem("clipping planes");
+    // Set default clipped planes, along each axis
+    cplanes->setCell(0,0,1);
+    cplanes->setCell(0,1, 0);
+    cplanes->setCell(0,2,0);
+    cplanes->setCell(0,3,0);
+    cplanes->setCell(0,4,Qt::Unchecked);
+    cplanes->setCell(1,0,0);
+    cplanes->setCell(1,1,1);
+    cplanes->setCell(1,2,0);
+    cplanes->setCell(1,3,0);
+    cplanes->setCell(1,4,Qt::Unchecked);
+    cplanes->setCell(2,0,0);
+    cplanes->setCell(2,1,0);
+    cplanes->setCell(2,2,1);
+    cplanes->setCell(2,3,0);
+    cplanes->setCell(2,4,Qt::Unchecked);
     if (iClip) {
         for (int i=0; i<cplanes->numPlanes(); i++) {
             EGS_Input *iPlane = iClip->takeInputItem("plane");
@@ -1196,6 +1294,9 @@ void GeometryViewControl::loadConfig(QString configFilename) {
             if (!err) {
                 cplanes->setCell(i,0,ax);
             }
+            /*else if (i == 0) {
+                cplanes->setCell(0, 0, 1);
+            }*/
             else {
                 cplanes->clearCell(i,0);
             }
@@ -2010,6 +2111,16 @@ void GeometryViewControl::changeTransparency(int t) {
     updateView(true);
 }
 
+void GeometryViewControl::changeGlobalTransparency(int t) {
+    int test = materialCB->count();
+    for (int i = 0; i <= test; i++ ) {
+        int med = materialCB->count() - i;
+        QRgb c = m_colors[med];
+        m_colors[med] = qRgba(qRed(c), qGreen(c), qBlue(c), t);
+    }
+    updateView(true);
+}
+
 void GeometryViewControl::changeDoseTransparency(int t) {
 #ifdef VIEW_DEBUG
     egsWarning("In changeDoseTransparency(%d)\n",t);
@@ -2190,7 +2301,6 @@ void GeometryViewControl::loadTracksDialog() {
     if (filename_tracks.isEmpty()) {
         return;
     }
-
     gview->loadTracks(filename_tracks);
 }
 
@@ -2202,6 +2312,22 @@ void GeometryViewControl::updateTracks(vector<size_t> ntracks) {
 #ifdef VIEW_DEBUG
     egsWarning("In updateTracks(%d %d %d)\n",ntracks[0], ntracks[1], ntracks[2]);
 #endif
+    label_particles->hide();
+    spin_tmaxp->show();
+    showPositronsCheckbox->show();
+    showPhotonsCheckbox->show();
+    showElectronsCheckbox->show();
+    spin_tminp->show();
+    spin_tmine->show();
+    spin_tmaxe->show();
+    spin_tminpo->show();
+    spin_tmaxpo->show();
+
+    label_particle_colours->hide();
+    cPhotonsButton->show();
+    cElectronsButton->show();
+    cPositronsButton->show();
+    energyScalingCheckbox->show();
 
     // Update maximum values for the track selection
     spin_tminp->setMaximum(ntracks[0]);

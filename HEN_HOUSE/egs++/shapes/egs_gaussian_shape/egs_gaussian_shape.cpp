@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -38,7 +38,42 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
+static bool EGS_GAUSSIAN_SHAPE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_GAUSSIAN_SHAPE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Gaussian_Shape"});
+        shapeBlockInput->addSingleInput("sigma", true, "1 or 2 or 3 inputs");
+
+        auto shapePtr = shapeBlockInput->addBlockInput("shape");
+        setShapeInputs(shapePtr);
+    }
+
+    EGS_GAUSSIAN_SHAPE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_gaussiam_shape
+    #:start shape:
+        library = egs_gaussian_shape
+        :start shape:
+            definition of the shape to be smeared
+        :stop shape:
+        sigma = 1, 2 or 3 inputs
+)"};
+        return example;
+    }
+
+    EGS_GAUSSIAN_SHAPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_GAUSSIAN_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {

@@ -63,7 +63,7 @@ static void addRunControlBlock(shared_ptr<EGS_InputStruct> blockPtr) {
 
   In EGSnrc applications derived from EGS_AdvancedApplication the program
   execution is controlled by a 'run control object' (RCO). The purpose of
-  the RCO is to tell the shower loop into how many 'chunks' the simulation
+  the RCO is to tell shower loop into how many 'chunks' the simulation
   should be split, how many particles to run per simulation chunk, into how
   many batches to split a simulation chunk, etc. In this way it is easy
   for EGSnrc C++ application developers to either use one of the RCO's

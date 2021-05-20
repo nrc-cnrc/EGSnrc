@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Hubert Ho
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -40,6 +41,8 @@
 #include "egs_gtransformed.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_GTRANSFORMED_LOCAL inputSet = false;
 
 void EGS_TransformedGeometry::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_TransformedGeometry::setMedia: don't use this method. Use the\n"
@@ -67,6 +70,51 @@ void EGS_TransformedGeometry::setBScaling(EGS_Input *) {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_GTransformed"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("my geometry", true, "The name of a previously defined geometry");
+
+        auto blockPtr = geomBlockInput->addBlockInput("transformation");
+        blockPtr->addSingleInput("translation", false, "The translation for the geometry (x, y ,z)");
+        auto rotPtr = blockPtr->addSingleInput("rotation", false, "2, 3, or 9 floating point numbers");
+        auto vectPtr = blockPtr->addSingleInput("rotation vector", false, "3 floating point numbers");
+        // Can either have "rotation" or "rotation vector"
+        rotPtr->addDependency(vectPtr, "", true);
+        vectPtr->addDependency(rotPtr, "", true);
+    }
+
+    EGS_GTRANSFORMED_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of egs_gtransformed
+    #:start geometry:
+        name = my_gtransform
+        library = egs_gtransformed
+        my geometry = geom
+        # created a geometry called geom
+        :start transformation:
+            translation = 0 0.5 0
+            rotation = 0.05 0 -1
+        :stop transformation:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_GTRANSFORMED_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_GTRANSFORMED_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         EGS_BaseGeometry *g = 0;

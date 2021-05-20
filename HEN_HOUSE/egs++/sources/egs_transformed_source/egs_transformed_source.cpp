@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -36,6 +36,8 @@
 
 #include "egs_transformed_source.h"
 #include "egs_input.h"
+
+static bool EGS_TRANSFORMED_SOURCE_LOCAL inputSet = false;
 
 EGS_TransformedSource::EGS_TransformedSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSource(input,f), source(0), T(0) {
@@ -75,6 +77,50 @@ void EGS_TransformedSource::setUp(EGS_AffineTransform *t) {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs(false, false);
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Transformed_Source"});
+
+        // Format: name, isRequired, description, vector striing of allowed values
+        srcBlockInput->addSingleInput("source name", true, "The name of a previously defined source.");
+
+        auto blockPtr = srcBlockInput->addBlockInput("transformation");
+        blockPtr->addSingleInput("translation", false, "The translation for the geometry (x, y ,z)");
+        auto rotPtr = blockPtr->addSingleInput("rotation", false, "2, 3, or 9 floating point numbers");
+        auto vectPtr = blockPtr->addSingleInput("rotation vector", false, "3 floating point numbers");
+        // Can either have "rotation" or "rotation vector"
+        rotPtr->addDependency(vectPtr, "", true);
+        vectPtr->addDependency(rotPtr, "", true);
+    }
+
+    EGS_TRANSFORMED_SOURCE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_transformed_source
+    #:start source:
+        library = egs_transformed_source
+        name = my_source
+        source_name = my_parallel_source
+        #create source called my_parallel_source
+        :start transformation:
+            rotation vector = 0 -1 1
+        :stop transformation:
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_TRANSFORMED_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_TRANSFORMED_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

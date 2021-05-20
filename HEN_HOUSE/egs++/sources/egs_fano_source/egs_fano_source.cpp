@@ -24,7 +24,7 @@
 #  Authors:         Ernesto Mainegra-Hing, 2016
 #                   Hugo Bouchard, 2016
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -40,6 +40,8 @@
 #include "egs_input.h"
 #include "egs_math.h"
 #include <sstream>
+
+static bool EGS_FANO_SOURCE_LOCAL inputSet = false;
 
 EGS_FanoSource::EGS_FanoSource(EGS_Input *input,
                                EGS_ObjectFactory *f) :
@@ -143,6 +145,55 @@ void EGS_FanoSource::setUp() {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs();
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Fano_Source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto shapePtr = srcBlockInput->addBlockInput("shape");
+        setShapeInputs(shapePtr);
+
+        srcBlockInput->addSingleInput("geometry", true, "The name of a predefined geometry");
+        srcBlockInput->addSingleInput("max mass density", true, "The maximum mass density");
+    }
+
+    EGS_FANO_SOURCE_EXPORT string getExample() {
+        string example;
+        example =
+{R"(
+    # Example of egs_fano_source
+    #:start source:
+        library = egs_fano_source
+        name = my_fano_source
+        :start shape:
+            type = box
+            box size = 1 2 3
+            :start media input:
+                media = water
+            :stop media input:
+        :stop shape:
+        :start spectrum:
+            type = monoenergetic
+            energy = 1
+        :stop spectrum:
+        charge = 0
+        max mass density = 1.2
+        geometry = some_name
+        #create a geometry called some_name
+)"};
+        return example;
+    }
+
+    EGS_FANO_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_FANO_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {
