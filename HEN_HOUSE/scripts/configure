@@ -343,7 +343,7 @@ for test_arg in -v; do
             junk=$(echo $f_test_output | grep "GNU Fortran")
             if test "x$junk" != x; then
                 f_version=$(echo $junk | grep -o -m1 'GNU Fortran [^\s]* version [0-9.]*'| head -1)
-                f_oflags="-O2 -mtune=native"
+                f_oflags="-O2 -mtune=native -mcmodel=medium"
                 f_dflags="-g"
                 if test ! x$is_x86_64 = x; then
                     f_fflags="-fPIC"
@@ -367,7 +367,7 @@ for test_arg in -v; do
             if test "x$junk" != x; then
                 junk=$(echo $junk | sed 's/.*GNU F95 version//g' | awk '{print $1}')
                 f_version="GNU F95 version $junk"
-                f_oflags="-O2 -mtune=native"
+                f_oflags="-O2 -mtune=native -mcmodel=medium"
                 f_dflags="-g"
                 if test ! x$is_x86_64 = x; then
                     f_fflags="-fPIC"
@@ -426,7 +426,7 @@ for test_arg in -v; do
             if test "x$junk" != x; then
                 junk=$(echo $junk | sed 's/.*D__INTEL_COMPILER=//g' | awk '{print $1}')
                 f_version="Intel(R) Fortran Compiler Version $junk"
-                f_oflags="-O2"
+                f_oflags="-O2 -mtune=native -mcmodel=medium"
                 f_dflags="-g -CB"
                 need_fool_optimizer=yes
                 break
@@ -496,7 +496,7 @@ fi
 read response
 if test "x$response" = x$help; then
     cat >&2 << _ACEOF
-Typical optimization flags are '-O3', '-fast' or '-Ofast'. You may also want
+Typical optimization flags are '-O2', '-fast' or '-Ofast'. You may also want
 to turn on some CPU specific optimizations, e.g., '-march=i686 -mcpu=i686'
 for the GNU compiler on Pentums/Athlons or '-mips2' for the SGI compiler and
 R4400 CPU. Best is to check your compiler documentation for supported
@@ -1424,7 +1424,7 @@ else
   have_c_compiler=yes
 
   default_cflags="-O2"
-  if test ! "x$is_x86_64" = x; then default_cflags="-O2 -fPIC"; fi
+  if test ! "x$is_x86_64" = x; then default_cflags="-O2 -fPIC -mtune=native -mcmodel=medium"; fi
   printf $format "Input C compiler flags to use: " >&2
   printf "[$default_cflags] " >&2
   read response
