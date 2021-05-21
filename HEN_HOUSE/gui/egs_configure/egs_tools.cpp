@@ -788,7 +788,7 @@ void MCompiler::init(){
     dso = 0;
     the_name = "gfortran"; vopt = "--version";
     opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
-    optimiz = "-O2 -mtune=native";
+    optimiz = "-O2 -mtune=native -mcmodel=medium";
     deb = "-g";
     eext = QString();
     oflag = "-o ";
@@ -809,7 +809,7 @@ void MCompiler::setLanguage(Language l){
     switch(l){
       case F:
         the_name = "gfortran";
-        optimiz = "-O2 -mtune=native";
+        optimiz = "-O2 -mtune=native -mcmodel=medium";
         break;
       case C:
         the_name = "gcc";
@@ -817,7 +817,7 @@ void MCompiler::setLanguage(Language l){
         break;
       case CPP:
         the_name = "g++";
-        optimiz = "-O2 -mtune=native";
+        optimiz = "-O2 -mtune=native -mcmodel=medium";
         dso = new EGS_DSO(name());// Creates dso, sets flibs to -lgfortran literally
         dso->flibs = getFlibs2LinkCPP("gfortran",path());
         break;
@@ -922,7 +922,7 @@ void MCompiler::setUpCCompiler(){
     optimiz  = "-O2 -no-prec-div -fp-model fast=2";
   }
   else if ( the_name.contains("gcc") ){
-    optimiz  = "-O2 -mtune=native";
+    optimiz  = "-O2 -mtune=native -mcmodel=medium";
   }
   else{
     optimiz  = "-O2";
@@ -940,14 +940,14 @@ void MCompiler::setUpCPPCompiler(const QString& link_to_name){
     vopt = QString();
   }
   else if ( the_name.contains("g++") ){
-    optimiz  = "-O2 -mtune=native -std=c++14 -DWIN32";
+    optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++14 -DWIN32";
   }
   else if (the_name.toLower()== "icpc"){
     optimiz  = "-O2 -no-prec-div -fp-model fast=2 -DWIN32";
   }
 #else
   if ( the_name.contains("g++") ){
-    optimiz  = "-O2 -mtune=native -std=c++14";
+    optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++14";
   }
   else if (the_name.toLower()== "icpc"){
     optimiz  = "-O2 -no-prec-div -fp-model fast=2";
@@ -1034,7 +1034,7 @@ void MCompiler::setUpFortranCompiler(){
          the_name.contains("g77")      ){
         vopt = "--version";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
-        optimiz = "-O2 -mtune=native";
+        optimiz = "-O2 -mtune=native -mcmodel=medium";
     }
     else if (the_name == "ifl"){
         vopt = "-V";
@@ -1080,7 +1080,7 @@ void MCompiler::setUpFortranCompiler(){
     if ( the_name.contains("gfortran") || the_name == "g95" || the_name.contains("g77") ){ // GNU Fortran
         vopt = "-v --version";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
-        optimiz = "-O2 -mtune=native";
+        optimiz = "-O2 -mtune=native -mcmodel=medium";
         deb = "-g";
     }
     _version = getVersion(); _version = _version.split("\n").takeFirst();
@@ -1101,7 +1101,7 @@ void MCompiler::setUpFortranCompiler(){
     _version = getVersion(); _version = _version.split("\n").takeFirst();
 #elif defined(Q_OS_LINUX) || defined(Q_OS_UNIX)
     if ( the_name.contains("gfortran") || the_name == "g95" || the_name.contains("g77")){ // GNU Fortran
-        vopt = "--version"; optimiz = "-O2 -mtune=native"; deb = "-g";
+        vopt = "--version"; optimiz = "-O2 -mtune=native -mcmodel=medium"; deb = "-g";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
     }
     else if (the_name == "ifort"){
