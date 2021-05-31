@@ -49,7 +49,7 @@
 #include "egs_radiative_splitting.h"
 #include "egs_input.h"
 #include "egs_functions.h"
-#include "array_sizes.h"
+//#include "array_sizes.h"
 
 //local structures required
 struct DBS_Aux {
@@ -132,7 +132,7 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
     // Set EGSnrc internal radiative splitting number .
     app->setRadiativeSplitting(nsplit);
 
-    if ((split_type == EGS_RadiativeSplitting::DRS || split_type == EGS_RadiativeSplitting::DRSf) && app->getIbrdst())
+    if (( split_type == DRS || split_type == DRSf ) && app->getIbrdst())
     {
         initSmartKM(app->getEmax()*1.05);
     }
@@ -144,8 +144,20 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
     description += "===========================================\n";
     if (nsplit > 1) {
         description +="\n - Splitting radiative events in ";
-        sprintf(buf,"%d\n\n",nsplit);
+        sprintf(buf,"%d",nsplit);
         description += buf;
+        if      ( split_type == URS ){
+                description +=" using URS\n\n";
+        }
+        else if ( split_type == DRS ) {
+            description +=" using DRS\n\n";
+        }
+        else if ( split_type == DRSf ){
+            description +=" using DRS (BEAMnrc)\n\n";
+        }
+        else {
+            description +=" using an unknown splitting algorithm? :-(";
+        }
     }
     else if (nsplit == 1) {
         description +="\n - NO radiative splitting";
@@ -153,6 +165,7 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
     else {
         description +="\n - BEWARE: Turning OFF radiative events !!!";
     }
+
     description += "\n===========================================\n\n";
 }
 
@@ -1441,67 +1454,66 @@ extern "C" {
         int split_type;
         string str;
         if(input->getInput("splitting type",str) < 0)
-	{
-		split_type = EGS_RadiativeSplitting::URS;
-	}
-	else
-	{
-		split_type = input->getInput("splitting type",allowed_split_type,-1);
-        	if (split_type < EGS_RadiativeSplitting::URS || split_type > EGS_RadiativeSplitting::DRSf)
-        	{
-    			egsFatal("\nEGS_RadiativeSplitting: Invalid splitting type.\n");
-		}
-	}
+	    {
+	    	split_type = EGS_RadiativeSplitting::URS;
+	    }
+	    else
+	    {
+	    	split_type = input->getInput("splitting type",allowed_split_type,-1);
+           	if ( split_type < EGS_RadiativeSplitting::URS ||
+                 split_type > EGS_RadiativeSplitting::DRSf )
+           	{
+     		   egsFatal("\nEGS_RadiativeSplitting: Invalid splitting type.\n");
+	    	}
+	    }
         EGS_Float nsplit = 1.0;
         EGS_Float fs,ssd,zrr;
         int irad = 0;
         vector<int> esplit_reg;
-        vector <string> allowed_irad;
         int err = input->getInput("splitting",nsplit);
         if (err)
-	{
-		egsWarning("\nEGS_RadiativeSplitting: Invalid splitting no.  Radiative splitting will be turned off.\n");
-	}
-        if (split_type == EGS_RadiativeSplitting::DRS || split_type == EGS_RadiativeSplitting::DRSf)
-	{
-		allowed_irad.push_back("no");
-		allowed_irad.push_back("yes");
-		int err01 = input->getInput("field size",fs);
-		if (err01)
-		{
-			egsFatal("\nEGS_RadiativeSplitting: Missing/invalid input for splitting field radius.\n");
-		}
-		int err02 = input->getInput("ssd",ssd);
-                if (err02)
-                {
-                        egsFatal("\nEGS_RadiativeSplitting: Missing/invalid input for splitting field ssd.\n");
-                }
-		int err03 = input->getInput("e-/e+ split region",esplit_reg);
-                if (err03)
-		{
-			egsWarning("\nEGS_RadiativeSplitting: Missing/invalid input for e+/e- splitting region.\nCharged particles will not be split.\n");
-		}
-		else
-		{
-			if(!input->getInput("radially redistribute e-/e+",str))
-			{
-				vector <string> allowed_irad;
-                		allowed_irad.push_back("no");
-                		allowed_irad.push_back("yes");
-				irad = input->getInput("radially redistribute e-/e+",allowed_irad,-1);
-                           	if (irad < 0)
-				{
-					egsWarning("\nEGS_RadiativeSplitting: Invalid input for e-/e+ radial redistribution.  Will not radially redistribute split charged particles.\n");
-					irad = 0;
-				}
-			}
-			int err04 = input->getInput("Z of russian roulette plane",zrr);
-                        if (err04)
-			{
-				egsWarning("\nEGS_RadiativeSplitting: Missing/invalid input for Z of russian roulette plane.  Will always subject split charged particles to russian roulette.\n");
-			}
-		}
-	}
+	    {
+	    	egsWarning("\nEGS_RadiativeSplitting: Invalid splitting no.  Radiative splitting will be turned off.\n");
+	    }
+        if ( split_type == EGS_RadiativeSplitting::DRS ||
+             split_type == EGS_RadiativeSplitting::DRSf )
+	    {
+	    	int err01 = input->getInput("field size",fs);
+	    	if (err01)
+	    	{
+	    		egsFatal("\nEGS_RadiativeSplitting: Missing/invalid input for splitting field radius.\n");
+	    	}
+	    	int err02 = input->getInput("ssd",ssd);
+            if (err02)
+            {
+                egsFatal("\nEGS_RadiativeSplitting: Missing/invalid input for splitting field ssd.\n");
+            }
+	    	int err03 = input->getInput("e-/e+ split region",esplit_reg);
+            if (err03)
+	    	{
+	    		egsWarning("\nEGS_RadiativeSplitting: Missing/invalid input for e+/e- splitting region.\nCharged particles will not be split.\n");
+	    	}
+	    	else
+	    	{
+	    		if(!input->getInput("radially redistribute e-/e+",str))
+	    		{
+                    vector <string> allowed_irad;
+	    	        allowed_irad.push_back("no");
+	    	        allowed_irad.push_back("yes");
+	    			irad = input->getInput("radially redistribute e-/e+",allowed_irad,-1);
+                    if (irad < 0)
+	    			{
+	    				egsWarning("\nEGS_RadiativeSplitting: Invalid input for e-/e+ radial redistribution.  Will not radially redistribute split charged particles.\n");
+	    				irad = 0;
+	    			}
+	    		}
+	    		int err04 = input->getInput("Z of russian roulette plane",zrr);
+                if (err04)
+	    		{
+	    			egsWarning("\nEGS_RadiativeSplitting: Missing/invalid input for Z of russian roulette plane.  Will always subject split charged particles to russian roulette.\n");
+	    		}
+	    	}
+	    }
 
         printf("\nAbout to set up\n");
 
@@ -1510,10 +1522,10 @@ extern "C" {
         EGS_RadiativeSplitting *result = new EGS_RadiativeSplitting("",f);
         result->setSplitType(split_type);
         result->setSplitting(nsplit);
-        if (split_type == EGS_RadiativeSplitting::DRS || split_type == EGS_RadiativeSplitting::DRSf)
-	{
-		result->initDBS(fs,ssd,esplit_reg,irad,zrr);
-	}
+        if (split_type == EGS_RadiativeSplitting::DRS ||
+            split_type == EGS_RadiativeSplitting::DRSf){
+	    	result->initDBS(fs,ssd,esplit_reg,irad,zrr);
+	    }
         result->setName(input);
         return result;
     }

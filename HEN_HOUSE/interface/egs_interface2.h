@@ -557,7 +557,7 @@ struct EGS_XOptions {
 /*! \brief A structure corresponding to the \c egs_vr common block
 
  The \c egs_vr common block contains variables that can turn on/off
- internally implemented variabce reduction techniques.
+ internally implemented variance reduction techniques.
 */
 struct EGS_VarianceReduction {
     /*! Maximum energy for which it is allowed to use range rejection.
@@ -642,6 +642,9 @@ struct EGS_emfInputs {
     bool emfield_on;
 };
 
+
+#define MXBRES    100
+#define MXBRXS     50
 /*! \brief A structure corresponding to the \c NIST_BREMS common block.
 
   This common block contains variables used to calculate NIST brems cross-
@@ -655,6 +658,8 @@ struct EGS_NistBrems {
               nb_dle[MXMED],nb_dlei[MXMED],log_ap[MXMED];
 };
 
+#define MXEL       50
+#define MXPWR2I    50
 /*! \brief A structure corresponding to the \c BREMPR common block.
 
   This common block contains variables used to calculate NRC brems cross-
@@ -669,6 +674,9 @@ struct EGS_Brempr {
    char asym[2][MXEL][MXMED][4];
 };
 
+#define MXRAYFF   100
+#define MXSGE     400
+#define MXGE     2000
 /*! \brief A structure corresponding to the \c PHOTIN common block.
 
   This common block contains variables used to calculate data used in
@@ -688,7 +696,7 @@ struct EGS_Photin {
     pointer to a C-structure of type EGS_Stack */
 extern __extc__ struct EGS_Stack             *the_stack;
 
-/*! \brief The address of the morrtan \c BOUNDS common block as a
+/*! \brief The address of the mortan \c BOUNDS common block as a
     pointer to a C-structure of type EGS_Bounds */
 extern __extc__ struct EGS_Bounds            *the_bounds;
 
