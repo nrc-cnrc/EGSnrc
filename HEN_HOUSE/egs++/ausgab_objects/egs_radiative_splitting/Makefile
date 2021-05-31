@@ -45,6 +45,10 @@ INC2 = -I$(IEGS2) -I..$(DSEP)..
 
 $(make_depend)
 
+clean:
+	$(REMOVE) $(ABS_DSO)$(library)*
+
 test:
 	@echo "common_h2: $(common_h2)"
+	@echo "INC2: $(INC2)"
 	@echo "extra_dep: $(extra_dep)"
