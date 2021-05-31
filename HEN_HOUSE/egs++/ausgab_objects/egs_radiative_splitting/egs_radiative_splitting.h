@@ -162,10 +162,15 @@ public:
     void initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr);
 
     bool needsCall(EGS_Application::AusgabCall iarg) const override {
-        if (split_type == EGS_RadiativeSplitting::DRS || split_type == EGS_RadiativeSplitting::DRSf) {
-           if (iarg == EGS_Application::BeforeBrems || iarg == EGS_Application::BeforeAnnihFlight || iarg == EGS_Application::BeforeAnnihRest ||
-               iarg == EGS_Application::BeforePair || iarg == EGS_Application::BeforeCompton || iarg == EGS_Application::BeforePhoto ||
-               iarg == EGS_Application::BeforeRayleigh || iarg == EGS_Application::FluorescentEvent) {
+        if ( split_type == DRS || split_type == DRSf ) {
+           if ( iarg == EGS_Application::BeforeBrems || 
+                iarg == EGS_Application::BeforeAnnihFlight || 
+                iarg == EGS_Application::BeforeAnnihRest ||
+                iarg == EGS_Application::BeforePair || 
+                iarg == EGS_Application::BeforeCompton || 
+                iarg == EGS_Application::BeforePhoto ||
+                iarg == EGS_Application::BeforeRayleigh || 
+                iarg == EGS_Application::FluorescentEvent) {
                return true;
            }
         }
@@ -173,7 +178,7 @@ public:
     };
 
     int processEvent(EGS_Application::AusgabCall iarg) {
-        if (split_type >  EGS_RadiativeSplitting::URS && iarg > EGS_Application::AfterTransport)
+        if ( split_type > URS && iarg > EGS_Application::AfterTransport )
         {
             if( !doInteractions(iarg,killed) )
             {
@@ -184,7 +189,7 @@ public:
     };
 
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
-        if (split_type >  EGS_RadiativeSplitting::URS && iarg > EGS_Application::AfterTransport)
+        if (split_type >  URS && iarg > EGS_Application::AfterTransport)
         {
             if( !doInteractions(iarg,killed) )
             {
