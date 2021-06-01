@@ -1498,6 +1498,35 @@ void EGS_AdvancedApplication::callEgsRayleighSampling(int imed, EGS_Float E, EGS
 EGS_Float EGS_AdvancedApplication::callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, EGS_Float nb_idata) {
     return F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(mxbrxs,nb_xdata,nb_fdata,nb_wdata,nb_idata);
 }
+//the following definitions are dependent on some array size macros
+//having been defined
+#ifndef MXSTACK
+int EGS_AdvancedApplication::getMxstack() {
+    return 0;
+}
+#else
+int EGS_AdvancedApplication::getMxstack() {
+    return MXSTACK;
+}
+#endif
+#ifndef MXBRES
+int EGS_AdvancedApplication::getMxbres() {
+    return 0;
+}
+#else
+int EGS_AdvancedApplication::getMxbres() {
+    return MXBRES;
+}
+#endif
+#ifndef MXBRXS
+int EGS_AdvancedApplication::getMxbrxs() {
+    return 0;
+}
+#else
+int EGS_AdvancedApplication::getMxbrxs() {
+    return MXBRXS;
+}
+#endif
 
 //get max. energy of source from source
 EGS_Float EGS_AdvancedApplication::getEmax() {

@@ -1291,6 +1291,15 @@ public:
     virtual EGS_Float callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, EGS_Float nb_idata) {
        return 0.0;
     }
+    virtual int getMxstack() {
+       return 0;
+    }
+    virtual int getMxbres() {
+       return 0;
+    }
+    virtual int getMxbrxs() {
+       return 0;
+    }
 };
 
 #define APP_MAIN(app_name) \

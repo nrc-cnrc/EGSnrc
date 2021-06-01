@@ -49,7 +49,6 @@
 #include "egs_radiative_splitting.h"
 #include "egs_input.h"
 #include "egs_functions.h"
-//#include "array_sizes.h"
 
 //local structures required
 struct DBS_Aux {
@@ -153,13 +152,13 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
             description +=" using DRS\n\n";
         }
         else if ( split_type == DRSf ){
-            description +=" using DRS (BEAMnrc)\n\n";
+            description +=" using BEAMnrc-style DRS\n\n";
         }
         else {
             description +=" using an unknown splitting algorithm? :-(";
         }
     }
-    else if (nsplit == 1) {
+    if (nsplit == 1) {
         description +="\n - NO radiative splitting";
     }
     else {
@@ -380,7 +379,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
     if( check ) {
         if( check == 1 ) {
-            if( app->getNp() >= MXSTACK ) egsFatal("Stack size exceeded "
+            if( app->getNp() >= app->getMxstack() ) egsFatal("Stack size exceeded "
               "in EGS_RadiativeSplitting::doInteractions()\n");
             //set weight of particle on top of stack to 0
             EGS_Particle p = app->top_p;
@@ -503,8 +502,8 @@ int EGS_RadiativeSplitting::doSmartBrems() {
                 if( app->getRngUniform()*nbrspl < 1 ) ns = nbrspl;
             }
             if( ns > 0 ) {
-                if( ++ip >= MXSTACK ) egsFatal(dbs_err_msg,
-                        "smartBrems",MXSTACK);
+                if( ++ip >= app->getMxstack() ) egsFatal(dbs_err_msg,
+                        "smartBrems",app->getMxstack());
                 if( app->getIbrdst() == 1 )
                     y2_KM[ib++] = beta*(1+beta)*(tau+1)*(tau+1)*(1-cost);
 
@@ -553,8 +552,8 @@ int EGS_RadiativeSplitting::doSmartBrems() {
             }
 
             if( app->getRngUniform() < rejf ) {
-                if( ++ip >= MXSTACK ) egsFatal(dbs_err_msg,
-                        "smartBrems",MXSTACK);
+                if( ++ip >= app->getMxstack() ) egsFatal(dbs_err_msg,
+                        "smartBrems",app->getMxstack());
                 if( app->getIbrdst() == 1 ) {
                     EGS_Float y2 = beta*(1+beta)*(tau+1)*(tau+1)*(1-cost);
                     if( y2 < 0 ) y2 = 0;
@@ -613,8 +612,8 @@ int EGS_RadiativeSplitting::doSmartBrems() {
             //u=0, v=0, w=1 (i.e. directed into the splitting field) as in beampp_dbs!
             //TODO: Figure out if this is correct or if this should go inside the
             //condition, if ibrdst!=1
-            if( ++ip >= MXSTACK ) egsFatal(dbs_err_msg,
-                    "smartBrems",MXSTACK);
+            if( ++ip >= app->getMxstack() ) egsFatal(dbs_err_msg,
+                    "smartBrems",app->getMxstack());
             ireal = ip-np-1; //index of this high weight particle in the local particle_stack
 
             EGS_Particle p;
@@ -808,8 +807,8 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
     {
         ajj = 1 + (waux + log(app->getAp(imed)) - app->getNbLemin(imed))*app->getNbDlei(imed);
         jj = ajj; ajj = ajj - jj;
-        if ( jj > MXBRES) {
-           jj = MXBRES;
+        if ( jj > app->getMxbres()) {
+           jj = app->getMxbres();
            ajj = -1;
         }
     }
@@ -829,7 +828,7 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
                      j = jj;
               }
               //maybe should use egs++ alias_sample function here
-              int mxbrxs = MXBRXS;
+              int mxbrxs = app->getMxbrxs();
               EGS_Float f1 = app->getNbXdata(0,j,imed);
               EGS_Float f2 = app->getNbFdata(0,j,imed);
               EGS_Float f3 = app->getNbWdata(1,j,imed);
@@ -1450,7 +1449,8 @@ extern "C" {
         vector<string> allowed_split_type;
         allowed_split_type.push_back("uniform");
         allowed_split_type.push_back("directional");
-        allowed_split_type.push_back("BEAMnrc directional");
+        //disable BEAMnrc-style DBS until we either implement/eliminate it
+        //allowed_split_type.push_back("BEAMnrc directional");
         int split_type;
         string str;
         if(input->getInput("splitting type",str) < 0)
