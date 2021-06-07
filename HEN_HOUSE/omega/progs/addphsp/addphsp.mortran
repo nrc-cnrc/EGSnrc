@@ -86,6 +86,14 @@ INTEGER i,j,k,iipar,iargc,numarg,lnblnk1,iistart,iiscore,iiend,ndigits,
         sumerr,ifirst,i_iaea_in;
 $LOGICAL ex,append;
 
+"sumerr=error code passed back from subroutine add_files, can take on"
+"the following values:"
+"sumerr=0--no error"
+"sumerr=1--file type mismatch or error opening file to be added: Nonfatal"
+"sumerr=2--error opening output file or total no. of particles will"
+"          exceed 2^32-1: Fatal"
+"sumerr=3--error opening first file to be added: Nonfatal
+
 numarg=iargc();
 " where phsp files to be added have naming scheme:"
 "infile_w(istart).egsphsp(iscore),...,infile_w(istart+ipar-1).egsphsp(iscore)"
@@ -287,7 +295,8 @@ integer ifirst,sumerr,IZLAST1,IMUPHSP1,IMUPHSP2,
         LATCHI,lnblnk1,i_iaea_in,i_log,
         i_unit_in,i_unit_out,IZLAST2,NPASSI,IQ,IZSCORE1,IZSCORE2;
 $LONG_INT PARANOT,PARANOT1,PARANOP1,PARANOT2,PARANOP2,
-        IPARANOT1,IPARANOT2,LPARANINC1,LPARANINC2,LNINC,NHSTRY;
+        IPARANOT1,IPARANOT2,LPARANINC1,LPARANINC2,LNINC,NHSTRY,
+        max_total_particle_no;
 real PARAEMAX1,PARAEMNE1,PARANINC1,PARAEMAX2,PARAEMNE2,PARANINC2,NINC,
      ZLAST,EREAD,WEIGHT,XIN,YIN,ZIN,UIN,VIN,WIN,Z_SCORE,MU_IDX;
 character*5 MODE_RW1,MODE_RW2;
@@ -298,6 +307,7 @@ $INITIALIZE_PHSP_VARIABLES;
 
 $INIT_PHSP_COUNTERS;
 sumerr=0;
+max_total_particle_no = 2147483647;
 
 i_log=6;
 IF(i_iaea_in=1)[
@@ -507,6 +517,19 @@ ELSEIF(PARANOT1+PARANOT2>76695843)[
 ]
 ]
 */
+
+"But we do want to check that the total no. of particles does not exceed"
+"2^32-1 and, thus, cannot be written to the header"
+"Note: Only for EGSnrc format"
+IF(i_iaea_in=0 & PARANOT1+PARANOT2>max_total_particle_no)[
+       OUTPUT; (//' ***WARNING***'/
+       ' Total no. of particles in combined ',
+       ' file will exceed 2^32-1.'/
+       ' This number cannot be stored in the header.'/
+       ' Exiting now.'//);
+       sumerr=2;
+       return;
+]
 
 IF(i_iaea_in=1)[
         DO IPARANOT1=1,PARANOT1["read phase-space data from the data file 1"
