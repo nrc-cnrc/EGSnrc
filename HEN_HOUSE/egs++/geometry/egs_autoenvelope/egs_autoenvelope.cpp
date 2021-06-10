@@ -73,7 +73,8 @@ static char EGS_AENVELOPE_LOCAL transformation_keyword[] = "transformation";
 
 EGS_AEnvelope::EGS_AEnvelope(EGS_BaseGeometry *base_geom,
                              const vector<AEnvelopeAux> inscribed, const string &Name, bool debug, string output_vc_file) :
-    EGS_BaseGeometry(Name), base_geom(base_geom), debug_info(debug), output_vc(output_vc_file) {
+    EGS_BaseGeometry(Name), base_geom(base_geom), inscribedAux(inscribed), debug_info(debug), output_vc(output_vc_file) {
+
 
     bool volcor_available = allowedBaseGeomType(base_geom->getType());
     bool volcor_requested = inscribed.size() > 0 && inscribed[0].vcopts->mode == CORRECT_VOLUME;
@@ -98,12 +99,6 @@ EGS_AEnvelope::EGS_AEnvelope(EGS_BaseGeometry *base_geom,
     nregbase = base_geom->regions();
     is_convex = base_geom->isConvex();
     has_rho_scaling = getHasRhoScaling();
-
-    // initialize uncorrected/corrected masses
-    for (int ir = 0; ir < nregbase; ir++) {
-        uncorrected_mass.push_back(base_geom->getMass(ir));
-        corrected_mass.push_back(base_geom->getMass(ir));
-    }
 
     ninscribed = inscribed.size();
     if (ninscribed == 0) {
@@ -138,14 +133,24 @@ EGS_AEnvelope::EGS_AEnvelope(EGS_BaseGeometry *base_geom,
     }
 
     geoms_in_region = new vector<EGS_BaseGeometry *>[nregbase];
+}
 
-    if (inscribed[0].vcopts->vc_file != "") {
-        vc_results = loadFileResults(inscribed[0].vcopts, base_geom, inscribed_geoms, transforms);
-        egsInformation("loaded from %s\n", inscribed[0].vcopts->vc_file.c_str());
+void EGS_AEnvelope::setMass() {
+    base_geom->setMass();
+
+    // initialize uncorrected/corrected masses
+    for (int ir = 0; ir < nregbase; ir++) {
+        uncorrected_mass.push_back(base_geom->getMass(ir));
+        corrected_mass.push_back(base_geom->getMass(ir));
+    }
+
+    if (inscribedAux[0].vcopts->vc_file != "") {
+        vc_results = loadFileResults(inscribedAux[0].vcopts, base_geom, inscribed_geoms, transforms);
+        egsInformation("loaded from %s\n", inscribedAux[0].vcopts->vc_file.c_str());
     }
     else {
         // now run volume correction and figure out which regions have inscribed geometries
-        vc_results = findRegionsWithInscribed(inscribed[0].vcopts, base_geom, inscribed_geoms, transforms);
+        vc_results = findRegionsWithInscribed(inscribedAux[0].vcopts, base_geom, inscribed_geoms, transforms);
     }
 
 
@@ -173,9 +178,7 @@ EGS_AEnvelope::EGS_AEnvelope(EGS_BaseGeometry *base_geom,
     if (debug_info) {
         printInfo();
     }
-
 }
-
 
 EGS_AEnvelope::~EGS_AEnvelope() {
     if (!base_geom->deref()) {
@@ -661,7 +664,7 @@ void EGS_AEnvelope::printInfo() const {
 
         for (int ir=0; ir < nregbase; ir++) {
             if (geoms_in_region[ir].size() > 0) {
-                egsInformation("    region %d has %d insribed geometries\n", ir, geoms_in_region[ir].size());
+                egsInformation("    region %d has %d inscribed geometries\n", ir, geoms_in_region[ir].size());
             }
         }
     }

@@ -152,9 +152,15 @@ public:
      * This is useful for e.g. outputing bounds for a 3ddose file */
     int getNRegDir(int dir);
 
+    /*! \brief set the mass for the geometry */
+    void setMass();
+
     /*! \brief get mass of a given region  */
     EGS_Float getMass(int ireg);
 
+    void setApplication(EGS_Application *App) {
+        app = App;
+    };
 };
 
 

@@ -43,6 +43,7 @@
 
 #include <map>
 #include "egs_input.h"
+#include "egs_application.h"
 #include "egs_rz.h"
 #include "../egs_cylinders/egs_cylinders.h"
 #include "../egs_planes/egs_planes.h"
@@ -54,30 +55,12 @@ EGS_RZGeometry::EGS_RZGeometry(vector<EGS_BaseGeometry *> geoms,
                                vector<EGS_Float> rads, vector<EGS_Float> zbs, const string &name) :
     EGS_NDGeometry(geoms, name), radii(rads), zbounds(zbs) {
 
+    setApplication(EGS_Application::activeApplication());
+
     /* we always set inner most radii to 0 (simplifies volume calcs) */
     if (radii[0] != 0) {
         radii.insert(radii.begin(), 0.);
     }
-
-    vector<EGS_Float> mass;
-    int ir = 0;
-    for (size_t r=0; r < radii.size()-1; r++) {
-
-        EGS_Float rmin = radii[r];
-        EGS_Float rmax = radii[r+1];
-
-        EGS_Float area = M_PI*(rmax*rmax - rmin*rmin);
-
-        for (size_t plane = 0; plane < zbounds.size()-1; plane++) {
-            EGS_Float zmin = zbounds[plane];
-            EGS_Float zmax = zbounds[plane+1];
-            EGS_Float rho = getRelativeRho(ir);
-            EGS_Float vol = (zmax-zmin)*area;
-            reg_mass.push_back(rho*vol);
-            ir++;
-        }
-    }
-
 };
 
 EGS_Float EGS_RZGeometry::getBound(int idir, int ind) {
@@ -99,6 +82,27 @@ int EGS_RZGeometry::getNRegDir(int dir) {
         return radii.size() - 1;
     }
     return 0;
+}
+
+void EGS_RZGeometry::setMass() {
+    vector<EGS_Float> mass;
+    int ir = 0;
+    for (size_t r=0; r < radii.size()-1; r++) {
+
+        EGS_Float rmin = radii[r];
+        EGS_Float rmax = radii[r+1];
+
+        EGS_Float area = M_PI*(rmax*rmax - rmin*rmin);
+
+        for (size_t plane = 0; plane < zbounds.size()-1; plane++) {
+            EGS_Float zmin = zbounds[plane];
+            EGS_Float zmax = zbounds[plane+1];
+            EGS_Float rho = app->getMediumRho(medium(ir)) * getRelativeRho(ir);
+            EGS_Float vol = (zmax-zmin)*area;
+            reg_mass.push_back(rho*vol);
+            ir++;
+        }
+    }
 }
 
 EGS_Float EGS_RZGeometry::getMass(int ireg) {

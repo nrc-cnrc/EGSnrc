@@ -231,10 +231,12 @@ public:
      */
     virtual EGS_Float hownear(int ireg, const EGS_Vector &x) = 0;
 
-    /*! \brief Calculates the volume*relative rho (rhor) of region ireg.
+    /*! \brief Calculates the regular mass of all regions for the geometry */
+    virtual void setMass() {
+        return;
+    }
 
-      Currently only implemented in EGS_XYZGeometry
-    */
+    /*! \brief Returns the regular mass of region ireg */
     virtual EGS_Float getMass(int ireg) {
         return 1.0;
     }

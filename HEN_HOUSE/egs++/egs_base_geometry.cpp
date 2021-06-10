@@ -243,15 +243,15 @@ public:
     };
 
     EGS_Float getMediumRho(int ind) const {
-        if (ind==-1) {
-            return -1;
+        if (ind < 0) {
+            return 0;
         }
         else {
             if (app) {
                 return app->getMediumRho(ind);
             }
             else {
-                return -1;
+                return 0;
             }
         }
     };
