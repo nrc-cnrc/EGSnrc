@@ -615,6 +615,11 @@ public:
         return first_parallel;
     };
 
+    /*! \brief Returns the active simulation geometry for the application. */
+    inline EGS_BaseGeometry *getGeometry() const {
+        return geometry;
+    }
+
     /*! \brief Calculates distance to a boundary along the current direction.
 
      This function implements the EGSnrc howfar geometry specification
@@ -922,7 +927,7 @@ protected:
 
      This function is re-implemented in the EGS_AdvancedApplication
      class, from which EGSnrc applications using the mortran EGSnrc
-     physics subroutines should be derived. The defualt implementation
+     physics subroutines should be derived. The default implementation
      is to set transport parameter and cross section options
      from input between :start MC Transport parameter: and
      :stop MC Transport parameter: in the input file,

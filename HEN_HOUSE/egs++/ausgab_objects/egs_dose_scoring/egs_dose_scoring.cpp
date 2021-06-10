@@ -340,7 +340,7 @@ void EGS_DoseScoring::reportResults() {
                     continue;
                 }
                 int imed = app->getMedium(ireg);
-                EGS_Float rho = app->getMediumRho(imed);
+                EGS_Float rho = app->getMediumRho(imed) * app->getGeometry()->getRelativeRho(ireg);
                 EGS_Float mass = vol[ireg]*rho;
                 dose->currentResult(d_reg_index[ireg],r,dr);
                 if (r > 0) {
@@ -349,8 +349,12 @@ void EGS_DoseScoring::reportResults() {
                 else {
                     dr=1;
                 }
+                EGS_Float finalDose = 0;
+                if(mass > 0) {
+                    finalDose = r*normD/mass;
+                }
                 egsInformation("%*d %-*s %7.3f   %8.4f %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
-                               irmax_digits,ireg,max_medl,app->getMediumName(imed),rho,vol[ireg],r*normE,dr*100.,r*normD/mass,dr*100.);
+                               irmax_digits,ireg,max_medl,app->getMediumName(imed),rho,vol[ireg],r*normE,dr*100.,finalDose,dr*100.);
             }
         }
         egsInformation("%s\n",line.c_str());
@@ -362,7 +366,7 @@ void EGS_DoseScoring::reportResults() {
             if (app->isRealRegion(ir)) {
                 imed = app->getMedium(ir);
                 EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
-                massM[imed] += app->getMediumRho(imed)*volume;
+                massM[imed] += app->getMediumRho(imed) * app->getGeometry()->getRelativeRho(ir) * volume;
             }
         }
         if (normE==1) {
@@ -385,9 +389,13 @@ void EGS_DoseScoring::reportResults() {
             doseM->currentResult(im,r,dr);
             if (r > 0) {
                 dr = dr/r;
+                EGS_Float finalDose = 0;
+                if(massM[im] > 0) {
+                    finalDose = r*normD/massM[im];
+                }
                 egsInformation(
                     "%-*s %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
-                    max_medl,app->getMediumName(im),r*normE,dr*100.,r*normD/massM[im],dr*100.);
+                    max_medl,app->getMediumName(im),r*normE,dr*100.,finalDose,dr*100.);
             }
         }
         egsInformation("%s\n",line.c_str());
@@ -444,7 +452,12 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
         for (int i=0; i<nx*ny*nz; i++) {
             doseF->currentResult(i,r,dr);
             EGS_Float mass = dose_geom->getMass(i); //local reg.
-            dose=r*normD/mass;
+            if(mass > 0) {
+                dose = r*normD/mass;
+            } else {
+                dose = 0;
+            }
+
             df_out << dose << " ";
         }
         df_out << endl;

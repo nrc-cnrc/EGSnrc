@@ -40,6 +40,7 @@
 #include "egs_spheres.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+#include "egs_application.h"
 
 #include <vector>
 using std::vector;
@@ -50,6 +51,8 @@ string EGS_cSpheres::type = "EGS_cSpheres";
 EGS_cSpheres::EGS_cSpheres(int ns, const EGS_Float *radius,
                            const EGS_Vector &position, const string &Name) :
     EGS_BaseGeometry(Name), xo(position) {
+
+    setApplication(EGS_Application::activeApplication());
 
     if (ns>0) {
 
@@ -68,10 +71,6 @@ EGS_cSpheres::EGS_cSpheres(int ns, const EGS_Float *radius,
 
     for (int ireg=0; ireg < ns; ireg++) {
         rbounds.push_back(radius[ireg]);
-        EGS_Float router = rbounds[ireg];
-        EGS_Float rinner = ireg > 0 ? rbounds[ireg-1] : 0;
-        EGS_Float volume = (4./3.)*M_PI*(router*router*router - rinner*rinner*rinner);
-        mass.push_back(getRelativeRho(ireg) * volume);
     }
 }
 
@@ -346,6 +345,14 @@ int EGS_cSpheres::getNRegDir(int dir) {
     return EGS_BaseGeometry::getNRegDir(dir);
 }
 
+void EGS_cSpheres::setMass() {
+    for (int ireg=0; ireg < rbounds.size(); ireg++) {
+        EGS_Float router = rbounds[ireg];
+        EGS_Float rinner = ireg > 0 ? rbounds[ireg-1] : 0;
+        EGS_Float volume = (4./3.)*M_PI*(router*router*router - rinner*rinner*rinner);
+        mass.push_back(app->getMediumRho(medium(ireg)) * getRelativeRho(ireg) * volume);
+    }
+}
 
 EGS_Float EGS_cSpheres::getMass(int ireg) {
     if (ireg >= 0 && ireg < nreg) {
@@ -363,6 +370,8 @@ EGS_cSphericalShell::EGS_cSphericalShell(int ns, const EGS_Float *radius,
         const EGS_Vector &position, const string &Name) :
     EGS_BaseGeometry(Name), xo(position) {
 
+    setApplication(EGS_Application::activeApplication());
+
     is_convex = false;
 
     if (ns>0) {
@@ -377,13 +386,6 @@ EGS_cSphericalShell::EGS_cSphericalShell(int ns, const EGS_Float *radius,
 
         // for n-concentric spheres (with hollow centre), we have n - 1 separate regions
         nreg = ns - 1;
-    }
-
-    for (int ireg=0; ireg < nreg; ireg++) {
-        EGS_Float rinner = R[ireg];
-        EGS_Float router = R[ireg + 1];
-        EGS_Float volume = (4./3.)*M_PI*(router*router*router - rinner*rinner*rinner);
-        mass.push_back(getRelativeRho(ireg) * volume);
     }
 }
 
@@ -659,6 +661,14 @@ int EGS_cSphericalShell::getNRegDir(int dir) {
     return EGS_BaseGeometry::getNRegDir(dir);
 }
 
+void EGS_cSphericalShell::setMass() {
+    for (int ireg=0; ireg < nreg; ireg++) {
+        EGS_Float rinner = R[ireg];
+        EGS_Float router = R[ireg + 1];
+        EGS_Float volume = (4./3.)*M_PI*(router*router*router - rinner*rinner*rinner);
+        mass.push_back(app->getMediumRho(medium(ireg)) * getRelativeRho(ireg) * volume);
+    }
+}
 
 EGS_Float EGS_cSphericalShell::getMass(int ireg) {
     if (ireg >= 0 && ireg < nreg) {

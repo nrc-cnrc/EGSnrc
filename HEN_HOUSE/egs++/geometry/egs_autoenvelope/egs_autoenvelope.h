@@ -402,6 +402,8 @@ public:
 
     int getMaxStep() const;
 
+    void setMass();
+
     virtual EGS_Float getMass(int ireg);
 
     virtual EGS_Float getMassCorrectionRatio(int ireg);
@@ -444,6 +446,7 @@ public:
 protected:
 
     EGS_BaseGeometry *base_geom;           //!< The envelope geometry
+    const vector<AEnvelopeAux> inscribedAux;
     vector<EGS_BaseGeometry *> inscribed_geoms; //!< The inscribed geometries
     vector<EGS_AffineTransform *> transforms; //!< The inscribed geometries
     vector<volcor::VCOptions *> opts; //!< The inscribed geometries

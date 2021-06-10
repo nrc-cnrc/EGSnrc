@@ -183,8 +183,15 @@ public:
     /*! \brief Implement geNRegDir for spherical regions */
     int getNRegDir(int dir);
 
+    /*! \brief Implement setMass for spherical regions */
+    void setMass();
+
     /*! \brief Implement getMass for spherical regions */
     EGS_Float getMass(int ireg);
+
+    void setApplication(EGS_Application *App) {
+        app = App;
+    };
 
 private:
 
@@ -247,8 +254,14 @@ public:
     EGS_Float getBound(int idir, int ind);
 
     int getNRegDir(int dir);
+    
+    void setMass();
 
     EGS_Float getMass(int ireg);
+
+    void setApplication(EGS_Application *App) {
+        app = App;
+    };
 
 private:
 

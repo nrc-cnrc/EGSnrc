@@ -686,6 +686,10 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
         }
     }
 
+    // Set the mass in geometries (only a few have defined this function)
+    // This happens after hatch so that the media densities can be used
+    geometry->setMass();
+
     egsInformation("\n\nThe following media are defined:\n"
                    "================================\n\n");
     EGS_Float Emax = source ? source->getEmax() : 0;
