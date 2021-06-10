@@ -350,7 +350,7 @@ void EGS_DoseScoring::reportResults() {
                     dr=1;
                 }
                 EGS_Float finalDose = 0;
-                if(mass > 0) {
+                if (mass > 0) {
                     finalDose = r*normD/mass;
                 }
                 egsInformation("%*d %-*s %7.3f   %8.4f %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
@@ -390,7 +390,7 @@ void EGS_DoseScoring::reportResults() {
             if (r > 0) {
                 dr = dr/r;
                 EGS_Float finalDose = 0;
-                if(massM[im] > 0) {
+                if (massM[im] > 0) {
                     finalDose = r*normD/massM[im];
                 }
                 egsInformation(
@@ -452,9 +452,10 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
         for (int i=0; i<nx*ny*nz; i++) {
             doseF->currentResult(i,r,dr);
             EGS_Float mass = dose_geom->getMass(i); //local reg.
-            if(mass > 0) {
+            if (mass > 0) {
                 dose = r*normD/mass;
-            } else {
+            }
+            else {
                 dose = 0;
             }
 

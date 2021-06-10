@@ -254,7 +254,7 @@ public:
     EGS_Float getBound(int idir, int ind);
 
     int getNRegDir(int dir);
-    
+
     void setMass();
 
     EGS_Float getMass(int ireg);
