@@ -1359,7 +1359,7 @@ EGS_Particle EGS_AdvancedApplication::getParticleFromStack(int ip) {
     p.q = the_stack->iq[ip];
     p.E = the_stack->E[ip];
     p.latch = the_stack->latch[ip];
-    p.ir = the_stack->ir[ip];
+    p.ir = the_stack->ir[ip]-2;
     p.wt = the_stack->wt[ip];
     p.x = EGS_Vector(the_stack->x[ip],the_stack->y[ip],the_stack->z[ip]);
     p.u = EGS_Vector(the_stack->u[ip],the_stack->v[ip],the_stack->w[ip]);
@@ -1371,7 +1371,7 @@ void EGS_AdvancedApplication::updateParticleOnStack(int ip, EGS_Particle p, EGS_
     the_stack->iq[ip] = p.q;
     the_stack->E[ip] = p.E;
     the_stack->latch[ip] = p.latch;
-    the_stack->ir[ip] = p.ir;
+    the_stack->ir[ip] = p.ir+2;
     the_stack->wt[ip] = p.wt;
     the_stack->x[ip] = p.x.x;
     the_stack->y[ip] = p.x.y;
