@@ -351,7 +351,7 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         }
         return node_it->second;
     };
-    for (int i = 0; i < _elements.size(); i++) {
+    for (int i = 0; i < static_cast<int>(_elements.size()); i++) {
         _elt_tags.push_back(i);
         const auto& e = _elements[i];
         auto a = find_node(e.a);
@@ -701,9 +701,6 @@ int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     return min_reg;
 }
 
-// TODO
-static char EGS_MESH_LOCAL geom_class_msg[] = "createGeometry(Mesh): %s\n";
-
 void EGS_Mesh::printInfo() const {
     EGS_BaseGeometry::printInfo();
     std::ostringstream oss;
@@ -714,37 +711,40 @@ void EGS_Mesh::printInfo() const {
 extern "C" {
     EGS_MESH_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
-            egsWarning(geom_class_msg, "null input");
+            egsWarning("createGeometry(EGS_Mesh): null input\n");
             return nullptr;
         }
         std::string mesh_file;
         int err = input->getInput("file", mesh_file);
         if (err) {
-            egsWarning(geom_class_msg, "no mesh file specified in input");
+            egsWarning("createGeometry(EGS_Mesh): no mesh file key `file` in input\n");
             return nullptr;
         }
-        if (mesh_file.length() >= 4 && mesh_file.rfind(".msh") == mesh_file.length() - 4)
-        {
-            std::ifstream input_file(mesh_file);
-            if (!input_file) {
-                egsWarning("unable to open file: `%s`", mesh_file.c_str());
-                return nullptr;
-            }
-            EGS_Mesh* mesh = EGS_Mesh::parse_msh_file(input_file);
-            if (!mesh) {
-                egsWarning("EGS_Mesh::from_file: Gmsh msh file parsing failed\n");
-                return nullptr;
-            }
-            mesh->setFilename(mesh_file);
-            mesh->setName(input);
-            for (const auto& medium: mesh->medium_names()) {
-                mesh->addMedium(medium);
-            }
-            return mesh;
+        if (!(mesh_file.length() >= 4 && mesh_file.rfind(".msh") == mesh_file.length() - 4)) {
+            egsWarning("createGeometry(EGS_Mesh): unknown file extension for file `%s`,"
+                "only `.msh` is allowed\n", mesh_file.c_str());
+            return nullptr;
         }
-        egsWarning("EGS_Mesh::from_file: unknown file extension for file `%s`,"
-            "only `.msh` is allowed\n", mesh_file.c_str());
-        return nullptr;
+        std::ifstream input_file(mesh_file);
+        if (!input_file) {
+            egsWarning("createGeometry(EGS_Mesh): unable to open file: `%s`\n"
+                "\thelp => try using the absolute path to the mesh file",
+                mesh_file.c_str());
+            return nullptr;
+        }
+        EGS_Mesh* mesh = EGS_Mesh::parse_msh_file(input_file);
+        if (!mesh) {
+            egsWarning("createGeometry(EGS_Mesh): Gmsh msh file parsing failed\n");
+            return nullptr;
+        }
+        mesh->setFilename(mesh_file);
+        mesh->setBoundaryTolerance(input);
+        mesh->setName(input);
+        mesh->setLabels(input);
+        for (const auto& medium: mesh->medium_names()) {
+            mesh->addMedium(medium);
+        }
+        return mesh;
     }
 }
 

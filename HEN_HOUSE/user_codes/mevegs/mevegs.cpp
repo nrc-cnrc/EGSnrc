@@ -533,6 +533,10 @@ int Mevegs_Application::addState(istream &data) {
 void Mevegs_Application::outputResults() {
     egsInformation("\n\n last case = %d Etot = %g\n",
                    (int)current_case,Etot);
+    writeGmsh();
+    if (nreg > 100) {
+        return;
+    }
     double norm = ((double)current_case)/Etot;
 
     egsInformation("\n\n======================================================\n");
@@ -564,8 +568,6 @@ void Mevegs_Application::outputResults() {
             }
         }
     }
-
-    writeGmsh();
 }
 
 void Mevegs_Application::writeGmsh() {
@@ -575,17 +577,24 @@ void Mevegs_Application::writeGmsh() {
         return;
     }
 
-    // copy the input mesh file to make a new output file
-    std::ofstream out("mevegs-results.msh");
+    // make a copy of the input mesh file and append the results to it
+    auto filename = mesh->filename();
+    if (filename.empty()) {
+        egsWarning("\n EGS_Mesh has no filename, skipping mesh output step\n");
+        return;
+    }
+    std::string output_msh = EGS_Application::getFinalOutputFile() + "+" + filename;
+    std::ofstream out(output_msh);
+    if (!out) {
+        egsWarning("\n couldn't open \"%s\" for writing EGS_Mesh results\n",
+                   output_msh.c_str());
+        return;
+    }
     {
-        auto filename = mesh->filename();
-        if (filename.empty()) {
-            egsWarning("\n\n EGS_Mesh has no filename, skipping mesh output step\n\n");
-            return;
-        }
         std::ifstream in(filename);
         if (!in) {
-            egsWarning("\n\n Couldn't open EGS_Mesh input file, skipping mesh output step\n\n");
+            egsWarning("\n couldn't open EGS_Mesh input file \"%s\", skipping mesh output step\n",
+                       filename.c_str());
             return;
         }
         out << in.rdbuf();
