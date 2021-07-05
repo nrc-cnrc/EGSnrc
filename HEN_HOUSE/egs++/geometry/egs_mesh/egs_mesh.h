@@ -42,12 +42,14 @@
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <vector>
 
 #include "egs_base_geometry.h"
 #include "egs_vector.h"
 
+/*
 class point {
    EGS_Vector p_;
 public:
@@ -159,6 +161,7 @@ public:
         return *best_;
     }
 };
+*/
 
 #ifdef WIN32
 
@@ -185,6 +188,8 @@ public:
   \ingroup Geometry
   \ingroup ElementaryG
 */
+
+class EGS_Mesh_Octree;
 
 class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
 public:
@@ -318,6 +323,9 @@ public:
     EGS_Float hownear(int ireg, const EGS_Vector &x) override;
     void printInfo() const override;
 
+    // Check if a point x is inside element i.
+    bool insideElement(int i, const EGS_Vector &x);
+
 private:
     // `hownear` helper method
     // Given a tetrahedron ireg, find the minimum distance to a face in any direction.
@@ -334,9 +342,6 @@ private:
     // `howfar` helper method outside the mesh
     int howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         EGS_Float &t, int *newmed, EGS_Vector *normal);
-
-    // `isWhere` helper method to check if a point x is inside element i
-    bool insideElement(int i, const EGS_Vector &x);
 
     std::vector<int> findNeighbourhood(int elt);
 
@@ -375,7 +380,7 @@ private:
     std::vector<int> _medium_indices;
     std::vector<std::string> _medium_names;
     std::string _filename;
-    kdtree _lookup_tree;
+    std::unique_ptr<EGS_Mesh_Octree> _lookup_tree;
 
     std::vector<EGS_Mesh::Tetrahedron> _elements;
     std::vector<EGS_Mesh::Node> _nodes;
