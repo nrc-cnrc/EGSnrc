@@ -912,6 +912,7 @@ class VolumeViewer { // eslint-disable-line no-unused-vars
           .attr('width', mainViewerDimensions.width)
           .attr('height', mainViewerDimensions.height)
           .style('margin', this.getMarginStr(mainViewerDimensions.margin))
+          .style('cursor', 'pointer')
 
         this.svgObjs[className][axis] = plot
         this.axisObjs[axis][className] = plot
