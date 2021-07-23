@@ -190,6 +190,7 @@ EGS_Object *EGS_ObjectFactory::createObjects(EGS_Input *i,
         if (!o) egsWarning("EGS_ObjectFactory::createObjects(): an object "
                                "with the name %s does not exist\n",sought_object.c_str());
     }
+    delete input;
     return o;
 }
 
