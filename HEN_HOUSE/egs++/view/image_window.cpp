@@ -335,7 +335,7 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         yscreen = -(xyMouse.y()-h/2)*yscale/h;
         EGS_Vector xp(q.screen_xo + q.screen_v2*yscreen + q.screen_v1*xscreen);
 
-        int maxreg=min(int((h-145)/15),N_REG_MAX);
+        int maxreg = N_REG_MAX;
         int regions[maxreg];
         EGS_Vector colors[N_REG_MAX];
         EGS_Vector hitCoord(0,0,0);
