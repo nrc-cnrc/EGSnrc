@@ -571,7 +571,13 @@ int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u
         if (normal) {
             EGS_Vector ab = B - A;
             EGS_Vector ac = C - A;
-            *normal = cross(ab, ac);
+            EGS_Vector n = cross(ab, ac);
+            // egs++ convention is normal pointing opposite view ray
+            if (dot(n, u) > 0) {
+                n = -1.0 * n;
+            }
+            n.normalize();
+            *normal = n;
         }
     };
 
@@ -686,18 +692,23 @@ int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u
         *newmed = medium(min_reg);
     }
     if (normal) {
-        const auto& n = element_nodes(ireg);
+        EGS_Vector tmp_normal;
+        const auto& n = element_nodes(min_reg);
         switch(min_reg_face) {
-            case 0: *normal = cross(n.C - n.B, n.D - n.B); break;
-            case 1: *normal = cross(n.C - n.A, n.D - n.A); break;
-            case 2: *normal = cross(n.B - n.A, n.D - n.A); break;
-            case 3: *normal = cross(n.B - n.A, n.C - n.A); break;
+            case 0: tmp_normal = cross(n.C - n.B, n.D - n.B); break;
+            case 1: tmp_normal = cross(n.C - n.A, n.D - n.A); break;
+            case 2: tmp_normal = cross(n.B - n.A, n.D - n.A); break;
+            case 3: tmp_normal = cross(n.B - n.A, n.C - n.A); break;
             default: throw std::runtime_error("Bad intersection, got face index: " +
                 std::to_string(min_reg_face));
         }
+        // egs++ convention is normal pointing opposite view ray
+        if (dot(tmp_normal, u) > 0) {
+            tmp_normal = -1.0 * tmp_normal;
+        }
+        tmp_normal.normalize();
+        *normal = tmp_normal;
     }
-    //out << "got min_reg: " << min_reg << "\n";
-    //egsWarning("%s", out.str().c_str());
     return min_reg;
 }
 
