@@ -12,20 +12,26 @@ Vagrant.configure("2") do |config|
         virtualbox-guest-x11
      # Add `vagrant` to Administrator
      usermod -a -G sudo vagrant
+     usermod -aG vboxsf vagrant
 
      apt-get install -y git gcc g++ gfortran make tk expect \
        libmotif-dev qt5-default imagej
-     git clone https://github.com/nrc-cnrc/EGSnrc.git
-     cd EGSnrc
-     ./HEN_HOUSE/scripts/configure.expect linux.conf 1
+     if [ ! -d "/vagrant/EGSnrc" ]; then
+       cd /home/vagrant
+       sudo -i -u vagrant git clone https://github.com/nrc-cnrc/EGSnrc.git
+       cd EGSnrc
+     else
+       cd /vagrant/EGSnrc
+     fi
+     sudo -i -u vagrant ./HEN_HOUSE/scripts/configure.expect linux.conf 1
      echo "export EGS_HOME=/home/vagrant/EGSnrc/egs_home/" >> /home/vagrant/.bashrc
      echo "export EGS_CONFIG=/home/vagrant/EGSnrc/HEN_HOUSE/specs/linux.conf" >> /home/vagrant/.bashrc
      echo "source /home/vagrant/EGSnrc/HEN_HOUSE/scripts/egsnrc_bashrc_additions" >> /home/vagrant/.bashrc
      source /home/vagrant/.bashrc
      echo $EGS_HOME
      cd $HEN_HOUSE/gui
-     make --quiet --print-directory
+     sudo -i -u vagrant make --quiet --print-directory
      cd $HEN_HOUSE/egs++/view/
-     make --quiet --print-directory
+     sudo -i -u vagrant make --quiet --print-directory
    SHELL
 end
