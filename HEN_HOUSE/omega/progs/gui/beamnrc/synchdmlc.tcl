@@ -296,9 +296,9 @@ proc edit_SYNCHDMLC { id zmax } {
     set top .synchdmlc$id.top
 
 
-    label $top.mainlabel -text "Multi-leaf collimator $cm_ident($id)" \
-	    -font $helvfont
-    pack $top.mainlabel -side top -padx 10
+    #label $top.mainlabel -text "Multi-leaf collimator $cm_ident($id)" \
+#	    -font $helvfont
+   # pack $top.mainlabel -side top -padx 10
 
     # SYNCHDMLC_macros.mortran:REPLACE {$MAXLEAF} WITH {64}
     # read the macro file for CM SYNCHDMLC to get defaults and put a label on the
@@ -330,9 +330,9 @@ proc edit_SYNCHDMLC { id zmax } {
 	tk_dialog .nope "Too bad" "Couldn't get the defaults" info 0 OK
     }
 
-    label $top.default1 -text "The default maximum number\
-	    of leaves is $default1." -font $helvfont
-    pack $top.default1 -side top
+   # label $top.default1 -text "The default maximum number\
+#	    of leaves is $default1." -font $helvfont
+ #   pack $top.default1 -side top
 
     label $top.zmax -text $zmax -font $helvfont
     pack $top.zmax -pady 5
@@ -481,11 +481,11 @@ proc edit_SYNCHDMLC { id zmax } {
     pack $top.openings.label $top.openings.inps -side top
     pack $top.openings -side top -fill x
 
-    pack $top -side top -pady 5
+    pack $top -side top -pady 0
 
 #now get ecut,pcut,materials,etc
 
-    frame .synchdmlc$id.bottom -bd 4
+    frame .synchdmlc$id.bottom -bd 0
 
     frame .synchdmlc$id.bottom.ecut
     button .synchdmlc$id.bottom.ecut.b -text "?" -command \
@@ -597,7 +597,7 @@ proc edit_SYNCHDMLC { id zmax } {
 
     pack .synchdmlc$id.bottom -side top -pady 5
 
-    frame .synchdmlc$id.buts -bd 4
+    frame .synchdmlc$id.buts -bd 1
     button .synchdmlc$id.buts.okb -text "OK" -command "destroy .synchdmlc$id"\
 	    -relief groove -bd 8
     button .synchdmlc$id.buts.helpb -text "Help" -command\
@@ -2315,7 +2315,7 @@ proc draw_SYNCHDMLC { id } {
 
     # put the canvas up
     set ncan 3
-    set width 200.0
+    set width 150.0
     set canwidth [expr $width+150.0]
     set scrlheight [expr 2*$canwidth]
     set scrlwidth [expr 2*$canwidth]
