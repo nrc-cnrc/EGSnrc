@@ -13,12 +13,20 @@
 #include "egs_rndm.h"
 //! To get EGS_Mesh quantities
 #include "egs_mesh.h"
+//! To handle EGS_Mesh in an EGS_EnvelopeGeometry
+#include "egs_envelope_geometry.h"
 
 #include <algorithm>
 #include <cstdlib>
 #include <cassert>
 #include <fstream>
 using namespace std;
+
+// anonymous namespace
+namespace {
+    // Whether the geometry is a plain mesh or inside an envelope
+    enum class MevegsGeometry { Mesh, EnvelopedMesh };
+} // anonymous namespace
 
 class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
 
@@ -132,7 +140,7 @@ public:
     void writeGmsh();
 
     /*! Helper function that calculates the results and writes them to an output file. */
-    void writeGmshResults(std::ostream& out, const EGS_Mesh& mesh);
+    void writeGmshResults(std::ostream& out, const EGS_Mesh& mesh, MevegsGeometry geo_type);
 
     /*! Get the current simulation result.
      This function is called from the run control object in parallel runs
@@ -570,11 +578,39 @@ void Mevegs_Application::outputResults() {
     }
 }
 
+EGS_Mesh * extractEGSMesh(EGS_EnvelopeGeometry *env) {
+    if (!env) {
+        return nullptr;
+    }
+    std::size_t nInscribed = 0;
+    EGS_BaseGeometry **geometries = env->getInscribedGeometries(nInscribed);
+    if (!geometries) {
+        return nullptr;
+    }
+    // don't allow more than one inscribed geometry to simplify result
+    // indexing in writeGmshResults
+    if (nInscribed != 1) {
+        egsWarning("\nfound more than one inscribed geometry\n");
+        return nullptr;
+    }
+    EGS_Mesh *mesh = dynamic_cast<EGS_Mesh*>(geometries[0]);
+    if (!mesh) {
+        return nullptr;
+    }
+    return mesh;
+}
+
 void Mevegs_Application::writeGmsh() {
+    MevegsGeometry geo_type = MevegsGeometry::Mesh;
     EGS_Mesh *mesh = dynamic_cast<EGS_Mesh*>(geometry);
     if (!mesh) {
-        egsWarning("\n\n No mesh geometry found, skipping mesh output step\n\n");
-        return;
+        EGS_Mesh *inscribed_mesh = extractEGSMesh(dynamic_cast<EGS_EnvelopeGeometry*>(geometry));
+        if (!inscribed_mesh) {
+            egsWarning("\n No mesh geometry found, skipping mesh output step\n");
+            return;
+        }
+        mesh = inscribed_mesh;
+        geo_type = MevegsGeometry::EnvelopedMesh;
     }
 
     // make a copy of the input mesh file and append the results to it
@@ -600,7 +636,7 @@ void Mevegs_Application::writeGmsh() {
         out << in.rdbuf();
     }
 
-    writeGmshResults(out, *mesh);
+    writeGmshResults(out, *mesh, geo_type);
 }
 
 namespace {
@@ -639,18 +675,36 @@ EGS_Float abs_to_percent(EGS_Float val, EGS_Float uncert) {
 
 } // anonymous namespace
 
-void Mevegs_Application::writeGmshResults(std::ostream& out, const EGS_Mesh& mesh) {
+void Mevegs_Application::writeGmshResults(std::ostream& out, const EGS_Mesh& mesh,
+    MevegsGeometry geo_type)
+{
     auto n_elts = mesh.num_elements();
     std::vector<double> e_deps;
     std::vector<double> uncerts;
     e_deps.reserve(n_elts);
     uncerts.reserve(n_elts);
-    // the score array is mesh size + 2, first elt is reflected, last is transmitted
-    // start at 1 to skip reflected energy reflected, stop 1 before end to skip transmitted
-    assert(score->regions() == n_elts + 2);
-    for (int i = 1; i < n_elts + 1; ++i) {
+
+    // offset into score array
+    int offset = 0;
+    switch (geo_type) {
+        // if it's a plain mesh being simulated, skip the first element (reflected energy)
+        case MevegsGeometry::Mesh:
+            assert(score->regions() == n_elts + 2);
+            offset = 1;
+            break;
+        // if it's a mesh in an envelope being simulated, skip two elements:
+        // reflected energy and the envelope
+        case MevegsGeometry::EnvelopedMesh:
+            assert(score->regions() == n_elts + 2 + 1);
+            offset = 2;
+            break;
+        default:
+            egsFatal("\nunhandled MevegsGeometry case in writeGmshResults\n");
+    }
+
+    for (int i = 0; i < n_elts; ++i) {
         double e_dep, uncert;
-        score->currentResult(i, e_dep, uncert);
+        score->currentResult(i + offset, e_dep, uncert);
         e_deps.push_back(e_dep);
         uncerts.push_back(abs_to_percent(e_dep, uncert));
     }

@@ -67,7 +67,8 @@ other_dep_user_code = $(ABS_EGSPP)egs_scoring.h
 
 include $(HEN_HOUSE)makefiles$(DSEP)cpp_makefile
 INCL += -I$(ABS_EGSPP)geometry$(DSEP)egs_mesh
-fortran_libs += -legs_mesh
+INCL += -I$(ABS_EGSPP)geometry$(DSEP)egs_genvelope
+fortran_libs += -legs_mesh -legs_genvelope
 
 #test_sources:
 #	@echo "$(C_SOURCES)"

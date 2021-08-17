@@ -558,6 +558,11 @@ public:
         return type;
     };
 
+    EGS_BaseGeometry ** getInscribedGeometries(std::size_t &nInscribed) const {
+        nInscribed = n_in;
+        return geometries;
+    }
+
     void printInfo() const;
 
     void setRelativeRho(int start, int end, EGS_Float rho);
