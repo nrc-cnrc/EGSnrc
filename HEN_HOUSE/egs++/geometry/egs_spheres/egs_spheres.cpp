@@ -70,8 +70,7 @@ EGS_cSpheres::EGS_cSpheres(int ns, const EGS_Float *radius,
         rbounds.push_back(radius[ireg]);
         EGS_Float router = rbounds[ireg];
         EGS_Float rinner = ireg > 0 ? rbounds[ireg-1] : 0;
-        EGS_Float volume = (4./3.)*M_PI*(router*router*router - rinner*rinner*rinner);
-        mass.push_back(getRelativeRho(ireg) * volume);
+        vol.push_back((4./3.)*M_PI*(router*router*router - rinner*rinner*rinner));
     }
 }
 
@@ -347,9 +346,9 @@ int EGS_cSpheres::getNRegDir(int dir) {
 }
 
 
-EGS_Float EGS_cSpheres::getMass(int ireg) {
+EGS_Float EGS_cSpheres::getVolume(int ireg) {
     if (ireg >= 0 && ireg < nreg) {
-        return mass[ireg];
+        return vol[ireg];
     }
     return 1;
 }
@@ -382,8 +381,7 @@ EGS_cSphericalShell::EGS_cSphericalShell(int ns, const EGS_Float *radius,
     for (int ireg=0; ireg < nreg; ireg++) {
         EGS_Float rinner = R[ireg];
         EGS_Float router = R[ireg + 1];
-        EGS_Float volume = (4./3.)*M_PI*(router*router*router - rinner*rinner*rinner);
-        mass.push_back(getRelativeRho(ireg) * volume);
+        vol.push_back((4./3.)*M_PI*(router*router*router - rinner*rinner*rinner));
     }
 }
 
@@ -660,9 +658,9 @@ int EGS_cSphericalShell::getNRegDir(int dir) {
 }
 
 
-EGS_Float EGS_cSphericalShell::getMass(int ireg) {
+EGS_Float EGS_cSphericalShell::getVolume(int ireg) {
     if (ireg >= 0 && ireg < nreg) {
-        return mass[ireg];
+        return vol[ireg];
     }
     return 1;
 }
