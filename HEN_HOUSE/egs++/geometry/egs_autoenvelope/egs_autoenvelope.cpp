@@ -59,7 +59,7 @@
 
 string EGS_AENVELOPE_LOCAL EGS_AEnvelope::type = "EGS_AEnvelope";
 string EGS_AENVELOPE_LOCAL EGS_ASwitchedEnvelope::type = "EGS_ASwitchedEnvelope";
-/* only geometries that support getting regional volume/mass can be used as phantoms */
+/* only geometries that support getting regional volume can be used as phantoms */
 const string EGS_AENVELOPE_LOCAL EGS_AEnvelope::allowed_base_geom_types[] = {"EGS_cSpheres", "EGS_cSphericalShell", "EGS_XYZGeometry", "EGS_RZ"};
 
 static char EGS_AENVELOPE_LOCAL geom_class_msg[] = "createGeometry(AEnvelope): %s\n";
@@ -82,7 +82,7 @@ EGS_AEnvelope::EGS_AEnvelope(EGS_BaseGeometry *base_geom,
 
         string msg(
             "EGS_AEnvelope:: Volume correction is not available for geometry type '%s (%s)'. "
-            "Geometry types must implement getMass.  Valid choices are:\n\t"
+            "Geometry types must implement getVolume.  Valid choices are:\n\t"
         );
 
         int end = (int)(sizeof(allowed_base_geom_types)/sizeof(string));
@@ -98,12 +98,6 @@ EGS_AEnvelope::EGS_AEnvelope(EGS_BaseGeometry *base_geom,
     nregbase = base_geom->regions();
     is_convex = base_geom->isConvex();
     has_rho_scaling = getHasRhoScaling();
-
-    // initialize uncorrected/corrected masses
-    for (int ir = 0; ir < nregbase; ir++) {
-        uncorrected_mass.push_back(base_geom->getMass(ir));
-        corrected_mass.push_back(base_geom->getMass(ir));
-    }
 
     ninscribed = inscribed.size();
     if (ninscribed == 0) {
@@ -154,12 +148,6 @@ EGS_AEnvelope::EGS_AEnvelope(EGS_BaseGeometry *base_geom,
             it!=vc_results.regions_with_inscribed.end(); it++) {
         nreg_with_inscribed++;
         copy(it->second.begin(), it->second.end(), back_inserter(geoms_in_region[it->first]));
-    }
-
-    // set mass correction based on volume correction
-    for (int ir = 0; ir < nregbase; ir++) {
-        double volume_ratio = vc_results.corrected_volumes[ir]/vc_results.uncorrected_volumes[ir];
-        corrected_mass[ir] = uncorrected_mass[ir]*volume_ratio;
     }
 
     if (getNRegWithInscribed() == 0) {
@@ -618,24 +606,24 @@ int EGS_AEnvelope::getMaxStep() const {
     return nstep + inscribed_geoms.size();
 };
 
-EGS_Float EGS_AEnvelope::getMass(int ireg) {
+EGS_Float EGS_AEnvelope::getVolume(int ireg) {
 
     if (ireg < 0) {
         return -1;
     }
     else if (ireg < nregbase) {
-        return corrected_mass[ireg];
+        return vc_results.corrected_volumes[ireg];
     }
 
     volcor::GeomRegPairT local = global_reg_to_local[ireg];
 
-    return local.first->getMass(local.second);
+    return local.first->getVolume(local.second);
 };
 
-EGS_Float EGS_AEnvelope::getMassCorrectionRatio(int ireg) {
+EGS_Float EGS_AEnvelope::getCorrectionRatio(int ireg) {
 
     if (0 <= ireg && ireg < nregbase) {
-        return corrected_mass[ireg]/uncorrected_mass[ireg];
+        return vc_results.corrected_volumes[ireg]/vc_results.uncorrected_volumes[ireg];
     }
 
     return 1;
@@ -653,15 +641,15 @@ void EGS_AEnvelope::printInfo() const {
     if (debug_info) {
 
         for (int ir=0; ir < nregbase; ir++) {
-            if (fabs(uncorrected_mass[ir] - corrected_mass[ir]) > 1E-8) {
-                egsInformation("    mass of region %d was corrected from %.5E g to %.5E g\n",
-                               ir, uncorrected_mass[ir], corrected_mass[ir]);
+            if (fabs(vc_results.uncorrected_volumes[ir] - vc_results.corrected_volumes[ir]) > 1E-8) {
+                egsInformation("    volume of region %d was corrected from %.5E g to %.5E g\n",
+                               ir, vc_results.uncorrected_volumes[ir], vc_results.corrected_volumes[ir]);
             }
         }
 
         for (int ir=0; ir < nregbase; ir++) {
             if (geoms_in_region[ir].size() > 0) {
-                egsInformation("    region %d has %d insribed geometries\n", ir, geoms_in_region[ir].size());
+                egsInformation("    region %d has %d inscribed geometries\n", ir, geoms_in_region[ir].size());
             }
         }
     }

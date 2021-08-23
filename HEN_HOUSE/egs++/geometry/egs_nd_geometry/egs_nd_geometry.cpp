@@ -42,7 +42,6 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 #include "egs_transformations.h"
-#include "egs_application.h"
 
 #ifdef HAS_GZSTREAM
     #include "gzstream.h"
@@ -172,8 +171,6 @@ EGS_XYZGeometry::EGS_XYZGeometry(EGS_PlanesX *Xp, EGS_PlanesY *Yp,
     xpos = xp->getPositions();
     ypos = yp->getPositions();
     zpos = zp->getPositions();
-
-    setApplication(EGS_Application::activeApplication());
 }
 
 EGS_XYZGeometry::~EGS_XYZGeometry() {

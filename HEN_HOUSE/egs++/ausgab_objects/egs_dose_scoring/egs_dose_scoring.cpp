@@ -132,7 +132,7 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     // Get the number of media in the input file
     nmedia = app->getnMedia();
     // determine maximum medium name length
-    char buf[32];
+    char buf[64];
     int count = 0;
     int imed=0;
     max_medl = 6;  // length of the string "medium" is the minimum
@@ -261,7 +261,6 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     description += buf;
     description += "--------------------------------------\n";
     for (imed=0; imed < nmedia; imed++) {
-        sprintf(buf,"%-*s",max_medl,app->getMediumName(imed));
         description += buf;
         description += "  ";
         sprintf(buf,"%11.8f",app->getMediumRho(imed));
@@ -451,7 +450,7 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
         //divide dose by mass and output
         for (int i=0; i<nx*ny*nz; i++) {
             doseF->currentResult(i,r,dr);
-            EGS_Float mass = dose_geom->getMass(i); //local reg.
+            EGS_Float mass = dose_geom->getVolume(i)*getRealRho(i); //local reg.
             dose=r*normD/mass;
             df_out << dose << " ";
         }

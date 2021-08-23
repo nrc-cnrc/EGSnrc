@@ -164,7 +164,7 @@ If one of the geometries in the simulation is an EGS_XYZGeometry, then the user
 has the option to output the dose in the voxels of this geometry to a file.  Currently,
 the only available output format is the .3ddose format, which is familiar to users
 of DOSXYZnrc (see DOSXYZnrc users manual for more details). In this case,
-masses of each voxel are available through the member function getMass of
+masses of each voxel are available through the member function getVolume of
 EGS_XYZGeometry.  An example input to obtain a .3ddose file for an EGS_XYZGeometry is given below:
 
 \verbatim
@@ -298,6 +298,11 @@ public:
         }
         return (int)log10((float)imax);
     };
+
+    EGS_Float getRealRho(int ireg) {
+        int med = dose_geom->medium(ireg);
+        return dose_geom->getRelativeRho(ireg)*app->getMediumRho(med);
+    }
 
     void setVol(const vector<EGS_Float> volin) {
         vol_list=volin;

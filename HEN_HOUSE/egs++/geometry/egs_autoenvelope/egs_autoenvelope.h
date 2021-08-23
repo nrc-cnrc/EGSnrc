@@ -402,9 +402,9 @@ public:
 
     int getMaxStep() const;
 
-    virtual EGS_Float getMass(int ireg);
+    virtual EGS_Float getVolume(int ireg);
 
-    virtual EGS_Float getMassCorrectionRatio(int ireg);
+    virtual EGS_Float getCorrectionRatio(int ireg);
 
     virtual const string &getType() const {
         return type;
@@ -461,10 +461,6 @@ protected:
 
     //keep track of which geometries are present in which base geometry regions
     vector<EGS_BaseGeometry *> *geoms_in_region;
-
-    // base geometry mass correction by region
-    vector<EGS_Float> uncorrected_mass;
-    vector<EGS_Float> corrected_mass;
 
     static string type;    //!< Geometry type
 
