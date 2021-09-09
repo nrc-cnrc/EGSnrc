@@ -58,7 +58,8 @@ inline bool approx_eq(double a, double b, double eps = 1e-5) {
 }
 
 void print_egsvec(const EGS_Vector& v, std::ostream& out = std::cout) {
-    out << "{\n  x: " << v.x << "\n  y: " << v.y << "\n  z: " << v.z << "\n}\n";
+    out << std::setprecision(std::numeric_limits<double>::max_digits10) <<
+    "{\n  x: " << v.x << "\n  y: " << v.y << "\n  z: " << v.z << "\n}\n";
 }
 
 inline EGS_Float dot(const EGS_Vector &x, const EGS_Vector &y) {
@@ -318,6 +319,9 @@ class EGS_Mesh_Octree {
         Point b;
         Point c;
         Point d;
+        Point centroid() const {
+            return ::centroid(a, b, c, d);
+        }
     };
     static double tet_min_x(const std::pair<int, Tet> &p) {
         const auto &t = p.second;
@@ -344,6 +348,7 @@ class EGS_Mesh_Octree {
         return std::max(t.a.z, std::max(t.b.z, std::max(t.c.z, t.d.z)));
     }
 
+    // An axis-aligned bounding box.
     struct BoundingBox {
         double min_x = 0.0;
         double max_x = 0.0;
@@ -363,6 +368,14 @@ class EGS_Mesh_Octree {
         }
         double mid_z() const {
             return (min_z + max_z) / 2.0;
+        }
+        void expand(double delta) {
+            min_x -= delta;
+            min_y -= delta;
+            min_z -= delta;
+            max_x += delta;
+            max_y += delta;
+            max_z += delta;
         }
         void print(std::ostream& out = std::cout) const {
             std::cout <<
@@ -384,256 +397,165 @@ class EGS_Mesh_Octree {
                 std::setprecision(std::numeric_limits<double>::max_digits10) <<
                     "max_z: " << max_z << "\n";
         }
+
+        bool contains(const Tet::Point& point) const {
+            // Inclusive at the lower bound, non-inclusive at the upper bound,
+            // so points on the interface between two bounding boxes only belong
+            // to one of them:
+            //
+            //  +---+---+
+            //  |   x   |
+            //  +---+---+
+            //        ^ belongs here
+            //
+            return point.x >= min_x && point.x < max_x &&
+                   point.y >= min_y && point.y < max_y &&
+                   point.z >= min_z && point.z < max_z;
+        }
+
+        bool contains(const Tet& tet) const {
+            // following Furuta et al, "Implementation of tetrahedral-mesh
+            // geometry in Monte Carlo radiation transport code PHITS",
+            // we consider a tetrahedron inside a bounding box if any of the
+            // points or the centre of mass are inside
+            // TODO: maybe consider midpoint of edge as well?
+            return contains(tet.a) || contains(tet.b) || contains(tet.c) ||
+                   contains(tet.d) || contains(tet.centroid());
+        }
+
+        bool is_indivisible() const {
+            // check if we're running up against precision limits
+            return approx_eq(min_x, mid_x()) ||
+                approx_eq(max_x, mid_x()) ||
+                approx_eq(min_y, mid_y()) ||
+                approx_eq(max_y, mid_y()) ||
+                approx_eq(min_z, mid_z()) ||
+                approx_eq(max_z, mid_z());
+
+        }
+
+        // Split into 8 equal octants. Octant numbering follows an S, i.e:
+        //
+        //        -z         +z
+        //     +---+---+  +---+---+
+        //     | 2 | 3 |  | 6 | 7 |
+        //  y  +---+---+  +---+---+
+        //  ^  | 0 | 1 |  | 4 | 5 |
+        //  |  +---+---+  +---+---+
+        //  + -- > x
+        //
+        std::array<BoundingBox, 8> divide8() const {
+            return {
+                BoundingBox (
+                    min_x, mid_x(),
+                    min_y, mid_y(),
+                    min_z, mid_z()
+                ),
+                BoundingBox(
+                    mid_x(), max_x,
+                    min_y, mid_y(),
+                    min_z, mid_z()
+                ),
+                BoundingBox(
+                    min_x, mid_x(),
+                    mid_y(), max_y,
+                    min_z, mid_z()
+                ),
+                BoundingBox(
+                    mid_x(), max_x,
+                    mid_y(), max_y,
+                    min_z, mid_z()
+                ),
+                BoundingBox(
+                    min_x, mid_x(),
+                    min_y, mid_y(),
+                    mid_z(), max_z
+                ),
+                BoundingBox(
+                    mid_x(), max_x,
+                    min_y, mid_y(),
+                    mid_z(), max_z
+                ),
+                BoundingBox(
+                    min_x, mid_x(),
+                    mid_y(), max_y,
+                    mid_z(), max_z
+                ),
+                BoundingBox(
+                    mid_x(), max_x,
+                    mid_y(), max_y,
+                    mid_z(), max_z
+                )
+            };
+        }
     };
     struct Node {
         std::vector<int> elts_;
         std::vector<Node> children_;
         BoundingBox bbox_;
         Node() = default;
+        // TODO: think about passing in EGS_Mesh as parameter
         Node(const std::vector<std::pair<int, Tet>> &elt_pairs, const BoundingBox& bbox)
             : bbox_(bbox)
         {
-            // check if we're running up against precision limits
-            bool indivisible =
-                approx_eq(bbox_.min_x, bbox_.mid_x()) ||
-                approx_eq(bbox_.max_x, bbox_.mid_x()) ||
-                approx_eq(bbox_.min_y, bbox_.mid_y()) ||
-                approx_eq(bbox_.max_y, bbox_.mid_y()) ||
-                approx_eq(bbox_.min_z, bbox_.mid_z()) ||
-                approx_eq(bbox_.max_z, bbox_.mid_z());
-            if (indivisible || elt_pairs.size() < 1000) {
-                //std::cout << "obtained octant with " << elt_pairs.size() << " elts\n";
-                //bbox_.print();
+            // TODO: max level and precision warning
+            if (bbox_.is_indivisible() || elt_pairs.size() < 200) {
                 elts_.reserve(elt_pairs.size());
                 for (const auto &p : elt_pairs) {
                     elts_.push_back(p.first);
                 }
                 return;
             }
-            // 0 -x-y-z
-            // 1 +x-y-z
-            // 2 +x+y-z
-            // 3 -x+y-z
-            // 4 -x-y+z
-            // 5 +x-y+z
-            // 6 +x+y+z
-            // 7 -x+y+z
-            std::vector<std::pair<int, Tet>> xlylzl;
-            std::vector<std::pair<int, Tet>> xgylzl;
-            std::vector<std::pair<int, Tet>> xgygzl;
-            std::vector<std::pair<int, Tet>> xlygzl;
-            std::vector<std::pair<int, Tet>> xlylzg;
-            std::vector<std::pair<int, Tet>> xgylzg;
-            std::vector<std::pair<int, Tet>> xgygzg;
-            std::vector<std::pair<int, Tet>> xlygzg;
 
-            bool found = false;
-            for (const auto& e : elt_pairs) {
-                if (tet_min_x(e) <= bbox_.mid_x() &&
-                    tet_min_y(e) <= bbox_.mid_y() &&
-                    tet_min_z(e) <= bbox_.mid_z())
-                {
-                    xlylzl.push_back(e);
-                    found = true;
-                }
-                if (tet_max_x(e) > bbox_.mid_x() &&
-                    tet_min_y(e) <= bbox_.mid_y() &&
-                    tet_min_z(e) <= bbox_.mid_z())
-                {
-                    xgylzl.push_back(e);
-                    found = true;
-                }
-                if (tet_max_x(e) > bbox_.mid_x() &&
-                    tet_max_y(e) > bbox_.mid_y() &&
-                    tet_min_z(e) <= bbox_.mid_z())
-                {
-                    xgygzl.push_back(e);
-                    found = true;
-                }
-                if (tet_min_x(e) <= bbox_.mid_x() &&
-                    tet_max_y(e) > bbox_.mid_y() &&
-                    tet_min_z(e) <= bbox_.mid_z())
-                {
-                    xlygzl.push_back(e);
-                    found = true;
-                }
-                if (tet_min_x(e) <= bbox_.mid_x() &&
-                    tet_min_y(e) <= bbox_.mid_y() &&
-                    tet_max_z(e) > bbox_.mid_z())
-                {
-                    xlylzg.push_back(e);
-                    found = true;
-                }
-                if (tet_max_x(e) > bbox_.mid_x() &&
-                    tet_min_y(e) <= bbox_.mid_y() &&
-                    tet_max_z(e) > bbox_.mid_z())
-                {
-                    xgylzg.push_back(e);
-                    found = true;
-                }
-                if (tet_max_x(e) > bbox_.mid_x() &&
-                    tet_max_y(e) > bbox_.mid_y() &&
-                    tet_max_z(e) > bbox_.mid_z())
-                {
-                    xgygzg.push_back(e);
-                    found = true;
-                }
-                if (tet_min_x(e) <= bbox_.mid_x() &&
-                    tet_max_y(e) > bbox_.mid_y() &&
-                    tet_max_z(e) > bbox_.mid_z())
-                {
-                    xlygzg.push_back(e);
-                    found = true;
-                }
-                if (!found) {
-                    throw std::runtime_error("uncategorized tet " + std::to_string(e.first));
-                }
-            }
-            //std::cout << "size of 0 " << xlylzl.size() << "\n";
-            //std::cout << "size of 1 " << xgylzl.size() << "\n";
-            //std::cout << "size of 2 " << xgygzl.size() << "\n";
-            //std::cout << "size of 3 " << xlygzl.size() << "\n";
-            //std::cout << "size of 4 " << xlylzg.size() << "\n";
-            //std::cout << "size of 5 " << xgylzg.size() << "\n";
-            //std::cout << "size of 6 " << xgygzg.size() << "\n";
-            //std::cout << "size of 7 " << xlygzg.size() << "\n";
-            children_ = {
-                Node(xlylzl, BoundingBox(
-                    bbox_.min_x, bbox_.mid_x(),
-                    bbox_.min_y, bbox_.mid_y(),
-                    bbox_.min_z, bbox_.mid_z()
-                )),
-                Node(xgylzl, BoundingBox(
-                    bbox_.mid_x(), bbox_.max_x,
-                    bbox_.min_y, bbox_.mid_y(),
-                    bbox_.min_z, bbox_.mid_z()
-                )),
-                Node(xgygzl, BoundingBox(
-                    bbox_.mid_x(), bbox_.max_x,
-                    bbox_.mid_y(), bbox_.max_y,
-                    bbox_.min_z, bbox_.mid_z()
-                )),
-                Node(xlygzl, BoundingBox(
-                    bbox_.min_x, bbox_.mid_x(),
-                    bbox_.mid_y(), bbox_.max_y,
-                    bbox_.min_z, bbox_.mid_z()
-                )),
-                Node(xlylzg, BoundingBox(
-                    bbox_.min_x, bbox_.mid_x(),
-                    bbox_.min_y, bbox_.mid_y(),
-                    bbox_.mid_z(), bbox_.max_z
-                )),
-                Node(xgylzg, BoundingBox(
-                    bbox_.mid_x(), bbox_.max_x,
-                    bbox_.min_y, bbox_.mid_y(),
-                    bbox_.mid_z(), bbox_.max_z
-                )),
-                Node(xgygzg, BoundingBox(
-                    bbox_.mid_x(), bbox_.max_x,
-                    bbox_.mid_y(), bbox_.max_y,
-                    bbox_.mid_z(), bbox_.max_z
-                )),
-                Node(xlygzg, BoundingBox(
-                    bbox_.min_x, bbox_.mid_x(),
-                    bbox_.mid_y(), bbox_.max_y,
-                    bbox_.mid_z(), bbox_.max_z
-                ))
-            };
-        }
+            std::array<std::vector<std::pair<int, Tet>>, 8> octants;
+            std::array<BoundingBox, 8> bbs = bbox_.divide8();
 
-        int findStartingOctant(const EGS_Vector &p) const {
-            if (p.x <= bbox_.mid_x() && p.x >= bbox_.min_x &&
-                p.y <= bbox_.mid_y() && p.y >= bbox_.min_y &&
-                p.z <= bbox_.mid_z() && p.z >= bbox_.min_z) {
-                //std::cout << "xlylzl\n";
-                //std::cout << "selecting octant 0\n";
-                return 0;
+            // elements may be in more than one bounding box
+            for (const auto &elt : elt_pairs) {
+                bool found = false;
+                for (int i = 0; i < 8; i++) {
+                    if (bbs[i].contains(elt.second)) {
+                        octants[i].push_back(elt);
+                        found = true;
+                    }
+                }
+                if (!found) { throw std::runtime_error(
+                    "uncategorized tet " + std::to_string(elt.first));
+                }
             }
-            if (p.x >= bbox_.mid_x() && p.x <= bbox_.max_x &&
-                p.y <= bbox_.mid_y() && p.y >= bbox_.min_y &&
-                p.z <= bbox_.mid_z() && p.z >= bbox_.min_z) {
-                //std::cout << "xgylzl\n";
-                //std::cout << "selecting octant 1\n";
-                return 1;
+
+            for (int i = 0; i < 8; i++) {
+                children_.push_back(Node(std::move(octants[i]), std::move(bbs[i])));
             }
-            if (p.x >= bbox_.mid_x() && p.x <= bbox_.max_x &&
-                p.y >= bbox_.mid_y() && p.y <= bbox_.max_y &&
-                p.z <= bbox_.mid_z() && p.z >= bbox_.min_z) {
-                //std::cout << "xgygzl\n";
-                //std::cout << "selecting octant 2\n";
-                return 2;
-            }
-            if (p.x <= bbox_.mid_x() && p.x >= bbox_.min_x &&
-                p.y >= bbox_.mid_y() && p.y <= bbox_.max_y &&
-                p.z <= bbox_.mid_z() && p.z >= bbox_.min_z) {
-                //std::cout << "xlygzl\n";
-                //std::cout << "selecting octant 3\n";
-                return 3;
-            }
-            if (p.x <= bbox_.mid_x() && p.x >= bbox_.min_x &&
-                p.y <= bbox_.mid_y() && p.y >= bbox_.min_y &&
-                p.z >= bbox_.mid_z() && p.z <= bbox_.max_z) {
-                //std::cout << "xlylzg\n";
-                //std::cout << "selecting octant 4\n";
-                return 4;
-            }
-            if (p.x >= bbox_.mid_x() && p.x <= bbox_.max_x &&
-                p.y <= bbox_.mid_y() && p.y >= bbox_.min_y &&
-                p.z >= bbox_.mid_z() && p.z <= bbox_.max_z) {
-                //std::cout << "xgylzg\n";
-                //std::cout << "selecting octant 5\n";
-                return 5;
-            }
-            if (p.x >= bbox_.mid_x() && p.x <= bbox_.max_x &&
-                p.y >= bbox_.mid_y() && p.y <= bbox_.max_y &&
-                p.z >= bbox_.mid_z() && p.z <= bbox_.max_z) {
-                //std::cout << "xgygzg\n";
-                //std::cout << "selecting octant 6\n";
-                return 6;
-            }
-            if (p.x <= bbox_.mid_x() && p.x >= bbox_.min_x &&
-                p.y >= bbox_.mid_y() && p.y <= bbox_.max_y &&
-                p.z >= bbox_.mid_z() && p.z <= bbox_.max_z) {
-                //std::cout << "xlygzg\n";
-                //std::cout << "selecting octant 7\n";
-                return 7;
-            }
-            return -1;
-            //std::ostringstream oss;
-            //print_egsvec(p, oss);
-            //throw std::runtime_error("findTetrahedron: uncategorizable point " + oss.str());
         }
 
         // Does not mutate the EGS_Mesh.
-        int findTetrahedron(const EGS_Vector &p, /*const*/ EGS_Mesh &mesh) const {
-            //for (const auto &e: elts_) {
-            //    std::cout << e << "\n";
-            //}
+        int isWhere(const EGS_Vector &p, /*const*/ EGS_Mesh &mesh) const {
+            if (!bbox_.contains(p)) {
+                return -1;
+            }
+            // Leaf node: search all bounded elements, and return -1 if the
+            // point isn't contained in any element
             if (children_.empty()) {
                 for (const auto &e: elts_) {
-                 //   std::cout << "looking at element " << e << "\n";
                     if (mesh.insideElement(e, p)) {
                         return e;
                     }
                 }
                 return -1;
             }
-            int octant = findStartingOctant(p);
-            if (octant == -1) {
-                return -1;
-            }
-            //std::cout << "starting in octant " << octant << "\n";
-            for (int count = 0; count < 8; count++) {
-                //std::cout << "looking in octant " << octant << " \n";
-                //children_.at(octant).bbox_.print();
-                auto elt = children_.at(octant).findTetrahedron(p, mesh);
-                if (elt != -1) {
-                 //   std::cout << "found elt " << elt << "\n";
-                    return elt;
-                }
-                octant = (octant + 1) % 8;
-            }
-            return -1;
+
+            // Parent node: decide which octant to search and descend the tree
+            //
+            // Our choice of octant ordering (see BoundingBox.divide8) means we
+            // can determine the correct octant with three checks. E.g. octant 0
+            // is (-x, -y, -z), octant 1 is (+x, -y, -z), octant 4 is (-x, -y, +z)
+            // octant 7 is (+x, +y, +z), etc.
+            std::size_t octant = 0;
+            if (p.x >= bbox_.mid_x()) { octant += 1; };
+            if (p.y >= bbox_.mid_y()) { octant += 2; };
+            if (p.z >= bbox_.mid_z()) { octant += 4; };
+            return children_[octant].isWhere(p, mesh);
         }
     };
     Node root_;
@@ -644,9 +566,11 @@ public:
             throw std::runtime_error("EGS_Mesh_Octree: empty points vector");
         }
         auto num_elts = points.size() / 4;
+        std::cout << "making octree of " << num_elts << " elements\n";
         if (num_elts > std::numeric_limits<int>::max()) {
             throw std::runtime_error("EGS_Mesh_Octree: num elts must fit into an int");
         }
+        // TODO: think of better name
         std::vector<std::pair<int, Tet>> element_offsets;
         element_offsets.reserve(num_elts);
         for (std::size_t i = 0; i < num_elts; i++) {
@@ -657,37 +581,24 @@ public:
                 points.at(4*i+3))
             });
         }
-        BoundingBox b;
-        b.min_x = tet_min_x(*std::min_element(element_offsets.begin(), element_offsets.end(),
-            [&](const std::pair<int, Tet> &a, const std::pair<int, Tet> &b) {
-                return tet_min_x(a) < tet_min_x(b); }));
-        b.max_x = tet_max_x(*std::max_element(element_offsets.begin(), element_offsets.end(),
-            [&](const std::pair<int, Tet> &a, const std::pair<int, Tet> &b) {
-                return tet_max_x(a) < tet_max_x(b); }));
-        b.min_y = tet_min_y(*std::min_element(element_offsets.begin(), element_offsets.end(),
-            [&](const std::pair<int, Tet> &a, const std::pair<int, Tet> &b) {
-                return tet_min_y(a) < tet_min_y(b); }));
-        b.max_y = tet_max_y(*std::max_element(element_offsets.begin(), element_offsets.end(),
-            [&](const std::pair<int, Tet> &a, const std::pair<int, Tet> &b) {
-                return tet_max_y(a) < tet_max_y(b); }));
-        b.min_z = tet_min_z(*std::min_element(element_offsets.begin(), element_offsets.end(),
-            [&](const std::pair<int, Tet> &a, const std::pair<int, Tet> &b) {
-                return tet_min_z(a) < tet_min_z(b); }));
-        b.max_z = tet_max_z(*std::max_element(element_offsets.begin(), element_offsets.end(),
-            [&](const std::pair<int, Tet> &a, const std::pair<int, Tet> &b) {
-                return tet_max_z(a) < tet_max_z(b); }));
+        const EGS_Float INF = std::numeric_limits<EGS_Float>::infinity();
+        BoundingBox b(INF, -INF, INF, -INF, INF, -INF);
+        for (const auto& e : element_offsets) {
+            b.min_x = std::min(b.min_x, tet_min_x(e));
+            b.max_x = std::max(b.max_x, tet_max_x(e));
+            b.min_y = std::min(b.min_y, tet_min_y(e));
+            b.max_y = std::max(b.max_y, tet_max_y(e));
+            b.min_z = std::min(b.min_z, tet_min_z(e));
+            b.max_z = std::max(b.max_z, tet_max_z(e));
+        }
+        // Add a small delta around the bounding box to avoid numerical problems
+        // at the boundary
+        b.expand(1e-8);
         root_ = Node(element_offsets, b);
     }
-    int findTetrahedron(const EGS_Vector& p, /*const*/ EGS_Mesh& mesh) const {
-        //std::cout << "looking for point:\n";
-        //print_egsvec(p);
-        if (p.x < root_.bbox_.min_x || p.x > root_.bbox_.max_x ||
-            p.y < root_.bbox_.min_y || p.y > root_.bbox_.max_y ||
-            p.z < root_.bbox_.min_z || p.z > root_.bbox_.max_z) {
-        //    std::cout << "outside point\n";
-            return -1;
-        }
-        return root_.findTetrahedron(p, mesh);
+
+    int isWhere(const EGS_Vector& p, /*const*/ EGS_Mesh& mesh) const {
+        return root_.isWhere(p, mesh);
     }
 };
 
@@ -796,6 +707,7 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     //    centroids.push_back(centroid(n.A, n.B, n.C, n.D));
     //}
     std::cout << "before making octree\n";
+    // TODO: pass in EGS_Mesh?
     _lookup_tree = std::unique_ptr<EGS_Mesh_Octree>(new EGS_Mesh_Octree(_elt_points));
     std::cout << "after making octree\n";
 }
@@ -853,22 +765,65 @@ std::vector<int> EGS_Mesh::findNeighbourhood(int elt) {
 }
 
 int EGS_Mesh::isWhere(const EGS_Vector &x) {
-    //static int num_calls = 0;
-    //static int num_hits = 0;
-    //num_calls++;
-    //if (num_calls && num_calls % 1000 == 0) {
-    //    egsInformation("\n%d of %d\n", num_hits, num_calls);
-    //}
+    static int num_calls = 0;
+    static int num_hits = 0;
+    num_calls++;
+    if (num_calls && num_calls % 1000 == 0) {
+        egsInformation("\n%d of %d\n", num_hits, num_calls);
+        exit(1);
+    }
     if (!_lookup_tree) {
         std::cerr << "lookup tree is null!\n";
     }
+    auto octree_elt = _lookup_tree->isWhere(x, *this);
 
-    //std::vector<EGS_Vector> centroids;
-    //centroids.reserve(num_elements());
-    //for (int i = 0; i < num_elements(); i++) {
-    //    auto n = element_nodes(i);
-    //    centroids.push_back(centroid(n.A, n.B, n.C, n.D));
-    //}
+    int elt = -1;
+    for (auto i = 0; i < num_elements(); i++) {
+        if (insideElement(i, x)) {
+            elt = i;
+        }
+    }
+
+    if (octree_elt == elt) {
+        num_hits++;
+    } else {
+        std::cout << "octree: " << octree_elt << "\n";
+        std::cout << "brute:  " << elt << "\n";
+        printElement(elt);
+        std::cout << "false negative for point:\n";
+        print_egsvec(x);
+        exit(1);
+    }
+
+    return elt;
+
+    /*
+    std::vector<EGS_Vector> centroids;
+    centroids.reserve(num_elements());
+    for (int i = 0; i < num_elements(); i++) {
+        auto n = element_nodes(i);
+        centroids.push_back(centroid(n.A, n.B, n.C, n.D));
+    }
+
+    std::cout << "\n";
+    int elt = -1;
+    for (int i = 0; i < num_elements(); i++) {
+        const auto& c = centroids[i];
+        //for (auto j = 0; j < num_elements(); j++) {
+        //    if (insideElement(j, c)) {
+        //        elt = j;
+        //    }
+        //}
+        auto octree_elt = _lookup_tree->isWhere(c, *this);
+        if (i != octree_elt) {
+            throw std::runtime_error("octree and brute don't match for element "
+                + std::to_string(i) + " " + std::to_string(octree_elt));
+        }
+        //std::cout << "Brute search  " << elt << "\n";
+        //std::cout << "Octree search " << octree_elt << "\n";
+    }
+    exit(1);
+    */
 
     //int elt = -1;
     //{
@@ -1138,6 +1093,10 @@ int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     }
     return min_reg;
 }
+
+// TODO deduplicate
+static char EGS_MESH_LOCAL geom_class_msg[] = "createGeometry(EGS_Mesh): %s\n";
+const std::string EGS_Mesh::type = "EGS_Mesh";
 
 void EGS_Mesh::printInfo() const {
     EGS_BaseGeometry::printInfo();

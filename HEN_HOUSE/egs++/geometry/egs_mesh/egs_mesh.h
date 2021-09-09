@@ -290,20 +290,20 @@ public:
         _filename = filename;
     }
     void printElement(int i, std::ostream& elt_info = std::cout) const {
-      elt_info << "Tetrahedron " << i << ":\n"
-          << "\tNode coordinates (cm):\n"
-          << "\t0: " << _elt_points[4*i].x << " " << _elt_points[4*i].y << " " << _elt_points[4*i].z << "\n"
-          << "\t1: " << _elt_points[4*i+1].x << " " << _elt_points[4*i+1].y << " " << _elt_points[4*i+1].z << "\n"
-          << "\t2: " << _elt_points[4*i+2].x << " " << _elt_points[4*i+2].y << " " << _elt_points[4*i+2].z << "\n"
-          << "\t3: " << _elt_points[4*i+3].x << " " << _elt_points[4*i+3].y << " " << _elt_points[4*i+3].z << "\n"
-          << "\tNeighbour elements:\n"
-          << "\t\tOn face 0: " << _neighbours[i][0] << "\n"
-          << "\t\tOn face 1: " << _neighbours[i][1] << "\n"
-          << "\t\tOn face 2: " << _neighbours[i][2] << "\n"
-          << "\t\tOn face 3: " << _neighbours[i][3] << "\n"
+      elt_info << " Tetrahedron " << i << ":\n"
+          << " \tNode coordinates (cm):\n"
+          << " \t0: " << _elt_points[4*i].x << " " << _elt_points[4*i].y << " " << _elt_points[4*i].z << "\n"
+          << " \t1: " << _elt_points[4*i+1].x << " " << _elt_points[4*i+1].y << " " << _elt_points[4*i+1].z << "\n"
+          << " \t2: " << _elt_points[4*i+2].x << " " << _elt_points[4*i+2].y << " " << _elt_points[4*i+2].z << "\n"
+          << " \t3: " << _elt_points[4*i+3].x << " " << _elt_points[4*i+3].y << " " << _elt_points[4*i+3].z << "\n"
+          << " \tNeighbour elements:\n"
+          << " \t\tOn face 0: " << _neighbours[i][0] << "\n"
+          << " \t\tOn face 1: " << _neighbours[i][1] << "\n"
+          << " \t\tOn face 2: " << _neighbours[i][2] << "\n"
+          << " \t\tOn face 3: " << _neighbours[i][3] << "\n"
           << std::boolalpha
-          << "\tBoundary element: " << is_boundary(i) << "\n"
-          << "\tMedia index: "<< _medium_indices[i] << "\n";
+          << " \tBoundary element: " << is_boundary(i) << "\n"
+          << " \tMedia index: "<< _medium_indices[i] << "\n";
     }
 
     // Order the mesh elements by their distance to x to improve performance.
@@ -375,19 +375,23 @@ private:
 
     std::vector<int> _elt_tags;
     std::vector<EGS_Vector> _elt_points;
+    // 4 * num_elts of which faces are boundaries
+    // TODO: try vec<array<bool, 4>>
     std::vector<bool> _boundary_faces;
+    // TODO: check and remove
     std::vector<bool> _boundary_elts;
     std::vector<int> _medium_indices;
     std::vector<std::string> _medium_names;
     std::string _filename;
     std::unique_ptr<EGS_Mesh_Octree> _lookup_tree;
 
+    // TODO: check and remove
     std::vector<EGS_Mesh::Tetrahedron> _elements;
     std::vector<EGS_Mesh::Node> _nodes;
     std::vector<EGS_Mesh::Medium> _materials;
 
     std::vector<std::array<int, 4>> _neighbours;
-    const std::string type = "EGS_Mesh";
+    static const std::string type;
 };
 
 #endif // EGS_MESH
