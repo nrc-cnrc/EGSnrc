@@ -313,39 +313,38 @@ EGS_Mesh* parse_msh41_body(std::istream& input) {
 
 class EGS_Mesh_Octree {
     struct Tet {
-        using Point = EGS_Vector;
-        Tet(Point a, Point b, Point c, Point d) : a(a), b(b), c(c), d(d) {}
-        Point a;
-        Point b;
-        Point c;
-        Point d;
-        Point centroid() const {
+        Tet(EGS_Vector a, EGS_Vector b, EGS_Vector c, EGS_Vector d)
+            : a(a), b(b), c(c), d(d) {}
+        EGS_Vector a;
+        EGS_Vector b;
+        EGS_Vector c;
+        EGS_Vector d;
+        EGS_Vector centroid() const {
             return ::centroid(a, b, c, d);
         }
     };
-    static double tet_min_x(const std::pair<int, Tet> &p) {
-        const auto &t = p.second;
+    static double tet_min_x(const Tet &t) {
         return std::min(t.a.x, std::min(t.b.x, std::min(t.c.x, t.d.x)));
     }
-    static double tet_max_x(const std::pair<int, Tet> &p) {
-        const auto &t = p.second;
+    static double tet_max_x(const Tet &t) {
         return std::max(t.a.x, std::max(t.b.x, std::max(t.c.x, t.d.x)));
     }
-    static double tet_min_y(const std::pair<int, Tet> &p) {
-        const auto &t = p.second;
+    static double tet_min_y(const Tet &t) {
         return std::min(t.a.y, std::min(t.b.y, std::min(t.c.y, t.d.y)));
     }
-    static double tet_max_y(const std::pair<int, Tet> &p) {
-        const auto &t = p.second;
+    static double tet_max_y(const Tet &t) {
         return std::max(t.a.y, std::max(t.b.y, std::max(t.c.y, t.d.y)));
     }
-    static double tet_min_z(const std::pair<int, Tet> &p) {
-        const auto &t = p.second;
+    static double tet_min_z(const Tet &t) {
         return std::min(t.a.z, std::min(t.b.z, std::min(t.c.z, t.d.z)));
     }
-    static double tet_max_z(const std::pair<int, Tet> &p) {
-        const auto &t = p.second;
+    static double tet_max_z(const Tet &t) {
         return std::max(t.a.z, std::max(t.b.z, std::max(t.c.z, t.d.z)));
+    }
+    static double tet_longest_edge2(const Tet &t) {
+        return std::max(distance2(t.a, t.b), std::max(distance2(t.a, t.c),
+                   std::max(distance2(t.a, t.d), std::max(distance2(t.b, t.c),
+                       std::max(distance2(t.b, t.d), distance2(t.c, t.d))))));
     }
 
     // An axis-aligned bounding box.
@@ -398,7 +397,7 @@ class EGS_Mesh_Octree {
                     "max_z: " << max_z << "\n";
         }
 
-        bool contains(const Tet::Point& point) const {
+        bool contains(const EGS_Vector& point) const {
             // Inclusive at the lower bound, non-inclusive at the upper bound,
             // so points on the interface between two bounding boxes only belong
             // to one of them:
@@ -493,10 +492,25 @@ class EGS_Mesh_Octree {
         std::vector<int> elts_;
         std::vector<Node> children_;
         BoundingBox bbox_;
+        // Knowing the longest edge gives us a good stopping criteria when a
+        // point in an overlapping element without nodes in the octree, e.g.
+        //
+        //     +---+---+
+        //     |   |   | /|
+        //     +---+---+/ |
+        //     |   |   /  |
+        //     +---+--/+  |
+        //           /    |
+        //           ------
+        // If the lookup fails, we will keep trying until we have searched a
+        // bounding box of at least "longest_edge" around the query point.
+        static EGS_Float longest_edge;
+        static BoundingBox global_bounds;
+
         Node() = default;
         // TODO: think about passing in EGS_Mesh as parameter
-        Node(const std::vector<std::pair<int, Tet>> &elt_pairs, const BoundingBox& bbox)
-            : bbox_(bbox)
+        Node(const std::vector<std::pair<int, Tet>> &elt_pairs,
+             const BoundingBox& bbox) : bbox_(bbox)
         {
             // TODO: max level and precision warning
             if (bbox_.is_indivisible() || elt_pairs.size() < 200) {
@@ -529,14 +543,59 @@ class EGS_Mesh_Octree {
             }
         }
 
+        bool isLeaf() const {
+            return children_.empty();
+        }
+
+        void print(std::ostream& out, int level) const {
+            out << "Level " << level << "\n";
+            bbox_.print(out);
+            if (children_.empty()) {
+                for (const auto& e: elts_) {
+                    out << e << " ";
+                }
+                out << "\n";
+                return;
+            }
+            for (int i = 0; i < 8; i++) {
+                children_.at(i).print(out, level + 1);
+            }
+        }
+
+
+        // Check if this node's bounding box is guaranteed to hold the largest
+        // possible tetrahedron in any orientation.
+        bool containsLargestTetrahedron(const EGS_Vector& p) const {
+            // Float comparison safety: global bounds should be equal to bounding
+            // boxes on the edge as they are assigned directly.
+            //
+            // Min bounds: local min is larger than global min and there
+            // could be an edge that extends past the local min
+            if ((bbox_.min_x > Node::global_bounds.min_x &&
+                    bbox_.min_x > (p.x - Node::longest_edge)) ||
+                (bbox_.min_y > Node::global_bounds.min_y &&
+                    bbox_.min_y > (p.y - Node::longest_edge)) ||
+                (bbox_.min_z > Node::global_bounds.min_z &&
+                    bbox_.min_z > (p.z - Node::longest_edge)) ||
+                // Max bounds: local max is smaller than global max and there
+                // could be an edge that extends past the local max
+                (bbox_.max_x < Node::global_bounds.max_x &&
+                    bbox_.max_x < (p.x + Node::longest_edge)) ||
+                (bbox_.max_y < Node::global_bounds.max_y &&
+                    bbox_.max_y < (p.y + Node::longest_edge)) ||
+                (bbox_.max_z < Node::global_bounds.max_z &&
+                    bbox_.max_z < (p.z + Node::longest_edge)))
+            {
+                return false;
+            }
+            return true;
+        }
+
         // Does not mutate the EGS_Mesh.
         int isWhere(const EGS_Vector &p, /*const*/ EGS_Mesh &mesh) const {
-            if (!bbox_.contains(p)) {
-                return -1;
-            }
-            // Leaf node: search all bounded elements, and return -1 if the
-            // point isn't contained in any element
-            if (children_.empty()) {
+            // Leaf node: search all bounded elements, returning -1 if the
+            // element wasn't found.
+            if (isLeaf()) {
                 for (const auto &e: elts_) {
                     if (mesh.insideElement(e, p)) {
                         return e;
@@ -555,7 +614,29 @@ class EGS_Mesh_Octree {
             if (p.x >= bbox_.mid_x()) { octant += 1; };
             if (p.y >= bbox_.mid_y()) { octant += 2; };
             if (p.z >= bbox_.mid_z()) { octant += 4; };
-            return children_[octant].isWhere(p, mesh);
+
+            auto elt = children_[octant].isWhere(p, mesh);
+
+            // If the element wasn't found, it is possible the point is in an
+            // overlapping element in a nearby octant.
+            // Give up if we can conclude that knowing the longest possible edge,
+            // we've searched a suitably sized bounding box around the query point.
+            // Otherwise begin a fallback search.
+            if (elt != -1) {
+                return elt;
+            }
+            if (children_[octant].containsLargestTetrahedron(p)) {
+                return -1;
+            }
+            // naive search through siblings
+            for (std::size_t i = 0; i < 8; i++) {
+                if (i == octant) { continue; }
+                auto elt = children_[i].isWhere(p, mesh);
+                if (elt != -1) {
+                    return elt;
+                }
+            }
+            return -1;
         }
     };
     Node root_;
@@ -570,11 +651,10 @@ public:
         if (num_elts > std::numeric_limits<int>::max()) {
             throw std::runtime_error("EGS_Mesh_Octree: num elts must fit into an int");
         }
-        // TODO: think of better name
-        std::vector<std::pair<int, Tet>> element_offsets;
-        element_offsets.reserve(num_elts);
+        std::vector<std::pair<int, Tet>> elements;
+        elements.reserve(num_elts);
         for (std::size_t i = 0; i < num_elts; i++) {
-            element_offsets.push_back({static_cast<int>(i), Tet(
+            elements.push_back({static_cast<int>(i), Tet(
                 points.at(4*i),
                 points.at(4*i+1),
                 points.at(4*i+2),
@@ -583,24 +663,34 @@ public:
         }
         const EGS_Float INF = std::numeric_limits<EGS_Float>::infinity();
         BoundingBox b(INF, -INF, INF, -INF, INF, -INF);
-        for (const auto& e : element_offsets) {
-            b.min_x = std::min(b.min_x, tet_min_x(e));
-            b.max_x = std::max(b.max_x, tet_max_x(e));
-            b.min_y = std::min(b.min_y, tet_min_y(e));
-            b.max_y = std::max(b.max_y, tet_max_y(e));
-            b.min_z = std::min(b.min_z, tet_min_z(e));
-            b.max_z = std::max(b.max_z, tet_max_z(e));
+        EGS_Float longest_edge2 = -INF;
+        for (const auto& e : elements) {
+            b.min_x = std::min(b.min_x, tet_min_x(e.second));
+            b.max_x = std::max(b.max_x, tet_max_x(e.second));
+            b.min_y = std::min(b.min_y, tet_min_y(e.second));
+            b.max_y = std::max(b.max_y, tet_max_y(e.second));
+            b.min_z = std::min(b.min_z, tet_min_z(e.second));
+            b.max_z = std::max(b.max_z, tet_max_z(e.second));
+            longest_edge2 = std::max(longest_edge2, tet_longest_edge2(e.second));
         }
         // Add a small delta around the bounding box to avoid numerical problems
         // at the boundary
         b.expand(1e-8);
-        root_ = Node(element_offsets, b);
+        root_ = Node(elements, b);
+        Node::longest_edge = std::sqrt(longest_edge2);
+        Node::global_bounds = b;
     }
 
     int isWhere(const EGS_Vector& p, /*const*/ EGS_Mesh& mesh) const {
+        if (!root_.bbox_.contains(p)) {
+            return -1;
+        }
         return root_.isWhere(p, mesh);
     }
 };
+
+EGS_Float EGS_Mesh_Octree::Node::longest_edge = 0.0;
+EGS_Mesh_Octree::BoundingBox EGS_Mesh_Octree::Node::global_bounds = {};
 
 // msh4.1 parsing
 EGS_Mesh* EGS_Mesh::parse_msh_file(std::istream& input) {
@@ -767,15 +857,13 @@ std::vector<int> EGS_Mesh::findNeighbourhood(int elt) {
 int EGS_Mesh::isWhere(const EGS_Vector &x) {
     static int num_calls = 0;
     static int num_hits = 0;
-    num_calls++;
-    if (num_calls && num_calls % 1000 == 0) {
-        egsInformation("\n%d of %d\n", num_hits, num_calls);
-        exit(1);
-    }
+
     if (!_lookup_tree) {
         std::cerr << "lookup tree is null!\n";
     }
+
     auto octree_elt = _lookup_tree->isWhere(x, *this);
+    return octree_elt;
 
     int elt = -1;
     for (auto i = 0; i < num_elements(); i++) {
@@ -793,6 +881,11 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
         std::cout << "false negative for point:\n";
         print_egsvec(x);
         exit(1);
+    }
+
+    num_calls++;
+    if (num_calls && num_calls % 1000 == 0) {
+        egsInformation("\n%d of %d\n", num_hits, num_calls);
     }
 
     return elt;
