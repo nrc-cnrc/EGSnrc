@@ -223,6 +223,7 @@ public:
         std::string medium_name;
     };
 
+    // TODO: refactor to MeshSpec struct
     EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials);
 
@@ -280,7 +281,8 @@ public:
     }
 
     inline bool is_boundary(int reg) const {
-        return _boundary_elts[reg];
+        return _boundary_faces[4*reg] || _boundary_faces[4*reg + 1] ||
+               _boundary_faces[4*reg + 2] || _boundary_faces[4*reg + 3];
     }
 
     const std::string& filename() const {
@@ -326,6 +328,18 @@ public:
     // Check if a point x is inside element i.
     bool insideElement(int i, const EGS_Vector &x);
 
+    struct Intersection {
+        Intersection(EGS_Float dist, int face_index)
+            : dist(dist), face_index(face_index) {}
+        /// Intersection distance
+        EGS_Float dist;
+        /// Face index
+        int face_index;
+    };
+
+    // `howfar` helper: Determine the closest boundary face intersection
+    Intersection closest_boundary_face(int ireg, const EGS_Vector& x, const EGS_Vector& u);
+
 private:
     // `hownear` helper method
     // Given a tetrahedron ireg, find the minimum distance to a face in any direction.
@@ -345,15 +359,6 @@ private:
 
     std::vector<int> findNeighbourhood(int elt);
 
-    struct Intersection {
-        Intersection(EGS_Float dist, int face_index)
-            : dist(dist), face_index(face_index) {}
-        /// Intersection distance
-        EGS_Float dist;
-        /// Face index
-        int face_index;
-    };
-
     struct Nodes {
         const EGS_Vector& A;
         const EGS_Vector& B;
@@ -370,16 +375,11 @@ private:
         };
     }
 
-    // `howfar` helper: Determine the closest boundary face intersection
-    Intersection closest_boundary_face(int ireg, const EGS_Vector& x, const EGS_Vector& u);
-
     std::vector<int> _elt_tags;
     std::vector<EGS_Vector> _elt_points;
     // 4 * num_elts of which faces are boundaries
     // TODO: try vec<array<bool, 4>>
     std::vector<bool> _boundary_faces;
-    // TODO: check and remove
-    std::vector<bool> _boundary_elts;
     std::vector<int> _medium_indices;
     std::vector<std::string> _medium_names;
     std::string _filename;

@@ -53,6 +53,8 @@
 // anonymous namespace
 namespace {
 
+const EGS_Float eps = 1e-10;
+
 inline bool approx_eq(double a, double b, double eps = 1e-5) {
     return (std::abs(a - b) <= eps * (std::abs(a) + std::abs(b) + 1.0));
 }
@@ -128,6 +130,8 @@ EGS_Vector closest_point_triangle(const EGS_Vector &P, const EGS_Vector &A, cons
     return A + v * ab + w * ac;
 }
 
+// Returns true if the point is on the outside of the plane defined by ABC using
+// reference point D, i.e. if D and P are on opposite sides of the plane of ABC.
 inline bool point_outside_of_plane(EGS_Vector P, EGS_Vector A, EGS_Vector B, EGS_Vector C, EGS_Vector D) {
     return dot(P - A, cross(B - A, C - A)) * dot(D - A, cross(B - A, C - A)) < 0.0;
 }
@@ -397,6 +401,45 @@ class EGS_Mesh_Octree {
                     "max_z: " << max_z << "\n";
         }
 
+        // Adapted from Ericson section 5.3.3 "Intersecting Ray or Segment
+        // Against Box".
+        //
+        // Returns 1 if there is an intersection and 0 if not. If there is an
+        // intersection, the out parameter dist will be the distance along v to
+        // the intersection point q.
+        int ray_intersection(const EGS_Vector &p, const EGS_Vector &v,
+            EGS_Float& dist, EGS_Vector &q) const
+        {
+            // check intersection of ray with three bounding box slabs
+            EGS_Float tmin = 0.0;
+            EGS_Float tmax = std::numeric_limits<EGS_Float>::max();
+            std::array<EGS_Float, 3> p_vec {p.x, p.y, p.z};
+            std::array<EGS_Float, 3> v_vec {v.x, v.y, v.z};
+            std::array<EGS_Float, 3> mins {min_x, min_y, min_z};
+            std::array<EGS_Float, 3> maxs {max_x, max_y, max_z};
+            for (std::size_t i = 0; i < 3; i++) {
+                // Parallel to slab. Point must be within slab bounds to hit
+                // the bounding box
+                if (std::abs(v_vec[i]) < eps) {
+                    // Outside slab bounds
+                    if (p_vec[i] < mins[i] || p_vec[i] > maxs[i]) { return 0; }
+                } else {
+                    // intersect ray with slab planes
+                    EGS_Float inv_vel = 1.0 / v_vec[i];
+                    EGS_Float t1 = (mins[i] - p_vec[i]) * inv_vel;
+                    EGS_Float t2 = (maxs[i] - p_vec[i]) * inv_vel;
+                    // convention is t1 is near plane, t2 is far plane
+                    if (t1 > t2) { std::swap(t1, t2); }
+                    if (t1 > tmin) { tmin = t1; }
+                    if (t2 > tmax) { tmax = t2; }
+                    if (tmin > tmax) { return 0; }
+                }
+            }
+            q = p + v * tmin;
+            dist = tmin;
+            return 1;
+        }
+
         bool contains(const EGS_Vector& point) const {
             // Inclusive at the lower bound, non-inclusive at the upper bound,
             // so points on the interface between two bounding boxes only belong
@@ -510,10 +553,10 @@ class EGS_Mesh_Octree {
         Node() = default;
         // TODO: think about passing in EGS_Mesh as parameter
         Node(const std::vector<std::pair<int, Tet>> &elt_pairs,
-             const BoundingBox& bbox) : bbox_(bbox)
+             const BoundingBox& bbox, std::size_t n_max) : bbox_(bbox)
         {
             // TODO: max level and precision warning
-            if (bbox_.is_indivisible() || elt_pairs.size() < 200) {
+            if (bbox_.is_indivisible() || elt_pairs.size() < n_max) {
                 elts_.reserve(elt_pairs.size());
                 for (const auto &p : elt_pairs) {
                     elts_.push_back(p.first);
@@ -539,7 +582,9 @@ class EGS_Mesh_Octree {
             }
 
             for (int i = 0; i < 8; i++) {
-                children_.push_back(Node(std::move(octants[i]), std::move(bbs[i])));
+                children_.push_back(Node(
+                    std::move(octants[i]), std::move(bbs[i]), n_max
+                ));
             }
         }
 
@@ -565,6 +610,8 @@ class EGS_Mesh_Octree {
 
         // Check if this node's bounding box is guaranteed to hold the largest
         // possible tetrahedron in any orientation.
+        //
+        // TODO: test if this method actually works
         bool containsLargestTetrahedron(const EGS_Vector& p) const {
             // Float comparison safety: global bounds should be equal to bounding
             // boxes on the edge as they are assigned directly.
@@ -591,6 +638,18 @@ class EGS_Mesh_Octree {
             return true;
         }
 
+        int findOctant(const EGS_Vector &p) const {
+            // Our choice of octant ordering (see BoundingBox.divide8) means we
+            // can determine the correct octant with three checks. E.g. octant 0
+            // is (-x, -y, -z), octant 1 is (+x, -y, -z), octant 4 is (-x, -y, +z)
+            // octant 7 is (+x, +y, +z), etc.
+            std::size_t octant = 0;
+            if (p.x >= bbox_.mid_x()) { octant += 1; };
+            if (p.y >= bbox_.mid_y()) { octant += 2; };
+            if (p.z >= bbox_.mid_z()) { octant += 4; };
+            return octant;
+        }
+
         // Does not mutate the EGS_Mesh.
         int isWhere(const EGS_Vector &p, /*const*/ EGS_Mesh &mesh) const {
             // Leaf node: search all bounded elements, returning -1 if the
@@ -605,33 +664,71 @@ class EGS_Mesh_Octree {
             }
 
             // Parent node: decide which octant to search and descend the tree
-            //
-            // Our choice of octant ordering (see BoundingBox.divide8) means we
-            // can determine the correct octant with three checks. E.g. octant 0
-            // is (-x, -y, -z), octant 1 is (+x, -y, -z), octant 4 is (-x, -y, +z)
-            // octant 7 is (+x, +y, +z), etc.
-            std::size_t octant = 0;
-            if (p.x >= bbox_.mid_x()) { octant += 1; };
-            if (p.y >= bbox_.mid_y()) { octant += 2; };
-            if (p.z >= bbox_.mid_z()) { octant += 4; };
-
+            auto octant = findOctant(p);
             auto elt = children_[octant].isWhere(p, mesh);
-
-            // If the element wasn't found, it is possible the point is in an
-            // overlapping element in a nearby octant.
-            // Give up if we can conclude that knowing the longest possible edge,
-            // we've searched a suitably sized bounding box around the query point.
-            // Otherwise begin a fallback search.
+            // If we find a valid element, we can conclude it is the correct
+            // solution since elements are assumed not to overlap.
             if (elt != -1) {
                 return elt;
             }
+
+            // If the element wasn't found, it is possible the point is in an
+            // overlapping element in a nearby octant. Give up if we can
+            // conclude that knowing the longest possible edge, we've searched
+            // a suitably sized bounding box around the query point.
+            //
+            // Otherwise begin a fallback search through the siblings.
             if (children_[octant].containsLargestTetrahedron(p)) {
                 return -1;
             }
-            // naive search through siblings
             for (std::size_t i = 0; i < 8; i++) {
                 if (i == octant) { continue; }
                 auto elt = children_[i].isWhere(p, mesh);
+                if (elt != -1) {
+                    return elt;
+                }
+            }
+            return -1;
+        }
+
+        int howfar_exterior(const EGS_Vector &p, const EGS_Vector &v,
+            const EGS_Float &max_dist, EGS_Float &t, /* const */ EGS_Mesh& mesh)
+        {
+            // Leaf node: check for intersection with any boundary elements
+            EGS_Float min_dist = std::numeric_limits<EGS_Float>::max();
+            int min_elt = -1;
+            if (isLeaf()) {
+                for (const auto &e: elts_) {
+                    if (!mesh.is_boundary(e)) {
+                        continue;
+                    }
+                    // closest_boundary_face only counts intersections where the
+                    // point is on the outside of the face, when it's possible
+                    // to intersect the boundary face directly
+                    auto intersection = mesh.closest_boundary_face(e, p, v);
+                    if (intersection.dist < min_dist) {
+                        min_elt = e;
+                        min_dist = intersection.dist;
+                    }
+                }
+                t = min_dist;
+                return min_elt; // min_elt may be -1 if there is no intersection
+            }
+
+            // Parent node: decide which octant to search and descend the tree
+            EGS_Vector intersection;
+            EGS_Float dist;
+            auto hit = bbox_.ray_intersection(p, v, dist, intersection);
+            if (!hit) {
+                return -1;
+            }
+            // case 1: we have a hit. Descend into the corresponding child
+            // octant's bounding box to find any intersecting elements
+            if (hit) {
+                auto octant = findOctant(intersection);
+                auto elt = children_[octant].howfar_exterior(
+                    p, v, max_dist, t, mesh
+                );
                 if (elt != -1) {
                     return elt;
                 }
@@ -642,7 +739,7 @@ class EGS_Mesh_Octree {
     Node root_;
 public:
     EGS_Mesh_Octree() = default;
-    EGS_Mesh_Octree(const std::vector<EGS_Vector> &points) {
+    EGS_Mesh_Octree(const std::vector<EGS_Vector> &points, std::size_t n_max) {
         if (points.empty()) {
             throw std::runtime_error("EGS_Mesh_Octree: empty points vector");
         }
@@ -676,7 +773,7 @@ public:
         // Add a small delta around the bounding box to avoid numerical problems
         // at the boundary
         b.expand(1e-8);
-        root_ = Node(elements, b);
+        root_ = Node(elements, b, n_max);
         Node::longest_edge = std::sqrt(longest_edge2);
         Node::global_bounds = b;
     }
@@ -686,6 +783,31 @@ public:
             return -1;
         }
         return root_.isWhere(p, mesh);
+    }
+
+    int howfar_exterior(const EGS_Vector &p, const EGS_Vector &v,
+        const EGS_Float &max_dist, EGS_Float &t, /* const */ EGS_Mesh& mesh)
+    {
+        //std::cout << "in howfar exterior with step " << max_dist << "\n";
+        //std::cout << "point\n";
+        //print_egsvec(p);
+        //std::cout << "velocity\n";
+        //print_egsvec(v);
+
+        EGS_Vector intersection;
+        EGS_Float dist;
+        auto hit = root_.bbox_.ray_intersection(p, v, dist, intersection);
+        if (!hit || dist > max_dist) {
+            //if (dist > max_dist) {
+            //    std::cout << "no intersection, step smaller than dist " << dist << "\n";
+            //} else {
+            //    std::cout << "no intersection\n";
+            //}
+            return -1;
+        }
+        //std::cout << "found intersection point\n";
+        //print_egsvec(intersection);
+        return root_.howfar_exterior(p, v, max_dist, t, mesh);
     }
 };
 
@@ -759,11 +881,7 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
 
     _boundary_faces.reserve(_elements.size() * 4);
-    _boundary_elts.reserve(_elements.size());
     for (const auto& ns: _neighbours) {
-        _boundary_elts.push_back(std::any_of(begin(ns), end(ns),
-            [](int n){ return n == mesh_neighbours::NONE; }
-        ));
         for (const auto& n: ns) {
             _boundary_faces.push_back(n == mesh_neighbours::NONE);
         }
@@ -797,8 +915,11 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     //    centroids.push_back(centroid(n.A, n.B, n.C, n.D));
     //}
     std::cout << "before making octree\n";
+    std::size_t n_vol = 200;
     // TODO: pass in EGS_Mesh?
-    _lookup_tree = std::unique_ptr<EGS_Mesh_Octree>(new EGS_Mesh_Octree(_elt_points));
+    _lookup_tree = std::unique_ptr<EGS_Mesh_Octree>(
+        new EGS_Mesh_Octree(_elt_points, n_vol)
+    );
     std::cout << "after making octree\n";
 }
 
@@ -1114,11 +1235,14 @@ EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vecto
     auto dist = min_dist;
     auto closest_face = -1;
 
-    auto check_face_intersection = [&](int face, const  EGS_Vector& p1, const EGS_Vector& p2,
-            const EGS_Vector& p3)
+    auto check_face_intersection = [&](int face, const EGS_Vector& A, const EGS_Vector& B,
+            const EGS_Vector& C, const EGS_Vector& D)
     {
         if (_boundary_faces[4*ireg + face] &&
-            triangle_ray_intersection(x, u, p1, p2, p3, dist) && dist < min_dist)
+            // check if the point is on the outside looking in (rather than just
+            // clipping the edge of a boundary face)
+            point_outside_of_plane(x, A, B, C, D) &&
+            triangle_ray_intersection(x, u, A, B, C, dist) && dist < min_dist)
         {
             min_dist = dist;
             closest_face = face;
@@ -1128,10 +1252,10 @@ EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vecto
 
     const auto& n = element_nodes(ireg);
     // face 0 (BCD), face 1 (ACD) etc.
-    check_face_intersection(0, n.B, n.C, n.D);
-    check_face_intersection(1, n.A, n.C, n.D);
-    check_face_intersection(2, n.A, n.B, n.D);
-    check_face_intersection(3, n.A, n.B, n.C);
+    check_face_intersection(0, n.B, n.C, n.D, n.A);
+    check_face_intersection(1, n.A, n.C, n.D, n.B);
+    check_face_intersection(2, n.A, n.B, n.D, n.C);
+    check_face_intersection(3, n.A, n.B, n.C, n.D);
 
     return EGS_Mesh::Intersection(min_dist, closest_face);
 }
@@ -1139,7 +1263,13 @@ EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vecto
 int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed, EGS_Vector *normal)
 {
+    static int num_calls = 0;
+    static int num_hits = 0;
+
     assert(ireg == -1);
+
+    EGS_Float dist = 1e30;
+    auto octree_elt = _lookup_tree->howfar_exterior(x, u, t, dist, *this);
 
     // loop over all boundary tetrahedrons and find the closest point to the tetrahedron
     EGS_Float min_dist = 1e30;
@@ -1159,8 +1289,27 @@ int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     }
     // no intersection
     if (min_dist > t) {
-        return -1;
+        min_reg = -1;
+    //    return -1;
     }
+
+    if (octree_elt == min_reg) {
+        num_hits++;
+    } else {
+        std::cout << "octree: " << octree_elt << "\n";
+        std::cout << "brute:  " << min_reg << "\n";
+        printElement(min_reg);
+        std::cout << "false negative for point:\n";
+        print_egsvec(x);
+        std::cout << "with direction:\n";
+        print_egsvec(u);
+    }
+
+    num_calls++;
+    if (num_calls && num_calls % 100 == 0) {
+        egsInformation("\n%d of %d\n", num_hits, num_calls);
+    }
+
     // intersection found, update out parameters
     t = min_dist;
     if (newmed) {
@@ -1238,6 +1387,7 @@ extern "C" {
     }
 }
 
+/*
 void EGS_Mesh::reorderMesh(const EGS_Vector &x) {
     std::vector<std::pair<int, EGS_Vector>> elt_centroids;
     elt_centroids.reserve(num_elements());
@@ -1299,3 +1449,4 @@ void EGS_Mesh::renumberMesh(const std::vector<int>& reordered_tags) {
         }
     }
 }
+*/
