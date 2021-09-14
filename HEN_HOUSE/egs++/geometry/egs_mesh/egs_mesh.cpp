@@ -316,9 +316,11 @@ EGS_Mesh* parse_msh41_body(std::istream& input) {
 } // anonymous namespace
 
 class EGS_Mesh_Octree {
+public:
     struct Tet {
-        Tet(EGS_Vector a, EGS_Vector b, EGS_Vector c, EGS_Vector d)
-            : a(a), b(b), c(c), d(d) {}
+        Tet(int offset, EGS_Vector a, EGS_Vector b, EGS_Vector c, EGS_Vector d)
+            : offset(offset), a(a), b(b), c(c), d(d) {}
+        int offset = -1;
         EGS_Vector a;
         EGS_Vector b;
         EGS_Vector c;
@@ -327,6 +329,7 @@ class EGS_Mesh_Octree {
             return ::centroid(a, b, c, d);
         }
     };
+private:
     static double tet_min_x(const Tet &t) {
         return std::min(t.a.x, std::min(t.b.x, std::min(t.c.x, t.d.x)));
     }
@@ -552,32 +555,32 @@ class EGS_Mesh_Octree {
 
         Node() = default;
         // TODO: think about passing in EGS_Mesh as parameter
-        Node(const std::vector<std::pair<int, Tet>> &elt_pairs,
-             const BoundingBox& bbox, std::size_t n_max) : bbox_(bbox)
+        Node(const std::vector<Tet> &elts, const BoundingBox& bbox,
+            std::size_t n_max) : bbox_(bbox)
         {
             // TODO: max level and precision warning
-            if (bbox_.is_indivisible() || elt_pairs.size() < n_max) {
-                elts_.reserve(elt_pairs.size());
-                for (const auto &p : elt_pairs) {
-                    elts_.push_back(p.first);
+            if (bbox_.is_indivisible() || elts.size() < n_max) {
+                elts_.reserve(elts.size());
+                for (const auto &e : elts) {
+                    elts_.push_back(e.offset);
                 }
                 return;
             }
 
-            std::array<std::vector<std::pair<int, Tet>>, 8> octants;
+            std::array<std::vector<Tet>, 8> octants;
             std::array<BoundingBox, 8> bbs = bbox_.divide8();
 
             // elements may be in more than one bounding box
-            for (const auto &elt : elt_pairs) {
+            for (const auto &e : elts) {
                 bool found = false;
                 for (int i = 0; i < 8; i++) {
-                    if (bbs[i].contains(elt.second)) {
-                        octants[i].push_back(elt);
+                    if (bbs[i].contains(e)) {
+                        octants[i].push_back(e);
                         found = true;
                     }
                 }
                 if (!found) { throw std::runtime_error(
-                    "uncategorized tet " + std::to_string(elt.first));
+                    "uncategorized tet " + std::to_string(e.offset));
                 }
             }
 
@@ -738,44 +741,43 @@ class EGS_Mesh_Octree {
     };
     Node root_;
 public:
-    EGS_Mesh_Octree() = default;
-    EGS_Mesh_Octree(const std::vector<EGS_Vector> &points, std::size_t n_max) {
-        if (points.empty()) {
-            throw std::runtime_error("EGS_Mesh_Octree: empty points vector");
-        }
-        auto num_elts = points.size() / 4;
-        std::cout << "making octree of " << num_elts << " elements\n";
-        if (num_elts > std::numeric_limits<int>::max()) {
-            throw std::runtime_error("EGS_Mesh_Octree: num elts must fit into an int");
-        }
-        std::vector<std::pair<int, Tet>> elements;
-        elements.reserve(num_elts);
-        for (std::size_t i = 0; i < num_elts; i++) {
-            elements.push_back({static_cast<int>(i), Tet(
-                points.at(4*i),
-                points.at(4*i+1),
-                points.at(4*i+2),
-                points.at(4*i+3))
-            });
+
+    // Must be called before creating and using any EGS_Mesh_Octrees
+    // TODO: maybe a nicer way to do this? Check core guidlines?
+    static void initStaticMembers(const std::vector<Tet> &elts) {
+        if (elts.empty()) {
+            throw std::runtime_error("EGS_Mesh_Octree: empty elements vector");
         }
         const EGS_Float INF = std::numeric_limits<EGS_Float>::infinity();
         BoundingBox b(INF, -INF, INF, -INF, INF, -INF);
         EGS_Float longest_edge2 = -INF;
-        for (const auto& e : elements) {
-            b.min_x = std::min(b.min_x, tet_min_x(e.second));
-            b.max_x = std::max(b.max_x, tet_max_x(e.second));
-            b.min_y = std::min(b.min_y, tet_min_y(e.second));
-            b.max_y = std::max(b.max_y, tet_max_y(e.second));
-            b.min_z = std::min(b.min_z, tet_min_z(e.second));
-            b.max_z = std::max(b.max_z, tet_max_z(e.second));
-            longest_edge2 = std::max(longest_edge2, tet_longest_edge2(e.second));
+        for (const auto& e : elts) {
+            b.min_x = std::min(b.min_x, tet_min_x(e));
+            b.max_x = std::max(b.max_x, tet_max_x(e));
+            b.min_y = std::min(b.min_y, tet_min_y(e));
+            b.max_y = std::max(b.max_y, tet_max_y(e));
+            b.min_z = std::min(b.min_z, tet_min_z(e));
+            b.max_z = std::max(b.max_z, tet_max_z(e));
+            longest_edge2 = std::max(longest_edge2, tet_longest_edge2(e));
         }
         // Add a small delta around the bounding box to avoid numerical problems
         // at the boundary
         b.expand(1e-8);
-        root_ = Node(elements, b, n_max);
         Node::longest_edge = std::sqrt(longest_edge2);
         Node::global_bounds = b;
+    }
+
+    EGS_Mesh_Octree() = default;
+    EGS_Mesh_Octree(const std::vector<Tet> &elts, std::size_t n_max) {
+        if (elts.empty()) {
+            throw std::runtime_error("EGS_Mesh_Octree: empty elements vector");
+        }
+        std::cout << "making octree of " << elts.size() << " elements\n";
+        if (elts.size() > std::numeric_limits<int>::max()) {
+            throw std::runtime_error("EGS_Mesh_Octree: num elts must fit into an int");
+        }
+        // TODO: add check that initStaticMembers was called?
+        root_ = Node(elts, Node::global_bounds, n_max);
     }
 
     int isWhere(const EGS_Vector& p, /*const*/ EGS_Mesh& mesh) const {
@@ -908,17 +910,37 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         _medium_indices.push_back(medium_offsets.at(e.medium_tag));
     }
 
-    //std::vector<EGS_Vector> centroids;
-    //centroids.reserve(num_elements());
-    //for (int i = 0; i < num_elements(); i++) {
-    //    auto n = element_nodes(i);
-    //    centroids.push_back(centroid(n.A, n.B, n.C, n.D));
-    //}
+    initOctrees();
+}
+
+void EGS_Mesh::initOctrees() {
+    std::vector<EGS_Mesh_Octree::Tet> elts;
+    std::vector<EGS_Mesh_Octree::Tet> boundary_elts;
+    elts.reserve(num_elements());
+    for (int i = 0; i < num_elements(); i++) {
+        EGS_Mesh_Octree::Tet elt(
+             i,
+            _elt_points.at(4*i),
+            _elt_points.at(4*i+1),
+            _elt_points.at(4*i+2),
+            _elt_points.at(4*i+3)
+        );
+        elts.push_back(elt);
+        if (is_boundary(i)) {
+            boundary_elts.push_back(elt);
+        }
+    }
     std::cout << "before making octree\n";
+    EGS_Mesh_Octree::initStaticMembers(elts);
+    // Max element sizes from Furuta et al section 2.1.1
     std::size_t n_vol = 200;
     // TODO: pass in EGS_Mesh?
-    _lookup_tree = std::unique_ptr<EGS_Mesh_Octree>(
-        new EGS_Mesh_Octree(_elt_points, n_vol)
+    _volume_tree = std::unique_ptr<EGS_Mesh_Octree>(
+        new EGS_Mesh_Octree(elts, n_vol)
+    );
+    std::size_t n_surf = 100;
+    _surface_tree = std::unique_ptr<EGS_Mesh_Octree>(
+        new EGS_Mesh_Octree(boundary_elts, n_surf)
     );
     std::cout << "after making octree\n";
 }
@@ -979,11 +1001,11 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
     static int num_calls = 0;
     static int num_hits = 0;
 
-    if (!_lookup_tree) {
+    if (!_volume_tree) {
         std::cerr << "lookup tree is null!\n";
     }
 
-    auto octree_elt = _lookup_tree->isWhere(x, *this);
+    auto octree_elt = _volume_tree->isWhere(x, *this);
     return octree_elt;
 
     int elt = -1;
@@ -1028,7 +1050,7 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
         //        elt = j;
         //    }
         //}
-        auto octree_elt = _lookup_tree->isWhere(c, *this);
+        auto octree_elt = _volume_tree->isWhere(c, *this);
         if (i != octree_elt) {
             throw std::runtime_error("octree and brute don't match for element "
                 + std::to_string(i) + " " + std::to_string(octree_elt));
@@ -1054,9 +1076,9 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
     //}
     //std::cout << "elt should be " << elt << "\n";
 
-    //return _lookup_tree->findTetrahedron(x, *this);
+    //return _volume_tree->findTetrahedron(x, *this);
     //auto start = std::chrono::steady_clock::now();
-    //auto closest_elt = _lookup_tree->findTetrahedron(x, *this);
+    //auto closest_elt = _volume_tree->findTetrahedron(x, *this);
     //auto end = std::chrono::steady_clock::now();
     //std::cout << "Octree search: "
     //    << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
@@ -1269,7 +1291,7 @@ int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     assert(ireg == -1);
 
     EGS_Float dist = 1e30;
-    auto octree_elt = _lookup_tree->howfar_exterior(x, u, t, dist, *this);
+    auto octree_elt = _surface_tree->howfar_exterior(x, u, t, dist, *this);
 
     // loop over all boundary tetrahedrons and find the closest point to the tetrahedron
     EGS_Float min_dist = 1e30;

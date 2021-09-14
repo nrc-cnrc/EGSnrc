@@ -375,6 +375,9 @@ private:
         };
     }
 
+    // Initialize the two octrees used to accelerate transport
+    void initOctrees();
+
     std::vector<int> _elt_tags;
     std::vector<EGS_Vector> _elt_points;
     // 4 * num_elts of which faces are boundaries
@@ -383,7 +386,9 @@ private:
     std::vector<int> _medium_indices;
     std::vector<std::string> _medium_names;
     std::string _filename;
-    std::unique_ptr<EGS_Mesh_Octree> _lookup_tree;
+
+    std::unique_ptr<EGS_Mesh_Octree> _volume_tree;
+    std::unique_ptr<EGS_Mesh_Octree> _surface_tree;
 
     // TODO: check and remove
     std::vector<EGS_Mesh::Tetrahedron> _elements;
