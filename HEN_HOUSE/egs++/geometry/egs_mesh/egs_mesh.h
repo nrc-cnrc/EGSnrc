@@ -195,8 +195,9 @@ class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
 public:
     /// A single tetrahedral mesh element
     struct Tetrahedron {
-        Tetrahedron(int medium_tag, int a, int b, int c, int d) :
-            medium_tag(medium_tag), a(a), b(b), c(c), d(d) {}
+        Tetrahedron(int tag, int medium_tag, int a, int b, int c, int d) :
+            tag(tag), medium_tag(medium_tag), a(a), b(b), c(c), d(d) {}
+        int tag = -1;
         int medium_tag = -1;
         // nodes
         int a = -1;

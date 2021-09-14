@@ -303,7 +303,7 @@ EGS_Mesh* parse_msh41_body(std::istream& input) {
     for (std::size_t i = 0; i < elements.size(); ++i) {
         const auto& elt = elements[i];
         mesh_elts.push_back(EGS_Mesh::Tetrahedron(
-            element_groups[i], elt.a, elt.b, elt.c, elt.d
+            elt.tag, element_groups[i], elt.a, elt.b, elt.c, elt.d
         ));
     }
 
@@ -1019,8 +1019,8 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         return node_it->second;
     };
     for (int i = 0; i < static_cast<int>(_elements.size()); i++) {
-        _elt_tags.push_back(i);
         const auto& e = _elements[i];
+        _elt_tags.push_back(e.tag);
         auto a = find_node(e.a);
         auto b = find_node(e.b);
         auto c = find_node(e.c);

@@ -660,7 +660,7 @@ void appendGmshData(std::ostream& out_file, std::string title, const std::vector
     // three ints, timestep 0, 1 value per elt, number of elts
     out_file << "3\n0\n1\n" << zipped.size() << "\n";
     for (std::size_t i = 0; i < zipped.size(); i++) {
-        out_file << zipped.at(i).first + 1 << " " << zipped.at(i).second << "\n";
+        out_file << zipped.at(i).first << " " << zipped.at(i).second << "\n";
     }
     out_file << "$EndElementData\n"; // footer
 }
