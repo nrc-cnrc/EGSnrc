@@ -989,25 +989,25 @@ EGS_Mesh* EGS_Mesh::parse_msh_file(std::istream& input) {
 }
 
 EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
-    std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials) :
-    EGS_BaseGeometry("EGS_Mesh"), _elements(std::move(elements)), _nodes(std::move(nodes)), _materials(std::move(materials))
+    std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials)
+        : EGS_BaseGeometry("EGS_Mesh")
 {
     std::size_t max_elts = std::numeric_limits<int>::max();
-    if (_elements.size() >= max_elts) {
+    if (elements.size() >= max_elts) {
         throw std::runtime_error("maximum number of elements (" +
-            std::to_string(max_elts) + ") exceeded (" + std::to_string(_elements.size()) + ")");
+            std::to_string(max_elts) + ") exceeded (" + std::to_string(elements.size()) + ")");
     }
-    EGS_BaseGeometry::nreg = _elements.size();
+    EGS_BaseGeometry::nreg = elements.size();
 
-    _elt_tags.reserve(_elements.size());
-    _elt_points.reserve(_elements.size() * 4);
+    _elt_tags.reserve(elements.size());
+    _elt_points.reserve(elements.size() * 4);
 
     std::unordered_map<int, EGS_Mesh::Node> node_map;
-    node_map.reserve(_nodes.size());
-    for (const auto& n : _nodes) {
+    node_map.reserve(nodes.size());
+    for (const auto& n : nodes) {
         node_map.insert({n.tag, n});
     }
-    if (node_map.size() != _nodes.size()) {
+    if (node_map.size() != nodes.size()) {
         throw std::runtime_error("duplicate nodes in node list");
     }
     // Find the matching nodes for every tetrahedron
@@ -1018,8 +1018,8 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         }
         return node_it->second;
     };
-    for (int i = 0; i < static_cast<int>(_elements.size()); i++) {
-        const auto& e = _elements[i];
+    for (int i = 0; i < static_cast<int>(elements.size()); i++) {
+        const auto& e = elements[i];
         _elt_tags.push_back(e.tag);
         auto a = find_node(e.a);
         auto b = find_node(e.b);
@@ -1032,13 +1032,13 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     }
 
     std::vector<mesh_neighbours::Tetrahedron> neighbour_elts;
-    neighbour_elts.reserve(_elements.size());
-    for (const auto& e: _elements) {
+    neighbour_elts.reserve(elements.size());
+    for (const auto& e: elements) {
         neighbour_elts.emplace_back(mesh_neighbours::Tetrahedron(e.a, e.b, e.c, e.d));
     }
     this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
 
-    _boundary_faces.reserve(_elements.size() * 4);
+    _boundary_faces.reserve(elements.size() * 4);
     for (const auto& ns: _neighbours) {
         for (const auto& n: ns) {
             _boundary_faces.push_back(n == mesh_neighbours::NONE);
@@ -1049,19 +1049,19 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
 
     // map from medium tags to offsets
     std::unordered_map<int, int> medium_offsets;
-    for (std::size_t i = 0; i < _materials.size(); i++) {
+    for (std::size_t i = 0; i < materials.size(); i++) {
         // TODO use EGS_BaseGeometry tracker
         // auto med = EGS_BaseGeometry::addMedium(m.medium_name);
-        _medium_names.push_back(_materials[i].medium_name);
-        auto material_tag = _materials[i].tag;
+        _medium_names.push_back(materials[i].medium_name);
+        auto material_tag = materials[i].tag;
         bool inserted = medium_offsets.insert({material_tag, i}).second;
         if (!inserted) {
             throw std::runtime_error("duplicate medium tag: " + std::to_string(material_tag));
         }
     }
 
-    _medium_indices.reserve(_elements.size());
-    for (const auto& e: _elements) {
+    _medium_indices.reserve(elements.size());
+    for (const auto& e: elements) {
         // TODO handle vacuum tag (-1)?
         _medium_indices.push_back(medium_offsets.at(e.medium_tag));
     }

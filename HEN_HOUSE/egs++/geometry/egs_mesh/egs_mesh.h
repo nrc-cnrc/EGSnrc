@@ -242,15 +242,15 @@ public:
     const std::vector<std::string>& medium_names() const {
         return _medium_names;
     }
-    const std::vector<EGS_Mesh::Tetrahedron>& elements() const {
-        return _elements;
-    }
-    const std::vector<EGS_Mesh::Node>& nodes() const {
-        return _nodes;
-    }
-    const std::vector<EGS_Mesh::Medium>& materials() const {
-        return _materials;
-    }
+    //const std::vector<EGS_Mesh::Tetrahedron>& elements() const {
+    //    return _elements;
+    //}
+    //const std::vector<EGS_Mesh::Node>& nodes() const {
+    //    return _nodes;
+    //}
+    //const std::vector<EGS_Mesh::Medium>& materials() const {
+    //    return _materials;
+    //}
     const std::vector<std::array<int, 4>>& neighbours() const {
         return _neighbours;
     }
@@ -390,11 +390,6 @@ private:
 
     std::unique_ptr<EGS_Mesh_Octree> _volume_tree;
     std::unique_ptr<EGS_Mesh_Octree> _surface_tree;
-
-    // TODO: check and remove
-    std::vector<EGS_Mesh::Tetrahedron> _elements;
-    std::vector<EGS_Mesh::Node> _nodes;
-    std::vector<EGS_Mesh::Medium> _materials;
 
     std::vector<std::array<int, 4>> _neighbours;
     static const std::string type;
