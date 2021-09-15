@@ -433,8 +433,8 @@ private:
                     EGS_Float t2 = (maxs[i] - p_vec[i]) * inv_vel;
                     // convention is t1 is near plane, t2 is far plane
                     if (t1 > t2) { std::swap(t1, t2); }
-                    if (t1 > tmin) { tmin = t1; }
-                    if (t2 > tmax) { tmax = t2; }
+                    tmin = std::max(tmin, t1);
+                    tmax = std::min(tmax, t2);
                     if (tmin > tmax) { return 0; }
                 }
             }
