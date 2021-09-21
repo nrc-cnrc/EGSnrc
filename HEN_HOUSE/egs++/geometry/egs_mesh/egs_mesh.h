@@ -340,6 +340,22 @@ public:
     // `howfar` helper: Determine the closest boundary face intersection
     Intersection closest_boundary_face(int ireg, const EGS_Vector& x, const EGS_Vector& u);
 
+    struct Nodes {
+        const EGS_Vector& A;
+        const EGS_Vector& B;
+        const EGS_Vector& C;
+        const EGS_Vector& D;
+    };
+
+    Nodes element_nodes(int element) const {
+        return Nodes {
+            _elt_points.at(4*element),
+            _elt_points.at(4*element + 1),
+            _elt_points.at(4*element + 2),
+            _elt_points.at(4*element + 3),
+        };
+    }
+
 private:
     // `hownear` helper method
     // Given a tetrahedron ireg, find the minimum distance to a face in any direction.
@@ -358,22 +374,6 @@ private:
         EGS_Float &t, int *newmed, EGS_Vector *normal);
 
     std::vector<int> findNeighbourhood(int elt);
-
-    struct Nodes {
-        const EGS_Vector& A;
-        const EGS_Vector& B;
-        const EGS_Vector& C;
-        const EGS_Vector& D;
-    };
-
-    Nodes element_nodes(int element) const {
-        return Nodes {
-            _elt_points.at(4*element),
-            _elt_points.at(4*element + 1),
-            _elt_points.at(4*element + 2),
-            _elt_points.at(4*element + 3),
-        };
-    }
 
     // Initialize the two octrees used to accelerate transport
     void initOctrees();

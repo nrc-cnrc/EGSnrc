@@ -53,10 +53,22 @@
 // anonymous namespace
 namespace {
 
-const EGS_Float eps = 1e-10;
+const EGS_Float eps = 1e-8;
 
-inline bool approx_eq(double a, double b, double eps = 1e-5) {
-    return (std::abs(a - b) <= eps * (std::abs(a) + std::abs(b) + 1.0));
+inline bool approx_eq(double a, double b, double e = eps) {
+    return (std::abs(a - b) <= e * (std::abs(a) + std::abs(b) + 1.0));
+}
+
+inline bool is_zero(const EGS_Vector &v) {
+    return approx_eq(0.0, v.length(), eps);
+}
+
+inline EGS_Float min3(EGS_Float a, EGS_Float b, EGS_Float c) {
+    return std::min(std::min(a, b), c);
+}
+
+inline EGS_Float max3(EGS_Float a, EGS_Float b, EGS_Float c) {
+    return std::max(std::max(a, b), c);
 }
 
 void print_egsvec(const EGS_Vector& v, std::ostream& out = std::cout) {
@@ -404,6 +416,122 @@ private:
                     "max_z: " << max_z << "\n";
         }
 
+        // Adapted from Ericson section 5.2.9 "Testing AABB Against Triangle".
+        // Uses a separating axis approach, as originally presented in Akenine-
+        // Möller's "Fast 3D Triangle-Box Overlap Testing" with 13 axes checked
+        // in total. There are three axis categories, and it is suggested the
+        // fastest way to check is 3, 1, 2.
+        //
+        // We use a more straightforward but less optimized formulation of the
+        // separating axis test than Ericson presents, because this test is
+        // intended to be done as part of the octree setup but not during the
+        // actual simulation.
+        //
+        // This routine should be robust for ray edges parallel with bounding
+        // box edges (category 3) but does not attempt to be robust for the case
+        // of degenerate triangle face normals (category 2). See Ericson 5.2.1.1
+        //
+        // The non-robustness of some cases should not be an issue for the most
+        // part as these will likely be false positives (harmless extra checks)
+        // instead of false negatives (missed intersections, a huge problem if
+        // present).
+        bool intersects_triangle(const EGS_Vector& a, const EGS_Vector& b,
+            const EGS_Vector& c) const
+        {
+            if (min3(a.x, b.x, c.x) >= max_x ||
+                min3(a.y, b.y, c.y) >= max_y ||
+                min3(a.z, b.z, c.z) >= max_z ||
+                max3(a.x, b.x, c.x) <= min_x ||
+                max3(a.y, b.y, c.y) <= min_y ||
+                max3(a.z, b.z, c.z) <= min_z)
+            {
+                return false;
+            }
+
+            EGS_Vector centre(mid_x(), mid_y(), mid_z());
+            // extents
+            EGS_Float ex = (max_x - min_x) / 2.0;
+            EGS_Float ey = (max_y - min_y) / 2.0;
+            EGS_Float ez = (max_z - min_z) / 2.0;
+            //std::cout << "extents : " << ex << " " << ey << " " << ez << "\n";
+
+            // move triangle to bounding box origin
+            EGS_Vector v0 = a - centre;
+            EGS_Vector v1 = b - centre;
+            EGS_Vector v2 = c - centre;
+
+            // find triangle edge vectors
+            const std::array<EGS_Vector, 3> edge_vecs { v1-v0, v2-v1, v0-v2 };
+
+            // Test the 9 category 3 axes (cross products between axis-aligned
+            // bounding box unit vectors and triangle edge vectors)
+            const EGS_Vector ux {1, 0 ,0}, uy {0, 1, 0}, uz {0, 0, 1};
+            const std::array<EGS_Vector, 3> unit_vecs { ux, uy, uz};
+            for (const EGS_Vector& u : unit_vecs) {
+                for (const EGS_Vector& f : edge_vecs) {
+                    const EGS_Vector a = cross(u, f);
+                    if (is_zero(a)) {
+                        //std::cout << "warning a near zero\n";
+                        // Ignore testing this axis, likely won't be a separating
+                        // axis. This may lead to false positives, but not false
+                        // negatives.
+                        continue;
+                    }
+                    // find box projection radius
+                    const EGS_Float r = ex * std::abs(dot(ux, a)) +
+                        ey * std::abs(dot(uy, a)) + ez * std::abs(dot(uz, a));
+                    // find three projections onto axis a
+                    const EGS_Float p0 = dot(v0, a);
+                    const EGS_Float p1 = dot(v1, a);
+                    const EGS_Float p2 = dot(v2, a);
+                    if (std::max(-max3(p0, p1, p2), min3(p0, p1, p2)) + eps > r) {
+                        //std::cout << "found separating axis\n";
+             //           print_egsvec(a);
+                        return false;
+                    }
+                }
+            }
+            //std::cout << "passed 9 edge-edge axis tests\n";
+            // category 1 - test overlap with AABB face normals
+            if (max3(v0.x, v1.x, v2.x) <= -ex || min3(v0.x, v1.x, v2.x) >= ex ||
+                max3(v0.y, v1.y, v2.y) <= -ey || min3(v0.y, v1.y, v2.y) >= ey ||
+                max3(v0.z, v1.z, v2.z) <= -ez || min3(v0.z, v1.z, v2.z) >= ez)
+            {
+                return false;
+            }
+            //std::cout << "passed 3 overlap tests\n";
+
+            // category 2 - test overlap with triangle face normal using AABB
+            // plane test (5.2.3)
+
+            // Cross product robustness issues are ignored here (assume
+            // non-degenerate and non-oversize triangles)
+            const EGS_Vector n = cross(edge_vecs[0], edge_vecs[1]);
+            //std::cout << "plane normal: \n";
+            //print_egsvec(n);
+            if (is_zero(n)) {
+                std::cout << "n near zero!\n";
+            }
+            // projection radius
+            const EGS_Float r = ex * std::abs(n.x) + ey * std::abs(n.y) +
+                ez * std::abs(n.z);
+            // distance from box centre to plane
+            //
+            // We have to use `a` here and not `v0` as in my printing since the
+            // bounding box was not translated to the origin. This is a known
+            // erratum, see http://realtimecollisiondetection.net/books/rtcd/errata/
+            const EGS_Float s = dot(n, centre) - dot(n, a);
+            // intersection if s falls within projection radius
+            return std::abs(s) <= r;
+        }
+
+        bool intersects_tetrahedron(const EGS_Mesh_Octree::Tet& tet) const {
+            return intersects_triangle(tet.a, tet.b, tet.c) ||
+                   intersects_triangle(tet.a, tet.c, tet.d) ||
+                   intersects_triangle(tet.a, tet.b, tet.d) ||
+                   intersects_triangle(tet.b, tet.c, tet.d);
+        }
+
         // Adapted from Ericson section 5.3.3 "Intersecting Ray or Segment
         // Against Box".
         //
@@ -572,18 +700,12 @@ private:
 
             // elements may be in more than one bounding box
             for (const auto &e : elts) {
-                bool found = false;
                 for (int i = 0; i < 8; i++) {
-                    if (bbs[i].contains(e)) {
+                    if (bbs[i].intersects_tetrahedron(e)) {
                         octants[i].push_back(e);
-                        found = true;
                     }
                 }
-                if (!found) { throw std::runtime_error(
-                    "uncategorized tet " + std::to_string(e.offset));
-                }
             }
-
             for (int i = 0; i < 8; i++) {
                 children_.push_back(Node(
                     std::move(octants[i]), std::move(bbs[i]), n_max
@@ -599,6 +721,7 @@ private:
             out << "Level " << level << "\n";
             bbox_.print(out);
             if (children_.empty()) {
+            out << "num_elts: " << elts_.size() << "\n";
                 for (const auto& e: elts_) {
                     out << e << " ";
                 }
@@ -651,6 +774,33 @@ private:
             if (p.y >= bbox_.mid_y()) { octant += 2; };
             if (p.z >= bbox_.mid_z()) { octant += 4; };
             return octant;
+        }
+
+        // Octants are returned ordered by minimum intersection distance
+        std::vector<int> findOtherIntersectedOctants(const EGS_Vector& p,
+                const EGS_Vector& v, int exclude_octant) const
+        {
+            if (isLeaf()) {
+                throw std::runtime_error(
+                    "findOtherIntersectedOctants called on leaf node");
+            }
+            std::vector<std::pair<EGS_Float, int>> intersections;
+            for (int i = 0; i < 8; i++) {
+                if (i == exclude_octant) {
+                    continue;
+                }
+                EGS_Vector intersection;
+                EGS_Float dist;
+                if (children_[i].bbox_.ray_intersection(p, v, dist, intersection)) {
+                    intersections.push_back({dist, i});
+                }
+            }
+            std::sort(intersections.begin(), intersections.end());
+            std::vector<int> octants;
+            for (const auto& i : intersections) {
+                octants.push_back(i.second);
+            }
+            return octants;
         }
 
         // Does not mutate the EGS_Mesh.
@@ -717,21 +867,32 @@ private:
                 t = min_dist;
                 return min_elt; // min_elt may be -1 if there is no intersection
             }
-
             // Parent node: decide which octant to search and descend the tree
             EGS_Vector intersection;
             EGS_Float dist;
             auto hit = bbox_.ray_intersection(p, v, dist, intersection);
+            // case 1: there's no intersection with this bounding box, return
             if (!hit) {
                 return -1;
             }
-            // case 1: we have a hit. Descend into the corresponding child
-            // octant's bounding box to find any intersecting elements
-            if (hit) {
-                auto octant = findOctant(intersection);
-                auto elt = children_[octant].howfar_exterior(
+            // case 2: we have a hit. Descend into the most likely intersecting
+            // child octant's bounding box to find any intersecting elements
+            auto octant = findOctant(intersection);
+            auto elt = children_[octant].howfar_exterior(
+                p, v, max_dist, t, mesh
+            );
+            // If we find a valid element, return it
+            if (elt != -1) {
+                return elt;
+            }
+            // Otherwise, if there was no intersection in the most likely
+            // octant, examine the other octants that are intersected by
+            // the ray:
+            for (const auto& o : findOtherIntersectedOctants(p, v, octant)) {
+                auto elt = children_[o].howfar_exterior(
                     p, v, max_dist, t, mesh
                 );
+                // If we find a valid element, return it
                 if (elt != -1) {
                     return elt;
                 }
@@ -739,6 +900,7 @@ private:
             return -1;
         }
     };
+
     Node root_;
 public:
 
@@ -787,28 +949,19 @@ public:
         return root_.isWhere(p, mesh);
     }
 
+    void print(std::ostream& out) const {
+		root_.print(out, 0);
+    }
+
     int howfar_exterior(const EGS_Vector &p, const EGS_Vector &v,
         const EGS_Float &max_dist, EGS_Float &t, /* const */ EGS_Mesh& mesh)
     {
-        //std::cout << "in howfar exterior with step " << max_dist << "\n";
-        //std::cout << "point\n";
-        //print_egsvec(p);
-        //std::cout << "velocity\n";
-        //print_egsvec(v);
-
         EGS_Vector intersection;
         EGS_Float dist;
         auto hit = root_.bbox_.ray_intersection(p, v, dist, intersection);
         if (!hit || dist > max_dist) {
-            //if (dist > max_dist) {
-            //    std::cout << "no intersection, step smaller than dist " << dist << "\n";
-            //} else {
-            //    std::cout << "no intersection\n";
-            //}
             return -1;
         }
-        //std::cout << "found intersection point\n";
-        //print_egsvec(intersection);
         return root_.howfar_exterior(p, v, max_dist, t, mesh);
     }
 };
@@ -817,6 +970,9 @@ EGS_Float EGS_Mesh_Octree::Node::longest_edge = 0.0;
 EGS_Mesh_Octree::BoundingBox EGS_Mesh_Octree::Node::global_bounds = {};
 
 // msh4.1 parsing
+//
+// TODO parse into MeshSpec struct instead of EGS_Mesh directly
+// to better delineate errors
 EGS_Mesh* EGS_Mesh::parse_msh_file(std::istream& input) {
     auto version = msh_parser::internal::parse_msh_version(input);
     // TODO auto mesh_data;
@@ -1028,7 +1184,7 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
 
     num_calls++;
     if (num_calls && num_calls % 1000 == 0) {
-        egsInformation("\n%d of %d\n", num_hits, num_calls);
+        egsInformation("isWhere: \n%d of %d\n", num_hits, num_calls);
     }
 
     return elt;
@@ -1285,51 +1441,12 @@ EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vecto
 int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed, EGS_Vector *normal)
 {
-    static int num_calls = 0;
-    static int num_hits = 0;
-
-    assert(ireg == -1);
-
-    EGS_Float dist = 1e30;
-    auto octree_elt = _surface_tree->howfar_exterior(x, u, t, dist, *this);
-
-    // loop over all boundary tetrahedrons and find the closest point to the tetrahedron
     EGS_Float min_dist = 1e30;
-    int min_reg = -1;
-    int min_reg_face = -1;
+    auto min_reg = _surface_tree->howfar_exterior(x, u, t, min_dist, *this);
 
-    for (auto i = 0; i < num_elements(); i++) {
-        if (!is_boundary(i)) {
-            continue;
-        }
-        auto intersection = closest_boundary_face(i, x, u);
-        if (intersection.dist < min_dist) {
-            min_dist = intersection.dist;
-            min_reg_face = intersection.face_index;
-            min_reg = i;
-        }
-    }
     // no intersection
-    if (min_dist > t) {
-        min_reg = -1;
-    //    return -1;
-    }
-
-    if (octree_elt == min_reg) {
-        num_hits++;
-    } else {
-        std::cout << "octree: " << octree_elt << "\n";
-        std::cout << "brute:  " << min_reg << "\n";
-        printElement(min_reg);
-        std::cout << "false negative for point:\n";
-        print_egsvec(x);
-        std::cout << "with direction:\n";
-        print_egsvec(u);
-    }
-
-    num_calls++;
-    if (num_calls && num_calls % 100 == 0) {
-        egsInformation("\n%d of %d\n", num_hits, num_calls);
+    if (min_dist > t || min_reg == -1) {
+        return -1;
     }
 
     // intersection found, update out parameters
@@ -1340,13 +1457,14 @@ int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     if (normal) {
         EGS_Vector tmp_normal;
         const auto& n = element_nodes(min_reg);
-        switch(min_reg_face) {
+        auto intersection = closest_boundary_face(min_reg, x, u);
+        switch(intersection.face_index) {
             case 0: tmp_normal = cross(n.C - n.B, n.D - n.B); break;
             case 1: tmp_normal = cross(n.C - n.A, n.D - n.A); break;
             case 2: tmp_normal = cross(n.B - n.A, n.D - n.A); break;
             case 3: tmp_normal = cross(n.B - n.A, n.C - n.A); break;
             default: throw std::runtime_error("Bad intersection, got face index: " +
-                std::to_string(min_reg_face));
+                std::to_string(intersection.face_index));
         }
         // egs++ convention is normal pointing opposite view ray
         if (dot(tmp_normal, u) > 0) {
