@@ -364,7 +364,7 @@ private:
 
     // `hownear` helper method
     // Outside the mesh, find the minimum distance to the mesh in any direction (ireg = -1)
-    EGS_Float min_exterior_face_dist(int ireg, const EGS_Vector& x);
+    EGS_Float min_exterior_face_dist(const EGS_Vector& x);
 
     // `howfar` helper method inside a given tetrahedron
     int howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
