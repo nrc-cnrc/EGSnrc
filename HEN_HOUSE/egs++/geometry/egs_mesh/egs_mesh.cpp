@@ -88,6 +88,10 @@ inline EGS_Float distance2(const EGS_Vector &x, const EGS_Vector &y) {
     return (x - y).length2();
 }
 
+inline EGS_Float distance(const EGS_Vector &x, const EGS_Vector &y) {
+    return std::sqrt(distance2(x, y));
+}
+
 EGS_Vector closest_point_triangle(const EGS_Vector &P, const EGS_Vector &A, const EGS_Vector& B, const EGS_Vector& C)
 {
     // vertex region A
@@ -571,6 +575,17 @@ private:
             return 1;
         }
 
+        // Given an interior point, return the minimum distance to a boundary.
+        // This is a helper method for hownear, as the minimum of the boundary
+        // distance and tetrahedron distance will be hownear's result.
+        //
+        // TODO maybe need to clamp to 0.0 here for results slightly under zero?
+        EGS_Float min_interior_distance(const EGS_Vector& point) const {
+            return std::min(point.x - min_x, std::min(point.y - min_y,
+                   std::min(point.z - min_z, std::min(max_x - point.x,
+                   std::min(max_y - point.y, max_z - point.z)))));
+        }
+
         // Returns the closest point on the bounding box to the given point.
         // If the given point is inside the bounding box, it is considered the
         // closest point. This method is intended for use by hownear, to decide
@@ -851,67 +866,33 @@ private:
             return octants;
         }
 
-        struct HownearResult {
-            int elt = -1;
-            // store squared distance to avoid square roots until the end
-            EGS_Float sq_dist = veryFar;
-        };
-
-        // Leaf node: search all bounded elements, updating dist with the
-        // closest distance.
-        HownearResult hownear_leaf_search(const EGS_Vector& p,
-            const EGS_Float& best_sq_dist, EGS_Mesh& mesh) const
+        // Leaf node: search all bounded elements, returning the minimum
+        // distance to a boundary tetrahedron or a bounding box surface.
+        EGS_Float hownear_leaf_search(const EGS_Vector& p, EGS_Mesh& mesh) const
         {
-            HownearResult res;
-            res.sq_dist = best_sq_dist;
+            const EGS_Float best_dist = bbox_.min_interior_distance(p);
+            // Use squared distance to avoid computing square roots in the
+            // loop. This has the added bonus of ridding ourselves of any
+            // negatives from near-zero floating-point issues
+            EGS_Float best_dist2 = best_dist * best_dist;
             for (const auto &e: elts_) {
                 const auto& n = mesh.element_nodes(e);
-                auto dist = distance2(p,
-                    closest_point_tetrahedron(p, n.A, n.B, n.C, n.D));
-                if (dist < res.sq_dist) {
-                    res.elt = e;
-                    res.sq_dist = dist;
-                }
+                best_dist2 = std::min(best_dist2, distance2(p,
+                    closest_point_tetrahedron(p, n.A, n.B, n.C, n.D)));
             }
-            return res;
+            return std::sqrt(best_dist2);
         }
 
-        HownearResult hownear_exterior(const EGS_Vector& p,
-            const EGS_Float& best_sq_dist, EGS_Mesh& mesh) const
+        EGS_Float hownear_exterior(const EGS_Vector& p, EGS_Mesh& mesh) const
         {
-            // Determine the closest point on this bounding box. If this is a
-            // parent node, this will determine where the search starts.
-            auto closest_point = bbox_.closest_point(p);
-            // Stop early: if the closest point on this octant's bounding box is
-            // farther away than the best distance so far, we can skip searching
-            // this octant.
-            if (distance2(p, closest_point) > best_sq_dist) {
-                return {};
-            }
-            // Leaf node: search all bounded elements, updating dist with the
+            // Leaf node: find a lower bound on the mesh exterior distance
             // closest distance
             if (isLeaf()) {
-                return hownear_leaf_search(p, best_sq_dist, mesh);
+                return hownear_leaf_search(p, mesh);
             }
-            // Parent node: decide which octant to search first and begin there
-            auto octant = findOctant(closest_point);
-            // Once we find a result, we still have to keep searching until we
-            // know this must be the closest element
-            auto res = children_[octant].hownear_exterior(p, best_sq_dist, mesh);
-            for (const auto& o : nextClosestOctants(p, octant)) {
-                // skip search if we know beforehand we can't beat the best
-                // distance
-                if (distance2(p, children_[o].bbox_.closest_point(p))
-                       > res.sq_dist)
-                {
-                    continue;
-                }
-                auto other = children_[o].hownear_exterior(p, res.sq_dist, mesh);
-                if (other.sq_dist < res.sq_dist) {
-                    res = other;
-                }
-            }
-            return res;
+            // Parent node: decide which octant to search and descend the tree
+            const auto octant = findOctant(p);
+            return children_[octant].hownear_exterior(p, mesh);
         }
 
         // TODO remove containsLargestTetrahedron check
@@ -1079,15 +1060,22 @@ public:
         return root_.howfar_exterior(p, v, max_dist, t, mesh);
     }
 
-    // Returns the closest exterior element to the given point and updates the
-    // distance in the out parameter dist.
-    int hownear_exterior(const EGS_Vector& p, EGS_Float& dist, EGS_Mesh& mesh)
-        const
-    {
-        EGS_Float best_dist = std::numeric_limits<EGS_Float>::max();
-        Node::HownearResult res = root_.hownear_exterior(p, best_dist, mesh);
-        dist = std::sqrt(res.sq_dist);
-        return res.elt;
+    // Returns a lower bound on the distance to the mesh exterior boundary.
+    // The actual distance to the mesh may be larger, i.e. a distance to an
+    // axis-aligned bounding box might be returned instead. This is allowed by
+    // the HOWNEAR spec, PIRS-701 section 3.6, "Specifications for HOWNEAR":
+    //
+    // > In complex geometries, the mathematics of HOWNEAR can become difficult
+    // and sometimes almost impossible! If it is easier for the user to
+    // compute some lower bound to the nearest distance, this could be used...
+    EGS_Float hownear_exterior(const EGS_Vector& p, EGS_Mesh& mesh) const {
+        // If the point is outside the octree bounding box, return the distance
+        // to the bounding box.
+        if (!root_.bbox_.contains(p)) {
+            return distance(root_.bbox_.closest_point(p), p);
+        }
+        // Otherwise, descend the octree
+        return root_.hownear_exterior(p, mesh);
     }
 };
 
@@ -1423,9 +1411,7 @@ EGS_Float EGS_Mesh::min_interior_face_dist(int ireg, const EGS_Vector& x) {
 }
 
 EGS_Float EGS_Mesh::min_exterior_face_dist(const EGS_Vector& x) {
-    EGS_Float dist = std::numeric_limits<EGS_Float>::max();
-    _surface_tree->hownear_exterior(x, dist, *this);
-    return dist;
+    return _surface_tree->hownear_exterior(x, *this);
 }
 
 int EGS_Mesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
