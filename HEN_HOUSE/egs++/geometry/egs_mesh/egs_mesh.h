@@ -237,7 +237,7 @@ public:
 
     int num_elements() const {
         // todo return nreg
-        return _elt_points.size() / 4;
+        return _elt_tags.size();
     }
     const std::vector<std::string>& medium_names() const {
         return _medium_names;
@@ -254,20 +254,19 @@ public:
     const std::vector<std::array<int, 4>>& neighbours() const {
         return _neighbours;
     }
-    const std::vector<EGS_Vector>& points() const {
-        return _elt_points;
-    }
+
     std::vector<EGS_Float> volumes() const {
         std::vector<EGS_Float> volumes;
         volumes.reserve(num_elements());
         for (int i = 0; i < num_elements(); i++) {
+            const auto& n = element_nodes(i);
             volumes.push_back(std::abs(
-                (_elt_points[4*i] - _elt_points[4*i+3]) *
-                    ((_elt_points[4*i+1] - _elt_points[4*i+3])
-                        % (_elt_points[4*i+2] - _elt_points[4*i+3]))) / 6.0);
+                (n.A - n.D) * ((n.B - n.D) % (n.C - n.D))) / 6.0
+            );
         }
         return volumes;
     }
+
     // Return element densities [g/cm3].
     std::vector<EGS_Float> densities() const {
         std::vector<EGS_Float> densities;
@@ -293,12 +292,13 @@ public:
         _filename = filename;
     }
     void printElement(int i, std::ostream& elt_info = std::cout) const {
+        const auto& n = element_nodes(i);
       elt_info << " Tetrahedron " << i << ":\n"
           << " \tNode coordinates (cm):\n"
-          << " \t0: " << _elt_points[4*i].x << " " << _elt_points[4*i].y << " " << _elt_points[4*i].z << "\n"
-          << " \t1: " << _elt_points[4*i+1].x << " " << _elt_points[4*i+1].y << " " << _elt_points[4*i+1].z << "\n"
-          << " \t2: " << _elt_points[4*i+2].x << " " << _elt_points[4*i+2].y << " " << _elt_points[4*i+2].z << "\n"
-          << " \t3: " << _elt_points[4*i+3].x << " " << _elt_points[4*i+3].y << " " << _elt_points[4*i+3].z << "\n"
+          << " \t0: " << n.A.x << " " << n.A.y << " " << n.A.z << "\n"
+          << " \t1: " << n.B.x << " " << n.B.y << " " << n.B.z << "\n"
+          << " \t2: " << n.C.x << " " << n.C.y << " " << n.C.z << "\n"
+          << " \t3: " << n.D.x << " " << n.C.y << " " << n.C.z << "\n"
           << " \tNeighbour elements:\n"
           << " \t\tOn face 0: " << _neighbours[i][0] << "\n"
           << " \t\tOn face 1: " << _neighbours[i][1] << "\n"
@@ -349,11 +349,12 @@ public:
     };
 
     Nodes element_nodes(int element) const {
+        const auto& node_indices = _elt_node_indices.at(element);
         return Nodes {
-            _elt_points.at(4*element),
-            _elt_points.at(4*element + 1),
-            _elt_points.at(4*element + 2),
-            _elt_points.at(4*element + 3),
+            _nodes.at(node_indices[0]),
+            _nodes.at(node_indices[1]),
+            _nodes.at(node_indices[2]),
+            _nodes.at(node_indices[3])
         };
     }
 
@@ -379,8 +380,9 @@ private:
     // Initialize the two octrees used to accelerate transport
     void initOctrees();
 
+    std::vector<EGS_Vector> _nodes;
     std::vector<int> _elt_tags;
-    std::vector<EGS_Vector> _elt_points;
+    std::vector<std::array<int, 4>> _elt_node_indices;
     // 4 * num_elts of which faces are boundaries
     // TODO: try vec<array<bool, 4>>
     std::vector<bool> _boundary_faces;

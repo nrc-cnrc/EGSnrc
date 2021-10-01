@@ -1092,18 +1092,20 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     EGS_BaseGeometry::nreg = elements.size();
 
     _elt_tags.reserve(elements.size());
-    _elt_points.reserve(elements.size() * 4);
+    _nodes.reserve(nodes.size());
 
-    std::unordered_map<int, EGS_Mesh::Node> node_map;
+    std::unordered_map<int, int> node_map;
     node_map.reserve(nodes.size());
-    for (const auto& n : nodes) {
-        node_map.insert({n.tag, n});
+    for (int i = 0; i < static_cast<int>(nodes.size()); i++) {
+        const auto& n = nodes[i];
+        node_map.insert({n.tag, i});
+        _nodes.push_back(EGS_Vector(n.x, n.y, n.z));
     }
     if (node_map.size() != nodes.size()) {
         throw std::runtime_error("duplicate nodes in node list");
     }
-    // Find the matching nodes for every tetrahedron
-    auto find_node = [&](int node_tag) -> EGS_Mesh::Node {
+    // Find the matching node indices for every tetrahedron
+    auto find_node = [&](int node_tag) -> int {
         auto node_it = node_map.find(node_tag);
         if (node_it == node_map.end()) {
             throw std::runtime_error("No mesh node with tag: " + std::to_string(node_tag));
@@ -1113,14 +1115,9 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     for (int i = 0; i < static_cast<int>(elements.size()); i++) {
         const auto& e = elements[i];
         _elt_tags.push_back(e.tag);
-        auto a = find_node(e.a);
-        auto b = find_node(e.b);
-        auto c = find_node(e.c);
-        auto d = find_node(e.d);
-        _elt_points.emplace_back(EGS_Vector(a.x, a.y, a.z));
-        _elt_points.emplace_back(EGS_Vector(b.x, b.y, b.z));
-        _elt_points.emplace_back(EGS_Vector(c.x, c.y, c.z));
-        _elt_points.emplace_back(EGS_Vector(d.x, d.y, d.z));
+        _elt_node_indices.push_back({
+            find_node(e.a), find_node(e.b), find_node(e.c), find_node(e.d)
+        });
     }
 
     std::vector<mesh_neighbours::Tetrahedron> neighbour_elts;
