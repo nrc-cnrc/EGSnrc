@@ -236,7 +236,6 @@ public:
     static EGS_Mesh* parse_msh_file(std::istream& input);
 
     int num_elements() const {
-        // todo return nreg
         return _elt_tags.size();
     }
     const std::vector<std::string>& medium_names() const {
@@ -377,8 +376,42 @@ private:
 
     std::vector<int> findNeighbourhood(int elt);
 
-    // Initialize the two octrees used to accelerate transport
-    void initOctrees();
+    // Constructor helper methods:
+    //
+    // Each logical piece is a separate function to help reduce peak memory
+    // usage. For large meshes, having temporaries around until the end of the
+    // constructor, including during intense operations like constructing the
+    // octrees, etc. can raise the peak memory usage far above the steady state
+    // requirements.
+
+    // Initialize the mesh element information in the EGS_Mesh constructor.
+    // Must be called before any other initialize functions.  After this method
+    // is called, the following member data is initialized:
+    // * EGS_Mesh::_nodes
+    // * EGS_Mesh::_elt_tags
+    // * EGS_Mesh::_elt_node_indices
+    // * EGS_BaseGeometry::nreg
+    // and member functions that depend on this data, like num_elements().
+    void initializeElements(std::vector<EGS_Mesh::Tetrahedron> elements,
+        std::vector<EGS_Mesh::Node> nodes,
+        std::vector<EGS_Mesh::Medium> materials);
+
+    // Initialize neigbhour and boundary information. Must be called after
+    // initializeElements. Responsible for initializing:
+    // * EGS_Mesh::_neighbours
+    // * EGS_Mesh::_boundary_faces
+    void initializeNeighbours();
+
+    // Initialize the two octrees used to accelerate transport. Both
+    // initializeElements and initializeNeighbours must be called to properly
+    // set up the octrees. Responsible for initializing:
+    // * EGS_Mesh::_volume_tree
+    // * EGS_Mesh::_surface_tree
+    void initializeOctrees();
+
+    // Initialize the tetrahedron face normals. Must be called after
+    // initializeElements. Responsible for initializing EGS_Mesh::_face_normals.
+    void initializeNormals();
 
     std::vector<EGS_Vector> _nodes;
     std::vector<int> _elt_tags;

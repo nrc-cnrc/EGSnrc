@@ -1084,14 +1084,30 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials)
         : EGS_BaseGeometry("EGS_Mesh")
 {
-    std::size_t max_elts = std::numeric_limits<int>::max();
-    if (elements.size() >= max_elts) {
+    initializeElements(std::move(elements), std::move(nodes), std::move(materials));
+    initializeNeighbours();
+    initializeOctrees();
+    initializeNormals();
+}
+
+void EGS_Mesh::initializeElements(std::vector<EGS_Mesh::Tetrahedron> elements,
+    std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials)
+{
+    std::size_t n_max = std::numeric_limits<int>::max();
+    if (elements.size() >= n_max) {
         throw std::runtime_error("maximum number of elements (" +
-            std::to_string(max_elts) + ") exceeded (" + std::to_string(elements.size()) + ")");
+            std::to_string(n_max) + ") exceeded (" +
+                std::to_string(elements.size()) + ")");
+    }
+    if (nodes.size() >= n_max) {
+        throw std::runtime_error("maximum number of nodes (" +
+            std::to_string(n_max) + ") exceeded (" +
+                std::to_string(nodes.size()) + ")");
     }
     EGS_BaseGeometry::nreg = elements.size();
 
     _elt_tags.reserve(elements.size());
+    _elt_node_indices.reserve(elements.size());
     _nodes.reserve(nodes.size());
 
     std::unordered_map<int, int> node_map;
@@ -1120,22 +1136,43 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         });
     }
 
-    std::vector<mesh_neighbours::Tetrahedron> neighbour_elts;
-    neighbour_elts.reserve(elements.size());
-    for (const auto& e: elements) {
-        neighbour_elts.emplace_back(mesh_neighbours::Tetrahedron(e.a, e.b, e.c, e.d));
+    // map from medium tags to offsets
+    std::unordered_map<int, int> medium_offsets;
+    for (std::size_t i = 0; i < materials.size(); i++) {
+        _medium_names.push_back(materials[i].medium_name);
+        auto material_tag = materials[i].tag;
+        bool inserted = medium_offsets.insert({material_tag, i}).second;
+        if (!inserted) {
+            throw std::runtime_error("duplicate medium tag: " + std::to_string(material_tag));
+        }
     }
-    this->_neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
 
-    _boundary_faces.reserve(elements.size() * 4);
+    _medium_indices.reserve(elements.size());
+    for (const auto& e: elements) {
+        // TODO handle vacuum tag (-1)?
+        _medium_indices.push_back(medium_offsets.at(e.medium_tag));
+    }
+}
+
+void EGS_Mesh::initializeNeighbours() {
+    std::vector<mesh_neighbours::Tetrahedron> neighbour_elts;
+    neighbour_elts.reserve(num_elements());
+    for (const auto& e: _elt_node_indices) {
+        neighbour_elts.emplace_back(mesh_neighbours::Tetrahedron(e[0], e[1], e[2], e[3]));
+    }
+    _neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
+
+    _boundary_faces.reserve(num_elements() * 4);
     for (const auto& ns: _neighbours) {
         for (const auto& n: ns) {
             _boundary_faces.push_back(n == mesh_neighbours::NONE);
         }
     }
+}
 
-    _face_normals.reserve(elements.size());
-    for (int i = 0; i < static_cast<int>(elements.size()); i++) {
+void EGS_Mesh::initializeNormals() {
+    _face_normals.reserve(num_elements());
+    for (int i = 0; i < static_cast<int>(num_elements()); i++) {
         auto get_normal = [](const EGS_Vector& a, const EGS_Vector& b,
             const EGS_Vector& c) -> EGS_Vector
         {
@@ -1151,32 +1188,9 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
             get_normal(n.A, n.B, n.C)
         });
     }
-
-    // TODO figure out materials setup (override setMedia?) with egsinp
-
-    // map from medium tags to offsets
-    std::unordered_map<int, int> medium_offsets;
-    for (std::size_t i = 0; i < materials.size(); i++) {
-        // TODO use EGS_BaseGeometry tracker
-        // auto med = EGS_BaseGeometry::addMedium(m.medium_name);
-        _medium_names.push_back(materials[i].medium_name);
-        auto material_tag = materials[i].tag;
-        bool inserted = medium_offsets.insert({material_tag, i}).second;
-        if (!inserted) {
-            throw std::runtime_error("duplicate medium tag: " + std::to_string(material_tag));
-        }
-    }
-
-    _medium_indices.reserve(elements.size());
-    for (const auto& e: elements) {
-        // TODO handle vacuum tag (-1)?
-        _medium_indices.push_back(medium_offsets.at(e.medium_tag));
-    }
-
-    initOctrees();
 }
 
-void EGS_Mesh::initOctrees() {
+void EGS_Mesh::initializeOctrees() {
     std::vector<int> elts;
     std::vector<int> boundary_elts;
     elts.reserve(num_elements());
@@ -1190,7 +1204,6 @@ void EGS_Mesh::initOctrees() {
     EGS_Mesh_Octree::initStaticMembers(elts, *this);
     // Max element sizes from Furuta et al section 2.1.1
     std::size_t n_vol = 200;
-    // TODO: pass in EGS_Mesh?
     _volume_tree = std::unique_ptr<EGS_Mesh_Octree>(
         new EGS_Mesh_Octree(elts, n_vol, *this)
     );
