@@ -1045,7 +1045,7 @@ public:
     }
 
     void print(std::ostream& out) const {
-		root_.print(out, 0);
+        root_.print(out, 0);
     }
 
     int howfar_exterior(const EGS_Vector &p, const EGS_Vector &v,
@@ -1156,6 +1156,24 @@ EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         for (const auto& n: ns) {
             _boundary_faces.push_back(n == mesh_neighbours::NONE);
         }
+    }
+
+    _face_normals.reserve(elements.size());
+    for (int i = 0; i < static_cast<int>(elements.size()); i++) {
+        auto get_normal = [](const EGS_Vector& a, const EGS_Vector& b,
+            const EGS_Vector& c) -> EGS_Vector
+        {
+            EGS_Vector normal = cross(b - a, c - a);
+            normal.normalize();
+            return normal;
+        };
+        const auto& n = element_nodes(i);
+        _face_normals.push_back({
+            get_normal(n.B, n.C, n.D),
+            get_normal(n.A, n.C, n.D),
+            get_normal(n.A, n.B, n.D),
+            get_normal(n.A, n.B, n.C)
+        });
     }
 
     // TODO figure out materials setup (override setMedia?) with egsinp
@@ -1390,24 +1408,27 @@ EGS_Float EGS_Mesh::hownear(int ireg, const EGS_Vector& x) {
     return min_exterior_face_dist(x);
 }
 
+// Assumes the input normal is normalized. Returns the absolute value of the
+// distance.
+EGS_Float distance_to_plane(const EGS_Vector &x,
+    const EGS_Vector& unit_plane_normal, const EGS_Vector& plane_point)
+{
+    return std::abs(dot(unit_plane_normal, x - plane_point));
+}
+
 EGS_Float EGS_Mesh::min_interior_face_dist(int ireg, const EGS_Vector& x) {
-    assert(ireg >= 0);
-    EGS_Float min2 = std::numeric_limits<EGS_Float>::max();
-
-    auto maybe_update_min = [&](const EGS_Vector& A, const EGS_Vector& B, const EGS_Vector& C) {
-        EGS_Float dis = distance2(closest_point_triangle(x, A, B, C), x);
-        if (dis < min2) {
-            min2 = dis;
-        }
-    };
-
     const auto& n = element_nodes(ireg);
-    maybe_update_min(n.A, n.B, n.C);
-    maybe_update_min(n.A, n.C, n.D);
-    maybe_update_min(n.A, n.B, n.D);
-    maybe_update_min(n.B, n.C, n.D);
 
-    return std::sqrt(min2);
+    // First face is BCD, second is ACD, third is ABD, fourth is ABC
+    EGS_Float min_dist = distance_to_plane(x, _face_normals[ireg][0], n.B);
+    min_dist = std::min(min_dist,
+        distance_to_plane(x, _face_normals[ireg][1], n.A));
+    min_dist = std::min(min_dist,
+        distance_to_plane(x, _face_normals[ireg][2], n.A));
+    min_dist = std::min(min_dist,
+        distance_to_plane(x, _face_normals[ireg][3], n.A));
+
+    return min_dist;
 }
 
 EGS_Float EGS_Mesh::min_exterior_face_dist(const EGS_Vector& x) {

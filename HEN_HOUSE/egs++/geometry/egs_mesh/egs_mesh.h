@@ -384,6 +384,9 @@ private:
     // 4 * num_elts of which faces are boundaries
     // TODO: try vec<array<bool, 4>>
     std::vector<bool> _boundary_faces;
+    // TODO if memory is an issue, could try storing tets as sets of faces,
+    // faces as sets of edges, etc.
+    std::vector<std::array<EGS_Vector, 4>> _face_normals;
     std::vector<int> _medium_indices;
     std::vector<std::string> _medium_names;
     std::string _filename;
