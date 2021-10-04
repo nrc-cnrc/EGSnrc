@@ -327,7 +327,11 @@ EGS_Mesh* parse_msh41_body(std::istream& input) {
 
     // TODO: check all 3d physical groups were used by elements
     // TODO: ensure all element node tags are valid
-    return new EGS_Mesh(mesh_elts, mesh_nodes, media);
+    return new EGS_Mesh(
+        std::move(mesh_elts),
+        std::move(mesh_nodes),
+        std::move(media)
+    );
 }
 } // anonymous namespace
 
