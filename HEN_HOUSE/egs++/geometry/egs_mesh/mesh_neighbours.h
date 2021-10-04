@@ -49,25 +49,25 @@ public:
     class Face {
     public:
         Face(){}
-        Face(std::size_t a, std::size_t b, std::size_t c) {
-            std::vector<std::size_t> sorted {a, b, c};
+        Face(int a, int b, int c) {
+            std::array<int, 3> sorted {a, b, c};
             // sort to ease comparison between faces
             std::sort(sorted.begin(), sorted.end());
-            _nodes = {sorted[0], sorted[1], sorted[2]};
+            _nodes = sorted;
         }
-        std::size_t node0() const {
+        int node0() const {
             return _nodes[0];
         }
         friend bool operator==(const Face& a, const Face& b);
         friend bool operator!=(const Face& a, const Face& b);
     private:
-        std::array<std::size_t, 3> _nodes;
+        std::array<int, 3> _nodes;
     };
 
     // Make a tetrahedron from four nodes.
     //
     // Throws a std::invalid_argument exception if duplicate node tags are passed in.
-    Tetrahedron(std::size_t a, std::size_t b, std::size_t c, std::size_t d)
+    Tetrahedron(int a, int b, int c, int d)
         : _nodes({a, b, c, d})
     {
         if (a == b || a == c || a == d) {
@@ -89,10 +89,10 @@ public:
             Face(a, b, c)
         };
     }
-    std::array<std::size_t, 4> nodes() const {
+    std::array<int, 4> nodes() const {
         return _nodes;
     }
-    std::size_t max_node() const {
+    int max_node() const {
         return *std::max_element(_nodes.begin(), _nodes.end());
     }
     std::array<Face, 4> faces() const {
@@ -100,7 +100,7 @@ public:
     }
 
 private:
-    std::array<std::size_t, 4> _nodes;
+    std::array<int, 4> _nodes;
     std::array<Face, 4> _faces;
 };
 
@@ -118,18 +118,18 @@ namespace internal {
 
 class SharedNodes {
 public:
-    SharedNodes(std::vector<std::vector<std::size_t>> shared_nodes) :
+    SharedNodes(std::vector<std::vector<int>> shared_nodes) :
         shared_nodes(std::move(shared_nodes)) {}
-    const std::vector<std::size_t>& elements_around_node(std::size_t node) const {
+    const std::vector<int>& elements_around_node(int node) const {
         return shared_nodes.at(node);
     }
 private:
-    std::vector<std::vector<std::size_t>> shared_nodes;
+    std::vector<std::vector<int>> shared_nodes;
 };
 
 // Find the elements around each node.
 SharedNodes elements_around_nodes(const std::vector<mesh_neighbours::Tetrahedron>& elements) {
-    std::size_t max_node = 0;
+    int max_node = 0;
     for (const auto& elt: elements) {
         if (elt.max_node() > max_node) {
             max_node = elt.max_node();
@@ -138,7 +138,7 @@ SharedNodes elements_around_nodes(const std::vector<mesh_neighbours::Tetrahedron
 
     // the number of unique nodes is equal to the maximum node number + 1
     // because the nodes are numbered from 0..=max_node
-    std::vector<std::vector<std::size_t>> shared_nodes(max_node + 1);
+    std::vector<std::vector<int>> shared_nodes(max_node + 1);
     for (std::size_t i = 0; i < elements.size(); i++) {
         for (auto node: elements[i].nodes()) {
             shared_nodes.at(node).push_back(i);
