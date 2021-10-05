@@ -226,16 +226,6 @@ int triangle_ray_intersection(const EGS_Vector &p, const EGS_Vector &v_norm,
     return 1;
 }
 
-EGS_Vector centroid(const EGS_Vector& a, const EGS_Vector& b, const EGS_Vector& c,
-    const EGS_Vector& d)
-{
-    return EGS_Vector(
-        (a.x + b.x + c.x + d.x) / 4.0,
-        (a.y + b.y + c.y + d.y) / 4.0,
-        (a.z + b.z + c.z + d.z) / 4.0
-    );
-}
-
 /// Parse the body of a msh4.1 file into an EGS_Mesh using the msh_parser API.
 ///
 /// Throws a std::runtime_error if parsing fails.
@@ -354,11 +344,6 @@ private:
     }
     static double tet_max_z(const EGS_Mesh::Nodes& n) {
         return std::max(n.A.z, std::max(n.B.z, std::max(n.C.z, n.D.z)));
-    }
-    static double tet_longest_edge2(const EGS_Mesh::Nodes& n) {
-        return std::max(distance2(n.A, n.B), std::max(distance2(n.A, n.C),
-                   std::max(distance2(n.A, n.D), std::max(distance2(n.B, n.C),
-                       std::max(distance2(n.B, n.D), distance2(n.C, n.D))))));
     }
 
     // An axis-aligned bounding box.
@@ -685,20 +670,6 @@ private:
         std::vector<int> elts_;
         std::vector<Node> children_;
         BoundingBox bbox_;
-        // Knowing the longest edge gives us a good stopping criteria when a
-        // point in an overlapping element without nodes in the octree, e.g.
-        //
-        //     +---+---+
-        //     |   |   | /|
-        //     +---+---+/ |
-        //     |   |   /  |
-        //     +---+--/+  |
-        //           /    |
-        //           ------
-        // If the lookup fails, we will keep trying until we have searched a
-        // bounding box of at least "longest_edge" around the query point.
-        static EGS_Float longest_edge;
-        static BoundingBox global_bounds;
 
         Node() = default;
         // TODO: think about passing in EGS_Mesh as parameter
@@ -749,37 +720,6 @@ private:
             }
         }
 
-
-        // Check if this node's bounding box is guaranteed to hold the largest
-        // possible tetrahedron in any orientation.
-        //
-        // TODO: test if this method actually works
-        bool containsLargestTetrahedron(const EGS_Vector& p) const {
-            // Float comparison safety: global bounds should be equal to bounding
-            // boxes on the edge as they are assigned directly.
-            //
-            // Min bounds: local min is larger than global min and there
-            // could be an edge that extends past the local min
-            if ((bbox_.min_x > Node::global_bounds.min_x &&
-                    bbox_.min_x > (p.x - Node::longest_edge)) ||
-                (bbox_.min_y > Node::global_bounds.min_y &&
-                    bbox_.min_y > (p.y - Node::longest_edge)) ||
-                (bbox_.min_z > Node::global_bounds.min_z &&
-                    bbox_.min_z > (p.z - Node::longest_edge)) ||
-                // Max bounds: local max is smaller than global max and there
-                // could be an edge that extends past the local max
-                (bbox_.max_x < Node::global_bounds.max_x &&
-                    bbox_.max_x < (p.x + Node::longest_edge)) ||
-                (bbox_.max_y < Node::global_bounds.max_y &&
-                    bbox_.max_y < (p.y + Node::longest_edge)) ||
-                (bbox_.max_z < Node::global_bounds.max_z &&
-                    bbox_.max_z < (p.z + Node::longest_edge)))
-            {
-                return false;
-            }
-            return true;
-        }
-
         int findOctant(const EGS_Vector &p) const {
             // Our choice of octant ordering (see BoundingBox.divide8) means we
             // can determine the correct octant with three checks. E.g. octant 0
@@ -819,31 +759,6 @@ private:
             return octants;
         }
 
-        // Given the most likely octant, return the remaining octants ordered by
-        // minimum distance to the query point.
-        std::array<int, 7> nextClosestOctants(const EGS_Vector& p,
-            int exclude_octant) const
-        {
-            if (isLeaf()) {
-                throw std::runtime_error(
-                    "nextClosestOctants called on leaf node");
-            }
-            std::vector<std::pair<EGS_Float, int>> octant_distances;
-            for (int i = 0; i < 8; i++) {
-                if (i == exclude_octant) {
-                    continue;
-                }
-                auto closest_point = children_[i].bbox_.closest_point(p);
-                octant_distances.push_back({distance2(p, closest_point), i});
-            }
-            std::sort(octant_distances.begin(), octant_distances.end());
-            std::array<int, 7> octants;
-            for (int i = 0; i < 7; i++) {
-                octants[i] = octant_distances[i].second;
-            }
-            return octants;
-        }
-
         // Leaf node: search all bounded elements, returning the minimum
         // distance to a boundary tetrahedron or a bounding box surface.
         EGS_Float hownear_leaf_search(const EGS_Vector& p, EGS_Mesh& mesh) const
@@ -873,7 +788,6 @@ private:
             return children_[octant].hownear_exterior(p, mesh);
         }
 
-        // TODO remove containsLargestTetrahedron check
         // Does not mutate the EGS_Mesh.
         int isWhere(const EGS_Vector &p, /*const*/ EGS_Mesh &mesh) const {
             // Leaf node: search all bounded elements, returning -1 if the
@@ -888,31 +802,7 @@ private:
             }
 
             // Parent node: decide which octant to search and descend the tree
-            auto octant = findOctant(p);
-            auto elt = children_[octant].isWhere(p, mesh);
-            // If we find a valid element, we can conclude it is the correct
-            // solution since elements are assumed not to overlap.
-            if (elt != -1) {
-                return elt;
-            }
-
-            // If the element wasn't found, it is possible the point is in an
-            // overlapping element in a nearby octant. Give up if we can
-            // conclude that knowing the longest possible edge, we've searched
-            // a suitably sized bounding box around the query point.
-            //
-            // Otherwise begin a fallback search through the siblings.
-            if (children_[octant].containsLargestTetrahedron(p)) {
-                return -1;
-            }
-            for (std::size_t i = 0; i < 8; i++) {
-                if (i == octant) { continue; }
-                auto elt = children_[i].isWhere(p, mesh);
-                if (elt != -1) {
-                    return elt;
-                }
-            }
-            return -1;
+            return children_[findOctant(p)].isWhere(p, mesh);
         }
 
         // TODO split into two functions
@@ -976,35 +866,6 @@ private:
 
     Node root_;
 public:
-
-    // Must be called before creating and using any EGS_Mesh_Octrees
-    // TODO: maybe a nicer way to do this? Check core guidlines?
-    static void initStaticMembers(const std::vector<int> &elts,
-        const EGS_Mesh& mesh)
-    {
-        if (elts.empty()) {
-            throw std::runtime_error("EGS_Mesh_Octree: empty elements vector");
-        }
-        const EGS_Float INF = std::numeric_limits<EGS_Float>::infinity();
-        BoundingBox b(INF, -INF, INF, -INF, INF, -INF);
-        EGS_Float longest_edge2 = -INF;
-        for (const auto& e : elts) {
-            const auto& nodes = mesh.element_nodes(e);
-            b.min_x = std::min(b.min_x, tet_min_x(nodes));
-            b.max_x = std::max(b.max_x, tet_max_x(nodes));
-            b.min_y = std::min(b.min_y, tet_min_y(nodes));
-            b.max_y = std::max(b.max_y, tet_max_y(nodes));
-            b.min_z = std::min(b.min_z, tet_min_z(nodes));
-            b.max_z = std::max(b.max_z, tet_max_z(nodes));
-            longest_edge2 = std::max(longest_edge2, tet_longest_edge2(nodes));
-        }
-        // Add a small delta around the bounding box to avoid numerical problems
-        // at the boundary
-        b.expand(1e-8);
-        Node::longest_edge = std::sqrt(longest_edge2);
-        Node::global_bounds = b;
-    }
-
     EGS_Mesh_Octree() = default;
     EGS_Mesh_Octree(const std::vector<int> &elts, std::size_t n_max,
         const EGS_Mesh& mesh)
@@ -1016,8 +877,22 @@ public:
         if (elts.size() > std::numeric_limits<int>::max()) {
             throw std::runtime_error("EGS_Mesh_Octree: num elts must fit into an int");
         }
-        // TODO: add check that initStaticMembers was called?
-        root_ = Node(elts, Node::global_bounds, n_max, mesh);
+
+        const EGS_Float INF = std::numeric_limits<EGS_Float>::infinity();
+        BoundingBox g_bounds(INF, -INF, INF, -INF, INF, -INF);
+        for (const auto& e : elts) {
+            const auto& nodes = mesh.element_nodes(e);
+            g_bounds.min_x = std::min(g_bounds.min_x, tet_min_x(nodes));
+            g_bounds.max_x = std::max(g_bounds.max_x, tet_max_x(nodes));
+            g_bounds.min_y = std::min(g_bounds.min_y, tet_min_y(nodes));
+            g_bounds.max_y = std::max(g_bounds.max_y, tet_max_y(nodes));
+            g_bounds.min_z = std::min(g_bounds.min_z, tet_min_z(nodes));
+            g_bounds.max_z = std::max(g_bounds.max_z, tet_max_z(nodes));
+        }
+        // Add a small delta around the bounding box to avoid numerical problems
+        // at the boundary
+        g_bounds.expand(1e-8);
+        root_ = Node(elts, g_bounds, n_max, mesh);
     }
 
     int isWhere(const EGS_Vector& p, /*const*/ EGS_Mesh& mesh) const {
@@ -1061,9 +936,6 @@ public:
         return root_.hownear_exterior(p, mesh);
     }
 };
-
-EGS_Float EGS_Mesh_Octree::Node::longest_edge = 0.0;
-EGS_Mesh_Octree::BoundingBox EGS_Mesh_Octree::Node::global_bounds = {};
 
 // msh4.1 parsing
 //
@@ -1205,7 +1077,6 @@ void EGS_Mesh::initializeOctrees() {
         }
     }
     std::cout << "before making octree\n";
-    EGS_Mesh_Octree::initStaticMembers(elts, *this);
     // Max element sizes from Furuta et al section 2.1.1
     std::size_t n_vol = 200;
     _volume_tree = std::unique_ptr<EGS_Mesh_Octree>(
@@ -1247,139 +1118,8 @@ bool EGS_Mesh::insideElement(int i, const EGS_Vector &x) /* const */ {
     return true;
 }
 
-std::vector<int> EGS_Mesh::findNeighbourhood(int elt) {
-    auto sz = 128;
-    std::vector<int> hood;
-    hood.reserve(sz);
-    std::deque<int> to_search;
-    to_search.push_back(elt);
-    while (!to_search.empty() && hood.size() <= 128) {
-        int elt = to_search.front();
-        to_search.pop_front();
-        std::array<int, 4> neighbours = _neighbours[elt];
-        for (auto n : neighbours) {
-            if (n == mesh_neighbours::NONE) {
-                continue;
-            }
-            if (std::find(begin(hood), end(hood), n) == hood.end()) {
-                hood.push_back(n);
-                to_search.push_back(n);
-            }
-        }
-    }
-    return hood;
-}
-
 int EGS_Mesh::isWhere(const EGS_Vector &x) {
-    static int num_calls = 0;
-    static int num_hits = 0;
-
-    if (!_volume_tree) {
-        std::cerr << "lookup tree is null!\n";
-    }
-
-    auto octree_elt = _volume_tree->isWhere(x, *this);
-    return octree_elt;
-
-    int elt = -1;
-    for (auto i = 0; i < num_elements(); i++) {
-        if (insideElement(i, x)) {
-            elt = i;
-        }
-    }
-
-    if (octree_elt == elt) {
-        num_hits++;
-    } else {
-        std::cout << "octree: " << octree_elt << "\n";
-        std::cout << "brute:  " << elt << "\n";
-        printElement(elt);
-        std::cout << "false negative for point:\n";
-        print_egsvec(x);
-        exit(1);
-    }
-
-    num_calls++;
-    if (num_calls && num_calls % 1000 == 0) {
-        egsInformation("isWhere: \n%d of %d\n", num_hits, num_calls);
-    }
-
-    return elt;
-
-    /*
-    std::vector<EGS_Vector> centroids;
-    centroids.reserve(num_elements());
-    for (int i = 0; i < num_elements(); i++) {
-        auto n = element_nodes(i);
-        centroids.push_back(centroid(n.A, n.B, n.C, n.D));
-    }
-
-    std::cout << "\n";
-    int elt = -1;
-    for (int i = 0; i < num_elements(); i++) {
-        const auto& c = centroids[i];
-        //for (auto j = 0; j < num_elements(); j++) {
-        //    if (insideElement(j, c)) {
-        //        elt = j;
-        //    }
-        //}
-        auto octree_elt = _volume_tree->isWhere(c, *this);
-        if (i != octree_elt) {
-            throw std::runtime_error("octree and brute don't match for element "
-                + std::to_string(i) + " " + std::to_string(octree_elt));
-        }
-        //std::cout << "Brute search  " << elt << "\n";
-        //std::cout << "Octree search " << octree_elt << "\n";
-    }
-    exit(1);
-    */
-
-    //int elt = -1;
-    //{
-    //auto start = std::chrono::steady_clock::now();
-    //for (auto i = 0; i < num_elements(); i++) {
-    //    if (insideElement(i, x)) {
-    //        elt = i;
-    //    }
-    //}
-    //auto end = std::chrono::steady_clock::now();
-    //std::cout << "Brute search: "
-    //    << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
-    //    << " us\n";
-    //}
-    //std::cout << "elt should be " << elt << "\n";
-
-    //return _volume_tree->findTetrahedron(x, *this);
-    //auto start = std::chrono::steady_clock::now();
-    //auto closest_elt = _volume_tree->findTetrahedron(x, *this);
-    //auto end = std::chrono::steady_clock::now();
-    //std::cout << "Octree search: "
-    //    << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count()
-    //    << " us\n";
-    //std::cout << "found elt " << closest_elt << "\n";
-    //if (closest_elt != -1) {
-    //    //num_hits++;
-    //    return closest_elt;
-    //}
-
-    //std::cout << "got closest elt " << closest_elt << "\n";
-    //auto neighbourhood = findNeighbourhood(closest_elt);
-    //std::array<int, 5> neighbourhood { closest_elt,
-    //    _neighbours[closest_elt][0], _neighbours[closest_elt][1],
-    //    _neighbours[closest_elt][2], _neighbours[closest_elt][3]
-    //};
-    //for (auto n : neighbourhood) {
-    //    if (n != mesh_neighbours::NONE && insideElement(n, x)) {
-    ////        num_hits++;
-    //        return n;
-    //    }
-    //}
-    for (auto i = 0; i < num_elements(); i++) {
-        if (insideElement(i, x)) {
-            return i;
-        }
-    }
-    return -1;
+    return _volume_tree->isWhere(x, *this);
 }
 
 EGS_Float EGS_Mesh::hownear(int ireg, const EGS_Vector& x) {
@@ -1632,66 +1372,3 @@ extern "C" {
     }
 }
 
-/*
-void EGS_Mesh::reorderMesh(const EGS_Vector &x) {
-    std::vector<std::pair<int, EGS_Vector>> elt_centroids;
-    elt_centroids.reserve(num_elements());
-    for (int i = 0; i < num_elements(); i++) {
-        auto n = element_nodes(i);
-        elt_centroids.push_back(std::make_pair(i, centroid(n.A, n.B, n.C, n.D)));
-    }
-    std::sort(begin(elt_centroids), end(elt_centroids),
-        [&](const std::pair<int, EGS_Vector>& A, const std::pair<int, EGS_Vector>& B) {
-        return (A.second - x).length2() < (B.second - x).length2();
-    });
-    std::vector<int> reordered_tags;
-    reordered_tags.reserve(num_elements());
-    for (const auto& pair: elt_centroids) {
-        reordered_tags.push_back(pair.first);
-    }
-    //for (int i = 0; i < 5; i++) {
-    //    std::cout << "tet " << elt_centroids[i].first << "\nwith centroid:\n";
-    //    print_egsvec(elt_centroids[i].second);
-    //}
-    renumberMesh(reordered_tags);
-}
-
-void EGS_Mesh::renumberMesh(const std::vector<int>& reordered_tags) {
-    if (reordered_tags.size() != _elt_tags.size()) {
-        throw std::runtime_error("renumberMesh: tag vector length mismatch");
-    }
-
-    // map from old numbering to new numbering
-    std::unordered_map<int, int> renum;
-    renum.reserve(num_elements());
-    for (int i = 0; i < num_elements(); i++) {
-        renum.insert({reordered_tags[i], i});
-    }
-
-    auto old_tags = _elt_tags;
-    auto old_points = _elt_points;
-    auto old_b_faces = _boundary_faces;
-    auto old_b_elts = _boundary_elts;
-    auto old_media = _medium_indices;
-    auto old_neighbours = _neighbours;
-
-    for (std::size_t i = 0; i < reordered_tags.size(); i++) {
-        auto old = reordered_tags.at(i);
-        _elt_tags.at(i) = old;
-        for (int j = 0; j < 4; j++) {
-            _elt_points.at(4*i+j) = old_points.at(4*old+j);
-            _boundary_faces.at(4*i+j) = old_b_faces.at(4*old+j);
-        }
-        _boundary_elts.at(i) = old_b_elts.at(old);
-        _medium_indices.at(i) = old_media.at(old);
-        for (int j = 0; j < 4; j++) {
-            auto old_n = old_neighbours.at(old).at(j);
-            if (old_n == -1) {
-                _neighbours.at(i).at(j) = -1;
-            } else {
-                _neighbours.at(i).at(j) = renum.at(old_n);
-            }
-        }
-    }
-}
-*/

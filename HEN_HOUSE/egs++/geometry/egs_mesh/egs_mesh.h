@@ -49,120 +49,6 @@
 #include "egs_base_geometry.h"
 #include "egs_vector.h"
 
-/*
-class point {
-   EGS_Vector p_;
-public:
-    point(EGS_Vector p) : p_(p) {}
-    double get(size_t index) const {
-        if (index == 0) { return p_.x; }
-        if (index == 1) { return p_.y; }
-        if (index == 2) { return p_.z; }
-        throw std::runtime_error("index out of bounds");
-    }
-    // Returns distance squared to another point
-    double distance(const point& pt) const {
-        auto diff = p_ - pt.p_;
-        return diff.length2();
-    }
-};
-
-std::ostream& operator<<(std::ostream& out, const point& pt) {
-    out << '(';
-    for (size_t i = 0; i < 3; ++i) {
-        if (i > 0)
-            out << ", ";
-        out << pt.get(i);
-    }
-    out << ')';
-    return out;
-}
-
-class kdtree {
-private:
-    struct node {
-        node(const point& pt) : point_(pt), left_(nullptr), right_(nullptr) {}
-        double get(size_t index) const {
-            return point_.get(index);
-        }
-        double distance(const point& pt) const {
-            return point_.distance(pt);
-        }
-        point point_;
-        node* left_;
-        node* right_;
-        // to lookup which tetrahedron this centroid belongs to
-        int offset_ = -1;
-    };
-    node* root_ = nullptr;
-    node* best_ = nullptr;
-    double best_dist_ = 0;
-    size_t visited_ = 0;
-    std::vector<node> nodes_;
-
-    struct node_cmp {
-        node_cmp(size_t index) : index_(index) {}
-        bool operator()(const node& n1, const node& n2) const {
-            return n1.point_.get(index_) < n2.point_.get(index_);
-        }
-        size_t index_;
-    };
-
-    node* make_tree(size_t begin, size_t end, size_t index) {
-        if (end <= begin)
-            return nullptr;
-        size_t n = begin + (end - begin)/2;
-        auto i = nodes_.begin();
-        std::nth_element(i + begin, i + n, i + end, node_cmp(index));
-        index = (index + 1) % 3;
-        nodes_[n].left_ = make_tree(begin, n, index);
-        nodes_[n].right_ = make_tree(n + 1, end, index);
-        return &nodes_[n];
-    }
-
-    void nearest(node* root, const point& point, size_t index) {
-        if (root == nullptr)
-            return;
-        ++visited_;
-        double d = root->distance(point);
-        if (best_ == nullptr || d < best_dist_) {
-            best_dist_ = d;
-            best_ = root;
-        }
-        if (best_dist_ == 0)
-            return;
-        double dx = root->get(index) - point.get(index);
-        index = (index + 1) % 3;
-        nearest(dx > 0 ? root->left_ : root->right_, point, index);
-        if (dx * dx >= best_dist_)
-            return;
-        nearest(dx > 0 ? root->right_ : root->left_, point, index);
-    }
-public:
-    kdtree() = default;
-    template<typename iterator>
-    kdtree(iterator begin, iterator end) : nodes_(begin, end) {
-        for (std::size_t i = 0; i < nodes_.size(); i++) {
-            nodes_[i].offset_ = i;
-        }
-        root_ = make_tree(0, nodes_.size(), 0);
-    }
-
-    bool empty() const { return nodes_.empty(); }
-    size_t visited() const { return visited_; }
-    double distance() const { return std::sqrt(best_dist_); }
-    const node& nearest(const point& pt) {
-        if (root_ == nullptr)
-            throw std::logic_error("tree is empty");
-        best_ = nullptr;
-        visited_ = 0;
-        best_dist_ = 0;
-        nearest(root_, pt, 0);
-        return *best_;
-    }
-};
-*/
-
 #ifdef WIN32
 
     #ifdef BUILD_EGS_MESH_DLL
@@ -308,12 +194,6 @@ public:
           << " \tMedia index: "<< _medium_indices[i] << "\n";
     }
 
-    // Order the mesh elements by their distance to x to improve performance.
-    void reorderMesh(const EGS_Vector &x);
-
-    // reorderMesh helper: renumber all the internal data vectors.
-    void renumberMesh(const std::vector<int>& reordered_tags);
-
     // EGS_BaseGeometry interface
     const std::string& getType() const override { return type; }
     bool isInside(const EGS_Vector &x) override;
@@ -373,8 +253,6 @@ private:
     // `howfar` helper method outside the mesh
     int howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         EGS_Float &t, int *newmed, EGS_Vector *normal);
-
-    std::vector<int> findNeighbourhood(int elt);
 
     // Constructor helper methods:
     //
