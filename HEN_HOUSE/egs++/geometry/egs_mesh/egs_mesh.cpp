@@ -188,18 +188,24 @@ EGS_Vector closest_point_tetrahedron(const EGS_Vector &P, const EGS_Vector &A, c
     return min_point;
 }
 
-// Inputs:
-// * particle position p,
-// * normalized velocity v_norm
-// * triangle points A, B, C (any ordering)
-//
-// Returns 1 if there is an intersection and 0 if not. If there is an intersection,
-// the out parameter dist will be the distance along v_norm to the intersection point.
-//
-// Implementation of double-sided Möller-Trumbore ray-triangle intersection
-// <http://www.graphics.cornell.edu/pubs/1997/MT97.pdf>
-int triangle_ray_intersection(const EGS_Vector &p, const EGS_Vector &v_norm,
-    const EGS_Vector& a, const EGS_Vector& b, const EGS_Vector& c, EGS_Float& dist)
+/// TODO: combine with interior_triangle_ray_intersection
+/// TODO: replace with Woop 2013 watertight algorithm.
+///
+/// Triangle-ray intersection algorithm for finding intersections with a ray
+/// outside the tetrahedron.
+/// Inputs:
+/// * particle position p,
+/// * normalized velocity v_norm
+/// * triangle points A, B, C (any ordering)
+///
+/// Returns 1 if there is an intersection and 0 if not. If there is an intersection,
+/// the out parameter dist will be the distance along v_norm to the intersection point.
+///
+/// Implementation of double-sided Möller-Trumbore ray-triangle intersection
+/// <http://www.graphics.cornell.edu/pubs/1997/MT97.pdf>
+int exterior_triangle_ray_intersection(const EGS_Vector &p,
+    const EGS_Vector &v_norm, const EGS_Vector& a, const EGS_Vector& b,
+    const EGS_Vector& c, EGS_Float& dist)
 {
     const EGS_Float eps = 1e-10;
     EGS_Vector ab = b - a;
@@ -224,7 +230,51 @@ int triangle_ray_intersection(const EGS_Vector &p, const EGS_Vector &v_norm,
     }
     // intersection found
     dist = dot(ac, qvec) * inv_det;
-    if (dist < eps) {
+    if (dist < 0.0) {
+        return 0;
+    }
+    return 1;
+}
+
+/// TODO: combine with exterior_triangle_ray_intersection
+/// Triangle-ray intersection algorithm for finding intersections with a ray
+/// inside the tetrahedron.
+int interior_triangle_ray_intersection(const EGS_Vector &p,
+    const EGS_Vector &v_norm, const EGS_Vector& face_norm, const EGS_Vector& a,
+    const EGS_Vector& b, const EGS_Vector& c, EGS_Float& dist)
+{
+    const EGS_Float eps = 1e-10;
+    if (dot(v_norm, face_norm) > -eps) {
+        return 0;
+    }
+
+    if (dot(face_norm, p - a) < 0.0) {
+        return 0;
+    }
+
+    EGS_Vector ab = b - a;
+    EGS_Vector ac = c - a;
+    EGS_Vector pvec = cross(v_norm, ac);
+    EGS_Float det = dot(ab, pvec);
+
+    if (det > -eps && det < eps) {
+        return 0;
+    }
+    EGS_Float inv_det = 1.0 / det;
+    EGS_Vector tvec = p - a;
+    EGS_Float u = dot(tvec, pvec) * inv_det;
+    if (u < 0.0 || u > 1.0) {
+        return 0;
+    }
+    EGS_Vector qvec = cross(tvec, ab);
+    EGS_Float v = dot(v_norm, qvec) * inv_det;
+    if (v < 0.0 || u + v > 1.0) {
+        return 0;
+    }
+    // intersection found
+    dist = dot(ac, qvec) * inv_det;
+    if (dist < 0.0) {
+        dist = 0.0;
         return 0;
     }
     return 1;
@@ -1054,18 +1104,21 @@ void EGS_Mesh::initializeNormals() {
     _face_normals.reserve(num_elements());
     for (int i = 0; i < static_cast<int>(num_elements()); i++) {
         auto get_normal = [](const EGS_Vector& a, const EGS_Vector& b,
-            const EGS_Vector& c) -> EGS_Vector
+            const EGS_Vector& c, const EGS_Vector& d) -> EGS_Vector
         {
             EGS_Vector normal = cross(b - a, c - a);
             normal.normalize();
+            if (dot(normal, d-a) < 0) {
+                normal *= -1.0;
+            }
             return normal;
         };
         const auto& n = element_nodes(i);
         _face_normals.push_back({
-            get_normal(n.B, n.C, n.D),
-            get_normal(n.A, n.C, n.D),
-            get_normal(n.A, n.B, n.D),
-            get_normal(n.A, n.B, n.C)
+            get_normal(n.B, n.C, n.D, n.A),
+            get_normal(n.A, n.C, n.D, n.B),
+            get_normal(n.A, n.B, n.D, n.C),
+            get_normal(n.A, n.B, n.C, n.D)
         });
     }
 }
@@ -1174,83 +1227,140 @@ int EGS_Mesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     return howfar_interior(ireg, x, u, t, newmed, normal);
 }
 
+// howfar_interior is the most complicated EGS_BaseGeometry method. Apart from
+// the intersection logic, there are exceptional cases that must be carefully
+// handled. In particular, the region number and the position `x` may not agree.
+// For example, the region may be 1, but the position x may be slightly outside
+// of region 1 because of numerical undershoot. The region number takes priority
+// because it is where EGS thinks the particle should be based on the simulation
+// so far, and we assume steps like boundary crossing calculations have already
+// taken place. So we have to do our best to calculate intersections as if the
+// position really is inside the given tetrahedron. There are three cases:
+//
+// 1. The position is inside the region: calculate the intersection without
+// further complications.
+// 2. The position is outside the region but will intersect one of the interior
+// faces: calculate the intersection, ignoring any backwards facing faces.
+// 3. The position is outside the region and won't intersect any of the interior
+// faces: return 0.0 as the howfar distance and set the new region number to
+// match the position.
+//
+//     Case 1      |        Case 2       |        Case 3
+//                 |                     |
+//       /\        |          /\         |          /\
+//      /  \       |         /  \        |         /  \
+//     /    \      |        /    \       |        /    \
+//    / * -> X     |  * -> /      X      |  <- * /      \
+//   /________\    |      /________\     |      /________\
+//                 |                     |
+//  Intersection   |     Intersection    |    No intersection, return 0.0
+//
+// This is the recommended way to implement howfar following Bielajew's "HOWFAR
+// and HOWNEAR: Geometry Modelling for Monte Carlo Particle Transport" (see
+// section 2, "Boundary Crossing" and section 4, "Solutions for simple
+// surfaces").
+//
+// Case 1 and 2 are currently both handled the same way: calculate triangle-ray
+// intersections with the subset of the surface triangles facing the query point
+// and return the first intersection. Unlike calculating the distance to face
+// planes, we can return immediately after finding an intersection because there
+// should not be a smaller intersection distance.
+//
+// TODO: check whether using ray-plane intersections for Case 1 is faster.
 int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed, EGS_Vector *normal)
 {
-    assert(ireg >= 0 && ireg < num_elements());
-    EGS_Vector u_norm = u;
-    u_norm.normalize();
-
-    auto update_media_and_normal = [&](const EGS_Vector &A, const EGS_Vector &B,
-        const EGS_Vector &C, int new_reg)
-    {
-        if (newmed) {
-            if (new_reg == -1) {
-                *newmed = -1; // vacuum
-            } else {
-                *newmed = medium(new_reg);
-            }
-        }
-        if (normal) {
-            EGS_Vector ab = B - A;
-            EGS_Vector ac = C - A;
-            EGS_Vector n = cross(ab, ac);
-            // egs++ convention is normal pointing opposite view ray
-            if (dot(n, u) > 0) {
-                n = -1.0 * n;
-            }
-            n.normalize();
-            *normal = n;
-        }
-    };
-
+    // Do we have to reset howfar for this particle? Set false if the particle
+    // will intersect a tetrahedron face as if it was inside the tetrahedron.
+    bool is_lost = true;
     EGS_Float dist = 1e30;
-    const auto& n = element_nodes(ireg);
-    if (triangle_ray_intersection(x, u_norm, n.A, n.B, n.C, dist)) {
-        // too far away to intersect
-        if (dist > t) {
-            return ireg;
-        }
-        t = dist;
-        // index 3 = excluding last point D = face ABC
-        auto new_reg = _neighbours[ireg][3];
-        update_media_and_normal(n.A, n.B, n.C, new_reg);
-        return new_reg;
-    }
-    if (triangle_ray_intersection(x, u_norm, n.A, n.C, n.D, dist)) {
-        // too far away to intersect
-        if (dist > t) {
-            return ireg;
-        }
-        t = dist;
-        // index 1 = excluding point B = face ACD
-        auto new_reg = _neighbours[ireg][1];
-        update_media_and_normal(n.A, n.C, n.D, new_reg);
-        return new_reg;
-    }
-    if (triangle_ray_intersection(x, u_norm, n.A, n.B, n.D, dist)) {
-        // too far away to intersect
-        if (dist > t) {
-            return ireg;
-        }
-        t = dist;
-        // index 2 = excluding point C = face ABD
-        auto new_reg = _neighbours[ireg][2];
-        update_media_and_normal(n.A, n.B, n.D, new_reg);
-        return new_reg;
-    }
-    if (triangle_ray_intersection(x, u_norm, n.B, n.C, n.D, dist)) {
-        if (dist > t) {
-            return ireg;
-        }
-        t = dist;
-        // index 0 = excluding point A = face BCD
-        auto new_reg = _neighbours[ireg][0];
-        update_media_and_normal(n.B, n.C, n.D, new_reg);
-        return new_reg;
-    }
 
-    return ireg;
+    const auto& n = element_nodes(ireg);
+    std::array<std::array<EGS_Vector, 3>, 4> face_nodes {{
+        {n.B, n.C, n.D}, {n.A, n.C, n.D}, {n.A, n.B, n.D}, {n.A, n.B, n.C}
+    }};
+
+    for (std::size_t i = 0; i < 4; i++) {
+        if (!(dot(_face_normals[ireg][i], x - face_nodes[i][0]) >= 0.0 &&
+            interior_triangle_ray_intersection(x, u, _face_normals[ireg][i],
+                face_nodes[i][0], face_nodes[i][1], face_nodes[i][2], dist)))
+        {
+            // no intersection with this triangle
+            continue;
+        }
+
+        // intersection found
+        is_lost = false;
+        if (dist > t) {
+            continue;
+        }
+
+        if (dist <= EGS_BaseGeometry::halfBoundaryTolerance) {
+            // if a point is within the thick plane, the distance to the next
+            // region is exactly 0.0
+            dist = 0.0;
+        }
+
+        t = dist;
+        int newreg = _neighbours[ireg][i];
+        update_medium(newreg, newmed);
+        update_normal(_face_normals[ireg][i], u, normal);
+        return newreg;
+    }
+    // If the particle isn't lost but won't intersect a boundary because it's
+    // too far away, return the current region.
+    if (!is_lost) {
+        return ireg;
+    }
+    // If the particle is not where ireg says and there is no intersection with
+    // any triangle face, we are in a situation like this (hopefully from
+    // numerical undershoot during transport).
+    //
+    //         /\
+    //   <- * /  \
+    //       /____\
+    //
+    // Protocol is to set the intersection distance to 0.0 and return the region
+    // where the particle is numerically.
+    t = 0.0;
+    int newreg = howfar_interior_find_lost_particle(ireg, x, u);
+    update_medium(newreg, newmed);
+    // We can't determine which normal to display (which is only for egs_view in
+    // any case), so we don't update the normal for this exceptional case.
+    return newreg;
+}
+
+// Determine where the lost particle from hownear_interior is numerically.
+//
+//         /\
+//   <- * /  \
+//       /____\
+//
+//  ^^^^ i.e., which region is this particle actually in?
+int EGS_Mesh::howfar_interior_find_lost_particle(int ireg, const EGS_Vector &x,
+    const EGS_Vector &u)
+{
+    // If a particle is slightly outside the bounds of an element, it will most
+    // likely be in a neighbouring element, so check those first.
+    for (const auto& neighbour : _neighbours[ireg]) {
+        if (neighbour == -1) {
+            continue;
+        }
+        if (insideElement(neighbour, x)) {
+            return neighbour;
+        }
+    }
+    // If the particle is not in a neighbouring element, use isWhere to find out
+    // where it should be. If isWhere returns the current region, that is a
+    // serious problem in the implementation (infinite loop), so crash. We could
+    // also consider issuing a warning and discarding the particle.
+    int newreg = isWhere(x);
+    if (newreg == ireg) {
+        egsFatal("EGS_Mesh::howfar: infinite loop detected in region %d\n"
+                 "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ireg, x.x,
+                 x.y, x.z, u.x, u.y, u.z);
+    }
+    return newreg;
 }
 
 EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vector &x,
@@ -1269,13 +1379,14 @@ EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vecto
             // check if the point is on the outside looking in (rather than just
             // clipping the edge of a boundary face)
             point_outside_of_plane(x, A, B, C, D) &&
-            triangle_ray_intersection(x, u, A, B, C, dist) && dist < min_dist)
+            dot(_face_normals[ireg][face], u) > 0.0 && // point might be in a thick plane
+            exterior_triangle_ray_intersection(x, u, A, B, C, dist) &&
+            dist < min_dist)
         {
             min_dist = dist;
             closest_face = face;
         }
     };
-
 
     const auto& n = element_nodes(ireg);
     // face 0 (BCD), face 1 (ACD) etc.

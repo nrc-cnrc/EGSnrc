@@ -252,9 +252,39 @@ private:
     int howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         EGS_Float &t, int *newmed, EGS_Vector *normal);
 
+    // Find the region where lost particles in `howfar_interior` are.
+    int howfar_interior_find_lost_particle(int ireg, const EGS_Vector &x,
+        const EGS_Vector &u);
+
     // `howfar` helper method outside the mesh
     int howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         EGS_Float &t, int *newmed, EGS_Vector *normal);
+
+    inline void update_medium(int newreg, int *newmed) const {
+        if (!newmed) {
+            return;
+        }
+        if (newreg == -1) {
+            // vacuum
+            *newmed = -1;
+        } else {
+            *newmed = medium(newreg);
+        }
+    }
+
+    inline void update_normal(const EGS_Vector& face_normal,
+        const EGS_Vector& u_norm, EGS_Vector *normal) const
+    {
+        if (!normal) {
+            return;
+        }
+        // egs++ convention is normal pointing opposite view ray
+        if (face_normal * u_norm > 0.0) {
+            *normal = -1.0 * face_normal;
+        } else {
+            *normal = face_normal;
+        }
+    }
 
     // Constructor helper methods:
     //
