@@ -70,12 +70,12 @@
 
 #endif
 
+class EGS_Mesh_Octree;
+
 /*! \brief A tetrahedral mesh geometry
   \ingroup Geometry
   \ingroup ElementaryG
 */
-
-class EGS_Mesh_Octree;
 
 class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
 public:
@@ -114,7 +114,9 @@ public:
     EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
         std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials);
 
-    ~EGS_Mesh() = default;
+    // Just declare destructor without defining it. We can't define it yet
+    // because of the unique_ptr to forward declared EGS_Mesh_Octree members.
+    ~EGS_Mesh();
 
     /// Parse a msh file into an owned EGS_Mesh allocated using new.
     ///

@@ -50,6 +50,10 @@
 #include <limits>
 #include <unordered_map>
 
+// Have to define the destructor here instead of in egs_mesh.h because of the
+// unique_ptr to forward declared EGS_Mesh_Octree members.
+EGS_Mesh::~EGS_Mesh() = default;
+
 // anonymous namespace
 namespace {
 
@@ -958,7 +962,7 @@ EGS_Mesh* EGS_Mesh::parse_msh_file(std::istream& input) {
 
 EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
     std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials)
-        : EGS_BaseGeometry("EGS_Mesh")
+        : EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName())
 {
     initializeElements(std::move(elements), std::move(nodes), std::move(materials));
     initializeNeighbours();
