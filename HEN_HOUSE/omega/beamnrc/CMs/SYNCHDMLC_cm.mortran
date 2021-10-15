@@ -764,13 +764,6 @@ IF(ORIENT_$SYNCHDMLC=1) [
 ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
 ;
 
-"IF(Z(NP)>47.62001 & Z(NP)<54.37999)["
-        "IF(med(irl) = 0)["
-         " write(*,*)' iq,x,y,z ',iq(np),x(np),y(np),z(np);"
-         " write(*,*)' ir,med ',ir(np),med(irl);"
-         " write(*,*)'  ihstry ',ihstry;"
-       " ]"
-  " ]"
 STEP_UNIT=0.0;
 COUNT = 0;
 OUTOFCMFLAG=0;
@@ -943,7 +936,7 @@ ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0)) [
       DIST1=DIST1+1.0E-5; "we have to shift it regardless to avoid "
                           "infinite loops"
     "OUTPUT REGION_$SYNCHDMLC;(I3);-prints 67 to 69"
-    "  IF(DIST1>=STEP_UNIT)[EXIT;]"
+      IF(DIST1>=STEP_UNIT)[EXIT;]
     "  ELSE["
         $SYNCHDMLC_FIND(NEWREGION_$SYNCHDMLC,DIST1);
 
@@ -1155,7 +1148,7 @@ $REAL INDEXTMP; "T>temporary input variable for field indices in dynamic and
                 "  step-and-shoot simulations
 $LOGICAL check_full_qtr;
 
-$REAL YTMP;
+$REAL YTMP,YLEAFEND;
 
 DO I=1,5[
   DO J=1,2[
@@ -2436,38 +2429,44 @@ I=0;
 IF(TOT_LEAF_$SYNCHDMLC>0) [
   DO L = 1,NGROUP_$SYNCHDMLC[
    DO K = 1,NUM_LEAF_$SYNCHDMLC(L) [
-
      I=I+1;
      IF(I=1)[
        YREG_$SYNCHDMLC(I,1)=START_$SYNCHDMLC;
      ]
-     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=1)[
-       YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+     ELSE[
+       YLEAFEND=YREG_$SYNCHDMLC(I-1,7);
+       "possible exceptions"
+       IF(LEAFTYPE_$SYNCHDMLC(I-1)=2 & I_LEAF_ALT_DEF_$SYNCHDMLC(2,1,6)=1)[
+          YLEAFEND=YREG_$SYNCHDMLC(I-1,6);
+       ]
+       IF(LEAFTYPE_$SYNCHDMLC(I)=1)[
+          YREG_$SYNCHDMLC(I,1)=YLEAFEND+LEAFGAP_$SYNCHDMLC-
                           WTONGUE_$SYNCHDMLC(1);
-     ]
-     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=2)["half target leaf"
-         YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+       ]
+       ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=2)["half target leaf"
+          YREG_$SYNCHDMLC(I,1)=YLEAFEND+LEAFGAP_$SYNCHDMLC-
                           WTONGUE_$SYNCHDMLC(2);
-     ]
-     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=3)["half isocenter leaf"
+       ]
+       ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=3)["half isocenter leaf"
          IF(I_LEAF_ALT_DEF_$SYNCHDMLC(3,1,1)=1)[
               "here we are saying that leaf gap is defined wrt tongue/groove"
-              YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+              YREG_$SYNCHDMLC(I,1)=YLEAFEND+LEAFGAP_$SYNCHDMLC-
                           WTONGUE_$SYNCHDMLC(3)-
                           ABS(WRAILBOT_$SYNCHDMLC(3)-WRAILTOP_$SYNCHDMLC(3));
          ]
          ELSE[
-              YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+              YREG_$SYNCHDMLC(I,1)=YLEAFEND+LEAFGAP_$SYNCHDMLC-
                           WTONGUE_$SYNCHDMLC(3);
          ]
-     ]
-     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=4)["qtr target leaf"
-         YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+       ]
+       ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=4)["qtr target leaf"
+         YREG_$SYNCHDMLC(I,1)=YLEAFEND+LEAFGAP_$SYNCHDMLC-
                           WTONGUE_$SYNCHDMLC(4);
-     ]
-     ELSE ["qtr iso leaf"
-         YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+       ]
+       ELSE ["qtr iso leaf"
+         YREG_$SYNCHDMLC(I,1)=YLEAFEND+LEAFGAP_$SYNCHDMLC-
                           WTONGUE_$SYNCHDMLC(5);
+       ]
      ]
      "we have now defined YREG_$SYNCHDMLC(I,1)"
 
@@ -2483,9 +2482,16 @@ IF(TOT_LEAF_$SYNCHDMLC>0) [
      ]
      ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=2)["half target leaf"
        YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(2);
-       YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2);
-       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,7)-
+       IF(I_LEAF_ALT_DEF_$SYNCHDMLC(2,1,6)=1)[
+          YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2);
+          YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,6)+
                             ABS(WRAILBOT_$SYNCHDMLC(2)-WRAILTOP_$SYNCHDMLC(2));
+       ]
+       ELSE[
+          YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2);
+          YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,7)-
+                            ABS(WRAILBOT_$SYNCHDMLC(2)-WRAILTOP_$SYNCHDMLC(2));
+       ]
        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(2,1,6)=1)[
           YTMP = YREG_$SYNCHDMLC(I,6);
        ]
