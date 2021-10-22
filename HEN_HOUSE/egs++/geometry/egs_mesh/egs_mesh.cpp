@@ -48,11 +48,26 @@
 #include <chrono>
 #include <deque>
 #include <limits>
+#include <stdexcept>
 #include <unordered_map>
 
 // Have to define the destructor here instead of in egs_mesh.h because of the
 // unique_ptr to forward declared EGS_Mesh_Octree members.
 EGS_Mesh::~EGS_Mesh() = default;
+
+void EGS_MeshSpec::checkValid() const {
+    std::size_t n_max = std::numeric_limits<int>::max();
+    if (this->elements.size() >= n_max) {
+        throw std::runtime_error("maximum number of elements (" +
+            std::to_string(n_max) + ") exceeded (" +
+                std::to_string(this->elements.size()) + ")");
+    }
+    if (this->nodes.size() >= n_max) {
+        throw std::runtime_error("maximum number of nodes (" +
+            std::to_string(n_max) + ") exceeded (" +
+                std::to_string(this->nodes.size()) + ")");
+    }
+}
 
 // anonymous namespace
 namespace {
@@ -280,103 +295,6 @@ int interior_triangle_ray_intersection(const EGS_Vector &p,
     return 1;
 }
 
-/// Parse the body of a msh4.1 file into an EGS_Mesh using the msh_parser API.
-///
-/// Throws a std::runtime_error if parsing fails.
-EGS_Mesh* parse_msh41_body(std::istream& input) {
-    std::vector<msh_parser::internal::msh41::Node> nodes;
-    std::vector<msh_parser::internal::msh41::MeshVolume> volumes;
-    std::vector<msh_parser::internal::msh41::PhysicalGroup> groups;
-    std::vector<msh_parser::internal::msh41::Tetrahedron> elements;
-
-    std::string parse_err;
-    std::string input_line;
-    while (std::getline(input, input_line)) {
-        msh_parser::internal::rtrim(input_line);
-        // stop reading if we hit another mesh file
-        if (input_line == "$MeshFormat") {
-            break;
-        }
-        if (input_line == "$Entities") {
-           volumes = msh_parser::internal::msh41::parse_entities(input);
-        } else if (input_line == "$PhysicalNames") {
-            groups = msh_parser::internal::msh41::parse_groups(input);
-        } else if (input_line == "$Nodes") {
-            nodes = msh_parser::internal::msh41::parse_nodes(input);
-        } else if (input_line == "$Elements") {
-            elements = msh_parser::internal::msh41::parse_elements(input);
-        }
-    }
-    if (volumes.empty()) {
-        throw std::runtime_error("No volumes were parsed from $Entities section");
-    }
-    if (nodes.empty()) {
-        throw std::runtime_error("No nodes were parsed, missing $Nodes section");
-    }
-    if (groups.empty()) {
-        throw std::runtime_error("No groups were parsed from $PhysicalNames section");
-    }
-    if (elements.empty()) {
-        throw std::runtime_error("No tetrahedrons were parsed from $Elements section");
-    }
-
-    // ensure each entity has a valid group
-    std::unordered_set<int> group_tags;
-    group_tags.reserve(groups.size());
-    for (auto g: groups) {
-        group_tags.insert(g.tag);
-    }
-    std::unordered_map<int, int> volume_groups;
-    volume_groups.reserve(volumes.size());
-    for (auto v: volumes) {
-        if (group_tags.find(v.group) == group_tags.end()) {
-            throw std::runtime_error("volume " + std::to_string(v.tag) + " had unknown physical group tag " + std::to_string(v.group));
-        }
-        volume_groups.insert({ v.tag, v.group });
-    }
-
-    // ensure each element has a valid entity and therefore a valid physical group
-    std::vector<int> element_groups;
-    element_groups.reserve(elements.size());
-    for (auto e: elements) {
-        auto elt_group = volume_groups.find(e.volume);
-        if (elt_group == volume_groups.end()) {
-            throw std::runtime_error("tetrahedron " + std::to_string(e.tag) + " had unknown volume tag " + std::to_string(e.volume));
-        }
-        element_groups.push_back(elt_group->second);
-    }
-
-    std::vector<EGS_Mesh::Tetrahedron> mesh_elts;
-    mesh_elts.reserve(elements.size());
-    for (std::size_t i = 0; i < elements.size(); ++i) {
-        const auto& elt = elements[i];
-        mesh_elts.push_back(EGS_Mesh::Tetrahedron(
-            elt.tag, element_groups[i], elt.a, elt.b, elt.c, elt.d
-        ));
-    }
-
-    std::vector<EGS_Mesh::Node> mesh_nodes;
-    mesh_nodes.reserve(nodes.size());
-    for (const auto& n: nodes) {
-        mesh_nodes.push_back(EGS_Mesh::Node(
-            n.tag, n.x, n.y, n.z
-        ));
-    }
-
-    std::vector<EGS_Mesh::Medium> media;
-    media.reserve(groups.size());
-    for (const auto& g: groups) {
-        media.push_back(EGS_Mesh::Medium(g.tag, g.name));
-    }
-
-    // TODO: check all 3d physical groups were used by elements
-    // TODO: ensure all element node tags are valid
-    return new EGS_Mesh(
-        std::move(mesh_elts),
-        std::move(mesh_nodes),
-        std::move(media)
-    );
-}
 } // anonymous namespace
 
 class EGS_Mesh_Octree {
@@ -991,49 +909,22 @@ public:
     }
 };
 
-// msh4.1 parsing
-//
-// TODO parse into MeshSpec struct instead of EGS_Mesh directly
-// to better delineate errors
-EGS_Mesh* EGS_Mesh::parse_msh_file(std::istream& input) {
-    auto version = msh_parser::internal::parse_msh_version(input);
-    // TODO auto mesh_data;
-    switch(version) {
-        case msh_parser::internal::MshVersion::v41:
-            try {
-                return parse_msh41_body(input);
-            } catch (const std::runtime_error& err) {
-                throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
-            }
-            break;
-    }
-    throw std::runtime_error("couldn't parse msh file");
-}
-
-EGS_Mesh::EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
-    std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials)
-        : EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName())
+EGS_Mesh::EGS_Mesh(EGS_MeshSpec spec) :
+    EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName())
 {
-    initializeElements(std::move(elements), std::move(nodes), std::move(materials));
+    spec.checkValid();
+    initializeElements(std::move(spec.elements), std::move(spec.nodes),
+        std::move(spec.media));
     initializeNeighbours();
     initializeOctrees();
     initializeNormals();
 }
 
-void EGS_Mesh::initializeElements(std::vector<EGS_Mesh::Tetrahedron> elements,
-    std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials)
+void EGS_Mesh::initializeElements(
+    std::vector<EGS_MeshSpec::Tetrahedron> elements,
+    std::vector<EGS_MeshSpec::Node> nodes,
+    std::vector<EGS_MeshSpec::Medium> materials)
 {
-    std::size_t n_max = std::numeric_limits<int>::max();
-    if (elements.size() >= n_max) {
-        throw std::runtime_error("maximum number of elements (" +
-            std::to_string(n_max) + ") exceeded (" +
-                std::to_string(elements.size()) + ")");
-    }
-    if (nodes.size() >= n_max) {
-        throw std::runtime_error("maximum number of nodes (" +
-            std::to_string(n_max) + ") exceeded (" +
-                std::to_string(nodes.size()) + ")");
-    }
     EGS_BaseGeometry::nreg = elements.size();
 
     _elt_tags.reserve(elements.size());
@@ -1471,11 +1362,28 @@ extern "C" {
                 mesh_file.c_str());
             return nullptr;
         }
-        EGS_Mesh* mesh = EGS_Mesh::parse_msh_file(input_file);
-        if (!mesh) {
-            egsWarning("createGeometry(EGS_Mesh): Gmsh msh file parsing failed\n");
+
+        EGS_MeshSpec mesh_spec;
+        try {
+            mesh_spec = msh_parser::parse_msh_file(input_file);
+        }
+        catch (const std::runtime_error& e) {
+            std::string error_msg = std::string("createGeometry(EGS_Mesh): ") +
+                "Gmsh msh file parsing failed\nerror: " + e.what() + "\n";
+            egsWarning("%s", error_msg.c_str());
             return nullptr;
         }
+
+        EGS_Mesh* mesh = nullptr;
+        try {
+            mesh = new EGS_Mesh(std::move(mesh_spec));
+        } catch (const std::runtime_error& e) {
+            std::string error_msg = std::string("createGeometry(EGS_Mesh): ") +
+                "bad input to EGS_Mesh\nerror: " + e.what() + "\n";
+            egsWarning("%s", error_msg.c_str());
+            return nullptr;
+        }
+
         mesh->setFilename(mesh_file);
         mesh->setBoundaryTolerance(input);
         mesh->setName(input);

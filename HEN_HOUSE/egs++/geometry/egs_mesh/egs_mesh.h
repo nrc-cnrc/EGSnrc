@@ -72,14 +72,18 @@
 
 class EGS_Mesh_Octree;
 
-/*! \brief A tetrahedral mesh geometry
-  \ingroup Geometry
-  \ingroup ElementaryG
-*/
-
-class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
+/// A container for raw unstructured tetrahedral mesh data.
+class EGS_MESH_EXPORT EGS_MeshSpec {
 public:
-    /// A single tetrahedral mesh element
+    EGS_MeshSpec() = default;
+    EGS_MeshSpec(const EGS_MeshSpec&) = delete;
+    EGS_MeshSpec& operator=(const EGS_MeshSpec&) = delete;
+    // EGS_MeshSpec is move-only
+    EGS_MeshSpec(EGS_MeshSpec&&) = default;
+    EGS_MeshSpec& operator=(EGS_MeshSpec&&) = default;
+    ~EGS_MeshSpec() = default;
+
+    /// A tetrahedral mesh element
     struct Tetrahedron {
         Tetrahedron(int tag, int medium_tag, int a, int b, int c, int d) :
             tag(tag), medium_tag(medium_tag), a(a), b(b), c(c), d(d) {}
@@ -92,7 +96,7 @@ public:
         int d = -1;
     };
 
-    /// A single 3D point
+    /// A 3D point
     struct Node {
         Node(int tag, double x, double y, double z) :
             tag(tag), x(x), y(y), z(z) {}
@@ -110,18 +114,39 @@ public:
         std::string medium_name;
     };
 
-    // TODO: refactor to MeshSpec struct
-    EGS_Mesh(std::vector<EGS_Mesh::Tetrahedron> elements,
-        std::vector<EGS_Mesh::Node> nodes, std::vector<EGS_Mesh::Medium> materials);
+    /// Throws std::runtime_error if an EGS_Mesh can't be properly initialized
+    /// using this mesh data.
+    void checkValid() const;
+
+    // Public members
+
+    // Unique mesh elements
+    std::vector<EGS_MeshSpec::Tetrahedron> elements;
+    // Unique nodes
+    std::vector<EGS_MeshSpec::Node> nodes;
+    // Unique medium information
+    std::vector<EGS_MeshSpec::Medium> media;
+};
+
+/*! \brief A tetrahedral mesh geometry
+  \ingroup Geometry
+  \ingroup ElementaryG
+*/
+
+class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
+public:
+    /// Throws std::runtime_error if construction fails.
+    EGS_Mesh(EGS_MeshSpec spec);
+
+    // EGS_Mesh is move-only
+    EGS_Mesh(const EGS_Mesh&) = delete;
+    EGS_Mesh& operator=(const EGS_Mesh&) = delete;
+    EGS_Mesh(EGS_Mesh&&) = default;
+    EGS_Mesh& operator=(EGS_Mesh&&) = default;
 
     // Just declare destructor without defining it. We can't define it yet
     // because of the unique_ptr to forward declared EGS_Mesh_Octree members.
     ~EGS_Mesh();
-
-    /// Parse a msh file into an owned EGS_Mesh allocated using new.
-    ///
-    /// Throws a std::runtime_error if parsing fails.
-    static EGS_Mesh* parse_msh_file(std::istream& input);
 
     int num_elements() const {
         return _elt_tags.size();
@@ -129,15 +154,7 @@ public:
     const std::vector<std::string>& medium_names() const {
         return _medium_names;
     }
-    //const std::vector<EGS_Mesh::Tetrahedron>& elements() const {
-    //    return _elements;
-    //}
-    //const std::vector<EGS_Mesh::Node>& nodes() const {
-    //    return _nodes;
-    //}
-    //const std::vector<EGS_Mesh::Medium>& materials() const {
-    //    return _materials;
-    //}
+
     const std::vector<std::array<int, 4>>& neighbours() const {
         return _neighbours;
     }
@@ -302,9 +319,9 @@ private:
     // * EGS_Mesh::_elt_node_indices
     // * EGS_BaseGeometry::nreg
     // and member functions that depend on this data, like num_elements().
-    void initializeElements(std::vector<EGS_Mesh::Tetrahedron> elements,
-        std::vector<EGS_Mesh::Node> nodes,
-        std::vector<EGS_Mesh::Medium> materials);
+    void initializeElements(std::vector<EGS_MeshSpec::Tetrahedron> elements,
+        std::vector<EGS_MeshSpec::Node> nodes,
+        std::vector<EGS_MeshSpec::Medium> materials);
 
     // Initialize neigbhour and boundary information. Must be called after
     // initializeElements. Responsible for initializing:
