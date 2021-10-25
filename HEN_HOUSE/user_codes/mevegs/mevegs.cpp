@@ -631,95 +631,107 @@ void Mevegs_Application::writeGmsh() {
     writeGmshResults(out, *mesh, geo_type);
 }
 
-namespace {
-// Helper function to append output data to a Gmsh file.
-void appendGmshData(std::ostream& out_file, std::string title, const std::vector<int>& tags,
-    const std::vector<double>& data)
-{
-    assert(data.size() == tags.size());
-    std::vector<std::pair<int, double>> zipped;
-    zipped.reserve(tags.size());
-    for (std::size_t i = 0; i < data.size(); i++) {
-        zipped.push_back({tags.at(i), data.at(i)});
-    }
-    // sort in order of element tag
-    std::sort(begin(zipped), end(zipped));
-
-    // Gmsh's ElementData section is the same for msh versions 2.2 and 4.1
-    out_file << "$ElementData\n"; // header
-    out_file << "1\n" << "\"" << title << "\"\n"; // one string, the view title
-    out_file << "1\n0.0\n"; // one float, the time (dummy 0.0)
-    // three ints, timestep 0, 1 value per elt, number of elts
-    out_file << "3\n0\n1\n" << zipped.size() << "\n";
-    for (std::size_t i = 0; i < zipped.size(); i++) {
-        out_file << zipped.at(i).first << " " << zipped.at(i).second << "\n";
-    }
-    out_file << "$EndElementData\n"; // footer
-}
-
-// convert absolute values to percentages
-EGS_Float abs_to_percent(EGS_Float val, EGS_Float uncert) {
-    if (val > 1e-6) {
-        return uncert / val * 100.0;
-    }
-    return 100.0;
-}
-
-} // anonymous namespace
-
 void Mevegs_Application::writeGmshResults(std::ostream& out, const EGS_Mesh& mesh,
     MevegsGeometry geo_type)
 {
     auto n_elts = mesh.num_elements();
-    std::vector<double> e_deps;
-    std::vector<double> uncerts;
-    e_deps.reserve(n_elts);
-    uncerts.reserve(n_elts);
 
     // offset into score array
-    int offset = 0;
+    int score_offset = 0;
     switch (geo_type) {
         // if it's a plain mesh being simulated, skip the first element (reflected energy)
         case MevegsGeometry::Mesh:
             assert(score->regions() == n_elts + 2);
-            offset = 1;
+            score_offset = 1;
             break;
         // if it's a mesh in an envelope being simulated, skip two elements:
         // reflected energy and the envelope
         case MevegsGeometry::EnvelopedMesh:
             assert(score->regions() == n_elts + 2 + 1);
-            offset = 2;
+            score_offset = 2;
             break;
         default:
             egsFatal("\nunhandled MevegsGeometry case in writeGmshResults\n");
     }
 
-    for (int i = 0; i < n_elts; ++i) {
-        double e_dep, uncert;
-        score->currentResult(i + offset, e_dep, uncert);
-        e_deps.push_back(e_dep);
-        uncerts.push_back(abs_to_percent(e_dep, uncert));
-    }
+    // write results to msh file
 
-    // calculate doses [Gy]
-    const double JOULES_PER_MEV = 1.602e-13;
-    const auto densities = mesh.densities();
-    const auto volumes = mesh.volumes();
-    std::vector<double> doses;
-    doses.reserve(n_elts);
+    // Energy deposition
+
+    // Gmsh's ElementData section is the same for msh versions 2.2 and 4.1
+    //
+    // header
+    out << "$ElementData\n";
+    // one string, the view title
+    out << "1\n" << "\"Energy deposition per particle [MeV]\"\n";
+    // one float, the time (dummy 0.0)
+    out << "1\n0.0\n";
+    // three ints, timestep 0, 1 value per elt, number of elts
+    out << "3\n0\n1\n" << n_elts << "\n";
     for (int i = 0; i < n_elts; i++) {
-        auto mass_kg = densities[i] * volumes[i] / 1000.0;
-        doses.push_back(JOULES_PER_MEV * e_deps[i] / mass_kg);
+        double e_dep, uncert;
+        score->currentResult(i + score_offset, e_dep, uncert);
+        out << mesh.element_tag(i) << " " << e_dep << "\n";
     }
+    // footer
+    out << "$EndElementData\n";
 
-    // append simulation data
-    auto tags = mesh.tags();
-    appendGmshData(out, "Energy deposition per particle [MeV]", tags, e_deps);
-    //appendGmshData(out, "energy fraction per particle", fractions);
-    appendGmshData(out, "Energy uncertainty [%]", tags, uncerts);
-    appendGmshData(out, "Volume [cm^3]", tags, volumes);
-    appendGmshData(out, "Density [g/cm^3]", tags, densities);
-    appendGmshData(out, "Dose [Gy]", tags, doses);
+    auto abs_to_percent = [](EGS_Float val, EGS_Float uncert) -> EGS_Float {
+        if (val > 1e-6) {
+            return uncert / val * 100.0;
+        }
+        return 100.0;
+    };
+
+    // Percent uncertainty
+    out << "$ElementData\n";
+    out << "1\n" << "\"Energy uncertainty [%]\"\n";
+    out << "1\n0.0\n";
+    out << "3\n0\n1\n" << n_elts << "\n";
+    for (int i = 0; i < n_elts; i++) {
+        double e_dep, uncert;
+        score->currentResult(i + score_offset, e_dep, uncert);
+        out << mesh.element_tag(i) << " " << abs_to_percent(e_dep, uncert)
+            << "\n";
+    }
+    out << "$EndElementData\n";
+
+    // Volumes
+    out << "$ElementData\n";
+    out << "1\n" << "\"Volume [cm^3]\"\n";
+    out << "1\n0.0\n";
+    out << "3\n0\n1\n" << n_elts << "\n";
+    for (int i = 0; i < n_elts; i++) {
+        out << mesh.element_tag(i) << " " << mesh.element_volume(i) << "\n";
+    }
+    out << "$EndElementData\n";
+
+    // Densities
+    out << "$ElementData\n";
+    out << "1\n" << "\"Density [g/cm^3]\"\n";
+    out << "1\n0.0\n";
+    out << "3\n0\n1\n" << n_elts << "\n";
+    for (int i = 0; i < n_elts; i++) {
+        out << mesh.element_tag(i) << " " << mesh.element_density(i) << "\n";
+    }
+    out << "$EndElementData\n";
+
+    // Doses
+
+    const double JOULES_PER_MEV = 1.602e-13;
+    out << "$ElementData\n";
+    out << "1\n" << "\"Dose [Gy]\"\n";
+    out << "1\n0.0\n";
+    out << "3\n0\n1\n" << n_elts << "\n";
+    for (int i = 0; i < n_elts; i++) {
+        double e_dep, uncert;
+        score->currentResult(i + score_offset, e_dep, uncert);
+        const auto mass_kg = mesh.element_density(i) * mesh.element_volume(i)
+            / 1000.0;
+        out << mesh.element_tag(i) << " " <<  JOULES_PER_MEV * e_dep / mass_kg
+            << "\n";
+    }
+    out << "$EndElementData\n";
 }
 
 void Mevegs_Application::getCurrentResult(double &sum, double &sum2,

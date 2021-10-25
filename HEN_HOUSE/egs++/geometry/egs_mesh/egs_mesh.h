@@ -151,6 +151,7 @@ public:
     int num_elements() const {
         return _elt_tags.size();
     }
+
     const std::vector<std::string>& medium_names() const {
         return _medium_names;
     }
@@ -159,29 +160,20 @@ public:
         return _neighbours;
     }
 
-    std::vector<EGS_Float> volumes() const {
-        std::vector<EGS_Float> volumes;
-        volumes.reserve(num_elements());
-        for (int i = 0; i < num_elements(); i++) {
-            const auto& n = element_nodes(i);
-            volumes.push_back(std::abs(
-                (n.A - n.D) * ((n.B - n.D) % (n.C - n.D))) / 6.0
-            );
-        }
-        return volumes;
+    // Return element volume [cm3].
+    EGS_Float element_volume(int i) const {
+        const auto& n = element_nodes(i);
+        return std::abs((n.A - n.D) * ((n.B - n.D) % (n.C - n.D))) / 6.0;
     }
 
-    // Return element densities [g/cm3].
-    std::vector<EGS_Float> densities() const {
-        std::vector<EGS_Float> densities;
-        densities.reserve(num_elements());
-        for (int i = 0; i < num_elements(); i++) {
-            densities.push_back(getMediumRho(_medium_indices[i]));
-        }
-        return densities;
+    // Return element density [g/cm3].
+    EGS_Float element_density(int i) const {
+        return EGS_BaseGeometry::getMediumRho(_medium_indices.at(i));
     }
-    std::vector<int> tags() const {
-        return _elt_tags;
+
+    // Return element tag.
+    int element_tag(int i) const {
+        return _elt_tags.at(i);
     }
 
     inline bool is_boundary(int reg) const {
