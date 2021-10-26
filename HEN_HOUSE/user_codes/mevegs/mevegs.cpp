@@ -136,11 +136,14 @@ public:
     /*! Output the results of a simulation. */
     void outputResults();
 
-    /*! Write the results to a Gmsh file. */
-    void writeGmsh();
+    /*! Write the results to mesh output files. */
+    void writeMeshOutputFiles() const;
 
-    /*! Helper function that calculates the results and writes them to an output file. */
-    void writeGmshResults(std::ostream& out, const EGS_Mesh& mesh, MevegsGeometry geo_type);
+    /*! Write the results to Gmsh v4.1 ASCII msh file. */
+    void writeGmsh(const EGS_Mesh& mesh, std::size_t offset) const;
+
+    /*! Write the results to a VTK legacy ASCII file. */
+    void writeVtk(const EGS_Mesh& mesh, std::size_t offset) const;
 
     /*! Get the current simulation result.
      This function is called from the run control object in parallel runs
@@ -533,7 +536,7 @@ int Mevegs_Application::addState(istream &data) {
 void Mevegs_Application::outputResults() {
     egsInformation("\n\n last case = %d Etot = %g\n",
                    (int)current_case,Etot);
-    writeGmsh();
+    writeMeshOutputFiles();
     if (nreg > 100) {
         return;
     }
@@ -579,8 +582,8 @@ EGS_Mesh * extractEGSMesh(EGS_EnvelopeGeometry *env) {
     if (!geometries) {
         return nullptr;
     }
-    // don't allow more than one inscribed geometry to simplify result
-    // indexing in writeGmshResults
+    // don't allow more than one inscribed geometry to simplify score array
+    // indexing
     if (nInscribed != 1) {
         egsWarning("\nfound more than one inscribed geometry\n");
         return nullptr;
@@ -592,7 +595,77 @@ EGS_Mesh * extractEGSMesh(EGS_EnvelopeGeometry *env) {
     return mesh;
 }
 
-void Mevegs_Application::writeGmsh() {
+void Mevegs_Application::writeVtk(const EGS_Mesh& mesh,
+    std::size_t score_offset) const
+{
+    if (EGS_Application::getIparallel()) {
+        egsInformation("\n Mevegs_Application: This is one of a number of parallel jobs. Will only output VTK file on combining results.\n");
+        return;
+    }
+
+    std::string vtk_out = getFinalOutputFile() + ".vtk";
+    std::ofstream out(vtk_out);
+    if (!out) {
+        egsWarning("\n couldn't open \"%s\" for writing\n", vtk_out.c_str());
+        return;
+    }
+    out << std::setprecision(std::numeric_limits<double>::max_digits10);
+    // legacy header
+    out << "# vtk DataFile Version 4.1\n"
+           "EGS_Mesh results\n"
+           "ASCII\n"
+           "DATASET UNSTRUCTURED_GRID\n"
+           "POINTS " << mesh.num_nodes() << " double\n";
+    // point data
+    for (int i = 0; i < mesh.num_nodes(); i++) {
+        const EGS_Vector& node = mesh.node_coordinates(i);
+        out << node.x << " " << node.y << " " << node.z << "\n";
+    }
+    // 5 numbers per line
+    out << "CELLS " << mesh.num_elements() << " "
+        << 5 * mesh.num_elements() << "\n";
+    // unstructured grid
+    for (int i = 0; i < mesh.num_elements(); i++) {
+        const auto& node_offsets = mesh.element_node_offsets(i);
+        // four nodes per tetrahedron
+        out << "4 " << node_offsets[0] << " " << node_offsets[1] << " " <<
+            node_offsets[2] << " " << node_offsets[3] << "\n";
+    }
+    out << "CELL_TYPES " << mesh.num_elements() << "\n";
+    for (int i = 0; i < mesh.num_elements(); i++) {
+        // vtk code for tetrahedron
+        out << "10\n";
+    }
+    // doses
+    out << "CELL_DATA " << mesh.num_elements() << "\n";
+    // adjust number here vvvv if the number of fields written out changes
+    out << "FIELD FieldData 2\n";
+    // %20 url-encoded space, Paraview errors on space character
+    out << "dose%20[Gy] 1 " << mesh.num_elements() << " double\n";
+    const double JOULES_PER_MEV = 1.602e-13;
+    for (int i = 0; i < mesh.num_elements(); i++) {
+        double e_dep, uncert;
+        score->currentResult(i + score_offset, e_dep, uncert);
+        const auto mass_kg = mesh.element_density(i) * mesh.element_volume(i)
+            / 1000.0;
+        // TODO zero out doses with uncertainty over 50%?
+        out << JOULES_PER_MEV * e_dep / mass_kg << "\n";
+    }
+    // uncertainties
+    out << "uncertainty%20[%25] 1 " << mesh.num_elements() << " double\n";
+    for (int i = 0; i < mesh.num_elements(); i++) {
+        double e_dep, uncert;
+        score->currentResult(i + score_offset, e_dep, uncert);
+        // if edep is exactly zero, there is 100% uncertainty
+        if (e_dep == 0.0) {
+            out << 100.0 << "\n";
+        } else {
+            out << uncert / e_dep * 100.0 << "\n";
+        }
+    }
+}
+
+void Mevegs_Application::writeMeshOutputFiles() const {
     MevegsGeometry geo_type = MevegsGeometry::Mesh;
     EGS_Mesh *mesh = dynamic_cast<EGS_Mesh*>(geometry);
     if (!mesh) {
@@ -605,8 +678,33 @@ void Mevegs_Application::writeGmsh() {
         geo_type = MevegsGeometry::EnvelopedMesh;
     }
 
+    // offset into score array
+    std::size_t score_offset = 0;
+    switch (geo_type) {
+        // if it's a plain mesh being simulated, skip the first element (reflected energy)
+        case MevegsGeometry::Mesh:
+            assert(score->regions() == mesh->num_elements() + 2);
+            score_offset = 1;
+            break;
+        // if it's a mesh in an envelope being simulated, skip two elements:
+        // reflected energy and the envelope
+        case MevegsGeometry::EnvelopedMesh:
+            assert(score->regions() == mesh->num_elements() + 3);
+            score_offset = 2;
+            break;
+        default:
+            egsFatal("\nunhandled MevegsGeometry case\n");
+    }
+
+    //writeGmsh(*mesh, score_offset);
+    writeVtk(*mesh, score_offset);
+}
+
+void Mevegs_Application::writeGmsh(const EGS_Mesh& mesh,
+    std::size_t score_offset) const
+{
     // make a copy of the input mesh file and append the results to it
-    auto filename = mesh->filename();
+    auto filename = mesh.filename();
     if (filename.empty()) {
         egsWarning("\n EGS_Mesh has no filename, skipping mesh output step\n");
         return;
@@ -628,31 +726,7 @@ void Mevegs_Application::writeGmsh() {
         out << in.rdbuf();
     }
 
-    writeGmshResults(out, *mesh, geo_type);
-}
-
-void Mevegs_Application::writeGmshResults(std::ostream& out, const EGS_Mesh& mesh,
-    MevegsGeometry geo_type)
-{
     auto n_elts = mesh.num_elements();
-
-    // offset into score array
-    int score_offset = 0;
-    switch (geo_type) {
-        // if it's a plain mesh being simulated, skip the first element (reflected energy)
-        case MevegsGeometry::Mesh:
-            assert(score->regions() == n_elts + 2);
-            score_offset = 1;
-            break;
-        // if it's a mesh in an envelope being simulated, skip two elements:
-        // reflected energy and the envelope
-        case MevegsGeometry::EnvelopedMesh:
-            assert(score->regions() == n_elts + 2 + 1);
-            score_offset = 2;
-            break;
-        default:
-            egsFatal("\nunhandled MevegsGeometry case in writeGmshResults\n");
-    }
 
     // write results to msh file
 
@@ -661,60 +735,60 @@ void Mevegs_Application::writeGmshResults(std::ostream& out, const EGS_Mesh& mes
     // Gmsh's ElementData section is the same for msh versions 2.2 and 4.1
     //
     // header
-    out << "$ElementData\n";
-    // one string, the view title
-    out << "1\n" << "\"Energy deposition per particle [MeV]\"\n";
-    // one float, the time (dummy 0.0)
-    out << "1\n0.0\n";
-    // three ints, timestep 0, 1 value per elt, number of elts
-    out << "3\n0\n1\n" << n_elts << "\n";
-    for (int i = 0; i < n_elts; i++) {
-        double e_dep, uncert;
-        score->currentResult(i + score_offset, e_dep, uncert);
-        out << mesh.element_tag(i) << " " << e_dep << "\n";
-    }
-    // footer
-    out << "$EndElementData\n";
+    //out << "$ElementData\n";
+    //// one string, the view title
+    //out << "1\n" << "\"Energy deposition per particle [MeV]\"\n";
+    //// one float, the time (dummy 0.0)
+    //out << "1\n0.0\n";
+    //// three ints, timestep 0, 1 value per elt, number of elts
+    //out << "3\n0\n1\n" << n_elts << "\n";
+    //for (int i = 0; i < n_elts; i++) {
+    //    double e_dep, uncert;
+    //    score->currentResult(i + score_offset, e_dep, uncert);
+    //    out << mesh.element_tag(i) << " " << e_dep << "\n";
+    //}
+    //// footer
+    //out << "$EndElementData\n";
 
-    auto abs_to_percent = [](EGS_Float val, EGS_Float uncert) -> EGS_Float {
-        if (val > 1e-6) {
-            return uncert / val * 100.0;
-        }
-        return 100.0;
-    };
+    //auto abs_to_percent = [](EGS_Float val, EGS_Float uncert) -> EGS_Float {
+    //    if (val > 1e-6) {
+    //        return uncert / val * 100.0;
+    //    }
+    //    return 100.0;
+    //};
 
-    // Percent uncertainty
-    out << "$ElementData\n";
-    out << "1\n" << "\"Energy uncertainty [%]\"\n";
-    out << "1\n0.0\n";
-    out << "3\n0\n1\n" << n_elts << "\n";
-    for (int i = 0; i < n_elts; i++) {
-        double e_dep, uncert;
-        score->currentResult(i + score_offset, e_dep, uncert);
-        out << mesh.element_tag(i) << " " << abs_to_percent(e_dep, uncert)
-            << "\n";
-    }
-    out << "$EndElementData\n";
+    //// Percent uncertainty
+    //out << "$ElementData\n";
+    //out << "1\n" << "\"Energy uncertainty [%]\"\n";
+    //out << "1\n0.0\n";
+    //out << "3\n0\n1\n" << n_elts << "\n";
+    //for (int i = 0; i < n_elts; i++) {
+    //    double e_dep, uncert;
+    //    score->currentResult(i + score_offset, e_dep, uncert);
+    //    out << mesh.element_tag(i) << " " << abs_to_percent(e_dep, uncert)
+    //        << "\n";
+    //}
+    //out << "$EndElementData\n";
 
-    // Volumes
-    out << "$ElementData\n";
-    out << "1\n" << "\"Volume [cm^3]\"\n";
-    out << "1\n0.0\n";
-    out << "3\n0\n1\n" << n_elts << "\n";
-    for (int i = 0; i < n_elts; i++) {
-        out << mesh.element_tag(i) << " " << mesh.element_volume(i) << "\n";
-    }
-    out << "$EndElementData\n";
+    //// Volumes
+    //out << "$ElementData\n";
+    //out << "1\n" << "\"Volume [cm^3]\"\n";
+    //out << "1\n0.0\n";
+    //out << "3\n0\n1\n" << n_elts << "\n";
+    //for (int i = 0; i < n_elts; i++) {
+    //    out << mesh.element_tag(i) << " " << mesh.element_volume(i) << "\n";
+    //}
+    //out << "$EndElementData\n";
 
-    // Densities
-    out << "$ElementData\n";
-    out << "1\n" << "\"Density [g/cm^3]\"\n";
-    out << "1\n0.0\n";
-    out << "3\n0\n1\n" << n_elts << "\n";
-    for (int i = 0; i < n_elts; i++) {
-        out << mesh.element_tag(i) << " " << mesh.element_density(i) << "\n";
-    }
-    out << "$EndElementData\n";
+    //// Densities
+    //out << "$ElementData\n";
+    //out << "1\n" << "\"Density [g/cm^3]\"\n";
+    //out << "1\n0.0\n";
+    //out << "3\n0\n1\n" << n_elts << "\n";
+    //for (int i = 0; i < n_elts; i++) {
+    //    out << mesh.element_tag(i) << " " << mesh.element_density(i) << "\n";
+    //}
+    //out << "$EndElementData\n";
 
     // Doses
 

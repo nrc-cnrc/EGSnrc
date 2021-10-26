@@ -152,6 +152,10 @@ public:
         return _elt_tags.size();
     }
 
+    int num_nodes() const {
+        return _nodes.size();
+    }
+
     const std::vector<std::string>& medium_names() const {
         return _medium_names;
     }
@@ -246,6 +250,17 @@ public:
             _nodes.at(node_indices[2]),
             _nodes.at(node_indices[3])
         };
+    }
+
+    /// Given a node offset (from 0 to EGS_Mesh::num_nodes() - 1), returns the
+    /// node coordinates.
+    const EGS_Vector& node_coordinates(int node_offset) const {
+        return _nodes.at(node_offset);
+    }
+
+    /// Given an element offset, return its four node offsets.
+    const std::array<int, 4>& element_node_offsets(int element) const {
+        return _elt_node_indices.at(element);
     }
 
 private:
