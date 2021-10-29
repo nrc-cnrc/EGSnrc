@@ -764,6 +764,15 @@ IF(ORIENT_$SYNCHDMLC=1) [
 ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
 ;
 
+"write(*,*)' in howfar ';
+
+"IF(Z(NP)>47.62001 & Z(NP)<54.37999)["
+        "IF(med(irl) = 0)["
+         " write(*,*)' iq,x,y,z ',iq(np),x(np),y(np),z(np);"
+         " write(*,*)' ir,med ',ir(np),med(irl);"
+         " write(*,*)'  ihstry ',ihstry;"
+       " ]"
+  " ]"
 STEP_UNIT=0.0;
 COUNT = 0;
 OUTOFCMFLAG=0;
@@ -823,6 +832,7 @@ ELSEIF(IR_$SYNCHDMLC=1 | IR_$SYNCHDMLC=2 | IR_$SYNCHDMLC=3) [
    ELSEIF(W(NP) < 0.0) [
      "particle going backward"
       DIST = (ZMIN_$SYNCHDMLC - Z(NP))/W(NP); "distance to back of CM "
+      "write(*,*)' dist, ustep ',dist,ustep;
       IF(DIST>USTEP) [ STEP_UNIT=USTEP;  ]
       ELSE [ STEP_UNIT=DIST; ]
       IF(DIST <= 0.0) [
@@ -839,6 +849,8 @@ ELSEIF(IR_$SYNCHDMLC=1 | IR_$SYNCHDMLC=2 | IR_$SYNCHDMLC=3) [
 "=========================
 
 $SYNCHDMLC_FIND(REGION_$SYNCHDMLC,0.0);
+
+"write(*,*)' leafis, region ',leafis,REGION_$SYNCHDMLC;
 
 IF(REGION_$SYNCHDMLC=4) [ "Particle is in the air gap "
   REGION_$SYNCHDMLC=IRSTART_$SYNCHDMLC-1+REGION_$SYNCHDMLC;
@@ -911,6 +923,10 @@ IF(OUTOFMLCFLAG=1) [
 
 $SYNCHDMLC_MINDISTANCE(DIST1);
 
+"write(*,*)' x,y,z ',x(np),y(np),z(np);
+"write(*,*)' leafis,nx,ny,nz ',leafis,nx,ny,nz;
+"write(*,*)' dist1,step_unit ',DIST1,STEP_UNIT;
+
 "OUTPUT REGION_$SYNCHDMLC;(I3);"
 
 IF((DIST1>=STEP_UNIT) | (DIST1<0)) [
@@ -942,6 +958,9 @@ ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0)) [
 
         NEWREGION_$SYNCHDMLC=NEWREGION_$SYNCHDMLC+IRSTART_$SYNCHDMLC-1;
        " OUTPUT REGION_$SYNCHDMLC;(I3);"
+
+       "write(*,*)' region, newregion, dist1 ',REGION_$SYNCHDMLC,
+       "     NEWREGION_$SYNCHDMLC,DIST1;
 
         IF( OUTOFCMFLAG=1 ) [
           EXIT;
@@ -975,6 +994,7 @@ ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0)) [
           RETURN;
        ] ELSE [
          $SYNCHDMLC_MINDISTANCE(DIST2);
+         "write(*,*)' dist1, dist2 ',dist1,dist2;
          DIST1=DIST1+DIST2;
        ];
 
@@ -2583,6 +2603,8 @@ IF(TOT_LEAF_$SYNCHDMLC>0) [
      DO J = 1, 7 [
        SURPARA1_$SYNCHDMLC(I,J)=YREG_$SYNCHDMLC(I,J)/TEMP1;
      "OUTPUT I, J, YREG_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
+     write(*,*)' i, leafis, j, yreg ',i,LEAFTYPE_$SYNCHDMLC(I),j,
+            YREG_$SYNCHDMLC(I,J);
      " OUTPUT I, J, SURPARA1_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
      ];"End of J Loop"
   ]; "End of K Loop"
@@ -3613,7 +3635,9 @@ IF(LEAFIS~=0) [
   "Check if we are in groove on leaf and move to adjacent leaf"
   IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
 				   "target leaf"
-    IF((NY=5|NY=6) & (NZ=7|NZ=8|NZ=9) & LEAFIS~=TOT_LEAF_$SYNCHDMLC) [
+    IF(LEAFIS~=TOT_LEAF_$SYNCHDMLC & (((NY=5|NY=6) & (NZ=7|NZ=8|NZ=9)) |
+        (I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1 &
+          NY=6 & NZ>1))) [
        IF(XYL1>SURPARA1_$SYNCHDMLC(LEAFIS+1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1)))[
           LEAFIS=LEAFIS+1;
           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
@@ -3703,7 +3727,32 @@ IF(LEAFIS~=0) [
                  ];
                 ]
            ];
-         ];
+         ]
+         ELSEIF(LEAFIS ~=1 &
+           I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,1)=1 &
+           NY=1 & NZ<9)[
+           "check if particle is in region of previous leaf"
+           IF(XYL1<SURPARA1_$SYNCHDMLC(LEAFIS-1,7)*
+             (Z(NP)-ZFOCUS_$SYNCHDMLC(1))) [
+
+              LEAFIS=LEAFIS-1;
+              NY=6;
+              IF(XYL1<SURPARA1_$SYNCHDMLC(LEAFIS,6)*
+                 (Z(NP)-ZFOCUS_$SYNCHDMLC(1))) [
+                 NY=5;
+              ]
+              IF(Z(NP)<ZREG_$SYNCHDMLC(LEAFIS,1))[
+                 NZ=1;
+              ] ELSEIF(Z(NP)>ZREG_$SYNCHDMLC(LEAFIS,10))[
+                 NZ=9;
+              ] ELSE[
+                 DO I=1,9 ["recheck Z region"
+                    IF((Z(NP)>=ZREG_$SYNCHDMLC(LEAFIS,I)) &
+                   (ZREG_$SYNCHDMLC(LEAFIS,I+1)>=Z(NP))) [NZ=I; EXIT];
+                 ];
+              ]
+           ]
+         ]
       ];
 
   "Determine which X region we are in"
@@ -3747,6 +3796,8 @@ IF(LEAFIS~=0) [
    "Set minimum and maximum Z boundaries"
     IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
       "Quarter or Half Target leaf"
+      "take care of distance to corners possibly being min. distance"
+      "here."
 
       IF(NY=1) [
         IF(NZ<=3) [I1=1; I2=4;]
@@ -3755,8 +3806,11 @@ IF(LEAFIS~=0) [
         ELSE [I1=6; I2=10;]
       ]
       ELSEIF(NY=2) [
-        IF(NZ<=3) [I1=1; I2=4;]
+        IF(NZ=1) [I1=1; I2=2;]
+        ELSEIF(NZ=2) [I1=1; I2=4;]
+        ELSEIF(NZ=3) [I1=3; I2=4;]
         ELSEIF(NZ=4) [I1=4; I2=5;]
+        ELSEIF(NZ=5) [I1=5; I2=6;]
         ELSEIF(NZ<=7) [I1=5; I2=8;]
         ELSE [I1=8; I2=10;]
       ]
@@ -3766,13 +3820,19 @@ IF(LEAFIS~=0) [
            ELSEIF(NZ=2) [I1=2; I2=3;]
            ELSEIF(NZ=3) [I1=3; I2=4;]
            ELSEIF(NZ=4) [I1=4; I2=5;]
-           ELSEIF(NZ<=7) [I1=5; I2=8;]
+           ELSEIF(NZ<=6) [I1=5; I2=7;]
+           ELSEIF(NZ=7) [I1=5; I2=8;]
            ELSE [I1=8; I2=10;]
         ]
         ELSE [
-           IF(NZ<=3) [I1=1; I2=4;]
+           IF(NZ=1) [I1=1; I2=2;]
+           ELSEIF(NZ=2) [I1=1; I2=4;]
+           ELSEIF(NZ=3) [I1=3; I2=4;]
            ELSEIF(NZ=4) [I1=4; I2=5;]
-           ELSEIF(NZ<=8) [I1=5; I2=9;]
+           ELSEIF(NZ=5) [I1=5; I2=6;]
+           ELSEIF(NZ=6) [I1=5; I2=7;]
+           ELSEIF(NZ=7) [I1=5; I2=8;]
+           ELSEIF(NZ=8) [I1=5; I2=9;]
            ELSE [I1=9; I2=10;]
         ]
       ]
@@ -3781,8 +3841,10 @@ IF(LEAFIS~=0) [
         ELSEIF(NZ=2) [I1=2; I2=3;]
         ELSEIF(NZ=3) [I1=3; I2=4;]
         ELSEIF(NZ=4) [I1=4; I2=5;]
-        ELSEIF(NZ<=7) [I1=5; I2=8;]
-        ELSE [I1=8; I2=10;]
+        ELSEIF(NZ<=6) [I1=5; I2=7;]
+        ELSEIF(NZ=7) [I1=5; I2=8;]
+        ELSEIF(NZ=8) [I1=5; I2=9;]
+        ELSE [I1=9; I2=10;]
       ]
       ELSEIF(NY=5) [
         IF(NZ=1) [I1=2; I2=3;]
@@ -3902,6 +3964,9 @@ IF(LEAFIS~=0) [
 
     DIST=MIN(ABS(ZREG_$SYNCHDMLC(LEAFIS,I1)-Z(NP)),
              ABS(ZREG_$SYNCHDMLC(LEAFIS,I2)-Z(NP)));
+    "write(*,*)' x,y,z ',x(np),y(np),z(np);
+    "write(*,*)' nx,ny,nz ',nx,ny,nz;
+    "write(*,*)' leafis,i1,i2,zdist ',leafis,i1,i2,dist;
 
     "Calculates distance to closest boundary in z direction"
     "--> 3) 7 Jul 2009"
@@ -3909,36 +3974,62 @@ IF(LEAFIS~=0) [
     IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
       "Target leaf"
 
-       IF(NZ=1 & NY<=5) [
-
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
-
-      ] ELSEIF(NZ=1 & NY=6) [
-
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
-        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+       IF(NZ=1)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1) [
+          TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
-        ] ELSE [
-          TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,3);
+        ]
+        ELSE[
+          IF(NY<=5) [
+
+            TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+            TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+
+          ] ELSEIF(NY=6) [
+
+            TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+            IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+              TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+            ] ELSE [
+              TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,3);
+            ]
+         ]
+       ]
+      ] ELSEIF(NZ=2) [
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,4)=1) [
+           IF(NY<=2) [
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+           ]
+           ELSE[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+             IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+                TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+             ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,3);]
+           ]
+        ]
+        ELSE[
+           IF(NY<=3)[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+           ]
+           ELSE[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+             IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+                TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+             ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,3);]
+           ]
         ]
 
-      ] ELSEIF(NZ=2 & NY<=2) [
-
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
-
-      ] ELSEIF(NZ=2 & NY>=3) [
-
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
-        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
-          TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
-        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,3);]
-
       ] ELSEIF(NZ=3|NZ=4|NZ=5) [
-
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1) [
+          TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+          TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+        ]
+        ELSE[
+          TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+          TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        ]
 
       ] ELSEIF(NY=1 & (NZ=6|NZ=7)) [
 
@@ -3947,33 +4038,62 @@ IF(LEAFIS~=0) [
         TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
 
       ] ELSEIF(NY>=2 & NZ=6) [
-
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
-
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1) [
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        ]
       ] ELSEIF(NZ=7 & (NY=2|NY=3|NY=4)) [
 
         TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
         TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
 
-      ] ELSEIF((NZ=7|NZ=8) & NY>=5) [
+      ] ELSEIF(NZ=7 & NY>=5) [
 
         TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,5);
         IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
         ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
 
-      ] ELSEIF(NZ=8 & NY<=3) [IF(LEAFIS=1) [
-
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
-        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,4);
-
-      ]
-     ELSEIF(NZ=8 & NY=4) [
-       TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,4);
-       TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
-      ]
+      ] ELSEIF(NZ=8)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,4)=1) [
+          IF(NY<=3)[
+            IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1); ]
+            ELSE[ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+            TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+          ]
+          ELSEIF(NY=4)[
+            TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+            TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+          ]
+          ELSE[
+            TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+            IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+               TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+            ELSE[TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+          ]
+        ]
+        ELSE[
+          IF(NY<=2)[
+            IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1); ]
+            ELSE[ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+            TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+          ]
+          ELSEIF(NY<=4)[
+            TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+            TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+          ]
+          ELSE[
+            TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+            IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+               TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+            ELSE[TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+          ]
+        ]
+     ]
      ELSEIF(NZ=9) [IF(LEAFIS=1) [
        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
@@ -4038,10 +4158,184 @@ IF(LEAFIS~=0) [
         TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
        ]
      ]
-    ELSE ["Isocenter leaf"
+    ELSEIF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=3) [
+      "half isocenter leaf
+      IF(NZ=1) [
+        IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+        "possibly use LHS=6?"
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+     ]
+     ELSEIF(NZ=2)[
+        IF(NY<=2)[
+           IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+           ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+        ]
+        IF(NY=3)[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+           IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+           ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+        ]
+     ]
+     ELSEIF(NZ=3)[
+        IF(NY<=2)[
+           IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+           ELSE [
+              IF(Z(NP)>ZREG_$SYNCHDMLC(J,7))[
+                TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);
+              ]
+              ELSE[
+                TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);
+              ]
+           ]
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+        ]
+        IF(NY<=5)[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+           IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+           ELSE [
+             IF(Z(NP)<ZREG_$SYNCHDMLC(I,6))[
+                TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);
+             ]
+             ELSE[
+                TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,2);
+             ]
+           ]
+        ]
+     ]
+     ELSEIF(NZ=4)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(3,1,1)=1) [
+           IF(NY=1)[
+             IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+             ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+           ]
+           ELSEIF(NY<=5)[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+           ]
+           ELSE[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+             IF(LEAFIS=TOT_LEAF_$SYNCHDMLC)[
+                   TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+             ELSE [
+               IF(Z(NP)<ZREG_$SYNCHDMLC(I,6))[
+                  TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);
+               ]
+               ELSE[
+                  TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,2);
+               ]
+             ]
+           ]
+        ]
+        ELSE[
+           IF(NY<=5)[
+              TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+              TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+           ]
+           ELSE[
+              TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+              IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+                     TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+              ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+           ]
+        ]
+     ]
+     ELSEIF(NZ=5)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(3,1,1)=1) [
+           IF(NY=1)[
+             IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+             ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+           ]
+           ELSE[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+           ]
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        ]
+     ]
+     ELSEIF(NZ=6)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(3,1,1)=1) [
+           IF(NY=1)[
+             IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+             ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+           ]
+           ELSE[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+           ]
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        ]
+     ]
+     ELSEIF(NZ=7)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(3,1,1)=1) [
+           IF(NY=1)[
+             IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+             ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+           ]
+           ELSE[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+           ]
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        ]
+     ]
+     ELSEIF(NZ=8)[
+        IF(NY<=4)[
+           IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+           ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        ]
+     ]
+     ELSEIF(NZ=9)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(3,1,1)=1) [
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        ]
+        ELSE[
+           IF(NY=1)[
+             IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+             ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+             "here we are ignoring the possibility that Z could be"
+             ">Ztip(LEAFIS-1) but should be okay"
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+           ]
+           ELSE[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+           ]
+        ]
+     ]
+    ]
+    ELSE ["Quarter Isocenter leaf"
       "EH - because the quarter and half leaves are slightly different"
       "     you will need a modification for NZ=4 and NY=6"
-
       IF(NZ=1) [
         IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
         ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);];
@@ -4121,6 +4415,7 @@ IF(LEAFIS~=0) [
           SQRT(1+TEMP2**2));
 
     DIST = MIN(DIST,TEMP1,TEMP2);
+    "write(*,*)' ydist ',dist;
  "NOW CHECK DISTANCE IN X DIRECTION"
     IF(ENDTYPE_$SYNCHDMLC=1) [ "focused leaf end"
       TEMP1=SURPARA2_B_$SYNCHDMLC(LEAFIS);

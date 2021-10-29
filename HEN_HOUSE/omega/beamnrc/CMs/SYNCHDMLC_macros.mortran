@@ -518,6 +518,8 @@ ELSE ["inside leaf bank"
       NY=NY+1;
     ];
 
+    "write(*,*)' leafis, xyfl1, ny ',leafis,xyfl(1),ny;"
+
     IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
        "Originally on Target (Quarter or Half) Leaf"
 
@@ -814,6 +816,7 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
      ZN = (ZREG_$SYNCHDMLC(LEAFIS,ZLHS)-ZFL)/W(NP);
      IF( (ZP>=0.0) & (ZN>=0.0) ) [ ZDIST =MIN(ZP, ZN); ]
      ELSE [ ZDIST = MAX(ZP, ZN); ]
+     "write(*,*)' zdist,leafis ',zdist,leafis;"
    ]
   ELSE [ ZDIST = 1.0E20; ];
   IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
@@ -860,16 +863,34 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
        ]
     ]
     ELSEIF(NZ=3)[
-       LHS=1; J=LEAFIS;
-       RHS=7; I=LEAFIS;
+       IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1) [
+          LHS=1; J=LEAFIS;
+          RHS=6; I=LEAFIS;
+       ]
+       ELSE[
+          LHS=1; J=LEAFIS;
+          RHS=7; I=LEAFIS;
+       ]
     ]
     ELSEIF(NZ=4)[
-       LHS=1; J=LEAFIS;
-       RHS=7; I=LEAFIS;
+       IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1) [
+          LHS=1; J=LEAFIS;
+          RHS=6; I=LEAFIS;
+       ]
+       ELSE[
+          LHS=1; J=LEAFIS;
+          RHS=7; I=LEAFIS;
+       ]
     ]
     ELSEIF(NZ=5)[
-       LHS=1; J=LEAFIS;
-       RHS=7; I=LEAFIS;
+       IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1) [
+          LHS=1; J=LEAFIS;
+          RHS=6; I=LEAFIS;
+       ]
+       ELSE[
+          LHS=1; J=LEAFIS;
+          RHS=7; I=LEAFIS;
+       ]
     ]
     ELSEIF(NZ=6)[
        IF(NY=1)[
@@ -878,8 +899,14 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
          RHS=2; I=LEAFIS;
        ]
        ELSE[
-         LHS=2; J=LEAFIS;
-         RHS=7; I=LEAFIS;
+         IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1) [
+            LHS=2; J=LEAFIS;
+            RHS=6; I=LEAFIS;
+         ]
+         ELSE[
+            LHS=2; J=LEAFIS;
+            RHS=7; I=LEAFIS;
+         ]
        ]
     ]
     ELSEIF(NZ=7)[
@@ -1222,6 +1249,7 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
   ELSE [ YN = 1.0E20; ];
   IF((YP>=0.0) & (YN>=0.0) ) [ YDIST =MIN(YP, YN); ]
   ELSE [ YDIST = MAX(YP,YN);];
+  "write(*,*)' ydist ',ydist;"
  IF(ENDTYPE_$SYNCHDMLC = 1) ["focused leaf end"
       HOLE=HOLEPOS_$SYNCHDMLC(LEAFIS);
       TEMP3=LEAFB_$SYNCHDMLC(LEAFIS)-HOLE;
@@ -1276,6 +1304,7 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
     TEMP3 = UVL(2)*(XYFL(2)-XoP)+W(NP)*(ZFL-Zo); "B in eqn"
     TEMP4 = (XYFL(2)-XoN)**2 + (ZFL-Zo)**2; "part of C"
     TEMP5 = (XYFL(2)-XoP)**2 + (ZFL-Zo)**2; "part of C"
+    "write(*,*)' nx ',nx;"
     IF((XYFL(2)>=XoN) & (SQRT((XYFL(2)-XoN)**2+(ZFL-Zo)**2)-
       LEAFRADIUS_$SYNCHDMLC=0.0) & (UVL(2)*(XYFL(2)-XoN)+W(NP)*(ZFL-Zo)=0.0)) [
          XN=0.0;  XP=1.0E20; "on edge of negative leaf"
@@ -1391,6 +1420,7 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
  ];
 IF( (XP>=0.0) & (XN>=0.0) ) [ XDIST =MIN(XP, XN); ]
 ELSE [ XDIST = MAX(XP,XN); ];
+"write(*,*)' xdist ',xdist;"
 IF( ZDIST>=0.0) [TEMP=ZDIST;
     IF( YDIST>=0.0 ) [TEMP=MIN(TEMP,YDIST);];
     IF( XDIST>=0.0 ) [TEMP=MIN(TEMP,XDIST);];
