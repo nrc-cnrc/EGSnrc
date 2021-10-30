@@ -2603,8 +2603,8 @@ IF(TOT_LEAF_$SYNCHDMLC>0) [
      DO J = 1, 7 [
        SURPARA1_$SYNCHDMLC(I,J)=YREG_$SYNCHDMLC(I,J)/TEMP1;
      "OUTPUT I, J, YREG_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
-     write(*,*)' i, leafis, j, yreg ',i,LEAFTYPE_$SYNCHDMLC(I),j,
-            YREG_$SYNCHDMLC(I,J);
+     "write(*,*)' i, leafis, j, yreg ',i,LEAFTYPE_$SYNCHDMLC(I),j,
+         "   YREG_$SYNCHDMLC(I,J);
      " OUTPUT I, J, SURPARA1_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
      ];"End of J Loop"
   ]; "End of K Loop"
@@ -3055,7 +3055,8 @@ DO L=1,TOT_LEAF_$SYNCHDMLC[
       SUBINDEX_$SYNCHDMLC(L,I,6,8)=2;
       SUBINDEX_$SYNCHDMLC(L,I,6,9)=2;
 
-      IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(L),2,4)~=1) [
+      IF(LEAFTYPE_$SYNCHDMLC(L)=5 &
+          I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)~=1) [
         "Quarter Isocenter with zg<zt"
         SUBINDEX_$SYNCHDMLC(L,I,6,4)=2;
       ];
@@ -3912,7 +3913,9 @@ IF(LEAFIS~=0) [
       ]
       ELSEIF(NY=3) [
         IF(NZ=1) [I1=1; I2=2;]
-        ELSEIF(NZ<=5) [I1=2; I2=6;]
+        ELSEIF(NZ=2)[I1=2; I2=6;]
+        ELSEIF(NZ=3) [I1=3; I2=6;]
+        ELSEIF(NZ<=5) [I1=4; I2=6;]
         ELSEIF(NZ=6) [I1=6; I2=7;]
         ELSEIF(NZ=7) [I1=7; I2=8;]
         ELSEIF(NZ=8) [I1=8; I2=9;]
@@ -3920,7 +3923,9 @@ IF(LEAFIS~=0) [
       ]
       ELSEIF(NY=4) [
         IF(NZ<=2) [I1=1; I2=3;]
-        ELSEIF(NZ<=5) [I1=3; I2=6;]
+        ELSEIF(NZ=3) [I1=3; I2=6;]
+        ELSEIF(NZ=4) [I1=4; I2=6;]
+        ELSEIF(NZ=5) [I1=5; I2=6;]
         ELSEIF(NZ=6) [I1=6; I2=7;]
         ELSEIF(NZ=7) [I1=7; I2=8;]
         ELSEIF(NZ=8) [I1=8; I2=9;]
@@ -3928,15 +3933,20 @@ IF(LEAFIS~=0) [
       ]
       ELSEIF(NY=5) [
         IF(NZ<=2) [I1=1; I2=3;]
-        ELSEIF(NZ<=5) [I1=3; I2=6;]
+        ELSEIF(NZ<=4) [I1=3; I2=6;]
+        ELSEIF(NZ=5) [I1=5; I2=6;]
         ELSEIF(NZ=6) [I1=6; I2=7;]
-        ELSE [I1=7; I2=10;]
+        ELSEIF(NZ=7) [I1=7; I2=8;]
+        ELSEIF(NZ=8) [I1=7; I2=10;]
+        ELSE [I1=9; I2=10;]
       ]
       ELSEIF(NY=6) [
         IF(NZ<=4) [I1=1; I2=5;]
         ELSEIF(NZ=5) [I1=5; I2=6;]
         ELSEIF(NZ=6) [I1=6; I2=7;]
-        ELSE [I1=7; I2=10;]
+        ELSEIF(NZ=7) [I1=7; I2=8;]
+        ELSEIF(NZ=8) [I1=7; I2=10;]
+        ELSE [I1=9; I2=10;]
       ]
     ] ELSE [
       "Quarter Isocenter leaf"
