@@ -1213,11 +1213,28 @@ int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     //
     // Protocol is to set the intersection distance to 0.0 and return the region
     // where the particle is numerically.
-    t = 0.0;
-    int newreg = howfar_interior_find_lost_particle(ireg, x, u);
-    update_medium(newreg, newmed);
+    //
     // We can't determine which normal to display (which is only for egs_view in
     // any case), so we don't update the normal for this exceptional case.
+    int newreg = howfar_interior_find_lost_particle(ireg, x, u);
+    if (newreg != ireg) {
+        t = 0.0;
+        update_medium(newreg, newmed);
+        return newreg;
+    }
+    // If numerically we are inside a region but don't intersect any of the
+    // faces, we have to push the particle along the direction of momentum to
+    // avoid getting stuck at a boundary (this happens extremely rarely).
+    egsWarning("EGS_Mesh::howfar: pushing stuck particle in region %d: "
+        "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ireg, x.x,
+            x.y, x.z, u.x, u.y, u.z);
+
+    EGS_Float small_dist = 1e-10;
+    newreg = isWhere(x + small_dist * u);
+    t = small_dist;
+    if (newreg != ireg) {
+        update_medium(newreg, newmed);
+    }
     return newreg;
 }
 
@@ -1242,16 +1259,10 @@ int EGS_Mesh::howfar_interior_find_lost_particle(int ireg, const EGS_Vector &x,
         }
     }
     // If the particle is not in a neighbouring element, use isWhere to find out
-    // where it should be. If isWhere returns the current region, that is a
-    // serious problem in the implementation (infinite loop), so crash. We could
-    // also consider issuing a warning and discarding the particle.
-    int newreg = isWhere(x);
-    if (newreg == ireg) {
-        egsFatal("EGS_Mesh::howfar: infinite loop detected in region %d\n"
-                 "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ireg, x.x,
-                 x.y, x.z, u.x, u.y, u.z);
-    }
-    return newreg;
+    // where it should be. In rare cases, this may return ireg! This is handled
+    // by howfar_interior by pushing the particle along the direction of
+    // momentum.
+    return isWhere(x);
 }
 
 EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vector &x,
