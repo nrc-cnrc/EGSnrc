@@ -1109,13 +1109,50 @@ EGS_Float EGS_Mesh::min_exterior_face_dist(const EGS_Vector& x) {
     return _surface_tree->hownear_exterior(x, *this);
 }
 
+// Track possibly stuck particles in howfar
+class SmallStepTracker {
+public:
+    SmallStepTracker() = default;
+    unsigned log_step() {
+        count += 1;
+        return count;
+    }
+    void reset() {
+        count = 0;
+    }
+private:
+    unsigned count = 0;
+};
+
 int EGS_Mesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed /* =0 */, EGS_Vector *normal /* =0 */)
 {
+    static SmallStepTracker step_tracker;
     if (ireg < 0) {
         return howfar_exterior(ireg, x, u, t, newmed, normal);
     }
-    return howfar_interior(ireg, x, u, t, newmed, normal);
+    auto new_reg = howfar_interior(ireg, x, u, t, newmed, normal);
+    EGS_Float small_dist = 1e-10;
+    if (t > small_dist) {
+        step_tracker.reset();
+        return new_reg;
+    }
+    // otherwise, we might be stuck at a corner point
+    auto num_small_steps = step_tracker.log_step();
+    // one small step doesn't mean we're stuck, might just be at a boundary
+    if (num_small_steps < 5) {
+        return new_reg;
+    }
+    // if the particle is stuck, push it along the momentum vector
+    //egsWarning("EGS_Mesh::howfar: pushing stuck particle in region %d: "
+    //    "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ireg, x.x,
+    //        x.y, x.z, u.x, u.y, u.z);
+    new_reg = isWhere(x + small_dist * u);
+    t = small_dist;
+    if (new_reg != ireg) {
+        update_medium(new_reg, newmed);
+    }
+    return new_reg;
 }
 
 // howfar_interior is the most complicated EGS_BaseGeometry method. Apart from
@@ -1225,9 +1262,9 @@ int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     // If numerically we are inside a region but don't intersect any of the
     // faces, we have to push the particle along the direction of momentum to
     // avoid getting stuck at a boundary (this happens extremely rarely).
-    egsWarning("EGS_Mesh::howfar: pushing stuck particle in region %d: "
-        "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ireg, x.x,
-            x.y, x.z, u.x, u.y, u.z);
+    //egsWarning("EGS_Mesh::howfar: pushing stuck particle in region %d: "
+    //    "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ireg, x.x,
+    //        x.y, x.z, u.x, u.y, u.z);
 
     EGS_Float small_dist = 1e-10;
     newreg = isWhere(x + small_dist * u);
