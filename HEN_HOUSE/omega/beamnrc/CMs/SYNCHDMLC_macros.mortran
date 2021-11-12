@@ -699,7 +699,8 @@ ELSE ["inside leaf bank"
          NX=5;]
  ];
  "write(*,*)' leafis, x, y, z ',leafis,xyfl(2),xyfl(1),zfl;"
- "write(*,*)' nx, ny, nz ',nx,ny,nz;"
+ "write(*,*)' nx, ny, nz, subindex ',nx,ny,nz,"
+ "            SUBINDEX_$SYNCHDMLC(LEAFIS,NX,NY,NZ);"
  {P1}=SUBINDEX_$SYNCHDMLC(LEAFIS,NX,NY,NZ);
 
  "OUTPUT LEAFIS,XYFL(2),XYFL(1),ZFL,{P1};"

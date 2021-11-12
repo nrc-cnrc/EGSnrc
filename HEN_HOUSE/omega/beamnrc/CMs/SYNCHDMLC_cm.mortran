@@ -2603,8 +2603,8 @@ IF(TOT_LEAF_$SYNCHDMLC>0) [
      DO J = 1, 7 [
        SURPARA1_$SYNCHDMLC(I,J)=YREG_$SYNCHDMLC(I,J)/TEMP1;
      "OUTPUT I, J, YREG_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
-     "write(*,*)' i, leafis, j, yreg ',i,LEAFTYPE_$SYNCHDMLC(I),j,
-         "   YREG_$SYNCHDMLC(I,J);
+     write(*,*)' i, leafis, j, yreg ',i,LEAFTYPE_$SYNCHDMLC(I),j,
+            YREG_$SYNCHDMLC(I,J);
      " OUTPUT I, J, SURPARA1_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
      ];"End of J Loop"
   ]; "End of K Loop"
