@@ -1041,111 +1041,117 @@ $start_new_particle;
 
 :NEWELECTRON:LOOP
 [
-"IF(Y(NP) > -0.73059 & Y(NP) < -0.689 &
-"    Z(NP) > 50.998 & ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-"  write(*,*)' test 1';
-"  write(*,*)' e,x,y,z,ir ',E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.8258 & Y(NP) < -0.689 &
-"    Z(NP) > 47.716 & Z(NP) < 47.979 & ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-"  write(*,*)' test 2';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.693 & Y(NP) < -0.689 & ABS(X(NP))<10.0 & Z(NP) > 47.716 &
-"   MED(IR(NP))=2)[
-"  write(*,*)' test 3';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9259 & Y(NP) <-0.8234 & Z(NP) >53.998 & ABS(X(NP))<10.0 &
-"  MED(IR(NP))=2)[
-"  write(*,*)' test 4';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9259 & Y(NP) <-0.7306 & Z(NP) <53.996 & Z(NP)>47.981 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 5';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9259 & Y(NP) <-0.6933 & Z(NP) <50.996 & Z(NP)>47.981 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 6';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9632 & Y(NP) <-0.689 & Z(NP) <47.714 & Z(NP)>47.6201 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 7';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9632 & Y(NP) <-0.826 & Z(NP) <50.994 & Z(NP)>47.6201 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 8';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.823 & Y(NP) <-0.7306 & Z(NP) <54.116 & Z(NP)>53.998 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 9';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-IF(Y(NP) > -0.72751 & Y(NP) <-0.728 & Z(NP) <54.284 & Z(NP)>47.621 &
+IF(Y(NP) > -0.73059 & Y(NP) < -0.689 &
+    Z(NP) > 50.998 & ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+  write(*,*)' half air test 1';
+  write(*,*)' e,x,y,z,ir ',E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+]
+IF(Y(NP) > -0.8258 & Y(NP) < -0.689 &
+    Z(NP) > 47.716 & Z(NP) < 47.979 & ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+  write(*,*)' half air test 2';
+  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+]
+IF(Y(NP) > -0.693 & Y(NP) < -0.689 & ABS(X(NP))<10.0 & Z(NP) > 47.716 &
+   MED(IR(NP))=2)[
+  write(*,*)' half air test 3';
+  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+]
+IF(Y(NP) > -0.9259 & Y(NP) <-0.8234 & Z(NP) >53.998 & ABS(X(NP))<10.0 &
   MED(IR(NP))=2)[
-  write(*,*)' test 10';
+  write(*,*)' half air test 4';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.72751 & Y(NP) <-0.690 & Z(NP) <51.103 & Z(NP)>47.621 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 11';
+IF(Y(NP) > -0.9632 & Y(NP) < -0.689 & Z(NP) >54.1161 & ABS(X(NP))<10.0 &
+  MED(IR(NP))=2)[
+  write(*,*)' half air test 5';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.6142 & Y(NP) <-0.4566 & Z(NP) <48.00 & Z(NP)>47.621 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 12';
+IF(Y(NP) > -0.9632 & Y(NP) < -0.926 & Z(NP) >50.996 & ABS(X(NP))<10.0 &
+  MED(IR(NP))=2)[
+  write(*,*)' half air test 6';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.493 & Y(NP) <-0.4566 & Z(NP) <51.204 & Z(NP)>47.621 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 13';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-]
-IF(Y(NP) > -0.7276 & Y(NP) <-0.4566 & Z(NP) <47.884 & Z(NP)>47.621 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 14';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-]
-IF(Y(NP) > -0.7276 & Y(NP) <-0.6106 & Z(NP) <54.284 & Z(NP)>54.021 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 15';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-]
-IF(Y(NP) > -0.7265 & Y(NP) <-0.4566 & Z(NP) <54.019 & Z(NP)>51.206 &
+IF(Y(NP) > -0.9259 & Y(NP) <-0.7306 & Z(NP) <53.996 & Z(NP)>47.981 &
   ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 16';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+  write(*,*)' half med test 7';
+ write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.6892 & Y(NP) <-0.4938 & Z(NP) <51.103 & Z(NP)>48.005 &
+IF(Y(NP) > -0.9259 & Y(NP) <-0.6933 & Z(NP) <50.996 & Z(NP)>47.981 &
   ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 17';
+  write(*,*)' half med test 8';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.7265 & Y(NP) <-0.4938 & Z(NP) <51.206 & Z(NP)>51.105 &
+IF(Y(NP) > -0.9632 & Y(NP) <-0.689 & Z(NP) <47.714 & Z(NP)>47.6201 &
   ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 18';
+  write(*,*)' half med test 9';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.6892 & Y(NP) <-0.6143 & Z(NP) <48.003 & Z(NP)>47.886 &
+IF(Y(NP) > -0.9632 & Y(NP) <-0.826 & Z(NP) <50.994 & Z(NP)>47.6201 &
   ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 19';
+  write(*,*)' half med test 10';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.6105 & Y(NP) <-0.4566 & Z(NP) <54.284 & Z(NP)>54.021 &
+IF(Y(NP) > -0.823 & Y(NP) <-0.7306 & Z(NP) <54.116 & Z(NP)>53.998 &
   ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 20';
+  write(*,*)' half med test 11';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.7275 & Y(NP) <-0.4566 & Z(NP) <54.379 & Z(NP)>54.286 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 21';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.4566 & Z(NP) <47.884 & Z(NP)>47.621 &
+"   ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 1';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.7266 & Z(NP) <54.284 & Z(NP)>47.621 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 2';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"  stop;
+"]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.6893 & Z(NP) <51.103 & Z(NP)>47.621 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 3';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.6106 & Z(NP) <54.284 & Z(NP)>54.021 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 4';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.6142 & Y(NP) <-0.4566 & Z(NP) <48.00 & Z(NP)>47.621 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 5';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.4936 & Y(NP) <-0.4566 & Z(NP) <51.2 & Z(NP)>47.621 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 6';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.4566 & Z(NP) <54.375 & Z(NP)>54.286 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 7';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.6104 & Y(NP) <-0.4566 & Z(NP) <54.375 & Z(NP)>51.206 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 8';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.7265 & Y(NP) <-0.4938 & Z(NP) <54.02 & Z(NP)>51.105 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 9';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.6892 & Y(NP) <-0.4938 & Z(NP) <51.103 & Z(NP)>48.005 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 10';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.6892 & Y(NP) <-0.6143 & Z(NP) <48.003 & Z(NP)>47.886 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 11';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
     "Go once through this loop for each 'new' electron whose charge and
     "energy has not been checked
 
@@ -6586,111 +6592,117 @@ $EVALUATE GMFPR0 USING GMFP(GLE);]
 
 :PTRANS:
 LOOP["PHOTON TRANSPORT LOOP"
-"IF(Y(NP) > -0.73059 & Y(NP) < -0.689 &
-"    Z(NP) > 50.998 & ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-"  write(*,*)' test 1';
-"  write(*,*)' e,x,y,z,ir ',E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.8258 & Y(NP) < -0.689 &
-"    Z(NP) > 47.716 & Z(NP) < 47.979 & ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-"  write(*,*)' test 2';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.693 & Y(NP) < -0.689 & ABS(X(NP))<10.0 & Z(NP) > 47.716 &
-"  MED(IR(NP))=2)[
-"  write(*,*)' test 3';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9259 & Y(NP) <-0.8234 & Z(NP) >53.998 & ABS(X(NP))<10.0 &
-"  MED(IR(NP))=2)[
-"  write(*,*)' test 4';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9259 & Y(NP) <-0.7306 & Z(NP) <53.996 & Z(NP)>47.981 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 5';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9259 & Y(NP) <-0.6933 & Z(NP) <50.996 & Z(NP)>47.981 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 6';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9632 & Y(NP) <-0.689 & Z(NP) <47.714 & Z(NP)>47.6201 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 7';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.9632 & Y(NP) <-0.826 & Z(NP) <50.994 & Z(NP)>47.6201 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 8';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-"IF(Y(NP) > -0.823 & Y(NP) <-0.7306 & Z(NP) <54.116 & Z(NP)>53.998 &
-"  MED(IR(NP))=1)[
-"  write(*,*)' test 9';
-"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-"]
-IF(Y(NP) > -0.72751 & Y(NP) <-0.728 & Z(NP) <54.284 & Z(NP)>47.621 &
+IF(Y(NP) > -0.73059 & Y(NP) < -0.689 &
+    Z(NP) > 50.998 & ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+  write(*,*)' half air test 1';
+  write(*,*)' e,x,y,z,ir ',E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+]
+IF(Y(NP) > -0.8258 & Y(NP) < -0.689 &
+    Z(NP) > 47.716 & Z(NP) < 47.979 & ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+  write(*,*)' half air test 2';
+  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+]
+IF(Y(NP) > -0.693 & Y(NP) < -0.689 & ABS(X(NP))<10.0 & Z(NP) > 47.716 &
+   MED(IR(NP))=2)[
+  write(*,*)' half air test 3';
+  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+]
+IF(Y(NP) > -0.9259 & Y(NP) <-0.8234 & Z(NP) >53.998 & ABS(X(NP))<10.0 &
   MED(IR(NP))=2)[
-  write(*,*)' test 10';
+  write(*,*)' half air test 4';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.72751 & Y(NP) <-0.690 & Z(NP) <51.103 & Z(NP)>47.621 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 11';
+IF(Y(NP) > -0.9632 & Y(NP) < -0.689 & Z(NP) >54.1161 & ABS(X(NP))<10.0 &
+  MED(IR(NP))=2)[
+  write(*,*)' half air test 5';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.6142 & Y(NP) <-0.4566 & Z(NP) <48.00 & Z(NP)>47.621 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 12';
+IF(Y(NP) > -0.9632 & Y(NP) < -0.926 & Z(NP) >50.996 & ABS(X(NP))<10.0 &
+  MED(IR(NP))=2)[
+  write(*,*)' half air test 6';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.493 & Y(NP) <-0.4566 & Z(NP) <51.204 & Z(NP)>47.621 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 13';
+IF(Y(NP) > -0.9259 & Y(NP) <-0.7306 & Z(NP) <53.996 & Z(NP)>47.981 &
+ ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+  write(*,*)' half med test 7';
+ write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+]
+IF(Y(NP) > -0.9259 & Y(NP) <-0.6933 & Z(NP) <50.996 & Z(NP)>47.981 &
+ ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+  write(*,*)' half med test 8';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.7276 & Y(NP) <-0.4566 & Z(NP) <47.884 & Z(NP)>47.621 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 14';
+IF(Y(NP) > -0.9632 & Y(NP) <-0.689 & Z(NP) <47.714 & Z(NP)>47.6201 &
+ ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+  write(*,*)' half med test 9';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.7276 & Y(NP) <-0.6106 & Z(NP) <54.284 & Z(NP)>54.021 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
-  write(*,*)' test 15';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-]
-IF(Y(NP) > -0.7265 & Y(NP) <-0.4566 & Z(NP) <54.019 & Z(NP)>51.206 &
+IF(Y(NP) > -0.9632 & Y(NP) <-0.826 & Z(NP) <50.994 & Z(NP)>47.6201 &
   ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 16';
+  write(*,*)' half med test 10';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.6892 & Y(NP) <-0.4938 & Z(NP) <51.103 & Z(NP)>48.005 &
+IF(Y(NP) > -0.823 & Y(NP) <-0.7306 & Z(NP) <54.116 & Z(NP)>53.998 &
   ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 17';
+  write(*,*)' half med test 11';
   write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
 ]
-IF(Y(NP) > -0.7265 & Y(NP) <-0.4938 & Z(NP) <51.206 & Z(NP)>51.105 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 18';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-]
-IF(Y(NP) > -0.6892 & Y(NP) <-0.6143 & Z(NP) <48.003 & Z(NP)>47.886 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 19';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-]
-IF(Y(NP) > -0.6105 & Y(NP) <-0.4566 & Z(NP) <54.284 & Z(NP)>54.021 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 20';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-]
-IF(Y(NP) > -0.7275 & Y(NP) <-0.4566 & Z(NP) <54.379 & Z(NP)>54.286 &
-  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
-  write(*,*)' test 21';
-  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
-]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.4566 & Z(NP) <47.884 & Z(NP)>47.621 &
+"   ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 1';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.7266 & Z(NP) <54.284 & Z(NP)>47.621 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 2';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.6893 & Z(NP) <51.103 & Z(NP)>47.621 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 3';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"  stop;
+"]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.6106 & Z(NP) <54.284 & Z(NP)>54.021 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 4';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.6142 & Y(NP) <-0.4566 & Z(NP) <48.00 & Z(NP)>47.621 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 5';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.4936 & Y(NP) <-0.4566 & Z(NP) <51.2 & Z(NP)>47.621 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=2)[
+"  write(*,*)' iso air test 6';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.7274 & Y(NP) <-0.4566 & Z(NP) <54.375 & Z(NP)>54.286 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 7';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.6104 & Y(NP) <-0.4566 & Z(NP) <54.375 & Z(NP)>51.206 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 8';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.7265 & Y(NP) <-0.4938 & Z(NP) <54.02 & Z(NP)>51.105 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 9';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.6892 & Y(NP) <-0.4938 & Z(NP) <51.103 & Z(NP)>48.005 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 10';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
+"IF(Y(NP) > -0.6892 & Y(NP) <-0.6143 & Z(NP) <48.003 & Z(NP)>47.886 &
+"  ABS(X(NP))<10.0 & MED(IR(NP))=1)[
+"  write(*,*)' iso med test 11';
+"  write(*,*)' iq,e,x,y,z,ir ',IQ(NP),E(NP),X(NP),Y(NP),Z(NP),IR(NP);
+"]
 
 IF (MEDIUM.EQ.0)[TSTEP=VACDST;]
 ELSE [$SET-RHOF;    "DENSITY RATIO SCALING TEMPLATE"

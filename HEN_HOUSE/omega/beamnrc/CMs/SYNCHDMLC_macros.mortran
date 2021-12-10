@@ -698,7 +698,7 @@ ELSE ["inside leaf bank"
     ELSEIF((XYFL(2)>TEMP4) | (XYFL(2)=TEMP4 & UVL(2)>=0)) [
          NX=5;]
  ];
- "write(*,*)' leafis, x, y, z ',leafis,xyfl(2),xyfl(1),zfl;"
+ "write(*,*)' find: leafis, x, y, z ',leafis,xyfl(2),xyfl(1),zfl;"
  "write(*,*)' nx, ny, nz, subindex ',nx,ny,nz,"
  "            SUBINDEX_$SYNCHDMLC(LEAFIS,NX,NY,NZ);"
  {P1}=SUBINDEX_$SYNCHDMLC(LEAFIS,NX,NY,NZ);

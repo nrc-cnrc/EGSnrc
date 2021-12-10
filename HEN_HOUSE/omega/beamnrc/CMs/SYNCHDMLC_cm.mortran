@@ -701,11 +701,14 @@
 "V>$GEO_SHIFT_1_(#)
 "V>=============
 "V>{p1} the value to compare with ustep
-"V> if {p1}+1.0e-5 < ustep shift it, otherwise no shift
+"V> if {p1}+1.0e-5 < ustep shift it, otherwise set it to ustep
+"V> Note: if above condition failed, this used to leave {p1}
+"V> unshifted, which led to transport errors 
 ;
 REPLACE {$GEO_SHIFT_1_(#)} WITH {
   ;IF({P1}~=0.00 ) [
     IF({P1}+1.0E-5< USTEP) [{P1}={P1}+1.0E-5;]
+    ELSE [{P1}=USTEP;]
    ]
    ELSE [{P1}={P1}+1.0E-5;];
 
@@ -764,7 +767,7 @@ IF(ORIENT_$SYNCHDMLC=1) [
 ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
 ;
 
-"write(*,*)' in howfar ';
+"write(*,*)' in howfar, ir, med ',IR_$SYNCHDMLC,med(IRL);
 
 "IF(Z(NP)>47.62001 & Z(NP)<54.37999)["
         "IF(med(irl) = 0)["
@@ -801,6 +804,7 @@ OUTOFMLCFLAG=0;
 IF(N_GAP_$SYNCHDMLC=1 & IR_$SYNCHDMLC=4 ) ["Check the air gap first"
    IF(W(NP)>0.0) ["Particle going forward"
       DIST = (ZMIN_$SYNCHDMLC - Z(NP))/W(NP); "distance to front of CM"
+      "write(*,*)' dist ',dist;
       IF(DIST <= 0.0) [
           USTEP=0.0;
           $SYNCHDMLC_FIND(IR_$SYNCHDMLC, 0.0);
@@ -850,15 +854,18 @@ ELSEIF(IR_$SYNCHDMLC=1 | IR_$SYNCHDMLC=2 | IR_$SYNCHDMLC=3) [
 
 $SYNCHDMLC_FIND(REGION_$SYNCHDMLC,0.0);
 
-"write(*,*)' leafis, region ',leafis,REGION_$SYNCHDMLC;
+"write(*,*)' leafis, region, dist ',leafis,REGION_$SYNCHDMLC,DIST;
 
 IF(REGION_$SYNCHDMLC=4) [ "Particle is in the air gap "
   REGION_$SYNCHDMLC=IRSTART_$SYNCHDMLC-1+REGION_$SYNCHDMLC;
    IF(W(NP) > 0.0)[
     IF(DIST <= USTEP ) ["particle to be moved to region boundary"
+      "write(*,*)' ustep, dist here ',ustep,dist;
       $GEO_SHIFT_1_(DIST);
+      "write(*,*)' and ustep, dist here ',ustep,dist;
       USTEP = DIST;
       $SYNCHDMLC_FIND(NEWREGION_$SYNCHDMLC,USTEP);
+      "write(*,*)' ustep, newregion ',ustep,NEWREGION_$SYNCHDMLC;
       IF( NEWREGION_$SYNCHDMLC=1) [IRNEW =IRSTART_$SYNCHDMLC; RETURN;]
       ELSE[IRNEW =IRSTART_$SYNCHDMLC+1; RETURN;]
     ]
@@ -923,6 +930,7 @@ IF(OUTOFMLCFLAG=1) [
 
 $SYNCHDMLC_MINDISTANCE(DIST1);
 
+"write(*,*)' dist1 ',dist1;
 "write(*,*)' x,y,z ',x(np),y(np),z(np);
 "write(*,*)' leafis,nx,ny,nz ',leafis,nx,ny,nz;
 "write(*,*)' dist1,step_unit ',DIST1,STEP_UNIT;
@@ -3077,6 +3085,18 @@ DO L=1,TOT_LEAF_$SYNCHDMLC[
      ]
    ];
 
+   "reset some driving screw regions to air for some
+   "input dimension overrides
+   IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(L),1,1)=1)[
+     "an isocenter leaf override"
+     SUBINDEX_$SYNCHDMLC(L,2,1,6)=1;
+     SUBINDEX_$SYNCHDMLC(L,5,1,6)=1;
+   ]
+   ELSEIF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(L),1,6)=1)[
+     SUBINDEX_$SYNCHDMLC(L,2,6,4)=1;
+     SUBINDEX_$SYNCHDMLC(L,5,6,4)=1;
+   ]
+
    IF(LEAFTYPE_$SYNCHDMLC(L)=1) [
      "Full Leaf"
      SUBINDEX_$SYNCHDMLC(L,2,1,6)=1;
@@ -3545,7 +3565,6 @@ $INTEGER I,J, "T> looping index"
          LEAFIS, "T> leaf no. where particle is located"
          I1,I2; "T> used to mark min. max. Z boundaries for calculating dist"
 
-
 IR_$SYNCHDMLC=IR(NP)-IRSTART_$SYNCHDMLC +1;
 "IR_$SYNCHDMLC=IR(NP)-IRSTART_$SYNCHDMLC; CB"
 IF(IR_$SYNCHDMLC=4) [ "in the air gap at the top"
@@ -3634,12 +3653,15 @@ IF(LEAFIS~=0) [
   ]
 
   "Check if we are in groove on leaf and move to adjacent leaf"
+"write(*,*)' before check leafis, leaftype ',leafis,LEAFTYPE_$SYNCHDMLC(LEAFIS);
+"write(*,*)' nx, ny, nz ',nx,ny,nz; 
   IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
 				   "target leaf"
-    IF(LEAFIS~=TOT_LEAF_$SYNCHDMLC & (((NY=5|NY=6) & (NZ=7|NZ=8|NZ=9)) |
-        (I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1 &
-          NY=6 & NZ>1))) [
-       IF(XYL1>SURPARA1_$SYNCHDMLC(LEAFIS+1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1)))[
+    IF(LEAFIS~=TOT_LEAF_$SYNCHDMLC & ((((NY=5|NY=6) & (NZ=7|NZ=8|NZ=9)) &
+       XYL1>SURPARA1_$SYNCHDMLC(LEAFIS+1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))) |
+      (I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1 & 
+       NY=6 & NZ>1 & 
+       XYL1>SURPARA1_$SYNCHDMLC(LEAFIS+1,3)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))))) [
           LEAFIS=LEAFIS+1;
           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
@@ -3669,7 +3691,6 @@ IF(LEAFIS~=0) [
             ];
           ]
          ];
-       ];
       ]
     ELSE [ "we are on a full leaf or isocenter leaf"
        IF((NY=6 & NZ<=4 & LEAFIS~=TOT_LEAF_$SYNCHDMLC &
@@ -3729,9 +3750,10 @@ IF(LEAFIS~=0) [
                 ]
            ];
          ]
-         ELSEIF(LEAFIS ~=1 &
-           I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,1)=1 &
-           NY=1 & NZ<9)[
+         ELSEIF(LEAFIS ~=1 & NY<=2 & 
+           ((LEAFTYPE_$SYNCHDMLC(LEAFIS) = 3 & NZ<=3) |
+            (LEAFTYPE_$SYNCHDMLC(LEAFIS) = 5 & NZ<=4)))[ 
+           "here we are in an isocenter leaf
            "check if particle is in region of previous leaf"
            IF(XYL1<SURPARA1_$SYNCHDMLC(LEAFIS-1,7)*
              (Z(NP)-ZFOCUS_$SYNCHDMLC(1))) [
@@ -3848,7 +3870,7 @@ IF(LEAFIS~=0) [
         ELSE [I1=9; I2=10;]
       ]
       ELSEIF(NY=5) [
-        IF(NZ=1) [I1=2; I2=3;]
+        IF(NZ=1) [I1=1; I2=2;]
         ELSEIF(NZ=2) [I1=2; I2=3;]
         ELSEIF(NZ=3) [I1=3; I2=4;]
         ELSEIF(NZ=4) [I1=4; I2=5;]
