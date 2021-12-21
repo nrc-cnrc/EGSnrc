@@ -193,7 +193,7 @@ public:
     }
     void printElement(int i, std::ostream& elt_info = std::cout) const {
         const auto& n = element_nodes(i);
-      elt_info << " Tetrahedron " << i << ":\n"
+        elt_info << " Tetrahedron " << i << ":\n"
           << " \tNode coordinates (cm):\n"
           << " \t0: " << n.A.x << " " << n.A.y << " " << n.A.z << "\n"
           << " \t1: " << n.B.x << " " << n.B.y << " " << n.B.z << "\n"
@@ -263,6 +263,10 @@ public:
         return _elt_node_indices.at(element);
     }
 
+    static EGS_Float get_min_step_size() {
+        return EGS_Mesh::min_step_size;
+    }
+
 private:
     // `hownear` helper method
     // Given a tetrahedron ireg, find the minimum distance to a face in any direction.
@@ -276,9 +280,34 @@ private:
     int howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         EGS_Float &t, int *newmed, EGS_Vector *normal);
 
-    // Find the region where lost particles in `howfar_interior` are.
-    int howfar_interior_find_lost_particle(int ireg, const EGS_Vector &x,
-        const EGS_Vector &u);
+    // `howfar_interior` helper methods
+
+    struct PointLocation {
+        PointLocation() = default;
+        PointLocation(EGS_Float direction_dot_normal, EGS_Float signed_distance)
+            : direction_dot_normal(direction_dot_normal), signed_distance(
+                signed_distance) {}
+
+        EGS_Float direction_dot_normal = 0.0;
+        EGS_Float signed_distance = 0.0;
+    };
+
+    PointLocation find_point_location(const EGS_Vector& x, const
+        EGS_Vector& u, const EGS_Vector& plane_point, const EGS_Vector&
+        plane_normal);
+
+    Intersection find_interior_intersection(
+        const std::array<PointLocation, 4>& ixs);
+
+    int howfar_interior_thick_plane(
+        const std::array<PointLocation, 4>& intersect_tests, int ireg,
+        const EGS_Vector &x, const EGS_Vector &u, EGS_Float &t, int *newmed,
+        EGS_Vector *normal);
+
+    // If the particle is lost, try to recover transport by shifting the
+    // particle along a small step.
+    int howfar_interior_recover_lost_particle(int ireg, const EGS_Vector &x,
+        const EGS_Vector &u, EGS_Float &t, int *newmed);
 
     // `howfar` helper method outside the mesh
     int howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
@@ -365,6 +394,8 @@ private:
 
     std::vector<std::array<int, 4>> _neighbours;
     static const std::string type;
+
+    static constexpr EGS_Float min_step_size = 1e-10;
 };
 
 #endif // EGS_MESH

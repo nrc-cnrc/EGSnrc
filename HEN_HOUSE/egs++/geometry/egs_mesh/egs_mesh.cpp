@@ -203,7 +203,6 @@ EGS_Vector closest_point_tetrahedron(const EGS_Vector &P, const EGS_Vector &A, c
     return min_point;
 }
 
-/// TODO: combine with interior_triangle_ray_intersection
 /// TODO: replace with Woop 2013 watertight algorithm.
 ///
 /// Triangle-ray intersection algorithm for finding intersections with a ray
@@ -246,50 +245,6 @@ int exterior_triangle_ray_intersection(const EGS_Vector &p,
     // intersection found
     dist = dot(ac, qvec) * inv_det;
     if (dist < 0.0) {
-        return 0;
-    }
-    return 1;
-}
-
-/// TODO: combine with exterior_triangle_ray_intersection
-/// Triangle-ray intersection algorithm for finding intersections with a ray
-/// inside the tetrahedron.
-int interior_triangle_ray_intersection(const EGS_Vector &p,
-    const EGS_Vector &v_norm, const EGS_Vector& face_norm, const EGS_Vector& a,
-    const EGS_Vector& b, const EGS_Vector& c, EGS_Float& dist)
-{
-    const EGS_Float eps = 1e-10;
-    if (dot(v_norm, face_norm) > -eps) {
-        return 0;
-    }
-
-    if (dot(face_norm, p - a) < 0.0) {
-        return 0;
-    }
-
-    EGS_Vector ab = b - a;
-    EGS_Vector ac = c - a;
-    EGS_Vector pvec = cross(v_norm, ac);
-    EGS_Float det = dot(ab, pvec);
-
-    if (det > -eps && det < eps) {
-        return 0;
-    }
-    EGS_Float inv_det = 1.0 / det;
-    EGS_Vector tvec = p - a;
-    EGS_Float u = dot(tvec, pvec) * inv_det;
-    if (u < 0.0 || u > 1.0) {
-        return 0;
-    }
-    EGS_Vector qvec = cross(tvec, ab);
-    EGS_Float v = dot(v_norm, qvec) * inv_det;
-    if (v < 0.0 || u + v > 1.0) {
-        return 0;
-    }
-    // intersection found
-    dist = dot(ac, qvec) * inv_det;
-    if (dist < 0.0) {
-        dist = 0.0;
         return 0;
     }
     return 1;
@@ -1109,50 +1064,27 @@ EGS_Float EGS_Mesh::min_exterior_face_dist(const EGS_Vector& x) {
     return _surface_tree->hownear_exterior(x, *this);
 }
 
-// Track possibly stuck particles in howfar
-class SmallStepTracker {
-public:
-    SmallStepTracker() = default;
-    unsigned log_step() {
-        count += 1;
-        return count;
-    }
-    void reset() {
-        count = 0;
-    }
-private:
-    unsigned count = 0;
-};
-
 int EGS_Mesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed /* =0 */, EGS_Vector *normal /* =0 */)
 {
-    static SmallStepTracker step_tracker;
     if (ireg < 0) {
+        // TODO check t isn't modified accidentally in howfar_exterior
         return howfar_exterior(ireg, x, u, t, newmed, normal);
     }
-    auto new_reg = howfar_interior(ireg, x, u, t, newmed, normal);
-    EGS_Float small_dist = 1e-10;
-    if (t > small_dist) {
-        step_tracker.reset();
+    // Find the minimum distance to an element boundary. If this distance is
+    // smaller than the intended step, adjust the step length and return the
+    // neighbouring element. If the step length is larger than the distance to a
+    // boundary, don't adjust it upwards! This will break particle transport.
+    EGS_Float distance_to_boundary = veryFar;
+    auto new_reg = howfar_interior(
+        ireg, x, u, distance_to_boundary, newmed, normal);
+
+    if (distance_to_boundary < t) {
+        t = distance_to_boundary;
         return new_reg;
     }
-    // otherwise, we might be stuck at a corner point
-    auto num_small_steps = step_tracker.log_step();
-    // one small step doesn't mean we're stuck, might just be at a boundary
-    if (num_small_steps < 5) {
-        return new_reg;
-    }
-    // if the particle is stuck, push it along the momentum vector
-    //egsWarning("EGS_Mesh::howfar: pushing stuck particle in region %d: "
-    //    "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ireg, x.x,
-    //        x.y, x.z, u.x, u.y, u.z);
-    new_reg = isWhere(x + small_dist * u);
-    t = small_dist;
-    if (new_reg != ireg) {
-        update_medium(new_reg, newmed);
-    }
-    return new_reg;
+    // Otherwise, return the current region and don't change the value of t.
+    return ireg;
 }
 
 // howfar_interior is the most complicated EGS_BaseGeometry method. Apart from
@@ -1163,143 +1095,285 @@ int EGS_Mesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
 // because it is where EGS thinks the particle should be based on the simulation
 // so far, and we assume steps like boundary crossing calculations have already
 // taken place. So we have to do our best to calculate intersections as if the
-// position really is inside the given tetrahedron. There are three cases:
-//
-// 1. The position is inside the region: calculate the intersection without
-// further complications.
-// 2. The position is outside the region but will intersect one of the interior
-// faces: calculate the intersection, ignoring any backwards facing faces.
-// 3. The position is outside the region and won't intersect any of the interior
-// faces: return 0.0 as the howfar distance and set the new region number to
-// match the position.
-//
-//     Case 1      |        Case 2       |        Case 3
-//                 |                     |
-//       /\        |          /\         |          /\
-//      /  \       |         /  \        |         /  \
-//     /    \      |        /    \       |        /    \
-//    / * -> X     |  * -> /      X      |  <- * /      \
-//   /________\    |      /________\     |      /________\
-//                 |                     |
-//  Intersection   |     Intersection    |    No intersection, return 0.0
-//
-// This is the recommended way to implement howfar following Bielajew's "HOWFAR
-// and HOWNEAR: Geometry Modelling for Monte Carlo Particle Transport" (see
-// section 2, "Boundary Crossing" and section 4, "Solutions for simple
-// surfaces").
-//
-// Case 1 and 2 are currently both handled the same way: calculate triangle-ray
-// intersections with the subset of the surface triangles facing the query point
-// and return the first intersection. Unlike calculating the distance to face
-// planes, we can return immediately after finding an intersection because there
-// should not be a smaller intersection distance.
-//
-// TODO: check whether using ray-plane intersections for Case 1 is faster.
+// position really is inside the given tetrahedron.
 int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed, EGS_Vector *normal)
 {
-    // Do we have to reset howfar for this particle? Set false if the particle
-    // will intersect a tetrahedron face as if it was inside the tetrahedron.
-    bool is_lost = true;
-    EGS_Float dist = 1e30;
+    // General idea is to use ray-plane intersection because it's watertight and
+    // uses less flops than ray-triangle intersection. To my understanding, this
+    // approach is also used by Geant, PHITS and MCNP.
+    //
+    // Because planes are infinite, intersections can be found far away from
+    // the actual tetrahedron bounds if the particle is travelling away from the
+    // element. So we limit valid intersections with planes by element face
+    // distances and normal angles.
+    //
+    //                          OK, if d < eps, and theta > -angle_eps
+    //
+    //        |<-d->|               |    /
+    //              |               | i /
+    //              |  n          * |  /
+    //        * ->  | -->         | | /
+    //              |             v |/
+    //              |               /
+    //              |              /
+    //                            x
+    //
+    // There is a chance that floating-point rounding may cause computed
+    // quantities to be inconsistent. The most important thing is the simulation
+    // should try to continue by always at least taking a small step. Returning
+    // 0.0 opens the door to hanging the transport routine entirely and for
+    // enough histories, it will almost certainly hang. Even returning a small
+    // step does not ensure forward progress for all possible input meshes,
+    // since if the step is too small, it may be wiped out by rounding error
+    // after being added to a large number. But if the step is too large, small
+    // tetrahedrons may be skipped entirely.
+
+    // TODO add test for transport after intersection point lands right on a
+    // corner node.
 
     const auto& n = element_nodes(ireg);
-    std::array<std::array<EGS_Vector, 3>, 4> face_nodes {{
-        {n.B, n.C, n.D}, {n.A, n.C, n.D}, {n.A, n.B, n.D}, {n.A, n.B, n.C}
-    }};
-
-    for (std::size_t i = 0; i < 4; i++) {
-        if (!(dot(_face_normals[ireg][i], x - face_nodes[i][0]) >= 0.0 &&
-            interior_triangle_ray_intersection(x, u, _face_normals[ireg][i],
-                face_nodes[i][0], face_nodes[i][1], face_nodes[i][2], dist)))
-        {
-            // no intersection with this triangle
-            continue;
-        }
-
-        // intersection found
-        is_lost = false;
-        if (dist > t) {
-            continue;
-        }
-
-        if (dist <= EGS_BaseGeometry::halfBoundaryTolerance) {
-            // if a point is within the thick plane, the distance to the next
-            // region is exactly 0.0
-            dist = 0.0;
-        }
-
-        t = dist;
-        int newreg = _neighbours[ireg][i];
-        update_medium(newreg, newmed);
-        update_normal(_face_normals[ireg][i], u, normal);
-        return newreg;
+    // Pick an arbitrary face point to do plane math with. Face 0 is BCD, Face 1
+    // is ACD, etc...
+    std::array<EGS_Vector, 4> face_points {n.B, n.A, n.A, n.A};
+    std::array<PointLocation, 4> intersect_tests {};
+    for (int i = 0; i < 4; ++i) {
+        intersect_tests[i] = find_point_location(
+                x, u, face_points[i], _face_normals[ireg][i]);
     }
-    // If the particle isn't lost but won't intersect a boundary because it's
-    // too far away, return the current region.
-    if (!is_lost) {
-        return ireg;
+    // If the particle is not strictly inside the element, try transporting
+    // along a thick plane.
+    if (intersect_tests[0].signed_distance < 0.0 ||
+        intersect_tests[1].signed_distance < 0.0 ||
+        intersect_tests[2].signed_distance < 0.0 ||
+        intersect_tests[3].signed_distance < 0.0)
+    {
+        return howfar_interior_thick_plane(intersect_tests, ireg, x, u, t,
+            newmed, normal);
     }
-    // If the particle is not where ireg says and there is no intersection with
-    // any triangle face, we are in a situation like this (hopefully from
-    // numerical undershoot during transport).
-    //
-    //         /\
-    //   <- * /  \
-    //       /____\
-    //
-    // Protocol is to set the intersection distance to 0.0 and return the region
-    // where the particle is numerically.
-    //
-    // We can't determine which normal to display (which is only for egs_view in
-    // any case), so we don't update the normal for this exceptional case.
-    int newreg = howfar_interior_find_lost_particle(ireg, x, u);
-    if (newreg != ireg) {
-        t = 0.0;
-        update_medium(newreg, newmed);
-        return newreg;
-    }
-    // If numerically we are inside a region but don't intersect any of the
-    // faces, we have to push the particle along the direction of momentum to
-    // avoid getting stuck at a boundary (this happens extremely rarely).
-    //egsWarning("EGS_Mesh::howfar: pushing stuck particle in region %d: "
-    //    "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ireg, x.x,
-    //        x.y, x.z, u.x, u.y, u.z);
 
-    EGS_Float small_dist = 1e-10;
-    newreg = isWhere(x + small_dist * u);
-    t = small_dist;
-    if (newreg != ireg) {
-        update_medium(newreg, newmed);
+    // Otherwise, if points are inside the element, calculate the minimum
+    // distance to a plane.
+    auto ix = find_interior_intersection(intersect_tests);
+    if (ix.dist < 0.0) {
+        egsWarning("interior intersection negative t: %.17g in region %d: "
+                   "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ix.dist,
+                   ireg, x.x, x.y, x.z, u.x, u.y, u.z);
     }
-    return newreg;
+    // Very small distances might get swallowed up by rounding error, so enforce
+    // a minimum step size.
+    if (ix.dist < EGS_Mesh::min_step_size) {
+        ix.dist = EGS_Mesh::min_step_size;
+    }
+    if (ix.face_index == -1) {
+        egsWarning("face_index %d in region %d: "
+                   "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n",
+                   ix.face_index, ireg, x.x, x.y, x.z, u.x, u.y, u.z);
+    }
+    t = ix.dist;
+    int new_reg = _neighbours[ireg].at(ix.face_index);
+    update_medium(new_reg, newmed);
+    update_normal(_face_normals[ireg].at(ix.face_index), u, normal);
+    return new_reg;
 }
 
-// Determine where the lost particle from hownear_interior is numerically.
+// Returns the position of the point relative to the face.
+EGS_Mesh::PointLocation EGS_Mesh::find_point_location(const EGS_Vector& x,
+    const EGS_Vector& u, const EGS_Vector& plane_point,
+    const EGS_Vector& plane_normal)
+{
+    // TODO handle degenerate triangles, by not finding any intersections.
+
+    // Face normals point inwards, to the tetrahedron centroid. So if
+    // dot(u, n) < 0, the particle is travelling towards the plane and will
+    // intersect it at some point. The intersection point might be outside the
+    // face's triangular bounds though.
+    EGS_Float direction_dot_normal = dot(u, plane_normal);
+    // A point travelling away from (-) or exactly parallel (0.0) to the plane
+    // won't intersect it.
+    bool intersects = direction_dot_normal < 0.0;
+
+    // Find the signed distance to the plane, to see if it lies in the thick
+    // plane and so might be a candidate for transport even if it's not strictly
+    // inside the tetrahedron. This is the distance along the plane normal, not
+    // the distance along the velocity vector.
+    //
+    //  (-)       (+)
+    //        |
+    //  *     |-> n
+    //        |
+    //  |-----+
+    //     d
+    //
+    EGS_Float signed_distance = dot(plane_normal, x - plane_point);
+    return PointLocation(direction_dot_normal, signed_distance);
+}
+
+// Assuming the point is inside the element, find the plane intersection point.
+//
+// Caller is responsible for checking that each intersections signed_distance is
+// >= 0.
+EGS_Mesh::Intersection EGS_Mesh::find_interior_intersection(
+    const std::array<PointLocation, 4>& ixs)
+{
+    EGS_Float t_min = veryFar;
+    int min_face_index = -1;
+    for (int i = 0; i < 4; ++i) {
+        // If the particle is travelling away from the face, it will not
+        // intersect it.
+        if (ixs[i].direction_dot_normal >= 0.0) {
+            continue;
+        }
+        EGS_Float t_i =  -ixs[i].signed_distance / ixs[i].direction_dot_normal;
+        if (t_i < t_min) {
+            t_min   = t_i;
+            min_face_index = i;
+        }
+    }
+    // Is there a risk of returning min_face_index = -1? Could t_min also be negative?
+    return Intersection(t_min, min_face_index);
+}
+
+// Try and transport the particle using thick plane intersections.
+int EGS_Mesh::howfar_interior_thick_plane(const std::array<PointLocation, 4>&
+    intersect_tests, int ireg, const EGS_Vector &x, const EGS_Vector &u,
+    EGS_Float &t, int *newmed, EGS_Vector *normal)
+{
+    // The particle isn't inside the element, but it might be a candidate for
+    // transport along a thick plane, as long as it is parallel or travelling
+    // towards the element.
+    //
+    //        OK              not OK            not OK
+    //
+    //                           *                 ^
+    //    -    * ->            - |               - |
+    //  d |    |             d | v             d | *
+    //    -----v---            ------            ------
+    //
+
+    // Find the largest negative distance to a face plane. If it is bigger
+    // than the thick plane tolerance, the particle isn't close enough to be
+    // considered part of the element.
+    EGS_Float max_neg_dist = veryFar;
+    int face_index = -1;
+    for (int i = 0; i < 4; ++i) {
+        if (intersect_tests[i].signed_distance < max_neg_dist) {
+            max_neg_dist = intersect_tests[i].signed_distance;
+            face_index = i;
+        }
+    }
+    if (face_index == -1) {
+        egsWarning("howfar_interior_thick_plane face_index %d in region %d: "
+                   "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n",
+                   face_index, ireg, x.x, x.y, x.z, u.x, u.y, u.z);
+    }
+
+    // If the perpendicular distance to the plane is too big to be a thick
+    // plane, or if the particle is travelling away from the plane, push the
+    // particle by a small step and return the region the particle is in.
+
+    // Some small epsilon, TODO maybe look into gamma bounds for this?
+    // Or EGS_BaseGeometry::BoundaryTolerance?
+    constexpr EGS_Float thick_plane_bounds = EGS_Mesh::min_step_size;
+    if (max_neg_dist < -thick_plane_bounds ||
+        intersect_tests.at(face_index).direction_dot_normal < -thick_plane_bounds)
+    {
+        return howfar_interior_recover_lost_particle(ireg, x, u, t, newmed);
+    }
+
+    // If the particle is inside the thick plane and travelling towards a face
+    // plane, find the intersection point. This might be outside the strict
+    // bounds of the tetrahedron, but necessary for "wall-riding" particles to
+    // be transported without tanking simulation efficiency.
+    //
+    //       \            /
+    //  out   \    * ->  x
+    //         \--------/
+    //  in      \      /
+    //
+    EGS_Float t_min = veryFar;
+    int min_face_index = -1;
+    for (int i = 0; i < 4; ++i) {
+        // If the particle is travelling away from the face, it will not
+        // intersect it.
+        if (intersect_tests[i].direction_dot_normal >= 0.0) {
+            continue;
+        }
+
+        EGS_Float t_i = -intersect_tests[i].signed_distance
+                        / intersect_tests[i].direction_dot_normal;
+
+        if (t_i < t_min) {
+            t_min = t_i;
+            min_face_index = i;
+        }
+    }
+
+    // Rarely, rounding error near an edge or corner can cause t_min to be
+    // negative or a very small positive number. For this case, try to recover
+    // as if the particle is lost.
+    if (t_min < EGS_Mesh::min_step_size) {
+        return howfar_interior_recover_lost_particle(ireg, x, u, t, newmed);
+    }
+    if (min_face_index == -1) {
+        egsWarning("face_index %d in region %d: "
+                   "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n",
+                   min_face_index, ireg, x.x, x.y, x.z, u.x, u.y, u.z);
+    }
+    t = t_min;
+    int new_reg = _neighbours[ireg].at(min_face_index);
+    update_medium(new_reg, newmed);
+    update_normal(_face_normals[ireg].at(min_face_index), u, normal);
+    return new_reg;
+}
+
+// No valid intersections were found for this particle. Push it along the
+// momentum vector by a small step and try to recover.
 //
 //         /\
 //   <- * /  \
 //       /____\
 //
 //  ^^^^ i.e., which region is this particle actually in?
-int EGS_Mesh::howfar_interior_find_lost_particle(int ireg, const EGS_Vector &x,
-    const EGS_Vector &u)
+//
+// There are many cases where this could happen, so this routine can't make
+// too many assumptions. Some possibiltites:
+//
+// * The particle is right on an edge and a negative distance was calculated
+// * The particle is inside the thick plane but travelling away from ireg
+// * The particle is outside the thick plane but travelling away or towards ireg
+//
+int EGS_Mesh::howfar_interior_recover_lost_particle(int ireg,
+    const EGS_Vector &x, const EGS_Vector &u, EGS_Float &t, int *newmed)
 {
-    // If a particle is slightly outside the bounds of an element, it will most
-    // likely be in a neighbouring element, so check those first.
-    for (const auto& neighbour : _neighbours[ireg]) {
+    t = EGS_Mesh::min_step_size;
+    // This may hang if min_step_size is too small for the mesh.
+    EGS_Vector new_pos = x + u * t;
+    // Fast path: particle is in a neighbouring element.
+    for (int i = 0; i < 4; ++i) {
+        const auto neighbour = _neighbours[ireg][i];
         if (neighbour == -1) {
             continue;
         }
-        if (insideElement(neighbour, x)) {
+        if (insideElement(neighbour, new_pos)) {
+            update_medium(neighbour, newmed);
             return neighbour;
         }
     }
-    // If the particle is not in a neighbouring element, use isWhere to find out
-    // where it should be. In rare cases, this may return ireg! This is handled
-    // by howfar_interior by pushing the particle along the direction of
-    // momentum.
-    return isWhere(x);
+    // Slow path: particle isn't in a neighbouring element, initiate a full
+    // octree search. This can also happen if the particle is leaving the
+    // mesh.
+    auto actual_elt = isWhere(new_pos);
+    if (actual_elt == ireg) {
+        egsWarning("howfar_interior_thick_plane isWhere search returned the "
+                   "same region %d: x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n",
+                   ireg, x.x, x.y, x.z, u.x, u.y, u.z);
+    }
+    update_medium(actual_elt, newmed);
+    // We can't determine which normal to display (which is only for
+    // egs_view in any case), so we don't update the normal for this
+    // exceptional case.
+    return actual_elt;
 }
 
 EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vector &x,
