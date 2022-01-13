@@ -212,7 +212,7 @@ public:
     // EGS_BaseGeometry interface
     const std::string& getType() const override { return type; }
     bool isInside(const EGS_Vector &x) override;
-    int inside(const EGS_Vector &x) override; // TODO figure out setMedia() situation
+    int inside(const EGS_Vector &x) override;
     int medium(int ireg) const override;
     int isWhere(const EGS_Vector &x) override;
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
@@ -357,6 +357,13 @@ private:
     // and member functions that depend on this data, like num_elements().
     void initializeElements(std::vector<EGS_MeshSpec::Tetrahedron> elements,
         std::vector<EGS_MeshSpec::Node> nodes,
+        std::vector<EGS_MeshSpec::Medium> materials);
+
+    // Initialize mesh element medium offsets, adding any previously undefined
+    // media to the EGS_BaseGeometry media list. Responsible for initializing:
+    // * EGS_Mesh::_medium_indices
+    // * EGS_Mesh::_medium_names
+    void initializeMedia(std::vector<EGS_MeshSpec::Tetrahedron> elements,
         std::vector<EGS_MeshSpec::Medium> materials);
 
     // Initialize neigbhour and boundary information. Must be called after

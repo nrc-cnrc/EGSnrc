@@ -912,20 +912,28 @@ void EGS_Mesh::initializeElements(
         });
     }
 
-    // map from medium tags to offsets
+    initializeMedia(std::move(elements), std::move(materials));
+}
+
+void EGS_Mesh::initializeMedia(std::vector<EGS_MeshSpec::Tetrahedron> elements,
+    std::vector<EGS_MeshSpec::Medium> materials)
+{
     std::unordered_map<int, int> medium_offsets;
-    for (std::size_t i = 0; i < materials.size(); i++) {
-        _medium_names.push_back(materials[i].medium_name);
-        auto material_tag = materials[i].tag;
-        bool inserted = medium_offsets.insert({material_tag, i}).second;
+    _medium_names.reserve(materials.size());
+    for (const auto& m : materials) {
+        _medium_names.push_back(m.medium_name);
+        // If the medium was already registered, returns its offset. For new
+        // media, addMedium adds them to the list and returns the new offset.
+        const int media_offset = EGS_BaseGeometry::addMedium(m.medium_name);
+        bool inserted = medium_offsets.insert({m.tag, media_offset}).second;
         if (!inserted) {
-            throw std::runtime_error("duplicate medium tag: " + std::to_string(material_tag));
+            throw std::runtime_error("duplicate medium tag: "
+                + std::to_string(m.tag));
         }
     }
 
     _medium_indices.reserve(elements.size());
     for (const auto& e: elements) {
-        // TODO handle vacuum tag (-1)?
         _medium_indices.push_back(medium_offsets.at(e.medium_tag));
     }
 }
@@ -1510,9 +1518,6 @@ extern "C" {
         mesh->setBoundaryTolerance(input);
         mesh->setName(input);
         mesh->setLabels(input);
-        for (const auto& medium: mesh->medium_names()) {
-            mesh->addMedium(medium);
-        }
         return mesh;
     }
 }
