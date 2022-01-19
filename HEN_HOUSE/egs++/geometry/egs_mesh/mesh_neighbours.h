@@ -33,6 +33,8 @@
 #ifndef MESH_NEIGHBOURS_
 #define MESH_NEIGHBOURS_
 
+#include "egs_mesh.h"
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -151,8 +153,10 @@ SharedNodes elements_around_nodes(const std::vector<mesh_neighbours::Tetrahedron
 
 // Given a list of tetrahedrons, returns the indices of neighbouring tetrahedrons.
 std::vector<std::array<int, 4>> tetrahedron_neighbours(
-        const std::vector<mesh_neighbours::Tetrahedron>& elements)
+    const std::vector<mesh_neighbours::Tetrahedron>& elements,
+    egs_mesh::internal::PercentCounter& progress)
 {
+    progress.start(elements.size());
     const std::size_t NUM_FACES = 4;
     const auto shared_nodes = mesh_neighbours::internal::elements_around_nodes(elements);
 
@@ -184,6 +188,7 @@ std::vector<std::array<int, 4>> tetrahedron_neighbours(
                 }
             }
         }
+        progress.step(1);
     }
     return neighbours;
 };

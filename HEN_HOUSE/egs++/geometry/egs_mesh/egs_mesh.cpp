@@ -51,6 +51,12 @@
 #include <stdexcept>
 #include <unordered_map>
 
+#ifndef WIN32
+    #include <unistd.h> // isatty
+#else
+    #include <io.h>     // _isatty
+#endif
+
 // Have to define the destructor here instead of in egs_mesh.h because of the
 // unique_ptr to forward declared EGS_Mesh_Octree members.
 EGS_Mesh::~EGS_Mesh() = default;
@@ -68,6 +74,57 @@ void EGS_MeshSpec::checkValid() const {
                 std::to_string(this->nodes.size()) + ")");
     }
 }
+
+namespace egs_mesh {
+namespace internal {
+
+PercentCounter::PercentCounter(EGS_InfoFunction info, const std::string& msg)
+    : info_(info), msg_(msg) {}
+
+void PercentCounter::start(EGS_Float goal) {
+    goal_ = goal;
+    t_start_ = std::chrono::system_clock::now();
+#ifndef WIN32
+    interactive_ = isatty(STDOUT_FILENO);
+#else
+    interactive_ = _isatty(STDOUT_FILENO);
+#endif
+    if (!info_ || !interactive_) {
+        return;
+    }
+    info_("\r%s (0%%)", msg_.c_str());
+}
+
+// Assumes delta is positive
+void PercentCounter::step(EGS_Float delta) {
+    if (!info_ || !interactive_) {
+        return;
+    }
+    progress_ += delta;
+    const int percent = static_cast<int>((progress_ / goal_) * 100.0);
+    if (percent > old_percent_) {
+        info_("\r%s (%d%%)", msg_.c_str(), percent);
+        old_percent_ = percent;
+    }
+}
+
+void PercentCounter::finish(const std::string& end_msg) {
+    if (!info_) {
+        return;
+    }
+    const auto t_end = std::chrono::system_clock::now();
+    const std::chrono::duration<float> elapsed = t_end - t_start_;
+    if (!interactive_) {
+        info_("%s in %0.3fs\n", end_msg.c_str(), elapsed.count());
+        return;
+    }
+    // overwrite any remaining text
+    info_("\r                                                                ");
+    info_("\r%s in %0.3fs\n", end_msg.c_str(), elapsed.count());
+}
+
+} // namespace internal
+} // namespace egs_mesh
 
 // anonymous namespace
 namespace {
@@ -293,6 +350,9 @@ private:
         }
         double mid_z() const {
             return (min_z + max_z) / 2.0;
+        }
+        double volume() const {
+            return (max_x - min_x) * (max_y - min_y) * (max_z - min_z);
         }
         void expand(double delta) {
             min_x -= delta;
@@ -601,11 +661,13 @@ private:
         Node() = default;
         // TODO: think about passing in EGS_Mesh as parameter
         Node(const std::vector<int> &elts, const BoundingBox& bbox,
-            std::size_t n_max, const EGS_Mesh& mesh) : bbox_(bbox)
+            std::size_t n_max, const EGS_Mesh& mesh,
+            egs_mesh::internal::PercentCounter& progress) : bbox_(bbox)
         {
             // TODO: max level and precision warning
             if (bbox_.is_indivisible() || elts.size() < n_max) {
                 elts_ = elts;
+                progress.step(bbox_.volume());
                 return;
             }
 
@@ -622,7 +684,7 @@ private:
             }
             for (int i = 0; i < 8; i++) {
                 children_.push_back(Node(
-                    std::move(octants[i]), bbs[i], n_max, mesh
+                    std::move(octants[i]), bbs[i], n_max, mesh, progress
                 ));
             }
         }
@@ -795,12 +857,11 @@ private:
 public:
     EGS_Mesh_Octree() = default;
     EGS_Mesh_Octree(const std::vector<int> &elts, std::size_t n_max,
-        const EGS_Mesh& mesh)
+        const EGS_Mesh& mesh, egs_mesh::internal::PercentCounter& progress)
     {
         if (elts.empty()) {
             throw std::runtime_error("EGS_Mesh_Octree: empty elements vector");
         }
-        std::cout << "making octree of " << elts.size() << " elements\n";
         if (elts.size() > std::numeric_limits<int>::max()) {
             throw std::runtime_error("EGS_Mesh_Octree: num elts must fit into an int");
         }
@@ -819,7 +880,10 @@ public:
         // Add a small delta around the bounding box to avoid numerical problems
         // at the boundary
         g_bounds.expand(1e-8);
-        root_ = Node(elts, g_bounds, n_max, mesh);
+
+        // Track progress using how much volume has been covered
+        progress.start(g_bounds.volume());
+        root_ = Node(elts, g_bounds, n_max, mesh, progress);
     }
 
     int isWhere(const EGS_Vector& p, /*const*/ EGS_Mesh& mesh) const {
@@ -944,7 +1008,14 @@ void EGS_Mesh::initializeNeighbours() {
     for (const auto& e: _elt_node_indices) {
         neighbour_elts.emplace_back(mesh_neighbours::Tetrahedron(e[0], e[1], e[2], e[3]));
     }
-    _neighbours = mesh_neighbours::tetrahedron_neighbours(neighbour_elts);
+
+    egs_mesh::internal::PercentCounter progress(get_logger(),
+        "EGS_Mesh: finding element neighbours");
+
+    _neighbours = mesh_neighbours::tetrahedron_neighbours(
+            neighbour_elts, progress);
+
+    progress.finish("EGS_Mesh: found element neighbours");
 
     _boundary_faces.reserve(num_elements() * 4);
     for (const auto& ns: _neighbours) {
@@ -987,17 +1058,22 @@ void EGS_Mesh::initializeOctrees() {
             boundary_elts.push_back(i);
         }
     }
-    std::cout << "before making octree\n";
     // Max element sizes from Furuta et al section 2.1.1
     std::size_t n_vol = 200;
+    egs_mesh::internal::PercentCounter vol_progress(get_logger(),
+        "EGS_Mesh: building volume octree");
     _volume_tree = std::unique_ptr<EGS_Mesh_Octree>(
-        new EGS_Mesh_Octree(elts, n_vol, *this)
+        new EGS_Mesh_Octree(elts, n_vol, *this, vol_progress)
     );
+    vol_progress.finish("EGS_Mesh: built volume octree");
+
     std::size_t n_surf = 100;
+    egs_mesh::internal::PercentCounter surf_progress(get_logger(),
+        "EGS_Mesh: building surface octree");
     _surface_tree = std::unique_ptr<EGS_Mesh_Octree>(
-        new EGS_Mesh_Octree(boundary_elts, n_surf, *this)
+        new EGS_Mesh_Octree(boundary_elts, n_surf, *this, surf_progress)
     );
-    std::cout << "after making octree\n";
+    surf_progress.finish("EGS_Mesh: built surface octree");
 }
 
 bool EGS_Mesh::isInside(const EGS_Vector &x) {
@@ -1487,20 +1563,19 @@ extern "C" {
         }
         std::ifstream input_file(mesh_file);
         if (!input_file) {
-            egsWarning("createGeometry(EGS_Mesh): unable to open file: `%s`\n"
-                "\thelp => try using the absolute path to the mesh file",
+            egsWarning("createGeometry(EGS_Mesh): unable to open file: `%s`\n",
                 mesh_file.c_str());
             return nullptr;
         }
 
         EGS_MeshSpec mesh_spec;
         try {
-            mesh_spec = msh_parser::parse_msh_file(input_file);
+            mesh_spec = msh_parser::parse_msh_file(input_file, egsInformation);
         }
         catch (const std::runtime_error& e) {
             std::string error_msg = std::string("createGeometry(EGS_Mesh): ") +
                 "Gmsh msh file parsing failed\nerror: " + e.what() + "\n";
-            egsWarning("%s", error_msg.c_str());
+            egsWarning("\n%s", error_msg.c_str());
             return nullptr;
         }
 
@@ -1510,7 +1585,7 @@ extern "C" {
         } catch (const std::runtime_error& e) {
             std::string error_msg = std::string("createGeometry(EGS_Mesh): ") +
                 "bad input to EGS_Mesh\nerror: " + e.what() + "\n";
-            egsWarning("%s", error_msg.c_str());
+            egsWarning("\n%s", error_msg.c_str());
             return nullptr;
         }
 

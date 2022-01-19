@@ -39,6 +39,7 @@
 #define EGS_MESH
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
@@ -339,6 +340,15 @@ private:
         }
     }
 
+    // Can only be called after initializeElements (for num_elements())
+    EGS_InfoFunction get_logger() const {
+        if (num_elements() < 50000) {
+            // don't log for small meshes since loading is near instantaneous
+            return nullptr;
+        }
+        return egsInformation;
+    }
+
     // Constructor helper methods:
     //
     // Each logical piece is a separate function to help reduce peak memory
@@ -404,5 +414,53 @@ private:
 
     static constexpr EGS_Float min_step_size = 1e-10;
 };
+
+namespace egs_mesh {
+
+// The egs_mesh::internal namespace is for internal API functions and may change
+// without warning.
+namespace internal {
+
+/// Percent display counter for potentially long EGS_Mesh initialization steps.
+class EGS_MESH_EXPORT PercentCounter {
+public:
+    // Create a new counter. This doesn't log anything or start the timer yet.
+    // The counter must be activated later using `start`.
+    PercentCounter(EGS_InfoFunction info, const std::string& msg);
+
+    // Start the counter's progress toward the provided goal. The goal must be
+    // a positive number and fit into an int. Logging and timing begin at this
+    // point.
+    void start(EGS_Float goal);
+
+    // Advance the counter by a fraction of the goal value. Assumes delta is
+    // positive.
+    void step(EGS_Float delta);
+
+    // After the task is finished, print a new message and the elapsed time.
+    void finish(const std::string& end_msg);
+
+private:
+    // egsInformation-like function pointer.
+    EGS_InfoFunction info_;
+    // Progress message.
+    std::string msg_;
+    // Goal value.
+    double goal_ = 0.0;
+    // Progress value, percent complete = progress_ / goal_.
+    double progress_ = 0.0;
+    // The last progress percentage that was displayed, used to avoid redundant
+    // I/O calls.
+    int old_percent_ = 0;
+    // The time when PercentCounter::start was called.
+    std::chrono::time_point<std::chrono::system_clock> t_start_;
+    // Whether to update the percentage in real time (true) or just report when
+    // the task is finished (false).
+    bool interactive_ = false;
+};
+
+} // namespace internal
+
+} // namespace egs_mesh
 
 #endif // EGS_MESH

@@ -308,7 +308,9 @@ static std::vector<Node> parse_node_bloc(std::istream& input) {
 /// Parse the entire $Nodes section and returns a list of Nodes. Node tags are unique.
 ///
 /// Throws a std::runtime_error if parsing fails.
-static std::vector<Node> parse_nodes(std::istream& input) {
+static std::vector<Node> parse_nodes(std::istream& input,
+    EGS_InfoFunction info)
+{
     std::vector<Node> nodes;
     std::size_t num_blocs = SIZET_MAX;
     std::size_t num_nodes = SIZET_MAX;
@@ -329,6 +331,15 @@ static std::vector<Node> parse_nodes(std::istream& input) {
                 + std::to_string(std::numeric_limits<int>::max()));
         }
     }
+
+    if (num_nodes < 50000) {
+        info = nullptr; // don't log for small meshes
+    }
+
+    egs_mesh::internal::PercentCounter progress(info, "EGS_Mesh: reading " +
+        std::to_string(num_nodes) + " nodes");
+    progress.start(num_nodes);
+
     nodes.reserve(num_nodes);
     for (std::size_t i = 0; i < num_blocs; ++i) {
         std::vector<Node> bloc_nodes;
@@ -338,6 +349,7 @@ static std::vector<Node> parse_nodes(std::istream& input) {
             throw std::runtime_error("$Nodes section parsing failed\n" + std::string(err.what()));
         }
         nodes.insert(nodes.end(), bloc_nodes.begin(), bloc_nodes.end());
+        progress.step(bloc_nodes.size());
     }
     if (nodes.size() != num_nodes) {
         throw std::runtime_error("$Nodes section parsing failed, expected " + std::to_string(num_nodes) + " nodes but read "
@@ -354,6 +366,8 @@ static std::vector<Node> parse_nodes(std::istream& input) {
         throw std::runtime_error("$Nodes section parsing failed, found duplicate node tag "
             + std::to_string(unique_res.second));
     }
+
+    progress.finish("EGS_Mesh: read " + std::to_string(num_nodes) + " nodes");
     return nodes;
 }
 
@@ -485,7 +499,9 @@ static std::vector<Tetrahedron> parse_element_bloc(std::istream& input) {
 /// Returns a list of tetrahedral elements. Element tags are unique.
 ///
 /// Throws a std::runtime_error if parsing fails.
-static std::vector<Tetrahedron> parse_elements(std::istream& input) {
+static std::vector<Tetrahedron> parse_elements(std::istream& input,
+    EGS_InfoFunction info)
+{
     std::vector<Tetrahedron> elts;
     std::size_t num_blocs = SIZET_MAX;
     std::size_t num_elts = SIZET_MAX;
@@ -502,6 +518,15 @@ static std::vector<Tetrahedron> parse_elements(std::istream& input) {
             throw std::runtime_error("$Elements section parsing failed, missing metadata");
         }
     }
+
+    if (num_elts < 50000) {
+        info = nullptr; // don't log for small meshes
+    }
+
+    egs_mesh::internal::PercentCounter progress(info, "EGS_Mesh: reading " +
+        std::to_string(num_elts) + " tetrahedrons");
+    progress.start(num_elts);
+
     elts.reserve(num_elts);
     for (std::size_t i = 0; i < num_blocs; ++i) {
         std::vector<Tetrahedron> bloc_elts;
@@ -511,6 +536,7 @@ static std::vector<Tetrahedron> parse_elements(std::istream& input) {
             throw std::runtime_error("$Elements section parsing failed\n" + std::string(err.what()));
         }
         elts.insert(elts.end(), bloc_elts.begin(), bloc_elts.end());
+        progress.step(bloc_elts.size());
     }
     // can't check against num_elts because it counts all elements
     std::getline(input, line);
@@ -527,6 +553,8 @@ static std::vector<Tetrahedron> parse_elements(std::istream& input) {
         throw std::runtime_error("$Elements section parsing failed, found duplicate tetrahedron tag "
             + std::to_string(unique_res.second));
     }
+    progress.finish("EGS_Mesh: read " + std::to_string(num_elts)
+        + " tetrahedrons");
     // TODO check against min and max tag values
     return elts;
 }
@@ -534,7 +562,7 @@ static std::vector<Tetrahedron> parse_elements(std::istream& input) {
 /// Parse the body of a msh4.1 file into an EGS_MeshSpec.
 ///
 /// Throws a std::runtime_error if parsing fails.
-EGS_MeshSpec parse_msh41_body(std::istream& input) {
+EGS_MeshSpec parse_msh41_body(std::istream& input, EGS_InfoFunction info) {
     std::vector<msh_parser::internal::msh41::Node> nodes;
     std::vector<msh_parser::internal::msh41::MeshVolume> volumes;
     std::vector<msh_parser::internal::msh41::PhysicalGroup> groups;
@@ -553,9 +581,9 @@ EGS_MeshSpec parse_msh41_body(std::istream& input) {
         } else if (input_line == "$PhysicalNames") {
             groups = msh_parser::internal::msh41::parse_groups(input);
         } else if (input_line == "$Nodes") {
-            nodes = msh_parser::internal::msh41::parse_nodes(input);
+            nodes = msh_parser::internal::msh41::parse_nodes(input, info);
         } else if (input_line == "$Elements") {
-            elements = msh_parser::internal::msh41::parse_elements(input);
+            elements = msh_parser::internal::msh41::parse_elements(input, info);
         }
     }
     if (volumes.empty()) {
@@ -632,12 +660,13 @@ EGS_MeshSpec parse_msh41_body(std::istream& input) {
 } // namespace msh_parser::internal::msh41
 } // namespace msh_parser::internal
 
-EGS_MeshSpec parse_msh_file(std::istream& input) {
+EGS_MeshSpec parse_msh_file(std::istream& input, EGS_InfoFunction info) {
     auto version = msh_parser::internal::parse_msh_version(input);
     switch(version) {
         case msh_parser::internal::MshVersion::v41:
             try {
-                return msh_parser::internal::msh41::parse_msh41_body(input);
+                return msh_parser::internal::msh41::parse_msh41_body(
+                    input, info);
             } catch (const std::runtime_error& err) {
                 throw std::runtime_error("msh 4.1 parsing failed\n" + std::string(err.what()));
             }
