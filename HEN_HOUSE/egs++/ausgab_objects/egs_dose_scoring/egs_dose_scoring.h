@@ -214,7 +214,7 @@ public:
         }
 
         /*** Check if scoring in current region ***/
-        if (dose) {
+        if (ir >= 0 && dose) {
             if (d_reg_index[ir]<0) {
                 return 0;
             }
@@ -247,7 +247,7 @@ public:
         }
 
         /*** Check if scoring in current region ***/
-        if (dose) {
+        if (ir >= 0 && dose) {
             if (d_reg_index[ir]<0) {
                 return 0;
             }
