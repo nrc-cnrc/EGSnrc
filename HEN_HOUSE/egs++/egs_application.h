@@ -1149,6 +1149,13 @@ public:
     virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
 
     //************************************************************
+    // Utility functions for use with ausgab fluence scoring objects
+    //************************************************************
+    virtual EGS_Float getTVSTEP() {
+        return 0.0;
+    };
+
+    //************************************************************
     // Utility function for ausgab phase space scoring objects
     //************************************************************
     virtual void setLatch(int latch) {};

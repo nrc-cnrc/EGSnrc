@@ -217,6 +217,11 @@ public:
     //************************************************************
     void setLatch(int latch);
 
+    //************************************************************
+    // Utility functions for fluence scoring objects
+    //************************************************************
+    EGS_Float getTVSTEP();
+
     /* Needed by some sources */
     EGS_Float getRM();
     /* Turn ON/OFF radiative splitting */
