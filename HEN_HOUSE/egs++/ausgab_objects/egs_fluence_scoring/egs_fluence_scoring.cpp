@@ -619,7 +619,7 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
           i_dedx = new EGS_Interpolator [n_media];// stp powers
           dedx_i = new EGS_Interpolator [n_media];// its inverse
           for( int j = 0; j < n_media; j++ ){
-              i_dedx[j] = *(app->eDEDX(j));
+              i_dedx[j] = *( app->getDEDX( j, scoring_charge ) );
               EGS_Float Emin = i_dedx[j].getXmin();
               EGS_Float Emax = i_dedx[j].getXmax();
               int n = 1 + i_dedx[j].getIndex(Emax);// getIndex returns lower bin limit?

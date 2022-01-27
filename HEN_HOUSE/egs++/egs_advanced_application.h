@@ -221,8 +221,13 @@ public:
     // Utility functions for fluence scoring objects
     //************************************************************
     EGS_Float getTVSTEP();
-    EGS_Interpolator* eDEDX( int imed ) {
-        return &i_ededx[imed];
+    EGS_Interpolator* getDEDX( const int &imed, const int &iq ) {
+        if (iq == -1)
+           return &i_ededx[imed];
+        else if (iq == 1)           
+           return &i_pdedx[imed];
+        else 
+           return 0;
     };
     
     /* Needed by some sources */
