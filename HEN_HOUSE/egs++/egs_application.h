@@ -1157,7 +1157,7 @@ public:
         return 0.0;
     };
 
-    virtual EGS_Interpolator* eDEDX( int imed ) {
+    virtual EGS_Interpolator* getDEDX( const int &imed, const int &iq ) {
         return 0;
     };
 
