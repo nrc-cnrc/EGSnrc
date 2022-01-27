@@ -31,8 +31,8 @@ include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
-# For debugging invoke: make DEBUG=-DDEBUG
-DEFS = $(DEF1) -DBUILD_FLUENCE_SCORING_DLL $(DEBUG)
+# For extra debugging messages invoke: make MYDEFS=-DDEBUG
+DEFS = $(DEF1) -DBUILD_FLUENCE_SCORING_DLL $(MYDEFS)
 
 library = egs_fluence_scoring
 lib_files = egs_fluence_scoring
