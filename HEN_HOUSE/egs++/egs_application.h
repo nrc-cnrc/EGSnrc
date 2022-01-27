@@ -43,6 +43,7 @@
 #include "egs_base_geometry.h"
 #include "egs_base_source.h"
 #include "egs_simple_container.h"
+#include "egs_interpolator.h"
 
 #include <string>
 #include <iostream>
@@ -54,6 +55,7 @@ class EGS_RandomGenerator;
 class EGS_RunControl;
 class EGS_GeometryHistory;
 class EGS_AusgabObject;
+class EGS_Interpolator;
 //template <class T> class EGS_SimpleContainer;
 
 /*! \brief A structure holding the information of one particle
@@ -1154,6 +1156,14 @@ public:
     virtual EGS_Float getTVSTEP() {
         return 0.0;
     };
+
+    virtual EGS_Interpolator* eDEDX( int imed ) {
+        return 0;
+    };
+
+    string sourceType() {
+        return source->getObjectType();
+    }
 
     //************************************************************
     // Utility function for ausgab phase space scoring objects

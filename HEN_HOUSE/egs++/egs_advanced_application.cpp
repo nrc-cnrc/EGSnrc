@@ -1221,6 +1221,7 @@ void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
 //************************************************************
 // Utility functions for use with ausgab fluence scoring objects
 //************************************************************
+
 EGS_Float EGS_AdvancedApplication::getTVSTEP() {
     return the_epcont->tvstep;
 };

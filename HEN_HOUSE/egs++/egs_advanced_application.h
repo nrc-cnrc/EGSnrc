@@ -221,7 +221,10 @@ public:
     // Utility functions for fluence scoring objects
     //************************************************************
     EGS_Float getTVSTEP();
-
+    EGS_Interpolator* eDEDX( int imed ) {
+        return &i_ededx[imed];
+    };
+    
     /* Needed by some sources */
     EGS_Float getRM();
     /* Turn ON/OFF radiative splitting */
