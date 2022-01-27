@@ -65,7 +65,8 @@ shape_libs = egs_circle egs_ellipse egs_extended_shape egs_gaussian_shape \
              egs_voxelized_shape egs_spherical_shell egs_conical_shell \
              egs_circle_perpendicular
 
-aobject_libs = egs_track_scoring egs_dose_scoring egs_radiative_splitting egs_phsp_scoring
+aobject_libs = egs_track_scoring egs_dose_scoring egs_radiative_splitting \
+	       egs_phsp_scoring egs_fluence_scoring
 
 all_libs = $(geometry_libs) $(source_libs) $(shape_libs) $(aobject_libs)
 lib_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(all_libs)))
