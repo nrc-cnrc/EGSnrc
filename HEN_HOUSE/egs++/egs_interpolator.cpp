@@ -87,7 +87,7 @@ void EGS_Interpolator::initialize(int nbin, EGS_Float Xmin, EGS_Float Xmax,
     clear();
     own_data = true;
     n = nbin - 1;
-    a = new EGS_Float [n], b = new EGS_Float [n];
+    a = new EGS_Float [nbin], b = new EGS_Float [nbin];
     xmin = Xmin;
     xmax = Xmax;
     fmin = values[0];
@@ -99,6 +99,13 @@ void EGS_Interpolator::initialize(int nbin, EGS_Float Xmin, EGS_Float Xmax,
         b[j] = (values[j+1]-values[j])*bx;
         a[j] = values[j] - b[j]*(xmin + dx*j);
     }
+    /**************************************************** 
+       Extra subinterval at top of interval, taking care 
+       of round-off errors via extrapolation.
+       Mimics PEGS4 PWLF QFIT approach.
+    *****************************************************/
+    a[n] = a[n-1];
+    b[n] = b[n-1];
 }
 
 void EGS_Interpolator::initialize(int nbin, EGS_Float Xmin, EGS_Float Xmax,
