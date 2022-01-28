@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for improving EGSnrc
+about: Suggest an idea to help us improve EGSnrc
 title: ''
 labels: 'improvement'
 assignees: ''
