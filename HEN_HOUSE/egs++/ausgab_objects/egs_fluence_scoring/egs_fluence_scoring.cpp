@@ -39,12 +39,25 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
-EGS_PlanarFluence::EGS_PlanarFluence(const string &Name, EGS_ObjectFactory *f) :
-    EGS_AusgabObject(Name,f), hits_field(false), 
-    scoring_charge(photon), particle_name("photon"),
+EGS_FluenceScoring::EGS_FluenceScoring(const string &Name, EGS_ObjectFactory *f) :
+    EGS_AusgabObject(Name,f), particle_name("photon"), 
+    scoring_charge(photon), source_charge(photon), 
     flu_s(0), flu_nbin(128), flu_xmin(0.001), flu_xmax(1.0), 
-    norm_u(1.0), Nx(1), Ny(1), flu(0), fluT(0), current_ncase(0), 
+    norm_u(1.0), flu(0), fluT(0), flu_p(0), fluT_p(0), current_ncase(0), 
+    verbose(false), score_primaries(false),
     m_primary(0.0), m_tot(0.0)
+{}
+
+/*! Destructor.  */
+EGS_FluenceScoring::~EGS_FluenceScoring(){
+       if(flu)  delete [] flu;
+       if(fluT) delete fluT;
+       if(flu_p)  delete [] flu_p;
+       if(fluT_p) delete fluT_p;
+}
+
+EGS_PlanarFluence::EGS_PlanarFluence(const string &Name, EGS_ObjectFactory *f) :
+    EGS_FluenceScoring(Name,f), hits_field(false), Nx(1), Ny(1)
 {
     otype = "EGS_PlanarFluence";
     m_midpoint = EGS_Vector(0,0,5);
@@ -60,8 +73,9 @@ EGS_PlanarFluence::~EGS_PlanarFluence(){
 
    if( flu ) {
        for(int j=0; j<Nx*Ny; j++) {delete flu[j];}
-       if(flu)  delete [] flu;
-       if(fluT) delete fluT;
+   }
+   if( flu_p ) {
+       for(int j=0; j<Nx*Ny; j++) {delete flu_p[j];}
    }
 }
 
@@ -513,15 +527,13 @@ bool  EGS_PlanarFluence::addState(istream &data){
 ***********************************************/
 
 EGS_VolumetricFluence::EGS_VolumetricFluence(const string &Name, EGS_ObjectFactory *f) :
-    EGS_AusgabObject(Name,f), scoring_charge(photon), particle_name("photon"),
-    flu_s(0), flu_nbin(128), flu_xmin(0.001), flu_xmax(1.0), norm_u(1.0),
-    flu(0), fluT(0), current_ncase(0), m_primary(0.0), m_tot(0.0), 
-    n_scoring_regions(0), max_reg(-1), active_region(-1), verbose(false)
+    EGS_FluenceScoring(Name,f), 
+    n_scoring_regions(0), max_reg(-1), active_region(-1)
 #ifdef DEBUG
     ,one_bin(0), multi_bin(0)
 #endif    
 {
-    otype = "EGS_VolumetricFluence";
+   otype = "EGS_VolumetricFluence";
 }
 
 /*! Destructor.  */
@@ -529,10 +541,12 @@ EGS_VolumetricFluence::~EGS_VolumetricFluence(){
 
    if( flu ) {
        for(int j=0; j<n_scoring_regions; j++) {delete flu[j];}
-       if(flu)  delete [] flu;
-       if(fluT) delete fluT;
-       //if(volume) delete [] volume;
-       //if(is_sensitive) delete [] is_sensitive;
+#ifdef DEBUG 
+       if (binDist) delete binDist;
+#endif    
+   }
+   if( flu_p ) {
+       for(int j=0; j<n_scoring_regions; j++) {delete flu_p[j];}
    }
 }
 
@@ -556,6 +570,7 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
     /* Initialize arrays with defaults */
     for (int j=0; j<nreg; j++) {
         is_sensitive.push_back(false);
+        is_source.push_back(false);
         volume.push_back(vol_list[0]);// set to either 1.0 or first volume entered
     }
     
@@ -575,17 +590,26 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
         if (is_sensitive[j])
            flu[j] = new EGS_ScoringArray(flu_nbin);
     }
+    if ( score_primaries ){
+       flu_p  = new EGS_ScoringArray* [nreg];
+       fluT_p = new EGS_ScoringArray(nreg);
+       for (int j = 0; j < nreg; j++){ 
+           if (is_sensitive[j])
+              flu_p[j] = new EGS_ScoringArray(flu_nbin);
+       }           
+    }
 #ifdef DEBUG 
     binDist = new EGS_ScoringArray(flu_nbin);
 #endif    
 
+    EGS_Float flu_Emin = flu_s ? exp(flu_xmin) : flu_xmin, 
+              flu_Emax = flu_s ? exp(flu_xmax) : flu_xmax;
+    EGS_Float bw = flu_s ?(log(flu_Emax / flu_Emin))/flu_nbin :
+                          (flu_Emax - flu_Emin) /flu_nbin;
+    flu_a_i = bw; flu_a = 1.0/bw;
+       
     /* Initialize data required to score charged particle fluence */
     if ( scoring_charge ){
-       EGS_Float flu_Emin = flu_s ? exp(flu_xmin) : flu_xmin, 
-                 flu_Emax = flu_s ? exp(flu_xmax) : flu_xmax;
-       EGS_Float bw = flu_s ?
-                     (log(flu_Emax / flu_Emin))/flu_nbin :
-                         (flu_Emax - flu_Emin) /flu_nbin;
        EGS_Float expbw;
        /* Pre-calculated values for faster evaluation on log scale */
        if (flu_s){
@@ -606,8 +630,6 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
                      ceil((log(flu_Emax / flu_Emin))/bw) :
                      ceil(    (flu_Emax - flu_Emin) /bw);
        }
-       
-       flu_a_i = bw; flu_a = 1.0/bw;
        
        /* Pre-calculated values for faster 1/stpwr evaluation */
        if (flu_stpwr){
@@ -725,10 +747,11 @@ void EGS_VolumetricFluence::initScoring(EGS_Input *inp) {
     flu_a = flu_nbin; flu_a /= (flu_xmax - flu_xmin);
     flu_b = -flu_xmin*flu_a;
 
-    vector<string> output_spectra; 
-    output_spectra.push_back("no");
-    output_spectra.push_back("yes");
-    verbose = inp->getInput("verbose",output_spectra,0);
+    vector<string> choice; 
+    choice.push_back("no");
+    choice.push_back("yes");
+    verbose = inp->getInput("verbose",choice,0);
+    score_primaries = inp->getInput("score primaries",choice,0);
 
     /* get region volume[s] in g/cm3 */
     vector <EGS_Float> v_in;
@@ -946,12 +969,12 @@ void EGS_VolumetricFluence::ouputResults(){
   // Get the number of regions in the geometry.
   for (int j = 0; j < nreg; j++) {
       if ( !is_sensitive[j] ) continue;
-      EGS_Float norm  = 1.0/src_norm;// per particle or fluence
-                norm *= norm_u;      // user-requested normalization
-                norm /= volume[j];   //per unit volume
-                //norm *= flu_a;     //per unit bin width <- implicit in scoring!
+      EGS_Float norm  = 1.0/src_norm;              // per particle or fluence
+                norm *= norm_u;                    // user-requested normalization
+                norm /= volume[j];                 //per volume
+                norm *= scoring_charge ? 1 : flu_a;//per bin width <- implicit for charged particles!
 
-      EGS_Float the_bw = flu_s? 1.0 : flu_a_i;// Implicit for log grid
+      EGS_Float the_bw = flu_s? 1.0 : flu_a_i;     // Implicit for log grid
 
       if (verbose){
          egsInformation("\nNormalization = Ncase/Fsrc/V = %g\n",norm);
@@ -1051,8 +1074,6 @@ bool  EGS_VolumetricFluence::addState(istream &data){
 
    return true;
 }
-
-
 
 extern "C" {
 

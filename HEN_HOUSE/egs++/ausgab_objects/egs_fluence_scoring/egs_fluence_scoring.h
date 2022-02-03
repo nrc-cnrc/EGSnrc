@@ -42,13 +42,6 @@ This ausgab object is specified via
 :start ausgab object:
     library = egs_fluence_scoring
     name    = some_name
-    score photons   = yes or no # optional, yes assumed if missing
-    score electrons = yes or no # optional, yes assumed if missing
-    score positrons = yes or no # optional, yes assumed if missing
-    start scoring   = event_number # optional, 0 assumed if missing
-    stop  scoring   = event_number # optional, 1024 assumed if missing
-    buffer size     = size         # optional, 1024 assumed if missing
-    file name addition = some_string # optional, empty string assumed if missing
 :stop ausgab object:
 \endverbatim
 The output file name is normally constructed from the output file name, 
@@ -103,7 +96,45 @@ enum eFluType { flurz=0, stpwr=1, stpwrO5=2 };
 
 class EGS_AdvancedApplication;
 
-class EGS_FLUENCE_SCORING_EXPORT EGS_PlanarFluence : public EGS_AusgabObject {
+class EGS_FLUENCE_SCORING_EXPORT EGS_FluenceScoring : public EGS_AusgabObject {
+
+public:
+   /*! Constructors */
+   EGS_FluenceScoring(const string &Name="", EGS_ObjectFactory *f = 0);
+   /*! Destructor.  */
+  ~EGS_FluenceScoring();
+
+protected:   
+
+  ParticleType scoring_charge;// charge of scored particles
+  ParticleType source_charge; // charge of source particles
+
+  /* Fluence Scoring Arrays */
+  EGS_ScoringArray **flu;   // differential fluence: primaries + secondaries
+  EGS_ScoringArray **flu_p; // differential fluence: primaries only 
+  EGS_ScoringArray  *fluT;  // Total fluence: primaries + secondaries
+  EGS_ScoringArray  *fluT_p;// Total fluence: primaries only
+
+  EGS_Float norm_u;         // User normalization
+
+  /* Energy grid inputs */
+  EGS_Float flu_a, flu_a_i,
+            flu_b,
+            flu_xmin,
+            flu_xmax;
+  int       flu_s,
+            flu_nbin;
+  /* Classification variables */
+  EGS_Float m_primary, 
+            m_tot;
+
+  string  particle_name;
+  EGS_I64 current_ncase;                  
+  bool    verbose, 
+          score_primaries;
+};
+
+class EGS_FLUENCE_SCORING_EXPORT EGS_PlanarFluence : public EGS_FluenceScoring {
 
 public:
    /*! Constructors */
@@ -183,43 +214,26 @@ private:
 
   FieldType field_type;
 
-  ParticleType scoring_charge;
+  EGS_Float Area;
 
-  string particle_name;
-
-  EGS_ScoringArray** flu;  
-  EGS_ScoringArray*  fluT;  
   /* Circular scoring field parameters */  
   EGS_Vector      m_normal,
                   m_midpoint,
                   ux, uy;
   EGS_Vector      x0;
-  EGS_Float     m_R, m_R2, // scoring field
-                norm_u;         // User normalization
+  EGS_Float       m_R, m_R2, // scoring field
+                  norm_u;    // User normalization
   /* Rectangular field parameters */  
   EGS_Float     ax, ay, vx, vy;
   int           Nx, Ny, n_sensitive_regs, ixy;
-  /* Energy grid inputs */
-  EGS_Float Area, flu_a,
-                  flu_b,
-                  flu_xmin,
-                  flu_xmax;
-  int             flu_s,
-                  flu_nbin;
   
-  EGS_Float     m_d;       // distance from origin to center of scoring field
-  EGS_Float     distance; // distance to scoring field along particle's direction
-  EGS_Float     m_primary, 
-                m_tot;
-//  int fluence_scoring, energy_scoring;
-  bool     hits_field;
-  EGS_I64  current_ncase;                  
-
-  bool verbose;
+  EGS_Float m_d;       // distance from origin to center of scoring field
+  EGS_Float distance; // distance to scoring field along particle's direction
+  bool      hits_field;
 
 };
 
-class EGS_FLUENCE_SCORING_EXPORT EGS_VolumetricFluence : public EGS_AusgabObject {
+class EGS_FLUENCE_SCORING_EXPORT EGS_VolumetricFluence : public EGS_FluenceScoring {
 
 public:
    /*! Constructors */
@@ -228,10 +242,28 @@ public:
    /*! Destructor.  */
   ~EGS_VolumetricFluence();
 
+   /*************************************************************** 
+     NOTE: Primary particles defined as particles that suffer any 
+           type of interaction, except for the slowing down of 
+           charged particles in a medium.  
+   ****************************************************************/
    bool needsCall(EGS_Application::AusgabCall iarg) const {
        if (iarg == EGS_Application::BeforeTransport ||
            iarg == EGS_Application::UserDiscard ){
            return true;
+       }
+       else if ( score_primaries && 
+              (iarg == EGS_Application::AfterPair        || 
+               iarg == EGS_Application::AfterCompton     || 
+               iarg == EGS_Application::AfterPhoto       || 
+               iarg == EGS_Application::AfterRayleigh    ||
+               iarg == EGS_Application::AfterBrems       || 
+               iarg == EGS_Application::AfterMoller      ||
+               iarg == EGS_Application::AfterBhabha      || 
+               iarg == EGS_Application::AfterAnnihFlight || 
+               iarg == EGS_Application::AfterAnnihRest   ))
+       {
+             return true;
        }
        else {
            return false;
@@ -250,210 +282,248 @@ public:
 
    int processEvent(EGS_Application::AusgabCall iarg) {
 
-       int q = app->top_p.q;
-       if ( q != scoring_charge ) return 0;
+    int q = app->top_p.q,
+       ir = app->top_p.ir;
 
-       int ir = app->top_p.ir;
-       if ( ir < 0 || !is_sensitive[ir] ) return 0;
+    if ( q == scoring_charge && ir >= 0 && is_sensitive[ir] ) {
 
-       /* Scoring photon about to be transported in geometry */
-       if ( !q && iarg == EGS_Application::BeforeTransport ) {
-          /* Track-Length scoring (classic) */
-          EGS_Float e = app->top_p.E,
-          wtstep  = app->top_p.wt*app->getTVSTEP();
-          if (flu_s) {
-               e = log(e);
+       if ( !q ){// It's a photon
+          /* Score photon fluence */
+          if (iarg == EGS_Application::BeforeTransport ) {
+             /* Track-Length scoring (classic) */
+             EGS_Float e = app->top_p.E,
+             wtstep  = app->top_p.wt*app->getTVSTEP();
+             if (flu_s) {
+                  e = log(e);
+             }
+             EGS_Float ae;
+             int je;
+             if (e > flu_xmin && e <= flu_xmax) {
+                 ae = flu_a*e + flu_b;
+                 je = min((int)ae,flu_nbin-1);
+                 EGS_ScoringArray *aux = flu[ir];
+                 aux->score(je,wtstep);
+                 fluT->score(ir,wtstep);
+             }
           }
-          EGS_Float ae;
-          int je;
-          if (e > flu_xmin && e <= flu_xmax) {
-              ae = flu_a*e + flu_b;
-              je = min((int)ae,flu_nbin-1);
-              EGS_ScoringArray *aux = flu[ir];
-              aux->score(je,wtstep);
-              fluT->score(ir,wtstep);
-          }
-          return 0;
        }
+       else {// It's a charged particle
 
-       EGS_Float edep = app->getEdep();
+          EGS_Float edep = app->getEdep();
+   
+          /* Score charged particle fluence */
+          if ( edep &&
+             ( iarg == EGS_Application::BeforeTransport || 
+               iarg == EGS_Application::UserDiscard )   ){
 
-       /* Scoring charged particle about to be transported in geometry */
-       if ( q && edep &&
-          ( iarg == EGS_Application::BeforeTransport || 
-            iarg == EGS_Application::UserDiscard )   ){
-          /***** Initialization *****/
-          EGS_Float Eb = app->top_p.E - app->getRM(),
-                    Ee = Eb - edep,
-                    weight = app->top_p.wt;
-          EGS_Float xb, xe;
-          /*********************************/
-          if( flu_s ) {
-              xb = log(Eb);
-              if( Ee > 0 )
-                  xe = log(Ee);
-              else xe = -15;
-          }
-          else{
-            xb = Eb; xe = Ee;
-          }
-          EGS_Float ab, ae; int jb, je;
-          if( xb > flu_xmin && xe < flu_xmax ) {
-              /* Fraction of the initial bin covered */
-              if( xb < flu_xmax ) {
-                  ab = flu_a*xb + flu_b; jb = (int) ab;
-                  /* Variable bin-width for log scale*/
-                  if (flu_s){
-                     ab = (Eb*a_const[jb]-1)*r_const;
-                  }
-                  else{ ab -= jb;}// particle's energy above Emax
-              }
-              else { xb = flu_xmax; ab = 1; jb = flu_nbin - 1; }
-              /* Fraction of the final bin covered */
-              if( xe > flu_xmin ) {
-                  ae = flu_a*xe + flu_b; je = (int) ae;
-                  /* Variable bin-width for log scale*/
-                  if (flu_s){
-                     ae = (Ee*a_const[je]-1)*r_const;
-                  }
-                  else{ ae -= je; }
-              }
-              else { xe = flu_xmin; ae = 0; je = 0; }// extends below Emin
+             /**************************/
+             /***** Initialization *****/
+             /**************************/
 
-#ifdef DEBUG 
-              //egsInformation("iarg = %d jb = %d je = %d edep = %g MeV weight = %g\n",iarg,jb,je,edep,weight);                    
-              if (jb == je) 
-                one_bin++;
-              else{          
-                multi_bin++;
-                //egsInformation("\niarg = %d jb = %d je = %d edep = %g MeV ab = %g ae = %g",iarg,jb,je,edep,ab,ae);                    
-              }
-              binDist->score(jb-je,weight);
-#endif
-              EGS_ScoringArray *aux = flu[ir];
-              EGS_ScoringArray *auxT = fluT;
+             EGS_Float Eb = app->top_p.E - app->getRM(),
+                       Ee = Eb - edep,
+                       weight = app->top_p.wt;
 
-              /************************************************
-               * Approach A:
-               * -----------
-               * Uses either an O(3) or O(5) series expansion of the
-               * integral of the inverse of the stopping power with
-               * respect to energy. The stopping power is represented
-               * as a linear interpolation over a log energy grid. It
-               * accounts for stopping power variation along the particle's
-               * step within the resolution of the scoring array. This
-               * is more accurate than the method used in FLURZnrc albeit
-               * about 10% slower in electron beam cases.
-               *
-               * BEWARE: For this approach to work, no range rejection
-               * ------  nor Russian Roulette should be used.
-               *
-               ************************************************/
-              if (flu_stpwr){
-                 int imed = app->getMedium(ir);
-                 // Initial and final energies in same bin
-                 EGS_Float step;
-                 if( jb == je ){
-                     step = weight*(ab-ae)*getStepPerFraction(imed,xb,xe);
-                     aux->score(jb,step);
-                     if (flu_s)
-                        auxT->score(ir,step*DE[jb]);
-                     else
-                        auxT->score(ir,step);
+             EGS_Float xb, xe;
+             if( flu_s ) {
+                 xb = log(Eb);
+                 if( Ee > 0 )
+                     xe = log(Ee);
+                 else xe = -15;
+             }
+             else{
+               xb = Eb; xe = Ee;
+             }
+
+             /**********************************************************/
+             /* If not out of bounds, proceed with rest of calculation */
+             /**********************************************************/
+             if( xb > flu_xmin && xe < flu_xmax ) {
+                 EGS_Float ab, ae; int jb, je;
+                 /* Fraction of the initial bin covered */
+                 if( xb < flu_xmax ) {
+                     ab = flu_a*xb + flu_b; jb = (int) ab;
+                     /* Variable bin-width for log scale*/
+                     if (flu_s){
+                        ab = (Eb*a_const[jb]-1)*r_const;
+                     }
+                     else{ ab -= jb;}// particle's energy above Emax
                  }
-                 else {
-                     //EGS_Float flu_a_i = 1/flu_a;
-                     // First bin
-                     Ee = flu_xmin + jb*flu_a_i; Eb=xb;
-                     step = weight*ab*getStepPerFraction(imed,Eb,Ee);
-                     aux->score(jb,step);
-                     if (flu_s)
-                        auxT->score(ir,step*DE[jb]);
-                     else
-                        auxT->score(ir,step);
-                     // Last bin
-                     Ee = xe; Eb = flu_xmin+(je+1)*flu_a_i;
-                     step = weight*(1-ae)*getStepPerFraction(imed,Eb,Ee);
-                     aux->score(je,step);
-                     if (flu_s)
-                        auxT->score(ir,step*DE[je]);
-                     else
-                        auxT->score(ir,step);
-                     // intermediate bins
-                     for(int j=je+1; j<jb; j++){
-                        if (flu_stpwr == stpwrO5){
-                          Ee = Eb; Eb = flu_xmin + (j+1)*flu_a_i;
-                         /* O(eps^5) would require more pre-computed values
-                          * than just 1/Lmid. One requires lnEmid[i] to get
-                          * the b parameter and eps[i]=1-E[i]/E[i+1]. Not
-                          * impossible, but seems unnecessary considering
-                          * the excellent agreement with O(eps^3), which
-                          * should be always used.
-                          */
-                          step = weight*getStepPerFraction(imed,Eb,Ee);
-                        }
-                        else{// use pre-computed values of 1/Lmid
-                         step = weight*Lmid_i[j + imed*flu_nbin];
-                        }
-                        aux->score(j,step);
+                 else { xb = flu_xmax; ab = 1; jb = flu_nbin - 1; }
+                 /* Fraction of the final bin covered */
+                 if( xe > flu_xmin ) {
+                     ae = flu_a*xe + flu_b; je = (int) ae;
+                     /* Variable bin-width for log scale*/
+                     if (flu_s){
+                        ae = (Ee*a_const[je]-1)*r_const;
+                     }
+                     else{ ae -= je; }
+                 }
+                 else { xe = flu_xmin; ae = 0; je = 0; }// extends below Emin
+   
+#ifdef DEBUG 
+                 //egsInformation("iarg = %d jb = %d je = %d edep = %g MeV weight = %g\n",iarg,jb,je,edep,weight);                    
+                 if (jb == je) 
+                   one_bin++;
+                 else{          
+                   multi_bin++;
+                   //egsInformation("\niarg = %d jb = %d je = %d edep = %g MeV ab = %g ae = %g",iarg,jb,je,edep,ab,ae);                    
+                 }
+                 binDist->score(jb-je,weight);
+#endif   
+                 EGS_ScoringArray *aux = flu[ir];
+                 EGS_ScoringArray *auxT = fluT;
+   
+                 /************************************************
+                  * Approach A:
+                  * -----------
+                  * Uses either an O(3) or O(5) series expansion of the
+                  * integral of the inverse of the stopping power with
+                  * respect to energy. The stopping power is represented
+                  * as a linear interpolation over a log energy grid. It
+                  * accounts for stopping power variation along the particle's
+                  * step within the resolution of the scoring array. This
+                  * is more accurate than the method used in FLURZnrc albeit
+                  * about 10% slower in electron beam cases.
+                  *
+                  * BEWARE: For this approach to work, no range rejection
+                  * ------  nor Russian Roulette should be used.
+                  *
+                  ************************************************/
+                 if (flu_stpwr){
+                    int imed = app->getMedium(ir);
+                    // Initial and final energies in same bin
+                    EGS_Float step;
+                    if( jb == je ){
+                        step = weight*(ab-ae)*getStepPerFraction(imed,xb,xe);
+                        aux->score(jb,step);
                         if (flu_s)
-                          auxT->score(ir,step*DE[j]);
+                           auxT->score(ir,step*DE[jb]);
+                        else
+                           auxT->score(ir,step);
+                    }
+                    else {
+                        //EGS_Float flu_a_i = 1/flu_a;
+                        // First bin
+                        Ee = flu_xmin + jb*flu_a_i; Eb=xb;
+                        step = weight*ab*getStepPerFraction(imed,Eb,Ee);
+                        aux->score(jb,step);
+                        if (flu_s)
+                           auxT->score(ir,step*DE[jb]);
+                        else
+                           auxT->score(ir,step);
+                        // Last bin
+                        Ee = xe; Eb = flu_xmin+(je+1)*flu_a_i;
+                        step = weight*(1-ae)*getStepPerFraction(imed,Eb,Ee);
+                        aux->score(je,step);
+                        if (flu_s)
+                           auxT->score(ir,step*DE[je]);
+                        else
+                           auxT->score(ir,step);
+                        // intermediate bins
+                        for(int j=je+1; j<jb; j++){
+                           if (flu_stpwr == stpwrO5){
+                             Ee = Eb; Eb = flu_xmin + (j+1)*flu_a_i;
+                            /* O(eps^5) would require more pre-computed values
+                             * than just 1/Lmid. One requires lnEmid[i] to get
+                             * the b parameter and eps[i]=1-E[i]/E[i+1]. Not
+                             * impossible, but seems unnecessary considering
+                             * the excellent agreement with O(eps^3), which
+                             * should be always used.
+                             */
+                             step = weight*getStepPerFraction(imed,Eb,Ee);
+                           }
+                           else{// use pre-computed values of 1/Lmid
+                            step = weight*Lmid_i[j + imed*flu_nbin];
+                           }
+                           aux->score(j,step);
+                           if (flu_s)
+                             auxT->score(ir,step*DE[j]);
+                           else
+                             auxT->score(ir,step);
+                        }
+                    }
+                 }
+                 /***************************************************
+                  * -----------------------
+                  * Approach B (FLURZnrc):
+                  * ----------------------
+                  * Path length at each energy interval from energy
+                  * deposited edep and total particle step tvstep. It
+                  * assumes stopping power constancy along the particle's
+                  * step. It might introduce artifacts if ESTEPE or the
+                  * scoring bin width are too large.
+                  *
+                  * BEWARE: For this approach to work, no range rejection
+                  * ------  nor Russian Roulette should be used.
+                  **************************************************/
+                 else{
+                    EGS_Float step, wtstep = weight*app->getTVSTEP()/edep;
+                    // Initial and final energies in same bin
+                    if( jb == je ){
+                      step = wtstep*(ab-ae);
+                      aux->score(jb,step);
+                      if (flu_s)
+                        auxT->score(ir,step*DE[jb]);
+                      else
+                        auxT->score(ir,step);
+                    }
+                    else {
+                        // First bin
+                        step = wtstep*ab;
+                        aux->score(jb,step);
+                        if (flu_s)
+                          auxT->score(ir,step*DE[jb]);
                         else
                           auxT->score(ir,step);
-                     }
+                        // Last bin
+                        step = wtstep*(1-ae);
+                        aux->score(je,step);
+                        if (flu_s)
+                          auxT->score(ir,step*DE[je]);
+                        else
+                          auxT->score(ir,step);
+                        // intermediate bins
+                        for(int j=je+1; j<jb; j++){
+                            aux->score(j,wtstep);
+                            if (flu_s)
+                              auxT->score(ir,wtstep*DE[j]);
+                            else
+                              auxT->score(ir,wtstep);
+                        }
+                    }
                  }
-              }
-              /***************************************************
-               * -----------------------
-               * Approach B (FLURZnrc):
-               * ----------------------
-               * Path length at each energy interval from energy
-               * deposited edep and total particle step tvstep. It
-               * assumes stopping power constancy along the particle's
-               * step. It might introduce artifacts if ESTEPE or the
-               * scoring bin width are too large.
-               *
-               * BEWARE: For this approach to work, no range rejection
-               * ------  nor Russian Roulette should be used.
-               **************************************************/
-              else{
-                 EGS_Float step, wtstep = weight*app->getTVSTEP()/edep;
-                 // Initial and final energies in same bin
-                 if( jb == je ){
-                   step = wtstep*(ab-ae);
-                   aux->score(jb,step);
-                   if (flu_s)
-                     auxT->score(ir,step*DE[jb]);
-                   else
-                     auxT->score(ir,step);
-                 }
-                 else {
-                     // First bin
-                     step = wtstep*ab;
-                     aux->score(jb,step);
-                     if (flu_s)
-                       auxT->score(ir,step*DE[jb]);
-                     else
-                       auxT->score(ir,step);
-                     // Last bin
-                     step = wtstep*(1-ae);
-                     aux->score(je,step);
-                     if (flu_s)
-                       auxT->score(ir,step*DE[je]);
-                     else
-                       auxT->score(ir,step);
-                     // intermediate bins
-                     for(int j=je+1; j<jb; j++){
-                         aux->score(j,wtstep);
-                         if (flu_s)
-                           auxT->score(ir,wtstep*DE[j]);
-                         else
-                           auxT->score(ir,wtstep);
-                     }
-                 }
-              }
+             }
           }
        }
+    }
+
+    /*************************************************************** 
+     NOTE: Secondary particles simply defined as those undergoing any 
+           interaction, except for charged particles slowing down 
+           in a medium.
+
+     BEWARE: Latch set to 1 (bit 0) to flag secondaries in the above sense.
+             Other applications might use latch for other purposes!
+    ****************************************************************/
+    if ( score_primaries && 
+       (iarg == EGS_Application::AfterPair        || 
+        iarg == EGS_Application::AfterCompton     || 
+        iarg == EGS_Application::AfterPhoto       || 
+        iarg == EGS_Application::AfterRayleigh    ||
+        iarg == EGS_Application::AfterBrems       || 
+        iarg == EGS_Application::AfterMoller      ||
+        iarg == EGS_Application::AfterBhabha      || 
+        iarg == EGS_Application::AfterAnnihFlight || 
+        iarg == EGS_Application::AfterAnnihRest   ))
+    {
+       int np = app->getNp(), npold = app->getNpOld();
+
+       for(int ip = npold; ip <= np; ip++) {
+          app->setLatch(ip,1);
+       }
+    }
+
 
        return 0;
    };
@@ -560,16 +630,6 @@ else{
 
 private:   
 
-  ParticleType scoring_charge;
-
-  string particle_name;
-
-  EGS_I64  current_ncase;                  
-
-  /* Fluence Scoring Arrays */
-  EGS_ScoringArray** flu;  
-  EGS_ScoringArray*  fluT;  
-
   /*******************************************/
   /* Charged particle fluence: Required data */
   /*******************************************/
@@ -588,35 +648,29 @@ private:
    EGS_Float      *DE;         // bin width of logarithmic scale
   /*****************************************************************/
 
-  vector<EGS_Float> volume;// volume of each scoring region
-  int       active_region;    // Region showing calculation progress
+  vector<EGS_Float> volume;    // volume of each scoring region
+  int       active_region;     // Region showing calculation progress
   int       n_scoring_regions; // number of scoring regions
   int       nreg;              // regions in geometry
-  int max_reg ;             // maximum scoring region number
+  int max_reg ;                // maximum scoring region number
+  /* Regions flags */
   vector<bool> is_sensitive;// flag scoring regions
+  vector<bool> is_source;   // flag source regions such as brems target or radiactive source
   EGS_Float norm_u;         // User normalization
   /* Energy grid inputs */
-  EGS_Float flu_a, flu_a_i,
-            flu_b,
-            flu_xmin,
-            flu_xmax;
-  int       flu_s,
-            flu_nbin;
-  /* Classification variables */
-  EGS_Float m_primary, 
-            m_tot;
+  EGS_Float flu_a_i;
   /* Auxiliary input variables*/
-  vector <EGS_Float> vol_list;      // Input list of region volumes
-  vector <int>       f_region;      // Input list of scoring regions
+  vector <EGS_Float> vol_list;       // Input list of region volumes
+  vector <int>       f_region;       // Input list of scoring regions
+  vector <int>       s_region;       // Input list of source regions
   string             f_regionsString;// Input string of scoring regions or labels
+  string             s_regionsString;// Input string of source regions or labels
 
 #ifdef DEBUG
   /* Debugging information */
   int one_bin, multi_bin;
   EGS_ScoringArray *binDist;  
 #endif
-
-  bool verbose;
 
 };
 
