@@ -1165,6 +1165,17 @@ public:
         return source->getObjectType();
     }
 
+    virtual void setLatch( const int &ip, const int &latch ){};
+    virtual void incLatch( const int &ip, const int &increment ){};
+
+    virtual int getNp() {
+      return 0;
+    };
+
+    virtual int getNpOld() {
+      return 0;
+    };
+
     //************************************************************
     // Utility function for ausgab phase space scoring objects
     //************************************************************
