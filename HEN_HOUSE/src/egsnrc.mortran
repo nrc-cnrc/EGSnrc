@@ -5247,7 +5247,7 @@ IF( iedgfl(irl) ~= 0 ) [" User requested atomic relaxations "
       $RANDOMSET br; logE = log(peig);
       "DO k=1,nne(medium) ["
       DO k=nne(medium),1,-1 [
-          iZ = int( zelem(medium,k) + 0.5 );zpos = pe_zpos(iZ);
+          iz = int(pe_zsorted(k,medium)+0.5); zpos = pe_zpos(iZ);
           IF( iZ < 1 | iZ > $MXELEMENT ) [
               $egs_info(*,' Error in egs_shellwise_photo: ');
               $egs_fatal(*,'   Atomic number of element ',k,
