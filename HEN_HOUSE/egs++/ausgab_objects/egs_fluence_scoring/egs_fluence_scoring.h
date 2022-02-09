@@ -27,30 +27,52 @@
 #
 ###############################################################################
 
-/*! \file egs_fluence_scoring.h
-    \brief A fluence scoring object : header
-  
-\ingroup AusgabObjects
+Ausgab objects (AOs) for fluence scoring in arbitrary geometrical regions or at 
+circular  or rectangular scoring fields located anywhere in space for a specific 
+particle type. Fluence can be scored for multiple particle types by definining 
+different AOs. An option exists for scoring the fluence of primary particles. 
+Classification into primary and secondary particles follows the definition used 
+in FLURZnrc for IPRIMARY = 2 (primaries) and IPRIMARY = 4 (secondaries).
 
+The basic definition of a fluence scoring AO is
 
-NEEDS UPDATING ... !
-
-This ausgab object can be used to score particle fluence during 
-run time and to output this information into a file
 This ausgab object is specified via
-\verbatim
-:start ausgab object:
-    library = egs_fluence_scoring
-    name    = some_name
-:stop ausgab object:
-\endverbatim
-The output file name is normally constructed from the output file name, 
-the string specified by <code>file name addition</code> (if present and not empty), 
-and <code>_wJob</code> in case of parallel runs. The extension given is <code>ptracks</code>. 
-Using <code>start scoring</code> and <code>stop scoring</code> one can select a 
-range of histories for which to score the particle track info. One can also 
-select specific particle type(s). 
- */
+
+    :start ausgab object:
+        name    = a_name
+        library = egs_fluence_scoring
+        type = planar # planar or volumetric
+        scoring particle = electron # or photon, or positron
+        # Define scoring (volumetric) or contributing (planar) regions
+        scoring regions = ir1 ir2 ... irn
+        # Alternatively:
+        # start region = iri_1, iri_2, ..., iri_n
+        # stop region =  irf_1, irf_2, ..., irf_n
+        volumes = V1, V2, ..., VN # Enter as many as scoring regions. If same number
+                                  # of entries as group of regions, assumes groups of 
+                                  # equal volume regions. If only one entry, assumes 
+                                  # equal volumes in all regions. Defaults to 1.
+        # score primaries = yes # or no, optional
+        # source regions = sr1 sr2 ... srN # <- no classification in these regions
+        # source particle = photon, electron, or positron #<- brems targets or multi-particle sources
+        # scoring grid
+        number of bins = 100
+        minimum kinetic energy = 0.001
+        maximum kinetic energy = 1.000
+        normalization  = 1 # user-normalization optional
+        scale = linear # or logarithmic
+        # Scoring field for planar scoring
+        scoring circle = 0 0 5.0 5.0
+        scoring plane normal = 0 0 1
+        verbose = yes # optional
+    :stop ausgab object:
+
+*/
+
+/*! \file egs_fluence_scoring.h
+ *  \brief A fluence scoring object : header 
+ *  \EM
+*/
 
 #ifndef EGS_FLUENCE_SCORING_
 #define EGS_FLUENCE_SCORING_
@@ -89,13 +111,48 @@ using namespace std;
 enum FieldType { circle=0, rectangle=1 };
 
 /*! Particle type */
-enum ParticleType { electron = -1, photon = 0, positron = 1 };
+enum ParticleType { electron = -1, photon = 0, positron = 1, unknown = -99 };
 
 /*! Charged particle fluence calculation type */
 enum eFluType { flurz=0, stpwr=1, stpwrO5=2 };
 
-class EGS_AdvancedApplication;
+/*! \brief Base class for fluence scoring ausgab objects 
 
+  \ingroup AusgabObjects
+
+  Contains the basic ingredients for fluence scoring such as energy grid,
+  particle type, scoring regions, and whether to score primary fluence. 
+  Provides the method for defining primary and secondary particles.
+
+A basic fluence scoring ausgab object is specified via
+\verbatim
+:start ausgab object:
+    name    = a_name
+    library = egs_fluence_scoring
+    type = a_type # planar or volumetric
+    scoring particle = a_particle # photon, electron, or positron
+    # Define scoring (volumetric) or contributing (planar) regions
+    scoring regions = ir1 ir2 ... irn
+    ## Alternatively:
+    # start region = iri_1, iri_2, ..., iri_n
+    # stop region =  irf_1, irf_2, ..., irf_n
+    # score primaries = yes # or no, optional
+    # source regions = sr1 sr2 ... srN # <- no classification in these regions
+    # source particle = photon, electron, or positron #<- brems targets or multi-particle sources
+    ## scoring grid
+    number of bins = 100
+    minimum kinetic energy = 0.001
+    maximum kinetic energy = 1.000
+    # normalization  = 1 # user-normalization optional, defaults to 1
+    scale = a_scale # linear or logarithmic
+    verbose = yes # or no, optional
+:stop ausgab object:
+\endverbatim
+  \todo Total kerma scoring
+  \todo Account for multiple app geometries
+  \todo Fluence for any particle type?
+
+*/
 class EGS_FLUENCE_SCORING_EXPORT EGS_FluenceScoring : public EGS_AusgabObject {
 
 public:
@@ -104,7 +161,77 @@ public:
    /*! Destructor.  */
   ~EGS_FluenceScoring();
 
+   void initScoring(EGS_Input *inp);
+
+   void getNumberRegions( const string &str, vector<int> &regs );
+
+   void getLabelRegions( const string &str, vector<int> &regs );
+
+   void setUpRegionFlags();
+
+   void describeMe();
+
+   void flagSecondaries( const int &iarg, const int &q ){
+       int npold = app->getNpOld(), 
+              np = app->getNp();
+       if ( scoring_charge ){
+          /*************************************************************** 
+           DEFAULT: 
+           FLURZnrc IPRIMARY = 2 (primaries) IPRIMARY = 4 (secondaries)
+               Secondary charged particles defined as those resulting 
+               from charged particle interactions, atomic relaxations 
+               following EII, brems and annihilation photons. 
+
+           OPTIONAL:
+           FLURZnrc IPRIMARY = 1 (e- from brems as primaries)
+               Set source_particle to 'photon' in the input file to not flag
+               brems photons so that when scoring charged partcle fluence in 
+               photon beams, first generation e- are primaries. This is
+               implicit for photon interactions when scoring charged particle 
+               fluence. But one must explicitly account for that during brems events.
+          ****************************************************************/
+          if ( iarg == EGS_Application::AfterBrems       || 
+               iarg == EGS_Application::AfterMoller      ||
+               iarg == EGS_Application::AfterAnnihFlight || 
+               iarg == EGS_Application::AfterAnnihRest   ){
+               /************************************************************************ 
+                Skip block below for a photon beam. First generation e- are primaries.
+                This will apply to ALL brems events in a photon beam simulation. One
+                could fine tune it to only brems events in certain regions, for instance
+                a bremsstrahlung target, by using the is_source flag for those regions.
+               *************************************************************************/
+               if (!(iarg == EGS_Application::AfterBrems && source_charge == photon)){
+                 for(int ip = npold+1; ip <= np; ip++) {
+                    app->setLatch(ip,1);
+                 }
+               }
+          }
+          else if ( iarg == EGS_Application::AfterBhabha ){
+               if (q == -1) app->setLatch(np,1);
+               else         app->setLatch(np-1,1);
+          }
+       }
+       else{
+          /*************************************************************** 
+           FLURZnrc IPRIMARY = 3
+              Flag scattered photons, secondaries, and relaxation 
+              particles as secondaries
+          ****************************************************************/
+          if ( iarg == EGS_Application::AfterPair     || 
+               iarg == EGS_Application::AfterCompton  || 
+               iarg == EGS_Application::AfterPhoto    || 
+               iarg == EGS_Application::AfterRayleigh ){
+               for(int ip = npold; ip <= np; ip++) {
+                  app->setLatch(ip,1);
+               }
+          }
+       }
+     
+   };
+   
 protected:   
+
+  EGS_I64 current_ncase;                  
 
   ParticleType scoring_charge;// charge of scored particles
   ParticleType source_charge; // charge of source particles
@@ -115,7 +242,24 @@ protected:
   EGS_ScoringArray  *fluT;  // Total fluence: primaries + secondaries
   EGS_ScoringArray  *fluT_p;// Total fluence: primaries only
 
-  EGS_Float norm_u;         // User normalization
+  /* Regions flags */
+  vector<bool> is_sensitive;     // flag scoring regions
+  vector<bool> is_source;        // Flag regions such as brems target or radiactive source
+                                 // Interacting particles not subjected to classification
+  vector <int> f_start, f_stop;  // Markers for group regions input
+  vector <int> f_region;         // Input list of scoring regions
+  vector <int> s_region;         // Input list of source regions
+  string       f_regionsString;  // Input string of scoring regions or labels
+  string       s_regionsString;  // Input string of source regions or labels
+  int          n_scoring_regions;// number of scoring regions
+  int          n_source_regions; // number of source regions
+  int          nreg;             // regions in geometry
+  int          max_reg;          // maximum scoring region number
+  int          active_region;    // Region showing calculation progress
+  bool score_in_all_regions;
+  bool source_in_all_regions;
+
+  EGS_Float norm_u;              // User normalization
 
   /* Energy grid inputs */
   EGS_Float flu_a, flu_a_i,
@@ -129,11 +273,62 @@ protected:
             m_tot;
 
   string  particle_name;
-  EGS_I64 current_ncase;                  
+  /* Auxiliary input variables*/
   bool    verbose, 
           score_primaries;
 };
 
+/*! \brief Ausgab object for scoring fluence at circular or rectangular fields
+
+  \ingroup AusgabObjects
+
+  A linear track-length estimator in the zero thickness limit is used to compute 
+  fluence and fluence-related quantities such as total kerma and cema if the user 
+  requestes it. Differencial and total fluence is estimated for a specific particle 
+  type. If fluence for more than one particle type is desired, multiple AOs are 
+  required. For charged particle fluence scoring this method can be inefficient as 
+  it checks at every single step whether a charged particle is aimed at scoring field.
+  
+  To improve the efficieny for charged particles, one has the option to define regions 
+  from where to score. However, users must be careful to select all regions from where
+  charged particles can cross the scoring field. This option has the added benefit of 
+  allowing to estimate the contribution to the fluence from specific regions in the geometry.
+
+  Scoring field can be either a circular field or a rectangular screen of arbitrary 
+  resolution (pixels). For rectangular fields, fluence is computed at each screen element (pixel)
+
+  To define an EGS_PlanarFluence AO use the syntax below:
+  \verbatim
+  :start ausgab object:
+      name    = a_name
+      library = egs_fluence_scoring
+      type = volumetric
+      scoring particle = electron # or photon, or positron
+      # Scoring field for planar scoring
+      scoring circle = 0 0 5.0 5.0
+      scoring plane normal = 0 0 1
+      ## Define contributing regions
+      # scoring regions = ir1 ir2 ... irn # optional, defaults to ALL
+      # Alternatively:
+      # start region = iri_1, iri_2, ..., iri_n
+      # stop region =  irf_1, irf_2, ..., irf_n
+      # score primaries = yes # or no, optional
+      # source regions = sr1 sr2 ... srN # <- no classification in these regions
+      # source particle = photon, electron, or positron #<- brems targets or multi-particle sources
+      # scoring grid
+      number of bins = 100
+      minimum kinetic energy = 0.001
+      maximum kinetic energy = 1.000
+      normalization  = 1 # user-normalization optional
+      scale = linear # or logarithmic
+      verbose = yes # optional
+  :stop ausgab object:
+  \endverbatim
+
+  \todo Store results in a 2D binary file for visualization
+  \todo Add option for (total) kerma scoring
+  \todo Add option for CEMA scoring ???
+*/
 class EGS_FLUENCE_SCORING_EXPORT EGS_PlanarFluence : public EGS_FluenceScoring {
 
 public:
@@ -142,11 +337,23 @@ public:
    /*! Destructor.  */
   ~EGS_PlanarFluence();
    EGS_Float area(){return Area;};
-   //bool needsCall(EGS_Application::AusgabCall iarg) const { return true; };
    bool needsCall(EGS_Application::AusgabCall iarg) const {
        if (iarg == EGS_Application::BeforeTransport ||
            iarg == EGS_Application::AfterTransport ){
            return true;
+       }
+       else if ( score_primaries && 
+              (iarg == EGS_Application::AfterPair        || 
+               iarg == EGS_Application::AfterCompton     || 
+               iarg == EGS_Application::AfterPhoto       || 
+               iarg == EGS_Application::AfterRayleigh    ||
+               iarg == EGS_Application::AfterBrems       || 
+               iarg == EGS_Application::AfterMoller      ||
+               iarg == EGS_Application::AfterBhabha      || 
+               iarg == EGS_Application::AfterAnnihFlight || 
+               iarg == EGS_Application::AfterAnnihRest   ))
+       {
+             return true;
        }
        else {
            return false;
@@ -162,28 +369,47 @@ public:
    void reportResults();
    int processEvent(EGS_Application::AusgabCall iarg) {
 
-       int q = app->top_p.q;
+       int q = app->top_p.q,
+          ir = app->top_p.ir;
 
-       if (q != scoring_charge ) return 0;
+       if ( q == scoring_charge && ir >= 0 && is_sensitive[ir] )
+       {
 
-       /* Quantify photon contribution to scoring field */
-       if( iarg == EGS_Application::BeforeTransport ){
-           ixy = hitsField(app->top_p,&distance);
-           if (ixy >= 0){
-              x0 = app->top_p.x; hits_field = true; 
-           }
-           else{hits_field = false; }
+          /* Quantify contribution to scoring field */
+          if( iarg == EGS_Application::BeforeTransport ){
+              ixy = hitsField(app->top_p,&distance);
+              if (ixy >= 0){
+                 x0 = app->top_p.x; hits_field = true; 
+              }
+              else{hits_field = false; }
+          }
+   
+          if( iarg == EGS_Application::AfterTransport && hits_field ){
+              EGS_Vector xstep = app->top_p.x - x0;
+              if (xstep.length() >= distance){// crossed scoring field
+                 //if (!app->top_p.latch ) m_primary += app->top_p.wt;
+                 m_tot  += app->top_p.wt;
+                 score( app->top_p, ixy );
+              }
+              hits_field = false;
+          }
        }
 
-       if( iarg == EGS_Application::AfterTransport && hits_field ){
-           EGS_Vector xstep = app->top_p.x - x0;
-           if (xstep.length() >= distance){// crossed scoring field
-              //if (!app->top_p.latch ) m_primary += app->top_p.wt;
-              m_tot  += app->top_p.wt;
-              score( app->top_p, ixy );
-           }
-           hits_field = false;
+       /******************************************************************** 
+        * Flag secondaries after interactions. Definition of secondaries
+        * matches FLURZnrc. One could fine tune it by using the is_source 
+        * flag to skip this block in certains regions such as brems targets,
+        * radioactive sources, etc.
+        * 
+        * BEWARE: Latch set to 1 (bit 0) to flag secondaries.
+        *         Other applications might use latch for other purposes!
+        *********************************************************************/
+       if ( score_primaries && ir >= 0 && !is_source[ir]){
+   
+          flagSecondaries( iarg, q );
+   
        }
+
 
        return 0;
 
@@ -196,6 +422,11 @@ public:
                    flu[j]->setHistory(ncase);
               fluT->setHistory(ncase);
             }
+            if (flu_p){
+              for (int j = 0; j < Nx*Ny; j++)
+                   flu_p[j]->setHistory(ncase);
+              fluT_p->setHistory(ncase);
+            }
         }
    };
    void resetCounter(){
@@ -204,6 +435,11 @@ public:
         for (int j = 0; j < Nx*Ny; j++)
              flu[j]->reset();
         fluT->reset();
+      }
+      if (flu_p){
+        for (int j = 0; j < Nx*Ny; j++)
+             flu_p[j]->reset();
+        fluT_p->reset();
       }
    }
    bool storeState(ostream &data) const;
@@ -221,8 +457,7 @@ private:
                   m_midpoint,
                   ux, uy;
   EGS_Vector      x0;
-  EGS_Float       m_R, m_R2, // scoring field
-                  norm_u;    // User normalization
+  EGS_Float       m_R, m_R2; // scoring field
   /* Rectangular field parameters */  
   EGS_Float     ax, ay, vx, vy;
   int           Nx, Ny, n_sensitive_regs, ixy;
@@ -233,6 +468,48 @@ private:
 
 };
 
+/*! \brief Ausgab object for scoring fluence in arbitrary geometry regions
+
+  \ingroup AusgabObjects
+
+  A linear track-lenght estimator is used to compute fluence and fluence-related 
+  quantities such as total kerma and cema if the user requestes it. Differencial 
+  and total fluence is estimated for a specific particle type. If fluence for more 
+  than one particle type is desired, multiple AOs are required.
+
+  To define an EGS_VolumetricFluence AO use the syntax below:
+  \verbatim
+  :start ausgab object:
+      name    = a_name
+      library = egs_fluence_scoring
+      type = volumetric
+      scoring particle = electron # or photon, or positron
+      # Define scoring (volumetric) or contributing (planar) regions
+      scoring regions = ir1 ir2 ... irn
+      # Alternatively:
+      # start region = iri_1, iri_2, ..., iri_n
+      # stop region =  irf_1, irf_2, ..., irf_n
+      volumes = V1, V2, ..., VN # Enter as many as scoring regions. If same number
+                                # of entries as group of regions, assumes groups of 
+                                # equal volume regions. If only one entry, assumes 
+                                # equal volumes in all regions. Defaults to 1.
+      # score primaries = yes # or no, optional
+      # source regions = sr1 sr2 ... srN # <- no classification in these regions
+      # source particle = photon, electron, or positron #<- brems targets or multi-particle sources
+      # scoring grid
+      number of bins = 100
+      minimum kinetic energy = 0.001
+      maximum kinetic energy = 1.000
+      normalization  = 1 # user-normalization optional
+      scale = linear # or logarithmic
+      verbose = yes # optional
+  :stop ausgab object:
+  \endverbatim
+
+  \todo Add option for (total) kerma scoring
+  \todo Add option for CEMA scoring
+
+*/
 class EGS_FLUENCE_SCORING_EXPORT EGS_VolumetricFluence : public EGS_FluenceScoring {
 
 public:
@@ -282,8 +559,9 @@ public:
 
    int processEvent(EGS_Application::AusgabCall iarg) {
 
-    int q = app->top_p.q,
-       ir = app->top_p.ir;
+    int    q = app->top_p.q,
+          ir = app->top_p.ir, 
+       latch = app->top_p.latch;
 
     if ( q == scoring_charge && ir >= 0 && is_sensitive[ir] ) {
 
@@ -304,6 +582,10 @@ public:
                  EGS_ScoringArray *aux = flu[ir];
                  aux->score(je,wtstep);
                  fluT->score(ir,wtstep);
+                 if (score_primaries && !latch){
+                    flu_p[ir]->score(je,wtstep);
+                    fluT_p->score(ir,wtstep);
+                 }
              }
           }
        }
@@ -373,6 +655,12 @@ public:
 #endif   
                  EGS_ScoringArray *aux = flu[ir];
                  EGS_ScoringArray *auxT = fluT;
+                 EGS_ScoringArray *aux_p, *auxT_p;
+                 if ( score_primaries ){
+                    aux_p = flu_p[ir];
+                    auxT_p = fluT_p;
+                 }
+                 bool score_p = score_primaries && !latch;
    
                  /************************************************
                   * Approach A:
@@ -397,29 +685,52 @@ public:
                     if( jb == je ){
                         step = weight*(ab-ae)*getStepPerFraction(imed,xb,xe);
                         aux->score(jb,step);
-                        if (flu_s)
+                        if (score_p)
+                           aux_p->score(jb,step);
+                        if (flu_s){
                            auxT->score(ir,step*DE[jb]);
-                        else
+                           if (score_p)
+                              auxT_p->score(ir,step*DE[jb]);
+                        }
+                        else{
                            auxT->score(ir,step);
+                           if (score_p) 
+                              auxT_p->score(ir,step);
+                        }
                     }
                     else {
-                        //EGS_Float flu_a_i = 1/flu_a;
                         // First bin
                         Ee = flu_xmin + jb*flu_a_i; Eb=xb;
                         step = weight*ab*getStepPerFraction(imed,Eb,Ee);
                         aux->score(jb,step);
-                        if (flu_s)
+                        if (score_p) 
+                           aux_p->score(jb,step);
+                        if (flu_s){
                            auxT->score(ir,step*DE[jb]);
-                        else
+                           if (score_p)
+                              auxT_p->score(ir,step*DE[jb]);
+                        }
+                        else{
                            auxT->score(ir,step);
+                           if (score_p)
+                              auxT_p->score(ir,step);
+                        }
                         // Last bin
                         Ee = xe; Eb = flu_xmin+(je+1)*flu_a_i;
                         step = weight*(1-ae)*getStepPerFraction(imed,Eb,Ee);
                         aux->score(je,step);
-                        if (flu_s)
+                        if (score_p)
+                           aux_p->score(je,step);
+                        if (flu_s){
                            auxT->score(ir,step*DE[je]);
-                        else
+                           if (score_p) 
+                              auxT_p->score(ir,step*DE[je]);
+                        }
+                        else{
                            auxT->score(ir,step);
+                           if (score_p)
+                              auxT_p->score(ir,step);
+                        }
                         // intermediate bins
                         for(int j=je+1; j<jb; j++){
                            if (flu_stpwr == stpwrO5){
@@ -437,10 +748,18 @@ public:
                             step = weight*Lmid_i[j + imed*flu_nbin];
                            }
                            aux->score(j,step);
-                           if (flu_s)
+                           if (score_p) 
+                              aux_p->score(j,step);
+                           if (flu_s){
                              auxT->score(ir,step*DE[j]);
-                           else
+                             if (score_p)
+                                auxT_p->score(ir,step*DE[j]);
+                           }
+                           else{
                              auxT->score(ir,step);
+                             if (score_p) 
+                                auxT_p->score(ir,step);
+                           }
                         }
                     }
                  }
@@ -463,33 +782,65 @@ public:
                     if( jb == je ){
                       step = wtstep*(ab-ae);
                       aux->score(jb,step);
-                      if (flu_s)
+                      if (score_p) 
+                         aux_p->score(jb,step);
+                      if (flu_s){
                         auxT->score(ir,step*DE[jb]);
-                      else
+                        if (score_p)
+                           auxT_p->score(ir,step*DE[jb]);
+                      }
+                      else{
                         auxT->score(ir,step);
+                        if (score_p) 
+                           auxT_p->score(ir,step);
+                      }
                     }
                     else {
                         // First bin
                         step = wtstep*ab;
                         aux->score(jb,step);
-                        if (flu_s)
+                        if (score_p)
+                           aux_p->score(jb,step);
+                        if (flu_s){
                           auxT->score(ir,step*DE[jb]);
-                        else
+                          if (score_p)
+                             auxT_p->score(ir,step*DE[jb]);
+                        }
+                        else{
                           auxT->score(ir,step);
+                          if (score_p)
+                             auxT_p->score(ir,step);
+                        }
                         // Last bin
                         step = wtstep*(1-ae);
                         aux->score(je,step);
-                        if (flu_s)
+                        if (score_p)
+                           aux_p->score(je,step);
+                        if (flu_s){
                           auxT->score(ir,step*DE[je]);
-                        else
+                          if (score_p)
+                             auxT_p->score(ir,step*DE[je]);
+                        }
+                        else{
                           auxT->score(ir,step);
+                          if (score_p) 
+                             auxT_p->score(ir,step);
+                        }
                         // intermediate bins
                         for(int j=je+1; j<jb; j++){
                             aux->score(j,wtstep);
-                            if (flu_s)
+                            if (score_p)
+                               aux_p->score(j,wtstep);
+                            if (flu_s){
                               auxT->score(ir,wtstep*DE[j]);
-                            else
+                              if (score_p)
+                                 auxT_p->score(ir,wtstep*DE[j]);
+                            }
+                            else{
                               auxT->score(ir,wtstep);
+                              if (score_p)
+                                 auxT_p->score(ir,wtstep);
+                            }
                         }
                     }
                  }
@@ -498,34 +849,23 @@ public:
        }
     }
 
-    /*************************************************************** 
-     NOTE: Secondary particles simply defined as those undergoing any 
-           interaction, except for charged particles slowing down 
-           in a medium.
+    /******************************************************************** 
+     * Flag secondaries after interactions. Definition of secondaries
+     * matches FLURZnrc. One could fine tune it by using the is_source 
+     * flag to skip this block in certains regions such as brems targets,
+     * radioactive sources, etc.
+     * 
+     * BEWARE: Latch set to 1 (bit 0) to flag secondaries.
+     *         Other applications might use latch for other purposes!
+     *********************************************************************/
+    if ( score_primaries && ir >= 0 && !is_source[ir]){
 
-     BEWARE: Latch set to 1 (bit 0) to flag secondaries in the above sense.
-             Other applications might use latch for other purposes!
-    ****************************************************************/
-    if ( score_primaries && 
-       (iarg == EGS_Application::AfterPair        || 
-        iarg == EGS_Application::AfterCompton     || 
-        iarg == EGS_Application::AfterPhoto       || 
-        iarg == EGS_Application::AfterRayleigh    ||
-        iarg == EGS_Application::AfterBrems       || 
-        iarg == EGS_Application::AfterMoller      ||
-        iarg == EGS_Application::AfterBhabha      || 
-        iarg == EGS_Application::AfterAnnihFlight || 
-        iarg == EGS_Application::AfterAnnihRest   ))
-    {
-       int np = app->getNp(), npold = app->getNpOld();
+       flagSecondaries( iarg, q );
 
-       for(int ip = npold; ip <= np; ip++) {
-          app->setLatch(ip,1);
-       }
     }
 
+    return 0;
 
-       return 0;
    };
 
     /*! Computes path per energy bin-width traveled by a charged particle when
@@ -600,6 +940,13 @@ else{
               }
               fluT->setHistory(ncase);
             }
+            if (flu_p){
+              for (int j = 0; j < nreg; j++){
+                  if ( is_sensitive[j] ) 
+                     flu_p[j]->setHistory(ncase);
+              }
+              fluT_p->setHistory(ncase);
+            }
         }
 #ifdef DEBUG
         binDist->setHistory(ncase);
@@ -614,14 +961,17 @@ else{
                flu[j]->reset();
         fluT->reset();
       }
+      if (flu_p){
+        for (int j = 0; j < nreg; j++)
+            if ( is_sensitive[j] ) 
+               flu_p[j]->reset();
+        fluT_p->reset();
+      }
 #ifdef DEBUG
       binDist->reset();
 #endif
    }
-   void getNumberRegions(const string &str, vector<int> &regs);
 
-   void getLabelRegions(const string &str, vector<int> &regs);
-   
    bool storeState(ostream &data) const;
    
    bool setState(istream &data);
@@ -649,22 +999,10 @@ private:
   /*****************************************************************/
 
   vector<EGS_Float> volume;    // volume of each scoring region
-  int       active_region;     // Region showing calculation progress
-  int       n_scoring_regions; // number of scoring regions
-  int       nreg;              // regions in geometry
-  int max_reg ;                // maximum scoring region number
-  /* Regions flags */
-  vector<bool> is_sensitive;// flag scoring regions
-  vector<bool> is_source;   // flag source regions such as brems target or radiactive source
-  EGS_Float norm_u;         // User normalization
   /* Energy grid inputs */
   EGS_Float flu_a_i;
   /* Auxiliary input variables*/
   vector <EGS_Float> vol_list;       // Input list of region volumes
-  vector <int>       f_region;       // Input list of scoring regions
-  vector <int>       s_region;       // Input list of source regions
-  string             f_regionsString;// Input string of scoring regions or labels
-  string             s_regionsString;// Input string of source regions or labels
 
 #ifdef DEBUG
   /* Debugging information */
