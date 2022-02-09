@@ -1165,7 +1165,12 @@ public:
         return source->getObjectType();
     }
 
+    int sourceCharge() {
+        return source->getCharge();
+    }
+
     virtual void setLatch( const int &ip, const int &latch ){};
+
     virtual void incLatch( const int &ip, const int &increment ){};
 
     virtual int getNp() {

@@ -142,6 +142,16 @@ public:
     */
     virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) { };
 
+    /*! \brief Get the charge of the source.
+     *
+     *  This virtual function must be re-implemented in derived classes
+     *  that return the source particles' charge. Multi-particle sources
+     *  will return a value of -99. This value corresponds to an unknown 
+     *  particle type in the fluence scoring AOs.
+     */
+    virtual int getCharge() const  {
+        return -99;
+    };
     /*! \brief Return the maximum energy of this source.
      *
      *  This pure virtual function must be implemented in derived classes
@@ -640,7 +650,7 @@ public:
      *
      * Simply returns the value of the (protected) attribute q.
      */
-    virtual int getCharge() const {
+    int getCharge() const {
         return q;
     };
 
