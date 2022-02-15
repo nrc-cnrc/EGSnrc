@@ -39,7 +39,8 @@ include $(SPEC_DIR)egspp_libs.spec
 $(make_depend)
 
 # unit tests
-test_egs_mesh: test_egs_mesh.cpp egs_mesh.h egs_mesh.cpp \
+test_egs_mesh: test_egs_mesh.cpp egs_mesh.h egs_mesh.cpp msh_parser.h \
+		mesh_neighbours.h \
         ../../egs_base_geometry.h \
         ../../egs_vector.h ../../../lib/$(my_machine)/egs_config1.h \
         ../../egs_libconfig.h ../../egs_functions.h $(ABS_DSO)$(libpre)egspp$(libext) \
