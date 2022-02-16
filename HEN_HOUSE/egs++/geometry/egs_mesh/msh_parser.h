@@ -2,7 +2,8 @@
 ###############################################################################
 #
 #  EGSnrc Gmsh msh file parser
-#  Copyright (C) 2020 National Research Council Canada
+#
+#  Copyright (C) 2022 Max Orok
 #
 #  This file is part of EGSnrc.
 #

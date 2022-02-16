@@ -1,4 +1,33 @@
-// EGS_Mesh test suite
+/*
+###############################################################################
+#
+#  EGSnrc egs_mesh test suite
+#
+#  Copyright (C) 2022 Max Orok
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Max Orok, 2022
+#
+###############################################################################
+*/
+
+// The test suite has three main parts:
 //
 // * egs_mesh tests
 // * mesh_neighbours

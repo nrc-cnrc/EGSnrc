@@ -3,14 +3,14 @@
 #
 #  EGSnrc egs++ mesh geometry library implementation.
 #
-#  Copyright (C) 2020 Mevex Corporation
+#  Copyright (C) 2022 Mevex Corporation
 #
 #  This file is part of EGSnrc.
 #
 #  Parts of this file, namely, the closest_point_triangle and
 #  closest_point_tetrahedron functions, are adapted from Chapter 5 of
-#  "Real-Time Collision Detection" by Christer Ericson with the consent
-#  of the author and of the publisher.
+#  "Real-Time Collision Detection" by Christer Ericson with the permission
+#  of the author and the publisher.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
 #  the terms of the GNU Affero General Public License as published by the
@@ -32,6 +32,8 @@
 #                    Nigel Vezeau,
 #                    Lou Thompson,
 #                    Max Orok
+#
+#  Revision:         Max Orok
 #
 ###############################################################################
 */

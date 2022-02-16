@@ -3,7 +3,7 @@
 #
 #  EGSnrc egs++ mesh geometry library headers.
 #
-#  Copyright (C) 2020 Mevex Corporation
+#  Copyright (C) 2022 Mevex Corporation
 #
 #  This file is part of EGSnrc.
 #
@@ -27,6 +27,8 @@
 #                    Nigel Vezeau,
 #                    Lou Thompson,
 #                    Max Orok
+#
+#  Revision:         Max Orok
 #
 ###############################################################################
 */

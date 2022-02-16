@@ -1,8 +1,8 @@
 %C80
 "#############################################################################"
 "                                                                             "
-"  EGSnrc egs++ tutor7pp application mortran macros                           "
-"  Copyright (C) 2015 National Research Council Canada                        "
+"  EGSnrc egs++ mevegs application mortran macros                             "
+"  Copyright (C) 2022 National Research Council Canada                        "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
 "                                                                             "
@@ -23,7 +23,7 @@
 "                                                                             "
 "  Author:          Iwan Kawrakow , 2009                                      "
 "                                                                             "
-"  Contributors:                                                              "
+"  Contributors:    Max Orok, 2022 (modified copy of tutor7pp.macros)         "
 "                                                                             "
 "#############################################################################"
 

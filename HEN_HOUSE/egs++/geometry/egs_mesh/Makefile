@@ -2,7 +2,7 @@
 #
 #  EGSnrc egs++ makefile to build the mesh geometry library
 #
-#  Copyright (C) 2020 Mevex Corporation
+#  Copyright (C) 2022 Mevex Corporation
 #
 #  This file is part of EGSnrc.
 #
@@ -18,6 +18,16 @@
 #
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Authors:          Dave Macrillo,
+#                    Matt Ronan,
+#                    Nigel Vezeau,
+#                    Lou Thompson,
+#                    Max Orok
+#
+#  Revision:         Max Orok
 #
 ###############################################################################
 

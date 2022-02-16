@@ -1,8 +1,8 @@
 /*
 ###############################################################################
 #
-#  EGSnrc tutor7pp application array sizes headers
-#  Copyright (C) 2015 National Research Council Canada
+#  EGSnrc mevegs application array sizes headers
+#  Copyright (C) 2022 National Research Council Canada
 #
 #  This file is part of EGSnrc.
 #
@@ -23,20 +23,10 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
-#
-###############################################################################
-#
-#  Defines he maximum number of media (MXMED) and the maximum number of
-#  particles on the stack (MXSTACK). This file gets included by the egsnrc
-#  fortran subroutines (egsnrc_$my_machine.F), the base application
-#  (egs_simple_application.cpp or egs_advanced_application.cpp in
-#  $HEN_HOUSE/egs++), and possibly the user code, if it uses the particle
-#  stack or one of the structures that depends on the maximum number of media.
+#  Contributors:    Max Orok, 2022 (modified tutor7pp.macros)
 #
 ###############################################################################
 */
-
 
 #ifndef ARRAY_SIZES_
 #define ARRAY_SIZES_
