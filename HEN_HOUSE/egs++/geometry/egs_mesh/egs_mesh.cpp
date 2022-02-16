@@ -953,16 +953,16 @@ void EGS_Mesh::initializeElements(
 {
     EGS_BaseGeometry::nreg = elements.size();
 
-    _elt_tags.reserve(elements.size());
-    _elt_node_indices.reserve(elements.size());
-    _nodes.reserve(nodes.size());
+    elt_tags_.reserve(elements.size());
+    elt_node_indices_.reserve(elements.size());
+    nodes_.reserve(nodes.size());
 
     std::unordered_map<int, int> node_map;
     node_map.reserve(nodes.size());
     for (int i = 0; i < static_cast<int>(nodes.size()); i++) {
         const auto& n = nodes[i];
         node_map.insert({n.tag, i});
-        _nodes.push_back(EGS_Vector(n.x, n.y, n.z));
+        nodes_.push_back(EGS_Vector(n.x, n.y, n.z));
     }
     if (node_map.size() != nodes.size()) {
         throw std::runtime_error("duplicate nodes in node list");
@@ -977,8 +977,8 @@ void EGS_Mesh::initializeElements(
     };
     for (int i = 0; i < static_cast<int>(elements.size()); i++) {
         const auto& e = elements[i];
-        _elt_tags.push_back(e.tag);
-        _elt_node_indices.push_back({
+        elt_tags_.push_back(e.tag);
+        elt_node_indices_.push_back({
             find_node(e.a), find_node(e.b), find_node(e.c), find_node(e.d)
         });
     }
@@ -990,9 +990,9 @@ void EGS_Mesh::initializeMedia(std::vector<EGS_MeshSpec::Tetrahedron> elements,
     std::vector<EGS_MeshSpec::Medium> materials)
 {
     std::unordered_map<int, int> medium_offsets;
-    _medium_names.reserve(materials.size());
+    medium_names_.reserve(materials.size());
     for (const auto& m : materials) {
-        _medium_names.push_back(m.medium_name);
+        medium_names_.push_back(m.medium_name);
         // If the medium was already registered, returns its offset. For new
         // media, addMedium adds them to the list and returns the new offset.
         const int media_offset = EGS_BaseGeometry::addMedium(m.medium_name);
@@ -1003,37 +1003,37 @@ void EGS_Mesh::initializeMedia(std::vector<EGS_MeshSpec::Tetrahedron> elements,
         }
     }
 
-    _medium_indices.reserve(elements.size());
+    medium_indices_.reserve(elements.size());
     for (const auto& e: elements) {
-        _medium_indices.push_back(medium_offsets.at(e.medium_tag));
+        medium_indices_.push_back(medium_offsets.at(e.medium_tag));
     }
 }
 
 void EGS_Mesh::initializeNeighbours() {
     std::vector<mesh_neighbours::Tetrahedron> neighbour_elts;
     neighbour_elts.reserve(num_elements());
-    for (const auto& e: _elt_node_indices) {
+    for (const auto& e: elt_node_indices_) {
         neighbour_elts.emplace_back(mesh_neighbours::Tetrahedron(e[0], e[1], e[2], e[3]));
     }
 
     egs_mesh::internal::PercentCounter progress(get_logger(),
         "EGS_Mesh: finding element neighbours");
 
-    _neighbours = mesh_neighbours::tetrahedron_neighbours(
+    neighbours_ = mesh_neighbours::tetrahedron_neighbours(
             neighbour_elts, progress);
 
     progress.finish("EGS_Mesh: found element neighbours");
 
-    _boundary_faces.reserve(num_elements() * 4);
-    for (const auto& ns: _neighbours) {
+    boundary_faces_.reserve(num_elements() * 4);
+    for (const auto& ns: neighbours_) {
         for (const auto& n: ns) {
-            _boundary_faces.push_back(n == mesh_neighbours::NONE);
+            boundary_faces_.push_back(n == mesh_neighbours::NONE);
         }
     }
 }
 
 void EGS_Mesh::initializeNormals() {
-    _face_normals.reserve(num_elements());
+    face_normals_.reserve(num_elements());
     for (int i = 0; i < static_cast<int>(num_elements()); i++) {
         auto get_normal = [](const EGS_Vector& a, const EGS_Vector& b,
             const EGS_Vector& c, const EGS_Vector& d) -> EGS_Vector
@@ -1046,7 +1046,7 @@ void EGS_Mesh::initializeNormals() {
             return normal;
         };
         const auto& n = element_nodes(i);
-        _face_normals.push_back({
+        face_normals_.push_back({
             get_normal(n.B, n.C, n.D, n.A),
             get_normal(n.A, n.C, n.D, n.B),
             get_normal(n.A, n.B, n.D, n.C),
@@ -1069,7 +1069,7 @@ void EGS_Mesh::initializeOctrees() {
     std::size_t n_vol = 200;
     egs_mesh::internal::PercentCounter vol_progress(get_logger(),
         "EGS_Mesh: building volume octree");
-    _volume_tree = std::unique_ptr<EGS_Mesh_Octree>(
+    volume_tree_ = std::unique_ptr<EGS_Mesh_Octree>(
         new EGS_Mesh_Octree(elts, n_vol, *this, vol_progress)
     );
     vol_progress.finish("EGS_Mesh: built volume octree");
@@ -1077,7 +1077,7 @@ void EGS_Mesh::initializeOctrees() {
     std::size_t n_surf = 100;
     egs_mesh::internal::PercentCounter surf_progress(get_logger(),
         "EGS_Mesh: building surface octree");
-    _surface_tree = std::unique_ptr<EGS_Mesh_Octree>(
+    surface_tree_ = std::unique_ptr<EGS_Mesh_Octree>(
         new EGS_Mesh_Octree(boundary_elts, n_surf, *this, surf_progress)
     );
     surf_progress.finish("EGS_Mesh: built surface octree");
@@ -1092,7 +1092,7 @@ int EGS_Mesh::inside(const EGS_Vector &x) {
 }
 
 int EGS_Mesh::medium(int ireg) const {
-    return _medium_indices.at(ireg);
+    return medium_indices_.at(ireg);
 }
 
 bool EGS_Mesh::insideElement(int i, const EGS_Vector &x) /* const */ {
@@ -1113,7 +1113,7 @@ bool EGS_Mesh::insideElement(int i, const EGS_Vector &x) /* const */ {
 }
 
 int EGS_Mesh::isWhere(const EGS_Vector &x) {
-    return _volume_tree->isWhere(x, *this);
+    return volume_tree_->isWhere(x, *this);
 }
 
 EGS_Float EGS_Mesh::hownear(int ireg, const EGS_Vector& x) {
@@ -1140,19 +1140,19 @@ EGS_Float EGS_Mesh::min_interior_face_dist(int ireg, const EGS_Vector& x) {
     const auto& n = element_nodes(ireg);
 
     // First face is BCD, second is ACD, third is ABD, fourth is ABC
-    EGS_Float min_dist = distance_to_plane(x, _face_normals[ireg][0], n.B);
+    EGS_Float min_dist = distance_to_plane(x, face_normals_[ireg][0], n.B);
     min_dist = std::min(min_dist,
-        distance_to_plane(x, _face_normals[ireg][1], n.A));
+        distance_to_plane(x, face_normals_[ireg][1], n.A));
     min_dist = std::min(min_dist,
-        distance_to_plane(x, _face_normals[ireg][2], n.A));
+        distance_to_plane(x, face_normals_[ireg][2], n.A));
     min_dist = std::min(min_dist,
-        distance_to_plane(x, _face_normals[ireg][3], n.A));
+        distance_to_plane(x, face_normals_[ireg][3], n.A));
 
     return min_dist;
 }
 
 EGS_Float EGS_Mesh::min_exterior_face_dist(const EGS_Vector& x) {
-    return _surface_tree->hownear_exterior(x, *this);
+    return surface_tree_->hownear_exterior(x, *this);
 }
 
 int EGS_Mesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
@@ -1230,7 +1230,7 @@ int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     std::array<PointLocation, 4> intersect_tests {};
     for (int i = 0; i < 4; ++i) {
         intersect_tests[i] = find_point_location(
-                x, u, face_points[i], _face_normals[ireg][i]);
+                x, u, face_points[i], face_normals_[ireg][i]);
     }
     // If the particle is not strictly inside the element, try transporting
     // along a thick plane.
@@ -1262,9 +1262,9 @@ int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u
                    ix.face_index, ireg, x.x, x.y, x.z, u.x, u.y, u.z);
     }
     t = ix.dist;
-    int new_reg = _neighbours[ireg].at(ix.face_index);
+    int new_reg = neighbours_[ireg].at(ix.face_index);
     update_medium(new_reg, newmed);
-    update_normal(_face_normals[ireg].at(ix.face_index), u, normal);
+    update_normal(face_normals_[ireg].at(ix.face_index), u, normal);
     return new_reg;
 }
 
@@ -1412,9 +1412,9 @@ int EGS_Mesh::howfar_interior_thick_plane(const std::array<PointLocation, 4>&
                    min_face_index, ireg, x.x, x.y, x.z, u.x, u.y, u.z);
     }
     t = t_min;
-    int new_reg = _neighbours[ireg].at(min_face_index);
+    int new_reg = neighbours_[ireg].at(min_face_index);
     update_medium(new_reg, newmed);
-    update_normal(_face_normals[ireg].at(min_face_index), u, normal);
+    update_normal(face_normals_[ireg].at(min_face_index), u, normal);
     return new_reg;
 }
 
@@ -1442,7 +1442,7 @@ int EGS_Mesh::howfar_interior_recover_lost_particle(int ireg,
     EGS_Vector new_pos = x + u * t;
     // Fast path: particle is in a neighbouring element.
     for (int i = 0; i < 4; ++i) {
-        const auto neighbour = _neighbours[ireg][i];
+        const auto neighbour = neighbours_[ireg][i];
         if (neighbour == -1) {
             continue;
         }
@@ -1479,11 +1479,11 @@ EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vecto
     auto check_face_intersection = [&](int face, const EGS_Vector& A, const EGS_Vector& B,
             const EGS_Vector& C, const EGS_Vector& D)
     {
-        if (_boundary_faces[4*ireg + face] &&
+        if (boundary_faces_[4*ireg + face] &&
             // check if the point is on the outside looking in (rather than just
             // clipping the edge of a boundary face)
             point_outside_of_plane(x, A, B, C, D) &&
-            dot(_face_normals[ireg][face], u) > 0.0 && // point might be in a thick plane
+            dot(face_normals_[ireg][face], u) > 0.0 && // point might be in a thick plane
             exterior_triangle_ray_intersection(x, u, A, B, C, dist) &&
             dist < min_dist)
         {
@@ -1506,7 +1506,7 @@ int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     EGS_Float &t, int *newmed, EGS_Vector *normal)
 {
     EGS_Float min_dist = 1e30;
-    auto min_reg = _surface_tree->howfar_exterior(x, u, t, min_dist, *this);
+    auto min_reg = surface_tree_->howfar_exterior(x, u, t, min_dist, *this);
 
     // no intersection
     if (min_dist > t || min_reg == -1) {

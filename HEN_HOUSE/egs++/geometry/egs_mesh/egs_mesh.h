@@ -154,19 +154,19 @@ public:
     ~EGS_Mesh();
 
     int num_elements() const {
-        return _elt_tags.size();
+        return elt_tags_.size();
     }
 
     int num_nodes() const {
-        return _nodes.size();
+        return nodes_.size();
     }
 
     const std::vector<std::string>& medium_names() const {
-        return _medium_names;
+        return medium_names_;
     }
 
     const std::array<int, 4>& element_neighbours(int i) const {
-        return _neighbours.at(i);
+        return neighbours_.at(i);
     }
 
     // Return element volume [cm3].
@@ -177,24 +177,24 @@ public:
 
     // Return element density [g/cm3].
     EGS_Float element_density(int i) const {
-        return EGS_BaseGeometry::getMediumRho(_medium_indices.at(i));
+        return EGS_BaseGeometry::getMediumRho(medium_indices_.at(i));
     }
 
     // Return element tag.
     int element_tag(int i) const {
-        return _elt_tags.at(i);
+        return elt_tags_.at(i);
     }
 
     inline bool is_boundary(int reg) const {
-        return _boundary_faces[4*reg] || _boundary_faces[4*reg + 1] ||
-               _boundary_faces[4*reg + 2] || _boundary_faces[4*reg + 3];
+        return boundary_faces_[4*reg] || boundary_faces_[4*reg + 1] ||
+               boundary_faces_[4*reg + 2] || boundary_faces_[4*reg + 3];
     }
 
     const std::string& filename() const {
-        return _filename;
+        return filename_;
     }
     void setFilename(std::string filename) {
-        _filename = filename;
+        filename_ = filename;
     }
     void printElement(int i, std::ostream& elt_info = std::cout) const {
         const auto& n = element_nodes(i);
@@ -205,13 +205,13 @@ public:
           << " \t2: " << n.C.x << " " << n.C.y << " " << n.C.z << "\n"
           << " \t3: " << n.D.x << " " << n.C.y << " " << n.C.z << "\n"
           << " \tNeighbour elements:\n"
-          << " \t\tOn face 0: " << _neighbours[i][0] << "\n"
-          << " \t\tOn face 1: " << _neighbours[i][1] << "\n"
-          << " \t\tOn face 2: " << _neighbours[i][2] << "\n"
-          << " \t\tOn face 3: " << _neighbours[i][3] << "\n"
+          << " \t\tOn face 0: " << neighbours_[i][0] << "\n"
+          << " \t\tOn face 1: " << neighbours_[i][1] << "\n"
+          << " \t\tOn face 2: " << neighbours_[i][2] << "\n"
+          << " \t\tOn face 3: " << neighbours_[i][3] << "\n"
           << std::boolalpha
           << " \tBoundary element: " << is_boundary(i) << "\n"
-          << " \tMedia index: "<< _medium_indices[i] << "\n";
+          << " \tMedia index: "<< medium_indices_[i] << "\n";
     }
 
     // EGS_BaseGeometry interface
@@ -248,24 +248,24 @@ public:
     };
 
     Nodes element_nodes(int element) const {
-        const auto& node_indices = _elt_node_indices.at(element);
+        const auto& node_indices = elt_node_indices_.at(element);
         return Nodes {
-            _nodes.at(node_indices[0]),
-            _nodes.at(node_indices[1]),
-            _nodes.at(node_indices[2]),
-            _nodes.at(node_indices[3])
+            nodes_.at(node_indices[0]),
+            nodes_.at(node_indices[1]),
+            nodes_.at(node_indices[2]),
+            nodes_.at(node_indices[3])
         };
     }
 
     /// Given a node offset (from 0 to EGS_Mesh::num_nodes() - 1), returns the
     /// node coordinates.
     const EGS_Vector& node_coordinates(int node_offset) const {
-        return _nodes.at(node_offset);
+        return nodes_.at(node_offset);
     }
 
     /// Given an element offset, return its four node offsets.
     const std::array<int, 4>& element_node_offsets(int element) const {
-        return _elt_node_indices.at(element);
+        return elt_node_indices_.at(element);
     }
 
     static EGS_Float get_min_step_size() {
@@ -397,23 +397,23 @@ private:
     // initializeElements. Responsible for initializing EGS_Mesh::_face_normals.
     void initializeNormals();
 
-    std::vector<EGS_Vector> _nodes;
-    std::vector<int> _elt_tags;
-    std::vector<std::array<int, 4>> _elt_node_indices;
+    std::vector<EGS_Vector> nodes_;
+    std::vector<int> elt_tags_;
+    std::vector<std::array<int, 4>> elt_node_indices_;
     // 4 * num_elts of which faces are boundaries
     // TODO: try vec<array<bool, 4>>
-    std::vector<bool> _boundary_faces;
+    std::vector<bool> boundary_faces_;
     // TODO if memory is an issue, could try storing tets as sets of faces,
     // faces as sets of edges, etc.
-    std::vector<std::array<EGS_Vector, 4>> _face_normals;
-    std::vector<int> _medium_indices;
-    std::vector<std::string> _medium_names;
-    std::string _filename;
+    std::vector<std::array<EGS_Vector, 4>> face_normals_;
+    std::vector<int> medium_indices_;
+    std::vector<std::string> medium_names_;
+    std::string filename_;
 
-    std::unique_ptr<EGS_Mesh_Octree> _volume_tree;
-    std::unique_ptr<EGS_Mesh_Octree> _surface_tree;
+    std::unique_ptr<EGS_Mesh_Octree> volume_tree_;
+    std::unique_ptr<EGS_Mesh_Octree> surface_tree_;
 
-    std::vector<std::array<int, 4>> _neighbours;
+    std::vector<std::array<int, 4>> neighbours_;
     static const std::string type;
 
     static constexpr EGS_Float min_step_size = 1e-10;

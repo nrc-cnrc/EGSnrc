@@ -55,22 +55,22 @@ public:
             std::array<int, 3> sorted {a, b, c};
             // sort to ease comparison between faces
             std::sort(sorted.begin(), sorted.end());
-            _nodes = sorted;
+            nodes_ = sorted;
         }
         int node0() const {
-            return _nodes[0];
+            return nodes_[0];
         }
         friend bool operator==(const Face& a, const Face& b);
         friend bool operator!=(const Face& a, const Face& b);
     private:
-        std::array<int, 3> _nodes;
+        std::array<int, 3> nodes_;
     };
 
     // Make a tetrahedron from four nodes.
     //
     // Throws a std::invalid_argument exception if duplicate node tags are passed in.
     Tetrahedron(int a, int b, int c, int d)
-        : _nodes({a, b, c, d})
+        : nodes_({a, b, c, d})
     {
         if (a == b || a == c || a == d) {
             throw std::invalid_argument("duplicate node " + std::to_string(a));
@@ -84,7 +84,7 @@ public:
         // Node ordering is important here. Face 0 is missing node 1, Face 1
         // is missing node 2, etc. This will be used later in the particle
         // transport methods EGS_Mesh::howfar and EGS_Mesh::hownear.
-        _faces = {
+        faces_ = {
             Face(b, c, d),
             Face(a, c, d),
             Face(a, b, d),
@@ -92,26 +92,26 @@ public:
         };
     }
     std::array<int, 4> nodes() const {
-        return _nodes;
+        return nodes_;
     }
     int max_node() const {
-        return *std::max_element(_nodes.begin(), _nodes.end());
+        return *std::max_element(nodes_.begin(), nodes_.end());
     }
     std::array<Face, 4> faces() const {
-        return _faces;
+        return faces_;
     }
 
 private:
-    std::array<int, 4> _nodes;
-    std::array<Face, 4> _faces;
+    std::array<int, 4> nodes_;
+    std::array<Face, 4> faces_;
 };
 
 bool operator==(const Tetrahedron::Face& a, const Tetrahedron::Face& b) {
-    return a._nodes == b._nodes;
+    return a.nodes_ == b.nodes_;
 }
 
 bool operator!=(const Tetrahedron::Face& a, const Tetrahedron::Face& b) {
-    return a._nodes != b._nodes;
+    return a.nodes_ != b.nodes_;
 }
 
 /// The mesh_neighbours::internal namespace is for internal API functions and is not
