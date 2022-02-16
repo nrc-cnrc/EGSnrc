@@ -36,7 +36,6 @@
 ###############################################################################
 */
 
-// TODO
 #include "egs_input.h"
 #include "egs_mesh.h"
 #include "egs_vector.h"
@@ -148,11 +147,6 @@ inline EGS_Float min3(EGS_Float a, EGS_Float b, EGS_Float c) {
 
 inline EGS_Float max3(EGS_Float a, EGS_Float b, EGS_Float c) {
     return std::max(std::max(a, b), c);
-}
-
-void print_egsvec(const EGS_Vector& v, std::ostream& out = std::cout) {
-    out << std::setprecision(std::numeric_limits<double>::max_digits10) <<
-    "{\n  x: " << v.x << "\n  y: " << v.y << "\n  z: " << v.z << "\n}\n";
 }
 
 inline EGS_Float dot(const EGS_Vector &x, const EGS_Vector &y) {
@@ -366,22 +360,22 @@ private:
             max_z += delta;
         }
         void print(std::ostream& out = std::cout) const {
-            std::cout <<
+            out <<
                 std::setprecision(std::numeric_limits<double>::max_digits10) <<
                     "min_x: " << min_x << "\n";
-            std::cout <<
+            out <<
                 std::setprecision(std::numeric_limits<double>::max_digits10) <<
                     "max_x: " << max_x << "\n";
-            std::cout <<
+            out <<
                 std::setprecision(std::numeric_limits<double>::max_digits10) <<
                     "min_y: " << min_y << "\n";
-            std::cout <<
+            out <<
                 std::setprecision(std::numeric_limits<double>::max_digits10) <<
                     "max_y: " << max_y << "\n";
-            std::cout <<
+            out <<
                 std::setprecision(std::numeric_limits<double>::max_digits10) <<
                     "min_z: " << min_z << "\n";
-            std::cout <<
+            out <<
                 std::setprecision(std::numeric_limits<double>::max_digits10) <<
                     "max_z: " << max_z << "\n";
         }
@@ -423,7 +417,6 @@ private:
             EGS_Float ex = (max_x - min_x) / 2.0;
             EGS_Float ey = (max_y - min_y) / 2.0;
             EGS_Float ez = (max_z - min_z) / 2.0;
-            //std::cout << "extents : " << ex << " " << ey << " " << ez << "\n";
 
             // move triangle to bounding box origin
             EGS_Vector v0 = a - centre;
@@ -441,7 +434,6 @@ private:
                 for (const EGS_Vector& f : edge_vecs) {
                     const EGS_Vector a = cross(u, f);
                     if (is_zero(a)) {
-                        //std::cout << "warning a near zero\n";
                         // Ignore testing this axis, likely won't be a separating
                         // axis. This may lead to false positives, but not false
                         // negatives.
@@ -455,13 +447,10 @@ private:
                     const EGS_Float p1 = dot(v1, a);
                     const EGS_Float p2 = dot(v2, a);
                     if (std::max(-max3(p0, p1, p2), min3(p0, p1, p2)) + eps > r) {
-                        //std::cout << "found separating axis\n";
-             //           print_egsvec(a);
                         return false;
                     }
                 }
             }
-            //std::cout << "passed 9 edge-edge axis tests\n";
             // category 1 - test overlap with AABB face normals
             if (max3(v0.x, v1.x, v2.x) <= -ex || min3(v0.x, v1.x, v2.x) >= ex ||
                 max3(v0.y, v1.y, v2.y) <= -ey || min3(v0.y, v1.y, v2.y) >= ey ||
@@ -469,7 +458,6 @@ private:
             {
                 return false;
             }
-            //std::cout << "passed 3 overlap tests\n";
 
             // category 2 - test overlap with triangle face normal using AABB
             // plane test (5.2.3)
@@ -477,11 +465,6 @@ private:
             // Cross product robustness issues are ignored here (assume
             // non-degenerate and non-oversize triangles)
             const EGS_Vector n = cross(edge_vecs[0], edge_vecs[1]);
-            //std::cout << "plane normal: \n";
-            //print_egsvec(n);
-            if (is_zero(n)) {
-                std::cout << "n near zero!\n";
-            }
             // projection radius
             const EGS_Float r = ex * std::abs(n.x) + ey * std::abs(n.y) +
                 ez * std::abs(n.z);
@@ -662,7 +645,6 @@ private:
         BoundingBox bbox_;
 
         Node() = default;
-        // TODO: think about passing in EGS_Mesh as parameter
         Node(const std::vector<int> &elts, const BoundingBox& bbox,
             std::size_t n_max, const EGS_Mesh& mesh,
             egs_mesh::internal::PercentCounter& progress) : bbox_(bbox)
@@ -990,9 +972,7 @@ void EGS_Mesh::initializeMedia(std::vector<EGS_MeshSpec::Tetrahedron> elements,
     std::vector<EGS_MeshSpec::Medium> materials)
 {
     std::unordered_map<int, int> medium_offsets;
-    medium_names_.reserve(materials.size());
     for (const auto& m : materials) {
-        medium_names_.push_back(m.medium_name);
         // If the medium was already registered, returns its offset. For new
         // media, addMedium adds them to the list and returns the new offset.
         const int media_offset = EGS_BaseGeometry::addMedium(m.medium_name);
@@ -1088,7 +1068,7 @@ bool EGS_Mesh::isInside(const EGS_Vector &x) {
 }
 
 int EGS_Mesh::inside(const EGS_Vector &x) {
-    return isInside(x) ? 0 : -1;
+    return isWhere(x);
 }
 
 int EGS_Mesh::medium(int ireg) const {
@@ -1117,9 +1097,6 @@ int EGS_Mesh::isWhere(const EGS_Vector &x) {
 }
 
 EGS_Float EGS_Mesh::hownear(int ireg, const EGS_Vector& x) {
-    if (ireg > 0 && ireg > num_elements() - 1) {
-        throw std::runtime_error("ireg " + std::to_string(ireg) + " out of bounds for mesh with " + std::to_string(num_elements()) + " regions");
-    }
     // inside
     if (ireg >= 0) {
         return min_interior_face_dist(ireg, x);
@@ -1159,8 +1136,7 @@ int EGS_Mesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed /* =0 */, EGS_Vector *normal /* =0 */)
 {
     if (ireg < 0) {
-        // TODO check t isn't modified accidentally in howfar_exterior
-        return howfar_exterior(ireg, x, u, t, newmed, normal);
+        return howfar_exterior(x, u, t, newmed, normal);
     }
     // Find the minimum distance to an element boundary. If this distance is
     // smaller than the intended step, adjust the step length and return the
@@ -1246,20 +1222,17 @@ int EGS_Mesh::howfar_interior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     // Otherwise, if points are inside the element, calculate the minimum
     // distance to a plane.
     auto ix = find_interior_intersection(intersect_tests);
-    if (ix.dist < 0.0) {
-        egsWarning("interior intersection negative t: %.17g in region %d: "
-                   "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ix.dist,
+    if (ix.dist < 0.0 || ix.face_index == -1) {
+        egsWarning("\nEGS_Mesh warning: bad interior intersection t = %.17g, face_index = %d in region %d: "
+                   "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n", ix.dist, ix.face_index,
                    ireg, x.x, x.y, x.z, u.x, u.y, u.z);
+        EGS_BaseGeometry::error_flag = 1;
+        return ireg;
     }
     // Very small distances might get swallowed up by rounding error, so enforce
     // a minimum step size.
     if (ix.dist < EGS_Mesh::min_step_size) {
         ix.dist = EGS_Mesh::min_step_size;
-    }
-    if (ix.face_index == -1) {
-        egsWarning("face_index %d in region %d: "
-                   "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n",
-                   ix.face_index, ireg, x.x, x.y, x.z, u.x, u.y, u.z);
     }
     t = ix.dist;
     int new_reg = neighbours_[ireg].at(ix.face_index);
@@ -1280,9 +1253,6 @@ EGS_Mesh::PointLocation EGS_Mesh::find_point_location(const EGS_Vector& x,
     // intersect it at some point. The intersection point might be outside the
     // face's triangular bounds though.
     EGS_Float direction_dot_normal = dot(u, plane_normal);
-    // A point travelling away from (-) or exactly parallel (0.0) to the plane
-    // won't intersect it.
-    bool intersects = direction_dot_normal < 0.0;
 
     // Find the signed distance to the plane, to see if it lies in the thick
     // plane and so might be a candidate for transport even if it's not strictly
@@ -1354,9 +1324,11 @@ int EGS_Mesh::howfar_interior_thick_plane(const std::array<PointLocation, 4>&
         }
     }
     if (face_index == -1) {
-        egsWarning("howfar_interior_thick_plane face_index %d in region %d: "
+        egsWarning("\nEGS_Mesh warning: howfar_interior_thick_plane face_index %d in region %d: "
                    "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n",
                    face_index, ireg, x.x, x.y, x.z, u.x, u.y, u.z);
+        EGS_BaseGeometry::error_flag = 1;
+        return ireg;
     }
 
     // If the perpendicular distance to the plane is too big to be a thick
@@ -1407,9 +1379,11 @@ int EGS_Mesh::howfar_interior_thick_plane(const std::array<PointLocation, 4>&
         return howfar_interior_recover_lost_particle(ireg, x, u, t, newmed);
     }
     if (min_face_index == -1) {
-        egsWarning("face_index %d in region %d: "
+        egsWarning("\nEGS_Mesh warning: face_index %d in region %d: "
                    "x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n",
                    min_face_index, ireg, x.x, x.y, x.z, u.x, u.y, u.z);
+        EGS_BaseGeometry::error_flag = 1;
+        return ireg;
     }
     t = t_min;
     int new_reg = neighbours_[ireg].at(min_face_index);
@@ -1418,22 +1392,22 @@ int EGS_Mesh::howfar_interior_thick_plane(const std::array<PointLocation, 4>&
     return new_reg;
 }
 
-// No valid intersections were found for this particle. Push it along the
-// momentum vector by a small step and try to recover.
-//
-//         /\
-//   <- * /  \
-//       /____\
-//
-//  ^^^^ i.e., which region is this particle actually in?
-//
-// There are many cases where this could happen, so this routine can't make
-// too many assumptions. Some possibiltites:
-//
-// * The particle is right on an edge and a negative distance was calculated
-// * The particle is inside the thick plane but travelling away from ireg
-// * The particle is outside the thick plane but travelling away or towards ireg
-//
+/* No valid intersections were found for this particle. Push it along the
+   momentum vector by a small step and try to recover.
+
+           /\
+     <- * /  \
+         /____\
+
+    ^^^^ i.e., which region is this particle actually in?
+
+   There are many cases where this could happen, so this routine can't make
+   too many assumptions. Some possibiltites:
+
+   * The particle is right on an edge and a negative distance was calculated
+   * The particle is inside the thick plane but travelling away from ireg
+   * The particle is outside the thick plane but travelling away or towards ireg
+*/
 int EGS_Mesh::howfar_interior_recover_lost_particle(int ireg,
     const EGS_Vector &x, const EGS_Vector &u, EGS_Float &t, int *newmed)
 {
@@ -1455,11 +1429,6 @@ int EGS_Mesh::howfar_interior_recover_lost_particle(int ireg,
     // octree search. This can also happen if the particle is leaving the
     // mesh.
     auto actual_elt = isWhere(new_pos);
-    if (actual_elt == ireg) {
-        egsWarning("howfar_interior_thick_plane isWhere search returned the "
-                   "same region %d: x=(%.17g,%.17g,%.17g) u=(%.17g,%.17g,%.17g)\n",
-                   ireg, x.x, x.y, x.z, u.x, u.y, u.z);
-    }
     update_medium(actual_elt, newmed);
     // We can't determine which normal to display (which is only for
     // egs_view in any case), so we don't update the normal for this
@@ -1502,7 +1471,7 @@ EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vecto
     return EGS_Mesh::Intersection(min_dist, closest_face);
 }
 
-int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
+int EGS_Mesh::howfar_exterior(const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed, EGS_Vector *normal)
 {
     EGS_Float min_dist = 1e30;
@@ -1540,8 +1509,6 @@ int EGS_Mesh::howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u
     return min_reg;
 }
 
-// TODO deduplicate
-static char EGS_MESH_LOCAL geom_class_msg[] = "createGeometry(EGS_Mesh): %s\n";
 const std::string EGS_Mesh::type = "EGS_Mesh";
 
 void EGS_Mesh::printInfo() const {
@@ -1570,8 +1537,8 @@ extern "C" {
         }
         std::ifstream input_file(mesh_file);
         if (!input_file) {
-            egsWarning("createGeometry(EGS_Mesh): unable to open file: `%s`\n",
-                mesh_file.c_str());
+            egsWarning("createGeometry(EGS_Mesh): mesh file: `%s` does "
+                       "not exist or is not readable\n", mesh_file.c_str());
             return nullptr;
         }
 
@@ -1596,7 +1563,6 @@ extern "C" {
             return nullptr;
         }
 
-        mesh->setFilename(mesh_file);
         mesh->setBoundaryTolerance(input);
         mesh->setName(input);
         mesh->setLabels(input);

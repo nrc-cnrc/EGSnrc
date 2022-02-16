@@ -146,11 +146,12 @@ public:
     // EGS_Mesh is move-only
     EGS_Mesh(const EGS_Mesh&) = delete;
     EGS_Mesh& operator=(const EGS_Mesh&) = delete;
+
+    // Declare move constructor, move assignment, and destructor without
+    // defining them. We can't define them yet because of the unique_ptr to
+    // forward declared EGS_Mesh_Octree members.
     EGS_Mesh(EGS_Mesh&&);
     EGS_Mesh& operator=(EGS_Mesh&&);
-
-    // Just declare destructor without defining it. We can't define it yet
-    // because of the unique_ptr to forward declared EGS_Mesh_Octree members.
     ~EGS_Mesh();
 
     int num_elements() const {
@@ -159,10 +160,6 @@ public:
 
     int num_nodes() const {
         return nodes_.size();
-    }
-
-    const std::vector<std::string>& medium_names() const {
-        return medium_names_;
     }
 
     const std::array<int, 4>& element_neighbours(int i) const {
@@ -190,12 +187,6 @@ public:
                boundary_faces_[4*reg + 2] || boundary_faces_[4*reg + 3];
     }
 
-    const std::string& filename() const {
-        return filename_;
-    }
-    void setFilename(std::string filename) {
-        filename_ = filename;
-    }
     void printElement(int i, std::ostream& elt_info = std::cout) const {
         const auto& n = element_nodes(i);
         elt_info << " Tetrahedron " << i << ":\n"
@@ -315,8 +306,8 @@ private:
         const EGS_Vector &u, EGS_Float &t, int *newmed);
 
     // `howfar` helper method outside the mesh
-    int howfar_exterior(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-        EGS_Float &t, int *newmed, EGS_Vector *normal);
+    int howfar_exterior(const EGS_Vector &x, const EGS_Vector &u, EGS_Float &t,
+        int *newmed, EGS_Vector *normal);
 
     inline void update_medium(int newreg, int *newmed) const {
         if (!newmed) {
@@ -364,9 +355,9 @@ private:
     // Initialize the mesh element information in the EGS_Mesh constructor.
     // Must be called before any other initialize functions.  After this method
     // is called, the following member data is initialized:
-    // * EGS_Mesh::_nodes
-    // * EGS_Mesh::_elt_tags
-    // * EGS_Mesh::_elt_node_indices
+    // * EGS_Mesh::nodes_
+    // * EGS_Mesh::elt_tags_
+    // * EGS_Mesh::elt_node_indices_
     // * EGS_BaseGeometry::nreg
     // and member functions that depend on this data, like num_elements().
     void initializeElements(std::vector<EGS_MeshSpec::Tetrahedron> elements,
@@ -375,26 +366,25 @@ private:
 
     // Initialize mesh element medium offsets, adding any previously undefined
     // media to the EGS_BaseGeometry media list. Responsible for initializing:
-    // * EGS_Mesh::_medium_indices
-    // * EGS_Mesh::_medium_names
+    // * EGS_Mesh::medium_indices_
     void initializeMedia(std::vector<EGS_MeshSpec::Tetrahedron> elements,
         std::vector<EGS_MeshSpec::Medium> materials);
 
     // Initialize neigbhour and boundary information. Must be called after
     // initializeElements. Responsible for initializing:
-    // * EGS_Mesh::_neighbours
-    // * EGS_Mesh::_boundary_faces
+    // * EGS_Mesh::neighbours_
+    // * EGS_Mesh::boundary_faces_
     void initializeNeighbours();
 
     // Initialize the two octrees used to accelerate transport. Both
     // initializeElements and initializeNeighbours must be called to properly
     // set up the octrees. Responsible for initializing:
-    // * EGS_Mesh::_volume_tree
-    // * EGS_Mesh::_surface_tree
+    // * EGS_Mesh::volume_tree_
+    // * EGS_Mesh::surface_tree_
     void initializeOctrees();
 
     // Initialize the tetrahedron face normals. Must be called after
-    // initializeElements. Responsible for initializing EGS_Mesh::_face_normals.
+    // initializeElements. Responsible for initializing EGS_Mesh:face_normals_.
     void initializeNormals();
 
     std::vector<EGS_Vector> nodes_;
@@ -407,8 +397,6 @@ private:
     // faces as sets of edges, etc.
     std::vector<std::array<EGS_Vector, 4>> face_normals_;
     std::vector<int> medium_indices_;
-    std::vector<std::string> medium_names_;
-    std::string filename_;
 
     std::unique_ptr<EGS_Mesh_Octree> volume_tree_;
     std::unique_ptr<EGS_Mesh_Octree> surface_tree_;

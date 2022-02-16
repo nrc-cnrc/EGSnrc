@@ -68,18 +68,18 @@ public:
 
     // Make a tetrahedron from four nodes.
     //
-    // Throws a std::invalid_argument exception if duplicate node tags are passed in.
+    // Throws std::runtime_error if duplicate node tags are passed in.
     Tetrahedron(int a, int b, int c, int d)
         : nodes_({a, b, c, d})
     {
         if (a == b || a == c || a == d) {
-            throw std::invalid_argument("duplicate node " + std::to_string(a));
+            throw std::runtime_error("duplicate node " + std::to_string(a));
         }
         if (b == c || b == d) {
-            throw std::invalid_argument("duplicate node " + std::to_string(b));
+            throw std::runtime_error("duplicate node " + std::to_string(b));
         }
         if (c == d) {
-            throw std::invalid_argument("duplicate node " + std::to_string(c));
+            throw std::runtime_error("duplicate node " + std::to_string(c));
         }
         // Node ordering is important here. Face 0 is missing node 1, Face 1
         // is missing node 2, etc. This will be used later in the particle
@@ -174,7 +174,7 @@ std::vector<std::array<int, 4>> tetrahedron_neighbours(
             // select a face node and loop through the other elements that share it
             const auto& elts_sharing_node = shared_nodes.elements_around_node(face.node0());
             for (auto j: elts_sharing_node) {
-                if (j == i) {
+                if (j == static_cast<int>(i)) {
                     // elt can't be a neighbour of itself, skip it
                     continue;
                 }
