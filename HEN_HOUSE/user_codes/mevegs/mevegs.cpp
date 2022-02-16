@@ -139,9 +139,6 @@ public:
     /*! Write the results to mesh output files. */
     void writeMeshOutputFiles() const;
 
-    /*! Write the results to Gmsh v4.1 ASCII msh file. */
-    void writeGmsh(const EGS_Mesh& mesh, std::size_t offset) const;
-
     /*! Write the results to a VTK legacy ASCII file. */
     void writeVtk(const EGS_Mesh& mesh, std::size_t offset) const;
 
@@ -696,116 +693,7 @@ void Mevegs_Application::writeMeshOutputFiles() const {
             egsFatal("\nunhandled MevegsGeometry case\n");
     }
 
-    //writeGmsh(*mesh, score_offset);
     writeVtk(*mesh, score_offset);
-}
-
-void Mevegs_Application::writeGmsh(const EGS_Mesh& mesh,
-    std::size_t score_offset) const
-{
-    // make a copy of the input mesh file and append the results to it
-    auto filename = mesh.filename();
-    if (filename.empty()) {
-        egsWarning("\n EGS_Mesh has no filename, skipping mesh output step\n");
-        return;
-    }
-    std::string output_msh = EGS_Application::getFinalOutputFile() + "+" + filename;
-    std::ofstream out(output_msh);
-    if (!out) {
-        egsWarning("\n couldn't open \"%s\" for writing EGS_Mesh results\n",
-                   output_msh.c_str());
-        return;
-    }
-    {
-        std::ifstream in(filename);
-        if (!in) {
-            egsWarning("\n couldn't open EGS_Mesh input file \"%s\", skipping mesh output step\n",
-                       filename.c_str());
-            return;
-        }
-        out << in.rdbuf();
-    }
-
-    auto n_elts = mesh.num_elements();
-
-    // write results to msh file
-
-    // Energy deposition
-
-    // Gmsh's ElementData section is the same for msh versions 2.2 and 4.1
-    //
-    // header
-    //out << "$ElementData\n";
-    //// one string, the view title
-    //out << "1\n" << "\"Energy deposition per particle [MeV]\"\n";
-    //// one float, the time (dummy 0.0)
-    //out << "1\n0.0\n";
-    //// three ints, timestep 0, 1 value per elt, number of elts
-    //out << "3\n0\n1\n" << n_elts << "\n";
-    //for (int i = 0; i < n_elts; i++) {
-    //    double e_dep, uncert;
-    //    score->currentResult(i + score_offset, e_dep, uncert);
-    //    out << mesh.element_tag(i) << " " << e_dep << "\n";
-    //}
-    //// footer
-    //out << "$EndElementData\n";
-
-    //auto abs_to_percent = [](EGS_Float val, EGS_Float uncert) -> EGS_Float {
-    //    if (val > 1e-6) {
-    //        return uncert / val * 100.0;
-    //    }
-    //    return 100.0;
-    //};
-
-    //// Percent uncertainty
-    //out << "$ElementData\n";
-    //out << "1\n" << "\"Energy uncertainty [%]\"\n";
-    //out << "1\n0.0\n";
-    //out << "3\n0\n1\n" << n_elts << "\n";
-    //for (int i = 0; i < n_elts; i++) {
-    //    double e_dep, uncert;
-    //    score->currentResult(i + score_offset, e_dep, uncert);
-    //    out << mesh.element_tag(i) << " " << abs_to_percent(e_dep, uncert)
-    //        << "\n";
-    //}
-    //out << "$EndElementData\n";
-
-    //// Volumes
-    //out << "$ElementData\n";
-    //out << "1\n" << "\"Volume [cm^3]\"\n";
-    //out << "1\n0.0\n";
-    //out << "3\n0\n1\n" << n_elts << "\n";
-    //for (int i = 0; i < n_elts; i++) {
-    //    out << mesh.element_tag(i) << " " << mesh.element_volume(i) << "\n";
-    //}
-    //out << "$EndElementData\n";
-
-    //// Densities
-    //out << "$ElementData\n";
-    //out << "1\n" << "\"Density [g/cm^3]\"\n";
-    //out << "1\n0.0\n";
-    //out << "3\n0\n1\n" << n_elts << "\n";
-    //for (int i = 0; i < n_elts; i++) {
-    //    out << mesh.element_tag(i) << " " << mesh.element_density(i) << "\n";
-    //}
-    //out << "$EndElementData\n";
-
-    // Doses
-
-    const double JOULES_PER_MEV = 1.602e-13;
-    out << "$ElementData\n";
-    out << "1\n" << "\"Dose [Gy]\"\n";
-    out << "1\n0.0\n";
-    out << "3\n0\n1\n" << n_elts << "\n";
-    for (int i = 0; i < n_elts; i++) {
-        double e_dep, uncert;
-        score->currentResult(i + score_offset, e_dep, uncert);
-        const auto mass_kg = mesh.element_density(i) * mesh.element_volume(i)
-            / 1000.0;
-        out << mesh.element_tag(i) << " " <<  JOULES_PER_MEV * e_dep / mass_kg
-            << "\n";
-    }
-    out << "$EndElementData\n";
 }
 
 void Mevegs_Application::getCurrentResult(double &sum, double &sum2,
