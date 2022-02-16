@@ -1500,22 +1500,13 @@ int EGS_Mesh::howfar_exterior(const EGS_Vector &x, const EGS_Vector &u,
         *newmed = medium(min_reg);
     }
     if (normal) {
-        EGS_Vector tmp_normal;
-        const auto& n = element_nodes(min_reg);
         auto intersection = closest_boundary_face(min_reg, x, u);
-        switch(intersection.face_index) {
-            case 0: tmp_normal = cross(n.C - n.B, n.D - n.B); break;
-            case 1: tmp_normal = cross(n.C - n.A, n.D - n.A); break;
-            case 2: tmp_normal = cross(n.B - n.A, n.D - n.A); break;
-            case 3: tmp_normal = cross(n.B - n.A, n.C - n.A); break;
-            default: throw std::runtime_error("Bad intersection, got face index: " +
-                std::to_string(intersection.face_index));
-        }
+        EGS_Vector tmp_normal = face_normals_[min_reg]
+            .at(intersection.face_index);
         // egs++ convention is normal pointing opposite view ray
         if (dot(tmp_normal, u) > 0) {
             tmp_normal = -1.0 * tmp_normal;
         }
-        tmp_normal.normalize();
         *normal = tmp_normal;
     }
     return min_reg;
