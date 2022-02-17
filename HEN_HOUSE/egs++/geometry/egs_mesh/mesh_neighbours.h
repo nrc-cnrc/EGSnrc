@@ -33,6 +33,9 @@
 ###############################################################################
 */
 
+// exclude from doxygen
+/// @cond
+
 #ifndef MESH_NEIGHBOURS_
 #define MESH_NEIGHBOURS_
 
@@ -198,3 +201,5 @@ std::vector<std::array<int, 4>> tetrahedron_neighbours(
 
 } // namespace mesh_neighbours
 #endif // MESH_NEIGHBOURS_
+
+/// @endcond

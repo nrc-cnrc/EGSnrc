@@ -73,13 +73,16 @@
 
 #endif
 
+// exclude from doxygen
+/// @cond
 class EGS_Mesh_Octree;
+/// @endcond
 
 /// A container for raw unstructured tetrahedral mesh data.
 class EGS_MESH_EXPORT EGS_MeshSpec {
 public:
 
-    /// A tetrahedral mesh element
+    /// A tetrahedral mesh element.
     struct Tetrahedron {
         Tetrahedron(int tag, int medium_tag, int a, int b, int c, int d) :
             tag(tag), medium_tag(medium_tag), a(a), b(b), c(c), d(d) {}
@@ -92,7 +95,7 @@ public:
         int d = -1;
     };
 
-    /// A 3D point
+    /// A 3D point. Units are `cm`.
     struct Node {
         Node(int tag, double x, double y, double z) :
             tag(tag), x(x), y(y), z(z) {}
@@ -102,7 +105,7 @@ public:
         double z = 0.0;
     };
 
-    /// A physical medium
+    /// A medium. The medium name must match an EGSnrc medium name.
     struct Medium {
         Medium(int tag, std::string medium_name) :
             tag(tag), medium_name(medium_name) {}
@@ -127,22 +130,75 @@ public:
 
     // Public members
 
-    // Unique mesh elements
+    /// Unique mesh elements
     std::vector<EGS_MeshSpec::Tetrahedron> elements;
-    // Unique nodes
+    /// Unique nodes
     std::vector<EGS_MeshSpec::Node> nodes;
-    // Unique medium information
+    /// Unique medium information
     std::vector<EGS_MeshSpec::Medium> media;
 };
 
-/*! \brief A tetrahedral mesh geometry
+/*! \brief A tetrahedral mesh geometry.
+
   \ingroup Geometry
   \ingroup ElementaryG
-*/
 
+The EGS_Mesh class implements an unstructured tetrahedral mesh. Mesh data and
+element media names are specified using a mesh file. Currently, the only
+supported mesh file format is the Gmsh `msh4.1` format.
+
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_mesh
+        library     = egs_mesh
+        file        = model.msh
+    :stop geometry:
+
+    simulation geometry = my_mesh
+:stop geometry definition:
+\endverbatim
+
+Generally, meshes should be enclosed in an envelope so particles that exit the
+mesh and reenter (for example, if there's a cutout feature in the mesh) are
+simulated correctly and not terminated immediately after initially exiting the
+mesh.
+
+\verbatim
+
+:start geometry definition:
+    :start geometry:
+        name = my_mesh
+        library = egs_mesh
+        file = model.msh
+    :stop geometry:
+
+    # define a 50cm vacuum cube at the origin
+    :start geometry:
+        library = egs_box
+        name = my_box
+        box size = 50 50 50
+        :start media input:
+            media = vacuum
+        :stop media input:
+    :stop geometry:
+
+    # embed the mesh in the vacuum box
+    :start geometry:
+        library = egs_genvelope
+        name = my_envelope
+        base geometry = my_box
+        inscribed geometries = my_mesh
+    :stop geometry:
+
+    simulation geometry = my_envelope
+:stop geometry definition:
+\endverbatim
+*/
 class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
 public:
-    /// Throws std::runtime_error if construction fails.
+    /// Create a new EGS_Mesh from raw mesh data `spec`. Throws a
+    /// `std::runtime_error` if construction fails for any reason.
     explicit EGS_Mesh(EGS_MeshSpec spec);
 
     // EGS_Mesh is move-only
@@ -156,39 +212,48 @@ public:
     EGS_Mesh& operator=(EGS_Mesh&&);
     ~EGS_Mesh();
 
+    /// Returns the number of mesh elements.
     int num_elements() const {
         return elt_tags_.size();
     }
 
+    /// Returns the number of unique mesh nodes.
     int num_nodes() const {
         return nodes_.size();
     }
 
+    /// Returns the four neighbour element offsets of element `i`. For faces
+    /// without neighbours, the array entry is `-1`.
     const std::array<int, 4>& element_neighbours(int i) const {
         return neighbours_.at(i);
     }
 
-    // Return element volume [cm3].
+    /// Returns the volume in `cm3` of element `i`.
     EGS_Float element_volume(int i) const {
         const auto& n = element_nodes(i);
         return std::abs((n.A - n.D) * ((n.B - n.D) % (n.C - n.D))) / 6.0;
     }
 
-    // Return element density [g/cm3].
+    /// Returns the density in `g/cm3` of element `i`.
     EGS_Float element_density(int i) const {
         return EGS_BaseGeometry::getMediumRho(medium_indices_.at(i));
     }
 
-    // Return element tag.
+    /// Returns the tag of element `i`. This is an arbitrary number from the
+    /// input mesh file.
     int element_tag(int i) const {
         return elt_tags_.at(i);
     }
 
+    /// Returns true if the element `reg` is a boundary element, i.e. doesn't
+    /// have neighbours for at least one face. Returns false if the element has
+    /// all four neighbours.
     inline bool is_boundary(int reg) const {
         return boundary_faces_[4*reg] || boundary_faces_[4*reg + 1] ||
                boundary_faces_[4*reg + 2] || boundary_faces_[4*reg + 3];
     }
 
+    /// Print information about element `i` to the stream `elt_info`.
     void printElement(int i, std::ostream& elt_info = std::cout) const {
         const auto& n = element_nodes(i);
         elt_info << " Tetrahedron " << i << ":\n"
@@ -218,9 +283,11 @@ public:
     EGS_Float hownear(int ireg, const EGS_Vector &x) override;
     void printInfo() const override;
 
-    // Check if a point x is inside element i.
+    /// Check if a point `x` is inside element `i`.
     bool insideElement(int i, const EGS_Vector &x);
 
+    // exclude from doxygen, should be private but used by EGS_Mesh_Octree::Node
+    /// @cond
     struct Intersection {
         Intersection(EGS_Float dist, int face_index)
             : dist(dist), face_index(face_index) {}
@@ -232,7 +299,14 @@ public:
 
     // `howfar` helper: Determine the closest boundary face intersection
     Intersection closest_boundary_face(int ireg, const EGS_Vector& x, const EGS_Vector& u);
+    /// @endcond
 
+    /// An element's node coordinates.
+    ///
+    /// * Face 1 = BCD
+    /// * Face 2 = ACD
+    /// * Face 3 = ABD
+    /// * Face 4 = ABC
     struct Nodes {
         const EGS_Vector& A;
         const EGS_Vector& B;
@@ -240,6 +314,7 @@ public:
         const EGS_Vector& D;
     };
 
+    /// Given an element offset, return the element's node coordinates.
     Nodes element_nodes(int element) const {
         const auto& node_indices = elt_node_indices_.at(element);
         return Nodes {
@@ -261,6 +336,7 @@ public:
         return elt_node_indices_.at(element);
     }
 
+    /// Returns the minimum step size (i.e. the fuzzy plane tolerance).
     static EGS_Float get_min_step_size() {
         return EGS_Mesh::min_step_size;
     }
@@ -409,6 +485,9 @@ private:
     static constexpr EGS_Float min_step_size = 1e-10;
 };
 
+// exclude from doxygen
+/// @cond
+
 namespace egs_mesh {
 
 // The egs_mesh::internal namespace is for internal API functions and may change
@@ -456,5 +535,7 @@ private:
 } // namespace internal
 
 } // namespace egs_mesh
+
+/// @endcond
 
 #endif // EGS_MESH

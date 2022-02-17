@@ -79,6 +79,8 @@ void EGS_MeshSpec::checkValid() const {
     }
 }
 
+// exclude from doxygen
+/// @cond
 namespace egs_mesh {
 namespace internal {
 
@@ -129,6 +131,8 @@ void PercentCounter::finish(const std::string& end_msg) {
 
 } // namespace internal
 } // namespace egs_mesh
+
+/// @endcond
 
 // anonymous namespace
 namespace {
@@ -308,6 +312,8 @@ int exterior_triangle_ray_intersection(const EGS_Vector &p,
 
 } // anonymous namespace
 
+// exclude from doxygen
+/// @cond
 class EGS_Mesh_Octree {
 private:
     static double tet_min_x(const EGS_Mesh::Nodes& n) {
@@ -918,6 +924,7 @@ public:
         return root_.hownear_exterior(p, mesh);
     }
 };
+/// @endcond
 
 EGS_Mesh::EGS_Mesh(EGS_MeshSpec spec) :
     EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName())
@@ -1438,6 +1445,8 @@ int EGS_Mesh::howfar_interior_recover_lost_particle(int ireg,
     return actual_elt;
 }
 
+// exclude from doxygen
+/// @cond
 EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vector &x,
     const EGS_Vector &u)
 {
@@ -1472,6 +1481,7 @@ EGS_Mesh::Intersection EGS_Mesh::closest_boundary_face(int ireg, const EGS_Vecto
 
     return EGS_Mesh::Intersection(min_dist, closest_face);
 }
+/// @endcond
 
 int EGS_Mesh::howfar_exterior(const EGS_Vector &x, const EGS_Vector &u,
     EGS_Float &t, int *newmed, EGS_Vector *normal)

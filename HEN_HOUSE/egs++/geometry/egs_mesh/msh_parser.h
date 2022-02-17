@@ -27,6 +27,9 @@
 ###############################################################################
 */
 
+// exclude from doxygen
+/// @cond
+
 #ifndef MSH_PARSER_
 #define MSH_PARSER_
 
@@ -676,3 +679,5 @@ EGS_MeshSpec parse_msh_file(std::istream& input, EGS_InfoFunction info /*default
 } // namespace msh_parser
 
 #endif // MSH_PARSER_
+
+/// @endcond
