@@ -1556,6 +1556,17 @@ extern "C" {
             return nullptr;
         }
 
+        EGS_Float scale = 0.0;
+        err = input->getInput("scale", scale);
+        if (!err) {
+            if (scale > 0.0) {
+                mesh_spec.scale(scale);
+            } else {
+                egsFatal("createGeometry(EGS_Mesh): invalid scale value (%g), "
+                         "expected a positive number\n", scale);
+            }
+        }
+
         EGS_Mesh* mesh = nullptr;
         try {
             mesh = new EGS_Mesh(std::move(mesh_spec));

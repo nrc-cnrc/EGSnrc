@@ -35,10 +35,13 @@
 //
 // TODO add test for intersection point right on element node
 
+#include "egs_input.h"
 #include "egs_mesh.h"
 #include "mesh_neighbours.h"
 #include "msh_parser.h"
 
+#include <cstdarg>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -86,12 +89,8 @@ static std::string to_string_with_precision(double d, const int n = 17)
     return out.str();
 }
 
-// We'll use a simple five-element mesh for smoke testing
-//
-// Not declared const because of EGS_BaseGeometry method requirements but
-// isn't mutated at any point.
-static EGS_Mesh test_mesh = [](){
-    std::stringstream input(
+// String for a five element Gmsh 4.1 msh file
+static std::string five_elt_mesh_str =
 R"($MeshFormat
 4.1 0 8
 $EndMeshFormat
@@ -131,8 +130,14 @@ $Elements
 3 1 3 4 6
 4 1 2 3 7
 5 2 3 4 8
-$EndElements)"
-    );
+$EndElements)";
+
+// We'll use a simple five-element mesh for smoke testing
+//
+// Not declared const because of EGS_BaseGeometry method requirements but
+// isn't mutated at any point.
+static EGS_Mesh test_mesh = [](){
+    std::stringstream input(five_elt_mesh_str);
     return EGS_Mesh(msh_parser::parse_msh_file(input));
 }();
 
@@ -378,6 +383,92 @@ static void test_howfar_exterior() {
     }
 }
 
+// Test the egsinp `scale` key.
+static void test_mesh_scaling() {
+    std::string filename("tmp_test_mesh_scaling.msh");
+    {
+        // write out mesh used in the input file
+        std::ofstream out(filename);
+        out << five_elt_mesh_str;
+    }
+    EGS_Input egsinp;
+    std::string egsinp_str(
+        ":start geometry definition:\n"
+        "    :start geometry:\n"
+        "       name = my_mesh\n"
+        "       library = egs_mesh\n"
+        "       file = " + filename + "\n"
+        "       scale = 0.1\n" // mm to cm
+        "    :stop geometry:\n"
+        "    simulation geometry = my_mesh\n"
+        ":stop geometry definition:\n"
+    );
+    egsinp.setContentFromString(egsinp_str);
+    EGS_BaseGeometry *geo = EGS_Mesh::createGeometry(&egsinp);
+    EGS_Mesh *scaled_mesh = dynamic_cast<EGS_Mesh*>(geo);
+    if (!scaled_mesh) {
+        throw std::runtime_error("dynamic_cast<EGS_Mesh*> failed!");
+    }
+
+    auto mesh_volume = [](const EGS_Mesh& mesh) -> EGS_Float {
+        EGS_Float vol = 0.0;
+        for (int i = 0; i < mesh.num_elements(); i++) {
+            vol += mesh.element_volume(i);
+        }
+        return vol;
+    };
+
+    auto scaled_vol = mesh_volume(*scaled_mesh);
+    auto vol = mesh_volume(test_mesh) / 1000.0; // 10^3
+    if (!approx_eq(scaled_vol, vol)) {
+        throw std::runtime_error("scaled volume " + std::to_string(scaled_vol) +
+            ") != expected (" + std::to_string(vol) + ")");
+    }
+    delete geo;
+    std::remove(filename.c_str());
+}
+
+// Custom egsFatal that throws error messages as exceptions for testing
+void egsFatalThrowing(const char *msg, ...) {
+    char buf[8192];
+    va_list ap;
+    va_start(ap, msg);
+    vsprintf(buf, msg, ap);
+    va_end(ap);
+    throw std::runtime_error(buf); // buf copied by constructor
+}
+
+// Test egsinp `scale` key errors.
+static void test_mesh_scale_key_errors() {
+    egsSetInfoFunction(Fatal, egsFatalThrowing);
+
+    std::string filename("tmp_test_mesh_scaling.msh");
+    {
+        // write out mesh used in the input file
+        std::ofstream out(filename);
+        out << five_elt_mesh_str;
+    }
+    EGS_Input egsinp;
+    std::string egsinp_str(
+        ":start geometry definition:\n"
+        "    :start geometry:\n"
+        "       name = my_mesh\n"
+        "       library = egs_mesh\n"
+        "       file = " + filename + "\n"
+        "       scale = -0.1\n" // invalid negative scale value
+        "    :stop geometry:\n"
+        "    simulation geometry = my_mesh\n"
+        ":stop geometry definition:\n"
+    );
+    egsinp.setContentFromString(egsinp_str);
+    EXPECT_ERROR(EGS_Mesh::createGeometry(&egsinp),
+        "createGeometry(EGS_Mesh): invalid scale value (-0.1), "
+        "expected a positive number\n");
+
+    // Reset egsFatal
+    egsSetDefaultIOFunctions();
+    std::remove(filename.c_str());
+}
 
 // Test the basic howfar_interior implementation
 //        __________
@@ -1697,6 +1788,8 @@ int main() {
     RUN_TEST(test_hownear_exterior());
     RUN_TEST(test_howfar_interior_basic());
     RUN_TEST(test_howfar_exterior());
+    RUN_TEST(test_mesh_scaling());
+    RUN_TEST(test_mesh_scale_key_errors());
 
     RUN_TEST(test_tetrahedron_face_eq());
     RUN_TEST(test_tetrahedron_errors());

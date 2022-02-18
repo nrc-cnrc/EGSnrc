@@ -128,6 +128,15 @@ public:
     /// using this mesh data.
     void checkValid() const;
 
+    /// Multiply all node coordinates by a constant factor.
+    void scale(EGS_Float factor) {
+        for (auto& node: nodes) {
+            node.x *= factor;
+            node.y *= factor;
+            node.z *= factor;
+        }
+    }
+
     // Public members
 
     /// Unique mesh elements
@@ -194,6 +203,24 @@ mesh.
     simulation geometry = my_envelope
 :stop geometry definition:
 \endverbatim
+
+Mesh node coordinates are assumed to be in `cm`. If you need to scale the input
+mesh (e.g. if the mesh file uses `mm`) you can use the `scale` key in the egsinp
+file:
+
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name = my_mesh
+        library = egs_mesh
+        file = model.msh
+        scale = 0.1         # multiply all node coordinates by 0.1
+    :stop geometry:
+
+    simulation geometry = my_mesh
+:stop geometry definition:
+\endverbatim
+
 */
 class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
 public:
