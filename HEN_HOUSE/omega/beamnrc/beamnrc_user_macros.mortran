@@ -110,7 +110,7 @@ REPLACE {$MXRDIST} WITH {1000}"no of POINTS IN RADIAL DISTRIBUTION FIT--src 15"
 " *****************************
 REPLACE {$BDY_TOL} WITH {1.E-5}    "boundary tolerance for HOWFAR_$CMNAME
                                    "to account for round-off error
-REPLACE {$MIN_GAP} WITH {0.01}     "minimum air gap allowed between CM's
+REPLACE {$MIN_GAP} WITH {1.E-5}    "minimum air gap allowed between CM's
 REPLACE {$ONE-EPS} WITH {0.9999}   "used to keep the source inside target
 ;
 ;
