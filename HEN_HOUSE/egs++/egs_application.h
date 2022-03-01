@@ -1169,6 +1169,10 @@ public:
         return source->getCharge();
     }
 
+    int sourceEmax() {
+        return source->getEmax();
+    }
+
     virtual void setLatch( const int &ip, const int &latch ){};
 
     virtual void incLatch( const int &ip, const int &increment ){};
