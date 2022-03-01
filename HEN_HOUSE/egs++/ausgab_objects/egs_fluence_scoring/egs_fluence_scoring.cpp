@@ -51,10 +51,12 @@ EGS_FluenceScoring::EGS_FluenceScoring(const string &Name, EGS_ObjectFactory *f)
     max_reg(-1), active_region(-1),
     flu_s(0), flu_nbin(128), flu_xmin(0.001), flu_xmax(1.0), 
     norm_u(1.0), flu(0), fluT(0), flu_p(0), fluT_p(0), current_ncase(0), 
-    verbose(false), score_primaries(false),
+    verbose(false), score_primaries(false), score_spe(false),
     m_primary(0.0), m_tot(0.0)
 {
        otype = "EGS_FluenceScoring";
+       flu_a = flu_nbin; flu_a /= (flu_xmax - flu_xmin);
+       flu_b = -flu_xmin*flu_a;
 }
 
 /*! Destructor. */
@@ -95,7 +97,7 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
                     "************************\n");
     }    
 
-    the_selection = inp->getInput("source particle", name, 0);
+    the_selection = inp->getInput("source particle", name, 3);
     switch(the_selection){
         case 0:
           source_charge = photon;
@@ -110,47 +112,50 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
           source_charge = unknown;
     }    
 
-    EGS_Float flu_Emin, flu_Emax, norma;
-    int err_n    = inp->getInput("number of bins",flu_nbin);
-    int err_i    = inp->getInput("minimum kinetic energy",flu_Emin);
-    int err_f    = inp->getInput("maximum kinetic energy",flu_Emax);
-    if (err_n) egsFatal("\n**** EGS_FluenceScoring::initScoring"
-                        "       Missing input: number of bins.\n"
-                        "       Aborting!\n\n");
-    if (err_i) egsFatal("\n**** EGS_FluenceScoring::initScoring"
-                        "       Missing input: minimum kinetic energy.\n"
-                        "       Aborting!\n\n");
-    if (err_f) egsFatal("\n**** EGS_FluenceScoring::initScoring"
-                        "       Missing input: maximum kinetic energy.\n"
-                        "       Aborting!\n\n");
-    int err_norm = inp->getInput("normalization",norma);
-    if (!err_norm) norm_u = norma;
-    else           norm_u = 1.0;
-
-    vector<string> scale;
-    scale.push_back("linear"); scale.push_back("logarithmic");
-    flu_s = inp->getInput("scale",scale,0);
-    if( flu_s == 0 ) {
-        flu_xmin = flu_Emin; flu_xmax = flu_Emax;
-    }
-    else {
-        flu_xmin = log(flu_Emin); flu_xmax = log(flu_Emax);
-    }
-    flu_a = flu_nbin; flu_a /= (flu_xmax - flu_xmin);
-    flu_b = -flu_xmin*flu_a;
-    /****************************************************** 
-       Algorithm assigns E in [Ei,Ei+1), one could add extra
-       bin for E = Emax cases. Alternatively, push those
-       events into last bin (bias?) during scoring.
-       Which approach is correct?
-     ******************************************************/
-    //flu_nbin++;
-
     vector<string> choice; 
     choice.push_back("no");
     choice.push_back("yes");
-    verbose = inp->getInput("verbose",choice,0);
+    verbose         = inp->getInput("verbose",        choice,0);
     score_primaries = inp->getInput("score primaries",choice,0);
+    score_spe      = inp->getInput( "score spectrum", choice,0);
+
+    if ( score_spe ){
+       EGS_Float flu_Emin, flu_Emax, norma;
+       int err_n    = inp->getInput("number of bins",flu_nbin);
+       int err_i    = inp->getInput("minimum kinetic energy",flu_Emin);
+       int err_f    = inp->getInput("maximum kinetic energy",flu_Emax);
+       if (err_n) egsFatal("\n**** EGS_FluenceScoring::initScoring"
+                           "       Missing input: number of bins.\n"
+                           "       Aborting!\n\n");
+       if (err_i) egsFatal("\n**** EGS_FluenceScoring::initScoring"
+                           "       Missing input: minimum kinetic energy.\n"
+                           "       Aborting!\n\n");
+       if (err_f) egsFatal("\n**** EGS_FluenceScoring::initScoring"
+                           "       Missing input: maximum kinetic energy.\n"
+                           "       Aborting!\n\n");
+       int err_norm = inp->getInput("normalization",norma);
+       if (!err_norm) norm_u = norma;
+       else           norm_u = 1.0;
+   
+       vector<string> scale;
+       scale.push_back("linear"); scale.push_back("logarithmic");
+       flu_s = inp->getInput("scale",scale,0);
+       if( flu_s == 0 ) {
+           flu_xmin = flu_Emin; flu_xmax = flu_Emax;
+       }
+       else {
+           flu_xmin = log(flu_Emin); flu_xmax = log(flu_Emax);
+       }
+       flu_a = flu_nbin; flu_a /= (flu_xmax - flu_xmin);
+       flu_b = -flu_xmin*flu_a;
+       /****************************************************** 
+          Algorithm assigns E in [Ei,Ei+1), one could add extra
+          bin for E = Emax cases. Alternatively, push those
+          events into last bin (bias?) during scoring.
+          Which approach is correct?
+        ******************************************************/
+       //flu_nbin++;
+    }
 
     /* 
        Get source regions where interacting particles
@@ -330,7 +335,7 @@ void EGS_FluenceScoring::describeMe(){
        description += buf;
     }
 
-    if (flu){
+    if (score_spe){
        description += " - scoring in the ";
        EGS_Float Emin = flu_s ? exp(flu_xmin):flu_xmin, 
                  Emax = flu_s ? exp(flu_xmax):flu_xmax;
@@ -404,17 +409,22 @@ void EGS_PlanarFluence::setApplication(EGS_Application *App) {
     setUpRegionFlags();
 
     /* Setup fluence scoring arrays, Nx*Ny = 1 for the circle */
-    flu  = new EGS_ScoringArray* [Nx*Ny];
     fluT = new EGS_ScoringArray(Nx*Ny);
-    for (int j = 0; j < Nx*Ny; j++) 
-        flu[j] = new EGS_ScoringArray(flu_nbin);
+    if ( score_spe ){
+       flu  = new EGS_ScoringArray* [Nx*Ny];
+       for (int j = 0; j < Nx*Ny; j++) {
+           flu[j] = new EGS_ScoringArray(flu_nbin);
+       }
+    }
 
     if ( score_primaries ){
-       flu_p  = new EGS_ScoringArray* [Nx*Ny];
        fluT_p = new EGS_ScoringArray(Nx*Ny);
-       for (int j = 0; j < Nx*Ny; j++){ 
-           flu_p[j] = new EGS_ScoringArray(flu_nbin);
-       }           
+       if ( score_spe ){
+          flu_p  = new EGS_ScoringArray* [Nx*Ny];
+          for (int j = 0; j < Nx*Ny; j++){ 
+              flu_p[j] = new EGS_ScoringArray(flu_nbin);
+          }           
+       }
     }
 
     describeMe();
@@ -560,35 +570,33 @@ void EGS_PlanarFluence::score(const EGS_Particle& p, const int& ivoxel){
      ***********************************************************/
      if( aup < 0.08 ) aup = 0.0871557;// Limit incident angle to 85 degrees
      EGS_Float e = p.q ? p.E - app->getRM() : p.E;
-     if (flu){
-       if( flu_s ) {e = log(e);} // log scale
-       EGS_Float ae; int je;
-       /* Score fluence in each voxel */
-       if( e > flu_xmin && e <= flu_xmax) {
-         /* Score total fluence in each voxel */
-         EGS_Float auxp = p.wt/aup;
-         fluT->score(ivoxel,auxp);
-         if (score_primaries && !p.latch) 
-            fluT_p->score(ivoxel,auxp);
-         /* Score differential fluence in each voxel */
-         ae = flu_a*e + flu_b; 
-        /****************************************************** 
-           Algorithm assigns E in [Ei,Ei+1), hence push events
-           with E = Emax into last bin (bias?) during scoring.
-           Alternatively add extra bin for E = Emax cases.
-           Which approach is correct?
-        ******************************************************/
-         je = min((int)ae,flu_nbin-1);//je = (int) ae;
-        /******************************************************/
-         if (ivoxel < 0 || ivoxel > Nx*Ny)
-            egsFatal("\n-> Scoring out of bounds, ivoxel = %d\n",ivoxel);
-         EGS_ScoringArray *aux   = flu[ivoxel];
-         if (je < 0 || je >= flu_nbin )
-            egsFatal("\n-> Scoring out of bounds, ibin = %d ae = %g E = %g MeV\n",je,ae,e);
-         aux->score(je,auxp);
-         if (score_primaries && !p.latch) 
-            flu_p[ivoxel]->score(je,auxp);
-       }
+     if( flu_s ) {e = log(e);} // log scale
+     EGS_Float ae; int je;
+     EGS_Float auxp = p.wt/aup;
+     /* Score total fluence in corresponding pixel */
+     fluT->score(ivoxel,auxp);
+     if (score_primaries && !p.latch) 
+        fluT_p->score(ivoxel,auxp);
+     /* Score differential fluence in corresponding pixel */
+     if( score_spe && e > flu_xmin && e <= flu_xmax ){
+          ae = flu_a*e + flu_b; 
+          /****************************************************** 
+            Algorithm assigns E in [Ei,Ei+1), hence push events
+            with E = Emax into last bin (bias?) during scoring.
+            Alternatively add extra bin for E = Emax cases.
+            Which approach is correct?
+          ******************************************************/
+          je = min((int)ae,flu_nbin-1);//je = (int) ae;
+         /******************************************************/
+          if (ivoxel < 0 || ivoxel > Nx*Ny)
+             egsFatal("\n-> Scoring out of bounds, ivoxel = %d\n",ivoxel);
+          EGS_ScoringArray *aux   = flu[ivoxel];
+          if (je < 0 || je >= flu_nbin )
+             egsFatal("\n-> Scoring out of bounds, ibin = %d ae = %g E = %g MeV\n",je,ae,e);
+          aux->score(je,auxp);
+          if (score_primaries && !p.latch) {
+             flu_p[ivoxel]->score(je,auxp);
+          }
      }
 }
 
@@ -627,127 +635,148 @@ int EGS_PlanarFluence::hitsField(const EGS_Particle& p, EGS_Float* dist){
      else return -1;
 }
 
-void EGS_PlanarFluence::ouputResults(){
-  if (!flu) return;  
+void EGS_PlanarFluence::ouputPlanarFluence( EGS_ScoringArray *fT, const double &norma ){
+    double fe,dfe,dfer;
+    int count = 0;
+    int ix_digits = getDigits(Nx);
+    int iy_digits = getDigits(Ny);
+    int xy_digits = getDigits(Nx*Ny);
 
-  EGS_Float src_norm = 1.0,          // default to number of histories in this run
-            Fsrc = app->getFluence();// Fluence or number of primary histories
-  egsInformation("\n\n last case = %lld source particles or fluence = %g\n\n",
-                  current_ncase, Fsrc);
-
-  if (Fsrc) 
-     src_norm = Fsrc/current_ncase;// fluence or primary histories per histories run
-
-  string normLabel = src_norm == 1 ? "history" : "MeV-1 cm-2";
-  string src_type = app->sourceType();
-  if ( src_type == "EGS_BeamSource" ){ 
-      normLabel = "primary history";
-     egsInformation("\n\n %s normalization = %g (primary histories per particle)\n\n",
-                  src_type.c_str(), src_norm);
-  }
-  else if ( src_type == "EGS_CollimatedSource" || 
-           (src_type == "EGS_ParallelBeam" && src_norm != 1)){ 
-     egsInformation("\n\n %s normalization = %g (fluence per particle)\n\n",
-                  src_type.c_str(), src_norm);
-  }
-  else{
-        egsInformation("\n\n %s normalization = %g (histories per particle)\n\n",
-                  src_type.c_str(), src_norm);
-
-  }
-
-  double norm = 1.0/src_norm;  //per fluence or particle depending on source
-         norm /= Area;         //per unit area
-         norm *= flu_a;        //per unit bin width
-         norm *= norm_u;       // times user-requested normalization
-  
-  if (verbose) 
-     egsInformation("\nNormalization = Ncase/Fsrc/A/bw = %g\n",norm);
-
-  string suffix = "_" + particle_name + ".agr";
-  string spe_name = app->constructIOFileName(suffix.c_str(),true);
-  ofstream spe_output(spe_name.c_str(),ios::out); 
-  //spe_output.open(spe_name.c_str());
-  if (!spe_output){
-      egsFatal("\n EGS_PlanarFluence: Error: Failed to open file %s\n",spe_name.c_str());
-      exit(1);
-  }
-
-  spe_output << "# " << particle_name.c_str() << " fluence \n";
-  spe_output << "# \n";
-  spe_output << "@    legend 0.2, 0.8\n";
-  spe_output << "@    legend box linestyle 0\n";
-  spe_output << "@    legend font 4\n";
-  spe_output << "@    xaxis  label \"energy / MeV\"\n";
-  spe_output << "@    xaxis  label char size 1.560000\n";
-  spe_output << "@    xaxis  label font 4\n";
-  spe_output << "@    xaxis  ticklabel font 4\n";
-  spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
-  spe_output << "@    yaxis  label char size 1.560000\n";
-  spe_output << "@    yaxis  label font 4\n";
-  spe_output << "@    yaxis  ticklabel font 4\n";
-  spe_output << "@    title \""<< particle_name.c_str() << " fluence" <<"\"\n";
-  spe_output << "@    title font 4\n";
-  spe_output << "@    title size 1.500000\n";
-  spe_output << "@    subtitle \"for each scoring region\"\n";
-  spe_output << "@    subtitle font 4\n";
-  spe_output << "@    subtitle size 1.000000\n";
-
-  int i_graph = 0;
-  egsInformation("\n\n%s fluence scoring\n"
-                     "=================================\n",particle_name.c_str());
-  for(int j=0; j<Ny; j++) {     
-    for(int i=0; i<Nx; i++) {     
-        int k = i + j*Nx;
-        egsInformation("\nVoxel # %d :",k);
-        spe_output<<"@    s" << i_graph <<" errorbar linestyle 0\n";
-        spe_output<<"@    s" << i_graph <<" legend \""<<
-               "Voxel # " << k <<"\"\n";
-        spe_output<<"@target G0.S"<< i_graph <<"\n";
-        spe_output<<"@type xydy\n";
-        double fe,dfe;
-        fluT->currentResult(k,fe,dfe);
-        if( fe > 0 ) dfe = 100*dfe/fe; else dfe = 100;
-        egsInformation(" total fluence = %10.4le +/- %-7.3lf\%\n",
-              fe*norm/flu_a,dfe);
-        if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
-                     "---------------------------------------------\n");
-        for(int l=0; l<flu_nbin; l++) {
-            flu[k]->currentResult(l,fe,dfe);
-            EGS_Float e = (l+0.5-flu_b)/flu_a;
-            if( flu_s ) e = exp(e);
-            spe_output<<e<<" "<<fe*norm<<" "<<dfe*norm<< "\n";
-            if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
-                         e,fe*norm,dfe*norm);
-        }
-        spe_output << "&\n";
-
-        if ( score_primaries ){
-           fluT_p->currentResult(k,fe,dfe);
-           if( fe > 0 ) dfe = 100*dfe/fe; else dfe = 100;
-           egsInformation(" total primary fluence = %10.4le +/- %-7.3lf\%\n",
-                 fe*norm/flu_a,dfe);
-           if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
-                        "---------------------------------------------\n");
-           spe_output<<"@    s" << ++i_graph <<" errorbar linestyle 0\n";
-           spe_output<<"@    s" << i_graph <<" legend \""<<
-                  "Voxel # " << k <<" (primary)\"\n";
-           spe_output<<"@target G0.S"<< i_graph <<"\n";
-           spe_output<<"@type xydy\n";
-           for(int l=0; l<flu_nbin; l++) {
-               flu_p[k]->currentResult(l,fe,dfe);
-               EGS_Float e = (l+0.5-flu_b)/flu_a;
-               if( flu_s ) e = exp(e);
-               spe_output<<e<<" "<<fe*norm<<" "<<dfe*norm<< "\n";
-               if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
-                            e,fe*norm,dfe*norm);
-           }
-           spe_output << "&\n";
-        }
-        i_graph++;
+    egsInformation("\n  %*s %*s pixel#    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
+                     "-----------------------------------------------------\n",
+                     iy_digits,"iy",ix_digits,"ix",&count);
+    for(int j=0; j<Ny; j++) {     
+      for(int i=0; i<Nx; i++) {     
+          int k = i + j*Nx;
+          egsInformation("   %*d  %*d  %*d      ",iy_digits,j,ix_digits,i,xy_digits,k);
+          fT->currentResult(k,fe,dfe);
+          if( fe > 0 ) dfer = 100*dfe/fe; else dfer = 100;
+          egsInformation(" %10.4le +/- %10.4le [%-7.3lf\%]\n",fe*norma,dfe*norma,dfer);
+      }
     }
-  }
-  spe_output.close();
+}
+
+void EGS_PlanarFluence::ouputResults(){
+
+    EGS_Float src_norm = 1.0,          // default to number of histories in this run
+              Fsrc = app->getFluence();// Fluence or number of primary histories
+    egsInformation("\n\n last case = %lld source particles or fluence = %g\n\n",
+                    current_ncase, Fsrc);
+  
+    if (Fsrc) 
+       src_norm = Fsrc/current_ncase;// fluence or primary histories per histories run
+  
+    string normLabel = src_norm == 1 ? "history" : "MeV-1 cm-2";
+    string src_type = app->sourceType();
+    if ( src_type == "EGS_BeamSource" ){ 
+        normLabel = "primary history";
+       egsInformation("\n\n %s normalization = %g (primary histories per particle)\n\n",
+                    src_type.c_str(), src_norm);
+    }
+    else if ( src_type == "EGS_CollimatedSource" || 
+             (src_type == "EGS_ParallelBeam" && src_norm != 1)){ 
+       egsInformation("\n\n %s normalization = %g (fluence per particle)\n\n",
+                    src_type.c_str(), src_norm);
+    }
+    else{
+          egsInformation("\n\n %s normalization = %g (histories per particle)\n\n",
+                    src_type.c_str(), src_norm);
+  
+    }
+  
+  
+    double norm = 1.0/src_norm;  //per fluence or particle depending on source
+           norm /= Area;         //per unit area
+           norm *= norm_u;       // times user-requested normalization
+  
+    //egsInformation("  Normalization = %g\n",norm);
+  
+    egsInformation("\n\n                   %s fluence\n"
+                       "               ==============\n", particle_name.c_str());
+    ouputPlanarFluence( fluT, norm );
+    
+    if ( score_primaries ){
+       egsInformation("\n\n                   primary fluence\n"
+                      "                   ==============\n");
+       ouputPlanarFluence( fluT_p, norm );
+    }
+  
+    if ( score_spe ){
+       norm *= flu_a;//per unit bin width
+       string suffix = "_" + particle_name + ".agr";
+       string spe_name = app->constructIOFileName(suffix.c_str(),true);
+       ofstream spe_output(spe_name.c_str(),ios::out); 
+       if (!spe_output){
+           egsFatal("\n EGS_PlanarFluence: Error: Failed to open file %s\n",spe_name.c_str());
+           exit(1);
+       }
+     
+       spe_output << "# " << particle_name.c_str() << " fluence \n";
+       spe_output << "# \n";
+       spe_output << "@    legend 0.2, 0.8\n";
+       spe_output << "@    legend box linestyle 0\n";
+       spe_output << "@    legend font 4\n";
+       spe_output << "@    xaxis  label \"energy / MeV\"\n";
+       spe_output << "@    xaxis  label char size 1.560000\n";
+       spe_output << "@    xaxis  label font 4\n";
+       spe_output << "@    xaxis  ticklabel font 4\n";
+       spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
+       spe_output << "@    yaxis  label char size 1.560000\n";
+       spe_output << "@    yaxis  label font 4\n";
+       spe_output << "@    yaxis  ticklabel font 4\n";
+       spe_output << "@    title \""<< particle_name.c_str() << " fluence" <<"\"\n";
+       spe_output << "@    title font 4\n";
+       spe_output << "@    title size 1.500000\n";
+       spe_output << "@    subtitle \"for each scoring region\"\n";
+       spe_output << "@    subtitle font 4\n";
+       spe_output << "@    subtitle size 1.000000\n";
+     
+       int i_graph = 0;
+       double fe,dfe;
+       for(int j=0; j<Ny; j++) {     
+         for(int i=0; i<Nx; i++) {     
+             int k = i + j*Nx;
+             egsInformation("\nVoxel # %d :",k);
+             spe_output<<"@    s" << i_graph <<" errorbar linestyle 0\n";
+             spe_output<<"@    s" << i_graph <<" legend \""<<
+                    "Voxel # " << k <<"\"\n";
+             spe_output<<"@target G0.S"<< i_graph <<"\n";
+             spe_output<<"@type xydy\n";
+             if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
+                          "---------------------------------------------\n");
+             for(int l=0; l<flu_nbin; l++) {
+                 flu[k]->currentResult(l,fe,dfe);
+                 EGS_Float e = (l+0.5-flu_b)/flu_a;
+                 if( flu_s ) e = exp(e);
+                 spe_output<<e<<" "<<fe*norm<<" "<<dfe*norm<< "\n";
+                 if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
+                              e,fe*norm,dfe*norm);
+             }
+             spe_output << "&\n";
+     
+             if ( score_primaries ){
+                if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
+                             "---------------------------------------------\n");
+                spe_output<<"@    s" << ++i_graph <<" errorbar linestyle 0\n";
+                spe_output<<"@    s" << i_graph <<" legend \""<<
+                       "Voxel # " << k <<" (primary)\"\n";
+                spe_output<<"@target G0.S"<< i_graph <<"\n";
+                spe_output<<"@type xydy\n";
+                for(int l=0; l<flu_nbin; l++) {
+                    flu_p[k]->currentResult(l,fe,dfe);
+                    EGS_Float e = (l+0.5-flu_b)/flu_a;
+                    if( flu_s ) e = exp(e);
+                    spe_output<<e<<" "<<fe*norm<<" "<<dfe*norm<< "\n";
+                    if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
+                                 e,fe*norm,dfe*norm);
+                }
+                spe_output << "&\n";
+             }
+             i_graph++;
+         }
+       }
+       spe_output.close();
+    }
        
 }
 
@@ -771,18 +800,24 @@ bool EGS_PlanarFluence::storeState(ostream &data) const {
   data << m_tot << " " << m_primary;
   data << endl;
   if (!data.good()) return false;
-  if( flu ) {
+
+  if( !fluT->storeState(data) ) return false;
+
+  if( score_spe ) {
       for(int j=0; j<Nx*Ny; j++) {
           if( !flu[j]->storeState(data) ) return false;
       }
-      if( !fluT->storeState(data) ) return false;
   }
-  if( flu_p ) {
-      for(int j=0; j<Nx*Ny; j++) {
-          if( !flu_p[j]->storeState(data) ) return false;
-      }
-      if( !fluT_p->storeState(data) ) return false;
+
+  if ( score_primaries ){
+     if( !fluT_p->storeState(data) ) return false;
+     if( score_spe ) {
+         for(int j=0; j<Nx*Ny; j++) {
+             if( !flu_p[j]->storeState(data) ) return false;
+         }
+     }
   }
+
   return true;  
 }
 
@@ -791,17 +826,25 @@ bool  EGS_PlanarFluence::setState(istream &data){
   //data >> m_primary >> m_ray >> m_compt >> m_fluor >> m_multiple;
   data >> m_tot >> m_primary;
   if (!data.good()) return false;
-  if( flu ) {
+
+  if( !fluT->setState(data) ) return false;
+
+  if( score_spe ) {
       for(int j=0; j<Nx*Ny; j++) {
           if( !flu[j]->setState(data) ) return false;
       }
-      if( !fluT->setState(data) ) return false;
   }
-  if( flu_p ) {
-      for(int j=0; j<Nx*Ny; j++) {
-          if( !flu_p[j]->setState(data) ) return false;
-      }
-      if( !fluT_p->setState(data) ) return false;
+
+  if ( score_primaries ){
+
+     if( !fluT_p->setState(data) ) return false;
+   
+     if( score_spe ) {
+         for(int j=0; j<Nx*Ny; j++) {
+             if( !flu_p[j]->setState(data) ) return false;
+         }
+     }
+
   }
   return true;
 }
@@ -820,25 +863,32 @@ bool  EGS_PlanarFluence::addState(istream &data){
    //m_primary += tmp_primary;m_ray += tmp_ray;m_compt += tmp_compt;
    //m_fluor += tmp_fluor;m_multiple += tmp_multiple;
    /* fluence objects */
-   if( flu ) {
+
+   EGS_ScoringArray tgT(Nx*Ny);
+   if( !tgT.setState(data) ) return false;
+   (*fluT) += tgT;
+
+   if( score_spe ) {
        EGS_ScoringArray tg(flu_nbin);
        for(int j=0; j<Nx*Ny; j++) {
            if( !tg.setState(data) ) return false;
            (*flu[j]) += tg;
        }
-       EGS_ScoringArray tgT(Nx*Ny);
-       if( !tgT.setState(data) ) return false;
-       (*fluT) += tgT;
    }
-   if( flu_p ) {
-       EGS_ScoringArray tg_p(flu_nbin);
-       for(int j=0; j<Nx*Ny; j++) {
-           if( !tg_p.setState(data) ) return false;
-           (*flu_p[j]) += tg_p;
-       }
+
+   if ( score_primaries ){
+ 
        EGS_ScoringArray tgT_p(Nx*Ny);
        if( !tgT_p.setState(data) ) return false;
        (*fluT_p) += tgT_p;
+    
+       if( score_spe ) {
+           EGS_ScoringArray tg_p(flu_nbin);
+           for(int j=0; j<Nx*Ny; j++) {
+               if( !tg_p.setState(data) ) return false;
+               (*flu_p[j]) += tg_p;
+           }
+       }
    }
 
    return true;
@@ -853,7 +903,7 @@ bool  EGS_PlanarFluence::addState(istream &data){
 EGS_VolumetricFluence::EGS_VolumetricFluence(const string &Name, EGS_ObjectFactory *f) :
     EGS_FluenceScoring(Name,f)
 #ifdef DEBUG
-    ,one_bin(0), multi_bin(0)
+    ,one_bin(0), multi_bin(0), max_step(-100.0), n_step_bins(10000)
 #endif    
 {
    otype = "EGS_VolumetricFluence";
@@ -864,13 +914,19 @@ EGS_VolumetricFluence::~EGS_VolumetricFluence(){
 
    if( flu ) {
        for(int j=0; j<n_scoring_regions; j++) {delete flu[j];}
-#ifdef DEBUG 
-       if (binDist) delete binDist;
-#endif    
    }
    if( flu_p ) {
        for(int j=0; j<n_scoring_regions; j++) {delete flu_p[j];}
    }
+
+#ifdef DEBUG 
+   if (binDist) delete binDist;
+   if( scoring_charge ) {
+       delete stepDist;
+       delete relStepDiff;
+   }
+#endif    
+
 }
 
 void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
@@ -909,23 +965,28 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
     }
 
     /* Setup fluence scoring arrays */
-    flu  = new EGS_ScoringArray* [nreg];
     fluT = new EGS_ScoringArray(nreg);
-    for (int j = 0; j < nreg; j++){ 
-        if (is_sensitive[j])
-           flu[j] = new EGS_ScoringArray(flu_nbin);
-    }
-    if ( score_primaries ){
-       flu_p  = new EGS_ScoringArray* [nreg];
-       fluT_p = new EGS_ScoringArray(nreg);
+    if ( score_spe ){
+       flu  = new EGS_ScoringArray* [nreg];
        for (int j = 0; j < nreg; j++){ 
            if (is_sensitive[j])
-              flu_p[j] = new EGS_ScoringArray(flu_nbin);
-       }           
+              flu[j] = new EGS_ScoringArray(flu_nbin);
+       }
+    }
+    if ( score_primaries ){
+       fluT_p = new EGS_ScoringArray(nreg);
+       if ( score_spe ){
+          flu_p  = new EGS_ScoringArray* [nreg];
+          for (int j = 0; j < nreg; j++){ 
+              if (is_sensitive[j])
+                 flu_p[j] = new EGS_ScoringArray(flu_nbin);
+          }
+       }
     }
 #ifdef DEBUG 
     binDist = new EGS_ScoringArray(flu_nbin);
-#endif    
+    int imed_max_range;
+#endif
 
     EGS_Float flu_Emin = flu_s ? exp(flu_xmin) : flu_xmin, 
               flu_Emax = flu_s ? exp(flu_xmax) : flu_xmax;
@@ -966,6 +1027,7 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
           i_dedx = new EGS_Interpolator [n_media];// stp powers
           dedx_i = new EGS_Interpolator [n_media];// its inverse
           for( int j = 0; j < n_media; j++ ){
+              /* Gets charged partcle stopping powers based on the scoring charge */
               i_dedx[j] = *( app->getDEDX( j, scoring_charge ) );
               EGS_Float Emin = i_dedx[j].getXmin();
               EGS_Float Emax = i_dedx[j].getXmax();
@@ -994,7 +1056,6 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
                 i_dedx[j].interpolate(Emin + k*bwidth), 
                 dedx_i[j].interpolate(Emin + k*bwidth));
               }
-              
 #endif             
           }
 
@@ -1002,16 +1063,49 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
           lnEmin  = flu_s ? log(0.5*flu_Emin*(expbw+1)) : 0;
           Lmid_i  = new EGS_Float [flu_nbin*n_media];
           for( int j = 0; j < n_media; j++ ){
+#ifdef DEBUG 
+            EGS_Float med_max_step = 0, logEmax, logEmin;
+#endif             
             for ( int i = 0; i < flu_nbin; i++ ){
                 lnEmid = flu_s ? lnEmin + i*bw : log(flu_Emin+bw*(i+0.5));
                 Lmid_i[i+j*flu_nbin] = 1/i_dedx[j].interpolate(lnEmid);
                 //egsInformation(" 1/L(%g MeV) = %g cm/MeV\n",exp(lnEmid),Lmid_i[i+j*flu_nbin]);
+#ifdef DEBUG 
+                // Set max_step to maximum range
+                if ( i > 0){
+                   logEmin = flu_s ? lnEmin + (i-1)*bw : log(flu_Emin+bw*(i-1)); 
+                   logEmax = flu_s ? lnEmin +     i*bw : log(flu_Emin+bw*i);
+                   if (i_dedx[j].interpolate(logEmax) < i_dedx[j].interpolate(logEmin))
+                      med_max_step += 1.02*(exp(logEmax) - exp(logEmin))/i_dedx[j].interpolate(logEmax);
+                   else
+                      med_max_step += 1.02*(exp(logEmax) - exp(logEmin))*i_dedx[j].interpolate(logEmin);
+                }
+#endif             
             }
+#ifdef DEBUG 
+            if ( med_max_step > max_step ){
+                max_step = med_max_step;
+                imed_max_range = j;
+            }
+#endif             
           }
        }
     }
 
-
+#ifdef DEBUG 
+    EGS_Float RCSDA = max_step;
+    //max_step /= 4.0; // Set to a quarter of the CSDA range
+    //if ( max_step > 1.0 ) max_step = 1.0;
+    max_step = 1.0;// reset to 1 cm
+    step_a = n_step_bins/max_step;
+    step_b = 0;
+    relStepDiff = new EGS_ScoringArray(n_step_bins);
+    stepDist    = new EGS_ScoringArray(n_step_bins);
+    eCases = 0;
+    egsInformation("\n===> RCSDA(%s) = %g cm  for Emax = %g MeV, max_step = %g cm bin width = %g cm\n",
+                  app->getMediumName(imed_max_range), RCSDA, 
+                  flu_s ? exp(flu_Emax) : flu_Emax, max_step, 1.0/step_a);
+#endif
     describeMe();
 }
 
@@ -1062,7 +1156,9 @@ void EGS_VolumetricFluence::initScoring(EGS_Input *inp) {
        method.push_back("flurz"); method.push_back("stpwr");   // 3rd order
                                   method.push_back("stpwrO5"); // 5th order
        flu_stpwr = eFluType(inp->getInput("method",method,1));
+
     }
+
 }
 
 void EGS_VolumetricFluence::describeMe(){
@@ -1078,11 +1174,11 @@ void EGS_VolumetricFluence::describeMe(){
     if (flu_stpwr){
       if (flu_stpwr == stpwr){
          description += "   O(eps^3) approach: accounts for change in stpwr\n";
-         description +=                "   along the step with eps=edep/Eb\n";
+         description +=                "   along the step with eps=edep/Emid\n";
       }
       else if (flu_stpwr == stpwrO5){
          description += "   O(eps^5) approach: accounts for change in stpwr\n";
-         description += "   along the step with eps=edep/Eb\n";
+         description += "   along the step with eps=edep/Emid\n";
       }
     }
     else
@@ -1095,6 +1191,28 @@ void EGS_VolumetricFluence::describeMe(){
     }
 
 }
+
+void EGS_VolumetricFluence::ouputVolumetricFluence( EGS_ScoringArray *fT, const double &norma ){
+    double fe,dfe,dfer;
+    double norm = norma;
+#ifndef USETVSTEP
+           norm  *= flu_s? 1.0 : flu_a_i; // Implicit for log grid
+#endif           
+    int count = 0;
+    int ir_digits = getDigits(nreg);
+
+    egsInformation("\n  region#    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
+                     "-----------------------------------------------------\n");
+    for( int k=0; k<nreg; k++ ){     
+       if ( !is_sensitive[k] ) continue;
+       norm /= volume[k];               //per volume
+       egsInformation("  %*d      ",ir_digits,k);
+       fT->currentResult(k,fe,dfe);
+       if( fe > 0 ) dfer = 100*dfe/fe; else dfer = 100;
+       egsInformation(" %10.4le +/- %10.4le [%-7.3lf%]\n",fe*norm,dfe*norm,dfer);
+    }
+}
+
 void EGS_VolumetricFluence::ouputResults(){
 
   
@@ -1133,118 +1251,127 @@ void EGS_VolumetricFluence::ouputResults(){
   one_bin, 100.0*one_bin/tot_bins, multi_bin,100.0*multi_bin/tot_bins);
   
   egsInformation("\n  # bins        freq         unc           percentage  \n");               
+  int bdigits = getDigits(flu_nbin);
   for (int i=0; i<flu_nbin; i++) {
       binDist->currentResult(i,fbins, d_fbins);
       if (fbins){
          d_fbins = 100.0*d_fbins/fbins; fbins = current_ncase*fbins;
-         egsInformation("   %d        %11.2f  [%-7.3lf\%]     %11.2f \%\n", 
-         i+1, fbins, d_fbins, 100.*fbins/tot_bins);
+         egsInformation("   %*d        %11.2f  [%-7.3lf\%]     %11.2f \%\n", 
+         bdigits, i+1, fbins, d_fbins, 100.*fbins/tot_bins);
       }
   }
+
+  if ( scoring_charge ){
+     egsInformation("\nDistribution of ratio between computed and taken steps\n"
+                      "------------------------------------------------------\n"
+                      "   (Omitted bins with differences less than 0.01\%)\n");
+      /*
+       //egsInformation(" Relative step difference: %8.4f%% +/- %8.4f%% [%8.4lf%%]\n",
+       //egsInformation(" Relative step ratio: %10.4le +/- %10.4le [%8.4lf%%]\n",
+       */
+   
+      EGS_Float step_diff, step_diff_std, step_diff_err, stepMid;
+      EGS_Float f_scores, f_scores_std;
+      int idigits = getDigits(eCases);
+      egsInformation("\n   step / cm        # scores      ratio       rel unc\n"
+                       "---------------------------------------------------------\n"); 
+      for (int i=0; i < n_step_bins; i++) {
+          stepDist->currentResult( i, f_scores, f_scores_std );
+          if ( f_scores > 0 ){
+             stepMid = (i + 0.5 - step_b)/step_a;
+             relStepDiff->currentResult( i, step_diff, step_diff_std );
+             if( step_diff > 0 ) 
+               step_diff_err = 100*step_diff_std/step_diff; 
+             else 
+               step_diff_err = 100;
+             if ( abs(step_diff/f_scores - 1.0) > 0.0001D+0 )
+                egsInformation("   %10.4le      %*d      %10.4le [%8.4lf\%]\n", 
+                stepMid, idigits, int(f_scores*current_ncase), step_diff/f_scores, step_diff_err);
+          }
+      }
+
+  }
+
 #endif
 
-  string suffix = "_" + particle_name + ".agr";
-  string spe_name = app->constructIOFileName(suffix.c_str(),true);
-  ofstream spe_output(spe_name.c_str(),ios::out); 
-  if (!spe_output){
-      egsFatal("\n EGS_VolumetricFluence: Error: Failed to open file %s\n",spe_name.c_str());
-      exit(1);
+  EGS_Float norm  = 1.0/src_norm;              // per particle or fluence
+            norm *= norm_u;                    // user-requested normalization
+
+  egsInformation("\n\n                   %s fluence\n"
+                 "               =====================\n", particle_name.c_str());
+  ouputVolumetricFluence( fluT, norm );
+  
+  if ( score_primaries ){
+     egsInformation("\n\n                   primary fluence\n"
+                    "                   ==============\n");
+     ouputVolumetricFluence( fluT_p, norm );
   }
 
-  spe_output << "# Volumetric " << particle_name.c_str() << " fluence \n";
-  spe_output << "# \n";
-  spe_output << "@    legend 0.2, 0.8\n";
-  spe_output << "@    legend box linestyle 0\n";
-  spe_output << "@    legend font 4\n";
-  spe_output << "@    xaxis  label \"energy / MeV\"\n";
-  spe_output << "@    xaxis  label char size 1.560000\n";
-  spe_output << "@    xaxis  label font 4\n";
-  spe_output << "@    xaxis  ticklabel font 4\n";
-  if (src_norm == 1 || normLabel == "primary history")
-     spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
-  else{   
-     spe_output << "@    yaxis  label \"fluence / MeV\\S-1\"\n";
+  if (verbose){
+     egsInformation("\nbw = %g nbins = %d\n", flu_a_i, flu_nbin);
   }
-  spe_output << "@    yaxis  label char size 1.560000\n";
-  spe_output << "@    yaxis  label font 4\n";
-  spe_output << "@    yaxis  ticklabel font 4\n";
-  spe_output << "@    title \""<< particle_name.c_str() << " fluence" <<"\"\n";
-  spe_output << "@    title font 4\n";
-  spe_output << "@    title size 1.500000\n";
-  spe_output << "@    subtitle \"for each scoring region\"\n";
-  spe_output << "@    subtitle font 4\n";
-  spe_output << "@    subtitle size 1.000000\n";
- 
-  egsInformation("\n\n%s fluence scoring\n"
-                     "=================================\n\n",particle_name.c_str());
-  int i_graph = 0;
-  // Loop through the number of regions in the geometry.
-  for (int j = 0; j < nreg; j++) {
-      if ( !is_sensitive[j] ) continue;
-      EGS_Float norm  = 1.0/src_norm;              // per particle or fluence
-                norm *= norm_u;                    // user-requested normalization
-                norm /= volume[j];                 //per volume
-                norm *= scoring_charge ? 1 : flu_a;//per bin width <- implicit for charged particles!
 
-      EGS_Float the_bw = flu_s? 1.0 : flu_a_i;     // Implicit for log grid
-
-      egsInformation("region # %d : ",j);
-
-      if (verbose){
-         egsInformation("Volume[%d] = %g bw = %g nbins = %d\n",j,volume[j], the_bw, flu_nbin);
-         egsInformation("        Normalization = Ncase/Fsrc/V = %g\n",norm);
-      }
-      
-      double fe, dfe, fp, dfp;
-      fluT->currentResult(j,fe,dfe);
-      if (fe > 0) {
-          dfe = 100*dfe/fe;
-      }
-      else {
-          dfe = 100;
-      }
-      egsInformation("        Total fluence [cm-2] = %10.4le +/- %-7.3lf\%\n",
-                     fe*norm*the_bw,dfe);
-
-      if ( score_primaries ){
-         fluT_p->currentResult(j,fp,dfp);
-         if (fp > 0) {
-             dfp = 100*dfp/fp;
+  if ( score_spe ){
+     string suffix = "_" + particle_name + ".agr";
+     string spe_name = app->constructIOFileName(suffix.c_str(),true);
+     ofstream spe_output(spe_name.c_str(),ios::out); 
+     if (!spe_output){
+         egsFatal("\n EGS_VolumetricFluence: Error: Failed to open file %s\n",spe_name.c_str());
+         exit(1);
+     }
+   
+     spe_output << "# Volumetric " << particle_name.c_str() << " fluence \n";
+     spe_output << "# \n";
+     spe_output << "@    legend 0.2, 0.8\n";
+     spe_output << "@    legend box linestyle 0\n";
+     spe_output << "@    legend font 4\n";
+     spe_output << "@    xaxis  label \"energy / MeV\"\n";
+     spe_output << "@    xaxis  label char size 1.560000\n";
+     spe_output << "@    xaxis  label font 4\n";
+     spe_output << "@    xaxis  ticklabel font 4\n";
+     if (src_norm == 1 || normLabel == "primary history")
+        spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
+     else{   
+        spe_output << "@    yaxis  label \"fluence / MeV\\S-1\"\n";
+     }
+     spe_output << "@    yaxis  label char size 1.560000\n";
+     spe_output << "@    yaxis  label font 4\n";
+     spe_output << "@    yaxis  ticklabel font 4\n";
+     spe_output << "@    title \""<< particle_name.c_str() << " fluence" <<"\"\n";
+     spe_output << "@    title font 4\n";
+     spe_output << "@    title size 1.500000\n";
+     spe_output << "@    subtitle \"for each scoring region\"\n";
+     spe_output << "@    subtitle font 4\n";
+     spe_output << "@    subtitle size 1.000000\n";
+    
+     egsInformation("\n\n%s fluence scoring\n"
+                        "=================================\n\n",particle_name.c_str());
+     int i_graph = 0;
+     double fe, dfe;
+     norm *= scoring_charge ? 1 : flu_a;//per bin width <- implicit for charged particles!
+     // Loop through the number of regions in the geometry.
+     for (int j = 0; j < nreg; j++) {
+   
+         if ( !is_sensitive[j] ) continue;
+   
+         norm /= volume[j];                 //per volume
+   
+         egsInformation("region # %d : ",j);
+   
+         if (verbose){
+            egsInformation("Volume[%d] = %g", j, volume[j]);
+            egsInformation(" Normalization = Ncase/Fsrc/V = %g\n",norm);
          }
-         else {
-             dfp = 100;
-         }
-         egsInformation("        Primary fluence [cm-2] = %10.4le +/- %-7.3lf\%\n",
-                        fp*norm*the_bw,dfp);
-      }
-
-      if (verbose) egsInformation("\nTotal differential fluence:\n");
-      spe_output<<"@    s"<< i_graph <<" errorbar linestyle 0\n";
-      spe_output<<"@    s"<< i_graph <<" legend \""<< "total (ir # " << j <<")\"\n";
-      spe_output<<"@target G0.S"<< i_graph <<"\n";
-      spe_output<<"@type xydy\n";
-      if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV-1*cm-2)   DFlu/(MeV-1*cm-2)\n"
-                     "---------------------------------------------------\n");
-      for (int i=0; i<flu_nbin; i++) {
-          flu[j]->currentResult(i,fe,dfe);
-          EGS_Float e = (i+0.5-flu_b)/flu_a;
-          if (flu_s) e = exp(e);
-          spe_output << e <<" "<< fe *norm<<" "<< dfe *norm<< "\n";
-          if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
-                        e, fe*norm, dfe*norm);
-      }
-      spe_output << "&\n";
-
-      if ( score_primaries ){
-         if (verbose) egsInformation("\nPrimary differential fluence:\n");
-         spe_output<<"@    s"<< ++i_graph <<" errorbar linestyle 0\n";
-         spe_output<<"@    s"<< i_graph <<" legend \""<< "primary (ir # " << j <<")\"\n";
+         
+         if (verbose) egsInformation("\nTotal differential fluence:\n");
+         spe_output<<"@    s"<< i_graph <<" errorbar linestyle 0\n";
+         spe_output<<"@    s"<< i_graph <<" legend \""<< "total (ir # " << j <<")\"\n";
          spe_output<<"@target G0.S"<< i_graph <<"\n";
          spe_output<<"@type xydy\n";
          if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV-1*cm-2)   DFlu/(MeV-1*cm-2)\n"
                         "---------------------------------------------------\n");
          for (int i=0; i<flu_nbin; i++) {
-             flu_p[j]->currentResult(i,fe,dfe);
+             flu[j]->currentResult(i,fe,dfe);
              EGS_Float e = (i+0.5-flu_b)/flu_a;
              if (flu_s) e = exp(e);
              spe_output << e <<" "<< fe *norm<<" "<< dfe *norm<< "\n";
@@ -1252,13 +1379,32 @@ void EGS_VolumetricFluence::ouputResults(){
                            e, fe*norm, dfe*norm);
          }
          spe_output << "&\n";
-      }
-      i_graph++;
+   
+         if ( score_primaries ){
+            if (verbose) egsInformation("\nPrimary differential fluence:\n");
+            spe_output<<"@    s"<< ++i_graph <<" errorbar linestyle 0\n";
+            spe_output<<"@    s"<< i_graph <<" legend \""<< "primary (ir # " << j <<")\"\n";
+            spe_output<<"@target G0.S"<< i_graph <<"\n";
+            spe_output<<"@type xydy\n";
+            if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV-1*cm-2)   DFlu/(MeV-1*cm-2)\n"
+                           "---------------------------------------------------\n");
+            for (int i=0; i<flu_nbin; i++) {
+                flu_p[j]->currentResult(i,fe,dfe);
+                EGS_Float e = (i+0.5-flu_b)/flu_a;
+                if (flu_s) e = exp(e);
+                spe_output << e <<" "<< fe *norm<<" "<< dfe *norm<< "\n";
+                if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
+                              e, fe*norm, dfe*norm);
+            }
+            spe_output << "&\n";
+         }
+         i_graph++;
+     }
+
+     spe_output.close();
+       
   }
 
-
-  spe_output.close();
-       
 }
 
 void EGS_VolumetricFluence::reportResults() {
@@ -1273,38 +1419,95 @@ void EGS_VolumetricFluence::reportResults() {
 bool EGS_VolumetricFluence::storeState(ostream &data) const {
   if( !egsStoreI64(data,current_ncase)) return false;
   data << endl;
+
   if (!data.good()) return false;
-  if( flu ) {
+
+#ifdef DEBUG
+  if ( scoring_charge ){
+    if( !relStepDiff->storeState(data) ) return false;
+    if( !stepDist->storeState(data) ) return false;
+  }
+#endif
+
+  if( !fluT->storeState(data) ) return false;
+  if( score_spe ) {
       for(int j = 0; j < nreg; j++) {
           if ( is_sensitive[j] ){ 
              if( !flu[j]->storeState(data) ) return false;
           }
       }
-      if( !fluT->storeState(data) ) return false;
   }
+
+  if ( score_primaries ){
+     if( !fluT_p->storeState(data) ) return false;
+     if( score_spe ) {
+         for(int j=0; j < nreg; j++) {
+            if ( is_sensitive[j] ){ 
+               if( !flu_p[j]->storeState(data) ) return false;
+            }
+         }
+     }
+  }
+
   return true;  
 }
 
 bool  EGS_VolumetricFluence::setState(istream &data){
+  
   if( !egsGetI64(data,current_ncase) ) return false;
+
   if (!data.good()) return false;
-  if( flu ) {
+
+#ifdef DEBUG
+  if ( scoring_charge ){
+    if( !relStepDiff->setState(data) ) return false;
+    if( !stepDist->setState(data) ) return false;
+  }
+#endif
+
+  if( !fluT->setState(data) ) return false;
+  if( score_spe ) {
       for(int j=0; j<nreg; j++) {
           if ( is_sensitive[j] ){ 
              if( !flu[j]->setState(data) ) return false;
           }
       }
-      if( !fluT->setState(data) ) return false;
   }
+
+  if ( score_primaries ){
+     if( !fluT_p->setState(data) ) return false;
+     if( score_spe ) {
+         for(int j=0; j < nreg; j++) {
+            if ( is_sensitive[j] ){ 
+               if( !flu_p[j]->setState(data) ) return false;
+            }
+         }
+     }
+  }
+
   return true;
 }
 
 bool  EGS_VolumetricFluence::addState(istream &data){
    EGS_I64 tmp_case; if( !egsGetI64(data,tmp_case) ) return false;
    current_ncase += tmp_case;
+
    if (!data.good()) return false;
+
+#ifdef DEBUG
+  if ( scoring_charge ){
+     EGS_ScoringArray tmpRelStepDiff(1);
+     if( !tmpRelStepDiff.setState(data) ) return false;
+     (*relStepDiff) += tmpRelStepDiff;
+  }
+#endif
    /* fluence objects */
-   if( flu ) {
+
+   EGS_ScoringArray tgT(nreg);
+   if( !tgT.setState(data) ) return false;
+   (*fluT) += tgT;
+
+   if( score_spe ) {
        EGS_ScoringArray tg(flu_nbin);
        for(int j = 0; j < nreg; j++) {
            if ( is_sensitive[j] ){ 
@@ -1312,9 +1515,21 @@ bool  EGS_VolumetricFluence::addState(istream &data){
              (*flu[j]) += tg;
            }
        }
-       EGS_ScoringArray tgT(nreg);
-       if( !tgT.setState(data) ) return false;
-       (*fluT) += tgT;
+   }
+
+   if ( score_primaries ){
+       EGS_ScoringArray tgT_p(nreg);
+       if( !tgT_p.setState(data) ) return false;
+       (*fluT_p) += tgT_p;
+       if( score_spe ) {
+           EGS_ScoringArray tg_p(flu_nbin);
+           for(int j=0; j < nreg; j++) {
+              if ( is_sensitive[j] ){ 
+                 if( !tg_p.setState(data) ) return false;
+                   (*flu_p[j]) += tg_p;
+              }
+           }
+       }
    }
 
    return true;

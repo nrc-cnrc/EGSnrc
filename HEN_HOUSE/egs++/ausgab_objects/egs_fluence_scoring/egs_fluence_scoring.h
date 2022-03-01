@@ -133,13 +133,15 @@ A basic fluence scoring ausgab object is specified via
     scoring particle = a_particle # photon, electron, or positron
     # Define scoring (volumetric) or contributing (planar) regions
     scoring regions = ir1 ir2 ... irn
-    ## Alternatively:
+    ### Alternatively:
     # start region = iri_1, iri_2, ..., iri_n
     # stop region =  irf_1, irf_2, ..., irf_n
+    ###
     # score primaries = yes # or no, optional
+    ###
     # source regions = sr1 sr2 ... srN # <- no classification in these regions
-    # source particle = photon, electron, or positron #<- brems targets or multi-particle sources
-    ## scoring grid
+    # source particle = photon, electron, or positron #<- multi-particle sources or brems targets
+    ### scoring grid
     number of bins = 100
     minimum kinetic energy = 0.001
     maximum kinetic energy = 1.000
@@ -170,6 +172,14 @@ public:
    void setUpRegionFlags();
 
    void describeMe();
+
+   int getDigits(int i) {
+        int imax = 10;
+        while (i>=imax) {
+            imax*=10;
+        }
+        return (int)log10((float)imax);
+   };
 
    void flagSecondaries( const int &iarg, const int &q ){
        int npold = app->getNpOld(), 
@@ -275,6 +285,7 @@ protected:
   string  particle_name;
   /* Auxiliary input variables*/
   bool    verbose, 
+          score_spe,
           score_primaries;
 };
 
@@ -307,15 +318,16 @@ protected:
       # Scoring field for planar scoring
       scoring circle = 0 0 5.0 5.0
       scoring plane normal = 0 0 1
-      ## Define contributing regions
+      ### Define contributing regions
       # scoring regions = ir1 ir2 ... irn # optional, defaults to ALL
-      # Alternatively:
+      ### Alternatively:
       # start region = iri_1, iri_2, ..., iri_n
       # stop region =  irf_1, irf_2, ..., irf_n
+      ###
       # score primaries = yes # or no, optional
       # source regions = sr1 sr2 ... srN # <- no classification in these regions
-      # source particle = photon, electron, or positron #<- brems targets or multi-particle sources
-      # scoring grid
+      # source particle = photon, electron, or positron #<- multi-particle sources or brems targets
+      ### scoring grid
       number of bins = 100
       minimum kinetic energy = 0.001
       maximum kinetic energy = 1.000
@@ -365,6 +377,7 @@ public:
    void describeMe();//!< Sets fluence scoring object \c description
    void initScoring(EGS_Input *inp);
    void setApplication(EGS_Application *App);
+   void ouputPlanarFluence( EGS_ScoringArray *fT, const double &norma );
    void ouputResults();
    void reportResults();
    int processEvent(EGS_Application::AusgabCall iarg) {
@@ -414,32 +427,41 @@ public:
        return 0;
 
    };
+   
    void setCurrentCase(EGS_I64 ncase) {
         if( ncase != current_ncase ) {
             current_ncase = ncase;
-            if (flu){
+
+            fluT->setHistory(ncase);
+
+            if (score_spe){
               for (int j = 0; j < Nx*Ny; j++)
                    flu[j]->setHistory(ncase);
-              fluT->setHistory(ncase);
             }
-            if (flu_p){
-              for (int j = 0; j < Nx*Ny; j++)
-                   flu_p[j]->setHistory(ncase);
+
+            if ( score_primaries ){
               fluT_p->setHistory(ncase);
+              if (score_spe){
+                 for (int j = 0; j < Nx*Ny; j++)
+                     flu_p[j]->setHistory(ncase);
+              }
             }
         }
    };
+
    void resetCounter(){
       current_ncase = 0; 
+      fluT->reset();
       if (flu){
         for (int j = 0; j < Nx*Ny; j++)
              flu[j]->reset();
-        fluT->reset();
       }
-      if (flu_p){
-        for (int j = 0; j < Nx*Ny; j++)
-             flu_p[j]->reset();
-        fluT_p->reset();
+      if ( score_primaries ){
+         fluT_p->reset();
+         if ( score_spe ){
+            for (int j = 0; j < Nx*Ny; j++)
+                flu_p[j]->reset();
+         }
       }
    }
    bool storeState(ostream &data) const;
@@ -484,18 +506,19 @@ private:
       library = egs_fluence_scoring
       type = volumetric
       scoring particle = electron # or photon, or positron
-      # Define scoring (volumetric) or contributing (planar) regions
+      # Define individual scoring regions
       scoring regions = ir1 ir2 ... irn
-      # Alternatively:
+      ### Alternatively use groups of regions:
       # start region = iri_1, iri_2, ..., iri_n
       # stop region =  irf_1, irf_2, ..., irf_n
+      ###
       volumes = V1, V2, ..., VN # Enter as many as scoring regions. If same number
                                 # of entries as group of regions, assumes groups of 
                                 # equal volume regions. If only one entry, assumes 
                                 # equal volumes in all regions. Defaults to 1.
       # score primaries = yes # or no, optional
       # source regions = sr1 sr2 ... srN # <- no classification in these regions
-      # source particle = photon, electron, or positron #<- brems targets or multi-particle sources
+      # source particle = photon, electron, or positron #<- multi-particle sources or brems targets
       # scoring grid
       number of bins = 100
       minimum kinetic energy = 0.001
@@ -553,6 +576,8 @@ public:
 
    void setApplication(EGS_Application *App);
 
+   void ouputVolumetricFluence( EGS_ScoringArray *fT, const double &norma );
+   
    void ouputResults();
 
    void reportResults();
@@ -568,24 +593,30 @@ public:
        if ( !q ){// It's a photon
           /* Score photon fluence */
           if (iarg == EGS_Application::BeforeTransport ) {
-             /* Track-Length scoring (classic) */
-             EGS_Float e = app->top_p.E,
-             wtstep  = app->top_p.wt*app->getTVSTEP();
-             if (flu_s) {
-                  e = log(e);
+             /* Linear track-Length scoring */
+             EGS_Float wtstep  = app->top_p.wt*app->getTVSTEP();
+             /* Score total fluence */
+             fluT->score(ir,wtstep);
+             if (score_primaries && !latch){
+                fluT_p->score(ir,wtstep);
              }
-             EGS_Float ae;
-             int je;
-             if (e > flu_xmin && e <= flu_xmax) {
-                 ae = flu_a*e + flu_b;
-                 je = min((int)ae,flu_nbin-1);
-                 EGS_ScoringArray *aux = flu[ir];
-                 aux->score(je,wtstep);
-                 fluT->score(ir,wtstep);
-                 if (score_primaries && !latch){
-                    flu_p[ir]->score(je,wtstep);
-                    fluT_p->score(ir,wtstep);
-                 }
+             /* Score differential fluence */
+             if ( score_spe ) {
+                EGS_Float e = app->top_p.E;
+                if (flu_s) {
+                     e = log(e);
+                }
+                EGS_Float ae; int je;
+                /* Score differential fluence */
+                if ( e > flu_xmin && e <= flu_xmax ) {
+                    ae = flu_a*e + flu_b;
+                    je = min((int)ae,flu_nbin-1);
+                    EGS_ScoringArray *aux = flu[ir];
+                    aux->score(je,wtstep);
+                    if (score_primaries && !latch){
+                       flu_p[ir]->score(je,wtstep);
+                    }
+                }
              }
           }
        }
@@ -601,250 +632,364 @@ public:
              /**************************/
              /***** Initialization *****/
              /**************************/
-
-             EGS_Float Eb = app->top_p.E - app->getRM(),
-                       Ee = Eb - edep,
-                       weight = app->top_p.wt;
-
-             EGS_Float xb, xe;
-             if( flu_s ) {
-                 xb = log(Eb);
-                 if( Ee > 0 )
-                     xe = log(Ee);
-                 else xe = -15;
-             }
-             else{
-               xb = Eb; xe = Ee;
+             EGS_Float weight = app->top_p.wt;
+             bool score_p = score_primaries && !latch;
+             /* Integral fluence scoring arrays */
+             EGS_ScoringArray *auxT = fluT, *auxT_p;
+             if ( score_p ){
+                 auxT_p = fluT_p;
              }
 
-             /**********************************************************/
-             /* If not out of bounds, proceed with rest of calculation */
-             /**********************************************************/
-             if( xb > flu_xmin && xe < flu_xmax ) {
-                 EGS_Float ab, ae; int jb, je;
-                 /* Fraction of the initial bin covered */
-                 if( xb < flu_xmax ) {
-                     ab = flu_a*xb + flu_b; jb = (int) ab;
-                     /* Variable bin-width for log scale*/
-                     if (flu_s){
-                        ab = (Eb*a_const[jb]-1)*r_const;
-                     }
-                     else{ ab -= jb;}// particle's energy above Emax
-                 }
-                 else { xb = flu_xmax; ab = 1; jb = flu_nbin - 1; }
-                 /* Fraction of the final bin covered */
-                 if( xe > flu_xmin ) {
-                     ae = flu_a*xe + flu_b; je = (int) ae;
-                     /* Variable bin-width for log scale*/
-                     if (flu_s){
-                        ae = (Ee*a_const[je]-1)*r_const;
-                     }
-                     else{ ae -= je; }
-                 }
-                 else { xe = flu_xmin; ae = 0; je = 0; }// extends below Emin
-   
-#ifdef DEBUG 
-                 //egsInformation("iarg = %d jb = %d je = %d edep = %g MeV weight = %g\n",iarg,jb,je,edep,weight);                    
-                 if (jb == je) 
-                   one_bin++;
-                 else{          
-                   multi_bin++;
-                   //egsInformation("\niarg = %d jb = %d je = %d edep = %g MeV ab = %g ae = %g",iarg,jb,je,edep,ab,ae);                    
-                 }
-                 binDist->score(jb-je,weight);
-#endif   
-                 EGS_ScoringArray *aux = flu[ir];
-                 EGS_ScoringArray *auxT = fluT;
-                 EGS_ScoringArray *aux_p, *auxT_p;
-                 if ( score_primaries ){
-                    aux_p = flu_p[ir];
-                    auxT_p = fluT_p;
-                 }
-                 bool score_p = score_primaries && !latch;
-   
-                 /************************************************
-                  * Approach A:
-                  * -----------
-                  * Uses either an O(3) or O(5) series expansion of the
-                  * integral of the inverse of the stopping power with
-                  * respect to energy. The stopping power is represented
-                  * as a linear interpolation over a log energy grid. It
-                  * accounts for stopping power variation along the particle's
-                  * step within the resolution of the scoring array. This
-                  * is more accurate than the method used in FLURZnrc albeit
-                  * about 10% slower in electron beam cases.
-                  *
-                  * BEWARE: For this approach to work, no range rejection
-                  * ------  nor Russian Roulette should be used.
-                  *
-                  ************************************************/
-                 if (flu_stpwr){
-                    int imed = app->getMedium(ir);
-                    // Initial and final energies in same bin
-                    EGS_Float step;
-                    if( jb == je ){
-                        step = weight*(ab-ae)*getStepPerFraction(imed,xb,xe);
-                        aux->score(jb,step);
-                        if (score_p)
-                           aux_p->score(jb,step);
-                        if (flu_s){
-                           auxT->score(ir,step*DE[jb]);
-                           if (score_p)
-                              auxT_p->score(ir,step*DE[jb]);
-                        }
-                        else{
-                           auxT->score(ir,step);
-                           if (score_p) 
-                              auxT_p->score(ir,step);
-                        }
+#ifdef USETVSTEP
+             EGS_Float a_step = weight*app->getTVSTEP();
+             auxT->score(ir,a_step);
+             if (score_p) 
+                auxT_p->score(ir,a_step);
+             if ( score_spe ){
+#endif             
+
+                 EGS_ScoringArray *aux, *aux_p;
+#ifndef USETVSTEP
+                 if ( score_spe ){
+#endif             
+                    aux = flu[ir];
+                    if ( score_p ){
+                       aux_p = flu_p[ir];
                     }
-                    else {
-                        // First bin
-                        Ee = flu_xmin + jb*flu_a_i; Eb=xb;
-                        step = weight*ab*getStepPerFraction(imed,Eb,Ee);
-                        aux->score(jb,step);
-                        if (score_p) 
-                           aux_p->score(jb,step);
-                        if (flu_s){
-                           auxT->score(ir,step*DE[jb]);
-                           if (score_p)
-                              auxT_p->score(ir,step*DE[jb]);
-                        }
-                        else{
-                           auxT->score(ir,step);
-                           if (score_p)
-                              auxT_p->score(ir,step);
-                        }
-                        // Last bin
-                        Ee = xe; Eb = flu_xmin+(je+1)*flu_a_i;
-                        step = weight*(1-ae)*getStepPerFraction(imed,Eb,Ee);
-                        aux->score(je,step);
-                        if (score_p)
-                           aux_p->score(je,step);
-                        if (flu_s){
-                           auxT->score(ir,step*DE[je]);
-                           if (score_p) 
-                              auxT_p->score(ir,step*DE[je]);
-                        }
-                        else{
-                           auxT->score(ir,step);
-                           if (score_p)
-                              auxT_p->score(ir,step);
-                        }
-                        // intermediate bins
-                        for(int j=je+1; j<jb; j++){
-                           if (flu_stpwr == stpwrO5){
-                             Ee = Eb; Eb = flu_xmin + (j+1)*flu_a_i;
-                            /* O(eps^5) would require more pre-computed values
-                             * than just 1/Lmid. One requires lnEmid[i] to get
-                             * the b parameter and eps[i]=1-E[i]/E[i+1]. Not
-                             * impossible, but seems unnecessary considering
-                             * the excellent agreement with O(eps^3), which
-                             * should be always used.
-                             */
-                             step = weight*getStepPerFraction(imed,Eb,Ee);
-                           }
-                           else{// use pre-computed values of 1/Lmid
-                            step = weight*Lmid_i[j + imed*flu_nbin];
-                           }
-                           aux->score(j,step);
-                           if (score_p) 
-                              aux_p->score(j,step);
-                           if (flu_s){
-                             auxT->score(ir,step*DE[j]);
-                             if (score_p)
-                                auxT_p->score(ir,step*DE[j]);
-                           }
-                           else{
-                             auxT->score(ir,step);
-                             if (score_p) 
-                                auxT_p->score(ir,step);
-                           }
-                        }
-                    }
+#ifndef USETVSTEP
                  }
-                 /***************************************************
-                  * -----------------------
-                  * Approach B (FLURZnrc):
-                  * ----------------------
-                  * Path length at each energy interval from energy
-                  * deposited edep and total particle step tvstep. It
-                  * assumes stopping power constancy along the particle's
-                  * step. It might introduce artifacts if ESTEPE or the
-                  * scoring bin width are too large.
-                  *
-                  * BEWARE: For this approach to work, no range rejection
-                  * ------  nor Russian Roulette should be used.
-                  **************************************************/
+#endif             
+
+                 EGS_Float Eb = app->top_p.E - app->getRM(),
+                           Ee = Eb - edep;
+    
+                 EGS_Float xb, xe;
+                 if( flu_s ) {
+                     xb = log(Eb);
+                     if( Ee > 0 )
+                         xe = log(Ee);
+                     else xe = -15;
+                 }
                  else{
-                    EGS_Float step, wtstep = weight*app->getTVSTEP()/edep;
-                    // Initial and final energies in same bin
-                    if( jb == je ){
-                      step = wtstep*(ab-ae);
-                      aux->score(jb,step);
-                      if (score_p) 
-                         aux_p->score(jb,step);
-                      if (flu_s){
-                        auxT->score(ir,step*DE[jb]);
-                        if (score_p)
-                           auxT_p->score(ir,step*DE[jb]);
-                      }
-                      else{
-                        auxT->score(ir,step);
-                        if (score_p) 
-                           auxT_p->score(ir,step);
-                      }
-                    }
-                    else {
-                        // First bin
-                        step = wtstep*ab;
-                        aux->score(jb,step);
-                        if (score_p)
-                           aux_p->score(jb,step);
-                        if (flu_s){
-                          auxT->score(ir,step*DE[jb]);
-                          if (score_p)
-                             auxT_p->score(ir,step*DE[jb]);
-                        }
-                        else{
-                          auxT->score(ir,step);
-                          if (score_p)
-                             auxT_p->score(ir,step);
-                        }
-                        // Last bin
-                        step = wtstep*(1-ae);
-                        aux->score(je,step);
-                        if (score_p)
-                           aux_p->score(je,step);
-                        if (flu_s){
-                          auxT->score(ir,step*DE[je]);
-                          if (score_p)
-                             auxT_p->score(ir,step*DE[je]);
-                        }
-                        else{
-                          auxT->score(ir,step);
-                          if (score_p) 
-                             auxT_p->score(ir,step);
-                        }
-                        // intermediate bins
-                        for(int j=je+1; j<jb; j++){
-                            aux->score(j,wtstep);
-                            if (score_p)
-                               aux_p->score(j,wtstep);
+                   xb = Eb; xe = Ee;
+                 }
+                 /**********************************************************/
+                 /* If not out of bounds, proceed with rest of calculation */
+                 /**********************************************************/
+                 if( xb > flu_xmin && xe < flu_xmax ) {
+                     EGS_Float ab, ae; int jb, je;
+                     /* Fraction of the initial bin covered */
+                     if( xb < flu_xmax ) {
+                         ab = flu_a*xb + flu_b; jb = (int) ab;
+                         /* Variable bin-width for log scale*/
+                         if (flu_s){
+                            ab = (Eb*a_const[jb]-1)*r_const;
+                         }
+                         else{ ab -= jb;}
+                     }
+                     else { // particle's energy above Emax
+                         xb = flu_xmax; ab = 1; jb = flu_nbin - 1; 
+                     }
+                     /* Fraction of the final bin covered */
+                     if( xe > flu_xmin ) {
+                         ae = flu_a*xe + flu_b; je = (int) ae;
+                         /* Variable bin-width for log scale*/
+                         if (flu_s){
+                            ae = (Ee*a_const[je]-1)*r_const;
+                         }
+                         else{ ae -= je; }
+                     }
+                     else { xe = flu_xmin; ae = 0; je = 0; }// extends below Emin
+       
+#ifdef DEBUG 
+                     if (jb == je) 
+                       one_bin++;
+                     else{          
+                       multi_bin++;
+                     }
+    
+                     binDist->score(jb-je,weight);
+    
+                     EGS_Float totStep = 0, the_step = app->getTVSTEP();
+#endif                            
+     
+                     /************************************************
+                      * Approach A:
+                      * -----------
+                      * Uses either an O(3) or O(5) series expansion of the
+                      * integral of the inverse of the stopping power with
+                      * respect to energy. The stopping power is represented
+                      * as a linear interpolation over a log energy grid. It
+                      * accounts for stopping power variation along the particle's
+                      * step within the resolution of the scoring array. This
+                      * is more accurate than the method used in FLURZnrc albeit
+                      * about 10% slower in electron beam cases.
+                      *
+                      * BEWARE: For this approach to work, no range rejection
+                      * ------  nor Russian Roulette should be used.
+                      *
+                      ************************************************/
+                     if ( flu_stpwr ){
+                        int imed = app->getMedium(ir);
+                        // Initial and final energies in same bin
+                        EGS_Float step;
+                        if( jb == je ){
+                            step = weight*(ab-ae)*getStepPerEnergyLoss(imed,xb,xe);
+#ifdef DEBUG
+                                totStep += step;
+#endif                            
+                            /* Differential fluence */
+                            if ( score_spe ){
+                               aux->score(jb,step);
+                               if (score_p)
+                                  aux_p->score(jb,step);
+                            }
+#ifndef USETVSTEP
+                            /* Integral fluence */
                             if (flu_s){
-                              auxT->score(ir,wtstep*DE[j]);
-                              if (score_p)
-                                 auxT_p->score(ir,wtstep*DE[j]);
+                               auxT->score(ir,step*DE[jb]);
+                               if (score_p)
+                                  auxT_p->score(ir,step*DE[jb]);
                             }
                             else{
-                              auxT->score(ir,wtstep);
-                              if (score_p)
-                                 auxT_p->score(ir,wtstep);
+                               auxT->score(ir,step);
+                               if (score_p) 
+                                  auxT_p->score(ir,step);
+                            }
+#endif                        
+                        }
+                        else {
+    
+                            // First bin
+    
+                            Ee = flu_xmin + jb*flu_a_i; Eb=xb;
+                            step = weight*ab*getStepPerEnergyLoss(imed,Eb,Ee);
+#ifdef DEBUG
+                                totStep += step;
+#endif                            
+                            /* Differential fluence */
+                            if ( score_spe ){
+                               aux->score(jb,step);
+                               if (score_p) 
+                                  aux_p->score(jb,step);
+                            }
+#ifndef USETVSTEP
+                            /* Integral fluence */
+                            if (flu_s){
+                               auxT->score(ir,step*DE[jb]);
+                               if (score_p)
+                                  auxT_p->score(ir,step*DE[jb]);
+                            }
+                            else{
+                               auxT->score(ir,step);
+                               if (score_p)
+                                  auxT_p->score(ir,step);
+                            }
+#endif                            
+    
+                            // Last bin
+    
+                            Ee = xe; Eb = flu_xmin+(je+1)*flu_a_i;
+                            step = weight*(1-ae)*getStepPerEnergyLoss(imed,Eb,Ee);
+#ifdef DEBUG
+                                totStep += step;
+#endif                            
+                            /* Differential fluence */
+                            if ( score_spe ){
+                               aux->score(je,step);
+                               if (score_p)
+                                  aux_p->score(je,step);
+                            }
+#ifndef USETVSTEP
+                            /* Integral fluence */
+                            if (flu_s){
+                               auxT->score(ir,step*DE[je]);
+                               if (score_p) 
+                                  auxT_p->score(ir,step*DE[je]);
+                            }
+                            else{
+                               auxT->score(ir,step);
+                               if (score_p)
+                                  auxT_p->score(ir,step);
+                            }
+#endif                            
+    
+                            // intermediate bins
+    
+                            for(int j=je+1; j<jb; j++){
+                               if (flu_stpwr == stpwrO5){
+                                 Ee = Eb; Eb = flu_xmin + (j+1)*flu_a_i;
+                                /* O(eps^5) would require more pre-computed values
+                                 * than just 1/Lmid. One requires lnEmid[i] to get
+                                 * the b parameter and eps[i]=1-E[i]/E[i+1]. Not
+                                 * impossible, but seems unnecessary considering
+                                 * the excellent agreement with O(eps^3), which
+                                 * should be always used.
+                                 */
+                                 step = weight*getStepPerEnergyLoss(imed,Eb,Ee);
+                               }
+                               else{// use pre-computed values of 1/Lmid
+                                step = weight*Lmid_i[j + imed*flu_nbin];
+                               }
+#ifdef DEBUG
+                                totStep += step;
+#endif                            
+                               /* Differential fluence */
+                               if ( score_spe ){
+                                  aux->score(j,step);
+                                  if (score_p) 
+                                     aux_p->score(j,step);
+                               }
+#ifndef USETVSTEP
+                               /* Integral fluence */
+                               if (flu_s){
+                                 auxT->score(ir,step*DE[j]);
+                                 if (score_p)
+                                    auxT_p->score(ir,step*DE[j]);
+                               }
+                               else{
+                                 auxT->score(ir,step);
+                                 if (score_p) 
+                                    auxT_p->score(ir,step);
+                               }
+#endif                            
                             }
                         }
-                    }
+                     }
+                     /***************************************************
+                      * -----------------------
+                      * Approach B (FLURZnrc):
+                      * ----------------------
+                      * Path length at each energy interval from energy
+                      * deposited edep and total particle step tvstep. It
+                      * assumes stopping power constancy along the particle's
+                      * step. It might introduce artifacts if ESTEPE or the
+                      * scoring bin width are too large.
+                      *
+                      * BEWARE: For this approach to work, no range rejection
+                      * ------  nor Russian Roulette should be used.
+                      **************************************************/
+                     else{
+                        EGS_Float step, wtstep = weight*app->getTVSTEP()/edep;
+                        // Initial and final energies in same bin
+                        if( jb == je ){
+                          step = wtstep*(ab-ae);
+#ifdef DEBUG
+                                totStep += step;
+#endif                
+                          /* Differential fluence */
+                          if ( score_spe ){
+                             aux->score(jb,step);
+                             if (score_p) 
+                                aux_p->score(jb,step);
+                          }
+#ifndef USETVSTEP
+                          /* Integral fluence */
+                          if (flu_s){
+                            auxT->score(ir,step*DE[jb]);
+                            if (score_p)
+                               auxT_p->score(ir,step*DE[jb]);
+                          }
+                          else{
+                            auxT->score(ir,step);
+                            if (score_p) 
+                               auxT_p->score(ir,step);
+                          }
+#endif                
+                        }
+                        else {
+    
+                            // First bin
+    
+                            step = wtstep*ab;
+#ifdef DEBUG
+                                totStep += step;
+#endif                            
+                            /* Differential fluence */
+                            if ( score_spe ){
+                               aux->score(jb,step);
+                               if (score_p)
+                                  aux_p->score(jb,step);
+                            }
+#ifndef USETVSTEP
+                            /* Integral fluence */
+                            if (flu_s){
+                              auxT->score(ir,step*DE[jb]);
+                              if (score_p)
+                                 auxT_p->score(ir,step*DE[jb]);
+                            }
+                            else{
+                              auxT->score(ir,step);
+                              if (score_p)
+                                 auxT_p->score(ir,step);
+                            }
+#endif                            
+    
+                            // Last bin
+    
+                            step = wtstep*(1-ae);
+#ifdef DEBUG
+                                totStep += step;
+#endif                            
+                            /* Differential fluence */
+                            if ( score_spe ){
+                               aux->score(je,step);
+                               if (score_p)
+                                  aux_p->score(je,step);
+                            }
+#ifndef USETVSTEP
+                            /* Integral fluence */
+                            if (flu_s){
+                              auxT->score(ir,step*DE[je]);
+                              if (score_p)
+                                 auxT_p->score(ir,step*DE[je]);
+                            }
+                            else{
+                              auxT->score(ir,step);
+                              if (score_p) 
+                                 auxT_p->score(ir,step);
+                            }
+#endif                            
+                            // intermediate bins
+                            for(int j=je+1; j<jb; j++){
+#ifdef DEBUG
+                                totStep += wtstep;
+#endif                            
+                                /* Differential fluence */
+                                if ( score_spe ){
+                                   aux->score(j,wtstep);
+                                   if (score_p)
+                                      aux_p->score(j,wtstep);
+                                }
+#ifndef USETVSTEP
+                                /* Integral fluence */
+                                if (flu_s){
+                                  auxT->score(ir,wtstep*DE[j]);
+                                  if (score_p)
+                                     auxT_p->score(ir,wtstep*DE[j]);
+                                }
+                                else{
+                                  auxT->score(ir,wtstep);
+                                  if (score_p)
+                                     auxT_p->score(ir,wtstep);
+                                }
+#endif                            
+                            }
+                        }
+                     }
+    
+#ifdef DEBUG
+                     EGS_Float edep_step = totStep*flu_a_i, diff = edep_step/the_step;
+                     EGS_Float astep = step_a*the_step + step_b; int jstep = (int) astep;
+                     if (jstep < 0 || jstep > n_step_bins)
+                        egsFatal("\n**** EGS_VolumetricFluence::processEvent-> jstep = %d\n is out of bound!\n");
+                     stepDist->score(jstep,app->top_p.wt);
+                     relStepDiff->score(jstep,diff); eCases++;
+#endif                 
                  }
+#ifdef USETVSTEP
              }
+#endif                 
           }
        }
     }
@@ -859,22 +1004,20 @@ public:
      *         Other applications might use latch for other purposes!
      *********************************************************************/
     if ( score_primaries && ir >= 0 && !is_source[ir]){
-
        flagSecondaries( iarg, q );
-
     }
 
     return 0;
 
    };
 
-    /*! Computes path per energy bin-width traveled by a charged particle when
+    /*! Computes path per energy loss traveled by a charged particle when
      *  slowing down from Eb to Ee.
      *
      * Computes the path-length traveled while slowing down from energy Eb to energy
      * Ee, both energies falling in the same energy bin assuming full coverage.
-     * The returned value should be multiplied by the actual fraction of the
-     * energy bin covered by Eb-Ee.
+     * The returned value should be multiplied by the fraction of the
+     * energy bin covered by Eb-Ee to compute fluence per bin width.
      * If using a logarithmic energy interpolation, Eb and Ee are actually the
      * logarithms of the initial and final energies. The expression is based on
      * linear interpolation in a logarithmic energy grid as used in EGSnrc
@@ -882,7 +1025,7 @@ public:
      * function that is the result of the integration of the inverse of the stopping
      * power with respect to energy.
      */
-    EGS_Float getStepPerFraction( const int & imed,
+    EGS_Float getStepPerEnergyLoss( const int & imed,
                                       const EGS_Float & Eb,
                                       const EGS_Float & Ee){
         EGS_Float stpFrac, eps, lnEmid;
@@ -933,42 +1076,55 @@ else{
    void setCurrentCase(EGS_I64 ncase) {
         if( ncase != current_ncase ) {
             current_ncase = ncase;
-            if (flu){
+            fluT->setHistory(ncase);
+            if ( score_primaries )
+               fluT_p->setHistory(ncase);
+            if (score_spe){
               for (int j = 0; j < nreg; j++){
                   if ( is_sensitive[j] ) 
                      flu[j]->setHistory(ncase);
               }
-              fluT->setHistory(ncase);
-            }
-            if (flu_p){
-              for (int j = 0; j < nreg; j++){
-                  if ( is_sensitive[j] ) 
-                     flu_p[j]->setHistory(ncase);
+              if ( score_primaries ){
+                 for (int j = 0; j < nreg; j++){
+                     if ( is_sensitive[j] ) 
+                        flu_p[j]->setHistory(ncase);
+                 }
               }
-              fluT_p->setHistory(ncase);
             }
         }
 #ifdef DEBUG
         binDist->setHistory(ncase);
+        if ( scoring_charge ){
+           stepDist->setHistory(ncase);
+           relStepDiff->setHistory(ncase);
+        }
 #endif        
 
    };
    void resetCounter(){
       current_ncase = 0; 
-      if (flu){
-        for (int j = 0; j < nreg; j++)
+      fluT->reset();
+      if ( score_primaries ) 
+         fluT_p->reset();
+      if ( score_spe ){
+        for (int j = 0; j < nreg; j++){
             if ( is_sensitive[j] ) 
                flu[j]->reset();
-        fluT->reset();
-      }
-      if (flu_p){
-        for (int j = 0; j < nreg; j++)
-            if ( is_sensitive[j] ) 
-               flu_p[j]->reset();
-        fluT_p->reset();
+        }
+        
+        if ( score_primaries ){
+           for (int j = 0; j < nreg; j++){
+               if ( is_sensitive[j] ) 
+                  flu_p[j]->reset();
+           }
+        }
       }
 #ifdef DEBUG
       binDist->reset();
+      if ( scoring_charge ){
+         stepDist->reset();
+         relStepDiff->reset();
+      }
 #endif
    }
 
@@ -998,9 +1154,11 @@ private:
    EGS_Float      *DE;         // bin width of logarithmic scale
   /*****************************************************************/
 
+  EGS_I64 eCases;
+
   vector<EGS_Float> volume;    // volume of each scoring region
   /* Energy grid inputs */
-  EGS_Float flu_a_i;
+  //EGS_Float flu_a_i;
   /* Auxiliary input variables*/
   vector <EGS_Float> vol_list;       // Input list of region volumes
 
@@ -1008,6 +1166,11 @@ private:
   /* Debugging information */
   int one_bin, multi_bin;
   EGS_ScoringArray *binDist;  
+  EGS_ScoringArray *stepDist;  
+  EGS_ScoringArray *relStepDiff; // Relative difference between tvstep and edep-derived step
+  EGS_Float max_step;
+  EGS_Float step_a, step_b;
+  EGS_I32 n_step_bins;
 #endif
 
 };
