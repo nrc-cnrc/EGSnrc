@@ -3727,6 +3727,11 @@ IF(iarg=5 & i_phsp_out~=0 & ir(np)=irmax+1 & irold<ir(np))[
              w(np)=r_13(k_field)*u_temp + r_23(k_field)*v_temp +
                    r_33(k_field)*w_temp;
 
+           IF(i_iaea_in=1)[
+          "for IAEA phsp source we need to add SAD back to Z coordinate"
+                  z(np) = z(np) + iaea_SAD;
+           ]
+
            "Write the particle to a phsp"
            $DOSXYZ_WRITE_PHSP;
 
