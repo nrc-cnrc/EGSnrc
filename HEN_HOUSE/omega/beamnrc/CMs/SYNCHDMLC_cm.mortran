@@ -238,6 +238,13 @@
 "I>
 "I>            ORIENT_$SYNCHDMLC = 0 for leaves parallel to Y direction
 "I>                            = 1 for leaves parallel to X direction
+"I>                            = 2 same as 0 but with leaf numbering and cross-
+"I>                              sections reversed--Note: This makes the
+"I>                              +ve leaves equivalent to leaf bank A
+"I>                              -ve leaves equivalent to bank B in TrueBeam
+"I>                              specs
+"I>                            = 3 same as 1 but with leaf numbering and cross-
+"I>                              sections reversed similar to option 2
 "I>            NGROUP_$SYNCHDMLC = number of groups of adjacent leaves where
 "I>                              all leaves in a group are:
 "I>                              1. FULL leaves
@@ -488,19 +495,18 @@
 "I>
 "I>   Repeat 14 until coordinates of all leaves are defined once.  Leaves
 "I>   are numbered 1,2,...TOT_LEAF_$SYNCHDMLC, where numbering goes from leaf
-"I>   1 to leaf TOT_LEAF_$SYNCHDMLC. Convention is lower to upper or
-"I>   left to right depending on ORIENT_$SYNCHDMLC i.e from negative to
-"I>   positive.
+"I>   1 to leaf TOT_LEAF_$SYNCHDMLC. Convention is -ve to +ve 
+"I>   (ORIENT_$SYNCHDMLC=0,2) or +ve to -ve (ORIENT_$SYNCHDMLC=1,3) 
 "I>
 "I>  14a  NEG_$SYNCHDMLC, POS_$SYNCHDMLC, NUM_$SYNCHDMLC (2F15.5,I5)
 "I>
-"I>    NEG_$SYNCHDMLC:   Min. Y (ORIENT_$SYNCHDMLC=0) or X (ORIENT_$SYNCHDMLC=1)
-"I>                   of front opening in leaf I (ie the opening at
-"I>                   ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of rounded end
-"I>                   of leaf I if ENDTYPE=0.
-"I>    POS_$SYNCHDMLC:   Max. Y (ORIENT_$SYNCHDMLC=0) or X (ORIENT_$SYNCHDMLC=1)
-"I>                   of front opening in leaf I if ENDTYPE=1, or of
+"I>    NEG_$SYNCHDMLC:   Min. Y (ORIENT_$SYNCHDMLC=0,2) or X 
+"I>                   (ORIENT_$SYNCHDMLC=1,3) of front opening in leaf I (ie 
+"I>                   the opening at ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of 
 "I>                   rounded end of leaf I if ENDTYPE=0.
+"I>    POS_$SYNCHDMLC:   Max. Y (ORIENT_$SYNCHDMLC=0,2) or X 
+"I>                   (ORIENT_$SYNCHDMLC=1,3) of front opening in leaf I if 
+"I>                   ENDTYPE=1, or of rounded end of leaf I if ENDTYPE=0.
 "I>    NUM_$SYNCHDMLC:   Apply NEG_$SYNCHDMLC and POS_$SYNCHDMLC to leaves
 "I>                   I,...,I+NUM_$SYNCHDMLC-1.  Defaults to 1 if set <=0.
 "I>                   Defaults to TOT_LEAF_$SYNCHDMLC-I+1 if set >
@@ -535,13 +541,13 @@
 "I>                         number is compared to a random number on (0,1) at
 "I>                         the start of each history; if the random number is
 "I>                         <= INDEX_$SYNCHDMLC(I), then field I is used.
-"I>          NEG_$SYNCHDMLC:  Min. Y (ORIENT_$SYNCHDMLC=0) or
-"I>			      X (ORIENT_$SYNCHDMLC=1)
+"I>          NEG_$SYNCHDMLC:  Min. Y (ORIENT_$SYNCHDMLC=0,2) or
+"I>			      X (ORIENT_$SYNCHDMLC=1,3)
 "I>                         of front opening in leaf (ie the opening at
 "I>                         ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of rounded end
 "I>                         of leaf if ENDTYPE=0 for leaf J in field I.
-"I>          POS_$SYNCHDMLC:  Max. Y (ORIENT_$SYNCHDMLC=0) or
-"I> 			      X (ORIENT_$SYNCHDMLC=1)
+"I>          POS_$SYNCHDMLC:  Max. Y (ORIENT_$SYNCHDMLC=0,2) or
+"I> 			      X (ORIENT_$SYNCHDMLC=1,3)
 "I>                         of front opening in leaf if ENDTYPE=1, or of
 "I>                         rounded end of leaf if ENDTYPE=0 for leaf J in
 "I>                         field I.
@@ -575,10 +581,10 @@
 "I>                      rejection in leaf material when the particle X position
 "I>                      is < min X of all leaf openings (not including leaf
 "I>                      ends) or > max X of leaf openings (not including ends)
-"I>                      (ORIENT_$SYNCHDMLC=1) or if the particle Y position
+"I>                      (ORIENT_$SYNCHDMLC=1,3) or if the particle Y position
 "I>                      is < min Y of all leaf openings (not including leaf
 "I>                      ends) or > max Y of leaf openings (not including ends)
-"I>                      (ORIENT_$SYNCHDMLC=0). This approximation is designed
+"I>                      (ORIENT_$SYNCHDMLC=0,2). This approximation is designed
 "I>                      to make range rejection more efficient deep in the
 "I>                      leaves, while still preserving accurate transport
 "I>                      in the leaf ends.  Note that if you have significant
@@ -762,9 +768,19 @@ parameter (one = 1);
 IRL = IR(NP); "local region number (absolute)"
 IR_$SYNCHDMLC = IRL - IRSTART_$SYNCHDMLC + 1; "rel. local region number"
 "IR_$SYNCHDMLC = IRL - IRSTART_$SYNCHDMLC; rel. local region number"
-IF(ORIENT_$SYNCHDMLC=1) [
-    XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);]
-ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
+
+IF(ORIENT_$SYNCHDMLC=0)[
+    XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);
+]
+ELSEIF(ORIENT_$SYNCHDMLC=1)[
+    XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);
+]
+ELSEIF(ORIENT_$SYNCHDMLC=2)[
+    XYL(1)=-X(NP); XYL(2)=Y(NP);UVL(1)=-U(NP);UVL(2)=V(NP);
+]
+ELSEIF(ORIENT_$SYNCHDMLC=3)[
+    XYL(1)=-Y(NP); XYL(2)=X(NP);UVL(1)=-V(NP);UVL(2)=U(NP);
+]
 ;
 
 "write(*,*)' in howfar, ir, med ',IR_$SYNCHDMLC,med(IRL);
@@ -1090,9 +1106,18 @@ INTEGER NX,NY,NZ,   "T>Indices of subregions
 DOUBLE PRECISION   XYL(2), XYFL(2), ZFL, UVL(2), XoN, XoP, Zo, TEMP1, TEMP2,
                    TEMP3, TEMP4, HOLE;
 
-IF(ORIENT_$SYNCHDMLC=1)
-    [ XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);]
-ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);];
+IF(ORIENT_$SYNCHDMLC=0)[
+    XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);
+]
+ELSEIF(ORIENT_$SYNCHDMLC=1)[ 
+    XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);
+]
+ELSEIF(ORIENT_$SYNCHDMLC=2)[
+    XYL(1)=-X(NP); XYL(2)=Y(NP);UVL(1)=-U(NP);UVL(2)=V(NP);
+]
+ELSEIF(ORIENT_$SYNCHDMLC=3)[ 
+    XYL(1)=-Y(NP); XYL(2)=X(NP);UVL(1)=-V(NP);UVL(2)=U(NP);
+]
 IF (IDIR=1) [
  "particle entering this CM through front face (upstream)"
    IF(N_GAP_$SYNCHDMLC = 0) [ "no air gap this CM"
@@ -1208,12 +1233,12 @@ OUTPUT TITLE_$SYNCHDMLC;(' ',60A1);
 "II. CHOOSE THE SYNCHDMLC ORIENTATION "
 "============================== "
 
-OUTPUT; (' Input leaf orientation (0=parallel to y, 1=parallel to x) and '/
+OUTPUT; (' Input leaf orientation (0,2=parallel to y, 1,3=parallel to x) and '/
          ' no. of groups of leaves with equal width on one line'/' :',$);
 MINPUT ($SYNCHDMLC) ORIENT_$SYNCHDMLC, NGROUP_$SYNCHDMLC,
        MODE_$SYNCHDMLC; (3I5);
 OUTPUT ORIENT_$SYNCHDMLC,NGROUP_$SYNCHDMLC,MODE_$SYNCHDMLC; (3I5/);
-IF(ORIENT_$SYNCHDMLC~=1) [
+IF(ORIENT_$SYNCHDMLC<0 | ORIENT_$SYNCHDMLC>3) [
       ORIENT_$SYNCHDMLC=0;
       OUTPUT;(/' Orientation defaults to 0.'/);
  ];
@@ -2119,8 +2144,8 @@ IF(check_full_qtr) [ "Ya never know"
 " III. START POSITION OF LEAVES"
 " ============================="
 ;
-OUTPUT ZMIN_$SYNCHDMLC; (/' Input the starting X (ORIENT_$SYNCHDMLC=0) or '/
-         ' Y (ORIENT_$SYNCHDMLC=1) position at z = ',F12.5, ' cm : ', $);
+OUTPUT ZMIN_$SYNCHDMLC; (/' Input the starting X (ORIENT_$SYNCHDMLC=0,2) or '/
+         ' Y (ORIENT_$SYNCHDMLC=1,3) position at z = ',F12.5, ' cm : ', $);
 MINPUT ($SYNCHDMLC) START_$SYNCHDMLC; (F15.0);
 OUTPUT START_$SYNCHDMLC; (F12.5);
 
@@ -2611,8 +2636,8 @@ IF(TOT_LEAF_$SYNCHDMLC>0) [
      DO J = 1, 7 [
        SURPARA1_$SYNCHDMLC(I,J)=YREG_$SYNCHDMLC(I,J)/TEMP1;
      "OUTPUT I, J, YREG_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
-     write(*,*)' i, leafis, j, yreg ',i,LEAFTYPE_$SYNCHDMLC(I),j,
-            YREG_$SYNCHDMLC(I,J);
+     "write(*,*)' i, leafis, j, yreg ',i,LEAFTYPE_$SYNCHDMLC(I),j,"
+            "YREG_$SYNCHDMLC(I,J);"
      " OUTPUT I, J, SURPARA1_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
      ];"End of J Loop"
   ]; "End of K Loop"
@@ -2688,7 +2713,7 @@ IF(MODE_$SYNCHDMLC=1|MODE_$SYNCHDMLC=2)["dynamic or step-and-shoot leaf inputs"
 ]
 ELSE[
 OUTPUT; (' Input for MLC A and B leaf tips '/);
-IF(ORIENT_$SYNCHDMLC=1)[
+IF(ORIENT_$SYNCHDMLC=1 | ORIENT_$SYNCHDMLC=3)[
     IF(ENDTYPE_$SYNCHDMLC=1)[
       OUTPUT;(' Input min. X, max. X of top of opening in leaves,');
     ]
@@ -2809,7 +2834,7 @@ DO IR_$SYNCHDMLC = 1,N_$SYNCHDMLC ["loop through regions to get information"
 ;
 
 IF(IGNOREGAPS_$SYNCHDMLC=1 & IREJCT_GLOBAL>0)[
-   IF(ORIENT_$SYNCHDMLC=1)["leaves parallel to X"
+   IF(ORIENT_$SYNCHDMLC=1 | ORIENT_$SYNCHDMLC=3)["leaves parallel to X"
        OUTPUT;(/' *******Range rejection in $SYNCHDMLC will ignore all'/
                ' air gaps if the particle is in the leaves and has'/
                ' X < min. X of leaf openings (not including leaf ends)'/
@@ -3345,7 +3370,7 @@ IF(N_GAP_$SYNCHDMLC~=0) [
                        ZMIN_$SYNCHDMLC-Z_min_CM(ICM_$SYNCHDMLC);
   ];
 WRITE(IOUTLIST,122) ZTHICK_$SYNCHDMLC;
-IF(ORIENT_$SYNCHDMLC~=0) [
+IF(ORIENT_$SYNCHDMLC~=0 & ORIENT_$SYNCHDMLC~=2) [
    WRITE(IOUTLIST,123) 'X';
 ]
 ELSE[
@@ -3376,7 +3401,7 @@ WRITE(IOUTLIST,128) (LEAFWIDTH_$SYNCHDMLC(I),I=1,3),
                      HOLEPOS_ISO_$SYNCHDMLC,
                     (ZRAILTOP_$SYNCHDMLC(I),I=1,3),
                     (ZRAILBOT_$SYNCHDMLC(I),I=1,3);
-IF(ORIENT_$SYNCHDMLC~=0) [
+IF(ORIENT_$SYNCHDMLC~=0 & ORIENT_$SYNCHDMLC~=2) [
       WRITE(IOUTLIST,129)'Y','X';
  ]
 ELSE [
@@ -3451,7 +3476,7 @@ IF(N_GAP_$SYNCHDMLC~=0) [
  ];
 
 IF(IGNOREGAPS_$SYNCHDMLC=1 & IREJCT_GLOBAL>0)[
-  IF(ORIENT_$SYNCHDMLC=1)["leaves parallel to X"
+  IF(ORIENT_$SYNCHDMLC=1 | ORIENT_$SYNCHDMLC=3)["leaves parallel to X"
    WRITE(IOUTLIST,'(/'' *******Range rejection in $SYNCHDMLC will ignore all''/
                    '' air gaps if the particle is in the leaves and has''/
                    '' X < min. X of leaf openings (not including leaf ends)''/
@@ -3572,8 +3597,18 @@ IF(IR_$SYNCHDMLC=4) [ "in the air gap at the top"
   ]
 
 ELSE [
-  IF(ORIENT_$SYNCHDMLC=1) [ XYL1=Y(NP);XYL2=X(NP);UVL1=V(NP);UVL2=U(NP); ]
-  ELSE [ XYL1=X(NP);XYL2=Y(NP);UVL1=U(NP);UVL2=V(NP);];
+  IF(ORIENT_$SYNCHDMLC=0) [
+     XYL1=X(NP);XYL2=Y(NP);UVL1=U(NP);UVL2=V(NP);
+  ]
+  ELSEIF(ORIENT_$SYNCHDMLC=1) [
+     XYL1=Y(NP);XYL2=X(NP);UVL1=V(NP);UVL2=U(NP);
+  ]
+  ELSEIF(ORIENT_$SYNCHDMLC=2) [
+     XYL1=-X(NP);XYL2=Y(NP);UVL1=-U(NP);UVL2=V(NP);
+  ]
+  ELSEIF(ORIENT_$SYNCHDMLC=3) [
+     XYL1=-Y(NP);XYL2=X(NP);UVL1=-V(NP);UVL2=U(NP);
+  ]
 
   IF(IGNOREGAPS_$SYNCHDMLC=1 & XYL2 < MIN_PLANE_$SYNCHDMLC &
   XYL1 > SURPARA1_$SYNCHDMLC(1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1)) &

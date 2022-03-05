@@ -345,14 +345,30 @@ proc edit_SYNCHDMLC { id zmax } {
     # for range rejection in leaves
     frame $top.inp2 -bd 2
     frame $top.inp2.left
-    radiobutton $top.inp2.left.r1 -text "Leaves parallel to y"\
+    frame $top.inp2.left.ll
+    checkbutton $top.inp2.left.ll.help -bitmap @$GUI_DIR/help_icon.xbm \
+          -command "help_leaf_mfg_specs_synchdmlc [winfo parent $top.inp2.left]"
+    pack $top.inp2.left.ll.help -padx 5
+    frame $top.inp2.left.l
+    label $top.inp2.left.l.l1 -text {Leaves || to Y}
+    label $top.inp2.left.l.l2 -text {Leaves || to X}
+    pack $top.inp2.left.l.l1 $top.inp2.left.l.l2 -side top
+    frame $top.inp2.left.m
+    radiobutton $top.inp2.left.m.r1 -text "default orient."\
             -variable cmval($id,2,0) -value 0
-    radiobutton $top.inp2.left.r2 -text "Leaves parallel to x"\
+    radiobutton $top.inp2.left.m.r2 -text "default orient."\
             -variable cmval($id,2,0) -value 1
-    pack $top.inp2.left.r1 $top.inp2.left.r2 -side top
+    pack $top.inp2.left.m.r1 $top.inp2.left.m.r2 -side top
+    frame $top.inp2.left.r
+    radiobutton $top.inp2.left.r.r1 -text "mfg orient."\
+            -variable cmval($id,2,0) -value 2
+    radiobutton $top.inp2.left.r.r2 -text "mfg orient."\
+            -variable cmval($id,2,0) -value 3
+    pack $top.inp2.left.r.r1 $top.inp2.left.r.r2 -side top
+    pack $top.inp2.left.ll $top.inp2.left.l $top.inp2.left.m $top.inp2.left.r -side left
+
     frame $top.inp2.right
-    checkbutton $top.inp2.right.c1 -text "Ignore air gaps for range \
-                   rejection in leaves" -variable cmval($id,17,4)
+    checkbutton $top.inp2.right.c1 -text "Ignore air gaps for range rejection" -variable cmval($id,17,4)
     button $top.inp2.right.help -bitmap @$GUI_DIR/help_icon.xbm \
             -command "help_ignoregaps_synchdmlc [winfo parent $top.inp2.right]"
     pack $top.inp2.right.help $top.inp2.right.c1 -side right
@@ -735,7 +751,7 @@ proc define_synchdmlc_leaves { id } {
     frame $top.f -bd 10
     set w $top.f
 
-    if $cmval($id,2,0)==1 {
+    if {$cmval($id,2,0)==1 || $cmval($id,2,0)==3} {
         set porient X
         set xorient Y
     } else {
@@ -1938,7 +1954,7 @@ proc define_synchdmlc_openings { id } {
     frame $top.f -bd 10
     set w $top.f
 
-    if $cmval($id,2,0)==1 {
+    if {$cmval($id,2,0)==1 || $cmval($id,2,0)==3} {
 	set orientation X
     } else {
 	set orientation Y
@@ -2315,7 +2331,7 @@ proc draw_SYNCHDMLC { id } {
 
     # put the canvas up
     set ncan 3
-    set width 150.0
+    set width 180.0
     set canwidth [expr $width+150.0]
     set scrlheight [expr 2*$canwidth]
     set scrlwidth [expr 2*$canwidth]
@@ -2341,7 +2357,7 @@ proc draw_SYNCHDMLC { id } {
 
     # Put some text in the upper left corner, just to fill the gap.
     if {$cmval($id,2,2)==1 | $cmval($id,2,2)==2} {
-      .synchdmlc$id.show.frm.can create text 225 225 -text "xz\
+      .synchdmlc$id.show.frm.can create text 160 160 -text "xz\
             cross-section shows only those leaves that\
             are intersected by y=0, and yz cross-section shows only those\
             leaves intersected by x=0.  In the case where only a portion\
@@ -2353,9 +2369,9 @@ proc draw_SYNCHDMLC { id } {
 NOTE: This is a dynamic or step-and-shoot delivery, with leaf opening\
       coordinates defined in a file.  Leaf opening coordinates are shown for the\
       first field defined in this file."\
-            -font $helvfont -width 300
+            -font $helvfont -width 300 
     } else {
-    .synchdmlc$id.show.frm.can create text 225 225 -text "xz\
+    .synchdmlc$id.show.frm.can create text 160 160 -text "xz\
             cross-section shows only those leaves that\
 	    are intersected by y=0, and yz cross-section shows only those\
             leaves intersected by x=0.  In the case where only a portion\
@@ -2363,7 +2379,7 @@ NOTE: This is a dynamic or step-and-shoot delivery, with leaf opening\
             is shown.  The xy view is at a plane at Z=ZMIN\
             (straight leaf ends) or Z=ZMIN+ZTHICK/2 (cylindrical\
             leaf ends)."\
-	    -font $helvfont -width 300
+	    -font $helvfont -width 300 
     }
 
     set xscale [expr $width/double(abs($xrange(1)-$xrange(0)))]
@@ -2416,7 +2432,7 @@ NOTE: This is a dynamic or step-and-shoot delivery, with leaf opening\
     add_air $id .synchdmlc$id.show.frm.can.two $xrange(0) $zrange(0)\
 	    $xscale $zscale $l $m
 
-    if $cmval($id,2,0)==0 {
+    if {$cmval($id,2,0)==0 || $cmval($id,2,0)==2} {
 	add_SYNCHDMLC_sides $id $xscale $zscale $xrange(0) $zrange(0) $zrange(1)\
 		$l $m .synchdmlc$id.show.frm.can.two
     } else {
@@ -2458,7 +2474,7 @@ NOTE: This is a dynamic or step-and-shoot delivery, with leaf opening\
     add_air $id .synchdmlc$id.show.frm.can.three $yrange(0) $zrange(0)\
 	    $yscale $zscale $l $m
 
-    if $cmval($id,2,0)==0 {
+    if {$cmval($id,2,0)==0 || $cmval($id,2,0)==2} {
 	add_SYNCHDMLC_ends $id $yscale $zscale $yrange(0) $zrange(0) $zrange(1)\
 		$l $m .synchdmlc$id.show.frm.can.three
     } else {
@@ -2577,6 +2593,17 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
 	}
 	incr i
     }
+    #now flip leaf opening sequence if ORIENT=2 or 3
+    if {$cmval($id,2,0) == 2 || $cmval($id,2,0) == 3} {
+        for {set i 1} {$i <= $nleaf($id)/2} {incr i} {
+          set tmp_coord $neg($i)
+          set neg($i) $neg([expr $nleaf($id)-$i+1])
+          set neg([expr $nleaf($id)-$i+1]) $tmp_coord
+          set tmp_coord $pos($i)
+          set pos($i) $pos([expr $nleaf($id)-$i+1])
+          set pos([expr $nleaf($id)-$i+1]) $tmp_coord
+        }
+    }
 
     set color [lindex $colorlist $med(leaves)]
 
@@ -2635,7 +2662,7 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
     set wg(5) $cmval($id,31,2)
     set wtot(5) [expr $cmval($id,31,0)+$cmval($id,31,1)]
   }
-    if {$cmval($id,2,0)==1} {
+    if {$cmval($id,2,0)==1 || $cmval($id,2,0)==3} {
 	# leaves parallel to x
 	set lstart $cmval($id,9)
 	set rmin [expr (-$cmval($id,0)-$xmin)*$xscale+$l]
@@ -2645,9 +2672,17 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
             set color [lindex $colorlist $med(leaves)]
 
             set a [expr ($neg($i)-$xmin)*$xscale+$l]
-            set b [expr ($lstart-$ymin)*$yscale+$m]
+            if {$cmval($id,2,0)==3} {
+               set b [expr (-$lstart-$ymin)*$yscale+$m] 
+            } else {
+               set b [expr ($lstart-$ymin)*$yscale+$m]
+            }
             set c [expr ($pos($i)-$xmin)*$xscale+$l]
-            set d [expr ($lstart+$wtot($type($i))-$ymin)*$yscale+$m]
+            if {$cmval($id,2,0)==3} {
+               set d [expr (-($lstart+$wtot($type($i)))-$ymin)*$yscale+$m]
+            } else {
+               set d [expr ($lstart+$wtot($type($i))-$ymin)*$yscale+$m]
+            }
             $parent_w create rectangle $rmin $b $a $d -fill $color -outline black
             $parent_w create rectangle $rmax $b $c $d -fill $color -outline black
 
@@ -2657,10 +2692,19 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
                   #draw the air space
                   set color [lindex $colorlist $med(in)]
                   set a [expr ($neg($i)-$xmin)*$xscale+$l]
-                  set b [expr ($lstart+$wtot($type($i))-$ymin)*$yscale+$m]
+                  if {$cmval($id,2,0)==3} {
+                     set b [expr (-($lstart+$wtot($type($i)))-$ymin)*$yscale+$m]
+                  } else {
+                     set b [expr ($lstart+$wtot($type($i))-$ymin)*$yscale+$m]
+                  }
                   set c [expr ($pos($i)-$xmin)*$xscale+$l]
-                  set d [expr ($lstart+$wtot($type($i))+$cmval($id,10) \
+                  if {$cmval($id,2,0)==3} {
+                     set d [expr (-($lstart+$wtot($type($i))+$cmval($id,10) \
+                               -$wt($type([expr $i+1])))-$ymin)*$yscale+$m]
+                  } else {
+                     set d [expr ($lstart+$wtot($type($i))+$cmval($id,10) \
                                -$wt($type([expr $i+1]))-$ymin)*$yscale+$m]
+                  }
                   $parent_w create rectangle $rmin $b $a $d -fill $color -outline {}
                   $parent_w create rectangle $rmax $b $c $d -fill $color -outline {}
               }
@@ -2678,9 +2722,17 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
             # now make rectangles for the top view of the leaf
 
             set a [expr ($neg($i)-$ymin)*$yscale+$m]
-            set b [expr ($lstart-$xmin)*$xscale+$l]
+            if {$cmval($id,2,0)==2} {
+               set b [expr (-$lstart-$xmin)*$xscale+$l]
+            } else {
+               set b [expr ($lstart-$xmin)*$xscale+$l]
+            }
             set c [expr ($pos($i)-$ymin)*$yscale+$m]
-            set d [expr ($lstart+$wtot($type($i))-$xmin)*$xscale+$l]
+            if {$cmval($id,2,0)==2} {
+               set d [expr (-($lstart+$wtot($type($i)))-$xmin)*$xscale+$l]
+            } else {
+               set d [expr ($lstart+$wtot($type($i))-$xmin)*$xscale+$l]
+            }
             $parent_w create rectangle $b $rmax $d $c -fill $color -outline black
             $parent_w create rectangle $b $a $d $rmin -fill $color -outline black
             if {$i<$nleaf($id)} {
@@ -2689,10 +2741,19 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
                   #draw the air space
                   set color [lindex $colorlist $med(in)]
                   set a [expr ($neg($i)-$ymin)*$yscale+$m]
-                  set b [expr ($lstart-$xmin)*$xscale+$l]
+                  if {$cmval($id,2,0)==2} {
+                     set b [expr (-$lstart-$xmin)*$xscale+$l]
+                  } else {
+                     set b [expr ($lstart-$xmin)*$xscale+$l]
+                  }
                   set c [expr ($pos($i)-$ymin)*$yscale+$m]
-                  set d [expr ($lstart+$wtot($type($i))+$cmval($id,10) \
+                  if {$cmval($id,2,0)==2} {
+                     set d [expr (-($lstart+$wtot($type($i))+$cmval($id,10) \
+                               -$wt($type([expr $i+1])))-$xmin)*$xscale+$l]
+                  } else {
+                     set d [expr ($lstart+$wtot($type($i))+$cmval($id,10) \
                                -$wt($type([expr $i+1]))-$xmin)*$xscale+$l]
+                  }
                   $parent_w create rectangle $b $rmax $d $c -fill $color -outline {}
                   $parent_w create rectangle $b $a $d $rmin -fill $color -outline {}
               }
@@ -2791,6 +2852,17 @@ proc add_SYNCHDMLC_ends {id xscale zscale xmin zmin zmax l m parent_w} {
                  set pos($k) $cmval($id,14,1,$i)
              }
              incr i
+    }
+    #now flip leaf opening sequence if ORIENT=2 or 3
+    if {$cmval($id,2,0) == 2 || $cmval($id,2,0) == 3} {
+        for {set i 1} {$i <= $nleaf($id)/2} {incr i} {
+          set tmp_coord $neg($i)
+          set neg($i) $neg([expr $nleaf($id)-$i+1])
+          set neg([expr $nleaf($id)-$i+1]) $tmp_coord
+          set tmp_coord $pos($i)
+          set pos($i) $pos([expr $nleaf($id)-$i+1])
+          set pos([expr $nleaf($id)-$i+1]) $tmp_coord
+        }
     }
 
     #set up an array of widths and Z positions for the leaf types
@@ -3170,6 +3242,17 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
         }
         incr i
     }
+    #now flip leaf opening sequence if ORIENT=2 or 3
+    if {$cmval($id,2,0) == 2 || $cmval($id,2,0) == 3} {
+        for {set i 1} {$i <= $nleaf($id)/2} {incr i} {
+          set tmp_coord $neg($i)
+          set neg($i) $neg([expr $nleaf($id)-$i+1])
+          set neg([expr $nleaf($id)-$i+1]) $tmp_coord 
+          set tmp_coord $pos($i)     
+          set pos($i) $pos([expr $nleaf($id)-$i+1])
+          set pos([expr $nleaf($id)-$i+1]) $tmp_coord
+        }
+    }
 
     # set up an array of leaf types
         set k 0; #leaf k
@@ -3542,6 +3625,11 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
             set y($j) [max_nrc $rmin $y($j)]
             set y($j) [min_nrc $rmax $y($j)]
 
+            #flip cross-sections around Z if ORIENT = 2 or 3 (hope this works!)
+            if {$cmval($id,2,0)==2 || $cmval($id,2,0)==3} {
+                set y($j) [expr -1*$y($j)]
+            }
+            
             # set y and z scale and relative position
             set y($j) [expr ($y($j)-$ymin)*$yscale+$l]
             set z($j) [expr ($z($j)-$zmin)*$zscale+$m]
@@ -3563,6 +3651,9 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
             set y($j) [expr ($ls+$hy($type($i),$j))*($z($j)-$zf)/($ztop-$zf)]
             set y($j) [max_nrc $rmin $y($j)]
             set y($j) [min_nrc $rmax $y($j)]
+            if {$cmval($id,2,0)==2 || $cmval($id,2,0)==3} {
+                set y($j) [expr -1*$y($j)]
+            }
 
             # set y and z scale and relative position
             set y($j) [expr ($y($j)-$ymin)*$yscale+$l]
@@ -3637,6 +3728,23 @@ recommended that you run with this option off (IGNOREGAPS=0; the default)\
 to have exact transport throughout the entire multi-leaf collimator.}
     help_dialog $w.help "Help" $text info 0 OK
 }
+
+proc help_leaf_mfg_specs_synchdmlc { w } {
+
+    set text {
+Choose "default orientation" for leaf cross-sections and numbering as shown in\
+the BEAMnrc manual for leaves parallel to Y (ORIENT=0) or X (ORIENT=1).  Choose\
+"mfg orientation" to reflect leaves parallel to Y about the X-axis (ORIENT=2)\
+or to reflect leaves parallel to X about the Y-axis (ORIENT=3).  The\
+"mfg orientation" option effectively reflects leaf banks so that the MLC\
+coordinate system accords with that used in the manufacturer (Varian)\
+specifications for the 120MLC and HD120 multileaf collimators.\
+Note that because the leaf banks have been reflected, leaf opening sequences\
+are automaticaly "flipped," so that opening coordinates for leaf i are instead\
+applied to leaf N-i+1, where N is the total no. of leaves.  See the BEAMnrc\
+Manual for more details.}
+    help_dialog $w.help "Help" $text info 0 OK
+} 
 
 proc help_screwdist { w } {
 
