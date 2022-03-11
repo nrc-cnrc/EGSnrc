@@ -1180,7 +1180,9 @@ EGS-IO/;
 DOUBLE PRECISION  NEG_$SYNCHDMLC,     "T>Leaf B tip
                   POS_$SYNCHDMLC,     "T>Leaf A Tip
                   TEMP1,
-                  TEMP2;
+                  TEMP2,
+                  tmp_coord;          "a variable to hold values while"
+                                      "reversing leaf opening definitions"
 
 INTEGER I,J,K,L,        "T>DO loop indices
         IRA,            "T>Absolute region number
@@ -2700,6 +2702,23 @@ IF(MODE_$SYNCHDMLC=1|MODE_$SYNCHDMLC=2)["dynamic or step-and-shoot leaf inputs"
        ]
        J=K;
      ]WHILE(J<=TOT_LEAF_$SYNCHDMLC);
+     IF(ORIENT_$SYNCHDMLC>=2)[
+       "reverse order of leaf opening coordinates"
+       DO K=1,TOT_LEAF_$SYNCHDMLC/2[
+         tmp_coord = LEAFNEG_$SYNCHDMLC(K+(I-1)*TOT_LEAF_$SYNCHDMLC);
+         LEAFNEG_$SYNCHDMLC(K+(I-1)*TOT_LEAF_$SYNCHDMLC) =
+             LEAFNEG_$SYNCHDMLC((TOT_LEAF_$SYNCHDMLC-K+1)+
+                      (I-1)*TOT_LEAF_$SYNCHDMLC);
+         LEAFNEG_$SYNCHDMLC((TOT_LEAF_$SYNCHDMLC-K+1)+
+                      (I-1)*TOT_LEAF_$SYNCHDMLC) = tmp_coord;
+         tmp_coord = LEAFPOS_$SYNCHDMLC(K+(I-1)*TOT_LEAF_$SYNCHDMLC);
+         LEAFPOS_$SYNCHDMLC(K+(I-1)*TOT_LEAF_$SYNCHDMLC) =
+             LEAFPOS_$SYNCHDMLC((TOT_LEAF_$SYNCHDMLC-K+1)+
+                      (I-1)*TOT_LEAF_$SYNCHDMLC);
+         LEAFPOS_$SYNCHDMLC((TOT_LEAF_$SYNCHDMLC-K+1)+
+                      (I-1)*TOT_LEAF_$SYNCHDMLC) = tmp_coord;
+       ]
+     ]   
   ]
   CLOSE(UNIT=mlc_unit);
 
@@ -2761,6 +2780,17 @@ LOOP[
   ]
   I=J;
 ]WHILE(I<=TOT_LEAF_$SYNCHDMLC);"End of Coordinate inputs for || direction "
+IF(ORIENT_$SYNCHDMLC>=2)[
+  "reverse leaf opening definitions"
+  DO I=1,TOT_LEAF_$SYNCHDMLC/2 [
+    tmp_coord = LEAFB_$SYNCHDMLC(I);
+    LEAFB_$SYNCHDMLC(I) = LEAFB_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC-I+1);
+    LEAFB_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC-I+1) = tmp_coord;
+    tmp_coord = LEAFA_$SYNCHDMLC(I);
+    LEAFA_$SYNCHDMLC(I) = LEAFA_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC-I+1);
+    LEAFA_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC-I+1) = tmp_coord;
+  ]
+] 
 
 IF(ENDTYPE_$SYNCHDMLC=1)[
 DO I=1, TOT_LEAF_$SYNCHDMLC [
