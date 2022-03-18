@@ -713,116 +713,10 @@ ELSE ["inside leaf bank"
 ;}
 ;
 
-" $SYNCHDMLC_MINDISTANCE;            "
-"===============================   "
-" The following macro will give the nearest distance the particle"
-" can travel along its given direction before it strikes the boundary"
-" in the x, y or z direction."
-"{P1}: The change value for ir region #"
-
-REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
-  "Note: some of these will underestimate dZ when input dimension"
-  "restrictions are overridden--this should not result in transport"
-  "errors, but will potentially slow transport"
-  IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
-                                   "Target leaf"
-
-    IF((NY=1|NY=2) & NZ<=3) [ZLHS=1; ZRHS=4;]
-    ELSEIF(NY=1 & NZ=5) [ZLHS=5; ZRHS=6;]
-    ELSEIF(NY=1 & NZ>=6) [ZLHS=6; ZRHS=10;]
-    ELSEIF(NZ=4) [ZLHS=4; ZRHS=5;]
-    ELSEIF((NY=2|NY=3) & NZ>=8) [ZLHS=8; ZRHS=10;]
-    ELSEIF((NY=3|NY=4|NY=5) & NZ=1) [ZLHS=1; ZRHS=2;]
-    ELSEIF((NY=3|NY=4|NY=5) & NZ=2) [ZLHS=2; ZRHS=3;]
-    ELSEIF(NY>=3 & NZ=3) [ZLHS=3; ZRHS=4;]
-    ELSEIF((NY=2|NY=3) & (NZ=5|NZ=6|NZ=7)) [ZLHS=5; ZRHS=8;]
-    ELSEIF(NY=4 & (NZ=5|NZ=6|NZ=7|NZ=8)) [ZLHS=5; ZRHS=9;]
-    ELSEIF(NY=4 & NZ=9) [ZLHS=9; ZRHS=10;]
-    ELSEIF((NY=5|NY=6) & (NZ=5|NZ=6)) [ZLHS=5; ZRHS=7;]
-    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
-    ELSEIF(NY=6 & NZ<=2) [
-      "dZ potentially overestimated--deal with it!"
-      IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1)[
-         IF(NZ=1)[ZLHS=1; ZRHS=2;]
-         ELSE[ZLHS=2; ZRHS=10;]
-      ]
-      ELSE[ZLHS=1; ZRHS=3;]
-    ]
-
-  ] ELSEIF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=1) ["Full leaf"
-
-    IF((NY=1|NY=2) & NZ=1) [ZLHS=1; ZRHS=2;]
-    ELSEIF(NY=1 & (NZ=2|NZ=3)) [ZLHS=2; ZRHS=4;]
-    ELSEIF(NY=1 & NZ>=4) [ZLHS=4; ZRHS=10;]
-    ELSEIF(NY=2 & (NZ=2|NZ=3|NZ=4|NZ=5)) [ZLHS=2; ZRHS=6;]
-    ELSEIF(NY>=2 & NZ=6) [ZLHS=6; ZRHS=7;]
-    ELSEIF(NY=2 & NZ>=8) [ZLHS=8; ZRHS=10;]
-    ELSEIF((NY=3|NY=4|NY=5) & (NZ=1|NZ=2)) [ZLHS=1; ZRHS=3;]
-    ELSEIF((NY=3|NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [ZLHS=3; ZRHS=6;]
-    ELSEIF(NY=3 & NZ>=8) [ZLHS=8; ZRHS=10;]
-    ELSEIF((NY=2|NY=3|NY=4) & NZ=7) [ZLHS=7; ZRHS=8;]
-    ELSEIF(NY=4 & NZ=8) [ZLHS=8; ZRHS=9;]
-    ELSEIF(NY=4 & NZ=9) [ZLHS=9; ZRHS=10;]
-    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
-    ELSEIF(NY=6 & NZ<=4) [ZLHS=1; ZRHS=5;]
-    ELSEIF(NY=6 & NZ=5) [ZLHS=5; ZRHS=6;]
-
-  ] ELSEIF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=3) [
-    "Half Isocenter leaf"
-
-    IF((NY=1|NY=2) & NZ<=3) [ZLHS=1; ZRHS=4;]
-    ELSEIF((NY=1|NY=2) & (NZ=4|NZ=5)) [ZLHS=4; ZRHS=6;]
-    ELSEIF(NZ=6) [ZLHS=6; ZRHS=7;]
-    ELSEIF(NY<=4 & NZ=7) [ZLHS=7; ZRHS=8;]
-    "potential overestimate of dZ below--correct it"
-    ELSEIF(NY=1 & NZ>=8) [
-      IF(I_LEAF_ALT_DEF_$SYNCHDMLC(3,1,1)=1)[
-        IF(NZ=9)[ZLHS=9; ZRHS=10;]
-        ELSE[ZLHS=1; ZRHS=9;]
-      ]
-      ELSE[ZLHS=8; ZRHS=10;]
-    ]
-    ELSEIF((NY=2|NY=3|NY=4) & NZ=8) [ZLHS=8; ZRHS=9;]
-    ELSEIF((NY=2|NY=3|NY=4) & NZ=9) [ZLHS=9; ZRHS=10;]
-    ELSEIF(NY=3 & NZ=1) [ZLHS=1; ZRHS=2;]
-    ELSEIF(NY=3 & (NZ=2|NZ=3|NZ=4|NZ=5)) [ZLHS=2; ZRHS=6;]
-    ELSEIF((NY=4|NY=5) & NZ<=2) [ZLHS=1; ZRHS=3;]
-    ELSEIF((NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [ZLHS=3; ZRHS=6;]
-    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
-    ELSEIF(NY=6 & NZ<=4) [ZLHS=1; ZRHS=5;]
-    ELSEIF(NY=6 & NZ=5) [ZLHS=5; ZRHS=6;]
-
-  ] ELSE [
-    "Quarter Isocenter leaf"
-
-    "!= from Half Isocenter"
-    IF((NY=1|NY=2) & NZ<=4) [ZLHS=1; ZRHS=5;]
-    "!= from Half Isocenter"
-    ELSEIF((NY=1|NY=2) & (NZ=5)) [ZLHS=5; ZRHS=6;]
-    ELSEIF(NZ=6) [ZLHS=6; ZRHS=7;]
-    ELSEIF(NY<=4 & NZ=7) [ZLHS=7; ZRHS=8;]
-    ELSEIF(NY=1 & NZ>=8) [ZLHS=8; ZRHS=10;]
-    ELSEIF((NY=2|NY=3|NY=4) & NZ=8) [ZLHS=8; ZRHS=9;]
-    ELSEIF((NY=2|NY=3|NY=4) & NZ=9) [ZLHS=9; ZRHS=10;]
-    ELSEIF(NY=3 & NZ=1) [ZLHS=1; ZRHS=2;]
-    ELSEIF(NY=3 & (NZ=2|NZ=3|NZ=4|NZ=5)) [ZLHS=2; ZRHS=6;]
-    ELSEIF((NY=4|NY=5) & NZ<=2) [ZLHS=1; ZRHS=3;]
-    ELSEIF((NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [ZLHS=3; ZRHS=6;]
-    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
-    "!= from Half Isocenter"
-    ELSEIF(NY=6 & NZ<=3) [ZLHS=1; ZRHS=4;]
-    "!= from Half Isocenter"
-    ELSEIF(NY=6 & (NZ=4|NZ=5)) [ZLHS=4; ZRHS=6;]
-  ]
-  IF(W(NP)~=0) [
-     ZP = (ZREG_$SYNCHDMLC(LEAFIS,ZRHS)-ZFL)/W(NP);
-     ZN = (ZREG_$SYNCHDMLC(LEAFIS,ZLHS)-ZFL)/W(NP);
-     IF( (ZP>=0.0) & (ZN>=0.0) ) [ ZDIST =MIN(ZP, ZN); ]
-     ELSE [ ZDIST = MAX(ZP, ZN); ]
-     "write(*,*)' zdist,leafis ',zdist,leafis;"
-   ]
-  ELSE [ ZDIST = 1.0E20; ];
-  IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
+"Macro to find I, LHS, J, RHS, indices of boundaries in Y-direction"
+"Put in a separate macro to prevent the parent macro from getting too long"
+REPLACE {$SYNCHDMLC_FIND_Y_BOUNDS;} WITH{;
+IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
      "Target leaf"
      IF(NZ=1) [
        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1) [
@@ -1190,56 +1084,303 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
            ]
         ]
      ]
-   ] ELSE [
+   ] 
+   ELSE[
      "Isocenter Quarter"
      IF(NZ=1) [
         IF(LEAFIS=1) [ LHS=1; J=LEAFIS;]
         ELSE [LHS=7; J=LEAFIS-1;]
+        "possibly use LHS=6?"
         IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [RHS=7; I=LEAFIS;]
         ELSE [RHS=1; I=LEAFIS+1;]
-     ] ELSEIF((NZ=2|NZ=3|NZ=4) & (NY=1|NY=2)) [
-        "!= from Half Isocenter - Block 2"
-        IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
-        ELSE [LHS=7; J=LEAFIS-1;]
-        RHS=3; I=LEAFIS;
-     ] ELSEIF(NZ=2 & NY=3) [
-        LHS=3; J=LEAFIS;
-        RHS=4; I=LEAFIS;
-     ] ELSEIF(NZ=2 & NY>=4) [
-        LHS=4; J=LEAFIS;
-        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [RHS=7; I=LEAFIS;]
-        ELSE [RHS=1; I=LEAFIS+1;]
-     ] ELSEIF(NZ=3 & (NY=3|NY=4|NY=5)) [
-        LHS=3; J=LEAFIS;
-        RHS=6; I=LEAFIS;
-     ] ELSEIF(NZ=3 & NY=6) [
-        "!= from Half Isocenter - Block 5"
-        LHS=6; J=LEAFIS;
-        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [RHS=7; I=LEAFIS;]
-        ELSE [RHS=1; I=LEAFIS+1;]
-     ] ELSEIF(NZ=4 & (NY>=3)) [
-        "!= from Half Isocenter - Block 7"
-        LHS=3; J=LEAFIS;
-        RHS=7; I=LEAFIS;
-     ] ELSEIF(NZ=5|NZ=6|NZ=7) [
+     ]
+     ELSEIF(NZ=2)[
+        IF(NY<=2)[
+           IF(LEAFIS=1) [ LHS=1; J=LEAFIS;]
+           ELSE [LHS=7; J=LEAFIS-1;]
+           RHS=3; I=LEAFIS;
+        ]
+        IF(NY=3)[
+           LHS=3; J=LEAFIS;
+           RHS=4; I=LEAFIS;
+        ]
+        ELSE[
+           LHS=4; J=LEAFIS;
+           IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [RHS=7; I=LEAFIS;]
+           ELSE [RHS=1; I=LEAFIS+1;]
+        ]
+     ]
+     ELSEIF(NZ=3)[
+        IF(NY<=2)[
+           IF(LEAFIS=1) [ LHS=1; J=LEAFIS;]
+           ELSE [
+              J=LEAFIS-1;
+              IF(ZFL>ZREG_$SYNCHDMLC(J,7))[
+                LHS = 5;
+              ]
+              ELSE[
+                LHS = 7;
+              ]
+           ]
+           RHS=3; I=LEAFIS;
+        ]
+        IF(NY<=5)[
+           LHS=3; J=LEAFIS;
+           RHS=6; I=LEAFIS;
+        ]
+        ELSE[
+           LHS=6; J=LEAFIS;
+           IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [RHS=7; I=LEAFIS;]
+           ELSE [
+             I=LEAFIS+1;
+             IF(ZFL<ZREG_$SYNCHDMLC(I,6))[
+                RHS=1;
+             ]
+             ELSE[
+                RHS=2;
+             ]
+           ]
+        ]
+     ]
+     ELSEIF(NZ=4)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[ 
+           IF(NY<=5)[
+              LHS=1; J=LEAFIS;
+              RHS=6; I=LEAFIS;
+           ]
+           ELSE[
+              LHS=6; J=LEAFIS;
+              IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [RHS=7; I=LEAFIS;]
+              ELSE [RHS=1; I=LEAFIS+1;]
+           ]
+        ]
+        ELSE[
+           IF(NY<=2)[
+              IF(LEAFIS=1) [ LHS=1; J=LEAFIS;]
+              ELSE [
+                 J=LEAFIS-1;
+                 IF(ZFL>ZREG_$SYNCHDMLC(J,7))[
+                   LHS = 5;
+                 ]
+                 ELSE[ 
+                   LHS = 7;
+                 ]
+              ]
+              RHS=3; I=LEAFIS;
+           ]
+           ELSE[
+              LHS=3; J=LEAFIS;
+              RHS=7; I=LEAFIS;
+           ]
+        ] 
+     ]
+     ELSEIF(NZ<=7)[
         LHS=1; J=LEAFIS;
         RHS=7; I=LEAFIS;
-     ] ELSEIF(NZ=8 & NY<=4) [
-        IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
-        ELSE [LHS=5; J=LEAFIS-1;]
-        RHS=5; I=LEAFIS;
-     ] ELSEIF(NZ=8 & NY>=5) [
-        LHS=5; J=LEAFIS;
-        RHS=7; I=LEAFIS;
-     ] ELSEIF(NZ=9 & NY=1) [
-       IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
-       ELSE [LHS=5; J=LEAFIS-1;]
-       RHS=2; I=LEAFIS;
-     ] ELSEIF(NZ=9 & NY>=2) [
-       LHS=2; J=LEAFIS;
-       RHS=7; I=LEAFIS;
      ]
-   ];
+     ELSEIF(NZ=8)[
+        IF(NY<=4)[
+           IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+           ELSE [LHS=5; J=LEAFIS-1;]
+           RHS=5; I=LEAFIS;
+        ]
+        ELSE[
+           LHS=5; J=LEAFIS;
+           RHS=7; I=LEAFIS;
+        ]
+     ]
+     ELSEIF(NZ=9)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,1,2)=1) [
+           IF(NY<=2)[
+              IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+              ELSE [LHS=5; J=LEAFIS-1;]
+              RHS=3; I=LEAFIS;
+           ]
+           ELSE[
+              LHS=3; J=LEAFIS;
+              RHS=7; I=LEAFIS;
+           ]    
+        ]
+        ELSE[
+           IF(NY=1)[
+              IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+              ELSE [LHS=5; J=LEAFIS-1;]
+              RHS=2; I=LEAFIS;
+           ]
+           ELSE[
+              LHS=2; J=LEAFIS;
+              RHS=7; I=LEAFIS;
+           ]
+        ]
+     ]
+];
+};
+
+" $SYNCHDMLC_MINDISTANCE;            "
+"===============================   "
+" The following macro will give the nearest distance the particle"
+" can travel along its given direction before it strikes the boundary"
+" in the x, y or z direction."
+"{P1}: The change value for ir region #"
+
+REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
+  "Note: some of these will underestimate dZ when input dimension"
+  "restrictions are overridden--this should not result in transport"
+  "errors, but will potentially slow transport"
+  IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
+                                   "Target leaf"
+
+    IF((NY=1|NY=2) & NZ<=3) [ZLHS=1; ZRHS=4;]
+    ELSEIF(NY=1 & NZ=5) [ZLHS=5; ZRHS=6;]
+    ELSEIF(NY=1 & NZ>=6) [ZLHS=6; ZRHS=10;]
+    ELSEIF(NZ=4) [ZLHS=4; ZRHS=5;]
+    ELSEIF((NY=2|NY=3) & NZ>=8) [ZLHS=8; ZRHS=10;]
+    ELSEIF((NY=3|NY=4|NY=5) & NZ=1) [ZLHS=1; ZRHS=2;]
+    ELSEIF((NY=3|NY=4|NY=5) & NZ=2) [ZLHS=2; ZRHS=3;]
+    ELSEIF(NY>=3 & NZ=3) [ZLHS=3; ZRHS=4;]
+    ELSEIF((NY=2|NY=3) & (NZ=5|NZ=6|NZ=7)) [ZLHS=5; ZRHS=8;]
+    ELSEIF(NY=4 & (NZ=5|NZ=6|NZ=7|NZ=8)) [ZLHS=5; ZRHS=9;]
+    ELSEIF(NY=4 & NZ=9) [ZLHS=9; ZRHS=10;]
+    ELSEIF((NY=5|NY=6) & (NZ=5|NZ=6)) [ZLHS=5; ZRHS=7;]
+    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
+    ELSEIF(NY=6 & NZ<=2) [
+      "dZ potentially overestimated--deal with it!"
+      IF(I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1)[
+         IF(NZ=1)[ZLHS=1; ZRHS=2;]
+         ELSE[ZLHS=2; ZRHS=10;]
+      ]
+      ELSE[ZLHS=1; ZRHS=3;]
+    ]
+
+  ] ELSEIF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=1) ["Full leaf"
+
+    IF((NY=1|NY=2) & NZ=1) [ZLHS=1; ZRHS=2;]
+    ELSEIF(NY=1 & (NZ=2|NZ=3)) [ZLHS=2; ZRHS=4;]
+    ELSEIF(NY=1 & NZ>=4) [ZLHS=4; ZRHS=10;]
+    ELSEIF(NY=2 & (NZ=2|NZ=3|NZ=4|NZ=5)) [ZLHS=2; ZRHS=6;]
+    ELSEIF(NY>=2 & NZ=6) [ZLHS=6; ZRHS=7;]
+    ELSEIF(NY=2 & NZ>=8) [ZLHS=8; ZRHS=10;]
+    ELSEIF((NY=3|NY=4|NY=5) & (NZ=1|NZ=2)) [ZLHS=1; ZRHS=3;]
+    ELSEIF((NY=3|NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [ZLHS=3; ZRHS=6;]
+    ELSEIF(NY=3 & NZ>=8) [ZLHS=8; ZRHS=10;]
+    ELSEIF((NY=2|NY=3|NY=4) & NZ=7) [ZLHS=7; ZRHS=8;]
+    ELSEIF(NY=4 & NZ=8) [ZLHS=8; ZRHS=9;]
+    ELSEIF(NY=4 & NZ=9) [ZLHS=9; ZRHS=10;]
+    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
+    ELSEIF(NY=6 & NZ<=4) [ZLHS=1; ZRHS=5;]
+    ELSEIF(NY=6 & NZ=5) [ZLHS=5; ZRHS=6;]
+
+  ] ELSEIF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=3) [
+    "Half Isocenter leaf"
+
+    IF((NY=1|NY=2) & NZ<=3) [ZLHS=1; ZRHS=4;]
+    ELSEIF((NY=1|NY=2) & (NZ=4|NZ=5)) [ZLHS=4; ZRHS=6;]
+    ELSEIF(NZ=6) [ZLHS=6; ZRHS=7;]
+    ELSEIF(NY<=4 & NZ=7) [ZLHS=7; ZRHS=8;]
+    "potential overestimate of dZ below--correct it"
+    ELSEIF(NY=1 & NZ>=8) [
+      IF(I_LEAF_ALT_DEF_$SYNCHDMLC(3,1,1)=1)[
+        IF(NZ=9)[ZLHS=9; ZRHS=10;]
+        ELSE[ZLHS=1; ZRHS=9;]
+      ]
+      ELSE[ZLHS=8; ZRHS=10;]
+    ]
+    ELSEIF((NY=2|NY=3|NY=4) & NZ=8) [ZLHS=8; ZRHS=9;]
+    ELSEIF((NY=2|NY=3|NY=4) & NZ=9) [ZLHS=9; ZRHS=10;]
+    ELSEIF(NY=3 & NZ=1) [ZLHS=1; ZRHS=2;]
+    ELSEIF(NY=3 & (NZ=2|NZ=3|NZ=4|NZ=5)) [ZLHS=2; ZRHS=6;]
+    ELSEIF((NY=4|NY=5) & NZ<=2) [ZLHS=1; ZRHS=3;]
+    ELSEIF((NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [ZLHS=3; ZRHS=6;]
+    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
+    ELSEIF(NY=6 & NZ<=4) [ZLHS=1; ZRHS=5;]
+    ELSEIF(NY=6 & NZ=5) [ZLHS=5; ZRHS=6;]
+
+  ] ELSE [
+    "Quarter Isocenter leaf"
+    IF(NY=1)[
+      IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[
+        IF(NZ<=3)[ZLHS=1; ZRHS=4;]
+        ELSEIF(NZ<=5)[ZLHS=4; ZRHS=6;]
+        ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
+        ELSEIF(NZ=7)[ZLHS=7; ZRHS=8;]
+        ELSE[ZLHS=8; ZRHS=10;]
+      ]
+      ELSE[
+        IF(NZ<=4)[ZLHS=1; ZRHS=5;]
+        ELSEIF(NZ=5)[ZLHS=5; ZRHS=6;]
+        ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
+        ELSEIF(NZ=7)[ZLHS=7; ZRHS=8;]
+        ELSE[ZLHS=8; ZRHS=10;]
+      ]
+    ]
+    ELSEIF(NY=2)[
+      IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[
+        IF(NZ<=3)[ZLHS=1; ZRHS=4;]
+        ELSEIF(NZ<=5)[ZLHS=4; ZRHS=6;]
+        ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
+        ELSEIF(NZ=7)[ZLHS=7; ZRHS=8;]
+        ELSEIF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,1,2)=1)[ZLHS=8; ZRHS=10;]
+        ELSEIF(NZ=8)[ZLHS=8; ZRHS=9;]
+        ELSE[ZLHS=9; ZRHS=10;]
+      ]
+      ELSE[
+        IF(NZ<=4)[ZLHS=1; ZRHS=5;]
+        ELSEIF(NZ=5)[ZLHS=5; ZRHS=6;]
+        ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
+        ELSEIF(NZ=7)[ZLHS=7; ZRHS=8;]
+        ELSEIF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,1,2)=1)[ZLHS=8; ZRHS=10;]
+        ELSEIF(NZ=8)[ZLHS=8; ZRHS=9;]
+        ELSE[ZLHS=9; ZRHS=10;]
+      ]
+    ]
+    ELSEIF(NY=3)[
+      IF(NZ=1)[ZLHS=1; ZRHS=2;]
+      ELSEIF(NZ<=5)[ZLHS=2; ZRHS=6;]
+      ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]  
+      ELSEIF(NZ=7)[ZLHS=7; ZRHS=8;]
+      ELSEIF(NZ=8)[ZLHS=8; ZRHS=9;]
+      ELSE[ZLHS=9; ZRHS=10;]
+    ]
+    ELSEIF(NY=4)[
+      IF(NZ<=2)[ZLHS=1; ZRHS=3;]
+      ELSEIF(NZ<=5)[ZLHS=3; ZRHS=6;]
+      ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
+      ELSEIF(NZ=7)[ZLHS=7; ZRHS=8;]
+      ELSEIF(NZ=8)[ZLHS=8; ZRHS=9;]
+      ELSE[ZLHS=9; ZRHS=10;]
+    ]
+    ELSEIF(NY=5)[
+      IF(NZ<=2)[ZLHS=1; ZRHS=3;]
+      ELSEIF(NZ<=5)[ZLHS=3; ZRHS=6;]
+      ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
+      ELSE[ZLHS=7; ZRHS=10;]
+    ]
+    ELSEIF(NY=6)[
+      IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[
+         IF(NZ<=4)[ZLHS=1; ZRHS=5;]
+         ELSEIF(NZ=5)[ZLHS=5; ZRHS=6;]
+         ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
+         ELSE[ZLHS=7; ZRHS=10;]
+      ]
+      ELSE[
+         IF(NZ<=3)[ZLHS=1; ZRHS=4;]
+         ELSEIF(NZ<=5)[ZLHS=4; ZRHS=6;]
+         ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
+         ELSE[ZLHS=7; ZRHS=10;]
+      ]
+    ] 
+  ]
+  IF(W(NP)~=0) [
+     ZP = (ZREG_$SYNCHDMLC(LEAFIS,ZRHS)-ZFL)/W(NP);
+     ZN = (ZREG_$SYNCHDMLC(LEAFIS,ZLHS)-ZFL)/W(NP);
+     IF( (ZP>=0.0) & (ZN>=0.0) ) [ ZDIST =MIN(ZP, ZN); ]
+     ELSE [ ZDIST = MAX(ZP, ZN); ]
+     "write(*,*)' zdist,leafis ',zdist,leafis;"
+   ]
+  ELSE [ ZDIST = 1.0E20; ];
+
+  $SYNCHDMLC_FIND_Y_BOUNDS;
+
   IF((UVL(1)-SURPARA1_$SYNCHDMLC(I,RHS)*W(NP))~ = 0 ) [
      YP = (SURPARA1_$SYNCHDMLC(I,RHS)*(ZFL-ZFOCUS_$SYNCHDMLC(1))-XYFL(1));
      YP = YP/(UVL(1) - SURPARA1_$SYNCHDMLC(I,RHS)*W(NP));
@@ -1252,7 +1393,7 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
   ELSE [ YN = 1.0E20; ];
   IF((YP>=0.0) & (YN>=0.0) ) [ YDIST =MIN(YP, YN); ]
   ELSE [ YDIST = MAX(YP,YN);];
-  "write(*,*)' ydist ',ydist;"
+  "write(*,*)' i,j, rhs, lhs, ydist ',i,j,rhs,lhs,ydist;"
  IF(ENDTYPE_$SYNCHDMLC = 1) ["focused leaf end"
       HOLE=HOLEPOS_$SYNCHDMLC(LEAFIS);
       TEMP3=LEAFB_$SYNCHDMLC(LEAFIS)-HOLE;

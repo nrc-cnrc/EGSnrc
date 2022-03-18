@@ -2489,11 +2489,16 @@ IF(TOT_LEAF_$SYNCHDMLC>0) [
        YREG_$SYNCHDMLC(I,1)=START_$SYNCHDMLC;
      ]
      ELSE[
+
        YLEAFEND=YREG_$SYNCHDMLC(I-1,7);
        "possible exceptions"
        IF(LEAFTYPE_$SYNCHDMLC(I-1)=2 & I_LEAF_ALT_DEF_$SYNCHDMLC(2,1,6)=1)[
           YLEAFEND=YREG_$SYNCHDMLC(I-1,6);
        ]
+       ELSEIF(LEAFTYPE_$SYNCHDMLC(I-1)=4 & I_LEAF_ALT_DEF_$SYNCHDMLC(4,1,6)=1)[
+          YLEAFEND=YREG_$SYNCHDMLC(I-1,6);
+       ]
+
        IF(LEAFTYPE_$SYNCHDMLC(I)=1)[
           YREG_$SYNCHDMLC(I,1)=YLEAFEND+LEAFGAP_$SYNCHDMLC-
                           WTONGUE_$SYNCHDMLC(1);
@@ -2585,11 +2590,18 @@ IF(TOT_LEAF_$SYNCHDMLC>0) [
      ]
      ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=4)["qtr target leaf"
        YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(4);
-       YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4);
        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(4,1,5)=1)[
+          YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4);
           YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,7)-WGROOVE_$SYNCHDMLC(4);
        ]
+       ELSEIF(I_LEAF_ALT_DEF_$SYNCHDMLC(4,1,6)=1)[
+          "this exception and the above are mutually exclusive"
+          YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2);
+          YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,6)+
+                            ABS(WRAILBOT_$SYNCHDMLC(4)-WRAILTOP_$SYNCHDMLC(4));
+       ]
        ELSE[
+          YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4);
           YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,7)-
                             ABS(WRAILBOT_$SYNCHDMLC(4)-WRAILTOP_$SYNCHDMLC(4));
        ]
@@ -2639,7 +2651,7 @@ IF(TOT_LEAF_$SYNCHDMLC>0) [
        SURPARA1_$SYNCHDMLC(I,J)=YREG_$SYNCHDMLC(I,J)/TEMP1;
      "OUTPUT I, J, YREG_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
      "write(*,*)' i, leafis, j, yreg ',i,LEAFTYPE_$SYNCHDMLC(I),j,"
-            "YREG_$SYNCHDMLC(I,J);"
+     "       YREG_$SYNCHDMLC(I,J);"
      " OUTPUT I, J, SURPARA1_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
      ];"End of J Loop"
   ]; "End of K Loop"
@@ -4037,26 +4049,98 @@ IF(LEAFIS~=0) [
       ]
     ] ELSE [
       "Quarter Isocenter leaf"
-
-      "!= from Half Isocenter"
-      IF((NY=1|NY=2) & NZ<=4) [I1=1; I2=5;]
-      "!= from Half Isocenter"
-      ELSEIF((NY=1|NY=2) & (NZ=5)) [I1=5; I2=6;]
-      ELSEIF(NZ=6) [I1=6; I2=7;]
-      ELSEIF(NY<=4 & NZ=7) [I1=7; I2=8;]
-      ELSEIF(NY=1 & NZ>=8) [I1=8; I2=10;]
-      ELSEIF((NY=2|NY=3|NY=4) & NZ=8) [I1=8; I2=9;]
-      ELSEIF((NY=2|NY=3|NY=4) & NZ=9) [I1=9; I2=10;]
-      ELSEIF(NY=3 & NZ=1) [I1=1; I2=2;]
-      ELSEIF(NY=3 & (NZ=2|NZ=3|NZ=4|NZ=5)) [I1=2; I2=6;]
-      ELSEIF((NY=4|NY=5) & NZ<=2) [I1=1; I2=3;]
-      ELSEIF((NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [I1=3; I2=6;]
-      ELSEIF((NY=5|NY=6) & NZ>=7) [I1=7; I2=10;]
-      "!= from Half Isocenter"
-      ELSEIF(NY=6 & NZ<=3) [I1=1; I2=4;]
-      "!= from Half Isocenter"
-      ELSEIF(NY=6 & (NZ=4|NZ=5)) [I1=4; I2=6;]
-
+      IF(NY=1) [
+        IF(NZ<=3) [I1=1; I2=4;]
+        ELSEIF(NZ<=5) [I1=4; I2=6;]
+        ELSEIF(NZ=6) [I1=6; I2=7;]
+        ELSEIF(NZ=7) [I1=7; I2=8;]
+        ELSE [I1=8; I2=10;]
+      ]
+      ELSEIF(NY=2) [
+        IF(NZ<=3) [I1=1; I2=4;]
+        ELSEIF(NZ<=5) [I1=4; I2=6;]
+        ELSEIF(NZ=6) [I1=6; I2=7;]
+        ELSEIF(NZ=7) [I1=7; I2=8;]
+        ELSE[
+          IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,1,2)=1)[
+            I1=8; I2=10;
+          ]
+          ELSE[
+            IF(NZ=8) [I1=8; I2=9;]
+            ELSE [I1=9; I2=10;]
+          ]
+        ]
+      ]
+      ELSEIF(NY=3) [
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[
+          IF(NZ=1) [I1=1; I2=2;]
+          ELSEIF(NZ=2)[I1=2; I2=6;]
+          ELSEIF(NZ=3) [I1=3; I2=6;]
+          ELSEIF(NZ<=5) [I1=4; I2=6;]
+          ELSEIF(NZ=6) [I1=6; I2=7;]
+          ELSEIF(NZ=7) [I1=7; I2=8;]
+          ELSEIF(NZ=8) [I1=8; I2=9;]
+          ELSE [I1=9; I2=10;]
+        ]
+        ELSE[ "Zg > Zt"
+          IF(NZ=1) [I1=1; I2=2;]
+          ELSEIF(NZ=2)[I1=2; I2=6;]
+          ELSEIF(NZ<=4) [I1=3; I2=6;]
+          ELSEIF(NZ=5) [I1=5; I2=6;]
+          ELSEIF(NZ=6) [I1=6; I2=7;]
+          ELSEIF(NZ=7) [I1=7; I2=8;]
+          ELSEIF(NZ=8) [I1=8; I2=9;]
+          ELSE [I1=9; I2=10;]
+        ]
+      ]
+      ELSEIF(NY=4) [
+        IF(NZ<=2) [I1=1; I2=3;]
+        ELSEIF(NZ=3) [I1=3; I2=6;]
+        ELSEIF(NZ=4) [I1=4; I2=6;]
+        ELSEIF(NZ=5) [I1=5; I2=6;]
+        ELSEIF(NZ=6) [I1=6; I2=7;]
+        ELSEIF(NZ=7) [I1=7; I2=8;]
+        ELSEIF(NZ=8) [I1=8; I2=9;]
+        ELSE [I1=9; I2=10;]
+      ]
+      ELSEIF(NY=5) [
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[
+          IF(NZ<=2) [I1=1; I2=3;]
+          ELSEIF(NZ<=4) [I1=3; I2=6;]
+          ELSEIF(NZ=5) [I1=5; I2=6;]
+          ELSEIF(NZ=6) [I1=6; I2=7;]
+          ELSEIF(NZ=7) [I1=7; I2=8;]
+          ELSEIF(NZ=8) [I1=7; I2=10;]
+          ELSE [I1=9; I2=10;]
+        ]
+        ELSE[
+          IF(NZ<=2) [I1=1; I2=3;]
+          ELSEIF(NZ=3) [I1=3; I2=6;]
+          ELSEIF(NZ<=5) [I1=4; I2=6;]
+          ELSEIF(NZ=6) [I1=6; I2=7;]
+          ELSEIF(NZ=7) [I1=7; I2=8;]
+          ELSEIF(NZ=8) [I1=7; I2=10;]
+          ELSE [I1=9; I2=10;]
+        ]
+      ]
+      ELSEIF(NY=6) [
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[
+          IF(NZ<=4) [I1=1; I2=5;]
+          ELSEIF(NZ=5) [I1=5; I2=6;]
+          ELSEIF(NZ=6) [I1=6; I2=7;]
+          ELSEIF(NZ=7) [I1=7; I2=8;]
+          ELSEIF(NZ=8) [I1=7; I2=10;]
+          ELSE [I1=9; I2=10;]
+        ]
+        ELSE[
+          IF(NZ<=3) [I1=1; I2=4;]
+          ELSEIF(NZ<=5) [I1=4; I2=6;]
+          ELSEIF(NZ=6) [I1=6; I2=7;]
+          ELSEIF(NZ=7) [I1=7; I2=8;]
+          ELSEIF(NZ=8) [I1=7; I2=10;]
+          ELSE [I1=9; I2=10;]
+        ]
+      ]
     ];
 
     DIST=MIN(ABS(ZREG_$SYNCHDMLC(LEAFIS,I1)-Z(NP)),
@@ -4284,7 +4368,7 @@ IF(LEAFIS~=0) [
         IF(NY<=2)[
            IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
            ELSE [
-              IF(Z(NP)>ZREG_$SYNCHDMLC(J,7))[
+              IF(Z(NP)>ZREG_$SYNCHDMLC(LEAFIS-1,7))[
                 TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);
               ]
               ELSE[
@@ -4300,8 +4384,8 @@ IF(LEAFIS~=0) [
         ELSE[
            TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
            IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
-           ELSE [
-             IF(Z(NP)<ZREG_$SYNCHDMLC(I,6))[
+           ELSE [ "ignores that LEAFIS+1 might be FULL"
+             IF(Z(NP)<ZREG_$SYNCHDMLC(LEAFIS+1,6))[
                 TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);
              ]
              ELSE[
@@ -4431,81 +4515,141 @@ IF(LEAFIS~=0) [
      ]
     ]
     ELSE ["Quarter Isocenter leaf"
-      "EH - because the quarter and half leaves are slightly different"
-      "     you will need a modification for NZ=4 and NY=6"
       IF(NZ=1) [
-        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
-        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);];
+        IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+        "possibly use LHS=6?"
         IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
-        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);];
-       ]
-      ELSEIF(((NZ=2|NZ=3) & (NY=1|NY=2)) |
-          ((NY<3) & (NZ=4) & LEAFTYPE_$SYNCHDMLC(LEAFIS)=5)) [
-        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
-        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);];
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
-       ]
-      ELSEIF(NZ=2 & NY=3) [
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,4);
-       ]
-      ELSEIF(NZ=2 & NY>=4) [
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,4);
-        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
-        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);];
-       ]
-      ELSEIF(NZ=3 & (NY=3|NY=4|NY=5)) [
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
-       ]
-      ELSEIF((NZ=3 & NY=6)
-              | (NZ=4 & NY=6 & (LEAFTYPE_$SYNCHDMLC(LEAFIS)=3))) [
-
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
-        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
-        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);];
-       ]
-      ELSEIF (NZ=4 & NY>=3
-              & (LEAFTYPE_$SYNCHDMLC(LEAFIS)=5)) [
-
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
-       ]
-     " ELSEIF (NZ=4 & NY<3"
-      "        & (LEAFTYPE_$SYNCHDMLC(LEAFIS)=5)) ["
-
-      "  IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]"
-      "  ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);];"
-      "  TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);"
-     " ]"
-      ELSEIF(NZ=4 & NY<=5 & (LEAFTYPE_$SYNCHDMLC(LEAFIS)=3)) [
-
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+     ]
+     ELSEIF(NZ=2)[
+        IF(NY<=2)[
+           IF(LEAFIS=1) [ TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+           ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+        ]
+        IF(NY=3)[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+           IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+           ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+        ]
+     ]
+     ELSEIF(NZ=3)[
+        IF(NY<=2)[
+           IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+           ELSE [
+              IF(Z(NP)>ZREG_$SYNCHDMLC(LEAFIS-1,7))[
+                TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);
+              ]
+              ELSE[
+                TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);
+              ]
+           ]
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+        ]
+        IF(NY<=5)[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+           IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+           ELSE [ "ignores that LEAFIS+1 might be FULL"
+             IF(Z(NP)<ZREG_$SYNCHDMLC(LEAFIS+1,6))[
+                TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);
+             ]
+             ELSE[
+                TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,2);
+             ]
+           ]
+        ]
+     ]
+     ELSEIF(NZ=4)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[
+           IF(NY<=5)[
+              TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+              TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+           ]
+           ELSE[
+              TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+              IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+                     TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+              ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+           ]
+        ]
+        ELSE[ "Zt > Zg"
+         IF(NY<=2)[
+           IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+           ELSE [
+              IF(Z(NP)>ZREG_$SYNCHDMLC(LEAFIS-1,7))[
+                TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);
+              ]
+              ELSE[
+                TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);
+              ]
+           ]
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+         ]
+         ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+         ]
+        ]
+     ]
+     ELSEIF(NZ=5)[
         TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
-       ]
-      ELSEIF(NZ=5|NZ=6|NZ=7) [
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+     ]
+     ELSEIF(NZ=6)[
         TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
         TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
-       ]
-      ELSEIF(NZ=8 & NY<=4) [
-        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
-        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);];
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
-       ]
-      ELSEIF(NZ=8 & NY>=5) [
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+     ]
+     ELSEIF(NZ=7)[
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
         TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
-       ]
-      ELSEIF(NZ=9 & NY=1) [
-        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
-        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
-       ]
-      ELSEIF(NZ=9 & NY>=2) [
-        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
-        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
-       ]
-     ];
+     ]
+     ELSEIF(NZ=8)[
+        IF(NY<=4)[
+           IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+           ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+        ]
+        ELSE[
+           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+           TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        ]
+     ]
+     ELSEIF(NZ=9)[
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,1,2)=1) [
+           IF(NY<=2)[
+             IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+             ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+             "here we are ignoring the possibility that Z could be"
+             ">Ztip(LEAFIS-1) but should be okay"
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+           ]
+           ELSE[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+           ]
+        ]
+        ELSE[
+           IF(NY=1)[
+             IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+             ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+           ]
+           ELSE[
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+           ]
+        ]
+     ]
+    ];
     TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/
           SQRT(1+TEMP1**2));
     TEMP2=ABS((TEMP2*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/
