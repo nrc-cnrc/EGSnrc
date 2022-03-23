@@ -36,8 +36,6 @@ in FLURZnrc for IPRIMARY = 2 (primaries) and IPRIMARY = 4 (secondaries).
 
 The basic definition of a fluence scoring AO is
 
-This ausgab object is specified via
-
     :start ausgab object:
         name    = a_name
         library = egs_fluence_scoring
@@ -153,7 +151,6 @@ A basic fluence scoring ausgab object is specified via
   \todo Total kerma scoring
   \todo Account for multiple app geometries
   \todo Fluence for any particle type?
-
 */
 class EGS_FLUENCE_SCORING_EXPORT EGS_FluenceScoring : public EGS_AusgabObject {
 
@@ -164,6 +161,8 @@ public:
   ~EGS_FluenceScoring();
 
    void initScoring(EGS_Input *inp);
+
+   void getSensitiveRegions(EGS_Input *inp);
 
    void getNumberRegions( const string &str, vector<int> &regs );
 
@@ -194,8 +193,8 @@ public:
 
            OPTIONAL:
            FLURZnrc IPRIMARY = 1 (e- from brems as primaries)
-               Set source_particle to 'photon' in the input file to not flag
-               brems photons so that when scoring charged partcle fluence in 
+               Set `source particle` to 'photon' in the input file to not flag
+               brems photons so that when scoring charged particle fluence in 
                photon beams, first generation e- are primaries. This is
                implicit for photon interactions when scoring charged particle 
                fluence. But one must explicitly account for that during brems events.
