@@ -361,6 +361,10 @@ void EGS_DoseScoring::reportResults() {
         for (int ir=0; ir<nreg; ir++) {
             if (app->isRealRegion(ir)) {
                 imed = app->getMedium(ir);
+                // skip vacuum regions
+                if (imed == -1) {
+                    continue;
+                }
                 EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
                 massM[imed] += app->getMediumRho(imed)*volume;
             }
