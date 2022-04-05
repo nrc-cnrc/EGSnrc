@@ -339,8 +339,8 @@ int Mevegs_Application::ausgab(int iarg) {
         if (ir == nreg+1) {
             EGS_ScoringArray *flu = the_stack->iq[np] ? eflu : gflu;
             EGS_Float r2 = the_stack->x[np]*the_stack->x[np] + the_stack->y[np]*the_stack->y[np];
-            if (r2 < 400) {
-                int bin = (int)(sqrt(r2)*10.);
+            int bin = (int)(sqrt(r2)*10.);
+            if (bin < 200) {
 
                 aux = the_stack->wt[np]/the_stack->w[np];
                 if (aux > 0) {
