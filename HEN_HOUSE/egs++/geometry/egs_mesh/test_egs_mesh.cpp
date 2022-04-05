@@ -27,11 +27,12 @@
 ###############################################################################
 */
 
-// The test suite has three main parts:
+// The test suite has four main parts:
 //
 // * egs_mesh tests
 // * mesh_neighbours
 // * msh_parser
+// * tetgen_parser
 //
 // TODO add test for intersection point right on element node
 
@@ -39,6 +40,7 @@
 #include "egs_mesh.h"
 #include "mesh_neighbours.h"
 #include "msh_parser.h"
+#include "tetgen_parser.h"
 
 #include <cstdarg>
 #include <cstdio>
@@ -81,6 +83,11 @@ static bool approx_eq(double a, double b, double e = 1e-8) {
     return (std::abs(a - b) <= e * (std::abs(a) + std::abs(b) + 1.0));
 }
 
+// Floating point values must match exactly, no approximate equality is used.
+static bool egsvec_eq(EGS_Vector x, EGS_Vector y) {
+    return x.x == y.x && x.y == y.y && x.z == y.z;
+}
+
 static std::string to_string_with_precision(double d, const int n = 17)
 {
     std::ostringstream out;
@@ -88,6 +95,26 @@ static std::string to_string_with_precision(double d, const int n = 17)
     out << std::fixed << d;
     return out.str();
 }
+
+// RAII class for a temporary file used by some tests
+class TempFile {
+public:
+    TempFile(const std::string& filename, const std::string& contents)
+        : filename_(filename)
+    {
+        {
+            std::ofstream out(filename_);
+            out << contents;
+        }
+    }
+
+    ~TempFile() {
+        std::remove(this->filename_.c_str());
+    }
+
+private:
+    std::string filename_;
+};
 
 // String for a five element Gmsh 4.1 msh file
 static std::string five_elt_mesh_str =
@@ -385,12 +412,9 @@ static void test_howfar_exterior() {
 
 // Test the egsinp `scale` key.
 static void test_mesh_scaling() {
-    std::string filename("tmp_test_mesh_scaling.msh");
-    {
-        // write out mesh used in the input file
-        std::ofstream out(filename);
-        out << five_elt_mesh_str;
-    }
+    std::string filename = "tmp_test_mesh_scaling.msh";
+    TempFile tmp(filename, five_elt_mesh_str);
+
     EGS_Input egsinp;
     std::string egsinp_str(
         ":start geometry definition:\n"
@@ -425,11 +449,10 @@ static void test_mesh_scaling() {
             ") != expected (" + std::to_string(vol) + ")");
     }
     delete geo;
-    std::remove(filename.c_str());
 }
 
-// Custom egsFatal that throws error messages as exceptions for testing
-void egsFatalThrowing(const char *msg, ...) {
+// Custom egsInfoFunction that throws error messages as exceptions for testing
+void egsInfoThrowing(const char *msg, ...) {
     char buf[8192];
     va_list ap;
     va_start(ap, msg);
@@ -440,14 +463,11 @@ void egsFatalThrowing(const char *msg, ...) {
 
 // Test egsinp `scale` key errors.
 static void test_mesh_scale_key_errors() {
-    egsSetInfoFunction(Fatal, egsFatalThrowing);
+    egsSetInfoFunction(Fatal, egsInfoThrowing);
 
-    std::string filename("tmp_test_mesh_scaling.msh");
-    {
-        // write out mesh used in the input file
-        std::ofstream out(filename);
-        out << five_elt_mesh_str;
-    }
+    std::string filename = "tmp_test_mesh_scaling.msh";
+    TempFile tmp(filename, five_elt_mesh_str);
+
     EGS_Input egsinp;
     std::string egsinp_str(
         ":start geometry definition:\n"
@@ -467,7 +487,6 @@ static void test_mesh_scale_key_errors() {
 
     // Reset egsFatal
     egsSetDefaultIOFunctions();
-    std::remove(filename.c_str());
 }
 
 // Test the basic howfar_interior implementation
@@ -1775,6 +1794,371 @@ static void test_parse_msh41_file(MeshFile file) {
     }
 }
 
+// tetgen_parser tests
+
+static void test_parse_tetgen_nodes() {
+    // blank file fails
+    {
+        std::istringstream input("");
+        EXPECT_ERROR(tetgen_parser::internal::parse_tetgen_node_file(input, nullptr),
+            "failed to parse TetGen node file header");
+    }
+    // file has to start with the header line
+    {
+        std::istringstream input(
+            "# some comment\n"
+            "4 3 0 0\n" // header line
+            "0 0 0 0\n"
+            "1 1.0 2.0 3.0\n"
+            "2 2.0 4.0 6.0\n"
+            "3 3.0 6.0 9.0\n"
+        );
+        EXPECT_ERROR(tetgen_parser::internal::parse_tetgen_node_file(input, nullptr),
+            "failed to parse TetGen node file header");
+    }
+    // num_coords must be 3
+    {
+        std::istringstream input(
+            "4 2 0 0\n" // header line
+        );
+        EXPECT_ERROR(tetgen_parser::internal::parse_tetgen_node_file(input, nullptr),
+            "TetGen node file parsing failed, expected num_coords = 3");
+    }
+    // Helper to check correctness of parsed nodes
+    auto check_parsed_nodes = [](const std::vector<EGS_MeshSpec::Node>& nodes) -> bool {
+        if (nodes.size() != 4) { return false; }
+        if (nodes[0].tag != 0 || nodes[0].x != 0.0 || nodes[0].y != 0.0 || nodes[0].z != 0.0) { return false; }
+        if (nodes[1].tag != 1 || nodes[1].x != 1.0 || nodes[1].y != 2.0 || nodes[1].z != 3.0) { return false; }
+        if (nodes[2].tag != 2 || nodes[2].x != 2.0 || nodes[2].y != 4.0 || nodes[2].z != 6.0) { return false; }
+        if (nodes[3].tag != 3 || nodes[3].x != 3.0 || nodes[3].y != 6.0 || nodes[3].z != 9.0) { return false; }
+        return true;
+    };
+    // node body is parsed correctly
+    {
+        std::istringstream input(
+            "4 3 0 0\n" // header line
+            "0 0 0 0\n"
+            "1 1.0 2.0 3.0\n"
+            "2 2.0 4.0 6.0\n"
+            "3 3.0 6.0 9.0\n"
+        );
+        if (!check_parsed_nodes(tetgen_parser::internal::parse_tetgen_node_file(input, nullptr))) {
+            throw std::runtime_error("TetGen node parsing failed");
+        }
+    }
+    // attribute and boundary data are ignored
+    {
+        std::istringstream input(
+            "4 3 1 1\n" // header line
+            "0 0 0 0 1.0 1\n"
+            "1 1.0 2.0 3.0 1.0 0 \n"
+            "2 2.0 4.0 6.0 2.0 0 \n"
+            "3 3.0 6.0 9.0 3.0 0 \n"
+        );
+        if (!check_parsed_nodes(tetgen_parser::internal::parse_tetgen_node_file(input, nullptr))) {
+            throw std::runtime_error("TetGen node file attributes and boundary data aren't skipped");
+        }
+    }
+    // comment lines starting with # in the body are skipped
+    {
+        std::istringstream input(
+            "4 3 0 0\n" // header line
+            "# comment\n"
+            "0 0 0 0\n"
+            "1 1.0 2.0 3.0\n"
+            "2 2.0 4.0 6.0\n"
+            "3 3.0 6.0 9.0\n"
+        );
+        if (!check_parsed_nodes(tetgen_parser::internal::parse_tetgen_node_file(input, nullptr))) {
+            throw std::runtime_error("TetGen node file comments aren't skipped");
+        }
+    }
+}
+
+static void test_parse_tetgen_elements() {
+    // blank file fails
+    {
+        std::istringstream input("");
+        EXPECT_ERROR(tetgen_parser::internal::parse_tetgen_ele_file(input, nullptr),
+            "failed to parse TetGen ele file header");
+    }
+    // file has to start with the header line
+    {
+        std::istringstream input(
+            "# some comment\n"
+            "4 4 1\n" // header line
+            "0 0 1 2 3 1\n"
+            "1 1 2 3 4 1\n"
+            "2 2 3 4 5 2\n"
+            "3 3 4 5 6 2\n"
+        );
+        EXPECT_ERROR(tetgen_parser::internal::parse_tetgen_ele_file(input, nullptr),
+            "failed to parse TetGen ele file header");
+    }
+    // num_nodes must be 4
+    {
+        std::istringstream input(
+            "4 10 0\n" // header line
+        );
+        EXPECT_ERROR(tetgen_parser::internal::parse_tetgen_ele_file(input, nullptr),
+            "TetGen ele file parsing failed, expected 4 nodes per tetrahedron");
+    }
+    // num_attr must be 1 (medium)
+    {
+        std::istringstream input(
+            "4 4 0\n" // header line
+        );
+        EXPECT_ERROR(tetgen_parser::internal::parse_tetgen_ele_file(input, nullptr),
+            "TetGen ele file parsing failed, expected each element to only have"
+            " one attribute (EGSnrc medium)");
+    }
+    // Helper to check correctness of parsed elts
+    auto check_parsed_elts = [](const std::vector<EGS_MeshSpec::Tetrahedron>& elts) -> bool {
+        if (elts.size() != 4) { return false; }
+        if (elts[0].tag != 0 || elts[0].a != 0 || elts[0].b != 1 || elts[0].c != 2 || elts[0].d != 3 || elts[0].medium_tag != 1) { return false; }
+        if (elts[1].tag != 1 || elts[1].a != 1 || elts[1].b != 2 || elts[1].c != 3 || elts[1].d != 4 || elts[1].medium_tag != 1) { return false; }
+        if (elts[2].tag != 2 || elts[2].a != 2 || elts[2].b != 3 || elts[2].c != 4 || elts[2].d != 5 || elts[2].medium_tag != 2) { return false; }
+        if (elts[3].tag != 3 || elts[3].a != 3 || elts[3].b != 4 || elts[3].c != 5 || elts[3].d != 6 || elts[3].medium_tag != 2) { return false; }
+        return true;
+    };
+
+    // ele file parsed successfully
+    {
+        std::istringstream input(
+            "4 4 1\n" // header line
+            "0 0 1 2 3 1\n"
+            "1 1 2 3 4 1\n"
+            "2 2 3 4 5 2\n"
+            "3 3 4 5 6 2\n"
+        );
+        if (!check_parsed_elts(tetgen_parser::internal::parse_tetgen_ele_file(input, nullptr))) {
+            throw std::runtime_error("TetGen ele file parsing failed");
+        }
+    }
+    // comment lines starting with # in the body are skipped
+    {
+        std::istringstream input(
+            "4 4 1\n" // header line
+            "# some comment\n"
+            "0 0 1 2 3 1\n"
+            "1 1 2 3 4 1\n"
+            "2 2 3 4 5 2\n"
+            "3 3 4 5 6 2\n"
+        );
+        if (!check_parsed_elts(tetgen_parser::internal::parse_tetgen_ele_file(input, nullptr))) {
+            throw std::runtime_error("TetGen ele file comments aren't skipped");
+        }
+    }
+}
+
+static void test_tetgen_elt_media() {
+    // expecting two media:
+    // EGS_MeshSpec::Medium(tag: 1, medium_name: "1")
+    // EGS_MeshSpec::Medium(tag: 1, medium_name: "2")
+    std::istringstream input(
+            "4 4 1\n" // header line
+            "# some comment\n"
+            "0 0 1 2 3 1\n"
+            "1 1 2 3 4 1\n"
+            "2 2 3 4 5 2\n"
+            "3 3 4 5 6 2\n"
+        );
+    auto elts = tetgen_parser::internal::parse_tetgen_ele_file(input, nullptr);
+    auto media = tetgen_parser::internal::find_tetgen_elt_media(elts);
+    if (media.size() != 2) {
+        throw std::runtime_error("parsed wrong number of media, expected 2");
+    }
+    // Implementation uses std::set<int> so tags will be in numerical order. If
+    // that changes, these checks could fail.
+    if (media[0].tag != 1 || media[0].medium_name != "1") {
+        throw std::runtime_error("TetGen media finding failed");
+    }
+    if (media[1].tag != 2 || media[1].medium_name != "2") {
+        throw std::runtime_error("TetGen media finding failed");
+    }
+}
+
+// Five elts (1-5), 8 nodes (1-8), 2 media (1, 2)
+static std::string tetgen_elt_str =
+R"(5 4 1
+1 1 2 3 4 1
+2 1 2 4 5 1
+3 1 3 4 6 2
+4 1 2 3 7 2
+5 2 3 4 8 2)";
+
+static std::string tetgen_node_str =
+R"(8 3 0 0
+1 0 0 0
+2 1 0 0
+3 0 1 0
+4 0 0 1
+5 0 -1 0
+6 -1 0 0
+7 0 0 -1
+8 1 1 1)";
+
+static void test_parse_tetgen_file_errors() {
+    // This test uses two files: model.ele and model.node
+    // Various possible file errors are tested for proper error-handling.
+    egsSetInfoFunction(Warning, egsInfoThrowing);
+    std::string tetgen_ele_egsinp(
+        ":start geometry definition:\n"
+        "    :start geometry:\n"
+        "       name = my_mesh\n"
+        "       library = egs_mesh\n"
+        "       file = tmp_model.node\n"   // model.node not written out yet
+        "    :stop geometry:\n"
+        "    simulation geometry = my_mesh\n"
+        ":stop geometry definition:\n");
+
+    // Non-existent TetGen file fails (model.node not written out yet)
+    {
+        EGS_Input egsinp;
+        egsinp.setContentFromString(tetgen_ele_egsinp);
+        EXPECT_ERROR(EGS_Mesh::createGeometry(&egsinp),
+            "\ncreateGeometry(EGS_Mesh): Tetgen node file `tmp_model.node` does not exist or is not readable\n");
+    }
+    // Write the node file to disk
+    std::string filename = "tmp_model.node";
+    TempFile tmp(filename, tetgen_node_str);
+
+    // Missing ele file fails even if the node file exists
+    {
+        EGS_Input egsinp;
+        egsinp.setContentFromString(tetgen_ele_egsinp);
+        EXPECT_ERROR(EGS_Mesh::createGeometry(&egsinp),
+            "\ncreateGeometry(EGS_Mesh): Tetgen ele file `tmp_model.ele` does not exist or is not readable\n");
+    }
+    // 3. Malformed TetGen files are caught
+    {
+        EGS_Input egsinp;
+        egsinp.setContentFromString(tetgen_ele_egsinp);
+        // Write the malformed ele file to disk
+        std::string filename = "tmp_model.ele";
+        // Use node file body for ele file to check parsing errors
+        TempFile tmp(filename, tetgen_node_str);
+        EXPECT_ERROR(EGS_Mesh::createGeometry(&egsinp),
+            "\ncreateGeometry(EGS_Mesh): TetGen ele file parsing failed, expected 4 nodes per tetrahedron\n");
+    }
+
+    // Reset egsWarning
+    egsSetDefaultIOFunctions();
+}
+
+static void test_parse_tetgen_file() {
+    TempFile node_file("mesh.node", tetgen_node_str);
+    TempFile ele_file("mesh.ele", tetgen_elt_str);
+
+    EGS_Input egsinp;
+    std::string egsinp_str(
+        ":start geometry definition:\n"
+        "    :start geometry:\n"
+        "       name = my_mesh\n"
+        "       library = egs_mesh\n"
+        "       file = mesh.node\n"
+        "    :stop geometry:\n"
+        "    simulation geometry = my_mesh\n"
+        ":stop geometry definition:\n"
+    );
+    egsinp.setContentFromString(egsinp_str);
+    EGS_BaseGeometry *geo = EGS_Mesh::createGeometry(&egsinp);
+    EGS_Mesh *mesh = dynamic_cast<EGS_Mesh*>(geo);
+    if (!mesh) {
+        throw std::runtime_error("dynamic_cast<EGS_Mesh*> failed!");
+    }
+    if (mesh->num_elements() != 5) {
+        throw std::runtime_error("TetGen parser: expected 5 elements");
+    }
+    if (mesh->num_nodes() != 8) {
+        throw std::runtime_error("TetGen parser: expected 8 nodes");
+    }
+    if (test_mesh.is_boundary(0)) {
+        throw std::runtime_error("TetGen parser: expected region 0 not to be a boundary element");
+    }
+    for (auto i = 1; i < test_mesh.num_elements(); i++) {
+        if (!test_mesh.is_boundary(i)) {
+            throw std::runtime_error("TetGen parser: expected region " + std::to_string(i) +
+                " to be a boundary element");
+        }
+    }
+    // nodes
+    if (!egsvec_eq(mesh->node_coordinates(0), EGS_Vector(0, 0, 0))) {
+        throw std::runtime_error("bad coordinates for node 0");
+    }
+    if (!egsvec_eq(mesh->node_coordinates(1), EGS_Vector(1, 0, 0))) {
+        throw std::runtime_error("bad coordinates for node 1");
+    }
+    if (!egsvec_eq(mesh->node_coordinates(2), EGS_Vector(0, 1, 0))) {
+        throw std::runtime_error("bad coordinates for node 2");
+    }
+    if (!egsvec_eq(mesh->node_coordinates(3), EGS_Vector(0, 0, 1))) {
+        throw std::runtime_error("bad coordinates for node 3");
+    }
+    if (!egsvec_eq(mesh->node_coordinates(4), EGS_Vector(0, -1, 0))) {
+        throw std::runtime_error("bad coordinates for node 4");
+    }
+    if (!egsvec_eq(mesh->node_coordinates(5), EGS_Vector(-1, 0, 0))) {
+        throw std::runtime_error("bad coordinates for node 5");
+    }
+    if (!egsvec_eq(mesh->node_coordinates(6), EGS_Vector(0, 0, -1))) {
+        throw std::runtime_error("bad coordinates for node 6");
+    }
+    if (!egsvec_eq(mesh->node_coordinates(7), EGS_Vector(1, 1, 1))) {
+        throw std::runtime_error("bad coordinates for node 7");
+    }
+    // elements
+    if (mesh->element_node_offsets(0) != std::array<int, 4>{0, 1, 2, 3} || mesh->element_tag(0) != 1) {
+        throw std::runtime_error("bad region 0");
+    }
+    if (mesh->element_node_offsets(1) != std::array<int, 4>{0, 1, 3, 4} || mesh->element_tag(1) != 2) {
+        throw std::runtime_error("bad region 1");
+    }
+    if (mesh->element_node_offsets(2) != std::array<int, 4>{0, 2, 3, 5} || mesh->element_tag(2) != 3) {
+        throw std::runtime_error("bad region 2");
+    }
+    if (mesh->element_node_offsets(3) != std::array<int, 4>{0, 1, 2, 6} || mesh->element_tag(3) != 4) {
+        throw std::runtime_error("bad region 3");
+    }
+    if (mesh->element_node_offsets(4) != std::array<int, 4>{1, 2, 3, 7} || mesh->element_tag(4) != 5) {
+        throw std::runtime_error("bad region 4");
+    }
+    // media
+    for (auto i = 0; i < mesh->num_elements(); i++) {
+        if (i < 2 && mesh->getMediumName(mesh->medium(i)) != std::string("1")) {
+            std::cout << "i: `" << mesh->getMediumName(mesh->medium(i)) << "`n";
+            throw std::runtime_error("expected elements 1, 2 to have media 1");
+        }
+        if (i >= 2 && mesh->getMediumName(mesh->medium(i)) != std::string("2")) {
+            std::cout << "i: " << mesh->getMediumName(mesh->medium(i)) << "\n";
+            throw std::runtime_error("expected elements 3, 4, 5 to have media 2");
+        }
+    }
+}
+
+static void test_unknown_mesh_file_extension() {
+    egsSetInfoFunction(Warning, egsInfoThrowing);
+
+    EGS_Input egsinp;
+    std::string egsinp_str(
+        ":start geometry definition:\n"
+        "    :start geometry:\n"
+        "       name = my_mesh\n"
+        "       library = egs_mesh\n"
+        "       file = mesh.bad_extension\n"
+        "    :stop geometry:\n"
+        "    simulation geometry = my_mesh\n"
+        ":stop geometry definition:\n"
+    );
+    egsinp.setContentFromString(egsinp_str);
+    EXPECT_ERROR(EGS_Mesh::createGeometry(&egsinp), "\ncreateGeometry(EGS_Mesh)"
+        ": unknown extension for mesh file `mesh.bad_extension`, supported "
+        "extensions are msh, ele, node\n");
+
+    // Reset egsWarning
+    egsSetDefaultIOFunctions();
+}
+
 int main() {
 
     test_howfar_interior();
@@ -1806,6 +2190,14 @@ int main() {
     MeshFile mesh_file;
     RUN_TEST(test_parse_msh41_file_errors(mesh_file));
     RUN_TEST(test_parse_msh41_file(mesh_file));
+
+    RUN_TEST(test_parse_tetgen_nodes());
+    RUN_TEST(test_parse_tetgen_elements());
+    RUN_TEST(test_tetgen_elt_media());
+    RUN_TEST(test_parse_tetgen_file_errors());
+    RUN_TEST(test_parse_tetgen_file());
+
+    RUN_TEST(test_unknown_mesh_file_extension());
 
     std::cerr << "\ntest result: " << num_total - num_failed << " out of " <<
         num_total << " tests passed\n";

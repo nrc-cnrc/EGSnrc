@@ -40,7 +40,8 @@ DEFS = $(DEF1) -DBUILD_EGS_MESH_DLL
 library = egs_mesh
 lib_files = egs_mesh
 my_deps = egs_transformations.h geometry$(DSEP)$(library)$(DSEP)msh_parser.h \
-	geometry$(DSEP)$(library)$(DSEP)mesh_neighbours.h
+	geometry$(DSEP)$(library)$(DSEP)mesh_neighbours.h \
+	geometry$(DSEP)$(library)$(DSEP)tetgen_parser.h
 
 extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 

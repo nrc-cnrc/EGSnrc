@@ -44,6 +44,7 @@
 
 #include "mesh_neighbours.h"
 #include "msh_parser.h"
+#include "tetgen_parser.h"
 
 #include <cassert>
 #include <chrono>
@@ -1521,6 +1522,52 @@ void EGS_Mesh::printInfo() const {
     egsInformation(oss.str().c_str());
 }
 
+// Parse a mesh file from the input file to an EGS_MeshSpec.
+//
+// Supported file types are:
+// * Gmsh msh4.1 (.msh)
+// * TetGen elt and node file pairs (.ele, .node)
+//
+// Throws a std::runtime_error if parsing fails.
+static EGS_MeshSpec parse_mesh_file(const std::string& mesh_file) {
+    // Needs to be at least four characters long (.ele, .msh)
+    auto ends_with = [](const std::string& str, const std::string& suffix)
+        -> bool
+    {
+        if (suffix.size() > str.size()) {
+            return false;
+        }
+        return str.compare(str.size() - suffix.size(), str.size(), suffix) == 0;
+    };
+
+    if (ends_with(mesh_file, ".msh")) {
+        std::ifstream file_stream(mesh_file);
+        if (!file_stream) {
+            throw std::runtime_error(std::string("mesh file: `") + mesh_file
+                + "` does not exist or is not readable");
+        }
+        try {
+            return msh_parser::parse_msh_file(file_stream, egsInformation);
+        } catch (const std::runtime_error& e) {
+            throw std::runtime_error(std::string("Gmsh msh file parsing failed")
+                + "\nerror: " + e.what() + "\n");
+        }
+    }
+
+    if (ends_with(mesh_file, ".ele")) {
+        return tetgen_parser::parse_tetgen_files(mesh_file,
+            tetgen_parser::TetGenFile::Ele, egsInformation);
+    }
+
+    if (ends_with(mesh_file, ".node")) {
+        return tetgen_parser::parse_tetgen_files(mesh_file,
+            tetgen_parser::TetGenFile::Node, egsInformation);
+    }
+
+    throw std::runtime_error(std::string("unknown extension for mesh file `")
+        + mesh_file + "`, supported extensions are msh, ele, node");
+}
+
 extern "C" {
     EGS_MESH_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
@@ -1533,25 +1580,13 @@ extern "C" {
             egsWarning("createGeometry(EGS_Mesh): no mesh file key `file` in input\n");
             return nullptr;
         }
-        if (!(mesh_file.length() >= 4 && mesh_file.rfind(".msh") == mesh_file.length() - 4)) {
-            egsWarning("createGeometry(EGS_Mesh): unknown file extension for file `%s`,"
-                "only `.msh` is allowed\n", mesh_file.c_str());
-            return nullptr;
-        }
-        std::ifstream input_file(mesh_file);
-        if (!input_file) {
-            egsWarning("createGeometry(EGS_Mesh): mesh file: `%s` does "
-                       "not exist or is not readable\n", mesh_file.c_str());
-            return nullptr;
-        }
 
         EGS_MeshSpec mesh_spec;
         try {
-            mesh_spec = msh_parser::parse_msh_file(input_file, egsInformation);
-        }
-        catch (const std::runtime_error& e) {
+            mesh_spec = parse_mesh_file(mesh_file);
+        } catch (const std::runtime_error& e) {
             std::string error_msg = std::string("createGeometry(EGS_Mesh): ") +
-                "Gmsh msh file parsing failed\nerror: " + e.what() + "\n";
+                e.what() + "\n";
             egsWarning("\n%s", error_msg.c_str());
             return nullptr;
         }

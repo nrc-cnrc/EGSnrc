@@ -153,15 +153,20 @@ public:
   \ingroup ElementaryG
 
 The EGS_Mesh class implements an unstructured tetrahedral mesh. Mesh data and
-element media names are specified using a mesh file. Currently, the only
-supported mesh file format is the Gmsh `msh4.1` format.
+element media names are specified using a mesh file. The supported mesh formats
+are:
+- Gmsh `msh4.1`
+- TetGen `node` and `ele`
 
 \verbatim
 :start geometry definition:
     :start geometry:
         name        = my_mesh
         library     = egs_mesh
+        # Using the msh4.1 format:
         file        = model.msh
+        # or, using the TetGen format:
+        # file       = model.node # or model.ele
     :stop geometry:
 
     simulation geometry = my_mesh
