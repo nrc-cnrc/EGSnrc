@@ -258,6 +258,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                 app_loaded = false;
             }
             egsInformation("Testapp %f\n",app->getRM());
+            delete app;
         }
     }
 
@@ -424,6 +425,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     }
                 }
             }
+
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = sourceMenu->addAction(libName);
@@ -536,6 +538,9 @@ GeometryViewControl::~GeometryViewControl() {
         for (int i=0; i<nobj; ++i) {
             delete EGS_AusgabObject::getObject(i);
         }
+    }
+    if(egsinpEdit) {
+        delete egsinpEdit;
     }
     if(highlighter) {
         delete highlighter;
