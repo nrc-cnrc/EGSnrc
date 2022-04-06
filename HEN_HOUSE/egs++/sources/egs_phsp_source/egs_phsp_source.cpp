@@ -516,7 +516,7 @@ extern "C" {
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("phase space file", true, "The name of the phase space file.");
         srcBlockInput->addSingleInput("particle type", true, "The type of particle", {"all", "charged", "electrons", "positrons", "photons"});
-        srcBlockInput->addSingleInput("cutout", false, "A rectagular cutout defined by x1, x2, y1, y2");
+        srcBlockInput->addSingleInput("cutout", false, "A rectangular cutout defined by x1, x2, y1, y2");
         srcBlockInput->addSingleInput("weight window", false, "wmin, wmax, the min and max particle weights to use. If the particle is not in this range, it is rejected.");
         srcBlockInput->addSingleInput("recyle photons", false, "The number of time to recycle each photon");
         srcBlockInput->addSingleInput("recycle electrons", false, "The number of times to recycle each electron");

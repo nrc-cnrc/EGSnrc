@@ -107,5 +107,3 @@ greaterThan(QMAKE_GCC_MAJOR_VERSION, 4) {
 UI_DIR = .ui/$$my_machine
 MOC_DIR = .moc/$$my_machine
 OBJECTS_DIR = .obj/$$my_machine
-
-
