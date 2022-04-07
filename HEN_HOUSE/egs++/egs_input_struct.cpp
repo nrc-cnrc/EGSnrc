@@ -64,7 +64,6 @@ vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
 
 shared_ptr<EGS_BlockInput> EGS_InputStruct::getBlockInput(string title) {
     for(auto &block: blockInputs) {
-        egsInformation("test struct getBlockInput %s\n", block->getTitle().c_str());
         if(egsEquivStr(block->getTitle(), title)) {
             return block;
         }
@@ -92,7 +91,7 @@ vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
     // E.g. find all the geometry libraries
     vector<string> libOptions;
     for(auto& block : blockInputs) {
-        egsInformation("test getLibOpt %s %s\n",block->getTitle().c_str(),blockTitle.c_str() );
+
         // We only search the 2nd-level blocks
         // i.e. don't look at the geometry definition block, look at the geometries
         for(auto& block2 : block->getBlockInputs()) {
@@ -111,7 +110,7 @@ vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
     // This is the case for shapes
     if(libOptions.size() < 1) {
         for(auto& block : blockInputs) {
-            egsInformation("test getLibOpt2 %s %s\n",block->getTitle().c_str(),blockTitle.c_str() );
+
             if(block && block->getTitle() == blockTitle) {
                 vector<string> libAr = block->getSingleInput("library")->getValues();
                 for(auto& lib : libAr) {
