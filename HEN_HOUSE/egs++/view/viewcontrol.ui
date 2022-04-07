@@ -1758,7 +1758,7 @@ p, li { white-space: pre-wrap; }
               </sizepolicy>
              </property>
              <attribute name="title">
-              <string>Editor</string>
+              <string>Editor (experimental)</string>
              </attribute>
              <layout class="QGridLayout" name="editorLayout"/>
             </widget>
