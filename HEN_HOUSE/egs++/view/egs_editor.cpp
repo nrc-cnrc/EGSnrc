@@ -187,7 +187,7 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
 
     QString blockTitle;
     shared_ptr<EGS_BlockInput> inputBlockTemplate = getBlockInput(blockTitle, cursor);
-    
+
     // If we aren't inside an input block, ignore this line
     if(blockTitle.size() < 1) {
         return;
@@ -205,7 +205,9 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
 
         QString inputTag = selectedText.left(equalsPos).simplified();
         QString inputVal = selectedText.right(selectedText.size() - equalsPos - 1).simplified();
-        egsInformation("test foundEquals %s\n",inputTag.toLatin1().data());
+#ifdef EDITOR_DEBUG
+        egsInformation("EGS_Editor::validateLine: Found equals sign: %s\n",inputTag.toLatin1().data());
+#endif
 
         // If we found a template for this type of input block,
         // check that the input tag  (LHS) is valid
@@ -330,10 +332,6 @@ void EGS_Editor::autoComplete() {
     // Get the input structure
     QString blockTitle;
     shared_ptr<EGS_BlockInput> inputBlockTemplate = getBlockInput(blockTitle);
-    egsInformation("testA %s\n", blockTitle.toLatin1().data());
-    if(inputBlockTemplate) {
-        egsInformation("test foundtemplate\n");
-    }
 
     // If we aren't inside an input block, ignore this line
     if(blockTitle.size() < 1) {
@@ -346,7 +344,9 @@ void EGS_Editor::autoComplete() {
     if(equalsPos != -1) {
         QString inputTag = selectedText.left(equalsPos).simplified();
         QString inputVal = selectedText.right(selectedText.size() - equalsPos - 1).simplified();
-        egsInformation("test foundEquals %s\n",inputTag.toLatin1().data());
+#ifdef EDITOR_DEBUG
+        egsInformation("EGS_Editor::autoComplete: found equals sign: %s\n",inputTag.toLatin1().data());
+#endif
 
         // Check that the line is valid
         validateLine(cursor);
@@ -371,7 +371,7 @@ void EGS_Editor::autoComplete() {
             }
             if(itemList.size() > 0) {
                 model->setStringList(itemList);
-                
+
 
                 popup->setModel(model);
                 popup->setFont(this->font());
@@ -433,7 +433,7 @@ void EGS_Editor::autoComplete() {
             }
             if(itemList.size() > 0) {
                 model->setStringList(itemList);
-                
+
 
                 popup->setModel(model);
                 popup->setFont(this->font());
@@ -562,7 +562,6 @@ void EGS_Editor::autoComplete() {
             QTextCharFormat format;
             format.setUnderlineStyle(QTextCharFormat::NoUnderline);
 
-            egsInformation("testQQ %s %s\n",blockTit.toLatin1().data(), selectedText.toLatin1().data());
             auto inputPtr = inputBlockTemplate->getBlockInput(blockTit.toStdString());
             if(!inputPtr) {
                 // Red underline the input tag
@@ -659,7 +658,9 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
     // If we couldn't find a library tag in the current block,
     // try searching the containing block (if there is one)
     if(library.size() < 1) {
-        egsInformation("test searching containing block %s\n", blockTitle.toLatin1().data());
+#ifdef EDITOR_DEBUG
+        egsInformation("EGS_Editor::getBlockInput: Searching containing block for library: %s\n", blockTitle.toLatin1().data());
+#endif
 
         // If we're currently on a :start line, start searching on the next line
         // so that we're actually starting within the block
@@ -688,7 +689,9 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
 
         // If we still didn't find the library, search one block higher
         if(library.size() < 1) {
-            egsInformation("test searching containing block2 %s\n", blockTitle.toLatin1().data());
+#ifdef EDITOR_DEBUG
+            egsInformation("EGS_Editor::getBlockInput: Checking up a level...\n");
+#endif
             // If we're currently on a :start line, start searching on the next line
             // so that we're actually starting within the block
             int loopGuard = 10000;
@@ -716,7 +719,9 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
 
     // If we got the library tag, we can directly look up this input block structure
     if(library.size() > 0) {
-        egsInformation("test getBlockInput %s %s\n", blockTitle.toLatin1().data(), library.toLatin1().data());
+#ifdef EDITOR_DEBUG
+            egsInformation("EGS_Editor::getBlockInput: Found library: %s\n", library.toLatin1().data());
+#endif
         shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getLibraryBlock(blockTitle.toStdString(), library.toStdString());
         if(inputBlock) {
             return inputBlock;
@@ -726,7 +731,10 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
     // If we didn't get the library tag, we might be in a top-level block
     // like a geometry definition. Just return the block with the matching title
     shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput(blockTitle.toStdString());
-    egsInformation("test returning top level block\n");
+
+#ifdef EDITOR_DEBUG
+            egsInformation("EGS_Editor::getBlockInput: No library found, assuming '%s' is top-level block\n", blockTitle.toLatin1().data());
+#endif
 
     return inputBlock;
 }
@@ -998,16 +1006,16 @@ bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QText
             auto dependencyBlockAnti = inp->getDependencyBlockAnti();
 
             QTextBlock depBlock = findSiblingBlock(QString::fromStdString(dependencyBlock->getTitle()), cursor.block());
-            
+
             if(depBlock.isValid()) {
                 if(dependencyBlockAnti) {
-                    satisfied = false; 
+                    satisfied = false;
                 } else {
                     satisfied = true;
                 }
             } else {
                 if(dependencyBlockAnti) {
-                    satisfied = true; 
+                    satisfied = true;
                 } else {
                     satisfied = false;
                 }
@@ -1187,6 +1195,7 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
                 return true;
             }
         } else if(keyEvent->key() == Qt::Key_Escape) {
+            popup->hide();
             popup->QWidget::releaseKeyboard();
         } else if(keyEvent->key() == Qt::Key_Right) {
             if (popup->isVisible()) {
@@ -1195,9 +1204,9 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
             }
         }
     //} else if(event->type() == QEvent::Wheel || event->type() == QEvent::FocusOut) {
-    } else if(event->type() == QEvent::FocusOut) {
-        popup->hide();
-        popup->QWidget::releaseKeyboard();
+//     } else if(event->type() == QEvent::FocusOut) { // This seemed to block the key_right grab on linux, so commented out
+//         popup->hide();
+//         popup->QWidget::releaseKeyboard();
     }
 
     return QPlainTextEdit::eventFilter(obj, event);
