@@ -62,6 +62,10 @@ USER_LIBDIR = $(EGS_HOME)$(LIB_SUBDIR)
 #
 EGS_SOURCEDIR = $(HEN_HOUSE)src$(DSEP)
 
+# ESTAR sources
+#
+ESTAR_DIR = $(HEN_HOUSE)estar$(DSEP)
+
 # Utilities coming with EGSnrc
 #
 EGS_UTILS = $(HEN_HOUSE)utils$(DSEP)
