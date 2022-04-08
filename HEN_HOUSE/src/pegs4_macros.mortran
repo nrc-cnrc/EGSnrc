@@ -163,13 +163,17 @@ REPLACE {;COMIN/ELEMTB/;} WITH
      $REAL4 ITBL,WATBL,RHOTBL;
      $TYPE ASYMT;
    }
-
+"ISCOMP is 1 only if medium is specified"
+"with number of atoms."
+"1 means the medium is a compound."
 REPLACE {;COMIN/MIXDAT/;} WITH
    {;COMMON/MIXDAT/NEP,LMED,PZP($MXEL),ZELEMP($MXEL),WAP($MXEL),RHOZP($MXEL),
-     GASPP,EZ,TPZ,IDSTRN(24);
+     GASPP,EZ,TPZ,IDSTRN(24),ELEM_NAMES($MXEL),ISCOMP;
      $INTEGER NEP,LMED;
      $REAL4 PZP,ZELEMP,WAP,RHOZP,GASPP,EZ,TPZ;
      $TYPE IDSTRN;
+     CHARACTER*2 ELEM_NAMES;
+     $INTEGER ISCOMP;
    }
 
 REPLACE {;COMIN/DBRPR/;} WITH
@@ -185,10 +189,12 @@ REPLACE {;COMIN/DBRPR/;} WITH
 REPLACE {;COMIN/MEDINP/;} WITH
    {;COMMON/MEDINP/inpdensity_file($MXMED),inpasym($MXMED,$MXEL),
      inpstrn(24,$MXMED),pz4($MXMED,$MXEL),
-     rhoz4($MXMED,$MXEL),wa4($MXMED,$MXEL),inpgasp($MXMED);
+     rhoz4($MXMED,$MXEL),wa4($MXMED,$MXEL),inpgasp($MXMED),
+     iscompound($MXMED);
      character*256 inpdensity_file;
      $TYPE inpasym,inpstrn;
      $REAL4 pz4,rhoz4,wa4,inpgasp;
+     $INTEGER iscompound;
    };
 
 REPLACE {$DECLARE-PEGS4-COMMON-BLOCKS;} WITH {
@@ -222,6 +228,7 @@ DO IM=1,NMED[
   APP=AP(IM);
   UPP=UP(IM);
   NEP=NNE(IM);
+  ISCOMP = iscompound(IM);
   IUNRSTP=IUNRST(IM);
   IAPRIMP=IAPRIM(IM);
   EPSTFLP=EPSTFL(IM);
@@ -234,6 +241,7 @@ DO IM=1,NMED[
     PZP(J)=PZ4(IM,J);
     RHOZP(J)=RHOZ4(IM,J);
     WAP(J)=WA4(IM,J);
+    ELEM_NAMES(J) = inpasym(IM,J);
  ]
  DO IB=1,LMDN[
    IDSTRN(IB)=INPSTRN(IB,IM);

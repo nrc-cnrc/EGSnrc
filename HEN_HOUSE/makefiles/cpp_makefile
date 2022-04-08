@@ -96,6 +96,11 @@ egs_simple_application_lib_$(my_machine).$(obje): $(dep_simple_application)
 egs_advanced_application_lib_$(my_machine).$(obje): $(dep_advanced_application)
 	$(object_lib_rule)
 
+estar_advanced_application_$(my_machine).$(obje): $(estar_advanced_application_files)
+	$(object_rule)
+estar_advanced_application_lib_$(my_machine).$(obje): $(estar_advanced_application_files)
+	$(object_lib_rule)
+
 $(USER_CODE)_$(my_machine).$(obje): $(dep_user_code)
 
 $(USER_CODE)_lib_$(my_machine).$(obje): $(dep_user_code)

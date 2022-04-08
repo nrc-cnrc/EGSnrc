@@ -1547,6 +1547,15 @@ DO i=1,NMED[
             rhoz4(i,j)=pz4(i,j)*wa4(i,j);
          ]
        ]
+       iscompound(i) = 0;
+       IF(spec_by_pz)[
+         IF (nne(i)>1) ["check if there are > 1 elements"
+          iscompound(i) = 1;
+          "is_compound(i) is 1 only if medium is specified"
+          "with number of atoms."
+          "(From PIRS-701 page 269)"
+         ]
+       ]
 
        iunrst(i)=iunrst_tmp;
        iaprim(i)=iaprim_tmp;
