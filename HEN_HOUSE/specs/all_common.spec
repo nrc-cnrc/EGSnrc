@@ -66,6 +66,9 @@ EGS_SOURCEDIR = $(HEN_HOUSE)src$(DSEP)
 #
 ESTAR_DIR = $(HEN_HOUSE)estar$(DSEP)
 
+# ESTAR linking keyword
+F77_CPP_LINKER = -lstdc++
+
 # Utilities coming with EGSnrc
 #
 EGS_UTILS = $(HEN_HOUSE)utils$(DSEP)

@@ -1,6 +1,6 @@
 #include <iostream>
 using namespace std;
-#include "newtrial.h"
+#include "estarCalc.h"
 #include "string.h"
 #include "cprep.cpp"
 
