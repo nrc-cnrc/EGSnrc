@@ -16,7 +16,7 @@ using namespace std;
 
 // WE NEED TO PASS IN numOfAtoms as a an array of floats as it is defined as a float in GET_MEDIA_INPUT;
 // however we later convert numOfAtoms from float -> int;
-int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elementArray, double *massFraction, float *numOfAtoms, double *densityCorr) {
+int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elementArray, double *massFraction, float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval) {
     //------------------------------------------------//
     int knmat;
 
@@ -47,6 +47,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     fc = getDataFromFormulae(knmat, rho, elementArray, massFraction, numOfAtoms, NEP); // pass formula array here // pass mass fractiom here too // that will get passed to mixtures then //  before that make sure to make NA Na
     cout << "I value is: " << fc.pot << "\n";
     double estarIval = fc.pot; // This is the I-value obtained by calculation
+    *meanIval = fc.pot;
     // cout << "input custom i-val? 0->no 1->yes\n";
     
     int p = 0;
@@ -376,6 +377,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
         //cout << "factor " << i << " is "<< setprecision(9) << dlt[i] << "\n";
         densityCorr[i] = dlt[i];
+        enGrid[i] = er[i];
     }
     
     return 0;
