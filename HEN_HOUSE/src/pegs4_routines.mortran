@@ -1661,10 +1661,10 @@ EGS-IO,MIXDAT,MISC/;
 $REAL4 IMEV;
 " IK: Variable declarations for implicit none"
 $INTEGER IM,J,IZ,IE,I,ICHECK,IESPEL,IPEGEL,density_unit,lnblnk1,egs_get_unit;
-$INTEGER i_mederr, elemIndex;
-REAL*8 densityCorr(113);
+$INTEGER i_mederr, elemIndex,zIndex,wtIndex,dfIndex;
+REAL*8 densityCorr(113),enGrid(113);
 $REAL4    VPLASM,ALIADG,EDENL,ALGASP,EPSTRH,
-         TLRNCE,EPSTWT;
+         TLRNCE,EPSTWT,NORM;
 CHARACTER*256 density_file;
 
 TOLN10=2.0*LOG(10.0);IM=-100;
@@ -1689,14 +1689,59 @@ $WRITE_MEDERR('Calling C++ ESTAR from pegs4_routine');
 
 $WRITE_MEDERR('Is media compound? -', ISCOMP);
 
-CALL mainf(ELEM_NAMES, RHOZP, PZP, RHOP, densityCorr, NEP, ISCOMP);
-$WRITE_MEDERR('Calling C++ function from pegs4_routine');
+CALL mainf(ELEM_NAMES,RHOZP,PZP,RHOP,densityCorr,enGrid,NEP,ISCOMP,IEV);
 
-$WRITE_MEDERR('**** DENSITY CORRECTIONS *******');
-DO elemIndex=1,113[
-    $WRITE_MEDERR('density correction for index ', elemIndex);
-    $WRITE_MEDERR(' IS ', densityCorr(elemIndex));
+
+NEPST = 113; "there are 113 energy levels"
+"in the standard energy grid"
+EPSTRH = RHOP;
+NELEPS = NEP;
+NORM = 0;
+
+DO zIndex=1,NELEPS[
+    ZEPST(zIndex) = ZELEMP(zIndex);
+    NORM = NORM + RHOZP(zIndex);
 ]
+DO wtIndex=1,NELEPS[
+    WEPST(wtIndex) = RHOZP(wtIndex)/NORM;
+]
+
+DO dfIndex=1,NEPST[
+    EPSTD(dfIndex) = densityCorr(dfIndex);
+    EPSTEN(dfIndex) = enGrid(dfIndex);
+]
+
+
+$WRITE_MEDERR('== NEPST HAS BEEN PASSED ====');
+$WRITE_MEDERR('NEPST IS ', NEPST);
+$WRITE_MEDERR('=================');
+
+$WRITE_MEDERR('== I-VALUE HAS BEEN PASSED ====');
+$WRITE_MEDERR('I-VAL (IEV) IS ', IEV);
+$WRITE_MEDERR('=================');
+
+$WRITE_MEDERR('== DENSITY HAS BEEN PASSED ====');
+$WRITE_MEDERR('DENSITY (EPSTRH) IS ', EPSTRH);
+$WRITE_MEDERR('=================');
+
+$WRITE_MEDERR('== NELEPS HAS BEEN PASSED ====');
+$WRITE_MEDERR('NEP (NELEPS) IS ', NELEPS);
+$WRITE_MEDERR('=================');
+
+$WRITE_MEDERR('== Z AND WT PASSED ====');
+DO zIndex=1,NELEPS[
+    $WRITE_MEDERR('Z NUM (ZEPST(zIndex)) ', ZEPST(zIndex));
+    $WRITE_MEDERR('FRAC (WEPST(wtIndex)) ', WEPST(zIndex));
+]
+$WRITE_MEDERR('=================');
+
+$WRITE_MEDERR('==== DENSITY CORR PASSED ====');
+DO elemIndex=1,NEPST[
+    $WRITE_MEDERR('for energy ', EPSTEN(elemIndex));
+    $WRITE_MEDERR('density cor    IS ', EPSTD(elemIndex));
+]
+$WRITE_MEDERR('=================');
+
 $WRITE_MEDERR('****************');
 
 "MATERIAL MUST BE FOUND IN THE SSB TABLE OR THE S-P"
