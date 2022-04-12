@@ -463,11 +463,18 @@ $REAL4   E0,EE;
 LOGICAL POSITR;
 $REAL4   G,EEM,T,ETA2,BETA2,ALETA2,X,D,FTERM,TP2,D2,D3,D4,DELTA;
 $INTEGER I;
+"$INTEGER i_mederr2,i_parallel,first_parallel,n_parallel;"
 COMIN/DERCON,LSPION,EPSTAR/; "MOD NOV 24,1988"
 "     COMMON POINT FOR E- AND E+ ENTRIES.                              "
 G=E0/RMP;
 EEM=EE/RMP-1.;
 "     T IS BERGER'S TAU                                                "
+"WRITE_MEDER is defined to print out data"
+"when running an application."
+"This can be used for debugging"
+"REPLACE {$WRITE_MEDERR(#)} WITH {;"
+"IF(n_parallel=0 | i_parallel=first_parallel)["
+"write(i_mederr2,*){P1};];};"
 T=G-1;
 ETA2=T*(G+1.);
 BETA2=ETA2/G**2;
@@ -495,12 +502,10 @@ FTERM=LOG(T*D)-(BETA2/T)*( T + 2.*D - (3.*D2/2.)/TP2
 
 "     NOW COMPUTE THE DENSITY CORRECTION TERM.                         "
 
-IF(EPSTFLP = 0) ["USE STANDARD PEGS4 METHOD"
-IF (X.LE.X0) [DELTA=0.0;]
-ELSEIF (X.LT.X1) [DELTA=TOLN10*X - CBAR + AFACT*(X1 - X)**SK;]
-ELSE [DELTA=TOLN10*X - CBAR;]]
+"THIS BLOCK OF CODE RUNS REGARDLESS OF WHETHER"
+"A DENSITY FILE HAS BEEN PROVIDED OR NOT."
 
-ELSE ["USE LINEAR INTERPOLATION OF USER SUPPLIED INPUT TABLE"
+"USE LINEAR INTERPOLATION OF USER SUPPLIED INPUT TABLE"
 
 "IEPST IS A POINTER SUCH THAT                              "
 "       EPSTEN(IEPST) <= E0 < EPSTEN(IEPST+1)              "
@@ -537,7 +542,7 @@ IF(IEPST < NEPST) [
    (EPSTEN(IEPST+1) - EPSTEN(IEPST)) * (EPSTD(IEPST+1) - EPSTD(IEPST));]
 ELSE [DELTA = EPSTD(NEPST);]
 
-]"END OF EPSTFL NON-ZERO BLOCK"
+"END OF DENSITY CORRECTION TERM CALCULATION"
 
 "     NOW PUT IT ALL TOGETHER                                          "
 SPIONB=(SPC1/BETA2)*(LOG(T + 2.) - SPC2 + FTERM - DELTA);
