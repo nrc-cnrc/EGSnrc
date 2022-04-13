@@ -57,12 +57,13 @@ extern "C" int mainf_(char *formulaStr,
                     double *enGrid,
                     int *NEP, 
                     int *ISCOMP,
-                    float *meanIval) {
+                    float *meanIval,
+                    float *ipotval) {
     string mainFormula;
     string mainFormula_temp_1;
     string mainFormula_temp_2;
 
-    // The  2 lines below process  formula_str   to make the array readable by estar c++
+    // The   2 lines below process  formula_str   to make the array readable by estar c++
     GetElements elemObject;
     GetElements::GetElementsStruct GeElems = elemObject.getElemArray(formulaStr, *NEP);
     int k = 0;
@@ -80,7 +81,8 @@ extern "C" int mainf_(char *formulaStr,
     // call the main estar calculation files.
     double mediumDensity = *mediaDensity;
     //double mIval = *meanIval;
-    estarCalculation(isCompInt, nepInt, mediumDensity, estarFormulaArrayInput, estarWeightArrayInput, numOfAtoms, densityCorr, enGrid, meanIval);
+    estarCalculation(isCompInt, nepInt, mediumDensity, estarFormulaArrayInput, estarWeightArrayInput, 
+    numOfAtoms, densityCorr, enGrid, meanIval, ipotval);
 
     return 0;
 }
