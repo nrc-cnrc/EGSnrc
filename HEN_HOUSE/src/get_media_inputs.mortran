@@ -668,7 +668,7 @@ COMIN/MEDINP,ELECIN,THRESH,ELEMTB,USEFUL/;
 
 $INTEGER  ival,ival_media,ival_medfile,i,j,k,ival_ae,ival_ue,ival_ap,ival_up,
           ival_rho,ival_elements,ival_rhoz,ival_iunrst,ival_iaprim,ival_gasp,
-          ival_pz,ival_sterncid,
+          ival_pz,ival_sterncid,ival_ipot,
           ival_densityfile,medfile_error,ival_outfile,
           egs_open_file,lnblnk1,i_medfile,egs_get_unit,i_mederr,mindex,eindex,
           i_density,i01,length,i_outfile;
@@ -679,6 +679,7 @@ $LOGICAL  medfile_specified,densityfile_specified,elements_specified,
 $LOGICAL  iunrst_specified,stern_specified,iaprim_specified,
           gasp_specified,rho_specified,start_delim_found,end_delim_found,
           spec_by_pz,spec_by_rhoz,df_if_elem_mismatch($MXMED),
+          ipot_specified,
           df_if_rho_mismatch($MXMED);
 $LOGICAL  ex;
 
@@ -711,7 +712,7 @@ character*512 toUpper;
 "to the media library"
 $INTEGER nne_tmp,iaprim_tmp,epstfl_tmp,iunrst_tmp;
 $REAL rho_tmp,rhoz_tmp($MXEL),z_tmp($MXEL),pz_tmp($MXEL),ae_tmp,ap_tmp,
-      ue_tmp,up_tmp,gasp_tmp;
+      ue_tmp,up_tmp,gasp_tmp,ipot_tmp;
 $TYPE asym_tmp($MXEL);
 
 "for stuff read from the density correction file"
@@ -901,6 +902,7 @@ DO i=1,NMED[
    "set up defaults"
    elements_specified=.false.;
    rho_specified=.false.;
+   ipot_specified=.false.;
    densityfile_specified=.false.;
    stern_specified=.false.;
    iunrst_specified=.false.;
@@ -1011,6 +1013,22 @@ DO i=1,NMED[
    ]
 
    "now see what else is specified in the .egsinp file"
+   ival=ival+1;
+   ival_ipot=ival;
+   values_sought(ival) = 'ivalue';
+   type(ival)=1;
+   nvalue(ival)=1;
+   value_min(ival)=0.;
+   value_max(ival)=1e15;
+   default(ival)=1.0;
+   nmin=ival_ipot;nmax=ival_ipot;
+   CALL GET_INPUT;
+   IF(error_flags(ival_ipot)=0)[
+      ipot_tmp=value(ival_ipot,1);
+      ipot_specified=.true.;
+      $WRITE_MEDERR(' I-value specified in .egsinp file.');
+   ]
+
    ival=ival+1;
    ival_sterncid=ival;
    values_sought(ival)='sterncid';
@@ -1519,6 +1537,10 @@ DO i=1,NMED[
 
        nne(i)=nne_tmp;
        rho(i)=rho_tmp;
+       ipot(i) = -1;
+       IF(ipot_specified)[
+         ipot(i) = ipot_tmp;
+       ]
 
        DO j=1,nne_tmp[
          inpasym(i,j)=asym_tmp(j);

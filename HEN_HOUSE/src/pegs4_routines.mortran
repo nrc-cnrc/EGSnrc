@@ -463,7 +463,7 @@ $REAL4   E0,EE;
 LOGICAL POSITR;
 $REAL4   G,EEM,T,ETA2,BETA2,ALETA2,X,D,FTERM,TP2,D2,D3,D4,DELTA;
 $INTEGER I;
-"$INTEGER i_mederr2,i_parallel,first_parallel,n_parallel;"
+$INTEGER i_mederr2,i_parallel,first_parallel,n_parallel;
 COMIN/DERCON,LSPION,EPSTAR/; "MOD NOV 24,1988"
 "     COMMON POINT FOR E- AND E+ ENTRIES.                              "
 G=E0/RMP;
@@ -472,9 +472,9 @@ EEM=EE/RMP-1.;
 "WRITE_MEDER is defined to print out data"
 "when running an application."
 "This can be used for debugging"
-"REPLACE {$WRITE_MEDERR(#)} WITH {;"
-"IF(n_parallel=0 | i_parallel=first_parallel)["
-"write(i_mederr2,*){P1};];};"
+REPLACE {$WRITE_MEDERR(#)} WITH {;
+IF(n_parallel=0 | i_parallel=first_parallel)[
+write(i_mederr2,*){P1};];};
 T=G-1;
 ETA2=T*(G+1.);
 BETA2=ETA2/G**2;
@@ -545,6 +545,9 @@ ELSE [DELTA = EPSTD(NEPST);]
 "END OF DENSITY CORRECTION TERM CALCULATION"
 
 "     NOW PUT IT ALL TOGETHER                                          "
+$WRITE_MEDERR('++++++++++++++');
+$WRITE_MEDERR('EPSTD(IEPST) IS ', EPSTD(IEPST));
+$WRITE_MEDERR('++++++++++++++');
 SPIONB=(SPC1/BETA2)*(LOG(T + 2.) - SPC2 + FTERM - DELTA);
 RETURN;
 END;  "END OF FUNCTION SPIONB"
@@ -1694,7 +1697,8 @@ $WRITE_MEDERR('Calling C++ ESTAR from pegs4_routine');
 
 $WRITE_MEDERR('Is media compound? -', ISCOMP);
 
-CALL mainf(ELEM_NAMES,RHOZP,PZP,RHOP,densityCorr,enGrid,NEP,ISCOMP,IEV);
+CALL mainf(ELEM_NAMES,RHOZP,PZP,RHOP,densityCorr,
+enGrid,NEP,ISCOMP,IEV,IPOTVAL);
 
 
 NEPST = 113; "there are 113 energy levels"
@@ -1751,6 +1755,10 @@ DO elemIndex=1,NEPST[
 ]
 $WRITE_MEDERR('=================');
 
+
+$WRITE_MEDERR('== IPOT PASSING ====');
+$WRITE_MEDERR('IVALUE  IS ', IPOTVAL);
+$WRITE_MEDERR('=================');
 $WRITE_MEDERR('****************');
 
 
