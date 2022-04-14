@@ -1626,6 +1626,9 @@ DO i=1,nmed[
   write(ounit,'(a,24a1)')'   Medium: ',(media(j,i),j=1,24);
   write(ounit,'(a,24a1)')' Sterncid: ',(inpstrn(j,i),j=1,24);
   write(ounit,'(a,1p,e14.5,a)')'     rho: ',rho(i),' g/cm^3';
+  IF(~(ipot(i)=-1))[
+      write(ounit,'(a,1p,e14.5,a)')'     I-value: ',ipot(i),' eV';
+  ]
   write(ounit,'(a,24a4)')' Elements: ',(inpasym(i,j),j=1,nne(i));
   write(ounit,'(a,1p,12e14.5)')'    rhoz: ',(rhoz(i,j),j=1,nne(i));
   write(ounit,'(a,1p,12e14.5)')'      pz: ',(pz(i,j),j=1,nne(i));

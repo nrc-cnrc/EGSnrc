@@ -545,9 +545,9 @@ ELSE [DELTA = EPSTD(NEPST);]
 "END OF DENSITY CORRECTION TERM CALCULATION"
 
 "     NOW PUT IT ALL TOGETHER                                          "
-$WRITE_MEDERR('++++++++++++++');
-$WRITE_MEDERR('EPSTD(IEPST) IS ', EPSTD(IEPST));
-$WRITE_MEDERR('++++++++++++++');
+"$WRITE_MEDERR('++++++++++++++');"
+"$WRITE_MEDERR('EPSTD(IEPST) IS ', EPSTD(IEPST));"
+"$WRITE_MEDERR('++++++++++++++');"
 SPIONB=(SPC1/BETA2)*(LOG(T + 2.) - SPC2 + FTERM - DELTA);
 RETURN;
 END;  "END OF FUNCTION SPIONB"
@@ -1801,7 +1801,12 @@ READ(density_unit,*) (ZEPST(I),WEPST(I),I=1,NELEPS);
 READ(density_unit,*) (EPSTEN(I),EPSTD(I),I=1,NEPST);
 
 close(density_unit);
-
+$WRITE_MEDERR('==== rho file d ====');
+DO elemIndex=1,NEPST[
+    $WRITE_MEDERR('for energy ', EPSTEN(elemIndex));
+    $WRITE_MEDERR('density cor s IS ', EPSTD(elemIndex));
+]
+$WRITE_MEDERR('=================');
 IF(NEPST>150)[OUTPUT NEPST;
 (//' *****NEPST=',I4,' IS GREATER THAN THE 150 ALLOWED');$CALL_EXIT(22);]
 "CONVERT TO TOTAL ENERGIES"
