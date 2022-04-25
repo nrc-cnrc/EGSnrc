@@ -125,7 +125,18 @@ dep_advanced_application = $(ABS_EGSPP)egs_advanced_application.cpp \
         $(ABS_EGSPP)egs_application.h $(ABS_EGSPP)egs_run_control.h
 
 estar_advanced_application_files = $(ESTAR_DIR)estarCalc.cpp \
-        $(ESTAR_DIR)estarCalc.h
+        $(ESTAR_DIR)estarCalc.h $(ESTAR_DIR)cprep.cpp \
+        $(ESTAR_MODULES)datatables.h $(ESTAR_MODULES)elementData.h \
+        $(ESTAR_MODULES)newtonbisec.h $(ESTAR_MODULES)newtonbisec.cpp \
+        $(ESTAR_MODULES)parse.h $(ESTAR_MODULES)parse.cpp \
+        $(ESTAR_MODULES)parseDataFile.h $(ESTAR_MODULES)parseDataFile.cpp \
+        $(ESTAR_ROUTINE)bspol.h $(ESTAR_ROUTINE)bspol.cpp \
+        $(ESTAR_ROUTINE)scof.h $(ESTAR_ROUTINE)scof.cpp \
+        $(ESTAR_ROUTINE)formulaCalculations.h $(ESTAR_ROUTINE)formula_calculation.cpp \
+        $(ESTAR_ROUTINE)formula.h $(ESTAR_ROUTINE)formula.cpp \
+        $(ESTAR_ROUTINE)mixformula.h $(ESTAR_ROUTINE)mixformula.cpp \
+        $(ESTAR_S_HELPERS)headerfile.h \
+        $(ESTAR_S_HELPERS)cutoff.cpp
 
 dep_user_code = $(USER_CODE).cpp array_sizes.h $(common_h_files1) \
         $(ABS_EGSPP)$(EGS_BASE_APPLICATION).h \

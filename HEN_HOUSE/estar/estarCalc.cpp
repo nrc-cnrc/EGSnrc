@@ -63,7 +63,7 @@ extern "C" int mainf_(char *formulaStr,
     string mainFormula_temp_1;
     string mainFormula_temp_2;
 
-    // The   2 lines below process  formula_str   to make the array readable by estar c++
+    // The   2 lines below process   formula_str   to make the array readable by estar c++
     GetElements elemObject;
     GetElements::GetElementsStruct GeElems = elemObject.getElemArray(formulaStr, *NEP);
     int k = 0;
