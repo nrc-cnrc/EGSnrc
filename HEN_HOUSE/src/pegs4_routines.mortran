@@ -1689,16 +1689,15 @@ IF(EPSTFLP < 0 | EPSTFLP > 1) [
 ]
 "ABOVE IS NRCC MOD DEC 1988"
 
-IF(EPSTFLP=0)["DEFAULT TO STANDARD PEGS4 METHODS"
+IF(EPSTFLP=0)[
 
 "No density file provided. We find density factors"
 "Using ESTAR"
-$WRITE_MEDERR('Calling C++ ESTAR from pegs4_routine');
 
-$WRITE_MEDERR('Is media compound? -', ISCOMP);
+"$WRITE_MEDERR('Is media compound? -', ISCOMP);"
 
 CALL mainf(ELEM_NAMES,RHOZP,PZP,RHOP,densityCorr,
-enGrid,NEP,ISCOMP,IEV,IPOTVAL);
+enGrid,NEP,ISCOMP,IEV,IPOTVAL,MEDID);
 
 
 NEPST = 113; "there are 113 energy levels"
@@ -1725,41 +1724,6 @@ DO dfIndex=1,NEPST[
 ]
 
 
-$WRITE_MEDERR('== NEPST HAS BEEN PASSED ====');
-$WRITE_MEDERR('NEPST IS ', NEPST);
-$WRITE_MEDERR('=================');
-
-$WRITE_MEDERR('== I-VALUE HAS BEEN PASSED ====');
-$WRITE_MEDERR('I-VAL (IEV) IS ', IEV);
-$WRITE_MEDERR('=================');
-
-$WRITE_MEDERR('== DENSITY HAS BEEN PASSED ====');
-$WRITE_MEDERR('DENSITY (EPSTRH) IS ', EPSTRH);
-$WRITE_MEDERR('=================');
-
-$WRITE_MEDERR('== NELEPS HAS BEEN PASSED ====');
-$WRITE_MEDERR('NEP (NELEPS) IS ', NELEPS);
-$WRITE_MEDERR('=================');
-
-$WRITE_MEDERR('== Z AND WT PASSED ====');
-DO zIndex=1,NELEPS[
-    $WRITE_MEDERR('Z NUM (ZEPST(zIndex)) ', ZEPST(zIndex));
-    $WRITE_MEDERR('FRAC (WEPST(wtIndex)) ', WEPST(zIndex));
-]
-$WRITE_MEDERR('=================');
-
-$WRITE_MEDERR('==== DENSITY CORR PASSED ====');
-DO elemIndex=1,NEPST[
-    $WRITE_MEDERR('for energy ', EPSTEN(elemIndex));
-    $WRITE_MEDERR('density cor    IS ', EPSTD(elemIndex));
-]
-$WRITE_MEDERR('=================');
-
-
-$WRITE_MEDERR('== IPOT PASSING ====');
-$WRITE_MEDERR('IVALUE  IS ', IPOTVAL);
-$WRITE_MEDERR('=================');
-$WRITE_MEDERR('****************');
 
 
 
@@ -1801,12 +1765,7 @@ READ(density_unit,*) (ZEPST(I),WEPST(I),I=1,NELEPS);
 READ(density_unit,*) (EPSTEN(I),EPSTD(I),I=1,NEPST);
 
 close(density_unit);
-$WRITE_MEDERR('==== rho file d ====');
-DO elemIndex=1,NEPST[
-    $WRITE_MEDERR('for energy ', EPSTEN(elemIndex));
-    $WRITE_MEDERR('density cor s IS ', EPSTD(elemIndex));
-]
-$WRITE_MEDERR('=================');
+
 IF(NEPST>150)[OUTPUT NEPST;
 (//' *****NEPST=',I4,' IS GREATER THAN THE 150 ALLOWED');$CALL_EXIT(22);]
 "CONVERT TO TOTAL ENERGIES"
