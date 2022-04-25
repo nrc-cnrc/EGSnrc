@@ -2,7 +2,7 @@
 using namespace std;
 #include "estarCalc.h"
 #include "string.h"
-#include "cprep.cpp"
+#include "estarMainCalc.cpp"
 
 class GetElements {
     public:
