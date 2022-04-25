@@ -78,7 +78,7 @@ class compFormulaPreprocess {
         }
 
 
-        string getCompFormula(string *elementArray, float *numOfAtoms, int NEP) {
+        string getCompFormula(string *elementArray, float *numOfAtoms, int NEP, int mediaNum) {
             // restructure the input arrays using compRes
             RestructureCompound compRestruct;
             // compRestruct = compRes(;
@@ -89,9 +89,6 @@ class compFormulaPreprocess {
             while (i < NEP) {
                 numberOfAtoms[i] = static_cast<int>(numOfAtoms[i]); // convert float to int
                 numberOfAtomsStr[i] = to_string(numberOfAtoms[i]); // convert int to string
-                // cout << "for element in compound " << elementArray[i] << "\n";
-                // cout << "numberOfAtoms[i] is " << numberOfAtoms[i] << "\n";
-                // cout << "numberOfAtomsStr[i] is " << numberOfAtomsStr[i] << "\n";
                 i = i + 1;
             }
             i = 0;
@@ -100,7 +97,8 @@ class compFormulaPreprocess {
                 compoundFormula = compoundFormula + elementArray[i] + numberOfAtomsStr[i]; // final formula
                 i = i + 1; 
             }
-            cout << "The medium is a compound with formula: " << compoundFormula << "\n";
+            cout << "\n";
+            cout << "The medium " << mediaNum << " is a compound with formula: " << compoundFormula << "\n";
             return compoundFormula;
         }
 };
@@ -110,23 +108,28 @@ class compFormulaPreprocess {
     This is a simple function which runs either fcalc or mixtureCalculation 
     depending on whether the substance is a compound/element or whether it is a mixture respectively
 */
-formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, double *massFraction, float *numOfAtoms, int NEP) {
+formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, double *massFraction, float *numOfAtoms, int NEP, int mediaNum) {
     formula_calc fc;
     string formula;
     string formulaCompound;
+    cout << "\n-------------------------\n";
+    cout << "== MEDIUM " << mediaNum << " BLOCK FOR ESTAR ==\n";
     if (knmat == 0) {
         formula = elementArray[0];
         fc = fcalc(knmat, rho, formula);
+        cout << "\n";
+        cout << "Medium " << mediaNum << " treated as element in ESTAR\n";
         return fc;
     } else if (knmat == 1) {
         compFormulaPreprocess compObject;
         compFormulaPreprocess::RestructureCompound rc = compObject.compRes(elementArray, numOfAtoms, NEP);
-        string compFormula = compObject.getCompFormula(rc.finalElemArray, rc.finalNumAtoms, rc.finalNumOfElems);
-        //cout << "FINAL compoundFormula[i] inside form_calc is " << compFormula << " hehe\n";
+        string compFormula = compObject.getCompFormula(rc.finalElemArray, rc.finalNumAtoms, rc.finalNumOfElems, mediaNum);
         fc = fcalc(knmat, rho, compFormula);
         return fc;
     } else {    
         fc = mixtureCalculation(rho, elementArray, massFraction, NEP);
+        cout << "\n";
+        cout << "Medium " << mediaNum << " treated as mixture in ESTAR\n";
         return fc;
     }
 }
