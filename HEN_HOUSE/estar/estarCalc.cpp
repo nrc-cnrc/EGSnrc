@@ -58,7 +58,8 @@ extern "C" int mainf_(char *formulaStr,
                     int *NEP, 
                     int *ISCOMP,
                     float *meanIval,
-                    float *ipotval) {
+                    float *ipotval,
+                    int *media) {
     string mainFormula;
     string mainFormula_temp_1;
     string mainFormula_temp_2;
@@ -69,6 +70,7 @@ extern "C" int mainf_(char *formulaStr,
     int k = 0;
     int nepInt = *NEP;
     int isCompInt = *ISCOMP;
+    int mediaNum = *media; // this is the media id
 
     string estarFormulaArrayInput[nepInt];
     double estarWeightArrayInput[nepInt];
@@ -82,7 +84,7 @@ extern "C" int mainf_(char *formulaStr,
     double mediumDensity = *mediaDensity;
     //double mIval = *meanIval;
     estarCalculation(isCompInt, nepInt, mediumDensity, estarFormulaArrayInput, estarWeightArrayInput, 
-    numOfAtoms, densityCorr, enGrid, meanIval, ipotval);
+    numOfAtoms, densityCorr, enGrid, meanIval, ipotval, mediaNum);
 
     return 0;
 }

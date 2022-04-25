@@ -17,7 +17,7 @@ using namespace std;
 // WE NEED TO PASS IN numOfAtoms as a an array of floats as it is defined as a float in GET_MEDIA_INPUT;
 // however we later convert numOfAtoms from float -> int;
 int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elementArray, double *massFraction, 
-float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *ipotval) {
+float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *ipotval, int mediaNum) {
     //------------------------------------------------//
     int knmat;
 
@@ -45,18 +45,16 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
 
     /////--> MUST PASS FORMULA AND RHO HERE *** MODIFY CALCULATE
 
-    fc = getDataFromFormulae(knmat, rho, elementArray, massFraction, numOfAtoms, NEP); // pass formula array here // pass mass fractiom here too // that will get passed to mixtures then //  before that make sure to make NA Na
+    fc = getDataFromFormulae(knmat, rho, elementArray, massFraction, numOfAtoms, NEP, mediaNum); // pass formula array here // pass mass fractiom here too // that will get passed to mixtures then //  before that make sure to make NA Na
     //cout << "I value is: " << fc.pot << "\n";
-    cout << "\n============\n";
-    cout << "ival in cprep is " << *ipotval << "\n";
+    cout << "\n";
     if (*ipotval != -1) {
         fc.pot = *ipotval;
-        cout << "I value (eV) given in egsinp file is " << fc.pot << "\n";
+        cout << "For medium " << mediaNum << " I-value (eV) given in egsinp file is " << fc.pot << "\n";
     } else {
-        cout << "I value (eV) not provided in egsinp file.\n";
+        cout << "For medium " << mediaNum << " I value (eV) not provided in egsinp file.\n";
         cout << "I value (eV) as calulated by ESTAR is: " << fc.pot << "\n";
     }
-    cout << "\n=============\n";
     double estarIval = fc.pot; // This is the I-value obtained by calculation
     *meanIval = fc.pot;
     // cout << "input custom i-val? 0->no 1->yes\n";
@@ -390,7 +388,9 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
         densityCorr[i] = dlt[i];
         enGrid[i] = er[i];
     }
-    
+    cout << "\n";
+    cout << "Density correction factors calculated by ESTAR for medium " << mediaNum << ".\n";
+    cout << "-------------------------\n";
     return 0;
     
 };
