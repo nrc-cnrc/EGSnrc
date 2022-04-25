@@ -5,7 +5,7 @@
 #include "modules/routine/scof.h" 
 #include "modules/parseDataFile.h"
 #include "modules/routine/bspol.h"
-#include "modules/newtonbisec.h"
+#include "modules/bisec.h"
 #include "modules/routine/formulaCalculations.h"
 #include "modules/solverHelpers/headerfile.h"
 #include "modules/solverHelpers/cutoff.cpp"
@@ -321,13 +321,13 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     double delta;
     double yl;
     double dlt[lkmax];
-    double tol = 0.000000001; // for newton bisection
+    double tol = 0.000000001; // for bisection method
     double xroot;
     double nb_density_corr[lkmax];
-    double nb_density; // density factor from newton bisection method
+    double nb_density; // density factor from bisection method
     /*
         solver = 1 := use approximation in estar
-        solver = 2 := use newton bisection (section 2.2 of report)
+        solver = 2 := use bisection method (section 2.2 of report)
     */
     int solver = 1;
     bspol bp;
@@ -347,7 +347,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
                 if (solver == 1) {
                     delta =  bp.density_corr;     
                 } else if (solver == 2) {
-                    xroot = newton_bisec(q[bp.lb_index], q[bp.ub_index], tol, tau, f, eps, nmax);
+                    xroot = bisec(q[bp.lb_index], q[bp.ub_index], tol, tau, f, eps, nmax);
                     double yqn = 0; 
                     sum = 0.0;
                     for (int m = 0; m < nmax; m++) {

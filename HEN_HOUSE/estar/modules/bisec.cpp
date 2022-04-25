@@ -3,12 +3,6 @@
 #include <iomanip>
 using namespace std;
 
-// plan of attack
-// we define the function initially 
-// then we call the functions in cprep.cpp
-// with the help of mu and 
-// the other predefined variables we already have in cprep
-// use the newton_bisec code of the co367 a4.
 
 // first we define the function which we want to do bisection over
 // we want to solve for x in the function accurately
@@ -29,7 +23,7 @@ double objective_function (double tau, double f[1000], double eps[1000], int nma
 
 // now we have to write the bisection algorithm
 
-double newton_bisec(double lowerbound, double upperbound, double tolerance, double tau, double f[1000], double eps[1000], int nmax) {
+double bisec(double lowerbound, double upperbound, double tolerance, double tau, double f[1000], double eps[1000], int nmax) {
     // we know objective_function(lowebound) will be positive
     double del = 1;
     double x_mid;
