@@ -65,6 +65,9 @@ EGS_SOURCEDIR = $(HEN_HOUSE)src$(DSEP)
 # ESTAR sources
 #
 ESTAR_DIR = $(HEN_HOUSE)estar$(DSEP)
+ESTAR_MODULES = $(ESTAR_DIR)modules$(DSEP)
+ESTAR_ROUTINE = $(ESTAR_MODULES)routine$(DSEP)
+ESTAR_S_HELPERS = $(ESTAR_MODULES)solverHelpers$(DSEP)
 
 # ESTAR linking keyword
 F77_CPP_LINKER = -lstdc++
