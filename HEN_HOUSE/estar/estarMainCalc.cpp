@@ -374,17 +374,9 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     }; 
     //---------------------------------------------//
 
-    // ofstream myfile;
-    // myfile.open ("modules/test/cppout.density");
 
-    // for (int i = 0; i < lkmax; i++) {
-
-    //     myfile << fixed << setprecision(9) << dlt[i] << "\n";
-    // }
-    // myfile.close();
     for (int i = 0; i < lkmax; i++) {
 
-        //cout << "factor " << i << " is "<< setprecision(9) << dlt[i] << "\n";
         densityCorr[i] = dlt[i];
         enGrid[i] = er[i];
     }
