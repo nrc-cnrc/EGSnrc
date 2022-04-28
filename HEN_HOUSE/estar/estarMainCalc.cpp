@@ -1,6 +1,7 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <assert.h>
 #include "modules/datatables.h"
 #include "modules/routine/scof.h" 
 #include "modules/parseDataFile.h"
@@ -11,11 +12,11 @@
 #include "modules/solverHelpers/cutoff.cpp"
 using namespace std;
 
-// estarCalculation(NEP -> DETERMINES KMAT)
-// estarCalculation(mediaDensity -> density)
+/*
+    This function computes the density correction factors by using the processed input arrays and variables
+    from estarCalc.cpp. The density correction factors are stored in the variable densityCorr.
+*/
 
-// WE NEED TO PASS IN numOfAtoms as a an array of floats as it is defined as a float in GET_MEDIA_INPUT;
-// however we later convert numOfAtoms from float -> int;
 int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elementArray, double *massFraction, 
 float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *ipotval, int mediaNum) {
     //------------------------------------------------//
@@ -24,17 +25,14 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     if (isCompound == 1) { // 1 means compound and 0 means not compound
         knmat = 1;
     } else if (NEP == 1) {
-        knmat = 0;
+        knmat = 0; // substance is an element
     } else {
-        knmat = 2;
+        knmat = 2; // substance is a mixture
     }
     HelperFunctions hf;
     formula_calc fc;
-    // cout << "element(0) or compound(1) or mixture(2)?\n";
-    // cin >> knmat;
     double rho;
     string elem_name;
-    // cout << "give density of element pls:\n";
     rho = mediaDensity;
     if (rho <= 0) {
         cout << "\n***************\n";
@@ -43,12 +41,13 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
         return 9;
     };
 
-    /////--> MUST PASS FORMULA AND RHO HERE *** MODIFY CALCULATE
-
-    fc = getDataFromFormulae(knmat, rho, elementArray, massFraction, numOfAtoms, NEP, mediaNum); // pass formula array here // pass mass fractiom here too // that will get passed to mixtures then //  before that make sure to make NA Na
-    //cout << "I value is: " << fc.pot << "\n";
+    // Here we pass the processed data from the .egsinp file
+    // in  getDataFromFormulae which computes the ivalue and other relevant quantities
+    fc = getDataFromFormulae(knmat, rho, elementArray, massFraction, numOfAtoms, NEP, mediaNum);
     cout << "\n";
+    
     if (*ipotval != -1) {
+        assert (*ipotval>=0 && "Ivalue must be non-negative");
         fc.pot = *ipotval;
         cout << "For medium " << mediaNum << " I-value (eV) given in egsinp file is " << fc.pot << "\n";
     } else {
@@ -57,28 +56,15 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     }
     double estarIval = fc.pot; // This is the I-value obtained by calculation
     *meanIval = fc.pot;
-    // cout << "input custom i-val? 0->no 1->yes\n";
+    
     
     int p = 0;
     double ival;
-    // cin >> p;
-    // if (p==1) {
-    //     cout << "give ival: ";
-    //     cin >> ival;
-    //     if (ival <= 0) {
-    //         cout << "\n***************\n";
-    //         cout << "Error! Density I-value be greater than 0";
-    //         cout << "\n***************\n";
-    //         return 9;
-    //     };
-    //     fc.pot = ival;
-    //     cout << "new i-val is :" << fc.pot << "\n";
-    // }
     //------------------------------------------------//
-    int lkmax = 113; // number of elements in the energy grid sizeof(er)/sizeof(*er)
+    int lkmax = 113; // number of elements in the energy grid ->sizeof(er)/sizeof(*er)
 
     //================================================//
-    // define q here. Furher information about q is given in 2.1 of report.
+    // define q here. Further information about q is given in 2.1 of report.
     int numq = 50;
     long double temp_qfac = log(10)/numq;
     long double qfac = exp(temp_qfac);
@@ -124,7 +110,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     double zav = fc.zav;
     double hom = 28.81593*sqrt(rho*zav); // this is equation 4 of Sternheimer 1984
     double phil = 2.0*log(fc.pot/hom);   // this is equation 7 of Sternheimer 1984 with a slight modification.
-                                         // Please refer to the report to understand the modification.
+                                         // Please refer to the report (2.2) to understand the modification.
     double cbar = phil + 1.0;
 
     for (int i = 0; i < mmax; i++) {
@@ -154,8 +140,8 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
 
         if (ds.nc[record][nmax-1] <0) {
             // This condition is true ONLY when the element is a metallic conductor.
-            // * example: Please look at data.txt in the nc section. More information is given in the report on 
-            // where to find the nc section. You will see that for metalllic conductors the last number of nb[] is 
+            // * example: Please look at elementData.h. More information is given in the report (Integration of ESTAR in EGSnrc) on 
+            // where to find the nc section. You will see that for metalllic conductors the last number of nc[] is 
             // negative of number of electrons in last subshell. This is how we know the element is a conductor.
             // Otherwise it is treated as a non-conductor. Once we know the element is a conductor,
             // we make the negative number positive with the code below
@@ -221,12 +207,12 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     //--------------------------------------------------------------------//
     // The variables defined above are used to solve equation 8 of Sternheimer 1984
     
-    //=================================================================//
+    //=============================//====================================//
     /*
         The code snippet here is used to solve equation 8 of Sternheimer 1984 using
         Newton's Method to solve for root (adjustment_factor^2 of the paper).
-        Note that the equation constructed here is a bit different from eqation 8.
-        The differences are explained in the report.
+        Note that the equation constructed here is a bit different from equation 8.
+        The differences are explained in the report (2.1).
     */
     double root; //root is the adjustment_factor^2 we want to find 
     double fun;  // this stores the function value
@@ -247,7 +233,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
 
         root = root - droot; 
     };
-    //=================================================================//
+    //=============================//====================================//
     double factor = sqrt(root); //  this is the adjustment factor
     
 
@@ -257,7 +243,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     };
 
     // here we computer cutoff below which density effect is 0. However this cutoff is not used in estar.
-    // Please refer to section 4 of the report for further details. 
+    // Please refer to section 3 of the report for further details. 
     double ycut = hf.cutoff(en, eps, f, nmax);
     
     // ========================================================== //
@@ -266,7 +252,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
         with l^2 being replaced by q[n]. However the formulation of d[n] is slightly different 
         from the formulation in the paper. This has been described in detail in section 2.2 of the 
         report. Furthermore, I have discussed about yql and yq in 2.1 of the report. 
-        Note that if you replace l^2 with q[n] in equation 7 (section 2.2 of report) you will get d[n]
+        The idea behind using d[n] is discussed at the end of 2.2.
     */
     double yq[1200];
     double yql[1200];
@@ -292,7 +278,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     // ========================================================== //
 
 
-    double rmass = 0.510999906; // this is the rest mass of an electron https://en.wikipedia.org/wiki/Electron_mass
+    double rmass = 0.510999906; // this is the rest mass of an electron
 
     // we call scof to get a,b,c,d which will be used to find density effect parameters with bspol
     // please see 2.1 of the report for more details.
@@ -386,18 +372,3 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     return 0;
     
 };
-
-
-// int testFunc(string *elemArray) {
-//     cout << "length is " << elemArray[0] << "\n";
-//     cout << "length2 is " << elemArray[1] << "\n";
-//     return 0;
-// }
-
-
-// int main() {
-//     string formulaArr[2] = {"Cr", "Fe"};
-//     double massFraction[2] = {11.9, 20};
-//     estarCalculation(2, 2, formulaArr, massFraction);
-//     return 0;
-// }

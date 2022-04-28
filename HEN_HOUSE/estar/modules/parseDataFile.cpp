@@ -34,15 +34,6 @@ data parseData() {
     data ds;
     ds.numLevelsStandard = 113; // number of elements in the standard energy grid
 
-    //
-    // The code snippet below puts att the data in data.txt in arr
-    // There are 14532 numbers in data.txt
-    // ifstream inFile;
-    // inFile.open("elementData");
-    // if (!inFile) {
-    //     cout << "Unable to open data.txt file";
-    //     exit(1);
-    // }
     double arr[14532];
     int arr_len = 14532;
     int i = 0;

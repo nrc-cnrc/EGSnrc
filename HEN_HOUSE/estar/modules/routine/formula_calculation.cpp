@@ -1,9 +1,12 @@
 #include <iostream>
 #include <iomanip>
-#include "structdef.cpp"
+#include "formulaStruct.cpp"
 #include "formula.h"
 #include "mixformula.h"
 using namespace std;
+
+// The objective of this module is to determine whether to call
+// fcalc() or mixtureCalculation()
 
 /*
     The class contains information on pre-processing compound formula
@@ -22,7 +25,7 @@ class compFormulaPreprocess {
         // then the function returns an object of RestructureCompound where:
         // * finalElemArray = {H,O}
         // * finalNumAtoms = {2,1}
-        // * finalNumOfElems = 3
+        // * finalNumOfElems = 2
         RestructureCompound compRes(string *inputElemArray, float *inputNumAtomArray, int NEP) {
             // NEP is the length of inputElemArray and inputNumAtomArray
             int j = 0;
@@ -69,7 +72,6 @@ class compFormulaPreprocess {
                 if (elemPresent[m] == 1) {
                     compForm.finalElemArray[k] = tempElemArray[m];
                     compForm.finalNumAtoms[k] = numAtomsArray[m];
-                    //cout << "For formula " << compForm.finalElemArray[k] << " the num of atoms is " << compForm.finalNumAtoms[k] << " with NEP " << compForm.finalNumOfElems << "\n";
                     k = k + 1;
                 }
                 m = m + 1;
@@ -77,11 +79,10 @@ class compFormulaPreprocess {
             return compForm;
         }
 
-
+        // This function produces the chemical formula of a compound from the 
+        // elementrray and numofAtoms array
         string getCompFormula(string *elementArray, float *numOfAtoms, int NEP, int mediaNum) {
-            // restructure the input arrays using compRes
             RestructureCompound compRestruct;
-            // compRestruct = compRes(;
             int numberOfAtoms[NEP];
             string numberOfAtomsStr[NEP];
             int i = 0;
@@ -94,7 +95,7 @@ class compFormulaPreprocess {
             i = 0;
             // now we produce the final string
             while (i < NEP) {
-                compoundFormula = compoundFormula + elementArray[i] + numberOfAtomsStr[i]; // final formula
+                compoundFormula = compoundFormula + elementArray[i] + numberOfAtomsStr[i];
                 i = i + 1; 
             }
             cout << "\n";
@@ -121,7 +122,7 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
         cout << "Medium " << mediaNum << " treated as element in ESTAR\n";
         return fc;
     } else if (knmat == 1) {
-        compFormulaPreprocess compObject;
+        compFormulaPreprocess compObject; // Pre-processing needed only if material is a compound
         compFormulaPreprocess::RestructureCompound rc = compObject.compRes(elementArray, numOfAtoms, NEP);
         string compFormula = compObject.getCompFormula(rc.finalElemArray, rc.finalNumAtoms, rc.finalNumOfElems, mediaNum);
         fc = fcalc(knmat, rho, compFormula);
