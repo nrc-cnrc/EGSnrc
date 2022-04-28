@@ -2,4 +2,4 @@
 
 struct scof;
 
-scof fscof();
+scof fscof(int nmax, double x[1200], double f[1200]);

@@ -6,4 +6,6 @@ struct mixtureData;
 
 mixtureData getData();
 
-formula_calc mixtureCalculation(double rho);
+mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP);
+
+formula_calc mixtureCalculation(double rho, string *elementArray, double *massFraction, int NEP);

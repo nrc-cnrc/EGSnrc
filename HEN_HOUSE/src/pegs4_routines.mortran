@@ -1692,13 +1692,18 @@ IF(EPSTFLP < 0 | EPSTFLP > 1) [
 IF(EPSTFLP=0)[
 
 "No density file provided. We find density factors"
-"Using ESTAR"
+"using ESTAR."
 
-"$WRITE_MEDERR('Is media compound? -', ISCOMP);"
-
-CALL mainf(ELEM_NAMES,RHOZP,PZP,RHOP,densityCorr,
+"Here we call estar"
+"The parameters are described in estarCalc.cpp"
+CALL estar(ELEM_NAMES,RHOZP,PZP,RHOP,densityCorr,
 enGrid,NEP,ISCOMP,IEV,IPOTVAL,MEDID);
 
+"After the call to ESTAR, the remainder"
+"of the calculation is similiar to the EPSTFL=1"
+"BLOCK (after data has been read from density file)."
+"However here we do not do any checks"
+"as they are unnecessary."
 
 NEPST = 113; "there are 113 energy levels"
 "in the standard energy grid"
