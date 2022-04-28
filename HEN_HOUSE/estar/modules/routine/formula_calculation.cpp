@@ -5,6 +5,9 @@
 #include "mixformula.h"
 using namespace std;
 
+// The objective of this module is to determine whether to call
+// fcalc() or mixtureCalculation()
+
 /*
     The class contains information on pre-processing compound formula
 */
