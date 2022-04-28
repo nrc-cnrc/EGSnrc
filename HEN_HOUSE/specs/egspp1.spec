@@ -124,8 +124,8 @@ dep_advanced_application = $(ABS_EGSPP)egs_advanced_application.cpp \
         $(ABS_EGSPP)egs_object_factory.h $(ABS_EGSPP)egs_timer.h \
         $(ABS_EGSPP)egs_application.h $(ABS_EGSPP)egs_run_control.h
 
-estar_advanced_application_files = $(ESTAR_DIR)estarCalc.cpp \
-        $(ESTAR_DIR)estarCalc.h $(ESTAR_DIR)estarMainCalc.cpp \
+estar_advanced_application_files = $(ESTAR_DIR)estarPreProcess.cpp \
+        $(ESTAR_DIR)estarMainCalc.cpp $(ESTAR_ROUTINE)formulaStruct.cpp \
         $(ESTAR_MODULES)datatables.h $(ESTAR_MODULES)elementData.h \
         $(ESTAR_MODULES)bisec.h $(ESTAR_MODULES)bisec.cpp \
         $(ESTAR_MODULES)parse.h $(ESTAR_MODULES)parse.cpp \

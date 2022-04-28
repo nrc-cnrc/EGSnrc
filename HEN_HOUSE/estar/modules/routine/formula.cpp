@@ -1,11 +1,15 @@
 #include <iostream>
 #include <math.h>
 #include "../parse.h"
-//#include "../datatables.h"
 #include <assert.h> 
 using namespace std;
 
-
+/*
+    The purpose of this module is to get a formula_calc object
+    containing relevant data for a single chemical formula like:
+    Na, Cl, NaCl2, H2O etc.
+    For mixtures please refer to mixformula.cpp
+*/
 
 // The function takes in the element name as a string and simply returns
 // the atomic number by using the per_table dictionary
@@ -15,7 +19,7 @@ int atom_num(string elem_name) {
     return atomic_num;
 }
 
-// formula_calc is a structure we defined in the module structdef.cpp.
+// formula_calc is a structure we defined in the module formulaStruct.cpp.
 // The input of fcalc are :
 //   * knmat := type of material (0-> element; 1->compound; 2:->mixture)
 //   * rho := density of material

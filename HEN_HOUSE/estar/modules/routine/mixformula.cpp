@@ -3,8 +3,10 @@
 #include <assert.h>
 using namespace std;
 
-// note that knmat is already 2 as this module is called
-// ONLY when the substance is a mixture
+/*
+    The purpose of this module is to get a formula_calc object
+    containing relevant data for a mixture.
+*/
 
 int const max_comp = 100;
 
@@ -21,6 +23,8 @@ struct mixtureData {
 
 // This is a simple function where we output an object of mixtureData structure
 // where the object has the relevant data of the mixture
+// UPDATE: getData() is no longer called as we get the data from .egsinp files and not 
+//         through command prompts anymore
 mixtureData getData() {
     mixtureData md;
     int ncomp;
@@ -65,7 +69,7 @@ mixtureData getData() {
     return md;
 }
 
-
+// This processes the input data and puts them in a mixtureData structure object
 mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP) {
     mixtureData md;
     md.ncomp = NEP;
@@ -110,9 +114,7 @@ mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP)
 // 2. fractional weight of each element used
 // 3. atomic number of the different elements present
 formula_calc mixtureCalculation(double rho, string *elementArray, double *massFraction, int NEP) {
-    //mixtureData md = getData();// ------------------------------------->>>> WE DO NOT NEED getData anymore::  rather we will throw
-                               // ------------------------------------->>>> mass fraction, element array and nep in a different function
-                               // -------------------------------------->>>> which willl return a mixtureData structure.
+
     mixtureData md = getEgsMediaData(elementArray, massFraction, NEP);
     int numComp = md.ncomp;
     string formulaArray[numComp]; // array containing all the formula

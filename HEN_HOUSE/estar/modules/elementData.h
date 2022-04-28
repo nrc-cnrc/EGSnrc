@@ -1,5 +1,10 @@
-
-double elementData[14532] = {1,113
+// This table contains useful elemental data for the first
+// 100 elements of the periodic table. 
+// Section 4 of the report and the data definition block of
+// parseDataFile.cpp can help to gain an insight on
+// the meaning of the values.
+double elementData[14532] = {
+1,113
 ,1
 ,1.36000E+01
 ,9.40752E-04,9.40748E-04,9.40872E-04,9.41229E-04,9.41529E-04,9.42738E-04

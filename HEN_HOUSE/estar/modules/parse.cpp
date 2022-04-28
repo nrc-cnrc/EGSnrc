@@ -8,13 +8,14 @@ using namespace std;
 
 /*
     This module is intended to parse and interpret a single chemical formula of a 
-    compound/element. The final product of this module is an object of structure parseformula.
+    compound/element. The final product of this module is a parseformula object.
     The comments inside the definition of structure parseformula gives more information on the output.
 */
 
 struct parseformula {
     string str_arr[100]; // stores the formula of elements present in a compound/element into an array
-    int num_arr[100];    // for a compound/element this stores the number of atoms of the corresponding elements in str_arr into an array
+    int num_arr[100];    // for a compound/element this stores the number of atoms 
+                         // of the corresponding elements in str_arr into an array
     int elem_types;      // number of different types of elements present
 };
 
@@ -54,7 +55,6 @@ parseformula parse(string str) {
             cout << "Please enter input formula correctly\n";
             cout << "\n***************\n";
             assert (error_handler==0);
-            exit(1);
         }
         int p = 0;
         if (isdigit(str[i]) != 0) {   // means str[i] is a digit  
@@ -69,12 +69,12 @@ parseformula parse(string str) {
             }
             int val = 0;
             /*
-                Say I have Na20. Now while parsing, kfac is used to record that there are 20 Na atoms.  
+                Say I have Na21. Now while parsing, kfac is used to record that there are 21 Na atoms.  
             */
             int kfac = 1; 
             p = p - 1;
             /*
-                Let us stick with the Na20 example
+                Let us stick with the Na21 example
                 my temp_carr[] = [2,1]. So, to make the algorithm understand there are 21 Na atoms, we do:
                 val = 1*(49-48) + 10*(50-48)
                 The while loop below does this
