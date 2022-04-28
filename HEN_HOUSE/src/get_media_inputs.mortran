@@ -1020,7 +1020,9 @@ DO i=1,NMED[
    nvalue(ival)=1;
    value_min(ival)=0.;
    value_max(ival)=1e15;
-   default(ival)=1.0;
+   default(ival)=-2.0;
+   "Default is set to -2 so that we get an"
+   "error if ivalue is negative"
    nmin=ival_ipot;nmax=ival_ipot;
    CALL GET_INPUT;
    IF(error_flags(ival_ipot)=0)[
@@ -1537,6 +1539,8 @@ DO i=1,NMED[
 
        nne(i)=nne_tmp;
        rho(i)=rho_tmp;
+       "If ivalue not provided,"
+       "ipot(i) is set to -1"
        ipot(i) = -1;
        IF(ipot_specified)[
          ipot(i) = ipot_tmp;
