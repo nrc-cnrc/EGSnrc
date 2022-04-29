@@ -25,8 +25,8 @@ struct  data {
                         // * example, L-III subshell has 4 electrons. So L[i - 1] = 4 when I >= 10.
                         // Please refer to the report to know which portion of the data.txt file represents the subshell data.
 
-    double bd[100][26]; // planck constant * bd[i-1][j] represents the jth oscillator for the dispersion model 
-                        // with atomic number i.
+    double bd[100][26]; // planck constant * bd[i-1][j] represents the absorption edge of the j+1 th oscillator for 
+                        // the dispersion model with atomic number i where 0<=j<=nmax-1.
                         // Please refer to the report to know which portion of the data.txt file represents the subshell data.
 };
 
