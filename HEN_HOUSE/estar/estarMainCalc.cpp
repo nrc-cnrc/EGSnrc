@@ -245,7 +245,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
 
     // here we computer cutoff below which density effect is 0. However this cutoff is not used in estar.
     // Please refer to section 3 of the report for further details. 
-    double ycut = hf.cutoff(en, eps, f, nmax);
+    // double ycut = hf.cutoff(en, eps, f, nmax);
     
     // ========================================================== //
     /*
