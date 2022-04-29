@@ -5,14 +5,14 @@
 using namespace std;
 
 /*
-    The purpose of this module is to read data from the data.txt
+    The purpose of this module is to read data from the elementData.h
     file and then to properly structure the data for usage in other modules.
-    There are 100 sets of data in data.txt (indexed by atomic number)
+    There are 100 sets of data in elementData.h (indexed by atomic number)
     where each set of data corresponds to each element.
-    * For example: the third set of data in data.txt is the data for Lithium
+    * For example: the third set of data in elementData.h is the data for Lithium
 */
 
-// 'data' structure will help us to properly organize the data from the data.txt file
+// 'data' structure will help us to properly organize the data from the elementData.h file
 struct  data {
     int nmax[100];      // number of dispersion oscillators required to describe 
                         // the atoms of a medium made solely with a particular element
@@ -23,11 +23,11 @@ struct  data {
 
     int nc[100][26];    // This is the number of electrons present in the subshell we are considering
                         // * example, L-III subshell has 4 electrons. So L[i - 1] = 4 when I >= 10.
-                        // Please refer to the report to know which portion of the data.txt file represents the subshell data.
+                        // Please refer to the report to know which portion of the elementData.h file represents the subshell data.
 
-    double bd[100][26]; // planck constant * bd[i-1][j] represents the jth oscillator for the dispersion model 
-                        // with atomic number i.
-                        // Please refer to the report to know which portion of the data.txt file represents the subshell data.
+    double bd[100][26]; // planck constant * bd[i-1][j] represents the absorption edge of the j+1 th oscillator for 
+                        // the dispersion model with atomic number i where 0<=j<=nmax-1.
+                        // Please refer to the report to know which portion of the elementData.h file represents the subshell data.
 };
 
 data parseData() {
