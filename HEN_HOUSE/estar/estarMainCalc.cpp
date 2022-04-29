@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <assert.h>
+#include <cmath>
 #include "modules/datatables.h"
 #include "modules/routine/scof.h" 
 #include "modules/parseDataFile.h"
