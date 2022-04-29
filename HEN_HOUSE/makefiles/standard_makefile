@@ -87,8 +87,8 @@ failed_message = "______Operation failed______"
 $(EXECUTABLE): $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(EXE_DIR) compare
 	@echo $(empty)
 	@echo $(empty)
-	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '-cpp $(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH)' and extra objects/libs '$(EGS_EXTRA_OBJECTS) $(ESTAR_DIR)estarCalc.cpp -lstdc++ $(EGS_EXTRA_LIBS)'"
-	@$(F77) -cpp $(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(ESTAR_DIR)estarCalc.cpp $(F77_CPP_LINKER) $(EGS_EXTRA_LIBS) 2>&1
+	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '$(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH)' and extra objects/libs '$(EGS_EXTRA_OBJECTS) $(ESTAR_DIR)estarCalc.cpp -lstdc++ $(EGS_EXTRA_LIBS)'"
+	@$(F77) $(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(ESTAR_DIR)estarCalc.cpp $(F77_CPP_LINKER) $(EGS_EXTRA_LIBS) 2>&1
 
 # The following 2 rules are to make sure that the user executable directory
 # exists.
