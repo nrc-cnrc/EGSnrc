@@ -378,6 +378,7 @@ extern "C" {
 
         shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Voxelized_Shape"});
         shapeBlockInput->addSingleInput("file name", true, "The name of a file that is in binary");
+        setShapeInputs(shapeBlockInput);
     }
 
     EGS_VOXELIZED_SHAPE_EXPORT string getExample() {

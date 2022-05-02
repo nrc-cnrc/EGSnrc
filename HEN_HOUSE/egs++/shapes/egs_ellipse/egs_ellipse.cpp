@@ -49,6 +49,7 @@ extern "C" {
         shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Ellipse"});
         shapeBlockInput->addSingleInput("halfaxis", true, "The two half axis of the ellipse.");
         shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the ellipse, (x, y).");
+        setShapeInputs(shapeBlockInput);
     }
 
     EGS_ELLIPSE_EXPORT string getExample() {

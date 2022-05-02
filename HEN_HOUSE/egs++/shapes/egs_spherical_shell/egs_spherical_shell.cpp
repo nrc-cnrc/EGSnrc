@@ -141,6 +141,7 @@ extern "C" {
         shapeBlockInput->addSingleInput("outer radius", true, "The outer radius");
         shapeBlockInput->addSingleInput("hemisphere", false, "Hemisphere");
         shapeBlockInput->addSingleInput("hemisphere", false, "The half angle, in degrees");
+        setShapeInputs(shapeBlockInput);
     }
 
     EGS_SPHERICAL_SHELL_EXPORT string getExample() {
