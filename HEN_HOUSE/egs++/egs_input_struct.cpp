@@ -95,7 +95,7 @@ vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
         // We only search the 2nd-level blocks
         // i.e. don't look at the geometry definition block, look at the geometries
         for(auto& block2 : block->getBlockInputs()) {
-            if(block2 && block2->getTitle() == blockTitle) {
+            if(block2 && (block2->getTitle() == blockTitle)) {
                 vector<string> libAr = block2->getSingleInput("library")->getValues();
                 for(auto& lib : libAr) {
                     if(lib.size() > 0) {
@@ -111,7 +111,9 @@ vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
     if(libOptions.size() < 1) {
         for(auto& block : blockInputs) {
 
-            if(block && block->getTitle() == blockTitle) {
+            if(block && (block->getTitle() == blockTitle ||
+                // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+        (egsEquivStr(block->getTitle(), "shape") && (egsEquivStr(blockTitle, "target shape") || egsEquivStr(blockTitle, "source shape"))))) {
                 vector<string> libAr = block->getSingleInput("library")->getValues();
                 for(auto& lib : libAr) {
                     if(lib.size() > 0) {
@@ -167,7 +169,9 @@ vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs() {
 }
 
 vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs(string title) {
-    if(egsEquivStr(blockTitle, title)) {
+    if(egsEquivStr(blockTitle, title) ||
+        // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+        (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
         return singleInputs;
     } else {
         for(auto &block: blockInputs) {
@@ -186,7 +190,9 @@ vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs() {
 }
 
 vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs(string title) {
-    if(egsEquivStr(this->getTitle(), title)) {
+    if(egsEquivStr(this->getTitle(), title) ||
+        // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+        (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
         return blockInputs;
     } else {
         for(auto &block: blockInputs) {
@@ -220,7 +226,9 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag) {
 
 shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag, string title) {
     // First search the top-level input block
-    if(egsEquivStr(blockTitle, title)) {
+    if(egsEquivStr(blockTitle, title) ||
+        // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+        (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
         for(auto &inp: singleInputs) {
             // TODO: this assumes unique inputTag
             if(inp && egsEquivStr(inp->getTag(), inputTag)) {
@@ -231,9 +239,11 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag, stri
 
     // If not found, go through input lower level blocks
     for(auto &block: blockInputs) {
-        auto inp = block->getSingleInput(inputTag, title);
-        if(inp) {
-            return inp;
+        if(egsEquivStr(block->getTitle(), title)) {
+            auto inp = block->getSingleInput(inputTag, title);
+            if(inp) {
+                return inp;
+            }
         }
     }
 
@@ -246,6 +256,9 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getBlockInput(string title) {
     } else {
         for(auto &block: blockInputs) {
             if(egsEquivStr(block->getTitle(), title)) {
+                return block;
+            // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+            } else if(egsEquivStr(block->getTitle(), "shape") && (egsEquivStr(title, "source shape") || egsEquivStr(title, "target shape"))) {
                 return block;
             } else {
                 // Do a recursive search

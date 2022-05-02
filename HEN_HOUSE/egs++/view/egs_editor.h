@@ -23,7 +23,7 @@
 #
 #  Author:          Reid Townson, 2020
 #
-#  Contributors:    
+#  Contributors:
 #
 ###############################################################################
 */
@@ -84,6 +84,7 @@ private:
     shared_ptr<EGS_InputStruct> inputStruct;
     QListView *popup;
     QStringListModel *model;
+    bool popupGrabbing;
 };
 
 

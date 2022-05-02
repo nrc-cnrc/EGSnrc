@@ -205,6 +205,8 @@ extern "C" {
         blockPtr->addSingleInput("thickness", true, "The thickness of the layer");
         blockPtr->addSingleInput("top radii", false, "1 (outer radius, inner radius assumed to be 0) or 2 (outer and inner radius) inputs, only required for top layer");
         blockPtr->addSingleInput("bottom radii", true, "1 (outer radius, inner radius assumed to be 0) or 2 (outer and inner radius) inputs");
+
+        setShapeInputs(shapeBlockInput);
     }
 
     EGS_CONICAL_SHELL_EXPORT string getExample() {
