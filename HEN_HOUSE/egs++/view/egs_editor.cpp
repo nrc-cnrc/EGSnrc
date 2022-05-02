@@ -85,6 +85,7 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
 //                         this, SLOT(_q_completionSelected(QItemSelection)));
     //connect(this, SIGNAL(keyboardGrabber()), this, SIGNAL(QAbstractItemView::MoveDown));
 
+    popupGrabbing = false;
 }
 
 EGS_Editor::~EGS_Editor() {
@@ -719,11 +720,30 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
 
     // If we got the library tag, we can directly look up this input block structure
     if(library.size() > 0) {
-#ifdef EDITOR_DEBUG
-            egsInformation("EGS_Editor::getBlockInput: Found library: %s\n", library.toLatin1().data());
-#endif
         shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getLibraryBlock(blockTitle.toStdString(), library.toStdString());
         if(inputBlock) {
+#ifdef EDITOR_DEBUG
+            egsInformation("EGS_Editor::getBlockInput: Found library: %s\n", library.toLatin1().data());
+            vector<shared_ptr<EGS_SingleInput>> singleInputs = inputBlock->getSingleInputs();
+            for (auto &inp : singleInputs) {
+                const vector<string> vals = inp->getValues();
+                egsInformation("   single %s\n", inp->getTag().c_str());
+                for (auto&& val : vals) {
+                    egsInformation("      %s\n", val.c_str());
+                }
+            }
+            vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputBlock->getBlockInputs();
+            for (auto &block : inputBlocks) {
+                singleInputs = inputBlock->getSingleInputs();
+                for (auto &inp : singleInputs) {
+                    const vector<string> vals = inp->getValues();
+                    egsInformation("   single %s\n", inp->getTag().c_str());
+                    for (auto&& val : vals) {
+                        egsInformation("      %s\n", val.c_str());
+                    }
+                }
+            }
+#endif
             return inputBlock;
         }
     }
@@ -1199,14 +1219,21 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
             popup->QWidget::releaseKeyboard();
         } else if(keyEvent->key() == Qt::Key_Right) {
             if (popup->isVisible()) {
+                popupGrabbing = true;
                 popup->QWidget::grabKeyboard();
                 return true;
             }
         }
-    //} else if(event->type() == QEvent::Wheel || event->type() == QEvent::FocusOut) {
-//     } else if(event->type() == QEvent::FocusOut) { // This seemed to block the key_right grab on linux, so commented out
-//         popup->hide();
-//         popup->QWidget::releaseKeyboard();
+//     } else if(event->type() == QEvent::FocusOut || event->type() == QEvent::Move || event->type() == QEvent::Resize || event->type() == QEvent::Scroll || event->type() == QEvent::WindowDeactivate) {
+
+    //} else if(event->type() == QEvent::Wheel || event->type() == QEvent::WindowDeactivate) {
+    } else if(event->type() == QEvent::Wheel || event->type() == QEvent::FocusOut) {
+        if(!popupGrabbing) {
+            popup->hide();
+            popup->QWidget::releaseKeyboard();
+        }
+    } else if(obj == popup && event->type() == QEvent::FocusIn) {
+        popupGrabbing = false;
     }
 
     return QPlainTextEdit::eventFilter(obj, event);
