@@ -147,6 +147,7 @@ extern "C" {
         inputSet = true;
         shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Polygon_Shape"});
         shapeBlockInput->addSingleInput("points", true, "A list of at least 3 2D points (at least 6 floating numbers)");
+        setShapeInputs(shapeBlockInput);
     }
 
     EGS_POLYGON_SHAPE_EXPORT string getExample() {
