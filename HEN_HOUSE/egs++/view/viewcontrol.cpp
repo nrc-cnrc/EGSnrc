@@ -87,7 +87,7 @@ typedef EGS_BaseShape *(*createShapeFunction)();
 typedef EGS_AusgabObject *(*createAusgabObjectFunction)();
 typedef void (*getAppInputsFunction)(shared_ptr<EGS_InputStruct> inpPtr);
 typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
-typedef string (*getExampleFunction)();
+typedef string(*getExampleFunction)();
 
 #ifdef WIN32
     #ifdef CYGWIN
@@ -280,7 +280,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QStringList libraries = directory.entryList(QStringList() << (lib_prefix+"*"+lib_suffix).c_str(), QDir::Files);
 
     // Create an examples drop down menu on the editor tab
-    QMenuBar* menuBar = new QMenuBar();
+    QMenuBar *menuBar = new QMenuBar();
     QMenu *exampleMenu = new QMenu("Insert example...");
     menuBar->addMenu(exampleMenu);
     QMenu *geomMenu = exampleMenu->addMenu("Geometries");
@@ -327,9 +327,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // Ausgab Object definition block
     auto ausDefPtr = inputStruct->addBlockInput("ausgab object definition");
-    ausDefPtr->addSingleInput("simulation ausgab object", true, "The name of the ausgab object that will be used in the simulation.");
 
-#ifdef VIEW_DEBUG
+#ifdef EDITOR_DEBUG
     egsInformation("Loading libraries for egs_editor...\n");
 #endif
 
@@ -340,7 +339,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         // Remove the prefix (EGS_Library adds it automatically)
         libName = libName.right(libName.length() - lib_prefix.length());
 
-#ifdef VIEW_DEBUG
+#ifdef EDITOR_DEBUG
         egsInformation("Trying %s\n", libName.toLatin1().data());
 #endif
         // Skip any library files that start with Qt
@@ -357,7 +356,9 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         // Geometries
         createGeomFunction isGeom = (createGeomFunction) egs_lib.resolve("createGeometry");
         if (isGeom) {
-            //egsInformation(" Geometry %s\n",libName.toLatin1().data());
+#ifdef EDITOR_DEBUG
+            egsInformation(" Geometry %s\n",libName.toLatin1().data());
+#endif
 
             getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
             if (getInputs) {
@@ -393,14 +394,16 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             if (getExample) {
                 QAction *action = geomMenu->addAction(libName);
                 action->setData(QString::fromStdString(getExample()));
-                connect(action,  &QAction::triggered, this, [this]{ insertInputExample(); });
+                connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
             }
         }
 
         // Sources
         createSourceFunction isSource = (createSourceFunction) egs_lib.resolve("createSource");
         if (isSource) {
-            //egsInformation(" Source %s\n",libName.toLatin1().data());
+#ifdef EDITOR_DEBUG
+            egsInformation(" Source %s\n",libName.toLatin1().data());
+#endif
 
             getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
             if (getInputs) {
@@ -437,14 +440,16 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             if (getExample) {
                 QAction *action = sourceMenu->addAction(libName);
                 action->setData(QString::fromStdString(getExample()));
-                connect(action,  &QAction::triggered, this, [this]{ insertInputExample(); });
+                connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
             }
         }
 
         // Shapes
         createShapeFunction isShape = (createShapeFunction) egs_lib.resolve("createShape");
         if (isShape) {
-            //egsInformation(" Shape %s\n",libName.toLatin1().data());
+#ifdef EDITOR_DEBUG
+            egsInformation(" Shape %s\n",libName.toLatin1().data());
+#endif
 
             getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
             if (getInputs) {
@@ -456,22 +461,22 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     vector<shared_ptr<EGS_SingleInput>> singleInputs = shape->getSingleInputs();
                     for (auto &inp : singleInputs) {
                         const vector<string> vals = inp->getValues();
-//                         egsInformation("  single %s\n", inp->getTag().c_str());
-//                         for (auto&& val : vals) {
-//                             egsInformation("      %s\n", val.c_str());
-//                         }
+                        egsInformation("  single %s\n", inp->getTag().c_str());
+                        for (auto&& val : vals) {
+                            egsInformation("      %s\n", val.c_str());
+                        }
                     }
 
                     vector<shared_ptr<EGS_BlockInput>> inputBlocks = shape->getBlockInputs();
                     for (auto &block : inputBlocks) {
-                        //egsInformation("  block %s\n", block->getTitle().c_str());
+                        egsInformation("  block %s\n", block->getTitle().c_str());
                         vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
                         for (auto &inp : singleInputs) {
                             const vector<string> vals = inp->getValues();
-//                             egsInformation("   single %s\n", inp->getTag().c_str());
-//                             for (auto&& val : vals) {
-//                                 egsInformation("      %s\n", val.c_str());
-//                             }
+                            egsInformation("   single %s\n", inp->getTag().c_str());
+                            for (auto&& val : vals) {
+                                egsInformation("      %s\n", val.c_str());
+                            }
                         }
                     }
                 }
@@ -481,20 +486,22 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             if (getExample) {
                 QAction *action = shapeMenu->addAction(libName);
                 action->setData(QString::fromStdString(getExample()));
-                connect(action,  &QAction::triggered, this, [this]{ insertInputExample(); });
+                connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
             }
         }
 
         // Ausgab Objects
         createAusgabObjectFunction isAusgabObject = (createAusgabObjectFunction) egs_lib.resolve("createAusgabObject");
         if (isAusgabObject) {
-            //egsInformation(" Ausgab %s\n",libName.toLatin1().data());
+#ifdef EDITOR_DEBUG
+            egsInformation(" Ausgab %s\n",libName.toLatin1().data());
+#endif
 
             getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
             if (getInputs) {
 
                 shared_ptr<EGS_BlockInput> aus = getInputs();
-                if(aus){
+                if (aus) {
                     ausDefPtr->addBlockInput(aus);
 
                     vector<shared_ptr<EGS_SingleInput>> singleInputs = aus->getSingleInputs();
@@ -524,7 +531,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             if (getExample) {
                 QAction *action = ausgabMenu->addAction(libName);
                 action->setData(QString::fromStdString(getExample()));
-                connect(action, &QAction::triggered, this, [this]{ insertInputExample(); });
+                connect(action, &QAction::triggered, this, [this] { insertInputExample(); });
             }
         }
     }
@@ -550,10 +557,10 @@ GeometryViewControl::~GeometryViewControl() {
             delete EGS_AusgabObject::getObject(i);
         }
     }
-    if(egsinpEdit) {
+    if (egsinpEdit) {
         delete egsinpEdit;
     }
-    if(highlighter) {
+    if (highlighter) {
         delete highlighter;
     }
 }
@@ -2152,7 +2159,7 @@ void GeometryViewControl::changeTransparency(int t) {
 
 void GeometryViewControl::changeGlobalTransparency(int t) {
     int test = materialCB->count();
-    for (int i = 0; i <= test; i++ ) {
+    for (int i = 0; i <= test; i++) {
         int med = materialCB->count() - i;
         QRgb c = m_colors[med];
         m_colors[med] = qRgba(qRed(c), qGreen(c), qBlue(c), t);
@@ -3745,7 +3752,7 @@ void GeometryViewControl::setFontSize(int size) {
 }
 
 void GeometryViewControl::insertInputExample() {
-    QAction *pAction = qobject_cast<QAction*>(sender());
+    QAction *pAction = qobject_cast<QAction *>(sender());
 
     QTextCursor cursor(egsinpEdit->textCursor());
     egsinpEdit->insertPlainText(pAction->data().toString());

@@ -105,6 +105,7 @@ extern "C" {
         shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Rectangle"});
         shapeBlockInput->addSingleInput("rectangle", true, "x1 y1 x2 y2");
         shapeBlockInput->addSingleInput("inner rectangle", false, "xp1 yp1 xp2 yp2");
+        setShapeInputs(shapeBlockInput);
     }
 
     EGS_RECTANGLE_EXPORT string getExample() {
