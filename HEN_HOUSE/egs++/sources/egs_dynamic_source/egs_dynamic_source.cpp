@@ -199,8 +199,8 @@ extern "C" {
 
     EGS_DYNAMIC_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_dynamic_source
     #:start source:
         library = egs_dynamic_source

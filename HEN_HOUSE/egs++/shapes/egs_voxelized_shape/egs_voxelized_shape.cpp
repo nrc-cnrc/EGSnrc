@@ -382,8 +382,8 @@ extern "C" {
 
     EGS_VOXELIZED_SHAPE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_voxelized_shape
     #:start shape:
         library = egs_voxelized_shape
@@ -403,31 +403,31 @@ extern "C" {
     EGS_VOXELIZED_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {
         static const char *func = "createShape(voxelized shape)";
-        if (!input) {
-            egsWarning("%s: null input?\n",func);
-            return 0;
+            if (!input) {
+                egsWarning("%s: null input?\n",func);
+                return 0;
+            }
+            string fname;
+            int err = input->getInput("file name",fname);
+            int file_format;
+            int err2 = input->getInput("file format",file_format);
+            if (err) {
+                egsWarning("%s: missing 'file name' input\n",func);
+                return 0;
+            }
+            if (err2) {
+                egsInformation("%s: 'file format' input missing. Using default 'binary'"
+                "file format \n",func);
+                file_format = 0;
+            }
+            EGS_VoxelizedShape *shape = new EGS_VoxelizedShape(file_format, fname.c_str());
+            if (!shape->isValid()) {
+                delete shape;
+                return 0;
+            }
+            shape->setName(input);
+            shape->setTransformation(input);
+            return shape;
         }
-        string fname;
-        int err = input->getInput("file name",fname);
-        int file_format;
-        int err2 = input->getInput("file format",file_format);
-        if (err) {
-            egsWarning("%s: missing 'file name' input\n",func);
-            return 0;
-        }
-        if (err2) {
-            egsInformation("%s: 'file format' input missing. Using default 'binary'"
-                           "file format \n",func);
-            file_format = 0;
-        }
-        EGS_VoxelizedShape *shape = new EGS_VoxelizedShape(file_format, fname.c_str());
-        if (!shape->isValid()) {
-            delete shape;
-            return 0;
-        }
-        shape->setName(input);
-        shape->setTransformation(input);
-        return shape;
-    }
 
-}
+    }

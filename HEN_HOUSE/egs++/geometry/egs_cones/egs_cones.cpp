@@ -294,8 +294,8 @@ extern "C" {
 
     EGS_CONES_EXPORT string getExample(string type) {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Examples of each of the egs_cones types follow
     # Simply uncomment the :start line for the example that you
     # wish to use

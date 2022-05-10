@@ -55,8 +55,8 @@ extern "C" {
 
     EGS_GAUSSIAN_SHAPE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_gaussiam_shape
     #:start shape:
         library = egs_gaussian_shape

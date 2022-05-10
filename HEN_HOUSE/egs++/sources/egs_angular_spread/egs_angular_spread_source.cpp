@@ -97,8 +97,8 @@ extern "C" {
 
     EGS_ANGULAR_SPREAD_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_angular_spread_source
     #:start source:
         library = egs_angular_spread_source

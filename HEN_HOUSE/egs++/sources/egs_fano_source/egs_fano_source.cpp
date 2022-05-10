@@ -163,8 +163,8 @@ extern "C" {
 
     EGS_FANO_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_fano_source
     #:start source:
         library = egs_fano_source

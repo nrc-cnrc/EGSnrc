@@ -558,8 +558,8 @@ extern "C" {
 
     EGS_PHSP_SCORING_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_phsp_scoring
     #:start ausgab object:
         library = egs_phsp_scoring
@@ -595,187 +595,187 @@ extern "C" {
     EGS_PHSP_SCORING_EXPORT EGS_AusgabObject *createAusgabObject(EGS_Input *input,
             EGS_ObjectFactory *f) {
         const static char *func = "createAusgabObject(phsp_scoring)";
-        if (!input) {
-            egsWarning("%s: null input?\n",func);
-            return 0;
-        }
-        string str;
-        EGS_BaseGeometry *phspgeom;
-        int iscoremc = 0; //default to not score multiple crossers
-        vector <int> from_reg, to_reg;
-        int stype = 0; //default is to use scoring geom
-        int phspouttype;
-        int ptype;
-        int sdir=0;
-        int imuscore = 0;
-        float xyzconst[3];
-        bool xyzisconst[3] = {false, false, false};
-        string gname;
-        string outdir;
-        int err01 = input->getInput("phase space geometry",gname);
-        if (err01) {
-            stype = 1;
-        }
-        else {
-            phspgeom = EGS_BaseGeometry::getGeometry(gname);
-            if (!phspgeom) {
-                egsWarning("\nEGS_PhspScoring: %s does not name an existing geometry.\n"
-                           "Will assume you want to use exit/entry region pairs.\n",gname.c_str());
+            if (!input) {
+                egsWarning("%s: null input?\n",func);
+                return 0;
+            }
+            string str;
+            EGS_BaseGeometry *phspgeom;
+            int iscoremc = 0; //default to not score multiple crossers
+            vector <int> from_reg, to_reg;
+            int stype = 0; //default is to use scoring geom
+            int phspouttype;
+            int ptype;
+            int sdir=0;
+            int imuscore = 0;
+            float xyzconst[3];
+            bool xyzisconst[3] = {false, false, false};
+            string gname;
+            string outdir;
+            int err01 = input->getInput("phase space geometry",gname);
+            if (err01) {
                 stype = 1;
             }
             else {
-                if (input->getInput("score particles on", str) < 0) {
-                    egsInformation("EGS_PhspScoring: No input for scoring direction.\n");
-                    egsInformation("Will score on entry and exit from phase space geometry.\n");
-                    sdir = 0;
+                phspgeom = EGS_BaseGeometry::getGeometry(gname);
+                if (!phspgeom) {
+                    egsWarning("\nEGS_PhspScoring: %s does not name an existing geometry.\n"
+                    "Will assume you want to use exit/entry region pairs.\n",gname.c_str());
+                    stype = 1;
                 }
                 else {
-                    //get scoring direction
-                    vector<string> allowed_sdir;
-                    allowed_sdir.push_back("entry and exit");
-                    allowed_sdir.push_back("entry");
-                    allowed_sdir.push_back("exit");
-                    sdir = input->getInput("score particles on",allowed_sdir,-1);
-                    if (sdir < 0) {
-                        egsFatal("\nEGS_PhspScoring: Invalid scoring direction.\n");
-                    }
-                }
-            }
-        }
-        if (stype==1) {
-            // user wants to use exit/entry region pairs
-            int err05 = input->getInput("from regions",from_reg);
-            int err06 = input->getInput("to regions",to_reg);
-            if (err05 || err06) {
-                egsFatal("\nEGS_PhspScoring: Missing/incorrect input for scoring method\n"
-                         "(scoring geometry or pairs of exit/entry regions)\n");
-            }
-            else {
-                //run some checks on exit/entry region pairs
-                vector<int>::iterator p,p1;
-                if (from_reg.size() > to_reg.size()) {
-                    p = from_reg.begin();
-                    egsWarning("\nEGS_PhspScoring: Mismatch in no. of exit/entry regions.\n"
-                               "Will only score for matched pairs.\n");
-                    p += to_reg.size();
-                    from_reg.erase(p,p+from_reg.size()-to_reg.size());
-                }
-                else if (to_reg.size() > from_reg.size()) {
-                    p = to_reg.begin();
-                    egsWarning("\nEGS_PhspScoring: Mismatch in no. of exit/entry regions.\n"
-                               "Will only score for matched pairs.\n");
-                    p += from_reg.size();
-                    to_reg.erase(p,p+to_reg.size()-from_reg.size());
-                }
-                //now go through and look for exit region = entry region
-                int i=0;
-                while (i<from_reg.size()) {
-                    if (from_reg[i]==to_reg[i]) {
-                        egsInformation("\nEGS_PhspScoring: Cannot have entry region = exit region (reg no. %d)\n",from_reg[i]);
-                        egsInformation("Will delete this pair\n");
-                        p=from_reg.begin()+i;
-                        p1 =to_reg.begin()+i;
-                        from_reg.erase(p);
-                        to_reg.erase(p1);
+                    if (input->getInput("score particles on", str) < 0) {
+                        egsInformation("EGS_PhspScoring: No input for scoring direction.\n");
+                        egsInformation("Will score on entry and exit from phase space geometry.\n");
+                        sdir = 0;
                     }
                     else {
-                        //advance counter
-                        i++;
+                        //get scoring direction
+                        vector<string> allowed_sdir;
+                        allowed_sdir.push_back("entry and exit");
+                        allowed_sdir.push_back("entry");
+                        allowed_sdir.push_back("exit");
+                        sdir = input->getInput("score particles on",allowed_sdir,-1);
+                        if (sdir < 0) {
+                            egsFatal("\nEGS_PhspScoring: Invalid scoring direction.\n");
+                        }
                     }
                 }
             }
-        }
-        //now get common inputs for both scoring methods
-        if (input->getInput("output format", str) < 0) {
-            egsInformation("EGS_PhspScoring: No input for output format type.  Will default to EGSnrc.\n");
-            phspouttype = 0;
-        }
-        else {
-            vector<string> allowed_oformat;
-            allowed_oformat.push_back("EGSnrc");
-            allowed_oformat.push_back("IAEA");
-            phspouttype = input->getInput("output format", allowed_oformat, -1);
-            if (phspouttype < 0) {
-                egsFatal("\nEGS_PhspScoring: Invalid output format.\n");
-            }
-            //see if the user wants to specify constant X/Y/Z for IAEA format
-            if (phspouttype == 1) {
-                int err02 = input->getInput("constant X",xyzconst[0]);
-                int err03 = input->getInput("constant Y",xyzconst[1]);
-                int err04 = input->getInput("constant Z",xyzconst[2]);
-                if (!err02) {
-                    xyzisconst[0] = true;
+            if (stype==1) {
+                // user wants to use exit/entry region pairs
+                int err05 = input->getInput("from regions",from_reg);
+                int err06 = input->getInput("to regions",to_reg);
+                if (err05 || err06) {
+                    egsFatal("\nEGS_PhspScoring: Missing/incorrect input for scoring method\n"
+                    "(scoring geometry or pairs of exit/entry regions)\n");
                 }
-                if (!err03) {
-                    xyzisconst[1] = true;
-                }
-                if (!err04) {
-                    xyzisconst[2] = true;
-                }
-                //see if user wants to score mu (if available)
-                //default is not to score
-                if (!input->getInput("score mu", str)) {
-                    vector<string> allowed_muscore;
-                    allowed_muscore.push_back("no");
-                    allowed_muscore.push_back("yes");
-                    imuscore = input->getInput("score mu",allowed_muscore,-1);
-                    if (imuscore < 0) {
-                        egsWarning("\nEGS_PhspScoring: Invalid input for mu scoring.  Will not score mu.\n");
-                        imuscore = 0;
+                else {
+                    //run some checks on exit/entry region pairs
+                    vector<int>::iterator p,p1;
+                    if (from_reg.size() > to_reg.size()) {
+                        p = from_reg.begin();
+                        egsWarning("\nEGS_PhspScoring: Mismatch in no. of exit/entry regions.\n"
+                                   "Will only score for matched pairs.\n");
+                        p += to_reg.size();
+                        from_reg.erase(p,p+from_reg.size()-to_reg.size());
+                    }
+                    else if (to_reg.size() > from_reg.size()) {
+                        p = to_reg.begin();
+                        egsWarning("\nEGS_PhspScoring: Mismatch in no. of exit/entry regions.\n"
+                                   "Will only score for matched pairs.\n");
+                        p += from_reg.size();
+                        to_reg.erase(p,p+to_reg.size()-from_reg.size());
+                    }
+                    //now go through and look for exit region = entry region
+                    int i=0;
+                    while (i<from_reg.size()) {
+                        if (from_reg[i]==to_reg[i]) {
+                            egsInformation("\nEGS_PhspScoring: Cannot have entry region = exit region (reg no. %d)\n",from_reg[i]);
+                            egsInformation("Will delete this pair\n");
+                            p=from_reg.begin()+i;
+                            p1 =to_reg.begin()+i;
+                            from_reg.erase(p);
+                            to_reg.erase(p1);
+                        }
+                        else {
+                            //advance counter
+                            i++;
+                        }
                     }
                 }
             }
-        }
-        if (phspouttype == 0) {
-            //see if user wants to score multiple crossers
-            if (!input->getInput("score multiple crossers", str)) {
-                vector<string> allowed_scoremc;
-                allowed_scoremc.push_back("no");
-                allowed_scoremc.push_back("yes");
-                iscoremc = input->getInput("score multiple crossers",allowed_scoremc,-1);
-                if (iscoremc < 0) {
-                    egsWarning("\nEGS_PhspScoring: Invalid input for score multiple crossers.  Will not score.\n");
-                    iscoremc = 0;
+            //now get common inputs for both scoring methods
+            if (input->getInput("output format", str) < 0) {
+                egsInformation("EGS_PhspScoring: No input for output format type.  Will default to EGSnrc.\n");
+                phspouttype = 0;
+            }
+            else {
+                vector<string> allowed_oformat;
+                allowed_oformat.push_back("EGSnrc");
+                allowed_oformat.push_back("IAEA");
+                phspouttype = input->getInput("output format", allowed_oformat, -1);
+                if (phspouttype < 0) {
+                    egsFatal("\nEGS_PhspScoring: Invalid output format.\n");
+                }
+                //see if the user wants to specify constant X/Y/Z for IAEA format
+                if (phspouttype == 1) {
+                    int err02 = input->getInput("constant X",xyzconst[0]);
+                    int err03 = input->getInput("constant Y",xyzconst[1]);
+                    int err04 = input->getInput("constant Z",xyzconst[2]);
+                    if (!err02) {
+                        xyzisconst[0] = true;
+                    }
+                    if (!err03) {
+                        xyzisconst[1] = true;
+                    }
+                    if (!err04) {
+                        xyzisconst[2] = true;
+                    }
+                    //see if user wants to score mu (if available)
+                    //default is not to score
+                    if (!input->getInput("score mu", str)) {
+                        vector<string> allowed_muscore;
+                        allowed_muscore.push_back("no");
+                        allowed_muscore.push_back("yes");
+                        imuscore = input->getInput("score mu",allowed_muscore,-1);
+                        if (imuscore < 0) {
+                            egsWarning("\nEGS_PhspScoring: Invalid input for mu scoring.  Will not score mu.\n");
+                            imuscore = 0;
+                        }
+                    }
                 }
             }
-        }
-        if (input->getInput("output directory",outdir) < 0) {
-            outdir="";
-        }
-        if (input->getInput("particle type", str) < 0) {
-            egsInformation("EGS_PhspScoring: No input for particle type.  Will score all.\n");
-            ptype = 0;
-        }
-        else {
-            //get particle type
-            vector<string> allowed_ptype;
-            allowed_ptype.push_back("all");
-            allowed_ptype.push_back("photons");
-            allowed_ptype.push_back("charged");
-            ptype = input->getInput("particle type",allowed_ptype,-1);
-            if (ptype < 0) {
-                egsFatal("\nEGS_PhspScoring: Invalid particle type.\n");
+            if (phspouttype == 0) {
+                //see if user wants to score multiple crossers
+                if (!input->getInput("score multiple crossers", str)) {
+                    vector<string> allowed_scoremc;
+                    allowed_scoremc.push_back("no");
+                    allowed_scoremc.push_back("yes");
+                    iscoremc = input->getInput("score multiple crossers",allowed_scoremc,-1);
+                    if (iscoremc < 0) {
+                        egsWarning("\nEGS_PhspScoring: Invalid input for score multiple crossers.  Will not score.\n");
+                        iscoremc = 0;
+                    }
+                }
             }
-        }
+            if (input->getInput("output directory",outdir) < 0) {
+                outdir="";
+            }
+            if (input->getInput("particle type", str) < 0) {
+                egsInformation("EGS_PhspScoring: No input for particle type.  Will score all.\n");
+                ptype = 0;
+            }
+            else {
+                //get particle type
+                vector<string> allowed_ptype;
+                allowed_ptype.push_back("all");
+                allowed_ptype.push_back("photons");
+                allowed_ptype.push_back("charged");
+                ptype = input->getInput("particle type",allowed_ptype,-1);
+                if (ptype < 0) {
+                    egsFatal("\nEGS_PhspScoring: Invalid particle type.\n");
+                }
+            }
 
-        //=================================================
+            //=================================================
 
-        /* Setup phsp scoring object with input parameters */
-        EGS_PhspScoring *result = new EGS_PhspScoring("",f);
-        result->setName(input);
-        if (stype==0) {
-            result->setGeom(phspgeom);
+            /* Setup phsp scoring object with input parameters */
+            EGS_PhspScoring *result = new EGS_PhspScoring("",f);
+            result->setName(input);
+            if (stype==0) {
+                result->setGeom(phspgeom);
+            }
+            else if (stype==1) {
+                result->setEntryExitReg(from_reg,to_reg);
+            }
+            result->setOType(phspouttype);
+            result->setXYZconst(xyzisconst,xyzconst);
+            result->setOutDir(outdir);
+            result->setParticleType(ptype);
+            result->setScoreDir(sdir);
+            result->setMuScore(imuscore);
+            result->setScoreMC(iscoremc);
+            return result;
         }
-        else if (stype==1) {
-            result->setEntryExitReg(from_reg,to_reg);
-        }
-        result->setOType(phspouttype);
-        result->setXYZconst(xyzisconst,xyzconst);
-        result->setOutDir(outdir);
-        result->setParticleType(ptype);
-        result->setScoreDir(sdir);
-        result->setMuScore(imuscore);
-        result->setScoreMC(iscoremc);
-        return result;
     }
-}

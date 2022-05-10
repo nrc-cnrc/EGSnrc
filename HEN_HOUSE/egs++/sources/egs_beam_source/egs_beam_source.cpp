@@ -359,8 +359,8 @@ extern "C" {
 
     EGS_BEAM_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_beam_source
     #:start source:
         library = egs_beam_source

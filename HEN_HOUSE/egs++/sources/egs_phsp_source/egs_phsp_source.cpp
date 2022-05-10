@@ -524,8 +524,8 @@ extern "C" {
 
     EGS_PHSP_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_phsp_soure
     #:start source:
         name = my_source

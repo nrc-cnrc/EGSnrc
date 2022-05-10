@@ -54,8 +54,8 @@ extern "C" {
 
     EGS_ELLIPSE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example fo egs_ellipse
     #:start shape:
         library = egs_ellipse

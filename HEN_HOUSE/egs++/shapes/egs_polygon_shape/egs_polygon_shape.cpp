@@ -152,8 +152,8 @@ extern "C" {
 
     EGS_POLYGON_SHAPE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_polygon_shape
     #:start shape:
         library = egs_polygon_shape

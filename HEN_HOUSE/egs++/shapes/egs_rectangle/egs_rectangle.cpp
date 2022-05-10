@@ -110,8 +110,8 @@ extern "C" {
 
     EGS_RECTANGLE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_rectangle
     #:start shape:
         library = egs_rectangle

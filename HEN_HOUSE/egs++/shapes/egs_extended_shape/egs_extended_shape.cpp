@@ -54,8 +54,8 @@ extern "C" {
 
     EGS_EXTENDED_SHAPE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_extended_shape
     #:start shape:
         library = egs_extended_shape

@@ -92,8 +92,8 @@ extern "C" {
 
     EGS_POINT_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_point_source
     #:start source:
         library = egs_point_source

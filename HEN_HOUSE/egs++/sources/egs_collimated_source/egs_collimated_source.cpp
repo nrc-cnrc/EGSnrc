@@ -142,8 +142,8 @@ extern "C" {
 
     EGS_COLLIMATED_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_collimated_source
     #:start source:
         library = egs_collimated_source
