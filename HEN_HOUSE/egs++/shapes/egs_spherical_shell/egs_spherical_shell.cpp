@@ -146,8 +146,8 @@ extern "C" {
 
     EGS_SPHERICAL_SHELL_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_spherical_shell
     #:start shape:
         library = egs_spherical_shell

@@ -63,8 +63,8 @@ vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
 }
 
 shared_ptr<EGS_BlockInput> EGS_InputStruct::getBlockInput(string title) {
-    for(auto &block: blockInputs) {
-        if(egsEquivStr(block->getTitle(), title)) {
+    for (auto &block: blockInputs) {
+        if (egsEquivStr(block->getTitle(), title)) {
             return block;
         }
     }
@@ -76,9 +76,9 @@ shared_ptr<EGS_BlockInput> EGS_InputStruct::getLibraryBlock(string blockTitle, s
     // Loop through each input block in the structure to find the library with
     // the matching name
     auto libraryBlock = make_shared<EGS_BlockInput>();
-    for(auto& block : blockInputs) {
+    for (auto &block : blockInputs) {
         libraryBlock = block->getLibraryBlock(blockTitle, libraryName);
-        if(libraryBlock) {
+        if (libraryBlock) {
             break;
         }
     }
@@ -90,15 +90,15 @@ vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
     // library options that match the input block type
     // E.g. find all the geometry libraries
     vector<string> libOptions;
-    for(auto& block : blockInputs) {
+    for (auto &block : blockInputs) {
 
         // We only search the 2nd-level blocks
         // i.e. don't look at the geometry definition block, look at the geometries
-        for(auto& block2 : block->getBlockInputs()) {
-            if(block2 && (block2->getTitle() == blockTitle)) {
+        for (auto &block2 : block->getBlockInputs()) {
+            if (block2 && (block2->getTitle() == blockTitle)) {
                 vector<string> libAr = block2->getSingleInput("library")->getValues();
-                for(auto& lib : libAr) {
-                    if(lib.size() > 0) {
+                for (auto &lib : libAr) {
+                    if (lib.size() > 0) {
                         libOptions.push_back(lib);
                     }
                 }
@@ -108,15 +108,15 @@ vector<string> EGS_InputStruct::getLibraryOptions(string blockTitle) {
 
     // If nothing was found on the 2nd level blocks, search the top level ones
     // This is the case for shapes
-    if(libOptions.size() < 1) {
-        for(auto& block : blockInputs) {
+    if (libOptions.size() < 1) {
+        for (auto &block : blockInputs) {
 
-            if(block && (block->getTitle() == blockTitle ||
-                // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
-        (egsEquivStr(block->getTitle(), "shape") && (egsEquivStr(blockTitle, "target shape") || egsEquivStr(blockTitle, "source shape"))))) {
+            if (block && (block->getTitle() == blockTitle ||
+                          // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+                          (egsEquivStr(block->getTitle(), "shape") && (egsEquivStr(blockTitle, "target shape") || egsEquivStr(blockTitle, "source shape"))))) {
                 vector<string> libAr = block->getSingleInput("library")->getValues();
-                for(auto& lib : libAr) {
-                    if(lib.size() > 0) {
+                for (auto &lib : libAr) {
+                    if (lib.size() > 0) {
                         libOptions.push_back(lib);
                     }
                 }
@@ -169,14 +169,15 @@ vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs() {
 }
 
 vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs(string title) {
-    if(egsEquivStr(blockTitle, title) ||
-        // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
-        (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
+    if (egsEquivStr(blockTitle, title) ||
+            // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+            (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
         return singleInputs;
-    } else {
-        for(auto &block: blockInputs) {
+    }
+    else {
+        for (auto &block: blockInputs) {
             auto inp = block->getSingleInputs(title);
-            if(inp.size() > 0) {
+            if (inp.size() > 0) {
                 return inp;
             }
         }
@@ -190,13 +191,14 @@ vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs() {
 }
 
 vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs(string title) {
-    if(egsEquivStr(this->getTitle(), title) ||
-        // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
-        (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
+    if (egsEquivStr(this->getTitle(), title) ||
+            // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+            (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
         return blockInputs;
-    } else {
-        for(auto &block: blockInputs) {
-            if(egsEquivStr(block->getTitle(), title)) {
+    }
+    else {
+        for (auto &block: blockInputs) {
+            if (egsEquivStr(block->getTitle(), title)) {
                 return block->getBlockInputs();
             }
         }
@@ -206,17 +208,17 @@ vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs(string title) 
 }
 
 shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag) {
-    for(auto& inp : singleInputs) {
+    for (auto &inp : singleInputs) {
         // TODO: this assumes unique inputTag
-        if(inp && egsEquivStr(inp->getTag(), inputTag)) {
+        if (inp && egsEquivStr(inp->getTag(), inputTag)) {
             return inp;
         }
     }
 
     // If not found in the top level, search recursively
-    for(auto &block: blockInputs) {
+    for (auto &block: blockInputs) {
         auto inp = block->getSingleInput(inputTag);
-        if(inp) {
+        if (inp) {
             return inp;
         }
     }
@@ -226,22 +228,22 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag) {
 
 shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag, string title) {
     // First search the top-level input block
-    if(egsEquivStr(blockTitle, title) ||
-        // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
-        (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
-        for(auto &inp: singleInputs) {
+    if (egsEquivStr(blockTitle, title) ||
+            // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+            (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
+        for (auto &inp: singleInputs) {
             // TODO: this assumes unique inputTag
-            if(inp && egsEquivStr(inp->getTag(), inputTag)) {
+            if (inp && egsEquivStr(inp->getTag(), inputTag)) {
                 return inp;
             }
         }
     }
 
     // If not found, go through input lower level blocks
-    for(auto &block: blockInputs) {
-        if(egsEquivStr(block->getTitle(), title)) {
+    for (auto &block: blockInputs) {
+        if (egsEquivStr(block->getTitle(), title)) {
             auto inp = block->getSingleInput(inputTag, title);
-            if(inp) {
+            if (inp) {
                 return inp;
             }
         }
@@ -251,19 +253,22 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag, stri
 }
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::getBlockInput(string title) {
-    if(egsEquivStr(blockTitle, title)) {
+    if (egsEquivStr(blockTitle, title)) {
         return shared_from_this();
-    } else {
-        for(auto &block: blockInputs) {
-            if(egsEquivStr(block->getTitle(), title)) {
+    }
+    else {
+        for (auto &block: blockInputs) {
+            if (egsEquivStr(block->getTitle(), title)) {
                 return block;
-            // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
-            } else if(egsEquivStr(block->getTitle(), "shape") && (egsEquivStr(title, "source shape") || egsEquivStr(title, "target shape"))) {
+                // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
+            }
+            else if (egsEquivStr(block->getTitle(), "shape") && (egsEquivStr(title, "source shape") || egsEquivStr(title, "target shape"))) {
                 return block;
-            } else {
+            }
+            else {
                 // Do a recursive search
                 auto foundBlock = block->getBlockInput(title);
-                if(foundBlock) {
+                if (foundBlock) {
                     return foundBlock;
                 }
             }
@@ -283,23 +288,24 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getParent() {
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::getLibraryBlock(string blockTitle, string libraryName) {
     // First search the singleInputs for the library name
-    for(auto &inp: singleInputs) {
-        if(!inp) {
+    for (auto &inp: singleInputs) {
+        if (!inp) {
             continue;
         }
-        if(egsEquivStr(inp->getTag(), "library")) {
-            if(inp->getValues().size() && egsEquivStr(inp->getValues().front(), libraryName)) {
+        if (egsEquivStr(inp->getTag(), "library")) {
+            if (inp->getValues().size() && egsEquivStr(inp->getValues().front(), libraryName)) {
                 return shared_from_this();
-            } else {
+            }
+            else {
                 break;
             }
         }
     }
 
     // If not found, go through input blocks
-    for(auto &block: blockInputs) {
+    for (auto &block: blockInputs) {
         auto libraryBlock = block->getLibraryBlock(blockTitle, libraryName);
-        if(libraryBlock) {
+        if (libraryBlock) {
             return libraryBlock;
         }
     }
@@ -307,11 +313,11 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getLibraryBlock(string blockTitle, st
 }
 
 bool EGS_BlockInput::contains(string inputTag) {
-    for(auto &inp: singleInputs) {
-        if(!inp) {
+    for (auto &inp: singleInputs) {
+        if (!inp) {
             continue;
         }
-        if(egsEquivStr(inp->getTag(), inputTag)) {
+        if (egsEquivStr(inp->getTag(), inputTag)) {
             return true;
         }
     }

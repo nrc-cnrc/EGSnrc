@@ -569,8 +569,8 @@ extern "C" {
 
     EGS_PHSP_SCORING_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_phsp_scoring
     #:start ausgab object:
         library = egs_phsp_scoring

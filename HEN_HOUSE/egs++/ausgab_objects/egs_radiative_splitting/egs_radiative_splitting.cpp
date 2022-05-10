@@ -125,7 +125,7 @@ extern "C" {
     }
 
     EGS_RADIATIVE_SPLITTING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
-        if(!inputSet) {
+        if (!inputSet) {
             setInputs();
         }
         return ausBlockInput;

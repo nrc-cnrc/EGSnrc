@@ -66,7 +66,7 @@ InputOptions inp;
 // Process inputs from the egsinp file
 EGS_BOX_LOCAL int processInputs(EGS_Input *input) {
     int err = input->getInput(ebox_key1,inp.boxSize);
-    if(err && geomBlockInput->getSingleInput(ebox_key1)->getRequired()) {
+    if (err && geomBlockInput->getSingleInput(ebox_key1)->getRequired()) {
         egsWarning(ebox_message1,ebox_message3);
         return 0;
     }
@@ -88,8 +88,8 @@ extern "C" {
     }
 
     EGS_BOX_EXPORT string getExample() {
-        string example
-{R"(
+        string example {
+            R"(
     :start geometry:
         library     = EGS_Box
         name        = my_box

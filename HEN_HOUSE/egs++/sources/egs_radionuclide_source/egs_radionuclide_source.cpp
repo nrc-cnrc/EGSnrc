@@ -573,8 +573,8 @@ extern "C" {
 
     EGS_RADIONUCLIDE_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_radionuclide_source
     #:start source:
         name = my_source
