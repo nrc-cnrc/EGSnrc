@@ -571,8 +571,8 @@ extern "C" {
 
     IAEA_PHSP_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of iaea_phsp_soure
     #:start source:
         name = my_source

@@ -63,11 +63,11 @@ static void setBaseSourceInputs(bool isSimpleSource = true, bool includeSpectrum
     srcBlockInput->addSingleInput("library", true, "The type of source, loaded by shared library in egs++/dso.");
     srcBlockInput->addSingleInput("name", true, "The user-declared unique name of this source. This is the name you may refer to elsewhere in the input file");
 
-    if(isSimpleSource) {
+    if (isSimpleSource) {
         includeSpectrumBlock = true;
         srcBlockInput->addSingleInput("charge", true, "The type of particle to emit from the source, as defined by the charge. Use 0 for photons, -1 for electrons and 1 for positrons.", {"0", "1", "-1"});
     }
-    if(includeSpectrumBlock) {
+    if (includeSpectrumBlock) {
         shared_ptr<EGS_BlockInput> specBlock = srcBlockInput->addBlockInput("spectrum");
         auto typePtr = specBlock->addSingleInput("type", true, "The type of energy distribution for the spectrum.", {"monoenergetic", "Gaussian", "Double Gaussian", "uniform", "tabulated spectrum", "radionuclide"});
 
@@ -96,7 +96,7 @@ static void setBaseSourceInputs(bool isSimpleSource = true, bool includeSpectrum
         maxEPtr->addDependency(rangePtr, "", true);
         rangePtr->addDependency(minEPtr, "", true);
         rangePtr->addDependency(maxEPtr, "", true);
-        
+
         // Tabulated
         auto specFilePtr = specBlock->addSingleInput("spectrum file", false, "The full file path to the spectrum file. See documentation for the format of the file.");
         specFilePtr->addDependency(typePtr, "tabulated spectrum");

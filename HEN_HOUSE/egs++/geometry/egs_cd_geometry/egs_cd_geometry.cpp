@@ -129,8 +129,8 @@ extern "C" {
     }
 
     EGS_CDGEOMETRY_EXPORT string getExample() {
-        string example
-{R"(
+        string example {
+            R"(
     :start geometry:
         library         = EGS_CDGeometry
         name            = my_cd

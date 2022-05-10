@@ -129,8 +129,8 @@ extern "C" {
 
     EGS_PARALLEL_BEAM_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_parallel_beam
     #:start source:
         library = egs_parallel_beam

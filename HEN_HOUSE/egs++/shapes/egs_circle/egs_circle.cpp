@@ -54,8 +54,8 @@ extern "C" {
     }
 
     EGS_CIRCLE_EXPORT string getExample() {
-        string example
-{R"(
+        string example {
+            R"(
         :start shape:
             library = egs_circle
             radius = the circle radius

@@ -99,8 +99,8 @@ extern "C" {
 
     EGS_TRANSFORMED_SOURCE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_transformed_source
     #:start source:
         library = egs_transformed_source

@@ -171,8 +171,8 @@ extern "C" {
 
     EGS_SOURCE_COLLECTION_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_source_collection
     :start source:
         library = egs_source_collection
