@@ -102,8 +102,9 @@ void EGS_Highlighter::highlightBlock(const QString &text) {
 
     //For multi-line comments
     int startIndex = 0;
-    if (previousBlockState() != 1)
+    if (previousBlockState() != 1) {
         startIndex = text.indexOf(commentStartExpression);
+    }
 
     while (startIndex >= 0) {
         QRegularExpressionMatch match = commentEndExpression.match(text, startIndex);
@@ -112,7 +113,8 @@ void EGS_Highlighter::highlightBlock(const QString &text) {
         if (endIndex == -1) {
             setCurrentBlockState(1);
             commentLength = text.length() - startIndex;
-        } else {
+        }
+        else {
             commentLength = endIndex - startIndex
                             + match.capturedLength();
         }

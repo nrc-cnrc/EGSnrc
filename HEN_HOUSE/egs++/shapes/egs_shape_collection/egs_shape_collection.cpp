@@ -76,8 +76,8 @@ extern "C" {
 
     EGS_SHAPE_COLLECTION_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_shape_collection
     #:start shape:
         library = egs_shape_sollection
@@ -148,7 +148,7 @@ extern "C" {
         }
         if (shapes.size() != probs.size()) {
             egsWarning("createShape(shape collection): the number of shapes (%d)"
-                       " is not the same as the number of input probabilities (%d)\n");
+            " is not the same as the number of input probabilities (%d)\n");
             ok = false;
         }
         for (unsigned int i=0; i<probs.size(); i++) {

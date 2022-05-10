@@ -81,7 +81,7 @@ static void setBaseGeometryInputs(bool includeMediaBlock = true) {
     geomBlockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso.");
     geomBlockInput->addSingleInput("name", true, "The user-declared unique name of this geometry. This is the name you may refer to elsewhere in the input file");
 
-    if(includeMediaBlock) {
+    if (includeMediaBlock) {
         shared_ptr<EGS_BlockInput> mediaBlock = geomBlockInput->addBlockInput("media input");
         mediaBlock->addSingleInput("media", true, "A list of media that are used in this geometry");
         mediaBlock->addSingleInput("set medium", false, "2, 3 or 4 integers defining the medium for a region or range of regions.\nFor 2: region #, medium index from the media list for this geometry (starts at 0). For 3: start region, stop region, medium index. For 4: Same as 3, plus a step size for the region range.\nNeglect this input for a homogeneous geometry of the first medium in the media list. Repeat this input to specify each medium.");
