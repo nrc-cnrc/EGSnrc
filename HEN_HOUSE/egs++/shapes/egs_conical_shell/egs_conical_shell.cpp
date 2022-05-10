@@ -211,8 +211,8 @@ extern "C" {
 
     EGS_CONICAL_SHELL_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_conical_shell
     #:start shape:
         library = egs_conical_shell

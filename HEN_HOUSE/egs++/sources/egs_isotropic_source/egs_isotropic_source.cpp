@@ -185,8 +185,8 @@ extern "C" {
     }
 
     EGS_ISOTROPIC_SOURCE_EXPORT string getExample() {
-        string example
-{R"(
+        string example {
+            R"(
     :start source:
         name                = my_source
         library             = egs_isotropic_source

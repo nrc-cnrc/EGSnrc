@@ -621,7 +621,7 @@ extern "C" {
     }
 
     EGS_DOSE_SCORING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
-        if(!inputSet) {
+        if (!inputSet) {
             setInputs();
         }
         return ausBlockInput;

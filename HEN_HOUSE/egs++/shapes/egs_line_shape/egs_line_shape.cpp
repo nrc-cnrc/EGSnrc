@@ -76,8 +76,8 @@ extern "C" {
 
     EGS_LINE_SHAPE_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_line_shape
     :start shape:
         library = egs_line_shape

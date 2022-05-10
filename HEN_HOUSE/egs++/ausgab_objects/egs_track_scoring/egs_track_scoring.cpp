@@ -139,8 +139,8 @@ extern "C" {
 
     EGS_TRACK_SCORING_EXPORT string getExample() {
         string example;
-        example =
-{R"(
+        example = {
+            R"(
     # Example of egs_track_scoring
     #:start ausgab object:
         library = egs_track_scoring
@@ -165,36 +165,36 @@ extern "C" {
     EGS_TRACK_SCORING_EXPORT EGS_AusgabObject *createAusgabObject(EGS_Input *input,
             EGS_ObjectFactory *f) {
         const static char *func = "createAusgabObject(track_scoring)";
-        if (!input) {
-            egsWarning("%s: null input?\n",func);
-            return 0;
+            if (!input) {
+                egsWarning("%s: null input?\n",func);
+                return 0;
+            }
+            vector<string> sc_options;
+            sc_options.push_back("no");
+            sc_options.push_back("yes");
+            bool scph = input->getInput("score photons",sc_options,true);
+            bool scel = input->getInput("score electrons",sc_options,true);
+            bool scpo = input->getInput("score positrons",sc_options,true);
+            if (!scph && !scel && !scpo) {
+                return 0;
+            }
+            EGS_I64 first = 0, last = 1024;
+            input->getInput("start scoring",first);
+            input->getInput("stop scoring",last);
+            int bufSize = 1024;
+            input->getInput("buffer size",bufSize);
+            string fnExtra;
+            input->getInput("file name addition",fnExtra);
+            EGS_TrackScoring *result = new EGS_TrackScoring("",f);
+            result->setScorePhotons(scph);
+            result->setScoreElectrons(scel);
+            result->setScorePositrons(scpo);
+            result->setFirstEvent(first);
+            result->setLastEvent(last);
+            result->setBufferSize(bufSize);
+            result->setFileNameExtra(fnExtra);
+            result->setName(input);
+            return result;
         }
-        vector<string> sc_options;
-        sc_options.push_back("no");
-        sc_options.push_back("yes");
-        bool scph = input->getInput("score photons",sc_options,true);
-        bool scel = input->getInput("score electrons",sc_options,true);
-        bool scpo = input->getInput("score positrons",sc_options,true);
-        if (!scph && !scel && !scpo) {
-            return 0;
-        }
-        EGS_I64 first = 0, last = 1024;
-        input->getInput("start scoring",first);
-        input->getInput("stop scoring",last);
-        int bufSize = 1024;
-        input->getInput("buffer size",bufSize);
-        string fnExtra;
-        input->getInput("file name addition",fnExtra);
-        EGS_TrackScoring *result = new EGS_TrackScoring("",f);
-        result->setScorePhotons(scph);
-        result->setScoreElectrons(scel);
-        result->setScorePositrons(scpo);
-        result->setFirstEvent(first);
-        result->setLastEvent(last);
-        result->setBufferSize(bufSize);
-        result->setFileNameExtra(fnExtra);
-        result->setName(input);
-        return result;
-    }
 
-}
+    }
