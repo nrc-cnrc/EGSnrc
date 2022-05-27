@@ -309,7 +309,7 @@ The Monte Carlo transport parameters have important and significant influence on
     Electron-step algorithm        = PRESTA-II      # PRESTA-II (default),PRESTA-I
     Spin effects                   = On             # On (default),Off
     Brems angular sampling         = KM             # Simple,KM (default)
-    Brems cross sections           = BH             # BH (default),NIST
+    Brems cross sections           = BH             # BH (default), NIST, NRC
     Pair angular sampling          = Simple         # Off, Simple (default),KM
     Triplet production             = Off            # On or Off (default)
     Electron Impact Ionization     = Off            # On, Off (default), casnati, kolbenstvedt, gryzinski

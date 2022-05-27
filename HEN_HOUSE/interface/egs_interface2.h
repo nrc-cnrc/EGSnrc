@@ -419,12 +419,14 @@ struct EGS_XOptions {
   /*! Determines the bremsstrahlung cross sections differential in the
     photon energy to be used for sampling the photon energy.
     If set to 0, the Bethe-Heitler high energy approximation will be
-    used, if set to 1 the NIST tabulations provided by Steve Seltzer
-    will be employed. Default is 0.
+    used. If set to 1, the NIST tabulations provided by Steve Seltzer
+    will be employed. If set to 2, the NRC brems data will be used,
+    which is a modified version of the NIST data with corrected
+    electron-electron brems contributions. Default is 0.
 
     Can be set in the input file using
     \verbatim
-    Brems cross sections= BH or NIST
+    Brems cross sections= BH or NIST or NRC
     \endverbatim
   */
   EGS_I32   ibr_nist;
