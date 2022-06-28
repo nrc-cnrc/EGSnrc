@@ -96,7 +96,7 @@ unix {
 }
 
 # Debug options
-DEFINES += VIEW_DEBUG EDITOR_DEBUG
+#DEFINES += VIEW_DEBUG EDITOR_DEBUG
 #QMAKE_CXXFLAGS+="-fsanitize=address -fno-omit-frame-pointer"
 #QMAKE_CXXFLAGS+="-ggdb3"
 #QMAKE_LFLAGS+="-fsanitize=address"

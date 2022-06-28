@@ -152,7 +152,7 @@ extern "C" {
     #:start shape:
         library = egs_spherical_shell
         midpoint = 0 0 0
-        innner radius = 0.5
+        inner radius = 0.5
         outer radius = 1
         hemisphere = 1
         half angle = 35
