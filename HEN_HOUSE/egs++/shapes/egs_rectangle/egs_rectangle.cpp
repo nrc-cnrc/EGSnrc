@@ -115,7 +115,7 @@ extern "C" {
     # Example of egs_rectangle
     #:start shape:
         library = egs_rectangle
-        reactangle = -.1 -.1 .1 .1
+        rectangle = -.1 -.1 .1 .1
 )"};
         return example;
     }
