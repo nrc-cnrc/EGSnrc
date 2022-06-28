@@ -85,7 +85,7 @@ extern "C" {
 
         srcBlockInput->getSingleInput("library")->setValues({"EGS_Transformed_Source"});
 
-        // Format: name, isRequired, description, vector striing of allowed values
+        // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("source name", true, "The name of a previously defined source.");
 
         auto blockPtr = srcBlockInput->addBlockInput("transformation");
@@ -105,7 +105,7 @@ extern "C" {
     #:start source:
         library = egs_transformed_source
         name = my_source
-        source_name = my_parallel_source
+        source name = my_parallel_source
         #create source called my_parallel_source
         :start transformation:
             rotation vector = 0 -1 1

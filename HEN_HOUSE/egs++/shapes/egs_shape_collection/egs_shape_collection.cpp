@@ -79,7 +79,7 @@ extern "C" {
             R"(
     # Example of egs_shape_collection
     #:start shape:
-        library = egs_shape_sollection
+        library = egs_shape_collection
         :start shape:
             definition of the first shape in the collection:
         :stop shape:
