@@ -518,8 +518,6 @@ ELSE ["inside leaf bank"
       NY=NY+1;
     ];
 
-    "write(*,*)' leafis, xyfl1, ny ',leafis,xyfl(1),ny;"
-
     IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
        "Originally on Target (Quarter or Half) Leaf"
 
@@ -698,9 +696,6 @@ ELSE ["inside leaf bank"
     ELSEIF((XYFL(2)>TEMP4) | (XYFL(2)=TEMP4 & UVL(2)>=0)) [
          NX=5;]
  ];
- "write(*,*)' find: leafis, x, y, z ',leafis,xyfl(2),xyfl(1),zfl;"
- "write(*,*)' nx, ny, nz, subindex ',nx,ny,nz,"
- "            SUBINDEX_$SYNCHDMLC(LEAFIS,NX,NY,NZ);"
  {P1}=SUBINDEX_$SYNCHDMLC(LEAFIS,NX,NY,NZ);
 
  "OUTPUT LEAFIS,XYFL(2),XYFL(1),ZFL,{P1};"
@@ -1401,7 +1396,6 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {;
   ELSE [ YN = 1.0E20; ];
   IF((YP>=0.0) & (YN>=0.0) ) [ YDIST =MIN(YP, YN); ]
   ELSE [ YDIST = MAX(YP,YN);];
-  "write(*,*)' i,j, rhs, lhs, ydist ',i,j,rhs,lhs,ydist;"
  IF(ENDTYPE_$SYNCHDMLC = 1) ["focused leaf end"
       HOLE=HOLEPOS_$SYNCHDMLC(LEAFIS);
       TEMP3=LEAFB_$SYNCHDMLC(LEAFIS)-HOLE;
@@ -1456,7 +1450,6 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {;
     TEMP3 = UVL(2)*(XYFL(2)-XoP)+W(NP)*(ZFL-Zo); "B in eqn"
     TEMP4 = (XYFL(2)-XoN)**2 + (ZFL-Zo)**2; "part of C"
     TEMP5 = (XYFL(2)-XoP)**2 + (ZFL-Zo)**2; "part of C"
-    "write(*,*)' nx ',nx;"
     IF((XYFL(2)>=XoN) & (SQRT((XYFL(2)-XoN)**2+(ZFL-Zo)**2)-
       LEAFRADIUS_$SYNCHDMLC=0.0) & (UVL(2)*(XYFL(2)-XoN)+W(NP)*(ZFL-Zo)=0.0)) [
          XN=0.0;  XP=1.0E20; "on edge of negative leaf"
@@ -1572,7 +1565,6 @@ REPLACE {$SYNCHDMLC_MINDISTANCE(#);} WITH {;
  ];
 IF( (XP>=0.0) & (XN>=0.0) ) [ XDIST =MIN(XP, XN); ]
 ELSE [ XDIST = MAX(XP,XN); ];
-"write(*,*)' xdist ',xdist;"
 IF( ZDIST>=0.0) [TEMP=ZDIST;
     IF( YDIST>=0.0 ) [TEMP=MIN(TEMP,YDIST);];
     IF( XDIST>=0.0 ) [TEMP=MIN(TEMP,XDIST);];

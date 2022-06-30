@@ -783,15 +783,6 @@ ELSEIF(ORIENT_$SYNCHDMLC=3)[
 ]
 ;
 
-"write(*,*)' in howfar, ir, med ',IR_$SYNCHDMLC,med(IRL);
-
-"IF(Z(NP)>47.62001 & Z(NP)<54.37999)["
-        "IF(med(irl) = 0)["
-         " write(*,*)' iq,x,y,z ',iq(np),x(np),y(np),z(np);"
-         " write(*,*)' ir,med ',ir(np),med(irl);"
-         " write(*,*)'  ihstry ',ihstry;"
-       " ]"
-  " ]"
 STEP_UNIT=0.0;
 COUNT = 0;
 OUTOFCMFLAG=0;
@@ -820,7 +811,6 @@ OUTOFMLCFLAG=0;
 IF(N_GAP_$SYNCHDMLC=1 & IR_$SYNCHDMLC=4 ) ["Check the air gap first"
    IF(W(NP)>0.0) ["Particle going forward"
       DIST = (ZMIN_$SYNCHDMLC - Z(NP))/W(NP); "distance to front of CM"
-      "write(*,*)' dist ',dist;
       IF(DIST <= 0.0) [
           USTEP=0.0;
           $SYNCHDMLC_FIND(IR_$SYNCHDMLC, 0.0);
@@ -852,7 +842,6 @@ ELSEIF(IR_$SYNCHDMLC=1 | IR_$SYNCHDMLC=2 | IR_$SYNCHDMLC=3) [
    ELSEIF(W(NP) < 0.0) [
      "particle going backward"
       DIST = (ZMIN_$SYNCHDMLC - Z(NP))/W(NP); "distance to back of CM "
-      "write(*,*)' dist, ustep ',dist,ustep;
       IF(DIST>USTEP) [ STEP_UNIT=USTEP;  ]
       ELSE [ STEP_UNIT=DIST; ]
       IF(DIST <= 0.0) [
@@ -870,18 +859,13 @@ ELSEIF(IR_$SYNCHDMLC=1 | IR_$SYNCHDMLC=2 | IR_$SYNCHDMLC=3) [
 
 $SYNCHDMLC_FIND(REGION_$SYNCHDMLC,0.0);
 
-"write(*,*)' leafis, region, dist ',leafis,REGION_$SYNCHDMLC,DIST;
-
 IF(REGION_$SYNCHDMLC=4) [ "Particle is in the air gap "
   REGION_$SYNCHDMLC=IRSTART_$SYNCHDMLC-1+REGION_$SYNCHDMLC;
    IF(W(NP) > 0.0)[
     IF(DIST <= USTEP ) ["particle to be moved to region boundary"
-      "write(*,*)' ustep, dist here ',ustep,dist;
       $GEO_SHIFT_1_(DIST);
-      "write(*,*)' and ustep, dist here ',ustep,dist;
       USTEP = DIST;
       $SYNCHDMLC_FIND(NEWREGION_$SYNCHDMLC,USTEP);
-      "write(*,*)' ustep, newregion ',ustep,NEWREGION_$SYNCHDMLC;
       IF( NEWREGION_$SYNCHDMLC=1) [IRNEW =IRSTART_$SYNCHDMLC; RETURN;]
       ELSE[IRNEW =IRSTART_$SYNCHDMLC+1; RETURN;]
     ]
@@ -946,11 +930,6 @@ IF(OUTOFMLCFLAG=1) [
 
 $SYNCHDMLC_MINDISTANCE(DIST1);
 
-"write(*,*)' dist1 ',dist1;
-"write(*,*)' x,y,z ',x(np),y(np),z(np);
-"write(*,*)' leafis,nx,ny,nz ',leafis,nx,ny,nz;
-"write(*,*)' dist1,step_unit ',DIST1,STEP_UNIT;
-
 "OUTPUT REGION_$SYNCHDMLC;(I3);"
 
 IF((DIST1>=STEP_UNIT) | (DIST1<0)) [
@@ -982,9 +961,6 @@ ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0)) [
 
         NEWREGION_$SYNCHDMLC=NEWREGION_$SYNCHDMLC+IRSTART_$SYNCHDMLC-1;
        " OUTPUT REGION_$SYNCHDMLC;(I3);"
-
-       "write(*,*)' region, newregion, dist1 ',REGION_$SYNCHDMLC,
-       "     NEWREGION_$SYNCHDMLC,DIST1;
 
         IF( OUTOFCMFLAG=1 ) [
           EXIT;
@@ -1018,7 +994,6 @@ ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0)) [
           RETURN;
        ] ELSE [
          $SYNCHDMLC_MINDISTANCE(DIST2);
-         "write(*,*)' dist1, dist2 ',dist1,dist2;
          DIST1=DIST1+DIST2;
        ];
 
@@ -3730,8 +3705,6 @@ IF(LEAFIS~=0) [
   ]
 
   "Check if we are in groove on leaf and move to adjacent leaf"
-"write(*,*)' before check leafis, leaftype ',leafis,LEAFTYPE_$SYNCHDMLC(LEAFIS);
-"write(*,*)' nx, ny, nz ',nx,ny,nz; 
   IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
 				   "target leaf"
     IF(LEAFIS~=TOT_LEAF_$SYNCHDMLC & ((((NY=5|NY=6) & (NZ=7|NZ=8|NZ=9)) &
@@ -4145,9 +4118,6 @@ IF(LEAFIS~=0) [
 
     DIST=MIN(ABS(ZREG_$SYNCHDMLC(LEAFIS,I1)-Z(NP)),
              ABS(ZREG_$SYNCHDMLC(LEAFIS,I2)-Z(NP)));
-    "write(*,*)' x,y,z ',x(np),y(np),z(np);
-    "write(*,*)' nx,ny,nz ',nx,ny,nz;
-    "write(*,*)' leafis,i1,i2,zdist ',leafis,i1,i2,dist;
 
     "Calculates distance to closest boundary in z direction"
     "--> 3) 7 Jul 2009"
@@ -4656,7 +4626,6 @@ IF(LEAFIS~=0) [
           SQRT(1+TEMP2**2));
 
     DIST = MIN(DIST,TEMP1,TEMP2);
-    "write(*,*)' ydist ',dist;
  "NOW CHECK DISTANCE IN X DIRECTION"
     IF(ENDTYPE_$SYNCHDMLC=1) [ "focused leaf end"
       TEMP1=SURPARA2_B_$SYNCHDMLC(LEAFIS);
