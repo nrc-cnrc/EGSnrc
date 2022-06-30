@@ -2369,7 +2369,7 @@ proc draw_SYNCHDMLC { id } {
 NOTE: This is a dynamic or step-and-shoot delivery, with leaf opening\
       coordinates defined in a file.  Leaf opening coordinates are shown for the\
       first field defined in this file."\
-            -font $helvfont -width 300 
+            -font $helvfont -width 300
     } else {
     .synchdmlc$id.show.frm.can create text 160 160 -text "xz\
             cross-section shows only those leaves that\
@@ -2379,7 +2379,7 @@ NOTE: This is a dynamic or step-and-shoot delivery, with leaf opening\
             is shown.  The xy view is at a plane at Z=ZMIN\
             (straight leaf ends) or Z=ZMIN+ZTHICK/2 (cylindrical\
             leaf ends)."\
-	    -font $helvfont -width 300 
+	    -font $helvfont -width 300
     }
 
     set xscale [expr $width/double(abs($xrange(1)-$xrange(0)))]
@@ -2673,7 +2673,7 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
 
             set a [expr ($neg($i)-$xmin)*$xscale+$l]
             if {$cmval($id,2,0)==3} {
-               set b [expr (-$lstart-$ymin)*$yscale+$m] 
+               set b [expr (-$lstart-$ymin)*$yscale+$m]
             } else {
                set b [expr ($lstart-$ymin)*$yscale+$m]
             }
@@ -3247,8 +3247,8 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
         for {set i 1} {$i <= $nleaf($id)/2} {incr i} {
           set tmp_coord $neg($i)
           set neg($i) $neg([expr $nleaf($id)-$i+1])
-          set neg([expr $nleaf($id)-$i+1]) $tmp_coord 
-          set tmp_coord $pos($i)     
+          set neg([expr $nleaf($id)-$i+1]) $tmp_coord
+          set tmp_coord $pos($i)
           set pos($i) $pos([expr $nleaf($id)-$i+1])
           set pos([expr $nleaf($id)-$i+1]) $tmp_coord
         }
@@ -3629,7 +3629,7 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
             if {$cmval($id,2,0)==2 || $cmval($id,2,0)==3} {
                 set y($j) [expr -1*$y($j)]
             }
-            
+
             # set y and z scale and relative position
             set y($j) [expr ($y($j)-$ymin)*$yscale+$l]
             set z($j) [expr ($z($j)-$zmin)*$zscale+$m]
@@ -3744,7 +3744,7 @@ are automaticaly "flipped," so that opening coordinates for leaf i are instead\
 applied to leaf N-i+1, where N is the total no. of leaves.  See the BEAMnrc\
 Manual for more details.}
     help_dialog $w.help "Help" $text info 0 OK
-} 
+}
 
 proc help_screwdist { w } {
 

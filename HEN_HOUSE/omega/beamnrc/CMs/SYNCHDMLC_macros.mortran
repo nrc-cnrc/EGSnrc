@@ -824,7 +824,7 @@ IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
     ELSEIF(NY=3)[
       IF(NZ=1)[ZLHS=1; ZRHS=2;]
       ELSEIF(NZ<=5)[ZLHS=2; ZRHS=6;]
-      ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]  
+      ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
       ELSEIF(NZ=7)[ZLHS=7; ZRHS=8;]
       ELSEIF(NZ=8)[ZLHS=8; ZRHS=9;]
       ELSE[ZLHS=9; ZRHS=10;]
@@ -856,7 +856,7 @@ IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
          ELSEIF(NZ=6)[ZLHS=6; ZRHS=7;]
          ELSE[ZLHS=7; ZRHS=10;]
       ]
-    ] 
+    ]
 ]
 };
 
@@ -1231,7 +1231,7 @@ IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
            ]
         ]
      ]
-   ] 
+   ]
    ELSE[
      "Isocenter Quarter"
      IF(NZ=1) [
@@ -1290,7 +1290,7 @@ IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
         ]
      ]
      ELSEIF(NZ=4)[
-        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[ 
+        IF(I_LEAF_ALT_DEF_$SYNCHDMLC(5,2,4)=1)[
            IF(NY<=5)[
               LHS=1; J=LEAFIS;
               RHS=6; I=LEAFIS;
@@ -1309,7 +1309,7 @@ IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
                  IF(ZFL>ZREG_$SYNCHDMLC(J,7))[
                    LHS = 5;
                  ]
-                 ELSE[ 
+                 ELSE[
                    LHS = 7;
                  ]
               ]
@@ -1319,7 +1319,7 @@ IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
               LHS=3; J=LEAFIS;
               RHS=7; I=LEAFIS;
            ]
-        ] 
+        ]
      ]
      ELSEIF(NZ<=7)[
         LHS=1; J=LEAFIS;
@@ -1346,7 +1346,7 @@ IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
            ELSE[
               LHS=3; J=LEAFIS;
               RHS=7; I=LEAFIS;
-           ]    
+           ]
         ]
         ELSE[
            IF(NY=1)[

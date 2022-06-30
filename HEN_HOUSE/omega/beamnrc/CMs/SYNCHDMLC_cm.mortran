@@ -495,17 +495,17 @@
 "I>
 "I>   Repeat 14 until coordinates of all leaves are defined once.  Leaves
 "I>   are numbered 1,2,...TOT_LEAF_$SYNCHDMLC, where numbering goes from leaf
-"I>   1 to leaf TOT_LEAF_$SYNCHDMLC. Convention is -ve to +ve 
-"I>   (ORIENT_$SYNCHDMLC=0,2) or +ve to -ve (ORIENT_$SYNCHDMLC=1,3) 
+"I>   1 to leaf TOT_LEAF_$SYNCHDMLC. Convention is -ve to +ve
+"I>   (ORIENT_$SYNCHDMLC=0,2) or +ve to -ve (ORIENT_$SYNCHDMLC=1,3)
 "I>
 "I>  14a  NEG_$SYNCHDMLC, POS_$SYNCHDMLC, NUM_$SYNCHDMLC (2F15.5,I5)
 "I>
-"I>    NEG_$SYNCHDMLC:   Min. Y (ORIENT_$SYNCHDMLC=0,2) or X 
-"I>                   (ORIENT_$SYNCHDMLC=1,3) of front opening in leaf I (ie 
-"I>                   the opening at ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of 
+"I>    NEG_$SYNCHDMLC:   Min. Y (ORIENT_$SYNCHDMLC=0,2) or X
+"I>                   (ORIENT_$SYNCHDMLC=1,3) of front opening in leaf I (ie
+"I>                   the opening at ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of
 "I>                   rounded end of leaf I if ENDTYPE=0.
-"I>    POS_$SYNCHDMLC:   Max. Y (ORIENT_$SYNCHDMLC=0,2) or X 
-"I>                   (ORIENT_$SYNCHDMLC=1,3) of front opening in leaf I if 
+"I>    POS_$SYNCHDMLC:   Max. Y (ORIENT_$SYNCHDMLC=0,2) or X
+"I>                   (ORIENT_$SYNCHDMLC=1,3) of front opening in leaf I if
 "I>                   ENDTYPE=1, or of rounded end of leaf I if ENDTYPE=0.
 "I>    NUM_$SYNCHDMLC:   Apply NEG_$SYNCHDMLC and POS_$SYNCHDMLC to leaves
 "I>                   I,...,I+NUM_$SYNCHDMLC-1.  Defaults to 1 if set <=0.
@@ -709,7 +709,7 @@
 "V>{p1} the value to compare with ustep
 "V> if {p1}+1.0e-5 < ustep shift it, otherwise set it to ustep
 "V> Note: if above condition failed, this used to leave {p1}
-"V> unshifted, which led to transport errors 
+"V> unshifted, which led to transport errors
 ;
 REPLACE {$GEO_SHIFT_1_(#)} WITH {
   ;IF({P1}~=0.00 ) [
@@ -1084,13 +1084,13 @@ DOUBLE PRECISION   XYL(2), XYFL(2), ZFL, UVL(2), XoN, XoP, Zo, TEMP1, TEMP2,
 IF(ORIENT_$SYNCHDMLC=0)[
     XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);
 ]
-ELSEIF(ORIENT_$SYNCHDMLC=1)[ 
+ELSEIF(ORIENT_$SYNCHDMLC=1)[
     XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);
 ]
 ELSEIF(ORIENT_$SYNCHDMLC=2)[
     XYL(1)=-X(NP); XYL(2)=Y(NP);UVL(1)=-U(NP);UVL(2)=V(NP);
 ]
-ELSEIF(ORIENT_$SYNCHDMLC=3)[ 
+ELSEIF(ORIENT_$SYNCHDMLC=3)[
     XYL(1)=-Y(NP); XYL(2)=X(NP);UVL(1)=-V(NP);UVL(2)=U(NP);
 ]
 IF (IDIR=1) [
@@ -2705,7 +2705,7 @@ IF(MODE_$SYNCHDMLC=1|MODE_$SYNCHDMLC=2)["dynamic or step-and-shoot leaf inputs"
          LEAFPOS_$SYNCHDMLC((TOT_LEAF_$SYNCHDMLC-K+1)+
                       (I-1)*TOT_LEAF_$SYNCHDMLC) = tmp_coord;
        ]
-     ]   
+     ]
   ]
   CLOSE(UNIT=mlc_unit);
 
@@ -2777,7 +2777,7 @@ IF(ORIENT_$SYNCHDMLC>=2)[
     LEAFA_$SYNCHDMLC(I) = LEAFA_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC-I+1);
     LEAFA_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC-I+1) = tmp_coord;
   ]
-] 
+]
 
 IF(ENDTYPE_$SYNCHDMLC=1)[
 DO I=1, TOT_LEAF_$SYNCHDMLC [
@@ -3709,8 +3709,8 @@ IF(LEAFIS~=0) [
 				   "target leaf"
     IF(LEAFIS~=TOT_LEAF_$SYNCHDMLC & ((((NY=5|NY=6) & (NZ=7|NZ=8|NZ=9)) &
        XYL1>SURPARA1_$SYNCHDMLC(LEAFIS+1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))) |
-      (I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1 & 
-       NY=6 & NZ>1 & 
+      (I_LEAF_ALT_DEF_$SYNCHDMLC(LEAFTYPE_$SYNCHDMLC(LEAFIS),1,6)=1 &
+       NY=6 & NZ>1 &
        XYL1>SURPARA1_$SYNCHDMLC(LEAFIS+1,3)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))))) [
           LEAFIS=LEAFIS+1;
           TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
@@ -3800,9 +3800,9 @@ IF(LEAFIS~=0) [
                 ]
            ];
          ]
-         ELSEIF(LEAFIS ~=1 & NY<=2 & 
+         ELSEIF(LEAFIS ~=1 & NY<=2 &
            ((LEAFTYPE_$SYNCHDMLC(LEAFIS) = 3 & NZ<=3) |
-            (LEAFTYPE_$SYNCHDMLC(LEAFIS) = 5 & NZ<=4)))[ 
+            (LEAFTYPE_$SYNCHDMLC(LEAFIS) = 5 & NZ<=4)))[
            "here we are in an isocenter leaf
            "check if particle is in region of previous leaf"
            IF(XYL1<SURPARA1_$SYNCHDMLC(LEAFIS-1,7)*
