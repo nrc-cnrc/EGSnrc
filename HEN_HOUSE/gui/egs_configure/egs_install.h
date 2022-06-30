@@ -214,7 +214,6 @@ private:
   //void printProgress( const QString& message );
   void printProgress( const QString& message, bool new_line = true );
 
-
 //************************************************************************
 
 /* Creates a log file to store useful information about
@@ -653,6 +652,13 @@ static const char machine_macros[]={
 "  {'$conf_name'};\n"\
 "REPLACE {$EGS_CONFIG} WITH \n"\
 "  {'$spec_file'};\n"\
+"\n"\
+"REPLACE {$GIT_HASH} WITH \n"\
+"  {'$git_hash'}; \n"\
+"REPLACE {$GIT_BRANCH} WITH \n"\
+"  {'$git_branch'}; \n"\
+"REPLACE {$CONFIG_TIME} WITH \n"\
+"  {'$config_time'}; \n"\
 "\n"\
 "\" System dependent stuff \"\n"\
 "\"========================================\"\n"\

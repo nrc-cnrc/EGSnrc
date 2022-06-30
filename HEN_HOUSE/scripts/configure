@@ -2061,6 +2061,8 @@ str_header=$(printf "$str_header" | while read line; do
     printf "\"\n"
 done)
 
+CONFIG_TIME=`date -u +'%Y-%m-%d %H:%M:%S UTC'`
+
 cat >$machine_macros <<_ACEOF
 %E
 %I4
@@ -2079,6 +2081,9 @@ REPLACE {\$CONFIGURATION_NAME} WITH
   {'$conf_name'};
 REPLACE {\$EGS_CONFIG} WITH
   {'$HEN_HOUSE/specs/$conf_file'};
+
+REPLACE {\$CONFIG_TIME} WITH
+  {'$CONFIG_TIME'};
 
 " System dependent stuff "
 "========================================"
