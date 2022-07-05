@@ -19,15 +19,17 @@ using namespace std;
 */
 
 int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elementArray, double *massFraction,
-float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *ipotval, int mediaNum) {
+                     float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *ipotval, int mediaNum) {
     //------------------------------------------------//
     int knmat;
 
     if (isCompound == 1) { // 1 means compound and 0 means not compound
         knmat = 1;
-    } else if (NEP == 1) {
+    }
+    else if (NEP == 1) {
         knmat = 0; // substance is an element
-    } else {
+    }
+    else {
         knmat = 2; // substance is a mixture
     }
     HelperFunctions hf;
@@ -48,10 +50,11 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     cout << "\n";
 
     if (*ipotval != -1) {
-        assert (*ipotval>=0 && "Ivalue must be non-negative");
+        assert(*ipotval>=0 && "Ivalue must be non-negative");
         fc.pot = *ipotval;
         cout << "For medium " << mediaNum << " I-value (eV) given in egsinp file is " << fc.pot << "\n";
-    } else {
+    }
+    else {
         cout << "For medium " << mediaNum << " I value (eV) not provided in egsinp file.\n";
         cout << "I value (eV) as calulated by ESTAR is: " << fc.pot << "\n";
     }
@@ -111,7 +114,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     double zav = fc.zav;
     double hom = 28.81593*sqrt(rho*zav); // this is equation 4 of Sternheimer 1984
     double phil = 2.0*log(fc.pot/hom);   // this is equation 7 of Sternheimer 1984 with a slight modification.
-                                         // Please refer to the report (2.2) to understand the modification.
+    // Please refer to the report (2.2) to understand the modification.
     double cbar = phil + 1.0;
 
     for (int i = 0; i < mmax; i++) {
@@ -198,12 +201,12 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
 
     if (en[nmax-1]<=0) {   // when en[nmax-1]==0 is true, it means the substance is a conductor.
         alf[nmax-1] = 1.0; // when it is a conductor, this code ensures there is this
-                           // term outside the loop according to equation 8
+        // term outside the loop according to equation 8
     };
 
     for (int n = 0; n < nmax; n++) {
         eps[n] = (en[n]/hom) * (en[n]/hom); // This is square of equation 3 (Sternheimer 1984) without
-                                            // the (adjustment factor)^2 which we will find
+        // the (adjustment factor)^2 which we will find
     };
     //--------------------------------------------------------------------//
     // The variables defined above are used to solve equation 8 of Sternheimer 1984
@@ -240,7 +243,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
 
     for (int n = 0; n < nmax; n++) {
         eps[n] = root*eps[n]; // after we find the adjustment factor we can write down the square of
-                              // equation 3 of Sternheimer 1984 explicitly
+        // equation 3 of Sternheimer 1984 explicitly
     };
 
     // here we computer cutoff below which density effect is 0. However this cutoff is not used in estar.
@@ -331,7 +334,8 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
                 bp = fbspol(yl, yql, adel, bdel, cdel, ddel, lmax);
                 if (solver == 1) {
                     delta =  bp.density_corr;
-                } else if (solver == 2) {
+                }
+                else if (solver == 2) {
                     xroot = bisec(q[bp.lb_index], q[bp.ub_index], tol, tau, f, eps, nmax);
                     double yqn = 0;
                     sum = 0.0;
@@ -343,14 +347,16 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
                     yqn = 1/yqn;
                     nb_density = sum - xroot/(yqn + 1.0);
                     delta =  nb_density;
-                } else {
+                }
+                else {
                     cout << "\n***************\n";
                     cout << "Solver option incorrect!\n";
                     cout << "\n***************\n";
                     return 9;
                 }
 
-            } else {
+            }
+            else {
                 cout << "\n***************\n";
                 cout << "energy is too high and out of range";
                 cout << "\n***************\n";

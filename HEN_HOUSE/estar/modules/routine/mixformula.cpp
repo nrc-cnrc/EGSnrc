@@ -13,17 +13,17 @@ int const max_comp = 100;
 // this struct stores the data present in a mixture
 struct mixtureData {
     int ncomp; // number of COMPONENTS in mixture
-               // * example: if a mixture is made with NaCl and H2O, ncomp will be 2
+    // * example: if a mixture is made with NaCl and H2O, ncomp will be 2
     string frm[max_comp];// array containing each formula
-               // * example: if a mixture is made with NaCl and H2O, frm[] will be ["NaCl", "H2O"]
+    // * example: if a mixture is made with NaCl and H2O, frm[] will be ["NaCl", "H2O"]
     double frac[max_comp];// array containing fraction by weight of each subsatance used in mixture
-               // * example: if a mixture is made with 0.8 NaCl and 0.2 H2O, frac[] will be [0.8, 0.2]
-               // NOTE: weights do not need to be normalized as program automatically normalizes weights
+    // * example: if a mixture is made with 0.8 NaCl and 0.2 H2O, frac[] will be [0.8, 0.2]
+    // NOTE: weights do not need to be normalized as program automatically normalizes weights
 };
 
 // This is a simple function where we output an object of mixtureData structure
 // where the object has the relevant data of the mixture
-// UPDATE: getData() is no longer called as we get the data from .egsinp files and not 
+// UPDATE: getData() is no longer called as we get the data from .egsinp files and not
 //         through command prompts anymore
 mixtureData getData() {
     mixtureData md;
@@ -34,7 +34,7 @@ mixtureData getData() {
         cout << "\n***************\n";
         cout << "Error! Number of components must be greater than 0 and an integer";
         cout << "\n***************\n";
-        assert (ncomp >= 0);
+        assert(ncomp >= 0);
     };
     cout << "num is " << ncomp << "\n";
     md.ncomp = ncomp;
@@ -53,7 +53,7 @@ mixtureData getData() {
             cout << "\n***************\n";
             cout << "Error! weight must be greater than 0";
             cout << "\n***************\n";
-            assert (weight >= 0);
+            assert(weight >= 0);
         };
         md.frac[i] = weight;
 
@@ -78,7 +78,7 @@ mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP)
         cout << "\n***************\n";
         cout << "Error! Number of components must be greater than 0 and an integer";
         cout << "\n***************\n";
-        assert (ncomp >= 0);
+        assert(ncomp >= 0);
     };
     int i = 0;
     while (i < ncomp) {
@@ -92,7 +92,7 @@ mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP)
             cout << "\n***************\n";
             cout << "Error! mass fraction must be greater than 0";
             cout << "\n***************\n";
-            assert (massFraction[i] > 0);
+            assert(massFraction[i] > 0);
         };
         md.frac[i] = massFraction[i];
         sumf = sumf + md.frac[i];
@@ -150,10 +150,11 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
             if (lh[atmoicNumIndex] == 0) {
                 lh[atmoicNumIndex] = 1;
                 wate[atmoicNumIndex] = md.frac[i]*fc.wt[j]; // if we encounter a new element, we do this
-            } else {
+            }
+            else {
                 wate[atmoicNumIndex] = wate[atmoicNumIndex] + md.frac[i]*fc.wt[j]; // if we encounter
-                                                                                   // an element which was part of a previous compound we add 
-                                                                                   // the previous weight to  md.frac[i]*fc.wt[j]
+                // an element which was part of a previous compound we add
+                // the previous weight to  md.frac[i]*fc.wt[j]
             }
         }
         zavArray[i] = fc.zav;
@@ -165,8 +166,8 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
     for (int k = 0; k < num_elems; k++) {
         if (lh[k] == 1) {
             /*
-                if lh[k] == 1, this means the element with atomic number k+1 is 
-                part of some compound of the mixture or is in elemental form in the mixture 
+                if lh[k] == 1, this means the element with atomic number k+1 is
+                part of some compound of the mixture or is in elemental form in the mixture
             */
             // here we just put the atomic numbers and weights of the elements present in the mixture in
             // arrays.
@@ -175,9 +176,9 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
             index = index + 1;
         }
     }
-    
-    int numDiffElemsUsed = index; // this is the number of differents used. 
-                                  // * example: if a mixture is made with NaCl and H2O, numDiffElemsUsed will be 4
+
+    int numDiffElemsUsed = index; // this is the number of differents used.
+    // * example: if a mixture is made with NaCl and H2O, numDiffElemsUsed will be 4
     ffc.mmax = numDiffElemsUsed;
     ffc.zav = 0.0;
     double potl = 0.0;

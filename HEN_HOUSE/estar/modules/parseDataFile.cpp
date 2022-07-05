@@ -14,20 +14,20 @@ using namespace std;
 
 // 'data' structure will help us to properly organize the data from the elementData.h file
 struct  data {
-    int nmax[100];      // number of dispersion oscillators required to describe 
-                        // the atoms of a medium made solely with a particular element
-                        // * example: nmax[6-1] is the number of dispersion oscillators required to describe a medium made of Carbon
-                        // note that for mixtures/compounds the nmax is later on modified
+    int nmax[100];      // number of dispersion oscillators required to describe
+    // the atoms of a medium made solely with a particular element
+    // * example: nmax[6-1] is the number of dispersion oscillators required to describe a medium made of Carbon
+    // note that for mixtures/compounds the nmax is later on modified
 
     int numLevelsStandard;          // number of energylevels in standard energy grid
 
     int nc[100][26];    // This is the number of electrons present in the subshell we are considering
-                        // * example, L-III subshell has 4 electrons. So L[i - 1] = 4 when I >= 10.
-                        // Please refer to the report to know which portion of the elementData.h file represents the subshell data.
+    // * example, L-III subshell has 4 electrons. So L[i - 1] = 4 when I >= 10.
+    // Please refer to the report to know which portion of the elementData.h file represents the subshell data.
 
-    double bd[100][26]; // planck constant * bd[i-1][j] represents the absorption edge of the j+1 th oscillator for 
-                        // the dispersion model with atomic number i where 0<=j<=nmax-1.
-                        // Please refer to the report to know which portion of the elementData.h file represents the subshell data.
+    double bd[100][26]; // planck constant * bd[i-1][j] represents the absorption edge of the j+1 th oscillator for
+    // the dispersion model with atomic number i where 0<=j<=nmax-1.
+    // Please refer to the report to know which portion of the elementData.h file represents the subshell data.
 };
 
 data parseData() {
@@ -42,7 +42,7 @@ data parseData() {
         arr[i] = elementData[i];
         i = i + 1;
     }
-    //   
+    //
 
     //--//--//--//--//
     // In the snippet below, we structure the data in arrays
@@ -56,7 +56,7 @@ data parseData() {
         temp_nmax[i] = arr[j];
         int k = j+2; // the second element of each set of data is 113 and thus we ignore the second element
         int a = 0;
-        /*  
+        /*
             temp_nmax[i] is the first element of each set and this is an integer
             length of nc_tamp array is temp_nmax[i]
         */
@@ -65,9 +65,9 @@ data parseData() {
             a = a + 1;
             k = k + 1;
         };
-        int m = k; 
+        int m = k;
         a = 0;
-        /*  
+        /*
             Recall temp_nmax[i] is the first element of each set and this is an integer
             length of bd_tamp array is temp_nmax[i]
         */
@@ -88,7 +88,7 @@ data parseData() {
         //--------------------
         // In this snippet we input the data from nc_temp, bd_temp and rlos_temp
         // into the structure
-        // Note that i is used to keep track of the set of data we are dealing with 
+        // Note that i is used to keep track of the set of data we are dealing with
         // and the range of i is 0 <= i <= 99
         ds.nmax[i] = temp_nmax[i];
         for (int p = 0; p < temp_nmax[i]; p++) {
@@ -99,7 +99,7 @@ data parseData() {
         };
         //--------------------
         i = i + 1;
-        j = n;    
+        j = n;
     };
     return ds;
 }

@@ -10,7 +10,7 @@ using namespace std;
 double yl;
 double yql;
 double obj_func;
-double objective_function (double tau, double f[1000], double eps[1000], int nmax, double x) {
+double objective_function(double tau, double f[1000], double eps[1000], int nmax, double x) {
     yl = log(tau*(tau+2.0));
     yql = 0;
     for (int i = 0; i < nmax; i++) {
@@ -32,22 +32,26 @@ double bisec(double lowerbound, double upperbound, double tolerance, double tau,
             x_mid = (lowerbound + upperbound)/2;
             if (objective_function(tau, f, eps, nmax, x_mid) > 0) {
                 lowerbound = x_mid;
-            } else {
+            }
+            else {
                 upperbound = x_mid;
             }
             del = objective_function(tau, f, eps, nmax, x_mid) ;
         }
-    } else if ((objective_function(tau, f, eps, nmax, lowerbound) < 0) && (objective_function(tau, f, eps, nmax, upperbound) > 0)) {
+    }
+    else if ((objective_function(tau, f, eps, nmax, lowerbound) < 0) && (objective_function(tau, f, eps, nmax, upperbound) > 0)) {
         while (del > tolerance) {
             x_mid = (lowerbound + upperbound)/2;
             if (objective_function(tau, f, eps, nmax, x_mid) > 0) {
                 upperbound = x_mid;
-            } else {
+            }
+            else {
                 lowerbound = x_mid;
             }
             del = objective_function(tau, f, eps, nmax, x_mid);
         }
-    } else {
+    }
+    else {
         cout << "The lower and upper bounds are wrong\n";
         exit(1);
     }
