@@ -461,22 +461,22 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
                     vector<shared_ptr<EGS_SingleInput>> singleInputs = shape->getSingleInputs();
                     for (auto &inp : singleInputs) {
                         const vector<string> vals = inp->getValues();
-                        egsInformation("  single %s\n", inp->getTag().c_str());
-                        for (auto&& val : vals) {
-                            egsInformation("      %s\n", val.c_str());
-                        }
+//                         egsInformation("  single %s\n", inp->getTag().c_str());
+//                         for (auto&& val : vals) {
+//                             egsInformation("      %s\n", val.c_str());
+//                         }
                     }
 
                     vector<shared_ptr<EGS_BlockInput>> inputBlocks = shape->getBlockInputs();
                     for (auto &block : inputBlocks) {
-                        egsInformation("  block %s\n", block->getTitle().c_str());
+                        //egsInformation("  block %s\n", block->getTitle().c_str());
                         vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
                         for (auto &inp : singleInputs) {
                             const vector<string> vals = inp->getValues();
-                            egsInformation("   single %s\n", inp->getTag().c_str());
-                            for (auto&& val : vals) {
-                                egsInformation("      %s\n", val.c_str());
-                            }
+//                             egsInformation("   single %s\n", inp->getTag().c_str());
+//                             for (auto&& val : vals) {
+//                                 egsInformation("      %s\n", val.c_str());
+//                             }
                         }
                     }
                 }
