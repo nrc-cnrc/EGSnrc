@@ -1694,6 +1694,14 @@ IF(EPSTFLP=0)[
 "No density file provided. We find density factors"
 "using ESTAR."
 
+"I-value is provided in MeV in the egsinp so we need to convert it"
+"to eV for estar"
+IF(IPOTVAL > 0.1) [
+OUTPUT;(//' *****IN SPINIT*** WARNING: I-value seems too large.',
+' Check that you provided in MeV, not eV!'//);
+]
+IPOTVAL = IPOTVAL * 1000000;
+
 "Here we call estar"
 "The parameters are described in estarCalc.cpp"
 CALL estar(ELEM_NAMES,RHOZP,PZP,RHOP,densityCorr,
