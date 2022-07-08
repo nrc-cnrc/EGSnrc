@@ -1360,6 +1360,7 @@ REAL z_score_tmp; "dummy variable passed to IAEA phsp file opening macro"
 external combine_results;
 
 character medChar($IMAX);
+character encoding*62;
 
 #ifdef HAVE_C_COMPILER;
 $REAL   part_dose, part2_dose, current_result, current_uncertainty;
@@ -1378,6 +1379,8 @@ $DECLARE_TIMING_VARIABLES;
 "cput1 is cputime at start of simulations"
 "cput2 is cputime when asked for so elapsed cpu is cput2-cput0 or -cput1"
 
+"define the ascii encoding string for media in egsphant file"
+encoding = $ENCODING;
 
 call egs_init; "initialize EGSnrc system"
 
@@ -1532,7 +1535,7 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
           read($CTUnitNumber,:medformat:) (medChar(i),i=1,IMAX);
           "Convert from ASCII to a number"
           DO i=1,IMAX[
-            med($IR(i,j,k)) = mod((iachar(medChar(i)) + 47), 95);
+            med($IR(i,j,k)) = index(encoding, medChar(i)) - 1;
           ]
        ]
        read($CTUnitNumber,*);
@@ -4611,6 +4614,8 @@ REAL    xbnd($IMAX+1),             "voxel x boundaries"
         estepe($MXMED);            "linear array of estepe values"
 $REAL rho($MXREG);
 
+character  encoding(62);
+encoding = $ENCODING;
 
 REPLACE {$IRWP(#,#,#)} WITH {(1 + {P1} + ({P2}-1)*iimax + ({P3}-1)*iimax*jjmax)}
 
@@ -4627,8 +4632,8 @@ WRITE(iunit,*) (ybnd(jj),jj=1,jjmax+1);
 WRITE(iunit,*) (zbnd(kk),kk=1,kkmax+1);
 DO kk=1,kkmax[
     DO jj=1,jjmax[
-        WRITE(iunit,1399) (achar(MOD((med($IRWP(ii,jj,kk))+16),95) + 32),
-            ii=1,iimax);
+        WRITE(iunit,1399)
+        (encoding(med($IRWP(ii,jj,kk))+1:med($IRWP(ii,jj,kk))+1),ii=1,iimax);
     ]
     WRITE(iunit,*);
 ]

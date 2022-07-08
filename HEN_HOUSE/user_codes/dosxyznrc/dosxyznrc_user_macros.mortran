@@ -110,6 +110,10 @@ REPLACE {$MXANG} WITH {60000};
 "default directory in which to output phase space files"
 REPLACE {$DIRECTORY-FOR-PHSP} WITH {$cstring(egs_home)//$cstring(user_code)};
 
+"Encoding of the egsphant material types"
+REPLACE {$ENCODING} WITH {
+'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'};
+
 "*******************************************************************"
 "   These macros define the null macros related to BEAM MODELS      "
 "*******************************************************************"
