@@ -1704,7 +1704,7 @@ IPOTVAL = IPOTVAL * 1000000;
 
 "Here we call estar"
 "The parameters are described in estarCalc.cpp"
-CALL estar(ELEM_NAMES,RHOZP,PZP,RHOP,densityCorr,
+CALL estar(ELEM_NAMES,RHOZP,PZP,LDENSITY,densityCorr,
 enGrid,NEP,ISCOMP,IEV,IPOTVAL,MEDID);
 
 "After the call to ESTAR, the remainder"
