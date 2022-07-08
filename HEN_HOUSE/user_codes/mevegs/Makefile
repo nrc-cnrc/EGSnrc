@@ -63,7 +63,8 @@ CPP_SOURCES = $(C_ADVANCED_SOURCES)
 
 # Specify here other header files that your user code depends upon.
 #
-other_dep_user_code = $(ABS_EGSPP)egs_scoring.h
+other_dep_user_code = $(ABS_EGSPP)egs_scoring.h \
+	$(ABS_EGSPP)geometry$(DSEP)egs_mesh$(DSEP)egs_mesh.h
 
 include $(HEN_HOUSE)makefiles$(DSEP)cpp_makefile
 INCL += -I$(ABS_EGSPP)geometry$(DSEP)egs_mesh

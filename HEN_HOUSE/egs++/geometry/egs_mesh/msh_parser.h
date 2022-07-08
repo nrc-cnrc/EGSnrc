@@ -44,7 +44,7 @@
 namespace msh_parser {
 
 // Top-level Gmsh msh file parser.
-EGS_MeshSpec parse_msh_file(std::istream& input);
+EGS_MeshSpec parse_msh_file(std::istream& input, EGS_InfoFunction info = nullptr);
 
 /// The msh_parser::internal namespace is for internal API functions and is not
 /// part of the public API. Functions and types may change without warning.
@@ -650,17 +650,14 @@ EGS_MeshSpec parse_msh41_body(std::istream& input, EGS_InfoFunction info) {
 
     // TODO: check all 3d physical groups were used by elements
     // TODO: ensure all element node tags are valid
-    EGS_MeshSpec spec;
-    spec.elements = std::move(mesh_elts);
-    spec.nodes = std::move(mesh_nodes);
-    spec.media = std::move(media);
-    return spec;
+    return EGS_MeshSpec(std::move(mesh_elts), std::move(mesh_nodes),
+        std::move(media));
 }
 
 } // namespace msh_parser::internal::msh41
 } // namespace msh_parser::internal
 
-EGS_MeshSpec parse_msh_file(std::istream& input, EGS_InfoFunction info) {
+EGS_MeshSpec parse_msh_file(std::istream& input, EGS_InfoFunction info /*default=nullptr*/) {
     auto version = msh_parser::internal::parse_msh_version(input);
     switch(version) {
         case msh_parser::internal::MshVersion::v41:

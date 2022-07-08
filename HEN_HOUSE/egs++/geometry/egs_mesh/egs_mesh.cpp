@@ -57,9 +57,12 @@
     #include <io.h>     // _isatty
 #endif
 
-// Have to define the destructor here instead of in egs_mesh.h because of the
-// unique_ptr to forward declared EGS_Mesh_Octree members.
+// Have to define the move constructor, move assignment operator and destructor
+// here instead of in egs_mesh.h because of the unique_ptr to forward declared
+// EGS_Mesh_Octree members.
 EGS_Mesh::~EGS_Mesh() = default;
+EGS_Mesh::EGS_Mesh(EGS_Mesh&&) = default;
+EGS_Mesh& EGS_Mesh::operator=(EGS_Mesh&&) = default;
 
 void EGS_MeshSpec::checkValid() const {
     std::size_t n_max = std::numeric_limits<int>::max();
@@ -729,6 +732,10 @@ private:
                 throw std::runtime_error(
                     "findOtherIntersectedOctants called on leaf node");
             }
+            // Perf note: this function was changed to use std::array, but there
+            // wasn't any observed performance change during benchmarking. Since
+            // the std::array logic was more complicated, the std::vector impl
+            // was kept.
             std::vector<std::pair<EGS_Float, int>> intersections;
             for (int i = 0; i < 8; i++) {
                 if (i == exclude_octant) {

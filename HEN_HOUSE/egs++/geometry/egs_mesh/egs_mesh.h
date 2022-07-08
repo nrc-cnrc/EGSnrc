@@ -76,13 +76,6 @@ class EGS_Mesh_Octree;
 /// A container for raw unstructured tetrahedral mesh data.
 class EGS_MESH_EXPORT EGS_MeshSpec {
 public:
-    EGS_MeshSpec() = default;
-    EGS_MeshSpec(const EGS_MeshSpec&) = delete;
-    EGS_MeshSpec& operator=(const EGS_MeshSpec&) = delete;
-    // EGS_MeshSpec is move-only
-    EGS_MeshSpec(EGS_MeshSpec&&) = default;
-    EGS_MeshSpec& operator=(EGS_MeshSpec&&) = default;
-    ~EGS_MeshSpec() = default;
 
     /// A tetrahedral mesh element
     struct Tetrahedron {
@@ -115,6 +108,17 @@ public:
         std::string medium_name;
     };
 
+    EGS_MeshSpec() = default;
+    EGS_MeshSpec(std::vector<Tetrahedron> elements, std::vector<Node> nodes,
+        std::vector<Medium> media) : elements(std::move(elements)),
+            nodes(std::move(nodes)), media(std::move(media)) {}
+    EGS_MeshSpec(const EGS_MeshSpec&) = delete;
+    EGS_MeshSpec& operator=(const EGS_MeshSpec&) = delete;
+    // EGS_MeshSpec is move-only
+    EGS_MeshSpec(EGS_MeshSpec&&) = default;
+    EGS_MeshSpec& operator=(EGS_MeshSpec&&) = default;
+    ~EGS_MeshSpec() = default;
+
     /// Throws std::runtime_error if an EGS_Mesh can't be properly initialized
     /// using this mesh data.
     void checkValid() const;
@@ -137,13 +141,13 @@ public:
 class EGS_MESH_EXPORT EGS_Mesh : public EGS_BaseGeometry {
 public:
     /// Throws std::runtime_error if construction fails.
-    EGS_Mesh(EGS_MeshSpec spec);
+    explicit EGS_Mesh(EGS_MeshSpec spec);
 
     // EGS_Mesh is move-only
     EGS_Mesh(const EGS_Mesh&) = delete;
     EGS_Mesh& operator=(const EGS_Mesh&) = delete;
-    EGS_Mesh(EGS_Mesh&&) = default;
-    EGS_Mesh& operator=(EGS_Mesh&&) = default;
+    EGS_Mesh(EGS_Mesh&&);
+    EGS_Mesh& operator=(EGS_Mesh&&);
 
     // Just declare destructor without defining it. We can't define it yet
     // because of the unique_ptr to forward declared EGS_Mesh_Octree members.
@@ -161,8 +165,8 @@ public:
         return _medium_names;
     }
 
-    const std::vector<std::array<int, 4>>& neighbours() const {
-        return _neighbours;
+    const std::array<int, 4>& element_neighbours(int i) const {
+        return _neighbours.at(i);
     }
 
     // Return element volume [cm3].
