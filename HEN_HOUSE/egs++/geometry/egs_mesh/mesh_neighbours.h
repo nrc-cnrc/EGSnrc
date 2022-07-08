@@ -56,7 +56,7 @@ class Tetrahedron {
 public:
     class Face {
     public:
-        Face(){}
+        Face() {}
         Face(int a, int b, int c) {
             std::array<int, 3> sorted {a, b, c};
             // sort to ease comparison between faces
@@ -66,8 +66,8 @@ public:
         int node0() const {
             return nodes_[0];
         }
-        friend bool operator==(const Face& a, const Face& b);
-        friend bool operator!=(const Face& a, const Face& b);
+        friend bool operator==(const Face &a, const Face &b);
+        friend bool operator!=(const Face &a, const Face &b);
     private:
         std::array<int, 3> nodes_;
     };
@@ -76,8 +76,9 @@ public:
     //
     // Throws std::runtime_error if duplicate node tags are passed in.
     Tetrahedron(int a, int b, int c, int d)
-        : nodes_({a, b, c, d})
-    {
+        : nodes_({
+        a, b, c, d
+    }) {
         if (a == b || a == c || a == d) {
             throw std::runtime_error("duplicate node " + std::to_string(a));
         }
@@ -112,11 +113,11 @@ private:
     std::array<Face, 4> faces_;
 };
 
-bool operator==(const Tetrahedron::Face& a, const Tetrahedron::Face& b) {
+bool operator==(const Tetrahedron::Face &a, const Tetrahedron::Face &b) {
     return a.nodes_ == b.nodes_;
 }
 
-bool operator!=(const Tetrahedron::Face& a, const Tetrahedron::Face& b) {
+bool operator!=(const Tetrahedron::Face &a, const Tetrahedron::Face &b) {
     return a.nodes_ != b.nodes_;
 }
 
@@ -128,7 +129,7 @@ class SharedNodes {
 public:
     SharedNodes(std::vector<std::vector<int>> shared_nodes) :
         shared_nodes(std::move(shared_nodes)) {}
-    const std::vector<int>& elements_around_node(int node) const {
+    const std::vector<int> &elements_around_node(int node) const {
         return shared_nodes.at(node);
     }
 private:
@@ -136,9 +137,9 @@ private:
 };
 
 // Find the elements around each node.
-SharedNodes elements_around_nodes(const std::vector<mesh_neighbours::Tetrahedron>& elements) {
+SharedNodes elements_around_nodes(const std::vector<mesh_neighbours::Tetrahedron> &elements) {
     int max_node = 0;
-    for (const auto& elt: elements) {
+    for (const auto &elt: elements) {
         if (elt.max_node() > max_node) {
             max_node = elt.max_node();
         }
@@ -159,9 +160,8 @@ SharedNodes elements_around_nodes(const std::vector<mesh_neighbours::Tetrahedron
 
 // Given a list of tetrahedrons, returns the indices of neighbouring tetrahedrons.
 std::vector<std::array<int, 4>> tetrahedron_neighbours(
-    const std::vector<mesh_neighbours::Tetrahedron>& elements,
-    egs_mesh::internal::PercentCounter& progress)
-{
+                                 const std::vector<mesh_neighbours::Tetrahedron> &elements,
+egs_mesh::internal::PercentCounter &progress) {
     progress.start(elements.size());
     const std::size_t NUM_FACES = 4;
     const auto shared_nodes = mesh_neighbours::internal::elements_around_nodes(elements);
@@ -178,7 +178,7 @@ std::vector<std::array<int, 4>> tetrahedron_neighbours(
             }
             auto face = elt_faces[f];
             // select a face node and loop through the other elements that share it
-            const auto& elts_sharing_node = shared_nodes.elements_around_node(face.node0());
+            const auto &elts_sharing_node = shared_nodes.elements_around_node(face.node0());
             for (auto j: elts_sharing_node) {
                 if (j == static_cast<int>(i)) {
                     // elt can't be a neighbour of itself, skip it

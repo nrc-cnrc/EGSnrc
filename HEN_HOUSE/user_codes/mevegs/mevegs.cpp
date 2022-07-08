@@ -63,8 +63,8 @@ using namespace std;
 
 // anonymous namespace
 namespace {
-    // Whether the geometry is a plain mesh or inside an envelope
-    enum class MevegsGeometry { Mesh, EnvelopedMesh };
+// Whether the geometry is a plain mesh or inside an envelope
+enum class MevegsGeometry { Mesh, EnvelopedMesh };
 } // anonymous namespace
 
 class APP_EXPORT Mevegs_Application : public EGS_AdvancedApplication {
@@ -179,7 +179,7 @@ public:
     void writeMeshOutputFiles() const;
 
     /*! Write the results to a VTK legacy ASCII file. */
-    void writeVtk(const EGS_Mesh& mesh, std::size_t offset) const;
+    void writeVtk(const EGS_Mesh &mesh, std::size_t offset) const;
 
     /*! Get the current simulation result.
      This function is called from the run control object in parallel runs
@@ -609,7 +609,7 @@ void Mevegs_Application::outputResults() {
     }
 }
 
-EGS_Mesh * extractEGSMesh(EGS_EnvelopeGeometry *env) {
+EGS_Mesh *extractEGSMesh(EGS_EnvelopeGeometry *env) {
     if (!env) {
         return nullptr;
     }
@@ -624,16 +624,15 @@ EGS_Mesh * extractEGSMesh(EGS_EnvelopeGeometry *env) {
         egsWarning("\nfound more than one inscribed geometry\n");
         return nullptr;
     }
-    EGS_Mesh *mesh = dynamic_cast<EGS_Mesh*>(geometries[0]);
+    EGS_Mesh *mesh = dynamic_cast<EGS_Mesh *>(geometries[0]);
     if (!mesh) {
         return nullptr;
     }
     return mesh;
 }
 
-void Mevegs_Application::writeVtk(const EGS_Mesh& mesh,
-    std::size_t score_offset) const
-{
+void Mevegs_Application::writeVtk(const EGS_Mesh &mesh,
+                                  std::size_t score_offset) const {
     if (EGS_Application::getIparallel()) {
         egsInformation("\n Mevegs_Application: This is one of a number of parallel jobs. Will only output VTK file on combining results.\n");
         return;
@@ -648,13 +647,13 @@ void Mevegs_Application::writeVtk(const EGS_Mesh& mesh,
     out << std::setprecision(std::numeric_limits<double>::max_digits10);
     // legacy header
     out << "# vtk DataFile Version 4.1\n"
-           "EGS_Mesh results\n"
-           "ASCII\n"
-           "DATASET UNSTRUCTURED_GRID\n"
-           "POINTS " << mesh.num_nodes() << " double\n";
+        "EGS_Mesh results\n"
+        "ASCII\n"
+        "DATASET UNSTRUCTURED_GRID\n"
+        "POINTS " << mesh.num_nodes() << " double\n";
     // point data
     for (int i = 0; i < mesh.num_nodes(); i++) {
-        const EGS_Vector& node = mesh.node_coordinates(i);
+        const EGS_Vector &node = mesh.node_coordinates(i);
         out << node.x << " " << node.y << " " << node.z << "\n";
     }
     // 5 numbers per line
@@ -662,7 +661,7 @@ void Mevegs_Application::writeVtk(const EGS_Mesh& mesh,
         << 5 * mesh.num_elements() << "\n";
     // unstructured grid
     for (int i = 0; i < mesh.num_elements(); i++) {
-        const auto& node_offsets = mesh.element_node_offsets(i);
+        const auto &node_offsets = mesh.element_node_offsets(i);
         // four nodes per tetrahedron
         out << "4 " << node_offsets[0] << " " << node_offsets[1] << " " <<
             node_offsets[2] << " " << node_offsets[3] << "\n";
@@ -683,9 +682,9 @@ void Mevegs_Application::writeVtk(const EGS_Mesh& mesh,
         double e_dep, uncert;
         score->currentResult(i + score_offset, e_dep, uncert);
         const auto mass_kg = mesh.element_density(i) * mesh.element_volume(i)
-            / 1000.0;
+                             / 1000.0;
         // TODO zero out doses with uncertainty over 50%?
-        out << JOULES_PER_MEV * e_dep / mass_kg << "\n";
+        out << JOULES_PER_MEV *e_dep / mass_kg << "\n";
     }
     // uncertainties
     out << "uncertainty%20[%25] 1 " << mesh.num_elements() << " double\n";
@@ -695,7 +694,8 @@ void Mevegs_Application::writeVtk(const EGS_Mesh& mesh,
         // if edep is exactly zero, there is 100% uncertainty
         if (e_dep == 0.0) {
             out << 100.0 << "\n";
-        } else {
+        }
+        else {
             out << uncert / e_dep * 100.0 << "\n";
         }
     }
@@ -703,9 +703,9 @@ void Mevegs_Application::writeVtk(const EGS_Mesh& mesh,
 
 void Mevegs_Application::writeMeshOutputFiles() const {
     MevegsGeometry geo_type = MevegsGeometry::Mesh;
-    EGS_Mesh *mesh = dynamic_cast<EGS_Mesh*>(geometry);
+    EGS_Mesh *mesh = dynamic_cast<EGS_Mesh *>(geometry);
     if (!mesh) {
-        EGS_Mesh *inscribed_mesh = extractEGSMesh(dynamic_cast<EGS_EnvelopeGeometry*>(geometry));
+        EGS_Mesh *inscribed_mesh = extractEGSMesh(dynamic_cast<EGS_EnvelopeGeometry *>(geometry));
         if (!inscribed_mesh) {
             egsWarning("\n No mesh geometry found, skipping mesh output step\n");
             return;
@@ -717,19 +717,19 @@ void Mevegs_Application::writeMeshOutputFiles() const {
     // offset into score array
     std::size_t score_offset = 0;
     switch (geo_type) {
-        // if it's a plain mesh being simulated, skip the first element (reflected energy)
-        case MevegsGeometry::Mesh:
-            assert(score->regions() == mesh->num_elements() + 2);
-            score_offset = 1;
-            break;
-        // if it's a mesh in an envelope being simulated, skip two elements:
-        // reflected energy and the envelope
-        case MevegsGeometry::EnvelopedMesh:
-            assert(score->regions() == mesh->num_elements() + 3);
-            score_offset = 2;
-            break;
-        default:
-            egsFatal("\nunhandled MevegsGeometry case\n");
+    // if it's a plain mesh being simulated, skip the first element (reflected energy)
+    case MevegsGeometry::Mesh:
+        assert(score->regions() == mesh->num_elements() + 2);
+        score_offset = 1;
+        break;
+    // if it's a mesh in an envelope being simulated, skip two elements:
+    // reflected energy and the envelope
+    case MevegsGeometry::EnvelopedMesh:
+        assert(score->regions() == mesh->num_elements() + 3);
+        score_offset = 2;
+        break;
+    default:
+        egsFatal("\nunhandled MevegsGeometry case\n");
     }
 
     writeVtk(*mesh, score_offset);
@@ -777,7 +777,7 @@ int Mevegs_Application::startNewShower() {
 }
 
 #ifdef BUILD_APP_LIB
-APP_LIB(Mevegs_Application);
+    APP_LIB(Mevegs_Application);
 #else
-APP_MAIN(Mevegs_Application);
+    APP_MAIN(Mevegs_Application);
 #endif
