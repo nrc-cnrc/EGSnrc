@@ -1007,7 +1007,7 @@ void EGS_Application::addAusgabObject(EGS_AusgabObject *o) {
         for (int j=0; j<a_objects_list.size(); ++j) {
             if (a_objects_list[j]->getObjectType() == "EGS_TrackScoring") {
                 egsFatal("error: only one ausgab object of type "
-                    "'EGS_TrackScoring' is allowed\n");
+                         "'EGS_TrackScoring' is allowed\n");
             }
         }
     }
