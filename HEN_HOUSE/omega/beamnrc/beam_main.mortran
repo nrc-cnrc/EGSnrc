@@ -40,8 +40,8 @@
 PROGRAM beam_main;
 
 "*******************************************************************************
-" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It 
-"                   is used only if the user specifies the _MPI macro during 
+" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It
+"                   is used only if the user specifies the _MPI macro during
 "                   compilation.
 "*******************************************************************************
 $IFDEF(#,_MPI);
@@ -53,7 +53,7 @@ $IMPLICIT-NONE;
 $INTEGER ircode;
 
 "*******************************************************************************
-" #PARALLEL_EGS -   Establish the MPI environment. It must be initialized here 
+" #PARALLEL_EGS -   Establish the MPI environment. It must be initialized here
 "                   in order to create one *.egslst file per MPI process.
 "*******************************************************************************
 $INTEGER ierr;  "error code returned by MPI subroutines"
@@ -81,4 +81,3 @@ $MPI{#, call MPI_FINALIZE(ierr)};
 
 $CALL_EXIT(0);
 end;
-

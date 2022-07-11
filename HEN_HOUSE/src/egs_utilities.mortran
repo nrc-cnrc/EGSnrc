@@ -484,8 +484,8 @@ subroutine egs_check_arguments;
 "*****************************************************************************
 
 "*******************************************************************************
-" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It 
-"                   is used only if the user specifies the _MPI macro during 
+" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It
+"                   is used only if the user specifies the _MPI macro during
 "                   compilation.
 "*******************************************************************************
 $IFDEF(#,_MPI);
@@ -2369,4 +2369,3 @@ $INTEGER function ibsearch(a, nsh, b);
  ]
  ibsearch = min;
  return;end;
-

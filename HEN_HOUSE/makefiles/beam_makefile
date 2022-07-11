@@ -115,7 +115,7 @@ $(FORTRAN_FILE).$(FEXT): $(SOURCES) sources.make
 	       -o8 $(FORTRAN_FILE).mortlst
 
 #*******************************************************************************
-# #PARALLEL_EGS -   Disable PJOB functionality for BEAMnrc libraries due to  
+# #PARALLEL_EGS -   Disable PJOB functionality for BEAMnrc libraries due to
 #                   locking problems when used from dosxyznrc parallel execution
 #*******************************************************************************
 library: $(LIB_FILE)

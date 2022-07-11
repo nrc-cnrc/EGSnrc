@@ -1250,14 +1250,14 @@ $LONG_INT nnphsp_max, nnphsp_min; } TO
 "  start of coding                 ""toc:
 
 "*******************************************************************************
-" #PARALLEL_EGS -   PROGRAM statement added to clearly define the start 
+" #PARALLEL_EGS -   PROGRAM statement added to clearly define the start
 "                   of the program.
 "*******************************************************************************
 PROGRAM dosxyznrc;
 
 "*******************************************************************************
-" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It 
-"                   is used only if the user specifies the _MPI macro during 
+" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It
+"                   is used only if the user specifies the _MPI macro during
 "                   compilation.
 "*******************************************************************************
 $IFDEF(#,_MPI);
@@ -1387,7 +1387,7 @@ $DECLARE_TIMING_VARIABLES;
 "cput2 is cputime when asked for so elapsed cpu is cput2-cput0 or -cput1"
 
 "*******************************************************************************
-" #PARALLEL_EGS -   Establish the MPI environment. It must be initialized here 
+" #PARALLEL_EGS -   Establish the MPI environment. It must be initialized here
 "                   in order to create one *.egslst file per MPI process.
 "*******************************************************************************
 $INTEGER ierr;  "error code returned by MPI subroutines"
@@ -2563,7 +2563,7 @@ IF(isource = 20 | isource = 21)["reset more_in_cont and MU index for every"
 	   frMU_indx=-1.0;
 ]
 "*******************************************************************************
-" #PARALLEL_EGS -   If PJOB is undefined disable job control file logic and 
+" #PARALLEL_EGS -   If PJOB is undefined disable job control file logic and
 "                   divide particle histories evenly among processes.
 "*******************************************************************************
 IF( n_parallel > 0 ) [  "Job is part of a parallel run "
@@ -2578,7 +2578,7 @@ $IF(#,_NOPJOB);
         " Figure out where to start in the phase space file "
         p_per_phsp_chunk=nshist/n_parallel;
         nnphsp_min=(i_parallel-1)*p_per_phsp_chunk+1;
-        nnphsp_max=nnphsp_min+p_per_phsp_chunk-1;        
+        nnphsp_max=nnphsp_min+p_per_phsp_chunk-1;
         nnphsp=nnphsp_min;
         IF(i_iaea_in=1)[
            $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);
@@ -2829,10 +2829,10 @@ DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
 "*******************************************************************************
 " #PARALLEL_EGS -   If PJOB is undefined disable original parallelization logic.
 "*******************************************************************************
-IF( n_parallel > 0 ) [ 
-$IFNDEF(#,_NOPJOB);    
-    goto :start_parallel_loop:; 
-$ENDIF(#);    
+IF( n_parallel > 0 ) [
+$IFNDEF(#,_NOPJOB);
+    goto :start_parallel_loop:;
+$ENDIF(#);
 ]
 
 #endif;
@@ -3438,7 +3438,7 @@ call egs_finish;     " Finish the simulation "
 #ifdef HAVE_C_COMPILER;
 ;
 "*******************************************************************************
-" #PARALLEL_EGS -   If PJOB is undefined disable job control file logic and 
+" #PARALLEL_EGS -   If PJOB is undefined disable job control file logic and
 "                   combine runs of MPI processes.
 "*******************************************************************************
 IF( n_parallel > 0 & ~is_finished ) [
@@ -3450,7 +3450,7 @@ $IF(#,_NOPJOB);
         " subroutine. Reset i_parallel and open again list file. "
         i_parallel = 0;
         call egs_open_units(.false.);
-        
+
         is_finished = .true.;
         call egs_combine_runs(combine_results,'.pardose');
         ainflu=temp2; "need to define this because it is used to normalize dose"
