@@ -140,16 +140,6 @@ else
     GIT_HASH = -DGIT_HASH="\"$(shell if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then git rev-parse --short=7 HEAD; fi)\""
 endif
 
-GIT_BRANCH =
-ifeq ($(OS),Windows_NT)
-    USING_GIT = $(shell cmd /C git rev-parse --is-inside-work-tree)
-    ifeq ($(USING_GIT),true)
-        GIT_BRANCH = -DGIT_BRANCH="\"$(shell cmd /C git rev-parse --abbrev-ref HEAD)\""
-    endif
-else
-    GIT_BRANCH = -DGIT_BRANCH="\"$(shell if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then git rev-parse --abbrev-ref HEAD; fi)\""
-endif
-
 COMPILE_TIME =
 ifeq ($(OS),Windows_NT)
     COMPILE_TIME = -DCOMPILE_TIME="\"$(shell cmd /C date /T)$(shell cmd /C time /T) $(shell cmd /C tzutil /g)\""
