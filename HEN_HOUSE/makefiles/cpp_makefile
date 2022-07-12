@@ -46,11 +46,20 @@ $(target): $(user_objects) $(egs_objects)
 $(lib_target): $(user_lib_objects) $(egs_lib_objects)
 	$(CXX) $(opt) $(shared) $(lib_link1) $^ $(extra) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) $(user_libs)
 
+EXISTS =
+ifeq ($(OS),Windows_NT)
+	EXISTS := $(shell if exist $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).cpp echo Exists)
+else
+	EXISTS := $(shell test -f $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).cpp && echo "Exists")
+endif
+
 CMP =
+ifeq ($(EXISTS),Exists)
 ifeq ($(OS),Windows_NT)
 	CMP := $(shell FC $(USER_CODE).cpp $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).cpp >NUL 2>&1 && echo Same || echo Different)
 else
 	CMP := $(shell cmp --version 2> /dev/null)
+endif
 endif
 
 compare:
@@ -95,7 +104,7 @@ egs_interface2_$(my_machine).$(obje): $(dep_egs_interface)
 	$(object_rule)
 
 egsnrc_$(my_machine).$(obje): egsnrc_$(my_machine).F array_sizes.h
-	$(F77) -cpp $(FC_FLAGS) $(FDEFS) $(COMPILE_TIME) $(GIT_HASH) $(GIT_BRANCH) -c $(FOUT)$@ $<
+	$(F77) -cpp $(FC_FLAGS) $(FDEFS) $(COMPILE_TIME) $(GIT_HASH) -c $(FOUT)$@ $<
 
 egsnrc_$(my_machine).F: $(CPP_SOURCES)
 	@echo "Mortran compiling EGSnrc sources ..."

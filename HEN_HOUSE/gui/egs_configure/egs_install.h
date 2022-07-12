@@ -655,8 +655,6 @@ static const char machine_macros[]={
 "\n"\
 "REPLACE {$GIT_HASH} WITH \n"\
 "  {'$git_hash'}; \n"\
-"REPLACE {$GIT_BRANCH} WITH \n"\
-"  {'$git_branch'}; \n"\
 "REPLACE {$CONFIG_TIME} WITH \n"\
 "  {'$config_time'}; \n"\
 "\n"\
