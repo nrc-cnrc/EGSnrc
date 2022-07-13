@@ -44,7 +44,7 @@ jobs:
           brew install tcl-tk
           brew install openmotif
 
-      - name: Check versions
+      - name: Compiler versions
         run: |
           gfortran --version
           gcc  --version
@@ -57,5 +57,5 @@ jobs:
       - name: Build EGSnrc
         run: |
           HEN_HOUSE/scripts/configure.expect ${{ runner.os }}.conf | tee configure.log
-          cat *.log log/*.log
-          (! grep -i fail *.log log/*.log)
+          for f in HEN_HOUSE/log/*.log configure.log; do echo $f; cat $f; done
+          (! grep -i fail configure.log)
