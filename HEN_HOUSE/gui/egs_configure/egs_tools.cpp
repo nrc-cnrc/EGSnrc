@@ -806,6 +806,7 @@ void MCompiler::init(){
 
 // Set options for GCC compilers
 void MCompiler::setLanguage(Language l){
+    QString majorVersion;
     switch(l){
       case F:
         the_name = "gfortran";
@@ -817,7 +818,18 @@ void MCompiler::setLanguage(Language l){
         break;
       case CPP:
         the_name = "g++";
-        optimiz = "-O2 -mtune=native -mcmodel=medium";
+
+        // Use c++14 for gcc 5 or higher
+        vopt = "-dumpversion";
+        majorVersion = getVersion();
+        majorVersion = majorVersion.split("\n").takeFirst().split(".").takeFirst();
+        vopt = "--version";
+        if(majorVersion.toInt() >= 5) {
+          optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++14";
+        } else {
+          optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++11";
+        }
+
         dso = new EGS_DSO(name());// Creates dso, sets flibs to -lgfortran literally
         dso->flibs = getFlibs2LinkCPP("gfortran",path());
         break;
@@ -940,14 +952,32 @@ void MCompiler::setUpCPPCompiler(const QString& link_to_name){
     vopt = QString();
   }
   else if ( the_name.contains("g++") ){
-    optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++14 -DWIN32";
+    // Use c++14 for gcc 5 or higher
+    vopt = "-dumpversion";
+    QString majorVersion = getVersion();
+    majorVersion = majorVersion.split("\n").takeFirst().split(".").takeFirst();
+    vopt = "--version";
+    if(majorVersion.toInt() >= 5) {
+      optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++14 -DWIN32";
+    } else {
+      optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++11 -DWIN32";
+    }
   }
   else if (the_name.toLower()== "icpc"){
     optimiz  = "-O2 -no-prec-div -fp-model fast=2 -DWIN32";
   }
 #else
   if ( the_name.contains("g++") ){
-    optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++14";
+    // Use c++14 for gcc 5 or higher
+    vopt = "-dumpversion";
+    QString majorVersion = getVersion();
+    majorVersion = majorVersion.split("\n").takeFirst().split(".").takeFirst();
+    vopt = "--version";
+    if(majorVersion.toInt() >= 5) {
+      optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++14";
+    } else {
+      optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++11";
+    }
   }
   else if (the_name.toLower()== "icpc"){
     optimiz  = "-O2 -no-prec-div -fp-model fast=2";
@@ -956,6 +986,7 @@ void MCompiler::setUpCPPCompiler(const QString& link_to_name){
     optimiz  = "-O2";
   }
 #endif
+
   _version = getVersion(); _version = _version.split("\n").takeFirst();
 
   //get_dso();

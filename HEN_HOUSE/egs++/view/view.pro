@@ -93,7 +93,13 @@ unix {
 #QMAKE_CXXFLAGS+="-ggdb3"
 #QMAKE_LFLAGS+="-fsanitize=address"
 
-QMAKE_CXXFLAGS+=-std=c++14
+# Use c++14 for gcc 5 or higher
+greaterThan(QMAKE_GCC_MAJOR_VERSION, 4) {
+    QMAKE_CXXFLAGS+=-std=c++14
+} else {
+    QMAKE_CXXFLAGS+=-std=c++11
+}
+
 UI_DIR = .ui/$$my_machine
 MOC_DIR = .moc/$$my_machine
 OBJECTS_DIR = .obj/$$my_machine
