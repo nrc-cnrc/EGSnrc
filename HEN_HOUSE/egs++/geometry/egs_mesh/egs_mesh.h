@@ -28,7 +28,19 @@
 #                    Lou Thompson,
 #                    Max Orok
 #
-#  Contributors:
+#  Contributors:     Pascal Michaud
+#
+###############################################################################
+#
+#  The original EGS_Mesh geometry started as a product of many people's hard
+#  work at Mevex Corporation. Thank you to the entire team. Special thanks to
+#  Dave Brown and Emily Craven for their support in releasing this work
+#  under a public licence.
+#
+#  The EGS_Mesh library was then extended and refactored significantly by
+#  Max Orok, as the subject of his Masters degree in Applied Science at the
+#  University of Ottawa, in the department of Mechanical Engineering and under
+#  the supervision of Professor James McDonald.
 #
 ###############################################################################
 */
