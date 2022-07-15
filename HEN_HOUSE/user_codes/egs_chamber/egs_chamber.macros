@@ -25,6 +25,7 @@
 "                   Joerg Wulff, 2007                                         "
 "                                                                             "
 "  Contributors:    Frederic Tessier                                          "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 
@@ -131,4 +132,3 @@ REPLACE {$CALL-HOWFAR-IN-ELECTR; } WITH{;
         ]
     ]
 };
-

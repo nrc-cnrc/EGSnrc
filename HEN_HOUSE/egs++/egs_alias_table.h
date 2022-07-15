@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Marc Chamberland
 #
 ###############################################################################
 */
@@ -212,4 +213,3 @@ private:
 
 
 #endif
-

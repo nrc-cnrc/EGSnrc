@@ -26,6 +26,7 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Blake Walters
 #                   Reid Townson
+#                   Max Orok
 #
 ###############################################################################
 */
@@ -958,4 +959,3 @@ extern __extc__ void egsAusgab(EGS_I32 *iarg);
 extern __extc__ void egsStartParticle(void);
 
 #endif
-

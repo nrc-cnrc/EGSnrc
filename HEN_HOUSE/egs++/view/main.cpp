@@ -24,6 +24,10 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Manuel Stoeckl
+#                   Ernesto Mainegra-Hing
+#                   Cody Crewson
+#                   Reid Townson
 #
 ###############################################################################
 */

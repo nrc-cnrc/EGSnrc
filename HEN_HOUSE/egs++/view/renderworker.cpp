@@ -23,6 +23,8 @@
 #
 #  Author:          Manuel Stoeckl, 2015
 #
+#  Contributors:    Reid Townson
+#
 ###############################################################################
 */
 
@@ -340,4 +342,3 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
 
     return r;
 }
-

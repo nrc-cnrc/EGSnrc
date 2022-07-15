@@ -26,6 +26,7 @@
 "                                                                             "
 "  Contributors:    Frederic Tessier                                          "
 "                   Blake Walters                                             "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -807,4 +808,3 @@ CALL HOWNEAR_$SYNCMLCE({P1});
 }
 ;
 "End of SYNCMLCE_macros.mortran "
-

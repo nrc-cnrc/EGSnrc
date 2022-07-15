@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Marc Chamberland
+#                   Randle Taylor
 #
 ###############################################################################
 */
