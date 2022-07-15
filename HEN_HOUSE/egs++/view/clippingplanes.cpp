@@ -23,7 +23,10 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:    Manuel Stoeckl, Ernesto Mainegra-Hing
+#  Contributors:    Manuel Stoeckl
+#                   Ernesto Mainegra-Hing
+#                   Cody Crewson
+#                   Reid Townson
 #
 ###############################################################################
 */

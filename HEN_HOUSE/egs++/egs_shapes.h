@@ -24,6 +24,8 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Marc Chamberland
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -759,4 +761,3 @@ public:
 };
 
 #endif
-

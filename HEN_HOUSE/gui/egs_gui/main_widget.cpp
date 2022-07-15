@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2003
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Cody Crewson
 #
 ###############################################################################
 */
@@ -287,4 +288,3 @@ void EGS_MainWidget::changePage(QListWidgetItem *item,QListWidgetItem * previous
   else qDebug("Unknow page %s",item->text().toLatin1());
 #endif
 }
-

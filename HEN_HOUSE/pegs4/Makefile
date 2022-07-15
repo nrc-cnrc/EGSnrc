@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow
 #
 #  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 
@@ -44,4 +45,3 @@ $(FORTRAN_FILE): $(sources)
 
 clean:
 	$(REMOVE) $(FORTRAN_FILE) $(HEN_HOUSE)/bin/$(my_machine)/pegs4.exe
-

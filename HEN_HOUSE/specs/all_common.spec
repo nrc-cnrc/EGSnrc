@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2003
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 #
@@ -170,4 +170,3 @@ C_SOURCES =   $(EGS_SOURCEDIR)egsnrc.macros \
 		$(MACHINE_MORTRAN) \
 		$(EGS_SOURCEDIR)egs_utilities.mortran \
 		$(EGS_SOURCEDIR)egsnrc.mortran
-

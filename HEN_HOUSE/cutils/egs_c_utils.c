@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2004
 #
-#  Contributors:
+#  Contributors:    Cody Crewson
 #
 ###############################################################################
 #

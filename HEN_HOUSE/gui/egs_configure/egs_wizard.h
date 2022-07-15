@@ -23,7 +23,8 @@
 #
 #  Author:          Ernesto Mainegra-Hing, 2015
 #
-#  Contributors:
+#  Contributors:    Cody Crewson
+#                   Reid Townson
 #
 ###############################################################################
 */

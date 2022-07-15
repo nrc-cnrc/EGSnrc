@@ -25,6 +25,8 @@
 #
 #  Contributors:    Iwan Kawrakow
 #                   Frederic Tessier
+#                   Manuel Stoeckl
+#                   Reid Townson
 #
 ###############################################################################
 */
