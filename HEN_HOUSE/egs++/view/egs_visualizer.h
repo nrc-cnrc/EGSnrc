@@ -24,6 +24,8 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Manuel Stoeckl
+#                   Reid Townson
 #                   Alexandre Demelo
 #
 ###############################################################################
@@ -131,6 +133,7 @@ public:
 
     // region picking
     void regionPick(int x, int y);
+
 #ifdef HAVE_PNG
     bool makePngImage(EGS_BaseGeometry *, int xsize, int ysize,
                       const char *fname);

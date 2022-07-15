@@ -23,7 +23,8 @@
 #
 #  Author:          Manuel Stoeckl, 2015
 #
-#  Contributors:    Alexandre Demelo
+#  Contributors:    Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -346,3 +347,4 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
 
     return r;
 }
+

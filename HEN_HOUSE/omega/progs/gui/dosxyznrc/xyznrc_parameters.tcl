@@ -28,6 +28,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #                   Marc-Andre Renaud
+#                   Reid Townson
 #
 ###############################################################################
 #

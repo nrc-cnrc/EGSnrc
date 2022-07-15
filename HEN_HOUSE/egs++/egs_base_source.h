@@ -24,6 +24,8 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Reid Townson
+#                   Ernesto Mainegra-Hing
+#                   Blake Walters
 #                   Alexandre Demelo
 #
 ###############################################################################
@@ -44,7 +46,6 @@
 #include "egs_vector.h"
 #include "egs_object_factory.h"
 #include "egs_functions.h"
-
 
 #include <string>
 #include <iostream>
@@ -619,7 +620,7 @@ public:
      */
     EGS_BaseSimpleSource(int Q, EGS_BaseSpectrum *Spec,
                          const string &Name="", EGS_ObjectFactory *f=0) :
-        EGS_BaseSource(Name,f), q(Q), s(Spec), count(0) {};
+        EGS_BaseSource(Name,f), q(Q), s(Spec), count(0) { };
 
     /*! \brief Construct a 'simple' particle source from the information
      * pointed to by \a input.
@@ -829,7 +830,6 @@ public:
         return true;
     };
 
-
 protected:
 
     /*! Set the particle latch.
@@ -853,8 +853,6 @@ protected:
 
     /*! \brief Number of statistically independent particles delivered so far.*/
     EGS_I64          count;
-
-
 
 };
 

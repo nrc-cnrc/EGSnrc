@@ -23,7 +23,9 @@
 #
 #  Author:          Manuel Stoeckl, 2015
 #
-#  Contributors:    Alexandre Demelo
+#  Contributors:    Reid Townson
+#                   Alexandre Demelo
+#
 ###############################################################################
 */
 

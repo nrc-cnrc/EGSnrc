@@ -24,6 +24,7 @@
 #  Author:          Georgi Gerganov, 2009
 #
 #  Contributors:    Iwan Kawrakow
+#                   Reid Townson
 #                   Alexandre Demelo
 #
 ###############################################################################
@@ -222,7 +223,6 @@ public:
         int dummy = 0;
         // at the end this will be replaced with the number of recorded tracks
         m_trspFile->write((char *)&dummy, sizeof(int));
-
     };
 
     /*! \brief The Destructor. Deallocate all allocated memory. */

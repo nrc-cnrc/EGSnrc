@@ -26,6 +26,11 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #                   Manuel Stoeckl
+#                   Reid Townson
+#                   Blake Walters
+#                   Jan Weidner
+#                   Randle Taylor
+#                   Martin Martinov
 #                   Max Orok
 #                   Alexandre Demelo
 #

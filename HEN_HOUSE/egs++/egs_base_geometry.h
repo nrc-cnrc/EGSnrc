@@ -29,6 +29,7 @@
 #                   Reid Townson
 #                   Ernesto Mainegra-Hing
 #                   Hugo Bouchard
+#                   Martin Martinov
 #                   Alexandre Demelo
 #
 ###############################################################################
@@ -696,6 +697,7 @@ public:
         return ++nref;
     };
 
+
     /*! \brief Decrease the reference count to this geometry
 
       Composite geometries should use this method to decrease
@@ -790,6 +792,7 @@ protected:
         the same medium.
      */
     int med;
+
 
     /*! \brief Does this geometry have relative mass density scvaling?
 
@@ -1143,6 +1146,7 @@ struct EGS_GeometryIntersections {
     \until make_depend
     That's all.
 
+
     Here is the complete source code of the EGS_Box class.<br>
     The header file:
     \include geometry/egs_box/egs_box.h
@@ -1150,6 +1154,7 @@ struct EGS_GeometryIntersections {
     \include geometry/egs_box/egs_box.cpp
     The Makefile:
     \include geometry/egs_box/Makefile
+
 */
 
 /* \example geometry/example1/geometry_example1.cpp
@@ -1360,5 +1365,6 @@ struct EGS_GeometryIntersections {
   \include geometry/example2/geometry_example2.h
   and the complete implementation:
 */
+
 
 #endif

@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Manuel Stoeckl
 #                   Reid Townson
+#                   Max Orok
 #                   Alexandre Demelo
 #
 ###############################################################################
@@ -227,7 +228,6 @@ void ImageWindow::saveView(EGS_BaseGeometry *geo, int nx, int ny, QString name, 
 
 void ImageWindow::loadTracks(QString name) {
     emit requestLoadTracks(name);
-
 }
 
 void ImageWindow::stopWorker() {
