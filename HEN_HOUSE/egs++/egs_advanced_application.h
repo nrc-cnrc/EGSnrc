@@ -230,7 +230,7 @@ public:
     // Utility functions for egs_radiative_splitting ausgab objects
     //************************************************************
     EGS_Float getRngUniform();
-    void getRngAzimuth(EGS_Float cphi, EGS_Float sphi);
+    void getRngAzimuth(EGS_Float &cphi, EGS_Float &sphi);
     void addParticleToStack(EGS_Particle p, EGS_Float dnear);
     void updateParticleOnStack(int ip, EGS_Particle p, EGS_Float dnear);
     EGS_Float getDnear(int np);
