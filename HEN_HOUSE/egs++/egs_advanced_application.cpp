@@ -1283,7 +1283,7 @@ EGS_Float EGS_AdvancedApplication::getRngUniform() {
     return rndm->getUniform();
 }
 
-void EGS_AdvancedApplication::getRngAzimuth(EGS_Float cphi, EGS_Float sphi) {
+void EGS_AdvancedApplication::getRngAzimuth(EGS_Float &cphi, EGS_Float &sphi) {
     rndm->getAzimuth(cphi,sphi);
 }
 

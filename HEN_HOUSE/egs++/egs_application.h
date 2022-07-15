@@ -1194,7 +1194,7 @@ public:
     // Utility functions for egs_radiative_splitting ausgab objects
     //************************************************************
     virtual EGS_Float getRngUniform() { return 0.0; }
-    virtual void getRngAzimuth(EGS_Float cphi, EGS_Float sphi) {};
+    virtual void getRngAzimuth(EGS_Float &cphi, EGS_Float &sphi) {};
     virtual void addParticleToStack(EGS_Particle p, EGS_Float dnear) {};
     virtual EGS_Float getDnear(int np) {
        return 0.0;
