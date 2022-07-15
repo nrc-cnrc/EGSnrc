@@ -21,9 +21,9 @@
 "                                                                             "
 "#############################################################################"
 "                                                                             "
-"  Author:          Iwan Kawrakow , 2009                                      "
+"  Author:          Iwan Kawrakow, 2009                                       "
 "                                                                             "
-"  Contributors:    Max Orok, 2022 (modified copy of tutor7pp.macros)         "
+"  Contributors:    Max Orok                                                  "
 "                                                                             "
 "#############################################################################"
 
@@ -57,4 +57,3 @@ IF( imed > 0 & imed <= nmed ) [ blcc(imed) = blcc(imed)*factor; ]
 return; end;
 
 ;
-

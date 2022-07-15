@@ -21,7 +21,7 @@
 "                                                                             "
 "#############################################################################"
 "                                                                             "
-"  Author:          Iwan Kawrakow , 2009                                      "
+"  Author:          Iwan Kawrakow, 2009                                       "
 "                                                                             "
 "  Contributors:                                                              "
 "                                                                             "
@@ -54,4 +54,3 @@ IF( imed > 0 & imed <= nmed ) [ blcc(imed) = blcc(imed)*factor; ]
 return; end;
 
 ;
-

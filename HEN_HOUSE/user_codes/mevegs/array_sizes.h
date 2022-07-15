@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:    Max Orok, 2022 (modified tutor7pp.macros)
+#  Contributors:    Max Orok
 #
 ###############################################################################
 */
