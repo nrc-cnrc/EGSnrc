@@ -123,7 +123,9 @@ extern "C" int estar_(char *formulaStr,
                       int *ISCOMP,
                       float *meanIval,
                       float *ipotval,
-                      int *mediaID) {
+                      int *mediaID,
+                      char *outputFilename
+                     ) {
     string mainFormula;
     string mainFormula_temp_1;
     string mainFormula_temp_2;
@@ -148,7 +150,7 @@ extern "C" int estar_(char *formulaStr,
     double mediumDensity = *mediaDensity;
     // call the main estar calculation files.
     estarCalculation(isCompInt, nepInt, mediumDensity, estarFormulaArrayInput, estarWeightArrayInput,
-                     numOfAtoms, densityCorr, enGrid, meanIval, ipotval, mediaNum);
+                     numOfAtoms, densityCorr, enGrid, meanIval, ipotval, mediaNum, string(outputFilename));
 
     return 0;
 }

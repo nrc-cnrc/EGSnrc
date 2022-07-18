@@ -168,7 +168,8 @@ REPLACE {;COMIN/ELEMTB/;} WITH
 "1 means the medium is a compound."
 REPLACE {;COMIN/MIXDAT/;} WITH
    {;COMMON/MIXDAT/NEP,LMED,PZP($MXEL),ZELEMP($MXEL),WAP($MXEL),RHOZP($MXEL),
-     GASPP,EZ,TPZ,IDSTRN(24),ELEM_NAMES($MXEL),ISCOMP,IPOTVAL,LDENSITY,MEDID;
+     GASPP,EZ,TPZ,IDSTRN(24),ELEM_NAMES($MXEL),ISCOMP,IPOTVAL,LDENSITY,MEDID,
+     OUTDENSITY;
      $INTEGER NEP,LMED;
      $REAL4 PZP,ZELEMP,WAP,RHOZP,GASPP,EZ,TPZ;
      $TYPE IDSTRN;
@@ -176,6 +177,7 @@ REPLACE {;COMIN/MIXDAT/;} WITH
      $INTEGER ISCOMP;
      $REAL4 IPOTVAL, LDENSITY;
      $INTEGER MEDID;
+     character*256 OUTDENSITY;
    }
 
 REPLACE {;COMIN/DBRPR/;} WITH
@@ -192,8 +194,9 @@ REPLACE {;COMIN/MEDINP/;} WITH
    {;COMMON/MEDINP/inpdensity_file($MXMED),inpasym($MXMED,$MXEL),
      inpstrn(24,$MXMED),pz4($MXMED,$MXEL),
      rhoz4($MXMED,$MXEL),wa4($MXMED,$MXEL),inpgasp($MXMED),
-     iscompound($MXMED),ipot($MXMED),localDensity($MXMED);
-     character*256 inpdensity_file;
+     iscompound($MXMED),ipot($MXMED),localDensity($MXMED),
+     outdensity_file($MXMED);
+     character*256 inpdensity_file,outdensity_file;
      $TYPE inpasym,inpstrn;
      $REAL4 pz4,rhoz4,wa4,inpgasp;
      $INTEGER iscompound;
@@ -235,6 +238,7 @@ DO IM=1,NMED[
   ISCOMP = iscompound(IM);
   IPOTVAL = ipot(IM);
   LDENSITY = localDensity(IM);
+  OUTDENSITY = outdensity_file(IM);
   IUNRSTP=IUNRST(IM);
   IAPRIMP=IAPRIM(IM);
   EPSTFLP=EPSTFL(IM);
