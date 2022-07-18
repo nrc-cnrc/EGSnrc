@@ -669,13 +669,13 @@ COMIN/MEDINP,ELECIN,THRESH,ELEMTB,USEFUL/;
 $INTEGER  ival,ival_media,ival_medfile,i,j,k,ival_ae,ival_ue,ival_ap,ival_up,
           ival_rho,ival_elements,ival_rhoz,ival_iunrst,ival_iaprim,ival_gasp,
           ival_pz,ival_sterncid,ival_ipot,ival_localdensity,
-          ival_densityfile,medfile_error,ival_outfile,
+          ival_densityfile,medfile_error,ival_outfile,ival_densityoutputfile,
           egs_open_file,lnblnk1,i_medfile,egs_get_unit,i_mederr,mindex,eindex,
           i_density,i01,length,i_outfile;
 $REAL ecut_min, pcut_min;
 
 $LOGICAL  medfile_specified,densityfile_specified,elements_specified,
-          outfile_specified($MXMED);
+          outfile_specified($MXMED), densityoutputfile_specified;
 $LOGICAL  iunrst_specified,stern_specified,iaprim_specified,
           gasp_specified,rho_specified,start_delim_found,end_delim_found,
           spec_by_pz,spec_by_rhoz,df_if_elem_mismatch($MXMED),
@@ -702,7 +702,7 @@ DATA ETAB/1.,1.25,1.5,1.75,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9./;
 
 character*24 medium_name,med_tmp,sterncid_tmp;
 character*256 density_file,material_file,tmp_string,
-              spoutput_file($MXMED);
+              spoutput_file($MXMED), density_outputfile;
 character*80 text_string, text_save, title;
 character*80 delim_start,delim_end;
 character*1 blank;
@@ -1078,6 +1078,19 @@ DO i=1,NMED[
           ' Automatically setting local density equal to the bulk density.');
       localdensity_specified=.true.;
       localdensity_tmp=rho_tmp;
+   ]
+
+   ival=ival+1;
+   ival_densityoutputfile=ival;
+   values_sought(ival)='output density file';
+   type(ival)          = 2;
+   nvalue(ival)=1;
+   nmin=ival_densityoutputfile;nmax=ival_densityoutputfile;
+   CALL GET_INPUT;
+   IF(error_flags(ival_densityoutputfile)=0)[
+       density_outputfile=char_value(ival_densityoutputfile,1);
+       densityoutputfile_specified=.true.;
+       $WRITE_MEDERR(' Density correction file will be output.');
    ]
 
    "now see what else is specified in the .egsinp file"
@@ -1663,6 +1676,12 @@ DO i=1,NMED[
        inpgasp(i)=gasp_tmp;
        inpdensity_file(i)=density_file;
 
+       "Only output the density correction file for the first job if parallel"
+       IF(densityoutputfile_specified &
+            (n_parallel=0 | i_parallel=first_parallel)) [
+         outdensity_file(i)=density_outputfile;
+       ]
+
     ]
     ELSE[
       $WRITE_MEDERR(' Error: Medium ',medium_name,' not correctly defined.');
@@ -1679,6 +1698,7 @@ entry show_media_parameters(ounit);
 IF ( ounit <= 0 ) return;
 
 IF(is_pegsless)[
+
 
 "show common data"
 
@@ -1704,13 +1724,13 @@ DO i=1,nmed[
   write(ounit,'(a,24a1)')'   Medium: ',(media(j,i),j=1,24);
   write(ounit,'(a,24a1)')' Sterncid: ',(inpstrn(j,i),j=1,24);
   write(ounit,'(a,1p,e14.5,a)')' rho (bulk density): ',rho(i),' g/cm^3';
-  IF(~densityfile_specified)[
+  IF(epstfl(i)~=1)[
  write(ounit,'(a,1p,e14.5,a)')'      local density: ',localDensity(i),' g/cm^3';
   ] ELSE [
     write(ounit,'(a)')'      local density: using .density file';
   ]
   IF(~(ipot(i)=-1))[
-    write(ounit,'(a,1p,e14.5,a)')'     I-value: ',ipot(i),' MeV';
+    write(ounit,'(a,1p,e14.5,a)')' I-value: ',ipot(i),' MeV';
   ]
   write(ounit,'(a,24a4)')' Elements: ',(inpasym(i,j),j=1,nne(i));
   write(ounit,'(a,1p,12e14.5)')'    rhoz: ',(rhoz(i,j),j=1,nne(i));
@@ -1718,6 +1738,10 @@ DO i=1,nmed[
   write(ounit,'(a,i5)')'  iunrst: ',iunrst(i);
   write(ounit,'(a,i5)')'  iaprim: ',iaprim(i);
   write(ounit,'(a,1p,e14.5,a)')'    gasp: ',inpgasp(i),' atm.';
+  IF(epstfl(i)~=1)[
+    write(ounit,*)' output density correction file: ',
+        $cstring(outdensity_file(i));
+  ]
   IF(epstfl(i)=1)[
     write(ounit,*)' density correction file: ',
         $cstring(inpdensity_file(i));
