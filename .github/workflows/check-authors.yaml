@@ -1,0 +1,23 @@
+name: Authorship
+
+on:
+  workflow_call:
+
+jobs:
+
+  authors:
+    name: check authors
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install fish
+        run: |
+          sudo apt-get install -qy fish
+
+      - name: Check authors
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          HEN_HOUSE/scripts/admin/check-authors.fish origin/${{ github.base_ref }}..HEAD

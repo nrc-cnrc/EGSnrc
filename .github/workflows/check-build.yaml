@@ -19,6 +19,9 @@ jobs:
     name: coding style
     uses: ./.github/workflows/check-coding-style.yaml
 
+    name: authorship
+    uses: ./.github/workflows/check-authors.yaml
+
   build:
 
     strategy:
