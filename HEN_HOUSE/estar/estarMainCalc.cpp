@@ -13,13 +13,83 @@
 #include "modules/solverHelpers/cutoff.cpp"
 using namespace std;
 
+string getFileNameWithoutExtension(const string &s) {
+    char sep = '/';
+#ifdef _WIN32
+    sep = '\\';
+#endif
+
+    size_t i = s.rfind(sep, s.length());
+    if (i != string::npos) {
+        string filename = s.substr(i+1, s.length() - i);
+        size_t lastindex = filename.find_last_of(".");
+        string rawname = filename.substr(0, lastindex);
+        return (rawname);
+    }
+    return ("");
+}
+
+// Output a density correction file
+void outputDensityFile(float mediaDensity, double *densityCorr, double *enGrid, float *meanIval, formula_calc fc, string outputFilename) {
+    // Remove spaces from the end because it was a fixed length fortran string
+    outputFilename = outputFilename.erase(outputFilename.find_last_not_of(" \n\r\t")+1);
+    if (outputFilename.empty()) {
+        return;
+    }
+
+    cout << "Writing density correction file: '" << outputFilename.c_str() << "'" << endl;
+
+    std::ofstream f(outputFilename.c_str());
+
+    f << getFileNameWithoutExtension(outputFilename).c_str() << endl;
+    f << setprecision(8);
+    f << "113 " << *meanIval << " " << mediaDensity << " " << fc.mmax << endl;
+
+    // Output the atomic numbers and mass fractions
+    unsigned int k = 0;
+    while (k < fc.mmax) {
+        f << fc.jz[k] << " " << fc.wt[k];
+
+        // Put a new line every 6 elements, or after the last element
+        if ((k+1) % 6 == 0 || k+1 == fc.mmax) {
+            f << endl;
+        }
+        else {
+            f << " ";
+        }
+
+        k += 1;
+    }
+
+    // Set formatting for the density data
+    f << scientific << showpoint;
+
+    // Output the energy grid and density effect corrections
+    for (int i = 0; i < 113; i++) {
+        f << setprecision(2);
+        f << enGrid[i];
+        f << setprecision(3);
+        f << "," << densityCorr[i];
+
+        // Put a new line every 4 values, or after the last value
+        if ((i+1) % 4 == 0 || i+1 == 113) {
+            f << endl;
+        }
+        else {
+            f << "  ";
+        }
+    }
+
+    f.close();
+}
+
 /*
     This function computes the density correction factors by using the processed input arrays and variables
     from estarCalc.cpp. The density correction factors are stored in the variable densityCorr.
 */
 
 int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elementArray, double *massFraction,
-                     float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *ipotval, int mediaNum) {
+                     float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *ipotval, int mediaNum, string outputFilename) {
     //------------------------------------------------//
     int knmat;
 
@@ -376,6 +446,10 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     cout << "\n";
     cout << "Density correction factors calculated by ESTAR for medium " << mediaNum << ".\n";
     cout << "-------------------------\n";
+
+    // output a density correction file
+    outputDensityFile(mediaDensity, densityCorr, enGrid, meanIval, fc, outputFilename);
+
     return 0;
 
 };
