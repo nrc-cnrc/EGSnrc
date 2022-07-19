@@ -123,11 +123,13 @@ _ACEOF
 
 read response
 
+memory_model="-mcmodel=medium"
 printf $format "Checking system type ... " >&2
 canonical_system=$($my_dir/config.guess)
 system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
 if test "x$system_name" = xdarwin; then
     system_name="osx"
+    memory_model=""
 fi
 echo "$canonical_system" >&2
 is_x86_64=$(echo $canonical_system | grep x86_64)
@@ -343,7 +345,7 @@ for test_arg in -v; do
             junk=$(echo $f_test_output | grep "GNU Fortran")
             if test "x$junk" != x; then
                 f_version=$(echo $junk | grep -o -m1 'GNU Fortran [^\s]* version [0-9.]*'| head -1)
-                f_oflags="-O2 -mtune=native -mcmodel=medium"
+                f_oflags="-O2 -mtune=native $memory_model"
                 f_dflags="-g"
                 if test ! x$is_x86_64 = x; then
                     f_fflags="-fPIC"
@@ -367,7 +369,7 @@ for test_arg in -v; do
             if test "x$junk" != x; then
                 junk=$(echo $junk | sed 's/.*GNU F95 version//g' | awk '{print $1}')
                 f_version="GNU F95 version $junk"
-                f_oflags="-O2 -mtune=native -mcmodel=medium"
+                f_oflags="-O2 -mtune=native $memory_model"
                 f_dflags="-g"
                 if test ! x$is_x86_64 = x; then
                     f_fflags="-fPIC"
@@ -426,7 +428,7 @@ for test_arg in -v; do
             if test "x$junk" != x; then
                 junk=$(echo $junk | sed 's/.*D__INTEL_COMPILER=//g' | awk '{print $1}')
                 f_version="Intel(R) Fortran Compiler Version $junk"
-                f_oflags="-O2 -mtune=native -mcmodel=medium"
+                f_oflags="-O2 -mtune=native $memory_model"
                 f_dflags="-g -CB"
                 need_fool_optimizer=yes
                 break
@@ -1424,7 +1426,7 @@ else
   have_c_compiler=yes
 
   default_cflags="-O2"
-  if test ! "x$is_x86_64" = x; then default_cflags="-O2 -fPIC -mtune=native -mcmodel=medium"; fi
+  if test ! "x$is_x86_64" = x; then default_cflags="-O2 -fPIC -mtune=native $memory_model"; fi
   printf $format "Input C compiler flags to use: " >&2
   printf "[$default_cflags] " >&2
   read response

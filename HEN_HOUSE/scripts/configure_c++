@@ -163,6 +163,12 @@ fi
 
 if test $create_config=yes; then
 
+memory_model="-mcmodel=medium"
+system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
+if test "x$system_name" = xdarwin; then
+    memory_model=""
+fi
+
 case $CXX in
 
     *g++*)
@@ -171,7 +177,7 @@ case $CXX in
     else
         std="c++11"
     fi
-    opt="-O2 -mtune=native -mcmodel=medium -std=$std";;# mingw32-g++ and g++4 also taken into account
+    opt="-O2 -mtune=native $memory_model -std=$std";;# mingw32-g++ and g++4 also taken into account
     icpc)  opt="-O2 -no-prec-div -fp-model fast=2";;
     icc)   opt="-O2 -no-prec-div -fp-model fast=2";;
     cl)    opt="-Ox -Ob2 -MD -GX -GR -nologo";;
