@@ -1,7 +1,7 @@
 ###############################################################################
 #
 #  EGSnrc makefile to build the mevegs application
-#  Copyright (C) 2022 Mevex Corporation
+#  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
 #

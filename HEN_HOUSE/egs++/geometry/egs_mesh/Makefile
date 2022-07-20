@@ -1,7 +1,6 @@
 ###############################################################################
 #
 #  EGSnrc egs++ makefile to build the mesh geometry library
-#
 #  Copyright (C) 2020 Mevex Corporation
 #
 #  This file is part of EGSnrc.
