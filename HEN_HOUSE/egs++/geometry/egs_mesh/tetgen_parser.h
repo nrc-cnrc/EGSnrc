@@ -2,7 +2,6 @@
 ###############################################################################
 #
 #  EGS_Mesh TetGen node and ele file parser
-#
 #  Copyright (C) 2022 Max Orok
 #
 #  This file is part of EGSnrc.

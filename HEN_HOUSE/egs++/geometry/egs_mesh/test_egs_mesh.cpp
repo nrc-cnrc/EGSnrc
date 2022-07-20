@@ -2,7 +2,6 @@
 ###############################################################################
 #
 #  EGSnrc egs_mesh test suite
-#
 #  Copyright (C) 2022 Max Orok
 #
 #  This file is part of EGSnrc.

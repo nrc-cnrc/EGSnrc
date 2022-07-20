@@ -2,7 +2,6 @@
 ###############################################################################
 #
 #  EGSnrc tetrahedral mesh nearest-neighbour algorithm
-#
 #  Copyright (C) 2020 Mevex Corporation
 #
 #  This file is part of EGSnrc.

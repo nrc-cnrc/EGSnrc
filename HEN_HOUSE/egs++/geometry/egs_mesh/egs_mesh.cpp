@@ -2,7 +2,6 @@
 ###############################################################################
 #
 #  EGSnrc egs++ mesh geometry library implementation.
-#
 #  Copyright (C) 2020 Mevex Corporation
 #
 #  This file is part of EGSnrc.
