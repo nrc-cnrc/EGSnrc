@@ -28,6 +28,7 @@
 "                   Blake Walters                                             "
 "                   Frederic Tessier                                          "
 "                   Reid Townson                                              "
+"                   Marc-Andre Renaud                                         "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -1176,7 +1177,8 @@ integer function egs_open_file(iunit,rl,action,extension);
 " If extension is an absolute file name (including path), use extension
 " as a file name, otherwise use output_file.extension in the temporary
 " working directory as name. In both cases use status='unknown' to open the
-" file. If rl = 0, open the file for formatted sequential access, otherwise
+" file. If rl = -1, open the file with stream access to write C-style binary
+" files. If rl = 0, open the file for formatted sequential access, otherwise
 " open for unformatted direct access with record length = rl.
 "******************************************************************************
 implicit none;
@@ -1209,6 +1211,10 @@ IF( egs_is_absolute_path(extension) ) [
              ' Will not try to re-open this file, assuming it has been opened',
              ' by the .io file.');
     ]
+    ELSE IF ( rl = -1 ) [
+        open(the_unit,file=extension,status='unknown',form='unformatted',
+             access='stream');
+    ]
     ELSE IF( rl = 0 ) [
         open(the_unit,file=extension,status='unknown');
     ]
@@ -1236,6 +1242,10 @@ IF(is_open)[
              ' is already opened and connected to unit ',the_unit,
              ' Will not try to re-open this file, assuming it has been opened',
              ' by specifying it in the .io file.');
+]
+ELSE IF ( rl = -1 ) [
+    open(the_unit,file=tmp_string,status='unknown',form='unformatted',
+            access='stream');
 ]
 ELSE IF( rl = 0 ) [
     open(the_unit,file=tmp_string,status='unknown',err=:open_error:);
@@ -2319,4 +2329,3 @@ $INTEGER function ibsearch(a, nsh, b);
  ]
  ibsearch = min;
  return;end;
-

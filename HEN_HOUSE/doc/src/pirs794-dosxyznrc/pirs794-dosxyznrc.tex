@@ -26,6 +26,7 @@
 %                   Dave Rogers, 2001
 %
 %  Contributors:    Frederic Tessier
+%                   Marc-Andre Renaud
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -3499,6 +3500,12 @@ the full path), and then recompiling DOSXYZnrc.
 
 For more information on the IAEA phase space file format, see the BEAMnrc Users Manual\cite{Ro09}.
 
+\subsection{{\tt i\_bindos}}
+\indexm{i\_bindos}
+If {\tt i\_bindos} is set to 1, DOSXYZnrc outputs a sparse binary dose file instead of a dense ASCII dose file.
+The resulting file typically has a much smaller memory footprint than the default {\tt .3ddose} format.
+See section~\ref{subsec:bindos_format} for a description of the format.
+
 \subsection{ECUTIN}
 \indexm{ECUTIN}
 \label{ECUTIN}
@@ -4316,11 +4323,13 @@ artifacts (see section~\ref{zeroairdose}).
 
 \indexm{.egslst}
 The dose distributions calculated by DOSXYZnrc can be found in the output
-files, ``{\tt .egslst}'', ``{\tt .3ddose}'' and ``{\tt .pardose}''.
+files, ``{\tt .egslst}'', ``{\tt .3ddose}'', ``{\tt .bindos}'' and ``{\tt .pardose}''.
 The file ``{\tt .egslst}''
 \indexm{.pardose}
 \indexm{.3ddose}
+\indexm{.bindos}
 \indexm{files!.3ddose}
+\indexm{files!.bindos}
 \indexm{files!.pardose}
 contains not only the dose (when asked for) and statistical data but also the information
 about simulation geometry, number of histories run, CPU time used, etc.
@@ -4422,6 +4431,35 @@ Number &  1 &        2 &         3       & 4      &  5 \\ \hline
 \normalsize
 
 \lfoot[]{}
+
+\subsection{{\tt .bindos} Files}
+\label{subsec:bindos_format}
+\indexm{.bindos}
+\indexm{files!.bindos}
+A ``{\tt .bindos}'' file is output instead of a ``{\tt .3ddose}'' file if the
+flag ``{\tt i\_bindos}'' is set to 1. The same dose content is contained in each file,
+but ``{\tt .bindos}'' is a sparse format, hence only information about non-zero dose
+voxels is included. The linearized start and end indices for blocks of contiguous non-zero
+doses are stored. Both integers and floats are stored as 4 bytes each.
+
+\begin{enumerate}
+\item Number of voxels in the x, y, z direction (e.g., $n_x$, $n_y$, $n_z$, 3 ints)
+\item Voxel boundaries (cm) in x direction($ n_x$ +1 floats)
+\item Voxel boundaries (cm) in y direction($ n_y$ +1 floats)
+\item Voxel boundaries (cm) in z direction($ n_z$ +1 floats)
+\item Number of non-zero dose voxels ($n_{nz}$, 1 int)
+\item Number of voxel index pairs ($n_{b}$, 1 int)
+\item Linearized voxel index pairs indicating the [start, end) of contiguous non-zero
+      voxel doses. ($2 \times n_{b}$ ints)
+\item Nonzero voxel doses ($n_{nz}$ floats)
+\item Nonzero voxel uncertainties ($n_{nz}$ floats)
+\end{enumerate}
+
+The linearization formula is as follows:
+\begin{equation}
+v_{lin} = (n_x \times n_y) \cdot v_z + (v_x) \cdot v_y + v_x
+\end{equation}
+where $v_x$, $v_y$, $v_z$ are the voxel indices in the x, y, z axes, respectively.
 
 \subsection{{\tt .pardose} Files}
 \indexm{files!.pardose}

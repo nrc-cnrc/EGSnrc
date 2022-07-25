@@ -842,7 +842,7 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
    Record 13 (9 if NMED=0)
             NCASE, IWATCH, TIMMAX, INSEED1, INSEED2,
        BEAM_SIZE, ISMOOTH,IRESTART,IDAT,IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,
-       PARNUM,n_split,ihowfarless,i_phsp_out
+       PARNUM,n_split,ihowfarless,i_phsp_out,i_bindos
 
             NCASE     Number of histories
             IWATCH    0=>no tracking output, 1=>list every interaction
@@ -1013,6 +1013,11 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
                       output.  If you are using source 20 or source 21
                       (synchronized sources) then you also have the option of
                       storing frMU_indx in the file (see source inputs).
+
+          i_bindos    For outputting sparse binary dose data instead of the
+                      dense ASCII .3ddose format. If i_bindos=0, then the
+                      dose will be output in .3ddose format. Any other value
+                      will output a .bindos file instead.
 
 ----------------------------------------------------------------------------
 ----------------------------------------------------------------------------

@@ -35,6 +35,7 @@
 "                   Frederic Tessier                                          "
 "                   Ernesto Mainegra-Hing                                     "
 "                   Reid Townson                                              "
+"                   Marc-Andre Renaud                                         "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -289,7 +290,7 @@
 "   Record 13 (9 if NMED=0)
 "            NCASE, IWATCH, TIMMAX, INSEED1, INSEED2,
 "       BEAM_SIZE, ISMOOTH,IRESTART,IDAT,IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,
-"       PARNUM,n_split,ihowfarless,i_phsp_out
+"       PARNUM,n_split,ihowfarless,i_phsp_out,i_bindos
 "
 "            NCASE     Number of histories
 "            IWATCH    0=>no tracking output, 1=>list every interaction
@@ -460,6 +461,11 @@
 "                      output.  If you are using source 20 or source 21
 "                      (synchronized sources) then you also have the option of
 "                      storing frMU_indx in the file (see source inputs).
+"
+"          i_bindos    For outputting sparse binary dose data instead of the
+"                      dense ASCII .3ddose format. If i_bindos=0, then the
+"                      dose will be output in .3ddose format. Any other value
+"                      will output a .bindos file instead.
 "
 "----------------------------------------------------------------------------
 "----------------------------------------------------------------------------
@@ -1161,7 +1167,7 @@ REPLACE {;COMIN/SCORE/;} WITH {
     planarefp,planarfe,planarfp,
     nestep,
     endep_tmp($MAXDOSE),
-    i_phsp_out,i_muidx_out,i_unit_out,IWATCH,mxnp,
+    i_phsp_out,i_muidx_out,i_unit_out,IWATCH,mxnp,i_bindos,
     endep_last($MAXDOSE);
     REAL*8 endep, endep2, temp2,planarefe, planarefp, planarfe, planarfp;
     $LONG_INT nestep;
@@ -1172,6 +1178,7 @@ REPLACE {;COMIN/SCORE/;} WITH {
                         "in phase space data (phsp or BEAM simulation source"
                         "only)"
             i_unit_out, "unit no. for IAEA phsp output"
+            i_bindos,   "set to 1 to output sparse binary file"
             IWATCH,mxnp;
     $SHORT_INT endep_last;
 }
@@ -1410,6 +1417,7 @@ MAX20=0;
 IPHANT=0;
 doseprint=1; "assume we want to output doses to .egslst unless using CT"
 i_phsp_out=0; "default is to not output phsp"
+i_bindos=0;
 
 
 CALL DATETIME(1);
@@ -1806,11 +1814,12 @@ call srcinput(ieof);
 
 OUTPUT61;
 (//' NCASE,IWATCH,TIMMAX,INSEED1,INSEED2,BEAM_SIZE,ISMOOTH,IRESTART,IDAT,'/
-' IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,PARNUM,n_split,ihowfarless,i_phsp_out'/
+' IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,PARNUM,n_split,ihowfarless,i_phsp_out,'/
+' i_bindos '/
    ' : ',$);
-read(5,'(2I16,F15.0,2I10,F15.0,4I10,F15.0,6I10)')
+read(5,'(2I16,F15.0,2I10,F15.0,4I10,F15.0,7I10)')
 NCASE,IWATCH,TIMMAX,IXXIN,JXXIN,BEAM_SIZE,ISMOOTH,IRESTART,IDAT,IREJECT,
-ESAVE_GLOBAL,NRCYCL,IPARALLEL,PARNUM,n_split,ihowfarless,i_phsp_out;
+ESAVE_GLOBAL,NRCYCL,IPARALLEL,PARNUM,n_split,ihowfarless,i_phsp_out,i_bindos;
 
 IF(n_split<=1 & e_split>1)[
    OUTPUT;
@@ -3357,7 +3366,8 @@ IF(zerodose=1 & zerocount >0)[
 "subroutine call replaces a portion of code to write to .3ddose file"
 "do not call if we are doing a parallel run"
 IF((IPARALLEL <= 1 & n_parallel = 0) | (n_parallel > 0 & is_finished))[
-   call write_dose(IMAX,JMAX,KMAX,xbound,ybound,zbound,endep,endep2,idd,MAX20);
+   call write_dose(IMAX,JMAX,KMAX,xbound,ybound,zbound,endep,endep2,idd,MAX20
+                   ,i_bindos);
 ]
 ELSE [OUTPUT61;(//' No dose outputs since this is a parallel run '//);]
 
@@ -4305,12 +4315,12 @@ RETURN; end;
 "******************************************************************************
 
 subroutine write_dose(iimax,jjmax,kkmax,xbnd,ybnd,zbnd,dd,ddun,unitnum,
-                      writemax20);
+                      writemax20,bindos);
 
 
-"Writes dose to file designated by unitnum.  Currently the subroutine only
-"writes in the .3ddose format (unitnum=3) and replaces a portion of the
-"main code.  However, this subroutine will eventually output the dose in
+"Writes dose to file designated by unitnum.  Currently the subroutine writes
+"in the .3ddose format (unitnum=3) or the .bindos format and replaces a portion
+"of the main code.  However, this subroutine will eventually output the dose in
 "other formats as well.
 
 "3 possible methods of specifying the array sizes for dd and ddun, the
@@ -4367,23 +4377,29 @@ INTEGER iimax,                     "max number of x cells"
         jjmax,                     "max number of y cells"
         kkmax,                     "max number of z cells"
         ijkmax,                    "iimax*jjmax*kkmax"
-        irtmp,                    "tmp variable to hold ir"
+        irtmp,                     "tmp variable to hold ir"
         writemax20,                "1 for summary of max 20 doses"
+        bindos,                    "1 for binary file"
         unitnum,                   "unit number in which to write data"
         ii,jj,kk,mm,nn,            "indices"
         NUMFRAC,                   "number of voxels for av. rel. uncertainty"
         MAXI(20),MAXJ(20),MAXK(20),"indices for max 20 doses"
+        num_nonzero,               "number of nonzero voxels"
+        num_blocks,                "number of voxel blocks"
+        start_block,               "keep track of contiguous nonzero voxels"
+        voxel_blocks($MAXDOSE),    "indices of nonzero voxels"
         egs_open_file;
 REAL    xbnd($IMAX+1),             "voxel x boundaries"
         ybnd($JMAX+1),             "voxel y boundaries"
         zbnd($KMAX+1),             "voxel z boundaries"
+        dtemp,                     "float version of double dose"
         MAXDOS(20),                "maximum 20 doses"
         MAXDOSAVG,                 "average of max 20 doses"
         ERRMAXDOSAVG,              "average of error of max 20 doses"
         ERR50AVG,                  "average % error of doses > 50% of max dose"
         ERR50FRAC,                 "average error of doses > 50% of max"
                                    " dose as a fraction of max dose"
-        DOSEFRAC,                "fraction for calculating av. rel. uncertainty"
+        DOSEFRAC,                  "fraction for calculating av. rel. uncertainty"
         DOSEmin,                   "DOSEFRAC*MAXDOS(1)"
         ARUFRAC;                   "average relative uncertainty on all voxels"
                                    "with dose > DOSEFRAC*Dmax"
@@ -4391,22 +4407,82 @@ REAL    xbnd($IMAX+1),             "voxel x boundaries"
 REAL*8  dd($MAXDOSE),              "linear array of doses"
         ddun($MAXDOSE);            "linear array of dose uncertainties"
 
-REPLACE {$PLOTOUT#;} WITH {write(unitnum,*){P1};}
-REPLACE {$IRDWD(#,#,#)} WITH {({P1}+({P2}-1)*iimax+({P3}-1)*iimax*jjmax)}
+REPLACE {$PLOTOUT#;} WITH {write(unitnum,*){P1};};
+REPLACE {$BINOUT#;} WITH {write(unitnum){P1};};
+REPLACE {$IRDWD(#,#,#)} WITH {({P1}+({P2}-1)*iimax+({P3}-1)*iimax*jjmax)};
 
-"open the .3ddose file for output"
-unitnum=egs_open_file(unitnum,0,1,'.3ddose');
+num_nonzero = 0;
+num_blocks = 0;
+start_block = -1;
+ijkmax=iimax*jjmax*kkmax;
 
-$PLOTOUT iimax,jjmax,kkmax;
-$PLOTOUT (xbnd(ii),ii=1,iimax+1);
-$PLOTOUT (ybnd(jj),jj=1,jjmax+1);
-$PLOTOUT (zbnd(kk),kk=1,kkmax+1);
-$PLOTOUT (((dd($IRDWD(ii,jj,kk)),ii=1,iimax),jj=1,jjmax),kk=1,kkmax);
-$PLOTOUT (((ddun($IRDWD(ii,jj,kk)),ii=1,iimax),jj=1,jjmax),kk=1,kkmax);
+IF(bindos=0)[
+    "open the .3ddose file for output"
+    unitnum=egs_open_file(unitnum,0,1,'.3ddose');
+    $PLOTOUT iimax,jjmax,kkmax;
+    $PLOTOUT (xbnd(ii),ii=1,iimax+1);
+    $PLOTOUT (ybnd(jj),jj=1,jjmax+1);
+    $PLOTOUT (zbnd(kk),kk=1,kkmax+1);
+    $PLOTOUT (((dd($IRDWD(ii,jj,kk)),ii=1,iimax),jj=1,jjmax),kk=1,kkmax);
+    $PLOTOUT (((ddun($IRDWD(ii,jj,kk)),ii=1,iimax),jj=1,jjmax),kk=1,kkmax);
+]
+ELSE[
+    DO ii=1,ijkmax[
+        IF(dd(ii)>0.0)[
+            IF(start_block = -1) [
+                start_block = ii;
+            ]
+            num_nonzero = num_nonzero + 1;
+        ] ELSE [
+            IF(start_block ~= -1) [
+                "First 0 dose voxel after a block of nonzero voxels"
+                num_blocks = num_blocks + 1;
+                voxel_blocks(2*num_blocks) = start_block;
+                voxel_blocks(2*num_blocks+1) = ii;
+                start_block = -1;
+            ]
+        ]
+    ]
+    "Capture the final voxel block"
+    IF(start_block ~= -1) [
+        num_blocks = num_blocks + 1;
+        voxel_blocks(2*num_blocks) = start_block;
+        voxel_blocks(2*num_blocks+1) = ijkmax;
+    ]
+
+    "open the .bindos file for output"
+    unitnum=egs_open_file(unitnum,-1,1,'.bindos');
+    $BINOUT iimax,jjmax,kkmax;
+    $BINOUT (xbnd(ii),ii=1,iimax+1);
+    $BINOUT (ybnd(jj),jj=1,jjmax+1);
+    $BINOUT (zbnd(kk),kk=1,kkmax+1);
+
+    $BINOUT num_nonzero;
+    $BINOUT num_blocks;
+
+    "Writing start/end indices of contiguous non-zero voxel doses, 0-indexed"
+    "To be interpreted as [start, end)"
+    DO ii=1,num_blocks [
+        $BINOUT voxel_blocks(2*ii) - 1;
+        $BINOUT voxel_blocks(2*ii+1) - 1;
+    ]
+
+    DO ii=1,num_blocks [
+        DO jj=voxel_blocks(2*ii),voxel_blocks(2*ii+1)-1 [
+            dtemp = dd(jj);
+            $BINOUT dtemp;
+        ]
+    ]
+
+    DO ii=1,num_blocks [
+        DO jj=voxel_blocks(2*ii),voxel_blocks(2*ii+1)-1 [
+            dtemp = ddun(jj);
+            $BINOUT dtemp;
+        ]
+    ]
+]
 
 close(unitnum);
-
-ijkmax=iimax*jjmax*kkmax;
 
 IF(writemax20=1)["print out maximum 20 doses"
   DO mm=1,20 [ MAXDOS(mm)=0.0; ]
