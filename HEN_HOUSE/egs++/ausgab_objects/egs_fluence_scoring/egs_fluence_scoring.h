@@ -26,45 +26,15 @@
 #  Contributors:    
 #
 ###############################################################################
-
-Ausgab objects (AOs) for fluence scoring in arbitrary geometrical regions or at 
-circular  or rectangular scoring fields located anywhere in space for a specific 
-particle type. Fluence can be scored for multiple particle types by definining 
-different AOs. An option exists for scoring the fluence of primary particles. 
-Classification into primary and secondary particles follows the definition used 
-in FLURZnrc for IPRIMARY = 2 (primaries) and IPRIMARY = 4 (secondaries).
-
-The basic definition of a fluence scoring AO is
-
-    :start ausgab object:
-        name    = a_name
-        library = egs_fluence_scoring
-        type = planar # planar or volumetric
-        scoring particle = electron # or photon, or positron
-        # Define scoring (volumetric) or contributing (planar) regions
-        scoring regions = ir1 ir2 ... irn
-        # Alternatively:
-        # start region = iri_1, iri_2, ..., iri_n
-        # stop region =  irf_1, irf_2, ..., irf_n
-        volumes = V1, V2, ..., VN # Enter as many as scoring regions. If same number
-                                  # of entries as group of regions, assumes groups of 
-                                  # equal volume regions. If only one entry, assumes 
-                                  # equal volumes in all regions. Defaults to 1.
-        # score primaries = yes # or no, optional
-        # source regions = sr1 sr2 ... srN # <- no classification in these regions
-        # source particle = photon, electron, or positron #<- brems targets or multi-particle sources
-        # scoring grid
-        number of bins = 100
-        minimum kinetic energy = 0.001
-        maximum kinetic energy = 1.000
-        normalization  = 1 # user-normalization optional
-        scale = linear # or logarithmic
-        # Scoring field for planar scoring
-        scoring circle = 0 0 5.0 5.0
-        scoring plane normal = 0 0 1
-        verbose = yes # optional
-    :stop ausgab object:
-
+# 
+# Ausgab objects (AOs) for fluence scoring in arbitrary geometrical regions or at 
+# circular  or rectangular scoring fields located anywhere in space for a specific 
+# particle type. Fluence can be scored for multiple particle types by definining 
+# different AOs. An option exists for scoring the fluence of primary particles. 
+# Classification into primary and secondary particles follows the definition used 
+# in FLURZnrc for IPRIMARY = 2 (primaries) and IPRIMARY = 4 (secondaries).
+#
+############################################################################### 
 */
 
 /*! \file egs_fluence_scoring.h
@@ -114,7 +84,7 @@ enum ParticleType { electron = -1, photon = 0, positron = 1, unknown = -99 };
 /*! Charged particle fluence calculation type */
 enum eFluType { flurz=0, stpwr=1, stpwrO5=2 };
 
-/*! \brief Base class for fluence scoring ausgab objects 
+/*! \brief Base class for fluence scoring. 
 
   \ingroup AusgabObjects
 
@@ -122,32 +92,6 @@ enum eFluType { flurz=0, stpwr=1, stpwrO5=2 };
   particle type, scoring regions, and whether to score primary fluence. 
   Provides the method for defining primary and secondary particles.
 
-A basic fluence scoring ausgab object is specified via
-\verbatim
-:start ausgab object:
-    name    = a_name
-    library = egs_fluence_scoring
-    type = a_type # planar or volumetric
-    scoring particle = a_particle # photon, electron, or positron
-    # Define scoring (volumetric) or contributing (planar) regions
-    scoring regions = ir1 ir2 ... irn
-    ### Alternatively:
-    # start region = iri_1, iri_2, ..., iri_n
-    # stop region =  irf_1, irf_2, ..., irf_n
-    ###
-    # score primaries = yes # or no, optional
-    ###
-    # source regions = sr1 sr2 ... srN # <- no classification in these regions
-    # source particle = photon, electron, or positron #<- multi-particle sources or brems targets
-    ### scoring grid
-    number of bins = 100
-    minimum kinetic energy = 0.001
-    maximum kinetic energy = 1.000
-    # normalization  = 1 # user-normalization optional, defaults to 1
-    scale = a_scale # linear or logarithmic
-    verbose = yes # or no, optional
-:stop ausgab object:
-\endverbatim
   \todo Total kerma scoring
   \todo Account for multiple app geometries
   \todo Fluence for any particle type?
@@ -292,53 +236,80 @@ protected:
 
   \ingroup AusgabObjects
 
-  A linear track-length estimator in the zero thickness limit is used to compute 
-  fluence and fluence-related quantities such as total kerma and cema if the user 
-  requestes it. Differencial and total fluence is estimated for a specific particle 
-  type. If fluence for more than one particle type is desired, multiple AOs are 
-  required. For charged particle fluence scoring this method can be inefficient as 
-  it checks at every single step whether a charged particle is aimed at scoring field.
+  A linear track-length estimator in the zero-thickness limit is used to 
+  compute fluence for either a circular field or a rectangular screen of 
+  arbitrary resolution (pixels). Rectangular fields are by default at Z = 0 
+  directed along the positive z-axis. An affine transofrmation can be included
+  to place a rectangular field anywhere in space. User can request to score primary 
+  fluence as well as differential fluence. If fluence for more than one particle type 
+  is desired, multiple AOs are required. 
   
-  To improve the efficieny for charged particles, one has the option to define regions 
+  For charged particle fluence scoring this method can be inefficient as 
+  it checks at every single step whether a charged particle is aimed at scoring field.
+  To improve the efficieny for charged particles, one has the option to define contributing regions 
   from where to score. However, users must be careful to select all regions from where
   charged particles can cross the scoring field. This option has the added benefit of 
   allowing to estimate the contribution to the fluence from specific regions in the geometry.
 
-  Scoring field can be either a circular field or a rectangular screen of arbitrary 
-  resolution (pixels). For rectangular fields, fluence is computed at each screen element (pixel)
-
   To define an EGS_PlanarFluence AO use the syntax below:
   \verbatim
-  :start ausgab object:
-      name    = a_name
-      library = egs_fluence_scoring
-      type = volumetric
-      scoring particle = electron # or photon, or positron
-      # Scoring field for planar scoring
-      scoring circle = 0 0 5.0 5.0
-      scoring plane normal = 0 0 1
-      ### Define contributing regions
-      # scoring regions = ir1 ir2 ... irn # optional, defaults to ALL
-      ### Alternatively:
-      # start region = iri_1, iri_2, ..., iri_n
-      # stop region =  irf_1, irf_2, ..., irf_n
-      ###
-      # score primaries = yes # or no, optional
-      # source regions = sr1 sr2 ... srN # <- no classification in these regions
-      # source particle = photon, electron, or positron #<- multi-particle sources or brems targets
-      ### scoring grid
-      number of bins = 100
-      minimum kinetic energy = 0.001
-      maximum kinetic energy = 1.000
-      normalization  = 1 # user-normalization optional
-      scale = linear # or logarithmic
-      verbose = yes # optional
-  :stop ausgab object:
+:start ausgab object:
+    name    = id-string            # Arbitrary identifying string
+    library = egs_fluence_scoring  # Library name
+    type    = planar               # Score on circular or square field
+    scoring particle = photon, or electron, or positron
+    source particle  = photon, or electron, or positron 
+                                   # Optional. Only required to score primary fluence.
+                                   # Defaults to source particles if all the same.
+                                   # In the case of multiple particles, 
+                                   # defaults to scoring particle. Useful for
+                                   # bremsstrahlung targets and radioactive sources.
+    score primaries = yes or no    # Defaults to `no`.
+    score spectrum  = yes or no    # Defaults to `no`.
+    verbose         = yes or no    # Defaults to `no`.
+    normalization   = norm         # User-requested normalization. Defaults to 1.
+    #########
+    # If scoring spectrum, define energy grid
+    # Default: 128 linear energy bins between 1 keV and 1 MeV
+    #########
+    :start energy grid:
+      number of bins = nbins
+      minimum kinetic energy = Emin
+      maximum kinetic energy = Emax
+      scale = linear or logarithmic # Defaults to `linear`.
+    :stop energy grid:
+    ########
+    # Define scoring based on type
+    ########
+    :start planar scoring:
+       # Define contributing regions
+       contributing regions = ir1 ir2 ... irn
+       ### Alternatively:
+       # start contributing region = iri_1, iri_2, ..., iri_n
+       # stop contributing region =  irf_1, irf_2, ..., irf_n
+       ###
+       ################################
+       # If a circular field desired:
+       ################################
+       scoring circle = x y z R
+       scoring plane normal = ux uy uz
+       ########################################################
+       # If a rectangular field desired:
+       #
+       #scoring rectangle = xmin xmax ymin ymax
+       #####
+       # See documentation for EGS_AffineTransform
+       #####
+       #:start transformation:
+       #   rotation = 2, 3 or 9 floating point numbers
+       #   translation = tx, ty, tz
+       #:stop transformation:
+       ##########################################################
+    :stop planar scoring:
+:stop ausgab object:
   \endverbatim
 
   \todo Store results in a 2D binary file for visualization
-  \todo Add option for (total) kerma scoring
-  \todo Add option for CEMA scoring ???
 */
 class EGS_FLUENCE_SCORING_EXPORT EGS_PlanarFluence : public EGS_FluenceScoring {
 
@@ -417,11 +388,8 @@ public:
         *         Other applications might use latch for other purposes!
         *********************************************************************/
        if ( score_primaries && ir >= 0 && !is_source[ir]){
-   
           flagSecondaries( iarg, q );
-   
        }
-
 
        return 0;
 
@@ -493,44 +461,86 @@ private:
 
   \ingroup AusgabObjects
 
-  A linear track-lenght estimator is used to compute fluence and fluence-related 
-  quantities such as total kerma and cema if the user requestes it. Differencial 
-  and total fluence is estimated for a specific particle type. If fluence for more 
-  than one particle type is desired, multiple AOs are required.
+  A linear track-length estimator is used to compute fluence in specific 
+  geometrical regions. User can request to score primary fluence as well 
+  as differential fluence. If fluence for more than one particle type is 
+  desired, multiple AOs are required.
+
+  Differential fluence for charged particle is calculated accounting for 
+  continuos energy losses along the path using two methods. One method follows 
+  the FLURZnrc implementation, whereby stopping power is assumed constant along 
+  the step and estimated as the ratio EDEP/TVSTEP. The contributions to each 
+  energy bin of width \f$\Delta E_i\f$ is obtained as the energy fraction 
+  TVSTEP*\f$\Delta E_i\f$/EDEP.
+
+  The second method follows the approach currently used in the EGSnrc 
+  application \ref cavity "cavity", which accounts for stopping power 
+  changes within a scoring energy bin. It uses a series expansion of the 
+  integral of the inverse of the stopping power with respect to energy. 
+  Stopping power is represented as a linear interpolation over a log energy grid. 
+  A technical note is in preparation providing more details about this implementation.
 
   To define an EGS_VolumetricFluence AO use the syntax below:
   \verbatim
-  :start ausgab object:
-      name    = a_name
-      library = egs_fluence_scoring
-      type = volumetric
-      scoring particle = electron # or photon, or positron
-      # Define individual scoring regions
-      scoring regions = ir1 ir2 ... irn
-      ### Alternatively use groups of regions:
-      # start region = iri_1, iri_2, ..., iri_n
-      # stop region =  irf_1, irf_2, ..., irf_n
-      ###
-      volumes = V1, V2, ..., VN # Enter as many as scoring regions. If same number
-                                # of entries as group of regions, assumes groups of 
-                                # equal volume regions. If only one entry, assumes 
-                                # equal volumes in all regions. Defaults to 1.
-      # score primaries = yes # or no, optional
-      # source regions = sr1 sr2 ... srN # <- no classification in these regions
-      # source particle = photon, electron, or positron #<- multi-particle sources or brems targets
-      # scoring grid
-      number of bins = 100
-      minimum kinetic energy = 0.001
-      maximum kinetic energy = 1.000
-      normalization  = 1 # user-normalization optional
-      scale = linear # or logarithmic
-      verbose = yes # optional
-  :stop ausgab object:
+:start ausgab object:
+    name    = id-string            # Arbitrary identifying string
+    library = egs_fluence_scoring  # Library name
+    type    = volumetric           # Score in a volume
+    scoring particle = photon, or electron, or positron
+    source particle  = photon, or electron, or positron 
+                                   # Optional. Only required to score primary fluence.
+                                   # Defaults to source particles if all the same.
+                                   # In the case of multiple particles, 
+                                   # defaults to scoring particle. Useful for
+                                   # bremsstrahlung targets and radioactive sources.
+    score primaries = yes or no    # Defaults to `no`.
+    score spectrum  = yes or no    # Defaults to `no`.
+    verbose         = yes or no    # Defaults to `no`.
+    normalization   = norm         # User-requested normalization. Defaults to 1.
+    # If scoring spectrum, define energy grid
+    # Default: 128 linear energy bins between 1 keV and 1 MeV
+    :start energy grid:
+      number of bins = nbins
+      minimum kinetic energy = Emin
+      maximum kinetic energy = Emax
+      scale = linear or logarithmic # Defaults to `linear`.
+    :stop energy grid:
+    :start volumetric scoring:
+        scoring regions = ir1 ir2 ... irn
+        ### Alternatively:
+        #start region = iri_1, iri_2, ..., iri_n
+        #stop region  = irf_1, irf_2, ..., irf_n
+        ###
+        volumes = V1, V2, ..., VN # Enter as many as scoring regions. If same number
+                                  # of entries as group of regions, assumes groups of 
+                                  # equal volume regions. If only one entry, assumes 
+                                  # equal volumes in all regions. Defaults to 1.
+        method  = flurz or stpwr or stpwrO5 # For charged particle scoring.
+                  # 
+                  # flurz   => FLURZnrc algorithm
+                  # 
+                  # Path length at each energy interval from energy
+                  # deposited EDEP and total particle step TVSTEP. 
+                  # Assumes stopping power constancy along the particle's
+                  # step. It might introduce artifacts if ESTEPE or the
+                  # scoring bin width are too large.
+                  # 
+                  # stpwr   => Accounts for stopping power variation 
+                  #          along the particle's step. More accurate 
+                  #          than method used in FLURZnrc albeit about
+                  #          about 10% slower in electron beam cases.
+                  #
+                  # Uses an O(3) series expansion of the integral of the
+                  # inverse of the stopping power with respect to energy. 
+                  # Stopping power is represented as a linear interpolation 
+                  # over a log energy grid.
+                  # 
+                  # stpwrO5 => Uses an O(5) series expansion. Slightly slower.
+                  # 
+                  # Defaults to `stpwr`.
+    :stop volumetric scoring:
+:stop ausgab object:
   \endverbatim
-
-  \todo Add option for (total) kerma scoring
-  \todo Add option for CEMA scoring
-
 */
 class EGS_FLUENCE_SCORING_EXPORT EGS_VolumetricFluence : public EGS_FluenceScoring {
 
