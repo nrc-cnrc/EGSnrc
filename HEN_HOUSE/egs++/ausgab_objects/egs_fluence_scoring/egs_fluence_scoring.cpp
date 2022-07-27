@@ -163,7 +163,7 @@ void EGS_PlanarFluence::initScoring(EGS_Input *inp) {
             EGS_Float xmin = tmp_field[0],xmax = tmp_field[1],
                       ymin = tmp_field[2],ymax = tmp_field[3];
             /* scoring plane location in space */
-            m_midpoint = EGS_Vector((xmax+xmin)/2.,(ymax+ymin)/2.,0); // plane at origin by default
+            m_midpoint = EGS_Vector((xmax+xmin)/2.,(ymax+ymin)/2.,0); // at origin by default
             /* scoring plane normal */
             m_normal = EGS_Vector(0,0,1); // default normal along positive z-axis
             /* define unit vectors on right-handed scoring plane */
@@ -215,8 +215,8 @@ void EGS_PlanarFluence::initScoring(EGS_Input *inp) {
         if( err1 || tmp_normal.size() != 3 ) {
           egsWarning(
           "\n\n***  Wrong/missing 'scoring plane normal' input. "
-          "Set to null vector\n\n");
-          m_normal = EGS_Vector();// set to null vector
+          "Set along positive z-axis\n\n");
+          m_normal = EGS_Vector(0,0,1);// Default along positive z-axis
         }
         else{
           m_normal = EGS_Vector(tmp_normal[0],tmp_normal[1],
