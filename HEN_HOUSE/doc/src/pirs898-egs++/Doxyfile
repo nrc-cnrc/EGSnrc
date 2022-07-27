@@ -738,6 +738,7 @@ INPUT                  = main.doxy \
                          common.doxy \
                          geometry.doxy \
                          sources.doxy \
+                         aobjects.doxy \
                          cavity.doxy \
                          egs_cbct.doxy \
                          egs_chamber.doxy \

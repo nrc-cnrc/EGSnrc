@@ -83,6 +83,9 @@
         <td> \ref Sources "Particle sources"</td>
     </tr>
     <tr>
+        <td> \ref AusgabObjects "Ausgab objects"</td>
+    </tr>
+    <tr>
         <td> \ref egspp_main "Main library"</td>
     </tr>
 
