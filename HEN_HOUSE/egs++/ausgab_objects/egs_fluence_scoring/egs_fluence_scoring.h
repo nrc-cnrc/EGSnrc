@@ -28,7 +28,7 @@
 ###############################################################################
 # 
 # Ausgab objects (AOs) for fluence scoring in arbitrary geometrical regions or at 
-# circular  or rectangular scoring fields located anywhere in space for a specific 
+# circular or rectangular scoring fields located anywhere in space for a specific 
 # particle type. Fluence can be scored for multiple particle types by definining 
 # different AOs. An option exists for scoring the fluence of primary particles. 
 # Classification into primary and secondary particles follows the definition used 
@@ -92,7 +92,6 @@ enum eFluType { flurz=0, stpwr=1, stpwrO5=2 };
   particle type, scoring regions, and whether to score primary fluence. 
   Provides the method for defining primary and secondary particles.
 
-  \todo Total kerma scoring
   \todo Account for multiple app geometries
   \todo Fluence for any particle type?
 */
@@ -466,20 +465,17 @@ private:
   as differential fluence. If fluence for more than one particle type is 
   desired, multiple AOs are required.
 
-  Differential fluence for charged particle is calculated accounting for 
-  continuos energy losses along the path using two methods. One method follows 
-  the FLURZnrc implementation, whereby stopping power is assumed constant along 
-  the step and estimated as the ratio EDEP/TVSTEP. The contributions to each 
-  energy bin of width \f$\Delta E_i\f$ is obtained as the energy fraction 
-  TVSTEP*\f$\Delta E_i\f$/EDEP.
-
-  The second method follows the approach currently used in the EGSnrc 
-  application \ref cavity "cavity", which accounts for stopping power 
-  changes within a scoring energy bin. It uses a series expansion of the 
-  integral of the inverse of the stopping power with respect to energy. 
-  Stopping power is represented as a linear interpolation over a log energy grid. 
-  A technical note is in preparation providing more details about this implementation.
-
+  Differential fluence for charged particles is calculated accounting for 
+  continuos energy losses along the path. As these particles slow down in medium,
+  their contribution to fluence will spread over several energy bins. Two methods
+  to account for this are provided. One method follows the FLURZnrc implementation, 
+  whereby stopping power is assumed constant along the step and estimated as the 
+  ratio of the deposited energy EDEP to the total step length TVSTEP. The second 
+  method follows the approach used in the EGSnrc application \ref cavity "cavity", 
+  which accounts for stopping power changes within a scoring energy bin. It uses a 
+  series expansion of the integral of the inverse of the stopping power with respect 
+  to energy. Implementation details are provided in an upcoming publication.  
+  
   To define an EGS_VolumetricFluence AO use the syntax below:
   \verbatim
 :start ausgab object:
@@ -649,25 +645,22 @@ public:
                  auxT_p = fluT_p;
              }
 
-#ifdef USETVSTEP
+             /***************************************/
+             /* Score integral fluence using TVSTEP */
+             /***************************************/
              EGS_Float a_step = weight*app->getTVSTEP();
              auxT->score(ir,a_step);
              if (score_p) 
                 auxT_p->score(ir,a_step);
+             /***************************************/
+
              if ( score_spe ){
-#endif             
 
                  EGS_ScoringArray *aux, *aux_p;
-#ifndef USETVSTEP
-                 if ( score_spe ){
-#endif             
-                    aux = flu[ir];
-                    if ( score_p ){
-                       aux_p = flu_p[ir];
-                    }
-#ifndef USETVSTEP
+                 aux = flu[ir];
+                 if ( score_p ){
+                    aux_p = flu_p[ir];
                  }
-#endif             
 
                  EGS_Float Eb = app->top_p.E - app->getRM(),
                            Ee = Eb - edep;
@@ -753,19 +746,6 @@ public:
                                if (score_p)
                                   aux_p->score(jb,step);
                             }
-#ifndef USETVSTEP
-                            /* Integral fluence */
-                            if (flu_s){
-                               auxT->score(ir,step*DE[jb]);
-                               if (score_p)
-                                  auxT_p->score(ir,step*DE[jb]);
-                            }
-                            else{
-                               auxT->score(ir,step);
-                               if (score_p) 
-                                  auxT_p->score(ir,step);
-                            }
-#endif                        
                         }
                         else {
     
@@ -782,19 +762,6 @@ public:
                                if (score_p) 
                                   aux_p->score(jb,step);
                             }
-#ifndef USETVSTEP
-                            /* Integral fluence */
-                            if (flu_s){
-                               auxT->score(ir,step*DE[jb]);
-                               if (score_p)
-                                  auxT_p->score(ir,step*DE[jb]);
-                            }
-                            else{
-                               auxT->score(ir,step);
-                               if (score_p)
-                                  auxT_p->score(ir,step);
-                            }
-#endif                            
     
                             // Last bin
     
@@ -809,19 +776,6 @@ public:
                                if (score_p)
                                   aux_p->score(je,step);
                             }
-#ifndef USETVSTEP
-                            /* Integral fluence */
-                            if (flu_s){
-                               auxT->score(ir,step*DE[je]);
-                               if (score_p) 
-                                  auxT_p->score(ir,step*DE[je]);
-                            }
-                            else{
-                               auxT->score(ir,step);
-                               if (score_p)
-                                  auxT_p->score(ir,step);
-                            }
-#endif                            
     
                             // intermediate bins
     
@@ -849,19 +803,6 @@ public:
                                   if (score_p) 
                                      aux_p->score(j,step);
                                }
-#ifndef USETVSTEP
-                               /* Integral fluence */
-                               if (flu_s){
-                                 auxT->score(ir,step*DE[j]);
-                                 if (score_p)
-                                    auxT_p->score(ir,step*DE[j]);
-                               }
-                               else{
-                                 auxT->score(ir,step);
-                                 if (score_p) 
-                                    auxT_p->score(ir,step);
-                               }
-#endif                            
                             }
                         }
                      }
@@ -892,19 +833,6 @@ public:
                              if (score_p) 
                                 aux_p->score(jb,step);
                           }
-#ifndef USETVSTEP
-                          /* Integral fluence */
-                          if (flu_s){
-                            auxT->score(ir,step*DE[jb]);
-                            if (score_p)
-                               auxT_p->score(ir,step*DE[jb]);
-                          }
-                          else{
-                            auxT->score(ir,step);
-                            if (score_p) 
-                               auxT_p->score(ir,step);
-                          }
-#endif                
                         }
                         else {
     
@@ -920,19 +848,6 @@ public:
                                if (score_p)
                                   aux_p->score(jb,step);
                             }
-#ifndef USETVSTEP
-                            /* Integral fluence */
-                            if (flu_s){
-                              auxT->score(ir,step*DE[jb]);
-                              if (score_p)
-                                 auxT_p->score(ir,step*DE[jb]);
-                            }
-                            else{
-                              auxT->score(ir,step);
-                              if (score_p)
-                                 auxT_p->score(ir,step);
-                            }
-#endif                            
     
                             // Last bin
     
@@ -946,19 +861,6 @@ public:
                                if (score_p)
                                   aux_p->score(je,step);
                             }
-#ifndef USETVSTEP
-                            /* Integral fluence */
-                            if (flu_s){
-                              auxT->score(ir,step*DE[je]);
-                              if (score_p)
-                                 auxT_p->score(ir,step*DE[je]);
-                            }
-                            else{
-                              auxT->score(ir,step);
-                              if (score_p) 
-                                 auxT_p->score(ir,step);
-                            }
-#endif                            
                             // intermediate bins
                             for(int j=je+1; j<jb; j++){
 #ifdef DEBUG
@@ -970,19 +872,6 @@ public:
                                    if (score_p)
                                       aux_p->score(j,wtstep);
                                 }
-#ifndef USETVSTEP
-                                /* Integral fluence */
-                                if (flu_s){
-                                  auxT->score(ir,wtstep*DE[j]);
-                                  if (score_p)
-                                     auxT_p->score(ir,wtstep*DE[j]);
-                                }
-                                else{
-                                  auxT->score(ir,wtstep);
-                                  if (score_p)
-                                     auxT_p->score(ir,wtstep);
-                                }
-#endif                            
                             }
                         }
                      }
@@ -996,9 +885,7 @@ public:
                      relStepDiff->score(jstep,diff); eCases++;
 #endif                 
                  }
-#ifdef USETVSTEP
              }
-#endif                 
           }
        }
     }

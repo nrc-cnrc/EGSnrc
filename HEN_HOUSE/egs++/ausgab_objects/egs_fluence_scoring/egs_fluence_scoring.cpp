@@ -1263,9 +1263,6 @@ void EGS_VolumetricFluence::describeMe(){
 void EGS_VolumetricFluence::ouputVolumetricFluence( EGS_ScoringArray *fT, const double &norma ){
     double fe,dfe,dfer;
     double norm = norma;
-#ifndef USETVSTEP
-           norm  *= flu_s? 1.0 : flu_a_i; // Implicit for log grid
-#endif           
     int count = 0;
     int ir_digits = getDigits(nreg);
 
