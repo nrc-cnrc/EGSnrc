@@ -207,7 +207,7 @@ case $canonical_system in
         libext=".dylib"; libext_bundle=".so"; defines="-DOSX";
         lib_link1="-L\$(abs_dso)"; shared="-dynamiclib";
         case $CXX in
-            g++) shared_bundle="-bundle" ;;
+            g++*) shared_bundle="-bundle" ;;
             *)   shared_bundle="-qmkshrobj" ;; # assume xlC
         esac
         ;;
@@ -302,7 +302,7 @@ EOF
 num_options=8
 if test $is_osx = yes; then
     cat >&2 <<EOF
-9) $bundle_options:               $f_libs
+9) $bundle_options:               $shared_bundle
 EOF
     num_options=9
 fi
