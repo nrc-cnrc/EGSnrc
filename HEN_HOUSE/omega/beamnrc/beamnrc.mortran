@@ -4775,8 +4775,31 @@ n_tot = ncaseo; first_time = .true.;
 write(i_log,*) '*********** jcase = ',jcase;
 
 :start_parallel_loop:;
+"*******************************************************************************
+" #PARALLEL_EGS -   If NOPJOB is defined disable job control file logic and
+"                   divide particle histories evenly among MPI processes.
+"*******************************************************************************
 IF( n_parallel > 0 ) [  "Job is part of a parallel run "
-
+$IF(#,_NOPJOB);
+   n_run = ncase/n_parallel;
+   jcase = n_run/$NBATCH;
+   IF( jcase < 1 ) [ jcase = 1; n_run = jcase*$NBATCH; ]
+   IF(ISOURC=21 | ISOURC=24)[
+"    figure out where to start in the phase space file"
+        p_per_phsp_chunk=NNPHSP/n_parallel;
+        INPHSP_MIN=(i_parallel-1)*p_per_phsp_chunk+1;
+        INPHSP_MAX=INPHSP_MIN+p_per_phsp_chunk-1;
+        INPHSP=INPHSP_MIN-1; "src routine adds 1 to INPHSP"
+        "need to set position in IAEA source, if applicable"
+        IF(i_iaea_in=1)[$IAEA_SET_PHSP_RECORD(IINSRC,INPHSP_MIN);]
+        CYCLNUM=0; "reset NRCYCL counter"
+        write(i_log,'(/a/,a,i12,a,i12/,a//)')
+  '      This simulation uses a phase space source.',
+  '      This run will use from particle',INPHSP_MIN,' to particle ',
+         INPHSP_MAX,
+  '      in the source file.';
+    ]
+$ELSE(#);
     call egs_pjob_control(ncase,n_run,n_left,n_tot,part_dose,part2_dose,
                           current_result, current_uncertainty);
     IF( n_run = 0 ) [
@@ -4825,6 +4848,7 @@ IF( n_parallel > 0 ) [  "Job is part of a parallel run "
          INPHSP_MAX,
   '      in the source file.';
     ]
+$ENDIF(#);
 ]
 #endif;
 
@@ -4921,7 +4945,14 @@ ELSE[
 
 #ifdef HAVE_C_COMPILER;
 ;
-IF( n_parallel > 0 ) [ goto :start_parallel_loop:; ]
+"*******************************************************************************
+" #PARALLEL_EGS -   If NOPJOB is defined disable original parallelization logic.
+"*******************************************************************************
+IF( n_parallel > 0 ) [
+$IFNDEF(#,_NOPJOB);
+   goto :start_parallel_loop:;
+$ENDIF(#);
+]
 
 #endif;
 
@@ -5017,7 +5048,17 @@ ITMAX=3+LNEXC+LNINC;
 return; end;
 
 subroutine beam_finish(i_entry);
-implicit none;
+
+"*******************************************************************************
+" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It
+"                   is used only if the user specifies the _MPI macro during
+"                   compilation.
+"*******************************************************************************
+$IFDEF(#,_MPI);
+  USE MPI;
+$ENDIF(#);
+
+$IMPLICIT-NONE;
 
 $INTEGER i_entry, ientry, egs_open_file;
 
@@ -5497,7 +5538,32 @@ call egs_finish;     " Finish the simulation "
 
 #ifdef HAVE_C_COMPILER;
 ;
+"*******************************************************************************
+" #PARALLEL_EGS -   If NOPJOB is enabled disable job control file logic and
+"                   combine runs of MPI processes.
+"*******************************************************************************
 IF( n_parallel > 0 & ~is_finished & ~is_beam_src ) [
+$IF(#,_NOPJOB);
+   "Get sure that all MPI processes have reached this point "
+    $MPI{#, call MPI_BARRIER(MPI_COMM_WORLD, ierr)};
+    IOUTLIST=egs_open_file(IOUTLIST,0,1,'.egslst');
+    IF( i_parallel = 1 ) [
+        " Open again the list file. This is actually done in egs_pjob_finish() "
+        " subroutine. Reset i_parallel and open again list file. "
+        i_parallel = 0;
+        call egs_open_units(.false.);
+
+        is_finished = .true.;
+        DO ID=1,NDOSE_ZONE[
+           AMASS(ID)=0.; "zero these since they get summed again in ISUMRY"
+        ]
+        CALL ISUMRY;
+        call egs_combine_runs(combine_results,'.egsdat');
+        NCASET=NCASEO;  IHSTRY=NCASET; NCASE=0;
+        CALL SRCOTO(WEIGHT);
+        goto :TIME-PLUS-ANAL:;
+    ]
+$ELSE(#);
     call egs_pjob_finish(n_job);
     IOUTLIST=egs_open_file(IOUTLIST,0,1,'.egslst');
     IF( n_job = 0 ) [
@@ -5511,6 +5577,7 @@ IF( n_parallel > 0 & ~is_finished & ~is_beam_src ) [
         CALL SRCOTO(WEIGHT);
         goto :TIME-PLUS-ANAL:;
     ]
+$ENDIF(#);
 ]
 #endif;
 

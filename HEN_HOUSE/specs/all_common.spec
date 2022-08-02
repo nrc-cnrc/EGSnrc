@@ -127,7 +127,7 @@ EGS_COMPILE = $(EGS_BINDIR)egs_compile$(EXE)
 
 # The fortran file extension
 #
-FEXT = f
+FEXT = F
 
 # The git hash and branch
 GIT_HASH =
@@ -170,4 +170,3 @@ C_SOURCES =   $(EGS_SOURCEDIR)egsnrc.macros \
 		$(MACHINE_MORTRAN) \
 		$(EGS_SOURCEDIR)egs_utilities.mortran \
 		$(EGS_SOURCEDIR)egsnrc.mortran
-

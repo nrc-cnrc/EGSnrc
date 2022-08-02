@@ -191,7 +191,7 @@ opt:
 
 # Build a user code without optimization
 noopt:
-	@$(MAKE) -s WHAT=_noopt OPTLEVEL_F= OPTLEVEL_C=
+	@$(MAKE) -s WHAT=_mpi OPTLEVEL_F= OPTLEVEL_C=
 #	@($(MAKE) -s WHAT=_noopt OPTLEVEL_F= OPTLEVEL_C= && echo $(ok_message)) || echo $(failed_message)
 
 # Build a user code for debugging
@@ -199,12 +199,19 @@ debug:
 	@$(MAKE) -s WHAT=_debug OPTLEVEL_F="$(FDEBUG)" OPTLEVEL_C="$(CDEBUG)"
 #@($(MAKE) -s WHAT=_debug OPTLEVEL_F="$(FDEBUG)" OPTLEVEL_C="$(CDEBUG)" && echo $(ok_message)) || echo $(failed_message)
 
+#*******************************************************************************
+# #PARALLEL_EGS -   Build a optimized user code with MPI support
+#*******************************************************************************
+mpi:
+	@$(MAKE) -s WHAT=_mpi F77=mpif90 FCFLAGS="$(FCFLAGS) -D_MPI"
+
 # Clean-up the user code directory.
 clean:
 	@echo "$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst"
 	@$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst
 	@$(MAKE) -s WHAT=_debug execlean
 	@$(MAKE) -s WHAT=_noopt execlean
+	@$(MAKE) -s WHAT=_mpi execlean
 	@$(MAKE) -s WHAT= execlean
 	@echo $(ok_message)
 
@@ -217,4 +224,4 @@ execlean:
 # execlean have no list of prerequisits so that make can determine whether
 # they need to be remade, we declare them as phony.
 #
-.PHONY: opt noopt debug clean execlean
+.PHONY: opt noopt debug mpi clean execlean

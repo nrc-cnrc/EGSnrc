@@ -1256,6 +1256,21 @@ $LONG_INT nnphsp_max, nnphsp_min; } TO
 
 "  start of coding                 ""toc:
 
+"*******************************************************************************
+" #PARALLEL_EGS -   PROGRAM statement added to clearly define the start
+"                   of the program.
+"*******************************************************************************
+PROGRAM dosxyznrc;
+
+"*******************************************************************************
+" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It
+"                   is used only if the user specifies the _MPI macro during
+"                   compilation.
+"*******************************************************************************
+$IFDEF(#,_MPI);
+  USE MPI;
+$ENDIF(#);
+
 $IMPLICIT-NONE;
 
 ;COMIN/ BOUNDS,BREMPR,ELECIN,GEOM,MEDIA,MISC,PHSPFILE,SCORE,SOURCE,
@@ -1378,6 +1393,13 @@ $DECLARE_TIMING_VARIABLES;
 "cput1 is cputime at start of simulations"
 "cput2 is cputime when asked for so elapsed cpu is cput2-cput0 or -cput1"
 
+"*******************************************************************************
+" #PARALLEL_EGS -   Establish the MPI environment. It must be initialized here
+"                   in order to create one *.egslst file per MPI process.
+"*******************************************************************************
+$INTEGER ierr;  "error code returned by MPI subroutines"
+
+$MPI{#, call MPI_INIT(ierr)};
 
 call egs_init; "initialize EGSnrc system"
 
@@ -1972,7 +1994,6 @@ IF(i_phsp_out=1 | i_phsp_out=2) iausfl(6)=1;
 
 $INITIALIZE RNG USING IXXIN AND JXXIN;
 
-
 "=========================================================================="
 " Moved here by Ernesto Mainegra-Hing Dec 2011                             "
 " Opening same pegs4 file with two different units gives an error in gcc   "
@@ -2510,7 +2531,6 @@ OUTPUT61;(/ ' ***************************************************************');
 
 "Step 8   shower call                                   ""toc:
 "====================
-
 "open the .egsdat file if called for"
 IF(IDAT=0 | IDAT=2)[
   i_par_temp=i_parallel;
@@ -2551,8 +2571,35 @@ IF(isource = 20 | isource = 21)["reset more_in_cont and MU index for every"
 	   more_in_cont=0;
 	   frMU_indx=-1.0;
 ]
+"*******************************************************************************
+" #PARALLEL_EGS -   If PJOB is undefined disable job control file logic and
+"                   divide particle histories evenly among processes.
+"*******************************************************************************
 IF( n_parallel > 0 ) [  "Job is part of a parallel run "
+$IF(#,_NOPJOB);
+    n_run = ncase/n_parallel;
+    jcase = n_run/$NBATCH;
+    IF( jcase < 1 ) [ jcase = 1; n_run = jcase*$NBATCH; ]
 
+    write(6,'(//a,i12,a//)') '****** Running ',n_run,' histories';
+
+    IF(isource=2|isource=8|isource=20)[
+        " Figure out where to start in the phase space file "
+        p_per_phsp_chunk=nshist/n_parallel;
+        nnphsp_min=(i_parallel-1)*p_per_phsp_chunk+1;
+        nnphsp_max=nnphsp_min+p_per_phsp_chunk-1;
+        nnphsp=nnphsp_min;
+        IF(i_iaea_in=1)[
+           $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);
+        ]
+        CYCLNUM=0; "reset NRCYCL counter"
+        write(6,'(/a/,a,i12,a,i12/,a//)')
+  '      This simulation uses a phase space source.',
+  '      This run will use from particle',nnphsp_min,' to particle ',
+         nnphsp_max,
+  '      in the source file.';
+    ]
+$ELSE(#);
     call egs_pjob_control(ncase,n_run,n_left,n_tot,part_dose,part2_dose,
                           current_result, current_uncertainty);
     IF( n_run = 0 ) [
@@ -2607,7 +2654,9 @@ IF( n_parallel > 0 ) [  "Job is part of a parallel run "
          nnphsp_max,
   '      in the source file.';
     ]
+$ENDIF(#);
 ]
+
 #endif;
 
 DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
@@ -2786,7 +2835,14 @@ DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
 
 #ifdef HAVE_C_COMPILER;
 ;
-IF( n_parallel > 0 ) [ goto :start_parallel_loop:; ]
+"*******************************************************************************
+" #PARALLEL_EGS -   If PJOB is undefined disable original parallelization logic.
+"*******************************************************************************
+IF( n_parallel > 0 ) [
+$IFNDEF(#,_NOPJOB);
+    goto :start_parallel_loop:;
+$ENDIF(#);
+]
 
 #endif;
 
@@ -3391,7 +3447,29 @@ call egs_finish;     " Finish the simulation "
 
 #ifdef HAVE_C_COMPILER;
 ;
+"*******************************************************************************
+" #PARALLEL_EGS -   If PJOB is undefined disable job control file logic and
+"                   combine runs of MPI processes.
+"*******************************************************************************
 IF( n_parallel > 0 & ~is_finished ) [
+$IF(#,_NOPJOB);
+    "Get sure that all MPI processes have reached this point "
+    $MPI{#, call MPI_BARRIER(MPI_COMM_WORLD, ierr)};
+    IF( i_parallel = 1 ) [
+        " Open again the list file. This is actually done in egs_pjob_finish() "
+        " subroutine. Reset i_parallel and open again list file. "
+        i_parallel = 0;
+        call egs_open_units(.false.);
+
+        is_finished = .true.;
+        call egs_combine_runs(combine_results,'.pardose');
+        ainflu=temp2; "need to define this because it is used to normalize dose"
+        IF((isource = 0 | isource = 1 | isource = 3 | isource = 7) &
+           beamarea>0.) ainflu=ainflu/beamarea;
+        goto :ANALYZE-PARALLEL:;
+    ]
+
+$ELSE(#);
     call egs_pjob_finish(n_job);
     IF( n_job = 0 ) [
         is_finished = .true.;
@@ -3403,6 +3481,7 @@ IF( n_parallel > 0 & ~is_finished ) [
         call srcout;
         goto :ANALYZE-PARALLEL:;
     ]
+$ENDIF(#);
 ]
 #endif;
 
@@ -3410,6 +3489,11 @@ IF(isource=9 | isource=21 | (isource=20 &
 SHLflag=1 & MLCflag=0)) call finish_beamsource;
 
 IF((isource=20 | isource = 21) & MLCflag=1) [call finish_vcusource;]
+
+"*******************************************************************************
+" #PARALLEL_EGS - Terminate the MPI environment.
+"*******************************************************************************
+$MPI{#, call MPI_FINALIZE(ierr)};
 
 $CALL_EXIT(0);
 
