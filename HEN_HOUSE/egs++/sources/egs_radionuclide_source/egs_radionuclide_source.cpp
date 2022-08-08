@@ -202,7 +202,7 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         // If the particle was emitted outside the
         // experiment time window, just set the energy to zero to discard
         E = 0;
-        return ++count;
+        return ishower+1;
     }
 
     EGS_I64 ishowerOld = decays[i]->getShowerIndex();
@@ -267,7 +267,7 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         wt = 0;
     }
 
-    return ++count;
+    return ishower+1;
 }
 
 void EGS_RadionuclideSource::setUp() {
