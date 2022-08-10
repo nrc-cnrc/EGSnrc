@@ -45,6 +45,8 @@
 <li> \ref common_rco </li>
 <li> \ref common_rng </li>
 <li> \ref common_mc </li>
+<li> \ref common_inputloops </li>
+<li> \ref common_example </li>
 </ul>
 
 \section common_intro Introduction
@@ -349,6 +351,11 @@ Default values may often only add time to your calculation. One can speed
 things up by turning them off. The user is referred to section 2.6
 of the PIRS-702 manual for a detailed description
 of these parameters.
+
+\section common_inputloops Input loops
+Sometimes it is necessary to repeat a geometry or other part of the input file, while just changing one parameter in a loop. If you are a programmer and comfortable with scripting (e.g. python), feel free to generate input files from a script - this is the most flexible and powerful method. However, there is a basic loop and variable replacement functionality built into egs++ input files, called \link EGS_InputLoopVariable <b><code>input loops</code></b>\endlink.
+
+For a complete description of input loops, see the documentation linked above.
 
 \section common_example A simple example
 Putting together the examples suggested above, we have a complete input file. Note that we are using default transport parameters. This input file will work with any egs++ application that doesn't require additional inputs. For example, it will work with \c tutor7pp.
