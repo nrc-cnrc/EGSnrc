@@ -607,10 +607,10 @@ Now one can have in the input file the following construct:
 Then, everything in the input loop block except for
 the definition of <b><em>loop count</em></b> and
 <b><em>loop variable</em></b> will be repeated
-<em>N</em> times, replacing all occurences of <em>\$(var1)</em>
+<em>N</em> times, replacing all occurrences of <em>\$(var1)</em>
 with <em>v1min+v1delta*i</em>,
 of <em>\$(var2)</em> with <em>v2min+v2delta*i</em> and of <em>\$(var3)</em>
-with <em>v3_1, v3_2 ... v3_N</em>.
+with <em>v3_1, v3_2 ... v3_N</em>. The index <em>i</em> runs from <em>0</em> to <em>N-1</em>.
 
 For real input variable (type 1), one can add a c style printf format string at the end of the
 loop variable input line to specify the format to use when replacing the variable with
