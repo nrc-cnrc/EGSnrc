@@ -93,8 +93,8 @@ EXE_DIR = $(EGS_HOME)bin$(DSEP)$(my_machine)
 $(EXE_FILE): $(FORTRAN_FILE).$(FEXT) $(EXE_DIR)
 	@echo $(empty)
 	@echo $(empty)
-	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '$(FCFLAGS) $(OPTLEVEL_F)' and extra objects/libs '$(BEAM_EXTRA_OBJECTS) $(FLIBS)'"
-	@$(F77) $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(BEAM_EXTRA_OBJECTS) $(FLIBS)
+	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '-cpp $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH)' and extra objects/libs '$(BEAM_EXTRA_OBJECTS) $(FLIBS)'"
+	@$(F77) -cpp $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(BEAM_EXTRA_OBJECTS) $(FLIBS)
 
 #$(LIB_FILE): $(LIB_FORTRAN_FILE).$(FEXT)
 #	@$(F77) $(FCFLAGS) $(OPTLEVEL_F)
@@ -117,10 +117,10 @@ $(FORTRAN_FILE).$(FEXT): $(SOURCES) sources.make
 library: $(LIB_FILE)
 
 $(LIB_FILE): $(LIB_FORTRAN_FILE).$(FOBJE)
-	$(F77_LINK) $(SHLIB_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FOBJE) $(BEAM_EXTRA_OBJECTS) $(FLIBS) $(SHLIB_LIBS)
+	$(F77_LINK) $(SHLIB_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FOBJE) $(BEAM_EXTRA_OBJECTS) $(FLIBS) $(SHLIB_LIBS)
 
 $(LIB_FORTRAN_FILE).$(FOBJE): $(LIB_FORTRAN_FILE).$(FEXT)
-	$(F77) -c $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FEXT)
+	$(F77) -c $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FEXT)
 
 $(LIB_FORTRAN_FILE).$(FEXT): $(LIB_SOURCES) sources.make
 	@echo "Mortran compilation for $@"
