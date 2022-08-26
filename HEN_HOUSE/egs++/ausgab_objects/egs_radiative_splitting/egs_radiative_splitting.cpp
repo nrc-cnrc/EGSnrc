@@ -226,10 +226,11 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
             }
             //we need to relable the interacting e- as fat
-            EGS_Particle p = app->top_p;
+            //at this point np holds the e-
+            EGS_Particle p = app->getParticleFromStack(np); 
             latch = latch | (1 << 0);
             p.latch = latch;
-            EGS_Float dnear = app->getDnear(app->Np);
+            EGS_Float dnear = app->getDnear(np);
             app->updateParticleOnStack(np,p,dnear);
         }
         else {
