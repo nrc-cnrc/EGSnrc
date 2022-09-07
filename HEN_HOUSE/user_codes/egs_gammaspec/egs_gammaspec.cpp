@@ -20,25 +20,6 @@ using namespace std;
 
 
 class APP_EXPORT EGS_GammaSpecApplication : public EGS_AdvancedApplication {
-
-    EGS_Float        Emin, Emax, binWidth;  // spectrum minimum and maximum, and bin size
-    int              nbins;             // number of bins to score spectra
-    vector<int>      scoringRegions;    // regions in which spectrum is scored
-    double           Etot;              // total energy that has entered the geometry
-    int              nreg;              // number of regions in the geometry
-
-    EGS_I64          currentSourceParticle;
-
-    // Scoring arrays that track energy depositions
-    EGS_ScoringArray *score, *score_perf;
-    // Spectrum scoring arrays
-    EGS_ScoringArray *spectrum, *spectrum_perf;
-    // The weight of the initial particle that is currently being simulated
-    EGS_Float        current_weight;
-
-    // Vectors to hold the spectra for post-processing, and uncertainties
-    vector<double> spec, specUnc, spec_perf, specUnc_perf;
-
 public:
 
     // constructor
@@ -104,6 +85,25 @@ protected:
     int startNewShower();
 
 private:
+    // spectrum minimum and maximum, bin size, minimum detectable energy
+    EGS_Float        Emin, Emax, binWidth, minDetectorEnergy;
+    int              nbins;             // number of bins to score spectra
+    vector<int>      scoringRegions;    // regions in which spectrum is scored
+    double           Etot;              // total energy that has entered the geometry
+    int              nreg;              // number of regions in the geometry
+
+    EGS_I64          currentSourceParticle;
+
+    // Scoring arrays that track energy depositions
+    EGS_ScoringArray *score, *score_perf;
+    // Spectrum scoring arrays
+    EGS_ScoringArray *spectrum, *spectrum_perf;
+    // The weight of the initial particle that is currently being simulated
+    EGS_Float        current_weight;
+
+    // Vectors to hold the spectra for post-processing, and uncertainties
+    vector<double> spec, specUnc, spec_perf, specUnc_perf;
+
     EGS_Application *app;
     vector<EGS_Float> gammaEnergies, peakEfficiency, peakEfficiencyUnc, peakEfficiency_perf, peakEfficiencyUnc_perf;
 
@@ -157,15 +157,22 @@ int EGS_GammaSpecApplication::initScoring() {
     Emin = 0;
     Emax = source->getEmax();
     EGS_Float myE;
-    if (!options->getInput("minimum energy", myE)) {
+    if (!options->getInput("minimum spectrum energy", myE)) {
         Emin = myE;
     }
-    if (!options->getInput("maximum energy", myE)) {
+    if (!options->getInput("maximum spectrum energy", myE)) {
         Emax = myE;
     }
-
     egsInformation("Minimum output spectrum energy = %f MeV\n", Emin);
     egsInformation("Maximum output spectrum energy = %f MeV\n", Emax);
+
+    // Get detector energy resolution
+    if (!options->getInput("minimum detectable energy", myE)) {
+        minDetectorEnergy = myE;
+    } else {
+        minDetectorEnergy = 1e-6;
+    }
+    egsInformation("Minimum energy resolved by detector = %f MeV\n", minDetectorEnergy);
 
     // number of bins for scoring spectra (default is 1000)
     int mybins = 1000;
@@ -182,11 +189,40 @@ int EGS_GammaSpecApplication::initScoring() {
     binWidth = (Emax-Emin)/(double)nbins;
     egsInformation("Bin width = %f MeV\n", binWidth);
 
-    if (!options->getInput("gamma analysis energies", gammaEnergies)) {
+    // Get the gamma energies that will be used to calculate efficiency
+    // These ones are manually input by user
+    options->getInput("gamma analysis energies", gammaEnergies);
+
+    // These ones are automatically obtained from the radionuclide source
+    vector<string> allowed;
+    allowed.push_back("no");
+    allowed.push_back("yes");
+    int useRadionuclideGammas = options->getInput("automatic analysis energies",allowed,1);
+    if(useRadionuclideGammas) {
+        egsInformation("\nGetting gamma analysis energies automatically from radionuclide source...\n");
+        if(gammaEnergies.size() > 0) {
+            egsInformation("Note that both the 'gamma analysis energies' input and gamma energies automatically extracted from the radionuclide decay scheme will be used. Make sure they don't overlap!\n");
+        }
+
+        vector<EGS_Ensdf *> decays = source->getRadionuclideEnsdf();
+        // There may be several radionuclides represented by one radionuclide source
+        // So we loop through all of them to get all the possible gamma energies
+        for (auto dec: decays) {
+            for(auto gamma: dec->getGammaRecords()) {
+                gammaEnergies.push_back(gamma->getDecayEnergy());
+            }
+            for(auto gamma: dec->getUncorrelatedGammaRecords()) {
+                gammaEnergies.push_back(gamma->getDecayEnergy());
+            }
+        }
+    }
+
+    if(gammaEnergies.size() > 0) {
         egsInformation("\nGamma analysis energies =");
         for(const auto& value: gammaEnergies) {
             egsInformation(" %f", value);
         }
+        egsInformation("\n");
 
         peakEfficiency.resize(gammaEnergies.size());
         peakEfficiencyUnc.resize(gammaEnergies.size());
@@ -247,7 +283,7 @@ int EGS_GammaSpecApplication::simulateSingleShower() {
     }
 
     // calculate spectrum bin number
-    if (myEnergy > 1e-6) {
+    if (myEnergy > minDetectorEnergy) {
         int mybin = (int)(myEnergy/binWidth);
         if (mybin == nbins) {
             mybin--;
@@ -373,7 +409,6 @@ void EGS_GammaSpecApplication::outputResults() {
     egsInformation("\n");
 
     // Print the emissions sampled
-    // This only does something for EGS_RadionuclideSource
     source->printSampledEmissions();
 }
 
@@ -397,7 +432,15 @@ void EGS_GammaSpecApplication::outputResponse() {
     for (int i=0; i<nbins; i++) {
         double x = Emin + (i+1)*binWidth;
         spectrum->currentResult(i, spec[i], specUnc[i]);
-        totalE += spec[i]*(Emin + (i+0.5) * binWidth);
+        if(spec[i] > 0) {
+            // Switch to relative uncertainty just for the normalization
+            specUnc[i] /= spec[i];
+            // Normalize to 'per decay' instead of 'per source particle'
+            spec[i] *= currentSourceParticle / current_case;
+            specUnc[i] *= spec[i];
+
+            totalE += spec[i]*(Emin + (i+0.5) * binWidth);
+        }
         spec_f  << setw(16) << x-binWidth
                 << setw(16) << spec[i]
                 << setw(16) << specUnc[i]
@@ -418,8 +461,8 @@ void EGS_GammaSpecApplication::outputResponse() {
         spectrum_perf->currentResult(i, spec_perf[i], specUnc_perf[i]);
         if(spec_perf[i] > 0) {
             // Switch to relative uncertainty just for the normalization
-            // For perfect detectors we need to adjust the normalization, because even though we are treating each particle from a decay as though it was a new independent particle, it should still be normalized per decay (current_case should equal the number of decays)
             specUnc_perf[i] /= spec_perf[i];
+            // Normalize to 'per decay' instead of 'per source particle'
             spec_perf[i] *= currentSourceParticle / current_case;
             specUnc_perf[i] *= spec_perf[i];
 
@@ -445,7 +488,7 @@ void EGS_GammaSpecApplication::outputResponse() {
 
     // Print summing corrections
     egsInformation("\n=== Coincidence summing correction ===\n\n");
-    egsInformation("Gamma energy [MeV] | Summing correction (perfect/non-perfect) | Uncertainty (%)\n");
+    egsInformation("Gamma energy [MeV] | Summing correction (perfect/non-perfect) | Uncertainty [%%]\n");
     for(size_t i=0; i<gammaEnergies.size(); ++i) {
         EGS_Float summingCorrection;
         if(peakEfficiency[i] > 0) {
@@ -480,15 +523,15 @@ void EGS_GammaSpecApplication::calculateEfficiencies(vector<double> &spectr, vec
     }
     totalEffUnc = sqrt(totalEffUnc) / totalEff * 100;
     fullEnergyPeakEffUnc = fullEnergyPeakEffUnc / fullEnergyPeakEff * 100;
-    egsInformation("Total efficiency = %f +- %f \%\n", totalEff, totalEffUnc);
-    egsInformation("Full energy peak efficiency = %f +- %f \%\n", fullEnergyPeakEff, fullEnergyPeakEffUnc);
+    egsInformation("Total efficiency = %f %% +- %f %%\n", totalEff*100, totalEffUnc);
+    egsInformation("Full energy peak efficiency = %f %% +- %f %%\n", fullEnergyPeakEff*100, fullEnergyPeakEffUnc);
 
     // Do processing of gamma peak efficiencies
     // If there's no array provided, just return
     if(gammaEnergies.size() < 1) {
         return;
     }
-    egsInformation("\nGamma energy [MeV] | Peak efficiency (background subtracted) | Uncertainty (\%)\n");
+    egsInformation("\nGamma energy [MeV] | Peak efficiency (background subtracted) [%%] | Uncertainty [%%]\n");
 
     double background, backgroundUnc;
     for(size_t i=0; i<gammaEnergies.size(); ++i) {
@@ -517,7 +560,7 @@ void EGS_GammaSpecApplication::calculateEfficiencies(vector<double> &spectr, vec
             peakEffUnc[i] = sqrt(peakEffUnc[i]) / peakEff[i] * 100;
         }
 
-        egsInformation("%f %f %f\n", gammaEnergies[i], peakEff[i], peakEffUnc[i]);
+        egsInformation("%f %f %f\n", gammaEnergies[i], peakEff[i]*100, peakEffUnc[i]);
     }
 }
 
@@ -537,21 +580,21 @@ int EGS_GammaSpecApplication::startNewShower() {
     // Do some scoring for the previous shower, if this particle is part
     // of a new decay and it's not a perfect detector
     if (current_case != last_case) {
-        // sum all energy deposited in the detector for the previous shower
+        // Sum all energy deposited in the detector for the previous shower
         EGS_Float myEnergy = 0.0;
         int size = scoringRegions.size();
         for (int k=0; k<size; k++) {
             myEnergy += score->thisHistoryScore(scoringRegions[k]);
         }
 
-        // calculate spectrum bin number
-        if (myEnergy > 1e-6) {
+        // Calculate spectrum bin number
+        if (myEnergy > minDetectorEnergy) {
             int mybin = (int)(myEnergy/binWidth);
             if (mybin == nbins) {
                 mybin--;
             }
             if (mybin >= 0 && mybin < nbins) {
-                // apply particle weight here to the bin count
+                // Apply particle weight here to the bin count
                 spectrum->score(mybin,current_weight);
             }
         }
@@ -567,14 +610,9 @@ int EGS_GammaSpecApplication::startNewShower() {
         return res;
     }
 
-    // =======================
-    // For perfect detectors
-    score_perf->setHistory(currentSourceParticle);
-    spectrum_perf->setHistory(currentSourceParticle);
-
-    // =======================
-    // For non-perfect detectors
     if (current_case != last_case) {
+        score_perf->setHistory(current_case);
+        spectrum_perf->setHistory(current_case);
         score->setHistory(current_case);
         spectrum->setHistory(current_case);
         last_case = source->getFluence();
