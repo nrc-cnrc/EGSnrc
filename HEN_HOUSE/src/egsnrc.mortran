@@ -7222,6 +7222,9 @@ DO medium=1,nmed [
 
     ]
 ]
+DO i=1,40 [
+  write(*,*)' i, nb_idata ',i,nb_idata(i,40,1);
+]  
 $egs_info(*,' ');
 $egs_info(*,' ');
 return;
