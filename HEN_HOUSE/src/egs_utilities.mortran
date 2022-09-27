@@ -1916,12 +1916,18 @@ $REAL     xs_array(0:nsbin),fs_array(0:nsbin),ws_array(nsbin);
 $INTEGER j;
 $REAL    r1,r2,aj,x,dx,a,rnno1;
 
+write(*,*)' nsbin,ibin_array ', nsbin,ibin_array;
+
 $RANDOMSET r1; $RANDOMSET r2;
 aj = 1 + r1*nsbin; j = aj; aj = aj - j;
+write(*,*)' j= ',j;
 IF( aj > ws_array(j) ) j = ibin_array(j);
+write(*,*)'j=',j;
 x = xs_array(j-1); dx = xs_array(j)-x;
 IF( fs_array(j-1) > 0 ) [
+    write(*,*)'here';
     a = fs_array(j)/fs_array(j-1)-1;
+    write(*,*)' a=',a; 
     IF( abs(a) < 0.2 ) [
         rnno1 = 0.5*(1-r2)*a;
         alias_sample1 = x + r2*dx*(1+rnno1*(1-r2*a));

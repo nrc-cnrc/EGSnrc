@@ -269,7 +269,7 @@ public:
     void callPair();
     void callCompt();
     void callEgsRayleighSampling(int imed, EGS_Float e, EGS_Float gle, EGS_I32 lgle, EGS_Float costhe, EGS_Float sinthe);
-    EGS_Float callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, EGS_Float nb_idata);
+    EGS_Float callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, int nb_idata);
     int getMxstack();
     int getMxbres();
     int getMxbrxs();
