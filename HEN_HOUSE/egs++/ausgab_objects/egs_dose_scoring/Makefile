@@ -49,4 +49,4 @@ test:
 
 clean:
 	$(REMOVE) $(ABS_DSO)*$(library)*
-	$(REMOVE) *.o	
+	$(REMOVE) *.o

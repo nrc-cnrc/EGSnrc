@@ -44,11 +44,11 @@
 
 \section ausgab_objects_general General discussion
 
-An ausgab object allows accessing the simulation at specific points in the simulation 
+An ausgab object allows accessing the simulation at specific points in the simulation
 to extract information (scoring) or modify aspects of the simulation, for instance to increase
 calculation efficiency by means of variance reduction techinques.
-The enumerated type EGS_Application#AusgabCall links certain events with an integer-valued constant, which is 
-passed to the \c ausgab scoring routine of the EGS_Application class and all defined ausgab objects 
+The enumerated type EGS_Application#AusgabCall links certain events with an integer-valued constant, which is
+passed to the \c ausgab scoring routine of the EGS_Application class and all defined ausgab objects
 if the event flag is set to \c true.
 
 */

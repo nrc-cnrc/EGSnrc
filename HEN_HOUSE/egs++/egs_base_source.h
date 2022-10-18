@@ -146,7 +146,7 @@ public:
      *
      *  This virtual function must be re-implemented in derived classes
      *  that return the source particles' charge. Multi-particle sources
-     *  will return a value of -99. This value corresponds to an unknown 
+     *  will return a value of -99. This value corresponds to an unknown
      *  particle type in the fluence scoring AOs.
      */
     virtual int getCharge() const  {

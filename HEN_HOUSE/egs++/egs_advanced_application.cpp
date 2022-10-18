@@ -1225,29 +1225,32 @@ EGS_Float EGS_AdvancedApplication::getTVSTEP() {
     return the_epcont->tvstep;
 }
 
-EGS_Interpolator* EGS_AdvancedApplication::getDEDX( const int &imed, const int &iq ) {
-    if (iq == -1)
-       return &i_ededx[imed];
-    else if (iq == 1)           
-       return &i_pdedx[imed];
-    else 
-       return 0;
+EGS_Interpolator *EGS_AdvancedApplication::getDEDX(const int &imed, const int &iq) {
+    if (iq == -1) {
+        return &i_ededx[imed];
+    }
+    else if (iq == 1) {
+        return &i_pdedx[imed];
+    }
+    else {
+        return 0;
+    }
 }
 
-void EGS_AdvancedApplication::setLatch( const int &ip, const int &latch ) {
-  the_stack->latch[ip] = latch;
+void EGS_AdvancedApplication::setLatch(const int &ip, const int &latch) {
+    the_stack->latch[ip] = latch;
 }
 
-void EGS_AdvancedApplication::incLatch( const int &ip, const int &increment ){
-  the_stack->latch[ip] += increment;
+void EGS_AdvancedApplication::incLatch(const int &ip, const int &increment) {
+    the_stack->latch[ip] += increment;
 }
 
 int EGS_AdvancedApplication::getNp() {
-  return the_stack->np-1;;
+    return the_stack->np-1;;
 }
 
 int EGS_AdvancedApplication::getNpOld() {
-  return the_stack->npold-1;
+    return the_stack->npold-1;
 }
 
 //************************************************************

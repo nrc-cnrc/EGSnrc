@@ -99,8 +99,8 @@ void EGS_Interpolator::initialize(int nbin, EGS_Float Xmin, EGS_Float Xmax,
         b[j] = (values[j+1]-values[j])*bx;
         a[j] = values[j] - b[j]*(xmin + dx*j);
     }
-    /**************************************************** 
-       Extra subinterval at top of interval, taking care 
+    /****************************************************
+       Extra subinterval at top of interval, taking care
        of round-off errors via extrapolation.
        Mimics PEGS4 PWLF QFIT approach.
     *****************************************************/

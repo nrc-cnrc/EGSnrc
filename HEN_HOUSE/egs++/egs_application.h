@@ -1157,7 +1157,7 @@ public:
         return 0.0;
     };
 
-    virtual EGS_Interpolator* getDEDX( const int &imed, const int &iq ) {
+    virtual EGS_Interpolator *getDEDX(const int &imed, const int &iq) {
         return 0;
     };
 
@@ -1173,16 +1173,16 @@ public:
         return source->getEmax();
     }
 
-    virtual void setLatch( const int &ip, const int &latch ){};
+    virtual void setLatch(const int &ip, const int &latch) {};
 
-    virtual void incLatch( const int &ip, const int &increment ){};
+    virtual void incLatch(const int &ip, const int &increment) {};
 
     virtual int getNp() {
-      return 0;
+        return 0;
     };
 
     virtual int getNpOld() {
-      return 0;
+        return 0;
     };
 
     //************************************************************
