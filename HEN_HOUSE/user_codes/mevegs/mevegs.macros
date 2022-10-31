@@ -1,8 +1,8 @@
 %C80
 "#############################################################################"
 "                                                                             "
-"  EGSnrc egs++ tutor7pp application mortran macros                           "
-"  Copyright (C) 2015 National Research Council Canada                        "
+"  EGSnrc egs++ mevegs application mortran macros                             "
+"  Copyright (C) 2022 National Research Council Canada                        "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
 "                                                                             "
@@ -23,10 +23,13 @@
 "                                                                             "
 "  Author:          Iwan Kawrakow, 2009                                       "
 "                                                                             "
-"  Contributors:                                                              "
+"  Contributors:    Max Orok                                                  "
 "                                                                             "
 "#############################################################################"
 
+REPLACE {$NMAX} WITH {200};
+REPLACE {$MXMED} WITH {200};
+REPLACE {$MXREG} WITH {10000000};
 
 /*
    Range rejection/Russian roulette
