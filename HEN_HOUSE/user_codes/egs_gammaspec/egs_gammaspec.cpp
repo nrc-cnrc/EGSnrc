@@ -433,12 +433,6 @@ void EGS_GammaSpecApplication::outputResponse() {
         double x = Emin + (i+1)*binWidth;
         spectrum->currentResult(i, spec[i], specUnc[i]);
         if(spec[i] > 0) {
-            // Switch to relative uncertainty just for the normalization
-            specUnc[i] /= spec[i];
-            // Normalize to 'per decay' instead of 'per source particle'
-            spec[i] *= currentSourceParticle / current_case;
-            specUnc[i] *= spec[i];
-
             totalE += spec[i]*(Emin + (i+0.5) * binWidth);
         }
         spec_f  << setw(16) << x-binWidth
@@ -463,7 +457,7 @@ void EGS_GammaSpecApplication::outputResponse() {
             // Switch to relative uncertainty just for the normalization
             specUnc_perf[i] /= spec_perf[i];
             // Normalize to 'per decay' instead of 'per source particle'
-            spec_perf[i] *= currentSourceParticle / current_case;
+            spec_perf[i] *= double(currentSourceParticle) / current_case;
             specUnc_perf[i] *= spec_perf[i];
 
             totalE += spec_perf[i]*(Emin + (i+0.5) * binWidth);
@@ -570,7 +564,6 @@ void EGS_GammaSpecApplication::getCurrentResult(double &sum, double &sum2, doubl
     score->currentScore(0,sum,sum2);
 }
 
-
 // startNewShower
 int EGS_GammaSpecApplication::startNewShower() {
 
@@ -610,12 +603,14 @@ int EGS_GammaSpecApplication::startNewShower() {
         return res;
     }
 
+    score_perf->setHistory(currentSourceParticle);
+    spectrum_perf->setHistory(currentSourceParticle);
+
     if (current_case != last_case) {
-        score_perf->setHistory(current_case);
-        spectrum_perf->setHistory(current_case);
+
         score->setHistory(current_case);
         spectrum->setHistory(current_case);
-        last_case = source->getFluence();
+        last_case = current_case;
     }
 
     currentSourceParticle++;
