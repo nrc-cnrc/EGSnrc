@@ -217,8 +217,8 @@ extern __extc__ void F77_OBJ_(annih_at_rest,ANNIH_AT_REST)();
 extern __extc__ void F77_OBJ_(photo,PHOTO)();
 extern __extc__ void F77_OBJ(pair,PAIR)();
 extern __extc__ void F77_OBJ_(compt,COMPT)();
-extern __extc__ void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(int &medium, EGS_Float &e, EGS_Float &gle, EGS_I32 &lgle, EGS_Float &costhe, EGS_Float &sinthe);
-extern __extc__ EGS_Float F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float &nb_xdata, EGS_Float &nb_fdata, EGS_Float &nb_wdata, int &nb_idata);
+extern __extc__ void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(int *medium, EGS_Float *e, EGS_Float *gle, EGS_I32 *lgle, EGS_Float *costhe, EGS_Float *sinthe);
+extern __extc__ EGS_Float F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float* nb_xdata, EGS_Float* nb_fdata, EGS_Float* nb_wdata, int* nb_idata);
 
 /* The following 2 functions were used in an attempt to redirect
    all fortran I/O to use egsInformationn a degsWarning.
@@ -1428,29 +1428,24 @@ EGS_Float EGS_AdvancedApplication::getNbEmin(int imed) {
     return the_nist_brems->nb_emin[imed];
 }
 
-//return the_nist_brems->nb_xdata[i,j,imed]
-EGS_Float EGS_AdvancedApplication::getNbXdata(int i, int j, int imed) {
-    return the_nist_brems->nb_xdata[imed][j][i];
+//return the_nist_brems->nb_xdata[j,imed]
+EGS_Float* EGS_AdvancedApplication::getNbXdata(int j, int imed) {
+    return the_nist_brems->nb_xdata[imed][j];
 }
 
-//return the_nist_brems->nb_fdata[i,j,imed]
-EGS_Float EGS_AdvancedApplication::getNbFdata(int i, int j, int imed) {
-    return the_nist_brems->nb_fdata[imed][j][i];
+//return the_nist_brems->nb_fdata[j,imed]
+EGS_Float* EGS_AdvancedApplication::getNbFdata(int j, int imed) {
+    return the_nist_brems->nb_fdata[imed][j];
 }
 
-//return the_nist_brems->nb_wdata[i,j,imed]
-EGS_Float EGS_AdvancedApplication::getNbWdata(int i, int j, int imed) {
-    return the_nist_brems->nb_wdata[imed][j][i];
+//return the_nist_brems->nb_wdata[j,imed]
+EGS_Float* EGS_AdvancedApplication::getNbWdata(int j, int imed) {
+    return the_nist_brems->nb_wdata[imed][j];
 }
 
-//return the_nist_brems->nb_idata[i,j,imed]
-int EGS_AdvancedApplication::getNbIdata(int i, int j, int imed) {
-    std::cout << " j= " << j << " imed=" << imed << std::endl;
-    for (size_t i = 0; i<sizeof(the_nist_brems->nb_idata[imed][j]); i++)
-    {
-       std::cout << " i " << i << " nb_idata " << the_nist_brems->nb_idata[imed][j][i] << std::endl;
-    }
-    return the_nist_brems->nb_idata[imed][j][i];
+//return the_nist_brems->nb_idata[j,imed]
+int* EGS_AdvancedApplication::getNbIdata(int j, int imed) {
+    return the_nist_brems->nb_idata[imed][j];
 }
 
 //return value of the_brempr->delcm[imed]
@@ -1496,11 +1491,11 @@ void EGS_AdvancedApplication::callPair() {
 void EGS_AdvancedApplication::callCompt() {
     F77_OBJ_(compt,COMPT)();
 }
-void EGS_AdvancedApplication::callEgsRayleighSampling(int imed, EGS_Float E, EGS_Float gle, EGS_I32 lgle, EGS_Float costhe, EGS_Float sinthe) {
+void EGS_AdvancedApplication::callEgsRayleighSampling(int imed, EGS_Float E, EGS_Float gle, EGS_I32 lgle, EGS_Float& costhe, EGS_Float& sinthe) {
     int f_imed=imed+1;
-    F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(f_imed,E,gle,lgle,costhe,sinthe);
+    F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(&f_imed,&E,&gle,&lgle,&costhe,&sinthe);
 }
-EGS_Float EGS_AdvancedApplication::callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, int nb_idata) {
+EGS_Float EGS_AdvancedApplication::callAliasSample1(int mxbrxs, EGS_Float* nb_xdata, EGS_Float* nb_fdata, EGS_Float* nb_wdata, int* nb_idata) {
     return F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(mxbrxs,nb_xdata,nb_fdata,nb_wdata,nb_idata);
 }
 //the following definitions are dependent on some array size macros

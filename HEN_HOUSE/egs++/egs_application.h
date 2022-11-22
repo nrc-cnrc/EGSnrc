@@ -1242,17 +1242,17 @@ public:
     virtual EGS_Float getNbEmin(int imed) {
        return 0.0;
     }
-    virtual EGS_Float getNbXdata(int i, int j, int imed) {
-       return 0.0;
+    virtual EGS_Float* getNbXdata(int j, int imed) {
+       return NULL;
     }
-    virtual EGS_Float getNbFdata(int i, int j, int imed) {
-       return 0.0;
+    virtual EGS_Float* getNbFdata(int j, int imed) {
+       return NULL;
     }
-    virtual EGS_Float getNbWdata(int i, int j, int imed) {
-       return 0.0;
+    virtual EGS_Float* getNbWdata(int j, int imed) {
+       return NULL;
     }
-    virtual int getNbIdata(int i, int j, int imed) {
-       return 0.0;
+    virtual int* getNbIdata(int j, int imed) {
+       return NULL;
     }
     virtual EGS_Float getEmax() {
        return 0.0;
@@ -1287,8 +1287,8 @@ public:
     virtual void callPhoto() {};
     virtual void callPair() {};
     virtual void callCompt() {};
-    virtual void callEgsRayleighSampling(int imed, EGS_Float e, EGS_Float gle, EGS_I32 lgle, EGS_Float costhe, EGS_Float sinthe) {};
-    virtual EGS_Float callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, int nb_idata) {
+    virtual void callEgsRayleighSampling(int imed, EGS_Float e, EGS_Float gle, EGS_I32 lgle, EGS_Float& costhe, EGS_Float& sinthe) {};
+    virtual EGS_Float callAliasSample1(int mxbrxs, EGS_Float* nb_xdata, EGS_Float* nb_fdata, EGS_Float* nb_wdata, int* nb_idata) {
        return 0.0;
     }
     virtual int getMxstack() {
