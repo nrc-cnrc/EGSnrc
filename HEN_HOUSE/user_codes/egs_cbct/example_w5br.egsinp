@@ -159,7 +159,7 @@
 :start cbct setup:
         orbit = 360.0
         step  = -45
-        z-rotation = -90
+        z-rotation = 0
 :stop cbct setup:
 
 :start scoring options:
