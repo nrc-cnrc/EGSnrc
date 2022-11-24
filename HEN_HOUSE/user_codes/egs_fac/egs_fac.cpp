@@ -246,8 +246,8 @@ int EGS_FACApplication::ausgab(int iarg) {
                 //    regions being CV.
                 EGS_Float dE = (the_stack->E[np]-the_epcont->edep-the_useful->rm)*
                                 the_stack->wt[np];
-                if( isnan(dE) || isnan(the_extra_stack->expmfp[np]) ||
-                    isinf(dE) || isinf(the_extra_stack->expmfp[np]) )
+                if( std::isnan(dE) || std::isnan(the_extra_stack->expmfp[np]) ||
+                    std::isinf(dE) || std::isinf(the_extra_stack->expmfp[np]) )
                     egsInformation("\nAdding a NaN in imbalance: %g %g\n",dE,the_extra_stack->expmfp[np]);
                 else sim[ig]->addEnergyImbalance(ir,irnew,the_extra_stack->expmfp[np],dE);
             }
@@ -261,7 +261,7 @@ int EGS_FACApplication::ausgab(int iarg) {
                             the_stack->wt[np],the_stack->iq[np],the_stack->latch[np],the_extra_stack->is_fat[np]);
                 }
             }
-            if( isnan(edep) || isinf(edep) )
+            if( std::isnan(edep) || std::isinf(edep) )
                 egsInformation("\nAdding a NaN in energy: %g %g\n",the_stack->wt[np],the_epcont->edep);
             else sim[ig]->addEnergyDeposition(ir,the_stack->latch[np],edep);
         }
@@ -433,7 +433,7 @@ void EGS_FACApplication::getCurrentResult(double &sum, double &sum2, double &nor
     count = current_case; double flu = source->getFluence();
     norm = flu > 0 ? 1.6022e-10*count/(flu*sim[0]->cmass) : 0;
     sum = sim[0]->dose[2]; sum2 = sim[0]->dose2[2];
-    if( isnan(sum) || isinf(sum) ) egsInformation("\nBad result? sum=%g sum2=%g\n",sum,sum2);
+    if( std::isnan(sum) || std::isinf(sum) ) egsInformation("\nBad result? sum=%g sum2=%g\n",sum,sum2);
 }
 
 void EGS_FACApplication::selectPhotonMFP(EGS_Float &dpmfp) {
