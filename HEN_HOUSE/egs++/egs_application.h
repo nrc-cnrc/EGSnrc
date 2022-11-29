@@ -660,6 +660,7 @@ public:
         return geometry->isRealRegion(ireg);
     }
     int  isWhere(EGS_Vector &r) {
+       //egsInformation(" x=%g, y=%g, is where=%d\n",r.x,r.y,r.z,geometry->isWhere(r));
         return geometry->isWhere(r);
     }
 
