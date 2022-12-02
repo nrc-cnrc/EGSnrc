@@ -184,7 +184,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
     killed = 0;
 
-    egsInformation("iarg=%d\n",iarg);
+    //egsInformation("iarg=%d\n",iarg);
 
     if( iarg > EGS_Application::AfterTransport && app->top_p.x.z > ssd ) {
         //particle is past ssd, no splitting
@@ -216,9 +216,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             app->top_p.latch=latch; //have to set this because it is used in doSmartBrems
             //is the next line necessary?
             app->setRadiativeSplitting(nsplit);
-            egsInformation("about to do smartbrems\n");
             int res = doSmartBrems();
-            egsInformation("res=%d\n",res);
             if( res ) {
                 app->callBrems();
                 int nstart = np+1, aux=0;
@@ -424,22 +422,15 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     //        be_factor,x.x,x.y,x.z,app->top_p.wt,nbrspl);
 
     EGS_Float ct_min,ct_max,ro;
-    egsInformation("x.x=%g, x.y=%g, u.x=%g, u.y=%g\n",x.x,x.y,u.x,u.y);
     getCostMinMax(x,u,ro,ct_min,ct_max);
-    egsInformation("ct_min=%g, ct_max=%g\n",ct_min,ct_max);
     imed = app->getMedium(ir);
-    egsInformation("imed=%d\n",imed);
     EGS_Float f_max_KM = 1, q_KM, p_KM; int j_KM;
 
     if(app->getIbrdst() == 1) {
-        egsInformation("imed=%d ener=%g\n",imed,ener);
         q_KM = a_KM[imed]*log(ener) + b_KM[imed];
         j_KM = (int) q_KM; q_KM -= j_KM; p_KM = 1 - q_KM;
         f_max_KM = f_KM_max[imed].interpolateFast(j_KM,log(ener));
     }
-
-    egsInformation("ibrdst=%d\n",app->getIbrdst());
-    egsInformation("ct_min=%g, ct_max=%g, beta=%g, tau=%g\n",ct_min,ct_max,beta,tau);
 
     EGS_Float w1, cmin, cmax;
     if( app->getIbrdst() == 1 ) {
@@ -448,7 +439,6 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     }
     else w1 = (ct_max - ct_min)/((1-beta*ct_max)*(1-beta*ct_min)*2*
                                      (tau+1)*(tau+1));
-    egsInformation("w1=%g\n",w1);
     w1 *= f_max_KM;
     EGS_Float d = ssd - x.z;
     EGS_Float dmin = ro <= fs ? d : sqrt(d*d + (ro-fs)*(ro-fs));
@@ -467,7 +457,6 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     }
     w2 *= f_max_KM;
     EGS_Float wprob = min(w1,w2);
-    egsInformation("w1=%g, w2=%g, nprob=%g\n",w1,w2,wprob);
     if( wprob >= 1 && app->getIbrdst() == 1 ) return 1;
     int nsample;
     if( wprob > 1 ) { ct_min = -1; ct_max = 1; wprob = 1; }
@@ -493,8 +482,6 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     int irl=app->top_p.ir;
     int latch=app->top_p.latch;
     EGS_Float dnear = app->getDnear(np); int ib = 0;
-
-    //egsInformation(" w1=%g, w2=%g\n",w1,w2);
 
     if( w1 < w2 ) {
         for(int j=0; j<nsample; j++) {
@@ -671,7 +658,6 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     //at this point ip has kept count of the total no. of particles to add to the stack
     //not sure what to do with real_brems yet--only relevant to BCSE
     if( ip > np || real_brems ) {
-        //egsInformation("ip=%d, np=%d\n",ip,np);
         getBremsEnergies(ip,np);
         if( !real_brems ) particle_stack[ip].E = E;
         if( ip > np && app->getIbrdst() == 1 ) {
@@ -762,7 +748,6 @@ int EGS_RadiativeSplitting::doSmartBrems() {
             }
         }
         //now add particles to the stack
-        //egsInformation("Adding particles\n");
         for (int i=0; i<ip-np; i++)
         {
             app->addParticleToStack(particle_stack[i],dnear_stack[i]);
@@ -825,7 +810,8 @@ void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
     EGS_Float peie,pese,pesg;
 
     EGS_Vector x = app->top_p.x;
-    imed = app->getMedium(app->isWhere(x));
+    int irl = app->top_p.ir;
+    imed = app->getMedium(irl);
 
     nsample = np-npold;
     if (nsample < 1) nsample = 1;
@@ -1217,9 +1203,9 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    //
    // sample interactions towards circle
    //
-   imed = app->getMedium(app->isWhere(x));
-   EGS_Float AP = app->getAp(imed);
    int irl=app->top_p.ir, latch=app->top_p.latch;
+   imed = app->getMedium(irl);
+   EGS_Float AP = app->getAp(imed);
    EGS_Float dnear = app->getDnear(np); int ip = np-1;
 
    //delete top (interacting) particle since we are about to overwrite it
