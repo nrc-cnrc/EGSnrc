@@ -59,6 +59,7 @@
 #include <memory>
 #include <sstream>
 #include <vector>
+#include <array>
 
 #include "egs_base_geometry.h"
 #include "egs_vector.h"
