@@ -23,20 +23,22 @@
 #
 #  Author:          Iwan Kawrakow, 2008
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 #
-#  An example input file for egs_chamber.
+#  An example input file for egs_chamber. This is an advanced example.
 #
 #  This file defines an egs_chamber simulation of a farmer type chamber
 #  positioned at different depths in and above a 30x30x30 cm water phantom. A
-#  BEAMnrc simulation source is used as a particles source. The scoring plane
+#  collimated source is used as a particle source, though a BEAMnrc shared
+#  library source is also provided as an example. The scoring plane
 #  of the BEAMnrc simulation is just below the photon jaws at z=50 cm from the
 #  target, i.e., the air between the jaws and the water surface at z=100 cm is
-#  included in the egs_chamber simulation. The XCSE technique is used combined
-#  with phase-space scoring for particles entering a rectangular 'tube' that
-#  encloses all chamber locations.
+#  included in the egs_chamber simulation.
+#
+#  The XCSE technique is used combined with phase-space scoring for particles
+#  entering a rectangular 'tube' that encloses all chamber locations.
 #
 #  Instead of using a transformed geometry to position the chamber at
 #  different depths, the chamber location is held fixed at 0 cm depth and the
@@ -93,7 +95,7 @@
             thickness    = 0.0417
             top radii    = 0.     1.35
             bottom radii = 0.0858 1.35
-            media = C173521ICRU H2O521ICRU
+            media = 170C521ICRU H2O521ICRU
         :stop layer:
         #
         # regions 10, 11, 12: chamber body + a XCSE region
@@ -102,7 +104,7 @@
             thickness    = 0.1283
             top radii    = 0. 0.0858 1.35
             bottom radii = 0.3125 0.35 1.35
-            media = AIR521ICRU C173521ICRU H2O521ICRU
+            media = AIR521ICRU 170C521ICRU H2O521ICRU
         :stop layer:
         #
         # regions 15, 16, 17: chamber body + a XCSE region
@@ -110,7 +112,7 @@
         :start layer:
             thickness    = 0.2217
             bottom radii = 0.3125 0.35 1.35
-            media        = AIR521ICRU C173521ICRU H2O521ICRU
+            media        = AIR521ICRU 170C521ICRU H2O521ICRU
         :stop layer:
         #
         # regions 20, 21, 22, 23
@@ -119,7 +121,7 @@
             thickness    = 2.05
             top radii    = 0.050 0.3125 0.35 1.35
             bottom radii = 0.050 0.3125 0.35 1.35
-            media = AL521ICRU AIR521ICRU C173521ICRU H2O521ICRU
+            media = AL521ICRU AIR521ICRU 170C521ICRU H2O521ICRU
         :stop layer:
         #
         # regions 25, 26, 27, 28, 29
@@ -132,7 +134,7 @@
             thickness    = 1.0
             top radii    = 0.050 0.175 0.35 0.4000 1.35
             bottom radii = 0.050 0.175 0.35 0.4000 1.35
-            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU H2O521ICRU
+            media = AL521ICRU POLYETH521ICRU 170C521ICRU AL521ICRU H2O521ICRU
         :stop layer:
         #
         # regions 30, 31, 32, 33, 34
@@ -141,7 +143,7 @@
             thickness    = 0.305
             top radii    = 0.050 0.175 0.35 0.4000 1.35
             bottom radii = 0.050 0.175 0.35 0.4000 1.35
-            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU H2O521ICRU
+            media = AL521ICRU POLYETH521ICRU 170C521ICRU AL521ICRU H2O521ICRU
         :stop layer:
         #
         # regions 35, 36, 37, 38
@@ -150,7 +152,7 @@
             thickness = 0.84
             top radii    = 0.050 0.35 0.4000 1.35
             bottom radii = 0.050 0.35 0.4000 1.35
-            media = AL521ICRU PTCFE521ICRU DURAL521ICRU H2O521ICRU
+            media = AL521ICRU POLYETH521ICRU AL521ICRU H2O521ICRU
         :stop layer:
         #
         # regions 40, 41, 42, 43
@@ -159,7 +161,7 @@
             thickness    = 1.655
             top radii    = 0.0750 0.3500 0.4000 1.35
             bottom radii = 0.0750 0.3500 0.4000 1.35
-            media = AL521ICRU PTCFE521ICRU DURAL521ICRU H2O521ICRU
+            media = AL521ICRU POLYETH521ICRU AL521ICRU H2O521ICRU
         :stop layer:
     :stop geometry:
 
@@ -179,55 +181,55 @@
             thickness = 0.0417
             top radii = 0.
             bottom radii = 0.0858
-            media = C173521ICRU
+            media = 170C521ICRU
         :stop layer:
         # regions 4, 5
         :start layer:
             thickness = 0.1283
             top radii = 0. 0.0858
             bottom radii = 0.3125 0.35
-            media = AIR521ICRU C173521ICRU
+            media = AIR521ICRU 170C521ICRU
         :stop layer:
         # regions 8, 9
         :start layer:
             thickness = 0.2217
             bottom radii = 0.3125 0.35
-            media = AIR521ICRU C173521ICRU
+            media = AIR521ICRU 170C521ICRU
         :stop layer:
         # regions 12, 13, 14
         :start layer:
             thickness = 2.05
             top radii = 0.050 0.3125 0.35
             bottom radii = 0.050 0.3125 0.35
-            media = AL521ICRU AIR521ICRU C173521ICRU
+            media = AL521ICRU AIR521ICRU 170C521ICRU
         :stop layer:
         # regions 16, 17, 18, 19
         :start layer:
             thickness = 1.0
             top radii = 0.050 0.175 0.35 0.4000
             bottom radii = 0.050 0.175 0.35 0.4000
-            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU
+            media = AL521ICRU POLYETH521ICRU 170C521ICRU AL521ICRU
         :stop layer:
         # regions 20, 21, 22, 23
         :start layer:
             thickness = 0.305
             top radii = 0.050 0.175 0.35 0.4000
             bottom radii = 0.050 0.175 0.35 0.4000
-            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU
+            media = AL521ICRU POLYETH521ICRU 170C521ICRU AL521ICRU
         :stop layer:
         # regions 24, 25, 26
         :start layer:
             thickness = 0.84
             top radii = 0.050 0.35 0.4000
             bottom radii = 0.050 0.35 0.4000
-            media = AL521ICRU PTCFE521ICRU DURAL521ICRU
+            media = AL521ICRU POLYETH521ICRU AL521ICRU
         :stop layer:
         # regions 28, 29, 30
         :start layer:
             thickness = 1.655
             top radii = 0.0750 0.3500 0.4000
             bottom radii = 0.0750 0.3500 0.4000
-            media = AL521ICRU PTCFE521ICRU DURAL521ICRU
+            media = AL521ICRU POLYETH521ICRU AL521ICRU
         :stop layer:
     :stop geometry:
 
@@ -306,8 +308,8 @@
         library = egs_ndgeometry
         type    = EGS_XYZGeometry
         name    = air_slab
-        x-planes = -30  30
-        y-planes = -30  30
+        x-planes = -15  15
+        y-planes = -15  15
         z-planes = -1000  1000
         :start media input:
             media = AIR521ICRU
@@ -363,8 +365,8 @@
         library = egs_ndgeometry
         type    = EGS_XYZGeometry
         name    = water_slab
-        x-planes = -30  30
-        y-planes = -30  30
+        x-planes = -15  15
+        y-planes = -15  15
         z-planes = -1000 1000
         :start media input:
             media = H2O521ICRU
@@ -598,19 +600,34 @@
 :stop geometry definition:
 
 ########################################### The source:
-#                                           a full BEAMnrc treatment head
-#                                           simulation
+# A parallel photon beam, 6MeV
+# or
+# A full BEAMnrc treatment head simulation
 :start source definition:
 
-    #:start source:
-    #    library = egs_beam_source
-    #    name    = the_source
-    #    beam code = BEAM_EX16MVp
-    #    pegs file = 700icru
-    #    input file = test
-    #    particle type = all
-    #    weight window = 0 0.1 # This discards fat particles.
-    #:stop source:
+    # A BEAMnrc shared library source
+    # This source option is commented out by default, since it requires an
+    # extra step. To compile the BEAMnrc accelerator as a shared library
+    # so that it can be used as a source, navigate to the accelerator directory
+    # on a terminal (e.g. on linux "cd $EGS_HOME/BEAM_EX16MVp")
+    # Then compile the accelerator as a shared library using "make library".
+    # Note that on Windows, the make command may be different
+    # (e.g. on windows "mingw32-make library")
+#     :start source:
+#        library = egs_beam_source
+#        name    = the_source
+#        beam code = BEAM_EX16MVp
+#        pegs file = 700icru
+#        input file = EX16MVp
+#        particle type = all
+#        weight window = 0 0.1 # This discards fat particles.
+#     :stop source:
+
+    # A parallel 10x10cm2 photon beam
+    # Note that this is defined at the origin (z=0), instead of at z=50 like the
+    # scoring plane in the BEAMnrc simulation, so we shift by 50 to line it up.
+    # In any case, this is just an example, and we don't expect the results
+    # to match the BEAMnrc source.
     :start source:
         library = egs_parallel_beam
         name    = the_source
@@ -636,7 +653,7 @@
 #
 :start run control:
 
-    ncase = 5000000
+    ncase = 100000 # Increase this to reduce the uncertainty
 
 :stop run control:
 
@@ -836,10 +853,12 @@
     TmpPhsp = 1   # i.e., score phase space and use it once in each specified
                   # geometry
     :start range rejection:
+        # The 'rejection' must be larger than the largest enhancement factor,
+        # and it should be divisible by the enhancement factors
         rejection = 512
         Esave     = 0.521 # i.e. no range rejection but Russian Roulette
         cavity geometry = cavity # since each geometry can have its own
-                                      # cavity geometry this is just a dummy
+                                 # cavity geometry this is just a dummy
         rejection range medium = H2O521ICRU
     :stop range rejection:
 :stop variance reduction:
