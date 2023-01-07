@@ -417,6 +417,8 @@ public:
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
+        //cout<<"current region: "<<ireg<<endl;
+        int region_out;
         if (ireg >= 0) {
             // inside.
             if (ireg < nbase) {
@@ -438,14 +440,17 @@ public:
                     }
                 }
                 if (ij < 0) {
+                    region_out=ibase;
+                    //cout<<"genveloppe:: debug howfar (1): "<<region_out<<endl;
                     return ibase;
                 }
                 // ij<0 implies that we have not hit any of the
                 // inscribed geometries => return the base geometry index.
                 // ij>=0 implies that we entered inscribed geometry
                 // jg in its local region ij.
-                return new_indexing ? local_start[jg] + ij :
-                       nbase + jg*nmax + ij;
+                region_out=new_indexing ? local_start[jg] + ij : nbase + jg*nmax + ij;
+                //cout<<"genveloppe:: debug howfar (2): "<<region_out<<endl;
+                return new_indexing ? local_start[jg] + ij : nbase + jg*nmax + ij;
             }
             // if here, we are in an inscribed geometry.
             // calculate its index (jg) and its local region (ilocal).
@@ -460,8 +465,10 @@ public:
             }
             // and then check if we will hit a boundary in this geometry.
             int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
-            if (inew >= 0) return new_indexing ? local_start[jg] + inew :
-                                      nbase + jg*nmax + inew;
+            if (inew >= 0){
+                region_out=new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;
+                //cout<<"genveloppe:: debug howfar (3): "<<region_out<<endl;
+                return new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;}
             // inew >= 0 implies that we either stay in the same
             // region (inew=ilocal) or we entered a new region
             // (inew!=ilocal), which is still inside the inscribed geometry
@@ -471,6 +478,8 @@ public:
             if (inew >= 0 && newmed) {
                 *newmed = g->medium(inew);
             }
+            region_out=inew;
+            //cout<<"genveloppe:: debug howfar (4): "<<region_out<<endl;
             return inew;
         }
         // if here, we are outside the base geometry.
@@ -486,11 +495,14 @@ public:
                     if (newmed) {
                         *newmed = geometries[j]->medium(i);
                     }
-                    return new_indexing ? local_start[j] + i :
-                           nbase + nmax*j + i;
+                    region_out=new_indexing ? local_start[j] + i : nbase + nmax*j + i;
+                    //cout<<"genveloppe:: debug howfar (5): "<<region_out<<endl;
+                    return new_indexing ? local_start[j] + i : nbase + nmax*j + i;
                 }
             }
         }
+        region_out=ienter;
+        //cout<<"genveloppe:: debug howfar (6): "<<region_out<<endl;
         return ienter;
     };
 
