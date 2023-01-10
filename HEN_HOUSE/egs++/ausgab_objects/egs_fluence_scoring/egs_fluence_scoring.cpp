@@ -1396,7 +1396,7 @@ void EGS_VolumetricFluence::describeMe() {
         description += "   Fluence calculated a-la-FLURZ using Lave=EDEP/TVSTEP.\n";
     }
 
-    if (norm_u != 1.0D+0) {
+    if (norm_u != 1.0) {
         description += "\n - Non-unity user-requested normalization = ";
         sprintf(buf,"%g\n",norm_u);
         description += buf;
