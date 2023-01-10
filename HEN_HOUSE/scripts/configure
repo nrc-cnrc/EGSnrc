@@ -126,7 +126,7 @@ read response
 memory_model="-mcmodel=medium"
 printf $format "Checking system type ... " >&2
 canonical_system=$($my_dir/config.guess)
-system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
+system_name=$(uname -s | sed "s|/|_|g" | tr '[:upper:]' '[:lower:]')
 if test "x$system_name" = xdarwin; then
     system_name="osx"
     memory_model=""

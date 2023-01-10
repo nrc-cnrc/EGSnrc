@@ -407,19 +407,19 @@ EGS_AdvancedApplication::~EGS_AdvancedApplication() {
         delete [] rng_buffer;
     }
     if (nmed > 0) {
-       delete [] i_ededx;
-       delete [] i_pdedx;
-       delete [] i_esig;
-       delete [] i_psig;
-       delete [] i_ebr1;
-       delete [] i_pbr1;
-       delete [] i_pbr2;
-       delete [] i_gmfp;
-       delete [] i_gbr1;
-       delete [] i_gbr2;
-       delete [] i_cohe;
-       delete [] i_photonuc;
-   }
+        delete [] i_ededx;
+        delete [] i_pdedx;
+        delete [] i_esig;
+        delete [] i_psig;
+        delete [] i_ebr1;
+        delete [] i_pbr1;
+        delete [] i_pbr2;
+        delete [] i_gmfp;
+        delete [] i_gbr1;
+        delete [] i_gbr2;
+        delete [] i_cohe;
+        delete [] i_photonuc;
+    }
 }
 
 void EGS_AdvancedApplication::describeSimulation() {
