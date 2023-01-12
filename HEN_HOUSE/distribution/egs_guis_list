@@ -111,6 +111,7 @@ unix:egs++/dso/linux-static/libegs_gunion.so
 unix:egs++/dso/linux-static/libegs_iplanes.so
 unix:egs++/dso/linux-static/libegs_lattice.so
 unix:egs++/dso/linux-static/libegs_line_shape.so
+unix:egs++/dso/linux-static/libegs_mesh.so
 unix:egs++/dso/linux-static/libegs_ndgeometry.so
 unix:egs++/dso/linux-static/libegs_octree.so
 unix:egs++/dso/linux-static/libegs_planes.so
@@ -162,6 +163,7 @@ win:egs++/dso/win-static/egs_gunion.dll
 win:egs++/dso/win-static/egs_iplanes.dll
 win:egs++/dso/win-static/egs_lattice.dll
 win:egs++/dso/win-static/egs_line_shape.dll
+win:egs++/dso/win-static/egs_mesh.dll
 win:egs++/dso/win-static/egs_ndgeometry.dll
 win:egs++/dso/win-static/egs_octree.dll
 win:egs++/dso/win-static/egs_planes.dll
