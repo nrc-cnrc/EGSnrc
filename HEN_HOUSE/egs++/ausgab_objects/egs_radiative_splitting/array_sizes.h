@@ -41,7 +41,7 @@
 #ifndef ARRAY_SIZES_
 #define ARRAY_SIZES_
 #define MXMED 10
-#define MXSTACK 1000
+#define MXSTACK 1000000
 #define MXBRES 100
 #define MXBRXS 50
 #define MXEL 50
