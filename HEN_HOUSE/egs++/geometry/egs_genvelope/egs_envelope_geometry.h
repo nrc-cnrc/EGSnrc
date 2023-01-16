@@ -559,7 +559,7 @@ public:
         return type;
     };
 
-    EGS_BaseGeometry ** getInscribedGeometries(std::size_t &nInscribed) const {
+    EGS_BaseGeometry **getInscribedGeometries(std::size_t &nInscribed) const {
         nInscribed = n_in;
         return geometries;
     }

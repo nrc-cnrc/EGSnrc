@@ -152,7 +152,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     string dummy;
     err = input->getInput("source type",dummy);
     int err2 = input->getInput("geometry",dummy);
-    if(!err || !err2) {
+    if (!err || !err2) {
         egsWarning("\nEGS_RadionuclideSource: Warning: Inputs for defining the radionuclide source as an isotropic or collimated source (e.g. 'source type') are deprecated. Please see the documentation - define the type of source separately and then refer to it using the new 'base source' input.\n");
     }
 
@@ -161,12 +161,12 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     err = input->getInput("base source",sName);
     if (err) {
         egsFatal("\nEGS_RadionuclideSource: Error: Base source must be defined\n"
-                   "using 'base source = some_name'\n");
+                 "using 'base source = some_name'\n");
     }
     baseSource = EGS_BaseSource::getSource(sName);
     if (!baseSource) {
         egsFatal("\nEGS_RadionuclideSource: Error: no source named %s"
-                   " is defined\n",sName.c_str());
+                 " is defined\n",sName.c_str());
     }
 
     // Initialize emission type to signify nothing has happened yet
