@@ -43,6 +43,7 @@
 #include "egs_base_geometry.h"
 #include "egs_base_source.h"
 #include "egs_simple_container.h"
+#include "egs_interpolator.h"
 
 #include <string>
 #include <iostream>
@@ -54,6 +55,7 @@ class EGS_RandomGenerator;
 class EGS_RunControl;
 class EGS_GeometryHistory;
 class EGS_AusgabObject;
+class EGS_Interpolator;
 //template <class T> class EGS_SimpleContainer;
 
 /*! \brief A structure holding the information of one particle
@@ -1147,6 +1149,41 @@ public:
         return -1.0;
     };
     virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
+
+    //************************************************************
+    // Utility functions for use with ausgab fluence scoring objects
+    //************************************************************
+    virtual EGS_Float getTVSTEP() {
+        return 0.0;
+    };
+
+    virtual EGS_Interpolator *getDEDX(const int &imed, const int &iq) {
+        return 0;
+    };
+
+    string sourceType() {
+        return source->getObjectType();
+    }
+
+    int sourceCharge() {
+        return source->getCharge();
+    }
+
+    int sourceEmax() {
+        return source->getEmax();
+    }
+
+    virtual void setLatch(const int &ip, const int &latch) {};
+
+    virtual void incLatch(const int &ip, const int &increment) {};
+
+    virtual int getNp() {
+        return 0;
+    };
+
+    virtual int getNpOld() {
+        return 0;
+    };
 
     //************************************************************
     // Utility function for ausgab phase space scoring objects

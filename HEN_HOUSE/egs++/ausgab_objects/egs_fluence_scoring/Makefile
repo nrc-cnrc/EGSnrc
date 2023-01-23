@@ -1,8 +1,8 @@
 
 ###############################################################################
 #
-#  EGSnrc egs++ makefile to build dose scoring object
-#  Copyright (C) 2015 National Research Council Canada
+#  EGSnrc egs++ makefile to build fluence scoring object
+#  Copyright (C) 2022 National Research Council Canada
 #
 #  This file is part of EGSnrc.
 #
@@ -21,21 +21,21 @@
 #
 ###############################################################################
 #
-#  Author:          Ernesto Mainegra-Hing, 2012
+#  Author:          Ernesto Mainegra-Hing, 2022
 #
 #  Contributors:
 #
 ###############################################################################
 
-
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
-DEFS = $(DEF1) -DBUILD_DOSE_SCORING_DLL
+# For extra debugging messages invoke: make MYDEFS=-DDEBUG
+DEFS = $(DEF1) -DBUILD_FLUENCE_SCORING_DLL $(MYDEFS)
 
-library = egs_dose_scoring
-lib_files = egs_dose_scoring
+library = egs_fluence_scoring
+lib_files = egs_fluence_scoring
 my_deps = $(common_ausgab_deps)
 extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
@@ -45,8 +45,9 @@ $(make_depend)
 
 test:
 	@echo "common_h2: $(common_h2)"
-	@echo "extra_dep: $(extra_dep)"
-
+	@echo "extra: $(extra)"
+	@echo "common_ausgab_deps: $(common_ausgab_deps)"
+	@echo $(ABS_DSO)*$(library)*
 clean:
 	$(REMOVE) $(ABS_DSO)*$(library)*
 	$(REMOVE) *.o
