@@ -242,14 +242,14 @@ protected:
   A linear track-length estimator in the zero-thickness limit is used to
   compute fluence for either a circular field or a rectangular screen of
   arbitrary resolution (pixels). Rectangular fields are by default at Z = 0
-  directed along the positive z-axis. An affine transofrmation can be included
+  directed along the positive z-axis. An affine transformation can be included
   to place a rectangular field anywhere in space. User can request to score primary
   fluence as well as differential fluence. If fluence for more than one particle type
   is desired, multiple AOs are required.
 
   For charged particle fluence scoring this method can be inefficient as
   it checks at every single step whether a charged particle is aimed at scoring field.
-  To improve the efficieny for charged particles, one has the option to define contributing regions
+  To improve the efficiency for charged particles, one has the option to define contributing regions
   from where to score. However, users must be careful to select all regions from where
   charged particles can cross the scoring field. This option has the added benefit of
   allowing to estimate the contribution to the fluence from specific regions in the geometry.
@@ -477,7 +477,7 @@ private:
   desired, multiple AOs are required.
 
   Differential fluence for charged particles is calculated accounting for
-  continuos energy losses along the path. As these particles slow down in medium,
+  continuous energy losses along the path. As these particles slow down in medium,
   their contribution to fluence will spread over several energy bins. Two methods
   to account for this are provided. One method follows the FLURZnrc implementation,
   whereby stopping power is assumed constant along the step and estimated as the
