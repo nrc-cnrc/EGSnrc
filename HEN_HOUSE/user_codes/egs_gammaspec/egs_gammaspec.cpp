@@ -435,7 +435,7 @@ void EGS_GammaSpecApplication::outputResponse() {
         if(spec[i] > 0) {
             totalE += spec[i]*(Emin + (i+0.5) * binWidth);
         }
-        spec_f  << setw(16) << x-binWidth
+        spec_f  << setw(16) << x-binWidth/2.
                 << setw(16) << spec[i]
                 << setw(16) << specUnc[i]
                 << endl;
@@ -462,7 +462,7 @@ void EGS_GammaSpecApplication::outputResponse() {
 
             totalE += spec_perf[i]*(Emin + (i+0.5) * binWidth);
         }
-        spec_perf_f  << setw(16) << x-binWidth
+        spec_perf_f  << setw(16) << x-binWidth/2.
                 << setw(16) << spec_perf[i]
                 << setw(16) << specUnc_perf[i]
                 << endl;
@@ -555,6 +555,24 @@ void EGS_GammaSpecApplication::calculateEfficiencies(vector<double> &spectr, vec
         }
 
         egsInformation("%f %f %f\n", gammaEnergies[i], peakEff[i]*100, peakEffUnc[i]);
+    }
+
+    egsInformation("\nPeak efficiency calculations may combine two bins when the peak is between bins, and the background is the average of the two bins outside the peak bins. For the spectrum array that is indexed from 0, the peak efficiency is the sum of the range from index ind1 to ind2, and the background averages the bins ind1-1 and ind2+2. The following table shows which bins were used for each peak, and the calculated background:\n");
+    egsInformation("\nGamma energy [MeV] | ind1 | ind2 | Background [%%]\n");
+
+    for(size_t i=0; i<gammaEnergies.size(); ++i) {
+        size_t ind1 = ceil(gammaEnergies[i]/binWidth-1);
+        size_t ind2 = ceil(gammaEnergies[i]/binWidth-0.5);
+
+        if(ind1 > 0 && ind1 < nbins && ind2 > 0 && ind2 < nbins) {
+            background = (spectr[ind1-1] + spectr[ind2+1])/2;
+            backgroundUnc = (pow(spectrUnc[ind1-1],2) + pow(spectrUnc[ind2+1],2))/4;
+        } else {
+            background = 0;
+            backgroundUnc = 0;
+        }
+
+        egsInformation("%f %d %d %f\n", gammaEnergies[i], ind1, ind2, background*100);
     }
 }
 

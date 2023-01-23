@@ -45,17 +45,15 @@
 
 \section egs_gammaspec_intro Introduction
 
-The C++ application \c egs_gammaspec is an advanced EGSnrc application designed
-for the purpose of calculating gamma spectrometry related quantities including
-total efficiency, full energy peak efficiency, and summing corrections.
+The C++ application \c egs_gammaspec is an advanced EGSnrc application designed for the purpose of calculating gamma spectrometry related quantities including total efficiency, full energy peak efficiency, individual peak efficiencies and summing corrections.
 
-Many of the results are divided depending on whether the detector was modelled as 'perfect', or 'non-perfect'. In this context, 'perfect' means that the scoring regions record energy depositions of every interaction as independently ("perfectly") resolved events. There is no dead time. This is physically unrealistic, because all real detectors are susceptible to detecting multiple different particles that interact at nearly the same time, and summing those contributions as though they came from a single particle. This is the case for the 'non-perfect' model of energy depositions. In 'non-perfect' mode, all energy depositions from a single decay event (all the secondaries that interact in the sensitive region) are combined into a single deposition event. This means that the produced 'non-perfect' spectrum will contain summed peaks, where the energy deposited is the sum of the deposited energy from the multiple particles that originated from the same shower. Note that each decay is still perfectly resolved - there is no cross-contamination between decays. Therefore the amount of summing may still be underestimated for high activity radionuclides. This is left for future work.
+Many of the results are divided into two categories: a 'perfect', and 'non-perfect' style of detector modelling. In this context, 'perfect' means that the scoring regions record energy depositions of every interaction as independently ("perfectly") resolved events. There is no dead time. This is physically unrealistic, because all real detectors are susceptible to detecting multiple different particles that interact at nearly the same time, and summing those contributions as though they came from a single particle. This is the case for the 'non-perfect' model of energy depositions. In 'non-perfect' mode, all energy depositions from a single decay event (all the secondaries that interact in the sensitive region) are combined into a single deposition event. This means that the produced 'non-perfect' spectrum will contain summed peaks, where the energy recorded in the spectrum for an event is the sum of the deposited energy from multiple particles originating from the same decay shower. Note that each decay is still perfectly resolved - there is no cross-contamination between decays. Therefore the amount of summing may still be underestimated for high activity radionuclides. This is left for future work.
 
 This application generally assumes that you are using \c egs_radionuclide_source to produce decays from a radionuclide. While it is possible to use a different source, the 'perfect' and 'non-perfect' results will be the same unless the source generates secondary particles. For example: when using a point source, all source particles are primaries; with a radionuclide source, one primary decay event may result in many secondary particles (e.g. a series of internal transitions that generate particles).
 
 The spectra are calculated as the energy deposited in each bin, normalized to the number of decays (i.e. disintegration events). The total efficiency is the sum of the spectrum bins. The full energy peak efficiency is the spectrum maximum value.
 
-Individual peak efficiencies are calculated using the bins nearest the peak. The values of the bins from \c ind1 to \c ind2+1 are added together, and the background is subtracted. Consider the peak \c i with energy <b><code>gammaEnergies[i]</code></b>, and an energy bin width of \c binWidth. Then we define
+Individual peak efficiencies are calculated using the bins nearest the peak. If the peak is between two bins, then those bins are added together. The values of the bins from \c ind1 to \c ind2+1 are combined, and the background is subtracted. Consider the peak \c i with energy <code>gammaEnergies[i]</code>, and an energy bin width of \c binWidth. Then we define
 
 \verbatim
 ind1 = ceil(gammaEnergies[i]/binWidth-1);
@@ -82,8 +80,6 @@ Here are some future ideas that are not yet implemented:
 \section egs_gammaspec_options
 All of the special inputs for \c egs_gammaspec are in the scoring options. The scoring options and output spectrum input blocks are required for the simulation to run. Only one output spectrum input block will be used - multiple are not supported. Output spectra can be produced and written to a file, and the regions selected for scoring are also used for calculating efficiencies and summing corrections.
 
-The output spectrum is automatically named \c ${basename}-spec.txt and \c ${basement}-spec-perf.txt, for the 'non-perfect' and 'perfect' spectra, respectively. \c ${basename} corresponds to the name of the input file, without the .egsinp extension.
-
 \verbatim
 :start scoring options:
 
@@ -106,6 +102,15 @@ The output spectrum is automatically named \c ${basename}-spec.txt and \c ${base
     :stop output spectrum:
 
 :stop scoring options:
+\endverbatim
+
+The output files are automatically named \c ${basename}-spec.txt and \c ${basement}-spec-perf.txt, for the 'non-perfect' and 'perfect' spectra, respectively. \c ${basename} corresponds to the name of the input file, without the .egsinp extension. The format of the output spectrum is simply three columns of floating point numbers. The first column contains the energy (MeV) of the middle of the energy bin (all bins are equal width). The second column contains the energy deposited per decay (MeV per decay). The third is the absolute uncertainty on the energy deposited (MeV per decay). For example:
+
+\verbatim
+    0.000000e+00    1.200985e-04    8.491990e-05
+    2.000000e-04    0.000000e+00    0.000000e+00
+    4.000000e-04    6.004924e-05    6.004924e-05
+    ... etc...
 \endverbatim
 
 \section egs_gammaspec_example An input example: Germanium detector from the ICRM HPGE comparison
@@ -749,4 +754,4 @@ Average gamma energy: 0.000000
 End of source emissions statistics
 ======================================================
 \endverbatim
-
+*/
