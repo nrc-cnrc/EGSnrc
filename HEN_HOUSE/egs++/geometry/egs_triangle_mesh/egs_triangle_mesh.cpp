@@ -245,8 +245,10 @@ int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
         return -1;
     }
     // If the closest exterior face is closer than the closest interior face,
-    // we are outside the mesh.
-    if (min_dist_exterior < min_dist_interior) {
+    // we are outside the mesh. Less-or-equal (<=) is needed as points outside
+    // the mesh can be intersect both inner and outer faces at corners at the
+    // same distance.
+    if (min_dist_exterior <= min_dist_interior) {
         return -1;
     }
     // Otherwise, we must be inside the region bounded by the mesh.
