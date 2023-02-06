@@ -4279,10 +4279,13 @@ IF( use_cs_enhance ) [
     IF( iausfl(21) = 0 ) cse_return(21) = .true.;
     IF( iausfl(24) = 0 ) cse_return(24) = .true.;
     IF( iausfl(25) = 0 ) cse_return(25) = .true.;
+    IF( iausfl(30) = 0 ) cse_return(30) = .true.;
+    IF( iausfl(31) = 0 ) cse_return(31) = .true.;
     IAUSFL(16) = 1; IAUSFL(17) = 1; " before/after PAIR     "
     IAUSFL(18) = 1; IAUSFL(19) = 1; " before/after COMPTON  "
     IAUSFL(20) = 1; IAUSFL(21) = 1; " before/after PHOTO    "
     IAUSFL(24) = 1; IAUSFL(25) = 1; " before/after RAYLEIGH "
+    IAUSFL(30) = 1; IAUSFL(31) = 1; " before/after PHOTONUC "
 ]
 
 "Ali:BCSE"
@@ -5816,16 +5819,16 @@ IF(IBRSPL=2 & USE_REJPLN) ["DBS WITH A REJECTION PLANE"
 IF( use_cs_enhance ) [
     iicm = IR_to_CM(irl);
     IF( cs_enhance(iicm) > 1 ) [
-        IF( iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23 ) [
-                       "Pair/Compton/Photo/Rayleigh about to occur"
+        IF( iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23 | iarg = 29 ) [
+                       "Pair/Compton/Photo/Rayleigh/Photonuclear about to occur"
             np = np+1; $CHECK-STACK(np,'ausgab(cs_enhance)');
             $TRANSFER PROPERTIES TO (np) FROM (np-1);
             W(NP)=W(NP-1); U(np)=U(np-1); V(np)=V(np-1);
             E(NP)=E(NP-1);IQ(NP)=IQ(NP-1); wt(np) = wt(np)/cs_enhance(iicm);
             return;
         ]
-        ELSE IF( iarg = 16 | iarg = 18 | iarg = 20 | iarg = 24 ) [
-                       "Pair/Compton/Photo/Rayleigh just occured."
+        ELSE IF( iarg = 16 | iarg = 18 | iarg = 20 | iarg = 24 | iarg = 30) [
+                       "Pair/Compton/Photo/Rayleigh/Photonuclear just occured."
             $RANDOMSET rnno35;
             IF( rnno35*cs_enhance(iicm) > 1 ) [
                 "keep the original photon and trow away scattered photons "
