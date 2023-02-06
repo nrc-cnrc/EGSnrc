@@ -2605,6 +2605,8 @@ write(6,*) 'flagged all photon intereaction types';
     iausfl(21) = 1; "After photoelectric"
     iausfl(24) = 1; "Before Rayleigh"
     iausfl(25) = 1; "After Rayleigh"
+    iausfl(30) = 1; "Before Photonuclear"
+    iausfl(31) = 1; "After Photonuclear"
 ]
 ELSE [ DO j=1,$MXREG [ iefl(j) = 0; ] ]
 
@@ -3634,8 +3636,8 @@ MXNP=MAX(MXNP,NP);"keep track of how deep stack is"
 
 IF (ienhance = 1) [" Option to enhance photon cross section in some region"
 "write(6,*) 'in ausgab to recreate photon';"
-    IF (iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23) [
-        "A pair/Compton/photoelectric/pair event is about to take place"
+    IF (iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23 | iarg = 29) [
+        "Just before pair/Compton/photoelectric/Rayleigh/photonuclear event"
         np = np + 1; "Boost the stack"
         IF(np > $MXSTACK) [
             OUTPUT $MXSTACK; (
@@ -3667,7 +3669,8 @@ IF (ienhance = 1) [" Option to enhance photon cross section in some region"
     " between NPold and NP for RR"
     IF ( (  iarg = 18               " Compton has occured"
           | iarg = 20               " After photo-absorption "
-          | iarg = 24)              " After Rayleigh "
+          | iarg = 24               " After Rayleigh "
+          | iarg = 30)              " After photonuclear "
           & ienhance = 1 )
     [
           ienhance=0;

@@ -1881,6 +1881,8 @@ IF(ifano = 1)
     iausfl(21) = 1; "After photoelectric"
     iausfl(24) = 1; "Before Rayleigh"
     iausfl(25) = 1; "After Rayleigh"
+    iausfl(30) = 1; "Before photonuclear"
+    iausfl(31) = 1; "After photonuclear"
 
     "AUSGAB will be responsible for throwing away any photons resulting"
     "from a primary electron. ie. True equilibtrium requires that all"
@@ -1905,6 +1907,8 @@ IF( n_split > 1 ) [
     iausfl(20) = 0;
     iausfl(24) = 0;
     iausfl(25) = 0;
+    iausfl(30) = 0;
+    iausfl(31) = 0;
 
 ]
 
@@ -1926,6 +1930,8 @@ IF( use_enhance ) [
     iausfl(21) = 1; "After photoelectric"
     iausfl(24) = 1; "Before Rayleigh"
     iausfl(25) = 1; "After Rayleigh"
+    iausfl(30) = 1; "Before photonuclear"
+    iausfl(31) = 1; "After photonuclear"
     iausfl(8)  = 1; "After bremsstrahlung"
     iausfl(14) = 1; "A positron has annihilated in-flight"
     iausfl(15) = 1; "A positron has annihilated at rest"
@@ -3255,12 +3261,12 @@ IF( use_enhance | n_split > 1 ) [
 IF( use_enhance ) [ "If we use cross section enhancement, all scoring "
                     " is done here and the rest of ausgab is ignored  "
 
-    IF (iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23)
+    IF (iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23 | iarg = 29)
     [
-        "A pair/Compton/photoelectric/Rayleigh event is about to take place"
+        "Before pair/Compton/photoelectric/Rayleigh/photonuclear event.    "
         "As we have increased the photon cross section by a factor of      "
         "cs_enhance, we must split the photon into a scattering portion    "
-        "(1/cs_enhance) and a nor-scattering portion (1-1/cs_enhance)      "
+        "(1/cs_enhance) and a non-scattering portion (1-1/cs_enhance)      "
         "Start with placing an identical photon on the stack               "
         np = np + 1;
         IF(np + 1 > $MXSTACK) [
@@ -3298,8 +3304,8 @@ IF( use_enhance ) [ "If we use cross section enhancement, all scoring "
     ]
 
 
-    IF( iarg = 18 | iarg = 20 | iarg = 24 |
-         " A Compton/photo-absorption/Rayleigh event just occured"
+    IF( iarg = 18 | iarg = 20 | iarg = 24 | iarg = 30 |
+         " A Compton/photo-absorption/Rayleigh/photonuclear event just occured"
         iarg = 7 | iarg = 13 | iarg = 14 ) [
          " A bremas/annihilation event just occured"
          " All scattered photons and photons originating in brems/annihilation"
@@ -3392,9 +3398,9 @@ IF(IWATCH.GT.0) [CALL WATCH(IARG,IWATCH); "SIGNAL WATCH ROUTINE IF ACTIVE"]
 
 IF (ifano = 1)
 [
-    IF (iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23)
+    IF (iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23 | iarg = 29)
     [
-        "A pair/Compton/photoelectric/pair event is about to take place"
+        "Just before pair/Compton/photoelectric/Rayleigh/photonuclear event"
         np = np + 1; "Boost the stack"
         IF(np + 1 > $MXSTACK)
         [
@@ -3425,6 +3431,7 @@ IF (ifano = 1)
     IF (  iarg = 18               " Compton has occured"
         | iarg = 20               " After photo-absorption "
         | iarg = 24               " After Rayleigh "
+        | iarg = 30               " After photonuclear "
         | iarg = 7                " After brems "
         | iarg = 13               " After annihilation "
         | iarg = 14)              " After annihilation at rest "

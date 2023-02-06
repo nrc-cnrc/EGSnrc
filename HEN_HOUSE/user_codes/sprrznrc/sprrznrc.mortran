@@ -1934,6 +1934,8 @@ IF(ifano = 1) [
     iausfl(21) = 1; "After photoelectric"
     iausfl(24) = 1; "Before Rayleigh"
     iausfl(25) = 1; "After Rayleigh"
+    iausfl(30) = 1; "Before photonuclear"
+    iausfl(31) = 1; "After photonuclear"
 
     "AUSGAB will be responsible for throwing away any photons resulting"
     "from a primary electron. ie. True equilibtrium requires that all"
@@ -2803,8 +2805,8 @@ IF(IARG = 0)["about to transport a particle"
 
 IF (ifano = 1) [ "option to regenerate photons after interaction"
                  "and throw away scattered particles"
-    IF (iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23) [
-        "A pair/Compton/photoelectric/pair event is about to take place"
+    IF (iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23 | iarg = 29) [
+        "Just before pair/Compton/photoelectric/pair/photonuclear event"
         np = np + 1; "Boost the stack"
         IF(np + 1 > $MXSTACK) [ "check there is space on STACK"
             OUTPUT; ( ' Fano calculation unable to boost stack.'/
@@ -2829,6 +2831,7 @@ IF (ifano = 1) [ "option to regenerate photons after interaction"
     IF (  iarg = 18               " Compton has occured"
         | iarg = 20               " After photo-absorption "
         | iarg = 24               " After Rayleigh "
+        | iarg = 30               " After Photonuclear "
         | iarg = 7                " After brems "
         | iarg = 13               " After annihilation "
         | iarg = 14)              " After annihilation at rest "
@@ -4933,4 +4936,3 @@ return; end;
 ;
 "end of sprrznrc.mortran"
 ;
-

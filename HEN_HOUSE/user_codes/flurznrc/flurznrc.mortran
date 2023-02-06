@@ -2269,7 +2269,7 @@ IF(IPRIM=3)["need to distinguish photon primaries from secondaries"
 
 write(6,'(/a)')
 '************************ IAUSFL values ************************** ';
-DO j=1,28 [
+DO j=1,30 [
   IF( iausfl(j).ne.0 ) write(6,'(i3,$)') j;
 ]
 write(6,'(/a//)')
