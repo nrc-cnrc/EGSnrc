@@ -163,14 +163,15 @@ public:
 
     bool needsCall(EGS_Application::AusgabCall iarg) const override {
         if ( split_type == DRS || split_type == DRSf ) {
-           if ( iarg == EGS_Application::BeforeBrems || 
-                iarg == EGS_Application::BeforeAnnihFlight || 
+           if ( iarg == EGS_Application::BeforeBrems ||
+                iarg == EGS_Application::BeforeAnnihFlight ||
                 iarg == EGS_Application::BeforeAnnihRest ||
-                iarg == EGS_Application::BeforePair || 
-                iarg == EGS_Application::BeforeCompton || 
+                iarg == EGS_Application::BeforePair ||
+                iarg == EGS_Application::BeforeCompton ||
                 iarg == EGS_Application::BeforePhoto ||
-                iarg == EGS_Application::BeforeRayleigh || 
-                iarg == EGS_Application::FluorescentEvent) {
+                iarg == EGS_Application::BeforeRayleigh ||
+                iarg == EGS_Application::FluorescentEvent ||
+                iarg == EGS_Application::BeforeTransport) {
                return true;
            }
         }
@@ -178,7 +179,7 @@ public:
     };
 
     int processEvent(EGS_Application::AusgabCall iarg) {
-        if ( split_type > URS && iarg > EGS_Application::AfterTransport )
+        if ( split_type > URS && iarg >= EGS_Application::BeforeTransport )
         {
             if( !doInteractions(iarg,killed) )
             {
@@ -189,7 +190,7 @@ public:
     };
 
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
-        if (split_type >  URS && iarg > EGS_Application::AfterTransport)
+        if (split_type >  URS && iarg >= EGS_Application::BeforeTransport)
         {
             if( !doInteractions(iarg,killed) )
             {
