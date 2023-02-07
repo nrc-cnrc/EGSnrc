@@ -203,11 +203,30 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     //seems like a temporary solution
     int is_fat = (latch & (1 << 0));
 
-    if(app->top_p.wt < 1 && is_fat) exit(1);
+    EGS_Float tmp_dist = (ssd - app->top_p.x.z)/app->top_p.u.z;
+    EGS_Float tmp_r = sqrt((app->top_p.x.x+tmp_dist*app->top_p.u.x)*(app->top_p.x.x+tmp_dist*app->top_p.u.x) +
+                      (app->top_p.x.y+tmp_dist*app->top_p.u.y)*(app->top_p.x.y+tmp_dist*app->top_p.u.y));
+
+    if(np>22990 && np<22999)
+    {
+    egsInformation("At start: iarg=%d np=%d, is_fat=%d, iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",iarg,np,is_fat,app->top_p.q,app->top_p.E,app->top_p.wt,app->top_p.x.x,app->top_p.x.y,app->top_p.x.z,tmp_r);
+    EGS_Particle p = app->getParticleFromStack(22996);
+    EGS_Float dist = (ssd - p.x.z)/p.u.z;
+    EGS_Float r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+    egsInformation(" 22996 at start: iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
+    }
+
+    if( iarg == EGS_Application::BeforeTransport)
+    {
+        return 0;
+    }
+
+    //if(app->top_p.wt < 1 && is_fat) exit(1);
 
     if( iarg == EGS_Application::BeforeBrems ) {
         double E = app->top_p.E;
         EGS_Float wt = app->top_p.wt;
+        //egsInformation("is_fat=%d, E=%g, wt=%g, x=%g, y=%g, z=%g\n",is_fat,E,wt,app->top_p.x.x,app->top_p.x.y,app->top_p.x.z);
         if( is_fat ) {
             //clear bit 0
             latch = latch & ~(1 << 0);
@@ -217,6 +236,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             //is the next line necessary?
             app->setRadiativeSplitting(nsplit);
             int res = doSmartBrems();
+            //egsInformation("res=%d\n",res);
             if( res ) {
                 app->callBrems();
                 int nstart = np+1, aux=0;
@@ -225,6 +245,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             //we need to relable the interacting e- as fat
             //at this point np holds the e-
             EGS_Particle p = app->getParticleFromStack(np);
+            //egsInformation("e?: iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g\n",p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z);
             latch = latch | (1 << 0);
             p.latch = latch;
             EGS_Float dnear = app->getDnear(np);
@@ -266,7 +287,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             latch = latch & ~(1 << 0);
             app->setLatch(latch);
             uniformPhotons(nsamp,nsplit,fs,ssd,app->getRM());
-            //uniformPhotons(nsamp,2,the_useful->rm);
         }
         else {
             app->setRadiativeSplitting(1);
@@ -295,10 +315,40 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         {
             //for now don't split the interaction
             //what happens to nonfat charged particles?
+         if (app->getNp()==22997){
+                EGS_Particle p = app->getParticleFromStack(app->getNp());
+                EGS_Float dist = (ssd - p.x.z)/p.u.z;
+                EGS_Float r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+                egsInformation("before photo: np=%d, iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",app->getNp(),p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
+                p = app->getParticleFromStack(22996);
+                dist = (ssd - p.x.z)/p.u.z;
+                r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+                egsInformation(" and 22996: iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
+                p = app->getParticleFromStack(22995);
+                dist = (ssd - p.x.z)/p.u.z;
+                r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+                egsInformation(" and 22995: iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
+         }
             app->callPhoto();
+            //examine resultant particles
+            int npold = np;
+            for(int i=npold; i<=app->getNp(); i++)
+            {
+                EGS_Particle p = app->getParticleFromStack(i);
+                EGS_Float dist = (ssd - p.x.z)/p.u.z;
+                EGS_Float r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+        if (i>22990 && i<22999){
+                egsInformation("after photo: np=%d, iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",i,p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
+                p = app->getParticleFromStack(22996);
+                dist = (ssd - p.x.z)/p.u.z;
+                r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+                egsInformation(" and 22996: iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
+         }
+            }
         }
         else if(iarg == EGS_Application::BeforeCompton)
         {
+            //egsInformation("is_fat=%d, ibcmp=%d\n",is_fat,app->getIbcmp());
             if(is_fat && !app->getIbcmp())
             {
                 //label as nonphat to be passed on to descendents
@@ -309,17 +359,30 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             }
             else //straight-up compton
             {
-                if (is_fat) {
-                    latch = latch & ~(1 << 0);
-                    app->setLatch(latch);
-                }
+                //label interacting photon as non-phat and reduce weight (if phat)
+                latch = latch & ~(1 << 0);
+                app->setLatch(latch);
+                EGS_Particle p = app->getParticleFromStack(np);
+                p.wt = p.wt/nint;
+                EGS_Float dnear = app->getDnear(np);
+                app->updateParticleOnStack(np,p,dnear);
+                //egsInformation(" calling compt: np=%d, e=%g, wt=%g, w=%g\n",np,p.E,p.wt,p.u.z);
                 for (int i=0; i<nint; i++)
                 {
+                    //egsInformation(" for i=%d\n",i);
                     app->callCompt();
                 }
                 // kill photons not aimed into the field and any electrons
-                int nstart = np+1, aux=1;
+                for(int i=np; i<=app->getNp(); i++)
+            {
+                EGS_Particle p = app->getParticleFromStack(i);
+                EGS_Float dist = (ssd - p.x.z)/p.u.z;
+                EGS_Float r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+                //egsInformation("after compt: np=%d, iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",i,p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
+            }
+                int nstart = np, aux=1;
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
+                //egsInformation("coming out of compt\n");
             }
         }
         else if (iarg == EGS_Application::BeforeRayleigh)
@@ -375,12 +438,29 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             latch = latch & ~(1 << 0);
             app->setLatch(latch);
             uniformPhotons(nsplit,nsplit,fs,ssd,ener);
+            int npold=np;
+            for(int i=npold; i<=app->getNp(); i++)
+            {
+                EGS_Particle p = app->getParticleFromStack(i);
+                EGS_Float dist = (ssd - p.x.z)/p.u.z;
+                EGS_Float r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+       if (i>22990 && i<22999){
+                egsInformation("after uniform: np=%d, iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, u=%g, v=%g, w=%g, r at ssd=%g\n",i,p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,p.u.x,p.u.y,p.u.z,r);
+       }
+            }
         }
         else {
-            int nstart=np+1, aux=0;
+            int nstart=np, aux=0;
             killThePhotons(fs,ssd,nsplit,nstart,aux);
         }
         //TODO: Ensure that below is correct, i.e. we don't want to go back to shower
+        if (app->getNp()>22990 && app->getNp()<22999){
+                EGS_Particle p = app->getParticleFromStack(22996);
+                EGS_Float dist = (ssd - p.x.z)/p.u.z;
+                EGS_Float r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+                egsInformation(" 22996 after uniform: iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
+        }
+        // Do not need to return to shower
         check = 2;
     }
 
@@ -393,6 +473,13 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             EGS_Float dnear = app->getDnear(app->Np);
             p.wt = 0.;
             app->addParticleToStack(p,dnear);
+        }
+
+        if (app->getNp()>22990 && app->getNp()<22999){
+                EGS_Particle p = app->getParticleFromStack(22996);
+                EGS_Float dist = (ssd - p.x.z)/p.u.z;
+                EGS_Float r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+                egsInformation(" 22996 before returning: iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
         }
         return 0;
     }
@@ -925,6 +1012,9 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
       if (p.q == 0)
       {
          i_playrr = 0;
+   EGS_Float tmp_dist = (ssd - p.x.z)/p.u.z;
+    EGS_Float tmp_r = sqrt((p.x.x+p.u.x)*(p.x.x+tmp_dist*p.u.x) + (p.x.y+tmp_dist*p.u.y)*(p.x.y+tmp_dist*p.u.y));
+         //egsInformation("a phot.: np=%d, is_fat=%d, iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",idbs,is_fat,p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,tmp_r);
          if (!is_fat)
          {
             if (p.u.z < 0)
@@ -966,6 +1056,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
      }
      else
      {
+        //egsInformation("the e-: iq=%d, E=%g, wt=%g\n",p.q,p.E,p.wt);
          //this is a charged particle
          if (kill_electrons == 0)
          {
@@ -974,17 +1065,17 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
          }
          else
          {
-            if (app->getRngUniform()*kill_electrons > 1)
+            if (app->getRngUniform()*n_split > 1)
             {
                 //kill it
-                //Note: this will never happen for now because kill_electrons = 0 or 1
                 app->deleteParticleFromStack(idbs);
             }
             else
             {
-                //keep the particle and increase weight
+                //keep the particle, increase weight and label as phat
                 EGS_Particle p2 = app->getParticleFromStack(idbs);
-                p2.wt = p2.wt*kill_electrons;
+                p2.wt = p2.wt*n_split;
+                p2.latch = p2.latch | (1 << 0);
                 app->updateParticleOnStack(idbs,p2,dnear);
                 idbs++;
             }
@@ -1025,12 +1116,13 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
    EGS_Particle p_ip = app->getParticleFromStack(app->getNp());
    EGS_Float x = p_ip.x.x;
    EGS_Float y = p_ip.x.y;
+   EGS_Float z = p_ip.x.z;
    EGS_Float dnear = app->getDnear(app->Np);
    EGS_Float weight = p_ip.wt/n_split;
 
    //calculate min/max polar angles subtended by the splitting field
    EGS_Float ro = sqrt(x*x+y*y);
-   EGS_Float d = ssd - app->top_p.x.z;
+   EGS_Float d = ssd - z;
    EGS_Float aux = (ro + fs)/d;
    EGS_Float ct_min = 1/sqrt(1+aux*aux);
    EGS_Float ct_max;
@@ -1056,7 +1148,8 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
    int ns,ip;
    //delete interacting particle on stack so that we overwrite it
    app->deleteParticleFromStack(app->getNp());
-   int np = app->getNp()-1;
+   //and update np
+   int np = app->getNp();
    for (int i=0; i< num_split; i++)
    {
        EGS_Particle p;
@@ -1072,21 +1165,35 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
        }
        selectAzimuthalAngle(cphi,sphi);
        aux = d/cost*sint;
-       x = x + aux*cphi;
-       y = y + aux*sphi;
+       EGS_Float x_tmp = x + aux*cphi;
+       EGS_Float y_tmp = y + aux*sphi;
        ns = 0;
-       if (x*x + y*y < fs*fs)
+       if (x_tmp*x_tmp + y_tmp*y_tmp < fs*fs)
        {
            ns = 1;
        }
-       else if (app->getRngUniform()*n_split < 1)
+       else
        {
-           ns = n_split;
+          //this is directed outside the field, play RR in next if block
+          ns = nsplit;
        }
+       if (ns > 1)
+       {
+          if(app->getRngUniform()*ns>1)
+          {
+             ns=0;
+          }
+       }
+       //egsInformation("uniformPhotons predicted d=%g x=%g y=%g u=%g v=%g r=%g ns=%d\n",d/sint,x_tmp,y_tmp,sint*cphi,sint*sphi,sqrt(x*x+y*y),ns);
        if (ns > 0)
        {
            np++;
            p.latch = p_ip.latch;
+           if (ns > 1)
+           {
+              // going outside field, label as phat
+              p.latch = p.latch | (1 << 0);
+           }
            p.ir = p_ip.ir;
            p.x = p_ip.x;
            //stuff that we do not inherit
@@ -1095,6 +1202,11 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
            p.wt = weight*ns;
            p.u = EGS_Vector(sint*cphi, sint*sphi, cost);
 
+           EGS_Float dist = (ssd - p.x.z)/p.u.z;
+           EGS_Float r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+      if(np==22996){
+           egsInformation("in uniformPhotons: ns=%d, np=%d, iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, r at ssd=%g\n",ns,np,p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,r);
+      }
            app->addParticleToStack(p,dnear);
        }
    }
@@ -1129,7 +1241,10 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
            p.E = energy;
            p.wt = weight*n_split;
            p.u = EGS_Vector(sint*cphi, sint*sphi, cost);
-
+          if(np==22996){
+           int is_fat = (p.latch & (1 << 0));
+           egsInformation("phat uniformPhotons: np=%d, is_fat=%d, iq=%d, E=%g, wt=%g, x=%g, y=%g, z=%g, u=%g, v=%g, w=%g\n",np,is_fat,p.q,p.E,p.wt,p.x.x,p.x.y,p.x.z,p.u.x,p.u.y,p.u.z);
+    }
            app->addParticleToStack(p,dnear);
        }
    }
