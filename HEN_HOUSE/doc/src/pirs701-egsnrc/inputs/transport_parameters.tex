@@ -31,14 +31,14 @@
 \index{ECUT}
 \begin{verbatim}
        Global ECUT=     Global (in all regions) electron transport cut
-                        off energy (in MeV). If this imput is missing,
+                        off energy (in MeV). If this input is missing,
                         AE(medium) will be used.
                         [ ECUT ]
 \end{verbatim}
 \index{PCUT}
 \begin{verbatim}
        Global PCUT=     Global (in all regions) photon transport cut
-                        off energy (in MeV). If this imput is missing,
+                        off energy (in MeV). If this input is missing,
                         AP(medium) will be used.
                         [ PCUT ]
 \end{verbatim}
@@ -59,7 +59,7 @@
        ESTEPE=          Maximum fractional energy loss per step.
                         Note that this is a global option only, no
                         region-by-region setting is possible. If missing,
-                        the defualt is 0.25 (25%).
+                        the default is 0.25 (25%).
                         [ ESTEPE ]
 \end{verbatim}
 \index{XImax}
@@ -74,8 +74,8 @@
 \index{exact\_bca}
 \index{transport\_algorithm}
 \begin{verbatim}
-       Boundary crossing algorithm=
-                        There are two selections possible: EXACT, means
+       Boundary crossing algorithm= EXACT (default), PRESTA-I
+                        There are two selections possible: EXACT means
                         the algorithm will cross boundaries in a single
                         scattering (SS) mode, the distance from a boundary
                         at which the transition to SS mode is made is
@@ -93,23 +93,21 @@
                         Determines the distance from a boundary (in elastic
                         MFP) at which the algorithm will go into single
                         scattering mode (if EXACT boundary crossing) or
-                        swith off lateral correlations (if PRESTA-I boundary
+                        switch off lateral correlations (if PRESTA-I boundary
                         crossing). Default value is 3 for EXACT or
                         exp(BLCMIN)/BLCMIN for PRESTA-I (see the PRESTA paper
                         for a definition of BLCMIN). Note that if you choose
                         EXACT boundary crossing and set Skin depth for BCA
                         to a very large number (e.g. 1e10), the entire
-                        calculation will be in SS mode. If you choose
-                        PRESTA-I boundary crossing and make Skin depth for BCA
-                        large, you will get default EGS4 behavious (no PRESTA)
+                        calculation will be in single-scattering mode. If you
+                        choose PRESTA-I boundary crossing and make Skin depth
+                        for BCA large, you will get default EGS4 behaviour
+                        (no PRESTA).
                         [ skindepth_for_bca ]
 \end{verbatim}
 \index{electron step algorithm}
 \begin{verbatim}
-       Electron-step algorithm=
-                        PRESTA-II (the default), the name is
-                        used for historical reasons
-                        or PRESTA-I
+       Electron-step algorithm= PRESTA-II (default), PRESTA-I (legacy)
                         Determines the algorithm used to take into account
                         lateral and longitudinal correlations in a
                         condensed history step.
@@ -118,7 +116,7 @@
 \index{spin effects}
 \index{spin\_effects}
 \begin{verbatim}
-       Spin effects=    Off, On, default is On
+       Spin effects=    Off, On (default)
                         Turns off/on spin effects for electron elastic
                         scattering. Spin On is ABSOLUTELY necessary for
                         good backscattering calculations. Will make a
@@ -130,10 +128,10 @@
 \index{brems angular sampling}
 \index{IBRDST}
 \begin{verbatim}
-       Brems angular sampling= Simple, KM, default is KM
+       Brems angular sampling= Simple, KM (default)
                         If Simple, use only the leading term of the Koch-Motz
                         distribution to determine the emission angle of
-                        bremsstrahlung photons. If On, complete
+                        bremsstrahlung photons. If KM, complete
                         modified Koch-Motz 2BS is used (modifications
                         concern proper handling of kinematics at low energies,
                         makes 2BS almost the same as 2BN at low energies).
@@ -142,7 +140,7 @@
 \index{brems cross section}
 \index{ibr\_nist}
 \begin{verbatim}
-       Brems cross sections= BH, NIST, NRC default is BH
+       Brems cross sections= BH (default), NIST, NRC
                         If BH is selected, the Bethe-Heitler bremsstrahlung
                         cross sections (Coulomb corrected above 50 MeV)
                         will be used. If NIST is selected, the NIST brems
@@ -186,7 +184,7 @@
 \index{radiative Compton corrections}
 \index{radc\_flag}
 \begin{verbatim}
-       Radiative Compton corrections= On or Off (default). If on, then
+       Radiative Compton corrections= On or Off (default). If On, then
                         include radiative corrections for Compton scattering.
                         Equations are based on original Brown & Feynman
                         equations (Phys. Rev. 85, p 231--1952).  Requires
@@ -216,14 +214,14 @@
 \index{pair angular sampling}
 \index{IPRDST}
 \begin{verbatim}
-       Pair angular sampling= Off, Simple, KM.
+       Pair angular sampling= Off, Simple (default), KM.
                         If off, pairs are set in motion at an angle m/E
                         relative to the photon direction (m is electron rest
                         energy, E the photon energy). Simple turns on
                         the leading term of the angular distribution
                         (this is sufficient for most applications),
                         KM (comes from Koch and Motz) turns on using 2BS
-                        from the article by Koch and Motz.  Uniform
+                        from the article by Koch and Motz.
                         Default is Simple, make sure you always use
                         Simple or KM
                         [ IPRDST ]
@@ -236,7 +234,7 @@
                         to NRC, then use NRC pair production cross-sections
                         (in file $HEN_HOUSE/data/pair_nrc1.data).  Only
                         of interest at low energies, where the NRC cross-
-                        sections take into account the assymmetry in the
+                        sections take into account the asymmetry in the
                         positron-electron energy distribution.
                         [ pair_nrc ]
 \end{verbatim}
@@ -284,9 +282,9 @@
 \index{Rayleigh scattering!custom form factors}
 \index{IRAYLR}
 \begin{verbatim}
-       Rayleigh scattering= Off, On, custom
-                        If On, turned on coherent (Rayleigh) scattering.
-                        Default is Off. Should be turned on for low energy
+       Rayleigh scattering= Off, On (default), custom
+                        If On, turns on coherent (Rayleigh) scattering.
+                        Default is On. Should be turned on for low energy
                         applications. If custom, user must provide media names
                         and form factor files for each desired medium. The
                         rest of the media use the default atomic form factors.
@@ -313,53 +311,82 @@
                        $HEN_HOUSE/data/molecular_form_factors.
                        [ iray_ff_file($MXMED) ]
 \end{verbatim}
+\index{photonuclear attenuation}
+\index{IPHOTONUCR}
+\begin{verbatim}
+       Photonuclear attenuation= Off (default) or On
+                        If On, models the photonuclear effect. Current
+                        implementation is crude. Available on a
+                        region-by-region basis (see below)
+                        [ IPHOTONUCR ]
+\end{verbatim}
+\index{photonuclear cross sections}
+\index{photonuc\_xsections}
+\begin{verbatim}
+       Photonuclear cross sections= Total photonuclear cross sections. User-
+                        supplied total photonuclear cross-sections in
+                        $HEN_HOUSE/data/photonuc_xsections_photonuc.data,
+                        where photonuc_xsections is the name supplied for
+                        this input (case sensitive). In the absence of
+                        any user-supplied data, or if photonuc_xsections
+                        is set to 'default', the default file is
+                        iaea_photonuc.data.
+                        [ photonuc_xsections ]
+\end{verbatim}
 \index{photoelectron angular sampling}
 \index{IPHTER}
 \begin{verbatim}
-       Photoelectron angular sampling= Off or On
+       Photoelectron angular sampling= Off or On (default)
                         If Off, photo-electrons get the direction of the
-                        `mother' photon, with On, Sauter's furmula is
-                        used (which is, striktly speaking, valid only for
+                        `mother' photon, with On, Sauter's formula is
+                        used (which is, strictly speaking, valid only for
                         K-shell photo-absorption).
                         If the user has a better approach, replace the macro
                             $SELECT-PHOTOELECTRON-DIRECTION;
-                        The only application that
-                        I encountered until now where this option made a
-                        small difference was a big ion chamber (cavity size
-                        comparable with electron range) with high-Z walls
-                        in a low energy photon beam.
-                        Default is On
+                        The only application encountered where this option
+                        made a small difference was a big ion chamber
+                        (cavity size comparable with electron range)
+                        with high-Z walls in a low energy photon beam.
                         [ IPHTER ]
 \end{verbatim}
 \index{atomic relaxations}
 \index{IEDGFL}
 \begin{verbatim}
-       Atomic relaxations= Off, On
-                        Default is On. The effect of using On is twofold:
+       Atomic relaxations= Off, On, eadl (default), simple
+                        On defaults to eadl.
+                        When simulating atomic relaxations:
                         - In photo-electric absorption events, the element
                           (if material is mixture) and the shell the photon
                           is interacting with are sampled from the appropriate
-                          cross seections
-                        - Shell vacancies created in photo-absorption events
+                          cross sections
+                        - Shell vacancies created in photoelectric,
+                          compton and electron impact ionization events
                           are relaxed via emission of fluorescent X-Rays,
                           Auger and Koster-Cronig electrons.
-                         Make sure to turn this option on for low energy
-                         applications.
-                         [ IEDGFL ]
+                          The eadl option features a more accurate treatment
+                          of relaxation events and uses binding energies
+                          consistent with those in of the photon cross sections
+                          used in the simulation.  If using mcdf-xcom or
+                          mcdf-epdl photon cross sections, you cannot use
+                          the simple option and this will automatically get
+                          reset to eadl. Make sure to use eadl or simple for
+                          low energy applications.
+                          [ IEDGFL ]
 \end{verbatim}
 
 \noindent
-Atomic relaxations, Rayleigh scattering, Photoelectron angular sampling
-and Bound Compton scattering can also be turned On/Off on a
-region-by-region basis. An example for Atomic relaxations on a region-
-by-region basis is:
+Atomic relaxations, Rayleigh scattering, Photoelectron angular sampling,
+Bound Compton scattering and photonuclear effect
+can also be turned On/Off on a region-by-region basis. An example for
+Atomic relaxations on a region-by-region basis is:
 
 \begin{verbatim}
        Atomic relaxations= On in Regions   or
        Atomic relaxations= Off in regions
 \end{verbatim}
 
-Then define the regions in which you want the feature to be turned on:
+Then define the regions in which you want
+the feature to be turned on:
 
 \begin{verbatim}
        Bound Compton start region=
@@ -374,8 +401,9 @@ Then define the regions in which you want the feature to be turned on:
        PE sampling start region=
        PE sampling stop region=
 \end{verbatim}
-each followed by a list of one or more start and stop regions
-separated by commas. Example:
+each followed by a list of one or more
+start and stop regions separated by commas.
+Example:
 \begin{verbatim}
         Atomic relaxations= On in Regions
         Relaxations start region=  1, 40
@@ -383,8 +411,8 @@ separated by commas. Example:
 \end{verbatim}
 will first turn off relaxations everywhere and
 then turn on in regions 1-10 and 40-99.
-Note that the input is checked against minimum and maximum
-region number and ignored if
+Note that the input is checked against minimum
+and maximum region numbers and ignored if
 \verb+start region < 1+ or \verb+stop_region > $MXREG+ or
 \verb+start region > stop region+.
 

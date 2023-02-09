@@ -138,7 +138,7 @@ typedef void (*EGS_InfoFunction)(const char *,...);
  *
  * \ingroup egspp_main
  *
- * By defualt the output goes to the standard output. This behaviour
+ * By default the output goes to the standard output. This behaviour
  * can be changed using egsSetInfoFunction(). This is used, for instance,
  * to write output generated in the C++ part of an EGSnrc application to
  * a string and then pass it to the EGSnrc mortran back-end using
@@ -152,7 +152,7 @@ extern EGS_EXPORT EGS_InfoFunction egsInformation;
  *
  * \ingroup egspp_main
  *
- * By defualt the output goes to standard error. This behaviour
+ * By default the output goes to standard error. This behaviour
  * can be changed using egsSetInfoFunction().
  *
  * \sa egsInformation, egsFatal
@@ -163,7 +163,7 @@ extern EGS_EXPORT EGS_InfoFunction egsWarning;
  *
  * \ingroup egspp_main
  *
- * By defualt the output goes to standard error and the \c exit function
+ * By default the output goes to standard error and the \c exit function
  * is called. This behaviour can be changed using egsSetInfoFunction().
  * However, keep in mind that there may be code that is not prepared to
  * deal with the situation that egsFatal actually returns.

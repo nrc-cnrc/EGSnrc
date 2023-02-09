@@ -932,7 +932,7 @@ protected:
 
      This function is re-implemented in the EGS_AdvancedApplication
      class, from which EGSnrc applications using the mortran EGSnrc
-     physics subroutines should be derived. The defualt implementation
+     physics subroutines should be derived. The default implementation
      is to set transport parameter and cross section options
      from input between :start MC Transport parameter: and
      :stop MC Transport parameter: in the input file,

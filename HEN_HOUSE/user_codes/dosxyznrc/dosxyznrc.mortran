@@ -562,7 +562,7 @@
 "                        behaviour (no PRESTA).
 "                        [ skindepth_for_bca ]
 "
-"            Note that the above defaults have been choosen as a compromise
+"            Note that the above defaults have been chosen as a compromise
 "            between accuracy (EXACT BCA) and efficiency (PRESTA-I BCA)
 "            since the PRESTA-I BCA algorithm has proven to generally
 "            produce satisfactory results.  Note that the new transport
