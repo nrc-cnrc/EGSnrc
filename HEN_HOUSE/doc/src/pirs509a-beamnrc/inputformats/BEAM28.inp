@@ -19,7 +19,7 @@
                          [ pair_nrc ]
         Photoelectron angular sampling= Off or On (Default is On)
                          If Off, photo-electrons get the direction of the
-                         `mother' photon, with On, Sauter's furmula is
+                         `mother' photon, with On, Sauter's formula is
                          used (which is, strictly speaking, valid only for
                          K-shell photo-absorption).
                          If the user has a better approach, replace the macro

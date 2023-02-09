@@ -1128,7 +1128,7 @@ IF(N_$XTUBE > 1)[
 "outermost target layer, if any
 IF(I_XTRA_$XTUBE=1)[
    OUTPUT N_$XTUBE;
-      (/' Now input for the the extra central region in the last'/
+      (/' Now input for the extra central region in the last'/
             ' (outermost) target layer (layer no. ',I4,'):');
    IRA = IRSTART_$XTUBE+N_$XTUBE+2;
    OUTPUT;(/' width, height of central region (cm):');

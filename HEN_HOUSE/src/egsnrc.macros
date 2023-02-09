@@ -2365,7 +2365,7 @@ REPLACE {$SET-SKINDEPTH(#,#);} WITH
 
 "This macro calculates the elastic scattering MFP"
 "If spin_effects is .false., the screened Rutherford cross section"
-"is used, else the the elastic MFP is based on PWA cross sections"
+"is used, else the elastic MFP is based on PWA cross sections"
 
 REPLACE {$CALCULATE-ELASTIC-SCATTERING-MFP(#,#,#);} WITH
 "        =======================================           "
@@ -3647,7 +3647,7 @@ REPLACE {;COMIN/EGS-IO/;} WITH {;
 };
 
 "The following macro sets the EGS_HOME directory               "
-"The defualt implementation is to use the environment variable "
+"The default implementation is to use the environment variable "
 "EGS_HOME. But at the NRC EGS_HOME is set using the macro      "
 "$EGS_HOME defined in machine.macros.                          "
 REPLACE {$set_egs_home;} WITH {;

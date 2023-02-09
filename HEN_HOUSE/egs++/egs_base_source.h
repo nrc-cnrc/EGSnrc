@@ -459,7 +459,7 @@ public:
 
     /*! \brief Reset the state of this spectrum object.
      *
-     * The defualt implementation of this method sets #count, #sum_E
+     * The default implementation of this method sets #count, #sum_E
      * and #sum_E2 to zero. It should be re-implemented by derived classes
      * if additional data is needed to describe the state of the spectrum
      * object to reset this data as well.
