@@ -1046,13 +1046,13 @@ subroutine get_transport_parameter(ounit);
 "                        (see below).  The default file (ie in the absence
 "                        of any user-supplied data) is compton_sigma.data.
 "                        [ comp_xsections ]
-"       Rayleigh scattering= Off, On, custom
-"                        If On, turn on coherent (Rayleigh) scattering.
+"       Rayleigh scattering= Off, On (default), custom
+"                        If On, turns on coherent (Rayleigh) scattering.
 "                        Default is On. Should be turned on for low energy
-"                        applications.
-"                        If custom, user must provide media names and form
-"                        factor files for each desired medium. For the rest
-"                        of the media, default atomic FF are used.
+"                        applications. If custom, user must provide media names
+"                        and form factor files for each desired medium. The
+"                        rest of the media use the default atomic form factors.
+"                        A PEGS4 data set is not required anymore.
 "                        [ IRAYLR ]
 "       ff media names = A list of media names (must match media found in
 "                        PEGS4 data file) for which the user is going to
