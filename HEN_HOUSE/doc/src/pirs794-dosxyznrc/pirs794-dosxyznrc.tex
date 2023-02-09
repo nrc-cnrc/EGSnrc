@@ -3993,13 +3993,13 @@ medium in the additional input {\tt ff file names= }.
 
 This input determines whether or not the relaxation of atoms to their
 ground state after Compton and photoelectric events is simulated.
-If {\tt Atomic Relaxations= On}, then relaxation after
+If {\tt Atomic Relaxations= On} (the default), then relaxation after
 Compton and photoelectric events is simulated via the
 emission of any combination of K-, L-, M- and N-shell fluorescent photons, Auger electrons
 and Coster-Kronig electrons.  The lower energy limit for relaxation processes
 is 1 keV.  Thus, only relaxation in shells with binding energy $>$ 1 keV is
 simulated.
-If {\tt Atomic Relaxations= Off} (the default), then atomic relaxations
+If {\tt Atomic Relaxations= Off}, then atomic relaxations
 are not simulated.  In this case, when there is a
 photoelectric event, EGSnrc transfers all of the photon energy to the
 photoelectron.  This is different from EGS4/DOSXYZ, where the binding energy
