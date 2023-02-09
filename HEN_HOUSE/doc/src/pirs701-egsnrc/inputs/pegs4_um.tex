@@ -117,12 +117,10 @@ data and recreate the photon cross sections using a logarithmic energy
 grid with {\tt \$MXGE} energy points. However, EGSnrc still needs the
 PEGS4 data file for material information, photon threshold energies
 ({\tt AP, UP}), and a fraction of the electron data.
-By default data is read from the
-Storm and Israel\cite{SI70} photon cross section compilation
-({\tt si\_pair.data, si\_photo.data, si\_rayleigh.data and
-si\_triplet.data}).
-As alternative, EGSnrc offers such cross section data files
-for the XCOM\cite{HS95} ({\tt xcom\_*.data}) and EPDL97\cite{Cu89}
+By default data is read from the XCOM\cite{HS95} photon cross section
+compilation ({\tt xcom\_pair.data, xcom\_photo.data, xcom\_rayleigh.data and
+xcom\_triplet.data}). As alternatives, EGSnrc offers cross section data files
+for the Storm and Israel\cite{SI70}({\tt si\_*.data}) and EPDL97\cite{Cu89}
 ({\tt epdl\_*.data}) photon cross section compilations.
 New photon cross section compilations can be added following the
 same format as above, \ie, {\tt prefix\_*.data}.
@@ -132,7 +130,7 @@ compilation is done by input as shown in the example below:
 
   :start MC transport parameter:
       .                             # This entry is case sensitive
-      Photon cross sections = xcom  # xcom, epdl, si(default) or any_prefix
+      Photon cross sections = xcom  # xcom (default), epdl, si or any_prefix
       .
   :stop MC transport parameter:
 

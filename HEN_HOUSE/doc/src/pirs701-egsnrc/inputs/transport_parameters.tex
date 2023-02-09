@@ -242,19 +242,24 @@
 \index{photon\_xsections}
 \begin{verbatim}
        Photon cross sections= Photon cross-section data.  Current options are
-                        si (Storm-Israel--the default), epdl (Evaluated Photon
-                        Data Library), and xcom.  Allows the user to use photon
-                        cross-sections other than the default PEGS4 (Storm-
-                        Israel) values.  Note that the user can supply their
-                        own cross-section data as well.  The requirement is
-                        that the files
+                        si (Storm-Israel), epdl (Evaluated Photon Data
+                        Library), xcom (default), pegs4, mcdf-xcom and
+                        mcdf-epdl:
+                        Allows the use of photon cross-sections other than
+                        from the PEGS4 file (unless the pegs4 option is
+                        specified).  Options mcdf-xcom and mcdf-epdl use
+                        Sabbatucci and Salvat's renormalized photoelectric
+                        cross sections with either xcom or epdl for all other
+                        cross sections.  These are more accurate but can
+                        increase CPU time by up to 6 %.
+                        Note that the user can supply their own cross-section
+                        data as well. The requirement is that the files
                         photon_xsections_photo.data,
                         photon_xsections_pair.data,
                         photon_xsections_triplet.data, and
                         photon_xsections_rayleigh.data exist in the
                         $HEN_HOUSE/data directory, where photon_xsections
-                        is the name specified.
-                        Entry is case-sensitive except for the pegs4 option.
+                        is the name specified. This entry is case-sensitive.
                         [ photon_xsections ]
 \end{verbatim}
 \index{photon cross sections!output}
