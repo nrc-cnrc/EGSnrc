@@ -1726,7 +1726,7 @@ ELSE[
 " input cs_enhance and iefl(irl) to increase the photon
 " interaction density in regions of interest (where iefl(irl) is set to 1)
 " cs_enhance means desired average number of interactions per
-" g/cm**2. If cs_enhance*rho(medium) > 1/gmfp (1/gmfp is the the actual
+" g/cm**2. If cs_enhance*rho(medium) > 1/gmfp (1/gmfp is the actual
 " number of interactions per unit length), cs_enhance*rho(medium) is
 " used to sample interaction distances in these regions.
 " Scattered and unscattered photon fractions are then killed via Russian
