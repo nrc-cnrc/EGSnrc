@@ -1395,10 +1395,10 @@ regions using {\tt Atomic relaxations= On}.
 \item[photon\_xsections] A character variable ({\tt character*16}) defined
 in {\tt COMMON/MEDIA} which must be defined prior to calling {\tt HATCH}
 if the user wants to use photon cross section data other than the default
-(Storm \& Israel\cite{SI70}) data.  Current possible settings of
+XCOM data. Current possible settings of
 {\tt photon\_xsections} are: {\tt epdl} (the Evaluated Photon Data
-Library\cite{Cu90}), {\tt xcom} (XCOM from Berger \& Hubbell\cite{BH87}),
-{\tt si} (Storm \& Israel--also the default if not set),
+Library\cite{Cu90}), {\tt xcom} (XCOM from Berger \& Hubbell\cite{BH87}, default),
+{\tt si} (Storm \& Israel),
 and {\tt pegs4} (to use PEGS4 photon data).
 The user can supply their own cross section data.  For a user-supplied data
 set, {\tt photon\_xsections}, the cross section data for photoelectric,
