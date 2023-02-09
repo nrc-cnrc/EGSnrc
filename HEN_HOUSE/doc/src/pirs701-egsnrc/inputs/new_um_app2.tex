@@ -431,7 +431,7 @@ electron in the current units (see section~\ref{range_rejection}).\\
         %       it is never turned off in default EGSnrc.\\
 	&IRAYLR	&Array(\$MXREG) of flags for turning on (=1)
                             coherent (Rayleigh) scattering in
-                            various regions (default=0$\Rightarrow$ off).\\
+                            various regions (default=1$\Rightarrow$ on).\\
 &&\\
 \hline
 \multicolumn{3}{c}{$^*$ NOSCAT is no longer available since there is
@@ -1233,7 +1233,7 @@ with all distances in units of {\tt DUNIT} (default value: 1.0 cm).
 \item[IRAYLR] The elements of this integer array (dimensioned {\tt
 IRAYLR(\$MXREG)} and passed in\\ {\tt COMMON/MISC/)} are to be set to 1
 prior to calling {\tt HATCH} if coherent (Rayleigh) scattering is to be done
-in a particular region. The default values are 0.
+in a particular region. The default values are 1.
 See section~\ref{rayleigh}(page~\pageref{rayleigh}).
 Execution is only terminated if set to 1, user wants to use photon data
 from PEGS4 file, and Rayleigh data are not included.

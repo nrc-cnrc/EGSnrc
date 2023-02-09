@@ -654,8 +654,8 @@ $REAL4 FUNCTION APRIM(Z,E);
 "     EMPIRICAL CORRECTION FACTOR TO BREMS CROSS SECTION               "
 
 " This version can be switched to use different values:                "
-"   IAPRIM = 0  equivalent to old PEGS4 (default)                      "
-"            1  reads in values from unit 22                           "
+"   IAPRIM = 0  equivalent to old PEGS4                                "
+"            1  reads in values from unit 22 (default)                 "
 "            2  sets APRIM to 1.0                                      "
 " Future changes can be accommodated by reading in                     "
 " different data on unit 22 and if necessary changing the array sizes: "
