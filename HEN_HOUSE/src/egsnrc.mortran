@@ -8311,7 +8311,7 @@ IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
    Figure out if custom ff needed for medium: check that medium
    is in the list iray_ff_media, else the default atomic ff used.
    This used to be done in subroutine get_transport_parameter
-   but was moved here, since it is up to the the user-code to
+   but was moved here, since it is up to the user-code to
    read in the information and it is not ensured that the media
    information will be read before getting the transport parameters.
 ****************************************************************/

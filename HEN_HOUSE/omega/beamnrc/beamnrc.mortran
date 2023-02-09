@@ -1307,7 +1307,7 @@ WITH {,' ',}
 "I>                        [ pair_nrc ]
 "I>       Photoelectron angular sampling= Off or On (Default is On)
 "I>                        If Off, photo-electrons get the direction of the
-"I>                        `mother' photon, with On, Sauter's furmula is
+"I>                        `mother' photon, with On, Sauter's formula is
 "I>                        used (which is, strictly speaking, valid only for
 "I>                        K-shell photo-absorption).
 "I>                        If the user has a better approach, replace the macro
@@ -6223,7 +6223,7 @@ IF (IARG =  5) ["Particle step just taken"
          "as 1."
 
             NFTIME(NP)=NFTIME(NP)+1;
-                             "increment the the number of interactions in the"
+                             "increment the number of interactions in the"
                              "forcing CMs"
             $RANDOMSET RNNO35;IF(RNNO35 = 0.0)RNNO35=1.E-30;
             ;$SELECT-PHOTON-MFP-FOR-FORCING(DPMFP);

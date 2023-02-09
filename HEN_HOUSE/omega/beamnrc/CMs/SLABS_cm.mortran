@@ -921,7 +921,7 @@ END; "End of subroutine WHERE_AM_I_SLABS"
 "                        *************************
 "
 " Returns min. distance to nearest region boundary.  Used to be a macro, but
-" now the the macro calls this subroutine.
+" now the macro calls this subroutine.
 "
 "*****************************************************************************
 
