@@ -83,11 +83,11 @@ failed_message = "______Operation failed______"
 # something like
 #   g77 -O3 -o /usr/people/iwan/egsnrc/bin/Linux/dosrznrc dosrznrc_Linux.F
 #
-$(EXECUTABLE): $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(EXE_DIR)
+$(EXECUTABLE): $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(EXE_DIR) compare
 	@echo $(empty)
 	@echo $(empty)
-	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '$(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F)' and extra objects/libs '$(EGS_EXTRA_OBJECTS) $(EGS_EXTRA_LIBS)'"
-	@$(F77) $(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(EGS_EXTRA_LIBS) 2>&1
+	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '-cpp $(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH)' and extra objects/libs '$(EGS_EXTRA_OBJECTS) $(EGS_EXTRA_LIBS)'"
+	@$(F77) -cpp $(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(EGS_EXTRA_LIBS) 2>&1
 
 # The following 2 rules are to make sure that the user executable directory
 # exists.
@@ -146,6 +146,43 @@ $(USER_CODE).mortran: $(depend)
 
 check:
 	@$(CHECK_USER_CODE)
+
+EXISTS =
+ifeq ($(OS),Windows_NT)
+	EXISTS := $(shell if exist $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).mortran echo Exists)
+else
+	EXISTS := $(shell test -f $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).mortran && echo "Exists")
+endif
+
+CMP =
+ifeq ($(EXISTS),Exists)
+ifeq ($(OS),Windows_NT)
+	CMP := $(shell FC $(USER_CODE).mortran $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).mortran >NUL 2>&1 && echo Same || echo Different)
+else
+	CMP := $(shell cmp --version 2> /dev/null)
+endif
+endif
+
+compare:
+ifeq ($(OS),Windows_NT)
+ifeq ($(CMP),Different)
+	@echo $(empty)
+	@echo =============================================
+	@echo Warning: local $(USER_CODE).mortran differs from $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).mortran
+	@echo =============================================
+	@echo $(empty)
+endif
+else
+ifdef CMP
+	@if ! cmp -s $(USER_CODE).mortran $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).mortran ; then \
+		echo $(empty); \
+		echo "============================================="; \
+		echo "Warning: local $(USER_CODE).mortran differs from $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).mortran"; \
+		echo "============================================="; \
+		echo $(empty); \
+	fi
+endif
+endif
 
 # Build a optimized user code
 opt:

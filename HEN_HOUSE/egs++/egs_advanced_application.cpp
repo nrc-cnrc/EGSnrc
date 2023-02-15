@@ -406,6 +406,20 @@ EGS_AdvancedApplication::~EGS_AdvancedApplication() {
     if (n_rng_buffer > 0) {
         delete [] rng_buffer;
     }
+    if (nmed > 0) {
+        delete [] i_ededx;
+        delete [] i_pdedx;
+        delete [] i_esig;
+        delete [] i_psig;
+        delete [] i_ebr1;
+        delete [] i_pbr1;
+        delete [] i_pbr2;
+        delete [] i_gmfp;
+        delete [] i_gbr1;
+        delete [] i_gbr2;
+        delete [] i_cohe;
+        delete [] i_photonuc;
+    }
 }
 
 void EGS_AdvancedApplication::describeSimulation() {
@@ -619,6 +633,7 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
             the_xoptions->iedgfl = 2;
             relax.setOption(1,"eadl");
         }
+        delete transportp;
     }
 
     if (do_hatch) {
@@ -641,6 +656,7 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
             delete [] i_gbr1;
             delete [] i_gbr2;
             delete [] i_cohe;
+            delete [] i_photonuc;
         }
         if (nmed > 0) {
             i_ededx = new EGS_Interpolator [nmed];
@@ -1171,6 +1187,10 @@ void EGS_AdvancedApplication::resetRNGState() {
 //************************************************************
 // Returns density for medium ind
 EGS_Float EGS_AdvancedApplication::getMediumRho(int ind) {
+    // handle the negative medium index for vacuum
+    if (ind < 0) {
+        return 0.0;
+    }
     return the_media->rho[ind];
 }
 // Returns edep
@@ -1196,6 +1216,41 @@ EGS_Float EGS_AdvancedApplication::getRM() {
 // Turns ON/OFF radiative splitting
 void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
     the_egsvr->nbr_split = nsplit;
+}
+
+//************************************************************
+// Utility functions for fluence scoring objects
+//************************************************************
+EGS_Float EGS_AdvancedApplication::getTVSTEP() {
+    return the_epcont->tvstep;
+}
+
+EGS_Interpolator *EGS_AdvancedApplication::getDEDX(const int &imed, const int &iq) {
+    if (iq == -1) {
+        return &i_ededx[imed];
+    }
+    else if (iq == 1) {
+        return &i_pdedx[imed];
+    }
+    else {
+        return 0;
+    }
+}
+
+void EGS_AdvancedApplication::setLatch(const int &ip, const int &latch) {
+    the_stack->latch[ip] = latch;
+}
+
+void EGS_AdvancedApplication::incLatch(const int &ip, const int &increment) {
+    the_stack->latch[ip] += increment;
+}
+
+int EGS_AdvancedApplication::getNp() {
+    return the_stack->np-1;;
+}
+
+int EGS_AdvancedApplication::getNpOld() {
+    return the_stack->npold-1;
 }
 
 //************************************************************

@@ -59,8 +59,7 @@ EGS_RZGeometry::EGS_RZGeometry(vector<EGS_BaseGeometry *> geoms,
         radii.insert(radii.begin(), 0.);
     }
 
-    vector<EGS_Float> mass;
-    int ir = 0;
+    vector<EGS_Float> vol;
     for (size_t r=0; r < radii.size()-1; r++) {
 
         EGS_Float rmin = radii[r];
@@ -71,10 +70,7 @@ EGS_RZGeometry::EGS_RZGeometry(vector<EGS_BaseGeometry *> geoms,
         for (size_t plane = 0; plane < zbounds.size()-1; plane++) {
             EGS_Float zmin = zbounds[plane];
             EGS_Float zmax = zbounds[plane+1];
-            EGS_Float rho = getRelativeRho(ir);
-            EGS_Float vol = (zmax-zmin)*area;
-            reg_mass.push_back(rho*vol);
-            ir++;
+            reg_vol.push_back((zmax-zmin)*area);
         }
     }
 
@@ -101,11 +97,11 @@ int EGS_RZGeometry::getNRegDir(int dir) {
     return 0;
 }
 
-EGS_Float EGS_RZGeometry::getMass(int ireg) {
+EGS_Float EGS_RZGeometry::getVolume(int ireg) {
     if (ireg < 0 || ireg >= nreg) {
         return -1;
     }
-    return reg_mass[ireg];
+    return reg_vol[ireg];
 }
 
 

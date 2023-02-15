@@ -26,6 +26,7 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #                   Reid Townson
+#                   Max Orok
 #
 ###############################################################################
 */
@@ -557,6 +558,11 @@ public:
     const string &getType() const {
         return type;
     };
+
+    EGS_BaseGeometry **getInscribedGeometries(std::size_t &nInscribed) const {
+        nInscribed = n_in;
+        return geometries;
+    }
 
     void printInfo() const;
 

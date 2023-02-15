@@ -28,6 +28,7 @@
 "                   Blake Walters                                             "
 "                   Frederic Tessier                                          "
 "                   Reid Townson                                              "
+"                   Marc-Andre Renaud                                         "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -430,12 +431,16 @@ IF( lnblnk1(tmp_string) > lnblnk1(pegs_file) ) [
 ]
 pos2 = min(pos2,80-lnblnk1(tmp_string));
 pos2 = min(pos2,80-lnblnk1(host_name));
+pos2 = min(pos2,80-lnblnk1($CONFIG_TIME));
 IF( have_input ) pos2 = min(pos2,80-lnblnk1(input_file));
 pos2 = min(pos2,80-lnblnk1(output_file));
 IF( pos2 < pos1+2 ) pos2 = pos1 + 2;
 
 $write_description('configuration'); $egs_info('(a)',$CONFIGURATION_NAME);
-$write_description('user code'); $egs_info('(a)',$cstring(user_code));
+$write_description('configuration time'); $egs_info('(a)',$CONFIG_TIME);
+$write_description('app compile time'); $egs_info('(a)',COMPILE_TIME);
+$write_description('git commit hash'); $egs_info('(a)',GIT_HASH);
+$write_description('application'); $egs_info('(a)',$cstring(user_code));
 $write_description('pegs file'); $egs_info('(a)',$cstring(tmp_string));
 $write_description('using host'); $egs_info('(a)',$cstring(host_name));
 IF( have_input ) [
@@ -1173,7 +1178,8 @@ integer function egs_open_file(iunit,rl,action,extension);
 " If extension is an absolute file name (including path), use extension
 " as a file name, otherwise use output_file.extension in the temporary
 " working directory as name. In both cases use status='unknown' to open the
-" file. If rl = 0, open the file for formatted sequential access, otherwise
+" file. If rl = -1, open the file with stream access to write C-style binary
+" files. If rl = 0, open the file for formatted sequential access, otherwise
 " open for unformatted direct access with record length = rl.
 "******************************************************************************
 implicit none;
@@ -1206,6 +1212,10 @@ IF( egs_is_absolute_path(extension) ) [
              ' Will not try to re-open this file, assuming it has been opened',
              ' by the .io file.');
     ]
+    ELSE IF ( rl = -1 ) [
+        open(the_unit,file=extension,status='unknown',form='unformatted',
+             access='stream');
+    ]
     ELSE IF( rl = 0 ) [
         open(the_unit,file=extension,status='unknown');
     ]
@@ -1233,6 +1243,10 @@ IF(is_open)[
              ' is already opened and connected to unit ',the_unit,
              ' Will not try to re-open this file, assuming it has been opened',
              ' by specifying it in the .io file.');
+]
+ELSE IF ( rl = -1 ) [
+    open(the_unit,file=tmp_string,status='unknown',form='unformatted',
+            access='stream');
 ]
 ELSE IF( rl = 0 ) [
     open(the_unit,file=tmp_string,status='unknown',err=:open_error:);
@@ -2316,4 +2330,3 @@ $INTEGER function ibsearch(a, nsh, b);
  ]
  ibsearch = min;
  return;end;
-

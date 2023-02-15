@@ -118,7 +118,7 @@ private:
 
     vector<EGS_Float> radii; /*! cylinder radii. Note radii[0] is always set to 0 */
     vector<EGS_Float> zbounds;
-    vector<EGS_Float> reg_mass; /* calculated mass of each region */
+    vector<EGS_Float> reg_vol; /* calculated vol of each region */
     static string RZType;
 
 public:
@@ -153,7 +153,7 @@ public:
     int getNRegDir(int dir);
 
     /*! \brief get mass of a given region  */
-    EGS_Float getMass(int ireg);
+    EGS_Float getVolume(int ireg);
 
 };
 

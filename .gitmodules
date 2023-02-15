@@ -1,0 +1,3 @@
+[submodule "third-party/3ddose_tools"]
+	path = third-party/3ddose_tools
+	url = https://github.com/MartinMartinov/3ddose_tools

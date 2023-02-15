@@ -542,7 +542,7 @@ vector<EGS_Float> applyFileVolumeCorrections(VCOptions *opts, vector<RegVolume> 
 vector<EGS_Float> getUncorrectedVolumes(EGS_BaseGeometry *base) {
     vector<EGS_Float> uncorrected;
     for (int ir=0; ir < base->regions(); ir++) {
-        EGS_Float vol = base->getMass(ir)/base->getRelativeRho(ir);
+        EGS_Float vol = base->getVolume(ir);
         uncorrected.push_back(vol);
     }
     return uncorrected;

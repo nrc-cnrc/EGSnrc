@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Reid Townson
+#                   Max Orok
 #
 ###############################################################################
 */
@@ -42,7 +43,10 @@
 <li> \ref common_media </li>
 <li> \ref common_source </li>
 <li> \ref common_rco </li>
+<li> \ref common_rng </li>
 <li> \ref common_mc </li>
+<li> \ref common_inputloops </li>
+<li> \ref common_example </li>
 </ul>
 
 \section common_intro Introduction
@@ -293,6 +297,17 @@ RCO by specifying <b><code>-s</code></b> on the command line. In this case,
 all parallel jobs will execute the same number of histories as specified
 in the input file.
 
+\section common_rng Random numbers
+The random number block specifies the random generator used for the simulation. Currently, the only generator available in egs++ is the \link EGS_Ranmar <b><code>ranmar</code></b>\endlink generator. This block is optional but useful to ensure simulation reproducibility by explicitly setting initial seeds. For parallel runs, each job uses a different set of seeds based on the seeds in the input file. The <b><code>high resolution</code></b> input can be used to obtain higher quality results with the tradeoff of increased runtime (which varies depending on the simulation).
+
+\verbatim
+:start rng definition:
+    type            = ranmar      # generator type
+    initial seeds   = 33 97       # initial seeds
+    high resolution = yes         # no (default), yes
+:stop rng definition:
+\endverbatim
+
 \section  common_mc Monte Carlo transport parameters
 The Monte Carlo transport parameters have important and significant influence on both the accuracy of the simulation, and the efficiency. If you are unsure, <b>neglect this input block entirely to use the defaults</b>. If you are publishing an article using EGSnrc, make sure to disclose the transport parameters in use, as well as the release version.
 
@@ -309,7 +324,7 @@ The Monte Carlo transport parameters have important and significant influence on
     Electron-step algorithm        = PRESTA-II      # PRESTA-II (default),PRESTA-I
     Spin effects                   = On             # On (default),Off
     Brems angular sampling         = KM             # Simple,KM (default)
-    Brems cross sections           = BH             # BH (default),NIST
+    Brems cross sections           = BH             # BH (default), NIST, NRC
     Pair angular sampling          = Simple         # Off, Simple (default),KM
     Triplet production             = Off            # On or Off (default)
     Electron Impact Ionization     = Off            # On, Off (default), casnati, kolbenstvedt, gryzinski
@@ -336,6 +351,11 @@ Default values may often only add time to your calculation. One can speed
 things up by turning them off. The user is referred to section 2.6
 of the PIRS-702 manual for a detailed description
 of these parameters.
+
+\section common_inputloops Input loops
+Sometimes it is necessary to repeat a geometry or other part of the input file, while just changing one parameter in a loop. If you are a programmer and comfortable with scripting (e.g. python), feel free to generate input files from a script - this is the most flexible and powerful method. However, there is a basic loop and variable replacement functionality built into egs++ input files, called \link EGS_InputLoopVariable <b><code>input loops</code></b>\endlink.
+
+For a complete description of input loops, see the documentation linked above.
 
 \section common_example A simple example
 Putting together the examples suggested above, we have a complete input file. Note that we are using default transport parameters. This input file will work with any egs++ application that doesn't require additional inputs. For example, it will work with \c tutor7pp.
@@ -410,6 +430,12 @@ Putting together the examples suggested above, we have a complete input file. No
         dose regions = 1 # list of individual region numbers (we just have 1)
     :stop ausgab object:
 :stop ausgab object definition:
+
+:start rng definition:
+    type = ranmar
+    initial seeds = 33 97
+    high resolution = yes
+:stop rng definition:
 
 :start run control:
     ncase = 1e5 # Number of histories to run

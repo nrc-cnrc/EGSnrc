@@ -655,7 +655,7 @@ EGS_TestMicro::EGS_TestMicro(EGS_Float Dx, EGS_Float Dy, EGS_Float Dz,
     nreg = nr*micro->mx*micro->my*micro->mz;
 }
 
-void EGS_TestMicro::setMedia(EGS_Input *, int , const int *) {
+void EGS_TestMicro::setMedia(EGS_Input *, int, const int *) {
     egsFatal("EGS_TestMicro::setMedia(EGS_Input*,int,const int *):\n"
              "  Don't use this method. Media are only set via the micro matrix"
              " data\n");

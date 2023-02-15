@@ -160,7 +160,7 @@ By default sources are placed at the origin and directed along the positive z-ax
 If the source should be somewhere else, an affine transformation must be applied.
 Transformations are not implemented in most sources, hence one must use a transformed
 source. The example below rotates the collimated source from the previous slide
-\f$90^{o}\f$ around the y-axis, placing it on the negative x-axis:
+\f$90^{o}\f$ around the y-axis, placing it on the positive x-axis:
 
 \verbatim
 :start source:

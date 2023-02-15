@@ -1871,9 +1871,11 @@ int EGS_ChamberApplication::initScoring() {
         setAusgabCall(BeforeCompton, true);
         setAusgabCall(BeforePhoto, true);
         setAusgabCall(BeforeRayleigh, true);
+        setAusgabCall(BeforePhotoNuc, true);
         setAusgabCall(AfterCompton, true);
         setAusgabCall(AfterPhoto, true);
         setAusgabCall(AfterRayleigh, true);
+        setAusgabCall(AfterPhotoNuc, true);
         setAusgabCall(AfterPair, true);
         setAusgabCall(AfterTransport, true);
         setAusgabCall(AfterBrems,true);
@@ -1944,7 +1946,7 @@ int EGS_ChamberApplication::ausgab(int iarg) {
     if( cs_enhance[ig][ir] > 1  ){
         // devide photon in interacting and non-interacting portions
         if( iarg == BeforePair  || iarg == BeforeCompton ||
-            iarg == BeforePhoto || iarg == BeforeRayleigh ) {
+            iarg == BeforePhoto || iarg == BeforeRayleigh || iarg == BeforePhotoNuc) {
             // increase stack
             ++the_stack->np;
             if (the_stack->np > MXSTACK)
@@ -1956,7 +1958,7 @@ int EGS_ChamberApplication::ausgab(int iarg) {
             the_stack->wt[np+1] /= cs_enhance[ig][ir];
             return 0;
         }
-        if( iarg == AfterCompton || iarg == AfterPhoto || iarg == AfterRayleigh || iarg == AfterPair ) {
+        if( iarg == AfterCompton || iarg == AfterPhoto || iarg == AfterRayleigh || iarg == AfterPair || iarg == AfterPhotoNuc) {
             if( rndm->getUniform()*cs_enhance[ig][ir] < 1 ){
                 // remove non-interacting portion
                 the_stack->wt[the_stack->npold-2] = 0;

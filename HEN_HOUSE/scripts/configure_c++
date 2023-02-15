@@ -163,9 +163,21 @@ fi
 
 if test $create_config=yes; then
 
+memory_model="-mcmodel=medium"
+system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
+if test "x$system_name" = xdarwin; then
+    memory_model=""
+fi
+
 case $CXX in
 
-    *g++*) opt="-O2 -mtune=native";;# mingw32-g++ and g++4 also taken into account
+    *g++*)
+    if test $($CXX -dumpversion | cut -f1 -d.) -ge 5; then
+        std="c++14"
+    else
+        std="c++11"
+    fi
+    opt="-O2 -mtune=native $memory_model -std=$std";;# mingw32-g++ and g++4 also taken into account
     icpc)  opt="-O2 -no-prec-div -fp-model fast=2";;
     icc)   opt="-O2 -no-prec-div -fp-model fast=2";;
     cl)    opt="-Ox -Ob2 -MD -GX -GR -nologo";;
@@ -195,7 +207,7 @@ case $canonical_system in
         libext=".dylib"; libext_bundle=".so"; defines="-DOSX";
         lib_link1="-L\$(abs_dso)"; shared="-dynamiclib";
         case $CXX in
-            g++) shared_bundle="-bundle" ;;
+            g++*) shared_bundle="-bundle" ;;
             *)   shared_bundle="-qmkshrobj" ;; # assume xlC
         esac
         ;;
@@ -290,7 +302,7 @@ EOF
 num_options=8
 if test $is_osx = yes; then
     cat >&2 <<EOF
-9) $bundle_options:               $f_libs
+9) $bundle_options:               $shared_bundle
 EOF
     num_options=9
 fi

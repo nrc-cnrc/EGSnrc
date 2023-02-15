@@ -27,6 +27,7 @@
 #                   Iwan Kawrakow
 #                   Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Marc-Andre Renaud
 #
 ###############################################################################
 #
@@ -767,6 +768,14 @@ proc read_input {} {
     set data [get_val $data arr 0]
     set iphspout 0
     if {$arr(0)<=2} { set iphspout $arr(0) }
+
+    # bindos output option
+    set data [get_val $data arr 0]
+    if {$arr(0)==1} {
+       set values(ibindos) $options(ibindos,1)
+    } else {
+       set values(ibindos) $options(ibindos,0)
+    }
 
     # now get the EGSnrc inputs
     foreach i {ecut pcut smaxir estepe ximax bca_algorithm skindepth_for_bca \

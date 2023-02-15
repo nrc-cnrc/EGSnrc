@@ -23,18 +23,25 @@
 #
 #  Author:          Iwan Kawrakow, 2009
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 #
-#  An example input file for egs_chamber.
+#  An example input file for egs_chamber. This is an advanced example.
 #
 #  This file defines an egs_chamber simulation of a farmer type chamber at
 #  5 cm depth in a 30x30x30 cm^3 water phantom irradiated by a Co-60 beam from
-#  a BEAMnrc simulation source. The XCSE technique is used combined with
+#  a BEAMnrc simulation source. The chamber model is just an example, and does
+#  not match any particular specifications.
+#
+#  The XCSE variance reduction technique is used combined with
 #  correlated sampling for calculation in chamber geometries that do not have
 #  a stem, a central electrode, a wall, etc., to compute the various
 #  correction factors known as Pstell, Pcell, Pwall, and Prepl.
+#
+#  Run this example using 521icru.pegs4dat:
+#
+#  egs_chamber -i example1_co60_Pfactors -p 521icru
 #
 ###############################################################################
 
@@ -55,48 +62,48 @@
             thickness = 0.0417
             top radii = 0.
             bottom radii = 0.0858
-            media = C173521ICRU
+            media = 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 0.1283
             top radii = 0. 0.0858
             bottom radii = 0.3125 0.35
-            media = AIR521ICRU C173521ICRU
+            media = AIR521ICRU 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 0.2217
             bottom radii = 0.3125 0.35
-            media = AIR521ICRU C173521ICRU
+            media = AIR521ICRU 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 2.05
             top radii = 0.050 0.3125 0.35
             bottom radii = 0.050 0.3125 0.35
-            media = AL521ICRU AIR521ICRU C173521ICRU
+            media = AL521ICRU AIR521ICRU 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 0.3
             top radii = 0.050 0.175 0.35 0.4000
             bottom radii = 0.050 0.175 0.35 0.4000
-            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU
+            media = AL521ICRU POLYETH521ICRU 170C521ICRU AL521ICRU
         :stop layer:
         :start layer:
             thickness = 1.005
             top radii = 0.050 0.175 0.35 0.4000
             bottom radii = 0.050 0.175 0.35 0.4000
-            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU
+            media = AL521ICRU POLYETH521ICRU 170C521ICRU AL521ICRU
         :stop layer:
         :start layer:
             thickness = 0.84
             top radii = 0.050 0.35 0.4000
             bottom radii = 0.050 0.35 0.4000
-            media = AL521ICRU PTCFE521ICRU DURAL521ICRU
+            media = AL521ICRU POLYETH521ICRU AL521ICRU
         :stop layer:
         :start layer:
             thickness = 1.655
             top radii = 0.0750 0.3500 0.4000
             bottom radii = 0.0750 0.3500 0.4000
-            media = AL521ICRU PTCFE521ICRU DURAL521ICRU
+            media = AL521ICRU POLYETH521ICRU AL521ICRU
         :stop layer:
     :stop geometry:
 
@@ -110,24 +117,24 @@
             thickness = 0.0417
             top radii = 0.
             bottom radii = 0.0858
-            media = C173521ICRU
+            media = 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 0.1283
             top radii = 0. 0.0858
             bottom radii = 0.3125 0.35
-            media = AIR521ICRU C173521ICRU
+            media = AIR521ICRU 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 0.2217
             bottom radii = 0.3125 0.35
-            media = AIR521ICRU C173521ICRU
+            media = AIR521ICRU 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 2.05
             top radii = 0.050 0.3125 0.35
             bottom radii = 0.050 0.3125 0.35
-            media = AL521ICRU AIR521ICRU C173521ICRU
+            media = AL521ICRU AIR521ICRU 170C521ICRU
         :stop layer:
     :stop geometry:
 
@@ -143,24 +150,24 @@
             thickness = 0.0417
             top radii = 0.
             bottom radii = 0.0858
-            media = C173521ICRU
+            media = 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 0.1283
             top radii = 0. 0.0858
             bottom radii = 0.3125 0.35
-            media = AIR521ICRU C173521ICRU
+            media = AIR521ICRU 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 0.2217
             bottom radii = 0.3125 0.35
-            media = AIR521ICRU C173521ICRU
+            media = AIR521ICRU 170C521ICRU
         :stop layer:
         :start layer:
             thickness = 2.05
             top radii = 0.050 0.3125 0.35
             bottom radii = 0.050 0.3125 0.35
-            media = AIR521ICRU AIR521ICRU C173521ICRU
+            media = AIR521ICRU AIR521ICRU 170C521ICRU
         :stop layer:
     :stop geometry:
 
@@ -350,15 +357,6 @@
         inscribed geometries = chamber
     :stop geometry:
     #
-    # Same but for phsp scoring
-    #
-    :start geometry:
-        library = egs_genvelope
-        name = chamber_in_water
-        base geometry = cse_phantom
-        inscribed geometries = chamber
-    :stop geometry:
-    #
     # Water phantom with chamber without stem
     #
     :start geometry:
@@ -423,18 +421,27 @@
 :stop geometry definition:
 
 ########################################### The source:
-#                                           a full BEAMnrc treatment head
-#                                           simulation
+# A Co-60 collimated spectrum source, for a 10x10cm2 field at the origin.
+# The source is 100cm from the surface of the water.
+# The chamber is at 5cm depth, at z=0.
 :start source definition:
 
     :start source:
-        library = egs_beam_source
         name    = the_source
-        beam code = BEAM_co60
-        pegs file = gmora
-        input file = 10x10_20000dsb_espl_augrr_delta1.5
-        particle type = all
-        weight window = 0 1e-4 # This discards fat particles.
+        library = egs_collimated_source
+        charge  = 0
+        :start source shape:
+            type = point
+            position = 0 0 -105.000
+        :stop source shape:
+        :start target shape:
+            library = egs_rectangle
+            rectangle = -5 -5 5 5
+        :stop target shape:
+        :start spectrum:
+            type = tabulated spectrum
+            spectrum file = $HEN_HOUSE/spectra/egsnrc/mora_10x10_60co_ssd80.ensrc
+        :stop spectrum:
     :stop source:
 
     simulation source = the_source
@@ -445,7 +452,7 @@
 #
 :start run control:
 
-    ncase = 2200000000
+    ncase = 1000000 # Increase this to reduce the uncertainty
 
 :stop run control:
 
@@ -469,17 +476,6 @@
         cavity geometry = inner_phsp_object
         enhance regions = -1 # i.e. enhance everywhere except in region 0
         enhancement = 512
-        #
-        # Note: the transformation specified below is applied to particle
-        # positions before checking if the particle enters the geometry.
-        # In the case of a BEAMnrc simulation source, the particle positions
-        # are the positions when the particles cross the scoring plane
-        # i.e. at (x,y,100) in this case. The top of this geometry is at
-        # z=-5 => we must translate the particle positions by -105.
-        #
-        :start transformation:
-            translation = 0 0 -105.0001
-        :stop transformation:
     :stop calculation geometry:
 
 # -------------------------------------- the actual calculation geometries

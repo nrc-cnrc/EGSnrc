@@ -26,6 +26,7 @@
 #  Contributors:    Blake Walters
 #                   Iwan Kawrakow
 #                   Frederic Tessier
+#                   Marc-Andre Renaud
 #
 ###############################################################################
 #
@@ -65,7 +66,7 @@ proc reset_parameters { } {
     global spec_file ecutin pcutin estepm smax imax ivox gvox dsurround
     global inc exc names mvox izvox PhantFileName latbit nbit1 nbit2
     global grouping nrow izrow enflag numsrcopts izopts maxvals
-    global dflag dflagopt iphspout imuphspout calflag
+    global dflag dflagopt iphspout imuphspout calflag ibindos
     global numthphi angfixed ang1 ang2 nang pang ivary thphidef
     global numsets iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
     global iphant level the_beam_code the_input_file the_pegs_file
@@ -172,6 +173,7 @@ proc reset_parameters { } {
     set iphspout 0
     set imuphspout 0
     set calflag 0
+    set ibindos 0
 
     set Ein {}
     set spec_file {}

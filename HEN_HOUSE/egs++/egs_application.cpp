@@ -1001,6 +1001,16 @@ void EGS_Application::addAusgabObject(EGS_AusgabObject *o) {
     if (!o) {
         return;
     }
+    // only one track scoring object is allowed, otherwise there can be bugs
+    // if both objects try and write to the same file.
+    if (o->getObjectType() == "EGS_TrackScoring") {
+        for (int j=0; j<a_objects_list.size(); ++j) {
+            if (a_objects_list[j]->getObjectType() == "EGS_TrackScoring") {
+                egsFatal("error: only one ausgab object of type "
+                         "'EGS_TrackScoring' is allowed\n");
+            }
+        }
+    }
     o->setApplication(this);
     a_objects_list.add(o);
     //int ncall = 1 + (int)AugerEvent;

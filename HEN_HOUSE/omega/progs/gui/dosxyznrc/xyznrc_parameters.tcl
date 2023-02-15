@@ -27,6 +27,7 @@
 #                   Iwan Kawrakow
 #                   Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Marc-Andre Renaud
 #
 ###############################################################################
 #
@@ -739,6 +740,18 @@ monoenergetic electron beams.
 Recommended for all homogeneous phantom calculations.
 }
 
+set ibindos {}
+set names(ibindos) "Dose output"
+set numopts(ibindos) 2
+set options(ibindos,0) "3ddose"
+set options(ibindos,1) "bindos (sparse binary format)"
+set values(ibindos) $options(ibindos,0)
+set help_text(ibindos) {
+Set to "3ddose output" to output a voxel doses in a dense ASCII file.
+Set to "sparse binary output" for a sparse binary dose file.
+See the DOSXYZnrc manual section titled "Format of Dose Outputs" for a\
+description of the file formats.
+}
 #################The following are the EGSnrc parameters#############
 
 set ecut {}

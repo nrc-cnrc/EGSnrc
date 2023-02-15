@@ -738,6 +738,7 @@ INPUT                  = main.doxy \
                          common.doxy \
                          geometry.doxy \
                          sources.doxy \
+                         aobjects.doxy \
                          cavity.doxy \
                          egs_cbct.doxy \
                          egs_chamber.doxy \
@@ -787,7 +788,8 @@ EXCLUDE                = ../../../egs++/view \
                          ../../../egs++/test_spectrum.cpp \
                          ../../../egs++/geometry/egs_elliptic_cylinders \
                          ../../../egs++/egs_fortran_geometry.cpp \
-                         ../../../egs++/egs_fortran_geometry.h
+                         ../../../egs++/egs_fortran_geometry.h \
+                         ../../../egs++/geometry/egs_mesh/test_egs_mesh.cpp
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

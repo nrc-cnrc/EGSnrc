@@ -2308,7 +2308,7 @@ It is possible to comment out an entire input block by just commenting out the
         # List of individual regions
         dose regions = chamber_cavity_label
         # List of each region volume (in same order), cm^3
-        volume = 0.02880 0.57732 0.05916
+        volume = 0.57732 0.02880 0.05916
     :stop ausgab object:
 :stop ausgab object definition:
 \end{lstlisting}
@@ -2375,12 +2375,34 @@ water 1.1111e-02 +/- 0.477  % 3.4258e-13 +/- 0.477  %
 this different from the total dose to air?
 
 \begin{answer}
-The total dose to the air cavity is the sum of the dose to regions 3, 7 and 31:
-$6.6491\e{-15} \pm 1.002\%$.
+The total dose to the air cavity is NOT the sum of the dose to regions 3, 7 and 31.
+Instead, there are two alternative methods. First is the pedagogical approach:
+use the energy deposited and the mass (or density multiplied by volume) of the combined regions, as well as the conversion factor for MeV/g to Gy, 1.602e-10.
 
-This is smaller than the total dose to air under
-\textit{Summary of media dosimetry}, which includes the dose to air regions
-outside the chamber.
+\begin{equation*}
+D = \frac{E_1 + E_2 + E_3}{m_1 + m_2 + m_3}
+\end{equation*}
+\begin{equation*}
+= (\frac{9.4809e-09 + 4.7904e-10 + 1.0028e-09}{0.001*(0.5773 + 0.0288 + 0.0592)})*1.602e-10
+\\
+= 2.6398e-15
+\end{equation*}
+
+The second method is to add the doses weighted by the volume. In theory this should give the same answer, but due to the limited number of significant figures printed in the output,
+the result is not the same. For that reason, this is the more accurate method. Note that we have eliminated dependency on density because all the regions are of equal density - it is
+left as an exercise to the reader to show the equivalency with the first method.
+\begin{equation*}
+D = D_1 * \frac{V_1}{V} + D_2 * \frac{V_2}{V} + D_3 * \frac{V_3}{V}
+\end{equation*}
+\begin{equation*}
+= 2.1836e-15*0.5773/0.6653 + 2.2117e-15*0.0288/0.6653 + 2.2538e-15*0.0592/0.6653
+\\
+= 2.1911e-15
+\end{equation*}
+
+The total dose to the cavity is smaller than the total dose to air under
+\textit{Summary of media dosimetry}, because the total dose to air includes the
+dose to additional air regions outside the chamber.
 \end{answer}
 
 \end{question}

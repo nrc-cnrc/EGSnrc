@@ -261,8 +261,8 @@ LEAFIS=I; EXIT; ];
 
 IF(I>1)[
   TMP2=(A_$MLCE(I-1,4)*ZFL)+B_$MLCE(I-1,4);
+  "particle not in any leaf but in air between leaves"
   IF(TMP2<XYFL(1) & XYFL(1)<TMP1)[
-    "particle not in any leaf but in air between leaves"
     {P1}=1;
     LEAFIS=I;
     BETWEEN_LEAF=1;

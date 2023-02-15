@@ -166,6 +166,7 @@ REPLACE {;COMIN/SOURCE/;} WITH {
     esrc_sp, "kinetic energy of source particle  (enflag=1)                    "
     SSD,     "Source to surface dist for point source particles ( isource=3)"
     einsrcold,"stores einsrc for source 20		        (isource=20) "
+    iaea_SAD, "stores SAD for IAEA phase space sources         (isource=2,8,20)"
     NINCSRC,  "No. of particles incident from original source   (isource=2,8)  "
     r_dbs,    "DBS splitting radius used to generate phsp source (isource=2,8)"
     ssd_dbs,  "SSD at which above DBS radius defined            (isource=2,8)"
@@ -243,7 +244,7 @@ REPLACE {;COMIN/SOURCE/;} WITH {
     pang,angfixed,angmin,angmax,pgang,r_11, r_12, r_13, r_21,
     r_22, r_23, r_31, r_32, r_33,dsource,dsourcetemp,
     ein, eksrcm, esrc_sp, SSD, NINCSRC,
-    r_dbs, ssd_dbs,z_dbs,survival_ratio,einsrcold;
+    r_dbs, ssd_dbs,z_dbs,survival_ratio,einsrcold,iaea_SAD;
     $INTEGER isource, iqin, iqphsp, iqinc,latchold,iqinold,MLCflag,SHLflag,
     calflag, ixinl, ixinu, jyinl, jyinu, kzinl, kzinu,
     klowx, khix, klowy, khiy, klowz, khiz,

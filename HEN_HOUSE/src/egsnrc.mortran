@@ -5247,7 +5247,7 @@ IF( iedgfl(irl) ~= 0 ) [" User requested atomic relaxations "
       $RANDOMSET br; logE = log(peig);
       "DO k=1,nne(medium) ["
       DO k=nne(medium),1,-1 [
-          iZ = int( zelem(medium,k) + 0.5 );zpos = pe_zpos(iZ);
+          iz = int(pe_zsorted(k,medium)+0.5); zpos = pe_zpos(iZ);
           IF( iZ < 1 | iZ > $MXELEMENT ) [
               $egs_info(*,' Error in egs_shellwise_photo: ');
               $egs_fatal(*,'   Atomic number of element ',k,
@@ -6703,30 +6703,9 @@ IF (IQI = 2) ["PI-ZERO OPTION"
   CALL UPHI(3,2);
 ]"end of pi-zero option"
 
-"The following convoluted logic is difficult to follow"
-"when one modifies the outcome of certain interactions"
-"using nbr_split, Russian Roulette, or one of the     "
-"particle selection macros. I'm simplifying it        "
-"so that ircode becomes irrelevant. IK, August 2002   "
-":TOPSTACK:"
-"LOOP["
-"   $KERMA-INSERT;"
-"   IF(IQ(NP) = 0) GO TO :PHOTON:;"
-"   LOOP ["
-"      :ELECTRON:"
-"      CALL ELECTR(IRCODE);"
-"      IF(IRCODE.EQ.2) EXIT; "
-"      :PHOTON:"
-"      CALL PHOTON(IRCODE);"
-"      IF(IRCODE.EQ.2) EXIT;"
-"   ]REPEAT"
-"   IF(NP <= 0) EXIT;"
-"]REPEAT "
-
 LOOP [
     ;
     IF( np <= 0 ) EXIT;
-    $KERMA-INSERT;  " DEFAULT FOR $KERMA-INSERT; IS ; (NULL)"
     IF( iq(np) = 0 ) [ call photon(ircode); ]
     ELSE             [ call electr(ircode); ]
 

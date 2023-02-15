@@ -3384,7 +3384,6 @@ $REAL xsrc,ysrc,zsrc, "X,Y,Z position of incident particle (isource=2,8,9)"
       uin,vin,win, "U,V,W of incident particle"
       enin,        "energy of incident particle"
       zsrcdum,     "dummy value of zsrc read in from BEAM sim (isource=9)"
-      SAD_s20,     "for source 20 if iaea phsp is read SAD is needed"
       r1,rnno1,rnno2, "random no.s"
       fw,
       rxyz, "radial position of incident particle"
@@ -3408,6 +3407,10 @@ $LONG_INT n_hist_dum;
 save wsrc; "in case of phsp particle recycling"
 
 zsrc = dsource;
+iaea_SAD = 0;
+IF(i_iaea_in = 1)[
+   iaea_SAD = -dsource; "save SAD for iaea phsp sources"
+]
 
 "----------------------------------------------------------------"
 IF(isource = 0)[ "Frontal parallel beam source"
@@ -4153,8 +4156,7 @@ IF(NofREPEAT > 0 & ISMOOTH = 1)[
 
 "Rotate/translate the source particle into position
 IF(isource<7 | isource=9)[
-  IF(i_iaea_in=1) zsrc = zsrc + dsource;
-  "this is zsrc - SAD, but dsource has been set -ve in srcinit"
+  IF(i_iaea_in=1) zsrc = zsrc - iaea_SAD;
 
   uin   = r_11(1)*usrc + r_12(1)*vsrc + r_13(1)*wsrc;
   vin   = r_21(1)*usrc + r_22(1)*vsrc + r_23(1)*wsrc;
@@ -4180,9 +4182,9 @@ ELSEIF(isource=20 | isource=21)[
    IF(i_iaea_in=1)[
         "for iaea phase space z is read from the particle"
         " dsourcetemp is now supposed to be SAD"
-        SAD_s20 = (dsourcetemp(K-1)+(dsourcetemp(K)-dsourcetemp(K-1))*
+        iaea_SAD = (dsourcetemp(K-1)+(dsourcetemp(K)-dsourcetemp(K-1))*
 		(frMU_indx-muIndex(K-1))/(muIndex(K)-muIndex(K-1)));
-        zsrc = zsrc - SAD_s20;
+        zsrc = zsrc - iaea_SAD;
    ]  ELSE [
 		zsrc = -1.0*(dsourcetemp(K-1)+(dsourcetemp(K)-dsourcetemp(K-1))*
 		(frMU_indx-muIndex(K-1))/(muIndex(K)-muIndex(K-1)));
@@ -4229,6 +4231,7 @@ cosphi   = cos(phi(1)*3.141593/180.); sinphi   = sin(phi(1)*3.141593/180.);
 
 ]
 ELSE[ "choose an incident angle from the distribution"
+  IF(i_iaea_in=1) zsrc = zsrc - iaea_SAD; "in case we have IAEA isource=8"
   $RANDOMSET RNNO1;
   k_field=numang;"use global variable k_field so we can untransform"
                  "if scoring phsp in BEAM coordinate system"

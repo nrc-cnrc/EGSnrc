@@ -46,3 +46,7 @@ $(make_depend)
 test:
 	@echo "common_h2: $(common_h2)"
 	@echo "extra_dep: $(extra_dep)"
+
+clean:
+	$(REMOVE) $(ABS_DSO)*$(library)*
+	$(REMOVE) *.o

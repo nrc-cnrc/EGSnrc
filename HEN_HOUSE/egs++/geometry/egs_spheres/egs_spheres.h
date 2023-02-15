@@ -183,8 +183,8 @@ public:
     /*! \brief Implement geNRegDir for spherical regions */
     int getNRegDir(int dir);
 
-    /*! \brief Implement getMass for spherical regions */
-    EGS_Float getMass(int ireg);
+    /*! \brief Implement getVolume for spherical regions */
+    EGS_Float getVolume(int ireg);
 
 private:
 
@@ -194,7 +194,7 @@ private:
     static string type;
 
     std::vector<EGS_Float> rbounds;
-    std::vector<EGS_Float> mass;
+    std::vector<EGS_Float> vol;
 };
 
 
@@ -248,7 +248,7 @@ public:
 
     int getNRegDir(int dir);
 
-    EGS_Float getMass(int ireg);
+    EGS_Float getVolume(int ireg);
 
 private:
 
@@ -257,7 +257,7 @@ private:
     EGS_Vector xo;                // for concentric spheres, all centres coincide
     static string type;
 
-    std::vector<EGS_Float> mass;
+    std::vector<EGS_Float> vol;
 };
 
 

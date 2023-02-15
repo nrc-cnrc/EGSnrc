@@ -23,16 +23,16 @@
 #
 #  Author:          Iwan Kawrakow, 2009
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 #
-#  An example input file for egs_chamber.
+#  An example input file for egs_chamber. This is an advanced example.
 #
-# This input file defines an egs_chamber simulation to compute the
-# perturbation factors Pwall and Pcell as a function of the off-axis distance
-# at 1.5 cm depth in a water phantom irradiated by a BEAMnrc simulation
-# source. A simple cylindrical model of the NE-2571 chamber is used.
+#  This input file defines an egs_chamber simulation to compute the
+#  perturbation factors Pwall and Pcell as a function of the off-axis distance
+#  at 1.5 cm depth in a water phantom irradiated by a 6MV spectrum
+#  source. A simple cylindrical model of the NE-2571 chamber is used.
 #
 ###############################################################################
 
@@ -43,7 +43,7 @@
     # The chamber
     # simple model of a NE2571 Farmer type chamber
     # modelled as a cone-stack.
-    # Overal chamber dimensions: 2.476 cm long,
+    # Overall chamber dimensions: 2.476 cm long,
     #                            0.358 cm radius
     #############################################
     :start geometry:
@@ -175,7 +175,7 @@
         library = egs_cylinders
         type = EGS_XCylinders
         name = cav_cyls0
-	midpoint = 0 0 1.5
+        midpoint = 0 0 1.5
         radii = .321
     :stop geometry:
     :start geometry:
@@ -200,14 +200,14 @@
         library = egs_cylinders
         type = EGS_XCylinders
         name = cse_cyls0
-	 midpoint = 0 0 1.5
+        midpoint = 0 0 1.5
         radii = 1.358
     :stop geometry:
     :start geometry:
         library = egs_ndgeometry
         name = cse_0
         dimensions = cse_planes cse_cyls0
-	:start media input:
+        :start media input:
             media = H2O521ICRU
         :stop media input:
     :stop geometry:
@@ -216,24 +216,24 @@
     # put the chambers into the CSE-geometry
     #############################################
     :start geometry:
-    	library = egs_genvelope
-	name = CHAMBER_0_
-	base geometry = cse_0
-	inscribed geometries = CHAMBER_0
+        library = egs_genvelope
+        name = CHAMBER_0_
+        base geometry = cse_0
+        inscribed geometries = CHAMBER_0
     :stop geometry:
 
     :start geometry:
-    	library = egs_genvelope
-	name = CHAMBER_noel_0_
-	base geometry = cse_0
-	inscribed geometries = CHAMBER_noel_0
+        library = egs_genvelope
+        name = CHAMBER_noel_0_
+        base geometry = cse_0
+        inscribed geometries = CHAMBER_noel_0
     :stop geometry:
 
     :start geometry:
-    	library = egs_genvelope
-	name = CHAMBER_nowall_0_
-	base geometry = cse_0
-	inscribed geometries = CHAMBER_nowall_0
+        library = egs_genvelope
+        name = CHAMBER_nowall_0_
+        base geometry = cse_0
+        inscribed geometries = CHAMBER_nowall_0
     :stop geometry:
 
     ######################################################
@@ -270,19 +270,20 @@
         #
         loop variable = 1 var1 0 1
 
-	 #
-	 # translate the chambers
-	 #
+        #
+        # translate the chambers
+        #
+
         # The full chamber geometry
         :start geometry:
             library = egs_gtransformed
             my geometry = CHAMBER_0_
             name = CHAMBER_$(var1)cm
-              # i.e., the name of the geometries created in the loop will be
-              # CHAMBER_0cm, CHAMBER_1cm, CHAMBER_2cm, ...
+            # i.e., the name of the geometries created in the loop will be
+            # CHAMBER_0cm, CHAMBER_1cm, CHAMBER_2cm, ...
             :start transformation:
                 translation = 0 $(var1) 0
-                  # i.e., translations by 0 cm, 1 cm, 2 cm, etc.
+                # i.e., translations by 0 cm, 1 cm, 2 cm, etc.
             :stop transformation:
         :stop geometry:
         # The chamber without a central electrode
@@ -364,71 +365,81 @@
 
 
     :start geometry:
-    	library = egs_ndgeometry
-	type = EGS_XYZGeometry
-	name = tmpPhsp_object0
-	x-planes = -1.3 1.3
-	y-planes = -0.4 21.4
-	z-planes = 1.1 1.9
-	:start media input:
+        library = egs_ndgeometry
+        type = EGS_XYZGeometry
+        name = tmpPhsp_object0
+        x-planes = -1.3 1.3
+        y-planes = -0.4 21.4
+        z-planes = 1.1 1.9
+        :start media input:
             media = H2O521ICRU
         :stop media input:
     :stop geometry:
 
     :start geometry:
-    	library = egs_ndgeometry
-	type = EGS_XYZGeometry
-	name = tmpPhsp_object1
-	x-planes = -2.3 2.3
-	y-planes = -1.4 22.4
-	z-planes = 0.1 2.9
-	:start media input:
+        library = egs_ndgeometry
+        type = EGS_XYZGeometry
+        name = tmpPhsp_object1
+        x-planes = -2.3 2.3
+        y-planes = -1.4 22.4
+        z-planes = 0.1 2.9
+        :start media input:
             media = H2O521ICRU
-      :stop media input:
+        :stop media input:
     :stop geometry:
 
     :start geometry:
-    	library = egs_genvelope
-	name = tmpPhsp_object
-	base geometry = tmpPhsp_object1
-	inscribed geometries = tmpPhsp_object0
+        library = egs_genvelope
+        name = tmpPhsp_object
+        base geometry = tmpPhsp_object1
+        inscribed geometries = tmpPhsp_object0
     :stop geometry:
 
     :start geometry:
-    	library = egs_genvelope
-	name = PhspObject_
-	base geometry = phantom
-	inscribed geometries = tmpPhsp_object
+        library = egs_genvelope
+        name = PhspObject_
+        base geometry = phantom
+        inscribed geometries = tmpPhsp_object
     :stop geometry:
 
     :start geometry:
-       	library  = egs_cdgeometry
-	name     = PhspObject
+           library  = egs_cdgeometry
+        name     = PhspObject
         base geometry = base_planes
-	set geometry  = 0 PhspObject_
+        set geometry  = 0 PhspObject_
     :stop geometry:
 
     simulation geometry = CHAMBER_IP_0cm
 
 :stop geometry definition:
 
+########################################### The source:
+# A 6MV collimated spectrum source, for a 10x10cm2 field at the origin.
+# The source is 100cm from the surface of the water.
+# The chamber is at 5cm depth, at z=0.
 :start source definition:
-########################################### define the source:
-#
-        :start source:
-                library = egs_beam_source
-                name    = the_beam_source
-                beam code = BEAM_Elekta_nrc2
-                pegs file = my700
-                input file = elekta_6MV_40x40
-                particle type = all
-                weight window = 0 0.01    # This discards fat particles.
-        :stop source:
 
-    simulation source = the_beam_source
+    :start source:
+        name    = the_source
+        library = egs_collimated_source
+        charge  = 0
+        :start source shape:
+            type = point
+            position = 0 0 -100.000
+        :stop source shape:
+        :start target shape:
+            library = egs_rectangle
+            rectangle = -5 -5 5 5
+        :stop target shape:
+        :start spectrum:
+            type = tabulated spectrum
+            spectrum file = $HEN_HOUSE/spectra/egsnrc/mohan6.spectrum
+        :stop spectrum:
+    :stop source:
+
+    simulation source = the_source
 
 :stop source definition:
-
 
 ##################################### Scoring options
 :start scoring options:
@@ -439,92 +450,93 @@
         geometry name = PhspObject
         cavity regions = 2
         cavity mass = 1
-	cavity geometry = tmpPhsp_object0
-	enhance regions = -1
-	enhancement = 128
-	:start transformation:
-            translation = 0 0 -100
-        :stop transformation:
+        cavity geometry = tmpPhsp_object0
+        enhance regions = -1
+        enhancement = 128
     :stop calculation geometry:
 # ----
    :start input loop:
-    	loop count = 25
-	loop variable = 1 var1 0 1
+        loop count = 25
+        loop variable = 1 var1 0 1
 
-	:start calculation geometry:
-        	geometry name = CHAMBER_IP_$(var1)cm
-	        cavity regions = 5 9
-	        cavity mass = 0.000910699084	# no elec: reg 8 0.00093012
-		cavity geometry = cav_$(var1)cm
-		enhance regions = -1
-		enhancement = 128
-	        subgeometries = CHAMBER_IP_$(var1)cm CHAMBER_noel_IP_$(var1)cm CHAMBER_nowall_IP_$(var1)cm
-	        subgeom regions = 2 6 5 8 9 10 11
+        :start calculation geometry:
+            geometry name = CHAMBER_IP_$(var1)cm
+            cavity regions = 5 9
+            cavity mass = 0.000910699084    # no elec: reg 8 0.00093012
+            cavity geometry = cav_$(var1)cm
+            enhance regions = -1
+            enhancement = 128
+            subgeometries = CHAMBER_IP_$(var1)cm CHAMBER_noel_IP_$(var1)cm CHAMBER_nowall_IP_$(var1)cm
+            subgeom regions = 2 6 5 8 9 10 11
         :stop calculation geometry:
 
-    	:start calculation geometry:
-        	geometry name = CHAMBER_noel_IP_$(var1)cm
-        	cavity regions = 5 8 9
-        	cavity mass = 0.00093012
-		cavity geometry = cav_$(var1)cm
-		enhance regions = -1
-		enhancement = 128
-    	:stop calculation geometry:
+        :start calculation geometry:
+            geometry name = CHAMBER_noel_IP_$(var1)cm
+            cavity regions = 5 8 9
+            cavity mass = 0.00093012
+            cavity geometry = cav_$(var1)cm
+            enhance regions = -1
+            enhancement = 128
+        :stop calculation geometry:
 
-    	:start calculation geometry:
-        	geometry name = CHAMBER_nowall_IP_$(var1)cm
-        	cavity regions = 5 8 9
-        	cavity mass = 0.00093012
-		cavity geometry = cav_$(var1)cm
-		enhance regions = -1
-		enhancement = 128
-    	:stop calculation geometry:
+        :start calculation geometry:
+            geometry name = CHAMBER_nowall_IP_$(var1)cm
+            cavity regions = 5 8 9
+            cavity mass = 0.00093012
+            cavity geometry = cav_$(var1)cm
+            enhance regions = -1
+            enhancement = 128
+        :stop calculation geometry:
    :stop input loop:
 
 
    :start input loop:
-    	loop count = 25
-	loop variable = 1 var1 0 1
-	correlated geometries = CHAMBER_IP_$(var1)cm CHAMBER_IP_0cm
+        loop count = 25
+        loop variable = 1 var1 0 1
+        correlated geometries = CHAMBER_IP_$(var1)cm CHAMBER_IP_0cm
    :stop input loop:
    :start input loop:
-    	loop count = 25
-	loop variable = 1 var1 0 1
-	correlated geometries = CHAMBER_noel_IP_$(var1)cm CHAMBER_IP_$(var1)cm
+        loop count = 25
+        loop variable = 1 var1 0 1
+        correlated geometries = CHAMBER_noel_IP_$(var1)cm CHAMBER_IP_$(var1)cm
    :stop input loop:
    :start input loop:
-    	loop count = 25
-	loop variable = 1 var1 0 1
-	correlated geometries = CHAMBER_nowall_IP_$(var1)cm CHAMBER_noel_IP_$(var1)cm
+        loop count = 25
+        loop variable = 1 var1 0 1
+        correlated geometries = CHAMBER_nowall_IP_$(var1)cm CHAMBER_noel_IP_$(var1)cm
    :stop input loop:
 
 :stop scoring options:
 
 ####################################### variance reduction
 :start variance reduction:
-    TmpPhsp = 1			#must be devider of cse's
-    #Photon splitting = 16
+    cs enhancement = 1
+    TmpPhsp = 1   # i.e., score phase space and use it once in each specified
+                  # geometry
+
     :start range rejection:
-        rejection = 256		#this must not be larger than largest enhancement and
-        Esave     = .521
-        cavity geometry = tmpPhsp_object0
+        # The 'rejection' must be larger than the largest enhancement factor,
+        # and it should be divisible by the enhancement factors
+        rejection = 256
+        Esave     = .521 # i.e. no range rejection but Russian Roulette
+        cavity geometry = tmpPhsp_object0 # since each geometry can have its own
+                                        # cavity geometry this is just a dummy
         rejection range medium = H2O521ICRU
     :stop range rejection:
-    cs enhancement = 1
+
 :stop variance reduction:
 
 ###################################### Transport parameters
 :start MC transport parameter:
-      # You can include here any of the transport parameter options
-      # understood by EGSnrc
-	#Global ECUT = 100
-	#Atomic relaxations = Off
-	#Rayleigh Scattering = Off
-	#Bound Compton Scattering = Off
+    # You can include here any of the transport parameter options
+    # understood by EGSnrc
+    #Global ECUT = 100
+    #Atomic relaxations = Off
+    #Rayleigh Scattering = Off
+    #Bound Compton Scattering = Off
 :stop MC transport parameter:
 
 ##################################### Run control
 :start run control:
-  ncase = 2400000000
-  calculation = first
+  ncase = 1000000 # Increase this to reduce the uncertainty
 :stop run control:

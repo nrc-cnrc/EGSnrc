@@ -326,12 +326,12 @@ proc define_syncjaws { id } {
 	}
     }
 
-    button $w.quikdyndef -text \
+    button $w.quiksyncdef -text \
 "Define x/y
 using field
-size and SSD" -command "quikdyndef $id" -relief groove -bd 8
+size and SSD" -command "quiksyncdef $id" -relief groove -bd 8
     if {"$cmval($id,2,1)" != "1" && "$cmval($id,2,1)" != "2"} {
-        grid configure $w.quikdyndef -row 3 -column 0 -rowspan 4 -sticky w
+        grid configure $w.quiksyncdef -row 3 -column 0 -rowspan 4 -sticky w
     }
 
     grid configure $w.lo -row 0 -column 1 -sticky w
@@ -719,7 +719,7 @@ proc add_SYNCJAWS_yz {id xscale zscale xmin zmin l m parent_w} {
     }
 }
 
-proc quikdyndef { id } {
+proc quiksyncdef { id } {
 
     global cmval ssd fmin fmax fieldfocus
 

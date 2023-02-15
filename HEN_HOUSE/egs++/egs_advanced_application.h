@@ -217,6 +217,16 @@ public:
     //************************************************************
     void setLatch(int latch);
 
+    //************************************************************
+    // Utility functions for fluence scoring objects
+    //************************************************************
+    EGS_Float getTVSTEP();
+    EGS_Interpolator *getDEDX(const int &imed, const int &iq);
+    void setLatch(const int &ip, const int &latch);
+    void incLatch(const int &ip, const int &increment);
+    int getNp();
+    int getNpOld();
+
     /* Needed by some sources */
     EGS_Float getRM();
     /* Turn ON/OFF radiative splitting */
