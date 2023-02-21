@@ -560,7 +560,7 @@ $DEFINE-LOCAL-VARIABLES-COMPT;
 $LOGICAL first_time;
 $INTEGER ibcmpl;
 
-IF(NP=22997)[
+IF(NP=5983)[
   write(*,*)' in compt: np, iq, e, wt, w ',np,iq(np),e(np),wt(np),w(np);
 ]
 
@@ -783,7 +783,6 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
     " Shell vacancy "
     IF( Uj > 1e-3 ) [
         edep = pzero;
-
         call relax(Uj,shn_array(j),iz_array(j));
         "relax will put all particles with energies above ecut,pcut on the "
         "stack, the remaining energy will be scored in edep and deposited  "
@@ -6194,7 +6193,7 @@ LOOP [ "from here to end of routine over all vacancies created"
         rfu_E = shell_be(vac);
         IF( iqf = 0 ) [
             e(np) = Ex; $AUSCALL($FLUORTRA);
-          IF(np=22997)[
+          IF(np=5983)[
             write(*,*)' after fluor: np,iq,e,wt ',np,iq(np),e(np),
 wt(np);
           ]
@@ -6475,7 +6474,7 @@ IF(EIG <= PCUT(IRL)) [GO TO :PCUT-DISCARD:;]
 :PNEWENERGY:
 LOOP["enter this loop for each photon with new energy"
 
-IF(np = 22997)[
+IF(np = 5983)[
 write(*,*)'  np,iq,e,wt,x,y,z,u,v,w ',NP,IQ(NP),E(NP),WT(NP),X(NP),Y(NP),
 Z(NP),u(np),v(np),w(np);
 ]
@@ -6531,7 +6530,7 @@ y_final = y(np) + v(np)*vstep;
 z_final = z(np) + w(np)*vstep;
 
 
-IF(np = 22997)[
+IF(np = 5983)[
 write(*,*)'  about to transport: np,iq,e,wt,x,y,z,u,v,w ',NP,
 IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 ]
@@ -6549,7 +6548,7 @@ IF (IRNEW.NE.IROLD) ["REGION CHANGE"
 ]
 
 
-IF(np = 22997)[
+IF(np = 5983)[
 write(*,*)'  transported: np,iq,e,wt,x,y,z,u,v,w ',NP,
 IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 ]
@@ -6576,7 +6575,7 @@ EXIT :PNEWMEDIUM:;]
 
 "   IT IS FINALLY TIME TO INTERACT."
 "   THE FOLLOWING MACRO ALLOWS ONE TO INTRODUCE RAYLEIGH SCATTERING"
-IF(np = 22997)[
+IF(np = 5983)[
 write(*,*)'  down here 1: np,iq,e,wt,x,y,z,u,v,w ',NP,
 IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 ]
@@ -6588,7 +6587,7 @@ $RANDOMSET RNNO36; "THIS RANDOM NUMBER DETERMINES WHICH INTERACTION"
 $EVALUATE GBR1 USING GBR1(GLE);
 IF((RNNO36.LE.GBR1).AND.(E(NP).GT.RMT2) )["IT WAS A PAIR PRODUCTION"
     $AUSCALL($PAIRAUSB);
-    IF(np = 22997)[
+    IF(np = 5983)[
 write(*,*)'  down here 2: np,iq,e,wt,x,y,z,u,v,w ',NP,
 IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 ]
@@ -6609,7 +6608,7 @@ IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 $EVALUATE GBR2 USING GBR2(GLE);
 IF (RNNO36.LT.GBR2)["IT WAS A COMPTON"
     $AUSCALL($COMPAUSB);
-IF(np = 22997)[
+IF(np = 5983)[
 write(*,*)'  down here 3: np,iq,e,wt,x,y,z,u,v,w ',NP,
 IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 ]
@@ -6625,7 +6624,7 @@ IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 ]
 ELSE["IT WAS PHOTOELECTRIC EFFECT"
     $AUSCALL($PHOTOAUSB);
- IF(np = 22997)[
+ IF(np = 5983)[
 write(*,*)'  down here 4: np,iq,e,wt,x,y,z,u,v,w ',NP,
 IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 ]
