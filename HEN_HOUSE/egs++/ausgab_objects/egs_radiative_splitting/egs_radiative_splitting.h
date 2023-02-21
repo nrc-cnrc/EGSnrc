@@ -225,6 +225,8 @@ protected:
     EGS_Float        *zbr_KM;
     int              nmed_KM;
 
+    bool flag_fluor = false;
+
     vector<EGS_Particle> particle_stack; //store a stack of brems particles in do_smart_brems
     vector<EGS_Float> dnear_stack; //similar for dnear
 
