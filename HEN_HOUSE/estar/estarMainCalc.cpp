@@ -119,8 +119,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     fc = getDataFromFormulae(knmat, rho, elementArray, massFraction, numOfAtoms, NEP, mediaNum);
     cout << "\n";
 
-    if (*ipotval != -1) {
-        assert(*ipotval>=0 && "Ivalue must be non-negative");
+    if (*ipotval >= 0) {
         fc.pot = *ipotval;
         cout << "For medium " << mediaNum << " I-value (eV) given in egsinp file is " << fc.pot << "\n";
     }

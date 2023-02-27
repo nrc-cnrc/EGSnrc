@@ -70,7 +70,7 @@ ESTAR_ROUTINE = $(ESTAR_MODULES)routine$(DSEP)
 ESTAR_S_HELPERS = $(ESTAR_MODULES)solverHelpers$(DSEP)
 
 # ESTAR linking keyword
-F77_CPP_LINKER = -lstdc++
+F77_CPP_LINKER = -lstdc++ -std=c++11
 
 # Utilities coming with EGSnrc
 #
