@@ -675,7 +675,7 @@ $INTEGER  ival,ival_media,ival_medfile,i,j,k,ival_ae,ival_ue,ival_ap,ival_up,
 $REAL ecut_min, pcut_min;
 
 $LOGICAL  medfile_specified,densityfile_specified,elements_specified,
-          outfile_specified($MXMED), densityoutputfile_specified;
+          outfile_specified($MXMED), densityoutputfile_specified($MXMED);
 $LOGICAL  iunrst_specified,stern_specified,iaprim_specified,
           gasp_specified,rho_specified,start_delim_found,end_delim_found,
           spec_by_pz,spec_by_rhoz,df_if_elem_mismatch($MXMED),
@@ -723,7 +723,7 @@ $TYPE asym_df($MXEL);
 data blank/' '/;
 
 save medfile_specified,material_file,df_if_elem_mismatch,df_if_rho_mismatch,
-     spoutput_file,outfile_specified;
+     spoutput_file,outfile_specified,densityoutputfile_specified;
 
 REPLACE {$WRITE_MEDERR(#)} WITH {
 ;
@@ -905,6 +905,7 @@ DO i=1,NMED[
    bulkdensity_specified=.false.;
    localdensity_specified=.false.;
    ipot_specified=.false.;
+   densityoutputfile_specified(i)=.false.;
    densityfile_specified=.false.;
    stern_specified=.false.;
    iunrst_specified=.false.;
@@ -1089,7 +1090,7 @@ DO i=1,NMED[
    CALL GET_INPUT;
    IF(error_flags(ival_densityoutputfile)=0)[
        density_outputfile=char_value(ival_densityoutputfile,1);
-       densityoutputfile_specified=.true.;
+       densityoutputfile_specified(i)=.true.;
        $WRITE_MEDERR(' Density correction file will be output.');
    ]
 
@@ -1677,7 +1678,7 @@ DO i=1,NMED[
        inpdensity_file(i)=density_file;
 
        "Only output the density correction file for the first job if parallel"
-       IF(densityoutputfile_specified &
+       IF(densityoutputfile_specified(i) &
             (n_parallel=0 | i_parallel=first_parallel)) [
          outdensity_file(i)=density_outputfile;
        ]
@@ -1738,7 +1739,7 @@ DO i=1,nmed[
   write(ounit,'(a,i5)')'  iunrst: ',iunrst(i);
   write(ounit,'(a,i5)')'  iaprim: ',iaprim(i);
   write(ounit,'(a,1p,e14.5,a)')'    gasp: ',inpgasp(i),' atm.';
-  IF(epstfl(i)~=1)[
+  IF(epstfl(i)~=1 & densityoutputfile_specified(i))[
     write(ounit,*)' output density correction file: ',
         $cstring(outdensity_file(i));
   ]
