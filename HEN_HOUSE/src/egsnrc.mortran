@@ -560,9 +560,10 @@ $DEFINE-LOCAL-VARIABLES-COMPT;
 $LOGICAL first_time;
 $INTEGER ibcmpl;
 
-IF(NP=5983)[
-  write(*,*)' in compt: np, iq, e, wt, w ',np,iq(np),e(np),wt(np),w(np);
-]
+"IF(NP>=103 & NP<=5982)[
+" write(*,*)' in compt: np, iq, e, wt, x, y, z, u, v, w ',np,iq(np),e(np),
+"wt(np),x(np),y(np),z(np),u(np),v(np),w(np);
+"]
 
 NPold = NP;       "Set the old stack counter"
 peig=E(NP);       "PRECISE ENERGY OF INCIDENT GAMMA"
@@ -799,14 +800,6 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
 
 " Now play Russian Roulette with resulting electrons if the user asked for it"
 $PLAY RUSSIAN ROULETTE WITH ELECTRONS FROM NPold+1; "TO NP"
-
-IF(np>22990)[
-write(*,*)' npold, np ',npold,np;
-DO i=npold,np[
-  write(*,*)'after russ rou: np,iq,e,wt,w ',i,iq(i),e(i),wt(i),w(i);
-]
-]
-
 
 return;
 
@@ -6193,10 +6186,6 @@ LOOP [ "from here to end of routine over all vacancies created"
         rfu_E = shell_be(vac);
         IF( iqf = 0 ) [
             e(np) = Ex; $AUSCALL($FLUORTRA);
-          IF(np=5983)[
-            write(*,*)' after fluor: np,iq,e,wt ',np,iq(np),e(np),
-wt(np);
-          ]
         ]
         ELSE [
             e(np) = Ex + rm; $AUSCALL($AUGERTRA);
@@ -6474,11 +6463,6 @@ IF(EIG <= PCUT(IRL)) [GO TO :PCUT-DISCARD:;]
 :PNEWENERGY:
 LOOP["enter this loop for each photon with new energy"
 
-IF(np = 5983)[
-write(*,*)'  np,iq,e,wt,x,y,z,u,v,w ',NP,IQ(NP),E(NP),WT(NP),X(NP),Y(NP),
-Z(NP),u(np),v(np),w(np);
-]
-
 IF(WT(NP) = 0.0) [go to :USER-PHOTON-DISCARD:;] "added May 01"
 
 GLE=LOG(EIG);"GLE IS GAMMA LOG ENERGY"
@@ -6530,10 +6514,6 @@ y_final = y(np) + v(np)*vstep;
 z_final = z(np) + w(np)*vstep;
 
 
-IF(np = 5983)[
-write(*,*)'  about to transport: np,iq,e,wt,x,y,z,u,v,w ',NP,
-IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
-]
 $AUSCALL($TRANAUSB);
 
 "   TRANSPORT THE PHOTON"
@@ -6545,12 +6525,6 @@ IROLD=IR(NP); "SAVE PREVIOUS REGION"
 MEDOLD=MEDIUM;
 IF (IRNEW.NE.IROLD) ["REGION CHANGE"
   $photon_region_change;
-]
-
-
-IF(np = 5983)[
-write(*,*)'  transported: np,iq,e,wt,x,y,z,u,v,w ',NP,
-IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 ]
 
 "   AFTER TRANSPORT CALL TO USER"
@@ -6575,10 +6549,6 @@ EXIT :PNEWMEDIUM:;]
 
 "   IT IS FINALLY TIME TO INTERACT."
 "   THE FOLLOWING MACRO ALLOWS ONE TO INTRODUCE RAYLEIGH SCATTERING"
-IF(np = 5983)[
-write(*,*)'  down here 1: np,iq,e,wt,x,y,z,u,v,w ',NP,
-IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
-]
 $RAYLEIGH-SCATTERING;
 "Ali:photonuclear, 1 line"
 $PHOTONUCLEAR;
@@ -6587,10 +6557,6 @@ $RANDOMSET RNNO36; "THIS RANDOM NUMBER DETERMINES WHICH INTERACTION"
 $EVALUATE GBR1 USING GBR1(GLE);
 IF((RNNO36.LE.GBR1).AND.(E(NP).GT.RMT2) )["IT WAS A PAIR PRODUCTION"
     $AUSCALL($PAIRAUSB);
-    IF(np = 5983)[
-write(*,*)'  down here 2: np,iq,e,wt,x,y,z,u,v,w ',NP,
-IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
-]
     CALL PAIR;
     "   THE FOLLOWING MACRO ALLOWS THE USER TO CHANGE THE PARTICLE"
     "   SELECTION SCHEME (E.G., ADDING IMPORTANCE SAMPLING (SPLITTING, "
@@ -6608,10 +6574,6 @@ IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 $EVALUATE GBR2 USING GBR2(GLE);
 IF (RNNO36.LT.GBR2)["IT WAS A COMPTON"
     $AUSCALL($COMPAUSB);
-IF(np = 5983)[
-write(*,*)'  down here 3: np,iq,e,wt,x,y,z,u,v,w ',NP,
-IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
-]
     CALL COMPT;
     "   THE FOLLOWING MACRO ALLOWS THE USER TO CHANGE THE PARTICLE"
     "   SELECTION SCHEME (E.G., ADDING IMPORTANCE SAMPLING (SPLITTING, "
@@ -6624,10 +6586,6 @@ IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
 ]
 ELSE["IT WAS PHOTOELECTRIC EFFECT"
     $AUSCALL($PHOTOAUSB);
- IF(np = 5983)[
-write(*,*)'  down here 4: np,iq,e,wt,x,y,z,u,v,w ',NP,
-IQ(NP),E(NP),WT(NP),X(NP),Y(NP),Z(NP),u(np),v(np),w(np);
-]
     CALL PHOTO;
     "   THE FOLLOWING MACRO ALLOWS THE USER TO CHANGE THE PARTICLE"
     "   SELECTION SCHEME (E.G., ADDING IMPORTANCE SAMPLING (SPLITTING, "
