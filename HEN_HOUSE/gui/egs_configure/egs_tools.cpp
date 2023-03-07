@@ -769,7 +769,7 @@ EGS_DSO::EGS_DSO(const QString &cpp_name){
 #elif defined(Q_OS_LINUX) || defined(Q_OS_UNIX)
    fpic = is_x86_64() ? "-fPIC" : QString();
 #endif
-   flibs = cpp_name.contains("g++") ? "-lgfortran" : QString();
+   flibs = cpp_name.contains("g++") ? "-lgfortran -lquadmath" : QString();
 }
 
 // Initialize default GCC compiler as gfortran
@@ -1007,7 +1007,7 @@ QString MCompiler::getFlibs2LinkCPP( const QString &f_name, const QString &a_pat
     if ( f_name.contains("g77") && name().contains("g++"))
         flibs= QString("-lg2c");
     else if ( f_name.contains("gfortran") && name().contains("g++"))
-        flibs= QString("-lgfortran");
+        flibs= QString("-lgfortran -lquadmath");
     else if ( f_name.contains("ifort") && name().contains("icpc"))
         flibs= QString("-lifport -lifcore");
     else{// using any other C++/Fortran compiler combination
@@ -1020,7 +1020,7 @@ QString MCompiler::getFlibs2LinkCPP( const QString &f_name, const QString &a_pat
 #else
   // Setting an initial guess
   if      ( f_name.contains("gfortran") && name().contains("g++") )
-          flibs="-lgfortran";
+          flibs="-lgfortran -lquadmath";
   else if ( f_name.contains("g77") )
           flibs="-lg2c";
   else if ( f_name.contains("ifort") && name().contains("icpc"))
