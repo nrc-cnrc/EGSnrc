@@ -142,7 +142,7 @@ endif
 
 COMPILE_TIME =
 ifeq ($(OS),Windows_NT)
-    COMPILE_TIME = -DCOMPILE_TIME="\"$(shell cmd /C date /T)$(shell cmd /C time /T) $(shell cmd /C tzutil /g)\""
+    COMPILE_TIME = -DCOMPILE_TIME="\"$(shell cmd /C date /T) $(shell cmd /C time /T)\""
 else
     COMPILE_TIME = -DCOMPILE_TIME="\"$(shell date -u +'%Y-%m-%d %H:%M:%S UTC')\""
 endif
