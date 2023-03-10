@@ -556,9 +556,7 @@ void EGS_Application::resetCounter() {
     run->resetCounter();
     rndm->resetCounter();
     source->resetCounter();
-    egsInformation(" here 1\n" );
     for (int j=0; j<a_objects_list.size(); ++j) {
-       egsInformation(" j=%d size=%d\n",j,a_objects_list.size());
         a_objects_list[j]->resetCounter();
     }
 
@@ -625,9 +623,7 @@ int EGS_Application::combineResults() {
         "\n                      Suming the following .egsdat files:\n"
         "=======================================================================\n");
     char buf[512];
-    egsInformation(" about to resetCounter\n");
     resetCounter();
-    egsInformation(" resetCounter\n");
     EGS_Float last_cpu = 0;
     EGS_I64 last_ncase = 0;
     int ndat = 0;
@@ -640,7 +636,6 @@ int EGS_Application::combineResults() {
     if (!n_parallel) {
         n_parallel = MAXIMUM_JOB_NUMBER;
     }
-    egsInformation(" n_parallel = %d\n",n_parallel);
     for (int j=first_parallel; j < first_parallel + n_parallel; j++) {
         sprintf(buf,"%s_w%d.egsdat",final_output_file.c_str(),j);
         string dfile = egsJoinPath(app_dir,buf);
@@ -754,7 +749,6 @@ int EGS_Application::initRNG() {
 
 int EGS_Application::initSimulation() {
     //if( !input ) { egsWarning("%s no input\n",__egs_app_msg2); return -1; }
-    egsInformation("In EGS_Application::initSimulation()\n");
     int err;
     bool ok = true;
     err = initGeometry();

@@ -560,11 +560,6 @@ $DEFINE-LOCAL-VARIABLES-COMPT;
 $LOGICAL first_time;
 $INTEGER ibcmpl;
 
-"IF(NP>=103 & NP<=5982)[
-" write(*,*)' in compt: np, iq, e, wt, x, y, z, u, v, w ',np,iq(np),e(np),
-"wt(np),x(np),y(np),z(np),u(np),v(np),w(np);
-"]
-
 NPold = NP;       "Set the old stack counter"
 peig=E(NP);       "PRECISE ENERGY OF INCIDENT GAMMA"
 ko = peig/rm;     "Gamma energy in units of electron rest energy"
@@ -7228,9 +7223,6 @@ DO medium=1,nmed [
                nb_fdata(0,i,medium),nb_wdata(1,i,medium),nb_idata(1,i,medium));
 
     ]
-]
-DO i=1,40 [
-  write(*,*)' i, nb_idata ',i,nb_idata(i,40,1);
 ]
 $egs_info(*,' ');
 $egs_info(*,' ');
