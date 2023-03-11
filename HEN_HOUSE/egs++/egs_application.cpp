@@ -749,6 +749,7 @@ int EGS_Application::initRNG() {
 
 int EGS_Application::initSimulation() {
     //if( !input ) { egsWarning("%s no input\n",__egs_app_msg2); return -1; }
+    egsInformation("In EGS_Application::initSimulation()\n");
     int err;
     bool ok = true;
     err = initGeometry();
