@@ -779,6 +779,7 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
     " Shell vacancy "
     IF( Uj > 1e-3 ) [
         edep = pzero;
+
         call relax(Uj,shn_array(j),iz_array(j));
         "relax will put all particles with energies above ecut,pcut on the "
         "stack, the remaining energy will be scored in edep and deposited  "
@@ -6508,7 +6509,6 @@ x_final = x(np) + u(np)*vstep;
 y_final = y(np) + v(np)*vstep;
 z_final = z(np) + w(np)*vstep;
 
-
 $AUSCALL($TRANAUSB);
 
 "   TRANSPORT THE PHOTON"
@@ -6524,8 +6524,6 @@ IF (IRNEW.NE.IROLD) ["REGION CHANGE"
 
 "   AFTER TRANSPORT CALL TO USER"
 $AUSCALL($TRANAUSA);
-
-
 "oct 31 bug found by C Ma. PCUT discard now after AUSGAB call"
 IF(EIG.LE.PCUT(IRL)) [GO TO :PCUT-DISCARD:;]
 
