@@ -80,8 +80,7 @@ for more details on how to download and configure EGSnrc.
 
 ## Support
 
-For technical support, consider the
-[EGSnrc reddit community](https://www.reddit.com/r/EGSnrc), the EGSnrc
+For technical support, consider the EGSnrc
 [Discussions](https://github.com/nrc-cnrc/EGSnrc/discussions), or
 [contact us](https://nrc.canada.ca/en/research-development/products-services/software-applications/egsnrc-software-tool-model-radiation-transport).
 
