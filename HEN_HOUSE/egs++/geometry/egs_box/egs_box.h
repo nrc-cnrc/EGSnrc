@@ -90,7 +90,7 @@ A simple example:
     :start geometry:
         name        = my_box
         library     = egs_box
-        box size    = 1 2 3
+        box size    = 2 4 6.2     # -1 < x < 1; -2 < y < 2; 3.1 < z < 3.1
         :start media input:
             media = water
         :stop media input:
