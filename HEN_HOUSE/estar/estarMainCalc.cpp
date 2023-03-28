@@ -32,7 +32,11 @@ string getFileNameWithoutExtension(const string &s) {
 // Output a density correction file
 void outputDensityFile(float mediaDensity, double *densityCorr, double *enGrid, float *meanIval, formula_calc fc, string outputFilename) {
     // Remove spaces from the end because it was a fixed length fortran string
-    outputFilename = outputFilename.erase(outputFilename.find_last_not_of(" \n\r\t")+1);
+//     outputFilename = outputFilename.erase(outputFilename.find_last_not_of(" \n\r\t")+1);
+    size_t firstSpace = outputFilename.find_first_of(" \n\r\t");
+    if(firstSpace != string::npos) {
+        outputFilename = outputFilename.erase(firstSpace);
+    }
     if (outputFilename.empty()) {
         return;
     }
@@ -443,8 +447,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         enGrid[i] = er[i];
     }
     cout << "\n";
-    cout << "Density correction factors calculated by ESTAR for medium " << mediaNum << ".\n";
-    cout << "-------------------------\n";
+    cout << "Density correction factors have been calculated by ESTAR for medium " << mediaNum << ".\n";
 
     // output a density correction file
     outputDensityFile(mediaDensity, densityCorr, enGrid, meanIval, fc, outputFilename);

@@ -122,7 +122,6 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
     for (int i = 0; i < numComp; i++) {
         formulaArray[i] = md.frm[i];
         fractionArray[i] = md.frac[i];
-        cout << "formula is " << formulaArray[i] << " with fraction " << fractionArray[i] << "\n";
     };
     int j = 0;
     int num_elems = 100; // we work with elements from atomic number 1-100
@@ -173,6 +172,7 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
             // arrays.
             ffc.jz[index] = k+1;
             ffc.wt[index] = wate[k];
+
             index = index + 1;
         }
     }
