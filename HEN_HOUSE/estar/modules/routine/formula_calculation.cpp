@@ -114,8 +114,6 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
     formula_calc fc;
     string formula;
     string formulaCompound;
-    cout << "\n-------------------------\n";
-    cout << "== MEDIUM " << mediaNum << " BLOCK FOR ESTAR ==\n";
     if (knmat == 0) {
         formula = elementArray[0];
         fc = fcalc(knmat, rho, formula);
