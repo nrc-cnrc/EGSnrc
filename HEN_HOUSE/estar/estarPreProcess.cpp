@@ -1,6 +1,11 @@
 #include <iostream>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <algorithm>
+
 using namespace std;
-#include "string.h"
+
 #include "estarMainCalc.cpp"
 
 
@@ -23,37 +28,37 @@ public:
         // this array contains all elements present in a medium
         string elemArrayStrut[100];
     };
+    void tokenize(std::string const &str, const char delim,
+            std::vector<std::string> &out) {
+        // Construct a stream from the string
+        std::stringstream ss(str);
+
+        std::string s;
+        while (std::getline(ss, s, delim)) {
+            if(s.empty()) continue;
+            out.push_back(s);
+        }
+    }
     // this function below parses fortran array to produce an array
     // which can be used in our C++ estar.
     // This is needed as arrays returned by fortran cannot be read by C++
     // without this pre-processing
     GetElementsStruct getElemArray(char *formulaStr, int NEP) {
-        int elemArraySize = NEP*2;
-        int i = 0;
-        int elemIndex = 0;
-        string elemArray[elemArraySize];
-        string elemTemp_1;
-        string elemTemp_2;
-        while (i < elemArraySize) {
-            elemTemp_1 = formulaStr[i];
-            if (formulaStr[i+1] == ' ') {
-                elemArray[elemIndex] = elemTemp_1;
-            }
-            else {
-                elemTemp_2 = tolower(formulaStr[i+1]);
-                elemArray[elemIndex] = elemTemp_1 + elemTemp_2;
-            }
-            i = i + 2;
-            elemIndex = elemIndex + 1;
+        const char delim = ' ';
+        std::vector<std::string> components;
+        tokenize(string(formulaStr), delim, components);
+
+        if(components.size() < NEP) {
+            cout << "\n***************\n";
+            cout << "Error: List of elements is inconsistent with the number expected\n";
+            cout << "\n***************\n";
+            assert(components.size() >= NEP);
         }
+
+        GetElementsStruct GElem;
         int k = 0;
         while (k < NEP) {
-            k = k + 1;
-        }
-        GetElementsStruct GElem;
-        k = 0;
-        while (k < NEP) {
-            GElem.elemArrayStrut[k] = elemArray[k];
+            GElem.elemArrayStrut[k] = components[k];
             k = k + 1;
         }
         return GElem;
@@ -126,6 +131,10 @@ extern "C" int estar_(char *formulaStr,
                       int *mediaID,
                       char *outputFilename
                      ) {
+
+    cout << "\n-------------------------\n";
+    cout << "== MEDIUM " << *mediaID << " BLOCK FOR ESTAR ==\n";
+
     string mainFormula;
     string mainFormula_temp_1;
     string mainFormula_temp_2;
@@ -133,7 +142,6 @@ extern "C" int estar_(char *formulaStr,
     // The 2 lines below process formula_str to make the array readable by estar c++
     GetElements elemObject;
     GetElements::GetElementsStruct GeElems = elemObject.getElemArray(formulaStr, *NEP);
-    int k = 0;
     int nepInt = *NEP;
     int isCompInt = *ISCOMP;
     int mediaNum = *mediaID; // this is the media id
@@ -144,6 +152,9 @@ extern "C" int estar_(char *formulaStr,
     while (i < nepInt) {
         estarFormulaArrayInput[i] = GeElems.elemArrayStrut[i];
         estarWeightArrayInput[i] = massFraction[i];
+
+        cout << "Formula is " << estarFormulaArrayInput[i] << " with fraction " << estarWeightArrayInput[i] << endl;
+
         i = i + 1;
     }
 
@@ -152,7 +163,65 @@ extern "C" int estar_(char *formulaStr,
     estarCalculation(isCompInt, nepInt, mediumDensity, estarFormulaArrayInput, estarWeightArrayInput,
                      numOfAtoms, densityCorr, enGrid, meanIval, ipotval, mediaNum, string(outputFilename));
 
+    cout << "-------------------------\n";
+
     return 0;
 }
 
 
+extern "C" int compoundstoelements_(char *formulaStr,
+                                   double *massFraction,
+                                   char *elementStr,
+                                   double *rhoz,
+                                   double *zelem,
+                                   int *ncomp,
+                                   int *NEP
+                                  ) {
+    GetElements elemObject;
+    GetElements::GetElementsStruct GeElems = elemObject.getElemArray(formulaStr, *ncomp);
+    int numCompounds = *ncomp;
+
+    string estarFormulaArrayInput[numCompounds];
+    double estarWeightArrayInput[numCompounds];
+    vector<string> elementList;
+    vector<double> elementWeightList;
+    for(size_t i=0; i < numCompounds; ++i) {
+        estarFormulaArrayInput[i] = GeElems.elemArrayStrut[i];
+        estarWeightArrayInput[i] = massFraction[i];
+    }
+
+    double rho = 1; // Material density not actually needed, so use a dummy
+    formula_calc fc = mixtureCalculation(rho, estarFormulaArrayInput, estarWeightArrayInput, numCompounds);
+
+    // Set NEP to actually be the number of elements now, instead of the number of compounds
+    NEP[0] = fc.mmax;
+
+    size_t charPos = 0;
+    for(size_t i=0; i != fc.mmax; ++i) {
+
+        // For each Z value we have, look up the element string
+        // They are already sorted by increasing Z
+        for (auto it = per_table.begin(); it != per_table.end(); ++it) {
+            if (it->second == fc.jz[i]) {
+
+                // For each character in the element string
+                for (auto &ch : it->first) {
+                    elementStr[charPos++] = ch;
+                }
+
+                // Pad out to 50 characters with spaces
+                for (auto j=it->first.length(); j < 50; j++) {
+                    elementStr[charPos++] = ' ';
+                }
+
+                break;
+            }
+        }
+
+        // Set the mass fraction for the element, for the whole mixture
+        rhoz[i] = fc.wt[i];
+        zelem[i] = fc.jz[i];
+    }
+
+    return 0;
+}
