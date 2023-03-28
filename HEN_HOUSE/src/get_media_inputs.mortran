@@ -675,6 +675,7 @@ $INTEGER  ival,ival_media,ival_medfile,i,j,k,ival_ae,ival_ue,ival_ap,ival_up,
 $REAL ecut_min, pcut_min;
 
 $LOGICAL  medfile_specified,densityfile_specified,elements_specified,
+          mixture_specified,
           outfile_specified($MXMED), densityoutputfile_specified($MXMED);
 $LOGICAL  iunrst_specified,stern_specified,iaprim_specified,
           gasp_specified,rho_specified,start_delim_found,end_delim_found,
@@ -710,10 +711,11 @@ character*512 toUpper;
 
 "temporary variables for storing values before committing them"
 "to the media library"
-$INTEGER nne_tmp,iaprim_tmp,epstfl_tmp,iunrst_tmp;
+$INTEGER nne_tmp,iaprim_tmp,epstfl_tmp,iunrst_tmp,numCompounds;
 $REAL rho_tmp,rhoz_tmp($MXEL),z_tmp($MXEL),pz_tmp($MXEL),ae_tmp,ap_tmp,
-      ue_tmp,up_tmp,gasp_tmp,ipot_tmp,localdensity_tmp;
-$TYPE asym_tmp($MXEL);
+      ue_tmp,up_tmp,gasp_tmp,ipot_tmp,localdensity_tmp,
+      compoundFractions_tmp($MXEL);
+character*50 asym_tmp($MXEL),compoundList_tmp($MXEL);
 
 "for stuff read from the density correction file"
 $INTEGER nepst_df,nne_df;
@@ -901,6 +903,7 @@ DO i=1,NMED[
 
    "set up defaults"
    elements_specified=.false.;
+   mixture_specified=.false.;
    rho_specified=.false.;
    bulkdensity_specified=.false.;
    localdensity_specified=.false.;
@@ -996,6 +999,53 @@ DO i=1,NMED[
      IF(elements_specified)[
        $WRITE_MEDERR(' Composition specified in .egsinp file.');
      ]
+   ]
+
+   "see if composition is specified explicitly as a mixture of compounds"
+   "this can be a comma separated list of compounds, to define a mixture"
+   ival=ival+1;
+   ival_elements=ival;
+   values_sought(ival) = 'mixture compounds';
+   type(ival)          = 2;  "i.e.  character input"
+   nvalue(ival)        = 0;
+   nmin=ival_elements;nmax=ival_elements;
+   CALL GET_INPUT;
+   IF(error_flags(ival_elements)=0)[
+    IF(elements_specified)[
+        $egs_fatal('(a)',' Error: Both elements and mixture compounds ',
+            'have been specified. Please choose only one.');
+    ]
+
+    "now get fraction of each element or compound"
+    "check to see if fractional wts specified"
+    ival=ival+1;
+    ival_rhoz=ival;
+    nne_tmp=nvalue(ival_elements);
+    numCompounds=nne_tmp;
+    values_sought(ival)='mass fractions';
+    type(ival)=1;
+    nvalue(ival)=nne_tmp;
+    nmin=ival_rhoz;nmax=ival_rhoz;
+    IF(nne_tmp=1)[
+        "set max, min and default values"
+        value_min(ival)=0.0;
+        value_max(ival)=1.e15;
+        default(ival)=1.;
+    ]
+    CALL GET_INPUT;
+    IF(error_flags(ival_rhoz)=0)[
+        "got em.  Use em."
+        DO j=1,nne_tmp[
+            compoundList_tmp(j)=char_value(ival_elements,j);
+            compoundFractions_tmp(j)=value(ival_rhoz,j);
+        ]
+        elements_specified=.true.;
+        mixture_specified=.true.;
+        spec_by_rhoz=.true.;
+    ]
+    IF(elements_specified)[
+        $WRITE_MEDERR(' Composition specified in .egsinp file.');
+    ]
    ]
 
    "Get the material density, rho"
@@ -1609,7 +1659,6 @@ DO i=1,NMED[
 
    "okay, now commit this to the media library"
    IF(elements_specified & rho_specified)[
-
        ae(i)=ae_tmp;
        ue(i)=ue_tmp;
        ap(i)=ap_tmp;
@@ -1634,41 +1683,72 @@ DO i=1,NMED[
          ipot(i) = ipot_tmp;
        ]
 
-       DO j=1,nne_tmp[
-         inpasym(i,j)=asym_tmp(j);
-         "assume we are getting z from asym"
-         "redundant in the case where medium defined using"
-         "density correction file"
-         "ZTBL is a function defined in pegs4_routines.mortran"
-         zelem(i,j)=ZTBL(asym_tmp(j));
-         i01=zelem(i,j);
-         "WATBL defined in pegs4_macros.mortran"
-         wa(i,j)=WATBL(i01);
-         wa4(i,j)=WATBL(i01);
-         "also do $REAL4 math so we can check against cross-sections"
-         "calculated by pegs4.mortran"
-         IF(spec_by_rhoz)[
+       IF(~mixture_specified)[
+        DO j=1,nne_tmp[
+            inpasym(i,j)=asym_tmp(j);
+            "assume we are getting z from asym"
+            "redundant in the case where medium defined using"
+            "density correction file"
+            "ZTBL is a function defined in pegs4_routines.mortran"
+            zelem(i,j)=ZTBL(asym_tmp(j));
+            i01=zelem(i,j);
+            "WATBL defined in pegs4_macros.mortran"
+            wa(i,j)=WATBL(i01);
+            wa4(i,j)=WATBL(i01);
+            "also do $REAL4 math so we can check against cross-sections"
+            "calculated by pegs4.mortran"
+            IF(spec_by_rhoz)[
+                rhoz(i,j)=rhoz_tmp(j);
+                rhoz4(i,j)=rhoz_tmp(j);
+                pz(i,j)=rhoz(i,j)/wa(i,j);
+                pz4(i,j)=rhoz4(i,j)/wa4(i,j);
+
+            ]
+            ELSEIF(spec_by_pz)[
+                pz(i,j)=pz_tmp(j);
+                pz4(i,j)=pz_tmp(j);
+                rhoz(i,j)=pz(i,j)*wa(i,j);
+                rhoz4(i,j)=pz4(i,j)*wa4(i,j);
+            ]
+        ]
+
+        iscompound(i) = 0;
+        IF(spec_by_pz)[
+            IF (nne(i)>1) ["check if there are > 1 elements"
+            iscompound(i) = 1;
+            "is_compound(i) is 1 only if medium is specified"
+            "with number of atoms."
+            "(From PIRS-701 page 269)"
+            ]
+        ]
+       ] ELSE [
+
+        ncomp(i)=nne_tmp;
+
+        DO j=1,nne_tmp[
+            compoundList(i,j)=compoundList_tmp(j);
+            compoundFractions(i,j)=compoundFractions_tmp(j);
+        ]
+
+        "Get the atomic data from the compounds"
+        CALL compoundstoelements(compoundList_tmp, compoundFractions_tmp,
+            asym_tmp, rhoz_tmp, z_tmp, ncomp(i), nne_tmp);
+
+        "nne_tmp will now have been updated with actual number of elements"
+        nne(i)=nne_tmp;
+
+        "Now we update everything to be by element instead of by compound"
+        DO j=1,nne_tmp[
+            inpasym(i,j)=asym_tmp(j);
             rhoz(i,j)=rhoz_tmp(j);
             rhoz4(i,j)=rhoz_tmp(j);
+            zelem(i,j) = z_tmp(j);
+            i01=zelem(i,j);
+            wa(i,j)=WATBL(i01);
+            wa4(i,j)=WATBL(i01);
             pz(i,j)=rhoz(i,j)/wa(i,j);
             pz4(i,j)=rhoz4(i,j)/wa4(i,j);
-
-         ]
-         ELSEIF(spec_by_pz)[
-            pz(i,j)=pz_tmp(j);
-            pz4(i,j)=pz_tmp(j);
-            rhoz(i,j)=pz(i,j)*wa(i,j);
-            rhoz4(i,j)=pz4(i,j)*wa4(i,j);
-         ]
-       ]
-       iscompound(i) = 0;
-       IF(spec_by_pz)[
-         IF (nne(i)>1) ["check if there are > 1 elements"
-          iscompound(i) = 1;
-          "is_compound(i) is 1 only if medium is specified"
-          "with number of atoms."
-          "(From PIRS-701 page 269)"
-         ]
+        ]
        ]
 
        iunrst(i)=iunrst_tmp;
@@ -1699,7 +1779,6 @@ entry show_media_parameters(ounit);
 IF ( ounit <= 0 ) return;
 
 IF(is_pegsless)[
-
 
 "show common data"
 
@@ -1733,9 +1812,9 @@ DO i=1,nmed[
   IF(~(ipot(i)=-1))[
     write(ounit,'(a,1p,e14.5,a)')' I-value: ',ipot(i),' MeV';
   ]
-  write(ounit,'(a,24a4)')' Elements: ',(inpasym(i,j),j=1,nne(i));
-  write(ounit,'(a,1p,12e14.5)')'    rhoz: ',(rhoz(i,j),j=1,nne(i));
-  write(ounit,'(a,1p,12e14.5)')'      pz: ',(pz(i,j),j=1,nne(i));
+  write(ounit,'(a,24a10)')' Elements: ',(inpasym(i,j),j=1,nne(i));
+  write(ounit,'(a,1p,24e14.5)')'    rhoz: ',(rhoz(i,j),j=1,nne(i));
+  write(ounit,'(a,1p,24e14.5)')'      pz: ',(pz(i,j),j=1,nne(i));
   write(ounit,'(a,i5)')'  iunrst: ',iunrst(i);
   write(ounit,'(a,i5)')'  iaprim: ',iaprim(i);
   write(ounit,'(a,1p,e14.5,a)')'    gasp: ',inpgasp(i),' atm.';

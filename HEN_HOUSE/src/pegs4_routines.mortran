@@ -1704,8 +1704,13 @@ IPOTVAL = IPOTVAL * 1000000;
 
 "Here we call estar"
 "The parameters are described in estarCalc.cpp"
-CALL estar(ELEM_NAMES,RHOZP,PZP,LDENSITY,densityCorr,
-enGrid,NEP,ISCOMP,IEV,IPOTVAL,MEDID,OUTDENSITY);
+IF (NCOMPOUNDS > 0) [
+    CALL estar(COMP_NAMES,COMP_FRACS,PZP,LDENSITY,densityCorr,
+    enGrid,NCOMPOUNDS,ISCOMP,IEV,IPOTVAL,MEDID,OUTDENSITY);
+] ELSE [
+    CALL estar(ELEM_NAMES,RHOZP,PZP,LDENSITY,densityCorr,
+    enGrid,NEP,ISCOMP,IEV,IPOTVAL,MEDID,OUTDENSITY);
+]
 
 "After the call to ESTAR, the remainder"
 "of the calculation is similiar to the EPSTFL=1"
