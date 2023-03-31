@@ -307,7 +307,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         else if(iarg == EGS_Application::BeforeCompton)
         {
 
-            /*
             if(is_fat && !app->getIbcmp())
             {
                 //label as nonphat to be passed on to descendents
@@ -318,7 +317,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             }
             else //straight-up compton
             {
-            */
                 //label interacting photon as non-phat and reduce weight (if phat)
                 latch = latch & ~(1 << 0);
                 app->setLatch(latch);
@@ -339,7 +337,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 // kill photons not aimed into the field and any electrons
                 int nstart = np, aux=1;
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
-            //}
+            }
         }
         else if (iarg == EGS_Application::BeforeRayleigh)
         {
@@ -1208,10 +1206,12 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    //delete top (interacting) particle since we are about to overwrite it
    app->deleteParticleFromStack(np);
 
+   EGS_Float br,sint,cost,cphi,sphi; //declared out here because they are also used for the electron below
+   EGS_Particle p;
+
    for(int j=0; j<=nsample; j++)
    {
-            EGS_Particle p;
-            EGS_Float br,temp, cost, sint, rejf;
+            EGS_Float temp, rejf;
 
             if (j==nsample)
             {
@@ -1230,11 +1230,11 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                 rejf = 1 - br*sint/(1+br*br);
             } while ( app->getRngUniform()*rejmax > rejf || sint < 0 );
 
+            cost = 1 - temp; sint = sqrt(sint);
+            app->getRngAzimuth(cphi,sphi);
+
             //Note: BEAMnrc does not do the following check on E*br (the energy of the photon)
             if( E*br > AP ) {
-                cost = 1 - temp; sint = sqrt(sint);
-                EGS_Float cphi,sphi;
-                app->getRngAzimuth(cphi,sphi);
                 EGS_Float un,vn,wn;
                 if( need_rotation ) {
                     EGS_Float us = sint*cphi, vs = sint*sphi;
@@ -1285,7 +1285,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
             }
    }
 
-   //now the electron
+   //now the electron--Note: br, cost will have the values set for the phat photon
    EGS_Float Eelec = E*(1-br);
    EGS_Float aux = 1 + br*br - 2*br*cost;
    EGS_Float un=0,vn=0,wn=1;
@@ -1297,7 +1297,6 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
             vn = u.z*sindel*us + cosdel*vs + u.y*cost;
             wn = u.z*cost - sinpsi*us;
    }
-   EGS_Particle p;
    p.x = x;
    p.u = EGS_Vector(un,vn,wn);
    p.ir = irl;
