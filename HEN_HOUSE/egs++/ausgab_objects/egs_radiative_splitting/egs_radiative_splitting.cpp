@@ -1173,6 +1173,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    EGS_Float eps12_t = eps1_t*eps1_t; EGS_Float alpha2_t = (eps2_t*eps2_t-eps12_t);
    EGS_Float alpha_t = alpha1_t/(alpha1_t+alpha2_t/2);
    EGS_Float eps1 = 1/(1+Ko*(1-ct_min)), eps2 = 1/(1+Ko*(1-ct_max));
+   EGS_Float eps1_0 = eps1, eps2_0 = eps2;
    EGS_Float alpha1 = log(eps2/eps1);
    EGS_Float w1 = alpha1*(Ko2-2*Ko-2)+(eps2-eps1)*(1./eps1/eps2 + broi
                 + Ko2*(eps1+eps2)/2);
@@ -1207,9 +1208,19 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    //delete top (interacting) particle since we are about to overwrite it
    app->deleteParticleFromStack(np);
 
-   for(int j=0; j<nsample; j++) {
+   for(int j=0; j<=nsample; j++)
+   {
             EGS_Particle p;
             EGS_Float br,temp, cost, sint, rejf;
+
+            if (j==nsample)
+            {
+                //for fat photon directed away from field
+                eps1 = eps1_t; eps2 = 1; eps12 = eps12_t;
+                alpha1 = alpha1_t; alpha2 = alpha2_t; alpha = alpha_t;
+                rejmax = 1;
+            }
+
             do {
                 if( app->getRngUniform() < alpha )
                     br = eps1*exp(alpha1*app->getRngUniform());
@@ -1232,13 +1243,35 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                     wn = u.z*cost - sinpsi*us;
                 } else { un = sint*cphi; vn = sint*sphi; wn = u.z*cost; }
                 int ns = 0;
-                if( wn > 0 ) {
-                    EGS_Float aux = (ssd - x.z)/wn;
-                    EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
-                    if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
+                if (j==nsample)
+                {
+                    //potential phat photon directed away from the field
+                    if (br <= eps1_0 || br >= eps2_0)
+                    {
+                        ns = nint;
+                    }
+                }
+                else
+                {
+                    ns = nint;
+                    //potential thin photon directed into the field
+                    if( wn > 0 ) {
+                        EGS_Float aux = (ssd - x.z)/wn;
+                        EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
+                        if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
+                    }
+                    if (ns > 1)
+                    {
+                        //not sure if we really need this because smart compton should have taken
+                        //care of the phat photon directed away from the field in the logic above, right?
+                        if (app->getRngUniform()*ns > 1)
+                        {
+                           ns = 0;
+                        }
+                    }
                 }
                 if( ns > 0 ) {
-                    //split photon falls within the field, add it to the stack
+                    //add the photon to the stack
                     p.x = x;
                     p.u = EGS_Vector(un,vn,wn);
                     p.ir = irl;
@@ -1250,78 +1283,29 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                     app->addParticleToStack(p,dnear);
                 }
             }
-    }
+   }
 
-    //now potentially generate one fat photon directed away from the field
-    //and the compton scattered electron
-    //NB: This is really poorly documented
-
-    //photon first
-    eps1 = eps1_t; eps2 = eps2_t; alpha1 = alpha1_t;
-    EGS_Float eps12 = eps1*eps1; EGS_Float alpha2 = (eps2*eps2-eps12);
-    EGS_Float alpha = alpha1/(alpha1+alpha2/2);
-    EGS_Float br,temp, cost, sint, rejf;
-    do {
-        if( app->getRngUniform() < alpha )
-            br = eps1*exp(alpha1*app->getRngUniform());
-        else
-            br = sqrt(eps12 + app->getRngUniform()*alpha2);
-        temp = (1-br)/(Ko*br); sint = temp*(2-temp);
-        rejf = 1 - br*sint/(1+br*br);
-     } while ( app->getRngUniform() > rejf || sint < 0 );
-     cost = 1 - temp; sint = sqrt(sint);
-     EGS_Float cphi,sphi; app->getRngAzimuth(cphi,sphi);
-     if (E*br > AP) {
-        EGS_Float un,vn,wn;
-        if( need_rotation ) {
-                EGS_Float us = sint*cphi, vs = sint*sphi;
-                un = u.z*cosdel*us - sindel*vs + u.x*cost;
-                vn = u.z*sindel*us + cosdel*vs + u.y*cost;
-                wn = u.z*cost - sinpsi*us;
-        } else { un = sint*cphi; vn = sint*sphi; wn = u.z*cost; }
-        bool take_it = true;
-        if( wn > 0) {
-           EGS_Float t = (ssd-x.z)/wn;
-           EGS_Float x1 = x.x + un*t, y1 = x.y + vn*t;
-           if( x1*x1 + y1*y1 <= fs*fs ) take_it = false; //directed into the field
-        }
-        if (take_it) {
-           EGS_Particle p;
-           p.x = x;
-           p.u = EGS_Vector(un,vn,wn);
-           p.ir = irl;
-           //restore weight and label particle as phat
-           p.wt=wt*nint;
-           p.latch = latch | (1 << 0);
-           p.q = 0;
-           p.E = E*br;
-           app->addParticleToStack(p,dnear);
-        }
-      }
-
-      //now the electron
-      EGS_Float Eelec = E*(1-br);
-      EGS_Float aux = 1 + br*br - 2*br*cost;
-      EGS_Float un=0,vn=0,wn=1;
-      if( aux > 1e-10 ) {
+   //now the electron
+   EGS_Float Eelec = E*(1-br);
+   EGS_Float aux = 1 + br*br - 2*br*cost;
+   EGS_Float un=0,vn=0,wn=1;
+   if( aux > 1e-8 ) {
             cost = (1-br*cost)/sqrt(aux); sint = 1-cost*cost;
             if( sint > 0 ) sint = -sqrt(sint); else sint = 0;
-            if( need_rotation ) {
-                EGS_Float us = sint*cphi, vs = sint*sphi;
-                un = u.z*cosdel*us - sindel*vs + u.x*cost;
-                vn = u.z*sindel*us + cosdel*vs + u.y*cost;
-                wn = u.z*cost - sinpsi*us;
-            } else { un = sint*cphi; vn = sint*sphi; wn = u.z*cost; }
-      }
-      EGS_Particle p;
-      p.x = x;
-      p.u = EGS_Vector(un,vn,wn);
-      p.ir = irl;
-      p.wt = wt*nint;
-      p.latch = latch | (1 << 0);
-      p.q = -1;
-      p.E = Eelec + app->getRM();
-      app->addParticleToStack(p,dnear);
+            EGS_Float us = sint*cphi, vs = sint*sphi;
+            un = u.z*cosdel*us - sindel*vs + u.x*cost;
+            vn = u.z*sindel*us + cosdel*vs + u.y*cost;
+            wn = u.z*cost - sinpsi*us;
+   }
+   EGS_Particle p;
+   p.x = x;
+   p.u = EGS_Vector(un,vn,wn);
+   p.ir = irl;
+   p.wt = wt*nint;
+   p.latch = latch | (1 << 0);
+   p.q = -1;
+   p.E = Eelec + app->getRM();
+   app->addParticleToStack(p,dnear);
 }
 
 void EGS_RadiativeSplitting::initSmartKM(EGS_Float Emax) {
