@@ -764,6 +764,7 @@ void EGS_RadiativeSplitting::getCostMinMax(const EGS_Vector &xx, const EGS_Vecto
     double ro2 = xo*xo + yo*yo; ro = sqrt(ro2);
     double r = fs; double r2 = r*r; double d2r2 = d2+r2;
     double st2 = u*u + v*v;
+
     // handle odd cases st=0 and/or ro=0
     if( st2 < 1e-10 ) {
         double dmin = sqrt(d2 + (r-ro)*(r-ro)),
@@ -1152,18 +1153,23 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
 
    //This is based on (i.e. copied from) the BEAMnrc implementation
 
-   //need to set variable iwt=nsplit or iwt=nint
-   int np = app->Np;
-   EGS_Vector x = app->top_p.x;
-   EGS_Vector u = app->top_p.u;
+   //get properties of interacting particle
+   int np = app->getNp();
+   EGS_Particle p_init = app->getParticleFromStack(np);
+   EGS_Vector x = p_init.x;
+   EGS_Vector u = p_init.u;
+   int irl=p_init.ir, latch=p_init.latch;
+   imed = app->getMedium(irl);
+   EGS_Float AP = app->getAp(imed);
+   EGS_Float dnear = app->getDnear(np);
+   //reduce weight of split particles
+   EGS_Float wt = p_init.wt/nint;
+
    EGS_Float ct_min,ct_max,ro; EGS_Float d = ssd - x.z;
    getCostMinMax(x,u,ro,ct_min,ct_max);
 
-   EGS_Float E = app->top_p.E; EGS_Float Ko = E/app->getRM();
+   EGS_Float E = p_init.E; EGS_Float Ko = E/app->getRM();
    EGS_Float broi = 1+2*Ko, Ko2 = Ko*Ko;
-   //reduce weight of split particles
-   EGS_Float wt = app->top_p.wt/nint;
-
    EGS_Float alpha1_t = log(broi);
    EGS_Float eps1_t = 1/broi, eps2_t = 1;
    EGS_Float w2 = alpha1_t*(Ko2-2*Ko-2)+(eps2_t-eps1_t)*
@@ -1198,13 +1204,9 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    //
    // sample interactions towards circle
    //
-   int irl=app->top_p.ir, latch=app->top_p.latch;
-   imed = app->getMedium(irl);
-   EGS_Float AP = app->getAp(imed);
-   EGS_Float dnear = app->getDnear(np); int ip = np-1;
 
    //delete top (interacting) particle since we are about to overwrite it
-   app->deleteParticleFromStack(np);
+   //app->deleteParticleFromStack(np);
 
    EGS_Float br,sint,cost,cphi,sphi; //declared out here because they are also used for the electron below
    EGS_Particle p;
@@ -1228,60 +1230,71 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                     br = sqrt(eps12 + app->getRngUniform()*alpha2);
                 temp = (1-br)/(Ko*br); sint = temp*(2-temp);
                 rejf = 1 - br*sint/(1+br*br);
-            } while ( app->getRngUniform()*rejmax > rejf || sint < 0 );
+            } while ( app->getRngUniform()*rejmax > rejf );
 
-            cost = 1 - temp; sint = sqrt(sint);
+            if ( temp < 2 )
+            {
+                cost = 1 - temp; sint = sqrt(sint);
+            }
+            else
+            {
+                cost = -1; sint = 0;
+            }
             app->getRngAzimuth(cphi,sphi);
 
-            //Note: BEAMnrc does not do the following check on E*br (the energy of the photon)
-            if( E*br > AP ) {
-                EGS_Float un,vn,wn;
-                if( need_rotation ) {
-                    EGS_Float us = sint*cphi, vs = sint*sphi;
-                    un = u.z*cosdel*us - sindel*vs + u.x*cost;
-                    vn = u.z*sindel*us + cosdel*vs + u.y*cost;
-                    wn = u.z*cost - sinpsi*us;
-                } else { un = sint*cphi; vn = sint*sphi; wn = u.z*cost; }
-                int ns = 0;
-                if (j==nsample)
-                {
-                    //potential phat photon directed away from the field
-                    if (br <= eps1_0 || br >= eps2_0)
-                    {
-                        ns = nint;
-                    }
-                }
-                else
+            EGS_Float un,vn,wn;
+            if( need_rotation )
+            {
+                EGS_Float us = sint*cphi, vs = sint*sphi;
+                un = u.z*cosdel*us - sindel*vs + u.x*cost;
+                vn = u.z*sindel*us + cosdel*vs + u.y*cost;
+                wn = u.z*cost - sinpsi*us;
+            }
+            else
+            {
+                un = sint*cphi;
+                vn = sint*sphi;
+                wn = u.z*cost;
+            }
+            int ns = 0;
+            if (j==nsample)
+            {
+                //potential phat photon directed away from the field
+                if (br <= eps1_0 || br >= eps2_0)
                 {
                     ns = nint;
-                    //potential thin photon directed into the field
-                    if( wn > 0 ) {
-                        EGS_Float aux = (ssd - x.z)/wn;
-                        EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
-                        if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
-                    }
-                    if (ns > 1)
-                    {
+                }
+            }
+            else
+            {
+                ns = nint;
+                //potential thin photon directed into the field
+                if( wn > 0 ) {
+                    EGS_Float aux = (ssd - x.z)/wn;
+                    EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
+                    if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
+                }
+                if (ns > 1)
+                {
                         //not sure if we really need this because smart compton should have taken
                         //care of the phat photon directed away from the field in the logic above, right?
-                        if (app->getRngUniform()*ns > 1)
-                        {
-                           ns = 0;
-                        }
+                    if (app->getRngUniform()*ns > 1)
+                    {
+                       ns = 0;
                     }
                 }
-                if( ns > 0 ) {
+            }
+            if( ns > 0 ) {
                     //add the photon to the stack
-                    p.x = x;
-                    p.u = EGS_Vector(un,vn,wn);
-                    p.ir = irl;
-                    p.wt = wt*ns;
-                    p.latch = latch;
-                    p.q = 0;
-                    p.E = E*br;
+                p.x = x;
+                p.u = EGS_Vector(un,vn,wn);
+                p.ir = irl;
+                p.wt = wt*ns;
+                p.latch = latch;
+                p.q = 0;
+                p.E = E*br;
 
-                    app->addParticleToStack(p,dnear);
-                }
+                app->addParticleToStack(p,dnear);
             }
    }
 
@@ -1304,6 +1317,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    p.latch = latch | (1 << 0);
    p.q = -1;
    p.E = Eelec + app->getRM();
+   //replace original interacting photon with this particle
    app->addParticleToStack(p,dnear);
 }
 
