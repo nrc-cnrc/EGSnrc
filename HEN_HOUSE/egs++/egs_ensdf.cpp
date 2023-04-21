@@ -2356,7 +2356,7 @@ void BetaPlusRecord::processEnsdf() {
         }
     }
 
-    if (ecIntensity > 0) {
+    if (ecIntensity > 0 && getNormalizationRecord()) {
         // Get the number of shells
         int nshell = getNormalizationRecord()->getNShell();
 
@@ -2589,7 +2589,7 @@ void GammaRecord::processEnsdf() {
     // Calculate the total transition intensity
     transitionIntensity = gammaIntensity * (1+icCoeff) * (1+ipCoeff);
 
-    if (icCoeff > 0) {
+    if (icCoeff > 0 && getNormalizationRecord()) {
         // Get the number of shells
         int nshell = getNormalizationRecord()->getNShell();
 
