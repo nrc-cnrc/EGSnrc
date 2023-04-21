@@ -1192,6 +1192,8 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    EGS_Float asample = wc*nint; int nsample = (int) asample;
    asample -= nsample; if( app->getRngUniform() < asample ) ++nsample;
 
+   egsInformation(" w1=%g w2=%g wc=%g nsample=%d\n",w1,w2,wc,nsample);
+
    // prepare rotations--not totally sure why this is needed
    EGS_Float sinpsi, sindel, cosdel; bool need_rotation;
    sinpsi = u.x*u.x + u.y*u.y;
@@ -1205,11 +1207,9 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    // sample interactions towards circle
    //
 
-   //delete top (interacting) particle since we are about to overwrite it
-   //app->deleteParticleFromStack(np);
-
    EGS_Float br,sint,cost,cphi,sphi; //declared out here because they are also used for the electron below
    EGS_Particle p;
+   //nsample=nsample+2;
 
    for(int j=0; j<=nsample; j++)
    {
@@ -1267,13 +1267,14 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
             }
             else
             {
-                ns = nint;
+                ns = 0;
                 //potential thin photon directed into the field
                 if( wn > 0 ) {
                     EGS_Float aux = (ssd - x.z)/wn;
                     EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
                     if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
                 }
+                /*
                 if (ns > 1)
                 {
                         //not sure if we really need this because smart compton should have taken
@@ -1283,6 +1284,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                        ns = 0;
                     }
                 }
+                */
             }
             if( ns > 0 ) {
                     //add the photon to the stack
@@ -1290,6 +1292,11 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                 p.u = EGS_Vector(un,vn,wn);
                 p.ir = irl;
                 p.wt = wt*ns;
+                if (ns > 1)
+                {
+                    //label photon as phat
+                    latch | (1 << 0);
+                }
                 p.latch = latch;
                 p.q = 0;
                 p.E = E*br;
@@ -1318,7 +1325,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    p.q = -1;
    p.E = Eelec + app->getRM();
    //replace original interacting photon with this particle
-   app->addParticleToStack(p,dnear);
+   app->updateParticleOnStack(np,p,dnear);
 }
 
 void EGS_RadiativeSplitting::initSmartKM(EGS_Float Emax) {
