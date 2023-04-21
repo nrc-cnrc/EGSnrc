@@ -13171,7 +13171,7 @@ wc = w1/w2;
 asample = wc*nbrspl; nsample = asample; asample = asample - nsample;
 $RANDOMSET rnno; IF( rnno < asample ) [ nsample = nsample + 1; ]
 nsample = nsample + 1;
-"write(25,*) ' wc = ',wc,' nsample = ',nsample;
+write(*,*)' w1,w2,wc,nsample: ',w1,w2,wc,nsample;
 
 sinpsi = u(npold)*u(npold)+v(npold)*v(npold);
 IF( sinpsi > 1e-20 ) [
