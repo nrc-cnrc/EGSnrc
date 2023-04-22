@@ -764,6 +764,9 @@ void EGS_RadiativeSplitting::getCostMinMax(const EGS_Vector &xx, const EGS_Vecto
     double ro2 = xo*xo + yo*yo; ro = sqrt(ro2);
     double r = fs; double r2 = r*r; double d2r2 = d2+r2;
     double st2 = u*u + v*v;
+    double st = sqrt(st2);
+
+    /*
 
     // handle odd cases st=0 and/or ro=0
     if( st2 < 1e-10 ) {
@@ -773,7 +776,6 @@ void EGS_RadiativeSplitting::getCostMinMax(const EGS_Vector &xx, const EGS_Vecto
         else        { ct_max = d*w/dmax; ct_min = ro <= r ? -1 : d*w/dmin; }
         return;
     }
-    double st = sqrt(st2);
     if( ro2 < 1e-8 ) {
         double aux = 1/sqrt(d2 + r*r);
         ct_max = (d*w + r*st)*aux; ct_min = (d*w - r*st)*aux;
@@ -786,6 +788,8 @@ void EGS_RadiativeSplitting::getCostMinMax(const EGS_Vector &xx, const EGS_Vecto
         return;
     }
 
+    */
+
     EGS_Float dmin = ro <= fs ? d : sqrt(d2 + (fs-ro)*(fs-ro));
     EGS_Float dmax = sqrt(d2 + (fs+ro)*(fs+ro));
     EGS_Float aux = w*d - u*xo - v*yo;
@@ -795,6 +799,7 @@ void EGS_RadiativeSplitting::getCostMinMax(const EGS_Vector &xx, const EGS_Vecto
     ct_min = aux - fs*st;
     if( ct_min > 0 ) ct_min /= dmax; else ct_min /= dmin;
     if( ct_min < -1 ) ct_min = -1;
+    egsInformation("\nd=%g,xo=%g,yo=%g,u=%g,v=%g,w=%g,aux=%g,fs=%g,st=%g,dmin=%g,dmax=%g,ct_min=%g,ct_max=%g\n",d,xo,yo,u,v,w,aux,fs,st,dmin,dmax,ct_min,ct_max);
 }
 
 void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
@@ -1167,16 +1172,17 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
 
    EGS_Float ct_min,ct_max,ro; EGS_Float d = ssd - x.z;
    getCostMinMax(x,u,ro,ct_min,ct_max);
+   egsInformation("ct_min=%g ct_max=%g\n",ct_min,ct_max);
 
    EGS_Float E = p_init.E; EGS_Float Ko = E/app->getRM();
    EGS_Float broi = 1+2*Ko, Ko2 = Ko*Ko;
    EGS_Float alpha1_t = log(broi);
-   EGS_Float eps1_t = 1/broi, eps2_t = 1;
+   EGS_Float eps1_t = 1./broi, eps2_t = 1;
    EGS_Float w2 = alpha1_t*(Ko2-2*Ko-2)+(eps2_t-eps1_t)*
        (1./eps1_t/eps2_t + broi + Ko2*(eps1_t+eps2_t)/2);
    EGS_Float eps12_t = eps1_t*eps1_t; EGS_Float alpha2_t = (eps2_t*eps2_t-eps12_t);
    EGS_Float alpha_t = alpha1_t/(alpha1_t+alpha2_t/2);
-   EGS_Float eps1 = 1/(1+Ko*(1-ct_min)), eps2 = 1/(1+Ko*(1-ct_max));
+   EGS_Float eps1 = 1./(1+Ko*(1-ct_min)), eps2 = 1./(1+Ko*(1-ct_max));
    EGS_Float eps1_0 = eps1, eps2_0 = eps2;
    EGS_Float alpha1 = log(eps2/eps1);
    EGS_Float w1 = alpha1*(Ko2-2*Ko-2)+(eps2-eps1)*(1./eps1/eps2 + broi
