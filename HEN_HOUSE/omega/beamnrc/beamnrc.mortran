@@ -13145,6 +13145,7 @@ $INTEGER ntest;
 "ntest = 1000000; nc1=0; nc2=0; nc3=0;
 
 call get_ctminmax(x(np),y(np),z(np),u(np),v(np),w(np),ro,fs,ssd,ctmin,ctmax);
+write(*,*)' ctmin,ctmax ',ctmin,ctmax;
 "write(25,*) '*******do_smart_compton: e = ',e(np),' ctmin/max = ',ctmin,ctmax,
 "' weight = ',wt(np);
 "write(25,*) ' pos: ',x(np),y(np),z(np),' dir: ',u(np),v(np),w(np);
@@ -13482,6 +13483,9 @@ IF( ct_max > 1 ) ct_max = 1;
 ct_min = aux-fs*st;
 IF( ct_min > 0 ) [ ct_min = ct_min/dmax; ] ELSE [ ct_min = ct_min/dmin; ]
 IF( ct_min < -1 ) ct_min = -1;
+write(*,*);
+write(*,*)'d,xo,yo,uo,vo,wo,aux,fs,st,dmin,dmax,ct_min,ct_max ',
+d,xo,yo,uo,vo,wo,aux,fs,st,dmin,dmax,ct_min,ct_max;
 return; end;
 
 subroutine old_get_ctminmax(x,y,z,u,v,w,fs,ssd,ct_min,ct_max);
