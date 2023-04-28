@@ -1428,205 +1428,208 @@ void EGS_Ensdf::getEmissionsFromComments() {
     for (vector<CommentRecord *>::iterator comment = myCommentRecords.begin();
             comment != myCommentRecords.end(); comment++) {
 
-        string line = (*comment)->getComment();
+        auto commentSet = (*comment)->getComments();
+        for (auto c = commentSet.begin(); c != commentSet.end(); ++c) {
+            string line = *c;
 
-        // Search for this line to ensure emissions will follow the right format
-        if (line.find("{U Energy (keV)}   {U Intensity}  {U Line}") != std::string::npos) {
-            containsEmissions = true;
-        }
-
-        if (containsEmissions) {
-            // Check for the end of multi-line records
-            // and average them together
-            if (line.length() < 48 ||
-                    ((xrayContinues || augerContinues) && line.at(30) != '|')) {
-
-                // If we just finished going through a series of
-                // lines that started with a "total" line at the top
-                // then we'll check to make sure they have intensities assigned
-                if (gotTotal) {
-
-                    // In the event that a zero intensity is in one of the lines
-                    // following the "total" line, ALL of those following
-                    // lines are assigned an equal fraction of the total
-                    // intensity. This is an imperfect work-around for insufficient
-                    // data. Using this method, the correct energies are used,
-                    // rather than assigning a single averaged "total" energy line.
-                    if (countNumAfterTotal > 0) {
-                        // X-rays
-                        if (lineTotalType == 0) {
-                            bool containsZeroIntensity = false;
-                            for (std::vector<double>::iterator it = xrayIntensities.end()-countNumAfterTotal; it != xrayIntensities.end(); ++it) {
-                                if (*it < epsilon) {
-                                    containsZeroIntensity = true;
-                                    break;
-                                }
-                            }
-
-                            if (containsZeroIntensity) {
-                                for (std::vector<double>::iterator it = xrayIntensities.end()-countNumAfterTotal; it != xrayIntensities.end(); ++it) {
-                                    *it = lineTotalIntensity / countNumAfterTotal;
-                                }
-                            }
-
-                            // Auger
-                        }
-                        else if (lineTotalType == -1) {
-                            bool containsZeroIntensity = false;
-                            for (std::vector<double>::iterator it = augerIntensities.end()-countNumAfterTotal; it != augerIntensities.end(); ++it) {
-                                if (*it < epsilon) {
-                                    containsZeroIntensity = true;
-                                    break;
-                                }
-                            }
-
-                            if (containsZeroIntensity) {
-                                for (std::vector<double>::iterator it = augerIntensities.end()-countNumAfterTotal; it != augerIntensities.end(); ++it) {
-                                    *it = lineTotalIntensity / countNumAfterTotal;
-                                }
-                            }
-                        }
-                    }
-
-                    gotTotal = false;
-                    countNumAfterTotal = 0;
-                    lineTotalIntensity = 0.;
-                }
-
-                if ((xrayContinues || augerContinues)
-                        && multilineEnergies.size() > 0) {
-
-                    double energySum = 0;
-                    double intensitySum = 0;
-                    unsigned int numNonzeroE = 0;
-                    unsigned int numNonzeroI = 0;
-                    for (unsigned int i=0; i < multilineEnergies.size(); ++i) {
-                        if (multilineEnergies[i] > 0) {
-                            energySum += multilineEnergies[i];
-                            numNonzeroE++;
-                        }
-                    }
-                    for (unsigned int i=0; i < multilineIntensities.size(); ++i) {
-                        if (multilineIntensities[i] > epsilon) {
-                            intensitySum += multilineIntensities[i];
-                            numNonzeroI++;
-                        }
-                    }
-                    double energy;
-                    if (numNonzeroE > 0) {
-                        energy = energySum / numNonzeroE;
-                    }
-                    double intensity;
-                    if (numNonzeroI > 0) {
-                        intensity = intensitySum / numNonzeroI;
-                    }
-
-                    if (numNonzeroE > 0 && numNonzeroI > 0) {
-                        if (xrayContinues) {
-                            xrayEnergies.push_back(energy);
-                            xrayIntensities.push_back(intensity);
-                        }
-                        else {
-                            augerEnergies.push_back(energy);
-                            augerIntensities.push_back(intensity);
-                        }
-                    }
-
-                    multilineEnergies.clear();
-                    multilineIntensities.clear();
-                }
-
-                xrayContinues = false;
-                augerContinues = false;
+            // Search for this line to ensure emissions will follow the right format
+            if (line.find("{U Energy (keV)}   {U Intensity}  {U Line}") != std::string::npos) {
+                containsEmissions = true;
             }
 
-            // Check for records containing XRays or Auger electrons
-            if (line.length() > 48) {
+            if (containsEmissions) {
+                // Check for the end of multi-line records
+                // and average them together
+                if (line.length() < 48 ||
+                        ((xrayContinues || augerContinues) && line.at(30) != '|')) {
 
-                string emissionLine = egsTrimString(line.substr(47));
+                    // If we just finished going through a series of
+                    // lines that started with a "total" line at the top
+                    // then we'll check to make sure they have intensities assigned
+                    if (gotTotal) {
 
-                // See if the line is an XRay or Auger
-                if (emissionLine.length() < 1 || (emissionLine.at(0) != 'X' && emissionLine.find("AUGER") == std::string::npos)) {
-                    continue;
-                }
+                        // In the event that a zero intensity is in one of the lines
+                        // following the "total" line, ALL of those following
+                        // lines are assigned an equal fraction of the total
+                        // intensity. This is an imperfect work-around for insufficient
+                        // data. Using this method, the correct energies are used,
+                        // rather than assigning a single averaged "total" energy line.
+                        if (countNumAfterTotal > 0) {
+                            // X-rays
+                            if (lineTotalType == 0) {
+                                bool containsZeroIntensity = false;
+                                for (std::vector<double>::iterator it = xrayIntensities.end()-countNumAfterTotal; it != xrayIntensities.end(); ++it) {
+                                    if (*it < epsilon) {
+                                        containsZeroIntensity = true;
+                                        break;
+                                    }
+                                }
 
-                string eStr = egsTrimString(line.substr(13, 15));
+                                if (containsZeroIntensity) {
+                                    for (std::vector<double>::iterator it = xrayIntensities.end()-countNumAfterTotal; it != xrayIntensities.end(); ++it) {
+                                        *it = lineTotalIntensity / countNumAfterTotal;
+                                    }
+                                }
 
-                // If we have a range in energy (e.g. 0.1-0.3)
-                // Find the average
-                size_t eDash = eStr.find('-');
-                double energy;
-                if (eDash!=std::string::npos) {
-                    if (eStr.length() > eDash+1) {
-                        double e1 = atof(eStr.substr(0, eDash).c_str());
-                        double e2 = atof(eStr.substr(eDash+1).c_str());
-                        energy = (e1 + e2) / 2;
-                    }
-                    else {
-                        energy = atof(eStr.substr(0, eDash).c_str());
-                    }
-                }
-                else {
-                    energy = atof(eStr.c_str());
-                }
+                                // Auger
+                            }
+                            else if (lineTotalType == -1) {
+                                bool containsZeroIntensity = false;
+                                for (std::vector<double>::iterator it = augerIntensities.end()-countNumAfterTotal; it != augerIntensities.end(); ++it) {
+                                    if (*it < epsilon) {
+                                        containsZeroIntensity = true;
+                                        break;
+                                    }
+                                }
 
-                // Convert the energy from keV to MeV
-                energy /= 1000.;
+                                if (containsZeroIntensity) {
+                                    for (std::vector<double>::iterator it = augerIntensities.end()-countNumAfterTotal; it != augerIntensities.end(); ++it) {
+                                        *it = lineTotalIntensity / countNumAfterTotal;
+                                    }
+                                }
+                            }
+                        }
 
-                // Get the intensity
-                string iStr = egsTrimString(line.substr(32, 9));
-                double intensity = atof(iStr.c_str());
-
-                // If this is a line coming after a "total" line,
-                // increment a counter. This will be used in the
-                // event that the lines following the "total"
-                // have zero intensity assigned
-                if (gotTotal && energy > epsilon) {
-                    countNumAfterTotal++;
-                }
-
-                // If this line is the total of the next lines, we will
-                // skip this line and use the individual ones
-                // However, record the total intensity in case we need it
-                if (emissionLine.find("(total)") != std::string::npos) {
-                    gotTotal = true;
-                    lineTotalIntensity = intensity;
-                    if (emissionLine.find("AUGER") != std::string::npos) {
-                        lineTotalType = -1;
-                    }
-                    else {
-                        lineTotalType = 0;
-                    }
-                    continue;
-                }
-
-                // Multi-line records have a bar '|' at 30
-                // We will store the data and average them later
-                if (line.at(30) == '|') {
-                    if (emissionLine.at(0) == 'X') {
-                        xrayContinues = true;
-                    }
-                    else if (emissionLine.find("AUGER") != std::string::npos) {
-                        augerContinues = true;
+                        gotTotal = false;
+                        countNumAfterTotal = 0;
+                        lineTotalIntensity = 0.;
                     }
 
-                    multilineEnergies.push_back(energy);
-                    multilineIntensities.push_back(intensity);
+                    if ((xrayContinues || augerContinues)
+                            && multilineEnergies.size() > 0) {
 
+                        double energySum = 0;
+                        double intensitySum = 0;
+                        unsigned int numNonzeroE = 0;
+                        unsigned int numNonzeroI = 0;
+                        for (unsigned int i=0; i < multilineEnergies.size(); ++i) {
+                            if (multilineEnergies[i] > 0) {
+                                energySum += multilineEnergies[i];
+                                numNonzeroE++;
+                            }
+                        }
+                        for (unsigned int i=0; i < multilineIntensities.size(); ++i) {
+                            if (multilineIntensities[i] > epsilon) {
+                                intensitySum += multilineIntensities[i];
+                                numNonzeroI++;
+                            }
+                        }
+                        double energy;
+                        if (numNonzeroE > 0) {
+                            energy = energySum / numNonzeroE;
+                        }
+                        double intensity;
+                        if (numNonzeroI > 0) {
+                            intensity = intensitySum / numNonzeroI;
+                        }
+
+                        if (numNonzeroE > 0 && numNonzeroI > 0) {
+                            if (xrayContinues) {
+                                xrayEnergies.push_back(energy);
+                                xrayIntensities.push_back(intensity);
+                            }
+                            else {
+                                augerEnergies.push_back(energy);
+                                augerIntensities.push_back(intensity);
+                            }
+                        }
+
+                        multilineEnergies.clear();
+                        multilineIntensities.clear();
+                    }
+
+                    xrayContinues = false;
+                    augerContinues = false;
                 }
-                else {
-                    if (emissionLine.at(0) == 'X') {
-                        if ((energy > epsilon && intensity > epsilon) ||
-                                (gotTotal && energy > epsilon)) {
-                            xrayEnergies.push_back(energy);
-                            xrayIntensities.push_back(intensity);
+
+                // Check for records containing XRays or Auger electrons
+                if (line.length() > 48) {
+
+                    string emissionLine = egsTrimString(line.substr(47));
+
+                    // See if the line is an XRay or Auger
+                    if (emissionLine.length() < 1 || (emissionLine.at(0) != 'X' && emissionLine.find("AUGER") == std::string::npos)) {
+                        continue;
+                    }
+
+                    string eStr = egsTrimString(line.substr(13, 15));
+
+                    // If we have a range in energy (e.g. 0.1-0.3)
+                    // Find the average
+                    size_t eDash = eStr.find('-');
+                    double energy;
+                    if (eDash!=std::string::npos) {
+                        if (eStr.length() > eDash+1) {
+                            double e1 = atof(eStr.substr(0, eDash).c_str());
+                            double e2 = atof(eStr.substr(eDash+1).c_str());
+                            energy = (e1 + e2) / 2;
+                        }
+                        else {
+                            energy = atof(eStr.substr(0, eDash).c_str());
                         }
                     }
-                    else if (emissionLine.find("AUGER") != std::string::npos) {
-                        if ((energy > epsilon && intensity > epsilon) ||
-                                (gotTotal && energy > epsilon)) {
-                            augerEnergies.push_back(energy);
-                            augerIntensities.push_back(intensity);
+                    else {
+                        energy = atof(eStr.c_str());
+                    }
+
+                    // Convert the energy from keV to MeV
+                    energy /= 1000.;
+
+                    // Get the intensity
+                    string iStr = egsTrimString(line.substr(32, 9));
+                    double intensity = atof(iStr.c_str());
+
+                    // If this is a line coming after a "total" line,
+                    // increment a counter. This will be used in the
+                    // event that the lines following the "total"
+                    // have zero intensity assigned
+                    if (gotTotal && energy > epsilon) {
+                        countNumAfterTotal++;
+                    }
+
+                    // If this line is the total of the next lines, we will
+                    // skip this line and use the individual ones
+                    // However, record the total intensity in case we need it
+                    if (emissionLine.find("(total)") != std::string::npos) {
+                        gotTotal = true;
+                        lineTotalIntensity = intensity;
+                        if (emissionLine.find("AUGER") != std::string::npos) {
+                            lineTotalType = -1;
+                        }
+                        else {
+                            lineTotalType = 0;
+                        }
+                        continue;
+                    }
+
+                    // Multi-line records have a bar '|' at 30
+                    // We will store the data and average them later
+                    if (line.at(30) == '|') {
+                        if (emissionLine.at(0) == 'X') {
+                            xrayContinues = true;
+                        }
+                        else if (emissionLine.find("AUGER") != std::string::npos) {
+                            augerContinues = true;
+                        }
+
+                        multilineEnergies.push_back(energy);
+                        multilineIntensities.push_back(intensity);
+
+                    }
+                    else {
+                        if (emissionLine.at(0) == 'X') {
+                            if ((energy > epsilon && intensity > epsilon) ||
+                                    (gotTotal && energy > epsilon)) {
+                                xrayEnergies.push_back(energy);
+                                xrayIntensities.push_back(intensity);
+                            }
+                        }
+                        else if (emissionLine.find("AUGER") != std::string::npos) {
+                            if ((energy > epsilon && intensity > epsilon) ||
+                                    (gotTotal && energy > epsilon)) {
+                                augerEnergies.push_back(energy);
+                                augerIntensities.push_back(intensity);
+                            }
                         }
                     }
                 }
@@ -1974,12 +1977,12 @@ CommentRecord::CommentRecord(vector<string> ensdf):Record(ensdf) {
 void CommentRecord::processEnsdf() {
     if (!lines.empty()) {
 
-        comment = lines.front();
+        comments = lines;
     }
 }
 
-string CommentRecord::getComment() {
-    return comment;
+vector<string> CommentRecord::getComments() {
+    return comments;
 }
 
 // Parent Record
