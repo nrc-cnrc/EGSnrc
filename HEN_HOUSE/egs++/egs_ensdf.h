@@ -176,10 +176,10 @@ protected:
 class CommentRecord : public Record {
 public:
     CommentRecord(vector<string> ensdf);
-    string getComment();
+    vector<string> getComments();
 
 private:
-    string comment;
+    vector<string> comments;
     void processEnsdf();
 };
 
