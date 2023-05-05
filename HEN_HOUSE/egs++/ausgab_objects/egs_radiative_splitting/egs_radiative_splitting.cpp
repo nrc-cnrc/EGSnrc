@@ -799,7 +799,6 @@ void EGS_RadiativeSplitting::getCostMinMax(const EGS_Vector &xx, const EGS_Vecto
     ct_min = aux - fs*st;
     if( ct_min > 0 ) ct_min /= dmax; else ct_min /= dmin;
     if( ct_min < -1 ) ct_min = -1;
-    egsInformation("\nd=%g,xo=%g,yo=%g,u=%g,v=%g,w=%g,aux=%g,fs=%g,st=%g,dmin=%g,dmax=%g,ct_min=%g,ct_max=%g\n",d,xo,yo,u,v,w,aux,fs,st,dmin,dmax,ct_min,ct_max);
 }
 
 void EGS_RadiativeSplitting::getBremsEnergies(int np, int npold) {
@@ -1161,6 +1160,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    //get properties of interacting particle
    int np = app->getNp();
    EGS_Particle p_init = app->getParticleFromStack(np);
+   EGS_Float E = p_init.E;
    EGS_Vector x = p_init.x;
    EGS_Vector u = p_init.u;
    int irl=p_init.ir, latch=p_init.latch;
@@ -1170,11 +1170,13 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    //reduce weight of split particles
    EGS_Float wt = p_init.wt/nint;
 
+ //  egsInformation("\nEntering smartCompt: np=%d E=%g wt=%g x=%g y=%g z=%g u=%g v=%g w=%g\n",np,E,p_init.wt,x.x,x.y,x.z,u.x,u.y,u.z);
+
    EGS_Float ct_min,ct_max,ro; EGS_Float d = ssd - x.z;
    getCostMinMax(x,u,ro,ct_min,ct_max);
-   egsInformation("ct_min=%g ct_max=%g\n",ct_min,ct_max);
+//   egsInformation("ct_min=%g ct_max=%g\n",ct_min,ct_max);
 
-   EGS_Float E = p_init.E; EGS_Float Ko = E/app->getRM();
+   EGS_Float Ko = E/app->getRM();
    EGS_Float broi = 1+2*Ko, Ko2 = Ko*Ko;
    EGS_Float alpha1_t = log(broi);
    EGS_Float eps1_t = 1./broi, eps2_t = 1;
@@ -1198,7 +1200,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    EGS_Float asample = wc*nint; int nsample = (int) asample;
    asample -= nsample; if( app->getRngUniform() < asample ) ++nsample;
 
-   egsInformation(" w1=%g w2=%g wc=%g nsample=%d\n",w1,w2,wc,nsample);
+//   egsInformation(" w1=%g w2=%g wc=%g nsample=%d\n",w1,w2,wc,nsample);
 
    // prepare rotations--not totally sure why this is needed
    EGS_Float sinpsi, sindel, cosdel; bool need_rotation;
@@ -1248,6 +1250,17 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
             }
             app->getRngAzimuth(cphi,sphi);
 
+            int ns=0;
+            if (j==nsample)
+            {
+                //potential phat photon directed away from the field
+                if (br < eps1_0 && br < eps2_0)
+                {
+                    break;
+                }
+                ns = nint;
+            }
+
             EGS_Float un,vn,wn;
             if( need_rotation )
             {
@@ -1262,25 +1275,16 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                 vn = sint*sphi;
                 wn = u.z*cost;
             }
-            int ns = 0;
-            if (j==nsample)
+
+            if (j<nsample)
             {
-                //potential phat photon directed away from the field
-                if (br <= eps1_0 || br >= eps2_0)
-                {
-                    ns = nint;
-                }
-            }
-            else
-            {
-                ns = 0;
+                ns = nint;
                 //potential thin photon directed into the field
                 if( wn > 0 ) {
                     EGS_Float aux = (ssd - x.z)/wn;
                     EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
                     if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
                 }
-                /*
                 if (ns > 1)
                 {
                         //not sure if we really need this because smart compton should have taken
@@ -1290,8 +1294,8 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                        ns = 0;
                     }
                 }
-                */
             }
+
             if( ns > 0 ) {
                     //add the photon to the stack
                 p.x = x;
