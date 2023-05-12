@@ -211,8 +211,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         return 0;
     }
 
-    //if(app->top_p.wt < 1 && is_fat) exit(1);
-
     if( iarg == EGS_Application::BeforeBrems ) {
         double E = app->top_p.E;
         EGS_Float wt = app->top_p.wt;
@@ -1170,11 +1168,8 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    //reduce weight of split particles
    EGS_Float wt = p_init.wt/nint;
 
- //  egsInformation("\nEntering smartCompt: np=%d E=%g wt=%g x=%g y=%g z=%g u=%g v=%g w=%g\n",np,E,p_init.wt,x.x,x.y,x.z,u.x,u.y,u.z);
-
    EGS_Float ct_min,ct_max,ro; EGS_Float d = ssd - x.z;
    getCostMinMax(x,u,ro,ct_min,ct_max);
-//   egsInformation("ct_min=%g ct_max=%g\n",ct_min,ct_max);
 
    EGS_Float Ko = E/app->getRM();
    EGS_Float broi = 1+2*Ko, Ko2 = Ko*Ko;
@@ -1200,8 +1195,6 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    EGS_Float asample = wc*nint; int nsample = (int) asample;
    asample -= nsample; if( app->getRngUniform() < asample ) ++nsample;
 
-//   egsInformation(" w1=%g w2=%g wc=%g nsample=%d\n",w1,w2,wc,nsample);
-
    // prepare rotations--not totally sure why this is needed
    EGS_Float sinpsi, sindel, cosdel; bool need_rotation;
    sinpsi = u.x*u.x + u.y*u.y;
@@ -1217,7 +1210,6 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
 
    EGS_Float br,sint,cost,cphi,sphi; //declared out here because they are also used for the electron below
    EGS_Particle p;
-   //nsample=nsample+2;
 
    for(int j=0; j<=nsample; j++)
    {
@@ -1254,7 +1246,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
             if (j==nsample)
             {
                 //potential phat photon directed away from the field
-                if (br < eps1_0 && br < eps2_0)
+                if (br > eps1_0 && br < eps2_0)
                 {
                     break;
                 }
@@ -1312,6 +1304,11 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                 p.E = E*br;
 
                 app->addParticleToStack(p,dnear);
+
+                EGS_Float dist = (ssd - p.x.z)/p.u.z;
+                EGS_Float r_dist = (p.x.x + p.u.x*dist)*(p.x.x + p.u.x*dist) +
+                                   (p.x.y + p.u.y*dist)*(p.x.y + p.u.y*dist);
+                r_dist = sqrt(r_dist);
             }
    }
 
