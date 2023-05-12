@@ -235,8 +235,6 @@ public:
     void updateParticleOnStack(int ip, EGS_Particle p, EGS_Float dnear);
     EGS_Float getDnear(int np);
     int getNmed();
-    int getNpold();
-    int getNp();
     void setNpold(int npold);
     void deleteParticleFromStack(int ip);
     EGS_Particle getParticleFromStack(int ip);
