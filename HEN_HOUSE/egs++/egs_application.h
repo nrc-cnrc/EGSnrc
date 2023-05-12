@@ -1202,12 +1202,6 @@ public:
     virtual int getNmed() {
        return 0;
     }
-    virtual int getNpold() {
-       return 0;
-    }
-    virtual int getNp() {
-       return 0;
-    }
     virtual void setNpold(int npold) {};
     virtual void deleteParticleFromStack(int ip) {};
     virtual EGS_Particle getParticleFromStack(int ip) {

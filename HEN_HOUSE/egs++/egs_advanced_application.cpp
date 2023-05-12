@@ -1315,16 +1315,6 @@ void EGS_AdvancedApplication::setNpold(int npold) {
     the_stack->npold = npold+1;
 }
 
-//get npold of stack
-int EGS_AdvancedApplication::getNpold(){
-    return the_stack->npold-1;
-}
-
-//get current value of np from stack
-int EGS_AdvancedApplication::getNp(){
-    return the_stack->np-1;
-}
-
 //get total no. of media in simulation
 int EGS_AdvancedApplication::getNmed(){
     return nmed;
