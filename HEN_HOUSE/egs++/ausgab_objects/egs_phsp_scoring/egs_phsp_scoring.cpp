@@ -248,13 +248,6 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
         score_mu=false;
     }
 
-    if (app->top_p.q==0 && sqrt(app->top_p.x.x*app->top_p.x.x+app->top_p.x.y*app->top_p.x.y)<10 &&
-        app->top_p.wt==1.0)
-    {
-        egsInformation("np=%d iq=%d E=%g x=%g y=%g z=%g wt=%g\n",app->Np,app->top_p.q,app->top_p.E,app->top_p.x.x,
-app->top_p.x.y,app->top_p.x.z,app->top_p.wt);
-        exit(1);
-    }
     //counters, min. and max. k.e.
     EGS_Float prm = app->getRM();
     count++;
