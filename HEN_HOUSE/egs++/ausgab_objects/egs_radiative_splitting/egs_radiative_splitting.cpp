@@ -201,6 +201,8 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     //seems like a temporary solution
     int is_fat = (latch & (1 << 0));
 
+    if(app->top_p.wt < 1 && is_fat) exit(1);
+
     EGS_Float tmp_dist = (ssd - app->top_p.x.z)/app->top_p.u.z;
     EGS_Float tmp_r = sqrt((app->top_p.x.x+tmp_dist*app->top_p.u.x)*(app->top_p.x.x+tmp_dist*app->top_p.u.x) +
                       (app->top_p.x.y+tmp_dist*app->top_p.u.y)*(app->top_p.x.y+tmp_dist*app->top_p.u.y));
@@ -1294,12 +1296,12 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                 p.u = EGS_Vector(un,vn,wn);
                 p.ir = irl;
                 p.wt = wt*ns;
+                p.latch = latch;
                 if (ns > 1)
                 {
                     //label photon as phat
-                    latch | (1 << 0);
+                    p.latch = latch | (1 << 0);
                 }
-                p.latch = latch;
                 p.q = 0;
                 p.E = E*br;
 
