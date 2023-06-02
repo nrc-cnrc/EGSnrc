@@ -26,6 +26,7 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -818,6 +819,14 @@ do_checks:
         }
         return nstep + 1;
     }
+    
+    void getNextGeom(EGS_RandomGenerator *rndm){
+	for (int j=0; j<bg->regions(); ++j) {
+		g[j]->getNextGeom(rndm);
+	}
+	bg->getNextGeom(rndm);
+    };
+
 
     bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
         if (ireg >= 0 && ireg < nreg) {

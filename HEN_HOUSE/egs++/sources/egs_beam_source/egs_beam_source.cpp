@@ -27,6 +27,7 @@
 #                   Frederic Tessier
 #                   Reid Townson
 #                   Ernesto Mainegra-Hing
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -324,6 +325,7 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
         u_save = u;
         mu_save = mu;
     }
+    setMu(mu); //NEW A.D
     return count;
 }
 

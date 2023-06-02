@@ -25,6 +25,7 @@
 #
 #  Contributors:    Reid Townson
 #                   Hubert Ho
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -342,6 +343,7 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         }
         if (mu_stored) {
             p.mu = extrafloattemp[i_mu];
+	    setMu(p.mu); //NEW A.D
         }
         if (swap_bytes) {
             egsSwapBytes(&p.q);

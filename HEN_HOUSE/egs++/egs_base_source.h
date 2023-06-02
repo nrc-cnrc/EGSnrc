@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -43,6 +44,7 @@
 #include "egs_vector.h"
 #include "egs_object_factory.h"
 #include "egs_functions.h"
+
 
 #include <string>
 #include <iostream>
@@ -85,7 +87,7 @@ public:
      *
      */
     EGS_BaseSource(const string &Name="", EGS_ObjectFactory *f = 0) :
-        EGS_Object(Name,f) {};
+        EGS_Object(Name,f), mu_index(-1) {};
 
     /*! \brief Construct a source from the input pointed to by \a inp.
      *
@@ -96,7 +98,7 @@ public:
      *  plus additional information as needed by the source being created.
      */
     EGS_BaseSource(EGS_Input *input, EGS_ObjectFactory *f = 0) :
-        EGS_Object(input,f) {};
+        EGS_Object(input,f), mu_index(-1)  {};
     virtual ~EGS_BaseSource() {};
 
     /*!  \brief Get a short description of this source.
@@ -184,9 +186,11 @@ public:
     * particle.  Currently only makes sense for IAEA_PhspSource and
     * EGS_BeamSource.
     */
-    virtual EGS_Float getMu() {
-        return -1;
-    };
+    //virtual EGS_Float getMu() {
+        //return -1;
+    //};
+    
+    //virtual void setMu(EGS_Float temp_mu) {};
 
     /*!  \brief Store the source state into the stream \a data_out.
      *
@@ -302,6 +306,15 @@ public:
      * check in such cases.
      */
     static void addKnownTypeId(const char *name);
+    
+    EGS_Float getMu() { 
+      return mu_index;
+	
+    };
+    
+    void setMu(EGS_Float temp_mu) {
+        mu_index=temp_mu;
+    };
 
 protected:
 
@@ -311,6 +324,9 @@ protected:
      * descriptive string.
      */
     string description;
+    
+    /*! \brief Monitor unit index corresponding to a particle.*/
+    EGS_Float mu_index;
 
 };
 
@@ -567,7 +583,7 @@ public:
      */
     EGS_BaseSimpleSource(int Q, EGS_BaseSpectrum *Spec,
                          const string &Name="", EGS_ObjectFactory *f=0) :
-        EGS_BaseSource(Name,f), q(Q), s(Spec), count(0) { };
+        EGS_BaseSource(Name,f), q(Q), s(Spec), count(0) {};
 
     /*! \brief Construct a 'simple' particle source from the information
      * pointed to by \a input.
@@ -619,10 +635,11 @@ public:
     virtual EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                                     int &Q, int &latch, EGS_Float &E, EGS_Float &wt,
                                     EGS_Vector &x, EGS_Vector &u) {
-        Q = q;
+	Q = q;
         E = s->sampleEnergy(rndm);
         getPositionDirection(rndm,x,u,wt);
         setLatch(latch);
+	//EGS_Application *app = EGS_Application::activeApplication();
         return ++count;
     };
 
@@ -776,6 +793,7 @@ public:
         }
         return true;
     };
+    
 
 protected:
 
@@ -800,6 +818,8 @@ protected:
 
     /*! \brief Number of statistically independent particles delivered so far.*/
     EGS_I64          count;
+    
+    
 
 };
 

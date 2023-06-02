@@ -28,6 +28,7 @@
 #                   Frederic Tessier
 #                   Reid Townson
 #                   Randle Taylor
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -552,6 +553,12 @@ public:
             nstep += g[j]->getMaxStep();
         }
         return nstep;
+    };
+    
+    void getNextGeom(EGS_RandomGenerator *rndm){
+	for (int j=0; j<N; j++) {
+		g[j]->getNextGeom(rndm);
+	}
     };
 
     const string &getType() const {

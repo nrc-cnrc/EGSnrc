@@ -29,6 +29,7 @@
 #                   Reid Townson
 #                   Ernesto Mainegra-Hing
 #                   Hugo Bouchard
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -43,6 +44,7 @@
 #define EGS_BASE_GEOMETRY_
 
 #include "egs_vector.h"
+#include "egs_rndm.h"
 
 #include <string>
 #include <vector>
@@ -148,6 +150,8 @@ public:
         geomtry and -1 otherwise.
     */
     virtual int isWhere(const EGS_Vector &x) = 0;
+    
+    virtual void getNextGeom(EGS_RandomGenerator *rndm){}; 
 
     /*! \brief Find the bin to which \a xp belongs, given \a np bin edges \a p
 

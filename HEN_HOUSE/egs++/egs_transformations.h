@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -44,7 +45,9 @@
 #include "egs_math.h"
 #include "egs_functions.h"
 
+
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -651,7 +654,8 @@ public:
       R_{xz}, R_{yx}, R_{yy}, R_{yz}, R_{zx} R_{zy}, R_{zz}\f$.
     */
     static EGS_AffineTransform *getTransformation(EGS_Input *inp);
-
+    
+    static EGS_AffineTransform *getTransformation(vector<EGS_Float> trnsl, vector<EGS_Float> rot);
 };
 
 #endif

@@ -27,6 +27,7 @@
 #  Contributors:    Marc Chamberland
 #                   Rowan Thomson
 #                   Dave Rogers
+#                   Alexandre Demelo
 #
 ###############################################################################
 #
@@ -605,6 +606,14 @@ int EGS_AEnvelope::getMaxStep() const {
     }
     return nstep + inscribed_geoms.size();
 };
+
+void EGS_AEnvelope::getNextGeom(EGS_RandomGenerator *rndm){
+	for (int j=0; j< inscribed_geoms.size(); ++j) {
+		inscribed_geoms[j]->getNextGeom(rndm);
+	}
+	base_geom->getNextGeom(rndm);
+    };//getnext geom will go to lower level geometries and call getnext geom on them to implement motion if any of them are dynamic geometries
+
 
 EGS_Float EGS_AEnvelope::getVolume(int ireg) {
 

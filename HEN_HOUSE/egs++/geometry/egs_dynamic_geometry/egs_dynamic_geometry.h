@@ -1,7 +1,7 @@
 /*
 ###############################################################################
 #
-#  EGSnrc egs++ gtransformed geometry headers
+#  EGSnrc egs++ dynamic_geometry geometry headers
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -21,145 +21,120 @@
 #
 ###############################################################################
 #
-#  Author:          Iwan Kawrakow, 2005
+#  Author:          Alex Demelo 2023
 #
-#  Contributors:    Frederic Tessier
-#                   Reid Townson
-#                   Ernesto Mainegra-Hing
-#                   Alexandre Demelo
+#  Contributors:    
 #
 ###############################################################################
 */
 
 
-/*! \file egs_gtransformed.h
- *  \brief A transformed geometry: header
+/*! \file egs_dynamic_geometry.h
+ *  \brief A dynamic geometry: header
  *  \IK
  */
 
-#ifndef EGS_GTRANSFORMED_
-#define EGS_GTRANSFORMED_
+#ifndef EGS_DYNAMIC_GEOMETRY_
+#define EGS_DYNAMIC_GEOMETRY_
 
 #include "egs_base_geometry.h"
 #include "egs_transformations.h"
+#include "egs_rndm.h"
+#include "egs_vector.h"
+#include "egs_application.h"
+#include <vector>
+#include <string>
+#include <sstream>
 
 #ifdef WIN32
 
-    #ifdef BUILD_GTRANSFORMED_DLL
-        #define EGS_GTRANSFORMED_EXPORT __declspec(dllexport)
+    #ifdef BUILD_DYNAMIC_GEOMETRY_DLL
+        #define EGS_DYNAMIC_GEOMETRY_EXPORT __declspec(dllexport)
     #else
-        #define EGS_GTRANSFORMED_EXPORT __declspec(dllimport)
+        #define EGS_DYNAMIC_GEOMETRY_EXPORT __declspec(dllimport)
     #endif
-    #define EGS_GTRANSFORMED_LOCAL
+    #define EGS_DYNAMIC_GEOMETRY_LOCAL
 
 #else
 
     #ifdef HAVE_VISIBILITY
-        #define EGS_GTRANSFORMED_EXPORT __attribute__ ((visibility ("default")))
-        #define EGS_GTRANSFORMED_LOCAL  __attribute__ ((visibility ("hidden")))
+        #define EGS_DYNAMIC_GEOMETRY_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_DYNAMIC_GEOMETRY_LOCAL  __attribute__ ((visibility ("hidden")))
     #else
-        #define EGS_GTRANSFORMED_EXPORT
-        #define EGS_GTRANSFORMED_LOCAL
+        #define EGS_DYNAMIC_GEOMETRY_EXPORT
+        #define EGS_DYNAMIC_GEOMETRY_LOCAL
     #endif
 
 #endif
 
-/*! \brief A transformed geometry.
+/*! \brief A dynamic geometry.
 
   \ingroup Geometry
   \ingroup CompositeG
 
-A transformed geometry is a geometry that has been transformed to
-a different location and/or orientation by the application of an
-\link EGS_AffineTransform affine transformation \endlink
-\f$T(R,\vec{t})\f$, where \f$R\f$ is a rotation matrix
-(a 3x3 matrix with a determinant of unity) and \f$\vec{t}\f$ is a translation
-vector (so that \f$\vec{x}' = R \vec{x} + \vec{t}\f$).
-A transformed geometry is useful for the following two broad classes
-of situations:
-- It is easier or only possible to define a geometry at a location and
-  orientation different from the location and orientation needed in
-  the simulation (the second case is true for a box, for instance).
-- One needs two or more replicas of the same geometry object placed at
-  different locations/orientations.
-
-The implementation of the geometry methods for this geometry is very simple:
-one applies the inverse affine transformation to the particle position
-and the inverse rotation to the particle direction (if needed) and
-then uses the corresponding method of the geometry being transformed.
-A transformed geometry is defined using the following keys:
-\verbatim
-library = egs_gtransformed
-my geometry = name of a previously defined geometry
-input defining the transformation
-\endverbatim
-The input defining the affine transformation is described in
-EGS_AffineTransform::getTransformation().
-
-Transformed geometries are used in the
-<code>car.geom, chambers_in_box.geom, seeds_in_xyz.geom</code> and
-\c seeds_in_xyz1.geom example geometry files.
-
-A simple example:
-\verbatim
-:start geometry definition:
-    :start geometry:
-        name        = my_box
-        library     = egs_box
-        box size    = 1 2 3
-        :start media input:
-            media = water
-        :stop media input:
-    :stop geometry:
-
-    :start geometry:
-        name        = my_transform
-        library     = egs_gtransformed
-        my geometry = my_box
-        :start transformation:
-            translation = 0 0.5 0
-            rotation    = 0.5 0 -1
-            ## rotation is first!
-        :stop transformation:
-    :stop geometry:
-
-    simulation geometry = my_transform
-
-:stop geometry definition:
-\endverbatim
-\image html egs_gtransformed.png "A simple example"
 */
-class EGS_GTRANSFORMED_EXPORT EGS_TransformedGeometry :
+
+class EGS_DYNAMIC_GEOMETRY_EXPORT EGS_DynamicGeometry :
     public EGS_BaseGeometry {
-
-protected:
-
-    EGS_BaseGeometry    *g;   //!< The geometry being transformed
-    EGS_AffineTransform T;    //!< The affine transformation
-    string              type; //!< The geometry type
-
+      
 public:
-
-    /*! \brief Construct a geometry that is a copy of the geometry \a G
-    transformed by \a t
+  
+    struct EGS_ControlPointGeom {
+      
+	EGS_Float mu; //monitor unit index for control point
+	vector<EGS_Float> trnsl; //vector specifying x,y,z translation
+	vector<EGS_Float> rot;
+    };
+    
+  
+   /*! \brief Construct a dynamic geometry using \a G as the
+    geometry and cpts as the control points.
     */
-    EGS_TransformedGeometry(EGS_BaseGeometry *G, const EGS_AffineTransform &t,
-                            const string &Name = "") : EGS_BaseGeometry(Name), g(G), T(t) {
-        type = g->getType();
-        type += "T";
+    EGS_DynamicGeometry(EGS_BaseGeometry *G, EGS_Input *dyninp, const string &Name = "") : EGS_BaseGeometry(Name), g(G), valid(true) {//there used to be a t(T) here when taking transform (se gTransform). Do I need something new here for control points? 
+        //vector<EGS_ControlPointGeom> controlpnt_vector = &cpts;
+	type = g->getType();
+        type += "D";
         nreg = g->regions();
         is_convex = g->isConvex();
         has_rho_scaling = g->hasRhoScaling();
         has_B_scaling = g->hasBScaling();
+	EGS_DynamicGeometry::buildDynamicGeometry(g, dyninp);
+	
+	//do some checks on cpts
+        if (cpts.size()<2) {
+            egsWarning("EGS_DynamicSource: not enough or missing control points.\n");
+            valid = false;
+        }
+        else {
+            if (cpts[0].mu > 0.0) {
+                egsWarning("EGS_DynamicSource: mu index of control point 1 > 0.0.  This will generate many warning messages.\n");
+            }
+            int npts = cpts.size();
+            for (int i=0; i<npts; i++) {
+                if (i>0 && cpts[i].mu < cpts[i-1].mu-epsilon) {
+                    egsWarning("EGS_DynamicSource: mu index of control point %i < mu index of control point %i\n",i,i-1);
+                    valid = false;
+                }
+                if (cpts[i].mu<0.0) {
+                    egsWarning("EGS_DynamicSource: mu index of control point %i < 0.0\n",i);
+                    valid = false;
+                }
+            }
+            //normalize mu values
+            for (int i=0; i<npts-1; i++) {
+                cpts[i].mu /= cpts[npts-1].mu;
+            }
+        }
+        
     };
 
-    ~EGS_TransformedGeometry() {
+    ~EGS_DynamicGeometry() {
         if (!g->deref()) {
             delete g;
         }
     };
 
-    void setTransformation(const EGS_AffineTransform &t) {
+    void setTransformation(EGS_AffineTransform t) {
         T = t;
     };
 
@@ -217,11 +192,6 @@ public:
         return g->hownear(ireg,xt);
         //return g->hownear(ireg,x*T);
     };
-    
-    void getNextGeom(EGS_RandomGenerator *rndm){
-	g->getNextGeom(rndm);
-
-    };
 
     int getMaxStep() const {
         return g->getMaxStep();
@@ -266,19 +236,65 @@ public:
     void setBScaling(int start, int end, EGS_Float bf);
 
     void setBScaling(EGS_Input *);
+    
+    bool isValid() const {
+        return (valid);
+    };
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
+    
+     //equivalent of get next particle but for geometries. 
+    void getNextGeom(EGS_RandomGenerator *rndm) {
+	int errg = 1;
+        EGS_ControlPointGeom gipt;
+        
+	//here get source from activeapplication in order to extract mu
+	EGS_Application *app = EGS_Application::activeApplication();
+	while (errg) {
+		pmu = app->getMU();//gets mu from source if it exists (otherwise gives -1).
+		if (pmu<0) {
+			//if no mu is given by the source the geometry will randomly sample from 0 to 1. This is where we would call setmu on the source to update mu value for all objects
+			pmu = rndm->getUniform();
+			app->setMU(pmu);
+		}
+           errg = getCoordGeom(pmu,gipt);//now run the get coord method that will sample the cpt given to find the transformation that will be applied for the current history
+        }
+        
+	EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
+	setTransformation(*tDG);
+	g->getNextGeom(rndm);
+	//note in the line directly above *tDG uses * to make this the object that the pointer tDG points to. Thus it gives an AffineTransform and not *AffineTransform
+    };
+    
 
 protected:
-
+    EGS_BaseGeometry    *g;   //!< The geometry undergoing dynamic motion
+    
+    string              type; //!< The geometry type
+    
+    EGS_AffineTransform T;
+    
+    vector<EGS_ControlPointGeom> cpts;  //control points
+    
+    int ncpts;  //no. of control points
+    
+    bool valid; //is this a valid geometry
+    
+    
+    EGS_Float pmu; //monitor unit index corresponding to particle
+    
+                   //could just be a random number.
     /*! \brief Don't define media in the transformed geometry definition.
-
     This function is re-implemented to warn the user to not define
     media in the definition of a transformed geometry. Instead, media should
     be defined when specifying the geometry to be transformed.
     */
     void setMedia(EGS_Input *inp,int,const int *);
-
+    
+    int getCoordGeom(EGS_Float rand, EGS_ControlPointGeom &gipt);
+    
+    void buildDynamicGeometry(EGS_BaseGeometry *g, EGS_Input *dyninp);  
+    //EGS_BaseGeometry *createGeometry(EGS_Input *input);
 };
 
 #endif

@@ -27,6 +27,7 @@
 #  Contributors:    Marc Chamberland
 #                   Rowan Thomson
 #                   Dave Rogers
+#                   Alexandre Demelo
 #
 ###############################################################################
 #
@@ -401,6 +402,8 @@ public:
     void addBooleanProperty(int,int,int,int step=1);
 
     int getMaxStep() const;
+    
+    void getNextGeom(EGS_RandomGenerator *rndm);
 
     virtual EGS_Float getVolume(int ireg);
 
