@@ -24,6 +24,7 @@
 #  Author:          Manuel Stoeckl, 2015
 #
 #  Contributors:    Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -54,8 +55,12 @@ RenderWorker::~RenderWorker() {
 }
 
 void RenderWorker::loadTracks(QString fileName) {
-    vector<size_t> ntracks = vis->loadTracksData(fileName.toUtf8().constData());
-    emit tracksLoaded(ntracks);
+    vector<EGS_Float> timelist_p, timelist_e, timelist_po;
+    vector<size_t> ntracks = vis->loadTracksData(fileName.toUtf8().constData(), timelist_p, timelist_e, timelist_po);
+    // time lists passed as arguments above are references in all the subsequent
+    // calls (Geometryvisualizer, then privateVisualizer, then Trackview
+    // creation which updates time list reference)
+    emit tracksLoaded(ntracks, timelist_p, timelist_e, timelist_po);
 }
 
 void RenderWorker::drawAxes(const RenderParameters &p) {
@@ -342,3 +347,4 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
 
     return r;
 }
+

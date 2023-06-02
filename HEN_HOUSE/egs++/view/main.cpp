@@ -28,6 +28,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Cody Crewson
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -104,6 +105,7 @@ int main(int argc, char **argv) {
 
     QString tracks_file = QString("");
     QString config_file = QString("");
+    QString extension=QString("ptracks");
     if (argc >= 3) {
         QString argv2 = argv[2];
         if (argv2.endsWith("ptracks")) {
@@ -124,6 +126,7 @@ int main(int argc, char **argv) {
     }
 
     w.setTracksFilename(tracks_file);
+    w.setTracksExtension(extension); // set the tracks extension in the viewcontrol
     if (!w.loadInput(false)) {
         return 1;
     }

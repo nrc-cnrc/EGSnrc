@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Blake Walters
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -695,16 +696,23 @@ public:
         geometry->getLabelRegions(str, regs);
     }
 
-    /*! \brief Returns the value of the \a mu synchronization parameter
+    /*! \brief Returns the value of the \a time synchronization parameter
 
-      The parameter, \a mu, is a random number on \a [0,1) associated with each
+      The parameter, \a time, is a random number on \a [0,1) associated with each
       primary history and is retrieved from \a source.  It can be used to
-      synchronize geometric parameters throughout a simulation.  If \a mu is
-      not available in \a source (i.e., the \a getMu function has not been
+      synchronize geometric parameters throughout a simulation.  If \a time is
+      not available in \a source (i.e., the \a getTime function has not been
       reimplemented in \a source), then this returns -1.
      */
-    EGS_Float getMU() {
-        return source->getMu();
+    EGS_Float getTimeIndex() {
+        return source->getTimeIndex();
+    }
+
+    /*! Sets the value of the time synchronization parameter. This will mainly
+     * be used by the dynamic geometry if it does not receive time from a source
+     * */
+    void setTimeIndex(EGS_Float temp_time) {
+        source->setTimeIndex(temp_time);
     }
 
     /*! \brief User scoring function for accumulation of results and VRT implementation
@@ -1197,6 +1205,14 @@ public:
     //************************************************************
     virtual void setLatch(int latch) {};
 
+    bool containsDynamic() {
+        bool hasDynamic = false;
+        geometry->containsDynamic(hasDynamic);
+        if(!hasDynamic) {
+            source->containsDynamic(hasDynamic);
+        }
+        return hasDynamic;
+    }
 };
 
 #define APP_MAIN(app_name) \
