@@ -27,6 +27,7 @@
 #                   Frederic Tessier
 #                   Reid Townson
 #                   Ernesto Mainegra-Hing
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -58,7 +59,7 @@ EGS_BeamSource::EGS_BeamSource(EGS_Input *input, EGS_ObjectFactory *f) :
     i_reuse_photon = 0;
     i_reuse_electron = 0;
     is_valid = false;
-    mu_stored = false;
+    time_stored = false;
     lib = 0;
     Xmin = -veryFar;
     Xmax = veryFar;
@@ -194,15 +195,15 @@ EGS_BeamSource::EGS_BeamSource(EGS_Input *input, EGS_ObjectFactory *f) :
         n_reuse_electron = ntmp;
     }
 
-    //now see if Mu is returned from the BEAM source
-    //use motionsample function, tmu will be -1 if not provided by BEAM
-    //have to save the values read here to use as the first particle in the
-    //simulation
-    motionsample(&tei,&txi,&tyi,&tzi,&tui,&tvi,&twi,&twti,&tqi,&tlatchi,&counti,&tiphati,&tmui);
-    if (!mu_stored) {
-        if (tmui >= 0.0 && tmui <= 1.0) {
-            egsInformation("EGS_BeamSource:: Mu index passed from this source.\n");
-            mu_stored = true;
+    // now see if time is returned from the BEAM source use motionsample
+    // function, ttime will be -1 if not provided by BEAM have to save the
+    // values read here to use as the first particle in the simulation
+    motionsample(&tei,&txi,&tyi,&tzi,&tui,&tvi,&twi,&twti,&tqi,&tlatchi,&counti,&tiphati,&ttimei);
+
+    if (!time_stored) {
+        if (ttimei >= 0.0 && ttimei <= 1.0) {
+            egsInformation("EGS_BeamSource:: Time index passed from this source.\n");
+            time_stored = true;
         }
     }
 
@@ -224,7 +225,7 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
         wt = wt_save;
         x = x_save;
         u = u_save;
-        mu = mu_save;
+        time = time_save;
         ++i_reuse_photon;
         return count;
     }
@@ -235,11 +236,11 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
         wt = wt_save;
         x = x_save;
         u = u_save;
-        mu = mu_save;
+        time = time_save;
         ++i_reuse_electron;
         return count;
     }
-    EGS_Float te,tx,ty,tz,tu,tv,tw,twt,tmu;
+    EGS_Float te,tx,ty,tz,tu,tv,tw,twt,ttime;
     int tq,tlatch,tiphat;
     bool ok;
     do {
@@ -257,20 +258,20 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
             tlatch=tlatchi;
             count=counti;
             tiphat=tiphati;
-            tmu=tmui;
+            ttime=ttimei;
             use_iparticle=false;
         }
         else {
-            motionsample(&te,&tx,&ty,&tz,&tu,&tv,&tw,&twt,&tq,&tlatch,&count,&tiphat,&tmu);
+            motionsample(&te,&tx,&ty,&tz,&tu,&tv,&tw,&twt,&tq,&tlatch,&count,&tiphat,&ttime);
             //sample(&te,&tx,&ty,&tz,&tu,&tv,&tw,&twt,&tq,&tlatch,&count,&tiphat);
             //egsInformation("EGS_BeamSource::getNextParticle: Got E=%g q=%d wt=%g"
             //    " x=(%g,%g,%g) latch=%d count=%lld\n",te,tq,twt,tx,ty,tz,
             //    tlatch,count);
-            if (mu_stored && (tmu < 0. || tmu > 1.0)) {
+            if (time_stored && (ttime < 0. || ttime > 1.0)) {
                 //something's wrong
-                egsWarning("EGS_BeamSource::getNextParticle: Mu index is stored in this source but mu returned < 0\n");
-                egsWarning("Will no longer read mu.\n");
-                mu_stored = false;
+                egsWarning("EGS_BeamSource::getNextParticle: Time index is stored in this source but time returned < 0\n");
+                egsWarning("Will no longer read time.\n");
+                time_stored = false;
             }
         }
         if (tq) {
@@ -314,7 +315,7 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
     wt = twt;
     x = EGS_Vector(tx,ty,tz);
     u = EGS_Vector(tu,tv,tw);
-    mu = tmu;
+    time = ttime;
     if (save_it) {
         q_save = tq;
         latch_save = 0;
@@ -322,9 +323,29 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
         wt_save = twt;
         x_save = x;
         u_save = u;
-        mu_save = mu;
+        time_save = time;
     }
+
+    if (time_stored) {
+        setTimeIndex(time);
+        /* this is setting the time index using the base source set call. We get
+         * rid of the local getTimeIndex function and it should allow for saving
+         * time in the base source like all the other sources do */
+    }
+    else {
+        setTimeIndex(-1);
+    }
+
     return count;
+}
+
+/**
+* @brief Check if the simulation source contains time indices.
+*
+* @param hasdynamic Boolean flag to indicate if time indices are included in particles returned by the source.
+*/
+void EGS_BeamSource::containsDynamic(bool &hasdynamic) {
+    hasdynamic = time_stored;
 }
 
 EGS_BeamSource::~EGS_BeamSource() {

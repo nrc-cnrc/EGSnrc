@@ -29,6 +29,7 @@
 #                   Reid Townson
 #                   Hubert Ho
 #                   Max Orok
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -48,6 +49,7 @@
 #include "egs_base_source.h"
 #include "egs_simple_container.h"
 #include "egs_ausgab_object.h"
+#include "egs_base_geometry.h"
 
 #include <cstring>
 #include <cstdio>
@@ -926,8 +928,11 @@ int EGS_Application::simulateSingleShower() {
                        " attempts\n");
             return 1;
         }
+        setTimeIndex(-1);
         current_case =
             source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,p.x,p.u);
+        geometry->getNextGeom(rndm);//calling get next geom on the simulation geometry.
+        //this is equivalent to the get next particle, it is simply grabbing the next state of the geometry. Only really important for dynamic geometries
         ireg = geometry->isWhere(p.x);
         if (ireg < 0) {
             EGS_Float t = veryFar;

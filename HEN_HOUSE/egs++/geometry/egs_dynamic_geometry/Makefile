@@ -1,7 +1,7 @@
 
 ###############################################################################
 #
-#  EGSnrc egs++ makefile to build particle track scoring object
+#  EGSnrc egs++ makefile to build dynamic_geometry geometry
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -21,7 +21,7 @@
 #
 ###############################################################################
 #
-#  Author:          Iwan Kawrakow, 2009
+#  Author:          Alexandre Demelo, 2023
 #
 #  Contributors:
 #
@@ -32,21 +32,13 @@ include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
-DEFS = $(DEF1) -DBUILD_TRACK_SCORING_DLL
+DEFS = $(DEF1) -DBUILD_DYNAMIC_GEOMETRY_DLL
 
-library = egs_track_scoring
-lib_files = egs_track_scoring
-my_deps = $(common_ausgab_deps)
+library = egs_dynamic_geometry
+lib_files = egs_dynamic_geometry
+my_deps = egs_transformations.h
 extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
 include $(SPEC_DIR)egspp_libs.spec
 
 $(make_depend)
-
-test:
-	@echo "common_h2: $(common_h2)"
-	@echo "extra_dep: $(extra_dep)"
-
-clean:
-	$(REMOVE) $(ABS_DSO)*$(library)*
-	$(REMOVE) *.o

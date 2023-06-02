@@ -312,6 +312,8 @@ public:
         }
     };
 
+    void containsDynamic(bool &hasdynamic);
+
 protected:
 
     int nsource;
