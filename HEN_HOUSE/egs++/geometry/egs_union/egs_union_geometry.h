@@ -26,6 +26,7 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -277,6 +278,32 @@ public:
             }
         }
         return tmin;
+    };
+
+    void getNextGeom(EGS_RandomGenerator *rndm) {
+        // calls getNextGeom on its component geometries to update dynamic
+        // geometries in the simulation
+        for (int j=0; j<ng; j++) {
+            g[j]->getNextGeom(rndm);
+        }
+    };
+
+    void updatePosition(EGS_Float time) {
+        // calls updatePosition on its component geometries to update dynamic
+        // geometries in the simulation
+        for (int j=0; j<ng; j++) {
+            g[j]->updatePosition(time);
+        }
+    };
+
+    void containsDynamic(bool &hasdynamic) {
+        // calls containsDynamic on its component geometries (only calls if
+        // hasDynamic is false, as if it is true we already found one)
+        for (int j=0; j<ng; j++) {
+            if (!hasdynamic) {
+                g[j]->containsDynamic(hasdynamic);
+            }
+        }
     };
 
     int getMaxStep() const {

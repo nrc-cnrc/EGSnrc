@@ -153,10 +153,10 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
         latch_ind = 2;//type of latch as defined by iaea
         iaea_n_extra_long=1; //only store latch
         iaea_i_latch=0; // position of latch in array
-        if (score_mu) {
+        if (score_time) {
             iaea_n_extra_float=1;
-            mu_ind = 0; //set type to generic float
-            iaea_i_mu=0; //position of mu in array
+            time_ind = 0; //set type to generic float
+            iaea_i_time=0; //position of time index in array
         }
         else {
             iaea_n_extra_float=0; //no extra floats
@@ -184,8 +184,8 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
     else if (ocharge == 2) {
         description += "charged";
     }
-    if (oformat ==1 && score_mu) {
-        description += "\n mu will be scored (if available)";
+    if (oformat ==1 && score_time) {
+        description += "\n time index will be scored (if available)";
     }
     if (oformat ==0 && score_mc) {
         description += "\n will score multiple crossers (and descendents)";
@@ -241,11 +241,11 @@ void EGS_PhspScoring::reportResults() {
 //also, keep track of phase space file counters, min., max. energy
 void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
 
-    //if user requested mu scoring, check if mu is available
-    if (score_mu && app->getMU() < 0) {
-        egsWarning("\nEGS_PhspScoring: User requested mu scoring, but mu is inavailable with this source.\n");
-        egsWarning("Turning off mu scoring.\n");
-        score_mu=false;
+    //if user requested time index scoring, check if time is available
+    if (score_time && app->getTimeIndex() < 0) {
+        egsWarning("\nEGS_PhspScoring: User requested time index scoring, but time is inavailable with this source.\n");
+        egsWarning("Turning off time index scoring.\n");
+        score_time=false;
     }
 
     //counters, min. and max. k.e.
@@ -286,8 +286,8 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
     p_stack[phsp_index].v = app->top_p.u.y;
     p_stack[phsp_index].w = app->top_p.u.z;
     p_stack[phsp_index].q = app->top_p.q;
-    if (score_mu) {
-        p_stack[phsp_index].mu = app->getMU();
+    if (score_time) {
+        p_stack[phsp_index].time = app->getTimeIndex();
     }
     p_stack[phsp_index++].latch = app->top_p.latch;
 
@@ -375,14 +375,14 @@ void EGS_PhspScoring::openPhspFile() const {
         int latch_ind_tmp = latch_ind;
         int iaea_n_extra_long_tmp=iaea_n_extra_long;
         int iaea_i_latch_tmp=iaea_i_latch;
-        int mu_ind_tmp = mu_ind;
-        int iaea_i_mu_tmp = iaea_i_mu;
+        int time_ind_tmp = time_ind;
+        int iaea_i_time_tmp = iaea_i_time;
         int iaea_n_extra_float_tmp=iaea_n_extra_float;
 
         iaea_set_extra_numbers(&iaea_id,&iaea_n_extra_float_tmp,&iaea_n_extra_long_tmp);
         iaea_set_type_extralong_variable(&iaea_id,&iaea_i_latch_tmp,&latch_ind_tmp);
-        if (score_mu) {
-            iaea_set_type_extrafloat_variable(&iaea_id,&iaea_i_mu_tmp,&mu_ind_tmp);
+        if (score_time) {
+            iaea_set_type_extrafloat_variable(&iaea_id,&iaea_i_time_tmp,&time_ind_tmp);
         }
     }
 }
@@ -411,8 +411,8 @@ int EGS_PhspScoring::flushBuffer() const {
             EGS_I32 *iaea_extra_long = new EGS_I32[iaea_n_extra_long];
             iaea_extra_long[iaea_i_latch]=p_stack[j].latch;
             float *iaea_extra_float = new float[iaea_n_extra_float];
-            if (score_mu) {
-                iaea_extra_float[iaea_i_mu] = p_stack[j].mu;
+            if (score_time) {
+                iaea_extra_float[iaea_i_time] = p_stack[j].time;
             }
 
             //now store double precision values in single precision reals
@@ -534,7 +534,7 @@ extern "C" {
         int phspouttype;
         int ptype;
         int sdir=0;
-        int imuscore = 0;
+        int itimescore = 0;
         float xyzconst[3];
         bool xyzisconst[3] = {false, false, false};
         string gname;
@@ -639,16 +639,28 @@ extern "C" {
                 if (!err04) {
                     xyzisconst[2] = true;
                 }
-                //see if user wants to score mu (if available)
+                //see if user wants to score time index (if available)
                 //default is not to score
+                // The "score mu" input is supported for backwards compatibility
                 if (!input->getInput("score mu", str)) {
-                    vector<string> allowed_muscore;
-                    allowed_muscore.push_back("no");
-                    allowed_muscore.push_back("yes");
-                    imuscore = input->getInput("score mu",allowed_muscore,-1);
-                    if (imuscore < 0) {
-                        egsWarning("\nEGS_PhspScoring: Invalid input for mu scoring.  Will not score mu.\n");
-                        imuscore = 0;
+                    vector<string> allowed_timescore;
+                    allowed_timescore.push_back("no");
+                    allowed_timescore.push_back("yes");
+                    itimescore = input->getInput("score mu",allowed_timescore,-1);
+                    if (itimescore < 0) {
+                        egsWarning("\nEGS_PhspScoring: Invalid input for time index scoring.  Will not score time.\n");
+                        itimescore = 0;
+                    }
+                }
+                // Now "score time index" is used instead of "score mu"
+                if (!input->getInput("score time index", str)) {
+                    vector<string> allowed_timescore;
+                    allowed_timescore.push_back("no");
+                    allowed_timescore.push_back("yes");
+                    itimescore = input->getInput("score time index",allowed_timescore,-1);
+                    if (itimescore < 0) {
+                        egsWarning("\nEGS_PhspScoring: Invalid input for time index scoring.  Will not score time.\n");
+                        itimescore = 0;
                     }
                 }
             }
@@ -701,7 +713,7 @@ extern "C" {
         result->setOutDir(outdir);
         result->setParticleType(ptype);
         result->setScoreDir(sdir);
-        result->setMuScore(imuscore);
+        result->setTimeScore(itimescore);
         result->setScoreMC(iscoremc);
         return result;
     }

@@ -23,7 +23,7 @@
 #
 #  Author:         Blake Walters, 2017
 #
-#  Contributors:
+#  Contributors:    Alexandre Demelo
 #
 ###############################################################################
 */
@@ -57,7 +57,7 @@ EGS_DynamicSource::EGS_DynamicSource(EGS_Input *input,
         }
     }
     //now read inputs relevant to dynamic source
-    //see if user wants to synchronize source with mu read from
+    //see if user wants to synchronize source with time read from
     //iaea phsp or beam simulation source
     vector<string> sync_options;
     sync_options.push_back("no");
@@ -80,25 +80,39 @@ EGS_DynamicSource::EGS_DynamicSource(EGS_Input *input,
         int err;
         int icpts=1;
         itos << icpts;
-        string sstring = "control point " + itos.str();
-        while (!(err = dyninp->getInput(sstring,point))) {
+
+        string inputTag = "control point";
+        string inputTag_backCompat = "control point " + itos.str();
+        EGS_Input *currentInput;
+
+        while (true) {
+            currentInput = dyninp->takeInputItem(inputTag);
+            if (!currentInput || currentInput->getInput(inputTag, point)) {
+                currentInput = dyninp->takeInputItem(inputTag_backCompat);
+                if (!currentInput || currentInput->getInput(inputTag_backCompat, point)) {
+                    delete currentInput;
+                    break;
+                }
+            }
+            delete currentInput;
+
             if (point.size()!=8) {
                 egsWarning("EGS_DynamicSource: control point %i does not specify 8 values.\n",icpts);
                 valid = false;
             }
             else {
-                if (ncpts>0 && point[7] < cpts[ncpts-1].mu) {
-                    egsWarning("EGS_DynamicSource: mu index of control point %i < mu index of control point %i\n",icpts,ncpts);
+                if (ncpts>0 && point[7] < cpts[ncpts-1].time) {
+                    egsWarning("EGS_DynamicSource: time index of control point %i < time index of control point %i\n",icpts,ncpts);
                     valid = false;
                 }
                 else if (point[7] < 0.) {
-                    egsWarning("EGS_DynamicSource: mu index of control point %i < 0.0\n",icpts);
+                    egsWarning("EGS_DynamicSource: time index of control point %i < 0.0\n",icpts);
                     valid = false;
                 }
                 else {
                     ncpts++;
                     if (ncpts ==1 && point[7] > 0.0) {
-                        egsWarning("EGS_DynamicSource: mu index of control point 1 > 0.0.  This will generate many warning messages.\n");
+                        egsWarning("EGS_DynamicSource: time index of control point 1 > 0.0.  This will generate many warning messages.\n");
                     }
                     //set cpt values
                     cpt.iso = EGS_Vector(point[0],point[1],point[2]);
@@ -106,13 +120,13 @@ EGS_DynamicSource::EGS_DynamicSource(EGS_Input *input,
                     cpt.theta = point[4];
                     cpt.phi = point[5];
                     cpt.phicol = point[6];
-                    cpt.mu = point[7];
+                    cpt.time = point[7];
                     //add it to the vector of control points
                     cpts.push_back(cpt);
                     icpts++;
                     itos.str("");
                     itos << icpts;
-                    sstring = "control point " + itos.str();
+                    inputTag_backCompat = "control point " + itos.str();
                 }
             }
         }
@@ -120,14 +134,14 @@ EGS_DynamicSource::EGS_DynamicSource(EGS_Input *input,
             egsWarning("EGS_DynamicSource: not enough or missing control points.\n");
             valid = false;
         }
-        if (cpts[ncpts-1].mu == 0.0) {
-            egsWarning("EGS_DynamicSource: mu index of last control point = 0.  Something's wrong.\n");
+        if (cpts[ncpts-1].time == 0.0) {
+            egsWarning("EGS_DynamicSource: time index of last control point = 0.  Something's wrong.\n");
             valid = false;
         }
         else {
-            //normalize mu index to max. value
-            for (int i=0; i<ncpts-1; i++) {
-                cpts[i].mu /= cpts[ncpts-1].mu;
+            //normalize time index to max. value
+            for (int i=0; i<=ncpts-1; i++) {
+                cpts[i].time /= cpts[ncpts-1].time;
             }
         }
     }
@@ -148,7 +162,7 @@ void EGS_DynamicSource::setUp() {
         description = "Dynamic source based on\n";
         description += source->getSourceDescription();
         if (sync) {
-            description += "\n Source will be synched with mu values read in (if available).";
+            description += "\n Source will be synched with time values read in (if available).";
         }
     }
 }
@@ -158,7 +172,7 @@ int EGS_DynamicSource::getCoord(EGS_Float rand, EGS_ControlPoint &ipt) {
     int iindex=0;
     int i;
     for (i=0; i<ncpts; i++) {
-        if (rand < cpts[i].mu) {
+        if (rand < cpts[i].time-epsilon) {
             iindex =i;
             break;
         }
@@ -167,7 +181,7 @@ int EGS_DynamicSource::getCoord(EGS_Float rand, EGS_ControlPoint &ipt) {
         egsWarning("EGS_DynamicSource: could not locate control point.\n");
         return 1;
     }
-    EGS_Float factor = (rand-cpts[iindex-1].mu)/(cpts[iindex].mu-cpts[iindex-1].mu);
+    EGS_Float factor = (rand-cpts[iindex-1].time)/(cpts[iindex].time-cpts[iindex-1].time);
     ipt.iso.x=cpts[iindex-1].iso.x+ (cpts[iindex].iso.x-cpts[iindex-1].iso.x)*factor;
     ipt.iso.y=cpts[iindex-1].iso.y+ (cpts[iindex].iso.y-cpts[iindex-1].iso.y)*factor;
     ipt.iso.z=cpts[iindex-1].iso.z+ (cpts[iindex].iso.z-cpts[iindex-1].iso.z)*factor;
@@ -177,6 +191,15 @@ int EGS_DynamicSource::getCoord(EGS_Float rand, EGS_ControlPoint &ipt) {
     ipt.phicol=cpts[iindex-1].phicol+ (cpts[iindex].phicol-cpts[iindex-1].phicol)*factor;
     return 0;
 };
+
+/**
+* @brief Check if the simulation source contains time indices.
+*
+* @param hasdynamic Boolean flag to indicate if time indices are included in particles returned by the source.
+*/
+void EGS_DynamicSource::containsDynamic(bool &hasdynamic) {
+    hasdynamic = true;
+}
 
 extern "C" {
 

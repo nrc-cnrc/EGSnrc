@@ -27,6 +27,7 @@
 #                   Frederic Tessier
 #                   Manuel Stoeckl
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -40,6 +41,7 @@
 #include "egs_transformations.h"
 #include "stddef.h"
 #include "egs_particle_track.h"
+#include <vector>
 
 class EGS_Matrix : private EGS_RotationMatrix {
 public:
@@ -94,8 +96,7 @@ public:
 class EGS_TrackView {
 
 public:
-
-    EGS_TrackView(const char *filename, vector<size_t> &ntracks);
+    EGS_TrackView(const char *filename, vector<size_t> &ntracks, vector<EGS_Float> &timelist_p, vector<EGS_Float> &timelist_e, vector<EGS_Float> &timelist_po);
 
     ~EGS_TrackView();
 
@@ -126,6 +127,7 @@ public:
     }
 
 protected:
+
     void renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EGS_Float color, int nx, int ny, EGS_Vector *image);
 
     // High-level camera description

@@ -25,6 +25,7 @@
 #
 #  Contributors:    Reid Townson
 #                   Hubert Ho
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -184,16 +185,16 @@ void IAEA_PhspSource::openFile(const string &phsp_file) {
             break;
         }
     }
-    //now see if mu index is stored in the file
+    //now see if time index is stored in the file
     //assume it is the first variable stored in extra_float
     //after zlast
-    i_mu=-1;
-    mu_stored=false;
+    i_time=-1;
+    time_stored=false;
     if (n_extra_floats > i_zlast+1) {
         if (extrafloat_types[i_zlast+1] == 0) {
-            i_mu=i_zlast+1;
-            mu_stored=true;
-            egsInformation("IAEA_PhspSource::openFile: Mu index included in data in %s.IAEAphsp\n",phsp_file.c_str());
+            i_time=i_zlast+1;
+            time_stored=true;
+            egsInformation("IAEA_PhspSource::openFile: Time index included in data in %s.IAEAphsp\n",phsp_file.c_str());
         }
     }
 
@@ -340,8 +341,14 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         if (mode2) {
             p.zlast = extrafloattemp[i_zlast];
         }
-        if (mu_stored) {
-            p.mu = extrafloattemp[i_mu];
+        if (time_stored) {
+            p.time = extrafloattemp[i_time];
+            setTimeIndex(p.time);
+            /* this is setting the time index using the base source set call. We get rid of the local getTimeIndex function and
+             * it should allow for saving time in the base source like all the other sources do */
+        }
+        else {
+            setTimeIndex(-1);
         }
         if (swap_bytes) {
             egsSwapBytes(&p.q);
@@ -356,7 +363,7 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
             egsSwapBytes(&p.u);
             egsSwapBytes(&p.v);
             egsSwapBytes(&p.w);
-            egsSwapBytes(&p.mu);
+            egsSwapBytes(&p.time);
         }
         //do check here because we need the swapped version of nstat
         if (nstat<0) {
@@ -534,6 +541,15 @@ void IAEA_PhspSource::setFilter(int type, int nbit1, int nbit2, const int *bits)
     }
     else if (filter_type == 3) {  // TODO
     }
+}
+
+/**
+* @brief Check if the simulation source contains time indices.
+*
+* @param hasdynamic Boolean flag to indicate if time indices are included in particles returned by the source.
+*/
+void IAEA_PhspSource::containsDynamic(bool &hasdynamic) {
+    hasdynamic = time_stored;
 }
 
 extern "C" {

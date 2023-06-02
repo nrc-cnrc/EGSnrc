@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Manuel Stoeckl
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -44,12 +45,12 @@ public:
         nlight(0), ntot(0), nmat(0), nclip(0), nclip_t(0),
         m_tracks(NULL) {};
     ~EGS_PrivateVisualizer();
-    vector<size_t> loadTracksData(const char *fname) {
+    vector<size_t> loadTracksData(const char *fname, vector<EGS_Float> &timelist_p, vector<EGS_Float> &timelist_e, vector<EGS_Float> &timelist_po) {
         if (m_tracks) {
             delete m_tracks;
         }
         vector<size_t> ntracks;
-        m_tracks = new EGS_TrackView(fname, ntracks);
+        m_tracks = new EGS_TrackView(fname, ntracks, timelist_p, timelist_e, timelist_po);
         return ntracks;
     }
     void setProjection(const EGS_Vector &camera_pos,
@@ -136,6 +137,7 @@ public:
     // get the color for the screen point x.
     EGS_Vector getColor(const EGS_Vector &x, EGS_BaseGeometry *g,
                         const EGS_Float track_distance, const EGS_Float track_alpha, bool debug=false, EGS_Vector bCol=EGS_Vector(1,1,1));
+
     void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg, EGS_Vector &hitCoord, const unordered_map<size_t, EGS_Float> &score, EGS_Float &hitScore);
 
     void getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g, EGS_Vector &hitCoord);
@@ -208,10 +210,10 @@ EGS_GeometryVisualizer::~EGS_GeometryVisualizer() {
     delete p;
 }
 
-vector<size_t> EGS_GeometryVisualizer::loadTracksData(const char *fname) {
+vector<size_t> EGS_GeometryVisualizer::loadTracksData(const char *fname, vector<EGS_Float> &timelist_p, vector<EGS_Float> &timelist_e, vector<EGS_Float> &timelist_po) {
     vector<size_t> ntracks;
     if (p) {
-        ntracks = p->loadTracksData(fname);
+        ntracks = p->loadTracksData(fname,timelist_p, timelist_e, timelist_po);
     }
     return ntracks;
 }

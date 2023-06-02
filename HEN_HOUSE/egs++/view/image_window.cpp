@@ -27,6 +27,7 @@
 #                   Manuel Stoeckl
 #                   Reid Townson
 #                   Max Orok
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -88,6 +89,7 @@ ImageWindow::ImageWindow(QWidget *parent, const char *name) :
     qRegisterMetaType<RenderParameters>("RenderParameters");
     qRegisterMetaType<RenderResults>("RenderResults");
     qRegisterMetaType<vector<size_t>>("vector<size_t>");
+    qRegisterMetaType<vector<EGS_Float>>("vector<EGS_Float>");
 
     // Initialize render worker and put it in a thread
     restartWorker();
@@ -251,7 +253,7 @@ void ImageWindow::restartWorker() {
             worker, SLOT(render(EGS_BaseGeometry *,RenderParameters)));
     connect(this, SIGNAL(requestLoadTracks(QString)), worker, SLOT(loadTracks(QString)));
     connect(worker, SIGNAL(rendered(RenderResults,RenderParameters)), this, SLOT(drawResults(RenderResults,RenderParameters)));
-    connect(worker, SIGNAL(tracksLoaded(vector<size_t>)), this, SLOT(trackResults(vector<size_t>)));
+    connect(worker, SIGNAL(tracksLoaded(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>)), this, SLOT(trackResults(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>)));
     connect(worker, SIGNAL(aborted()), this, SLOT(handleAbort()));
     thread->start();
     renderState = WorkerIdle;
@@ -648,8 +650,8 @@ void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
     repaint();
 }
 
-void ImageWindow::trackResults(vector<size_t> ntracks) {
-    emit tracksLoaded(ntracks);
+void ImageWindow::trackResults(vector<size_t> ntracks, vector<EGS_Float> timelist_p, vector<EGS_Float> timelist_e, vector<EGS_Float> timelist_po) {
+    emit tracksLoaded(ntracks, timelist_p, timelist_e, timelist_po);
 }
 
 void ImageWindow::handleAbort() {

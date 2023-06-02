@@ -29,6 +29,7 @@
 #                   Frederic Tessier
 #                   Manuel Stoeckl
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 </comment>
@@ -38,8 +39,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>675</width>
-    <height>592</height>
+    <width>717</width>
+    <height>655</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -92,8 +93,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>671</width>
-           <height>563</height>
+           <width>713</width>
+           <height>626</height>
           </rect>
          </property>
          <property name="sizePolicy">
@@ -132,7 +133,7 @@
              </attribute>
              <layout class="QVBoxLayout" name="verticalLayout_7" stretch="1">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1">
+               <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,0">
                 <property name="sizeConstraint">
                  <enum>QLayout::SetDefaultConstraint</enum>
                 </property>
@@ -210,36 +211,6 @@
                      <string>Particle tracks</string>
                     </property>
                     <layout class="QGridLayout">
-                     <item row="0" column="2">
-                      <widget class="QSpinBox" name="spin_tmaxp">
-                       <property name="minimum">
-                        <number>1</number>
-                       </property>
-                       <property name="value">
-                        <number>1</number>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="2" column="0">
-                      <widget class="QCheckBox" name="showPositronsCheckbox">
-                       <property name="text">
-                        <string>Positrons</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="0" column="0">
-                      <widget class="QCheckBox" name="showPhotonsCheckbox">
-                       <property name="text">
-                        <string>Photons</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
                      <item row="1" column="0">
                       <widget class="QCheckBox" name="showElectronsCheckbox">
                        <property name="text">
@@ -250,23 +221,13 @@
                        </property>
                       </widget>
                      </item>
-                     <item row="0" column="1">
-                      <widget class="QSpinBox" name="spin_tminp">
-                       <property name="minimum">
-                        <number>1</number>
+                     <item row="2" column="0">
+                      <widget class="QCheckBox" name="showPositronsCheckbox">
+                       <property name="text">
+                        <string>Positrons</string>
                        </property>
-                       <property name="value">
-                        <number>1</number>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="1" column="1">
-                      <widget class="QSpinBox" name="spin_tmine">
-                       <property name="minimum">
-                        <number>1</number>
-                       </property>
-                       <property name="value">
-                        <number>1</number>
+                       <property name="checked">
+                        <bool>true</bool>
                        </property>
                       </widget>
                      </item>
@@ -282,6 +243,48 @@
                      </item>
                      <item row="2" column="1">
                       <widget class="QSpinBox" name="spin_tminpo">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QCheckBox" name="showPhotonsCheckbox">
+                       <property name="text">
+                        <string>Photons</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="2">
+                      <widget class="QSpinBox" name="spin_tmaxp">
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QSpinBox" name="spin_tminp">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
                        <property name="minimum">
                         <number>1</number>
                        </property>
@@ -300,7 +303,169 @@
                        </property>
                       </widget>
                      </item>
+                     <item row="1" column="1">
+                      <widget class="QSpinBox" name="spin_tmine">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="0">
+                      <widget class="QLabel" name="label_timewindow">
+                       <property name="text">
+                        <string>Time window</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="1">
+                      <widget class="QDoubleSpinBox" name="spin_timewindow">
+                       <property name="decimals">
+                        <number>3</number>
+                       </property>
+                       <property name="maximum">
+                        <double>2.000000000000000</double>
+                       </property>
+                       <property name="singleStep">
+                        <double>0.001000000000000</double>
+                       </property>
+                       <property name="value">
+                        <double>2.000000000000000</double>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="3" column="2">
+                      <widget class="QPushButton" name="button_timereset">
+                       <property name="maximumSize">
+                        <size>
+                         <width>62</width>
+                         <height>29</height>
+                        </size>
+                       </property>
+                       <property name="text">
+                        <string>reset</string>
+                       </property>
+                      </widget>
+                     </item>
                     </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QVBoxLayout" name="verticalLayout_17"/>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_time">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>90</height>
+                     </size>
+                    </property>
+                    <property name="title">
+                     <string>Time control</string>
+                    </property>
+                    <widget class="QSlider" name="slider_timeindex">
+                     <property name="geometry">
+                      <rect>
+                       <x>10</x>
+                       <y>30</y>
+                       <width>231</width>
+                       <height>21</height>
+                      </rect>
+                     </property>
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="maximum">
+                      <number>999</number>
+                     </property>
+                     <property name="singleStep">
+                      <number>1</number>
+                     </property>
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                    <widget class="QPushButton" name="button_timeplay">
+                     <property name="geometry">
+                      <rect>
+                       <x>180</x>
+                       <y>50</y>
+                       <width>62</width>
+                       <height>26</height>
+                      </rect>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>62</width>
+                       <height>26</height>
+                      </size>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>62</width>
+                       <height>26</height>
+                      </size>
+                     </property>
+                     <property name="text">
+                      <string>Play</string>
+                     </property>
+                    </widget>
+                    <widget class="QDoubleSpinBox" name="spin_timeindex">
+                     <property name="geometry">
+                      <rect>
+                       <x>110</x>
+                       <y>50</y>
+                       <width>63</width>
+                       <height>26</height>
+                      </rect>
+                     </property>
+                     <property name="accelerated">
+                      <bool>true</bool>
+                     </property>
+                     <property name="decimals">
+                      <number>3</number>
+                     </property>
+                     <property name="maximum">
+                      <double>0.999000000000000</double>
+                     </property>
+                     <property name="singleStep">
+                      <double>0.001000000000000</double>
+                     </property>
+                     <property name="value">
+                      <double>0.000000000000000</double>
+                     </property>
+                    </widget>
+                    <widget class="QLabel" name="label_timeindex">
+                     <property name="geometry">
+                      <rect>
+                       <x>10</x>
+                       <y>50</y>
+                       <width>91</width>
+                       <height>26</height>
+                      </rect>
+                     </property>
+                     <property name="text">
+                      <string>Time index</string>
+                     </property>
+                    </widget>
                    </widget>
                   </item>
                   <item>
@@ -433,6 +598,14 @@
                           <bool>true</bool>
                          </property>
                          <widget class="QWidget" name="scrollAreaWidgetContents">
+                          <property name="geometry">
+                           <rect>
+                            <x>0</x>
+                            <y>0</y>
+                            <width>232</width>
+                            <height>68</height>
+                           </rect>
+                          </property>
                           <layout class="QVBoxLayout" name="verticalLayout_16">
                            <item>
                             <layout class="QVBoxLayout" name="verticalLayout_dose">
@@ -1674,7 +1847,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>675</width>
+     <width>717</width>
      <height>25</height>
     </rect>
    </property>
@@ -2653,6 +2826,86 @@ p, li { white-space: pre-wrap; }
     <hint type="destinationlabel">
      <x>20</x>
      <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>button_timeplay</sender>
+   <signal>pressed()</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>playTime()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>488</x>
+     <y>321</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>358</x>
+     <y>327</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>slider_timeindex</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>slideTime()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>608</x>
+     <y>321</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>358</x>
+     <y>327</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spin_timewindow</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>slideTime()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>590</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>358</x>
+     <y>327</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>button_timereset</sender>
+   <signal>pressed()</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>resetTime()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>658</x>
+     <y>241</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>358</x>
+     <y>327</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spin_timeindex</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>spinTime()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>594</x>
+     <y>334</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>358</x>
+     <y>327</y>
     </hint>
    </hints>
   </connection>

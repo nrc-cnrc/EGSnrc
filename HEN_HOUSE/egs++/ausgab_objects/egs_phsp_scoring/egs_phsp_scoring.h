@@ -77,12 +77,12 @@ This ausgab object generates phase space data for particles using one of two met
 Phase space data can be scored in one of 2 possible formats:
 
 EGSnrc format: E,x,y,u,v,wt,latch
-IAEA format: iq,E,[x],[y],[z],u,v,wt,latch,[mu]
+IAEA format: iq,E,[x],[y],[z],u,v,wt,latch,[time]
 
 Note that in IAEA format, the user has the option of specifying a fixed x, y, and/or z coordinate
 of the scoring plane/line/point, in which case the fixed coordinates shall not be scored for each
 particle but will be specified in the header (.IAEAheader) file.  Also, in this format, the
-user has the option of scoring the synchronization parameter, mu, passed from the source.
+user has the option of scoring the time index synchronization parameter, time, passed from the source.
 
 Can be used in any C++ user code by entering the proper input block in
 the ausgab object definition block.
@@ -97,7 +97,7 @@ the ausgab object definition block.
           constant Y               = Y value (cm) at which all particles are scored (IAEA format only)
           constant Z               = Z value (cm) at which all particles are scored (IAEA format only)
           particle type            = all, photons, or charged
-          score mu                 = yes or no [default] (IAEA format only)
+          score time index         = yes or no [default] (IAEA format only)
           score multiple crossers  = no (default) or yes (EGSnrc format only)
           output directory         = name of output directory
 
@@ -124,11 +124,11 @@ to the .IAEAphsp file.
 Particles of the type indicated by the "particle type" input are scored.  If this input
 is omitted, then all particles are scored.
 
-In IAEA-format phase space files, the user can opt to score the synchronization parameter, mu.
+In IAEA-format phase space files, the user can opt to score the synchronization parameter, time.
 This option will automatically be turned off if the parameter is not available from the
 source.  Currently, this parameter can only be passed from egs_beam_source (only if the accelerator
 includes synchronized CMs), iaea_phsp_source (if scored using a BEAMnrc simulation with
-synchronized CMs or scored using this ausgab object with mu scoring turned on) and
+synchronized CMs or scored using this ausgab object with time index scoring turned on) and
 egs_dynamic_source (always available).
 
 The default is to not score multiple crossers (and their descendents) and, indeed, this
@@ -212,7 +212,7 @@ cases, phase space is scored in planes perpendicular to the axis of a water/air 
         output format = IAEA
         constant Z = 10.0
         particle type = all
-        score mu = no
+        score time index = no
       :stop ausgab object:
 
       :start ausgab object:
@@ -401,12 +401,12 @@ public:
         scoredir = sdir;
     }
 
-    void setMuScore(const int imuscore) {
-        if (imuscore == 1) {
-            score_mu = true;
+    void setTimeScore(const int itimescore) {
+        if (itimescore == 1) {
+            score_time = true;
         }
         else {
-            score_mu = false;
+            score_time = false;
         }
     }
 
@@ -448,7 +448,7 @@ protected:
 
     struct Particle {
         int  q, latch;
-        EGS_Float E, x, y, z, u, v, w, wt, mu;
+        EGS_Float E, x, y, z, u, v, w, wt, time;
     };
 
     //functions, struct and variables used to write EGSnrc format phsp files
@@ -490,16 +490,16 @@ protected:
     //variables specific to IAEA format
     mutable int iaea_id; //file id--mutable so we can write to it during storeState
     int latch_ind; //IAEA id for latch variable (set to 2)
-    int mu_ind; //IAEA id for mu--no ID for now so set to generic float (0)
+    int time_ind; //IAEA id for time--no ID for now so set to generic float (0)
     int iaea_n_extra_float, iaea_n_extra_long; //no. of extra floats, ints
-    int iaea_i_latch, iaea_i_mu; //indices of indicated variables in arrays
+    int iaea_i_latch, iaea_i_time; //indices of indicated variables in arrays
     int iaea_q_type[3]; //easy conversion from q to iaea type
     bool xyz_is_const[3]; //set to true if scoring at constant X/Y/Z
     float xyzscore[3]; //constant X/Y/Z scoring values
     int len; //length of name
     char *phsp_fname_char; //need file name in char format
-    bool score_mu; //set to true if scoring mu
-    float pmu; //mu value associated with particle
+    bool score_time; //set to true if scoring time index
+    float ptime; //time index value associated with particle
 
     //back to variables common to EGSnrc and IAEA formats
 

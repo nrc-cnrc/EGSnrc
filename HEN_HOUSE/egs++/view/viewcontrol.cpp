@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Manuel Stoeckl
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -35,6 +36,7 @@
 #include "saveimage.h"
 #include "clippingplanes.h"
 #include "viewcontrol.h"
+#include "egs_track_view.h"
 
 #include "egs_libconfig.h"
 #include "egs_functions.h"
@@ -44,6 +46,7 @@
 #include "egs_input.h"
 #include "egs_ausgab_object.h"
 #include "ausgab_objects/egs_dose_scoring/egs_dose_scoring.h"
+#include "egs_particle_track.h"
 
 #include <qmessagebox.h>
 #include <qapplication.h>
@@ -62,6 +65,10 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
+#include <unistd.h>
+#include <chrono>
+#include <thread>
+
 using namespace std;
 
 #ifndef M_PI
@@ -125,7 +132,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     if (showPhotonTracks || showElectronTracks || showPositronTracks) {
         showTracks = true;
     }
-
     // camera orientation vectors (same as the screen vectors)
     camera_v1 = screen_v1;
     camera_v2 = screen_v2;
@@ -164,7 +170,10 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(gview, SIGNAL(putCameraOnAxis(char)), this, SLOT(cameraOnAxis(char)));
     connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
     connect(gview, SIGNAL(leftDoubleClick(EGS_Vector)), this, SLOT(setRotationPoint(EGS_Vector)));
-    connect(gview, SIGNAL(tracksLoaded(vector<size_t>)), this, SLOT(updateTracks(vector<size_t>)));
+
+    // EGS_Float vectors added to signal & slot to allow the track loading
+    // method in trackview to set the time index lists in this class
+    connect(gview, SIGNAL(tracksLoaded(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>)), this, SLOT(updateTracks(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>)));
 
     save_image = new SaveImage(this,"save image");
 
@@ -177,6 +186,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // set the widget to show near the left-upper corner of the screen
     move(QPoint(25,25));
+    //set the play button active boolean to false
+    isPlaying=false;
 }
 
 GeometryViewControl::~GeometryViewControl() {
@@ -221,7 +232,6 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
 #ifdef VIEW_DEBUG
     egsWarning("In loadInput(), reloading is %d\n",reloading);
 #endif
-
     // check that the file (still) exists
     QFile file(filename);
     if (!file.exists()) {
@@ -230,15 +240,12 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     }
 
     QFileInfo fileInfo = QFileInfo(file);
-
     // Set the title of the viewer
     this->setProperty("windowTitle", "View Controls ("+fileInfo.baseName()+")");
     gview->setProperty("windowTitle", "egs_view ("+fileInfo.baseName()+")");
-
     // Clear the current geometry
     gview->stopWorker();
     qApp->processEvents();
-
     // Delete any previous geometry
     if (!simGeom) {
 #ifdef VIEW_DEBUG
@@ -249,6 +256,10 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
             g = 0;
         }
         EGS_BaseGeometry::clearGeometries();
+
+        // solve loading new input file from file tab in egsview. Previously
+        // name array is never cleared after loading new input file
+        geometryNames.clear();
 
         // Delete any previous ausgab objects
 #ifdef VIEW_DEBUG
@@ -261,14 +272,12 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
             }
         }
     }
-
     // Read the input file
 #ifdef VIEW_DEBUG
     egsInformation("GeometryViewControl::loadInput: Reading input file...\n");
 #endif
     EGS_Input input;
     input.setContentFromFile(filename.toUtf8().constData());
-
     // Load the new geometry
 #ifdef VIEW_DEBUG
     egsInformation("GeometryViewControl::loadInput: Creating the geometry...\n");
@@ -305,7 +314,6 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     else {
         newGeom = simGeom;
     }
-
     // restart from scratch (copied from main.cpp)
     EGS_Float xmin = -50, xmax = 50;
     EGS_Float ymin = -50, ymax = 50;
@@ -357,7 +365,6 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         }
         delete vc;
     }
-
     // Only allow region selection for up to 1k regions
     int nreg = newGeom->regions();
     if (nreg < 1001) {
@@ -370,14 +377,11 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         egsInformation("Region selection tab has been disabled due to >1000 regions (for performance reasons)\n");
     }
     tabWidget->setTabEnabled(2,allowRegionSelection);
-
     // Get the rendering parameters
     RenderParameters &rp = gview->pars;
     rp.allowRegionSelection = allowRegionSelection;
     rp.trackIndices.assign(6,1);
-
     gview->restartWorker();
-
     if (!simGeom) {
         setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
         origSimGeom = g;
@@ -391,14 +395,12 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     if (allowRegionSelection) {
         updateRegionTable();
     }
-
     // Set the simulation geometry combobox
     comboBox_simGeom->clear();
     for (unsigned int i=0; i<geometryNames.size(); ++i) {
         comboBox_simGeom->addItem((geometryNames[i] + " (" + g->getGeometry(geometryNames[i])->getType() + ")").c_str(), geometryNames[i].c_str());
     }
     comboBox_simGeom->setCurrentIndex(comboBox_simGeom->findData(g->getName().c_str()));
-
     // Load ausgab objects from the input file
     if (!simGeom) {
 #ifdef VIEW_DEBUG
@@ -1080,6 +1082,10 @@ void GeometryViewControl::setFilename(QString str) {
 
 void GeometryViewControl::setTracksFilename(QString str) {
     filename_tracks = str;
+}
+
+void GeometryViewControl::setTracksExtension(QString str) {
+    tracks_extension = str;
 }
 
 void GeometryViewControl::loadDose() {
@@ -1890,19 +1896,39 @@ void GeometryViewControl::loadTracksDialog() {
     egsWarning("In loadTracksDialog()\n");
 #endif
     QFileInfo inputFileInfo = QFileInfo(filename);
-    filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*.ptracks");
+    filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*ptracks");
+    tracks_extension=QString("ptracks");
 
     if (filename_tracks.isEmpty()) {
         return;
     }
 
+    hasTrackTimeIndex = hasValidTime();
+    if (!hasDynamic) {
+        // if hasdynamic is not yet true (no dynamic geometry) then check the time indices in the file
+        hasDynamic=hasTrackTimeIndex;
+    }
+
+    // run timeObjectVisibility to either make visible or hide time index
+    // related objects depending on input file and tracks file
+    timeObjectVisibility();
+
     gview->loadTracks(filename_tracks);
+
+
 }
 
-void GeometryViewControl::updateTracks(vector<size_t> ntracks) {
+void GeometryViewControl::updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po) {
     if (ntracks.size() != 3) {
         return;
     }
+
+    // vectors containing the sorted list of time indices corresponding to the
+    // compressed particle tracks list is saved
+    timelist_p=timeindexlist_p;
+    timelist_e=timeindexlist_e;
+    timelist_po=timeindexlist_po;
+
 
 #ifdef VIEW_DEBUG
     egsWarning("In updateTracks(%d %d %d)\n",ntracks[0], ntracks[1], ntracks[2]);
@@ -2008,9 +2034,27 @@ int GeometryViewControl::setGeometry(
     }
     g = geom;
 
+    // check the geometry and the tracks file to determine whether the time
+    // index objects should be made visible (i.e., setting hasdynamic)
+    hasDynamic=false;
+
+    // loop through the different layers of the geometry and makes hasdynamic
+    // true if a dynamic geometry is found. This is independent of tracks file
+    // type, such that visualizing geometry motion is possible even with a
+    // ptracks file without time indices in it
+    g->containsDynamic(hasDynamic);
     if (!filename_tracks.isEmpty()) {
         gview->loadTracks(filename_tracks);
+
+        hasTrackTimeIndex = hasValidTime();
+        if (!hasDynamic) {
+            // if hasdynamic is not yet true (no dynamic geometry) then check the time indices in the file
+            hasDynamic=hasTrackTimeIndex;
+        }
     }
+    // run timeObjectVisibility to either make visible or hide time index
+    // related objects depending on input file and tracks file
+    timeObjectVisibility();
 
 #ifdef VIEW_DEBUG
     qDebug("Got %d user defined colors",int(ucolors.size()));
@@ -2394,8 +2438,8 @@ int GeometryViewControl::setGeometry(
 }
 
 void GeometryViewControl::updateView(bool transform) {
-    // transfer
     RenderParameters &rp = gview->pars;
+
     rp.axesmax = axesmax;
     rp.camera = camera;
     rp.camera_v1 = camera_v1;
@@ -2716,6 +2760,265 @@ void GeometryViewControl::endTransformation() {
     gview->endTransformation();
 }
 
+// Time index visual elements methods
+void GeometryViewControl::playTime() {
+    if (isPlaying) {
+        button_timeplay->setText("play");
+        isPlaying=false;
+    }
+    else {
+        button_timeplay->setText("pause");
+        isPlaying=true;
+    }
+    int sliderpos=slider_timeindex->sliderPosition();
+    if (sliderpos==999) {
+        sliderpos=0;
+    }
+    // this function controls the play button, and allows for the simulation to
+    // be automatically played out sequentially in time.
+    for (int i= sliderpos; i<1000;) {
+        // the simulation plays through 1000 discrete time points (equivalent to
+        // possible slider steps) from 0.000 to 0.999 in 0.0001 increments
+        if (!isPlaying) {
+            break;
+        }
+        EGS_Float currtime = i/(float)1000;
+
+        // update time index display/input box. The signals are blocked as it
+        // would lead to an infinite loop between the slider and the time index
+        // spin box
+        spin_timeindex->blockSignals(true);
+        spin_timeindex->setValue(currtime);
+        spin_timeindex->blockSignals(false);
+
+        // the time index slider's value is updated (as is its position since
+        // tracking is enabled). Changing the slider value emits a
+        // 'valuechanged' signal which automatically invokes the slidertime
+        // function
+        slider_timeindex->setValue(i);
+
+        // update the Qt display between discrete steps
+        qApp->processEvents();
+
+        i+=1;
+
+        // wait 10 milliseconds before making the next step, otherwise the
+        // motion would be difficult to follow
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    button_timeplay->setText("play");
+    isPlaying=false;
+}
+
+void GeometryViewControl::resetTime() {
+    /* this function controls the reset button, and allows for the time index
+    * settings to be returned to their initial state. need only reset the slider
+    * and time window values to their original state. These will automatically
+    * call the particleslider() and slidetime() methods respectively due to
+    * 'valuechanged' signal emissions. All other elements (time index spinbox
+    * and the particle bounds) are returned to their initial states through
+    * these */
+    slider_timeindex->setValue(0);
+    spin_timewindow->setValue(2);
+}
+
+void GeometryViewControl::spinTime() {
+    // this function controls the time index spinbox, which is used both as a
+    // way to display the current index, and to input and go to a particular
+    // index first, get the new time index, and from it calculate the equivalent
+    // position on the slider (multiply by 1000 to get integer between 0 and
+    // 999)
+    EGS_Float slidertime=spin_timeindex->value();
+    int sliderpos=(int)(slidertime*1000);
+
+    // ujpdate the time index slider. The signals are blocked as it would lead
+    // to an infinite loop between the slider and the time index spin box
+    slider_timeindex->blockSignals(true);
+    slider_timeindex->setValue(sliderpos);
+    slider_timeindex->blockSignals(false);
+
+    // updatePosition is called on our geometry using the new time index, this
+    // simply sets the geometry transformation as specified by the control
+    // points
+    g->updatePosition(slidertime);
+
+    // finally, the particleslider function is called using the new time index
+    // to update the particle track indices
+    particleSlider(slidertime);
+    updateView();
+}
+
+void GeometryViewControl::slideTime() {
+    /* this function controls the time index slider and allows for the user to
+     * control the geometry motion and visible particle tracks by dragging the
+     * slider to various time indices. Note that this function is connected to
+     * the slider via the valuechanged signal, such that it will update
+     * continuously as the slider is dragged, not only at discrete points where
+     * the slider is released. Note this is also connected to the time window
+     * spin box. It requires essentially the same code, as it ultimately it only
+     * needs to call particleslider with the current time index to change the
+     * particle track indices */
+
+    // first the slider position is grabbed. The slider ranges from 0 to 999 as
+    // it cannot have decimal increments
+    int sliderpos=slider_timeindex->sliderPosition();
+
+    // the time index corresponding to the position integer is determined by
+    // dividing the position by 1000
+    EGS_Float slidertime = sliderpos/(float)1000;
+
+    // update the time index spinbox. The signals are blocked as it would lead
+    // to an infinite loop between the slider and the time index spin box
+    spin_timeindex->blockSignals(true);
+    spin_timeindex->setValue(slidertime);
+    spin_timeindex->blockSignals(false);
+
+    // updatePosition is called on our geometry using the new time index, this
+    // simply sets the geometry transformation as specified by the control
+    // points
+    g->updatePosition(slidertime);
+
+    // finally, the particleslider function is called using the new time index
+    // to update the particle track indices
+    particleSlider(slidertime);
+    updateView();
+}
+
+
+void GeometryViewControl::particleSlider(EGS_Float slidertime) {
+    /* this function is called by the time index slider, the time window box,
+     * and the time index box, as the final step in updating the display. It is
+     * responsible for determining which particle tracks are within the range to
+     * be displayed at a given time index. It considers a range of +/- half the
+     * provided time window on either side of the slider position and checks the
+     * sorted list of time indices corresponding to the compressed particle
+     * tracks list, and determines the start and end index of each particle type
+     * boxes to be imposed on their min and max spin boxes */
+
+    /* first, all of these operations can only be performed given a ptracks
+     * file is being used with time indices to compare to */
+    if (hasTrackTimeIndex) {
+
+        // obtain size of the time window
+        EGS_Float t_window = spin_timewindow->value();
+
+        // a boolean variable hasstart is defined as initially set to false.
+        // This will track whether a starting index has been assigned
+        bool hasstart=false;
+
+        // start and end index integers defined
+        int startindex=1,endindex=1;
+
+        // loop through the photons time index list one at a time
+        for (int j=0; j<timelist_p.size(); j++) {
+
+            // check whether the jth photon time index is within the +/- half
+            // time window range centered at the current time index
+            if (timelist_p[j]<(slidertime+(t_window/2)) && timelist_p[j]>(slidertime-(t_window/2))) {
+
+                // if it is, we check whether a starting index has been assigned
+                if (!hasstart) {
+                    // if the starting index has not been assigned, assign both
+                    // the start and the end index to the current loop index,
+                    // and make hasstart true; the end index is also set here as
+                    // it is possible only one particle is in the range, and the
+                    // end cannot be smaller than the start
+                    startindex=j+1;
+                    endindex=j+2;
+                    hasstart=true;
+                    // since hasstart is now true, the starting index will not
+                    // be updated at any later loop iteration
+                }
+                else {
+                    // if the starting index has been assigned, only set the end
+                    // index
+                    endindex=j+2;
+                }
+            }
+        }
+        // once the loop is over the max and min spin boxes are set (both are 1
+        // if no particle in range) (note max must be set first as it sets the
+        // maximum value of the min spinbox)
+        spin_tmaxp->setValue(endindex);
+        spin_tminp->setValue(startindex);
+
+        // hasstart bool and indices are reset to initial states
+        hasstart=false;
+        startindex=1;
+        endindex=1;
+
+        // loop through the electrons time index list one at a time
+        for (int j=0; j<timelist_e.size(); j++) {
+
+            // check whether the jth electron time index is within the +/- half
+            // time window range centered at the current time index
+            if (timelist_e[j]<(slidertime+(t_window/2)) && timelist_e[j]>(slidertime-(t_window/2))) {
+                // if it is, we check whether a starting index has been assigned
+                if (!hasstart) {
+                    // if the starting index has not been assigned, assign both
+                    // the start and the end index to the current loop index,
+                    // and make hasstart true; the end index is also set here as
+                    // it is possible only one particle is in the range, and the
+                    // end cannot be smaller than the start
+                    startindex=j+1;
+                    endindex=j+2; //
+                    hasstart=true;
+                    // since hasstart is now true, the starting index will not
+                    // be updated at any later loop iteration
+                }
+                else {
+                    // if the starting index has been assigned, only set the end
+                    // index
+                    endindex=j+1;
+                }
+            }
+        }
+        // once the loop is over the max and min spin boxes are set (both are 1
+        // if no particle in range) (note max must be set first as it sets the
+        // maximum value of the min spinbox)
+        spin_tmaxe->setValue(endindex);
+        spin_tmine->setValue(startindex);
+
+        // hasstart bool and indices are reset to initial states
+        hasstart=false;
+        startindex=1;
+        endindex=1;
+        // loop through the positron time index list one at a time
+        for (int j=0; j<timelist_po.size(); j++) {
+            // check whether the jth positron time index is within the +/- half
+            // time window range centered at the current time index
+            if (timelist_po[j]<(slidertime+(t_window/2)) && timelist_po[j]>(slidertime-(t_window/2))) {
+                // if it is, we check whether a starting index has been assigned
+                if (!hasstart) {
+                    // if the starting index has not been assigned, assign both
+                    // the start and the end index to the current loop index,
+                    // and make hasstart true; the end index is also set here as
+                    // it is possible only one particle is in the range, and the
+                    // end cannot be smaller than the start
+                    startindex=j+1;
+                    endindex=j+2;
+                    hasstart=true;
+                    // since hasstart is now true, the starting index will not
+                    // be updated at any later loop iteration
+                }
+                else {
+                    // if the starting index has been assigned, only set the end
+                    // index
+                    endindex=j+1;
+                }
+            }
+        }
+        // once the loop is over the max and min spin boxes are set (both are 1
+        // if no particle in range) (note max must be set first as it sets the
+        // maximum value of the min spinbox)
+        spin_tmaxpo->setValue(endindex);
+        spin_tminpo->setValue(startindex);
+    }
+    // if the file doesn't contain time indices then nothing at all occurs in this function
+    // and the particle tracks are unchanged
+}
+// end of time index methods//
+
 void GeometryViewControl::updateRegionTable() {
     if (!g) {
         return;
@@ -2962,3 +3265,60 @@ void GeometryViewControl::setFontSize(int size) {
     controlsText->setTextCursor(cursor);
 }
 
+
+bool GeometryViewControl::hasValidTime() {
+    // This function is used to determine whether the time index elements should be shown in the case that no dynamic geometry is present
+    bool incltime;
+
+    ifstream data(filename_tracks.toUtf8().constData(), ios::binary);
+
+    // Skip the first few bits related to the string head_inctime
+    data.seekg(sizeof(head_inctime));
+    // Read the boolean of whether or not time indices are included
+    data.read((char *)&incltime, sizeof(bool));
+
+    data.close();
+
+    return incltime;
+}
+
+void GeometryViewControl::timeObjectVisibility() {
+    //this function is used to make the time index objects visible or hidden as necessary. It will use the hasdynamic boolean, which indicates if they have any relevance in the uploaded files
+    if (!hasDynamic) { //if false all objects are hidden and the particle index spin boxes are allowed to be manually edited
+        button_timereset->hide();
+        button_timeplay->hide();
+        slider_timeindex->hide();
+        spin_timewindow->hide();
+        label_timewindow->hide();
+        spin_timeindex->hide();
+        label_timeindex->hide();
+        groupBox_time->hide();
+        spin_tmaxe->setReadOnly(false);
+        spin_tmine->setReadOnly(false);
+        spin_tmaxpo->setReadOnly(false);
+        spin_tminpo->setReadOnly(false);
+        spin_tmaxp->setReadOnly(false);
+        spin_tminp->setReadOnly(false);
+    }
+    else { //if trueall objects are made visible and the particle index spin boxes cannot be manually edited
+        /* disable manual spinbox editing as the particle min and max indices will be determined by the time window and current time index (either from slider or spinbox). It is simpler in this case to simply
+         * have them modified only by interactions with time index objects to avoid any bugs or inconsistensies between the visual display and the dashboard settings*/
+        spin_tmaxe->setReadOnly(true);
+        spin_tmine->setReadOnly(true);
+        spin_tmaxpo->setReadOnly(true);
+        spin_tminpo->setReadOnly(true);
+        spin_tmaxp->setReadOnly(true);
+        spin_tminp->setReadOnly(true);
+        button_timereset->show();
+        button_timeplay->show();
+        slider_timeindex->show();
+        spin_timewindow->show();
+        label_timewindow->show();
+        spin_timeindex->show();
+        label_timeindex->show();
+        groupBox_time->show();
+    }
+    //has dynamic is true when a dynamic geometry is present, or when the tracks are being given some time index (exmaple due to a dynamic source or phasespace file)
+
+
+}

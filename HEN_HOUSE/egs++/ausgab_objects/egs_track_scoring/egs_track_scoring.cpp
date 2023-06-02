@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2009
 #
 #  Contributors:    Georgi Gerganov
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -41,7 +42,7 @@
 EGS_TrackScoring::EGS_TrackScoring(const string &Name, EGS_ObjectFactory *f) :
     EGS_AusgabObject(Name,f), m_pts(0), m_start(0), m_stop(1024), m_lastCase(-1),
     m_nScore(0), m_bufSize(16), m_score(false), m_didScore(false),
-    m_score_photons(true), m_score_electrons(true), m_score_positrons(true), m_fnExtra("") {
+    m_score_photons(true), m_score_electrons(true), m_score_positrons(true), m_fnExtra(""), m_include_time(false) {
     otype = "EGS_TrackScoring";
 }
 
@@ -77,8 +78,18 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
         sprintf(buf,"_w%d",i_parallel);
         fname += buf;
     }
+
     fname += ".ptracks";
-    m_pts = new EGS_ParticleTrackContainer(fname.c_str(),m_bufSize);
+
+    // Determine whether a dynamic geometry or source was used
+    // Only do this if the user didn't explicitly say whether to include time indices
+    if(m_autoDetectDynamic) {
+        m_include_time = app->containsDynamic();
+    }
+
+    // create new particleTrackContainer using the m_include_time boolean which
+    // controls time index writting and filetype
+    m_pts = new EGS_ParticleTrackContainer(fname.c_str(),m_bufSize,m_include_time);
 
     description = "\nParticle Track Scoring (";
     description += name;
@@ -90,6 +101,8 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
     description += m_score_electrons ? "YES\n" : "NO\n";
     description += " - Scoring positron tracks     = ";
     description += m_score_positrons ? "YES\n" : "NO\n";
+    description += " - Include time index          = ";
+    description += m_include_time ? "YES\n" : "NO\n";
     description += " - First event to score        = ";
     char buf[32];
     sprintf(buf,"%lld\n",m_start);
@@ -114,7 +127,6 @@ void EGS_TrackScoring::reportResults() {
     }
 }
 
-
 extern "C" {
 
     EGS_TRACK_SCORING_EXPORT EGS_AusgabObject *createAusgabObject(EGS_Input *input,
@@ -133,6 +145,19 @@ extern "C" {
         if (!scph && !scel && !scpo) {
             return 0;
         }
+
+        // include time index lets the program know whether to write the time
+        // index to the tracks file
+        // The default is -1 so we know if this input wasn't specified
+        bool found = false;
+        bool incltime = input->getInput("include time index",sc_options,1,&found);
+        // If the user didn't specify whether or not to include time indices
+        // check if a dynamic source or geometry is in use
+        bool autoDetectDynamic = false;
+        if(!found) {
+            autoDetectDynamic = true;
+        }
+
         EGS_I64 first = 0, last = 1024;
         input->getInput("start scoring",first);
         input->getInput("stop scoring",last);
@@ -144,6 +169,8 @@ extern "C" {
         result->setScorePhotons(scph);
         result->setScoreElectrons(scel);
         result->setScorePositrons(scpo);
+        result->setIncludeTime(incltime); // incltime boolean is set from aquired input for the trackscoring object (sets m_include_time)
+        result->setAutoDetectDynamic(autoDetectDynamic);
         result->setFirstEvent(first);
         result->setLastEvent(last);
         result->setBufferSize(bufSize);
