@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2009
 #
 #  Contributors:    Georgi Gerganov
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -66,7 +67,7 @@
 
 \ingroup AusgabObjects
 
-This ausgab object can be used to store pareticle track information during
+This ausgab object can be used to store particle track information during
 run time and to output this information into a file. The data collected
 by this ausgab object can then be used to visualize the geometry and particle
 tracks with \c egs_view.
@@ -78,6 +79,7 @@ This ausgab object is specified via
     score photons   = yes or no # optional, yes assumed if missing
     score electrons = yes or no # optional, yes assumed if missing
     score positrons = yes or no # optional, yes assumed if missing
+    include time index = yes or no # optional, automatically set if missing, depending on whether there's a dynamic geometry or source
     start scoring   = event_number # optional, 0 assumed if missing
     stop  scoring   = event_number # optional, 1024 assumed if missing
     buffer size     = size         # optional, 1024 assumed if missing
@@ -116,11 +118,13 @@ public:
             }
             else if (iarg == EGS_Application::BeforeTransport) {
                 int q = app->top_p.q;
+                EGS_Float timeindex = app->getTimeIndex(); // get current time index from the source (through the application.cpp)
                 if ((q ==  0 && m_score_photons) ||
                         (q == -1 && m_score_electrons) ||
                         (q ==  1 && m_score_positrons)) {
                     m_pts->startNewTrack(np);
                     m_pts->setCurrentParticleInfo(new EGS_ParticleTrack::ParticleInfo(q));
+                    m_pts->setCurrentTimeIndex(timeindex); // set current time index for the particle track container object
                     m_pts->addVertex(np,new EGS_ParticleTrack::Vertex(app->top_p.x,app->top_p.E));
                 }
             }
@@ -158,6 +162,12 @@ public:
     void setScorePositrons(bool score) {
         m_score_positrons = score;
     };
+    void setIncludeTime(bool incltime) {
+        m_include_time = incltime;
+    };
+    void setAutoDetectDynamic(bool autoDetectDynamic) {
+        m_autoDetectDynamic = autoDetectDynamic;
+    };
     void setFirstEvent(EGS_I64 first)  {
         m_start = first;
     };
@@ -188,6 +198,8 @@ protected:
     bool                        m_score_photons;      //!< Score photon tracks?
     bool                        m_score_electrons;    //!< Score electron tracks?
     bool                        m_score_positrons;    //!< Score positron tracks?
+    bool                        m_include_time;       //!< include time index in tracks file?
+    bool                        m_autoDetectDynamic;  //!< Option for autodetecting whether to include time indices
 
     string                      m_fnExtra;            //!< String to append to output file name
 

@@ -63,7 +63,7 @@ template <class T>
 class EGS_CONEZ_EXPORT EGS_ConezT : public EGS_BaseGeometry {
 protected:
 
-    EGS_Float *theta,*cos_t,*cos2_t,*sin_t,*sin2_t;
+    EGS_Float *theta, *cos_t, *cos2_t, *sin_t, *sin2_t;
     // for conc-cones, all apices coincide
     EGS_Vector xo;
     // projection operator

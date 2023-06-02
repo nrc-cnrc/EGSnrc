@@ -160,14 +160,6 @@ public:
         double aux = ((double) Nread)/((double) Nparticle);
         return Pinc*aux;
     };
-    EGS_Float getMu() {
-        if (mu_stored) {
-            return p.mu;
-        }
-        else {
-            return -1.0;
-        }
-    };
     bool storeState(ostream &data) const {
         data << endl;
         bool res = egsStoreI64(data,Nread);
@@ -245,13 +237,15 @@ public:
     };
     void setFilter(int, int, int, const int *);
 
+    void containsDynamic(bool &hasdynamic);
+
 protected:
 
     bool        is_valid;
     string      the_file_name; //!< The phase-space file name
     bool        mode2;         //!< \c true, if a MODE2 file (i.e. storing Zlast)
     bool        latch_stored;  //!< true if LATCH is stored in data
-    bool        mu_stored;  //!< true if mu index stored
+    bool        time_stored;  //!< true if time index stored
     bool        swap_bytes;    /*!< \c true, if phase-space file was generated
                                 on a CPU with different endianness */
     EGS_Float   Emax,    //!< Maximum k.e. (obtained from the phsp file)
@@ -274,7 +268,7 @@ protected:
     int         n_extra_floats; //!< no. of extra floats stored in phsp file
     int         n_extra_longs; //!< no. of extra longs stored in phsp file
     int         i_zlast;   //!< index of zlast in extra_floats array
-    int         i_mu;   //!< index of mu index in extra_floats array
+    int         i_time;   //!< index of time index in extra_floats array
     int         i_latch;   //!< index of latch in extra_floats array
 
     bool        first;
@@ -292,7 +286,7 @@ protected:
 #ifndef SKIP_DOXYGEN
     struct EGS_LOCAL BeamParticle {
         int  latch, q;
-        float E, u, v, w, x, y, z, wt, zlast, mu;
+        float E, u, v, w, x, y, z, wt, zlast, time;
     };
     BeamParticle  p;
 #endif
