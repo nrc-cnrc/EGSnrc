@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
+#                   Alexandre Demelo
 #
 ###############################################################################
 #
@@ -315,6 +316,13 @@ public:
             return tmin;
         }
         return g->hownear(ireg,x);
+    };
+    
+    void getNextGeom(EGS_RandomGenerator *rndm){
+	for (int j=0; j<n_in; j++) {
+		geometries[j]->getNextGeom(rndm);
+	}
+	g->getNextGeom(rndm);
     };
 
     int getMaxStep() const {

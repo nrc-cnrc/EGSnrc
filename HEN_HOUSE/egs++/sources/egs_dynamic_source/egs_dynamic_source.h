@@ -243,6 +243,7 @@ public:
             if (!sync) {
                 pmu = rndm->getUniform();
             }
+            setMu(pmu);
             err = getCoord(pmu,ipt);
         }
 
@@ -267,9 +268,9 @@ public:
     EGS_Float getFluence() const {
         return source->getFluence();
     };
-    EGS_Float getMu() {
-        return pmu;
-    };
+    //EGS_Float getMu() {
+        //return pmu;
+    //};
     bool storeState(ostream &data) const {
         return source->storeState(data);
     };

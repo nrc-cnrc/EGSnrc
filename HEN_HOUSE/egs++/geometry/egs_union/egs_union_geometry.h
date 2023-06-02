@@ -26,6 +26,7 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -277,6 +278,12 @@ public:
             }
         }
         return tmin;
+    };
+    
+    void getNextGeom(EGS_RandomGenerator *rndm){
+	for (int j=0; j<ng; j++) {
+		g[j]->getNextGeom(rndm);
+	}
     };
 
     int getMaxStep() const {

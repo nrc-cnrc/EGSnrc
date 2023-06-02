@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Blake Walters
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -704,6 +705,10 @@ public:
      */
     EGS_Float getMU() {
         return source->getMu();
+    }
+    
+    void setMU(EGS_Float temp_mu) {//new A.D
+        source->setMu(temp_mu);
     }
 
     /*! \brief User scoring function for accumulation of results and VRT implementation

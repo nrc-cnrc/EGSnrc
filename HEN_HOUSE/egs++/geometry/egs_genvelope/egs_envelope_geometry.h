@@ -27,6 +27,7 @@
 #                   Frederic Tessier
 #                   Reid Townson
 #                   Max Orok
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -522,6 +523,13 @@ public:
         }
         return g->hownear(ireg,x);
     };
+    
+    void getNextGeom(EGS_RandomGenerator *rndm){
+	for (int j=0; j<n_in; j++) {
+		geometries[j]->getNextGeom(rndm);
+	}
+	g->getNextGeom(rndm);
+    };//getnext geom will go to lower level geometries and call getnext geom on them to implement motion if any of them are dynamic geometries
 
     int getMaxStep() const {
         int nstep = g->getMaxStep();
@@ -684,6 +692,14 @@ public:
         }
         return ireg;
     };
+    
+    void getNextGeom(EGS_RandomGenerator *rndm){
+	for (int j=0; j<n_in; j++) {
+		geometries[j]->getNextGeom(rndm);
+	}
+	g->getNextGeom(rndm);
+    };//getnext geom will go to lower level geometries and call getnext geom on them to implement motion if any of them are dynamic geometries
+
 
     int inside(const EGS_Vector &x) {
         return isWhere(x);
