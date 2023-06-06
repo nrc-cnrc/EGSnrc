@@ -116,7 +116,7 @@ public:
       Writes the particle information block m_pInfo, the number of vertices
       in this track and finally all vertex data.
     */
-    int writeTrack(ofstream *trsp);
+    int writeTrack(ofstream *trsp, bool inclmu);
 
     /*! \brief Add additional point of interaction (Vertex) to the track. */
     void addVertex(Vertex *x);
@@ -143,12 +143,22 @@ public:
         return m_pInfo;
     };
 
+    void setMuIndex(EGS_Float mu) {
+        mu_index = mu;
+    };
+
+    /*! \brief Get the type of the particle being tracked. */
+    EGS_Float getMuIndex() {
+        return mu_index;
+    };
+
 protected:
 
     /*! \brief Resize the array containing the vertices. */
     void grow();
 
     ParticleInfo    *m_pInfo;       //!< type of the tracked particle
+    EGS_Float       mu_index;
 
     int             m_size;         //!< current size of the vertex array
     int             m_nVertices;    //!< current number of vertices in track
@@ -181,12 +191,13 @@ public:
       \a buf_size which defines how many tracks the container will store
       before flushing them to the output file.
     */
-    EGS_ParticleTrackContainer(const char *fname, int buf_size) : m_nEvents(0),
+    EGS_ParticleTrackContainer(const char *fname, int buf_size, bool mu_bool) : m_nEvents(0),
         m_nTracks(0), m_totalTracks(0), m_isScoring(NULL), m_bufferSize(0), m_buffer(0),
         m_trspFile(NULL) {
         m_bufferSize = buf_size;
 
         // initialize the arrays
+        inclmu = mu_bool;
         m_buffer = new EGS_ParticleTrack* [m_bufferSize];
         m_stackMap = new int [m_bufferSize];
         m_isScoring = new bool [m_bufferSize];
@@ -202,6 +213,7 @@ public:
         int dummy = 0;
         // at the end this will be replaced with the number of recorded tracks
         m_trspFile->write((char *)&dummy, sizeof(int));
+        //if inclmu is true write a flag to show mu values are included. Otherwise write nothing.
     };
 
     /*! \brief The Destructor. Deallocate all allocated memory. */
@@ -317,6 +329,10 @@ public:
         m_buffer[m_nTracks-1]->setParticleInfo(p);
     }
 
+    void setCurrentMuIndex(EGS_Float mu) {
+        m_buffer[m_nTracks-1]->setMuIndex(mu);
+    }
+
     /*! \brief Load particle data from the file called \a filename .*/
     int readDataFile(const char *filename);
 
@@ -341,6 +357,7 @@ protected:
     */
     void updateHeader();
 
+    bool                inclmu;
     int                 m_nEvents;      //!< number of events scored
     int                 m_nTracks;      //!< number of tracks currently in memory
     int                 m_totalTracks;  //!< total number of tracks registered

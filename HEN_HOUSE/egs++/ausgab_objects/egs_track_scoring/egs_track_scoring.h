@@ -116,11 +116,13 @@ public:
             }
             else if (iarg == EGS_Application::BeforeTransport) {
                 int q = app->top_p.q;
+                EGS_Float mu = app->getMU();
                 if ((q ==  0 && m_score_photons) ||
                         (q == -1 && m_score_electrons) ||
                         (q ==  1 && m_score_positrons)) {
                     m_pts->startNewTrack(np);
                     m_pts->setCurrentParticleInfo(new EGS_ParticleTrack::ParticleInfo(q));
+                    m_pts->setCurrentMuIndex(mu);
                     m_pts->addVertex(np,new EGS_ParticleTrack::Vertex(app->top_p.x,app->top_p.E));
                 }
             }
@@ -158,6 +160,9 @@ public:
     void setScorePositrons(bool score) {
         m_score_positrons = score;
     };
+    void setIncludeMu(bool score)   {
+        m_include_mu = score;
+    };
     void setFirstEvent(EGS_I64 first)  {
         m_start = first;
     };
@@ -188,6 +193,7 @@ protected:
     bool                        m_score_photons;      //!< Score photon tracks?
     bool                        m_score_electrons;    //!< Score electron tracks?
     bool                        m_score_positrons;    //!< Score positron tracks?
+    bool                        m_include_mu;
 
     string                      m_fnExtra;            //!< String to append to output file name
 
