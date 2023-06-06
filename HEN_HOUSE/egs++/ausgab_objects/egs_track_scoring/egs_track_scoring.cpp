@@ -77,8 +77,14 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
         sprintf(buf,"_w%d",i_parallel);
         fname += buf;
     }
-    fname += ".ptracks";
-    m_pts = new EGS_ParticleTrackContainer(fname.c_str(),m_bufSize);
+    //if inclmu is false use .ptracks. If inclmu is true use the new file format .syncptracks
+    if(m_include_mu){
+        fname += ".syncptracks";
+    }
+    else{
+        fname += ".ptracks";
+    }
+    m_pts = new EGS_ParticleTrackContainer(fname.c_str(),m_bufSize,m_include_mu);
 
     description = "\nParticle Track Scoring (";
     description += name;
@@ -130,6 +136,7 @@ extern "C" {
         bool scph = input->getInput("score photons",sc_options,true);
         bool scel = input->getInput("score electrons",sc_options,true);
         bool scpo = input->getInput("score positrons",sc_options,true);
+        bool inclmu = input->getInput("include mu index",sc_options,true);
         if (!scph && !scel && !scpo) {
             return 0;
         }
@@ -144,6 +151,7 @@ extern "C" {
         result->setScorePhotons(scph);
         result->setScoreElectrons(scel);
         result->setScorePositrons(scpo);
+        result->setIncludeMu(inclmu);
         result->setFirstEvent(first);
         result->setLastEvent(last);
         result->setBufferSize(bufSize);

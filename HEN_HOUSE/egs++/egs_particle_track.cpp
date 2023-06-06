@@ -70,13 +70,22 @@ void EGS_ParticleTrack::clearTrack() {
     m_nVertices = 0;
 }
 
-int EGS_ParticleTrack::writeTrack(ofstream *trsp) {
+int EGS_ParticleTrack::writeTrack(ofstream *trsp, bool inclmu) {
     // no need to write the track if it has less than 2 vertices ...
+    egsInformation("\nwriteTrack() \n");
     if (m_nVertices < 2) {
         return 1;
     }
+
     trsp->write((char *)&m_nVertices, sizeof(int));
     trsp->write((char *)m_pInfo, sizeof(ParticleInfo));
+    egsInformation("wrote original info\n");
+    //EGS_Float* pmu;
+    //*pmu = mu_index;//this and above are causing segmentation fault
+    if (inclmu){
+        trsp->write((char *) &mu_index, sizeof(EGS_Float));
+        egsInformation("wrote mu to file\n");
+    }
     for (int i = 0; i < m_nVertices; i++) {
         trsp->write((char *)m_track[i],sizeof(Vertex));
     }
@@ -139,7 +148,7 @@ void EGS_ParticleTrackContainer::flushBuffer() {
             // if the particle is not being scored anymore
             if (!m_isScoring[i]) {
                 // output it to the file and free memory
-                if (!m_buffer[i]->writeTrack(m_trspFile)) {
+                if (!m_buffer[i]->writeTrack(m_trspFile,inclmu)) {
                     m_totalTracks++;
                 }
                 m_buffer[i]->clearTrack();
@@ -204,6 +213,16 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
                    func_name, filename);
         return -1;
     }
+
+    //this block of code gets the file extension. It should work as it worked in the track_view file (see terminal output)
+    string readfile = string(filename);
+    string extension;
+    size_t k = readfile.rfind('.', readfile.length());
+    if (k != string::npos) {
+      extension = readfile.substr(k+1, readfile.length() - k);
+    }
+    cout<<"extension of file is "<<extension<<"\n";
+
     data->read((char *)&m_totalTracks, sizeof(int));
     egsInformation("%s: Reading %d tracks from '%s' ...\n", func_name, m_totalTracks, filename);
     m_nTracks = 0;

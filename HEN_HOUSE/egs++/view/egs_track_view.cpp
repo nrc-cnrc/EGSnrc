@@ -102,6 +102,14 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
     }
     egsInformation("%s: Reading %d tracks from '%s' ...\n", func_name, tot_tracks, filename);
 
+    string readfile = string(filename);
+    string extension;
+    size_t k = readfile.rfind('.', readfile.length());
+    if (k != string::npos) {
+      extension = readfile.substr(k+1, readfile.length() - k);
+   }
+   cout<<"extension of file is "<<extension<<"\n";
+
     tmp_buffer = new char[size-sizeof(int)];
 
     // May want to look into memory mapping, but only if access patterns/OS sets matter
@@ -131,10 +139,19 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
     for (int i=0; i<tot_tracks; i++) {
         // The general track structure is:
         // [int nverts] [ParticleInfo b] [Vertex r]
+        //this is where the track file is being read. Reads nvert and pinfo and then moves onto reading vertices
+        int skip;
         int nverts = *((int *)loc);
         PInfo pInfo =
             *(PInfo *)(loc+sizeof(int));
-
+        EGS_Float muindex;
+        if(extension=="syncptracks"){
+            muindex = *(EGS_Float *)(loc+sizeof(int)+ sizeof(PInfo));
+            skip = sizeof(int) + sizeof(PInfo)+sizeof(EGS_Float);
+        }
+        else{
+            skip = sizeof(int) + sizeof(PInfo);
+        }
         if (nverts < 2) {
             egsWarning("Track %d has length %d < 2.", i, nverts);
         }
@@ -144,7 +161,7 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
         count_vert[type] += nverts;
 
         tmp_index[i] = loc;
-        int skip = sizeof(int) + sizeof(PInfo);
+
         loc += skip;
         for (int k=0; k<nverts; k++) {
             EGS_Float energy = ((Vert *)loc)->e;
@@ -175,11 +192,19 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
 
     // Compression routine!
     for (int i=0; i<tot_tracks; i++) {
+        char *start;
         char *ind = (char *)tmp_index[i];
         int nverts = *((int *)ind);
         PInfo pInfo =
             *(PInfo *)(ind+sizeof(int));
-        char *start = ind+sizeof(int)+sizeof(PInfo);
+        EGS_Float muindex;
+        if(extension=="syncptracks"){
+            muindex = *(EGS_Float *)(loc+sizeof(int)+ sizeof(PInfo));
+            start = ind+sizeof(int)+sizeof(PInfo)+sizeof(EGS_Float);
+        }
+        else{
+            start = ind+sizeof(int)+sizeof(PInfo);
+        }
 
         int type = particleType(pInfo);
         int m_off = mem_rcnt[type];
