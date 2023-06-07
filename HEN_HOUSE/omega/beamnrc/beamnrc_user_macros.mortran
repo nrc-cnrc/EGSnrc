@@ -87,7 +87,7 @@ REPLACE {$COVMIN} WITH {10}        "min. no. of particles crossing a scoring"
 REPLACE {$MXMED} WITH {12}         "max # of media
 REPLACE {$MXREG} WITH {3000}       "maximum number of regions (absolute)
 REPLACE {$MXSTACK} WITH {900000}   "maximum stack (much less if no brem split)
-REPLACE {$MAXBRSPLIT} WITH {2000}  "maximum number of bremsstrahlung splits
+REPLACE {$MAXBRSPLIT} WITH {5000}  "maximum number of bremsstrahlung splits
                                    "note that $MXSTACK must be adjusted too
 REPLACE {$MAX_DOSE_ZONE} WITH {1500} "maximum number of dose-scoring zones
 REPLACE {$MAXIT} WITH {12}         "maximum number of dose components to score
