@@ -142,11 +142,17 @@ public:
         bool is_phat = (app->top_p.wt - wthin) > epsilon;
         bool is_primary = app->top_p.latch == 0 ? true : false;
 
-        /* Split primary and fat electrons */
-        if ( iarg == EGS_Application::BeforeBrems && (is_primary || is_phat) ){
+        /* Split radiative events ONLY for primary and fat electrons */
+        if ( iarg == EGS_Application::BeforeBrems       ||
+             iarg == EGS_Application::BeforeAnnihFlight ||
+             iarg == EGS_Application::BeforeAnnihRest   && 
+             (is_primary || is_phat)                    ){
            app->setRadiativeSplitting(nsplit);
         }
-        else if ( iarg == EGS_Application::AfterBrems ){
+        /* Avoids higher order splitting of radiative events */        
+        else if ( iarg == EGS_Application::AfterBrems       ||
+                  iarg == EGS_Application::AfterAnnihFlight ||
+                  iarg == EGS_Application::AfterAnnihRest   ){
            app->setRadiativeSplitting(1);
            app->setLatch(app->getNpOld()+1,1);
         }
