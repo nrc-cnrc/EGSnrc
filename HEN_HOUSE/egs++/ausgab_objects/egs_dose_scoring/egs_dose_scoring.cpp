@@ -257,10 +257,11 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         description += " - Medium dose will be calculated\n";
     }
     description += "\n--------------------------------------\n";
-    sprintf(buf,"%*s  rho (g/cm^3)\n",max_medl,"medium");
+    sprintf(buf,"%*s %*s rho/(g/cm^3)\n",max_medl/2,"medium",max_medl/2," ");
     description += buf;
     description += "--------------------------------------\n";
     for (imed=0; imed < nmedia; imed++) {
+        sprintf(buf,"%-*s",max_medl,app->getMediumName(imed));
         description += buf;
         description += "  ";
         sprintf(buf,"%11.8f",app->getMediumRho(imed));
@@ -638,7 +639,7 @@ extern "C" {
         // Check if one volume for each group requested.
         // If not just pass the volumes read and if there
         // is a mismatch, then the first volume element
-        // or 1g/cm3 will be used.
+        // or 1 g/cm3 will be used.
         //=================================================
         vector <EGS_Float> volin;
         // groups of regions with same volume
