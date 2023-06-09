@@ -229,8 +229,16 @@ public:
 
     /* Needed by some sources */
     EGS_Float getRM();
-    /* Turn ON/OFF radiative splitting */
-    void setRadiativeSplitting(const EGS_Float &nsplit);
+
+    //************************************************
+    // For use with ausgab radiative splitting objects
+    //************************************************
+
+    /* Turn ON/OFF EGSnrc internal radiative splitting (UBS) */
+    void setRadiativeSplitting( const EGS_Float &nsplit );
+    /* Turn ON/OFF EGSnrc internal Russian Roultette + UBS */
+    void setRussianRoulette( const EGS_Float &iSwitchRR );
+    void splitTopParticleIsotropically( const EGS_Float &fsplit );
 
 protected:
 
