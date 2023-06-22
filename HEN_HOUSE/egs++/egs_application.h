@@ -695,20 +695,21 @@ public:
         geometry->getLabelRegions(str, regs);
     }
 
-    /*! \brief Returns the value of the \a mu synchronization parameter
+    /*! \brief Returns the value of the \a time synchronization parameter
 
-      The parameter, \a mu, is a random number on \a [0,1) associated with each
+      The parameter, \a time, is a random number on \a [0,1) associated with each
       primary history and is retrieved from \a source.  It can be used to
-      synchronize geometric parameters throughout a simulation.  If \a mu is
-      not available in \a source (i.e., the \a getMu function has not been
+      synchronize geometric parameters throughout a simulation.  If \a time is
+      not available in \a source (i.e., the \a getTime function has not been
       reimplemented in \a source), then this returns -1.
      */
-    EGS_Float getMU() {
-        return source->getMu();
+    EGS_Float getTimeIndex() {
+        return source->getTimeIndex();
     }
-    
-    void setMU(EGS_Float temp_mu) {//new A.D
-        source->setMu(temp_mu);
+
+     /*! Sets the value of the time synchronization parameter. This will mainly be used by the dynamic geometry if it does not receive time from a source */
+    void setTimeIndex(EGS_Float temp_time) {
+        source->setTimeIndex(temp_time);
     }
 
     /*! \brief User scoring function for accumulation of results and VRT implementation

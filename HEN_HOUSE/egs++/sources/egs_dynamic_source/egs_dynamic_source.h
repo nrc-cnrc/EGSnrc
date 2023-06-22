@@ -24,6 +24,7 @@
 #  Author:          Blake Walters, 2017
 #
 #  Contributors:    Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -85,7 +86,7 @@ phi = angle of rotation of dsource about Z-axis (deg).
       relative to the +X-axis.
 phicol = angle of rotation of source about -dsource (deg).  +ve
          value defines clockwise rotations.
-The monitor unit index, mu, controls dynamic motion as described
+The time index controls dynamic motion as described
 below.
 The generic input is:
 \verbatim
@@ -95,27 +96,27 @@ The generic input is:
     source name = the name of a previously defined source
     synchronize motion = yes or no (default)
     :start motion:
-       control point 1 = xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) mu(1)
-       control point 2 = xiso(2) yiso(2) ziso(2) dsource(2) theta(2) phi(2) phicol(2) mu(2)
+       control point 1 = xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) time(1)
+       control point 2 = xiso(2) yiso(2) ziso(2) dsource(2) theta(2) phi(2) phicol(2) time(2)
        .
        .
        .
-       control point N = xiso(N) yiso(N) ziso(N) dsource(N) theta(N) phi(N) phicol(N) mu(N)
+       control point N = xiso(N) yiso(N) ziso(N) dsource(N) theta(N) phi(N) phicol(N) time(N)
     :stop motion:
 :stop source:
 \endverbatim
-Control points must be defined such that mu(i+1)>=mu(i), where mu(i)
-is the value of mu for control point i.  The mu(i) are automatically
-normalized by mu(N), where N is the number of control points.
+Control points must be defined such that time(i+1)>=time(i), where time(i)
+is the value of time for control point i.  The time(i) are automatically
+normalized by time(N), where N is the number of control points.
 Continuous, dynamic motion between control points is simulated by choosing a random
-number, R, on (0,1] and, for mu(i)<R<=mu(i+1), setting incident source
+number, R, on (0,1] and, for time(i)<R<=time(i+1), setting incident source
 coordinate, P, where P is one of xiso, yiso, ziso, dsource, theta,
 phi, or phicol, using:
-P=P(i)+[P(i+1)-P(i)]/[mu(i+1)-mu(i)]*[R-mu(i)]
+P=P(i)+[P(i+1)-P(i)]/[time(i+1)-time(i)]*[R-time(i)]
 Note that this scheme for generating incident source coordinates really
-only makes sense if mu(1)=0.0.  However, the source can function
-with mu(1)>0.0, in the case where a user desires to eliminate particles
-associated with a range of mu values, but there will be a lot of
+only makes sense if time(1)=0.0.  However, the source can function
+with time(1)>0.0, in the case where a user desires to eliminate particles
+associated with a range of time values, but there will be a lot of
 warning messages.
 
 A simple example is shown below.  This first defines a monoenergetic
@@ -125,7 +126,7 @@ distance, dsource, of 100 cm above the isocentre at (0,0,0).  Control
 points 1 and 2 rotate the source clockwise around the Y-axis (phi=0)
 through theta=0-360 degrees, while control points 3 and 4 rotate
 the source clockwise around the Z-axis (phi=90 degrees) through
-phi=0-360 degrees.  Note that mu(2)-mu(1)=mu(4)-mu(3), so the rotations
+phi=0-360 degrees.  Note that time(2)-time(1)=time(4)-time(3), so the rotations
 around Z and Y are carried out for an equal number of incident photons.
 If the source being made to move dynamically supplies its own monitor
 unit index (iaea_phsp_source and egs_beam_source only), then the dynamic
@@ -179,7 +180,7 @@ public:
         EGS_Float theta; //angle of rotation about Y-axis
         EGS_Float phi;  //angle of rotation about Z-axis
         EGS_Float phicol; //angle of rotation in source plane
-        EGS_Float mu; //monitor unit index for control point
+        EGS_Float time; //monitor unit index for control point
     };
 
     /*! \brief Construct a dynamic source using \a Source as the
@@ -195,23 +196,23 @@ public:
             valid = false;
         }
         else {
-            if (cpts[0].mu > 0.0) {
-                egsWarning("EGS_DynamicSource: mu index of control point 1 > 0.0.  This will generate many warning messages.\n");
+            if (cpts[0].time > 0.0) {
+                egsWarning("EGS_DynamicSource: time index of control point 1 > 0.0.  This will generate many warning messages.\n");
             }
             int npts = cpts.size();
             for (int i=0; i<npts; i++) {
-                if (i>0 && cpts[i].mu < cpts[i-1].mu) {
-                    egsWarning("EGS_DynamicSource: mu index of control point %i < mu index of control point %i\n",i,i-1);
+                if (i>0 && cpts[i].time < cpts[i-1].time) {
+                    egsWarning("EGS_DynamicSource: time index of control point %i < time index of control point %i\n",i,i-1);
                     valid = false;
                 }
-                if (cpts[i].mu<0.0) {
-                    egsWarning("EGS_DynamicSource: mu index of control point %i < 0.0\n",i);
+                if (cpts[i].time<0.0) {
+                    egsWarning("EGS_DynamicSource: time index of control point %i < 0.0\n",i);
                     valid = false;
                 }
             }
-            //normalize mu values
+            //normalize time values
             for (int i=0; i<npts-1; i++) {
-                cpts[i].mu /= cpts[npts-1].mu;
+                cpts[i].time /= cpts[npts-1].time;
             }
         }
         setUp();
@@ -228,23 +229,23 @@ public:
                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
                             EGS_Vector &x, EGS_Vector &u) {
         int err = 1;
-        EGS_ControlPoint ipt;  //the actual rotation coords
+        EGS_ControlPoint ipt;
         EGS_I64 c;
         while (err) {
             c = source->getNextParticle(rndm,q,latch,E,wt,x,u);
             if (sync) {
-                pmu = source->getMu();
-                if (pmu<0) {
+                ptime = source->getTimeIndex();
+                if (ptime<0) {
                     egsWarning("EGS_DynamicSource: You have selected synchronization of dynamic source with %s\n",source->getObjectName().c_str());
-                    egsWarning("However, this source does not return mu values for each particle.  Will turn off synchronization.\n");
+                    egsWarning("However, this source does not return time values for each particle.  Will turn off synchronization.\n");
                     sync = false;
                 }
             }
             if (!sync) {
-                pmu = rndm->getUniform();
+                ptime = rndm->getUniform();
             }
-            setMu(pmu);
-            err = getCoord(pmu,ipt);
+            setTimeIndex(ptime); //this is added for the storing of time index in a single location. Technically stored as a basesource attribute not dynamic source
+            err = getCoord(ptime,ipt);
         }
 
         //translate source in Z
@@ -268,9 +269,6 @@ public:
     EGS_Float getFluence() const {
         return source->getFluence();
     };
-    //EGS_Float getMu() {
-        //return pmu;
-    //};
     bool storeState(ostream &data) const {
         return source->storeState(data);
     };
@@ -302,12 +300,12 @@ protected:
 
     bool valid; //is this a valid source
 
-    bool sync; //set to true if source motion synched with mu read from
+    bool sync; //set to true if source motion synched with time read from
     //iaea phsp or beam simulation source
 
     int getCoord(const EGS_Float rand, EGS_ControlPoint &ipt);
 
-    EGS_Float pmu; //monitor unit index corresponding to particle
+    EGS_Float ptime; //time index corresponding to particle
     //could just be a random number.
 
     void setUp();

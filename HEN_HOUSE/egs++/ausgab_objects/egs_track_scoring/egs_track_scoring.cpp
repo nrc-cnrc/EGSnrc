@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2009
 #
 #  Contributors:    Georgi Gerganov
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -41,7 +42,7 @@
 EGS_TrackScoring::EGS_TrackScoring(const string &Name, EGS_ObjectFactory *f) :
     EGS_AusgabObject(Name,f), m_pts(0), m_start(0), m_stop(1024), m_lastCase(-1),
     m_nScore(0), m_bufSize(16), m_score(false), m_didScore(false),
-    m_score_photons(true), m_score_electrons(true), m_score_positrons(true), m_fnExtra("") {
+    m_score_photons(true), m_score_electrons(true), m_score_positrons(true), m_fnExtra(""), m_include_time(false) {
     otype = "EGS_TrackScoring";
 }
 
@@ -77,14 +78,15 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
         sprintf(buf,"_w%d",i_parallel);
         fname += buf;
     }
-    //if inclmu is false use .ptracks. If inclmu is true use the new file format .syncptracks
-    if(m_include_mu){
+    //if incltime is false use .ptracks. If incltime is true use the new file format .syncptracks
+    if(m_include_time){
         fname += ".syncptracks";
     }
     else{
         fname += ".ptracks";
     }
-    m_pts = new EGS_ParticleTrackContainer(fname.c_str(),m_bufSize,m_include_mu);
+    //here new particleTrackContainer created using the m_include_time boolean which controls time index writting and filetype
+    m_pts = new EGS_ParticleTrackContainer(fname.c_str(),m_bufSize,m_include_time);
 
     description = "\nParticle Track Scoring (";
     description += name;
@@ -96,6 +98,8 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
     description += m_score_electrons ? "YES\n" : "NO\n";
     description += " - Scoring positron tracks     = ";
     description += m_score_positrons ? "YES\n" : "NO\n";
+    description += " - Include time index          = ";
+    description += m_include_time ? "YES\n" : "NO\n";
     description += " - First event to score        = ";
     char buf[32];
     sprintf(buf,"%lld\n",m_start);
@@ -136,7 +140,8 @@ extern "C" {
         bool scph = input->getInput("score photons",sc_options,true);
         bool scel = input->getInput("score electrons",sc_options,true);
         bool scpo = input->getInput("score positrons",sc_options,true);
-        bool inclmu = input->getInput("include mu index",sc_options,true);
+        //include time index lets the program know whether to write the time index to the tracks file and determines the filetype (ptracks or syncptracks)
+        bool incltime = input->getInput("include time index",sc_options,false); //here false in argument makes time inclusion false by default
         if (!scph && !scel && !scpo) {
             return 0;
         }
@@ -151,7 +156,7 @@ extern "C" {
         result->setScorePhotons(scph);
         result->setScoreElectrons(scel);
         result->setScorePositrons(scpo);
-        result->setIncludeMu(inclmu);
+        result->setIncludeTime(incltime);//here incltime boolean is set from aquired input for the trackscoring object (sets m_include_time)
         result->setFirstEvent(first);
         result->setLastEvent(last);
         result->setBufferSize(bufSize);

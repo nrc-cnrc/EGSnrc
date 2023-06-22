@@ -242,7 +242,7 @@ void EGS_PhspScoring::reportResults() {
 void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
 
     //if user requested mu scoring, check if mu is available
-    if (score_mu && app->getMU() < 0) {
+    if (score_mu && app->getTimeIndex() < 0) {
         egsWarning("\nEGS_PhspScoring: User requested mu scoring, but mu is inavailable with this source.\n");
         egsWarning("Turning off mu scoring.\n");
         score_mu=false;
@@ -278,7 +278,7 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
     p_stack[phsp_index].w = app->top_p.u.z;
     p_stack[phsp_index].q = app->top_p.q;
     if (score_mu) {
-        p_stack[phsp_index].mu = app->getMU();
+        p_stack[phsp_index].mu = app->getTimeIndex();
     }
     p_stack[phsp_index++].latch = app->top_p.latch;
 

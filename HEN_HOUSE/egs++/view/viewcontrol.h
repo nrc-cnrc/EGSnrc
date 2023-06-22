@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Manuel Stoeckl
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -60,6 +61,7 @@ public:
 
     virtual void setFilename(QString str);
     virtual void setTracksFilename(QString str);
+    virtual void setTracksExtension(QString str);
     virtual void setCameraPosition();
     virtual void setProjectionLineEdit();
     virtual void setLightLineEdit();
@@ -76,6 +78,8 @@ public:
     virtual void updateRegionTable(int imed);
     virtual void updateAusgabObjects(bool loadUserDose=false);
     virtual void initColorSwatches();
+    virtual bool hasValidTime();
+    virtual void timeObjectVisibility();
 
 public slots:
 
@@ -142,7 +146,12 @@ public slots:
     virtual void changeTrackMaxP(int t);
     virtual void changeTrackMaxE(int t);
     virtual void changeTrackMaxPo(int t);
-    virtual void updateTracks(vector<size_t> ntracks);
+    virtual void playTime();
+    virtual void resetTime();
+    virtual void slideTime();
+    virtual void spinTime();
+    virtual void particleSlider(EGS_Float slidertime);
+    virtual void updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po);
 
 private:
 
@@ -150,8 +159,13 @@ private:
     ImageWindow *gview;
     SaveImage *save_image;
 
+    vector<EGS_Float> timelist_p;  //list of time indices of compressed particle tracks for photons
+    vector<EGS_Float> timelist_e;  //list of time indices of compressed particle tracks for electrons
+    vector<EGS_Float> timelist_po; //list of time indices of compressed particle tracks for positrons
+
     QString filename;
     QString filename_tracks;
+    QString tracks_extension;
     QString userDoseFile;
     int nmed;
     QRgb *m_colors;
@@ -194,6 +208,7 @@ private:
     bool showPhotonTracks;
     bool showElectronTracks;
     bool showPositronTracks;
+    bool hasDynamic; //boolean to track whether or not to make time objects visible or hidden
     vector<bool> show_regions;
     bool    allowRegionSelection,
             energyScaling;

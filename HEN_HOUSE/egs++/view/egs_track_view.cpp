@@ -26,6 +26,7 @@
 #  Contributors:    Iwan Kawrakow
 #                   Frederic Tessier
 #                   Ernesto Mainegra-Hing
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -67,7 +68,13 @@ static T *shrink(T *original, size_t old_len, size_t new_len) {
 
 const int zero = 0;
 
-EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
+EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vector<EGS_Float> &timelist_p, vector<EGS_Float> &timelist_e, vector<EGS_Float> &timelist_po) {
+    //timelist vector references added as arguments in order to incorporate particle track time slider in egsview.
+    /*time lists are references so all changes here change the time list vectors in renderworker::loadtracks. The lists then pass from renderworker to viewcontrol through signal emissions.
+     *tracksloaded from renderworker to imagewindow
+     * tracksloaded from image window to viewcontrol
+     */
+
     // typedefs to keep things short
     typedef EGS_ParticleTrack::Vertex Vert;
     typedef EGS_ParticleTrack::ParticleInfo PInfo;
@@ -93,6 +100,7 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
     data.seekg(0, ios::beg);
 
     data.read((char *)&tot_tracks, sizeof(int));
+
     // very conservative sanity check to avoid a huge allocation
     if (tot_tracks * sizeof(Vert) > size - sizeof(int)) {
         egsInformation("%s: No tracks loaded: %d tracks can't fit in %d-byte file '%s'\n",
@@ -108,7 +116,6 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
     if (k != string::npos) {
       extension = readfile.substr(k+1, readfile.length() - k);
    }
-   cout<<"extension of file is "<<extension<<"\n";
 
     tmp_buffer = new char[size-sizeof(int)];
 
@@ -138,15 +145,17 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
     char *loc = tmp_buffer;
     for (int i=0; i<tot_tracks; i++) {
         // The general track structure is:
-        // [int nverts] [ParticleInfo b] [Vertex r]
+        // [int nverts] [ParticleInfo b] [Vertex r]                        for ptracks
+        // [int nverts] [ParticleInfo b] [Vertex r] [EGS_Float time index] for syncptracks
         //this is where the track file is being read. Reads nvert and pinfo and then moves onto reading vertices
         int skip;
         int nverts = *((int *)loc);
         PInfo pInfo =
             *(PInfo *)(loc+sizeof(int));
-        EGS_Float muindex;
+        EGS_Float timeindex;
         if(extension=="syncptracks"){
-            muindex = *(EGS_Float *)(loc+sizeof(int)+ sizeof(PInfo));
+            //if the tracksfile is a syncptracks file, the time index is also read before moving on to reading vertices. Skip includes size of EGS_Float if time indices present only
+            timeindex = *(EGS_Float *)(loc+sizeof(int)+ sizeof(PInfo));
             skip = sizeof(int) + sizeof(PInfo)+sizeof(EGS_Float);
         }
         else{
@@ -197,9 +206,10 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
         int nverts = *((int *)ind);
         PInfo pInfo =
             *(PInfo *)(ind+sizeof(int));
-        EGS_Float muindex;
+        EGS_Float timeindex;
         if(extension=="syncptracks"){
-            muindex = *(EGS_Float *)(loc+sizeof(int)+ sizeof(PInfo));
+            //if the tracksfile is a syncptracks file, the time index is also read before moving on to reading vertices. Start includes size of EGS_Float if time indices present only
+            timeindex = *(EGS_Float *)(ind+sizeof(int)+ sizeof(PInfo));
             start = ind+sizeof(int)+sizeof(PInfo)+sizeof(EGS_Float);
         }
         else{
@@ -235,6 +245,20 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
             m_index[type][i_off] = m_off;
             ind_rcnt[type]++;
             mem_rcnt[type] += nverts;
+            if(extension=="syncptracks"){
+                //here timelist vectors are updated such that the time indices of the compressed particle list is available from the viewcontrol class
+                //lists updated here to ensure the time index vector indices match those of the compressed particle list.
+                if(type==0){
+                    timelist_p.push_back(timeindex);
+                }
+                else if(type==1){
+                    timelist_e.push_back(timeindex);
+                }
+                else if(type==2){
+                    timelist_po.push_back(timeindex);
+                }
+
+            }
         }
     }
     // Sentinel at the end; get lengths
@@ -265,7 +289,10 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
                    ind_rcnt[0]+ind_rcnt[1]+ind_rcnt[2],
                    ind_rcnt[0], ind_rcnt[1], ind_rcnt[2]);
     m_failed = false;
+    data.close();
+
 }
+
 
 EGS_TrackView::~EGS_TrackView() {}
 

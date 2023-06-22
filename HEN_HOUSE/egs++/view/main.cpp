@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -100,6 +101,7 @@ int main(int argc, char **argv) {
 
     QString tracks_file = QString("");
     QString config_file = QString("");
+    QString extension=QString("");
     if (argc >= 3) {
         QString argv2 = argv[2];
         if (argv2.endsWith("ptracks")) {
@@ -119,7 +121,16 @@ int main(int argc, char **argv) {
         }
     }
 
+    //below getting the extension of the trackfile (either ptracks or syncptracks) if tracksfile provided in terminal to pass to the viewcontrol
+    if(tracks_file.endsWith("syncptracks")){
+        extension=QString("syncptracks");
+    }
+    else{
+        extension=QString("ptracks");
+    }
+
     w.setTracksFilename(tracks_file);
+    w.setTracksExtension(extension);//setting the tracks extension in the viewcontrol
     if (!w.loadInput(false)) {
         return 1;
     }
