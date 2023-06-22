@@ -68,7 +68,7 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(EGS_Input *i) {
     if (!err && tmp.size() == 3)
         result = new EGS_AffineTransform(
             EGS_RotationMatrix(EGS_Vector(tmp[0],tmp[1],tmp[2])),t);
-    else {
+    else {       //egsWarning("getTransformation: rotation specified by 3 angles: %g   %g   %g\n\n",tmp[0],tmp[1],tmp[2]);
         err = input->getInput("rotation",tmp);
         if (!err) {
             if (tmp.size() == 2) result = new EGS_AffineTransform(
@@ -109,37 +109,25 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(EGS_Input *i) {
 
 //////////// OVERLOADING FOR DYNAMIC GEOMETRY /////////////
 EGS_AffineTransform *EGS_AffineTransform::getTransformation(vector<EGS_Float> translation, vector<EGS_Float> rotation) {
-    if (translation.size()!=3 || (rotation.size()!=2 && rotation.size()!=3 && rotation.size()!=9)) {
+    /* the following method is used by the dynamic geometry class to create a transformation corresponding to a certain translation and rotation vector. These vectors are determined
+     * through the control points and the sampled mu value. The sampled transformation coordinates are passed here to build a transformation */
+
+    //first check that appropriate values have been provdid. May work with either 2 or 3 rotation parameters, and exactly 3 translation parameters
+    if (translation.size()!=3 || (rotation.size()!=2 && rotation.size()!=3)) {
 	egsWarning("getTransformation: invalid transformation parameters\n");
         return 0;
     }
-   
-    EGS_AffineTransform *result;
-    
-    EGS_Vector t;
-    t = EGS_Vector(translation[0],translation[1],translation[2]);
-    //egsWarning("\ngetTransformation: translation specified by: %g   %g   %g\n",translation[0],translation[1],translation[2]);
-    vector<EGS_Float> tmp;
-    tmp = rotation;
-    //EGS_RotationMatrix(EGS_Vector(tmp[0],tmp[1],tmp[2])),t);
-    if (tmp.size() == 2) {
-	result = new EGS_AffineTransform(EGS_RotationMatrix(tmp[0],tmp[1]),t);
-	 //egsWarning("getTransformation: rotation specified by 2 angles : %g   %g\n",tmp[0],tmp[1]);
+
+    EGS_AffineTransform *result; //the returned transformation
+
+    //EGS_vector holding translation parameters is defined to pass to the EGS_AffineTransform constructor
+    EGS_Vector t = EGS_Vector(translation[0],translation[1],translation[2]);
+    //if statements check the size of the rotation vector provided and call the appropriate EGS_AffineTransform constructor (converting rotation vector to matrix)
+    if (rotation.size() == 2) {
+	result = new EGS_AffineTransform(EGS_RotationMatrix(rotation[0],rotation[1]),t);
     }
-    else if (tmp.size() == 3){
-	result = new EGS_AffineTransform(EGS_RotationMatrix(tmp[0],tmp[1],tmp[2]),t);
-	 //egsWarning("getTransformation: rotation specified by 3 angles: %g   %g   %g\n\n",tmp[0],tmp[1],tmp[2]);
-    }
-    else if (tmp.size() == 9) {
-        EGS_RotationMatrix R(tmp[0],tmp[1],tmp[2],
-                             tmp[3],tmp[4],tmp[5],
-                             tmp[6],tmp[7],tmp[8]);
-        if (!R.isRotation())
-            egsWarning("getTransformation: the rotation specified by\n"
-                       "   %g %g %g\n   %g %g %g\n   %g %g %g\n"
-                       " is not a rotation\n",tmp[0],tmp[1],tmp[2],
-                       tmp[3],tmp[4],tmp[5],tmp[6],tmp[7],tmp[8]);
-        result = new EGS_AffineTransform(R,t);
+    else if (rotation.size() == 3){
+	result = new EGS_AffineTransform(EGS_RotationMatrix(rotation[0],rotation[1],rotation[2]),t);
     }
     else {
         result = new EGS_AffineTransform(EGS_RotationMatrix(),t);

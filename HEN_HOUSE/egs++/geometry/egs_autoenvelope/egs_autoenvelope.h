@@ -402,8 +402,12 @@ public:
     void addBooleanProperty(int,int,int,int step=1);
 
     int getMaxStep() const;
-    
+
     void getNextGeom(EGS_RandomGenerator *rndm);
+
+    void updatePosition(EGS_Float time);
+
+    void containsDynamic(bool &hasdynamic);
 
     virtual EGS_Float getVolume(int ireg);
 

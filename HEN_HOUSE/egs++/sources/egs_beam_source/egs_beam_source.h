@@ -151,14 +151,14 @@ public:
     EGS_Float getFluence() const {
         return count;
     };
-    EGS_Float getMu() {
-        if (mu_stored) {
-            return mu;
+    /*EGS_Float getTimeIndex() {
+        if (time_stored) {
+            return time;
         }
         else {
             return -1.0;
         }
-    };
+    };*/
     bool storeState(ostream &data) const {
         return egsStoreI64(data,count);
     };
@@ -197,11 +197,11 @@ protected:
     //< to synchronize dynamic source with this
 
     bool        is_valid;
-    bool        mu_stored;  //!< true if mu index stored
+    bool        time_stored;  //!< true if time index stored
     string      the_file_name;
     ifstream    the_file;
     EGS_Float   Emax;
-    EGS_Float   mu;
+    EGS_Float   time;
     EGS_I64     count;
 
     // filters
@@ -211,7 +211,7 @@ protected:
 
     // temporary particle storage
     int         q_save, latch_save;
-    EGS_Float   E_save, wt_save, mu_save;
+    EGS_Float   E_save, wt_save, time_save;
     EGS_Vector  x_save, u_save;
 
     // reusing particles
@@ -220,8 +220,8 @@ protected:
 
     // stored info for first particle read in
     // need this because we now query the data to see
-    // if mu index is passed by the source
-    EGS_Float tei,txi,tyi,tzi,tui,tvi,twi,twti,tmui;
+    // if time index is passed by the source
+    EGS_Float tei,txi,tyi,tzi,tui,tvi,twi,twti,ttimei;
     int tqi,tlatchi,tiphati;
     EGS_I64     counti;
     bool  use_iparticle; // true if we want to use the above data instead

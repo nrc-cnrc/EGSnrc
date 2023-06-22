@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Manuel Stoeckl
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -90,7 +91,7 @@ protected:
 protected slots:
 
     void drawResults(RenderResults,RenderParameters);
-    void trackResults(vector<size_t>);
+    void trackResults(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>);
     void handleAbort();
 
 signals:
@@ -106,7 +107,7 @@ signals:
     void leftMouseClick(int x, int y);
     void leftDoubleClick(EGS_Vector hitCoord);
     void saveComplete();
-    void tracksLoaded(vector<size_t>);
+    void tracksLoaded(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>);
 
     // for render thread
     void requestRender(EGS_BaseGeometry *,RenderParameters);

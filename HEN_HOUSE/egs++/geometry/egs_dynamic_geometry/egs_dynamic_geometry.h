@@ -23,7 +23,7 @@
 #
 #  Author:          Alex Demelo 2023
 #
-#  Contributors:    
+#  Contributors:
 #
 ###############################################################################
 */
@@ -76,56 +76,51 @@
 
 class EGS_DYNAMIC_GEOMETRY_EXPORT EGS_DynamicGeometry :
     public EGS_BaseGeometry {
-      
+
 public:
-  
+
     struct EGS_ControlPointGeom {
-      
-	EGS_Float mu; //monitor unit index for control point
+
+	EGS_Float time; //time index for control point
 	vector<EGS_Float> trnsl; //vector specifying x,y,z translation
 	vector<EGS_Float> rot;
     };
-    
-  
+
+
    /*! \brief Construct a dynamic geometry using \a G as the
     geometry and cpts as the control points.
     */
-    EGS_DynamicGeometry(EGS_BaseGeometry *G, EGS_Input *dyninp, const string &Name = "") : EGS_BaseGeometry(Name), g(G), valid(true) {//there used to be a t(T) here when taking transform (se gTransform). Do I need something new here for control points? 
-        //vector<EGS_ControlPointGeom> controlpnt_vector = &cpts;
+    EGS_DynamicGeometry(EGS_BaseGeometry *G, EGS_Input *dyninp, const string &Name = "") : EGS_BaseGeometry(Name), g(G){
 	type = g->getType();
         type += "D";
         nreg = g->regions();
         is_convex = g->isConvex();
         has_rho_scaling = g->hasRhoScaling();
         has_B_scaling = g->hasBScaling();
-	EGS_DynamicGeometry::buildDynamicGeometry(g, dyninp);
-	
-	//do some checks on cpts
+	EGS_DynamicGeometry::buildDynamicGeometry(g, dyninp); //build dynamic geometry is where many of the geometry attributes (including control points) are extracted
+
         if (cpts.size()<2) {
             egsWarning("EGS_DynamicSource: not enough or missing control points.\n");
-            valid = false;
         }
         else {
-            if (cpts[0].mu > 0.0) {
-                egsWarning("EGS_DynamicSource: mu index of control point 1 > 0.0.  This will generate many warning messages.\n");
+            if (cpts[0].time > 0.0) {
+                egsWarning("EGS_DynamicSource: time index of control point 1 > 0.0.  This will generate many warning messages.\n");
             }
             int npts = cpts.size();
             for (int i=0; i<npts; i++) {
-                if (i>0 && cpts[i].mu < cpts[i-1].mu-epsilon) {
-                    egsWarning("EGS_DynamicSource: mu index of control point %i < mu index of control point %i\n",i,i-1);
-                    valid = false;
+                if (i>0 && cpts[i].time < cpts[i-1].time-epsilon) {
+                    egsWarning("EGS_DynamicSource: time index of control point %i < time index of control point %i\n",i,i-1);
                 }
-                if (cpts[i].mu<0.0) {
-                    egsWarning("EGS_DynamicSource: mu index of control point %i < 0.0\n",i);
-                    valid = false;
+                if (cpts[i].time<0.0) {
+                    egsWarning("EGS_DynamicSource: time index of control point %i < 0.0\n",i);
                 }
             }
-            //normalize mu values
+            //normalize time values
             for (int i=0; i<npts-1; i++) {
-                cpts[i].mu /= cpts[npts-1].mu;
+                cpts[i].time /= cpts[npts-1].time;
             }
         }
-        
+
     };
 
     ~EGS_DynamicGeometry() {
@@ -134,6 +129,7 @@ public:
         }
     };
 
+    //sets the current state transform of the geometry. This is called when checking location. Same as gtransformed.
     void setTransformation(EGS_AffineTransform t) {
         T = t;
     };
@@ -144,7 +140,6 @@ public:
         T.inverseTransform(xt);
         T.rotateInverse(ut);
         return g->computeIntersections(ireg,n,xt,ut,isections);
-        //return g->computeIntersections(ireg,n,x*T,u*T.getRotation(),isections);
     };
     bool isRealRegion(int ireg) const {
         return g->isRealRegion(ireg);
@@ -153,13 +148,11 @@ public:
         EGS_Vector xt(x);
         T.inverseTransform(xt);
         return g->isInside(xt);
-        //return g->isInside(x*T);
     };
     int isWhere(const EGS_Vector &x) {
         EGS_Vector xt(x);
         T.inverseTransform(xt);
         return g->isWhere(xt);
-        //return g->isWhere(x*T);
     };
     int inside(const EGS_Vector &x) {
         return isWhere(x);
@@ -179,7 +172,6 @@ public:
         T.inverseTransform(xt);
         T.rotateInverse(ut);
         int inew = g->howfar(ireg,xt,ut,t,newmed,normal);
-        //int inew = g->howfar(ireg,x*T,u*T.getRotation(),t,newmed,normal);
         if (inew != ireg && normal) {
             *normal = T.getRotation()*(*normal);
         }
@@ -190,19 +182,13 @@ public:
         EGS_Vector xt(x);
         T.inverseTransform(xt);
         return g->hownear(ireg,xt);
-        //return g->hownear(ireg,x*T);
     };
 
     int getMaxStep() const {
         return g->getMaxStep();
     };
 
-    // Not sure about the following.
-    // If I leave the implementation that way, all transformed copies of a
-    // geometry share the same boolean properties. But that may not be
-    // what the user wants. So, I should implement both options:
-    // all copies share the same properties and the user has the options
-    // to define separate properties for each copy.
+
     bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
         return g->hasBooleanProperty(ireg,prop);
     };
@@ -236,53 +222,70 @@ public:
     void setBScaling(int start, int end, EGS_Float bf);
 
     void setBScaling(EGS_Input *);
-    
-    bool isValid() const {
-        return (valid);
-    };
+
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
-    
-     //equivalent of get next particle but for geometries. 
+
+     /*equivalent of get next particle but for geometries. It is tasked with determining the next state of the dynamic geometry. This is done by obtaining a time index (either
+      * from the simulation source or by sampling itself if the source yields nothing), obtaining the corresponding position and orientation coordinates (through getCoordGeom) and creating
+      * and setting the dynamic geometry's transform */
     void getNextGeom(EGS_RandomGenerator *rndm) {
 	int errg = 1;
         EGS_ControlPointGeom gipt;
-        
-	//here get source from activeapplication in order to extract mu
+
+	//here get source from activeapplication in order to extract time
 	EGS_Application *app = EGS_Application::activeApplication();
 	while (errg) {
-		pmu = app->getMU();//gets mu from source if it exists (otherwise gives -1).
-		if (pmu<0) {
-			//if no mu is given by the source the geometry will randomly sample from 0 to 1. This is where we would call setmu on the source to update mu value for all objects
-			pmu = rndm->getUniform();
-			app->setMU(pmu);
+		ptime = app->getTimeIndex();//gets time from source if it exists (otherwise gives -1).
+		if (ptime<0) {
+			//if no time is given by the source the geometry will randomly sample from 0 to 1.
+			ptime = rndm->getUniform();
+                        //set randomly sampled time index for all objects in the simualtion (through base source)
+			app->setTimeIndex(ptime);
 		}
-           errg = getCoordGeom(pmu,gipt);//now run the get coord method that will sample the cpt given to find the transformation that will be applied for the current history
+           errg = getCoordGeom(ptime,gipt);//now run the get coord method that will sample the cpt given to find the transformation that will be applied for the current history
         }
-        
+
+        //create and set the current geometry transformation using the sampled coordinates from getCoordGeom. This is where overloaded EGsSAffineTransform is used
 	EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
 	setTransformation(*tDG);
+        //call getNextGeom on base geometry in case there are lower level dynamic geometries
 	g->getNextGeom(rndm);
-	//note in the line directly above *tDG uses * to make this the object that the pointer tDG points to. Thus it gives an AffineTransform and not *AffineTransform
     };
-    
+
+     void updatePosition(EGS_Float time) {
+         /*this method is essentially just to update the geometry state as needed in egsview. It takes the desired time index, and computes the correspoding coordinates, and sets the
+          * geometry transform to update the egsview display*/
+        int errg = 1;
+        EGS_ControlPointGeom gipt;
+        errg = getCoordGeom(time,gipt); //run the get coord method that will use the control points given to find the transformation that will be applied for the current time index
+        //create and set the geometry transform with the updated coordinates
+        EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
+        setTransformation(*tDG);
+        //call update positions on base to allow lower level geometries to update as needed
+        g->updatePosition(time);
+    };
+
+    void containsDynamic(bool &hasdynamic) {
+        //this method is essentially used to determine whether the simulation geometry contains a dynamic geometry.
+        hasdynamic=true;  //if the dynamic geometry implementation of containsdynamic is called, the simulation does indeed contain a dynamic geometry, so the boolean flag is set to true
+        //g->containsDynamic(hasdynamic); //technically we dont need this as we only need to find one. We don't care about the number we just want to know if there is any at all
+    }
+
 
 protected:
     EGS_BaseGeometry    *g;   //!< The geometry undergoing dynamic motion
-    
+
     string              type; //!< The geometry type
-    
+
     EGS_AffineTransform T;
-    
+
     vector<EGS_ControlPointGeom> cpts;  //control points
-    
+
     int ncpts;  //no. of control points
-    
-    bool valid; //is this a valid geometry
-    
-    
-    EGS_Float pmu; //monitor unit index corresponding to particle
-    
+
+    EGS_Float ptime; //time index corresponding to particle
+
                    //could just be a random number.
     /*! \brief Don't define media in the transformed geometry definition.
     This function is re-implemented to warn the user to not define
@@ -290,10 +293,10 @@ protected:
     be defined when specifying the geometry to be transformed.
     */
     void setMedia(EGS_Input *inp,int,const int *);
-    
+
     int getCoordGeom(EGS_Float rand, EGS_ControlPointGeom &gipt);
-    
-    void buildDynamicGeometry(EGS_BaseGeometry *g, EGS_Input *dyninp);  
+
+    void buildDynamicGeometry(EGS_BaseGeometry *g, EGS_Input *dyninp);
     //EGS_BaseGeometry *createGeometry(EGS_Input *input);
 };
 

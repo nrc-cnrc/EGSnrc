@@ -23,6 +23,7 @@
 #
 #  Author:          Manuel Stoeckl, 2015
 #
+#  Contributors:    Alexandre Demelo
 ###############################################################################
 */
 
@@ -135,7 +136,7 @@ signals:
 
     void aborted();
     void rendered(struct RenderResults, struct RenderParameters params);
-    void tracksLoaded(vector<size_t> ntracks);
+    void tracksLoaded(vector<size_t> ntracks, vector<EGS_Float> timelist_p, vector<EGS_Float> timelist_e, vector<EGS_Float> timelist_po);
 
 private:
     void drawAxes(const struct RenderParameters &);

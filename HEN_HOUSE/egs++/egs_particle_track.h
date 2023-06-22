@@ -24,6 +24,7 @@
 #  Author:          Georgi Gerganov, 2009
 #
 #  Contributors:    Iwan Kawrakow
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -116,7 +117,7 @@ public:
       Writes the particle information block m_pInfo, the number of vertices
       in this track and finally all vertex data.
     */
-    int writeTrack(ofstream *trsp, bool inclmu);
+    int writeTrack(ofstream *trsp, bool incltime);
 
     /*! \brief Add additional point of interaction (Vertex) to the track. */
     void addVertex(Vertex *x);
@@ -143,13 +144,13 @@ public:
         return m_pInfo;
     };
 
-    void setMuIndex(EGS_Float mu) {
-        mu_index = mu;
+    void setTimeIndex(EGS_Float time) {
+        time_index = time;
     };
 
-    /*! \brief Get the type of the particle being tracked. */
-    EGS_Float getMuIndex() {
-        return mu_index;
+    /*! \brief Get the time index of the particle being tracked. */
+    EGS_Float getTimeIndex() {
+        return time_index;
     };
 
 protected:
@@ -158,7 +159,7 @@ protected:
     void grow();
 
     ParticleInfo    *m_pInfo;       //!< type of the tracked particle
-    EGS_Float       mu_index;
+    EGS_Float       time_index;
 
     int             m_size;         //!< current size of the vertex array
     int             m_nVertices;    //!< current number of vertices in track
@@ -191,13 +192,13 @@ public:
       \a buf_size which defines how many tracks the container will store
       before flushing them to the output file.
     */
-    EGS_ParticleTrackContainer(const char *fname, int buf_size, bool mu_bool) : m_nEvents(0),
+    EGS_ParticleTrackContainer(const char *fname, int buf_size, bool time_bool) : m_nEvents(0),
         m_nTracks(0), m_totalTracks(0), m_isScoring(NULL), m_bufferSize(0), m_buffer(0),
         m_trspFile(NULL) {
         m_bufferSize = buf_size;
 
         // initialize the arrays
-        inclmu = mu_bool;
+        incltime = time_bool; //incltime variable set from the time_bool passed from the constructor (track scoring object gets incltime from input file and calls and passes)
         m_buffer = new EGS_ParticleTrack* [m_bufferSize];
         m_stackMap = new int [m_bufferSize];
         m_isScoring = new bool [m_bufferSize];
@@ -213,7 +214,7 @@ public:
         int dummy = 0;
         // at the end this will be replaced with the number of recorded tracks
         m_trspFile->write((char *)&dummy, sizeof(int));
-        //if inclmu is true write a flag to show mu values are included. Otherwise write nothing.
+
     };
 
     /*! \brief The Destructor. Deallocate all allocated memory. */
@@ -329,8 +330,8 @@ public:
         m_buffer[m_nTracks-1]->setParticleInfo(p);
     }
 
-    void setCurrentMuIndex(EGS_Float mu) {
-        m_buffer[m_nTracks-1]->setMuIndex(mu);
+    void setCurrentTimeIndex(EGS_Float time) {
+        m_buffer[m_nTracks-1]->setTimeIndex(time);
     }
 
     /*! \brief Load particle data from the file called \a filename .*/
@@ -340,6 +341,8 @@ public:
         \todo Maybe this method should be \c virtual ?
     */
     void reportResults(bool with_header = true);
+
+    void tracksFileSort();
 
 protected:
 
@@ -357,7 +360,7 @@ protected:
     */
     void updateHeader();
 
-    bool                inclmu;
+    bool                incltime;
     int                 m_nEvents;      //!< number of events scored
     int                 m_nTracks;      //!< number of tracks currently in memory
     int                 m_totalTracks;  //!< total number of tracks registered

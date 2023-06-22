@@ -24,6 +24,7 @@
 #  Author:          Georgi Gerganov, 2009
 #
 #  Contributors:    Iwan Kawrakow
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -35,6 +36,10 @@
 
 
 #include "egs_particle_track.h"
+#include <vector>
+#include <algorithm>
+
+
 
 void EGS_ParticleTrack::grow() {
     // calculate the new size of the vertex array
@@ -70,21 +75,17 @@ void EGS_ParticleTrack::clearTrack() {
     m_nVertices = 0;
 }
 
-int EGS_ParticleTrack::writeTrack(ofstream *trsp, bool inclmu) {
+int EGS_ParticleTrack::writeTrack(ofstream *trsp, bool incltime) {
     // no need to write the track if it has less than 2 vertices ...
-    egsInformation("\nwriteTrack() \n");
     if (m_nVertices < 2) {
         return 1;
     }
 
     trsp->write((char *)&m_nVertices, sizeof(int));
     trsp->write((char *)m_pInfo, sizeof(ParticleInfo));
-    egsInformation("wrote original info\n");
-    //EGS_Float* pmu;
-    //*pmu = mu_index;//this and above are causing segmentation fault
-    if (inclmu){
-        trsp->write((char *) &mu_index, sizeof(EGS_Float));
-        egsInformation("wrote mu to file\n");
+
+    if (incltime){//if user indicates to include time in inputfile then write the time index to the tracks file after the particle info
+        trsp->write((char *) &time_index, sizeof(EGS_Float));
     }
     for (int i = 0; i < m_nVertices; i++) {
         trsp->write((char *)m_track[i],sizeof(Vertex));
@@ -108,7 +109,6 @@ void EGS_ParticleTrack::addVertex(Vertex *x) {
     }
 }
 
-///////////////////////// EGS_ParticleTrackContainer ////////////////////////
 
 void EGS_ParticleTrackContainer::startNewTrack() {
     // buffer full ? flush it
@@ -148,7 +148,7 @@ void EGS_ParticleTrackContainer::flushBuffer() {
             // if the particle is not being scored anymore
             if (!m_isScoring[i]) {
                 // output it to the file and free memory
-                if (!m_buffer[i]->writeTrack(m_trspFile,inclmu)) {
+                if (!m_buffer[i]->writeTrack(m_trspFile,incltime)) {
                     m_totalTracks++;
                 }
                 m_buffer[i]->clearTrack();
@@ -214,15 +214,6 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
         return -1;
     }
 
-    //this block of code gets the file extension. It should work as it worked in the track_view file (see terminal output)
-    string readfile = string(filename);
-    string extension;
-    size_t k = readfile.rfind('.', readfile.length());
-    if (k != string::npos) {
-      extension = readfile.substr(k+1, readfile.length() - k);
-    }
-    cout<<"extension of file is "<<extension<<"\n";
-
     data->read((char *)&m_totalTracks, sizeof(int));
     egsInformation("%s: Reading %d tracks from '%s' ...\n", func_name, m_totalTracks, filename);
     m_nTracks = 0;
@@ -233,6 +224,7 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
     m_isScoring = new bool [m_totalTracks];
     for (int i = 0; i < m_totalTracks; i++) {
         int nvertices;
+        EGS_Float time;
         m_buffer[i] = new EGS_ParticleTrack();
         m_stackMap[i] = -1;
         m_isScoring[i] = false;
@@ -241,6 +233,9 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
         totalVertices += nvertices;
         data->read((char *)pinfo,sizeof(EGS_ParticleTrack::ParticleInfo));
         startNewTrack(pinfo);
+        if(incltime){ //if user indicates to include time in inputfile then read the time index from the tracks file after the particle info
+            data->read((char *)&time,sizeof(EGS_Float));
+        }
         for (int j = 0; j < nvertices; j++) {
             EGS_ParticleTrack::Vertex *v = new EGS_ParticleTrack::Vertex();
             data->read((char *)v,sizeof(EGS_ParticleTrack::Vertex));
@@ -285,4 +280,73 @@ void EGS_ParticleTrackContainer::reportResults(bool with_header) {
         }
     }
     egsInformation("   Output file name:        %s\n\n", m_trspFilename.c_str());
+    if(incltime){
+        tracksFileSort();
+    }
+    readDataFile(m_trspFilename.c_str());
+}
+
+void EGS_ParticleTrackContainer::tracksFileSort(){
+    /* this function is used to sort the trackfile entries by time index. Essentially this is done by reading in all the time indices one by one, and also saving the position of
+     * that time index in a vector of pairs. The vector is then sorted by time index, and the index positions are used to read the tracks from the tracksfile in their sorted order, and
+     * write them into a new tracks file. Once the sorting is complete, the unsorted tracksfile is deleted and the sorted tracksfile replaces it */
+    const char *func_name = "EGS_ParticleTrackContainer::tracksFileSort()";
+    const char *trackfile=m_trspFilename.c_str();
+    ifstream *data = new ifstream(trackfile, ios::binary);
+
+    //this is the new sorted tracks file where the data from the original tracksfile will be rewritten in order
+    string outstring = "sorted_trackfile.syncptracks";
+    const char *outname=outstring.c_str();
+    ofstream *sortout = new ofstream(outname, ios::binary);
+
+
+    int totalTrackNum;
+    data->read((char *)&totalTrackNum, sizeof(int));
+    egsInformation("%s: Sorting %d tracks from '%s' by time index ...\n", func_name, totalTrackNum, trackfile);
+    sortout->write((char *)&totalTrackNum, sizeof(int));
+    //defining vector of pairs which will be used to sort
+    vector< pair <EGS_Float, int> > vect;
+    data->seekg(sizeof(int),ios_base::beg); //skip the total number of tracks in the beginning
+
+    for (int i = 0; i < m_totalTracks; i++) {
+        int nvertices;
+        EGS_ParticleTrack::ParticleInfo *pinfo = new EGS_ParticleTrack::ParticleInfo(0);
+        EGS_Float time;
+        int position = data->tellg();//get the position in the file (right before a new track starts)
+        //read in usual track info
+        data->read((char *)&nvertices,sizeof(int));
+        data->read((char *)pinfo,sizeof(EGS_ParticleTrack::ParticleInfo));
+        data->read((char *)&time,sizeof(EGS_Float));
+        vect.push_back(make_pair(time, position));//add the time index/file position pair to the vector
+        //determine the size of the all the vertices for track i and skip these to get to the next track
+        int vertsize=nvertices*sizeof(EGS_ParticleTrack::Vertex);
+        data->seekg(vertsize,ios_base::cur);
+    }
+    sort(vect.begin(), vect.end());//using the built in c++ sort function, sort all the pairs by their time index (first element in the pair)
+    //now we will go through and write the sorted trackfile by jumping around the unsorted file using the positions in the pairs vector
+    for (int i = 0; i < m_totalTracks; i++) {
+        int nvertices;
+        EGS_ParticleTrack::ParticleInfo *pinfo = new EGS_ParticleTrack::ParticleInfo(0);
+        EGS_Float time;
+        data->seekg(vect[i].second);//go to file position right before track i
+        //read in all track info for track i from unsorted
+        data->read((char *)&nvertices,sizeof(int));
+        data->read((char *)pinfo,sizeof(EGS_ParticleTrack::ParticleInfo));
+        data->read((char *)&time,sizeof(EGS_Float));
+        //write all read track info to the sorted file (at the end of the file)
+        sortout->write((char *)&nvertices, sizeof(int));
+        sortout->write((char *)pinfo, sizeof(EGS_ParticleTrack::ParticleInfo));
+        sortout->write((char *)&time, sizeof(EGS_Float));
+
+
+        for (int j = 0; j < nvertices; j++) {//read the nvertices from the unsorted file and write them to the end of the sorted file
+            EGS_ParticleTrack::Vertex *v = new EGS_ParticleTrack::Vertex();
+            data->read((char *)v,sizeof(EGS_ParticleTrack::Vertex));
+            sortout->write((char *)v,sizeof(EGS_ParticleTrack::Vertex));
+        }
+    }
+    sortout->close();
+    int removal = remove(trackfile); //delete unsorted file
+    int renaming = rename(outname, trackfile); //rename sorted file to the unsorted file's old name
+
 }
