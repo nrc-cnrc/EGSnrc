@@ -359,12 +359,12 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     t = min_dist;
     if (inside_mesh) {
         cout<<"trimesh::debugging howfar (2): "<<-1<<endl;
-        return 0; // new region is outside the mesh (used to return 0)
+        return -1; // new region is outside the mesh (used to return 0)
     }
     // outside mesh, new region is inside the mesh
     cout<<"outside mesh, new region is inside the mesh"<<endl;
-    cout<<"trimesh::debugging howfar (3): "<<-0<<endl;
-    return -1; //(used to return -1)
+    cout<<"trimesh::debugging howfar (3): "<<0<<endl;
+    return 0; //(used to return -1)
 }
 
 const std::string EGS_TriangleMesh::type = "EGS_TriangleMesh";
