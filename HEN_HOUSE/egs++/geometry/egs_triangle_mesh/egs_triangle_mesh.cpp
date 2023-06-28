@@ -291,9 +291,12 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     // Loop over all elements, testing for intersection. If the point is outside
     // the mesh, only outward facing triangles are tested. Otherwise if the
     // point is inside the mesh, only inward facing triangles are tested.
+    cout<<"trimesh::debugging howfar passed ireg: "<<ireg<<endl;
     double min_dist = veryFar;
     int min_tri = -1;
     const bool inside_mesh = ireg != -1;
+    if(inside_mesh){ cout<<"trimesh:: inside mesh"<<endl;}
+    else{cout<<"trimesh::outside mesh"<<endl;}
 
     for (int i = 0; i < num_triangles(); i++) {
         const auto& xs = triangle_xs(i);
@@ -327,6 +330,7 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     }
 
     if (min_dist >= t) {
+        cout<<"trimesh::debugging howfar (1): "<<ireg<<endl;
         return ireg;
     }
 
@@ -354,11 +358,13 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
 
     t = min_dist;
     if (inside_mesh) {
-        return -1; // new region is outside the mesh (used to return 0)
+        cout<<"trimesh::debugging howfar (2): "<<-1<<endl;
+        return 0; // new region is outside the mesh (used to return 0)
     }
     // outside mesh, new region is inside the mesh
     cout<<"outside mesh, new region is inside the mesh"<<endl;
-    return -1;
+    cout<<"trimesh::debugging howfar (3): "<<-0<<endl;
+    return -1; //(used to return -1)
 }
 
 const std::string EGS_TriangleMesh::type = "EGS_TriangleMesh";

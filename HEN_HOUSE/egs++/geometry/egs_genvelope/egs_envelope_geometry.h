@@ -417,7 +417,7 @@ public:
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
         int region_out;
-        cout<<"current region: "<<ireg<<endl;
+        cout<<endl<<"current region: "<<ireg<<endl;
         if (ireg >= 0) {
             // inside.
             if (ireg < nbase) {
