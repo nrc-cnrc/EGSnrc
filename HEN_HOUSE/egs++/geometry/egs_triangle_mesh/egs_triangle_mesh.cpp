@@ -287,17 +287,15 @@ EGS_Float EGS_TriangleMesh::hownear(int ireg, const EGS_Vector &x) {
 
 int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                              EGS_Float &t, int *newmed, EGS_Vector *normal) {
-
     // Loop over all elements, testing for intersection. If the point is outside
     // the mesh, only outward facing triangles are tested. Otherwise if the
     // point is inside the mesh, only inward facing triangles are tested.
-    cout<<"trimesh::debugging howfar passed ireg: "<<ireg<<endl;
+    //cout<<"stepsize t = "<<t<<endl;
     double min_dist = veryFar;
     int min_tri = -1;
     const bool inside_mesh = ireg != -1;
-    if(inside_mesh){ cout<<"trimesh:: inside mesh"<<endl;}
-    else{cout<<"trimesh::outside mesh"<<endl;}
-
+    //if(inside_mesh) cout<<"inside mesh"<<endl;
+    //else cout<<"outside mesh"<<endl;
     for (int i = 0; i < num_triangles(); i++) {
         const auto& xs = triangle_xs(i);
         const auto& ys = triangle_ys(i);
@@ -325,17 +323,24 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         if (dist > min_dist) {
             continue;
         }
-        min_dist = dist;
+        min_dist= dist+1e-10; //add 1e-10 here to avoid floating point bug
+
+        /* bug was that outward_triangle would not differentiate between truly in front of the plane and on the plane itself. Because of this particles would exit geometry,
+         * re-enter via the same triangle (min dist would be zero), and one "inside" undefined behaviour would follow causing the particle to continue moving "inside mesh" while
+         * travelling outside of the mesh geometry due to particle direction. This little push makes it clear where the particle is relative to the surface mesh and prevents
+         * false positive intersections which yield unphysical results */
+        //could try to modify is_outside_of_triangle_plane method but this would be much more complex. Would have to check particle direction and triangle normal to decide what is happening
+
         min_tri = i;
     }
+    //cout<<"min dist: "<<min_dist<<" with triangle: "<<min_tri<<endl;
 
-    if (min_dist >= t) {
-        cout<<"trimesh::debugging howfar (1): "<<ireg<<endl;
+    if (min_dist>= t) {
+        //cout<<"trimesh:: debug howfar (1): "<<ireg<<endl;
         return ireg;
     }
 
     // otherwise, if min_dist is smaller than t, update out parameters
-
     if (newmed) {
         if (inside_mesh) {
             // new medium is outside the mesh (-1)
@@ -358,13 +363,12 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
 
     t = min_dist;
     if (inside_mesh) {
-        cout<<"trimesh::debugging howfar (2): "<<-1<<endl;
-        return -1; // new region is outside the mesh (used to return 0)
+        //cout<<"trimesh:: debug howfar (2): "<<-1<<endl;
+        return -1; // new region is outside the mesh
     }
     // outside mesh, new region is inside the mesh
-    cout<<"outside mesh, new region is inside the mesh"<<endl;
-    cout<<"trimesh::debugging howfar (3): "<<0<<endl;
-    return 0; //(used to return -1)
+    //cout<<"trimesh:: debug howfar (3): "<<0<<endl;
+    return 0;
 }
 
 const std::string EGS_TriangleMesh::type = "EGS_TriangleMesh";

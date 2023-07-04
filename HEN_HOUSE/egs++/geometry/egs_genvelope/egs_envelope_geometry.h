@@ -416,8 +416,8 @@ public:
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
+        //cout<<"current region: "<<ireg<<endl;
         int region_out;
-        cout<<endl<<"current region: "<<ireg<<endl;
         if (ireg >= 0) {
             // inside.
             if (ireg < nbase) {
@@ -440,7 +440,7 @@ public:
                 }
                 if (ij < 0) {
                     region_out=ibase;
-                    cout<<"genveloppe::debugging howfar (1): "<<region_out<<endl;
+                    //cout<<"genveloppe:: debug howfar (1): "<<region_out<<endl;
                     return ibase;
                 }
                 // ij<0 implies that we have not hit any of the
@@ -448,7 +448,7 @@ public:
                 // ij>=0 implies that we entered inscribed geometry
                 // jg in its local region ij.
                 region_out=new_indexing ? local_start[jg] + ij : nbase + jg*nmax + ij;
-                cout<<"genveloppe::debugging howfar (2): "<<region_out<<endl;
+                //cout<<"genveloppe:: debug howfar (2): "<<region_out<<endl;
                 return new_indexing ? local_start[jg] + ij : nbase + jg*nmax + ij;
             }
             // if here, we are in an inscribed geometry.
@@ -466,7 +466,7 @@ public:
             int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
             if (inew >= 0){
                 region_out=new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;
-                cout<<"genveloppe::debugging howfar (3): "<<region_out<<endl;
+                //cout<<"genveloppe:: debug howfar (3): "<<region_out<<endl;
                 return new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;}
             // inew >= 0 implies that we either stay in the same
             // region (inew=ilocal) or we entered a new region
@@ -478,7 +478,7 @@ public:
                 *newmed = g->medium(inew);
             }
             region_out=inew;
-            cout<<"genveloppe::debugging howfar (4): "<<region_out<<endl;
+            //cout<<"genveloppe:: debug howfar (4): "<<region_out<<endl;
             return inew;
         }
         // if here, we are outside the base geometry.
@@ -495,13 +495,13 @@ public:
                         *newmed = geometries[j]->medium(i);
                     }
                     region_out=new_indexing ? local_start[j] + i : nbase + nmax*j + i;
-                    cout<<"genveloppe::debugging howfar (5): "<<region_out<<endl;
+                    //cout<<"genveloppe:: debug howfar (5): "<<region_out<<endl;
                     return new_indexing ? local_start[j] + i : nbase + nmax*j + i;
                 }
             }
         }
         region_out=ienter;
-        cout<<"genveloppe::debugging howfar (6): "<<region_out<<endl;
+        //cout<<"genveloppe:: debug howfar (6): "<<region_out<<endl;
         return ienter;
     };
 
