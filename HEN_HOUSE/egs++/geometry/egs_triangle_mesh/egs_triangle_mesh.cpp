@@ -34,7 +34,134 @@
 #include "stl_parser.h"
 
 #include <algorithm>
+#include <array>
 #include <stdexcept>
+
+// exclude from doxygen
+/// @cond
+class EGS_TriangleMeshBbox {
+public:
+    EGS_TriangleMeshBbox() = default;
+    EGS_TriangleMeshBbox(double min_x, double max_x, double min_y, double max_y,
+                double min_z, double max_z) : min_x(min_x), max_x(max_x),
+        min_y(min_y), max_y(max_y), min_z(min_z), max_z(max_z) {}
+
+    void expand(double delta) {
+        min_x -= delta;
+        min_y -= delta;
+        min_z -= delta;
+        max_x += delta;
+        max_y += delta;
+        max_z += delta;
+    }
+    //get the midpoints of the bounding box along each axis to create the octets by dividing boxes into 8
+    double mid_x() const {
+        return (min_x + max_x) / 2.0;
+    }
+    double mid_y() const {
+        return (min_y + max_y) / 2.0;
+    }
+    double mid_z() const {
+        return (min_z + max_z) / 2.0;
+    }
+
+    bool contains(const EGS_Vector &point) const {
+        // non-inclusive on the boundary
+        // so points on the interface between two bounding boxes only belong
+        // to one of them:
+        //      +---+---+
+        //      |   x   |
+        //      +---+---+
+        //            ^ belongs here
+        return point.x > min_x && point.x < max_x &&
+               point.y > min_y && point.y < max_y &&
+               point.z > min_z && point.z < max_z;
+    }
+
+    // Returns the closest point on the bounding box to the given point.
+    // If the given point is inside the bounding box, it is considered the
+    // closest point (should only be called if the point is outside).
+    //
+    // See section 5.1.3 of Ericson's Real-Time Collision Detection.
+    EGS_Vector closest_point(const EGS_Vector &point) const {
+        std::array<EGS_Float, 3> p = {point.x, point.y, point.z};
+        std::array<EGS_Float, 3> mins = {min_x, min_y, min_z};
+        std::array<EGS_Float, 3> maxs = {max_x, max_y, max_z};
+        // set q to p, then clamp it to min/max bounds as needed
+        std::array<EGS_Float, 3> q = p;
+        for (int i = 0; i < 3; i++) {
+            if (p[i] < mins[i]) {
+                q[i] = mins[i];
+            }
+            if (p[i] > maxs[i]) {
+                q[i] = maxs[i];
+            }
+        }
+        return EGS_Vector(q[0], q[1], q[2]);
+    }
+
+    // Returns 1 if there is an intersection and 0 if not. If there is an
+    // intersection, the out parameter dist will be the distance along v to
+    // the intersection point q.
+    //
+    // Adapted from Ericson section 5.3.3 "Intersecting Ray or Segment
+    // Against Box".
+    int ray_intersection(const EGS_Vector &p, const EGS_Vector &v) const {
+        // check intersection of ray with three bounding box slabs
+        EGS_Float tmin = 0.0;
+        EGS_Float tmax = veryFar;
+        std::array<EGS_Float, 3> p_vec {p.x, p.y, p.z};
+        std::array<EGS_Float, 3> v_vec {v.x, v.y, v.z};
+        std::array<EGS_Float, 3> mins {min_x, min_y, min_z};
+        std::array<EGS_Float, 3> maxs {max_x, max_y, max_z};
+        for (std::size_t i = 0; i < 3; i++) {
+            // Parallel to slab. Point must be within slab bounds to hit
+            // the bounding box
+            if (std::abs(v_vec[i]) < 1e-10) {
+                // Outside slab bounds
+                if (p_vec[i] < mins[i] || p_vec[i] > maxs[i]) {
+                    return 0;
+                }
+            }
+            else {
+                // intersect ray with slab planes
+                EGS_Float inv_vel = 1.0 / v_vec[i];
+                EGS_Float t1 = (mins[i] - p_vec[i]) * inv_vel;
+                EGS_Float t2 = (maxs[i] - p_vec[i]) * inv_vel;
+                // convention is t1 is near plane, t2 is far plane
+                if (t1 > t2) {
+                    std::swap(t1, t2);
+                }
+                tmin = std::max(tmin, t1);
+                tmax = std::min(tmax, t2);
+                if (tmin > tmax) {
+                    return 0;
+                }
+            }
+        }
+        //q = p + v * tmin;
+        //dist = tmin;
+        return 1;
+    }
+
+private:
+    EGS_Float min_x = 0.0;
+    EGS_Float max_x = 0.0;
+    EGS_Float min_y = 0.0;
+    EGS_Float max_y = 0.0;
+    EGS_Float min_z = 0.0;
+    EGS_Float max_z = 0.0;
+};
+
+class EGS_TriangleMeshNode {
+public:
+
+}
+
+class EGS_TriangleMesh_Octree {
+private:
+
+};
 
 // No checks are done on element validity, triangles are used as-is
 EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec) :
@@ -54,13 +181,40 @@ EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec) :
     zs.reserve(this->n_tris);
     ns.reserve(this->n_tris);
 
+    EGS_Float bbox_min_x = veryFar;
+    EGS_Float bbox_min_y = veryFar;
+    EGS_Float bbox_min_z = veryFar;
+    EGS_Float bbox_max_x = -veryFar;
+    EGS_Float bbox_max_y = -veryFar;
+    EGS_Float bbox_max_z = -veryFar;
+
     for (const auto& tri: spec.elements) {
         xs.push_back({tri.a.x, tri.b.x, tri.c.x});
         ys.push_back({tri.a.y, tri.b.y, tri.c.y});
         zs.push_back({tri.a.z, tri.b.z, tri.c.z});
         // TODO add check for degenerate triangle normals?
         ns.push_back(tri.n);
+
+        bbox_min_x = std::min(bbox_min_x, std::min(tri.a.x, std::min(tri.b.x, tri.c.x)));
+        bbox_min_y = std::min(bbox_min_y, std::min(tri.a.y, std::min(tri.b.y, tri.c.y)));
+        bbox_min_z = std::min(bbox_min_z, std::min(tri.a.z, std::min(tri.b.z, tri.c.z)));
+
+        bbox_max_x = std::max(bbox_max_x, std::max(tri.a.x, std::max(tri.b.x, tri.c.x)));
+        bbox_max_y = std::max(bbox_max_y, std::max(tri.a.y, std::max(tri.b.y, tri.c.y)));
+        bbox_max_z = std::max(bbox_max_z, std::max(tri.a.z, std::max(tri.b.z, tri.c.z)));
     }
+
+    bbox = std::unique_ptr<EGS_TriangleMeshBbox>(new EGS_TriangleMeshBbox(
+        bbox_min_x, bbox_max_x,
+        bbox_min_y, bbox_max_y,
+        bbox_min_z, bbox_max_z
+    ));
+
+    // expand bounding box by a small amount to avoid issues at the boundary
+    bbox->expand(1e-8);
+    //below here likely will be the starting point for all the octree initialization stuff
+    //at this point, we have saved all the triangle vertices and normals, we have created and properly sized the bounding box, and the media has been "initialized' by the usual getinput
+    //so we have essentially all we need to get started on creating the octrtee
 }
 
 EGS_TriangleMesh::~EGS_TriangleMesh() = default;
@@ -203,6 +357,12 @@ int EGS_TriangleMesh::inside(const EGS_Vector &x) {
 }
 
 int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
+
+    // Bounding box check to avoid isWhere mesh search
+    if (!bbox->contains(x)) {
+        return -1;
+    }
+
     // Pick an arbitrary direction vector, then loop over all elements, testing
     // for intersection. Compute the minimum distances to an interior face and
     // an exterior face. If the interior face is closer than the exterior face,
@@ -256,6 +416,18 @@ int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
 }
 
 EGS_Float EGS_TriangleMesh::hownear(int ireg, const EGS_Vector &x) {
+
+    // Bounding box check to avoid full mesh search.
+    //
+    // If the point is outside the mesh bounding box, the HOWNEAR spec allows
+    // for returning a lower bound, which in this case is the minimum distance
+    // to the bounding box.
+    if (ireg == -1 && !bbox->contains(x)) {
+        // TODO test potential performance improvement by calculating the
+        // distance explicitly without finding the closest point.
+        return distance(bbox->closest_point(x), x);
+    }
+
     // naive impl: loop over all elements, finding the global minimum distance
 
     EGS_Vector min_point = x;
@@ -287,15 +459,20 @@ EGS_Float EGS_TriangleMesh::hownear(int ireg, const EGS_Vector &x) {
 
 int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                              EGS_Float &t, int *newmed, EGS_Vector *normal) {
+
+    // If the particle doesn't intersect the mesh bounding box, it can't
+    // intersect the mesh.
+    if (!bbox->ray_intersection(x, u)) {
+        return -1;
+    }
+
     // Loop over all elements, testing for intersection. If the point is outside
     // the mesh, only outward facing triangles are tested. Otherwise if the
     // point is inside the mesh, only inward facing triangles are tested.
-    //cout<<"stepsize t = "<<t<<endl;
     double min_dist = veryFar;
     int min_tri = -1;
     const bool inside_mesh = ireg != -1;
-    //if(inside_mesh) cout<<"inside mesh"<<endl;
-    //else cout<<"outside mesh"<<endl;
+
     for (int i = 0; i < num_triangles(); i++) {
         const auto& xs = triangle_xs(i);
         const auto& ys = triangle_ys(i);
@@ -323,24 +500,23 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         if (dist > min_dist) {
             continue;
         }
-        min_dist= dist+1e-10; //add 1e-10 here to avoid floating point bug
+        min_dist= dist+boundaryTolerance; //add the small boundaryTolerance here to avoid floating point bug
 
         /* bug was that outward_triangle would not differentiate between truly in front of the plane and on the plane itself. Because of this particles would exit geometry,
-         * re-enter via the same triangle (min dist would be zero), and one "inside" undefined behaviour would follow causing the particle to continue moving "inside mesh" while
+         * re-enter via the same triangle (min dist would be zero), and once "inside" undefined behaviour would follow causing the particle to continue moving "inside mesh" while
          * travelling outside of the mesh geometry due to particle direction. This little push makes it clear where the particle is relative to the surface mesh and prevents
          * false positive intersections which yield unphysical results */
         //could try to modify is_outside_of_triangle_plane method but this would be much more complex. Would have to check particle direction and triangle normal to decide what is happening
 
         min_tri = i;
     }
-    //cout<<"min dist: "<<min_dist<<" with triangle: "<<min_tri<<endl;
 
-    if (min_dist>= t) {
-        //cout<<"trimesh:: debug howfar (1): "<<ireg<<endl;
+    if (min_dist >= t) {
         return ireg;
     }
 
     // otherwise, if min_dist is smaller than t, update out parameters
+
     if (newmed) {
         if (inside_mesh) {
             // new medium is outside the mesh (-1)
@@ -363,11 +539,9 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
 
     t = min_dist;
     if (inside_mesh) {
-        //cout<<"trimesh:: debug howfar (2): "<<-1<<endl;
         return -1; // new region is outside the mesh
     }
     // outside mesh, new region is inside the mesh
-    //cout<<"trimesh:: debug howfar (3): "<<0<<endl;
     return 0;
 }
 
