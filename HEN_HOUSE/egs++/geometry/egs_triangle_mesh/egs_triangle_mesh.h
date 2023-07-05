@@ -40,6 +40,7 @@
 #include "egs_vector.h"
 
 #include <array>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -110,6 +111,11 @@ public:
     /// Unique elements
     std::vector<EGS_TriangleMeshSpec::Triangle> elements;
 };
+
+// exclude from doxygen
+/// @cond
+class EGS_TriangleMeshBbox;
+/// @endcond
 
 /*! \brief A triangular surface mesh geometry.
 
@@ -239,6 +245,9 @@ private:
     std::vector<std::array<EGS_Float, 3>> ys;
     std::vector<std::array<EGS_Float, 3>> zs;
     std::vector<EGS_Vector> ns;
+
+    // Axis-aligned mesh bounding box used to accelerate geometry routines
+    std::unique_ptr<EGS_TriangleMeshBbox> bbox;
 };
 
 #endif // EGS_TRIANGLE_MESH
