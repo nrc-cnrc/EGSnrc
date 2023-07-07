@@ -927,7 +927,6 @@ int EGS_Application::simulateSingleShower() {
         }
         current_case =
             source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,p.x,p.u);
-        //cout<<endl<<"new history"<<endl;
         ireg = geometry->isWhere(p.x);
         if (ireg < 0) {
             EGS_Float t = veryFar;
