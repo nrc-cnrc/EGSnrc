@@ -54,9 +54,25 @@ public:
         max_y += delta;
         max_z += delta;
     }
+    //get the midpoints of the bounding box along each axis to create the octets by dividing boxes into 8
+    double mid_x() const {
+        return (min_x + max_x) / 2.0;
+    }
+    double mid_y() const {
+        return (min_y + max_y) / 2.0;
+    }
+    double mid_z() const {
+        return (min_z + max_z) / 2.0;
+    }
 
     bool contains(const EGS_Vector &point) const {
         // non-inclusive on the boundary
+        // so points on the interface between two bounding boxes only belong
+        // to one of them:
+        //      +---+---+
+        //      |   x   |
+        //      +---+---+
+        //            ^ belongs here
         return point.x > min_x && point.x < max_x &&
                point.y > min_y && point.y < max_y &&
                point.z > min_z && point.z < max_z;
@@ -137,6 +153,16 @@ private:
     EGS_Float max_z = 0.0;
 };
 
+class EGS_TriangleMeshNode {
+public:
+
+}
+
+class EGS_TriangleMesh_Octree {
+private:
+
+};
+
 // No checks are done on element validity, triangles are used as-is
 EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec) :
     n_tris(spec.elements.size()), EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName()) {
@@ -186,6 +212,9 @@ EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec) :
 
     // expand bounding box by a small amount to avoid issues at the boundary
     bbox->expand(1e-8);
+    //below here likely will be the starting point for all the octree initialization stuff
+    //at this point, we have saved all the triangle vertices and normals, we have created and properly sized the bounding box, and the media has been "initialized' by the usual getinput
+    //so we have essentially all we need to get started on creating the octrtee
 }
 
 EGS_TriangleMesh::~EGS_TriangleMesh() = default;
@@ -471,10 +500,10 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         if (dist > min_dist) {
             continue;
         }
-        min_dist= dist+1e-10; //add 1e-10 here to avoid floating point bug
+        min_dist= dist+boundaryTolerance; //add the small boundaryTolerance here to avoid floating point bug
 
         /* bug was that outward_triangle would not differentiate between truly in front of the plane and on the plane itself. Because of this particles would exit geometry,
-         * re-enter via the same triangle (min dist would be zero), and one "inside" undefined behaviour would follow causing the particle to continue moving "inside mesh" while
+         * re-enter via the same triangle (min dist would be zero), and once "inside" undefined behaviour would follow causing the particle to continue moving "inside mesh" while
          * travelling outside of the mesh geometry due to particle direction. This little push makes it clear where the particle is relative to the surface mesh and prevents
          * false positive intersections which yield unphysical results */
         //could try to modify is_outside_of_triangle_plane method but this would be much more complex. Would have to check particle direction and triangle normal to decide what is happening
