@@ -153,15 +153,15 @@ private:
     EGS_Float max_z = 0.0;
 };
 
-class EGS_TriangleMeshNode {
+/*class EGS_TriangleMeshNode {
 public:
 
-}
+};
 
 class EGS_TriangleMesh_Octree {
 private:
 
-};
+};*/
 
 // No checks are done on element validity, triangles are used as-is
 EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec) :
@@ -496,18 +496,22 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
             // no intersection
             continue;
         }
-        // intersection, update min_dist if smaller
+        // intersection, if intersection distance zero, particle is on the plane from its last step. Not true intersection so ignore it
+        if (dist==0) {
+            continue; //this fixes the floating point bug without modifying step size, as it prevents the particle from going back into the plane it just crossed. Will not count an intersection
+                      //if the distance is zero as it means it previously intersected and is now sitting on the plane. Not a valid intersection.
+        }
+        /* bug was that outward_triangle would not differentiate between truly in front of the plane and on the plane itself. Because of this particles would exit geometry,
+         * re-enter via the same triangle (min dist would be zero), and once "inside" undefined behaviour would follow causing the particle to continue moving "inside mesh" while
+         * travelling outside of the mesh geometry due to particle direction. Requiring the intersection distance be larger than zero makes it clear where the particle is relative
+         * to the surface mesh and prevents invalid intersections which yield unphysical results */
+
+        // intersection, and distance is larger than zero so it is a true intersection
+        //update min_dist if smaller
         if (dist > min_dist) {
             continue;
         }
-        min_dist= dist+boundaryTolerance; //add the small boundaryTolerance here to avoid floating point bug
-
-        /* bug was that outward_triangle would not differentiate between truly in front of the plane and on the plane itself. Because of this particles would exit geometry,
-         * re-enter via the same triangle (min dist would be zero), and once "inside" undefined behaviour would follow causing the particle to continue moving "inside mesh" while
-         * travelling outside of the mesh geometry due to particle direction. This little push makes it clear where the particle is relative to the surface mesh and prevents
-         * false positive intersections which yield unphysical results */
-        //could try to modify is_outside_of_triangle_plane method but this would be much more complex. Would have to check particle direction and triangle normal to decide what is happening
-
+        min_dist= dist;
         min_tri = i;
     }
 
