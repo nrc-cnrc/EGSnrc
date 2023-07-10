@@ -1349,6 +1349,7 @@ void EGS_AdvancedApplication::setLatch(int latch) {
 }
 
 extern __extc__ void egsHowfar() {
+    cout<<"advapp initial:: t="<<the_epcont->ustep<<endl;
     CHECK_GET_APPLICATION(app,"egsHowfar()");
     int np = the_stack->np-1;
     int ireg = the_stack->ir[np]-2;
@@ -1357,6 +1358,7 @@ extern __extc__ void egsHowfar() {
         return;
     }
     int newmed;
+    cout<<"advapp howfar:: t="<<the_epcont->ustep<<endl;
     int inew = app->howfar(ireg,
                            EGS_Vector(the_stack->x[np],the_stack->y[np],the_stack->z[np]),
                            EGS_Vector(the_stack->u[np],the_stack->v[np],the_stack->w[np]),

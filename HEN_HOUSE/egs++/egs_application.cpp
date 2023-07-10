@@ -1051,6 +1051,7 @@ int EGS_Application::finishSimulation() {
     int err = 0;
     if (run) {
         err = run->finishSimulation();
+        geometry->printTriCheck(); //output number of checked triangles by trimesh in howfar method
         if (err < 0) {
             return err;
         }
