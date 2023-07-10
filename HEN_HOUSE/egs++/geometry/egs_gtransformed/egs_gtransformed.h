@@ -285,6 +285,10 @@ public:
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
+    void printTriCheck() { //A.D debugging
+        g->printTriCheck();
+    };
+
 protected:
 
     /*! \brief Don't define media in the transformed geometry definition.

@@ -41,7 +41,7 @@
 #define EGS_CSPHERES_
 
 #include <vector>
-
+#include <fstream>
 #include "egs_base_geometry.h"
 
 #ifdef WIN32
@@ -188,6 +188,13 @@ public:
     /*! \brief Implement getVolume for spherical regions */
     EGS_Float getVolume(int ireg);
 
+    void debugtool(){
+        string outstring = "geom_"+name+"_debug.txt";
+        const char *outname=outstring.c_str();
+        sortout = new ofstream(outname, ios::trunc);
+        *sortout<<"debugging tool"<<endl;
+    }
+
 private:
 
     EGS_Float *R2;                // radius^2
@@ -197,6 +204,8 @@ private:
 
     std::vector<EGS_Float> rbounds;
     std::vector<EGS_Float> vol;
+    ofstream *sortout;
+    int n_hist=0;
 };
 
 
