@@ -37,191 +37,8 @@
 #include <array>
 #include <stdexcept>
 
-// exclude from doxygen
-/// @cond
-class EGS_TriangleMeshBbox {
-public:
-    EGS_TriangleMeshBbox() = default;
-    EGS_TriangleMeshBbox(double min_x, double max_x, double min_y, double max_y,
-                double min_z, double max_z) : min_x(min_x), max_x(max_x),
-        min_y(min_y), max_y(max_y), min_z(min_z), max_z(max_z) {}
-
-    void expand(double delta) {
-        min_x -= delta;
-        min_y -= delta;
-        min_z -= delta;
-        max_x += delta;
-        max_y += delta;
-        max_z += delta;
-    }
-    //get the midpoints of the bounding box along each axis to create the octets by dividing boxes into 8
-    double mid_x() const {
-        return (min_x + max_x) / 2.0;
-    }
-    double mid_y() const {
-        return (min_y + max_y) / 2.0;
-    }
-    double mid_z() const {
-        return (min_z + max_z) / 2.0;
-    }
-
-    bool contains(const EGS_Vector &point) const {
-        // non-inclusive on the boundary
-        // so points on the interface between two bounding boxes only belong
-        // to one of them:
-        //      +---+---+
-        //      |   x   |
-        //      +---+---+
-        //            ^ belongs here
-        return point.x > min_x && point.x < max_x &&
-               point.y > min_y && point.y < max_y &&
-               point.z > min_z && point.z < max_z;
-    }
-
-    // Returns the closest point on the bounding box to the given point.
-    // If the given point is inside the bounding box, it is considered the
-    // closest point (should only be called if the point is outside).
-    //
-    // See section 5.1.3 of Ericson's Real-Time Collision Detection.
-    EGS_Vector closest_point(const EGS_Vector &point) const {
-        std::array<EGS_Float, 3> p = {point.x, point.y, point.z};
-        std::array<EGS_Float, 3> mins = {min_x, min_y, min_z};
-        std::array<EGS_Float, 3> maxs = {max_x, max_y, max_z};
-        // set q to p, then clamp it to min/max bounds as needed
-        std::array<EGS_Float, 3> q = p;
-        for (int i = 0; i < 3; i++) {
-            if (p[i] < mins[i]) {
-                q[i] = mins[i];
-            }
-            if (p[i] > maxs[i]) {
-                q[i] = maxs[i];
-            }
-        }
-        return EGS_Vector(q[0], q[1], q[2]);
-    }
-
-    // Returns 1 if there is an intersection and 0 if not. If there is an
-    // intersection, the out parameter dist will be the distance along v to
-    // the intersection point q.
-    //
-    // Adapted from Ericson section 5.3.3 "Intersecting Ray or Segment
-    // Against Box".
-    int ray_intersection(const EGS_Vector &p, const EGS_Vector &v) const {
-        // check intersection of ray with three bounding box slabs
-        EGS_Float tmin = 0.0;
-        EGS_Float tmax = veryFar;
-        std::array<EGS_Float, 3> p_vec {p.x, p.y, p.z};
-        std::array<EGS_Float, 3> v_vec {v.x, v.y, v.z};
-        std::array<EGS_Float, 3> mins {min_x, min_y, min_z};
-        std::array<EGS_Float, 3> maxs {max_x, max_y, max_z};
-        for (std::size_t i = 0; i < 3; i++) {
-            // Parallel to slab. Point must be within slab bounds to hit
-            // the bounding box
-            if (std::abs(v_vec[i]) < 1e-10) {
-                // Outside slab bounds
-                if (p_vec[i] < mins[i] || p_vec[i] > maxs[i]) {
-                    return 0;
-                }
-            }
-            else {
-                // intersect ray with slab planes
-                EGS_Float inv_vel = 1.0 / v_vec[i];
-                EGS_Float t1 = (mins[i] - p_vec[i]) * inv_vel;
-                EGS_Float t2 = (maxs[i] - p_vec[i]) * inv_vel;
-                // convention is t1 is near plane, t2 is far plane
-                if (t1 > t2) {
-                    std::swap(t1, t2);
-                }
-                tmin = std::max(tmin, t1);
-                tmax = std::min(tmax, t2);
-                if (tmin > tmax) {
-                    return 0;
-                }
-            }
-        }
-        //q = p + v * tmin;
-        //dist = tmin;
-        return 1;
-    }
-
-private:
-    EGS_Float min_x = 0.0;
-    EGS_Float max_x = 0.0;
-    EGS_Float min_y = 0.0;
-    EGS_Float max_y = 0.0;
-    EGS_Float min_z = 0.0;
-    EGS_Float max_z = 0.0;
-};
-
-/*class EGS_TriangleMeshNode {
-public:
-
-};
-
-class EGS_TriangleMesh_Octree {
-private:
-
-};*/
-
-// No checks are done on element validity, triangles are used as-is
-EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec) :
-    n_tris(spec.elements.size()), EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName()) {
-
-    // The volume bounded by the surface mesh is a single transport region.
-    EGS_BaseGeometry::nreg = 1;
-
-    // We could check for less than four elements here, since that's the
-    // minimum required to make a closed 3D surface, but it seems pedantic.
-    if (this->n_tris == 0) {
-        throw std::runtime_error("empty triangles vector in EGS_TriangleMesh constructor");
-    }
-
-    xs.reserve(this->n_tris);
-    ys.reserve(this->n_tris);
-    zs.reserve(this->n_tris);
-    ns.reserve(this->n_tris);
-
-    EGS_Float bbox_min_x = veryFar;
-    EGS_Float bbox_min_y = veryFar;
-    EGS_Float bbox_min_z = veryFar;
-    EGS_Float bbox_max_x = -veryFar;
-    EGS_Float bbox_max_y = -veryFar;
-    EGS_Float bbox_max_z = -veryFar;
-
-    for (const auto& tri: spec.elements) {
-        xs.push_back({tri.a.x, tri.b.x, tri.c.x});
-        ys.push_back({tri.a.y, tri.b.y, tri.c.y});
-        zs.push_back({tri.a.z, tri.b.z, tri.c.z});
-        // TODO add check for degenerate triangle normals?
-        ns.push_back(tri.n);
-
-        bbox_min_x = std::min(bbox_min_x, std::min(tri.a.x, std::min(tri.b.x, tri.c.x)));
-        bbox_min_y = std::min(bbox_min_y, std::min(tri.a.y, std::min(tri.b.y, tri.c.y)));
-        bbox_min_z = std::min(bbox_min_z, std::min(tri.a.z, std::min(tri.b.z, tri.c.z)));
-
-        bbox_max_x = std::max(bbox_max_x, std::max(tri.a.x, std::max(tri.b.x, tri.c.x)));
-        bbox_max_y = std::max(bbox_max_y, std::max(tri.a.y, std::max(tri.b.y, tri.c.y)));
-        bbox_max_z = std::max(bbox_max_z, std::max(tri.a.z, std::max(tri.b.z, tri.c.z)));
-    }
-
-    bbox = std::unique_ptr<EGS_TriangleMeshBbox>(new EGS_TriangleMeshBbox(
-        bbox_min_x, bbox_max_x,
-        bbox_min_y, bbox_max_y,
-        bbox_min_z, bbox_max_z
-    ));
-
-    // expand bounding box by a small amount to avoid issues at the boundary
-    bbox->expand(1e-8);
-    //below here likely will be the starting point for all the octree initialization stuff
-    //at this point, we have saved all the triangle vertices and normals, we have created and properly sized the bounding box, and the media has been "initialized' by the usual getinput
-    //so we have essentially all we need to get started on creating the octrtee
-}
-
-EGS_TriangleMesh::~EGS_TriangleMesh() = default;
-EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMesh &&) = default;
-EGS_TriangleMesh &EGS_TriangleMesh::operator=(EGS_TriangleMesh &&) = default;
-
 namespace { // anonymous namespace for low-level geometry routines
+const EGS_Float eps = 1e-8;
 
 inline EGS_Float dot(const EGS_Vector &x, const EGS_Vector &y) {
     return x * y;
@@ -237,6 +54,22 @@ inline EGS_Float distance2(const EGS_Vector &x, const EGS_Vector &y) {
 
 inline EGS_Float distance(const EGS_Vector &x, const EGS_Vector &y) {
     return std::sqrt(distance2(x, y));
+}
+
+inline EGS_Float min3(EGS_Float a, EGS_Float b, EGS_Float c) {
+    return std::min(std::min(a, b), c);
+}
+
+inline EGS_Float max3(EGS_Float a, EGS_Float b, EGS_Float c) {
+    return std::max(std::max(a, b), c);
+}
+
+inline bool approx_eq(double a, double b, double e = eps) {
+    return (std::abs(a - b) <= e * (std::abs(a) + std::abs(b) + 1.0));
+} //this is a helper function for the is_indivisible method
+
+inline bool is_zero(const EGS_Vector &v) {
+    return approx_eq(0.0, v.length(), eps);
 }
 
 // Test whether the point `p` is in front of the plane defined by the triangle's
@@ -347,6 +180,406 @@ bool triangle_ray_intersection(const EGS_Vector &p,
 }
 
 } // anonymous namespace
+
+// exclude from doxygen
+/// @cond
+class EGS_TriangleMeshBbox {
+public:
+    EGS_TriangleMeshBbox() = default;
+    EGS_TriangleMeshBbox(double min_x, double max_x, double min_y, double max_y,
+                double min_z, double max_z) : min_x(min_x), max_x(max_x),
+        min_y(min_y), max_y(max_y), min_z(min_z), max_z(max_z) {}
+
+    void expand(double delta) {
+        min_x -= delta;
+        min_y -= delta;
+        min_z -= delta;
+        max_x += delta;
+        max_y += delta;
+        max_z += delta;
+    }
+    //get the midpoints of the bounding box along each axis to create the octets by dividing boxes into 8
+    double mid_x() const {
+        return (min_x + max_x) / 2.0;
+    }
+    double mid_y() const {
+        return (min_y + max_y) / 2.0;
+    }
+    double mid_z() const {
+        return (min_z + max_z) / 2.0;
+    }
+
+    bool is_indivisible() const {
+            // check if we're running up against precision limits
+            return approx_eq(min_x, mid_x()) ||
+                   approx_eq(max_x, mid_x()) ||
+                   approx_eq(min_y, mid_y()) ||
+                   approx_eq(max_y, mid_y()) ||
+                   approx_eq(min_z, mid_z()) ||
+                   approx_eq(max_z, mid_z());
+
+        }
+
+    std::array<EGS_TriangleMeshBbox, 8> divide8() const {
+            return {
+                EGS_TriangleMeshBbox(
+                    min_x, mid_x(),
+                    min_y, mid_y(),
+                    min_z, mid_z()
+                ),
+                EGS_TriangleMeshBbox(
+                    mid_x(), max_x,
+                    min_y, mid_y(),
+                    min_z, mid_z()
+                ),
+                EGS_TriangleMeshBbox(
+                    min_x, mid_x(),
+                    mid_y(), max_y,
+                    min_z, mid_z()
+                ),
+                EGS_TriangleMeshBbox(
+                    mid_x(), max_x,
+                    mid_y(), max_y,
+                    min_z, mid_z()
+                ),
+                EGS_TriangleMeshBbox(
+                    min_x, mid_x(),
+                    min_y, mid_y(),
+                    mid_z(), max_z
+                ),
+                EGS_TriangleMeshBbox(
+                    mid_x(), max_x,
+                    min_y, mid_y(),
+                    mid_z(), max_z
+                ),
+                EGS_TriangleMeshBbox(
+                    min_x, mid_x(),
+                    mid_y(), max_y,
+                    mid_z(), max_z
+                ),
+                EGS_TriangleMeshBbox(
+                    mid_x(), max_x,
+                    mid_y(), max_y,
+                    mid_z(), max_z
+                )
+            };
+        }
+
+    bool contains(const EGS_Vector &point) const {
+        // non-inclusive on the boundary
+        // so points on the interface between two bounding boxes only belong
+        // to one of them:
+        //      +---+---+
+        //      |   x   |
+        //      +---+---+
+        //            ^ belongs here
+        return point.x > min_x && point.x < max_x &&
+               point.y > min_y && point.y < max_y &&
+               point.z > min_z && point.z < max_z;
+    }
+
+    // Returns the closest point on the bounding box to the given point.
+    // If the given point is inside the bounding box, it is considered the
+    // closest point (should only be called if the point is outside).
+    //
+    // See section 5.1.3 of Ericson's Real-Time Collision Detection.
+    EGS_Vector closest_point(const EGS_Vector &point) const {
+        std::array<EGS_Float, 3> p = {point.x, point.y, point.z};
+        std::array<EGS_Float, 3> mins = {min_x, min_y, min_z};
+        std::array<EGS_Float, 3> maxs = {max_x, max_y, max_z};
+        // set q to p, then clamp it to min/max bounds as needed
+        std::array<EGS_Float, 3> q = p;
+        for (int i = 0; i < 3; i++) {
+            if (p[i] < mins[i]) {
+                q[i] = mins[i];
+            }
+            if (p[i] > maxs[i]) {
+                q[i] = maxs[i];
+            }
+        }
+        return EGS_Vector(q[0], q[1], q[2]);
+    }
+
+    // Returns 1 if there is an intersection and 0 if not. If there is an
+    // intersection, the out parameter dist will be the distance along v to
+    // the intersection point q.
+    //
+    // Adapted from Ericson section 5.3.3 "Intersecting Ray or Segment
+    // Against Box".
+    int ray_intersection(const EGS_Vector &p, const EGS_Vector &v) const {
+        // check intersection of ray with three bounding box slabs
+        EGS_Float tmin = 0.0;
+        EGS_Float tmax = veryFar;
+        std::array<EGS_Float, 3> p_vec {p.x, p.y, p.z};
+        std::array<EGS_Float, 3> v_vec {v.x, v.y, v.z};
+        std::array<EGS_Float, 3> mins {min_x, min_y, min_z};
+        std::array<EGS_Float, 3> maxs {max_x, max_y, max_z};
+        for (std::size_t i = 0; i < 3; i++) {
+            // Parallel to slab. Point must be within slab bounds to hit
+            // the bounding box
+            if (std::abs(v_vec[i]) < 1e-10) {
+                // Outside slab bounds
+                if (p_vec[i] < mins[i] || p_vec[i] > maxs[i]) {
+                    return 0;
+                }
+            }
+            else {
+                // intersect ray with slab planes
+                EGS_Float inv_vel = 1.0 / v_vec[i];
+                EGS_Float t1 = (mins[i] - p_vec[i]) * inv_vel;
+                EGS_Float t2 = (maxs[i] - p_vec[i]) * inv_vel;
+                // convention is t1 is near plane, t2 is far plane
+                if (t1 > t2) {
+                    std::swap(t1, t2);
+                }
+                tmin = std::max(tmin, t1);
+                tmax = std::min(tmax, t2);
+                if (tmin > tmax) {
+                    return 0;
+                }
+            }
+        }
+        //q = p + v * tmin;
+        //dist = tmin;
+        return 1;
+    }
+
+    // Adapted from Ericson section 5.2.9 "Testing AABB Against Triangle".
+    // Uses a separating axis approach, as originally presented in Akenine-
+    // Möller's "Fast 3D Triangle-Box Overlap Testing" with 13 axes checked
+    // in total. There are three axis categories, and it is suggested the
+    // fastest way to check is 3, 1, 2.
+    //
+    // We use a more straightforward but less optimized formulation of the
+    // separating axis test than Ericson presents, because this test is
+    // intended to be done as part of the octree setup but not during the
+    // actual simulation.
+    //
+    // This routine should be robust for ray edges parallel with bounding
+    // box edges (category 3) but does not attempt to be robust for the case
+    // of degenerate triangle face normals (category 2). See Ericson 5.2.1.1
+    //
+    // The non-robustness of some cases should not be an issue for the most
+    // part as these will likely be false positives (harmless extra checks)
+    // instead of false negatives (missed intersections, a huge problem if
+    // present).
+    bool intersects_triangle(const EGS_Vector &a, const EGS_Vector &b, const EGS_Vector &c) const {
+        const EGS_Float eps = 1e-10;
+        if (min3(a.x, b.x, c.x) >= max_x ||
+                min3(a.y, b.y, c.y) >= max_y ||
+                min3(a.z, b.z, c.z) >= max_z ||
+                max3(a.x, b.x, c.x) <= min_x ||
+                max3(a.y, b.y, c.y) <= min_y ||
+                max3(a.z, b.z, c.z) <= min_z) {
+            //cout<<"no intersect (1)"<<endl;
+            return false;
+        }
+
+        EGS_Vector centre(mid_x(), mid_y(), mid_z());
+        // extents
+        EGS_Float ex = (max_x - min_x) / 2.0;
+        EGS_Float ey = (max_y - min_y) / 2.0;
+        EGS_Float ez = (max_z - min_z) / 2.0;
+
+        // move triangle to bounding box origin
+        EGS_Vector v0 = a - centre;
+        EGS_Vector v1 = b - centre;
+        EGS_Vector v2 = c - centre;
+
+        // find triangle edge vectors
+        const std::array<EGS_Vector, 3> edge_vecs { v1-v0, v2-v1, v0-v2 };
+
+        // Test the 9 category 3 axes (cross products between axis-aligned
+        // bounding box unit vectors and triangle edge vectors)
+        const EGS_Vector ux {1, 0, 0}, uy {0, 1, 0}, uz {0, 0, 1};
+        const std::array<EGS_Vector, 3> unit_vecs { ux, uy, uz};
+        for (const EGS_Vector &u : unit_vecs) {
+            for (const EGS_Vector &f : edge_vecs) {
+                const EGS_Vector a = cross(u, f);
+                if (is_zero(a)) {
+                    // Ignore testing this axis, likely won't be a separating
+                    // axis. This may lead to false positives, but not false
+                    // negatives.
+                    continue;
+                }
+                // find box projection radius
+                const EGS_Float r = ex * std::abs(dot(ux, a)) + ey * std::abs(dot(uy, a)) + ez * std::abs(dot(uz, a));
+                // find three projections onto axis a
+                const EGS_Float p0 = dot(v0, a);
+                const EGS_Float p1 = dot(v1, a);
+                const EGS_Float p2 = dot(v2, a);
+                if (std::max(-max3(p0, p1, p2), min3(p0, p1, p2)) + eps > r) {
+                    //cout<<"no intersect (2)"<<endl;
+                    return false;
+                }
+            }
+        }
+        // category 1 - test overlap with AABB face normals
+        if (max3(v0.x, v1.x, v2.x) <= -ex || min3(v0.x, v1.x, v2.x) >= ex ||
+                max3(v0.y, v1.y, v2.y) <= -ey || min3(v0.y, v1.y, v2.y) >= ey ||
+                max3(v0.z, v1.z, v2.z) <= -ez || min3(v0.z, v1.z, v2.z) >= ez) {
+            //cout<<"no intersect (3)"<<endl;
+            return false;
+        }
+
+        // category 2 - test overlap with triangle face normal using AABB
+        // plane test (5.2.3)
+
+        // Cross product robustness issues are ignored here (assume
+        // non-degenerate and non-oversize triangles)
+        const EGS_Vector n = cross(edge_vecs[0], edge_vecs[1]);
+        // projection radius
+        const EGS_Float r = ex * std::abs(n.x) + ey * std::abs(n.y) + ez * std::abs(n.z);
+        // distance from box centre to plane
+        //
+        // We have to use `a` here and not `v0` as in my printing since the
+        // bounding box was not translated to the origin. This is a known
+        // erratum, see http://realtimecollisiondetection.net/books/rtcd/errata/
+        const EGS_Float s = dot(n, centre) - dot(n, a);
+        // intersection if s falls within projection radius
+        if(std::abs(s) <= r) //cout<<min_x<<" <x< "<<max_x<<"  "<<min_y<<" <y< "<<max_y<<"  "<<min_z<<" <z< "<<max_z<<endl;
+        //else cout<<"no intersect (4)"<<endl;
+
+        return std::abs(s) <= r;
+    }
+
+private:
+    EGS_Float min_x = 0.0;
+    EGS_Float max_x = 0.0;
+    EGS_Float min_y = 0.0;
+    EGS_Float max_y = 0.0;
+    EGS_Float min_z = 0.0;
+    EGS_Float max_z = 0.0;
+};
+
+class TriNode {
+public:
+    std::vector<int> elts_; //list of elements within this node of the octree (i.e triangles intersecting bbox_)
+    std::vector<TriNode> children_; //the octants that this node is divided into if it is not a leaf (this is empty if it is a leaf)
+    EGS_TriangleMeshBbox bbox_;//region of the total bounding box represented by this octree node
+
+    TriNode() = default;
+    TriNode(const std::vector<int> &elts, const EGS_TriangleMeshBbox &bbox, std::size_t n_max, const EGS_TriangleMesh &mesh) : bbox_(bbox) {
+        if (bbox_.is_indivisible() || elts.size() < n_max) {
+                elts_ = elts;
+                //this is then a leaf either because it cannot be further divided or has gotten its element number below the required maximum
+                return;//return so no new children are produced (its children is empty is is_leaf() is true)
+            }
+
+        std::array<std::vector<int>, 8> octants;
+        std::array<EGS_TriangleMeshBbox, 8> bbs = bbox_.divide8();
+
+        // elements may be in more than one bounding box
+        for (const auto &e : elts) {
+            //get relevant information for triangle corresponding to element e
+            const auto& xs = mesh.triangle_xs(e);
+            const auto& ys = mesh.triangle_ys(e);
+            const auto& zs = mesh.triangle_zs(e);
+            //cout<<"triangle e: "<<e<<" with points a= ("<<xs[0]<<", "<<ys[0]<<", "<<zs[0]<<")  b= ("<<xs[1]<<", "<<ys[1]<<", "<<zs[1]<<")  c= ("<<xs[2]<<", "<<ys[2]<<", "<<zs[2]<<")"<<endl;
+            for (int i = 0; i < 8; i++) {
+                //check if the triangle corresponding to element e intersects the bounding box of our current node
+                if (bbs[i].intersects_triangle(EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]))) {
+                    //cout<<"octant "<<i<<" intersects triangle: "<<e<<endl<<endl;
+                    octants[i].push_back(e);
+                }
+            }
+        }
+        for (int i = 0; i < 8; i++) {
+            children_.push_back(TriNode(std::move(octants[i]), bbs[i], n_max, mesh));
+        }
+    }
+};
+
+class EGS_TriangleMesh_Octree {
+private:
+    TriNode root_;
+public:
+    EGS_TriangleMesh_Octree() = default;
+    EGS_TriangleMesh_Octree(const std::vector<int> &elts, std::size_t n_max,
+                    const EGS_TriangleMesh &mesh, EGS_TriangleMeshBbox basebox) {
+        if (elts.empty()) {
+            throw std::runtime_error("EGS_Mesh_Octree: empty elements vector");
+        }
+        if (elts.size() > std::numeric_limits<int>::max()) {
+            throw std::runtime_error("EGS_Mesh_Octree: num elts must fit into an int");
+        }
+        root_ = TriNode(elts, basebox, n_max, mesh);
+    }
+private:
+
+};
+
+// No checks are done on element validity, triangles are used as-is
+EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec) :
+    n_tris(spec.elements.size()), EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName()) {
+
+    // The volume bounded by the surface mesh is a single transport region.
+    EGS_BaseGeometry::nreg = 1;
+
+    // We could check for less than four elements here, since that's the
+    // minimum required to make a closed 3D surface, but it seems pedantic.
+    if (this->n_tris == 0) {
+        throw std::runtime_error("empty triangles vector in EGS_TriangleMesh constructor");
+    }
+
+    xs.reserve(this->n_tris);
+    ys.reserve(this->n_tris);
+    zs.reserve(this->n_tris);
+    ns.reserve(this->n_tris);
+
+    EGS_Float bbox_min_x = veryFar;
+    EGS_Float bbox_min_y = veryFar;
+    EGS_Float bbox_min_z = veryFar;
+    EGS_Float bbox_max_x = -veryFar;
+    EGS_Float bbox_max_y = -veryFar;
+    EGS_Float bbox_max_z = -veryFar;
+
+    for (const auto& tri: spec.elements) {
+        xs.push_back({tri.a.x, tri.b.x, tri.c.x});
+        ys.push_back({tri.a.y, tri.b.y, tri.c.y});
+        zs.push_back({tri.a.z, tri.b.z, tri.c.z});
+        // TODO add check for degenerate triangle normals?
+        ns.push_back(tri.n);
+
+        bbox_min_x = std::min(bbox_min_x, std::min(tri.a.x, std::min(tri.b.x, tri.c.x)));
+        bbox_min_y = std::min(bbox_min_y, std::min(tri.a.y, std::min(tri.b.y, tri.c.y)));
+        bbox_min_z = std::min(bbox_min_z, std::min(tri.a.z, std::min(tri.b.z, tri.c.z)));
+
+        bbox_max_x = std::max(bbox_max_x, std::max(tri.a.x, std::max(tri.b.x, tri.c.x)));
+        bbox_max_y = std::max(bbox_max_y, std::max(tri.a.y, std::max(tri.b.y, tri.c.y)));
+        bbox_max_z = std::max(bbox_max_z, std::max(tri.a.z, std::max(tri.b.z, tri.c.z)));
+    }
+
+    bbox = std::unique_ptr<EGS_TriangleMeshBbox>(new EGS_TriangleMeshBbox(
+        bbox_min_x, bbox_max_x,
+        bbox_min_y, bbox_max_y,
+        bbox_min_z, bbox_max_z
+    ));
+
+    // expand bounding box by a small amount to avoid issues at the boundary
+    bbox->expand(1e-8);
+    //below here likely will be the starting point for all the octree initialization stuff
+    //at this point, we have saved all the triangle vertices and normals, we have created and properly sized the bounding box, and the media has been "initialized' by the usual getinput
+    //so we have essentially all we need to get started on creating the octrtee
+    initializeOctree();
+}
+
+void EGS_TriangleMesh::initializeOctree(){
+    std::vector<int> elts; //this tracks the indices of the triangles in the mesh for the octree to assign to octants
+    //in this case there is no boundary list like the egs_mesh has as it is not relevant. There is only surface elements, no inner or outer elements
+    elts.reserve(num_triangles());
+    for (int i = 0; i < num_triangles(); i++) {
+        elts.push_back(i);
+    }
+    std::size_t n_surf = 10; //the maximum number of elements allowed in a single octant (this may need to be fine tuned for best results)
+    surface_tree_ = std::unique_ptr<EGS_TriangleMesh_Octree>(new EGS_TriangleMesh_Octree(elts, n_surf, *this, *bbox)); //creating the octree (in this case a surface octree i suppose but no point in differentiating)
+    //note that surface tree is an attribute of the triangle mesh, hence how we will access the octree, which will access its root_, which then allows access to all of the other nodes in the tree
+}
+
+EGS_TriangleMesh::~EGS_TriangleMesh() = default;
+EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMesh &&) = default;
+EGS_TriangleMesh &EGS_TriangleMesh::operator=(EGS_TriangleMesh &&) = default;
+
 
 bool EGS_TriangleMesh::isInside(const EGS_Vector &x) {
     return isWhere(x) != -1;

@@ -115,6 +115,8 @@ public:
 // exclude from doxygen
 /// @cond
 class EGS_TriangleMeshBbox;
+class EGS_TriangleMeshNode;
+class EGS_TriangleMesh_Octree;
 /// @endcond
 
 /*! \brief A triangular surface mesh geometry.
@@ -235,6 +237,7 @@ public:
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) override;
     EGS_Float hownear(int ireg, const EGS_Vector &x) override;
+    void initializeOctree();
 
     static const std::string type;
 
@@ -248,6 +251,7 @@ private:
 
     // Axis-aligned mesh bounding box used to accelerate geometry routines
     std::unique_ptr<EGS_TriangleMeshBbox> bbox;
+    std::unique_ptr<EGS_TriangleMesh_Octree> surface_tree_;
 };
 
 #endif // EGS_TRIANGLE_MESH
