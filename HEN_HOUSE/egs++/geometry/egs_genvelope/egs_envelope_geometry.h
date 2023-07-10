@@ -418,6 +418,7 @@ public:
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
         //cout<<"current region: "<<ireg<<endl;
+        cout<<"genv initial:: t="<<t<<endl;
         int region_out;
         if (ireg >= 0) {
             // inside.
@@ -425,13 +426,17 @@ public:
                 // in one of the regions of the base geometry
                 // check if we hit a boundary in the base geometry.
                 // if we do, newmed and normal get set accordingly.
+                cout<<"genv base:: t_i="<<t;
                 int ibase = g->howfar(ireg,x,u,t,newmed,normal);
+                cout<<" becomes t_f="<<t<<endl;
                 int ij = -1, jg;
                 // check if we will enter any of the inscribed geometries
                 // before entering a new region in the base geometry.
                 for (int j=0; j<n_in; j++) {
+                    cout<<"genv (1)inscribed #"<<j<<":: t="<<t;
                     int ireg_j =
                         geometries[j]->howfar(-1,x,u,t,newmed,normal);
+                    cout<<" becomes t_f="<<t<<endl;
                     if (ireg_j >= 0) {
                         // we do. remember the inscribed geometry index
                         // and local region
@@ -464,7 +469,9 @@ public:
                 ilocal = ireg - nbase - jg*nmax;
             }
             // and then check if we will hit a boundary in this geometry.
+            cout<<"genv (2)inscribed #"<<jg<<":: t="<<t;
             int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
+            cout<<" becomes t_f="<<t<<endl;
             if (inew >= 0){
                 region_out=new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;
                 //cout<<"genveloppe:: debug howfar (3): "<<region_out<<endl;
@@ -484,7 +491,9 @@ public:
         }
         // if here, we are outside the base geometry.
         // check to see if we will enter.
+        cout<<"genv outbase:: t="<<t;
         int ienter = g->howfar(ireg,x,u,t,newmed,normal);
+        cout<<" becomes t_f="<<t<<endl;
         if (ienter >= 0) {
             // yes, we do. see if we are already inside of one of the
             // inscribed geometries.
@@ -640,6 +649,13 @@ public:
     };
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
+
+    void printTriCheck() { //A.D debugging
+        for (int j=0; j<n_in; j++) {
+            geometries[j]->printTriCheck();
+        }
+        g->printTriCheck();
+    };
 
 protected:
 
