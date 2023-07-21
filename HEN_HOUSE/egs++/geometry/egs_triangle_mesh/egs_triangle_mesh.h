@@ -190,7 +190,7 @@ correctly and not terminated immediately after initially exiting the mesh.
 
 class EGS_TRIANGLE_MESH_EXPORT EGS_TriangleMesh : public EGS_BaseGeometry {
 public:
-    explicit EGS_TriangleMesh(EGS_TriangleMeshSpec);
+    explicit EGS_TriangleMesh(EGS_TriangleMeshSpec, bool);
 
     // EGS_TriangleMesh is move-only
     EGS_TriangleMesh(const EGS_TriangleMesh &) = delete;
@@ -231,6 +231,39 @@ public:
         return EGS_TriangleMesh::type;
     }
 
+    void setOctBool(bool octset){
+        octree_acc_on=octset;
+    }
+    bool getOctBool(){
+        return octree_acc_on;
+    }
+    void inctricheck_OHF(){
+        tri_check_OHF++;
+    }
+    void inctricheck_OHN(){
+        tri_check_OHN++;
+    }
+    void inctricheck_OIW(){
+        tri_check_OIW++;
+    }
+    void inctricheck_NHF(){
+        tri_check_NHF++;
+    }
+    void inctricheck_NHN(){
+        tri_check_NHN++;
+    }
+    void inctricheck_NIW(){
+        tri_check_NIW++;
+    }
+    void printTriCheck(){
+        if(octree_acc_on){
+        cout<<endl<<"In this simualtion (Octree) each each geometry checked "<<endl<<tri_check_OHF<<" triangles (howfar)"<<endl<<tri_check_OHN<<" triangles (hownear)"<<endl<<tri_check_OIW<<" triangles (iswhere)"<<endl;
+        }
+        else{
+        cout<<endl<<"In this simualtion (Naive) each each geometry checked "<<endl<<tri_check_NHF<<" triangles (howfar)"<<endl<<tri_check_NHN<<" triangles (hownear)"<<endl<<tri_check_NIW<<" triangles (iswhere)"<<endl;
+        }
+    }
+
     bool isInside(const EGS_Vector &x) override;
     int inside(const EGS_Vector &x) override;
     int isWhere(const EGS_Vector &x) override;
@@ -240,9 +273,10 @@ public:
     void initializeOctree();
 
     static const std::string type;
-
+    
 private:
     int n_tris = -1;
+
     // Vectors with len = n_tris
     std::vector<std::array<EGS_Float, 3>> xs;
     std::vector<std::array<EGS_Float, 3>> ys;
@@ -252,6 +286,8 @@ private:
     // Axis-aligned mesh bounding box used to accelerate geometry routines
     std::unique_ptr<EGS_TriangleMeshBbox> bbox;
     std::unique_ptr<EGS_TriangleMesh_Octree> surface_tree_;
+    bool octree_acc_on;
+    int tri_check_OHF=0,tri_check_OHN=0,tri_check_OIW=0,tri_check_NHF=0,tri_check_NHN=0,tri_check_NIW=0;
 };
 
 #endif // EGS_TRIANGLE_MESH

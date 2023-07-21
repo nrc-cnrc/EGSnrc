@@ -300,13 +300,19 @@ public:
         return EGS_Vector(q[0], q[1], q[2]);
     }
 
+    EGS_Float min_interior_distance(const EGS_Vector &point) const {
+            return std::min(point.x - min_x, std::min(point.y - min_y,
+                            std::min(point.z - min_z, std::min(max_x - point.x,
+                                     std::min(max_y - point.y, max_z - point.z)))));
+        }
+
     // Returns 1 if there is an intersection and 0 if not. If there is an
     // intersection, the out parameter dist will be the distance along v to
     // the intersection point q.
     //
     // Adapted from Ericson section 5.3.3 "Intersecting Ray or Segment
     // Against Box".
-    int ray_intersection(const EGS_Vector &p, const EGS_Vector &v) const {
+    int ray_intersection(const EGS_Vector &p, const EGS_Vector &v, EGS_Float &dist, EGS_Vector &q) const {
         // check intersection of ray with three bounding box slabs
         EGS_Float tmin = 0.0;
         EGS_Float tmax = veryFar;
@@ -339,8 +345,8 @@ public:
                 }
             }
         }
-        //q = p + v * tmin;
-        //dist = tmin;
+        q = p + v * tmin;
+        dist = tmin;
         return 1;
     }
 
@@ -363,15 +369,16 @@ public:
     // part as these will likely be false positives (harmless extra checks)
     // instead of false negatives (missed intersections, a huge problem if
     // present).
-    bool intersects_triangle(const EGS_Vector &a, const EGS_Vector &b, const EGS_Vector &c) const {
-        const EGS_Float eps = 1e-10;
-        if (min3(a.x, b.x, c.x) >= max_x ||
-                min3(a.y, b.y, c.y) >= max_y ||
-                min3(a.z, b.z, c.z) >= max_z ||
-                max3(a.x, b.x, c.x) <= min_x ||
-                max3(a.y, b.y, c.y) <= min_y ||
-                max3(a.z, b.z, c.z) <= min_z) {
-            //cout<<"no intersect (1)"<<endl;
+    bool intersects_triangle(const EGS_Vector &a, const EGS_Vector &b, const EGS_Vector &c, int e) const {
+        const EGS_Float eps = 1e-30;
+        if (min3(a.x, b.x, c.x) >= max_x+1e-10 ||
+                min3(a.y, b.y, c.y) >= max_y+1e-10 ||
+                min3(a.z, b.z, c.z) >= max_z+1e-10 ||
+                max3(a.x, b.x, c.x) <= min_x-1e-10 ||
+                max3(a.y, b.y, c.y) <= min_y-1e-10 ||
+                max3(a.z, b.z, c.z) <= min_z-1e-10) {
+            //cout<<"triangle "<<e<<" no intersect (1)::  ";
+            //cout<<min_x<<" <x< "<<max_x<<"  "<<min_y<<" <y< "<<max_y<<"  "<<min_z<<" <z< "<<max_z<<endl;
             return false;
         }
 
@@ -408,8 +415,9 @@ public:
                 const EGS_Float p0 = dot(v0, a);
                 const EGS_Float p1 = dot(v1, a);
                 const EGS_Float p2 = dot(v2, a);
-                if (std::max(-max3(p0, p1, p2), min3(p0, p1, p2)) + eps > r) {
-                    //cout<<"no intersect (2)"<<endl;
+                if (std::max(-max3(p0, p1, p2), min3(p0, p1, p2)) > r+ 1e-10) {
+                    //cout<<"triangle "<<e<<" no intersect (2)::  ";
+                    //cout<<min_x<<" <x< "<<max_x<<"  "<<min_y<<" <y< "<<max_y<<"  "<<min_z<<" <z< "<<max_z<<endl;
                     return false;
                 }
             }
@@ -418,7 +426,8 @@ public:
         if (max3(v0.x, v1.x, v2.x) <= -ex || min3(v0.x, v1.x, v2.x) >= ex ||
                 max3(v0.y, v1.y, v2.y) <= -ey || min3(v0.y, v1.y, v2.y) >= ey ||
                 max3(v0.z, v1.z, v2.z) <= -ez || min3(v0.z, v1.z, v2.z) >= ez) {
-            //cout<<"no intersect (3)"<<endl;
+            //cout<<"triangle "<<e<<" no intersect (3)::  ";
+            //cout<<min_x<<" <x< "<<max_x<<"  "<<min_y<<" <y< "<<max_y<<"  "<<min_z<<" <z< "<<max_z<<endl;
             return false;
         }
 
@@ -437,8 +446,11 @@ public:
         // erratum, see http://realtimecollisiondetection.net/books/rtcd/errata/
         const EGS_Float s = dot(n, centre) - dot(n, a);
         // intersection if s falls within projection radius
-        if(std::abs(s) <= r) //cout<<min_x<<" <x< "<<max_x<<"  "<<min_y<<" <y< "<<max_y<<"  "<<min_z<<" <z< "<<max_z<<endl;
-        //else cout<<"no intersect (4)"<<endl;
+        if(!(std::abs(s) <= r)){
+            //cout<<"triangle "<<e<<" no intersect (4)::  ";
+            //cout<<min_x<<" <x< "<<max_x<<"  "<<min_y<<" <y< "<<max_y<<"  "<<min_z<<" <z< "<<max_z<<endl;
+        }
+        //else cout<<min_x<<" <x< "<<max_x<<"  "<<min_y<<" <y< "<<max_y<<"  "<<min_z<<" <z< "<<max_z<<endl;
 
         return std::abs(s) <= r;
     }
@@ -460,6 +472,7 @@ public:
 
     TriNode() = default;
     TriNode(const std::vector<int> &elts, const EGS_TriangleMeshBbox &bbox, std::size_t n_max, const EGS_TriangleMesh &mesh) : bbox_(bbox) {
+        //cout<<"new node"<<endl;
         if (bbox_.is_indivisible() || elts.size() < n_max) {
                 elts_ = elts;
                 //this is then a leaf either because it cannot be further divided or has gotten its element number below the required maximum
@@ -475,18 +488,239 @@ public:
             const auto& xs = mesh.triangle_xs(e);
             const auto& ys = mesh.triangle_ys(e);
             const auto& zs = mesh.triangle_zs(e);
-            //cout<<"triangle e: "<<e<<" with points a= ("<<xs[0]<<", "<<ys[0]<<", "<<zs[0]<<")  b= ("<<xs[1]<<", "<<ys[1]<<", "<<zs[1]<<")  c= ("<<xs[2]<<", "<<ys[2]<<", "<<zs[2]<<")"<<endl;
+            int added = -1;
+            //cout<<"new octant set (triangle "<<e<<")"<<endl;
             for (int i = 0; i < 8; i++) {
                 //check if the triangle corresponding to element e intersects the bounding box of our current node
-                if (bbs[i].intersects_triangle(EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]))) {
-                    //cout<<"octant "<<i<<" intersects triangle: "<<e<<endl<<endl;
+                if (bbs[i].intersects_triangle(EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]),e)) {
+                    added++;
                     octants[i].push_back(e);
                 }
+            }
+            if(added==-1){
+                    cout<<"no octant intersection found for triangle "<<e<<" with points a= ("<<xs[0]<<", "<<ys[0]<<", "<<zs[0]<<")  b= ("<<xs[1]<<", "<<ys[1]<<", "<<zs[1]<<")  c= ("<<xs[2]<<", "<<ys[2]<<", "<<zs[2]<<")"<<endl;
             }
         }
         for (int i = 0; i < 8; i++) {
             children_.push_back(TriNode(std::move(octants[i]), bbs[i], n_max, mesh));
         }
+    }
+
+    bool isLeaf() const {
+        return children_.empty();
+    }
+
+    int findOctant(const EGS_Vector &p) const {
+        // Our choice of octant ordering (see BoundingBox.divide8) means we
+        // can determine the correct octant with three checks. E.g. octant 0
+        // is (-x, -y, -z), octant 1 is (+x, -y, -z), octant 4 is (-x, -y, +z)
+        // octant 7 is (+x, +y, +z), etc.
+        std::size_t octant = 0;
+        if (p.x >= bbox_.mid_x()) {
+            octant += 1;
+        };
+        if (p.y >= bbox_.mid_y()) {
+            octant += 2;
+        };
+        if (p.z >= bbox_.mid_z()) {
+            octant += 4;
+        };
+        return octant;
+    }
+
+    // Octants are returned ordered by minimum intersection distance
+    std::vector<int> findOtherIntersectedOctants(const EGS_Vector &p, const EGS_Vector &v, int exclude_octant) const {
+        if (isLeaf()) {
+            throw std::runtime_error("findOtherIntersectedOctants called on leaf node");
+        }
+        std::vector<std::pair<EGS_Float, int>> intersections;
+        for (int i = 0; i < 8; i++) {
+            if (i == exclude_octant) {
+                continue;
+            }
+            EGS_Vector intersection;
+            EGS_Float dist;
+            if (children_[i].bbox_.ray_intersection(p, v, dist, intersection)) {
+                intersections.push_back({dist, i});
+            }
+        }
+        std::sort(intersections.begin(), intersections.end());
+        std::vector<int> octants;
+        for (const auto &i : intersections) {
+            octants.push_back(i.second);
+        }
+        return octants;
+    }
+
+    int howfar(const EGS_Vector &x, const EGS_Vector &u, double &min_dist, int &min_tri, const bool inside_mesh, EGS_TriangleMesh &trimesh) const {
+        //leaf
+        if (isLeaf()) {
+            if(elts_.size()>0){
+                for (const auto &i: elts_) {
+                    const auto& xs = trimesh.triangle_xs(i);
+                    const auto& ys = trimesh.triangle_ys(i);
+                    const auto& zs = trimesh.triangle_zs(i);
+
+                    bool outward_triangle = is_outside_of_triangle_plane(x, trimesh.triangle_normal(i), EGS_Vector(xs[0], ys[0], zs[0]));
+
+                    // if the point is inside the mesh, skip testing all outward triangles
+                    if (inside_mesh && outward_triangle) {
+                        continue;
+                    }
+                    // if the point is outside the mesh, skip testing all inward triangles
+                    if (!inside_mesh && !outward_triangle) {
+                        continue;
+                    }
+                    // otherwise, test this triangle for intersection
+                    double dist = veryFar;
+                    trimesh.inctricheck_OHF();
+                    if (!triangle_ray_intersection(x, u, EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]), dist)) {
+                        // no intersection
+                        continue;
+                    }
+                    // intersection, if intersection distance zero, particle is on the plane from its last step. Not true intersection so ignore it
+                    if (dist>-1e-10 && dist<1e-10) { //0-1e-08 < dist && 0+1e-08 > dist
+                        continue; //this fixes the floating point bug without modifying step size, as it prevents the particle from going back into the plane it just crossed. Will not count an intersection
+                                //if the distance is zero as it means it previously intersected and is now sitting on the plane. Not a valid intersection.
+                    }
+
+                    // intersection, and distance is larger than zero so it is a true intersection
+                    //update min_dist if smaller
+                    if (dist > min_dist) {
+                        continue;
+                    }
+                    min_dist= dist;
+                    min_tri = i;
+                }
+            }
+            return min_tri; //return min tri. Program knows there was no intersect in this octant if it is still -1
+        }
+        //parent
+        EGS_Vector intersection;
+        EGS_Float interdist;
+        auto hit = bbox_.ray_intersection(x, u, interdist, intersection);
+        // case 1: there's no intersection with this bounding box, return
+        if (!hit) {
+            return -1;
+        }
+        // case 2: we have a hit. Descend into the most likely intersecting
+        // child octant's bounding box to find any intersecting elements
+        auto octant = findOctant(intersection);
+        auto elt = children_[octant].howfar(x, u, min_dist, min_tri, inside_mesh, trimesh);
+            // If we find a valid element, return it
+            if (elt != -1) {
+                return elt;
+            }
+            // Otherwise, if there was no intersection in the most likely
+            // octant, examine the other octants that are intersected by
+            // the ray:
+            for (const auto &o : findOtherIntersectedOctants(x, u, octant)) {
+                auto elt = children_[o].howfar(x, u, min_dist, min_tri, inside_mesh, trimesh);
+                // If we find a valid element, return it
+                if (elt != -1) {
+                    return elt;
+                }
+            }
+            return -1;
+
+    }
+    //howfar end
+
+    int isWhere(const EGS_Vector &x, const EGS_Vector &arbitrary_unit_velocity, double &min_dist_interior, double &min_dist_exterior, EGS_TriangleMesh &trimesh){
+        //leaf
+        if (isLeaf()) {
+            int tri=-1;
+            if(elts_.size()>0){
+                for (const auto &i: elts_) {
+                    const auto& xs = trimesh.triangle_xs(i);
+                    const auto& ys = trimesh.triangle_ys(i);
+                    const auto& zs = trimesh.triangle_zs(i);
+
+                    // test for intersection
+                    double dist = veryFar;
+                    trimesh.inctricheck_OIW();
+                    //iswhere bug has something to do with this ray intersection check
+                    if (!triangle_ray_intersection(x, arbitrary_unit_velocity,
+                            EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]),
+                                EGS_Vector(xs[2], ys[2], zs[2]), dist))
+                    {
+                        // no intersection
+                        continue;
+                    }
+                    tri=i;
+                    // There's an intersection, check whether it is an inner or outer face.
+                    //
+                    // TODO check if adding epsilon check around 0.0 (parallel) is important here.
+                    if (is_outside_of_triangle_plane(x, trimesh.triangle_normal(i), EGS_Vector(xs[0], ys[0], zs[0]))) {
+                        min_dist_exterior = std::min(dist, min_dist_exterior);
+                    }
+                    else {
+                        min_dist_interior = std::min(dist, min_dist_interior);
+                    }
+                }
+            }
+            else{
+            }
+            return tri;
+        }
+        //parent
+        EGS_Vector intersection;
+        EGS_Float interdist;
+        auto hit = bbox_.ray_intersection(x, arbitrary_unit_velocity, interdist, intersection);
+        // case 1: there's no intersection with this bounding box, return
+        if (!hit) {
+            return -1;
+        }
+        // case 2: we have a hit. Descend into the most likely intersecting
+        // child octant's bounding box to find any intersecting elements
+        auto octant = findOctant(intersection);
+        auto elt = children_[octant].isWhere(x, arbitrary_unit_velocity, min_dist_interior, min_dist_exterior, trimesh);
+            // If we find a valid element, return it
+            if (elt != -1) {
+                return elt;
+            }
+            // Otherwise, if there was no intersection in the most likely
+            // octant, examine the other octants that are intersected by
+            // the ray:
+            for (const auto &o : findOtherIntersectedOctants(x, arbitrary_unit_velocity, octant)) {
+                auto elt = children_[o].isWhere(x, arbitrary_unit_velocity, min_dist_interior, min_dist_exterior, trimesh);
+                // If we find a valid element, return it
+                if (elt != -1) {
+                    return elt;
+                }
+            }
+            return -1;
+    }
+    void hownear(const EGS_Vector &x, EGS_Float &min_t, EGS_Vector &min_point, EGS_TriangleMesh &trimesh){
+        //leaf
+        if (isLeaf()) {
+            //min_t=distance(bbox_.closest_point(x), x);
+            min_t=bbox_.min_interior_distance(x);
+            EGS_Float min_t2=min_t*min_t;
+            for (const auto &i: elts_) {
+                const auto& xs = trimesh.triangle_xs(i);
+                const auto& ys = trimesh.triangle_ys(i);
+                const auto& zs = trimesh.triangle_zs(i);
+
+                trimesh.inctricheck_OHN();
+                EGS_Vector q = closest_point_triangle(x, EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]));
+                EGS_Float dis2 = distance2(q, x);
+
+                if (dis2 < min_t2) {
+                    min_t2 = dis2;
+                    min_point = q;
+                }
+            }
+            min_t=std::sqrt(min_t2);
+            //cout<<"octree min_t= "<<min_t<<endl;
+            return;
+        }
+        //parent
+
+        // Descend into the leaf octant containing the particle position
+        auto octant = findOctant(x);
+        children_[octant].hownear(x, min_t, min_point, trimesh);
+            // If we find a valid element, return it
     }
 };
 
@@ -496,7 +730,7 @@ private:
 public:
     EGS_TriangleMesh_Octree() = default;
     EGS_TriangleMesh_Octree(const std::vector<int> &elts, std::size_t n_max,
-                    const EGS_TriangleMesh &mesh, EGS_TriangleMeshBbox basebox) {
+                    const EGS_TriangleMesh &mesh, EGS_TriangleMeshBbox &basebox) {
         if (elts.empty()) {
             throw std::runtime_error("EGS_Mesh_Octree: empty elements vector");
         }
@@ -505,14 +739,37 @@ public:
         }
         root_ = TriNode(elts, basebox, n_max, mesh);
     }
-private:
 
+    int howfar(const EGS_Vector &x, const EGS_Vector &u, double &min_dist, const EGS_Float &max_dist, int &min_tri, const bool inside_mesh, EGS_TriangleMesh &trimesh) const {
+        //cout<<"howfar"<<endl;
+        EGS_Vector intersection;
+        EGS_Float dist;
+        auto hit = root_.bbox_.ray_intersection(x, u, dist, intersection);
+        if (!hit || dist > max_dist) { //egsmesh also has maxdistance condition here ???
+            return -1;
+        }
+        return root_.howfar(x, u, min_dist, min_tri, inside_mesh, trimesh);
+    }
+
+    int isWhere(const EGS_Vector &x, const EGS_Vector &arbitrary_unit_velocity, double &min_dist_interior, double &min_dist_exterior, EGS_TriangleMesh &trimesh){
+        if (!root_.bbox_.contains(x)) {
+            return -1;
+        }
+        return root_.isWhere(x, arbitrary_unit_velocity, min_dist_interior, min_dist_exterior, trimesh);
+    }
+
+    void hownear(const EGS_Vector &x, EGS_Float &min_t, EGS_Vector &min_point, EGS_TriangleMesh &trimesh){
+        if (!root_.bbox_.contains(x)) {
+            return;
+        }
+        root_.hownear(x, min_t, min_point, trimesh);
+    }
 };
 
 // No checks are done on element validity, triangles are used as-is
-EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec) :
-    n_tris(spec.elements.size()), EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName()) {
-
+EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec, bool oct_set) :
+    n_tris(spec.elements.size()), EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName()),octree_acc_on(oct_set) {
+    cout<<"mesh contains "<<n_tris<<" triangles"<<endl;
     // The volume bounded by the surface mesh is a single transport region.
     EGS_BaseGeometry::nreg = 1;
 
@@ -561,12 +818,19 @@ EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec) :
     //below here likely will be the starting point for all the octree initialization stuff
     //at this point, we have saved all the triangle vertices and normals, we have created and properly sized the bounding box, and the media has been "initialized' by the usual getinput
     //so we have essentially all we need to get started on creating the octrtee
-    initializeOctree();
+    if(getOctBool()){
+        cout<<"INITIALIZING OCTREE"<<endl;
+        initializeOctree();
+    }
+    else{
+        cout<<"SKIP OCTREE CREATION"<<endl;
+    }
 }
 
 void EGS_TriangleMesh::initializeOctree(){
     std::vector<int> elts; //this tracks the indices of the triangles in the mesh for the octree to assign to octants
     //in this case there is no boundary list like the egs_mesh has as it is not relevant. There is only surface elements, no inner or outer elements
+
     elts.reserve(num_triangles());
     for (int i = 0; i < num_triangles(); i++) {
         elts.push_back(i);
@@ -590,8 +854,8 @@ int EGS_TriangleMesh::inside(const EGS_Vector &x) {
 }
 
 int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
-
     // Bounding box check to avoid isWhere mesh search
+    //cout<<"iswhere"<<endl;
     if (!bbox->contains(x)) {
         return -1;
     }
@@ -606,29 +870,35 @@ int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
 
     double min_dist_interior = veryFar;
     double min_dist_exterior = veryFar;
+    if(octree_acc_on){
+        surface_tree_->isWhere(x, arbitrary_unit_velocity, min_dist_interior, min_dist_exterior, *this);
+    }
+    else{
+        for (int i = 0; i < num_triangles(); i++) {
+            const auto& xs = triangle_xs(i);
+            const auto& ys = triangle_ys(i);
+            const auto& zs = triangle_zs(i);
 
-    for (int i = 0; i < num_triangles(); i++) {
-        const auto& xs = triangle_xs(i);
-        const auto& ys = triangle_ys(i);
-        const auto& zs = triangle_zs(i);
+            // test for intersection
+            double dist = veryFar;
+            inctricheck_NIW();
+            if (!triangle_ray_intersection(x, arbitrary_unit_velocity,
+                    EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]),
+                        EGS_Vector(xs[2], ys[2], zs[2]), dist))
+            {
+                // no intersection
+                continue;
+            }
 
-        // test for intersection
-        double dist = veryFar;
-        if (!triangle_ray_intersection(x, arbitrary_unit_velocity,
-                EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]),
-                    EGS_Vector(xs[2], ys[2], zs[2]), dist))
-        {
-            // no intersection
-            continue;
-        }
-
-        // There's an intersection, check whether it is an inner or outer face.
-        //
-        // TODO check if adding epsilon check around 0.0 (parallel) is important here.
-        if (is_outside_of_triangle_plane(x, triangle_normal(i), EGS_Vector(xs[0], ys[0], zs[0]))) {
-            min_dist_exterior = std::min(dist, min_dist_exterior);
-        } else {
-            min_dist_interior = std::min(dist, min_dist_interior);
+            // There's an intersection, check whether it is an inner or outer face.
+            //
+            // TODO check if adding epsilon check around 0.0 (parallel) is important here.
+            if (is_outside_of_triangle_plane(x, triangle_normal(i), EGS_Vector(xs[0], ys[0], zs[0]))) {
+                min_dist_exterior = std::min(dist, min_dist_exterior);
+            }
+            else {
+                min_dist_interior = std::min(dist, min_dist_interior);
+            }
         }
     }
     // If there were no intersections found, we must have been outside of the
@@ -642,9 +912,11 @@ int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
     // the mesh can be intersect both inner and outer faces at corners at the
     // same distance.
     if (min_dist_exterior <= min_dist_interior) {
+        //cout<<"closest triangle = "<<exmintri<<" (ext)"<<endl;
         return -1;
     }
     // Otherwise, we must be inside the region bounded by the mesh.
+    //cout<<"closest triangle = "<<inmintri<<" (int)"<<endl;
     return 0;
 }
 
@@ -655,7 +927,7 @@ EGS_Float EGS_TriangleMesh::hownear(int ireg, const EGS_Vector &x) {
     // If the point is outside the mesh bounding box, the HOWNEAR spec allows
     // for returning a lower bound, which in this case is the minimum distance
     // to the bounding box.
-    if (ireg == -1 && !bbox->contains(x)) {
+    if (ireg == -1 && !bbox->contains(x)) { //if (ireg == -1 && !bbox->contains(x))
         // TODO test potential performance improvement by calculating the
         // distance explicitly without finding the closest point.
         return distance(bbox->closest_point(x), x);
@@ -666,89 +938,100 @@ EGS_Float EGS_TriangleMesh::hownear(int ireg, const EGS_Vector &x) {
     EGS_Vector min_point = x;
     EGS_Float min_t = veryFar;
 
-    auto maybe_update_min_point = [&](const EGS_Vector& A, const EGS_Vector& B, const EGS_Vector& C) {
-        EGS_Vector q = closest_point_triangle(x, A, B, C);
-        EGS_Float dis = distance(q, x);
-        if (dis < min_t) {
-            min_t = dis;
-            min_point = q;
-        }
-    };
-
-    for (int i = 0; i < num_triangles(); i++) {
-        const auto& xs = triangle_xs(i);
-        const auto& ys = triangle_ys(i);
-        const auto& zs = triangle_zs(i);
-
-        maybe_update_min_point(
-            EGS_Vector(xs[0], ys[0], zs[0]),
-            EGS_Vector(xs[1], ys[1], zs[1]),
-            EGS_Vector(xs[2], ys[2], zs[2])
-        );
+    if(octree_acc_on){
+        surface_tree_->hownear(x, min_t, min_point, *this);
     }
+    else{
+        for (int i = 0; i < num_triangles(); i++) {
+            const auto& xs = triangle_xs(i);
+            const auto& ys = triangle_ys(i);
+            const auto& zs = triangle_zs(i);
 
+             inctricheck_NHN();
+             EGS_Vector q = closest_point_triangle(x, EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]));
+             EGS_Float dis = distance(q, x);
+             if (dis < min_t) {
+                 min_t = dis;
+                 min_point = q;
+             }
+        }
+        //cout<<"naive min_t= "<<min_t<<endl;
+    }
     return min_t;
 }
 
 int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                              EGS_Float &t, int *newmed, EGS_Vector *normal) {
-
-    // If the particle doesn't intersect the mesh bounding box, it can't
-    // intersect the mesh.
-    if (!bbox->ray_intersection(x, u)) {
+    //cout<<"new howfar call (trimesh)"<<endl;
+    // If the particle doesn't intersect the mesh bounding box, it can't intersect the mesh.
+    EGS_Vector intersection;
+    EGS_Float dist;
+    if (!bbox->ray_intersection(x, u, dist, intersection)) {
+        //cout<<"trimesh::debugging howfar (1): "<<-1<<endl;
         return -1;
     }
 
-    // Loop over all elements, testing for intersection. If the point is outside
-    // the mesh, only outward facing triangles are tested. Otherwise if the
-    // point is inside the mesh, only inward facing triangles are tested.
+    // The old implementation would Loop over all elements, testing for intersection.
+    // In order to accelerate this process, the octree is used, first we determine
+    // which octants the ray will intersect, and check only the triangles contained in these octants.
+
+    //If the point is outside the mesh, only outward facing triangles are tested. Otherwise
+    //if the point is inside the mesh, only inward facing triangles are tested.
     double min_dist = veryFar;
     int min_tri = -1;
     const bool inside_mesh = ireg != -1;
 
-    for (int i = 0; i < num_triangles(); i++) {
-        const auto& xs = triangle_xs(i);
-        const auto& ys = triangle_ys(i);
-        const auto& zs = triangle_zs(i);
+    if(octree_acc_on){
+        surface_tree_->howfar(x, u, min_dist, t, min_tri, inside_mesh, *this);
+    }
+    else{
+        for (int i = 0; i < num_triangles(); i++) {
+            const auto& xs = triangle_xs(i);
+            const auto& ys = triangle_ys(i);
+            const auto& zs = triangle_zs(i);
 
-        bool outward_triangle = is_outside_of_triangle_plane(x, triangle_normal(i), EGS_Vector(xs[0], ys[0], zs[0]));
+            bool outward_triangle = is_outside_of_triangle_plane(x, triangle_normal(i), EGS_Vector(xs[0], ys[0], zs[0]));
 
-        // if the point is inside the mesh, skip testing all outward triangles
-        if (inside_mesh && outward_triangle) {
-            continue;
-        }
-        // if the point is outside the mesh, skip testing all inward triangles
-        if (!inside_mesh && !outward_triangle) {
-            continue;
-        }
-        // otherwise, test this triangle for intersection
-        double dist = veryFar;
-        if (!triangle_ray_intersection(x, u, EGS_Vector(xs[0], ys[0], zs[0]),
-            EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]), dist))
-        {
-            // no intersection
-            continue;
-        }
-        // intersection, if intersection distance zero, particle is on the plane from its last step. Not true intersection so ignore it
-        if (dist==0) {
-            continue; //this fixes the floating point bug without modifying step size, as it prevents the particle from going back into the plane it just crossed. Will not count an intersection
-                      //if the distance is zero as it means it previously intersected and is now sitting on the plane. Not a valid intersection.
-        }
-        /* bug was that outward_triangle would not differentiate between truly in front of the plane and on the plane itself. Because of this particles would exit geometry,
-         * re-enter via the same triangle (min dist would be zero), and once "inside" undefined behaviour would follow causing the particle to continue moving "inside mesh" while
-         * travelling outside of the mesh geometry due to particle direction. Requiring the intersection distance be larger than zero makes it clear where the particle is relative
-         * to the surface mesh and prevents invalid intersections which yield unphysical results */
+            // if the point is inside the mesh, skip testing all outward triangles
+            if (inside_mesh && outward_triangle) {
+                continue;
+            }
+            // if the point is outside the mesh, skip testing all inward triangles
+            if (!inside_mesh && !outward_triangle) {
+                continue;
+            }
+            // otherwise, test this triangle for intersection
+            double dist = veryFar;
+            inctricheck_NHF();
+            if (!triangle_ray_intersection(x, u, EGS_Vector(xs[0], ys[0], zs[0]),
+                EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]), dist))
+            {
+                // no intersection
+                continue;
+            }
+            // intersection, if intersection distance zero, particle is on the plane from its last step. Not true intersection so ignore it
+            if (dist>-1e-10 && dist<1e-10) {
+                continue; //this fixes the floating point bug without modifying step size, as it prevents the particle from going back into the plane it just crossed. Will not count an intersection
+                        //if the distance is zero as it means it previously intersected and is now sitting on the plane. Not a valid intersection.
+            }
+            /* bug was that outward_triangle would not differentiate between truly in front of the plane and on the plane itself. Because of this particles would exit geometry,
+            * re-enter via the same triangle (min dist would be zero), and once "inside" undefined behaviour would follow causing the particle to continue moving "inside mesh" while
+            * travelling outside of the mesh geometry due to particle direction. Requiring the intersection distance be larger than zero makes it clear where the particle is relative
+            * to the surface mesh and prevents invalid intersections which yield unphysical results */
 
-        // intersection, and distance is larger than zero so it is a true intersection
-        //update min_dist if smaller
-        if (dist > min_dist) {
-            continue;
+            // intersection, and distance is larger than zero so it is a true intersection
+            //update min_dist if smaller
+            if (dist > min_dist) {
+                continue;
+            }
+            min_dist= dist;
+            min_tri = i;
         }
-        min_dist= dist;
-        min_tri = i;
     }
 
+    //cout<<"Min dist="<<min_dist<<" with triangle "<<min_tri<<endl;
     if (min_dist >= t) {
+        //cout<<"trimesh::debugging howfar (2): "<<ireg<<endl;
         return ireg;
     }
 
@@ -776,9 +1059,11 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
 
     t = min_dist;
     if (inside_mesh) {
+        //cout<<"trimesh::debugging howfar (3): "<<-1<<endl;
         return -1; // new region is outside the mesh
     }
     // outside mesh, new region is inside the mesh
+    //cout<<"trimesh::debugging howfar (4): "<<0<<endl;
     return 0;
 }
 
@@ -828,9 +1113,20 @@ extern "C" {
             }
         }
 
+        vector<string> oct_options;
+        oct_options.push_back("no");
+        oct_options.push_back("yes");
+        bool oct_set = input->getInput("octree accelerate",oct_options,false); //here false in argument makes time inclusion false by default
+        if(oct_set){
+            cout<<"code will be octree accelerated"<<endl;
+        }
+        else{
+            cout<<"naive approach will be employed"<<endl;
+        }
+
         EGS_TriangleMesh *result = nullptr;
         try {
-            result = new EGS_TriangleMesh(std::move(mesh_spec));
+            result = new EGS_TriangleMesh(std::move(mesh_spec),oct_set);
         }
         catch (const std::runtime_error &e) {
             std::string error_msg = std::string("createGeometry(EGS_TriangleMesh): ") +
