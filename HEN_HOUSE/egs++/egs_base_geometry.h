@@ -732,6 +732,7 @@ public:
     int setLabels(const string &inp);
 
     virtual void printTriCheck() { }; //A.D debugging
+    virtual void debugtool() { }; //A.D debugging
 
 protected:
 

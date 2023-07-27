@@ -769,6 +769,7 @@ public:
 // No checks are done on element validity, triangles are used as-is
 EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec, bool oct_set) :
     n_tris(spec.elements.size()), EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName()),octree_acc_on(oct_set) {
+
     cout<<"mesh contains "<<n_tris<<" triangles"<<endl;
     // The volume bounded by the surface mesh is a single transport region.
     EGS_BaseGeometry::nreg = 1;
@@ -835,7 +836,7 @@ void EGS_TriangleMesh::initializeOctree(){
     for (int i = 0; i < num_triangles(); i++) {
         elts.push_back(i);
     }
-    std::size_t n_surf = 10; //the maximum number of elements allowed in a single octant (this may need to be fine tuned for best results)
+    std::size_t n_surf = 30; //the maximum number of elements allowed in a single octant (this may need to be fine tuned for best results)
     surface_tree_ = std::unique_ptr<EGS_TriangleMesh_Octree>(new EGS_TriangleMesh_Octree(elts, n_surf, *this, *bbox)); //creating the octree (in this case a surface octree i suppose but no point in differentiating)
     //note that surface tree is an attribute of the triangle mesh, hence how we will access the octree, which will access its root_, which then allows access to all of the other nodes in the tree
 }
@@ -854,9 +855,15 @@ int EGS_TriangleMesh::inside(const EGS_Vector &x) {
 }
 
 int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
+    n_hist++;
+    //*sortout<<"NEW HISTORY #"<<n_hist<<endl;
+    //*sortout<<"isWhere x=("<<x.x<<", "<<x.y<<", "<<x.z<<")::";
     // Bounding box check to avoid isWhere mesh search
     //cout<<"iswhere"<<endl;
+    EGS_Float xo_dist=distance(x, EGS_Vector(0,0,0));
+    //cout<<"trimesh iswhere:: dist="<<xo_dist;
     if (!bbox->contains(x)) {
+        //*sortout<<" Out bbox"<<endl;
         return -1;
     }
 
@@ -905,6 +912,7 @@ int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
     // mesh (ignoring watertightness issues at mesh corners and edges if the
     // point is inside of the mesh).
     if (min_dist_interior == veryFar && min_dist_exterior == veryFar) {
+        //*sortout<<" Outside"<<endl;
         return -1;
     }
     // If the closest exterior face is closer than the closest interior face,
@@ -913,16 +921,20 @@ int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
     // same distance.
     if (min_dist_exterior <= min_dist_interior) {
         //cout<<"closest triangle = "<<exmintri<<" (ext)"<<endl;
+        //cout<<" point is outside mesh"<<endl;
+        //*sortout<<" Outside"<<endl;
         return -1;
     }
     // Otherwise, we must be inside the region bounded by the mesh.
     //cout<<"closest triangle = "<<inmintri<<" (int)"<<endl;
+    //cout<<" point is inside mesh"<<endl;
+    //*sortout<<" Inside"<<endl;
     return 0;
 }
 
 EGS_Float EGS_TriangleMesh::hownear(int ireg, const EGS_Vector &x) {
-
     // Bounding box check to avoid full mesh search.
+    //*sortout<<"hownear ireg = "<<ireg<<" x=("<<x.x<<", "<<x.y<<", "<<x.z<<")::";
     //
     // If the point is outside the mesh bounding box, the HOWNEAR spec allows
     // for returning a lower bound, which in this case is the minimum distance
@@ -930,6 +942,7 @@ EGS_Float EGS_TriangleMesh::hownear(int ireg, const EGS_Vector &x) {
     if (ireg == -1 && !bbox->contains(x)) { //if (ireg == -1 && !bbox->contains(x))
         // TODO test potential performance improvement by calculating the
         // distance explicitly without finding the closest point.
+        //*sortout<<" boxmin= "<<distance(bbox->closest_point(x), x)<<endl;
         return distance(bbox->closest_point(x), x);
     }
 
@@ -957,6 +970,7 @@ EGS_Float EGS_TriangleMesh::hownear(int ireg, const EGS_Vector &x) {
         }
         //cout<<"naive min_t= "<<min_t<<endl;
     }
+    //*sortout<<" min_t= "<<min_t<<endl;
     return min_t;
 }
 
@@ -964,10 +978,12 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                              EGS_Float &t, int *newmed, EGS_Vector *normal) {
     //cout<<"new howfar call (trimesh)"<<endl;
     // If the particle doesn't intersect the mesh bounding box, it can't intersect the mesh.
+    //*sortout<<"howfar ireg= "<<ireg<<" x=("<<x.x<<", "<<x.y<<", "<<x.z<<")  u=("<<u.x<<", "<<u.y<<", "<<u.z<<") || ";
     EGS_Vector intersection;
     EGS_Float dist;
     if (!bbox->ray_intersection(x, u, dist, intersection)) {
         //cout<<"trimesh::debugging howfar (1): "<<-1<<endl;
+        //*sortout<<"(1) freg= "<<-1<<endl;
         return -1;
     }
 
@@ -980,6 +996,8 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     double min_dist = veryFar;
     int min_tri = -1;
     const bool inside_mesh = ireg != -1;
+    //if(inside_mesh) *sortout<<"inside mesh::";
+    //else *sortout<<"outside mesh::";
 
     if(octree_acc_on){
         surface_tree_->howfar(x, u, min_dist, t, min_tri, inside_mesh, *this);
@@ -1029,9 +1047,11 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
         }
     }
 
+    //*sortout<<"Min dist= "<<min_dist<<" ";
     //cout<<"Min dist="<<min_dist<<" with triangle "<<min_tri<<endl;
     if (min_dist >= t) {
         //cout<<"trimesh::debugging howfar (2): "<<ireg<<endl;
+        //*sortout<<"(2) freg= "<<ireg<<endl;
         return ireg;
     }
 
@@ -1060,10 +1080,12 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
     t = min_dist;
     if (inside_mesh) {
         //cout<<"trimesh::debugging howfar (3): "<<-1<<endl;
+        //*sortout<<"(3) freg= "<<-1<<endl;
         return -1; // new region is outside the mesh
     }
     // outside mesh, new region is inside the mesh
     //cout<<"trimesh::debugging howfar (4): "<<0<<endl;
+    //*sortout<<"(4) freg= "<<0<<endl;
     return 0;
 }
 
@@ -1138,6 +1160,7 @@ extern "C" {
         result->setName(input);
         result->setMedia(input);
         result->setLabels(input);
+        result->debugtool();
         return result;
     }
 }

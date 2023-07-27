@@ -43,6 +43,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #ifdef WIN32
 
@@ -264,6 +265,13 @@ public:
         }
     }
 
+    void debugtool(){
+        string outstring = "trimesh_"+name+"_debug.txt";
+        const char *outname=outstring.c_str();
+        sortout = new ofstream(outname, ios::trunc);
+        *sortout<<"debugging tool"<<endl;
+    }
+
     bool isInside(const EGS_Vector &x) override;
     int inside(const EGS_Vector &x) override;
     int isWhere(const EGS_Vector &x) override;
@@ -273,15 +281,17 @@ public:
     void initializeOctree();
 
     static const std::string type;
-    
+
 private:
     int n_tris = -1;
+    int n_hist=0;
 
     // Vectors with len = n_tris
     std::vector<std::array<EGS_Float, 3>> xs;
     std::vector<std::array<EGS_Float, 3>> ys;
     std::vector<std::array<EGS_Float, 3>> zs;
     std::vector<EGS_Vector> ns;
+    ofstream *sortout;
 
     // Axis-aligned mesh bounding box used to accelerate geometry routines
     std::unique_ptr<EGS_TriangleMeshBbox> bbox;

@@ -84,14 +84,20 @@ bool EGS_cSpheres::isInside(const EGS_Vector &x) {
 }
 
 int EGS_cSpheres::isWhere(const EGS_Vector &x) {
+    n_hist++;
+    //*sortout<<"NEW HISTORY #"<<n_hist<<endl;
+    //*sortout<<"isWhere x=("<<x.x<<", "<<x.y<<", "<<x.z<<")::";
     EGS_Vector tmp(x-xo);
     EGS_Float r_sq=tmp.length2();
     if (r_sq>R2[nreg-1]) {
+        //*sortout<<" Outside"<<endl;
         return -1;
     }
     if (r_sq<R2[0]) {
+        //*sortout<<" inside"<<endl;
         return 0;
     }
+    //*sortout<<" findRegion->"<<(findRegion(r_sq,nreg-1,R2)+1)<<endl;
     return findRegion(r_sq,nreg-1,R2)+1;
 }
 
@@ -156,6 +162,7 @@ EGS_Float EGS_cSpheres::howfarToOutside(int ireg, const EGS_Vector &x,
 
 int EGS_cSpheres::howfar(int ireg, const EGS_Vector &x,
                          const EGS_Vector &u, EGS_Float &t, int *newmed, EGS_Vector *normal) {
+    //*sortout<<"howfar  ireg= "<<ireg<<" x=("<<x.x<<", "<<x.y<<", "<<x.z<<")  u=("<<u.x<<", "<<u.y<<", "<<u.z<<") || ";
     int direction_flag=-1;  /* keep track of direction entering or exiting a
                              sphere boundary */
     double d=veryFar*1e5;   // set a maximum distance from a boundary
@@ -288,13 +295,16 @@ int EGS_cSpheres::howfar(int ireg, const EGS_Vector &x,
             EGS_Vector n(xp + u*d);
             *normal = n*(1/rad);
         }
+        //*sortout<<" d<=t::Min dist= "<<d<<" (1) freg= "<<direction_flag<<endl;
         return direction_flag;
     }
+    //*sortout<<" d>t::Min dist= "<<d<<" (2) freg=ireg= "<<ireg<<endl;
     return ireg;
 }
 
 // hownear - closest perpendicular distance to sphere surface
 EGS_Float EGS_cSpheres::hownear(int ireg, const EGS_Vector &x) {
+    //*sortout<<"hownear ireg= "<<ireg<<" x=("<<x.x<<", "<<x.y<<", "<<x.z<<")::";
     EGS_Vector xp(x-xo);
     EGS_Float r=xp.length();
     //EGS_Float r_sq=x.x*x.x+x.y*x.y+x.z*x.z;
@@ -312,7 +322,7 @@ EGS_Float EGS_cSpheres::hownear(int ireg, const EGS_Vector &x) {
     else {
         d=r-R[nreg-1];
     }
-
+    //*sortout<<" d= "<<d<<endl;
     return d;
 }
 
@@ -721,6 +731,7 @@ extern "C" {
         result->setBoundaryTolerance(input);
         result->setMedia(input);
         result->setLabels(input);
+        result->debugtool();
         return result;
     }
 
