@@ -53,6 +53,7 @@ using std::vector;
 
 class EGS_Application; // forward declaration
 class EGS_Input;
+class EGS_AffineTransform; // forward declaration
 struct EGS_GeometryIntersections;
 
 #ifdef BPROPERTY64
@@ -247,6 +248,22 @@ public:
     */
     virtual EGS_Float getBound(int idir, int ind) {
         return 0.0;
+    }
+
+    /*! \brief Returns base geometry of a transformed geometry
+
+      Currently only implemented in EGS_TransformedGeometry
+    */
+    virtual EGS_BaseGeometry *getBaseGeom() {
+        return NULL;
+    }
+
+    /*! \brief Returns the transform for a transformed geometry
+
+      Currently only implemented in EGS_TransformedGeometry
+    */
+    virtual EGS_AffineTransform *getTransform() {
+        return NULL;
     }
 
     /*! Returns number of planar slabs/cylinders/etc in direction idir

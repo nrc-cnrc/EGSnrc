@@ -263,6 +263,14 @@ public:
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
+    EGS_BaseGeometry *getBaseGeom() const {
+        return g;
+    }
+
+    EGS_AffineTransform *getTransform() {
+        return &T;
+    }
+
 protected:
 
     /*! \brief Don't define media in the transformed geometry definition.
