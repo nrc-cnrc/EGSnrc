@@ -197,12 +197,12 @@ public:
     /*!  \brief Print statistics on what was sampled from the source. */
     virtual void printSampledEmissions() {};
 
-   /*!  \brief Get the radionuclide ENSDF object from the source.
-    *
-    * This is only defined for EGS_RadionuclideSource
-    */
-    virtual vector<EGS_Ensdf*> getRadionuclideEnsdf() {
-        return vector<EGS_Ensdf*>();
+    /*!  \brief Get the radionuclide ENSDF object from the source.
+     *
+     * This is only defined for EGS_RadionuclideSource
+     */
+    virtual vector<EGS_Ensdf *> getRadionuclideEnsdf() {
+        return vector<EGS_Ensdf *>();
     };
 
     /*!  \brief Store the source state into the stream \a data_out.

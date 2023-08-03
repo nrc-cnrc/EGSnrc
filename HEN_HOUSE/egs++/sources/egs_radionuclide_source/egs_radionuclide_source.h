@@ -354,7 +354,7 @@ protected:
         for (int k=1; k<=4; k++) {
 
             gk = sqrt(k*k-az*az);
-            x1 = pow((pow(p,k-1)/dfac[k-1]) ,2);
+            x1 = pow((pow(p,k-1)/dfac[k-1]),2);
 
             aa = clgamma(complex<double>(gk,y));
             double aa_real = real(aa);
@@ -727,7 +727,7 @@ public:
      */
     void printSampledEmissions();
 
-    EGS_Ensdf* getRadionuclideEnsdf() {
+    EGS_Ensdf *getRadionuclideEnsdf() {
         return decays;
     }
 
@@ -1088,11 +1088,11 @@ public:
      */
     bool setState(istream &data);
 
-    EGS_RadionuclideSpectrum* createSpectrum(EGS_Input *input);
+    EGS_RadionuclideSpectrum *createSpectrum(EGS_Input *input);
 
-    vector<EGS_Ensdf*> getRadionuclideEnsdf() {
-        vector<EGS_Ensdf*> decayEnsdf;
-        for(auto dec: decays) {
+    vector<EGS_Ensdf *> getRadionuclideEnsdf() {
+        vector<EGS_Ensdf *> decayEnsdf;
+        for (auto dec: decays) {
             decayEnsdf.push_back(dec->getRadionuclideEnsdf());
         }
         return decayEnsdf;

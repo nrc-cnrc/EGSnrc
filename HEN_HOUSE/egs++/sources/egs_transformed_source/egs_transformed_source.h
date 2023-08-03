@@ -195,7 +195,7 @@ public:
         source->printSampledEmissions();
     }
 
-    vector<EGS_Ensdf*> getRadionuclideEnsdf() {
+    vector<EGS_Ensdf *> getRadionuclideEnsdf() {
         return source->getRadionuclideEnsdf();
     };
 

@@ -169,7 +169,8 @@ int EGS_GammaSpecApplication::initScoring() {
     // Get detector energy resolution
     if (!options->getInput("minimum detectable energy", myE)) {
         minDetectorEnergy = myE;
-    } else {
+    }
+    else {
         minDetectorEnergy = 1e-6;
     }
     egsInformation("Minimum energy resolved by detector = %f MeV\n", minDetectorEnergy);
@@ -198,9 +199,9 @@ int EGS_GammaSpecApplication::initScoring() {
     allowed.push_back("no");
     allowed.push_back("yes");
     int useRadionuclideGammas = options->getInput("automatic analysis energies",allowed,1);
-    if(useRadionuclideGammas) {
+    if (useRadionuclideGammas) {
         egsInformation("\nGetting gamma analysis energies automatically from radionuclide source...\n");
-        if(gammaEnergies.size() > 0) {
+        if (gammaEnergies.size() > 0) {
             egsInformation("Note that both the 'gamma analysis energies' input and gamma energies automatically extracted from the radionuclide decay scheme will be used. Make sure they don't overlap!\n");
         }
 
@@ -208,18 +209,18 @@ int EGS_GammaSpecApplication::initScoring() {
         // There may be several radionuclides represented by one radionuclide source
         // So we loop through all of them to get all the possible gamma energies
         for (auto dec: decays) {
-            for(auto gamma: dec->getGammaRecords()) {
+            for (auto gamma: dec->getGammaRecords()) {
                 gammaEnergies.push_back(gamma->getDecayEnergy());
             }
-            for(auto gamma: dec->getUncorrelatedGammaRecords()) {
+            for (auto gamma: dec->getUncorrelatedGammaRecords()) {
                 gammaEnergies.push_back(gamma->getDecayEnergy());
             }
         }
     }
 
-    if(gammaEnergies.size() > 0) {
+    if (gammaEnergies.size() > 0) {
         egsInformation("\nGamma analysis energies =");
-        for(const auto& value: gammaEnergies) {
+        for (const auto &value: gammaEnergies) {
             egsInformation(" %f", value);
         }
         egsInformation("\n");
@@ -432,7 +433,7 @@ void EGS_GammaSpecApplication::outputResponse() {
     for (int i=0; i<nbins; i++) {
         double x = Emin + (i+1)*binWidth;
         spectrum->currentResult(i, spec[i], specUnc[i]);
-        if(spec[i] > 0) {
+        if (spec[i] > 0) {
             totalE += spec[i]*(Emin + (i+0.5) * binWidth);
         }
         spec_f  << setw(16) << x-binWidth/2.
@@ -453,7 +454,7 @@ void EGS_GammaSpecApplication::outputResponse() {
     for (int i=0; i<nbins; i++) {
         double x = Emin + (i+1)*binWidth;
         spectrum_perf->currentResult(i, spec_perf[i], specUnc_perf[i]);
-        if(spec_perf[i] > 0) {
+        if (spec_perf[i] > 0) {
             // Switch to relative uncertainty just for the normalization
             specUnc_perf[i] /= spec_perf[i];
             // Normalize to 'per decay' instead of 'per source particle'
@@ -463,9 +464,9 @@ void EGS_GammaSpecApplication::outputResponse() {
             totalE += spec_perf[i]*(Emin + (i+0.5) * binWidth);
         }
         spec_perf_f  << setw(16) << x-binWidth/2.
-                << setw(16) << spec_perf[i]
-                << setw(16) << specUnc_perf[i]
-                << endl;
+                     << setw(16) << spec_perf[i]
+                     << setw(16) << specUnc_perf[i]
+                     << endl;
     }
 
     // report total energy fraction recorded in spectrum
@@ -483,11 +484,12 @@ void EGS_GammaSpecApplication::outputResponse() {
     // Print summing corrections
     egsInformation("\n=== Coincidence summing correction ===\n\n");
     egsInformation("Gamma energy [MeV] | Summing correction (perfect/non-perfect) | Uncertainty [%%]\n");
-    for(size_t i=0; i<gammaEnergies.size(); ++i) {
+    for (size_t i=0; i<gammaEnergies.size(); ++i) {
         EGS_Float summingCorrection;
-        if(peakEfficiency[i] > 0) {
+        if (peakEfficiency[i] > 0) {
             summingCorrection = peakEfficiency_perf[i] / peakEfficiency[i];
-        } else {
+        }
+        else {
             summingCorrection = 0;
         }
         EGS_Float summingCorrectionUnc = sqrt(pow(peakEfficiencyUnc_perf[i], 2) + pow(peakEfficiencyUnc[i], 2));
@@ -497,20 +499,21 @@ void EGS_GammaSpecApplication::outputResponse() {
 }
 
 void EGS_GammaSpecApplication::calculateEfficiencies(vector<double> &spectr, vector<double> &spectrUnc, vector<double> &peakEff, vector<double> &peakEffUnc, bool isPerfect) {
-    if(isPerfect) {
+    if (isPerfect) {
         egsInformation("\n=== Efficiency for 'perfect' detector ===\n");
-    } else {
+    }
+    else {
         egsInformation("\n=== Efficiency for 'non-perfect' detector ===\n");
     }
 
     // Loop through the whole spectrum to get the total efficiency and full energy peak efficiency
     EGS_Float totalEff = 0, fullEnergyPeakEff = 0,
-        totalEffUnc = 0, fullEnergyPeakEffUnc = 0;
-    for(size_t i=0; i<spectr.size(); ++i) {
+              totalEffUnc = 0, fullEnergyPeakEffUnc = 0;
+    for (size_t i=0; i<spectr.size(); ++i) {
         totalEff += spectr[i];
         totalEffUnc += pow(spectrUnc[i], 2);
 
-        if(spectr[i] > fullEnergyPeakEff) {
+        if (spectr[i] > fullEnergyPeakEff) {
             fullEnergyPeakEff = spectr[i];
             fullEnergyPeakEffUnc = spectrUnc[i];
         }
@@ -522,35 +525,37 @@ void EGS_GammaSpecApplication::calculateEfficiencies(vector<double> &spectr, vec
 
     // Do processing of gamma peak efficiencies
     // If there's no array provided, just return
-    if(gammaEnergies.size() < 1) {
+    if (gammaEnergies.size() < 1) {
         return;
     }
     egsInformation("\nGamma energy [MeV] | Peak efficiency (background subtracted) [%%] | Uncertainty [%%]\n");
 
     double background, backgroundUnc;
-    for(size_t i=0; i<gammaEnergies.size(); ++i) {
+    for (size_t i=0; i<gammaEnergies.size(); ++i) {
         size_t ind1 = ceil(gammaEnergies[i]/binWidth-1);
         size_t ind2 = ceil(gammaEnergies[i]/binWidth-0.5);
 
-        if(ind1 > 0 && ind1 < nbins && ind2 > 0 && ind2 < nbins) {
+        if (ind1 > 0 && ind1 < nbins && ind2 > 0 && ind2 < nbins) {
             background = (spectr[ind1-1] + spectr[ind2+1])/2;
             backgroundUnc = (pow(spectrUnc[ind1-1],2) + pow(spectrUnc[ind2+1],2))/4;
-        } else {
+        }
+        else {
             background = 0;
             backgroundUnc = 0;
         }
 
         peakEff[i] = 0;
         peakEffUnc[i] = 0;
-        for(size_t j=ind1; j<ind2+1; ++j) {
+        for (size_t j=ind1; j<ind2+1; ++j) {
             peakEff[i] += spectr[j] - background;
             peakEffUnc[i] += pow(spectrUnc[j],2) + backgroundUnc;
         }
 
-        if(peakEff[i] < 0) {
+        if (peakEff[i] < 0) {
             peakEff[i] = 0;
             peakEffUnc[i] = 0;
-        } else if(peakEff[i] > 0) {
+        }
+        else if (peakEff[i] > 0) {
             peakEffUnc[i] = sqrt(peakEffUnc[i]) / peakEff[i] * 100;
         }
 
@@ -560,14 +565,15 @@ void EGS_GammaSpecApplication::calculateEfficiencies(vector<double> &spectr, vec
     egsInformation("\nPeak efficiency calculations may combine two bins when the peak is between bins, and the background is the average of the two bins outside the peak bins. For the spectrum array that is indexed from 0, the peak efficiency is the sum of the range from index ind1 to ind2, and the background averages the bins ind1-1 and ind2+2. The following table shows which bins were used for each peak, and the calculated background:\n");
     egsInformation("\nGamma energy [MeV] | ind1 | ind2 | Background [%%]\n");
 
-    for(size_t i=0; i<gammaEnergies.size(); ++i) {
+    for (size_t i=0; i<gammaEnergies.size(); ++i) {
         size_t ind1 = ceil(gammaEnergies[i]/binWidth-1);
         size_t ind2 = ceil(gammaEnergies[i]/binWidth-0.5);
 
-        if(ind1 > 0 && ind1 < nbins && ind2 > 0 && ind2 < nbins) {
+        if (ind1 > 0 && ind1 < nbins && ind2 > 0 && ind2 < nbins) {
             background = (spectr[ind1-1] + spectr[ind2+1])/2;
             backgroundUnc = (pow(spectrUnc[ind1-1],2) + pow(spectrUnc[ind2+1],2))/4;
-        } else {
+        }
+        else {
             background = 0;
             backgroundUnc = 0;
         }
