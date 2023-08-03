@@ -120,9 +120,11 @@ LIB_SOURCES = $(BEAM_HOME)beam_lib.macros \
 # The git hash and branch
 GIT_HASH =
 ifeq ($(OS),Windows_NT)
-    USING_GIT = $(shell cmd /C git rev-parse --is-inside-work-tree)
+    USING_GIT = $(shell cmd /C @ECHO OFF & git rev-parse --is-inside-work-tree 2>NUL)
     ifeq ($(USING_GIT),true)
         GIT_HASH = -DGIT_HASH="\"$(shell cmd /C git rev-parse --short=7 HEAD)\""
+    else
+        GIT_HASH = -DGIT_HASH="\"unknown\""
     endif
 else
     GIT_HASH = -DGIT_HASH="\"$(shell if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then git rev-parse --short=7 HEAD; fi)\""
@@ -130,7 +132,7 @@ endif
 
 COMPILE_TIME =
 ifeq ($(OS),Windows_NT)
-    COMPILE_TIME = -DCOMPILE_TIME="\"$(shell cmd /C date /T)$(shell cmd /C time /T) $(shell cmd /C tzutil /g)\""
+    COMPILE_TIME = -DCOMPILE_TIME="\"$(shell cmd /C date /T)$(shell cmd /C time /T)\""
 else
     COMPILE_TIME = -DCOMPILE_TIME="\"$(shell date -u +'%Y-%m-%d %H:%M:%S UTC')\""
 endif
