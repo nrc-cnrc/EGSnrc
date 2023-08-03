@@ -178,7 +178,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
 
 static char spec_msg1[] = "EGS_RadionuclideSource::createSpectrum:";
 
-EGS_RadionuclideSpectrum* EGS_RadionuclideSource::createSpectrum(EGS_Input *input) {
+EGS_RadionuclideSpectrum *EGS_RadionuclideSource::createSpectrum(EGS_Input *input) {
 
     // Read inputs for the spectrum
     if (!input) {
@@ -321,8 +321,8 @@ EGS_RadionuclideSpectrum* EGS_RadionuclideSource::createSpectrum(EGS_Input *inpu
             if (!hen_house) {
 
                 egsWarning("EGS_RadionuclideSource::createSpectrum: "
-                            "No active application and HEN_HOUSE not defined.\n"
-                            "Assuming local directory for spectra\n");
+                           "No active application and HEN_HOUSE not defined.\n"
+                           "Assuming local directory for spectra\n");
                 ensdf_file = "./";
             }
             else {
@@ -339,7 +339,7 @@ EGS_RadionuclideSpectrum* EGS_RadionuclideSource::createSpectrum(EGS_Input *inpu
     ensdf_fh.open(ensdf_file.c_str(),ios::in);
     if (!ensdf_fh.is_open()) {
         egsWarning("EGS_RadionuclideSource::createSpectrum: failed to open ensdf file %s"
-                    " for reading\n",ensdf_file.c_str());
+                   " for reading\n",ensdf_file.c_str());
         return 0;
     }
     ensdf_fh.close();
@@ -537,7 +537,7 @@ extern "C" {
 }
 
 EGS_RadionuclideSpectrum::EGS_RadionuclideSpectrum(const string nuclide, const string ensdf_file,
-                            const EGS_Float relativeActivity, const string relaxType, const string outputBetaSpectra, const bool scoreAlphasLocally, const bool allowMultiTransition) {
+        const EGS_Float relativeActivity, const string relaxType, const string outputBetaSpectra, const bool scoreAlphasLocally, const bool allowMultiTransition) {
 
     // For now, hard-code verbose mode
     // 0 - minimal output
@@ -653,7 +653,7 @@ void EGS_RadionuclideSpectrum::printSampledEmissions() {
             beta != myBetas.end(); beta++) {
 
         egsInformation("%f %f\n", (*beta)->getFinalEnergy(),
-                        ((EGS_Float)(*beta)->getNumSampled()/(ishower+1))*100);
+                       ((EGS_Float)(*beta)->getNumSampled()/(ishower+1))*100);
     }
     if (myAlphas.size() > 0) {
         egsInformation("Alpha records:\n");
@@ -662,7 +662,7 @@ void EGS_RadionuclideSpectrum::printSampledEmissions() {
             alpha != myAlphas.end(); alpha++) {
 
         egsInformation("%f %f\n", (*alpha)->getFinalEnergy(),
-                        ((EGS_Float)(*alpha)->getNumSampled()/(ishower+1))*100);
+                       ((EGS_Float)(*alpha)->getNumSampled()/(ishower+1))*100);
     }
     if (myGammas.size() > 0) {
         egsInformation("Gamma records (E,Igamma,Ice,Ipp):\n");
@@ -673,15 +673,15 @@ void EGS_RadionuclideSpectrum::printSampledEmissions() {
 
         totalNumSampled += (*gamma)->getGammaSampled();
         egsInformation("%f %f %.4e %.4e\n", (*gamma)->getDecayEnergy(),
-                        ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100,
-                        ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100,
-                        ((EGS_Float)(*gamma)->getIPSampled()/(ishower+1))*100
-                        );
+                       ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100,
+                       ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100,
+                       ((EGS_Float)(*gamma)->getIPSampled()/(ishower+1))*100
+                      );
     }
     if (myGammas.size() > 0) {
         if (totalNumSampled > 0) {
             egsInformation("Average gamma energy: %f\n",
-                            totalGammaEnergy / totalNumSampled);
+                           totalGammaEnergy / totalNumSampled);
         }
         else {
             egsInformation("Zero gamma transitions occurred.\n");
@@ -694,24 +694,24 @@ void EGS_RadionuclideSpectrum::printSampledEmissions() {
             gamma != myUncorrelatedGammas.end(); gamma++) {
 
         egsInformation("%f %f %.4e %.4e\n", (*gamma)->getDecayEnergy(),
-                        ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100,
-                        ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100,
-                        ((EGS_Float)(*gamma)->getIPSampled()/(ishower+1))*100
-                        );
+                       ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100,
+                       ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100,
+                       ((EGS_Float)(*gamma)->getIPSampled()/(ishower+1))*100
+                      );
     }
     if (xrayEnergies.size() > 0) {
         egsInformation("X-Ray records:\n");
     }
     for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
         egsInformation("%f %f\n", xrayEnergies[i],
-                        ((EGS_Float)numSampledXRay[i]/(ishower+1))*100);
+                       ((EGS_Float)numSampledXRay[i]/(ishower+1))*100);
     }
     if (augerEnergies.size() > 0) {
         egsInformation("Auger records:\n");
     }
     for (unsigned int i=0; i < augerEnergies.size(); ++i) {
         egsInformation("%f %f\n", augerEnergies[i],
-                        ((EGS_Float)numSampledAuger[i]/(ishower+1))*100);
+                       ((EGS_Float)numSampledAuger[i]/(ishower+1))*100);
     }
     egsInformation("\n");
 }
@@ -769,7 +769,7 @@ EGS_Float EGS_RadionuclideSpectrum::sample(EGS_RandomGenerator *rndm) {
                     double hl = currentLevel->getHalfLife();
                     if (hl > 0) {
                         currentTime = -hl * log(1.-rndm->getUniform()) /
-                                        0.693147180559945309417232121458176568075500134360255254120680009493393;
+                                      0.693147180559945309417232121458176568075500134360255254120680009493393;
                     }
 
                     // Determine whether multiple gamma transitions occur

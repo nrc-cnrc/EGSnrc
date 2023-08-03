@@ -320,10 +320,10 @@ public:
         }
     }
 
-    vector<EGS_Ensdf*> getRadionuclideEnsdf() {
-        vector<EGS_Ensdf*> allDecays;
+    vector<EGS_Ensdf *> getRadionuclideEnsdf() {
+        vector<EGS_Ensdf *> allDecays;
         for (int j=0; j<nsource; j++) {
-            for(auto decays: sources[j]->getRadionuclideEnsdf()) {
+            for (auto decays: sources[j]->getRadionuclideEnsdf()) {
                 allDecays.push_back(decays);
             }
         }
