@@ -314,6 +314,22 @@ public:
 
     void containsDynamic(bool &hasdynamic);
 
+    void printSampledEmissions() {
+        for (int j=0; j<nsource; j++) {
+            sources[j]->printSampledEmissions();
+        }
+    }
+
+    vector<EGS_Ensdf*> getRadionuclideEnsdf() {
+        vector<EGS_Ensdf*> allDecays;
+        for (int j=0; j<nsource; j++) {
+            for(auto decays: sources[j]->getRadionuclideEnsdf()) {
+                allDecays.push_back(decays);
+            }
+        }
+        return allDecays;
+    };
+
 protected:
 
     int nsource;
