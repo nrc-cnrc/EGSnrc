@@ -41,7 +41,7 @@
 EGS_SourceCollection::EGS_SourceCollection(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSource(input,f), nsource(0), count(0) {
     vector<EGS_BaseSource *> s;
-    egsInformation("EGS_BaseSource::EGS_BaseSource: input is:\n");
+    egsInformation("EGS_SourceCollection::EGS_BaseSource: input is:\n");
     input->print(0,cout);
     EGS_Input *isource;
     while ((isource = input->takeInputItem("source",false))) {
