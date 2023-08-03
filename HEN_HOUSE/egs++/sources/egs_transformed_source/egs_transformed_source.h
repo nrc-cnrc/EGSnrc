@@ -191,6 +191,14 @@ public:
         source->setSimulationChunk(nstart, nrun, npar, nchunk);
     };
 
+    void printSampledEmissions() {
+        source->printSampledEmissions();
+    }
+
+    vector<EGS_Ensdf*> getRadionuclideEnsdf() {
+        return source->getRadionuclideEnsdf();
+    };
+
 protected:
 
     EGS_BaseSource *source; //!< The source being transformed
