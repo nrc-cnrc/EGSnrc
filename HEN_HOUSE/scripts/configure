@@ -1813,7 +1813,7 @@ if test x$F77 = xg77 || test x$F77 = xgfortran; then
             if test x$F77 = xg77; then
                 SHLIB_LIBS="-lg2c"
             else
-                SHLIB_LIBS="-lgfortran"
+                SHLIB_LIBS="-lgfortran -lquadmath"
             fi
             printf $format "An OS X system with $F77 and $CC ... " >&2
             echo "using $SHLIB_FLAGS and $SHLIB_LIBS to build shared libraries" >&2
