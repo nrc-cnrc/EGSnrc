@@ -314,7 +314,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
         solver = 1 := use approximation in estar
         solver = 2 := use bisection method (section 2.2 of report)
     */
-    int solver = 1;
+    int solver = 2;
     bspol bp;
 
     for (int i = 0; i < lkmax; i++) {
