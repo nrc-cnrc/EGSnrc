@@ -557,7 +557,7 @@ struct EGS_XOptions {
 /*! \brief A structure corresponding to the \c egs_vr common block
 
  The \c egs_vr common block contains variables that can turn on/off
- internally implemented variabce reduction techniques.
+ internally implemented variance reduction techniques.
 */
 struct EGS_VarianceReduction {
     /*! Maximum energy for which it is allowed to use range rejection.
@@ -642,11 +642,61 @@ struct EGS_emfInputs {
     bool emfield_on;
 };
 
+
+#define MXBRES    100
+#define MXBRXS     50
+/*! \brief A structure corresponding to the \c NIST_BREMS common block.
+
+  This common block contains variables used to calculate NIST brems cross-
+  sections
+  */
+struct EGS_NistBrems {
+    EGS_Float nb_fdata[MXMED][MXBRES][MXBRXS+1], nb_xdata[MXMED][MXBRES][MXBRXS+1],
+              nb_wdata[MXMED][MXBRES][MXBRXS];
+    EGS_I32   nb_idata[MXMED][MXBRES][MXBRXS];
+    EGS_Float nb_emin[MXMED],nb_emax[MXMED],nb_lemin[MXMED],nb_lemax[MXMED],
+              nb_dle[MXMED],nb_dlei[MXMED],log_ap[MXMED];
+};
+
+#define MXEL       50
+#define MXPWR2I    50
+/*! \brief A structure corresponding to the \c BREMPR common block.
+
+  This common block contains variables used to calculate NRC brems cross-
+  sections
+  */
+struct EGS_Brempr {
+   EGS_Float dl1[MXMED][8],dl2[MXMED][8],dl3[MXMED][8],dl4[MXMED][8],dl5[MXMED][8],
+             dl6[MXMED][8],alphi[MXMED][2],bpar[MXMED][2],delpos[MXMED][2],
+             wa[MXEL][MXMED],pz[MXEL][MXMED],zelem[MXEL][MXMED],rhoz[MXEL][MXMED],
+             pwr2i[MXPWR2I],delcm[MXMED],zbrang[MXMED],lzbrang[MXMED];
+   EGS_I32 nne[MXMED];
+   char asym[2][MXEL][MXMED][4];
+};
+
+#define MXRAYFF   100
+#define MXSGE     400
+#define MXGE     2000
+/*! \brief A structure corresponding to the \c PHOTIN common block.
+
+  This common block contains variables used to calculate data used in
+  photon transport
+*/
+struct EGS_Photin {
+  EGS_Float ebinda[MXMED],ge0[MXMED],ge1[MXMED],gmfp1[MXMED][MXGE],gmfp2[MXMED][MXGE],
+  gbr10[MXMED][MXGE],gbr11[MXMED][MXGE],gbr20[MXMED][MXGE],gbr21[MXMED][MXGE],
+  rco0[MXMED],rco1[MXMED],rsct0[MXMED][MXRAYFF],rsct1[MXMED][MXRAYFF],
+  cohe0[MXMED][MXGE],cohe1[MXMED][MXGE],photonuc0[MXMED][MXGE],photonuc1[MXMED][MXGE],
+  dpmfp;
+  EGS_I32 mpgem[MXMED][MXSGE],ngr[MXMED];
+};
+
+
 /*! \brief The address of the mortran \c STACK common block as a
     pointer to a C-structure of type EGS_Stack */
 extern __extc__ struct EGS_Stack             *the_stack;
 
-/*! \brief The address of the morrtan \c BOUNDS common block as a
+/*! \brief The address of the mortan \c BOUNDS common block as a
     pointer to a C-structure of type EGS_Bounds */
 extern __extc__ struct EGS_Bounds            *the_bounds;
 
@@ -689,6 +739,18 @@ extern __extc__ struct EGS_Rayleigh *the_rayleigh;
 /*! \brief The address of the mortran EMF-INPUTS common block as a
   pointer to a C-structure of type EGS_emfInputs */
 extern __extc__ struct EGS_emfInputs *the_emf;
+
+/*! \brief The address of the mortran NIST-BREMS common block as a
+  pointer to a C-structure of type EGS_NistBrems */
+extern __extc__ struct EGS_NistBrems *the_nist_brems;
+
+/*! \brief The address of the mortran BREMPR common block as a
+  pointer to a C-structure of type EGS_Brempr */
+extern __extc__ struct EGS_Brempr *the_brempr;
+
+/*! \brief The address of the mortran PHOTIN common block as a
+  pointer to a C-structure of type EGS_Photin */
+extern __extc__ struct EGS_Photin *the_photin;
 
 /* ******************* EGSnrc interface functions *************************/
 
