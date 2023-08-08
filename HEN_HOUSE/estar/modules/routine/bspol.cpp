@@ -21,17 +21,20 @@ bspol fbspol(double s, double x[1000], double a[1000], double b[1000], double c[
     if (x[0] <= x[n-1]) {
         idir =0;
         mlb =0;
-        mub = n; 
-    } else {
+        mub = n;
+    }
+    else {
         idir =1;
         mlb =n;
-        mub = 0; 
+        mub = 0;
     }
     if (s>=x[mub+idir-1]) {
         mu = mub + 2*idir - 1;
-    } else if (s<=x[mlb+1-idir-1]) {
+    }
+    else if (s<=x[mlb+1-idir-1]) {
         mu = mlb - 2*idir + 1;
-    } else {
+    }
+    else {
         ml = mlb;
         mu = mub;
         int binary_temp = 0; // we define binary_temp = 0 as the loop must run at least once
@@ -39,7 +42,8 @@ bspol fbspol(double s, double x[1000], double a[1000], double b[1000], double c[
             mav = (ml+mu)/2;
             if (s<x[mav]) {
                 mu = mav;
-            } else {
+            }
+            else {
                 ml = mav;
             }
             binary_temp=1;
@@ -49,7 +53,7 @@ bspol fbspol(double s, double x[1000], double a[1000], double b[1000], double c[
     mu = mu + 1;
 
     // s lies between x[mu-1] and x[mu]
-    k = s - x[mu-1]; 
+    k = s - x[mu-1];
     /*
         g gives you the density correction factor
         by using the variables from scof - a,b,c,d

@@ -7,10 +7,10 @@ struct scof {
     double b[1200];
     double c[1200];
     double d[1200];
-}; 
+};
 
 scof fscof(int nmax, double x[1200], double f[1200]) {
-    scof sf;   
+    scof sf;
     int m1 = 2;
     int m2 = nmax-1;
     double s = 0.0;
@@ -25,7 +25,7 @@ scof fscof(int nmax, double x[1200], double f[1200]) {
     s = 0.0;
     r = 0.0;
     sf.c[0] = 0.0;
-    sf.c[nmax-1] = 0.0; 
+    sf.c[nmax-1] = 0.0;
 
     for (int m = 1; m < m2; m++) {
         sf.c[m] = sf.c[m] + r*sf.c[m-1];
@@ -33,7 +33,7 @@ scof fscof(int nmax, double x[1200], double f[1200]) {
         s = sf.d[m];
         r = s/sf.b[m];
     };
-    int mr = m2 - 1; 
+    int mr = m2 - 1;
     for (int m = 1; m < m2; m++) {
         sf.c[mr] = (sf.d[mr] * sf.c[mr+1] - sf.c[mr])/sf.b[mr];
         mr = mr - 1;

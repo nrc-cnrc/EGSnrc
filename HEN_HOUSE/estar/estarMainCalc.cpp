@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <cmath>
 #include "modules/datatables.h"
-#include "modules/routine/scof.h" 
+#include "modules/routine/scof.h"
 #include "modules/parseDataFile.h"
 #include "modules/routine/bspol.h"
 #include "modules/bisec.h"
@@ -18,16 +18,18 @@ using namespace std;
     from estarCalc.cpp. The density correction factors are stored in the variable densityCorr.
 */
 
-int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elementArray, double *massFraction, 
-float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *ipotval, int mediaNum) {
+int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elementArray, double *massFraction,
+                     float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *ipotval, int mediaNum) {
     //------------------------------------------------//
     int knmat;
 
     if (isCompound == 1) { // 1 means compound and 0 means not compound
         knmat = 1;
-    } else if (NEP == 1) {
+    }
+    else if (NEP == 1) {
         knmat = 0; // substance is an element
-    } else {
+    }
+    else {
         knmat = 2; // substance is a mixture
     }
     HelperFunctions hf;
@@ -46,19 +48,20 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     // in  getDataFromFormulae which computes the ivalue and other relevant quantities
     fc = getDataFromFormulae(knmat, rho, elementArray, massFraction, numOfAtoms, NEP, mediaNum);
     cout << "\n";
-    
+
     if (*ipotval != -1) {
-        assert (*ipotval>=0 && "Ivalue must be non-negative");
+        assert(*ipotval>=0 && "Ivalue must be non-negative");
         fc.pot = *ipotval;
         cout << "For medium " << mediaNum << " I-value (eV) given in egsinp file is " << fc.pot << "\n";
-    } else {
+    }
+    else {
         cout << "For medium " << mediaNum << " I value (eV) not provided in egsinp file.\n";
         cout << "I value (eV) as calulated by ESTAR is: " << fc.pot << "\n";
     }
     double estarIval = fc.pot; // This is the I-value obtained by calculation
     *meanIval = fc.pot;
-    
-    
+
+
     int p = 0;
     double ival;
     //------------------------------------------------//
@@ -77,9 +80,9 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     int i = 0;
 
     /*
-        The q[] array we find below will help us to find an approximate solution of l^2 
-        in eqation 2 of Sternheimer 1984. 
-        Then using the approximate solution, we can find the exact value of the density factor using 
+        The q[] array we find below will help us to find an approximate solution of l^2
+        in eqation 2 of Sternheimer 1984.
+        Then using the approximate solution, we can find the exact value of the density factor using
         equation 1.
     */
     for (int i = 1; i < lmax; i++) {
@@ -96,22 +99,22 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     int mmax = fc.mmax; // this is the number of different types of elements present in the compound/mixture
     i = 0;
     double at[50]; // mass number
-    double g[50]; // This is the weight*atmic_number/atomic_mass 
+    double g[50]; // This is the weight*atmic_number/atomic_mass
     double a; // mass number (defined for convenience)
     int jz; // atomic number
     while (i < mmax) {
-        jz = fc.jz[i]; 
+        jz = fc.jz[i];
         at[i] = atb[jz-1];
         double z = fc.jz[i];
         a = at[i];
         g[i] = fc.wt[i]*(z/a); // This is the weight*atmic_number/atomic_mass
         i = i + 1;
     }
-    
+
     double zav = fc.zav;
     double hom = 28.81593*sqrt(rho*zav); // this is equation 4 of Sternheimer 1984
     double phil = 2.0*log(fc.pot/hom);   // this is equation 7 of Sternheimer 1984 with a slight modification.
-                                         // Please refer to the report (2.2) to understand the modification.
+    // Please refer to the report (2.2) to understand the modification.
     double cbar = phil + 1.0;
 
     for (int i = 0; i < mmax; i++) {
@@ -122,9 +125,9 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     int nmax;
     int record;
     double sum;
-    double f[1000]; 
+    double f[1000];
     double en[1000];
-    
+
     for (int m = 0; m < mmax; m++) {
         int iz = fc.jz[m]; // atomic number
         data ds;
@@ -141,13 +144,13 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
 
         if (ds.nc[record][nmax-1] <0) {
             // This condition is true ONLY when the element is a metallic conductor.
-            // * example: Please look at elementData.h. More information is given in the report (Integration of ESTAR in EGSnrc) on 
-            // where to find the nc section. You will see that for metalllic conductors the last number of nc[] is 
+            // * example: Please look at elementData.h. More information is given in the report (Integration of ESTAR in EGSnrc) on
+            // where to find the nc section. You will see that for metalllic conductors the last number of nc[] is
             // negative of number of electrons in last subshell. This is how we know the element is a conductor.
             // Otherwise it is treated as a non-conductor. Once we know the element is a conductor,
             // we make the negative number positive with the code below
             ds.nc[record][nmax-1] = - ds.nc[record][nmax-1];
-            if (mmax<=1) { 
+            if (mmax<=1) {
                 /*
                     It was discussed in Sternheimer 1984 (just below equation 8) that when the substance is a metallic conductor,
                     there is a term ouside the summation in the right hand side of equation 8. Now the code below ensures that we
@@ -167,17 +170,17 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
 
         int nn;
         /*
-            In the loop below, we compute the oscillator strength for each oscillator. 
+            In the loop below, we compute the oscillator strength for each oscillator.
             Now this calculation is a bit different depending on whether the substance is an element/anything else.
-            When the substance is an element, f is computed using just the formula given in Sternheimer 1984. 
+            When the substance is an element, f is computed using just the formula given in Sternheimer 1984.
             However when the substance is a compound/mixture, the calculation is a bit different and it is not given in Sternheimer 1984.
             I could not find this calculation in any other source
         */
         for (int n = 0; n < nmax; n++) {
-            nn = n + nbas; 
+            nn = n + nbas;
             f[nn] = ds.nc[record][n]*g[m]/sum;
             en[nn] = ds.bd[record][n]; // we redefine for convenience
-       
+
         };
         nbas = nbas + nmax;
     };
@@ -198,16 +201,16 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
 
     if (en[nmax-1]<=0) {   // when en[nmax-1]==0 is true, it means the substance is a conductor.
         alf[nmax-1] = 1.0; // when it is a conductor, this code ensures there is this
-                           // term outside the loop according to equation 8
+        // term outside the loop according to equation 8
     };
 
     for (int n = 0; n < nmax; n++) {
-        eps[n] = (en[n]/hom) * (en[n]/hom); // This is square of equation 3 (Sternheimer 1984) without 
-                                            // the (adjustment factor)^2 which we will find
+        eps[n] = (en[n]/hom) * (en[n]/hom); // This is square of equation 3 (Sternheimer 1984) without
+        // the (adjustment factor)^2 which we will find
     };
     //--------------------------------------------------------------------//
     // The variables defined above are used to solve equation 8 of Sternheimer 1984
-    
+
     //=============================//====================================//
     /*
         The code snippet here is used to solve equation 8 of Sternheimer 1984 using
@@ -215,11 +218,11 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
         Note that the equation constructed here is a bit different from equation 8.
         The differences are explained in the report (2.1).
     */
-    double root; //root is the adjustment_factor^2 we want to find 
+    double root; //root is the adjustment_factor^2 we want to find
     double fun;  // this stores the function value
     double der;  // der is derivative of fun with respect to root
     double trm;  // this is one term in the function
-    root = 1.0; 
+    root = 1.0;
     double droot = 1; // initialization to ensure loop runs at least once
     while (abs(droot)-0.00001 > 0) {
         fun = -phil;
@@ -229,51 +232,51 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
             fun = fun +f[n]*log(trm);
             der = der + f[n]*eps[n]/trm; //  der is derivative of fun with respect to root
         };
-        
+
         droot = fun/der;
 
-        root = root - droot; 
+        root = root - droot;
     };
     //=============================//====================================//
     double factor = sqrt(root); //  this is the adjustment factor
-    
+
 
     for (int n = 0; n < nmax; n++) {
         eps[n] = root*eps[n]; // after we find the adjustment factor we can write down the square of
-                              // equation 3 of Sternheimer 1984 explicitly
+        // equation 3 of Sternheimer 1984 explicitly
     };
 
     // here we computer cutoff below which density effect is 0. However this cutoff is not used in estar.
-    // Please refer to section 3 of the report for further details. 
+    // Please refer to section 3 of the report for further details.
     // double ycut = hf.cutoff(en, eps, f, nmax);
-    
+
     // ========================================================== //
     /*
         In this snippet we mainly find d, which is equation 1 of Sternheimer 1984
-        with l^2 being replaced by q[n]. However the formulation of d[n] is slightly different 
-        from the formulation in the paper. This has been described in detail in section 2.2 of the 
-        report. Furthermore, I have discussed about yql and yq in 2.1 of the report. 
+        with l^2 being replaced by q[n]. However the formulation of d[n] is slightly different
+        from the formulation in the paper. This has been described in detail in section 2.2 of the
+        report. Furthermore, I have discussed about yql and yq in 2.1 of the report.
         The idea behind using d[n] is discussed at the end of 2.2.
     */
     double yq[1200];
     double yql[1200];
-    double d[1200]; 
+    double d[1200];
     double arg;
 
     for (int n = 0; n < lmax; n++) {
         sum = 0.0;
         for (int m = 0; m < nmax; m++) {
             sum = sum + f[m]/(eps[m] + q[n]);
-        }; 
+        };
         yq[n] = 1/sum;
-        
+
         yql[n] = log(yq[n]);
         sum = 0.0;
         for (int m = 0; m < nmax; m++) {
             arg = 1 + q[n]/(eps[m] + alf[m] * f[m]);
             sum =  sum + f[m]*log(arg);
         };
-        d[n] = sum - q[n]/(yq[n] + 1.0);    
+        d[n] = sum - q[n]/(yq[n] + 1.0);
     };
 
     // ========================================================== //
@@ -285,7 +288,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     // please see 2.1 of the report for more details.
     scof sf2 = fscof(lmax, yql, d);
 
-    double adel[1200]; 
+    double adel[1200];
     double bdel[1200];
     double cdel[1200];
     double ddel[1200];
@@ -294,13 +297,13 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
         bdel[i] = sf2.b[i];
         cdel[i] = sf2.c[i];
         ddel[i] = sf2.d[i];
-    }; 
+    };
 
     //---------------------------------------------//
-    // The following code is used to obtain 
+    // The following code is used to obtain
     // density corrections. Some details on what is happening here is givn in
     // section 2.1 of the notes.
-    double e; 
+    double e;
     double tau;
     double y;
     double delta;
@@ -323,17 +326,18 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
         y = tau*(tau+2.0);
         delta = 0.0;
         nb_density = 0.0;
-        // y must be less than yq[lmax-1] 
+        // y must be less than yq[lmax-1]
         // section 2.3 of the report gives more detail about the range error.
         if (y>=yq[0]) {
             if (y-yq[lmax-1] <= 0) {
                 yl = log(y);
                 bp = fbspol(yl, yql, adel, bdel, cdel, ddel, lmax);
                 if (solver == 1) {
-                    delta =  bp.density_corr;     
-                } else if (solver == 2) {
+                    delta =  bp.density_corr;
+                }
+                else if (solver == 2) {
                     xroot = bisec(q[bp.lb_index], q[bp.ub_index], tol, tau, f, eps, nmax);
-                    double yqn = 0; 
+                    double yqn = 0;
                     sum = 0.0;
                     for (int m = 0; m < nmax; m++) {
                         arg = 1 + xroot/(eps[m] + alf[m] * f[m]);
@@ -343,14 +347,16 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
                     yqn = 1/yqn;
                     nb_density = sum - xroot/(yqn + 1.0);
                     delta =  nb_density;
-                } else {
+                }
+                else {
                     cout << "\n***************\n";
                     cout << "Solver option incorrect!\n";
                     cout << "\n***************\n";
                     return 9;
                 }
-                
-            } else {
+
+            }
+            else {
                 cout << "\n***************\n";
                 cout << "energy is too high and out of range";
                 cout << "\n***************\n";
@@ -358,7 +364,7 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
             }
         }
         dlt[i] = delta;
-    }; 
+    };
     //---------------------------------------------//
 
 
@@ -371,5 +377,5 @@ float *numOfAtoms, double *densityCorr, double *enGrid, float *meanIval, float *
     cout << "Density correction factors calculated by ESTAR for medium " << mediaNum << ".\n";
     cout << "-------------------------\n";
     return 0;
-    
+
 };
