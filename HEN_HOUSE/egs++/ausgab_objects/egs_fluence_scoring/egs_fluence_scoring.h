@@ -200,7 +200,7 @@ protected:
 
     /* Regions flags */
     vector<bool> is_sensitive;     // flag scoring regions
-    vector<bool> is_source;        // Flag regions such as brems target or radiactive source
+    vector<bool> is_source;        // Flag regions such as brems target or radioactive source
     // Interacting particles not subjected to classification
     vector <int> f_start, f_stop;  // Markers for group regions input
     vector <int> f_region;         // Input list of scoring regions
