@@ -227,6 +227,54 @@ public:
     int getNp();
     int getNpOld();
 
+    //************************************************************
+    // Utility functions for egs_radiative_splitting ausgab objects
+    //************************************************************
+    EGS_Float getRngUniform();
+    void getRngAzimuth(EGS_Float cphi, EGS_Float sphi);
+    void addParticleToStack(EGS_Particle p, EGS_Float dnear);
+    void updateParticleOnStack(int ip, EGS_Particle p, EGS_Float dnear);
+    EGS_Float getDnear(int np);
+    int getNmed();
+    int getNpold();
+    int getNp();
+    void setNpold(int npold);
+    void deleteParticleFromStack(int ip);
+    EGS_Particle getParticleFromStack(int ip);
+    EGS_Float getGle();
+    int getLgle(EGS_Float gle, int med);
+    int getIbrdst();
+    int getIbcmp();
+    EGS_Float getAp(int imed);
+    int getIbrnist();
+    EGS_Float getNbLemin(int imed);
+    EGS_Float getNbDlei(int imed);
+    EGS_Float getNbEmin(int imed);
+    EGS_Float getNbXdata(int i, int j, int imed);
+    EGS_Float getNbFdata(int i, int j, int imed);
+    EGS_Float getNbWdata(int i, int j, int imed);
+    int getNbIdata(int i, int j, int imed);
+    EGS_Float getEmax();
+    EGS_Float getZbrang(int imed);
+    EGS_Float getDelcm(int imed);
+    EGS_Float getDl1(int i, int imed);
+    EGS_Float getDl2(int i, int imed);
+    EGS_Float getDl3(int i, int imed);
+    EGS_Float getDl4(int i, int imed);
+    EGS_Float getDl5(int i, int imed);
+    EGS_Float getDl6(int i, int imed);
+    void callBrems();
+    void callAnnih();
+    void callAnnihAtRest();
+    void callPhoto();
+    void callPair();
+    void callCompt();
+    void callEgsRayleighSampling(int imed, EGS_Float e, EGS_Float gle, EGS_I32 lgle, EGS_Float costhe, EGS_Float sinthe);
+    EGS_Float callAliasSample1(int mxbrxs, EGS_Float nb_xdata, EGS_Float nb_fdata, EGS_Float nb_wdata, EGS_Float nb_idata);
+    int getMxstack();
+    int getMxbres();
+    int getMxbrxs();
+
     /* Needed by some sources */
     EGS_Float getRM();
     /* Turn ON/OFF radiative splitting */
