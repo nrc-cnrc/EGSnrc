@@ -1122,7 +1122,7 @@ factor of two and so has only a minor effect on the overall simulation
 time when electron transport is included. Binding effects and
 Doppler broadening for coherent scattering are therefore turned
 on by default in the {\tt block data} sub-program (the switch
-{\tt IBCMP} is set to unity).
+{\tt IBCMP} is set to 3, {\tt norej}).
 \index{IBCMP}
 
 Since the 2009 release of EGSnrc, the user has the option to change
@@ -1268,7 +1268,7 @@ by the flag {\tt IEDGFL}
 (in the {\tt COMIN/EDGE} common block-see Section~\ref{common_blocks}). If {\tt IEDGFL} of the
 region is non-zero, a detailed simulation is performed,
 otherwise a simplified treatment of the photo-absorption process
-is undertaken. The default setting of {\tt IEDGFL} is one.
+is undertaken. The default setting of {\tt IEDGFL} is 1.
 \index{IEDGFL}
 
 \paragraph{Detailed simulation of photo-electric absorption}\hfill
@@ -1726,7 +1726,7 @@ the form factor file correspond to the same material.
 
 In the current version of EGSnrc, the user has the option to use
 photon cross section data other than the default
-Storm \& Israel data.  To do this, the user must
+XCOM data.  To do this, the user must
 set the character variable {\tt photon\_xsections} (part of the
 {\tt COMIN/MEDIA} common block) to the name of the cross section
 data to use.  Cross sections included with the EGSnrc distribution
@@ -2046,4 +2046,3 @@ to an appropriate value, or play Russian Roulette with them.
 \index{AUSGAB}
 \index{IARG!25,26,27:}
 %\clearpage
-

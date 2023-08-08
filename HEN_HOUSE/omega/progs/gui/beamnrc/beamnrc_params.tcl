@@ -1227,7 +1227,7 @@ Maximum fractional energy loss/step, ESTEPE:
 
 Note that this is a global option only, no\
         region-by-region setting is possible. If missing,\
-        the defualt is 0.25 (25%).
+        the default is 0.25 (25%).
 }
 
 set ximax {}
@@ -1292,7 +1292,7 @@ If Boundary crossing algorithm= PRESTA-I\
         Skin depth for BCA large, you will get default EGS4\
         behaviour (no PRESTA).\
 
-Note that the above defaults have been choosen as a compromise\
+Note that the above defaults have been chosen as a compromise\
 between accuracy (EXACT BCA) and efficiency (PRESTA-I BCA).\
 Note that the new transport\
 mechanics of EGSnrc are maintained away from boundaries.
@@ -3203,4 +3203,3 @@ The user can think of the inputs of the CHAMBER CM\
 	input file and so must be reselected by the user each time\
 	the GUI is used.
 }
-

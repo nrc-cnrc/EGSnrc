@@ -240,7 +240,7 @@ used by the \c EGS_Xplanes constructor).
 
 All geometries can be filled with media by including a
 <code>media input</code>
-property within the the geometry definition.
+property within the geometry definition.
 Because geometries can be used as building blocks for other geometries,
 which could fill the regions with media, it is not considered a
 mistake if a geometry does not define its media.  However,

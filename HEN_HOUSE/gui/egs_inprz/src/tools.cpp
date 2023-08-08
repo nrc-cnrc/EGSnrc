@@ -118,7 +118,7 @@ QString forwardItUp( const QString& str ){
 }
 
 /*And last, but not least, if we want to get a proper
-   name according the the OS, we can use this little
+   name according to the OS, we can use this little
    tool to first get the proper separator and then
    remove multiplicities
 
@@ -486,5 +486,3 @@ void changeTextColor( QLabel* l, const QString& color )
   QString s = l->text();
   l->setText( "<p style=\"color:" + color + "\">"+ s + "</p>");
 }
-
-

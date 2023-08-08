@@ -24,6 +24,7 @@
 "  Authors:         Blake Walters, 2013                                       "
 "                                                                             "
 "  Contributors:    Reid Townson                                              "
+"                   Frederic Tessier                                          "
 "                                                                             "
 "#############################################################################"
 
@@ -913,7 +914,7 @@ DO i=1,NMED[
    sterncid_tmp=medium_name;
    gasp_tmp=0.0;
    iunrst_tmp=0;
-   iaprim_tmp=0;
+   iaprim_tmp=1;
    epstfl_tmp=0;
    density_file=' ';
 

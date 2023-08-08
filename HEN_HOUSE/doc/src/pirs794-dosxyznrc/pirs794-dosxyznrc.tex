@@ -2098,7 +2098,7 @@ requested.  However, interactions in the shared library geometry will change the
 the DOSXYZnrc phantom per particle incident from the phase space source.  Thus, the original estimate of
 {\tt NRCYCL} is incorrect.  To overcome this when a BEAM shared library is used, an initial calibration comprising
 1x10$^6$ particles run through the BEAM geometry only is used to determine the ratio of the number of particles
-emerging from the the bottom of the BEAM library geometry to the number of incident particles (survival ratio).
+emerging from the bottom of the BEAM library geometry to the number of incident particles (survival ratio).
 {\tt NRCYCL} is then recalculated by multiplying the original estimate by 1/(survival ratio).
 
 \indexm{calflag}
@@ -3910,7 +3910,7 @@ If {\tt Pair angular sampling= KM}, then eqn 3D-2003 in
 Motz et al\cite{Mo69} is used to determine the positron/electron emission
 angles.  This option is similar to the sampling technique used by the current
 version of EGS4/DOSXYZ.  Finally if {\tt Pair angular sampling= Simple} (the default), then only
-the first term in the the Motz et al eqn 3D-2003 is used.  The {\tt KM} option
+the first term in the Motz et al eqn 3D-2003 is used.  The {\tt KM} option
 becomes less efficient with increasing accelerator energies and, moreover, involves
 assumptions that are questionable at low energy.  For these reasons, the default
 setting is {\tt Simple}.
@@ -3934,9 +3934,9 @@ energy distribution.
 
 The {\tt Photoelectron angular sampling} input determines the sampling method
 used by EGSnrc to determine the angle of emission of photoelectrons.
-If {\tt Photoelectron angular sampling= Off} (the default), then
+If {\tt Photoelectron angular sampling= Off}, then
  photoelectrons inherit the direction of the incident photon.  If
-{\tt Photoelectron angular sampling= On}, then Sauter's formula
+{\tt Photoelectron angular sampling= On} (the default), then Sauter's formula
 \cite{Sa31} is used to determine the angle of the photoelectron.  Note
 that, in most applications, we have not observed any difference between
 the ``Off" and ``On" settings of this parameters.  Also note that,
@@ -3962,11 +3962,11 @@ photoelectron angular sampling is to be turned on or off.
 
 This input determines whether Rayleigh (coherent) scattering is
 simulated or not.
-If {\tt Rayleigh scattering= On}, then Rayleigh events are simulated
+If {\tt Rayleigh scattering= On} (the default), then Rayleigh events are simulated
 using the total coherent cross-sections from Storm and
 Israel\cite{SI70} and atomic form factors from Hubbell and {\O}verb{\o}\cite{HO79}.
 This data must be included in the PEGS4 material data set.
-If {\tt Rayleigh scattering= Off} (the default), then Rayleigh
+If {\tt Rayleigh scattering= Off}, then Rayleigh
 events are not simulated.  Rayleigh scattering is only recommended for
 low-energy ($<$ 1 MeV) simulations.  Also, for proper simulation
 of Rayleigh events, bound Compton scattering (see section~\ref{bcsect} above)
@@ -3993,13 +3993,13 @@ medium in the additional input {\tt ff file names= }.
 
 This input determines whether or not the relaxation of atoms to their
 ground state after Compton and photoelectric events is simulated.
-If {\tt Atomic Relaxations= On}, then relaxation after
+If {\tt Atomic Relaxations= On} (the default), then relaxation after
 Compton and photoelectric events is simulated via the
 emission of any combination of K-, L-, M- and N-shell fluorescent photons, Auger electrons
 and Coster-Kronig electrons.  The lower energy limit for relaxation processes
 is 1 keV.  Thus, only relaxation in shells with binding energy $>$ 1 keV is
 simulated.
-If {\tt Atomic Relaxations= Off} (the default), then atomic relaxations
+If {\tt Atomic Relaxations= Off}, then atomic relaxations
 are not simulated.  In this case, when there is a
 photoelectric event, EGSnrc transfers all of the photon energy to the
 photoelectron.  This is different from EGS4/DOSXYZ, where the binding energy
@@ -4045,7 +4045,7 @@ distribution (and, thus, the possible settings of
 \index{photon cross-sections!Storm-Israel}
 \index{photon cross-sections!EPDL}
 \index{photon cross-sections!XCOM}
-``Storm-Israel'' (the default), ``epdl'' and ``xcom''.
+``Storm-Israel'', ``epdl'' and ``xcom'' (the default).
 The Storm-Israel cross-sections are the standard PEGS4 cross-sections.
 The ``epdl'' setting will use cross-sections from
 the evaluated photon data library (EPDL) from Lawrence Livermore\cite{Cu90}.
@@ -4885,7 +4885,7 @@ using the code
 \indexm{CT!data file}
 \indexm{CTFilename}
 {\tt CTFilename} is the full name of a file, the contents of which depend
-on the the CT data format:
+on the CT data format:
 \begin {description}
 \item [Pinnacle format]
 \indexm{Pinnacle CT}

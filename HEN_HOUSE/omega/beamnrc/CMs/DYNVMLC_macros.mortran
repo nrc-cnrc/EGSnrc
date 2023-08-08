@@ -226,7 +226,7 @@ REPLACE{;COMIN/CM_$DYNVMLC/;} WITH {
 
 "V>COMMON/USERDYNVMLC/
 "V>
-"V> the following variables are required in the the main beam code
+"V> the following variables are required in the main beam code
 "V> to set leaf positions during the simulation when dynamic and step-and-shoot
 "V> (MODE_$DYNVMLC=1,2) options are used.  This common block is part of
 "V> the larger USER common block.  It is defined as {;} in

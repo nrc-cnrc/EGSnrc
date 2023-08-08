@@ -446,7 +446,7 @@ static const char* sources[] = {
                       "\nelse treated with Klein-Nishina. Make sure to turn it on for" \
                       "\nlow energy applications. Default is On."
 #define PE_ANG_SAMPLING "If Off, photo-electrons get direction of `mother' photon," \
-                        "\nelse Sauter's formula used (which is, striktly speaking," \
+                        "\nelse Sauter's formula used (which is, strictly speaking," \
                         "\nvalid only for  K-shell photo-absorption)."
 
 #define RAYLEIGH_SCAT   "Turns on/off coherent (Rayleigh) scattering." \
@@ -585,4 +585,3 @@ static const char* sources[] = {
                  "\nto collision stopping powers.  Superseded if a density correction file is specified."
 
 #endif
-
