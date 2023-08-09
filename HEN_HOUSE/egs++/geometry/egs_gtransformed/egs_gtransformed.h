@@ -264,7 +264,6 @@ public:
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
     EGS_BaseGeometry *getBaseGeom() {
-        egsInformation("in getBaseGeom type = %s\n",g->getType().c_str());
         return g;
     }
 

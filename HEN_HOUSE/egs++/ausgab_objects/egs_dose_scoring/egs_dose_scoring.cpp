@@ -212,7 +212,6 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     }
 
     if (output_dose_file) {
-     egsInformation(" here 1 nreg=%d\n",nreg);
         //set df_reg to default (non-scoring) values
         for (int i=0; i<nreg; i++) {
             df_reg.push_back(-1);
@@ -221,26 +220,17 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         //global reg. no.
         EGS_Vector tp;
         EGS_BaseGeometry *d_geom = dose_geom;
-    egsInformation(" here 2\n");
         vector < EGS_AffineTransform* > t_form;
-    egsInformation(" here 3\n");
         //now see if this is a transformed EGS_XYZGeometry
         //if so, find the base EGS_XYZGeometry and use that to set up the scoring array
-        int ii=0;
         while(d_geom->getType().find_last_of("T") == d_geom->getType().length()-1)
         {
-            egsInformation(" transform\n");
             t_form.push_back(d_geom->getTransform()); //have to get transform first
             d_geom = d_geom->getBaseGeom();
-            egsInformation(" base geom = %s called = %s\n",d_geom->getType().c_str(),d_geom->getName().c_str());
-            egsInformation("translation: %g %g %g\n",t_form[ii]->getTranslation().x,
-t_form[ii]->getTranslation().y,t_form[ii]->getTranslation().z);
-            ii++;
         }
         int nx=d_geom->getNRegDir(0);
         int ny=d_geom->getNRegDir(1);
         int nz=d_geom->getNRegDir(2);
-        egsInformation("nx=%d ny=%d nz=%d\n",nx,ny,nz);
         EGS_Float minx,maxx,miny,maxy,minz,maxz;
         for (int k=0; k<nz; k++) {
             for (int j=0; j<ny; j++) {
@@ -260,9 +250,7 @@ t_form[ii]->getTranslation().y,t_form[ii]->getTranslation().z);
                     {
                         t_form[m]->transform(tp);
                     }
-                    egsInformation("calling isWhere\n");
                     int g_reg = app->isWhere(tp);
-                    egsInformation("g_reg=%d\n",g_reg);
                     df_reg[g_reg]=i+j*nx+k*nx*ny;
                 }
             }
@@ -711,7 +699,6 @@ extern "C" {
             }
             else {
                 dgeom = EGS_BaseGeometry::getGeometry(gname);
-       egsInformation(" dose geom = %s\n",dgeom->getType().c_str());
                 if (!dgeom) {
                     egsFatal("EGS_DoseScoring: Output dose file: %s does not name an existing geometry\n",gname.c_str());
                 }
