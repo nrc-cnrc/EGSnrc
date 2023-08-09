@@ -132,7 +132,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     if (showPhotonTracks || showElectronTracks || showPositronTracks) {
         showTracks = true;
     }
-
     // camera orientation vectors (same as the screen vectors)
     camera_v1 = screen_v1;
     camera_v2 = screen_v2;
@@ -185,6 +184,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // set the widget to show near the left-upper corner of the screen
     move(QPoint(25,25));
+    //set the play button active boolean to false
+    isPlaying=false;
 }
 
 GeometryViewControl::~GeometryViewControl() {
@@ -2749,8 +2750,25 @@ void GeometryViewControl::endTransformation() {
 
 //A.D Time index visual elements methods//
 void GeometryViewControl::playTime() {
+    if(isPlaying){
+        button_timeplay->setText("play");
+        isPlaying=false;
+    }
+    else{
+        button_timeplay->setText("pause");
+        isPlaying=true;
+    }
+    int sliderpos=slider_timeindex->sliderPosition();
+    cout<<"slider at "<<sliderpos<<" when play pressed"<<endl;
+    if(sliderpos==999){
+        sliderpos=0;
+    }
+    cout<<"now slider at "<<sliderpos<<" at for loop"<<endl;
     //this function controls the play button, and allows for the simulation to be automatically played out sequentially in time.
-    for (int i= 0; i<1000;){ //the simulation plays through 1000 discrete time points (equivalent to possible slider steps) from 0.000 to 0.999 in 0.0001 increments
+    for (int i= sliderpos; i<1000;){ //the simulation plays through 1000 discrete time points (equivalent to possible slider steps) from 0.000 to 0.999 in 0.0001 increments
+        if(!isPlaying){
+            break;
+        }
         EGS_Float currtime = i/(float)1000;
         //below the time index display/input box is updated. The signals are blocked as it would lead to an infinite loop between the slider and the time index spin box
         spin_timeindex->blockSignals(true);
@@ -2764,6 +2782,8 @@ void GeometryViewControl::playTime() {
         //the line below makes the program wait 10 milliseconds before making the next step, otherwise the motion would be difficult to follow
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
+    button_timeplay->setText("play");
+    isPlaying=false;
 }
 
 void GeometryViewControl::resetTime() {

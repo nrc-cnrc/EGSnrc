@@ -209,6 +209,7 @@ private:
     bool showElectronTracks;
     bool showPositronTracks;
     bool hasDynamic; //boolean to track whether or not to make time objects visible or hidden
+    bool isPlaying;
     vector<bool> show_regions;
     bool    allowRegionSelection,
             energyScaling;
