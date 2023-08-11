@@ -212,6 +212,8 @@ void EGS_DynamicGeometry::buildDynamicGeometry(EGS_BaseGeometry *g, EGS_Input *d
 			cpts[i].time /= cpts[ncpts-1].time;
 		}
 	}
+	updatePosition(0); //sets position to initial time in egsview upon openning
+
 
 };
 
