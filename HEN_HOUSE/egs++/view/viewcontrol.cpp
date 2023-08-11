@@ -2759,11 +2759,9 @@ void GeometryViewControl::playTime() {
         isPlaying=true;
     }
     int sliderpos=slider_timeindex->sliderPosition();
-    cout<<"slider at "<<sliderpos<<" when play pressed"<<endl;
     if(sliderpos==999){
         sliderpos=0;
     }
-    cout<<"now slider at "<<sliderpos<<" at for loop"<<endl;
     //this function controls the play button, and allows for the simulation to be automatically played out sequentially in time.
     for (int i= sliderpos; i<1000;){ //the simulation plays through 1000 discrete time points (equivalent to possible slider steps) from 0.000 to 0.999 in 0.0001 increments
         if(!isPlaying){
