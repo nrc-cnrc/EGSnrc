@@ -73,13 +73,12 @@
                                    #          those regions specified by
                                    #          LIST FLUENCE START REGION and
                                    #          LIST FLUENCE STOP REGION below
- LIST FLUENCE START REGION= 12, 72, 132, 192, 252 #Only used if PRINT FLUENCE
- LIST FLUENCE STOP REGION= 12, 72, 132, 192, 252 #SPECTRA= specified.
+ LIST FLUENCE START REGION= 12, 27, 42       #Only used if PRINT FLUENCE
+ LIST FLUENCE STOP REGION= 12, 27, 42        #SPECTRA= specified.
                                              #This will print fluence spectra
                                              #for particles crossing the slab
-                                             #between Z=10 cm and Z=12 cm
-                                             #(see geometry below) in the
-                                             #.egslst file
+                                             #between Z=5-6 cm (see geometry
+                                             # below) in the .egslst file
 
  IPRIMARY= total fluence   #total fluence, electron primaries, include
                            #brem secondaries, photon primaries, electron
@@ -112,7 +111,7 @@
  ##########################
  :start Monte Carlo inputs:
 
- NUMBER OF HISTORIES= 10000   #splits into $STAT statistical batches
+ NUMBER OF HISTORIES= 1000000   #splits into $STAT statistical batches
                               #must be >=$STAT**2 if IWATCH= Off
                               #can have less than this if IWATCH set to
                               #another option
@@ -285,7 +284,7 @@ Brems cross sections= BH           # BH (default),NIST;
                                    # BH: Bethe-Heitler cross-sections used
                                    # NIST: NIST cross-sections used
 
-Bound Compton scattering= Off      # Off, On, simple or norej (default);
+Bound Compton scattering= On       # Off, On, simple or norej (default);
                                    # Off: Klein-Nishina used for Compton
                                    #     scattering
                                    # On: Impulse approximation used for
@@ -487,18 +486,17 @@ Atomic relaxations= On             # Off (default),On;
                                 #pair, a fluence spectrum (ie fluence vs
                                 #energy) will be output to the .spectra
                                 #file.  In this case, spectra will be
-                                #output for the slab between Z=10 cm and Z=12 cm
-                                #(see geometry above).  Each radial region
-                                #will have its own spectrum
+                                #output for regions defined by
+                                #(r=0-3 cm, Z=0-0.5 cm) and
+                                #(r=0-3 cm, Z=4-4.5 cm).
 
  PLOT RADIAL REGION IX= 0       #Indices of cylinders for which to output
                                 #fluence vs depth data in .plotdat (0-->
                                 #no plots)
  PLOT PLANAR REGION IZ= 1,6     #Indices of slabs for which to plot fluence vs
                                 #radius in .plotdat file (0 --> no plots)
-                                #Here, we will generate plots for the slab
-                                #between Z=10 cm and Z=12 cm and for
-                                #the last slab in the geometry.
+                                #Here, we will generate plots for the slabs
+                                #between Z=0-0.5 cm and Z=2.5-3 cm.
 
  :stop plot control:
  ########################
