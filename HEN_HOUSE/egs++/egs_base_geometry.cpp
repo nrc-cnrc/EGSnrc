@@ -46,6 +46,8 @@
 #include "egs_library.h"
 #include "egs_input.h"
 #include "egs_application.h"
+#include "egs_rndm.h"
+#include "egs_timer.h"
 
 #include <algorithm>
 #include <vector>
@@ -1169,4 +1171,244 @@ int EGS_BaseGeometry::setLabels(const string &inp) {
     labels.push_back(lab);
 
     return 1;
+}
+
+void EGS_BaseGeometry::printVolumes(EGS_Input *input, EGS_RandomGenerator *rndm) {
+
+    EGS_Timer timer;
+
+    EGS_Input *inp;
+    inp = input->takeInputItem("volume calculation");
+    if (!inp) {
+        return;
+    }
+
+    egsInformation("\n");
+    egsInformation("================================================================================\n");
+    egsInformation("EGS_BaseGeometry::printVolumes()\n");
+    egsInformation("Performing a Monte Carlo volume calculation...\n");
+    egsInformation("================================================================================\n");
+
+    double npass_double;
+    if (inp->getInput("passes", npass_double)) {
+        egsFatal("ERROR: passes = undefined.\nAborting.");
+    }
+    double nsample_double;
+    if (inp->getInput("samples", nsample_double)) {
+        egsFatal("ERROR: passes = undefined.\nAborting.");
+    }
+    std::vector<EGS_Float> boxmin, boxmax;
+    if (inp->getInput("box min", boxmin)) {
+        egsFatal("ERROR: box min = undefined.\nAborting.");
+    }
+    if (inp->getInput("box max", boxmax)) {
+        egsFatal("ERROR: box max = undefined.\nAborting.");
+    }
+    std::vector<std::string> volumeLabels;
+    inp->getInput("labels", volumeLabels);
+
+    EGS_I64 npass = (EGS_I64)npass_double;
+    EGS_I64 nsample = (EGS_I64)nsample_double;
+
+    // get number of regions
+    unsigned int nreg = regions();
+
+    egsInformation("Number of passes = %lld\n", npass);
+    egsInformation("Number of samples = %lld\n", nsample);
+    egsInformation("Box min = %f %f %f\n", boxmin[0], boxmin[1], boxmin[2]);
+    egsInformation("Box max = %f %f %f\n", boxmax[0], boxmax[1], boxmax[2]);
+    egsInformation("Number of regions = %u\n", nreg);
+
+    // sample points inside the node (this is where all the work gets done)
+    egsInformation("\n");
+    egsInformation("================================================================================\n");
+    egsInformation("%15s %15s %15s %15s\n", "PASS", "octree leaves", "samples/leaf", "total points");
+    egsInformation("================================================================================\n");
+    vector<double>  sigma, volume;
+    vector<EGS_I64> nhit, ntry;
+    EGS_I64 ntot;
+    if (getVolumes(npass, nsample, boxmin, boxmax, nreg, sigma, volume,
+                   nhit, ntry, ntot, rndm, true)) {
+        egsWarning("EGS_BaseGeometry::printVolumes(): Error: Failed to calculate volumes.\n");
+        return;
+    }
+
+    // report regions
+    egsInformation("\n");
+    egsInformation("================================================================================\n");
+    egsInformation("%15s %15s %15s %15s %%\n", "REGION", "volume", "sigma", "sigma");
+    egsInformation("================================================================================\n");
+    double total_volume = 0;
+    double total_sigma  = 0;
+    for (int i=0; i<nreg; i++) {
+        if (!this->isRealRegion(i)) {
+            continue;
+        }
+        double vol = volume[i];
+        double sig = sigma[i];
+        double err = sqrt(sig);
+        double relerr = 0;
+        if (vol > 0) {
+            relerr = err/vol*100;
+        }
+        egsInformation("%15d %15.6f %15.6f %15.6f %%\n", i, vol, err, relerr);
+        total_volume += vol;
+        total_sigma  += sig;
+    }
+    double total_err = sqrt(total_sigma);
+    double relerr = 0;
+    if (total_volume > 0) {
+        relerr = total_err/total_volume*100;
+    }
+    egsInformation("\n");
+    egsInformation("%15s %15.6f %15.6f %15.6f %%\n", "TOTAL", total_volume, total_err, relerr);
+
+    // report media
+    egsInformation("\n");
+    egsInformation("================================================================================\n");
+    egsInformation("%15s %15s %15s %15s %%\n", "MEDIUM", "volume", "sigma", "sigma");
+    egsInformation("================================================================================\n");
+    int nmed = this->nMedia();
+    vector<double> vol_med, sig_med;
+    for (int i=0; i<nmed; i++) {
+        vol_med.push_back(0);
+        sig_med.push_back(0);
+    }
+    for (int i=0; i<nreg; i++) {
+        if (!this->isRealRegion(i)) {
+            continue;
+        }
+        int med = this->medium(i);
+        if (med >=0 && med < nmed) {
+            vol_med[med]  += volume[i];
+            sig_med[med]  += sigma[i];
+        }
+    }
+    for (int i=0; i<nmed; i++) {
+        double vol = vol_med[i];
+        double sig = sig_med[i];
+        double err = sqrt(sig);
+        double relerr = 0;
+        if (vol > 0) {
+            relerr = err/vol*100;
+        }
+        egsInformation("%15s %15.6f %15.6f %15.6f %%\n", this->getMediumName(i), vol, err, relerr);
+    }
+    egsInformation("\n");
+
+    // report labels
+    if (volumeLabels.size() > 0) {
+        egsInformation("================================================================================\n");
+        egsInformation("%15s %15s %15s %15s %%\n", "LABEL", "volume", "sigma", "sigma");
+        egsInformation("================================================================================\n");
+        for (int k=0; k<volumeLabels.size(); k++) {
+            vector<int> label_regions;
+            this->getLabelRegions(volumeLabels[k], label_regions);
+            double label_volume = 0;
+            double label_sigma  = 0;
+            for (int i=0; i<label_regions.size(); i++) {
+                int reg = label_regions[i];
+                label_volume += volume[reg];
+                label_sigma  += sigma[reg];
+            }
+            double relerr = 0;
+            double err = sqrt(label_sigma);
+            if (label_volume > 0) {
+                relerr = err/label_volume*100;
+            }
+            egsInformation("%15s %15.6f %15.6f %15.6f %%\n", volumeLabels[k].c_str(), label_volume, err, relerr);
+        }
+        egsInformation("\n");
+    }
+
+    EGS_Float cpu = timer.time();
+
+    // report total number of samples
+    egsInformation("Total number of points sampled = %.0f\n", ntot);
+//     egsInformation("Memory used = %.2f MB\n", root->countMem());
+    egsInformation("Calculation time = %g seconds\n\n", cpu);
+
+    egsInformation("EGS_BaseGeometry::printVolumes(): Volume calculation complete.\n\n");
+}
+
+int EGS_BaseGeometry::getVolumes(EGS_I64 &npass, EGS_I64 &nsample,
+                                 vector<EGS_Float> &boxmin,
+                                 vector<EGS_Float> &boxmax,
+                                 unsigned int &nreg, vector<double> &sigma,
+                                 vector<double> &volume,
+                                 vector<EGS_I64> &nhit, vector<EGS_I64> &ntry,
+                                 EGS_I64 &ntot,
+                                 EGS_RandomGenerator *rndm, bool verbose = true) {
+
+    // Check box dimensions
+    if (boxmin.size() != 3 || boxmax.size() != 3) {
+        egsWarning("EGS_BaseGeometry::getVolumes(): Error: Box dimensions for volume calculation 'min' and 'max' must have sizes of 3.\n");
+        return 1;
+    }
+
+    // Check vectors haven't already been initialized
+    if (sigma.size() > 0 || volume.size() > 0 ||
+            nhit.size() > 0 || ntry.size() > 0) {
+        egsWarning("EGS_BaseGeometry::getVolumes(): Error: Expected empty vectors but they already have size (sigma, volume, nhit, ntry).\n");
+        return 1;
+    }
+
+    EGS_Vector min(boxmin[0], boxmin[1], boxmin[2]);
+    EGS_Vector max(boxmax[0], boxmax[1], boxmax[2]);
+
+    // Create octree root node
+    Volume_Info *vInfo = new Volume_Info(min, max, this, rndm);
+    Volume_Node *root = new Volume_Node(vInfo, NULL, -1);
+
+    // Initialize
+    double avgSigma = 0;
+    ntot = 0;
+    int nsampleLeaf = nsample;
+    for (unsigned int i=0; i<nreg; i++) {
+        sigma.push_back(0);
+        volume.push_back(0);
+        nhit.push_back(0);
+        ntry.push_back(0);
+    }
+
+    // Start executing passes
+    for (EGS_I64 i=0; i<npass; i++) {
+        if (verbose) {
+            egsInformation("%15d %15d %15d %15d\n", i, root->countLeaves(), nsampleLeaf, root->countLeaves()*nsampleLeaf);
+        }
+
+        if (i > 0) {
+            double varSum = 0;
+            for (unsigned int j=0; j<nreg; j++) {
+                if (volume[j] > 1e-10) {
+                    sigma[j] = sqrt(sigma[j])/volume[j]*100.;
+                }
+                else {
+                    sigma[j] = 0;
+                }
+                varSum += sigma[j];
+            }
+            avgSigma = varSum / nreg;
+        }
+
+        root->sampleVolumes(vInfo, nsampleLeaf, sigma, avgSigma);
+
+        ntot = 0;
+        for (unsigned int j=0; j<nreg; j++) {
+            sigma[j] = 0;
+            volume[j] = 0;
+            nhit[j] = 0;
+            ntry[j] = 0;
+        }
+
+        root->calculateVolumes(vInfo, volume, sigma, nreg, ntot, nhit, ntry);
+
+        nsampleLeaf = nsample/root->countLeaves() + 1;
+        if (nsampleLeaf < 10) {
+            nsampleLeaf = 10;
+        }
+    }
+
+    root->deleteChildren();
+    delete root, vInfo;
 }
