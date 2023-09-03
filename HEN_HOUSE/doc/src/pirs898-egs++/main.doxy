@@ -110,6 +110,9 @@
     <tr>
         <td> \ref egs_kerma "egs_kerma" <em>An application for volumetric kerma calculations </em></td>
     </tr>
+    <tr>
+        <td> \ref egs_gammaspec "egs_gammaspec" <em>An application for gamma spectrometry calculations </em></td>
+    </tr>
 
     <tr class='egsRowTitle'>
         <td> <h3>How to write an egs++ application</h3> </td>

@@ -43,6 +43,7 @@
 #include "egs_vector.h"
 #include "egs_object_factory.h"
 #include "egs_functions.h"
+#include "egs_ensdf.h"
 
 #include <string>
 #include <iostream>
@@ -186,6 +187,17 @@ public:
     */
     virtual EGS_Float getMu() {
         return -1;
+    };
+
+    /*!  \brief Print statistics on what was sampled from the source. */
+    virtual void printSampledEmissions() {};
+
+    /*!  \brief Get the radionuclide ENSDF object from the source.
+     *
+     * This is only defined for EGS_RadionuclideSource
+     */
+    virtual vector<EGS_Ensdf *> getRadionuclideEnsdf() {
+        return vector<EGS_Ensdf *>();
     };
 
     /*!  \brief Store the source state into the stream \a data_out.

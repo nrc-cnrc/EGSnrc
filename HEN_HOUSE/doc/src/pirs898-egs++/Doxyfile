@@ -744,6 +744,7 @@ INPUT                  = main.doxy \
                          egs_chamber.doxy \
                          egs_fac.doxy \
                          egs_kerma.doxy \
+                         egs_gammaspec.doxy \
                          ../../../egs++ \
                          ../../../interface/egs_interface2.h
 
