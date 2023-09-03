@@ -23,7 +23,7 @@
 #
 #  Author:          Blake Walters, 2018
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */

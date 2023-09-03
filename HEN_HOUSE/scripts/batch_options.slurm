@@ -82,5 +82,3 @@ long_queue="-p long"
 user1_queue="-p user1"
 user2_queue="-p user2"
 user3_queue="-p user3"
-
-

@@ -24,6 +24,7 @@
 #  Author:          Reid Townson, 2016
 #
 #  Contributors:    Martin Martinov
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */

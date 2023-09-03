@@ -24,6 +24,10 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
+#                   Blake Walters
+#                   Reid Townson
+#                   Max Orok
 #
 ###############################################################################
 #

@@ -23,7 +23,8 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Randle Taylor
+#                   Reid Townson
 #
 ###############################################################################
 */

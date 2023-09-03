@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2006
 #
-#  Contributors:
+#  Contributors:    Marc Chamberland
 #
 ###############################################################################
 #

@@ -21,9 +21,11 @@
 #
 ###############################################################################
 #
-#  Author:          Ernesto Mainegra, 2015
+#  Author:          Ernesto Mainegra-Hing, 2015
 #
-#  Contributors:
+#  Contributors:    Cody Crewson
+#                   Reid Townson
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 
@@ -93,4 +95,3 @@ TEMPLATE  = app
 LANGUAGE  = C++
 QT += xml
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-

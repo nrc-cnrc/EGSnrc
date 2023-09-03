@@ -23,7 +23,8 @@
 #
 #  Author:          Frederic Tessier, 2016
 #
-#  Contributors:
+#  Contributors:    Manuel Stoeckl
+#                   Reid Townson
 #
 ###############################################################################
 #

@@ -23,7 +23,8 @@
 #
 #  Author:          Blake Walters, 2013
 #
-#  Contributors:
+#  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 #

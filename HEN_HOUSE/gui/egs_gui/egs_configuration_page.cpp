@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2003
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Cody Crewson
 #
 ###############################################################################
 */
@@ -212,5 +213,3 @@ void EGS_ConfigurationPage::selectEgsHome() {
     setEgsHome(s); le_egshome->setText(egsHome());
   }
 }
-
-

@@ -24,6 +24,8 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Reid Townson
+#                   Ernesto Mainegra-Hing
+#                   Blake Walters
 #
 ###############################################################################
 */

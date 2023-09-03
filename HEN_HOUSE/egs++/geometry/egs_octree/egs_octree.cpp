@@ -25,6 +25,7 @@
 #
 #  Contributors:    Iwan Kawrakow
 #                   Hubert Ho
+#                   Marc Chamberland
 #
 ###############################################################################
 */

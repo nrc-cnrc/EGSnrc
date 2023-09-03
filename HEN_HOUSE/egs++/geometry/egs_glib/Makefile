@@ -27,6 +27,7 @@
 #  Contributors:    Marc Chamberland
 #                   Rowan Thomson
 #                   Dave Rogers
+#                   Reid Townson
 #
 ###############################################################################
 
@@ -56,4 +57,3 @@ ndgeom:
 
 clean:
 	$(REMOVE) $(ABS_DSO)$(libpre)$(library)$(libext) $(DSO2)$(library).$(obje)
-

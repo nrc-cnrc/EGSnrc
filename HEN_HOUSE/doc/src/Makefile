@@ -23,7 +23,7 @@
 #
 #  Author:          Frederic Tessier, 2015
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 

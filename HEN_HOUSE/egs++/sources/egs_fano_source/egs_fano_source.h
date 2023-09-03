@@ -24,7 +24,7 @@
 #  Authors:         Ernesto Mainegra-Hing, 2016
 #                   Hugo Bouchard, 2016
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */

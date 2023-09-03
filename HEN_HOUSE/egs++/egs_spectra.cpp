@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Reid Townson
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */

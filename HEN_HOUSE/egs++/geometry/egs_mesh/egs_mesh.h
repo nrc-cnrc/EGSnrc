@@ -21,13 +21,14 @@
 #
 ###############################################################################
 #
-#  Authors:          Dave Macrillo, 2020
-#                    Matt Ronan,
-#                    Nigel Vezeau,
-#                    Lou Thompson,
-#                    Max Orok
+#  Authors:         Dave Macrillo, 2020
+#                   Matt Ronan,
+#                   Nigel Vezeau,
+#                   Lou Thompson,
+#                   Max Orok
 #
-#  Contributors:     Pascal Michaud
+#  Contributors:    Pascal Michaud
+#                   Reid Townson
 #
 ###############################################################################
 #

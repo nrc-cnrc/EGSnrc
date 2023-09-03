@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2008
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
