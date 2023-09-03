@@ -1,0 +1,219 @@
+ 3S graphite spherical ion chamber, monoenergetic 1.25 MeV beam at 1m            
+ *******************************************************************************
+ *                                                                             *
+ *                                                                             *
+ *                               ************                                  *
+ *                               *          *                                  *
+ *                               * CAVSPHnrc*                                  *
+ *                               *          *                                  *
+ *                               ************                                  *
+ *                                                                             *
+ *   Spherical-geometryEGSnrc user-code for scoring cavity details             *
+ *                                                                             *
+ *   CAVSPHnrc was developed by the National Research Council of Canada        *
+ *                                                                             *
+ *     It uses the EGSnrc Code System developed at NRC                         *
+ *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)         *
+ *     running on linux (test)                                                 *
+ *                                                                             *
+ *                                                   Thu Aug 23 18:19:54 2018  *
+ *******************************************************************************
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon cross sections                                      si
+ Compton cross sections                                     compton_sigma.da
+ Photon transport cutoff(MeV)                                    0.1000E-02
+ Pair angular sampling                                       SIM
+ Pair cross sections                                         BH 
+ Triplet production                                          OFF
+ Bound Compton scattering                                    ON            
+ Radiative Compton corrections                               OFF           
+ Rayleigh scattering                                         OFF           
+ Atomic relaxations                                          EADL          
+ Photoelectron angular sampling                              ON            
+ Photonuclear attenuation                                    Off           
+ Photonuclear cross sections                                 default
+
+ Electron transport cutoff(MeV)                               0.5210
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             KM 
+ Spin effects                                                On
+ Electron Impact Ionization                                  Off
+ Maxium electron step in cm (SMAX)                               0.1000E+11
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 EXACT     
+ Skin-depth for boundary crossing (MFP)                      3.000    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+ *******************************************************************************
+
+                   MONTE CARLO, TRANSPORT, AND SCATTER CONTROLS
+
+*******************************************************************************
+
+
+                   MAX # OF HISTORIES TO RUN                   100000
+                   MAX # OF HISTORIES TO ANALYZE               100000
+                   INCIDENT CHARGE
+                   Incident Charge                         photons
+                   INCIDENT KINETIC ENERGY                  1.250 (MeV)
+                   MIN/MAX PHOTON STEP FORCED                   1/     1
+                   Range rejection on a region by region basis
+                   Also globally to region between z=   -0.0000 &    0.0000 cm
+                      and inside radius=      1.3001 cm
+                   Range rejection only for electrons < ESAVEIN=     2.000 MeV
+                   MAXIMUM CPUTIME ALLOWED                24.00 (hrs)
+                   STATS IN CAVITY OBJECTIVE               0.000 %
+                   1ST INITIALRANDOM NUMBER SEED
+                   Initial RNG state:     ixx jxx =   97  33
+                   ** No regeneration requested (IFANO set to 0)! ** 
+ *******************************************************************************
+
+
+                   MATERIAL SUMMARY   2 MATERIALS USED
+
+
+*******************************************************************************
+
+
+# MATERIAL  DENSITY(g/cm**3)      AE(MeV)    AP(MeV)         UE(MeV)    UP(MeV)
+ - --------  ----------------      -------    -------         -------    -------
+ 1   170C52     1.700E+00           0.521      0.010          55.511     55.000
+ 2   AIR521     1.205E-03           0.521      0.010          55.511     55.000
+ ***********************************************************************************************
+
+                             SOURCE PARAMETERS
+
+ ***********************************************************************************************
+
+                   POINT SOURCE FROM ANY ANGLE   100.0 cm AWAY, RADIUS =   1.598 cm
+                              X-AXIS DIRECTION COSINE=    0.0000
+                              Y-AXIS DIRECTION COSINE=    0.0000
+                              Z-AXIS DIRECTION COSINE=    1.0000
+                   INCIDENT FLUENCE * SOLID ANGLE=    1.000E+01/cm**2
+
+
+ ZONAL VARIABLES-NONROTATED OUTPUT
+ *********************************
+
+
+#IRL/X/MED/ : #IRL = GEOMETRY REGION NUMBER
+                   X = "*" IF CAVITY REGION
+                   MEDIUM, FIRST 6 CHARACTERS ONLY
+ MASS             : MASS OF THE REGION IN GRAMS
+ 
+ 
+ 
+       0.0000
++                        1.3001
++                                          1.5981
+    0.0000|
++          -----------------|
++                            -----------------|
++                                              ( 1)
+          |                 |
++                           |                 |
+          | #  2/*/AIR521/  |
++                           | #  3/ /170C52/  |
+            MASS  1.109E-02 |
++                             MASS  1.342E+01 |
+  180.0000|
++          -----------------|
++                            -----------------|
++                                              ( 2)
+         ( 0)
++                          ( 1)
++                                            ( 2)
+ 
+ 
+13S graphite spherical ion chamber, monoenergetic 1.25 MeV beam at 1m            
+
+NRCC calculation using CAVSPHnrc(EGSnrc)   
+ on linux (test)                                       Thu Aug 23 18:19:54 2018
+
+
+*******************************************************************************
+
+
+                   EXECUTION INFORMATION AND WARNING MESSAGES
+
+
+*******************************************************************************
+
+
+Using CAVSPHnrc(EGSnrc)   on linux (test) 
+
+********* NEW INPUT FILE *********
+
+
+*********DESIRED STATISTICAL ACCURACY OF  0.00% NOT REACHED*********
+ STATS IN CAVITY=  1.58 % AFTER 10 BATCHES
+
+********* FINAL RANDOM NUMBER STATE: ixx jxx =    5  38  *********
+
+Finished simulations:time elsapsed,CPU,ratio=      0.6     0.6(= 0.00h)    0.95
+
+CPUtime/history=   0.00001  sec.  Histories/hour=  569304090.
+
+
+       # PRIMARY CHARGED PARTICLE STEPS                 696381 +/-  0.81%
+       # OF TIMES MSCAT SWITCHED OFF                         0 +/-99.90%
+       RATIO                                                     0.000 +/- 99.90%
+
+
+       # PRIMARY CHARGED PARTICLE STEPS IN CAVITY       150484 +/-  1.16%
+       # TIMES MSCAT SWITCHED OFF IN CAVITY REGION           0 +/- 99.90%
+       RATIO                                                     0.000 +/- 99.90%
+
+
+    *** WARNING ***  IDNEAR=0, ABOVE RESULTS INCOMPLETE (NOT ALL STEPS COUNTED)
+
+
+                   SUM OF RESULTS FOR THE CAVITY: 1 REGION
+                   ***************************************
+
+                   Results using history by history scoring scheme
+                   ===================================================== 
+
+
+TOTAL DOSE (GRAYS/INCIDENT FLUENCE):              5.1432E-12 +/-   1.576%
+Total dose/Awall (grays/incident fluence):        5.2366E-12 +/-   1.604%
+Awall:                                            0.98216    +/-   0.281%
+Aatt:                                             0.95792    +/-   0.044%
+Ascat:                                            1.02530    +/-   0.276%
+Dpr + Dsec:                                       5.1432E-12 +/-   1.576%
+
+
+                   ===================================================== 
+
+
+
+
+                   Results using a batch scoring scheme
+                   ===================================================== 
+
+
+TOTAL DOSE (GRAYS/(INCIDENT FLUENCE):             5.1432E-12 +/-   1.45%
+ Ascat:                                           1.02521   +/-  0.00238
+ Aatt :                                           0.95794   +/-  0.00049
+ Awall:                                           0.98210   +/-  0.00233
+ TOTAL DOSE/Awall:                                5.2366E-12 +/-   1.38%
+
+
+Kscat:                                            0.97541   +/-  0.00226
+ Katt :                                           1.04390   +/-  0.00054
+ Kwall:                                           1.01823   +/-  0.00242
+
+END OF RUN          Thu Aug 23 18:19:54 2018
+
+
+
+

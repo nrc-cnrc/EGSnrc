@@ -1,0 +1,196 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ egs_quality input file
+#  Copyright (C) 2017 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Reid Townson, 2017
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  Quality tests
+#
+#
+###############################################################################
+
+
+##############################################################################
+### RUN CONTROL
+##############################################################################
+:start run control:
+  ncase = 1e6
+  geometry error limit = 100
+:stop run control:
+
+:start rng definition:
+    type = ranmar
+    initial seeds = 6314 8370
+:stop rng definition:
+
+##############################################################################
+### AUSGAB
+##############################################################################
+:start ausgab object definition:
+#     :start ausgab object:
+#         name    = tracks
+#         library = egs_track_scoring
+#         stop scoring = 1000
+#     :stop ausgab object:
+    :start ausgab object:
+        library      = egs_dose_scoring
+        name         = doseScoring
+        medium dose  = no
+        region dose  = yes
+        volume       = 1 # in cm**3
+        dose regions = quality_doseLabel
+    :stop ausgab object:
+:stop ausgab object definition:
+
+##############################################################################
+### APPLICATION TESTS
+### In each 'test' block, specify the 'application'
+### Input files and pegs data can be specified with 'inputs' and 'pegs'
+### The input files must reside in egs_quality/inputs/apps/theApp/
+### If the application is not compiled, it will be skipped
+##############################################################################
+:start quality test applications:
+    :start test:
+        application = tutor1
+        pegs = tutor_data
+    :stop test:
+    :start test:
+        application = tutor7pp
+        inputs = quality_slab
+        pegs = tutor_data
+    :stop test:
+    :start test:
+        application = egs_chamber
+        inputs = quality_kerma
+    :stop test:
+    :start test:
+        application = BEAM_EX10MeVe
+        inputs = quality_test
+        pegs = 521icru
+    :stop test:
+    :start test:
+        application = dosxyznrc
+        inputs = quality_test
+        pegs = 521icru
+    :stop test:
+    :start test:
+        application = dosrznrc
+        inputs = quality_test
+        pegs = 521icru
+    :stop test:
+    :start test:
+        application = flurznrc
+        inputs = quality_test
+        pegs = 700icru
+    :stop test:
+    :start test:
+        application = cavrznrc
+        inputs = quality_test
+        pegs = 521icru
+    :stop test:
+    :start test:
+        application = cavsphnrc
+        inputs = quality_test
+        pegs = 521icru
+    :stop test:
+    :start test:
+        application = sprrznrc
+        inputs = quality_test
+        pegs = 521icru
+    :stop test:
+    :start test:
+        application = edknrc
+        inputs = quality_test
+        pegs = 521icru
+    :stop test:
+    :start test:
+        application = g
+        inputs = quality_test
+        pegs = 521icru
+    :stop test:
+
+
+:stop quality test applications:
+
+##############################################################################
+### GEOMETRY TESTS
+### Each geometry in 'geometry inputs', will be tested with every source in
+### 'source inputs'
+### By default, we look in the egs_quality/inputs/geometries folder
+##############################################################################
+:start quality test geometries:
+    # TODO: missing fastenvelope, deformedxyz, octree, vhpgeometry
+
+    geometry inputs = egs_gstack egs_box egs_cdgeometry egs_coneset egs_conestack egs_cylinders egs_elliptic_cylinders egs_genvelope egs_gtransformed egs_gunion egs_iplanes egs_parallelcones egs_planecollection egs_prism egs_pyramid egs_radialrepeater egs_roundrect_cylinders egs_simplecone egs_space egs_spheres egs_xyzgeometry egs_xyzrepeater
+    source inputs = egs_isotropic_source
+:stop quality test geometries:
+
+##############################################################################
+### SOURCE TESTS
+### Each source in 'source inputs' will generate 'ncase' particles to
+### be compared with the quality database
+### By default, we look in the egs_quality/inputs/sources folder
+##############################################################################
+:start quality test sources:
+    # TODO: missing fanosource
+
+    source inputs = egs_angular_spread_source egs_beam_source egs_collimated_source egs_isotropic_source egs_parallel_beam egs_phsp_source egs_point_source egs_radionuclide_source egs_source_collection egs_transformed_source iaea_phsp_source
+:stop quality test sources:
+
+##############################################################################
+### MEDIA
+##############################################################################
+:start media definition:
+
+    ### cutoff energies
+    ae  = 0.521             # lowest  energy for electrons (kinetic+0.511)
+    ap  = 0.01              # lowest  energy for photons   (kinetic)
+    ue  = 50.511            # maximum energy for electrons (kinetic+0.511)
+    up  = 50                # maximum energy for photons   (kinetic)
+
+    :start air:
+        density correction file    = air_dry_nearsealevel
+    :stop air:
+
+    :start aluminum:
+        density correction file     = aluminum
+    :stop aluminum:
+
+    :start water:
+        density correction file    = water_liquid
+    :stop water:
+
+:stop media definition:
+
+
+##############################################################################
+### TRANSPORT PARAMETERS
+##############################################################################
+:start MC transport parameter:
+    Global ECUT                     = 0.521     # Global electron transport cutoff
+    Global PCUT                     = 0.010     # Global photon transport cutoff
+:stop MC transport parameter:
+

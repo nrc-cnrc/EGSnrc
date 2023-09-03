@@ -1,0 +1,136 @@
+================================================================================
+EGSnrc version 4 for x86_64-unknown-linux-gnu          Wed Aug  1 14:57:31 2018
+================================================================================
+configuration............................................test
+user code................................................tutor1
+pegs file................................................tutor_data on HEN_HOUSE
+using host...............................................irs25
+output file(s)...........................................test
+================================================================================
+\f  Start tutor1
+
+ CALL HATCH to get cross-section data
+
+ ===> Photonuclear flag:   0
+ RAYLEIGH OPTION REQUESTED FOR MEDIUM NUMBER  1
+
+ Rayleigh data available for medium  1 in PEGS4 data set.
+
+(Re)-initializing photon cross sections with files from the series: xcom
+
+ Compton cross sections: default
+ Using Compton cross sections from /home/rwtownson/EGSnrc/HEN_HOUSE/data/compton_sigma.data
+ Working on medium   1 ... 
+  ->  100 atomic ff values computed!
+      preparing data for Rayleigh sampling ... done
+
+OK
+
+Reading screened Rutherford MS data ...............  done 
+
+
+Reading spin data base from /home/rwtownson/EGSnrc/HEN_HOUSE/data/spinms.data
+EGSnrc spin data, version 2.0   
+Data generated on a machine with 1234 endianess
+The endianess of this CPU is 1234
+Ranges:      1.00   100.00  0.30054  1.00000
+
+
+  medium    1 .....................  done
+  
+  Medium            1  sige =    1.7946410123827996        1.7870816572288755       monotone =  T T
+  
+  Initializing tmxs for estepe =   0.25000000000000000       and ximax =   0.50000000000000000     
+  
+
+Bound Compton scattering requested, reading data ......  Done
+
+ Initializing Bound Compton scattering ......
+ Medium   1 has  21 shells: 
+   1  861   1  0.02740 0.141E+01    67.416
+   2  862   2  0.02740 0.503E+01    11.681
+   3  863   3  0.02740 0.247E+01    11.136
+   4  864   4  0.05479 0.271E+01     9.881
+   5  865   5  0.02740 0.111E+02     2.708
+   6  866   6  0.02740 0.652E+01     2.469
+   7  867   7  0.05479 0.696E+01     2.194
+   8  868   8  0.05479 0.452E+01     1.793
+   9  869   9  0.08219 0.462E+01     1.735
+  10  870  10  0.02740 0.234E+02     0.563
+  11  871  11  0.02740 0.148E+02     0.462
+  12  872  12  0.05479 0.158E+02     0.402
+  13  873  13  0.05479 0.121E+02     0.239
+  14  874  14  0.08219 0.124E+02     0.227
+  15  875  15  0.02740 0.607E+02     0.068
+  16  876  16  0.02740 0.414E+02     0.042
+  17  877  17  0.05479 0.444E+02     0.034
+  18  878  18  0.08219 0.117E+02     0.025
+  19  879  19  0.10959 0.118E+02     0.023
+  20  880  20  0.05479 0.944E+02     0.008
+  21  881  21  0.01370 0.221E+03     0.008
+ ...... Done.
+
+Output from subroutine EDGSET:
+==============================
+ Atomic relaxations requested! 
+
+ Reading simplified photo-absorption data ..... Done
+
+ Reading simplified relaxation data ..... Done
+
+ Reading parametrized XCOM photo cross section data ..... Done
+
+ Reading EADL relaxation data ......
+  Z =  73 has 22 shells
+ ...... Done.
+
+ EGSnrc SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+
+ knock-on electrons can be created and any electron followed down to
+                                          0.189 MeV kinetic energy
+ brem photons can be created and any photon followed down to      
+                                          0.010 MeV
+
+                  Kinetic Energy(MeV)  charge  angle w.r.t.Z axis-degrees
+ Start history   1
+                         0.961           0             6.9
+                        17.193          -1            23.0
+ Start history   2
+                        10.319           0            15.7
+                         7.898          -1             8.0
+ Start history   3
+                         0.108           0            37.0
+                         0.217           0            51.7
+                         6.831           1            54.9
+                         7.483          -1            50.7
+ Start history   4
+                        18.097          -1             7.0
+ Start history   5
+                        18.066          -1            30.6
+ Start history   6
+                        12.137           0             3.3
+                         5.845          -1            21.3
+ Start history   7
+                         4.985           0            16.0
+                        13.286          -1            19.8
+ Start history   8
+                        17.867          -1            58.5
+ Start history   9
+                         0.272           0            28.8
+                         3.705           0            21.0
+                        14.160          -1            19.2
+ Start history  10
+                         0.175           0            16.4
+                        16.496          -1            22.4
+
+
+================================================================================
+Finished simulation
+
+  Elapsed time:                    0.1 s (  0.000 h)
+  CPU time:                        0.1 s (  0.000 h)
+  Ratio:                          1.118
+
+
+End of run                                             Wed Aug  1 14:57:31 2018
+================================================================================

@@ -1,0 +1,72 @@
+
+###############################################################################
+#
+#  EGSnrc g application input file template
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Reid Townson
+#
+###############################################################################
+
+# Relax off, eii off
+#<E*mu_tr/rho>     =    76.907083269024980       10^-12 Gy cm^2  +/-   4.94134717475937998E-002
+
+ ##############################
+ :Start MC Transport Parameter:
+
+ Global ECUT=                    0.700
+ Global PCUT=                    0.01
+ Global SMAX=                    1e10
+ Electron Impact Ionization=     Off
+ Spin effects=                   Off
+ Bound Compton scattering=       Off
+ Rayleigh scattering=            Off
+ Atomic relaxations=             Off
+ Photoelectron angular sampling= Off
+ Brems angular sampling=         simple
+ Brems cross sections= BH
+ Pair angular sampling=          Off
+ ESTEPE=                         0.25
+ XIMAX=                          0.5
+ Skin depth for BCA=             3
+ Boundary crossing algorithm=    exact
+ Electron-step algorithm=        default
+ Spin effects=                   Off
+
+ :Stop MC Transport Parameter:
+ #############################
+
+ media=  AL521ICRU
+ initial random no. seeds = 97, 34
+ number of histories =       200000
+ accuracy= 0.001
+ calculation type= 1
+
+ :Start Source Input:
+ --------------------
+
+ incident spectrum =       MONO-ENERGY
+ incident charge=         0
+ incident kinetic energy = 25
+
+
+ :Stop Source Input:
+ -------------------
+

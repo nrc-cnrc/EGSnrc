@@ -1,0 +1,46 @@
+electron beam 5 MeV 1x1 water 2mm grid                                           #!GUI1.0
+1
+H2O521ICRU
+0.521, 0.01, 0, 0
+-1, -1, -1, 0
+-5.1
+0.2, 51
+0.0
+0.2, 50
+-5.1
+0.2, 51
+0, 0, 0, 0, 0, 0, 0, 0
+0, 0, 0, 0, 0, 0, 0, 0
+26, 26, 1, 10, 26, 26, 2, 0
+0, 0, 0, 0, 0, 0, 0, 0
+-1, 1, 0, 0, 0, 90, 270, 1, 1, 0.0,
+0, 0, 0, 0, 0, 0, 0, 0
+5.511
+2000, 0, 24.0, 33, 98, 100.0, 0, 0, 0, 0, , 0, 0, 0, 1, 0, 0
+ #########################
+ :Start MC Transport Parameter:
+
+ Global ECUT= 0.521
+ Global PCUT= 0.01
+ Global SMAX= 0.03
+ ESTEPE= 0.25
+ XIMAX= 0.5
+ Boundary crossing algorithm= EXACT
+ Skin depth for BCA= 0
+ Electron-step algorithm= PRESTA-II
+ Spin effects= On
+ Brems angular sampling= KM
+ Brems cross sections= BH
+ Bound Compton scattering= Off
+ Compton cross sections= default
+ Pair angular sampling= KM
+ Pair cross sections= BH
+ Photoelectron angular sampling= Off
+ Rayleigh scattering= On
+ Atomic relaxations= Off
+ Electron impact ionization= Off
+ Photon cross sections= epdl
+ Photon cross-sections output= Off
+
+ :Stop MC Transport Parameter:
+ #########################
