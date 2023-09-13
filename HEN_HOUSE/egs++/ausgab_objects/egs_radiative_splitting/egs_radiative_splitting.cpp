@@ -312,7 +312,11 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 //label as nonphat to be passed on to descendents
                 latch = latch & ~(1 << 0);
                 app->setLatch(latch); //reset latch of interacting photon
+            //    EGS_Particle p_tmp = app->getParticleFromStack(app->getNp());
+     // egsInformation("about to doSC: np=%d, iq=%d, E=%g, wt=%g\n",app->getNp(),p_tmp.q,p_tmp.E,p_tmp.wt);
                 doSmartCompton(nint);
+          //      p_tmp = app->getParticleFromStack(app->getNp());
+      //egsInformation("after doSC: np=%d, iq=%d, E=%g, wt=%g\n",app->getNp(),p_tmp.q,p_tmp.E,p_tmp.wt);
             }
             else //straight-up compton
             {
@@ -1222,7 +1226,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
    //
    // sample interactions towards circle
    //
-   app->deleteParticleFromStack(np); //overwrite interacting photon
+   app->deleteParticleFromStack(np); //delete interacting particle
    if( method1 ) {
         for(int j=0; j<nsample; j++) {
             EGS_Float x1, y1; int iw;
@@ -1338,6 +1342,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
                 p.u=EGS_Vector(un,vn,wn);
                 p.wt=wt*nint;
                 p.latch=latch | (1 << 0);
+                p.ir=irl;
                 p.q=0; p.E = E*br;
                 app->addParticleToStack(p,dnear);
             }
