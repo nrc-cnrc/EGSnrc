@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Marc Chamberland
+#                   Blake Walters
 #
 ###############################################################################
 */
@@ -96,6 +97,8 @@ void EGS_SourceCollection::setUp(const vector<EGS_BaseSource *> &S,
     description = "Invalid source collection";
     if (isValid()) {
         p = new EGS_Float [nsource];
+        last_flu = new EGS_Float [nsource];
+        p_group = new vector<EGS_I64> [nsource];
         sources = new EGS_BaseSource* [nsource];
         Emax = 0;
         for (int j=0; j<nsource; j++) {
@@ -126,7 +129,9 @@ void EGS_SourceCollection::setUp(const vector<EGS_BaseSource *> &S,
         last_cases = new EGS_I64 [ nsource ];
         for (int i=0; i<nsource; i++) {
             last_cases[i] = 0;
+            last_flu[i]=0.;
         }
+        i_add = false;
     }
 }
 
