@@ -148,6 +148,8 @@ public:
             delete table;
             delete [] p;
             delete [] last_cases;
+            delete [] last_flu;
+            delete [] p_group;
         }
     };
 
@@ -158,6 +160,22 @@ public:
         EGS_I64 this_case = sources[j]->getNextParticle(rndm,q,latch,E,wt,x,u);
         count += this_case - last_cases[j];
         last_cases[j] = this_case;
+        for (int i=0; i<nsource; i++)
+        {
+            //prevent "false" fluence counts in case of a collection consisting of multiple
+            //transformations of a common base source using a vector that, for each source,
+            //stores all other sources sharing the same base source
+            //use fluence increments in the unselected sources to detect this
+            if (i != j && sources[i]->getFluence() > last_flu[i])
+            {
+                if(std::find(p_group[i].begin(), p_group[i].end(), j) == p_group[i].end())
+                {
+                     p_group[i].push_back(j);
+                     p_group[j].push_back(i);
+                }
+            }
+            last_flu[i] = sources[i]->getFluence();
+        }
         return count;
     };
     EGS_Float getEmax() const {
@@ -166,7 +184,12 @@ public:
     EGS_Float getFluence() const {
         EGS_Float flu = 0;
         for (int j=0; j<nsource; j++) {
-            flu += sources[j]->getFluence();
+            EGS_Float p_tot=p[j];
+            for (int i=0; i<p_group[j].size(); i++)
+            {
+               p_tot += p[p_group[j][i]];
+            }
+            flu += p[j]/p_tot*sources[j]->getFluence();
         }
         return flu;
     };
@@ -218,6 +241,7 @@ public:
         count = 0;
         for (int j=0; j<nsource; ++j) {
             last_cases[j] = 0;
+            last_flu[j] = 0;
             sources[j]->resetCounter();
         }
     };
@@ -263,8 +287,10 @@ protected:
     EGS_SimpleAliasTable *table;     //!< Alias table for randomly picking a source
     EGS_I64        *last_cases;//!< Last case returned from each source
     EGS_Float      *p;         //!< The probabilities
+    EGS_Float      *last_flu;   //!< Saved value of source_flu
     EGS_Float Emax;            //!< Maximum energy (max of s[j]->getEmax()).
     EGS_I64        count;      //!< Independent particles delivered
+    vector<EGS_I64> *p_group;  //!< Vector of sources using the same base source
 
     void setUp(const vector<EGS_BaseSource *> &S, const vector<EGS_Float> &);
 
