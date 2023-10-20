@@ -1866,7 +1866,7 @@ public:
                         for (int iiz=iz-1; iiz<=iz+1; ++iiz) {
                             if (iiz >= 0 && iiz < nz) {
                                 if (iix != ix || iiy != iy || iiz != iz) {
-                                    int cell1 = iix+iiy*nx+iiz*nz;
+                                    int cell1 = iix+iiy*nx+iiz*nxy;
                                     EGS_Vector tmp(x-translation[cell1]);
                                     EGS_Float t1 = g->hownear(-1,tmp);
                                     if (t1 < t) {
