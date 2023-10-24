@@ -1182,9 +1182,9 @@ void EGS_AdvancedApplication::resetRNGState() {
     }
 }
 
-//************************************************************
-// Utility functions for use with ausgab dose scoring object
-//************************************************************
+//****************************************************
+// Utility functions for use with dose scoring object
+//****************************************************
 // Returns density for medium ind
 EGS_Float EGS_AdvancedApplication::getMediumRho(int ind) {
     // handle the negative medium index for vacuum
@@ -1213,10 +1213,32 @@ EGS_Float EGS_AdvancedApplication::getPcut() {
 EGS_Float EGS_AdvancedApplication::getRM() {
     return the_useful->rm;
 }
-// Turns ON/OFF radiative splitting
+
+//*********************************************************
+// Utility functions for radiative splitting ausgab object
+//*********************************************************
+
+//! Turns ON/OFF radiative splitting
 void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
     the_egsvr->nbr_split = nsplit;
 }
+
+//*****************************************************
+// Utility functions for range rejection ausgab object
+//*****************************************************
+void setRangeRejection(const EGS_Float &E) {
+
+    the_egsvr->e_max_rr = E;
+
+    if ( E > 0.0 ){
+       the_egsvr->i_do_rr  = 1;
+    }
+    else{
+       the_egsvr->i_do_rr  = 0;
+    }
+
+};
+
 
 //************************************************************
 // Utility functions for fluence scoring objects

@@ -1117,6 +1117,7 @@ public:
 
     EGS_Particle top_p;  //!< The top particle on the stack (i.e., the particle being transported)
     int          Np;     //!< The index of the top particle on the stack
+    
     //************************************************************
     // Utility functions for use with ausgab dose scoring objects
     //************************************************************
@@ -1148,7 +1149,16 @@ public:
     virtual EGS_Float getRM() {
         return -1.0;
     };
+    
+    //*********************************************************
+    // Utility functions for radiative splitting ausgab object
+    //*********************************************************
     virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
+
+    //*****************************************************
+    // Utility functions for range rejection ausgab object
+    //*****************************************************
+    virtual void setRangeRejection(const EGS_Float &E) {};
 
     //************************************************************
     // Utility functions for use with ausgab fluence scoring objects
