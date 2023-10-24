@@ -204,9 +204,9 @@ public:
     */
     void setEIIData(EGS_I32 len);
 
-    //************************************************************
-    // Utility functions for use with ausgab dose scoring objects
-    //************************************************************
+    //*****************************************************
+    // Utility functions for use with dose scoring objects
+    //*****************************************************
     EGS_Float getMediumRho(int ind);
     EGS_Float getEdep();
     void setEdep(EGS_Float edep);
@@ -231,15 +231,20 @@ public:
     /* Needed by some sources */
     EGS_Float getRM();
 
-    //************************************************
-    // For use with ausgab radiative splitting objects
-    //************************************************
+    //*********************************************************
+    // Utility functions for radiative splitting ausgab object
+    //*********************************************************
 
     /* Turn ON/OFF EGSnrc internal radiative splitting (UBS) */
     void setRadiativeSplitting(const EGS_Float &nsplit);
     /* Turn ON/OFF EGSnrc internal Russian Roultette + UBS */
     void setRussianRoulette(const EGS_Float &iSwitchRR);
     void splitTopParticleIsotropically(const EGS_Float &fsplit);
+
+    //*****************************************************
+    // Utility functions for range rejection ausgab object
+    //*****************************************************
+    void setRangeRejection(const EGS_Float &E) {};
 
 protected:
 
