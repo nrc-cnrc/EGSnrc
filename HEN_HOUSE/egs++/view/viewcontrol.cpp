@@ -19,7 +19,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
-###############################################################################
+####################################################################8###########
 #
 #  Author:          Iwan Kawrakow, 2005
 #
@@ -2859,39 +2859,38 @@ int GeometryViewControl::setGeometry(
 
     axesmax  = pmax + EGS_Vector(size, size, size)*0.3;
 
-    if (!justReloading) {
-        distance = size*3.5; // ~2*sqrt(3);
-        look_at = center;
-        look_at_home = look_at;
-        setLookAtLineEdit();
-        if (distance > 60000) {
-            egsWarning("too big: %g\n",size);
-            distance = 9999;
-        }
-        else {
-            zoomlevel = -112;
-        }
-        setProjectionLineEdit();
-        //p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
-        p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*3*distance;
-        setLightLineEdit();
-        camera = p_light;
-        screen_xo = look_at-EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
-        screen_v1 = EGS_Vector(c_phi,-s_phi,0);
-        screen_v2 = EGS_Vector(c_theta*s_phi,c_theta*c_phi,-s_theta);
-
-        // camera orientation vectors (same as the screen vectors)
-        camera_v1 = screen_v1;
-        camera_v2 = screen_v2;
-
-        // save camera home position
-        camera_home = camera;
-        camera_home_v1 = camera_v1;
-        camera_home_v2 = camera_v2;
-        zoomlevel_home = zoomlevel;
-
-        setCameraLineEdit();
+    // Set or reset the viewing window
+    distance = size*3.5; // ~2*sqrt(3);
+    look_at = center;
+    look_at_home = look_at;
+    setLookAtLineEdit();
+    if (distance > 60000) {
+        egsWarning("too big: %g\n",size);
+        distance = 9999;
     }
+    else {
+        zoomlevel = -112;
+    }
+    setProjectionLineEdit();
+    //p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
+    p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*3*distance;
+    setLightLineEdit();
+    camera = p_light;
+    screen_xo = look_at-EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
+    screen_v1 = EGS_Vector(c_phi,-s_phi,0);
+    screen_v2 = EGS_Vector(c_theta*s_phi,c_theta*c_phi,-s_theta);
+
+    // camera orientation vectors (same as the screen vectors)
+    camera_v1 = screen_v1;
+    camera_v2 = screen_v2;
+
+    // save camera home position
+    camera_home = camera;
+    camera_home_v1 = camera_v1;
+    camera_home_v2 = camera_v2;
+    zoomlevel_home = zoomlevel;
+
+    setCameraLineEdit();
 
     updateView();
 
