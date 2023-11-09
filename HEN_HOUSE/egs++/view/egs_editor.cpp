@@ -596,10 +596,11 @@ void EGS_Editor::autoComplete() {
             setExtraSelections(extraSelections);
         }
 
-        // For geometry and source blocks that don't contain a library line,
+        // For geometry, source and ausgab object blocks that don't contain a library line,
         // add 'library =' as an option in the popup
     }
-    else if (selectedText.size() == 0 && (egsEquivStr(blockTitle.toStdString(), "geometry") || egsEquivStr(blockTitle.toStdString(), "source"))) {
+    else if (selectedText.size() == 0 && (egsEquivStr(blockTitle.toStdString(), "geometry") || egsEquivStr(blockTitle.toStdString(), "source")
+    || egsEquivStr(blockTitle.toStdString(), "ausgab object"))) {
 
         // Populate the popup list
         QStringList itemList;
