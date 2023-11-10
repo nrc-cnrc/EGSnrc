@@ -128,7 +128,9 @@ void EGS_SourceCollection::setUp(const vector<EGS_BaseSource *> &S,
         last_cases = new EGS_I64 [ nsource ];
         for (int i=0; i<nsource; i++) {
             last_cases[i] = 0;
+            last_flu[i]=0.;
         }
+        i_add = false;
     }
 }
 

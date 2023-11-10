@@ -173,6 +173,8 @@ public:
                      p_group[i].push_back(j);
                      p_group[j].push_back(i);
                 }
+                //set last_case for this source equal to that for source j
+                last_cases[i]=last_cases[j];
             }
             last_flu[i] = sources[i]->getFluence();
         }
@@ -189,7 +191,16 @@ public:
             {
                p_tot += p[p_group[j][i]];
             }
-            flu += p[j]/p_tot*sources[j]->getFluence();
+            int norm = 1;
+            //if we've combined results where a group of sources using a single base source
+            //is used, then at this point the summed fluence for EACH source is actually multiplied
+            //by the number of sources in the group
+            if (i_add)
+            {
+               norm = p_group[j].size()+1;
+            }
+            flu += p[j]/p_tot*sources[j]->getFluence()/norm;
+            egsInformation("j=%d pj=%g p_tot=%g norm=%d flu before norm=%g flu=%g\n",j,p[j],p_tot,norm,sources[j]->getFluence(),p[j]/p_tot*sources[j]->getFluence()/norm);
         }
         return flu;
     };
@@ -209,6 +220,15 @@ public:
                 return res;
             }
             data << " ";
+            // have to store last_flu so we don't end up mistakenly registering
+            // a common base source in case of restart
+            data << last_flu[j] << " ";
+            for (int i=0; i<p_group[j].size(); i++)
+            {
+                data << p_group[j][i] << " ";
+            }
+            // use -1 to denote end of group sharing a common base source
+            data << -1 << " ";
             if (!sources[j]->storeState(data)) {
                 return false;
             }
@@ -228,6 +248,17 @@ public:
             res = egsGetI64(data,last_cases[j]);
             if (!res) {
                 return res;
+            }
+            data >> last_flu[j];
+            EGS_I64 tmp_int;
+            data >> tmp_int;
+            while(tmp_int != -1)
+            {
+                if(std::find(p_group[j].begin(), p_group[j].end(), tmp_int) == p_group[j].end())
+                {
+                    p_group[j].push_back(tmp_int);
+                }
+                data >> tmp_int;
             }
             if (!sources[j]->setState(data)) {
                 return false;
@@ -263,10 +294,22 @@ public:
                 return res;
             }
             last_cases[j] += tmp;
+            data_in >> last_flu[j];
+            EGS_I64 tmp_int;
+            data_in >> tmp_int;
+            while(tmp_int != -1)
+            {
+                if(std::find(p_group[j].begin(), p_group[j].end(), tmp_int) == p_group[j].end())
+                {
+                    p_group[j].push_back(tmp_int);
+                }
+                data_in >> tmp_int;
+            }
             if (!sources[j]->addState(data_in)) {
                 return false;
             }
         }
+        i_add = true;
         return true;
     };
 
@@ -291,6 +334,7 @@ protected:
     EGS_Float Emax;            //!< Maximum energy (max of s[j]->getEmax()).
     EGS_I64        count;      //!< Independent particles delivered
     vector<EGS_I64> *p_group;  //!< Vector of sources using the same base source
+    bool i_add;                //!< Set to true if parallel results have been combined
 
     void setUp(const vector<EGS_BaseSource *> &S, const vector<EGS_Float> &);
 
