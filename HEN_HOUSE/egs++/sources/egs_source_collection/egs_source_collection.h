@@ -200,7 +200,6 @@ public:
                norm = p_group[j].size()+1;
             }
             flu += p[j]/p_tot*sources[j]->getFluence()/norm;
-            egsInformation("j=%d pj=%g p_tot=%g norm=%d flu before norm=%g flu=%g\n",j,p[j],p_tot,norm,sources[j]->getFluence(),p[j]/p_tot*sources[j]->getFluence()/norm);
         }
         return flu;
     };
