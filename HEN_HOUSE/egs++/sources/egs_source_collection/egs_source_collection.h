@@ -219,9 +219,6 @@ public:
                 return res;
             }
             data << " ";
-            // have to store last_flu so we don't end up mistakenly registering
-            // a common base source in case of restart
-            data << last_flu[j] << " ";
             for (int i=0; i<p_group[j].size(); i++)
             {
                 data << p_group[j][i] << " ";
@@ -248,7 +245,6 @@ public:
             if (!res) {
                 return res;
             }
-            data >> last_flu[j];
             EGS_I64 tmp_int;
             data >> tmp_int;
             while(tmp_int != -1)
@@ -262,6 +258,7 @@ public:
             if (!sources[j]->setState(data)) {
                 return false;
             }
+            last_flu[j]=sources[j]->getFluence();
         }
         return true;
     }
@@ -293,7 +290,6 @@ public:
                 return res;
             }
             last_cases[j] += tmp;
-            data_in >> last_flu[j];
             EGS_I64 tmp_int;
             data_in >> tmp_int;
             while(tmp_int != -1)
@@ -307,6 +303,7 @@ public:
             if (!sources[j]->addState(data_in)) {
                 return false;
             }
+            last_flu[j]=sources[j]->getFluence();
         }
         i_add = true;
         return true;
