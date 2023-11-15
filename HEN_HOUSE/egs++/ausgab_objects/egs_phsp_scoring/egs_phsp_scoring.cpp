@@ -254,20 +254,30 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
     if (app->top_p.q==0) {
         countg++;
     }
-    if (app->top_p.E-abs(app->top_p.q)*prm > emax) {
-        emax = app->top_p.E-abs(app->top_p.q)*prm;
+    double ke = app->top_p.E-abs(app->top_p.q)*prm;
+    if (ke > emax) {
+        emax = ke;
     }
     if (app->top_p.q != 0 && app->top_p.E - prm < emin) {
         emin = app->top_p.E - prm;
     }
 
-    //store particle data in p_stack
+
+    // Store kinetic energy for IAEA format phsp, and total energy for egsphsp
+    double E;
+    if (oformat == 0) {
+        E = app->top_p.E;
+    } else if (oformat == 1) {
+        E = ke;
+    }
+
     //set -ve energy marker if this is a new primary hist.
-    double E = app->top_p.E;
     if (ncase != last_case) {
         E = -E;
         last_case = ncase;
     }
+
+    //store particle data in p_stack
     p_stack[phsp_index].E = E;
     p_stack[phsp_index].wt = app->top_p.wt;
     p_stack[phsp_index].x = app->top_p.x.x;
