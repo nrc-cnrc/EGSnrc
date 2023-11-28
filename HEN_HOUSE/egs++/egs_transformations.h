@@ -43,12 +43,22 @@
 #include "egs_libconfig.h"
 #include "egs_math.h"
 #include "egs_functions.h"
+#include "egs_input_struct.h"
 
 #include <iostream>
 
 using namespace std;
 
 class EGS_Input;
+
+static void addTransformationBlock(shared_ptr<EGS_BlockInput> blockPtr) {
+    shared_ptr<EGS_BlockInput> transBlock = blockPtr->addBlockInput("transformation");
+    transBlock->addSingleInput("translation", false, "The x, y, z translation offsets in cm.");
+    auto vecPtr = transBlock->addSingleInput("rotation vector", false, "Defines a rotation which, when applied to the 3D vector defined by this input, transforms it into a vector along the positive z-axis.");
+    auto rotPtr = transBlock->addSingleInput("rotation", false, "2, 3 or 9 floating point numbers define a rotation. See the documentation for details.");
+    vecPtr->addDependency(rotPtr, "", true);
+    rotPtr->addDependency(vecPtr, "", true);
+}
 
 /*! \brief A class for vector rotations.
 

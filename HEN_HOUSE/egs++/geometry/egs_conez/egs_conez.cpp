@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -37,7 +37,34 @@ string YProjector::type = "EGS_Yconez";
 string ZProjector::type = "EGS_Zconez";
 string Projector::type = "EGS_conez";
 
+static bool EGS_CONEZ_LOCAL inputSet = false;
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Conez"});
+
+        // Format: name, description, isRequired, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", true,"The type of cone", {"EGS_Xconez", "EGS_Yconez", "EGS_Zcones", "EGS_conez"});
+
+        geomBlockInput->addSingleInput("apex", false, "The position of the cone apex (x, y, z)");
+        geomBlockInput->addSingleInput("opening angles", false, "A list of angles in degrees");
+
+        // EGS_Conez
+        auto inpPtr = geomBlockInput->addSingleInput("axis", true, "The unit vector defining the length along the conez");
+        inpPtr->addDependency(typePtr, "EGS_conez");
+    }
+
+    EGS_CONEZ_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_CONEZ_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 
