@@ -62,12 +62,7 @@
 
 using namespace std;
 
-void EGS_BaseSpectrum::reportAverageEnergy() const {
-    egsInformation("expected average energy: %g\n",expectedAverage());
-    EGS_Float e=0,de=0;
-    getSampledAverage(e,de);
-    egsInformation("sampled  average energy: %g +/- %g\n",e,de);
-}
+
 
 /*! \brief A monoenergetic particle spectrum.
   \ingroup egspp_main

@@ -333,7 +333,7 @@ int string_to_doubles (const char *s,int num_doub)
 }
 
 
-F77_OBJ_(readct_dicom,READCT_DICOM)(char *ct_filename, int ct_arraysize[3],
+int F77_OBJ_(readct_dicom,READCT_DICOM)(char *ct_filename, int ct_arraysize[3],
 		                      short *ctdata, float ct_offset[3],
 	                      	float ct_voxelsize[3],int *ct_errorcode)
 {

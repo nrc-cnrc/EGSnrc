@@ -46,7 +46,7 @@
 
 EGS_PhspScoring::EGS_PhspScoring(const string &Name,
                                  EGS_ObjectFactory *f) :
-    EGS_AusgabObject(Name,f), phsp_index(0), store_max(1000), phsp_file(0),
+    EGS_AusgabObject(Name,f), phsp_index(0), store_max(1000), phsp_file(),
     count(0), countg(0), emin(1.e30), emax(-1.e30), first_flush(true), is_restart(false) {
     otype = "EGS_PhspScoring";
 }

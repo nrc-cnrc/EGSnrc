@@ -86,7 +86,11 @@ void  egsOpenControlFile(const char *fname, int *status, int len) {
         if (__my_fd > 0) {
             break;
         }
-        _sleep(1000);
+        #ifdef WIN32
+            Sleep(1000);
+        #else
+            _sleep(1000);
+        #endif
     }
     if (__my_fd < 0) {
         *status = __my_fd;
@@ -208,7 +212,12 @@ void egsReadControlFile(char *buf, const int *n, int *status, int len) {
 
 void egsSleep(const int *secs) {
     unsigned int msecs = *secs * 1000;
-    _sleep(msecs);
+
+    #ifdef WIN32
+        Sleep(msecs);
+    #else
+        _sleep(msecs);
+    #endif
 }
 void egsPerror(const char *str, int len) {
     perror(str);
