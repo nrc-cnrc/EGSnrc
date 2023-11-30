@@ -372,7 +372,7 @@ public:
                EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
         if (ireg >= 0) {
             int itmp = ireg;
-            int inext = -1, idelta, lnew_j=0;
+            int inext = -1, idelta=0, lnew_j=0;
             for (int j=N-1; j>=0; j--) {
                 int l = itmp/n[j];
                 int lnew = g[j]->howfar(l,x,u,t,0,normal);

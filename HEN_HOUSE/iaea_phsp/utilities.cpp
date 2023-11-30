@@ -240,7 +240,7 @@ FILE *open_file(char *filename, const char*extension, const char *access)
    // char *filename1 = new(char[len+strlen(extension)+1]);
 
    const int filenameLength = len+strlen(extension)+1;
-   char *filename1 = new(char[filenameLength]);
+   char *filename1 = new char[filenameLength];
 
    strcpy(filename1,filename); // temp filename for appending extension
 

@@ -555,7 +555,12 @@ public:
      * This function prints information about the expected and actually
      * sampled average energy of the spectrum using egsInformation().
      */
-    void reportAverageEnergy() const;
+    void reportAverageEnergy() const {    
+        egsInformation("expected average energy: %g\n",expectedAverage());
+        EGS_Float e=0,de=0;
+        getSampledAverage(e,de);
+        egsInformation("sampled  average energy: %g +/- %g\n",e,de);
+    };
 
 protected:
 
