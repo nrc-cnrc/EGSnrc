@@ -224,12 +224,12 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             app->top_p.latch=latch; //have to set this because it is used in doSmartBrems
             //is the next line necessary?
             app->setRadiativeSplitting(nsplit);
-            int res = doSmartBrems();
-            if( res ) {
+           // int res = doSmartBrems();
+            //if( res ) {
                 app->callBrems();
                 int nstart = np+1, aux=0;
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
-            }
+            //}
             //we need to relable the interacting e- as fat
             //at this point np holds the e-
             EGS_Particle p = app->getParticleFromStack(np);
@@ -247,6 +247,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         check = 1;
     }
     else if( iarg == EGS_Application::BeforeAnnihFlight ) {
+      /*
         if( is_fat ) {
             //figure out what to do with the extra stack
             //the_extra_stack->iweight[np]=1;
@@ -261,6 +262,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         app->callAnnih();
         int nstart=np+1,aux=0;
         killThePhotons(fs,ssd,nsplit,nstart,aux);
+      */
         check = 1;
     }
     else if( iarg == EGS_Application::BeforeAnnihRest ) {
@@ -306,7 +308,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         }
         else if(iarg == EGS_Application::BeforeCompton)
         {
-
+            /*
             if(is_fat && !app->getIbcmp())
             {
                 //label as nonphat to be passed on to descendents
@@ -318,8 +320,9 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
           //      p_tmp = app->getParticleFromStack(app->getNp());
       //egsInformation("after doSC: np=%d, iq=%d, E=%g, wt=%g\n",app->getNp(),p_tmp.q,p_tmp.E,p_tmp.wt);
             }
-            else //straight-up compton
-            {
+           */
+           // else //straight-up compton
+           // {
                 //label interacting photon as non-phat and reduce weight (if phat)
                 latch = latch & ~(1 << 0);
                 app->setLatch(latch);
@@ -340,7 +343,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 // kill photons not aimed into the field and any electrons
                 int nstart = np, aux=1;
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
-            }
+            //}
         }
         else if (iarg == EGS_Application::BeforeRayleigh)
         {
@@ -387,6 +390,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     }
     else if(iarg == EGS_Application::FluorescentEvent )
     {
+        /*
         if( is_fat ) {
             EGS_Float ener = app->top_p.E;
             //label photons as nonphat
@@ -398,6 +402,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             int nstart=np, aux=0;
             killThePhotons(fs,ssd,nsplit,nstart,aux);
         }
+        */
         // Do not need to return to shower
         check = 2;
     }
