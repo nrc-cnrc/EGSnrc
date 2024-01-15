@@ -247,7 +247,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         check = 1;
     }
     else if( iarg == EGS_Application::BeforeAnnihFlight ) {
-      /*
         if( is_fat ) {
             //figure out what to do with the extra stack
             //the_extra_stack->iweight[np]=1;
@@ -262,7 +261,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         app->callAnnih();
         int nstart=np+1,aux=0;
         killThePhotons(fs,ssd,nsplit,nstart,aux);
-      */
         check = 1;
     }
     else if( iarg == EGS_Application::BeforeAnnihRest ) {
@@ -308,7 +306,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         }
         else if(iarg == EGS_Application::BeforeCompton)
         {
-            /*
             if(is_fat && !app->getIbcmp())
             {
                 //label as nonphat to be passed on to descendents
@@ -320,9 +317,8 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
           //      p_tmp = app->getParticleFromStack(app->getNp());
       //egsInformation("after doSC: np=%d, iq=%d, E=%g, wt=%g\n",app->getNp(),p_tmp.q,p_tmp.E,p_tmp.wt);
             }
-           */
-           // else //straight-up compton
-           // {
+            else //straight-up compton
+            {
                 //label interacting photon as non-phat and reduce weight (if phat)
                 latch = latch & ~(1 << 0);
                 app->setLatch(latch);
@@ -343,7 +339,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 // kill photons not aimed into the field and any electrons
                 int nstart = np, aux=1;
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
-            //}
+            }
         }
         else if (iarg == EGS_Application::BeforeRayleigh)
         {
@@ -390,7 +386,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     }
     else if(iarg == EGS_Application::FluorescentEvent )
     {
-        /*
         if( is_fat ) {
             EGS_Float ener = app->top_p.E;
             //label photons as nonphat
@@ -402,7 +397,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             int nstart=np, aux=0;
             killThePhotons(fs,ssd,nsplit,nstart,aux);
         }
-        */
         // Do not need to return to shower
         check = 2;
     }
@@ -922,27 +916,20 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
    EGS_Float dnear = app->getDnear(idbs);
    do {
       EGS_Particle p = app->getParticleFromStack(idbs);
-      //below is temporary until we figure out how to pass iweight
-      int is_fat = (p.latch & (1 << 0));
       if (p.q == 0)
       {
          i_playrr = 0;
-   EGS_Float tmp_dist = (ssd - p.x.z)/p.u.z;
-    EGS_Float tmp_r = sqrt((p.x.x+p.u.x)*(p.x.x+tmp_dist*p.u.x) + (p.x.y+tmp_dist*p.u.y)*(p.x.y+tmp_dist*p.u.y));
-         if (!is_fat)
+         if (p.u.z < 0)
          {
-            if (p.u.z < 0)
-            {
                i_playrr = 1;
-            }
-            else
-            {
+         }
+         else
+         {
                EGS_Float dist = (ssd - p.x.z)/p.u.z;
                EGS_Float r2 = (p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y);
                if (r2 > fs*fs) i_playrr = 1;
-            }
          }
-         if (app->getRngUniform()*i_playrr)
+         if (i_playrr)
          {
             if (app->getRngUniform()*n_split > 1)
             {
