@@ -43,6 +43,8 @@
 #include "egs_rndm.h"
 #include "egs_alias_table.h"
 
+#include <algorithm>
+
 #ifdef WIN32
 
     #ifdef BUILD_SOURCE_COLLECTION_DLL
