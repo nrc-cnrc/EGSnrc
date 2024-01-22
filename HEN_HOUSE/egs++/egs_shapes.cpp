@@ -56,6 +56,7 @@ EGS_BaseShape *EGS_BaseShape::createShape(EGS_Input *i) {
         shape_creator.addKnownObject(new EGS_CylinderShape);
     }
     __shape_count++;
+
     EGS_Object *o = shape_creator.createSingleObject(i,"createShape",true);
     return dynamic_cast<EGS_BaseShape *>(o);
 }
