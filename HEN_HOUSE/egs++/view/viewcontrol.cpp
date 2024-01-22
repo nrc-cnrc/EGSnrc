@@ -186,6 +186,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // set the widget to show near the left-upper corner of the screen
     move(QPoint(25,25));
+
     //set the play button active boolean to false
     isPlaying=false;
 }
@@ -1914,8 +1915,6 @@ void GeometryViewControl::loadTracksDialog() {
     timeObjectVisibility();
 
     gview->loadTracks(filename_tracks);
-
-
 }
 
 void GeometryViewControl::updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po) {
@@ -1952,7 +1951,9 @@ void GeometryViewControl::updateTracks(vector<size_t> ntracks, vector<EGS_Float>
     spin_tmine->setValue(1);
     spin_tminpo->setValue(1);
 
-    updateView();
+    // Update the time window value
+    // This includes an updateView() call
+    slideTime();
 }
 
 void GeometryViewControl::viewAllMaterials() {
@@ -2763,26 +2764,27 @@ void GeometryViewControl::endTransformation() {
 // Time index visual elements methods
 void GeometryViewControl::playTime() {
     if (isPlaying) {
-        button_timeplay->setText("play");
+        button_timeplay->setText("Play");
         isPlaying=false;
     }
     else {
-        button_timeplay->setText("pause");
+        button_timeplay->setText("Pause");
         isPlaying=true;
     }
     int sliderpos=slider_timeindex->sliderPosition();
-    if (sliderpos==999) {
+
+    if (sliderpos==spin_numTimeSteps->value()-1) {
         sliderpos=0;
     }
     // this function controls the play button, and allows for the simulation to
     // be automatically played out sequentially in time.
-    for (int i= sliderpos; i<1000;) {
+    for (int i= sliderpos; i<spin_numTimeSteps->value();) {
         // the simulation plays through 1000 discrete time points (equivalent to
         // possible slider steps) from 0.000 to 0.999 in 0.0001 increments
         if (!isPlaying) {
             break;
         }
-        EGS_Float currtime = i/(float)1000;
+        EGS_Float currtime = i/(float)spin_numTimeSteps->value();
 
         // update time index display/input box. The signals are blocked as it
         // would lead to an infinite loop between the slider and the time index
@@ -2806,7 +2808,7 @@ void GeometryViewControl::playTime() {
         // motion would be difficult to follow
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    button_timeplay->setText("play");
+    button_timeplay->setText("Play");
     isPlaying=false;
 }
 
@@ -2819,7 +2821,9 @@ void GeometryViewControl::resetTime() {
     * and the particle bounds) are returned to their initial states through
     * these */
     slider_timeindex->setValue(0);
-    spin_timewindow->setValue(2);
+
+    // Default the time window to 1% of the simulation time
+    spin_timewindow->setValue(0.01);
 }
 
 void GeometryViewControl::spinTime() {
@@ -2829,9 +2833,9 @@ void GeometryViewControl::spinTime() {
     // position on the slider (multiply by 1000 to get integer between 0 and
     // 999)
     EGS_Float slidertime=spin_timeindex->value();
-    int sliderpos=(int)(slidertime*1000);
+    int sliderpos=(int)(slidertime*spin_numTimeSteps->value());
 
-    // ujpdate the time index slider. The signals are blocked as it would lead
+    // update the time index slider. The signals are blocked as it would lead
     // to an infinite loop between the slider and the time index spin box
     slider_timeindex->blockSignals(true);
     slider_timeindex->setValue(sliderpos);
@@ -2864,8 +2868,8 @@ void GeometryViewControl::slideTime() {
     int sliderpos=slider_timeindex->sliderPosition();
 
     // the time index corresponding to the position integer is determined by
-    // dividing the position by 1000
-    EGS_Float slidertime = sliderpos/(float)1000;
+    // dividing the position by the number of time steps
+    EGS_Float slidertime = sliderpos/(float)spin_numTimeSteps->value();
 
     // update the time index spinbox. The signals are blocked as it would lead
     // to an infinite loop between the slider and the time index spin box
@@ -2884,6 +2888,13 @@ void GeometryViewControl::slideTime() {
     updateView();
 }
 
+void GeometryViewControl::updateNumTimeSteps() {
+    int newMaximum = spin_numTimeSteps->value()-1;
+    slider_timeindex->blockSignals(true);
+    slider_timeindex->setMaximum(newMaximum);
+    slider_timeindex->blockSignals(false);
+    spinTime();
+}
 
 void GeometryViewControl::particleSlider(EGS_Float slidertime) {
     /* this function is called by the time index slider, the time window box,
@@ -2939,8 +2950,12 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         // once the loop is over the max and min spin boxes are set (both are 1
         // if no particle in range) (note max must be set first as it sets the
         // maximum value of the min spinbox)
+        spin_tmaxp->blockSignals(true);
         spin_tmaxp->setValue(endindex);
+        spin_tmaxp->blockSignals(false);
+        spin_tminp->blockSignals(true);
         spin_tminp->setValue(startindex);
+        spin_tminp->blockSignals(false);
 
         // hasstart bool and indices are reset to initial states
         hasstart=false;
@@ -2961,7 +2976,7 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
                     // it is possible only one particle is in the range, and the
                     // end cannot be smaller than the start
                     startindex=j+1;
-                    endindex=j+2; //
+                    endindex=j+2;
                     hasstart=true;
                     // since hasstart is now true, the starting index will not
                     // be updated at any later loop iteration
@@ -2976,8 +2991,12 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         // once the loop is over the max and min spin boxes are set (both are 1
         // if no particle in range) (note max must be set first as it sets the
         // maximum value of the min spinbox)
+        spin_tmaxe->blockSignals(true);
         spin_tmaxe->setValue(endindex);
+        spin_tmaxe->blockSignals(false);
+        spin_tmine->blockSignals(true);
         spin_tmine->setValue(startindex);
+        spin_tmine->blockSignals(false);
 
         // hasstart bool and indices are reset to initial states
         hasstart=false;
@@ -3011,8 +3030,12 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         // once the loop is over the max and min spin boxes are set (both are 1
         // if no particle in range) (note max must be set first as it sets the
         // maximum value of the min spinbox)
+        spin_tmaxpo->blockSignals(true);
         spin_tmaxpo->setValue(endindex);
+        spin_tmaxpo->blockSignals(false);
+        spin_tminpo->blockSignals(true);
         spin_tminpo->setValue(startindex);
+        spin_tminpo->blockSignals(false);
     }
     // if the file doesn't contain time indices then nothing at all occurs in this function
     // and the particle tracks are unchanged
@@ -3293,6 +3316,8 @@ void GeometryViewControl::timeObjectVisibility() {
         spin_timeindex->hide();
         label_timeindex->hide();
         groupBox_time->hide();
+        spin_numTimeSteps->hide();
+        label_numTimeSteps->hide();
         spin_tmaxe->setReadOnly(false);
         spin_tmine->setReadOnly(false);
         spin_tmaxpo->setReadOnly(false);
@@ -3317,8 +3342,11 @@ void GeometryViewControl::timeObjectVisibility() {
         spin_timeindex->show();
         label_timeindex->show();
         groupBox_time->show();
+        spin_numTimeSteps->show();
+        label_numTimeSteps->show();
     }
     //has dynamic is true when a dynamic geometry is present, or when the tracks are being given some time index (exmaple due to a dynamic source or phasespace file)
 
 
 }
+

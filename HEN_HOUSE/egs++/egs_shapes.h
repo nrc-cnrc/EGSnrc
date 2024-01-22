@@ -207,6 +207,14 @@ public:
         return false;
     };
 
+    /* getNextShapePosition is the equivalent of getNextParticle but for a shape object. Its goal is to determine the next state of the geometry, either by synchronizing itself to the
+     * source time parameter, or by sampling it's own time parameter and updating itself accordingly if the source has provided no time index.
+     *
+     *This function has a non-empty implementation in 2 cases.
+     *1) it is re implemented in any composite shape, where it will call getNextShapePosition on all of its components
+     *2) it is re implemented in the dynamic shape class. This is where the code will find the current (non static) state of the shape. */
+    virtual void getNextShapePosition(EGS_RandomGenerator *rndm) {};
+
     /*! Get a random direction given a source position \a xo.
      *
      * This method is used to sample random directions by picking a
@@ -234,6 +242,10 @@ public:
     virtual EGS_Float area() const {
         return 1;
     };
+
+    /*! \brief Update the position of the shape if it is in motion
+     */
+    virtual void updatePosition(EGS_Float time) { };
 
 protected:
 
@@ -390,7 +402,7 @@ public:
     /*! \brief Destructor. Does nothing */
     ~EGS_BoxShape() { };
 
-    /*! \brief Returns a point uniformely distributed within the box. */
+    /*! \brief Returns a point uniformly distributed within the box. */
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         EGS_Vector v(ax*(rndm->getUniform()-0.5),
                      ay*(rndm->getUniform()-0.5),
@@ -410,7 +422,7 @@ public:
         return true;
     };
 
-    /*! \brief Sets the direction \a u by picking a random point uniformely the
+    /*! \brief Sets the direction \a u by picking a random point uniformly the
      * on the box surface.
      * \sa EGS_BaseShape::getPointSourceDirection()
      */
@@ -540,7 +552,7 @@ public:
         return true;
     };
 
-    /*! \brief Sets the direction \a u by picking a random point uniformely
+    /*! \brief Sets the direction \a u by picking a random point uniformly
      * on the sphere surface.
      * \sa EGS_BaseShape::getPointSourceDirection()
      */
