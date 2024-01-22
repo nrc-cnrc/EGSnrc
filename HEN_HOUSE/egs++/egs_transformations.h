@@ -629,11 +629,14 @@ public:
     \verbatim
     :start transformation:
         translation = tx, ty, tz
-        rotation    = 2, 3 or 9 floating point numbers
+        rotation    = 2, 3 or 9 floating point numbers in radians
         or
-        rotation vector = 3 floating point numbers
+        rotation vector = 3 floating point numbers in radians
     :stop transformation:
     \endverbatim
+
+    Note that rotations are always performed before translations.
+
     There are many different ways to define a rotation. The
     <code> rotation vector </code> input defines a rotation which,
     when applied to the 3D vector defined by the input, transforms it
