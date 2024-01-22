@@ -71,7 +71,7 @@ source_libs = egs_collimated_source egs_isotropic_source egs_parallel_beam \
 shape_libs = egs_circle egs_ellipse egs_extended_shape egs_gaussian_shape \
              egs_line_shape egs_polygon_shape egs_rectangle egs_shape_collection \
              egs_voxelized_shape egs_spherical_shell egs_conical_shell \
-             egs_circle_perpendicular
+             egs_circle_perpendicular egs_dynamic_shape
 
 aobject_libs = egs_track_scoring egs_dose_scoring egs_radiative_splitting \
 	       egs_phsp_scoring egs_fluence_scoring
