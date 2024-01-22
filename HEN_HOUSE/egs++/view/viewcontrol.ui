@@ -338,7 +338,7 @@
                         <double>0.001000000000000</double>
                        </property>
                        <property name="value">
-                        <double>2.000000000000000</double>
+                        <double>0.010000000000000</double>
                        </property>
                       </widget>
                      </item>
@@ -351,7 +351,7 @@
                         </size>
                        </property>
                        <property name="text">
-                        <string>reset</string>
+                        <string>Reset</string>
                        </property>
                       </widget>
                      </item>
@@ -372,7 +372,7 @@
                     <property name="minimumSize">
                      <size>
                       <width>0</width>
-                      <height>90</height>
+                      <height>114</height>
                      </size>
                     </property>
                     <property name="title">
@@ -464,6 +464,41 @@
                      </property>
                      <property name="text">
                       <string>Time index</string>
+                     </property>
+                    </widget>
+                    <widget class="QSpinBox" name="spin_numTimeSteps">
+                     <property name="geometry">
+                      <rect>
+                       <x>180</x>
+                       <y>80</y>
+                       <width>61</width>
+                       <height>29</height>
+                      </rect>
+                     </property>
+                     <property name="minimum">
+                      <number>1</number>
+                     </property>
+                     <property name="maximum">
+                      <number>1000000</number>
+                     </property>
+                     <property name="singleStep">
+                      <number>1000</number>
+                     </property>
+                     <property name="value">
+                      <number>1000</number>
+                     </property>
+                    </widget>
+                    <widget class="QLabel" name="label_numTimeSteps">
+                     <property name="geometry">
+                      <rect>
+                       <x>10</x>
+                       <y>85</y>
+                       <width>151</width>
+                       <height>20</height>
+                      </rect>
+                     </property>
+                     <property name="text">
+                      <string>Number of time steps</string>
                      </property>
                     </widget>
                    </widget>
@@ -2898,6 +2933,22 @@ p, li { white-space: pre-wrap; }
    <signal>valueChanged(double)</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>spinTime()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>594</x>
+     <y>334</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>358</x>
+     <y>327</y>
+    </hint>
+   </hints>
+  </connection>
+    <connection>
+   <sender>spin_numTimeSteps</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>updateNumTimeSteps()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>594</x>
