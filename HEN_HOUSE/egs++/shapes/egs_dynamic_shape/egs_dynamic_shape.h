@@ -78,15 +78,15 @@ An dynamic shape is defined using
     :start shape:
         definition of the shape to be 'dynamic'
     :stop shape:
-    :start motion:
-       control point 1 = time(1) x(1) y(1) z(1) xrot(1) yrot(1) zrot(1)
-       control point 2 = time(2) x(2) y(2) z(2) xrot(2) yrot(2) zrot(2)
+    :start motion: # units of cm and degrees
+       control point = time(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
+       control point = time(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
        .
        .
        .
-       control point N = time(N) x(N) y(N) z(N) xrot(N) yrot(N) zrot(N)
+       control point = time(N) xtrans(N) ytrans(N) ztrans(N) xrot(N) yrot(N) zrot(N)
     :stop motion:
-:stop source:
+:stop shape:
 \endverbatim
 
 Control points must be defined such that time(i+1)>=time(i), where time(i)
@@ -114,8 +114,14 @@ class EGS_DYNAMIC_SHAPE_EXPORT EGS_DynamicShape : public EGS_BaseShape {
 
 public:
 
-    EGS_DynamicShape(EGS_BaseShape *Shape, EGS_Input *dyninp,
-                      const string &Name="",EGS_ObjectFactory *f=0) :
+    /*!
+     * \brief Constructor for EGS_DynamicShape
+     * \param Shape Base shape to be made dynamic
+     * \param dyninp Input containing dynamic shape specifications
+     * \param Name Name of the dynamic shape
+     * \param f EGS_ObjectFactory pointer
+     */
+    EGS_DynamicShape(EGS_BaseShape *Shape, EGS_Input *dyninp, const string &Name="",EGS_ObjectFactory *f=0) :
         EGS_BaseShape(Name,f), shape(Shape) {
         if (shape) {
             shape->ref();
@@ -152,67 +158,44 @@ public:
             }
         }
     };
+
+    /*!
+     * \brief Destructor for EGS_DynamicShape
+     */
     ~EGS_DynamicShape() {
         EGS_Object::deleteObject(shape);
     };
+
+    /*!
+     * \brief Get a random point from the dynamic shape
+     * \param rndm Random number generator
+     * \return Random point as an EGS_Vector
+     */
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         getNextShapePosition(rndm);
         EGS_Vector v(shape->getPoint(rndm));
         return v;
     };
 
+    /*!
+     * \brief Structure representing a control point for dynamic motion
+     */
     struct EGS_ControlPoint {
-        EGS_Float time; // time index for control point
-        vector<EGS_Float> trnsl; // vector specifying x,y,z translation
-        vector<EGS_Float> rot; // rotation vector
+        EGS_Float time;     //!< Time index for control point
+        vector<EGS_Float> trnsl; //!< Vector specifying x, y, z translation
+        vector<EGS_Float> rot;   //!< Rotation vector
     };
 
-    /* This function is tasked with determining the next state of the dynamic shape
-     * This is done by obtaining a time index (either
-     * from the simulation source or by sampling itself if the source yields nothing), obtaining the corresponding position and orientation coordinates (through getCoord) and creating
-      * and setting the dynamic shapes's transform */
-    void getNextShapePosition(EGS_RandomGenerator *rndm) {
-        int errg = 1;
-        EGS_ControlPoint gipt;
-
-        // Here get source from activeapplication in order to extract time
-        EGS_Application *app = EGS_Application::activeApplication();
-        while (errg) {
-            // Gets time if it's already set (otherwise gives -1).
-            ptime = app->getTimeIndex();
-
-            if (ptime<0) {
-                // If no time is given by the source the shape will randomly sample from 0 to 1.
-                ptime = rndm->getUniform();
-
-                // Set randomly sampled time index for all objects in the simulation
-                app->setTimeIndex(ptime);
-            }
-
-            // Now run the get coord method that will sample the cpt given to find the transformation that will be applied for the current history
-            errg = getCoord(ptime,gipt);
-        }
-
-        // Create and set the current shape transformation using the sampled coordinates from getCoord. This is where overloaded EGS_AffineTransform is used
-        EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
-        shape->setTransformation(tDG);
-
-        // Call getNextShapePosition on base shape in case there are lower level dynamic shapes
-        shape->getNextShapePosition(rndm);
-    };
-
-    // This method is used to determine whether the simulation geometry contains a dynamic shape
-    void containsDynamic(bool &hasdynamic) {
-        hasdynamic = true;
-    }
-
-    bool supportsDirectionMethod() const {
-        return shape->supportsDirectionMethod();
-    }
-
+    /*!
+     * \brief Get the direction of the point source for a given position
+     * \param Xo Position vector
+     * \param rndm Random number generator
+     * \param u Direction vector
+     * \param wt Weight
+     */
     void getPointSourceDirection(const EGS_Vector &Xo,
                                  EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
-        if(shape->supportsDirectionMethod()) {
+        if (shape->supportsDirectionMethod()) {
             getNextShapePosition(rndm);
             shape->getPointSourceDirection(Xo, rndm, u, wt);
         }
@@ -220,17 +203,48 @@ public:
 
 protected:
 
-    EGS_BaseShape  *shape;
-    EGS_Float      h1, h2, dh;
+    EGS_BaseShape  *shape;    //!< Base shape made dynamic
 
-    vector<EGS_ControlPoint> cpts; // Control points
+    vector<EGS_ControlPoint> cpts; //!< Control points
 
-    int ncpts; // Number of control points
+    int ncpts; //!< Number of control points
 
-    EGS_Float ptime; // Time index corresponding to particle
+    EGS_Float ptime; //!< Time index corresponding to particle
 
+    /*!
+     * \brief Get the next state of the dynamic shape
+     * \param rndm Random number generator
+     */
+    void getNextShapePosition(EGS_RandomGenerator *rndm);
+
+    /*!
+     * \brief Determine whether the simulation geometry contains a dynamic shape
+     * \param hasdynamic Boolean indicating if the simulation geometry contains a dynamic shape
+     */
+    void containsDynamic(bool &hasdynamic) {
+        hasdynamic = true;
+    }
+
+    /*!
+     * \brief Check if the shape supports the direction method
+     * \return Boolean indicating if the shape supports the direction method
+     */
+    bool supportsDirectionMethod() const {
+        return shape->supportsDirectionMethod();
+    }
+
+    /*!
+     * \brief Extract coordinates for the next dynamic shape position
+     * \param rand Random number for time sampling
+     * \param gipt EGS_ControlPoint structure to store the coordinates
+     * \return 0 if successful, otherwise 1
+     */
     int getCoord(EGS_Float rand, EGS_ControlPoint &gipt);
 
+    /*!
+     * \brief Build the dynamic shape using input specifications
+     * \param dyninp Input containing dynamic shape specifications
+     */
     void buildDynamicShape(EGS_Input *dyninp);
 
 };
