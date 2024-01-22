@@ -46,13 +46,16 @@
 #include <sstream>
 
 #ifdef WIN32
+
     #ifdef BUILD_DYNAMIC_GEOMETRY_DLL
         #define EGS_DYNAMIC_GEOMETRY_EXPORT __declspec(dllexport)
     #else
         #define EGS_DYNAMIC_GEOMETRY_EXPORT __declspec(dllimport)
     #endif
     #define EGS_DYNAMIC_GEOMETRY_LOCAL
+
 #else
+
     #ifdef HAVE_VISIBILITY
         #define EGS_DYNAMIC_GEOMETRY_EXPORT __attribute__ ((visibility ("default")))
         #define EGS_DYNAMIC_GEOMETRY_LOCAL  __attribute__ ((visibility ("hidden")))
@@ -60,6 +63,7 @@
         #define EGS_DYNAMIC_GEOMETRY_EXPORT
         #define EGS_DYNAMIC_GEOMETRY_LOCAL
     #endif
+
 #endif
 
 /*! \brief A dynamic geometry.
@@ -102,6 +106,7 @@ time(1)>0.0, in the case where a user desires to eliminate particles associated
 with a range of time values, but there will be a lot of warning messages.
 
 */
+
 class EGS_DYNAMIC_GEOMETRY_EXPORT EGS_DynamicGeometry :
     public EGS_BaseGeometry {
 
@@ -152,6 +157,7 @@ public:
                 cpts[i].time /= cpts[npts - 1].time;
             }
         }
+
     };
 
     /*! Destructor. */
@@ -428,4 +434,5 @@ protected:
      */
     void buildDynamicGeometry(EGS_BaseGeometry *g, EGS_Input *dyninp);
 };
+
 #endif
