@@ -129,11 +129,11 @@ extern "C" {
         }
         EGS_BaseGeometry *g;
         if (type == "EGS_Xplanes") g = new EGS_PlanesX(pos,"",
-                    EGS_XProjector(xproj_type));
+                EGS_XProjector(xproj_type));
         else if (type == "EGS_Yplanes") g = new EGS_PlanesY(pos,"",
-                    EGS_YProjector(yproj_type));
+                EGS_YProjector(yproj_type));
         else if (type == "EGS_Zplanes") g = new EGS_PlanesZ(pos,"",
-                    EGS_ZProjector(zproj_type));
+                EGS_ZProjector(zproj_type));
         else if (type == "EGS_Planes") {
             vector<EGS_Float> a;
             err = input->getInput("normal",a);

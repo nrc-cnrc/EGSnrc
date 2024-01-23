@@ -187,7 +187,7 @@ public:
     * EGS_BeamSource.
     */
     //virtual EGS_Float getTimeIndex() {
-        //return -1;
+    //return -1;
     //};
 
     //virtual void setTimeIndex(EGS_Float temp_time) {};
@@ -317,7 +317,7 @@ public:
 
     //I did not know enough about either source type to test it myself, if issues are found please let me know and I will work to include these two sources into the centralized time index system
     EGS_Float getTimeIndex() {
-      return time_index;
+        return time_index;
 
     };
 
@@ -644,11 +644,11 @@ public:
     virtual EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                                     int &Q, int &latch, EGS_Float &E, EGS_Float &wt,
                                     EGS_Vector &x, EGS_Vector &u) {
-	Q = q;
+        Q = q;
         E = s->sampleEnergy(rndm);
         getPositionDirection(rndm,x,u,wt);
         setLatch(latch);
-	//EGS_Application *app = EGS_Application::activeApplication();
+        //EGS_Application *app = EGS_Application::activeApplication();
         return ++count;
     };
 

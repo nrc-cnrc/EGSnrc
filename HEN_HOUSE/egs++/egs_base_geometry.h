@@ -157,7 +157,7 @@ public:
      *This function has a non-empty implementation in 2 cases.
      *1) it is re implemented in any composite geometry, where it will call next geom on all of its components
      *2) it is re implemented in the dynamic geometry class. This is where the code will find the current (non static) state of the geometry. */
-    virtual void getNextGeom(EGS_RandomGenerator *rndm){};
+    virtual void getNextGeom(EGS_RandomGenerator *rndm) {};
 
 
 

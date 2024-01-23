@@ -332,7 +332,7 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
         /* this is setting the time index using the base source set call. We get rid of the local getTimeIndex function and
          * it should allow for saving time in the base source like all the other sources do */
     }
-    else{
+    else {
         setTimeIndex(-1);
     }
 
