@@ -154,7 +154,16 @@ extern "C" {
         int rotsize = 0;
 
         // Control points read one by one from motion block in dynamic geometry definition, and saved as a vector to points
-        while (!(err = dyninp->getInput(sstring, point))) {
+        while (true) {
+            currentInput = dyninp->takeInputItem(inputTag);
+            if (!currentInput || currentInput->getInput(inputTag, point)) {
+                currentInput = dyninp->takeInputItem(inputTag_backCompat);
+                if (!currentInput || currentInput->getInput(inputTag_backCompat, point)) {
+                    delete currentInput;
+                    break;
+                }
+            }
+            delete currentInput;
 
             // Checking the size to make sure it is a valid control point input
             if (point.size() != 6 && point.size() != 7) {
@@ -588,5 +597,3 @@ extern "C" {
     }
 
 }
-
-

@@ -84,7 +84,7 @@ int EGS_ParticleTrack::writeTrack(ofstream *trsp, bool incltime) {
     trsp->write((char *)&m_nVertices, sizeof(int));
     trsp->write((char *)m_pInfo, sizeof(ParticleInfo));
 
-    if (incltime){//if user indicates to include time in inputfile then write the time index to the tracks file after the particle info
+    if (incltime) { //if user indicates to include time in inputfile then write the time index to the tracks file after the particle info
         trsp->write((char *) &time_index, sizeof(EGS_Float));
     }
     for (int i = 0; i < m_nVertices; i++) {
@@ -280,44 +280,12 @@ void EGS_ParticleTrackContainer::reportResults(bool with_header) {
         }
     }
     egsInformation("   Output file name:        %s\n\n", m_trspFilename.c_str());
-    if(incltime){
+    if (incltime) {
         tracksFileSort();
     }
     readDataFile(m_trspFilename.c_str());
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-void EGS_ParticleTrackContainer::tracksFileSort(){
-    /* this function is used to sort the trackfile entries by time index. Essentially this is done by reading in all the time indices one by one, and also saving the position of
-     * that time index in a vector of pairs. The vector is then sorted by time index, and the index positions are used to read the tracks from the tracksfile in their sorted order, and
-     * write them into a new tracks file. Once the sorting is complete, the unsorted tracksfile is deleted and the sorted tracksfile replaces it */
-||||||| parent of 0bb3c758 (Update documentation and formatting)
-void EGS_ParticleTrackContainer::tracksFileSort() {
-    /* this function is used to sort the trackfile entries by time index. Essentially this is done by reading in all the time indices one by one, and also saving the position of
-     * that time index in a vector of pairs. The vector is then sorted by time index, and the index positions are used to read the tracks from the tracksfile in their sorted order, and
-     * write them into a new tracks file. Once the sorting is complete, the unsorted tracksfile is deleted and the sorted tracksfile replaces it */
-=======
-||||||| parent of 0ffae27f (squash)
-<<<<<<< HEAD
-<<<<<<< HEAD
-void EGS_ParticleTrackContainer::tracksFileSort(){
-||||||| parent of aff4b53a (Apply egs coding style standard with astyle)
-void EGS_ParticleTrackContainer::tracksFileSort(){
-=======
-void EGS_ParticleTrackContainer::tracksFileSort() {
->>>>>>> aff4b53a (Apply egs coding style standard with astyle)
-    /* this function is used to sort the trackfile entries by time index. Essentially this is done by reading in all the time indices one by one, and also saving the position of
-     * that time index in a vector of pairs. The vector is then sorted by time index, and the index positions are used to read the tracks from the tracksfile in their sorted order, and
-     * write them into a new tracks file. Once the sorting is complete, the unsorted tracksfile is deleted and the sorted tracksfile replaces it */
-||||||| parent of 0bb3c758 (Update documentation and formatting)
-void EGS_ParticleTrackContainer::tracksFileSort() {
-    /* this function is used to sort the trackfile entries by time index. Essentially this is done by reading in all the time indices one by one, and also saving the position of
-     * that time index in a vector of pairs. The vector is then sorted by time index, and the index positions are used to read the tracks from the tracksfile in their sorted order, and
-     * write them into a new tracks file. Once the sorting is complete, the unsorted tracksfile is deleted and the sorted tracksfile replaces it */
-=======
-=======
->>>>>>> 0ffae27f (squash)
 void EGS_ParticleTrackContainer::tracksFileSort() {
     // Function to sort trackfile entries by time index.
     // This is done by reading time indices, saving their positions in a vector of pairs,

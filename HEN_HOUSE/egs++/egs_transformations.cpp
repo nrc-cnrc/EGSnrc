@@ -114,7 +114,7 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(vector<EGS_Float> tr
 
     // First check that appropriate values have been provided. May work with either 2 or 3 rotation parameters, and exactly 3 translation parameters
     if (translation.size()!=3 || (rotation.size()!=2 && rotation.size()!=3)) {
-	egsWarning("getTransformation: invalid transformation parameters\n");
+        egsWarning("getTransformation: invalid transformation parameters\n");
         return 0;
     }
 
@@ -124,10 +124,10 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(vector<EGS_Float> tr
     EGS_Vector t = EGS_Vector(translation[0],translation[1],translation[2]);
     // If statements check the size of the rotation vector provided and call the appropriate EGS_AffineTransform constructor (converting rotation vector to matrix)
     if (rotation.size() == 2) {
-	result = new EGS_AffineTransform(EGS_RotationMatrix(rotation[0],rotation[1]),t);
+        result = new EGS_AffineTransform(EGS_RotationMatrix(rotation[0],rotation[1]),t);
     }
-    else if (rotation.size() == 3){
-	result = new EGS_AffineTransform(EGS_RotationMatrix(rotation[0],rotation[1],rotation[2]),t);
+    else if (rotation.size() == 3) {
+        result = new EGS_AffineTransform(EGS_RotationMatrix(rotation[0],rotation[1],rotation[2]),t);
     }
     else {
         result = new EGS_AffineTransform(EGS_RotationMatrix(),t);

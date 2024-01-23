@@ -707,7 +707,7 @@ public:
         return source->getTimeIndex();
     }
 
-     /*! Sets the value of the time synchronization parameter. This will mainly be used by the dynamic geometry if it does not receive time from a source */
+    /*! Sets the value of the time synchronization parameter. This will mainly be used by the dynamic geometry if it does not receive time from a source */
     void setTimeIndex(EGS_Float temp_time) {
         source->setTimeIndex(temp_time);
     }

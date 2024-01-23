@@ -187,7 +187,7 @@ public:
     * EGS_BeamSource.
     */
     //virtual EGS_Float getTimeIndex() {
-        //return -1;
+    //return -1;
     //};
 
     //virtual void setTimeIndex(EGS_Float temp_time) {};
@@ -315,7 +315,7 @@ public:
      * this was not done for the beam source and the iaea_phsp source, as they had slightly more involved time index implementations that seemed best left alone. They do not have setTimeIndex methods, \
      * and may not return the right thing if we set the time using the geometry, as calling get may try to get the beam or iaea_phsp time index and not the basesource index we set with the geometry. */
     EGS_Float getTimeIndex() {
-      return time_index;
+        return time_index;
 
     };
 
@@ -642,7 +642,7 @@ public:
     virtual EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                                     int &Q, int &latch, EGS_Float &E, EGS_Float &wt,
                                     EGS_Vector &x, EGS_Vector &u) {
-	Q = q;
+        Q = q;
         E = s->sampleEnergy(rndm);
         getPositionDirection(rndm,x,u,wt);
         setLatch(latch);

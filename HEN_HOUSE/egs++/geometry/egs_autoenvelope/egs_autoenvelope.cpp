@@ -607,27 +607,27 @@ int EGS_AEnvelope::getMaxStep() const {
     return nstep + inscribed_geoms.size();
 };
 
-void EGS_AEnvelope::getNextGeom(EGS_RandomGenerator *rndm){//calls getNextGeom on its component geometries to update dynamic geometries in the simulation
-	for (int j=0; j< inscribed_geoms.size(); ++j) {
-		inscribed_geoms[j]->getNextGeom(rndm);
-	}
-	base_geom->getNextGeom(rndm);
-    };
+void EGS_AEnvelope::getNextGeom(EGS_RandomGenerator *rndm) { //calls getNextGeom on its component geometries to update dynamic geometries in the simulation
+    for (int j=0; j< inscribed_geoms.size(); ++j) {
+        inscribed_geoms[j]->getNextGeom(rndm);
+    }
+    base_geom->getNextGeom(rndm);
+};
 
 void EGS_AEnvelope::updatePosition(EGS_Float time) {//calls updatePosition on its component geometries to update dynamic geometries in the simulation
     for (int j=0; j< inscribed_geoms.size(); j++) {
-            inscribed_geoms[j]->updatePosition(time);
+        inscribed_geoms[j]->updatePosition(time);
     }
     base_geom->updatePosition(time);
 };
 
 void EGS_AEnvelope::containsDynamic(bool &hasdynamic) {//calls containsDynamic on its component geometries (only calls if hasDynamic is false, as if it is true we already found one)
     for (int j=0; j< inscribed_geoms.size(); j++) {
-        if(!hasdynamic){
+        if (!hasdynamic) {
             inscribed_geoms[j]->containsDynamic(hasdynamic);
         }
     }
-    if(!hasdynamic){
+    if (!hasdynamic) {
         base_geom->containsDynamic(hasdynamic);
     }
 };
@@ -919,9 +919,9 @@ void EGS_ASwitchedEnvelope::activateByIndex(int inscribed_index) {
 
 void EGS_ASwitchedEnvelope::deactivateByIndex(int inscribed_index) {
     vector<EGS_BaseGeometry *>::iterator loc = find(
-                active_inscribed.begin(), active_inscribed.end(),
-                inscribed_geoms[inscribed_index]
-            );
+            active_inscribed.begin(), active_inscribed.end(),
+            inscribed_geoms[inscribed_index]
+        );
     if (loc != active_inscribed.end()) {
         active_inscribed.erase(loc);
     }
