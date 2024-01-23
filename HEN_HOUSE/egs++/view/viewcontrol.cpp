@@ -1893,14 +1893,14 @@ void GeometryViewControl::loadTracksDialog() {
     QFileInfo inputFileInfo = QFileInfo(filename);
     filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*ptracks");
     //below, tracks_extension is set based on selected tracks file. syncptracks contain track time indices, ptracks do not
-    if(filename_tracks.endsWith("syncptracks")){
+    if (filename_tracks.endsWith("syncptracks")) {
         tracks_extension=QString("syncptracks");
-        if(!hasDynamic){
+        if (!hasDynamic) {
             //here, if hasdynamic is not yet true (no dynamic geometry) and extension is syncptracks then check the time indices in the file. check done through hasValidTime function
             hasDynamic=hasValidTime();
         }
     }
-    else{
+    else {
         tracks_extension=QString("ptracks");
     }
 
@@ -2037,7 +2037,7 @@ int GeometryViewControl::setGeometry(
     if (!filename_tracks.isEmpty()) {
         gview->loadTracks(filename_tracks);
         //here, if hasdynamic is not yet true (no dynamic geometry) and extension is syncptracks then check the time indices in the file. check done through hasValidTime function
-        if(!hasDynamic && tracks_extension=="syncptracks"){
+        if (!hasDynamic && tracks_extension=="syncptracks") {
             hasDynamic = hasValidTime();
         }
     }
@@ -2750,21 +2750,21 @@ void GeometryViewControl::endTransformation() {
 
 //A.D Time index visual elements methods//
 void GeometryViewControl::playTime() {
-    if(isPlaying){
+    if (isPlaying) {
         button_timeplay->setText("play");
         isPlaying=false;
     }
-    else{
+    else {
         button_timeplay->setText("pause");
         isPlaying=true;
     }
     int sliderpos=slider_timeindex->sliderPosition();
-    if(sliderpos==999){
+    if (sliderpos==999) {
         sliderpos=0;
     }
     //this function controls the play button, and allows for the simulation to be automatically played out sequentially in time.
-    for (int i= sliderpos; i<1000;){ //the simulation plays through 1000 discrete time points (equivalent to possible slider steps) from 0.000 to 0.999 in 0.0001 increments
-        if(!isPlaying){
+    for (int i= sliderpos; i<1000;) { //the simulation plays through 1000 discrete time points (equivalent to possible slider steps) from 0.000 to 0.999 in 0.0001 increments
+        if (!isPlaying) {
             break;
         }
         EGS_Float currtime = i/(float)1000;
@@ -2828,14 +2828,14 @@ void GeometryViewControl::slideTime() {
 }
 
 
-void GeometryViewControl::particleSlider(EGS_Float slidertime){
+void GeometryViewControl::particleSlider(EGS_Float slidertime) {
     /* this function is called by the time index slider, the time window box, and the time index box, as the final step in updating the display. It is responsible for determining which
      * particle tracks are within the range to be displayed at a given time index. It considers a range of +/- half the provided time window on either side of the slider position and checks the
      * sorted list of time indices corresponding to the compressed particle tracks list, and determines the start and end index of each particle type boxes to be imposed on their min and max spin boxes */
 
     /* first, all of these operations can only be performed given a syncptracks file is being used as we need time indices to compare too (note a syncptracks file is not a given, as one
      * could have access to the time index view elements for a dynamic geometry where the time is not recorded, however given a syncptracks file we know the time indices are valid)*/
-    if(tracks_extension=="syncptracks"){
+    if (tracks_extension=="syncptracks") {
         //the size of the time window is obtained
         EGS_Float t_window = spin_timewindow->value();
         //a boolean variable hasstart is defined as initially set to false. This will track whether a starting index has been assigned
@@ -2844,18 +2844,18 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime){
         int startindex=1,endindex=1;
 
         //the for loop below is responsible for going through the photons time index list one at a time
-        for(int j=0;j<timelist_p.size(); j++){
+        for (int j=0; j<timelist_p.size(); j++) {
             //the below if statement checks whether the jth photon time index is within the +/- half time window range centered at the current time index
-            if(timelist_p[j]<(slidertime+(t_window/2)) && timelist_p[j]>(slidertime-(t_window/2))){
+            if (timelist_p[j]<(slidertime+(t_window/2)) && timelist_p[j]>(slidertime-(t_window/2))) {
                 //if it is, we check whether a starting index has been assigned
-                if(!hasstart){
+                if (!hasstart) {
                     //if the starting index has not been assigned, assign both the start and the end index to the current loop index, and make hasstart true
                     startindex=j+1;
                     endindex=j+2; //the end index is also set here as it is possible only one particle is in the range, and the end cannot be smaller than the start
                     hasstart=true;
                     //since hasstart is now true, the starting index will not be updated at any later loop iteration
                 }
-                else{
+                else {
                     //if the starting index has been assigned, only set the end index
                     endindex=j+2;
                 }
@@ -2867,20 +2867,21 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime){
 
         //hasstart bool and indices are reset to initial states
         hasstart=false;
-        startindex=1; endindex=1;
+        startindex=1;
+        endindex=1;
         //the for loop below is responsible for going through the electrons time index list one at a time
-        for(int j=0;j<timelist_e.size(); j++){
+        for (int j=0; j<timelist_e.size(); j++) {
             //the below if statement checks whether the jth electron time index is within the +/- half time window range centered at the current time index
-            if(timelist_e[j]<(slidertime+(t_window/2)) && timelist_e[j]>(slidertime-(t_window/2))){
+            if (timelist_e[j]<(slidertime+(t_window/2)) && timelist_e[j]>(slidertime-(t_window/2))) {
                 //if it is, we check whether a starting index has been assigned
-                if(!hasstart){
-                     //if the starting index has not been assigned, assign both the start and the end index to the current loop index, and make hasstart true
+                if (!hasstart) {
+                    //if the starting index has not been assigned, assign both the start and the end index to the current loop index, and make hasstart true
                     startindex=j+1;
                     endindex=j+2; //the end index is also set here as it is possible only one particle is in the range, and the end cannot be smaller than the start
                     hasstart=true;
                     //since hasstart is now true, the starting index will not be updated at any later loop iteration
                 }
-                else{
+                else {
                     //if the starting index has been assigned, only set the end index
                     endindex=j+1;
                 }
@@ -2892,20 +2893,21 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime){
 
         //hasstart bool and indices are reset to initial states
         hasstart=false;
-        startindex=1; endindex=1;
+        startindex=1;
+        endindex=1;
         //the for loop below is responsible for going through the positron time index list one at a time
-        for(int j=0;j<timelist_po.size(); j++){
+        for (int j=0; j<timelist_po.size(); j++) {
             //the below if statement checks whether the jth positron time index is within the +/- half time window range centered at the current time index
-            if(timelist_po[j]<(slidertime+(t_window/2)) && timelist_po[j]>(slidertime-(t_window/2))){
+            if (timelist_po[j]<(slidertime+(t_window/2)) && timelist_po[j]>(slidertime-(t_window/2))) {
                 //if it is, we check whether a starting index has been assigned
-                if(!hasstart){
-                     //if the starting index has not been assigned, assign both the start and the end index to the current loop index, and make hasstart true
+                if (!hasstart) {
+                    //if the starting index has not been assigned, assign both the start and the end index to the current loop index, and make hasstart true
                     startindex=j+1;
                     endindex=j+2; //the end index is also set here as it is possible only one particle is in the range, and the end cannot be smaller than the start
                     hasstart=true;
                     //since hasstart is now true, the starting index will not be updated at any later loop iteration
                 }
-                else{
+                else {
                     //if the starting index has been assigned, only set the end index
                     endindex=j+1;
                 }
@@ -3165,7 +3167,7 @@ void GeometryViewControl::setFontSize(int size) {
     controlsText->setTextCursor(cursor);
 }
 
-bool GeometryViewControl::hasValidTime(){
+bool GeometryViewControl::hasValidTime() {
     /* This function is used to determine whether the time index elements should be shown in the case that no dynamic geometry is present.
      * if the tracks file is a .syncptracks file (a condition for callling this function), it will check the first of the time indices written to it. If it is not -1
      * then the time indices are valid and the time index visual elements are relevant. Otherwise there is no time in the simulation and the elements are unnecessary.
@@ -3180,17 +3182,17 @@ bool GeometryViewControl::hasValidTime(){
     data.read((char *)&time,sizeof(EGS_Float));
     data.close();
     //check that the time index is between 0 and 1. if so return true (thus setting hasdynamic true). Otherwise return false (similarly setting hasdynamic false)
-    if(time>=0 && time<1){
+    if (time>=0 && time<1) {
         return true;
     }
-    else{
+    else {
         return false;
     }
 }
 
-void GeometryViewControl::timeObjectVisibility(){
+void GeometryViewControl::timeObjectVisibility() {
     //this function is used to make the time index objects visible or hidden as necessary. It will use the hasdynamic boolean, which indicates if they have any relevance in the uploaded files
-    if(!hasDynamic){//if false all objects are hidden and the particle index spin boxes are allowed to be manually edited
+    if (!hasDynamic) { //if false all objects are hidden and the particle index spin boxes are allowed to be manually edited
         button_timereset->hide();
         button_timeplay->hide();
         slider_timeindex->hide();
@@ -3206,7 +3208,7 @@ void GeometryViewControl::timeObjectVisibility(){
         spin_tmaxp->setReadOnly(false);
         spin_tminp->setReadOnly(false);
     }
-    else{//if trueall objects are made visible and the particle index spin boxes cannot be manually edited
+    else { //if trueall objects are made visible and the particle index spin boxes cannot be manually edited
         /* disable manual spinbox editing as the particle min and max indices will be determined by the time window and current time index (either from slider or spinbox). It is simpler in this case to simply
          * have them modified only by interactions with time index objects to avoid any bugs or inconsistensies between the visual display and the dashboard settings*/
         spin_tmaxe->setReadOnly(true);
@@ -3220,7 +3222,7 @@ void GeometryViewControl::timeObjectVisibility(){
         slider_timeindex->show();
         spin_timewindow->show();
         label_timewindow->show();
-         spin_timeindex->show();
+        spin_timeindex->show();
         label_timeindex->show();
         groupBox_time->show();
     }

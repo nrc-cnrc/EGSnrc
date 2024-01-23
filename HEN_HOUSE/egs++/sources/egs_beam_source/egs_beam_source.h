@@ -151,14 +151,6 @@ public:
     EGS_Float getFluence() const {
         return count;
     };
-    /*EGS_Float getTimeIndex() {
-        if (time_stored) {
-            return time;
-        }
-        else {
-            return -1.0;
-        }
-    };*/
     bool storeState(ostream &data) const {
         return egsStoreI64(data,count);
     };
