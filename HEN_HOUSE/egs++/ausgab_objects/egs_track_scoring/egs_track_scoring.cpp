@@ -79,10 +79,10 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
         fname += buf;
     }
     //if incltime is false use .ptracks. If incltime is true use the new file format .syncptracks
-    if(m_include_time){
+    if (m_include_time) {
         fname += ".syncptracks";
     }
-    else{
+    else {
         fname += ".ptracks";
     }
     //here new particleTrackContainer created using the m_include_time boolean which controls time index writting and filetype

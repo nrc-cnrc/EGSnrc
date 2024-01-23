@@ -343,11 +343,11 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         }
         if (time_stored) {
             p.time = extrafloattemp[i_time];
-	    setTimeIndex(p.time);
+            setTimeIndex(p.time);
             /* this is setting the time index using the base source set call. We get rid of the local getTimeIndex function and
              * it should allow for saving time in the base source like all the other sources do */
         }
-        else{
+        else {
             setTimeIndex(-1);
         }
         if (swap_bytes) {

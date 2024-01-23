@@ -80,8 +80,22 @@ EGS_DynamicSource::EGS_DynamicSource(EGS_Input *input,
         int err;
         int icpts=1;
         itos << icpts;
-        string sstring = "control point " + itos.str();
-        while (!(err = dyninp->getInput(sstring,point))) {
+
+        string inputTag = "control point";
+        string inputTag_backCompat = "control point " + itos.str();
+        EGS_Input *currentInput;
+
+        while (true) {
+            currentInput = dyninp->takeInputItem(inputTag);
+            if (!currentInput || currentInput->getInput(inputTag, point)) {
+                currentInput = dyninp->takeInputItem(inputTag_backCompat);
+                if (!currentInput || currentInput->getInput(inputTag_backCompat, point)) {
+                    delete currentInput;
+                    break;
+                }
+            }
+            delete currentInput;
+
             if (point.size()!=8) {
                 egsWarning("EGS_DynamicSource: control point %i does not specify 8 values.\n",icpts);
                 valid = false;
