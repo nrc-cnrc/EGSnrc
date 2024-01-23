@@ -307,15 +307,13 @@ public:
      */
     static void addKnownTypeId(const char *name);
 
-    /*The main change I made to the basesource class was to centralize the time index parameter so that it can be saved to and accessed from a single point. In almost any instance
+    /* Centralize the time index parameter so that it can be saved to and accessed from a single point. In almost any instance
      * where a time index parameter is created, it is saved in the source object using setTimeIndex. When other objects would like to access the time index (most relevant example
      * being the dynamic geometry checking if the source has provided a time index before setting its own), they can call getTimeIndex. In many cases, this method is indirectly called
      * via the getTimeIndex in the application class, which returns the results of getTimeIndex call on the simulation source.
      * Note there are two cases which behave slightly differently and may need some modifications. While the dynamicSource time index implementation was completely absorbed into the basesource,
      * this was not done for the beam source and the iaea_phsp source, as they had slightly more involved time index implementations that seemed best left alone. They do not have setTimeIndex methods, \
      * and may not return the right thing if we set the time using the geometry, as calling get may try to get the beam or iaea_phsp time index and not the basesource index we set with the geometry. */
-
-    //I did not know enough about either source type to test it myself, if issues are found please let me know and I will work to include these two sources into the centralized time index system
     EGS_Float getTimeIndex() {
       return time_index;
 
@@ -648,7 +646,6 @@ public:
         E = s->sampleEnergy(rndm);
         getPositionDirection(rndm,x,u,wt);
         setLatch(latch);
-	//EGS_Application *app = EGS_Application::activeApplication();
         return ++count;
     };
 

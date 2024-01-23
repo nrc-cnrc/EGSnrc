@@ -114,8 +114,8 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
     string extension;
     size_t k = readfile.rfind('.', readfile.length());
     if (k != string::npos) {
-      extension = readfile.substr(k+1, readfile.length() - k);
-   }
+        extension = readfile.substr(k+1, readfile.length() - k);
+    }
 
     tmp_buffer = new char[size-sizeof(int)];
 
@@ -153,12 +153,12 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
         PInfo pInfo =
             *(PInfo *)(loc+sizeof(int));
         EGS_Float timeindex;
-        if(extension=="syncptracks"){
+        if (extension=="syncptracks") {
             //if the tracksfile is a syncptracks file, the time index is also read before moving on to reading vertices. Skip includes size of EGS_Float if time indices present only
             timeindex = *(EGS_Float *)(loc+sizeof(int)+ sizeof(PInfo));
             skip = sizeof(int) + sizeof(PInfo)+sizeof(EGS_Float);
         }
-        else{
+        else {
             skip = sizeof(int) + sizeof(PInfo);
         }
         if (nverts < 2) {
@@ -207,12 +207,12 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
         PInfo pInfo =
             *(PInfo *)(ind+sizeof(int));
         EGS_Float timeindex;
-        if(extension=="syncptracks"){
+        if (extension=="syncptracks") {
             //if the tracksfile is a syncptracks file, the time index is also read before moving on to reading vertices. Start includes size of EGS_Float if time indices present only
             timeindex = *(EGS_Float *)(ind+sizeof(int)+ sizeof(PInfo));
             start = ind+sizeof(int)+sizeof(PInfo)+sizeof(EGS_Float);
         }
-        else{
+        else {
             start = ind+sizeof(int)+sizeof(PInfo);
         }
 
@@ -245,16 +245,16 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
             m_index[type][i_off] = m_off;
             ind_rcnt[type]++;
             mem_rcnt[type] += nverts;
-            if(extension=="syncptracks"){
+            if (extension=="syncptracks") {
                 //here timelist vectors are updated such that the time indices of the compressed particle list is available from the viewcontrol class
                 //lists updated here to ensure the time index vector indices match those of the compressed particle list.
-                if(type==0){
+                if (type==0) {
                     timelist_p.push_back(timeindex);
                 }
-                else if(type==1){
+                else if (type==1) {
                     timelist_e.push_back(timeindex);
                 }
-                else if(type==2){
+                else if (type==2) {
                     timelist_po.push_back(timeindex);
                 }
 
