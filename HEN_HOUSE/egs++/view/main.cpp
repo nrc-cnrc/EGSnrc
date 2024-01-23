@@ -122,10 +122,10 @@ int main(int argc, char **argv) {
     }
 
     //below getting the extension of the trackfile (either ptracks or syncptracks) if tracksfile provided in terminal to pass to the viewcontrol
-    if(tracks_file.endsWith("syncptracks")){
+    if (tracks_file.endsWith("syncptracks")) {
         extension=QString("syncptracks");
     }
-    else{
+    else {
         extension=QString("ptracks");
     }
 

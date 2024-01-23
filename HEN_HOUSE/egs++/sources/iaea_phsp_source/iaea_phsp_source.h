@@ -160,14 +160,6 @@ public:
         double aux = ((double) Nread)/((double) Nparticle);
         return Pinc*aux;
     };
-    /*EGS_Float getTimeIndex() {
-        if (time_stored) {
-            return p.time;
-        }
-        else {
-            return -1.0;
-        }
-    };*/
     bool storeState(ostream &data) const {
         data << endl;
         bool res = egsStoreI64(data,Nread);
