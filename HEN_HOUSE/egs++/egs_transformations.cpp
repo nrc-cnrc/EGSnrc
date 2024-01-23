@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -67,7 +68,7 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(EGS_Input *i) {
     if (!err && tmp.size() == 3)
         result = new EGS_AffineTransform(
             EGS_RotationMatrix(EGS_Vector(tmp[0],tmp[1],tmp[2])),t);
-    else {
+    else {       //egsWarning("getTransformation: rotation specified by 3 angles: %g   %g   %g\n\n",tmp[0],tmp[1],tmp[2]);
         err = input->getInput("rotation",tmp);
         if (!err) {
             if (tmp.size() == 2) result = new EGS_AffineTransform(
@@ -105,3 +106,32 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(EGS_Input *i) {
     }
     return result;
 }
+
+//////////// OVERLOADING FOR DYNAMIC GEOMETRY /////////////
+EGS_AffineTransform *EGS_AffineTransform::getTransformation(vector<EGS_Float> translation, vector<EGS_Float> rotation) {
+    /* The following method is used by the dynamic geometry class to create a transformation corresponding to a certain translation and rotation vector. These vectors are determined
+     * through the control points and the sampled mu value. The sampled transformation coordinates are passed here to build a transformation */
+
+    // First check that appropriate values have been provided. May work with either 2 or 3 rotation parameters, and exactly 3 translation parameters
+    if (translation.size()!=3 || (rotation.size()!=2 && rotation.size()!=3)) {
+        egsWarning("getTransformation: invalid transformation parameters\n");
+        return 0;
+    }
+
+    EGS_AffineTransform *result; //the returned transformation
+
+    // EGS_vector holding translation parameters is defined to pass to the EGS_AffineTransform constructor
+    EGS_Vector t = EGS_Vector(translation[0],translation[1],translation[2]);
+    // If statements check the size of the rotation vector provided and call the appropriate EGS_AffineTransform constructor (converting rotation vector to matrix)
+    if (rotation.size() == 2) {
+        result = new EGS_AffineTransform(EGS_RotationMatrix(rotation[0],rotation[1]),t);
+    }
+    else if (rotation.size() == 3) {
+        result = new EGS_AffineTransform(EGS_RotationMatrix(rotation[0],rotation[1],rotation[2]),t);
+    }
+    else {
+        result = new EGS_AffineTransform(EGS_RotationMatrix(),t);
+    }
+    return result;
+}
+

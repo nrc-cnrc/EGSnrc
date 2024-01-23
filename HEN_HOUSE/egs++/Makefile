@@ -27,6 +27,7 @@
 #                   Frederic Tessier
 #                   Manuel Stoeckl
 #                   Max Orok
+#                   Alexandre Demelo
 #
 ###############################################################################
 
@@ -53,7 +54,8 @@ geometry_libs = egs_planes egs_cd_geometry egs_gtransformed egs_nd_geometry \
                egs_cones egs_gstack egs_prism egs_union egs_pyramid egs_conez\
                egs_space egs_elliptic_cylinders egs_smart_envelope \
                egs_vhp_geometry egs_octree egs_roundrect_cylinders \
-               egs_rz egs_autoenvelope egs_lattice egs_glib egs_mesh
+               egs_rz egs_autoenvelope egs_lattice egs_glib egs_mesh \
+               egs_dynamic_geometry
 
 source_libs = egs_collimated_source egs_isotropic_source egs_parallel_beam \
               egs_point_source egs_source_collection egs_transformed_source \

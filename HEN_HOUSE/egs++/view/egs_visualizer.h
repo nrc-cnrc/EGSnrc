@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -88,7 +89,7 @@ public:
     EGS_GeometryVisualizer();
     ~EGS_GeometryVisualizer();
 
-    vector<size_t> loadTracksData(const char *fname);
+    vector<size_t> loadTracksData(const char *fname, vector<EGS_Float> &timelist_p, vector<EGS_Float> &timelist_e, vector<EGS_Float> &timelist_po);
 
     void setProjection(const EGS_Vector &camera_pos,
                        const EGS_Vector &camera_look_at, EGS_Float distance,
@@ -130,7 +131,6 @@ public:
 
     // region picking
     void regionPick(int x, int y);
-
 #ifdef HAVE_PNG
     bool makePngImage(EGS_BaseGeometry *, int xsize, int ysize,
                       const char *fname);

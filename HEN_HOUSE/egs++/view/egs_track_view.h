@@ -25,6 +25,7 @@
 #
 #  Contributors:    Iwan Kawrakow
 #                   Frederic Tessier
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -38,6 +39,7 @@
 #include "egs_transformations.h"
 #include "stddef.h"
 #include "egs_particle_track.h"
+#include <vector>
 
 class EGS_Matrix : private EGS_RotationMatrix {
 public:
@@ -92,10 +94,10 @@ public:
 class EGS_TrackView {
 
 public:
-
-    EGS_TrackView(const char *filename, vector<size_t> &ntracks);
+    EGS_TrackView(const char *filename, vector<size_t> &ntracks, vector<EGS_Float> &timelist_p, vector<EGS_Float> &timelist_e, vector<EGS_Float> &timelist_po);
 
     ~EGS_TrackView();
+
 
     bool renderTracks(int nx, int ny, EGS_Vector *image,
                       EGS_ClippingPlane **planes, const int n_planes,
@@ -123,7 +125,9 @@ public:
         trackIndices = trackInd;
     }
 
+
 protected:
+
     void renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EGS_Float color, int nx, int ny, EGS_Vector *image);
 
     // High-level camera description
@@ -145,6 +149,7 @@ protected:
     size_t      m_tracks[3];      // Number of tracks in each index
 
     vector<size_t> trackIndices;
+
 
     EGS_ClippingPlane m_planes[14]; // Clipping planes. 0-3 are for the viewport
     int         nplanes;          // number of planes used
