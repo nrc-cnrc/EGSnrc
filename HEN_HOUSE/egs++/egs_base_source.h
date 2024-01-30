@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -43,6 +44,7 @@
 #include "egs_vector.h"
 #include "egs_object_factory.h"
 #include "egs_functions.h"
+
 
 #include <string>
 #include <iostream>
@@ -85,7 +87,7 @@ public:
      *
      */
     EGS_BaseSource(const string &Name="", EGS_ObjectFactory *f = 0) :
-        EGS_Object(Name,f) {};
+        EGS_Object(Name,f), time_index(-1) {};
 
     /*! \brief Construct a source from the input pointed to by \a inp.
      *
@@ -96,7 +98,7 @@ public:
      *  plus additional information as needed by the source being created.
      */
     EGS_BaseSource(EGS_Input *input, EGS_ObjectFactory *f = 0) :
-        EGS_Object(input,f) {};
+        EGS_Object(input,f), time_index(-1)  {};
     virtual ~EGS_BaseSource() {};
 
     /*!  \brief Get a short description of this source.
@@ -184,9 +186,11 @@ public:
     * particle.  Currently only makes sense for IAEA_PhspSource and
     * EGS_BeamSource.
     */
-    virtual EGS_Float getMu() {
-        return -1;
-    };
+    //virtual EGS_Float getTimeIndex() {
+        //return -1;
+    //};
+
+    //virtual void setTimeIndex(EGS_Float temp_time) {};
 
     /*!  \brief Store the source state into the stream \a data_out.
      *
@@ -303,6 +307,24 @@ public:
      */
     static void addKnownTypeId(const char *name);
 
+    /*The main change I made to the basesource class was to centralize the time index parameter so that it can be saved to and accessed from a single point. In almost any instance
+     * where a time index parameter is created, it is saved in the source object using setTimeIndex. When other objects would like to access the time index (most relevant example
+     * being the dynamic geometry checking if the source has provided a time index before setting its own), they can call getTimeIndex. In many cases, this method is indirectly called
+     * via the getTimeIndex in the application class, which returns the results of getTimeIndex call on the simulation source.
+     * Note there are two cases which behave slightly differently and may need some modifications. While the dynamicSource time index implementation was completely absorbed into the basesource,
+     * this was not done for the beam source and the iaea_phsp source, as they had slightly more involved time index implementations that seemed best left alone. They do not have setTimeIndex methods, \
+     * and may not return the right thing if we set the time using the geometry, as calling get may try to get the beam or iaea_phsp time index and not the basesource index we set with the geometry. */
+
+    //I did not know enough about either source type to test it myself, if issues are found please let me know and I will work to include these two sources into the centralized time index system
+    EGS_Float getTimeIndex() {
+      return time_index;
+
+    };
+
+    void setTimeIndex(EGS_Float temp_time) {
+        time_index=temp_time;
+    };
+
 protected:
 
     /*! \brief A short source description.
@@ -311,6 +333,9 @@ protected:
      * descriptive string.
      */
     string description;
+
+    /*! \brief time index corresponding to a particle. This stores the current time index for all objects in the simulation (with the potential exception of beam and iaea_phsp source) */
+    EGS_Float time_index;
 
 };
 
@@ -567,7 +592,7 @@ public:
      */
     EGS_BaseSimpleSource(int Q, EGS_BaseSpectrum *Spec,
                          const string &Name="", EGS_ObjectFactory *f=0) :
-        EGS_BaseSource(Name,f), q(Q), s(Spec), count(0) { };
+        EGS_BaseSource(Name,f), q(Q), s(Spec), count(0) {};
 
     /*! \brief Construct a 'simple' particle source from the information
      * pointed to by \a input.
@@ -619,10 +644,11 @@ public:
     virtual EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                                     int &Q, int &latch, EGS_Float &E, EGS_Float &wt,
                                     EGS_Vector &x, EGS_Vector &u) {
-        Q = q;
+	Q = q;
         E = s->sampleEnergy(rndm);
         getPositionDirection(rndm,x,u,wt);
         setLatch(latch);
+	//EGS_Application *app = EGS_Application::activeApplication();
         return ++count;
     };
 
@@ -777,6 +803,7 @@ public:
         return true;
     };
 
+
 protected:
 
     /*! Set the particle latch.
@@ -800,6 +827,8 @@ protected:
 
     /*! \brief Number of statistically independent particles delivered so far.*/
     EGS_I64          count;
+
+
 
 };
 
