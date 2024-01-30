@@ -2831,7 +2831,7 @@ void GeometryViewControl::spinTime() {
     EGS_Float slidertime=spin_timeindex->value();
     int sliderpos=(int)(slidertime*1000);
 
-    // ujpdate the time index slider. The signals are blocked as it would lead
+    // update the time index slider. The signals are blocked as it would lead
     // to an infinite loop between the slider and the time index spin box
     slider_timeindex->blockSignals(true);
     slider_timeindex->setValue(sliderpos);
@@ -2939,8 +2939,12 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         // once the loop is over the max and min spin boxes are set (both are 1
         // if no particle in range) (note max must be set first as it sets the
         // maximum value of the min spinbox)
+        spin_tmaxp->blockSignals(true);
         spin_tmaxp->setValue(endindex);
+        spin_tmaxp->blockSignals(false);
+        spin_tminp->blockSignals(true);
         spin_tminp->setValue(startindex);
+        spin_tminp->blockSignals(false);
 
         // hasstart bool and indices are reset to initial states
         hasstart=false;
@@ -2961,7 +2965,7 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
                     // it is possible only one particle is in the range, and the
                     // end cannot be smaller than the start
                     startindex=j+1;
-                    endindex=j+2; //
+                    endindex=j+2;
                     hasstart=true;
                     // since hasstart is now true, the starting index will not
                     // be updated at any later loop iteration
@@ -2976,8 +2980,12 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         // once the loop is over the max and min spin boxes are set (both are 1
         // if no particle in range) (note max must be set first as it sets the
         // maximum value of the min spinbox)
+        spin_tmaxe->blockSignals(true);
         spin_tmaxe->setValue(endindex);
+        spin_tmaxe->blockSignals(false);
+        spin_tmine->blockSignals(true);
         spin_tmine->setValue(startindex);
+        spin_tmine->blockSignals(false);
 
         // hasstart bool and indices are reset to initial states
         hasstart=false;
@@ -3011,8 +3019,12 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         // once the loop is over the max and min spin boxes are set (both are 1
         // if no particle in range) (note max must be set first as it sets the
         // maximum value of the min spinbox)
+        spin_tmaxpo->blockSignals(true);
         spin_tmaxpo->setValue(endindex);
+        spin_tmaxpo->blockSignals(false);
+        spin_tminpo->blockSignals(true);
         spin_tminpo->setValue(startindex);
+        spin_tminpo->blockSignals(false);
     }
     // if the file doesn't contain time indices then nothing at all occurs in this function
     // and the particle tracks are unchanged
@@ -3322,3 +3334,4 @@ void GeometryViewControl::timeObjectVisibility() {
 
 
 }
+
