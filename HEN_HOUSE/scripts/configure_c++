@@ -172,6 +172,9 @@ system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
 if test "x$system_name" = xdarwin; then
     memory_model=""
 fi
+if echo "$canonical_system" | grep "aarch64" > /dev/null; then
+  memory_model=""
+fi
 
 case $CXX in
 
@@ -260,6 +263,10 @@ case $canonical_system in
         #
     *ibm-aix*)
         shared="-G -Wl,-brtl"; lib_link1="-L\$(abs_dso) -Wl,-brtl,-bexpall";;
+    *aarch64-*-linux*)
+        fpic="-fPIC";
+        opt="$opt -Wno-narrowing"
+        ;;
     *) echo Unsupported architecture $canonical_system; fpic="-fPIC";;
 esac
 
