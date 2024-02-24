@@ -1,0 +1,18 @@
+{
+    "image": "debian:bookworm",
+    "features": {
+      "ghcr.io/devcontainers/features/common-utils:2": {
+        "username": "devcontainer"
+      },
+      "ghcr.io/devcontainers/features/desktop-lite:1": {}
+    },
+    "onCreateCommand": ".devcontainer/setup.sh",
+    "postCreateCommand": ".devcontainer/build-gui-apps.sh",
+    "forwardPorts": [6080],
+    "portsAttributes": {
+      "6080": {
+        "label": "desktop",
+        "onAutoForward": "openBrowser"
+      }
+    }
+  }
