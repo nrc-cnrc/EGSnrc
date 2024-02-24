@@ -168,6 +168,9 @@ system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
 if test "x$system_name" = xdarwin; then
     memory_model=""
 fi
+if echo "$canonical_system" | grep "aarch64" > /dev/null; then
+  memory_model=""
+fi
 
 case $CXX in
 
