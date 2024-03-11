@@ -130,6 +130,15 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
     verbose         = inp->getInput("verbose",        choice,0);
     score_primaries = inp->getInput("score primaries",choice,0);
     score_spe      = inp->getInput("score spectrum", choice,0);
+    
+    EGS_Float norma;
+    int err_norm = inp->getInput("normalization",norma);
+    if (!err_norm) {
+        norm_u = norma;
+    }
+    else {
+        norm_u = 1.0;
+    }
 
     if (score_spe) {
         EGS_Float flu_Emin, flu_Emax;
@@ -147,14 +156,6 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
             if (err_f) egsFatal("\n**** EGS_FluenceScoring::initScoring"
                                     "       Missing input: maximum kinetic energy.\n"
                                     "       Aborting!\n\n");
-        }
-        EGS_Float norma;
-        int err_norm = inp->getInput("normalization",norma);
-        if (!err_norm) {
-            norm_u = norma;
-        }
-        else {
-            norm_u = 1.0;
         }
 
         vector<string> scale;
@@ -1086,7 +1087,7 @@ bool  EGS_PlanarFluence::addState(istream &data) {
 
 
 EGS_VolumetricFluence::EGS_VolumetricFluence(const string &Name, EGS_ObjectFactory *f) :
-    EGS_FluenceScoring(Name,f)
+    EGS_FluenceScoring(Name,f), flu_stpwr(stpwr)
 #ifdef DEBUG
     ,one_bin(0), multi_bin(0), max_step(-100.0), n_step_bins(10000)
 #endif
@@ -1382,18 +1383,20 @@ void EGS_VolumetricFluence::describeMe() {
 
     EGS_FluenceScoring::describeMe();
 
-    if (flu_stpwr) {
-        if (flu_stpwr == stpwr) {
-            description += "   O(eps^3) approach: accounts for change in stpwr\n";
-            description +=                "   along the step with eps=edep/Emid\n";
-        }
-        else if (flu_stpwr == stpwrO5) {
-            description += "   O(eps^5) approach: accounts for change in stpwr\n";
-            description += "   along the step with eps=edep/Emid\n";
-        }
-    }
-    else {
-        description += "   Fluence calculated a-la-FLURZ using Lave=EDEP/TVSTEP.\n";
+    if (scoring_charge) {
+       if (flu_stpwr) {
+           if (flu_stpwr == stpwr) {
+               description += "   O(eps^3) approach: accounts for change in stpwr\n";
+               description +=                "   along the step with eps=edep/Emid\n";
+           }
+           else if (flu_stpwr == stpwrO5) {
+               description += "   O(eps^5) approach: accounts for change in stpwr\n";
+               description += "   along the step with eps=edep/Emid\n";
+           }
+       }
+       else {
+           description += "   Fluence calculated a-la-FLURZ using Lave=EDEP/TVSTEP.\n";
+       }
     }
 
     if (norm_u != 1.0) {
@@ -1410,13 +1413,15 @@ void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const d
     int count = 0;
     int ir_digits = getDigits(nreg);
 
+    //egsInformation("-> norma = %10.4le\n", norma);
+
     egsInformation("\n  region#    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
                    "-----------------------------------------------------\n");
     for (int k=0; k<nreg; k++) {
         if (!is_sensitive[k]) {
             continue;
         }
-        norm /= volume[k];               //per volume
+        norm = norma/volume[k];               //per volume
         egsInformation("  %*d      ",ir_digits,k);
         fT->currentResult(k,fe,dfe);
         if (fe > 0) {
@@ -1425,6 +1430,7 @@ void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const d
         else {
             dfer = 100;
         }
+        //egsInformation(" %10.4le +/- %10.4le [%-7.3lf%] %10.4le\n",fe,dfe,dfer,norm);
         egsInformation(" %10.4le +/- %10.4le [%-7.3lf%]\n",fe*norm,dfe*norm,dfer);
     }
 }
