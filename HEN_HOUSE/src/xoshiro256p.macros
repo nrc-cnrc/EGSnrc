@@ -1,0 +1,163 @@
+%C80
+"#############################################################################"
+"                                                                             "
+"  EGSnrc macros for xoshiro256p random number generator                      "
+"  Copyright (C) 2024 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Ernesto Mainegra-Hing, 2024                               "
+"                                                                             "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  A large number of people have been involved with the development of EGS    "
+"  over the years. Many details are in the manual. The authors want to point  "
+"  out the central role of Ralph Nelson of SLAC in the development of EGS     "
+"  over decades. We all owe Ralph a huge debt of gratitude.  Similarly, the   "
+"  role of Alex Bielajew while he was at NRC was critical in many aspects of  "
+"  code development. Hideo Hirayama was involved with the development of EGS4 "
+"  while at SLAC and with Yosh Namito and Syuichi Ban at KEK has continued    "
+"  developments on EGS4. As well many others and users from around the world  "
+"  have assisted in developing and making available the code, in particular   "
+"  Robert D. Stewart.                                                         "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Sum-scrambled linear pseudorandom number generator (64-bit).               "
+"                                                                             "
+"  Xoshiro256+ is faster than xoshiro256++ since it uses a weaker scrambler   "
+"  based on the sum of the first and last words of the state array. If, one is"
+"  only interested in generating 64-bit floating-point numbers (by extracting "
+"  the upper 53 bits), or if the mild linear artifacts in its lowest bits are "
+"  not considered problematic, this one is a faster generator with analogous  "
+"  statistical properties.
+"                                                                             "
+"  Footprint (bits): 256     Period: 2**256 - 1                               "
+"                                                                             "
+"  References:                                                                "
+"                                                                             "
+"  D. Blackman and S. Vigna.  ACM Trans.Math.Softw., 47:1-32, 2021            "
+"  P. L'Ecuyer and R. Simard. ACM Trans.Math.Softw., 33(4), Article 22, 2007  "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$SEEDSKIP-DFLT} WITH {314159265}; "Fixed seed shift"
+REPLACE {$RNGSIZE} WITH {10240}; "Random number array size"
+
+REPLACE {;COMIN/RANDOM/;} WITH
+{;
+  common/randomm/ s(4);
+  $LONG_INT s;       "stores rng state"
+  real*8    unif01;  "returns U[0,1)"
+  integer*4 rng_seed;"needed since hard-coded in egs_utilities.mortran :-("
+}
+
+"Single rnd number version"
+"Rename to de-activate"
+REPLACE {$RANDOMSET#;} WITH
+{;
+  {P1} = unif01();
+;
+}
+;
+REPLACE {$RNG-INITIALIZATION;} WITH {;
+  s(1) = 1; s(2) = 2; s(3) = 3; s(4) = 4;
+  call set_seed(s);
+}
+
+"Initial default rng state (better use your own seed)"
+REPLACE {$RNG-DEFAULT-INITIALIZATION;} WITH {;
+  s(1) = 123456789; s(2) = 987654321; s(3) = 567891234; s(4) = 432198765;
+  call set_seed(s);
+}
+
+"Get initial state from input file, followed by a jump "
+"equivalent to 2^64 calls to next. Macro parameters are"
+" ignored, since initial state s set directly in RNG-INPUTS macro"
+REPLACE {$INITIALIZE RNG USING # AND #; } WITH
+{
+    call set_seed(s);
+}
+;
+
+REPLACE {$STORE RNG STATE ON UNIT #;} WITH
+{
+    call get_state(s);
+    rewind({P1});
+    write({P1},*) s;
+}
+;
+
+REPLACE {$PUT RNG STATE ON UNIT #;} WITH
+{
+    call get_state(s);
+    write({P1},*) s;
+}
+;
+
+REPLACE {$RETRIEVE RNG STATE FROM UNIT #;} WITH
+{
+    read({P1},*) s;
+    call set_state(s);
+}
+;
+
+REPLACE {$SHOW-RNG-STATE(#);} WITH { call show_seeds({P1}); };
+
+REPLACE {$PRINT-RNG-STATE(#,#);} WITH { call print_seeds(); };
+
+REPLACE {$RNG-INPUTS(#,#,#,#);} WITH {;
+   ival = ival + 1;
+   VALUES_SOUGHT(IVAL)={P1};
+   nvalue(ival) = 4;
+   type(ival)   = 0;
+   value_min(ival) = 0;
+   value_max(ival) = 2**63;
+   default(ival)   = $SEEDSKIP-DFLT;
+   delimeter = {P2};
+   nmin = ival; nmax = ival;
+   call get_input;
+   IF( error_flags(ival) = 0 ) [
+       s(1) = value(ival,1);
+       s(2) = value(ival,2);
+       s(3) = value(ival,3);
+       s(4) = value(ival,4);
+   ]
+   ELSE ["Initial default rng state (better use your own seed)"
+    s(1) = 123456789; 
+    s(2) = 987654321; 
+    s(3) = 567891234; 
+    s(4) = 432198765;
+   ]
+   {P3} = s(1); {P4} = s(2);
+};
+
+REPLACE {$RNG-STRING-1} WITH {' XOSHIRO256+ seed 1: '}
+REPLACE {$RNG-STRING-2} WITH {' XOSHIRO256+ seed 2: '}
+
+"        end of xoshiro256pp.macros                  "

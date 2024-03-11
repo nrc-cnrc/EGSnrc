@@ -1,0 +1,97 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc macros for xoshiro256p correlated sampling                          "
+"  Copyright (C) 2024 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Ernesto Mainegra-Hing, 2024                               "
+"                                                                             "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  A large number of people have been involved with the development of EGS    "
+"  over the years. Many details are in the manual. The authors want to point  "
+"  out the central role of Ralph Nelson of SLAC in the development of EGS     "
+"  over decades. We all owe Ralph a huge debt of gratitude.  Similarly, the   "
+"  role of Alex Bielajew while he was at NRC was critical in many aspects of  "
+"  code development. Hideo Hirayama was involved with the development of EGS4 "
+"  while at SLAC and with Yosh Namito and Syuichi Ban at KEK has continued    "
+"  developments on EGS4. As well many others and users from around the world  "
+"  have assisted in developing and making available the code, in particular   "
+"  Robert D. Stewart.                                                         "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The following macros can be used for correlated sampling, together with    "
+"  the EGSnrc random number generator (rng) xoshiro256pp.                     "
+"                                                                             "
+"  $MXRNGDIM      gives the maximum number of different rng states that       "
+"                 can be simultaneously held in the memory                    "
+"                                                                             "
+"  $STORE-RNG(#)  is used to store the current rng state into dimension {P1}  "
+"                 of the 2D array extra_seeds                                 "
+"                                                                             "
+"  $RESET-RNG(#)  is used to re-set the rng state from a previous state       "
+"                                                                             "
+"  In order to use these macros, include this file before your user code via  "
+"  the configuration file.                                                    "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$MXRNGDIM} WITH {5};  "to store up to five rng states"
+
+APPEND {;
+
+  common/random_extra/ extra_seeds(4,$MXRNGDIM);
+  $LONG_INT  extra_seeds;
+
+} TO { ;COMIN/RANDOM/; }
+
+REPLACE {$STORE-RNG(#);} WITH {;
+
+  IF( {P1} < 1 | {P1} > $MXRNGDIM ) [
+      OUTPUT {P1};
+      (//' ******* Attempt to store rng state into an illegal dimension: ',
+      i4//);
+      stop;
+  ]
+  call get_state(extra_seeds(1,{P1}));
+};
+
+REPLACE {$RESET-RNG(#);} WITH {;
+
+  IF( {P1} < 1 | {P1} > $MXRNGDIM ) [
+      OUTPUT {P1};
+      (//' ******* Attempt to reset rng state from an illegal dimension: ',
+      i4//);
+      stop;
+  ]
+  call set_state(extra_seeds(1,{P1}));
+};
+"end of xoshiro256p.correlations"
