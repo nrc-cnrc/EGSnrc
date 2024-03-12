@@ -896,7 +896,7 @@ return; end;
 subroutine egs_set_defaults;
 "******************************************************************************
 " Replaces BLOCK DATA "
-implicit none;
+$IMPLICIT-NONE;
 $COMIN-SET-DEFAULTS;
 
 integer  i,j,lnblnk1;
@@ -1543,7 +1543,7 @@ return; end;
 "=============================================================================
 $REAL function egs_rndm();
 "=============================================================================
-implicit none;
+$IMPLICIT-NONE;
 ;COMIN/RANDOM/;
 $RANDOMSET egs_rndm;
 return; end;
@@ -1905,7 +1905,7 @@ $REAL function alias_sample1(nsbin,xs_array,fs_array,ws_array,ibin_array);
 " which must have been prepared with prepare_alias_table
 "
 "******************************************************************************
-implicit none;
+$IMPLICIT-NONE;
 
 integer   nsbin;
 $INTEGER  ibin_array(nsbin);
@@ -2001,7 +2001,7 @@ $INTEGER function sample_alias_histogram(nsbin,ws_array,ibin_array);
 " Iwan Kawrakow, November 2001.
 "***********************************************************************
 
-implicit none;
+$IMPLICIT-NONE;
 
 $INTEGER  nsbin,ibin_array(*);
 $REAL     ws_array(*);

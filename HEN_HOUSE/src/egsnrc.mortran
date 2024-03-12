@@ -2757,7 +2757,7 @@ subroutine mscati;
 " I.Kawrakow, NRC
 "**********************************************************************"
 
-implicit none;
+$IMPLICIT-NONE;
 
 $REAL ededx,ei,eil,eip1,eip1l,si,sip1,eke,elke,aux,ecutmn,tstbm,tstbmn;
 $REAL p2,beta2,dedx0,ekef,elkef,estepx,ektmp,elktmp,chi_a2;
@@ -2994,7 +2994,7 @@ subroutine mscat(lambda,chia2,q1,elke,beta2,qel,medium,
 " I.Kawrakow, NRC                                                         "
 "========================================================================="
 
-implicit none;
+$IMPLICIT-NONE;
 
 $REAL    lambda, chia2,q1,elke,beta2,cost,sint;
 $INTEGER qel,medium;
@@ -3176,7 +3176,7 @@ $REAL function spin_rejection(qel,medium,elke,beta2,q1,cost,
 " I.Kawrakow, NRC                                                             "
 "============================================================================="
 
-implicit none;
+$IMPLICIT-NONE;
 
 $REAL      elke,beta2,q1,cost;
 $INTEGER   qel,medium;
@@ -3231,7 +3231,7 @@ subroutine sscat(chia2,elke,beta2,qel,medium,spin_effects,cost,sint);
 " I.Kawrakow, NRC                                                            "
 "============================================================================"
 
-implicit none;
+$IMPLICIT-NONE;
 
 $REAL    chia2,elke,beta2,cost,sint;
 $INTEGER qel,medium;
@@ -4733,7 +4733,7 @@ RETURN;
 subroutine sample_triplet;
 
 "***************************************************************************"
-implicit none;
+$IMPLICIT-NONE;
 $declare_max_medium;
 ;COMIN/EPCONT,STACK,MEDIA,THRESH,USEFUL,RANDOM,USER,EGS-IO/;
 $declare_write_buffer;
@@ -5568,7 +5568,7 @@ SUBROUTINE RELAX(energy,n,iZ);
 "                                                                  "
 " Version 1:  I. Kawrakow, December 1998                           "
 "******************************************************************"
-implicit none;
+$IMPLICIT-NONE;
 
 " Input variables "
 "================="
@@ -7380,11 +7380,13 @@ end;
 " Included here because it makes life easier for using the EGSnrc RNG"
 " from within the C-interface. "
 subroutine egs_init_default_rng;
+$IMPLICIT-NONE;
 ;COMIN/RANDOM/;
 $RNG-DEFAULT-INITIALIZATION;
 return; end;
 
 subroutine egs_init_rng(arg1,arg2);
+$IMPLICIT-NONE;
 $INTEGER arg1,arg2;
 ;COMIN/RANDOM/;
 $declare_write_buffer;
@@ -7392,12 +7394,14 @@ $INITIALIZE RNG USING arg1 AND arg2;
 return; end;
 
 subroutine egs_get_rndm(ran);
+$IMPLICIT-NONE;
 $REAL ran;
 ;COMIN/RANDOM/;
 $RANDOMSET ran;
 return; end;
 
 subroutine egs_get_rndm_array(n,rarray);
+$IMPLICIT-NONE;
 $INTEGER n;
 $REAL    rarray(*);
 ;COMIN/RANDOM/;
@@ -7758,7 +7762,7 @@ return; end;
 "*****************************************************************************"
 
 subroutine eii_sample(ish,iZ,Uj);
-implicit none;
+$IMPLICIT-NONE;
 $INTEGER ish,iZ;
 $REAL    Uj;
 

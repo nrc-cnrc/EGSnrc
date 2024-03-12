@@ -577,7 +577,7 @@ $REAL function alias_sample(nsbin,xs_array,ws_array,ibin_array);
 "
 "===============================================================
 
-implicit none;
+$IMPLICIT-NONE;
 
 $INTEGER nsbin,ibin_array(nsbin);
 $REAL    xs_array(0:nsbin),ws_array(nsbin);
