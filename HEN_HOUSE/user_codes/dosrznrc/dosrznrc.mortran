@@ -1558,7 +1558,7 @@ REPLACE {$VERSION} WITH {
 "                       USER DEFINED MACROS
 "                       *******************
 ;
-REPLACE {$IMPLICIT-NONE;} WITH {implicit none;}
+REPLACE {$IMPLICIT-NONE-LOCAL;} WITH {implicit none;}
 
 REPLACE {$PLTDIM} WITH {500}     "bins for plotting routine xvgrplot"
 REPLACE {$EBIN} WITH {$PLTDIM}   "Max number of bins in pulse height distn     "
@@ -4358,7 +4358,7 @@ ELSE[{P3}=0;{P4}=1.0E30;]
 
 SUBROUTINE HOWFAR;
 
-$IMPLICIT-NONE;
+$IMPLICIT-NONE-LOCAL;
 
 ;
 "MACRO USED LOCALLY TO CHANGE REGIONS, ADJUST USTEP, AND EXIT"
@@ -5837,7 +5837,7 @@ SUBROUTINE OSUMRY;
 "
 "************************************************************************
 
-$IMPLICIT-NONE;
+$IMPLICIT-NONE-LOCAL;
 
 ;
 REPLACE {$IRL} WITH {IZD+NZDMIN+NZDOSE*(IXD+NRDMIN-1)}
@@ -6210,7 +6210,7 @@ END; "END OF SUBROUTINE OSUMRY"
 
 "THIS FUNCTION COMPRESSES NON-HOLLERITH STRINGS"
 CHARACTER*(*) FUNCTION CMPRES(UNCOMP);
-$IMPLICIT-NONE;
+$IMPLICIT-NONE-LOCAL;
 CHARACTER*(*) UNCOMP;
 $LOGICAL HOLRTH;
 $INTEGER INDX,NARG,I,NRES;
@@ -6261,7 +6261,7 @@ SUBROUTINE PLOTPH(TITLE,PDST,PDSTUN,PCUM,PCUMUN,PTOT,PTOTUN,DFEP,DFEPUN,
 "***************************************************************************
 
 ;
-$IMPLICIT-NONE;
+$IMPLICIT-NONE-LOCAL;
 
 CHARACTER SPACE,BAR,LINE(61),SYMBOL(6);
 REAL*8 PDST($EBIN),PDSTUN($EBIN),PTOT,PTOTUN,DFEP(4),DFEPUN(4),
@@ -6471,7 +6471,7 @@ RETURN;END;
 "*******************************************************************************
 ;SUBROUTINE PLOTSN;
 
-$IMPLICIT-NONE;
+$IMPLICIT-NONE-LOCAL;
 
 COMIN/GetInput/;
 
@@ -7252,7 +7252,7 @@ REPLACE {$CALL-HOWNEAR(#);} WITH
 
 subroutine hownear(tperp,x,y,z,ir);
 
-$IMPLICIT-NONE;
+$IMPLICIT-NONE-LOCAL;
 
 COMIN/GEOM/;
 
@@ -7289,7 +7289,7 @@ return;
 end;
 
 subroutine combine_results(file_name);
-implicit none;
+$IMPLICIT-NONE;
 character*(*) file_name;
 ;COMIN/SCORE,RANDOM,IODAT2,GEOM,SOURCE/;
 
