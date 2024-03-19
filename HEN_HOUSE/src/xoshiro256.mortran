@@ -1,0 +1,294 @@
+%C80
+"#############################################################################"
+"                                                                             "
+"  EGSnrc xoshiro256++ random number generator                                "
+"  Copyright (C) 2024 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Ernesto Mainegra-Hing, 2024                               "
+"                                                                             "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  A large number of people have been involved with the development of EGS    "
+"  over the years. Many details are in the manual. The authors want to point  "
+"  out the central role of Ralph Nelson of SLAC in the development of EGS     "
+"  over decades. We all owe Ralph a huge debt of gratitude.  Similarly, the   "
+"  role of Alex Bielajew while he was at NRC was critical in many aspects of  "
+"  code development. Hideo Hirayama was involved with the development of EGS4 "
+"  while at SLAC and with Yosh Namito and Syuichi Ban at KEK has continued    "
+"  developments on EGS4. As well many others and users from around the world  "
+"  have assisted in developing and making available the code, in particular   "
+"  Robert D. Stewart.                                                         "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Sum-rotate-sum scrambled linear pseudorandom number generator (64-bit).    "
+"                                                                             "
+"  This fast generator has a state space that is large enough for any parallel" 
+"  application, and passes all tests the authors were aware of.               "
+"  It notably passes the powerful BigCrush suite of tests, a comprehensive    "
+"  testing framework for pseudo random number generators (PRNGs) developed by "
+"  Pierre L'Ecuyer and Richard Simard. Since simple operations are used, it   "
+"  can be easily parallelized. Although xoshiro256++ is just 3-dimensionally  "
+"  equidistributed, this has no practical effect. On the other hand, the bits "
+"  have high linear complexity due to the strong ++ scrambler(sum-rotate-sum)."
+"                                                                             "
+"  Footprint (bits): 256     Period: 2**256 - 1                               "
+"                                                                             "
+"  References:                                                                "
+"                                                                             "
+"  D. Blackman and S. Vigna.  ACM Trans.Math.Softw., 47:1-32, 2021            "
+"  P. L'Ecuyer and R. Simard. ACM Trans.Math.Softw., 33(4), Article 22, 2007  "
+"                                                                             "
+"#############################################################################"
+#define RNGSIZE $RNGSIZE
+%Q1
+%F
+      module egs_xoshiro256
+      
+        implicit none
+        private
+
+        ! A 64 bit floating point type
+        !integer, parameter :: dp = kind(0.0d0)
+        integer, parameter :: dp = selected_real_kind(15, 307)
+      
+        ! A 64 bit integer type
+        integer, parameter :: i8 = selected_int_kind(18)
+
+        !> Inverse of largest integer
+        real(dp), parameter :: two53i =  1.0/2.0**53
+
+        !> Mapping of real exponent onto an integer
+        integer(i8), parameter :: iexp = shiftl(1023_i8, 52)
+        
+        !> Random number generator type, which contains the state
+        type xoshiro256pp_t
+           !> The rng state (always use your own seed)
+           integer(i8), private       :: s(4) = [123456789_i8,  
+     >                                         987654321_i8,  
+     >                                         567891234_i8, 
+     >                                         432198765_i8]
+         contains
+           procedure, non_overridable :: set_seed    ! Seed the generator
+           procedure, non_overridable :: set_random_seed ! Use a random seed
+           procedure, non_overridable :: jump        ! Jump function (see below)
+           procedure, non_overridable :: unif01      ! Uniform (0,1] real
+           procedure, non_overridable :: next        ! Internal method
+           procedure, non_overridable :: set_state   ! Internal method
+           procedure, non_overridable :: get_state   ! Internal method
+           procedure, non_overridable :: print_seeds ! Internal method
+           procedure, non_overridable :: show_seeds  ! Internal method
+        end type xoshiro256pp_t
+      
+        public :: xoshiro256pp_t
+
+        type(xoshiro256pp_t), public :: rng
+      
+      contains
+      
+        !> Set a seed for the rng
+        subroutine set_seed(self, the_seed)
+          class(xoshiro256pp_t), intent(inout) :: self
+          integer(i8), intent(in)     :: the_seed(4)
+      
+          self%s = the_seed
+      
+          ! Simulate calls to next() to improve randomness of first number
+          call self%jump()
+      
+        end subroutine set_seed
+
+       
+        subroutine set_random_seed(self)
+          class(xoshiro256pp_t), intent(inout) :: self
+          integer                   :: i
+          real(dp)                    :: rr
+          integer(i8)                 :: time
+      
+          ! Get a random seed from the system (this does not always work)
+          call random_seed()
+      
+          ! Get some count of the time
+          call system_clock(time)
+      
+          do i = 1, 4
+             call random_number(rr)
+             self%s(i) = ieor(transfer(rr, 1_i8), transfer(time, 1_i8))
+          end do
+      
+          ! Simulate calls to next() to improve randomness of first number
+          call self%jump()
+        end subroutine set_random_seed
+      
+        ! This is the jump function for the generator. It is equivalent
+        ! to 2^64 calls to next(); it can be used to generate 2^64
+        ! non-overlapping subsequences for parallel computations.
+        subroutine jump(self)
+          class(xoshiro256pp_t), intent(inout) :: self
+          integer                   :: i, b
+          integer(i8)                 :: t(4), dummy
+          ! The signed equivalent of the unsigned constants
+          integer(i8), parameter      :: jmp_c(4) = (/        
+     >                                1733541517147835066_i8, 
+     >                               -3051731464161248980_i8, 
+     >                               -6244198995065845334_i8, 
+     >                                4155657270789760540_i8 /)
+      
+          t = 0
+          do i = 1, 4
+             do b = 0, 63
+                if (iand(jmp_c(i), shiftl(1_i8, b)) /= 0) then
+                   t = ieor(t, self%s)
+                end if
+                dummy = self%next()
+             end do
+          end do
+      
+          self%s = t
+
+          write(*,*) "**** State after jump: "
+          call self%show_seeds(6)
+          write(*,*) "***********************"
+        
+        end subroutine jump
+      
+        !> Get next value (returned as 64 bit signed integer)
+        !  From: https://prng.di.unimi.it/xoshiro256pplus.c 
+        function next(self) result(res)
+          class(xoshiro256pp_t), intent(inout) :: self
+          integer(i8)                          :: res
+          integer(i8)                          :: s(4)
+          integer(i8)                          :: t
+      
+          s    = self%s
+          
+          !res = rotl(s(1) + s(4), 23) + s(1)
+          !> Sum, left-rotation and sum
+          res = ior(shiftl(s(1) + s(4), 23),  
+     >              shiftr(s(1) + s(4), 41)) + 
+     >              s(1)
+      
+          t = shiftl(s(2), 17)
+      
+          s(3) = ieor(s(3), s(1))
+          s(4) = ieor(s(4), s(2))
+          s(2) = ieor(s(2), s(3))
+          s(1) = ieor(s(1), s(4))
+              
+          s(3) = ieor(s(3), t)
+      
+          !s(4) = rotl(s(4), 45)
+          !> Left-rotation
+          s(4) = ior(shiftl(s(4), 45),  
+     >               shiftr(s(4), 19))
+          
+          self%s = s
+      
+        end function next
+      
+        !> Get a uniform [0,1) random real (double precision)
+        !> without calling function next
+        function unif01(self) result(res_f)
+          class(xoshiro256pp_t), intent(inout) :: self
+          real(dp)                             :: res_f
+          integer(i8)                          :: res
+          integer(i8)                          :: s(4)
+          integer(i8)                          :: t
+      
+          s    = self%s
+          
+          !res = rotl(s(1) + s(4), 23) + s(1)
+          !> Sum, left-rotation and sum
+          res = ior(shiftl(s(1) + s(4), 23),  
+     >              shiftr(s(1) + s(4), 41)) + 
+     >              s(1)
+  
+          res_f = shiftr(res, 11)*two53i
+
+          !write(*,*) "U[0,1) = ", res_f
+      
+          t = shiftl(s(2), 17)
+      
+          s(3) = ieor(s(3), s(1))
+          s(4) = ieor(s(4), s(2))
+          s(2) = ieor(s(2), s(3))
+          s(1) = ieor(s(1), s(4))
+              
+          s(3) = ieor(s(3), t)
+      
+          !s(4) = rotl(s(4), 45)
+          !> Left-rotation
+          s(4) = ior(shiftl(s(4), 45),  
+     >               shiftr(s(4), 19))
+  
+          
+          self%s = s
+      
+        end function unif01
+      
+        !> Set state for the rng
+        subroutine set_state(self, the_seed)
+            class(xoshiro256pp_t), intent(inout) :: self
+            integer(i8), intent(in)     :: the_seed(4)
+        
+            self%s = the_seed
+        
+        end subroutine set_state
+  
+        !> Get the seed for the rng
+        subroutine get_state(self, the_seed)
+            class(xoshiro256pp_t), intent(inout) :: self
+            integer(i8), intent(out)     :: the_seed(4)
+        
+            the_seed = self%s
+        
+        end subroutine get_state
+  
+        !> Output current seeds to ounit with fixed format
+        subroutine show_seeds( self, ounit )
+            class(xoshiro256pp_t), intent(inout) :: self
+            integer :: ounit
+            write(ounit,"(4(/a,i0))") " s(1) = ",self%s(1),
+     >                                " s(2) = ",self%s(2),
+     >                                " s(3) = ",self%s(3),
+     >                                " s(4) = ",self%s(4)
+        end subroutine show_seeds
+    
+        !> Output current seeds to ounit with fixed format
+        subroutine print_seeds( self, ounit, fmt )
+            class(xoshiro256pp_t), intent(inout) :: self
+            integer   :: ounit
+            character *(*) fmt
+            write(ounit,fmt) self%s
+        end subroutine print_seeds
+              
+      
+      end module egs_xoshiro256
+%M
+;
