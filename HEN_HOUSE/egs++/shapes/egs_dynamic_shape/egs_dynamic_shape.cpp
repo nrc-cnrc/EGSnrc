@@ -205,6 +205,7 @@ extern "C" {
         // Create and set the current shape transformation using the sampled coordinates from getCoord. This is where overloaded EGS_AffineTransform is used
         EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
         shape->setTransformation(tDG);
+        delete tDG;
 
         // Call getNextShapePosition on base shape in case there are lower level dynamic shapes
         shape->getNextShapePosition(rndm);
