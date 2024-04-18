@@ -336,16 +336,20 @@ union __egs_data32 {
 };
 #endif
 
-void EGS_PhspSource::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) {
-    if (nstart < 0 || nrun < 1 || nstart + nrun > Nparticle) {
-        egsWarning("EGS_PhspSource::setSimulationChunk(): illegal attempt "
-                   "to set the simulation chunk between %lld and %lld ignored\n",
-                   nstart+1,nstart+nrun);
-        return;
+void EGS_PhspSource::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) {
+
+    //determine the simulation chunk and use this to calculate first/last particles
+    //in the phase space chunk
+    EGS_I64 particlesPerChunk = Nparticle/(npar*nchunk);
+    int ichunk = nstart/nrun;
+    Nfirst = ichunk*particlesPerChunk+1;
+    Nlast = Nfirst-1+particlesPerChunk;
+    if (Nparticle - Nlast < particlesPerChunk)
+    {
+        //throw the remaining particles into the last phsp chunk
+        Nlast = Nparticle;
     }
-    Nfirst = nstart+1;
-    Nlast = nstart + nrun;
-    Npos = nstart;
+    Npos = Nfirst-1; //we increment Npos before attempting to read a particle
     istream::off_type pos = Nfirst*recl;
     the_file.seekg(pos,ios::beg);
     egsInformation("EGS_PhspSource: using phsp portion between %lld and %lld\n",
