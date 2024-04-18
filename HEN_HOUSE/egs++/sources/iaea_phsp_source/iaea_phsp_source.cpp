@@ -430,16 +430,19 @@ union __egs_data32 {
 };
 #endif
 
-void IAEA_PhspSource::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) {
-    if (nstart < 0 || nrun < 1 || nstart + nrun > Nparticle) {
-        egsWarning("IAEA_PhspSource::setSimulationChunk(): illegal attempt "
-                   "to set the simulation chunk between %lld and %lld ignored\n",
-                   nstart+1,nstart+nrun);
-        return;
+void IAEA_PhspSource::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) {
+    //determine the simulation chunk and use this to calculate first/last particles
+    //in the phase space chunk
+    EGS_I64 particlesPerChunk = Nparticle/(npar*nchunk);
+    int ichunk = nstart/nrun;
+    Nfirst = ichunk*particlesPerChunk+1;
+    Nlast = Nfirst-1+particlesPerChunk;
+    if (Nparticle - Nlast < particlesPerChunk)
+    {
+        //throw the remaining particles into the last phsp chunk
+        Nlast = Nparticle;
     }
-    Nfirst = nstart+1;
-    Nlast = nstart + nrun;
-    Npos = nstart;
+    Npos = Nfirst-1;
     iaea_set_record(&iaea_fileid,&Nfirst,&iaea_iostat);
     if (iaea_iostat<0) {
         egsWarning("IAEA_PhspSource::setSimulationChunk(): error setting phase space chunk\n");

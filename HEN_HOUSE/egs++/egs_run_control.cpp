@@ -784,7 +784,7 @@ EGS_I64 EGS_JCFControl::getNextChunk() {
         nrun = nleft;
     }
     if (nrun > 0) {
-        app->setSimulationChunk(ntot,nrun);
+        app->setSimulationChunk(ntot,nrun,npar,nchunk);
     }
     nleft -= nrun;
     ntot += nrun;

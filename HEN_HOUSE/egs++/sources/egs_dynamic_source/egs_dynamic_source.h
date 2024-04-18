@@ -286,8 +286,8 @@ public:
         return (valid && source != 0);
     };
 
-    void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) {
-        source->setSimulationChunk(nstart, nrun);
+    void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) {
+        source->setSimulationChunk(nstart, nrun, npar, nchunk);
     };
 
     void containsDynamic(bool &hasdynamic);

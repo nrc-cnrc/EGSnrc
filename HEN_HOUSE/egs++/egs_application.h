@@ -317,11 +317,12 @@ public:
 
       Tells the application that the next chunk of particles to be
       simulated starts at \a nstart and will consist of \a nrun particles.
+      It also provides the source with the parallel run parameters, \a npar and \a nchunk.
       This is necessary for parallel runs using phase space files. The default
       implementation simply calls the EGS_BaseSource::setSimulationChunk()
       method.
     */
-    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun);
+    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk);
 
     /*! \brief Runs an EGSnrc simulation.
 
