@@ -152,7 +152,7 @@ public:
     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
                             EGS_Vector &x, EGS_Vector &u);
-    void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun);
+    void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk);
     EGS_Float getEmax() const {
         return Emax;
     };

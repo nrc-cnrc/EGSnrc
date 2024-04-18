@@ -140,7 +140,7 @@ public:
       It may also be re-implemented, if one wanted to use some sort of
       a systematic sampling of the phase space.
     */
-    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) { };
+    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) { };
 
     /*! \brief Get the charge of the source.
      *

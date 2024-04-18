@@ -798,9 +798,9 @@ int EGS_Application::initSimulation() {
     return 0;
 }
 
-void EGS_Application::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) {
+void EGS_Application::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) {
     if (source) {
-        source->setSimulationChunk(nstart,nrun);
+        source->setSimulationChunk(nstart,nrun,npar,nchunk);
     }
 }
 
