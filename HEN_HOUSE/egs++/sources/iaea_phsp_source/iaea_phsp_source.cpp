@@ -435,12 +435,22 @@ void IAEA_PhspSource::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar,
     //in the phase space chunk
     EGS_I64 particlesPerChunk = Nparticle/(npar*nchunk);
     int ichunk = nstart/nrun;
-    Nfirst = ichunk*particlesPerChunk+1;
-    Nlast = Nfirst-1+particlesPerChunk;
-    if (Nparticle - Nlast < particlesPerChunk)
+    if (ichunk > npar*nchunk-1)
     {
-        //throw the remaining particles into the last phsp chunk
+        //remainder of histories, reuse the last chunk of the phsp
+        //there may be a more clever strategy
+        egsInformation("IAEA_PhspSource: Remainder of histories will reuse the last chunk of the phase space source.\n");
+        ichunk = npar*nchunk-1;
+    }
+    Nfirst = ichunk*particlesPerChunk+1;
+    if (ichunk == npar*nchunk-1)
+    {
+        //last chunk of the phsp file, just go to the end of the file
         Nlast = Nparticle;
+    }
+    else
+    {
+        Nlast = Nfirst-1+particlesPerChunk;
     }
     Npos = Nfirst-1;
     iaea_set_record(&iaea_fileid,&Nfirst,&iaea_iostat);
