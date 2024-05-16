@@ -139,7 +139,7 @@ public:
     void getCostMinMax(const EGS_Vector &xx, const EGS_Vector &uu,
                         EGS_Float &ro, EGS_Float &ct_min, EGS_Float &ct_max);
 
-    void getBremsEnergies(int npold, int np);
+    void getBremsEnergies();
 
     void killThePhotons(EGS_Float fs, EGS_Float ssd, int n_split, int npstart, int kill_electrons);
 
