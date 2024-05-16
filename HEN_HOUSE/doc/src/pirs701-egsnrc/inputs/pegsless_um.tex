@@ -47,41 +47,39 @@ is a logical next step.
 \subsection{User Code Inputs for Pegsless Mode}
 \label{pegslessinputsect}
 
-To run a user code in pegsless mode, the user must include parameters for calculating cross-sections, including
-specifications for all media used in the simulation, in their {\tt .egsinp} file between the
-delimiters, {\tt :start media definition:} and {\tt :stop media definition:}.  This is best illustrated
-with an example input:
+To run a user code in pegsless mode, the user must include parameters for calculating cross-sections, including specifications for all media used in the simulation, in their {\tt .egsinp} file between the
+delimiters, {\tt :start media definition:} and {\tt :stop media definition:}. With the addition of ESTAR on-the-fly density effect corrections, the recommended method for defining materials is to use the in-line list of compound mixtures or elements, or density correction files (instead of pegs4dat files). This is best illustrated with an example input:
 
 \begin{verbatim}
 :start media definition:
 
-AE=0.521
-UE=50.511
-AP=0.01
-UP=50.
+    AE=0.521
+    UE=50.511
+    AP=0.01
+    UP=50.
 
-material data file=/home/username/HEN_HOUSE/pegs4/data/material.dat
+    # The usual definition of water
+    # This will do on-the-fly ESTAR density corrections
+    :start water:
+        elements = H, O
+        number of atoms = 2,1
+        bulk density = 1.0
+    :stop water:
 
-:start H2O521ICRU:
-  elements = H, O
-  number of atoms = 2,1
-  bulk density = 1.0
-  bremsstrahlung correction = KM
-:stop H2O521ICRU:
+    # Now salt water with 1% salt, a mixture of compounds
+    # This will do on-the-fly ESTAR density corrections
+    :start water:
+        mixture compounds = H2O, NaCl
+        mass fractions = 0.99, 0.01
+        bulk density = 1.027
+    :stop water:
 
-:start AIR521ICRU:
-  elements = C,N,O,AR
-  mass fractions = 1.24000E-04, 7.55200E-01, 2.31800E-01, 1.28300E-02
-  bulk density = 1.2048E-03
-  bremsstrahlung correction = NRC
-  gas pressure = 1.0
-:stop AIR521ICRU:
-
-:start PMMA521ICRU:
-  bremsstrahlung correction = NRC
-  density correction file = /home/uname/EGSnrc/HEN_HOUSE/pegs4/density_corrections/
-compounds/polymethylmethacrylate__lucite___perspex___plexiglas_.density
-:stop PMMA521ICRU:
+    # The usual air definition
+    # Here we just use the density correction file that is distributed with EGSnrc
+    # Note that if you provide a density correction file, it will take precedent over any other inputs
+    :start air:
+        density correction file    = air_dry_nearsealevel
+    :stop air:
 
 :stop media definition:
 \end{verbatim}
@@ -95,6 +93,25 @@ not specified it defaults to the highest value of {\tt ECUT} (electron transport
 in the simulation.  If
 {\tt AP} is unspecified, then it defaults to the highest value of {\tt PCUT} (photon transport cutoff energy--see Section~\ref{step_2})
 specified.  {\tt UE} and {\tt UP} default to 50.511 MeV and 50.0 MeV, respectively.
+
+For access to the same list of materials that you may find in the 521icru.pegs4dat that is used in many EGSnrc examples, use the {\tt material data file} input to include {\tt HEN_HOUSE/pegs4/data/material.dat}. When including this file, it is also possible to include additional materials, as show below:
+
+\begin{verbatim}
+:start media definition:
+
+    AE=0.521
+    UE=50.511
+    AP=0.01
+    UP=50.
+
+    material data file=/home/username/HEN_HOUSE/pegs4/data/material.dat
+
+    :start my-pmma:
+        density correction file = polymethylmethacrylate__lucite___perspex___plexiglas_.density
+    :stop my-pmma:
+
+:stop media definition:
+\end{verbatim}
 
 \index{pegsless mode!material data file}
 \item {\tt material data file} is the name (including full directory path) of a file containing specifications for the media used
