@@ -276,6 +276,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         }
         check = 1;
     }
+    */
     if( iarg == EGS_Application::BeforeCompton ||
              iarg == EGS_Application::BeforePair ||
              iarg == EGS_Application::BeforePhoto ||
@@ -309,6 +310,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
         int nint = is_fat ? nsplit : 1;
 
+        /*
         if(iarg == EGS_Application::BeforePair)
         {
             app->callPair();
@@ -317,9 +319,11 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         {
             app->callPhoto();
         }
+        */
         if(iarg == EGS_Application::BeforeCompton)
         {
             int npold = np;
+            /*
             if(is_fat && !app->getIbcmp())
             {
                 //label as nonphat to be passed on to descendents
@@ -331,6 +335,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             }
             else //straight-up compton
             {
+            */
                 //label interacting photon as non-phat and reduce weight (if phat)
                 latch = latch & ~(1 << 0);
                 EGS_Particle p = app->getParticleFromStack(app->getNp());
@@ -349,8 +354,9 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                     }
                     killThePhotons(fs,ssd,nsplit,nstart,aux);
                 }
-            }
+            //}
         }
+        /*
         else if (iarg == EGS_Application::BeforeRayleigh)
         {
             //TODO: Put all of this in a doRayleigh function
@@ -383,8 +389,10 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
             }
         }
+        */
         check = 1;
     }
+    /*
     else if(iarg == EGS_Application::FluorescentEvent )
     {
         if( is_fat ) {
