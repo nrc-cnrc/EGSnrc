@@ -1246,8 +1246,10 @@ $start_new_particle;
                 is_ch_step = .false.;
                 IF((tustep <= tperp) & ((~exact_bca) | (tustep > skindepth)))
                 [
-                    "We are further way from a boundary than a skindepth, so
-                    "perform a normal condensed-history step
+                    "We are further away from a boundary than a skindepth and
+                    "either: we are not using exact boundary-crossing, or the
+                    "requested condensed-history step is greater than the
+                    "skindepth. So perform a normal condensed-history step
                     callhowfar = .false.; "Do not call HAWFAR
                     domultiple = .false.; "Multiple scattering done here
                     dosingle   = .false.; "MS => no single scattering
