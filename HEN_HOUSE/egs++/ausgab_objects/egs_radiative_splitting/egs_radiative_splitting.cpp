@@ -186,7 +186,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     EGS_Float dneari = app->getDnear(np);
     int latch = pi.latch;
 
-    int check = 1; //set to 1 to return to shower
+    int check = 0; //set to 1 to return to shower
 
     killed = 0;
 
@@ -238,7 +238,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         }
         check = 1;
     }
-    /*
     else if( iarg == EGS_Application::BeforeAnnihFlight ) {
         if( is_fat ) {
             //figure out what to do with the extra stack
@@ -276,7 +275,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         }
         check = 1;
     }
-    */
     if( iarg == EGS_Application::BeforeCompton ||
              iarg == EGS_Application::BeforePair ||
              iarg == EGS_Application::BeforePhoto ||
@@ -284,12 +282,9 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     {
 
         //currently only phat photons undergo interactions
-        //unless it is bound compton
-        //Note: In BEAMnrc, we also exclude Rayleigh from this RR process, but
-        //I am not sure why.
-     //   if(!is_fat &&
-      //    (iarg != EGS_Application::BeforeCompton || !app->getIbcmp()))
-          if(!is_fat && iarg == EGS_Application::BeforeCompton && !app->getIbcmp())
+        //unless it is Rayleigh or bound compton
+          if(!is_fat && (iarg == EGS_Application::BeforePhoto || iarg == EGS_Application::BeforePair ||
+            (iarg == EGS_Application::BeforeCompton && !app->getIbcmp())))
         {
                if (app->getRngUniform()*nsplit > 1)
                {
@@ -310,7 +305,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
         int nint = is_fat ? nsplit : 1;
 
-        /*
         if(iarg == EGS_Application::BeforePair)
         {
             app->callPair();
@@ -319,11 +313,9 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         {
             app->callPhoto();
         }
-        */
         if(iarg == EGS_Application::BeforeCompton)
         {
             int npold = np;
-            /*
             if(is_fat && !app->getIbcmp())
             {
                 //label as nonphat to be passed on to descendents
@@ -335,13 +327,12 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             }
             else //straight-up compton
             {
-            */
                 //label interacting photon as non-phat and reduce weight (if phat)
                 latch = latch & ~(1 << 0);
-                EGS_Particle p = app->getParticleFromStack(app->getNp());
+                EGS_Particle p = pi;
                 p.latch = latch;
                 p.wt = p.wt/nint;
-                app->deleteParticleFromStack(app->getNp());
+                app->deleteParticleFromStack(np);
                 for (int i=0; i<nint; i++)
                 {
                     app->addParticleToStack(p,dneari);
@@ -354,29 +345,24 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                     }
                     killThePhotons(fs,ssd,nsplit,nstart,aux);
                 }
-            //}
+            }
         }
-        /*
         else if (iarg == EGS_Application::BeforeRayleigh)
         {
             //TODO: Put all of this in a doRayleigh function
             if (is_fat) {
-                    //this should always be true
                     latch = latch & ~(1 << 0);
-                    app->setLatch(latch);
             }
-            int npstart = app->getNp();
             EGS_Float gle = app->getGle();
             int imed = app->getMedium(pi.ir);
             int lgle = app->getLgle(gle,imed);
             EGS_Float costhe, sinthe;
-            //delete the particle from the top of the stack because we are going to replace it
+            //delete the interacting particle because we are going to replace it
             app->deleteParticleFromStack(np);
             for (int i=0; i<nint; i++)
             {
                 EGS_Particle p = pi;
                 p.wt = p.wt/nint;
-                //probably don't need to set latch here
                 p.latch = latch;
                 //call EGS rayleigh sampling routine to get scatter angles cost, sint
                 app->callEgsRayleighSampling(imed,p.E,gle,lgle,costhe,sinthe);
@@ -389,10 +375,8 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 killThePhotons(fs,ssd,nsplit,nstart,aux);
             }
         }
-        */
         check = 1;
     }
-    /*
     else if(iarg == EGS_Application::FluorescentEvent )
     {
         if( is_fat ) {
@@ -409,9 +393,9 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
         // Do not need to return to shower
         check = 2;
     }
-    */
 
     /*
+    //summary debug statement
     for(int i=np; i<=app->getNp(); i++)
     {
                 EGS_Particle p = app->getParticleFromStack(i);
@@ -543,14 +527,17 @@ int EGS_RadiativeSplitting::doSmartBrems() {
                 EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
                 if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
             }
+            /*
             if( !ns ) {
                 if( app->getRngUniform()*nbrspl < 1 )
                 {
                     //odd: we allow the generation of a fat photon here
+                    //this is a hangover from the beampp implementation...comment out for now
                     ns = nbrspl;
                     the_fat = true;
                 }
             }
+            */
             if( ns > 0 ) {
                 if( ++ip >= app->getMxstack() ) egsFatal(dbs_err_msg,
                         "smartBrems",app->getMxstack());
