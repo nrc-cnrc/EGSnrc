@@ -1190,90 +1190,92 @@ public:
     //************************************************************
     virtual void setLatch(int latch) {};
 
-       //************************************************************
+    //************************************************************
     // Utility functions for egs_radiative_splitting ausgab objects
     //************************************************************
-    virtual EGS_Float getRngUniform() { return 0.0; }
+    virtual EGS_Float getRngUniform() {
+        return 0.0;
+    }
     virtual void getRngAzimuth(EGS_Float &cphi, EGS_Float &sphi) {};
     virtual void addParticleToStack(EGS_Particle p, EGS_Float dnear) {};
     virtual EGS_Float getDnear(int np) {
-       return 0.0;
+        return 0.0;
     }
     virtual int getNmed() {
-       return 0;
+        return 0;
     }
     virtual void setNpold(int npold) {};
     virtual void deleteParticleFromStack(int ip) {};
     virtual EGS_Particle getParticleFromStack(int ip) {
-       EGS_Particle p;
-       return p;
+        EGS_Particle p;
+        return p;
     };
     virtual void updateParticleOnStack(int ip, EGS_Particle p, EGS_Float dnear) {};
     virtual EGS_Float getGle() {
-       return 0.0;
+        return 0.0;
     }
     virtual int getLgle(EGS_Float gle, int med) {
-       return 0;
+        return 0;
     }
     virtual int getIbrdst() {
-       return 0;
+        return 0;
     }
     virtual int getIbcmp() {
-       return 0;
+        return 0;
     }
     virtual EGS_Float getAp(int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual int getIbrnist() {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getNbLemin(int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getNbDlei(int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getNbEmin(int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float* getNbXdata(int j, int imed) {
-       return NULL;
+        return NULL;
     }
     virtual EGS_Float* getNbFdata(int j, int imed) {
-       return NULL;
+        return NULL;
     }
     virtual EGS_Float* getNbWdata(int j, int imed) {
-       return NULL;
+        return NULL;
     }
     virtual int* getNbIdata(int j, int imed) {
-       return NULL;
+        return NULL;
     }
     virtual EGS_Float getEmax() {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getZbrang(int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getDelcm(int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getDl1(int i, int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getDl2(int i, int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getDl3(int i, int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getDl4(int i, int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getDl5(int i, int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual EGS_Float getDl6(int i, int imed) {
-       return 0.0;
+        return 0.0;
     }
     virtual void callBrems() {};
     virtual void callAnnih() {};
@@ -1283,16 +1285,16 @@ public:
     virtual void callCompt() {};
     virtual void callEgsRayleighSampling(int imed, EGS_Float e, EGS_Float gle, EGS_I32 lgle, EGS_Float& costhe, EGS_Float& sinthe) {};
     virtual EGS_Float callAliasSample1(int mxbrxs, EGS_Float* nb_xdata, EGS_Float* nb_fdata, EGS_Float* nb_wdata, int* nb_idata) {
-       return 0.0;
+        return 0.0;
     }
     virtual int getMxstack() {
-       return 0;
+        return 0;
     }
     virtual int getMxbres() {
-       return 0;
+        return 0;
     }
     virtual int getMxbrxs() {
-       return 0;
+        return 0;
     }
 };
 

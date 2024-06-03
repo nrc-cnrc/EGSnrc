@@ -23,7 +23,7 @@
 #
 #  Author:          Ernesto Mainegra-Hing, 2018
 #
-#  Contributors:
+#  Contributors:    Blake Walters, 2021
 #
 ###############################################################################
 #
@@ -31,7 +31,8 @@
 #
 #  TODO:
 #
-#  - Add directional radiative splitting (DRS)
+#  - Testing/debugging directional radiative splitting (DRS)
+#  - Implement BEAMnrc-style DRS (DRSf)
 #
 ###############################################################################
 */
@@ -54,22 +55,22 @@
 
 #ifdef WIN32
 
-    #ifdef BUILD_RADIATIVE_SPLITTING_DLL
-        #define EGS_RADIATIVE_SPLITTING_EXPORT __declspec(dllexport)
-    #else
-        #define EGS_RADIATIVE_SPLITTING_EXPORT __declspec(dllimport)
-    #endif
-    #define EGS_RADIATIVE_SPLITTING_LOCAL
+#ifdef BUILD_RADIATIVE_SPLITTING_DLL
+#define EGS_RADIATIVE_SPLITTING_EXPORT __declspec(dllexport)
+#else
+#define EGS_RADIATIVE_SPLITTING_EXPORT __declspec(dllimport)
+#endif
+#define EGS_RADIATIVE_SPLITTING_LOCAL
 
 #else
 
-    #ifdef HAVE_VISIBILITY
-        #define EGS_RADIATIVE_SPLITTING_EXPORT __attribute__ ((visibility ("default")))
-        #define EGS_RADIATIVE_SPLITTING_LOCAL  __attribute__ ((visibility ("hidden")))
-    #else
-        #define EGS_RADIATIVE_SPLITTING_EXPORT
-        #define EGS_RADIATIVE_SPLITTING_LOCAL
-    #endif
+#ifdef HAVE_VISIBILITY
+#define EGS_RADIATIVE_SPLITTING_EXPORT __attribute__ ((visibility ("default")))
+#define EGS_RADIATIVE_SPLITTING_LOCAL  __attribute__ ((visibility ("hidden")))
+#else
+#define EGS_RADIATIVE_SPLITTING_EXPORT
+#define EGS_RADIATIVE_SPLITTING_LOCAL
+#endif
 
 #endif
 
@@ -83,7 +84,7 @@ events. This ausgab object is specified via:
 :start ausgab object:
     library   = egs_radiative_splitting
     name      = some_name
-    splitting type   = uniform (default), directional, or BEAMnrc directional
+    splitting type   = uniform (default), directional, or BEAMnrc directional (currently unavailable)
     splitting = the splitting number (n_split)
  The following inputs apply to directional or BEAMnrc directional splitting only:
     field size = radius of splitting field (cm) -- required
@@ -96,7 +97,8 @@ events. This ausgab object is specified via:
 \endverbatim
 
 TODO:
- - Add directional radiative splitting (DRS)
+ - Testing/debugging directional radiative splitting (DRS)
+ - Implement BEAMnrc-style DRS (DRSf)
 
 */
 
@@ -137,7 +139,7 @@ public:
     void doSmartCompton(int nsample);
 
     void getCostMinMax(const EGS_Vector &xx, const EGS_Vector &uu,
-                        EGS_Float &ro, EGS_Float &ct_min, EGS_Float &ct_max);
+                       EGS_Float &ro, EGS_Float &ct_min, EGS_Float &ct_max);
 
     void getBremsEnergies();
 
@@ -163,17 +165,17 @@ public:
 
     bool needsCall(EGS_Application::AusgabCall iarg) const override {
         if ( split_type == DRS || split_type == DRSf ) {
-           if ( iarg == EGS_Application::BeforeBrems ||
-                iarg == EGS_Application::BeforeAnnihFlight ||
-                iarg == EGS_Application::BeforeAnnihRest ||
-                iarg == EGS_Application::BeforePair ||
-                iarg == EGS_Application::BeforeCompton ||
-                iarg == EGS_Application::BeforePhoto ||
-                iarg == EGS_Application::BeforeRayleigh ||
-                iarg == EGS_Application::FluorescentEvent ||
-                iarg == EGS_Application::BeforeTransport) {
-               return true;
-           }
+            if ( iarg == EGS_Application::BeforeBrems ||
+                    iarg == EGS_Application::BeforeAnnihFlight ||
+                    iarg == EGS_Application::BeforeAnnihRest ||
+                    iarg == EGS_Application::BeforePair ||
+                    iarg == EGS_Application::BeforeCompton ||
+                    iarg == EGS_Application::BeforePhoto ||
+                    iarg == EGS_Application::BeforeRayleigh ||
+                    iarg == EGS_Application::FluorescentEvent ||
+                    iarg == EGS_Application::BeforeTransport) {
+                return true;
+            }
         }
         return false;
     };
@@ -183,7 +185,7 @@ public:
         {
             if( !doInteractions(iarg,killed) )
             {
-            	return 0;
+                return 0;
             }
         }
         return 0;
@@ -233,8 +235,8 @@ protected:
     int imed;
 
     const char *dbs_err_msg =
-"Stack size exceeded in BEAMpp_DBS::%s()\n"
-"Increase MXSTACK (currently %d) in array_sizes.h and retry\n";
+        "Stack size exceeded in BEAMpp_DBS::%s()\n"
+        "Increase MXSTACK (currently %d) in array_sizes.h and retry\n";
 };
 
 #endif

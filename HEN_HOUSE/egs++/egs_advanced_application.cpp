@@ -869,11 +869,11 @@ void EGS_AdvancedApplication::setEIIData(EGS_I32 len) {
 }
 
 #ifdef GDEBUG
-    #define MAX_STEP 100000
-    EGS_Vector steps_x[MAX_STEP], steps_u[MAX_STEP];
-    int steps_ireg[MAX_STEP], steps_inew[MAX_STEP];
-    EGS_Float steps_ustepi[MAX_STEP], steps_ustepf[MAX_STEP];
-    int steps_n = 0;
+#define MAX_STEP 100000
+EGS_Vector steps_x[MAX_STEP], steps_u[MAX_STEP];
+int steps_ireg[MAX_STEP], steps_inew[MAX_STEP];
+EGS_Float steps_ustepi[MAX_STEP], steps_ustepf[MAX_STEP];
+int steps_n = 0;
 #endif
 
 int EGS_AdvancedApplication::shower() {
@@ -1316,7 +1316,7 @@ void EGS_AdvancedApplication::setNpold(int npold) {
 }
 
 //get total no. of media in simulation
-int EGS_AdvancedApplication::getNmed(){
+int EGS_AdvancedApplication::getNmed() {
     return nmed;
 }
 
@@ -1326,18 +1326,18 @@ void EGS_AdvancedApplication::deleteParticleFromStack(int ip) {
     int np = the_stack->np-1;
     if (ip < np)
     {
-    	the_stack->iq[ip] = the_stack->iq[np];
-    	the_stack->E[ip] = the_stack->E[np];
-    	the_stack->x[ip] = the_stack->x[np];
-    	the_stack->y[ip] = the_stack->y[np];
-    	the_stack->z[ip] = the_stack->z[np];
-    	the_stack->u[ip] = the_stack->u[np];
-    	the_stack->v[ip] = the_stack->v[np];
-    	the_stack->w[ip] = the_stack->w[np];
-    	the_stack->wt[ip] = the_stack->wt[np];
-    	the_stack->ir[ip] = the_stack->ir[np];
-    	the_stack->latch[ip] = the_stack->latch[np];
-    	the_stack->dnear[ip] = the_stack->dnear[np];
+        the_stack->iq[ip] = the_stack->iq[np];
+        the_stack->E[ip] = the_stack->E[np];
+        the_stack->x[ip] = the_stack->x[np];
+        the_stack->y[ip] = the_stack->y[np];
+        the_stack->z[ip] = the_stack->z[np];
+        the_stack->u[ip] = the_stack->u[np];
+        the_stack->v[ip] = the_stack->v[np];
+        the_stack->w[ip] = the_stack->w[np];
+        the_stack->wt[ip] = the_stack->wt[np];
+        the_stack->ir[ip] = the_stack->ir[np];
+        the_stack->latch[ip] = the_stack->latch[np];
+        the_stack->dnear[ip] = the_stack->dnear[np];
     }
     the_stack->np--;
     return;

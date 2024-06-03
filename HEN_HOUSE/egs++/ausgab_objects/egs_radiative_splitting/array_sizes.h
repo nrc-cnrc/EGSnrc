@@ -1,7 +1,7 @@
 /*
 ###############################################################################
 #
-#  EGSnrc tutor7pp application array sizes headers
+#  EGSnrc radiative splitting ausgab object array sizes headers
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
