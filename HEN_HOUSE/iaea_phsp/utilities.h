@@ -80,9 +80,15 @@ char *pbuffer;  /* pointer to buffer for output of run info for failures */
 #define	__BIG_ENDIAN	4321
 #define	__PDP_ENDIAN	3412
 
+#ifndef LITTLE_ENDIAN
 #define LITTLE_ENDIAN	__LITTLE_ENDIAN
+#endif
+#ifndef BIG_ENDIAN
 #define BIG_ENDIAN	__BIG_ENDIAN
+#endif
+#ifndef PDP_ENDIAN
 #define PDP_ENDIAN	__PDP_ENDIAN
+#endif
 #define UNKNOWN_ENDIAN  0000
 
 #endif	/* endian.h */
