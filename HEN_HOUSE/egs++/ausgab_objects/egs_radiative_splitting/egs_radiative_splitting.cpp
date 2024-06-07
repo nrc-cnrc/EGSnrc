@@ -813,7 +813,6 @@ void EGS_RadiativeSplitting::getCostMinMax(const EGS_Vector &xx, const EGS_Vecto
     ro = sqrt(ro2);
     double r = fs;
     double r2 = r*r;
-    double d2r2 = d2+r2;
     double st2 = u*u + v*v;
     double st = sqrt(st2);
 
@@ -1203,8 +1202,7 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
 
 void EGS_RadiativeSplitting::doSmartCompton(int nint)
 {
-
-    //This is based on the beampp implementation
+    //This is based on (i.e. copied from) the BEAMnrc implementation
 
     //get properties of interacting particle
     int np = app->getNp();
@@ -1225,56 +1223,30 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
 
     EGS_Float Ko = E/app->getRM();
     EGS_Float broi = 1+2*Ko, Ko2 = Ko*Ko;
-
-    //
-    // calculate probability for method 1: picking points within
-    // the circle and rejecting with probability sigma(direction)/sigma_max
-    //
-    EGS_Float dmin = ro <= fs ? d : sqrt(d*d + (ro-fs)*(ro-fs));
-    EGS_Float wnew = fs*fs*d/(2*dmin*dmin*dmin);
     EGS_Float alpha1_t = log(broi);
-    EGS_Float eps1_t = 1/broi, eps2_t = 1;
+    EGS_Float eps1_t = 1./broi, eps2_t = 1;
     EGS_Float w2 = alpha1_t*(Ko2-2*Ko-2)+(eps2_t-eps1_t)*
                    (1./eps1_t/eps2_t + broi + Ko2*(eps1_t+eps2_t)/2);
-    EGS_Float fnorm = w2/(Ko2*Ko);
-    EGS_Float a = 1 + Ko*(1-ct_max);
-    EGS_Float a2 = a*a;
-    EGS_Float f1 = (1/a + a - 1 + ct_max*ct_max)/a2;
-    a = 1 + Ko*(1-ct_min);
-    a2 = a*a;
-    EGS_Float f2 = (1/a + a - 1 + ct_min*ct_min)/a2;
-    EGS_Float fmax = f1 > f2 ? f1 : f2;
-    wnew *= fmax/fnorm;
-
-    //
-    // calculate probability for method 2: picking directions
-    // between ct_min and ct_max and rejecting those not going towards
-    // the circle
-    //
-    EGS_Float eps1 = 1/(1+Ko*(1-ct_min)), eps2 = 1/(1+Ko*(1-ct_max));
+    EGS_Float eps12_t = eps1_t*eps1_t;
+    EGS_Float alpha2_t = (eps2_t*eps2_t-eps12_t);
+    EGS_Float alpha_t = alpha1_t/(alpha1_t+alpha2_t/2);
+    EGS_Float eps1 = 1./(1+Ko*(1-ct_min)), eps2 = 1./(1+Ko*(1-ct_max));
+    EGS_Float eps1_0 = eps1, eps2_0 = eps2;
     EGS_Float alpha1 = log(eps2/eps1);
     EGS_Float w1 = alpha1*(Ko2-2*Ko-2)+(eps2-eps1)*(1./eps1/eps2 + broi
                    + Ko2*(eps1+eps2)/2);
-    EGS_Float wc = w1/w2;
+    EGS_Float eps12 = eps1*eps1, alpha2 = (eps2*eps2-eps12);
+    EGS_Float alpha = alpha1/(alpha1+alpha2/2);
+    EGS_Float rej1 = 1-(1-eps1)*(broi*eps1-1)/(Ko*Ko*eps1*(1+eps1*eps1));
+    EGS_Float rej2 = 1-(1-eps2)*(broi*eps2-1)/(Ko*Ko*eps2*(1+eps2*eps2));
+    EGS_Float rejmax = max(rej1,rej2);
 
-    //
-    // number of interactions to sample
-    //
-    bool method1;
-    EGS_Float wprob;
-    if( wnew <= wc ) {
-        method1 = true;
-        wprob = wnew;
-    }
-    else {
-        method1 = false;
-        wprob = wc;
-    }
-    EGS_Float asample = wprob*nint;
+    //determine no. of interactions to sample
+    EGS_Float wc = w1/w2;
+    EGS_Float asample = wc*nint;
     int nsample = (int) asample;
     asample -= nsample;
     if( app->getRngUniform() < asample ) ++nsample;
-
 
     // prepare rotations--not totally sure why this is needed
     EGS_Float sinpsi, sindel, cosdel;
@@ -1290,154 +1262,117 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
     //
     // sample interactions towards circle
     //
-    app->deleteParticleFromStack(np); //delete interacting particle
-    if( method1 ) {
-        for(int j=0; j<nsample; j++) {
-            EGS_Float x1, y1;
-            int iw;
-            do {
-                x1 = 2*app->getRngUniform()-1;
-                y1 = 2*app->getRngUniform()-1;
-            } while ( x1*x1 + y1*y1 > 1 );
-            x1 *= fs;
-            y1 *= fs;
-            iw = 1;
-            EGS_Float un = x1 - x.x, vn = y1 - x.y, wn = d;
-            EGS_Float dist = sqrt(un*un + vn*vn + wn*wn);
-            EGS_Float disti = 1/dist;
-            un *= disti;
-            vn *= disti;
-            wn *= disti;
-            EGS_Float cost = u.x*un + u.y*vn + u.z*wn;
-            EGS_Float aux = dmin*disti;
-            a = 1/(1 + Ko*(1-cost));
-            if( E*a > AP ) {
-                EGS_Float frej = (1/a+a-1+cost*cost)*a*a*aux*aux*aux;
-                if( app->getRngUniform()*fmax < frej ) {
-                    EGS_Particle p;
-                    p.x=x;
-                    p.u = EGS_Vector(un,vn,wn);
-                    p.ir=irl;
-                    p.wt=wt;
-                    p.latch=latch;
-                    p.q=0;
-                    p.E=E*a;
-                    app->addParticleToStack(p,dnear);
-                }
-            }
-        }
-    }
-    else {
-        EGS_Float eps12 = eps1*eps1, alpha2 = (eps2*eps2-eps12);
-        EGS_Float alpha = alpha1/(alpha1+alpha2/2);
-        EGS_Float rej1 = 1-(1-eps1)*(broi*eps1-1)/(Ko*Ko*eps1*(1+eps1*eps1));
-        EGS_Float rej2 = 1-(1-eps2)*(broi*eps2-1)/(Ko*Ko*eps2*(1+eps2*eps2));
-        EGS_Float rejmax = max(rej1,rej2);
-        for(int j=0; j<nsample; j++) {
-            EGS_Float br,temp, cost, sint, rejf;
-            do {
-                if( app->getRngUniform() < alpha )
-                    br = eps1*exp(alpha1*app->getRngUniform());
-                else
-                    br = sqrt(eps12 + app->getRngUniform()*alpha2);
-                temp = (1-br)/(Ko*br);
-                sint = temp*(2-temp);
-                rejf = 1 - br*sint/(1+br*br);
-            } while ( app->getRngUniform()*rejmax > rejf || sint < 0 );
-            if( E*br > AP ) {
-                cost = 1 - temp;
-                sint = sqrt(sint);
-                EGS_Float cphi,sphi;
-                app->getRngAzimuth(cphi,sphi);
-                EGS_Float un,vn,wn;
-                if( need_rotation ) {
-                    EGS_Float us = sint*cphi, vs = sint*sphi;
-                    un = u.z*cosdel*us - sindel*vs + u.x*cost;
-                    vn = u.z*sindel*us + cosdel*vs + u.y*cost;
-                    wn = u.z*cost - sinpsi*us;
-                } else {
-                    un = sint*cphi;
-                    vn = sint*sphi;
-                    wn = u.z*cost;
-                }
-                int ns = 0;
-                if( wn > 0 ) {
-                    EGS_Float aux = (ssd - x.z)/wn;
-                    EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
-                    if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
-                }
-                if( ns > 0 ) {
-                    EGS_Particle p;
-                    p.x=x;
-                    p.u = EGS_Vector(un,vn,wn);
-                    p.ir=irl;
-                    p.wt=wt;
-                    p.latch=latch;
-                    p.q=0;
-                    p.E=E*a;
-                    app->addParticleToStack(p,dnear);
-                }
-            }
-        }
-    }
 
-    // get potential high weight photon directed away from the field and compton electron.
+    EGS_Float br,sint,cost,cphi,sphi; //declared out here because they are also used for the electron below
+    EGS_Particle p;
 
-    eps1 = eps1_t;
-    eps2 = eps2_t;
-    alpha1 = alpha1_t;
-    EGS_Float eps12 = eps1*eps1;
-    EGS_Float alpha2 = (eps2*eps2-eps12);
-    EGS_Float alpha = alpha1/(alpha1+alpha2/2);
-    EGS_Float br,temp, cost, sint, rejf;
-    do {
-        if( app->getRngUniform() < alpha )
-            br = eps1*exp(alpha1*app->getRngUniform());
+    for(int j=0; j<nsample; j++)
+    {
+        EGS_Float temp, rejf;
+
+        if (j==nsample-1)
+        {
+            //for fat photon directed away from field
+            eps1 = eps1_t;
+            eps2 = 1;
+            eps12 = eps12_t;
+            alpha1 = alpha1_t;
+            alpha2 = alpha2_t;
+            alpha = alpha_t;
+            rejmax = 1;
+        }
+
+        do {
+            if( app->getRngUniform() < alpha )
+                br = eps1*exp(alpha1*app->getRngUniform());
+            else
+                br = sqrt(eps12 + app->getRngUniform()*alpha2);
+            temp = (1-br)/(Ko*br);
+            sint = temp*(2-temp);
+            rejf = 1 - br*sint/(1+br*br);
+        } while ( app->getRngUniform()*rejmax > rejf );
+
+        if ( temp < 2 )
+        {
+            cost = 1 - temp;
+            sint = sqrt(sint);
+        }
         else
-            br = sqrt(eps12 + app->getRngUniform()*alpha2);
-        temp = (1-br)/(Ko*br);
-        sint = temp*(2-temp);
-        rejf = 1 - br*sint/(1+br*br);
-    } while ( app->getRngUniform() > rejf || sint < 0 );
-    cost = 1 - temp;
-    sint = sqrt(sint);
-    EGS_Float cphi,sphi;
-    app->getRngAzimuth(cphi,sphi);
-    if( E*br > AP) {
-        //this is a potential high wt photon directed away from the field
+        {
+            cost = -1;
+            sint = 0;
+        }
+        app->getRngAzimuth(cphi,sphi);
+
+        int ns=0;
+        if (j==nsample-1)
+        {
+            //potential phat photon directed away from the field
+            if (br > eps1_0 && br < eps2_0)
+            {
+                break; // last time through the loop anyway, but do not generate this phat photon
+            }
+            ns = nint;
+        }
+
         EGS_Float un,vn,wn;
-        if( need_rotation ) {
+        if( need_rotation )
+        {
             EGS_Float us = sint*cphi, vs = sint*sphi;
             un = u.z*cosdel*us - sindel*vs + u.x*cost;
             vn = u.z*sindel*us + cosdel*vs + u.y*cost;
             wn = u.z*cost - sinpsi*us;
-        } else {
+        }
+        else
+        {
             un = sint*cphi;
             vn = sint*sphi;
             wn = u.z*cost;
         }
-        bool take_it = true;
-        if( wn > 0) {
-            EGS_Float t = (ssd-x.z)/wn;
-            EGS_Float x1 = x.x + un*t, y1 = x.y + vn*t;
-            if( x1*x1 + y1*y1 <= fs*fs ) take_it = false;
+
+        if (j<nsample-1)
+        {
+            ns = nint;
+            //potential thin photon directed into the field
+            if( wn > 0 ) {
+                EGS_Float aux = (ssd - x.z)/wn;
+                EGS_Float x1 = x.x + un*aux, y1 = x.y + vn*aux;
+                if( x1*x1 + y1*y1 < fs*fs ) ns = 1;
+            }
+            if (ns > 1)
+            {
+                //potentially a 2nd phat photon?
+                if (app->getRngUniform()*ns > 1)
+                {
+                    ns = 0;
+                }
+            }
         }
-        if( take_it ) {
-            EGS_Particle p;
-            p.x=x;
-            p.u=EGS_Vector(un,vn,wn);
-            p.wt=wt*nint;
-            p.latch=latch | (1 << 0);
-            p.ir=irl;
-            p.q=0;
+
+        if( ns > 0 ) {
+            //add the photon to the stack
+            p.x = x;
+            p.u = EGS_Vector(un,vn,wn);
+            p.ir = irl;
+            p.wt = wt*ns;
+            p.latch = latch;
+            if (ns > 1)
+            {
+                //label photon as phat
+                p.latch = latch | (1 << 0);
+            }
+            p.q = 0;
             p.E = E*br;
+
             app->addParticleToStack(p,dnear);
+
         }
     }
+
     //now the electron--Note: br, cost will have the values set for the phat photon
     EGS_Float Eelec = E*(1-br);
     EGS_Float aux = 1 + br*br - 2*br*cost;
-    EGS_Float un=0,vn=0,wn=1;
+    EGS_Float un=u.x,vn=u.y,wn=u.z;
     if( aux > 1e-8 ) {
         cost = (1-br*cost)/sqrt(aux);
         sint = 1-cost*cost;
@@ -1448,7 +1383,6 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
         vn = u.z*sindel*us + cosdel*vs + u.y*cost;
         wn = u.z*cost - sinpsi*us;
     }
-    EGS_Particle p;
     p.x = x;
     p.u = EGS_Vector(un,vn,wn);
     p.ir = irl;
@@ -1456,7 +1390,8 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
     p.latch = latch | (1 << 0);
     p.q = -1;
     p.E = Eelec + app->getRM();
-    app->addParticleToStack(p,dnear);
+    //replace original interacting photon with the e-
+    app->updateParticleOnStack(np,p,dnear);
 }
 
 void EGS_RadiativeSplitting::initSmartKM(EGS_Float Emax) {
