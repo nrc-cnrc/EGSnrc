@@ -172,9 +172,19 @@ public:
      * \return Random point as an EGS_Vector
      */
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
-        getNextShapePosition(rndm);
         EGS_Vector v(shape->getPoint(rndm));
         return v;
+    };
+
+    /*! \brief Returns a random 3D vector.
+     *
+     * Uses the function getPoint() to pick a random position and
+     * then applies the affine transformation attached to the shape before
+     * returning it.
+     */
+    EGS_Vector getRandomPoint(EGS_RandomGenerator *rndm) {
+        getNextShapePosition(rndm);
+        return shape->getRandomPoint(rndm);
     };
 
     /*!
