@@ -400,7 +400,7 @@ public:
     /*! \brief Destructor. Does nothing */
     ~EGS_BoxShape() { };
 
-    /*! \brief Returns a point uniformely distributed within the box. */
+    /*! \brief Returns a point uniformly distributed within the box. */
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         EGS_Vector v(ax*(rndm->getUniform()-0.5),
                      ay*(rndm->getUniform()-0.5),
@@ -420,7 +420,7 @@ public:
         return true;
     };
 
-    /*! \brief Sets the direction \a u by picking a random point uniformely the
+    /*! \brief Sets the direction \a u by picking a random point uniformly the
      * on the box surface.
      * \sa EGS_BaseShape::getPointSourceDirection()
      */
@@ -550,7 +550,7 @@ public:
         return true;
     };
 
-    /*! \brief Sets the direction \a u by picking a random point uniformely
+    /*! \brief Sets the direction \a u by picking a random point uniformly
      * on the sphere surface.
      * \sa EGS_BaseShape::getPointSourceDirection()
      */

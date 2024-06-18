@@ -109,20 +109,20 @@ extern "C" {
 
             // Checking the size to make sure it is a valid control point input
             if (point.size()!=6 && point.size()!=7) {
-                egsWarning("EGS_DynamicShape: Control point %i must specify either 6 or 7 values.\n",icpts);
+                egsFatal("EGS_DynamicShape: Control point %i must specify either 6 or 7 values.\n",icpts);
             }
             else {
                 if (ncpts == 0) {
                     rotsize=point.size();// Variable to make sure all control point definitions have consistent formats
                 }
                 if (ncpts>0 && point[0] < cpts[ncpts-1].time) {// Make sure each time index is larger than the last
-                    egsWarning("EGS_DynamicShape: Time index of control point %i < time index of control point %i\n",icpts,ncpts);
+                    egsFatal("EGS_DynamicShape: Time index of control point %i < time index of control point %i\n",icpts,ncpts);
                 }
                 else if (point[0] < 0.) {// Checks that time index is valid (larger than zero)
-                    egsWarning("EGS_DynamicShape: Time index of control point %i < 0.0\n",icpts);
+                    egsFatal("EGS_DynamicShape: Time index of control point %i < 0.0\n",icpts);
                 }
                 else if (ncpts> 0 && point.size() != rotsize) { // Checks that control point formats follow the first
-                    egsWarning("EGS_DynamicShape: Rotation definition inconsistent \n");
+                    egsFatal("EGS_DynamicShape: Rotation definition inconsistent \n");
                 }
                 else {
                     ncpts++;
@@ -162,10 +162,10 @@ extern "C" {
             }
         }
         if (ncpts<=1) {
-            egsWarning("EGS_DynamicShape: not enough or missing control points.\n");
+            egsFatal("EGS_DynamicShape: not enough or missing control points.\n");
         }
         if (cpts[ncpts-1].time == 0.0) {
-            egsWarning("EGS_DynamicShape: time index of last control point = 0.  Something's wrong.\n");
+            egsFatal("EGS_DynamicShape: time index of last control point = 0.  Something's wrong.\n");
         }
         else {
             // Normalize time index to max. value
