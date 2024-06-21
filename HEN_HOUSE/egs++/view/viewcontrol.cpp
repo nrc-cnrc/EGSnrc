@@ -186,6 +186,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // set the widget to show near the left-upper corner of the screen
     move(QPoint(25,25));
+
     //set the play button active boolean to false
     isPlaying=false;
 }
@@ -1920,8 +1921,6 @@ void GeometryViewControl::loadTracksDialog() {
     timeObjectVisibility();
 
     gview->loadTracks(filename_tracks);
-
-
 }
 
 void GeometryViewControl::updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po) {
@@ -1958,7 +1957,9 @@ void GeometryViewControl::updateTracks(vector<size_t> ntracks, vector<EGS_Float>
     spin_tmine->setValue(1);
     spin_tminpo->setValue(1);
 
-    updateView();
+    // Update the time window value
+    // This includes an updateView() call
+    slideTime();
 }
 
 void GeometryViewControl::viewAllMaterials() {
@@ -2769,26 +2770,27 @@ void GeometryViewControl::endTransformation() {
 // Time index visual elements methods
 void GeometryViewControl::playTime() {
     if (isPlaying) {
-        button_timeplay->setText("play");
+        button_timeplay->setText("Play");
         isPlaying=false;
     }
     else {
-        button_timeplay->setText("pause");
+        button_timeplay->setText("Pause");
         isPlaying=true;
     }
     int sliderpos=slider_timeindex->sliderPosition();
-    if (sliderpos==999) {
+
+    if (sliderpos==spin_numTimeSteps->value()-1) {
         sliderpos=0;
     }
     // this function controls the play button, and allows for the simulation to
     // be automatically played out sequentially in time.
-    for (int i= sliderpos; i<1000;) {
+    for (int i= sliderpos; i<spin_numTimeSteps->value();) {
         // the simulation plays through 1000 discrete time points (equivalent to
         // possible slider steps) from 0.000 to 0.999 in 0.0001 increments
         if (!isPlaying) {
             break;
         }
-        EGS_Float currtime = i/(float)1000;
+        EGS_Float currtime = i/(float)spin_numTimeSteps->value();
 
         // update time index display/input box. The signals are blocked as it
         // would lead to an infinite loop between the slider and the time index
@@ -2812,7 +2814,7 @@ void GeometryViewControl::playTime() {
         // motion would be difficult to follow
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
-    button_timeplay->setText("play");
+    button_timeplay->setText("Play");
     isPlaying=false;
 }
 
@@ -2825,7 +2827,9 @@ void GeometryViewControl::resetTime() {
     * and the particle bounds) are returned to their initial states through
     * these */
     slider_timeindex->setValue(0);
-    spin_timewindow->setValue(2);
+
+    // Default the time window to 1% of the simulation time
+    spin_timewindow->setValue(0.01);
 }
 
 void GeometryViewControl::spinTime() {
@@ -2835,7 +2839,7 @@ void GeometryViewControl::spinTime() {
     // position on the slider (multiply by 1000 to get integer between 0 and
     // 999)
     EGS_Float slidertime=spin_timeindex->value();
-    int sliderpos=(int)(slidertime*1000);
+    int sliderpos=(int)(slidertime*spin_numTimeSteps->value());
 
     // update the time index slider. The signals are blocked as it would lead
     // to an infinite loop between the slider and the time index spin box
@@ -3321,6 +3325,8 @@ void GeometryViewControl::timeObjectVisibility() {
         spin_timeindex->hide();
         label_timeindex->hide();
         groupBox_time->hide();
+        spin_numTimeSteps->hide();
+        label_numTimeSteps->hide();
         spin_tmaxe->setReadOnly(false);
         spin_tmine->setReadOnly(false);
         spin_tmaxpo->setReadOnly(false);
@@ -3345,6 +3351,8 @@ void GeometryViewControl::timeObjectVisibility() {
         spin_timeindex->show();
         label_timeindex->show();
         groupBox_time->show();
+        spin_numTimeSteps->show();
+        label_numTimeSteps->show();
     }
     //has dynamic is true when a dynamic geometry is present, or when the tracks are being given some time index (exmaple due to a dynamic source or phasespace file) and include time = yes in input file (syncptracks file)
 
