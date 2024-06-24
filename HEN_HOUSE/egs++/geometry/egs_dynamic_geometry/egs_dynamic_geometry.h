@@ -78,13 +78,13 @@ An dynamic geometry is defined using
     name        = ...
     library     = egs_dynamic_geometry
     my geometry = name of a predefined geometry that we want to add motion to
-    :start motion:
-       control point 1 = time(1) x(1) y(1) z(1) xrot(1) yrot(1) zrot(1)
-       control point 2 = time(2) x(2) y(2) z(2) xrot(2) yrot(2) zrot(2)
+    :start motion: # units of cm and degrees
+       control point = time(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
+       control point = time(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
        .
        .
        .
-       control point N = time(N) x(N) y(N) z(N) xrot(N) yrot(N) zrot(N)
+       control point = time(N) xtrans(N) ytrans(N) ztrans(N) xrot(N) yrot(N) zrot(N)
     :stop motion:
 :stop geometry:
 \endverbatim
