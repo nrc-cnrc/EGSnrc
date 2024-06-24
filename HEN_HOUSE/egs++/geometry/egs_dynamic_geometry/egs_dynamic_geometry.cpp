@@ -148,7 +148,9 @@ extern "C" {
         int err;
         int icpts = 1;
         itos << icpts;
-        string sstring = "control point " + itos.str();
+        string inputTag = "control point";
+        string inputTag_backCompat = "control point " + itos.str();
+        EGS_Input *currentInput;
         int rotsize = 0;
 
         // Control points read one by one from motion block in dynamic geometry definition, and saved as a vector to points
@@ -160,7 +162,7 @@ extern "C" {
             }
             else {
                 if (ncpts == 0) {
-                    // Variable to make sure all control point definitons have consistent formats
+                    // Variable to make sure all control point definitions have consistent formats
                     rotsize = point.size();
                 }
 
@@ -213,15 +215,15 @@ extern "C" {
                     itos << icpts;
 
                     // Define next control point i string for getInput in while condition
-                    sstring = "control point " + itos.str();
+                    inputTag_backCompat = "control point " + itos.str();
                 }
             }
         }
         if (ncpts <= 1) {
-            egsWarning("EGS_DynamicGeometry: Not enough or missing control points.\n");
+            egsFatal("EGS_DynamicGeometry: Not enough or missing control points.\n");
         }
         if (cpts[ncpts - 1].time == 0.0) {
-            egsWarning("EGS_DynamicGeometry: Time index of last control point = 0.  Something's wrong.\n");
+            egsFatal("EGS_DynamicGeometry: Time index of last control point = 0.  Something's wrong.\n");
         }
         else {
 

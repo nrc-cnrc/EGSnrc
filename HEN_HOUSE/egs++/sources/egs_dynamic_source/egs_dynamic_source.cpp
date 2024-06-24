@@ -112,7 +112,7 @@ EGS_DynamicSource::EGS_DynamicSource(EGS_Input *input,
                     icpts++;
                     itos.str("");
                     itos << icpts;
-                    sstring = "control point " + itos.str();
+                    inputTag_backCompat = "control point " + itos.str();
                 }
             }
         }

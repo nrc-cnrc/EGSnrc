@@ -96,12 +96,12 @@ The generic input is:
     source name = the name of a previously defined source
     synchronize motion = yes or no (default)
     :start motion:
-       control point 1 = xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) time(1)
-       control point 2 = xiso(2) yiso(2) ziso(2) dsource(2) theta(2) phi(2) phicol(2) time(2)
+       control point = xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) time(1)
+       control point = xiso(2) yiso(2) ziso(2) dsource(2) theta(2) phi(2) phicol(2) time(2)
        .
        .
        .
-       control point N = xiso(N) yiso(N) ziso(N) dsource(N) theta(N) phi(N) phicol(N) time(N)
+       control point = xiso(N) yiso(N) ziso(N) dsource(N) theta(N) phi(N) phicol(N) time(N)
     :stop motion:
 :stop source:
 \endverbatim
@@ -154,10 +154,10 @@ to "yes".
         name = my_source
         source name = my_parallel_source
         :start motion:
-            control point 1 = 0 0 0 100 0 0 0 0
-            control point 2 = 0 0 0 100 360 0 0 0.5
-            control point 3 = 0 0 0 100 90 0 0 0.5
-            control point 4 = 0 0 0 100 90 360 0 1.0
+            control point = 0 0 0 100 0 0 0 0
+            control point = 0 0 0 100 360 0 0 0.5
+            control point = 0 0 0 100 90 0 0 0.5
+            control point = 0 0 0 100 90 360 0 1.0
         :stop motion:
     :stop source:
 
