@@ -1,0 +1,42 @@
+%C80
+"#############################################################################"
+"                                                                             "
+"  EGSnrc common block reorganization for C interface                         "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters 2021                                        "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This is a set of macros used to redefine some macros in                    "
+"  egs_c_interface2.macros as ; (i.e. null).  This is coding that is not      "
+"  required for the subset of egsnrc.mortran used by egs_radiative_splitting  "
+"  and setting these blocks to null means that we do not have redefine C++    "
+"  versions of some subroutines                                               "
+"#############################################################################"
+
+REPLACE {$CALL-HOWNEAR(#);} WITH {;}
+
+REPLACE {$CALL-HOWFAR-IN-ELECTR;} WITH {;}
+
+REPLACE {$CALL-HOWFAR-IN-PHOTON;} WITH {;}
+
+REPLACE {$start_new_particle;} WITH {;}
+
