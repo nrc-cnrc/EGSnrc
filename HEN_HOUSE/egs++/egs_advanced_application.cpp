@@ -210,6 +210,16 @@ int EGS_AdvancedApplication::initEGSnrcBackEnd() {
     return 0;
 }
 
+//EGSnrc functions needed for radiative splitting ausgab object
+extern __extc__ void F77_OBJ_(brems,BREMS)();
+extern __extc__ void F77_OBJ_(annih,ANNIH)();
+extern __extc__ void F77_OBJ_(annih_at_rest,ANNIH_AT_REST)();
+extern __extc__ void F77_OBJ_(photo,PHOTO)();
+extern __extc__ void F77_OBJ(pair,PAIR)();
+extern __extc__ void F77_OBJ_(compt,COMPT)();
+extern __extc__ void F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(int *medium, EGS_Float *e, EGS_Float *gle, EGS_I32 *lgle, EGS_Float *costhe, EGS_Float *sinthe);
+extern __extc__ EGS_Float F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(int &mxbrxs, EGS_Float* nb_xdata, EGS_Float* nb_fdata, EGS_Float* nb_wdata, int* nb_idata);
+
 /* The following 2 functions were used in an attempt to redirect
    all fortran I/O to use egsInformationn a degsWarning.
    Unfortunately, there were segmentation violations in the
@@ -859,11 +869,11 @@ void EGS_AdvancedApplication::setEIIData(EGS_I32 len) {
 }
 
 #ifdef GDEBUG
-    #define MAX_STEP 100000
-    EGS_Vector steps_x[MAX_STEP], steps_u[MAX_STEP];
-    int steps_ireg[MAX_STEP], steps_inew[MAX_STEP];
-    EGS_Float steps_ustepi[MAX_STEP], steps_ustepf[MAX_STEP];
-    int steps_n = 0;
+#define MAX_STEP 100000
+EGS_Vector steps_x[MAX_STEP], steps_u[MAX_STEP];
+int steps_ireg[MAX_STEP], steps_inew[MAX_STEP];
+EGS_Float steps_ustepi[MAX_STEP], steps_ustepf[MAX_STEP];
+int steps_n = 0;
 #endif
 
 int EGS_AdvancedApplication::shower() {
@@ -886,6 +896,9 @@ int EGS_AdvancedApplication::shower() {
 #ifdef GDEBUG
     steps_n = 0;
 #endif
+    for (int j=0; j<a_objects_list.size(); ++j) {
+        a_objects_list[j]->initializeData();
+    }
     egsShower();
     return 0;
 }
@@ -1261,6 +1274,260 @@ void EGS_AdvancedApplication::setLatch(int latch) {
     the_stack->latch[np] = latch;
 }
 
+//************************************************************
+// Utility functions for ausgab egs_radiative_splitting objects
+//************************************************************
+
+//necessary RNG functions
+EGS_Float EGS_AdvancedApplication::getRngUniform() {
+    return rndm->getUniform();
+}
+
+void EGS_AdvancedApplication::getRngAzimuth(EGS_Float &cphi, EGS_Float &sphi) {
+    rndm->getAzimuth(cphi,sphi);
+}
+
+//add a particle (+ dnear) to the top of the stack and increment np
+void EGS_AdvancedApplication::addParticleToStack(EGS_Particle p, EGS_Float dnear) {
+    int np = the_stack->np; //np+1
+    the_stack->E[np] = p.E;
+    the_stack->wt[np] = p.wt;
+    the_stack->x[np] = p.x.x;
+    the_stack->y[np] = p.x.y;
+    the_stack->z[np] = p.x.z;
+    the_stack->u[np] = p.u.x;
+    the_stack->v[np] = p.u.y;
+    the_stack->w[np] = p.u.z;
+    the_stack->iq[np] = p.q;
+    the_stack->ir[np] = p.ir+2;
+    the_stack->latch[np] = p.latch;
+    the_stack->dnear[np] = dnear;
+    the_stack->np++;
+}
+
+//get dnear from position np in the stack
+EGS_Float EGS_AdvancedApplication::getDnear(int np) {
+    return the_stack->dnear[np];
+}
+
+//set npold of stack
+void EGS_AdvancedApplication::setNpold(int npold) {
+    the_stack->npold = npold+1;
+}
+
+//get total no. of media in simulation
+int EGS_AdvancedApplication::getNmed() {
+    return nmed;
+}
+
+//delete particle at stack position ip
+//replace with data at position np and reduce np by 1
+void EGS_AdvancedApplication::deleteParticleFromStack(int ip) {
+    int np = the_stack->np-1;
+    if (ip < np)
+    {
+        the_stack->iq[ip] = the_stack->iq[np];
+        the_stack->E[ip] = the_stack->E[np];
+        the_stack->x[ip] = the_stack->x[np];
+        the_stack->y[ip] = the_stack->y[np];
+        the_stack->z[ip] = the_stack->z[np];
+        the_stack->u[ip] = the_stack->u[np];
+        the_stack->v[ip] = the_stack->v[np];
+        the_stack->w[ip] = the_stack->w[np];
+        the_stack->wt[ip] = the_stack->wt[np];
+        the_stack->ir[ip] = the_stack->ir[np];
+        the_stack->latch[ip] = the_stack->latch[np];
+        the_stack->dnear[ip] = the_stack->dnear[np];
+    }
+    the_stack->np--;
+    return;
+}
+
+//retrieve particle information at stack position ip
+EGS_Particle EGS_AdvancedApplication::getParticleFromStack(int ip) {
+    EGS_Particle p;
+    p.q = the_stack->iq[ip];
+    p.E = the_stack->E[ip];
+    p.latch = the_stack->latch[ip];
+    p.ir = the_stack->ir[ip]-2;
+    p.wt = the_stack->wt[ip];
+    p.x = EGS_Vector(the_stack->x[ip],the_stack->y[ip],the_stack->z[ip]);
+    p.u = EGS_Vector(the_stack->u[ip],the_stack->v[ip],the_stack->w[ip]);
+    return p;
+}
+
+//update particle info (+ dnear) at stack position ip
+void EGS_AdvancedApplication::updateParticleOnStack(int ip, EGS_Particle p, EGS_Float dnear) {
+    the_stack->iq[ip] = p.q;
+    the_stack->E[ip] = p.E;
+    the_stack->latch[ip] = p.latch;
+    the_stack->ir[ip] = p.ir+2;
+    the_stack->wt[ip] = p.wt;
+    the_stack->x[ip] = p.x.x;
+    the_stack->y[ip] = p.x.y;
+    the_stack->z[ip] = p.x.z;
+    the_stack->u[ip] = p.u.x;
+    the_stack->v[ip] = p.u.y;
+    the_stack->w[ip] = p.u.z;
+    the_stack->dnear[ip] = dnear;
+    return;
+}
+
+//return the value of gle
+EGS_Float EGS_AdvancedApplication::getGle() {
+    return the_epcont->gle;
+}
+
+//return lgle
+int EGS_AdvancedApplication::getLgle(EGS_Float gle, int med) {
+    return the_photin->ge1[med]*gle+the_photin->ge0[med];
+}
+
+//return the value of the_xoptions->ibrdst
+int EGS_AdvancedApplication::getIbrdst() {
+    return the_xoptions->ibrdst;
+}
+
+//return the value of the_xoptions->ibcmp
+int EGS_AdvancedApplication::getIbcmp() {
+    return the_xoptions->ibcmp;
+}
+
+//return the value of the_thresh->ap[imed]
+EGS_Float EGS_AdvancedApplication::getAp(int imed) {
+    return the_thresh->ap[imed];
+}
+
+//return the value of the_xoptions->ibr_nist
+int EGS_AdvancedApplication::getIbrnist() {
+    return the_xoptions->ibr_nist;
+}
+
+//return the value of the_nist_brems->nb_lemin[imed]
+EGS_Float EGS_AdvancedApplication::getNbLemin(int imed) {
+    return the_nist_brems->nb_lemin[imed];
+}
+
+//return the value of the_nist_brems->nb_dlei[imed]
+EGS_Float EGS_AdvancedApplication::getNbDlei(int imed) {
+    return the_nist_brems->nb_dlei[imed];
+}
+
+//return the value of the_nist_brems->nb_emin[imed]
+EGS_Float EGS_AdvancedApplication::getNbEmin(int imed) {
+    return the_nist_brems->nb_emin[imed];
+}
+
+//return the_nist_brems->nb_xdata[j,imed]
+EGS_Float* EGS_AdvancedApplication::getNbXdata(int j, int imed) {
+    return the_nist_brems->nb_xdata[imed][j];
+}
+
+//return the_nist_brems->nb_fdata[j,imed]
+EGS_Float* EGS_AdvancedApplication::getNbFdata(int j, int imed) {
+    return the_nist_brems->nb_fdata[imed][j];
+}
+
+//return the_nist_brems->nb_wdata[j,imed]
+EGS_Float* EGS_AdvancedApplication::getNbWdata(int j, int imed) {
+    return the_nist_brems->nb_wdata[imed][j];
+}
+
+//return the_nist_brems->nb_idata[j,imed]
+int* EGS_AdvancedApplication::getNbIdata(int j, int imed) {
+    return the_nist_brems->nb_idata[imed][j];
+}
+
+//return value of the_brempr->delcm[imed]
+EGS_Float EGS_AdvancedApplication::getDelcm(int imed) {
+    return the_brempr->delcm[imed];
+}
+
+//functions below return value of the_brempr->dl1...dl6[i,imed]
+EGS_Float EGS_AdvancedApplication::getDl1(int i, int imed) {
+    return the_brempr->dl1[imed][i];
+}
+EGS_Float EGS_AdvancedApplication::getDl2(int i, int imed) {
+    return the_brempr->dl2[imed][i];
+}
+EGS_Float EGS_AdvancedApplication::getDl3(int i, int imed) {
+    return the_brempr->dl3[imed][i];
+}
+EGS_Float EGS_AdvancedApplication::getDl4(int i, int imed) {
+    return the_brempr->dl4[imed][i];
+}
+EGS_Float EGS_AdvancedApplication::getDl5(int i, int imed) {
+    return the_brempr->dl5[imed][i];
+}
+EGS_Float EGS_AdvancedApplication::getDl6(int i, int imed) {
+    return the_brempr->dl6[imed][i];
+}
+//EGSnrc Mortran calls used in radiative splitting
+void EGS_AdvancedApplication::callBrems() {
+    F77_OBJ_(brems,BREMS)();
+}
+void EGS_AdvancedApplication::callAnnih() {
+    F77_OBJ_(annih,ANNIH)();
+}
+void EGS_AdvancedApplication::callAnnihAtRest() {
+    F77_OBJ_(annih_at_rest,ANNIH_AT_REST)();
+}
+void EGS_AdvancedApplication::callPhoto() {
+    F77_OBJ_(photo,PHOTO)();
+}
+void EGS_AdvancedApplication::callPair() {
+    F77_OBJ_(pair,PAIR)();
+}
+void EGS_AdvancedApplication::callCompt() {
+    F77_OBJ_(compt,COMPT)();
+}
+void EGS_AdvancedApplication::callEgsRayleighSampling(int imed, EGS_Float E, EGS_Float gle, EGS_I32 lgle, EGS_Float& costhe, EGS_Float& sinthe) {
+    int f_imed=imed+1;
+    F77_OBJ_(egs_rayleigh_sampling,EGS_RAYLEIGH_SAMPLING)(&f_imed,&E,&gle,&lgle,&costhe,&sinthe);
+}
+EGS_Float EGS_AdvancedApplication::callAliasSample1(int mxbrxs, EGS_Float* nb_xdata, EGS_Float* nb_fdata, EGS_Float* nb_wdata, int* nb_idata) {
+    return F77_OBJ_(alias_sample1,ALIAS_SAMPLE1)(mxbrxs,nb_xdata,nb_fdata,nb_wdata,nb_idata);
+}
+//the following definitions are dependent on some array size macros
+//having been defined
+#ifndef MXSTACK
+int EGS_AdvancedApplication::getMxstack() {
+    return 0;
+}
+#else
+int EGS_AdvancedApplication::getMxstack() {
+    return MXSTACK;
+}
+#endif
+#ifndef MXBRES
+int EGS_AdvancedApplication::getMxbres() {
+    return 0;
+}
+#else
+int EGS_AdvancedApplication::getMxbres() {
+    return MXBRES;
+}
+#endif
+#ifndef MXBRXS
+int EGS_AdvancedApplication::getMxbrxs() {
+    return 0;
+}
+#else
+int EGS_AdvancedApplication::getMxbrxs() {
+    return MXBRXS;
+}
+#endif
+
+//get max. energy of source from source
+EGS_Float EGS_AdvancedApplication::getEmax() {
+    return source->getEmax();
+}
+
+//get value of ZBRANG for medium
+EGS_Float EGS_AdvancedApplication::getZbrang(int imed) {
+    return the_brempr->zbrang[imed];
+}
+
 extern __extc__ void egsHowfar() {
     CHECK_GET_APPLICATION(app,"egsHowfar()");
     int np = the_stack->np-1;
@@ -1338,6 +1605,7 @@ extern __extc__ void egsAusgab(EGS_I32 *iarg) {
     app->top_p.latch = the_stack->latch[np];
     app->Np = the_stack->np-1;
     *iarg = app->userScoring(*iarg);
+    if (the_stack->wt[np] == 0) return; //allow code to force return to shower
 }
 
 extern __extc__ void egsStartParticle() {
@@ -1350,6 +1618,5 @@ extern __extc__ void egsStartParticle() {
     }
     the_epcont->idisc = 0;
     the_useful->medium = app->getMedium(ir)+1;
-    //egsInformation("start particle: ir=%d medium=%d\n",ir,the_useful->medium);
     app->startNewParticle();
 }
