@@ -19,7 +19,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
-###############################################################################
+####################################################################8###########
 #
 #  Author:          Iwan Kawrakow, 2005
 #
@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Manuel Stoeckl
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -39,11 +40,14 @@
 #include "egs_libconfig.h"
 #include "egs_functions.h"
 #include "egs_base_geometry.h"
+#include "egs_shapes.h"
 #include "egs_visualizer.h"
 #include "egs_timer.h"
 #include "egs_input.h"
 #include "egs_ausgab_object.h"
 #include "ausgab_objects/egs_dose_scoring/egs_dose_scoring.h"
+#include "egs_library.h"
+#include "egs_input_struct.h"
 
 #include <qmessagebox.h>
 #include <qapplication.h>
@@ -56,6 +60,7 @@
 #include <qfiledialog.h>
 #include <qprogressdialog.h>
 #include <QTextStream>
+#include <QMenuBar>
 
 #include <cmath>
 #include <cstdlib>
@@ -66,6 +71,29 @@ using namespace std;
 
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
+#endif
+
+typedef EGS_Application *(*createAppFunction)(int argc, char **argv);
+typedef EGS_BaseGeometry *(*createGeomFunction)();
+typedef EGS_BaseSource *(*createSourceFunction)();
+typedef EGS_BaseShape *(*createShapeFunction)();
+typedef EGS_AusgabObject *(*createAusgabObjectFunction)();
+typedef void (*getAppInputsFunction)(shared_ptr<EGS_InputStruct> inpPtr);
+typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
+typedef string(*getExampleFunction)();
+
+#ifdef WIN32
+    #ifdef CYGWIN
+        const char fs = '/';
+    #else
+        const char fs = '\\';
+    #endif
+    string lib_prefix = "";
+    string lib_suffix = ".dll";
+#else
+    const char fs = '/';
+    string lib_prefix = "lib";
+    string lib_suffix = ".so";
 #endif
 
 static unsigned char standard_red[] = {
@@ -165,6 +193,9 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
     connect(gview, SIGNAL(leftDoubleClick(EGS_Vector)), this, SLOT(setRotationPoint(EGS_Vector)));
     connect(gview, SIGNAL(tracksLoaded(vector<size_t>)), this, SLOT(updateTracks(vector<size_t>)));
+    connect(global_transparency, SIGNAL(sliderReleased()), this, SLOT(endTransformation()));
+    connect(global_transparency, SIGNAL(sliderPressed()), this, SLOT(startTransformation()));
+    connect(global_transparency, SIGNAL(valueChanged(int)), this, SLOT(changeGlobalTransparency(int)));
 
     save_image = new SaveImage(this,"save image");
 
@@ -175,8 +206,325 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // Add the clipping planes widget to the designated layout
     clipLayout->addWidget(cplanes);
 
-    // set the widget to show near the left-upper corner of the screen
-    move(QPoint(25,25));
+    // Initialize the editor and syntax highlighter
+    egsinpEdit = new EGS_Editor();
+    editorLayout->addWidget(egsinpEdit);
+    highlighter = new EGS_Highlighter(egsinpEdit->document());
+
+// TODO: This is an example of how to load an application for egs_editor inputs
+//     // Load an egs++ application to parse the input file
+//     string app_name;
+    int appc = 5;
+    char *appv[] = { "egspp", "-a", "tutor7pp", "-i", "tracks1.egsinp", "-p", "tutor_data"};
+//
+//     // Appv: %s -a application [-p pegs_file] [-i input_file] [-o output_file] [-b] [-P number_of_parallel_jobs] [-j job_index]
+//     if (!EGS_Application::getArgument(appc,appv,"-a","--application",app_name)) {
+//         egsFatal("test fail\n\n");
+//     }
+//
+//     string lib_dir;
+//     EGS_Application::checkEnvironmentVar(appc,appv,"-e","--egs-home","EGS_HOME",lib_dir);
+//     lib_dir += "bin";
+//     lib_dir += fs;
+//     lib_dir += CONFIG_NAME;
+//     lib_dir += fs;
+//
+//     // Load the application library
+//     // We don't require the application to be compiled, just give a warning if it isn't.
+//     EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
+//     bool app_loaded = true;
+//     if (!app_lib.load()) {
+//         egsWarning("\n%s: Failed to load the %s application library from %s\n\n", appv[0],app_name.c_str(),lib_dir.c_str());
+//         app_loaded = false;
+//     } else {
+//         createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
+//         if (!createApp) {
+//             egsWarning("\n%s: Failed to resolve the address of the 'createApplication' function in the application library %s\n\n",appv[0],app_lib.libraryFile());
+//             app_loaded = false;
+//         } else {
+//             EGS_Application *app = createApp(appc,appv);
+//             if (!app) {
+//                 egsWarning("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
+//                 app_loaded = false;
+//             }
+//             egsInformation("Testapp %f\n",app->getRM());
+//             delete app;
+//         }
+//     }
+
+
+
+
+    // Get a list of all the libraries in the dso directory
+    string dso_dir;
+    EGS_Application::checkEnvironmentVar(appc,appv,"-H","--hen-house","HEN_HOUSE",dso_dir);
+    dso_dir += "egs++";
+    dso_dir += fs;
+    dso_dir += "dso";
+    dso_dir += fs;
+    dso_dir += CONFIG_NAME;
+    dso_dir += fs;
+
+    QDir directory(dso_dir.c_str());
+    QStringList libraries = directory.entryList(QStringList() << (lib_prefix+"*"+lib_suffix).c_str(), QDir::Files);
+
+    // Create an examples drop down menu on the editor tab
+    QMenuBar *menuBar = new QMenuBar();
+    QMenu *exampleMenu = new QMenu("Insert example...");
+    menuBar->addMenu(exampleMenu);
+    QMenu *geomMenu = exampleMenu->addMenu("Geometries");
+    QMenu *sourceMenu = exampleMenu->addMenu("Sources");
+    QMenu *shapeMenu = exampleMenu->addMenu("Shapes");
+    QMenu *ausgabMenu = exampleMenu->addMenu("Ausgab/Output");
+    QMenu *mediaMenu = exampleMenu->addMenu("Media");
+    QMenu *runMenu = exampleMenu->addMenu("Run Control");
+    QMenu *appMenu = exampleMenu->addMenu("Applications");
+    editorLayout->setMenuBar(menuBar);
+
+    // The input template structure
+    inputStruct = make_shared<EGS_InputStruct>();
+
+//     // Get the application level input blocks
+//     if(app_loaded) {
+//         getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
+//         if(getAppInputs) {
+//             getAppInputs(inputStruct);
+//             if(inputStruct) {
+//                 vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputStruct->getBlockInputs();
+//                 for (auto &block : inputBlocks) {
+//                     egsInformation("  block %s\n", block->getTitle().c_str());
+//                     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+//                     for (auto &inp : singleInputs) {
+//                         const vector<string> vals = inp->getValues();
+//                         egsInformation("   single %s\n", inp->getTag().c_str());
+//                         for (auto&& val : vals) {
+//                             egsInformation("      %s\n", val.c_str());
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+
+    // Geometry definition block
+    auto geomDefPtr = inputStruct->addBlockInput("geometry definition");
+    geomDefPtr->addSingleInput("simulation geometry", true, "The name of the geometry that will be used in the simulation, or to be viewed in egs_view. If you have created a composite geometry using many other geometries, name the final composite geometry here. Note that in some applications, the calculation geometry input block overrides this input, but it is still required.");
+
+    // Source definition block
+    auto srcDefPtr = inputStruct->addBlockInput("source definition");
+    srcDefPtr->addSingleInput("simulation source", true, "The name of the source that will be used in the simulation. If you have created a composite source using many other sources, name the final composite source here.");
+
+    // Ausgab Object definition block
+    auto ausDefPtr = inputStruct->addBlockInput("ausgab object definition");
+
+#ifdef EDITOR_DEBUG
+    egsInformation("Loading libraries for egs_editor...\n");
+#endif
+
+    // For each library, try to load it and determine if it is geometry or source
+    for (const auto &lib : libraries) {
+        // Remove the extension
+        QString libName = lib.left(lib.lastIndexOf("."));
+        // Remove the prefix (EGS_Library adds it automatically)
+        libName = libName.right(libName.length() - lib_prefix.length());
+
+#ifdef EDITOR_DEBUG
+        egsInformation("Trying %s\n", libName.toLatin1().data());
+#endif
+        // Skip any library files that start with Qt
+        // For dynamic builds, there may be QtCore, QtWidgets, etc. files in the dso directory
+        if (lib.startsWith("Qt")) {
+            continue;
+        }
+
+        EGS_Library egs_lib(libName.toLatin1().data(),dso_dir.c_str());
+        if (!egs_lib.load()) {
+            continue;
+        }
+
+        // Geometries
+        createGeomFunction isGeom = (createGeomFunction) egs_lib.resolve("createGeometry");
+        if (isGeom) {
+#ifdef EDITOR_DEBUG
+            egsInformation(" Geometry %s\n",libName.toLatin1().data());
+#endif
+
+            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+            if (getInputs) {
+
+                shared_ptr<EGS_BlockInput> geom = getInputs();
+                if (geom) {
+                    geomDefPtr->addBlockInput(geom);
+
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = geom->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+//                         egsInformation("  single %s\n", inp->getTag().c_str());
+//                         for (auto&& val : vals) {
+//                             egsInformation("      %s\n", val.c_str());
+//                         }
+                    }
+
+                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = geom->getBlockInputs();
+                    for (auto &block : inputBlocks) {
+                        //egsInformation("  block %s\n", block->getTitle().c_str());
+                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                        for (auto &inp : singleInputs) {
+                            const vector<string> vals = inp->getValues();
+//                             egsInformation("   single %s\n", inp->getTag().c_str());
+//                             for (auto&& val : vals) {
+//                                 egsInformation("      %s\n", val.c_str());
+//                             }
+                        }
+                    }
+                }
+            }
+            getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
+            if (getExample) {
+                QAction *action = geomMenu->addAction(libName);
+                action->setData(QString::fromStdString(getExample()));
+                connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
+            }
+        }
+
+        // Sources
+        createSourceFunction isSource = (createSourceFunction) egs_lib.resolve("createSource");
+        if (isSource) {
+#ifdef EDITOR_DEBUG
+            egsInformation(" Source %s\n",libName.toLatin1().data());
+#endif
+
+            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+            if (getInputs) {
+
+                shared_ptr<EGS_BlockInput> src = getInputs();
+                if (src) {
+                    srcDefPtr->addBlockInput(src);
+
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = src->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+//                         egsInformation("  single %s\n", inp->getTag().c_str());
+//                         for (auto&& val : vals) {
+//                             egsInformation("      %s\n", val.c_str());
+//                         }
+                    }
+
+                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = src->getBlockInputs();
+                    for (auto &block : inputBlocks) {
+                        //egsInformation("  block %s\n", block->getTitle().c_str());
+                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                        for (auto &inp : singleInputs) {
+                            const vector<string> vals = inp->getValues();
+//                             egsInformation("   single %s\n", inp->getTag().c_str());
+//                             for (auto&& val : vals) {
+//                                 egsInformation("      %s\n", val.c_str());
+//                             }
+                        }
+                    }
+                }
+            }
+
+            getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
+            if (getExample) {
+                QAction *action = sourceMenu->addAction(libName);
+                action->setData(QString::fromStdString(getExample()));
+                connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
+            }
+        }
+
+        // Shapes
+        createShapeFunction isShape = (createShapeFunction) egs_lib.resolve("createShape");
+        if (isShape) {
+#ifdef EDITOR_DEBUG
+            egsInformation(" Shape %s\n",libName.toLatin1().data());
+#endif
+
+            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+            if (getInputs) {
+
+                shared_ptr<EGS_BlockInput> shape = getInputs();
+                if (shape) {
+                    inputStruct->addBlockInput(shape);
+
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = shape->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+//                         egsInformation("  single %s\n", inp->getTag().c_str());
+//                         for (auto&& val : vals) {
+//                             egsInformation("      %s\n", val.c_str());
+//                         }
+                    }
+
+                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = shape->getBlockInputs();
+                    for (auto &block : inputBlocks) {
+                        //egsInformation("  block %s\n", block->getTitle().c_str());
+                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                        for (auto &inp : singleInputs) {
+                            const vector<string> vals = inp->getValues();
+//                             egsInformation("   single %s\n", inp->getTag().c_str());
+//                             for (auto&& val : vals) {
+//                                 egsInformation("      %s\n", val.c_str());
+//                             }
+                        }
+                    }
+                }
+            }
+
+            getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
+            if (getExample) {
+                QAction *action = shapeMenu->addAction(libName);
+                action->setData(QString::fromStdString(getExample()));
+                connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
+            }
+        }
+
+        // Ausgab Objects
+        createAusgabObjectFunction isAusgabObject = (createAusgabObjectFunction) egs_lib.resolve("createAusgabObject");
+        if (isAusgabObject) {
+#ifdef EDITOR_DEBUG
+            egsInformation(" Ausgab %s\n",libName.toLatin1().data());
+#endif
+
+            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+            if (getInputs) {
+
+                shared_ptr<EGS_BlockInput> aus = getInputs();
+                if (aus) {
+                    ausDefPtr->addBlockInput(aus);
+
+                    vector<shared_ptr<EGS_SingleInput>> singleInputs = aus->getSingleInputs();
+                    for (auto &inp : singleInputs) {
+                        const vector<string> vals = inp->getValues();
+//                         egsInformation("   single %s\n", inp->getTag().c_str());
+//                         for (auto&& val : vals) {
+//                             egsInformation("      %s\n", val.c_str());
+//                         }
+                    }
+
+                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = aus->getBlockInputs();
+                    for (auto &block : inputBlocks) {
+                        //egsInformation("  block %s\n", block->getTitle().c_str());
+                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                        for (auto &inp : singleInputs) {
+                            const vector<string> vals = inp->getValues();
+//                             egsInformation("   single %s\n", inp->getTag().c_str());
+//                             for (auto&& val : vals) {
+//                                 egsInformation("      %s\n", val.c_str());
+//                             }
+                        }
+                    }
+                }
+            }
+            getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
+            if (getExample) {
+                QAction *action = ausgabMenu->addAction(libName);
+                action->setData(QString::fromStdString(getExample()));
+                connect(action, &QAction::triggered, this, [this] { insertInputExample(); });
+            }
+        }
+    }
+    egsinpEdit->setInputStruct(inputStruct);
 }
 
 GeometryViewControl::~GeometryViewControl() {
@@ -194,6 +542,12 @@ GeometryViewControl::~GeometryViewControl() {
         for (int i=0; i<nobj; ++i) {
             delete EGS_AusgabObject::getObject(i);
         }
+    }
+    if (egsinpEdit) {
+        delete egsinpEdit;
+    }
+    if (highlighter) {
+        delete highlighter;
     }
 }
 
@@ -225,7 +579,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     // check that the file (still) exists
     QFile file(filename);
     if (!file.exists()) {
-        egsWarning("\nFile %s does not exist anymore!\n\n",filename.toUtf8().constData());
+        egsWarning("\nInput file %s does not exist!\n\n",filename.toUtf8().constData());
         return false;
     }
 
@@ -410,6 +764,12 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     updateAusgabObjects();
     // See if any of the dose checkboxes are checked
     doseCheckbox_toggled();
+
+    // Load the egsinp file into the editor
+    if (file.open(QFile::ReadOnly | QFile::Text)) {
+        egsinpEdit->setPlainText(file.readAll());
+        egsinpEdit->validateEntireInput();
+    }
 
     return true;
 }
@@ -688,6 +1048,8 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     }
 
     // Load the particle track options
+    label_particles->hide();
+    label_particle_colours->hide();
     EGS_Input *iTracks = input->takeInputItem("tracks");
     if (iTracks) {
         int show;
@@ -725,8 +1087,25 @@ void GeometryViewControl::loadConfig(QString configFilename) {
                 showPositronsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
-
         delete iTracks;
+    }
+    else {
+        label_particles->show();
+        spin_tmaxp->hide();
+        showPositronsCheckbox->hide();
+        showPhotonsCheckbox->hide();
+        showElectronsCheckbox->hide();
+        spin_tminp->hide();
+        spin_tmine->hide();
+        spin_tmaxe->hide();
+        spin_tminpo->hide();
+        spin_tmaxpo->hide();
+
+        label_particle_colours->show();
+        cPhotonsButton->hide();
+        cElectronsButton->hide();
+        cPositronsButton->hide();
+        energyScalingCheckbox->hide();
     }
 
     // Load the overlay options
@@ -908,6 +1287,22 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load the clipping planes
     EGS_Input *iClip = input->takeInputItem("clipping planes");
+    // Set default clipped planes, along each axis
+    cplanes->setCell(0,0,1);
+    cplanes->setCell(0,1, 0);
+    cplanes->setCell(0,2,0);
+    cplanes->setCell(0,3,0);
+    cplanes->setCell(0,4,Qt::Unchecked);
+    cplanes->setCell(1,0,0);
+    cplanes->setCell(1,1,1);
+    cplanes->setCell(1,2,0);
+    cplanes->setCell(1,3,0);
+    cplanes->setCell(1,4,Qt::Unchecked);
+    cplanes->setCell(2,0,0);
+    cplanes->setCell(2,1,0);
+    cplanes->setCell(2,2,1);
+    cplanes->setCell(2,3,0);
+    cplanes->setCell(2,4,Qt::Unchecked);
     if (iClip) {
         for (int i=0; i<cplanes->numPlanes(); i++) {
             EGS_Input *iPlane = iClip->takeInputItem("plane");
@@ -922,6 +1317,9 @@ void GeometryViewControl::loadConfig(QString configFilename) {
             if (!err) {
                 cplanes->setCell(i,0,ax);
             }
+            /*else if (i == 0) {
+                cplanes->setCell(0, 0, 1);
+            }*/
             else {
                 cplanes->clearCell(i,0);
             }
@@ -1072,6 +1470,26 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     delete input;
 
     updateView(true);
+}
+
+void GeometryViewControl::saveEgsinp() {
+#ifdef VIEW_DEBUG
+    egsWarning("In saveEgsinp()\n");
+#endif
+
+    // Prompt the user for a filename and open the file for writing
+    QString newFilename = QFileDialog::getSaveFileName(this, "Save input file as...", filename);
+    QFile egsinpFile(newFilename);
+    if (!egsinpFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return;
+    }
+    QTextStream out(&egsinpFile);
+
+    // Write the text from the editor window
+    out << egsinpEdit->toPlainText() << flush;
+
+    // Reload the input so that the changes are recognized
+    reloadInput();
 }
 
 void GeometryViewControl::setFilename(QString str) {
@@ -1716,6 +2134,16 @@ void GeometryViewControl::changeTransparency(int t) {
     updateView(true);
 }
 
+void GeometryViewControl::changeGlobalTransparency(int t) {
+    int test = materialCB->count();
+    for (int i = 0; i <= test; i++) {
+        int med = materialCB->count() - i;
+        QRgb c = m_colors[med];
+        m_colors[med] = qRgba(qRed(c), qGreen(c), qBlue(c), t);
+    }
+    updateView(true);
+}
+
 void GeometryViewControl::changeDoseTransparency(int t) {
 #ifdef VIEW_DEBUG
     egsWarning("In changeDoseTransparency(%d)\n",t);
@@ -1895,7 +2323,6 @@ void GeometryViewControl::loadTracksDialog() {
     if (filename_tracks.isEmpty()) {
         return;
     }
-
     gview->loadTracks(filename_tracks);
 }
 
@@ -1907,6 +2334,22 @@ void GeometryViewControl::updateTracks(vector<size_t> ntracks) {
 #ifdef VIEW_DEBUG
     egsWarning("In updateTracks(%d %d %d)\n",ntracks[0], ntracks[1], ntracks[2]);
 #endif
+    label_particles->hide();
+    spin_tmaxp->show();
+    showPositronsCheckbox->show();
+    showPhotonsCheckbox->show();
+    showElectronsCheckbox->show();
+    spin_tminp->show();
+    spin_tmine->show();
+    spin_tmaxe->show();
+    spin_tminpo->show();
+    spin_tmaxpo->show();
+
+    label_particle_colours->hide();
+    cPhotonsButton->show();
+    cElectronsButton->show();
+    cPositronsButton->show();
+    energyScalingCheckbox->show();
 
     // Update maximum values for the track selection
     spin_tminp->setMaximum(ntracks[0]);
@@ -2354,39 +2797,38 @@ int GeometryViewControl::setGeometry(
 
     axesmax  = pmax + EGS_Vector(size, size, size)*0.3;
 
-    if (!justReloading) {
-        distance = size*3.5; // ~2*sqrt(3);
-        look_at = center;
-        look_at_home = look_at;
-        setLookAtLineEdit();
-        if (distance > 60000) {
-            egsWarning("too big: %g\n",size);
-            distance = 9999;
-        }
-        else {
-            zoomlevel = -112;
-        }
-        setProjectionLineEdit();
-        //p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
-        p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*3*distance;
-        setLightLineEdit();
-        camera = p_light;
-        screen_xo = look_at-EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
-        screen_v1 = EGS_Vector(c_phi,-s_phi,0);
-        screen_v2 = EGS_Vector(c_theta*s_phi,c_theta*c_phi,-s_theta);
-
-        // camera orientation vectors (same as the screen vectors)
-        camera_v1 = screen_v1;
-        camera_v2 = screen_v2;
-
-        // save camera home position
-        camera_home = camera;
-        camera_home_v1 = camera_v1;
-        camera_home_v2 = camera_v2;
-        zoomlevel_home = zoomlevel;
-
-        setCameraLineEdit();
+    // Set or reset the viewing window
+    distance = size*3.5; // ~2*sqrt(3);
+    look_at = center;
+    look_at_home = look_at;
+    setLookAtLineEdit();
+    if (distance > 60000) {
+        egsWarning("too big: %g\n",size);
+        distance = 9999;
     }
+    else {
+        zoomlevel = -112;
+    }
+    setProjectionLineEdit();
+    //p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
+    p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*3*distance;
+    setLightLineEdit();
+    camera = p_light;
+    screen_xo = look_at-EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
+    screen_v1 = EGS_Vector(c_phi,-s_phi,0);
+    screen_v2 = EGS_Vector(c_theta*s_phi,c_theta*c_phi,-s_theta);
+
+    // camera orientation vectors (same as the screen vectors)
+    camera_v1 = screen_v1;
+    camera_v2 = screen_v2;
+
+    // save camera home position
+    camera_home = camera;
+    camera_home_v1 = camera_v1;
+    camera_home_v2 = camera_v2;
+    zoomlevel_home = zoomlevel;
+
+    setCameraLineEdit();
 
     updateView();
 
@@ -2932,6 +3374,8 @@ void GeometryViewControl::enlargeFont() {
     controlsText->selectAll();
     controlsText->setFontPointSize(controlsFont.pointSize() + 1);
     controlsText->setTextCursor(cursor);
+
+    egsinpEdit->zoomIn();
 }
 
 void GeometryViewControl::shrinkFont() {
@@ -2946,6 +3390,8 @@ void GeometryViewControl::shrinkFont() {
     controlsText->selectAll();
     controlsText->setFontPointSize(controlsFont.pointSize() - 1);
     controlsText->setTextCursor(cursor);
+
+    egsinpEdit->zoomOut();
 }
 
 void GeometryViewControl::setFontSize(int size) {
@@ -2961,4 +3407,12 @@ void GeometryViewControl::setFontSize(int size) {
     controlsText->setFontPointSize(controlsFont.pointSize() + changeInSize);
     controlsText->setTextCursor(cursor);
 }
+
+void GeometryViewControl::insertInputExample() {
+    QAction *pAction = qobject_cast<QAction *>(sender());
+
+    QTextCursor cursor(egsinpEdit->textCursor());
+    egsinpEdit->insertPlainText(pAction->data().toString());
+}
+
 

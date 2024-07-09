@@ -40,9 +40,50 @@
 #include "egs_libconfig.h"
 #include "egs_functions.h"
 #include "egs_math.h"
+#include "egs_input_struct.h"
 
 #include <iostream>
 using namespace std;
+
+static void addScoringBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+    shared_ptr<EGS_BlockInput> scoreBlock = blockPtr->addBlockInput("scoring options");
+    scoreBlock->addSingleInput("pulse height regions", false, "A list of regions to score pulse height distributions");
+    scoreBlock->addSingleInput("pulse height bins", false, "How many bins to use for each pulse height distribution. This must be either a single input, in which case all pulse height distributions will use this number of bins, or the same number of inputs as pulse height regions.");
+    scoreBlock->addSingleInput("silent", false, "0 (verbose output) or greater than 0 (short output)");
+    scoreBlock->addSingleInput("calculation type", false, "Default is dose", {"Dose", "Awall", "Fano", "FAC", "HVL"});
+
+    shared_ptr<EGS_BlockInput> calGeomPtr = scoreBlock->addBlockInput("calculation geometry");
+    calGeomPtr->addSingleInput("geometry name", false, "The name of the base geometry");
+    calGeomPtr->addSingleInput("cavity regions", true, "A list of cavity region indices");
+    calGeomPtr->addSingleInput("cavity mass", true, "The total cavity mass in grams");
+    calGeomPtr->addSingleInput("cavity geometry", true, "The name of geometry for range rejection");
+    calGeomPtr->addSingleInput("enhance regions", false, "A list of enhancement region indicies");
+    calGeomPtr->addSingleInput("enhancement", false, "A list of enhancement factors");
+
+    auto transPtr = calGeomPtr->addBlockInput("transformation");
+    transPtr->addSingleInput("translation", false, "The translation for the geometry (x, y ,z)");
+
+    scoreBlock->addSingleInput("correlated geometries", false, "A list of geometries");
+
+    // input loops can also be used so avoid retyping things
+    auto inpPtr = scoreBlock->addBlockInput("input loop");
+    inpPtr->addSingleInput("loop count", true, "The number of times the loop repeats");
+    inpPtr->addSingleInput("loop variable", true, "The type (0 for integer, 1 for real, 2 for string), the variable name, then a list of the variable inputs");
+    inpPtr->addSingleInput("correlated geometries", false, "A list of geometries");
+
+    auto geominpPtr = inpPtr->addBlockInput("calculation geometry");
+    geominpPtr->addSingleInput("geometry name", false, "The name of the base geometry");
+    geominpPtr->addSingleInput("cavity regions", true, "A list of cavity region indices");
+    geominpPtr->addSingleInput("cavity mass", true, "The total cavity mass in grams");
+    geominpPtr->addSingleInput("cavity geometry", true, "The name of geometry for range rejection");
+    geominpPtr->addSingleInput("enhance regions", false, "A list of enhancement region indicies");
+    geominpPtr->addSingleInput("enhancement", false, "A list of enhancement factors");
+    geominpPtr->addSingleInput("subgeometries", false, "A list of identical geometries with material differences");
+    geominpPtr->addSingleInput("sub geom regions", false, "A list of regions where composition changes");
+
+    auto transinpPtr = geominpPtr->addBlockInput("transformation");
+    transinpPtr->addSingleInput("translation", false, "The translation for the geometry (x, y ,z)");
+}
 
 /*! \brief A class for scoring a single quantity of interest in a
   Monte Carlo simulation.
