@@ -119,7 +119,7 @@ extern "C" {
         err = input->getInput("inner rectangle",posi);
         if (!err && posi.size() == 4) {
             EGS_RectangularRing *s = new EGS_RectangularRing(pos[0],pos[2],pos[1],
-                    pos[3],posi[0],posi[2],posi[1],posi[3],"",f);
+                pos[3],posi[0],posi[2],posi[1],posi[3],"",f);
             if (!s->isValid()) {
                 egsWarning("createShape(rectangle): your input did not result in"
                            " a valid \"rectangular ring\"\n");

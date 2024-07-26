@@ -137,13 +137,13 @@ extern "C" {
         EGS_BaseGeometry *g;
         if (type == "EGS_RoundRectCylindersXY")
             g = new EGS_RoundRectCylindersT<EGS_XProjector,EGS_YProjector>(x_widths,y_widths,radii,xo,"",
-                    EGS_XProjector("X"),EGS_YProjector("Y"));
+                EGS_XProjector("X"),EGS_YProjector("Y"));
         else if (type == "EGS_RoundRectCylindersXZ")
             g = new EGS_RoundRectCylindersT<EGS_XProjector,EGS_ZProjector>(x_widths,y_widths,radii,xo,"",
-                    EGS_XProjector("X"),EGS_ZProjector("Z"));
+                EGS_XProjector("X"),EGS_ZProjector("Z"));
         else if (type == "EGS_RoundRectCylindersYZ")
             g = new EGS_RoundRectCylindersT<EGS_YProjector,EGS_ZProjector>(x_widths,y_widths,radii,xo,"",
-                    EGS_YProjector("Y"),EGS_ZProjector("Z"));
+                EGS_YProjector("Y"),EGS_ZProjector("Z"));
         else {
             vector<EGS_Float> ax, ay;
             err = input->getInput("x-axis",ax);
@@ -159,8 +159,8 @@ extern "C" {
                 return 0;
             }
             g = new EGS_RoundRectCylindersT<EGS_Projector,EGS_Projector>(x_widths,y_widths,radii,xo,"",
-                    EGS_Projector(EGS_Vector(ax[0],ax[1],ax[2]),"Any"),
-                    EGS_Projector(EGS_Vector(ay[0],ay[1],ay[2]),""));
+                EGS_Projector(EGS_Vector(ax[0],ax[1],ax[2]),"Any"),
+                EGS_Projector(EGS_Vector(ay[0],ay[1],ay[2]),""));
         }
         g->setName(input);
         g->setLabels(input);
