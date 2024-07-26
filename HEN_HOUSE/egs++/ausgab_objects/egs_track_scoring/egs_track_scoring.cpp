@@ -83,7 +83,7 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
 
     // Determine whether a dynamic geometry or source was used
     // Only do this if the user didn't explicitly say whether to include time indices
-    if(m_autoDetectDynamic) {
+    if (m_autoDetectDynamic) {
         m_include_time = app->containsDynamic();
     }
 
@@ -154,7 +154,7 @@ extern "C" {
         // If the user didn't specify whether or not to include time indices
         // check if a dynamic source or geometry is in use
         bool autoDetectDynamic = false;
-        if(!found) {
+        if (!found) {
             autoDetectDynamic = true;
         }
 

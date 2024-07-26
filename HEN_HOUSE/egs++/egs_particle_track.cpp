@@ -227,9 +227,10 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
 
     data->read((char *)&m_totalTracks, sizeof(int));
     egsInformation("%s: Reading %d tracks from '%s' ...\n", func_name, m_totalTracks, filename);
-    if(incltime) {
+    if (incltime) {
         egsInformation("%s: Time indices are included in the data.\n", func_name);
-    } else {
+    }
+    else {
         egsInformation("%s: Time indices are not included in the data.\n", func_name);
     }
 
@@ -330,7 +331,7 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
 
     int position = data->tellg();
 
-    if(!incltime) {
+    if (!incltime) {
         egsWarning("%s: Warning: Attempted to sort ptracks file that does not contain time index.\n", func_name);
         sortout->close();
         data->close();
@@ -344,7 +345,7 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
     // Write whether or not time index is included (it must be true)
     sortout->write(head_inctime, sizeof(head_inctime));
     sortout->write((char *)&incltime, sizeof(bool));
-    
+
     sortout->write((char *)&totalTrackNum, sizeof(int));
 
     // Defining vector of pairs which will be used to sort.

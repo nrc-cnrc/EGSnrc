@@ -145,7 +145,7 @@ void EGS_SourceCollection::containsDynamic(bool &hasdynamic) {
     for (int j=0; j<nsource; j++) {
         bool sourceContainsDynamic = false;
         sources[j]->containsDynamic(sourceContainsDynamic);
-        if(sourceContainsDynamic) {
+        if (sourceContainsDynamic) {
             hasdynamic = true;
             return;
         }

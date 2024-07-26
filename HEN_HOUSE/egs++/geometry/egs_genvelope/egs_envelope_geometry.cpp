@@ -320,7 +320,7 @@ void EGS_EnvelopeGeometry::printInfo() const {
                    g->getType().c_str());
     egsInformation(" inscribed geometries:\n");
     for (int j=0; j<n_in; j++) egsInformation("   %s (type %s)\n",
-            geometries[j]->getName().c_str(),geometries[j]->getType().c_str());
+                geometries[j]->getName().c_str(),geometries[j]->getType().c_str());
     egsInformation(
         "=======================================================\n");
 }
@@ -331,7 +331,7 @@ void EGS_FastEnvelope::printInfo() const {
                    g->getType().c_str());
     egsInformation(" inscribed geometries:\n");
     for (int j=0; j<n_in; j++) egsInformation("   %s (type %s)\n",
-            geometries[j]->getName().c_str(),geometries[j]->getType().c_str());
+                geometries[j]->getName().c_str(),geometries[j]->getType().c_str());
     egsInformation(
         "=======================================================\n");
 }

@@ -926,9 +926,9 @@ void EGS_ASwitchedEnvelope::activateByIndex(int inscribed_index) {
 
 void EGS_ASwitchedEnvelope::deactivateByIndex(int inscribed_index) {
     vector<EGS_BaseGeometry *>::iterator loc = find(
-            active_inscribed.begin(), active_inscribed.end(),
-            inscribed_geoms[inscribed_index]
-        );
+                active_inscribed.begin(), active_inscribed.end(),
+                inscribed_geoms[inscribed_index]
+            );
     if (loc != active_inscribed.end()) {
         active_inscribed.erase(loc);
     }

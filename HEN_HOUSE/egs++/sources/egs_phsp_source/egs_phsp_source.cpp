@@ -341,21 +341,18 @@ void EGS_PhspSource::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, 
     //in the phase space chunk
     EGS_I64 particlesPerChunk = Nparticle/(npar*nchunk);
     int ichunk = nstart/nrun;
-    if (ichunk > npar*nchunk-1)
-    {
+    if (ichunk > npar*nchunk-1) {
         //remainder of histories, reuse the last chunk of the phsp
         //there may be a more clever strategy
         egsWarning("EGS_PhspSource: Remainder of histories will reuse the last chunk of the phase space source.\n");
         ichunk = npar*nchunk-1;
     }
     Nfirst = ichunk*particlesPerChunk+1;
-    if (ichunk == npar*nchunk-1)
-    {
+    if (ichunk == npar*nchunk-1) {
         //last chunk of the phsp file, just go to the end of the file
         Nlast = Nparticle;
     }
-    else
-    {
+    else {
         Nlast = Nfirst-1+particlesPerChunk;
     }
     Npos = Nfirst-1; //we increment Npos before attempting to read a particle
