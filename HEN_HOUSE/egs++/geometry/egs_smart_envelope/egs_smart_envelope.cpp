@@ -224,9 +224,9 @@ void EGS_SmartEnvelope::printInfo() const {
                    g->getType().c_str());
     egsInformation(" inscribed geometries:\n");
     for (int j=0; j<n_in; j++) egsInformation("   %s (type %s) in region=%d, "
-            " itype=%d\n",
-            geometries[j]->getName().c_str(),geometries[j]->getType().c_str(),
-            reg_to_base[j],(int)itype[j]);
+                " itype=%d\n",
+                geometries[j]->getName().c_str(),geometries[j]->getType().c_str(),
+                reg_to_base[j],(int)itype[j]);
     egsInformation(
         "=======================================================\n");
 }

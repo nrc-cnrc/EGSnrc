@@ -1345,7 +1345,7 @@ extern "C" {
                        "construct a ND geometry with a single dimension?\n");
             input->print(0,cerr);
             for (int j=0; j<gnames.size(); j++) egsWarning("dimension %d: %s\n",
-                    j+1,gnames[j].c_str());
+                        j+1,gnames[j].c_str());
         }
         int n_concav = 0;
         for (int j=0; j<dims.size(); j++) if (!dims[j]->isConvex()) {

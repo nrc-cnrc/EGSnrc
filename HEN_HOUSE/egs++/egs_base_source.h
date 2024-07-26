@@ -349,7 +349,7 @@ public:
     /* This method is essentially used to determine whether the simulation
      * source contains a dynamic source. The only
      * non-empty implementations of this function are in composite sources
-     * (where it simply calls containsDynamic on its components), 
+     * (where it simply calls containsDynamic on its components),
      * where it will update the boolean reference to true and
      * call containsDynamic on its base geometry, and sources that
      * can contain time indices (dynamic, phsp, beam sources).
@@ -568,7 +568,7 @@ public:
      * This function prints information about the expected and actually
      * sampled average energy of the spectrum using egsInformation().
      */
-    void reportAverageEnergy() const {    
+    void reportAverageEnergy() const {
         egsInformation("expected average energy: %g\n",expectedAverage());
         EGS_Float e=0,de=0;
         getSampledAverage(e,de);
