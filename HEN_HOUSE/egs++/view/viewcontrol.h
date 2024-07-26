@@ -161,6 +161,7 @@ public slots:
     virtual void updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po);
     virtual void updateTracks(vector<size_t> ntracks);
     virtual void insertInputExample();
+    virtual void setApplication();
 
 private:
 
@@ -233,6 +234,9 @@ private:
     EGS_AdvancedApplication *egsApp;
     shared_ptr<EGS_InputStruct> inputStruct;
     QMenu *exampleMenu;
+    string selectedApplication = "None";
+    string lib_dir;
+    QMenu *appMenu;
 
 protected slots:
 

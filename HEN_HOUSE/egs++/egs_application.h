@@ -49,10 +49,12 @@
 #include "egs_input_struct.h"
 #include "egs_run_control.h"
 #include "egs_scoring.h"
+#include "egs_rndm.h"
 
 #include <memory>
 #include <string>
 #include <iostream>
+#include <dirent.h>
 using namespace std;
 
 class EGS_Input;
@@ -63,6 +65,54 @@ class EGS_GeometryHistory;
 class EGS_AusgabObject;
 class EGS_Interpolator;
 //template <class T> class EGS_SimpleContainer;
+
+// Looks into \EGSnrc\HEN_HOUSE\pegs4\density_corrections\compounds for the density correction files
+// returns a string vector of the file names
+static vector<string> findDensityCorrectionInputs() {
+    vector<string> fileList;
+    #ifdef WIN32
+        const char fs = '\\';
+    #else
+        const char fs = '/';
+    #endif
+    
+    string compound_dir = "C:";
+    compound_dir += fs;
+    compound_dir += "EGSnrc";
+    compound_dir += fs;
+    compound_dir += "HEN_HOUSE";
+    compound_dir += fs;
+    compound_dir += "pegs4";
+    compound_dir += fs;
+    compound_dir += "density_corrections";
+    compound_dir += fs;
+    compound_dir += "compounds";
+
+    DIR *dir;
+    struct dirent *ent;
+    
+    if ((dir = opendir(compound_dir.c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            string filename = ent->d_name;
+
+            // removes the .density at the end of the file
+            if (filename.find(".density") != string::npos) {
+                filename = filename.substr(0, filename.find(".density"));
+                fileList.push_back(filename);
+            }
+        }
+        closedir(dir);
+    } else {
+        egsInformation("Failed to open density correction files directory\n");
+    }
+
+    // egsInformation("Printing file titles \n");
+    // for (const auto& file : fileList) {
+    //    egsInformation("%s\n", file.c_str());
+    // }
+
+    return fileList;
+}
 
 static void addmcBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     shared_ptr<EGS_BlockInput> mcBlock = blockPtr->addBlockInput("MC transport parameter");
@@ -77,7 +127,7 @@ static void addmcBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     mcBlock->addSingleInput("Spin effects", false, "Default is On", {"On", "Off"});
     mcBlock->addSingleInput("Brems angular sampling", false, "Default is KM", {"KM", "Simple"});
     mcBlock->addSingleInput("Brems cross sections", false, "Default is BH", {"BH", "NIST"});
-    mcBlock->addSingleInput("Pair angular crossing", false, "Default is Simple", {"Simple", "Off", "KM"});
+    mcBlock->addSingleInput("Pair angular sampling", false, "Default is Simple", {"Simple", "Off", "KM"});
     mcBlock->addSingleInput("Triplet production", false, "Default is On", {"On", "Off"});
     mcBlock->addSingleInput("Electron Impact Ionization", false, "Default is Off", {"On", "Off", "casnati", "kolbenstvedt", "gryzinski"});
     mcBlock->addSingleInput("Bound Compton scattering", false, "Default is norej", {"On", "Off", "Simple", "norej"});
@@ -103,6 +153,101 @@ static void addvrBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     rangePtr->addSingleInput("Esave", false, "E_save");
     rangePtr->addSingleInput("cavity geometry", false, "The name of a previously defined geometry");
     rangePtr->addSingleInput("rejection range medium", false, "index of the medium to calculate electron ranges");
+}
+
+static void addMediaDefBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+    shared_ptr<EGS_BlockInput> mediaBlockInput = blockPtr->addBlockInput("media definition");
+    mediaBlockInput->addSingleInput("ae", false, "lowest  energy for electron production (kinetic+0.511)");
+    mediaBlockInput->addSingleInput("ap", false, "lowest  energy for photon production   (kinetic)");
+    mediaBlockInput->addSingleInput("ue", false, "maximum energy for electrons (kinetic+0.511)");
+    mediaBlockInput->addSingleInput("up", false, "maximum energy for photons (kinetic)");
+
+    shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->addBlockInput("pegsless");
+    mediumBlock->addSingleInput("elements", false, "");
+    mediumBlock->addSingleInput("number of atoms", false, "");
+    mediumBlock->addSingleInput("mass fractions", false, "");
+    mediumBlock->addSingleInput("rho", false, "");
+    mediumBlock->addSingleInput("sterncid", false, "");
+    mediumBlock->addSingleInput("stopping powers", false, "{restricted total, unrestricted collision, unrestricted collision and radiative, unrestricted collision and restricted radiative, restricted collision and unrestricted radiative, unrestricted radiative}");
+    mediumBlock->addSingleInput("bremsstrahlung correction", false, "");
+    mediumBlock->addSingleInput("gas pressure", false, "");
+
+    vector<string> densityCorrectionFiles = findDensityCorrectionInputs();
+    mediumBlock->addSingleInput("density correction file", false, "", densityCorrectionFiles);
+
+    mediumBlock->addSingleInput("e- stopping power output file", false, ""); 
+}
+
+static string addmcExample() {
+    string example = {
+        R"(
+:start MC transport parameter:
+    Global ECUT                    = 0.521          # Global electron transport cutoff
+    Global PCUT                    = 0.001          # Global photon transport cutoff
+    Global SMAX                    = 1e10           # Global maximum step-size restriction for e- transport
+    ESTEPE                         = 0.25           # Default is 0.25
+    XIMAX                          = 0.5            # Default is 0.5, max. value is 1.
+    Boundary crossing algorithm    = exact          # exact (default), PRESTA-I
+    Skin depth for BCA             = 3              # Default value is 3 for exact boundary crossing
+    Electron-step algorithm        = PRESTA-II      # PRESTA-II (default),PRESTA-I
+    Spin effects                   = On             # On (default),Off
+    Brems angular sampling         = KM             # Simple,KM (default)
+    Brems cross sections           = BH             # BH (default), NIST, NRC
+    Pair angular sampling          = Simple         # Off, Simple (default),KM
+    Triplet production             = Off            # On or Off (default)
+    Electron Impact Ionization     = Off            # On, Off (default), casnati, kolbenstvedt, gryzinski
+    Bound Compton scattering       = norej          # On, Off, Simple, norej (default)
+    Radiative Compton corrections  = Off            # On,  Off (default)
+    Rayleigh scattering            = Off            # On ,Off (default), custom
+    Photoelectron angular sampling = On             # On (default),Off
+    Atomic relaxations             = On             # On (default),Off
+    Photon cross sections          = xcom           # si, epdl, xcom (default) or user-supplied
+    Photon cross-sections output   = Off            # Off (default) or On
+    Compton cross sections         = comp_xsections # user-supplied
+    Photonuclear attenuation       = Off            # Off (default) or On
+    Photonuclear cross sections    = default        # default (default) or user-supplied
+:stop MC transport parameter:
+)"};
+    return example;
+}
+
+static string addMediaExample() {
+    string example = {
+    // Not completed yet, need to fill in numbers for example
+        R"(
+:start media definition:
+    ae = 0.1                   # lowest  energy for electron production (kinetic+0.511)
+    ap = 0.1                   # lowest  energy for photon production   (kinetic)
+    ue = 0.1                   # maximum energy for electrons (kinetic+0.511)
+    up = 0.1                   # maximum energy for photons (kinetic)
+    :start pegsless:
+        elements = 
+        number of atoms = 
+        mass fractions = 
+        rho = 
+        sterncid = 
+        stopping powers = 
+        bremsstrahlung correction =
+        gas pressure = 
+        density correction file = 
+        e- stopping power output file = 
+    :stop pegsless:
+:stop media definition:
+
+# Here is an example for defining a material named water
+:start media definition:
+    ae  = 0.521
+    ap  = 0.01
+    ue  = 50.511
+    up  = 50
+
+    :start water:
+        density correction file = water_liquid.density
+    :stop water:
+
+:stop media definition:
+)"};
+    return example;
 }
 
 /*! \brief A structure holding the information of one particle
@@ -1285,16 +1430,29 @@ public:
 #define APP_LIB(app_name) \
     extern "C" {\
         APP_EXPORT EGS_Application* createApplication(int argc, char **argv) {\
-            return new app_name(argc,argv);\
+            return new app_name(argc, argv);\
         }\
-        APP_EXPORT void getAppInputs(shared_ptr<EGS_InputStruct> inpPtr) {\
-            addRunControlBlock(inpPtr);\
-            addmcBlock(inpPtr);\
-            addvrBlock(inpPtr);\
-            addScoringBlock(inpPtr);\
+        APP_EXPORT shared_ptr<EGS_InputStruct> getAppInputs() {\
+            shared_ptr<EGS_InputStruct> appInputStruct = make_shared<EGS_InputStruct>();\
+            addmcBlock(appInputStruct);\
+            addvrBlock(appInputStruct);\
+            addRngDefinitionBlock(appInputStruct);\
+            addRunControlBlock(appInputStruct);\
+            addMediaDefBlock(appInputStruct);\
+            return appInputStruct;\
         }\
-    }
-
+        APP_EXPORT string getmcExample() {\
+            return addmcExample();\
+        }\
+        APP_EXPORT string getRunControlExample() {\
+            return addRunControlExample();\
+        }\
+        APP_EXPORT string getRngDefinitionExample() {\
+            return addRngDefinitionExample();\
+        }\
+        APP_EXPORT string getMediaExample() {\
+            return addMediaExample();\
+        }\
+    }\
 
 #endif
-

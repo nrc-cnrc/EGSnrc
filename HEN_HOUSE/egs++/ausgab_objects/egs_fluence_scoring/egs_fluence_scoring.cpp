@@ -41,6 +41,8 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
+static bool EGS_FLUENCE_SCORING_LOCAL inputSet = false;
+
 #define REGIONS_ENTRIES 100
 #define REGIONS_PER_LINE 25
 
@@ -1853,5 +1855,33 @@ extern "C" {
             return 0;
         }
     }
+
+    // Not finished
+    // static void setInputs() {
+    //     inputSet = true;
+
+    //     setBaseAusgabObjectInputs();
+
+    //     ausBlockInput->getSingleInput("library")->setValues({"EGS_Fluence_Scoring"});
+
+    //     // Format: name, isRequired, description, vector string of allowed values
+        
+    // }
+
+//     EGS_FLUENCE_SCORING_EXPORT string getExample() {
+//         string example;
+//         example = {
+//             R"(
+    
+// )"};
+    //     return example;
+    // }
+
+    // EGS_FLUENCE_SCORING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+    //     if (!inputSet) {
+    //         setInputs();
+    //     }
+    //     return ausBlockInput;
+    // }
 
 }

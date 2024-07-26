@@ -155,7 +155,7 @@ extern "C" {
         example = {
             R"(
     # Example of egs_track_scoring
-    #:start ausgab object:
+    :start ausgab object:
         library = egs_track_scoring
         name = my_score
         score photons = yes

@@ -146,6 +146,12 @@ public:
     /*! \brief Get the title of the block. */
     string getTitle();
 
+    /*! \brief Set the appName of the block. */
+    void setAppName(string appName);
+
+    /*! \brief Get the application name of the block. */
+    string getAppName();
+
     /*! \brief Add a single input. */
     shared_ptr<EGS_SingleInput> addSingleInput(string inputTag, bool isReq, const string desc, const vector<string> vals = vector<string>());
 
@@ -205,6 +211,7 @@ private:
     shared_ptr<EGS_BlockInput> parent;
     string blockTitle;
     bool isRequired;
+    string application;
     const string desc;
     shared_ptr<EGS_SingleInput> dependencyInp;
     string dependencyVal;
@@ -259,6 +266,12 @@ public:
     /*! \brief Add a list of input blocks that are already defined as \a blocks */
     void addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks);
 
+    /*! \brief Remove the input block named \a blockTitle. */
+    void removeBlockInput(string blockTitle);
+
+    /*! \brief Removes block inputs in input struct based on name of app variable*/
+    void removeBlockInputByApp(string appName);
+
     /*! \brief Get the list of input blocks. */
     vector<shared_ptr<EGS_BlockInput>> getBlockInputs();
 
@@ -279,5 +292,3 @@ private:
 
 
 #endif
-
-

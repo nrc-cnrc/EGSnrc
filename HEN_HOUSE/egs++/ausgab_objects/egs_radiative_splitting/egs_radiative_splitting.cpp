@@ -124,6 +124,20 @@ extern "C" {
         ausBlockInput->addSingleInput("splitting", false, "N-split");
     }
 
+    EGS_RADIATIVE_SPLITTING_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_radiative_splitting
+    :start ausgab object:
+        library   = egs_radiative_splitting
+        name      = my_score
+        splitting = n_split
+    :stop ausgab object:
+)"};
+        return example;
+    }
+
     EGS_RADIATIVE_SPLITTING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
         if (!inputSet) {
             setInputs();
