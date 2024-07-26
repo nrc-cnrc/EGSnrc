@@ -1,3 +1,4 @@
+
 /*
 ###############################################################################
 #
@@ -656,12 +657,22 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
     }
 
     blockTitle = getBlockTitle(cursor);
+    QString parentTitle = getParentBlockTitle(cursor);
+
     if (blockTitle.size() < 1) {
         return nullptr;
     }
 
     bool foundTag;
     QString library = getInputValue("library", cursor.block(), foundTag);
+
+    // egsInformation("Printing parentBlockTitle: %s\n", parentTitle.toLatin1().data());
+    // If the parent block is media definition, then just return pegsless
+    if (parentTitle.toStdString() == "media definition") {
+        shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput("media definition")->getBlockInput("pegsless");
+        egsInformation("Input Block title test: %s\n", inputBlock->getTitle().c_str());
+        return inputBlock;
+    }
 
     // If we couldn't find a library tag in the current block,
     // try searching the containing block (if there is one)
@@ -807,6 +818,61 @@ QString EGS_Editor::getBlockTitle(QTextCursor cursor) {
             int endPos = line.indexOf(":",pos);
             if (endPos > 0) {
                 QString stopTitle = line.mid(pos, endPos-pos);
+                innerList.push_back(stopTitle);
+                withinOtherBlock = true;
+            }
+        }
+    }
+
+    return blockTitle;
+}
+
+// There may be a cleaner way of implementing this in getBlockTitle instead
+QString EGS_Editor::getParentBlockTitle(QTextCursor cursor) {
+    if (cursor == QTextCursor()) {
+        cursor = textCursor();
+    }
+
+    vector<QString> innerList;
+    QString blockTitle;
+    bool withinOtherBlock = false;
+    bool findingParent = false;
+
+    // Starting at the current line, start iterating in reverse through
+    // the previous lines until we find two start blocks
+    for (QTextBlock block = cursor.block(); block.isValid(); block = block.previous()) {
+        QString line = block.text().simplified();
+
+        // Get block title
+        int pos = line.lastIndexOf(":start ");
+        if (pos >= 0) {
+            pos += 7;
+            int endPos = line.indexOf(":",pos);
+            if (endPos > 0) {
+                blockTitle = line.mid(pos, endPos-pos);
+                if (innerList.size() > 0 && blockTitle == innerList.back()) {
+                    innerList.pop_back();
+                    blockTitle.clear();
+                    withinOtherBlock = false;
+                }
+                else {
+                    if (findingParent) {
+                        break;
+                    }
+                    findingParent = true;
+                }
+            }
+        }
+
+        // Save a vector of blocks that have already been closed
+        // This means both a matching :start and :stop are above the cursor
+        // so we're not inside the block
+        pos = line.lastIndexOf(":stop ");
+        if (pos >= 0) {
+            pos += 6;
+            int endPos = line.indexOf(":", pos);
+            if (endPos > 0) {
+                QString stopTitle = line.mid(pos, endPos - pos);
                 innerList.push_back(stopTitle);
                 withinOtherBlock = true;
             }
@@ -1307,4 +1373,3 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
 
 //    return false;
 //}
-

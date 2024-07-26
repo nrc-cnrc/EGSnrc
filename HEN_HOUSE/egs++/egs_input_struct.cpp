@@ -58,6 +58,28 @@ void EGS_InputStruct::addBlockInputs(vector<shared_ptr<EGS_BlockInput>> blocks) 
     blockInputs.insert(blockInputs.end(), blocks.begin(), blocks.end());
 }
 
+void EGS_InputStruct::removeBlockInput(string title) {
+    auto it = blockInputs.begin();
+    while (it != blockInputs.end()) {
+        if ((*it)->getTitle() == title) {
+            it = blockInputs.erase(it); 
+        } else {
+            ++it;
+        }
+    }
+}
+
+void EGS_InputStruct::removeBlockInputByApp(string appName) {
+    auto it = blockInputs.begin();
+    while (it != blockInputs.end()) {
+        if ((*it)->getAppName() == appName) {
+            it = blockInputs.erase(it); 
+        } else {
+            ++it;
+        }
+    }
+}
+
 vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
     return blockInputs;
 }
@@ -134,6 +156,7 @@ EGS_BlockInput::EGS_BlockInput(string blockTit, bool isReq, shared_ptr<EGS_Block
     blockTitle = blockTit;
     isRequired = isReq;
     parent = par;
+    application = "";
 }
 
 EGS_BlockInput::~EGS_BlockInput() {}
@@ -146,6 +169,14 @@ string EGS_BlockInput::getTitle() {
     return blockTitle;
 }
 
+void EGS_BlockInput::setAppName(string appName) {
+    application = appName;
+}
+
+string EGS_BlockInput::getAppName() {
+    return application;
+}
+
 shared_ptr<EGS_SingleInput> EGS_BlockInput::addSingleInput(string inputTag, bool isReq, const string desc, const vector<string> vals) {
     singleInputs.push_back(make_shared<EGS_SingleInput>(inputTag, isReq, desc, vals));
     return singleInputs.back();
@@ -153,7 +184,7 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::addSingleInput(string inputTag, bool
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::addBlockInput(string blockTit, bool isReq) {
     blockInputs.push_back(make_shared<EGS_BlockInput>(blockTit, isReq, shared_from_this()));
-
+    
     return blockInputs.back();
 }
 
@@ -398,8 +429,3 @@ void EGS_SingleInput::setValues(const vector<string> vals) {
 string EGS_SingleInput::getDescription() {
     return description;
 }
-
-
-
-
-

@@ -95,7 +95,7 @@ extern "C" {
     static void setInputs() {
         inputSet = true;
 
-        setBaseGeometryInputs(false);
+        setBaseGeometryInputs();
 
         geomBlockInput->getSingleInput("library")->setValues({"EGS_Planes"});
 
@@ -110,7 +110,7 @@ extern "C" {
 
         // EGS_PlaneCollection
         auto normsPtr = geomBlockInput->addSingleInput("normals", true, "3N number inputs For each plane's normal");
-        normsPtr->addDependency(typePtr, "EGS_PlaneCollection");
+        normsPtr->addDependency(typePtr, "EGS_PlaneCollection");;
 
         // Alternative definition of the plane position
         auto fpPtr = geomBlockInput->addSingleInput("first plane", false, "The position of the first plane.");

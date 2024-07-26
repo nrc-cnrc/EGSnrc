@@ -186,6 +186,8 @@
 #include "egs_transformations.h"
 // Interpolators
 #include "egs_interpolator.h"
+// For autocomplete and examples
+#include "egs_input_struct.h"
 
 #include <fstream>
 #include <iostream>
@@ -3316,6 +3318,127 @@ void EGS_HVL::recursiveIteration(){
 
      /* to be added ...*/
 
+}
+
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
+
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("cavity");
+        shared_ptr<EGS_BlockInput> scaleBlock = scoreBlock->addBlockInput("scale photon x-sections");
+        scaleBlock->addSingleInput("factor", false, "");
+        scaleBlock->addSingleInput("medium", false, "");
+        scaleBlock->addSingleInput("cross section", false, "options are: all, Rayleigh, Compton, Pair, or Photo", {"all", "Rayleigh", "Compton", "Pair", "Photo"});
+
+        scoreBlock->addSingleInput("calculation type", false, "options are: Dose, Awall, Fano, HVL, FAC", {"Dose", "Awall", "Fano", "HVL", "FAC"});
+        // not sure about inputs for scale xcc
+        scoreBlock->addSingleInput("scale xcc", false, "");
+
+        shared_ptr<EGS_BlockInput> calcBlock = scoreBlock->addBlockInput("calculation geometry");
+        calcBlock->addSingleInput("geometry name", false, "");
+        calcBlock->addSingleInput("calculation name", true, "");
+        calcBlock->addSingleInput("cavity regions", false, "");
+        calcBlock->addSingleInput("aperture regions", false, "");
+        calcBlock->addSingleInput("cavity mass", false, "");
+        calcBlock->addSingleInput("charge regions", false, "");
+
+        scoreBlock->addSingleInput("correlated geometries", false, "only available with types Dose, HVL, and FAC");
+        
+        shared_ptr<EGS_BlockInput> fluenceBlock = scoreBlock->addBlockInput("fluence scoring");
+        fluenceBlock->addSingleInput("minimum energy", false, "");
+        fluenceBlock->addSingleInput("maximum energy", false, "");
+        fluenceBlock->addSingleInput("number of bins", false, "");
+        fluenceBlock->addSingleInput("scale", false, "options are: linear, logarithmic", {"linear", "logarithmic"});
+
+        shared_ptr<EGS_BlockInput> hvlBlock = scoreBlock->addBlockInput("HVL scoring");
+        hvlBlock->addSingleInput("scoring circle", false, "");
+        hvlBlock->addSingleInput("scoring plane normal", false, "");
+        hvlBlock->addSingleInput("muen file", false, "");
+        hvlBlock->addSingleInput("absorber thicknesses", false, "");
+        hvlBlock->addSingleInput("scatter", false, "yes or no", {"yes", "no"});
+
+        shared_ptr<EGS_BlockInput> kermaBlock = scoreBlock->addBlockInput("kerma scoring");
+        kermaBlock->addSingleInput("scoring circle", false, "");
+        kermaBlock->addSingleInput("scoring plane normal", false, "");
+        kermaBlock->addSingleInput("muen file", false, "");
+
+        shared_ptr<EGS_BlockInput> varBlock = appInput->addBlockInput("variance reduction");
+        varBlock->setAppName("cavity");
+        varBlock->addSingleInput("photon splitting", false, "");
+        shared_ptr<EGS_BlockInput> rejBlock = varBlock->addBlockInput("range rejection");
+        rejBlock->addSingleInput("rejection", false, "");
+        rejBlock->addSingleInput("Esave", false, "");
+        rejBlock->addSingleInput("cavity geometry", false, "");
+        rejBlock->addSingleInput("rejection range medium", false, "");
+        
+        return appInput;
+    }
+
+
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+    :start scale photon x-sections:
+        factor = 1.5
+        medium = ALL
+        cross section = all                 # Rayleigh, Compton, Pair, or Photo
+    :stop scale photon x-sections:
+
+    calculation type = Dose                 # Dose, Awall, Fano, HVL, or FAC
+    scale xcc = 1.5           
+
+    :start calculation geometry:
+        geometry name = fac_1
+        cavity regions = 3184
+        aperture regions = 490,1470,2450
+        cavity mass = 0.009462477073        # cylinder defined by diaphragm and plates
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+    :stop calculation geometry:
+
+    correlated geometries = fac_1   
+
+    :start fluence scoring:
+        minimum energy = Emin
+        maximum energy = Emax
+        number of bins = N
+        scale = linear                      # linear or logarithmic
+    :stop fluence scoring:  
+
+    # if type is HVL
+    :start HVL scoring:
+        scoring circle = x y z R
+        scoring plane normal = u v w
+        muen file = E*muen file name
+        absorber thicknesses = t_1 t_2 ... t_ncg
+        scatter = yes or no
+    :stop HVL scoring:
+
+    # if type is FAC
+    :start kerma scoring:
+        scoring circle = 0 0 0.45 0.5
+        scoring plane normal = 0 0 1
+        muen file = E*muen file name
+    :stop kerma scoring
+:stop scoring options:
+
+:start variance reduction:
+    photon splitting = 50
+    :start range rejection:
+        rejection = 100
+        Esave     = 1
+        cavity geometry = cavity
+        rejection range medium = 170C521ICRU
+    :stop range rejection:
+:stop variance reduction:
+)"};
+        return example;
+    }
 }
 
 #ifdef BUILD_APP_LIB

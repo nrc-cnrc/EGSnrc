@@ -58,7 +58,7 @@ extern "C" {
         geomBlockInput->addSingleInput("y-widths", true, "A list of cylinder half-widths in the y-direction, must be in increasing order");
         geomBlockInput->addSingleInput("radii", true, "A list of fillet radii, must be in increasing order");
         geomBlockInput->addSingleInput("midpoint", false, "The position of the midpoint (x, y, z)");
-
+        
         // EGS_RoundRectCylinders
         auto inpPtr = geomBlockInput->addSingleInput("x-axis", true, "x-axis of rounded rectangle (x, y, z)");
         inpPtr->addDependency(typePtr, "EGS_RoundRectCylinders");

@@ -145,6 +145,7 @@
 #include "egs_functions.h"
 //! We use the EGS_Input class
 #include "egs_input.h"
+#include "egs_input_struct.h"
 //! To get the maximum source energy
 #include "egs_base_source.h"
 #include "egs_rndm.h"
@@ -737,6 +738,48 @@ int Tutor7_Application::startNewShower() {
     }
     current_weight = p.wt;
     return 0;
+}
+
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> tutor7Input = make_shared<EGS_InputStruct>();
+        shared_ptr<EGS_BlockInput> scoreBlock = tutor7Input->addBlockInput("scoring options");
+        scoreBlock->setAppName("tutor7pp");
+
+        // not sure about the inputs for scale xcc and scale bc
+        scoreBlock->addSingleInput("scale xcc", false, "2 values");
+        scoreBlock->addSingleInput("scale bc", false, "2 values");
+        scoreBlock->addSingleInput("deflect electron after brems", false, "yes or no", {"yes", "no"});
+        scoreBlock->addSingleInput("Russian Roulette", false, "survival probability is 1/input");
+        scoreBlock->addSingleInput("pulse height regions", false, "list of regions");
+        scoreBlock->addSingleInput("pulse height bins", false, "list of bins");
+
+        return tutor7Input;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+# tutor7pp example input
+:start scoring options:
+    scale xcc = 1
+    scale bc = 2
+    deflect electron after brems = yes 
+    Russian Roulette = 5                # survival probability is 1/5
+    pulse height regions = 1 2 3        # a list of regions to score pulse height
+                                        # distributions
+                                        # how many bins to use for each pulse height
+                                        # distribution. This must be either a single
+                                        # input, in which case all pulse height
+                                        # distributions will use this number of bins,
+                                        # or the same number of inputs as pulse height
+                                        # regions.
+    pulse height bins = 100
+:stop scoring options:
+)"};
+        return example;
+    }
 }
 
 #ifdef BUILD_APP_LIB
