@@ -60,6 +60,21 @@ static void addRunControlBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     runBlock->addSingleInput("calculation", false, "The calculation type: first (default, runs a new simulation), restart (resumes a terminated simulation), analyze (prints results), combine (combines results from a parallel run). Defaults to 'first'.", {"first", "restart", "analyze", "combine"});
 }
 
+static string addRunControlExample() {
+    string example = {
+        R"(
+:start run control:
+    ncase                       = 1e4
+    nbatch                      = 10    #[optional] 
+    statistical accuracy sought = 5     #[optional] 
+    max cpu hours allowed       = 0.5   #[optional] 
+    calculation                 = first #[optional] 
+    geometry error limit        = 2     #[optional] 
+:stop run control:
+)"};
+    return example;
+}
+
 /*! \brief A simple run control object for advanced EGSnrc C++ applications.
 
   \ingroup egspp_main

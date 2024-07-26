@@ -284,12 +284,21 @@ extern "C" {
         anglesRadPtr->addDependency(anglesPtr, "", true);
         anglesPtr->addDependency(anglesRadPtr, "", true);
         geomBlockInput->addSingleInput("flag", false, "0 or 1 or 2. This input affects the region numbering algorithm; see the documentation for details.")->addDependency(typePtr, "EGS_ConeSet");
+        auto mediaPtr = geomBlockInput->addBlockInput("media input");
+        mediaPtr->addDependency(typePtr, "EGS_ConeSet");
+        mediaPtr->addSingleInput("media", true, "");
+        mediaPtr->addSingleInput("set medium", false, "");
 
         // EGS_SimpleCone
         auto anglePtr = geomBlockInput->addSingleInput("opening angle", false, "The opening angle of the cone in degrees.");
         anglePtr->addDependency(typePtr, "EGS_SimpleCone");
         anglePtr->addDependency(typePtr, "EGS_ParallelCones");
         geomBlockInput->addSingleInput("height", false, "The height of the cone.");
+        auto mediaPtr2 = geomBlockInput->addBlockInput("media input");
+        mediaPtr2->addDependency(typePtr, "EGS_SimpleCone");
+        mediaPtr2->addDependency(typePtr, "EGS_ParallelCones");
+        mediaPtr2->addSingleInput("media", true, "");
+        mediaPtr2->addSingleInput("set medium", false, "");
 
         // EGS_ParallelCones
         geomBlockInput->addSingleInput("apex distances", false, "A list of distances from the first apex.");
