@@ -75,7 +75,7 @@ extern "C" {
             }
         }
         EGS_EllipseShape *shape = new EGS_EllipseShape(pos[0],pos[1],
-                axis[0],axis[1],"",f);
+            axis[0],axis[1],"",f);
         shape->setName(input);
         shape->setTransformation(input);
         return shape;
