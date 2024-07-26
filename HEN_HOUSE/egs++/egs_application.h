@@ -1208,7 +1208,7 @@ public:
     bool containsDynamic() {
         bool hasDynamic = false;
         geometry->containsDynamic(hasDynamic);
-        if(!hasDynamic) {
+        if (!hasDynamic) {
             source->containsDynamic(hasDynamic);
         }
         return hasDynamic;
