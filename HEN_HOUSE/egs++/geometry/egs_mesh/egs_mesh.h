@@ -366,9 +366,9 @@ public:
         const auto &node_indices = elt_node_indices_.at(element);
         return Nodes {
             nodes_.at(node_indices[0]),
-                  nodes_.at(node_indices[1]),
-                  nodes_.at(node_indices[2]),
-                  nodes_.at(node_indices[3])
+            nodes_.at(node_indices[1]),
+            nodes_.at(node_indices[2]),
+            nodes_.at(node_indices[3])
         };
     }
 

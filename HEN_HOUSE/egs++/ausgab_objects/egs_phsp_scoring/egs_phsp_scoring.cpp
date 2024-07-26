@@ -266,7 +266,8 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
     double E;
     if (oformat == 0) {
         E = app->top_p.E;
-    } else if (oformat == 1) {
+    }
+    else if (oformat == 1) {
         E = ke;
     }
 
