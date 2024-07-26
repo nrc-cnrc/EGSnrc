@@ -231,7 +231,7 @@ extern "C" {
     static void setInputs() {
         inputSet = true;
 
-        setBaseGeometryInputs(false);
+        setBaseGeometryInputs();
 
         geomBlockInput->getSingleInput("library")->setValues({"EGS_RZ"});
 

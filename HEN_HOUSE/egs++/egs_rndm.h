@@ -40,8 +40,28 @@
 #include "egs_libconfig.h"
 #include "egs_math.h"
 #include "egs_functions.h"
+#include "egs_input_struct.h"
 
 class EGS_Input;
+
+static void addRngDefinitionBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+    shared_ptr<EGS_BlockInput> rngBlock = blockPtr->addBlockInput("rng definition");
+    rngBlock->addSingleInput("type", true, "Generator type (Only ranmar)");
+    rngBlock->addSingleInput("inital seeds", true, "Two integers that represent the inital seed");
+    rngBlock->addSingleInput("high resolution", false, "Default is no", {"No", "Yes"});
+}
+
+static string addRngDefinitionExample() {
+    string example = {
+        R"(
+:start rng definition:
+    type = ranmar
+    initial seeds = 33 97
+    high resolution = no
+:stop rng definition:
+)"};
+    return example;
+}
 
 /*! \brief Base random number generator class. All random number generators
  * should be derived from this class.

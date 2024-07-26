@@ -620,6 +620,23 @@ extern "C" {
         blockPtr->addSingleInput("file type", true, "The type of file", {"3ddose"});
     }
 
+    EGS_DOSE_SCORING_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_dose_scoring
+    :start ausgab object:
+        library      = egs_dose_scoring
+        name         = my_score
+        medium dose  = yes # no  (default)
+        region dose  = no  # yes (default)
+        volume       =  v1 ... vn  # in cm**3
+        dose regions = ir1 ... irn # individual regions
+    :stop ausgab object:
+)"};
+        return example;
+    }
+
     EGS_DOSE_SCORING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
         if (!inputSet) {
             setInputs();

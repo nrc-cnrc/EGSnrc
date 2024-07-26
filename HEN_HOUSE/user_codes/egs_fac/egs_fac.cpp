@@ -198,6 +198,7 @@
 #include "egs_range_rejection.h"
 #include "egs_fac_simulation.h"
 #include "egs_math.h"
+#include "egs_input_struct.h"
 
 #include <fstream>
 using namespace std;
@@ -1081,6 +1082,82 @@ void EGS_FACApplication::describeSimulation() {
                        "=======================\n");
     for(int j=0; j<ngeom; j++){
         sim[j]->describeSimulation();
+    }
+}
+
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
+
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_fac");
+        shared_ptr<EGS_BlockInput> scaleBlock = scoreBlock->addBlockInput("scale photon x-sections");
+        scaleBlock->addSingleInput("factor", false, "");
+        scaleBlock->addSingleInput("medium", false, "");
+        scaleBlock->addSingleInput("cross section", false, "options are: all, Rayleigh, Compton, Pair, or Photo", {"all", "Rayleigh", "Compton", "Pair", "Photo"});
+        
+        scoreBlock->addSingleInput("scale xcc", false, "scale elastic scattering");
+        shared_ptr<EGS_BlockInput> calcBlock = scoreBlock->addBlockInput("calculation geometry");
+        scoreBlock->addSingleInput("correlated geometries", false, "");
+        scoreBlock->addSingleInput("Ax calculation", false, "");
+        scoreBlock->addSingleInput("muen file", false, "get E*muen/rho values");
+
+        shared_ptr<EGS_BlockInput> vrBlock = appInput->addBlockInput("variance reduction");
+        vrBlock->setAppName("egs_fac");
+        vrBlock->addSingleInput("photon splitting", false, "");
+        vrBlock->addSingleInput("increase scatter", false, "yes or no", {"no", "yes"});
+
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+    :start scale photon x-sections:
+        factor = 1.5
+        medium = ALL
+        cross section = all
+    :stop scale photon x-sections:
+    scale xcc = 1.5
+
+    :start calculation geometry:
+        geometry name = fac_air_tube
+        cavity regions = 132
+        aperture regions = 13 16 19 30
+        front and back regions = 83 181
+        cavity mass = 0.009462477073                        # cylinder defined by diaphragm and plates
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+        POM = 0.45 0.5
+    :stop calculation geometry:
+
+    :start calculation geometry:
+        geometry name = fac_vacuum_tube
+        cavity regions = 132
+        aperture regions = 13 16 19 30
+        front and back regions = 83 181
+        cavity mass = 0.009462477073                        # cylinder defined by diaphragm and plates
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+        POM = 0.45 0.5
+    :stop calculation geometry:
+
+    correlated geometries = fac_air_tube fac_vacuum_tube
+    Ax calculation = fac_air_tube fac_vacuum_tube
+    muen file =                                             # absolute or relative file path
+
+:stop scoring options:
+
+:start variance reduction:
+    photon splitting = 200
+    increase scatter = no
+:stop variance reduction:
+)"};
+        return example;
     }
 }
 

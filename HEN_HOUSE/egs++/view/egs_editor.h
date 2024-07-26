@@ -73,6 +73,7 @@ private slots:
 private:
     shared_ptr<EGS_BlockInput> getBlockInput(QString &blockTitle, QTextCursor cursor = QTextCursor());
     QString getBlockTitle(QTextCursor cursor = QTextCursor());
+    QString getParentBlockTitle(QTextCursor cursor = QTextCursor());
     QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag);
     QTextBlock getBlockEnd(QTextBlock currentBlock);
     bool inputHasDependency(shared_ptr<EGS_SingleInput> inp);

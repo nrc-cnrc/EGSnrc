@@ -45,7 +45,7 @@
 #include <iostream>
 using namespace std;
 
-static void addScoringBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+/*static void addScoringBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     shared_ptr<EGS_BlockInput> scoreBlock = blockPtr->addBlockInput("scoring options");
     scoreBlock->addSingleInput("pulse height regions", false, "A list of regions to score pulse height distributions");
     scoreBlock->addSingleInput("pulse height bins", false, "How many bins to use for each pulse height distribution. This must be either a single input, in which case all pulse height distributions will use this number of bins, or the same number of inputs as pulse height regions.");
@@ -83,7 +83,7 @@ static void addScoringBlock(shared_ptr<EGS_InputStruct> blockPtr) {
 
     auto transinpPtr = geominpPtr->addBlockInput("transformation");
     transinpPtr->addSingleInput("translation", false, "The translation for the geometry (x, y ,z)");
-}
+}*/
 
 /*! \brief A class for scoring a single quantity of interest in a
   Monte Carlo simulation.

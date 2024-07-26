@@ -78,9 +78,10 @@ typedef EGS_BaseGeometry *(*createGeomFunction)();
 typedef EGS_BaseSource *(*createSourceFunction)();
 typedef EGS_BaseShape *(*createShapeFunction)();
 typedef EGS_AusgabObject *(*createAusgabObjectFunction)();
-typedef void (*getAppInputsFunction)(shared_ptr<EGS_InputStruct> inpPtr);
+typedef shared_ptr<EGS_InputStruct> (*getAppInputsFunction)();
+typedef shared_ptr<EGS_InputStruct> (*getAppSpecificInputsFunction)();
 typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
-typedef string(*getExampleFunction)();
+typedef string (*getExampleFunction)();
 
 #ifdef WIN32
     #ifdef CYGWIN
@@ -211,49 +212,48 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     editorLayout->addWidget(egsinpEdit);
     highlighter = new EGS_Highlighter(egsinpEdit->document());
 
-// TODO: This is an example of how to load an application for egs_editor inputs
-//     // Load an egs++ application to parse the input file
-//     string app_name;
+
+    // Load the egs_application library
+    string app_name;
     int appc = 5;
     char *appv[] = { "egspp", "-a", "tutor7pp", "-i", "tracks1.egsinp", "-p", "tutor_data"};
-//
-//     // Appv: %s -a application [-p pegs_file] [-i input_file] [-o output_file] [-b] [-P number_of_parallel_jobs] [-j job_index]
-//     if (!EGS_Application::getArgument(appc,appv,"-a","--application",app_name)) {
-//         egsFatal("test fail\n\n");
-//     }
-//
-//     string lib_dir;
-//     EGS_Application::checkEnvironmentVar(appc,appv,"-e","--egs-home","EGS_HOME",lib_dir);
-//     lib_dir += "bin";
-//     lib_dir += fs;
-//     lib_dir += CONFIG_NAME;
-//     lib_dir += fs;
-//
-//     // Load the application library
-//     // We don't require the application to be compiled, just give a warning if it isn't.
-//     EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
-//     bool app_loaded = true;
-//     if (!app_lib.load()) {
-//         egsWarning("\n%s: Failed to load the %s application library from %s\n\n", appv[0],app_name.c_str(),lib_dir.c_str());
-//         app_loaded = false;
-//     } else {
-//         createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
-//         if (!createApp) {
-//             egsWarning("\n%s: Failed to resolve the address of the 'createApplication' function in the application library %s\n\n",appv[0],app_lib.libraryFile());
-//             app_loaded = false;
-//         } else {
-//             EGS_Application *app = createApp(appc,appv);
-//             if (!app) {
-//                 egsWarning("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
-//                 app_loaded = false;
-//             }
-//             egsInformation("Testapp %f\n",app->getRM());
-//             delete app;
-//         }
-//     }
 
+    if (!EGS_Application::getArgument(appc,appv,"-a","--application",app_name)) {
+        egsFatal("test fail\n\n");
+    }
 
+    EGS_Application::checkEnvironmentVar(appc,appv,"-e","--egs-home","EGS_HOME",lib_dir);
+    lib_dir += "bin";
+    lib_dir += fs;
+    lib_dir += CONFIG_NAME;
+    lib_dir += fs;
 
+    // Load the application library
+    // We don't require the application to be compiled, just give a warning if it isn't.
+    EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
+    bool app_loaded = true;
+    if (!app_lib.load()) {
+        egsWarning("\n%s: Failed to load the %s application library from %s\n\n", appv[0],app_name.c_str(),lib_dir.c_str());
+        app_loaded = false;
+    } else {
+        createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
+        if (!createApp) {
+            egsWarning("\n%s: Failed to resolve the address of the 'createApplication' function in the application library %s\n\n",appv[0],app_lib.libraryFile());
+            app_loaded = false;
+        } else {
+            EGS_Application *app = createApp(appc,appv);
+            if (!app) {
+                egsWarning("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
+                app_loaded = false;
+            }
+            egsInformation("Testapp %f\n",app->getRM());
+            delete app;
+        }
+    }
+
+    // Get a list of all the libraries in the bin directory for applications
+    QDir binDirectory(lib_dir.c_str());
+    QStringList binLibraries = binDirectory.entryList(QStringList() << (lib_prefix + "*" + lib_suffix).c_str(), QDir::Files);
 
     // Get a list of all the libraries in the dso directory
     string dso_dir;
@@ -278,33 +278,116 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QMenu *ausgabMenu = exampleMenu->addMenu("Ausgab/Output");
     QMenu *mediaMenu = exampleMenu->addMenu("Media");
     QMenu *runMenu = exampleMenu->addMenu("Run Control");
-    QMenu *appMenu = exampleMenu->addMenu("Applications");
+
+    appMenu = exampleMenu->addMenu("Applications");
+
+    // Creates the example menu for different applications
+    QMenu *exampleMenu2 = new QMenu("Choose application");
+    menuBar->addMenu(exampleMenu2);
+
+    QAction *action = exampleMenu2->addAction("none");
+    action->setData("none");
+    connect(action,  &QAction::triggered, this, [this] { setApplication(); });
+
+    for (const auto &lib : binLibraries) {
+        // Remove the extension
+        QString libName = lib.left(lib.lastIndexOf("."));
+
+        // Remove the prefix (EGS_Library adds it automatically)
+        libName = libName.right(libName.length() - lib_prefix.length());
+        egsInformation("Trying %s\n", libName.toLatin1().data());
+
+        // Adds the button to the menu
+        QAction *action = exampleMenu2->addAction(libName);
+        action->setData(libName);
+        connect(action,  &QAction::triggered, this, [this] { setApplication(); });
+    }
     editorLayout->setMenuBar(menuBar);
 
     // The input template structure
     inputStruct = make_shared<EGS_InputStruct>();
 
-//     // Get the application level input blocks
-//     if(app_loaded) {
-//         getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
-//         if(getAppInputs) {
-//             getAppInputs(inputStruct);
-//             if(inputStruct) {
-//                 vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputStruct->getBlockInputs();
-//                 for (auto &block : inputBlocks) {
-//                     egsInformation("  block %s\n", block->getTitle().c_str());
-//                     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+    if(app_loaded) {
+
+        getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
+        if(getAppInputs) {
+
+            // before this was a BlockInput, now it is a InputStruct
+            shared_ptr<EGS_InputStruct> app = getAppInputs();
+
+            if (app) {
+                inputStruct->addBlockInputs(app->getBlockInputs());
+
+//                     vector<shared_ptr<EGS_SingleInput>> singleInputs = app->getSingleInputs();
 //                     for (auto &inp : singleInputs) {
 //                         const vector<string> vals = inp->getValues();
-//                         egsInformation("   single %s\n", inp->getTag().c_str());
-//                         for (auto&& val : vals) {
-//                             egsInformation("      %s\n", val.c_str());
-//                         }
+// //                         egsInformation("  single %s\n", inp->getTag().c_str());
+// //                         for (auto&& val : vals) {
+// //                             egsInformation("      %s\n", val.c_str());
+// //                         }
 //                     }
-//                 }
-//             }
-//         }
-//     }
+
+                // vector<shared_ptr<EGS_BlockInput>> inputBlocks = app->getBlockInputs();
+                // for (auto &block : inputBlocks) {
+                //     egsInformation("  block %s\n", block->getTitle().c_str());
+                //     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                //     inputStruct->addBlockInput(block);
+                //     for (auto &inp : singleInputs) {
+                //         const vector<string> vals = inp->getValues();
+                //         egsInformation("   single %s\n", inp->getTag().c_str());
+                //         for (auto&& val : vals) {
+                //             egsInformation("      %s\n", val.c_str());
+                //         }
+                //     }
+                // }
+            }
+        }
+        //     getAppInputs(inputStruct);
+        //     if(inputStruct) {
+        //         vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputStruct->getBlockInputs();
+        //         for (auto &block : inputBlocks) {
+        //             egsInformation("  block %s\n", block->getTitle().c_str());
+        //             vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+        //             for (auto &inp : singleInputs) {
+        //                 const vector<string> vals = inp->getValues();
+        //                 egsInformation("   single %s\n", inp->getTag().c_str());
+        //                 for (auto&& val : vals) {
+        //                     egsInformation("      %s\n", val.c_str());
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        // Add the examples from the Application library
+        getExampleFunction getExample = (getExampleFunction) app_lib.resolve("getRunControlExample");
+        if (getExample) {
+            QAction *action = runMenu->addAction("egs_run_control");
+            action->setData(QString::fromStdString(getExample()));
+            connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
+        }
+
+        getExample = (getExampleFunction) app_lib.resolve("getmcExample");
+        if (getExample) {
+            QAction *action = appMenu->addAction("egs_monte_carlo_parameters");
+            action->setData(QString::fromStdString(getExample()));
+            connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
+        }
+
+        getExample = (getExampleFunction) app_lib.resolve("getRngDefinitionExample");
+        if (getExample) {
+            QAction *action = appMenu->addAction("egs_rng_definition");
+            action->setData(QString::fromStdString(getExample()));
+            connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
+        }
+
+        getExample = (getExampleFunction) app_lib.resolve("getMediaExample");
+        if (getExample) {
+            QAction *action = mediaMenu->addAction("egs_example_media");
+            action->setData(QString::fromStdString(getExample()));
+            connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
+        }
+    }
 
     // Geometry definition block
     auto geomDefPtr = inputStruct->addBlockInput("geometry definition");
@@ -3415,4 +3498,56 @@ void GeometryViewControl::insertInputExample() {
     egsinpEdit->insertPlainText(pAction->data().toString());
 }
 
+void GeometryViewControl::setApplication() {
 
+    // Gets the selected application from the menu
+    QAction *pAction = qobject_cast<QAction *>(sender());
+    string newlySelectedApp = pAction->data().toString().toStdString();
+    egsInformation("Selected application: %s\n", newlySelectedApp.c_str());
+
+    // Removes previous application inputs
+    if (selectedApplication != "None") {
+        inputStruct->removeBlockInputByApp(selectedApplication);
+    }
+
+    // Load the new library
+    // Do not load if the default is selected
+    if (newlySelectedApp != "None") {
+        egsInformation("Loading library: %s\n", newlySelectedApp.c_str());
+        EGS_Library app_lib(newlySelectedApp.c_str(),lib_dir.c_str());
+        if (!app_lib.load()) {
+            egsWarning("Failed to load inputs and example for applications\n");
+        } else {
+            getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppSpecificInputs");
+            egsInformation("getAppInputs %s\n", getAppInputs ? "true" : "false");
+      
+            if (getAppInputs) {
+                shared_ptr<EGS_InputStruct> app = getAppInputs();
+                if (app) {
+                    inputStruct->addBlockInputs(app->getBlockInputs()); 
+                }
+            }
+
+            // Delete the previous application example
+            QList<QAction*> actions = appMenu->actions();
+            for (QAction* action : actions) {
+                if (action->text() == "egs_current_app") {
+                    appMenu->removeAction(action);
+                    delete action;
+                    break;
+                }
+            }
+
+            // Load the new application example
+            getExampleFunction getExample = (getExampleFunction) app_lib.resolve("getAppSpecificExample");
+            if (getExample) {
+                QAction *action = appMenu->addAction("egs_current_app");
+                action->setData(QString::fromStdString(getExample()));
+                connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
+            }
+        }
+    }
+
+    selectedApplication = newlySelectedApp;
+    egsinpEdit->setInputStruct(inputStruct);
+}
