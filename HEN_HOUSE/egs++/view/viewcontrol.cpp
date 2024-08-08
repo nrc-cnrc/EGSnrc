@@ -301,8 +301,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QMenu *exampleMenu2 = new QMenu("Choose application");
     menuBar->addMenu(exampleMenu2);
 
-    QAction *action = exampleMenu2->addAction("none");
-    action->setData("none");
+    QAction *action = exampleMenu2->addAction("None");
+    action->setData("None");
     connect(action,  &QAction::triggered, this, [this] { setApplication(); });
 
     for (const auto &lib : binLibraries) {
@@ -343,19 +343,19 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 // //                         }
 //                     }
 
-                // vector<shared_ptr<EGS_BlockInput>> inputBlocks = app->getBlockInputs();
-                // for (auto &block : inputBlocks) {
-                //     egsInformation("  block %s\n", block->getTitle().c_str());
-                //     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-                //     inputStruct->addBlockInput(block);
-                //     for (auto &inp : singleInputs) {
-                //         const vector<string> vals = inp->getValues();
-                //         egsInformation("   single %s\n", inp->getTag().c_str());
-                //         for (auto&& val : vals) {
-                //             egsInformation("      %s\n", val.c_str());
-                //         }
-                //     }
-                // }
+//                 vector<shared_ptr<EGS_BlockInput>> inputBlocks = app->getBlockInputs();
+//                 for (auto &block : inputBlocks) {
+//                     egsInformation("  block %s\n", block->getTitle().c_str());
+//                     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+//                     inputStruct->addBlockInput(block);
+//                     for (auto &inp : singleInputs) {
+//                         const vector<string> vals = inp->getValues();
+//                         egsInformation("   single %s\n", inp->getTag().c_str());
+//                         for (auto&& val : vals) {
+//                             egsInformation("      %s\n", val.c_str());
+//                         }
+//                     }
+//                 }
             }
         }
         //     getAppInputs(inputStruct);
@@ -404,14 +404,14 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
 
-        // Add the denstiy correction files 
+        // Add the denstiy correction files
         shared_ptr<EGS_BlockInput> mediaBlockInput = inputStruct->getBlockInput("media definition");
         shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->getBlockInput("pegsless");
 
         string compound_dir;
         EGS_Application::checkEnvironmentVar(appc,appv,"-H","--hen-house","HEN_HOUSE", compound_dir);
         vector<string> densityCorrectionFiles = findDensityCorrectionInputs(compound_dir);
-        
+
         mediumBlock->addSingleInput("density correction file", false, "", densityCorrectionFiles);
     }
 
@@ -634,9 +634,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         }
     }
     egsinpEdit->setInputStruct(inputStruct);
-
-    //set the play button active boolean to false
-    isPlaying=false;
 }
 
 GeometryViewControl::~GeometryViewControl() {
@@ -715,10 +712,6 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
             g = 0;
         }
         EGS_BaseGeometry::clearGeometries();
-
-        // solve loading new input file from file tab in egsview. Previously
-        // name array is never cleared after loading new input file
-        geometryNames.clear();
 
         // Delete any previous ausgab objects
 #ifdef VIEW_DEBUG
@@ -1201,7 +1194,6 @@ void GeometryViewControl::loadConfig(QString configFilename) {
                 showPositronsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
-
         delete iTracks;
     }
     else {
@@ -1613,10 +1605,6 @@ void GeometryViewControl::setFilename(QString str) {
 
 void GeometryViewControl::setTracksFilename(QString str) {
     filename_tracks = str;
-}
-
-void GeometryViewControl::setTracksExtension(QString str) {
-    tracks_extension = str;
 }
 
 void GeometryViewControl::loadDose() {
@@ -2437,37 +2425,18 @@ void GeometryViewControl::loadTracksDialog() {
     egsWarning("In loadTracksDialog()\n");
 #endif
     QFileInfo inputFileInfo = QFileInfo(filename);
-    filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*ptracks");
-    tracks_extension=QString("ptracks");
+    filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*.ptracks");
 
     if (filename_tracks.isEmpty()) {
         return;
     }
-
-    hasTrackTimeIndex = hasValidTime();
-    if (!hasDynamic) {
-        // if hasdynamic is not yet true (no dynamic geometry) then check the time indices in the file
-        hasDynamic=hasTrackTimeIndex;
-    }
-
-    // run timeObjectVisibility to either make visible or hide time index
-    // related objects depending on input file and tracks file
-    timeObjectVisibility();
-
     gview->loadTracks(filename_tracks);
 }
 
-void GeometryViewControl::updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po) {
+void GeometryViewControl::updateTracks(vector<size_t> ntracks) {
     if (ntracks.size() != 3) {
         return;
     }
-
-    // vectors containing the sorted list of time indices corresponding to the
-    // compressed particle tracks list is saved
-    timelist_p=timeindexlist_p;
-    timelist_e=timeindexlist_e;
-    timelist_po=timeindexlist_po;
-
 
 #ifdef VIEW_DEBUG
     egsWarning("In updateTracks(%d %d %d)\n",ntracks[0], ntracks[1], ntracks[2]);
@@ -2507,9 +2476,7 @@ void GeometryViewControl::updateTracks(vector<size_t> ntracks, vector<EGS_Float>
     spin_tmine->setValue(1);
     spin_tminpo->setValue(1);
 
-    // Update the time window value
-    // This includes an updateView() call
-    slideTime();
+    updateView();
 }
 
 void GeometryViewControl::viewAllMaterials() {
@@ -2591,15 +2558,6 @@ int GeometryViewControl::setGeometry(
     }
     g = geom;
 
-    // check the geometry and the tracks file to determine whether the time
-    // index objects should be made visible (i.e., setting hasdynamic)
-    hasDynamic=false;
-
-    // loop through the different layers of the geometry and makes hasdynamic
-    // true if a dynamic geometry is found. This is independent of tracks file
-    // type, such that visualizing geometry motion is possible even with a
-    // ptracks file without time indices in it
-    g->containsDynamic(hasDynamic);
     if (!filename_tracks.isEmpty()) {
         gview->loadTracks(filename_tracks);
 
@@ -2995,6 +2953,7 @@ int GeometryViewControl::setGeometry(
 }
 
 void GeometryViewControl::updateView(bool transform) {
+    // transfer
     RenderParameters &rp = gview->pars;
     rp.axesmax = axesmax;
     rp.camera = camera;
@@ -3876,11 +3835,11 @@ void GeometryViewControl::setApplication() {
         } else {
             getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppSpecificInputs");
             egsInformation("getAppInputs %s\n", getAppInputs ? "true" : "false");
-      
+
             if (getAppInputs) {
                 shared_ptr<EGS_InputStruct> app = getAppInputs();
                 if (app) {
-                    inputStruct->addBlockInputs(app->getBlockInputs()); 
+                    inputStruct->addBlockInputs(app->getBlockInputs());
                 }
             }
 
@@ -3921,7 +3880,7 @@ vector<string> findDensityCorrectionInputs(string compound_dir) {
 
     DIR *dir;
     struct dirent *ent;
-    
+
     if ((dir = opendir(compound_dir.c_str())) != NULL) {
         while ((ent = readdir(dir)) != NULL) {
             string filename = ent->d_name;
