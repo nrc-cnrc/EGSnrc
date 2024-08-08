@@ -62,7 +62,7 @@ void EGS_InputStruct::removeBlockInput(string title) {
     auto it = blockInputs.begin();
     while (it != blockInputs.end()) {
         if ((*it)->getTitle() == title) {
-            it = blockInputs.erase(it); 
+            it = blockInputs.erase(it);
         } else {
             ++it;
         }
@@ -73,7 +73,7 @@ void EGS_InputStruct::removeBlockInputByApp(string appName) {
     auto it = blockInputs.begin();
     while (it != blockInputs.end()) {
         if ((*it)->getAppName() == appName) {
-            it = blockInputs.erase(it); 
+            it = blockInputs.erase(it);
         } else {
             ++it;
         }
@@ -184,7 +184,7 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::addSingleInput(string inputTag, bool
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::addBlockInput(string blockTit, bool isReq) {
     blockInputs.push_back(make_shared<EGS_BlockInput>(blockTit, isReq, shared_from_this()));
-    
+
     return blockInputs.back();
 }
 
@@ -202,7 +202,10 @@ vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs() {
 vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs(string title) {
     if (egsEquivStr(blockTitle, title) ||  (parent != nullptr && egsEquivStr(parent->getTitle(), "media definition") &&  egsEquivStr(blockTitle, "pegsless")) ||
             // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
-            (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
+            (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape"))) ||
+            // Handle the special case where material names match any block title
+            (egsEquivStr(blockTitle, "myMediumName"))
+    ) {
         return singleInputs;
     }
     else {
@@ -261,7 +264,10 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag, stri
     // First search the top-level input block
     if (egsEquivStr(blockTitle, title) || (parent != nullptr && egsEquivStr(parent->getTitle(), "media definition") &&  egsEquivStr(blockTitle, "pegsless")) ||
             // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
-            (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
+            (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape"))) ||
+            // Handle the special case where material names match any block title
+            (egsEquivStr(blockTitle, "myMediumName"))
+       ) {
         for (auto &inp: singleInputs) {
             // TODO: this assumes unique inputTag
             if (inp && egsEquivStr(inp->getTag(), inputTag)) {
