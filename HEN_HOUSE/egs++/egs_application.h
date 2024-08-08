@@ -65,6 +65,54 @@ class EGS_AusgabObject;
 class EGS_Interpolator;
 //template <class T> class EGS_SimpleContainer;
 
+// Looks into \EGSnrc\HEN_HOUSE\pegs4\density_corrections\compounds for the density correction files
+// returns a string vector of the file names
+static vector<string> findDensityCorrectionInputs() {
+    vector<string> fileList;
+    #ifdef WIN32
+        const char fs = '\\';
+    #else
+        const char fs = '/';
+    #endif
+    
+    string compound_dir = "C:";
+    compound_dir += fs;
+    compound_dir += "EGSnrc";
+    compound_dir += fs;
+    compound_dir += "HEN_HOUSE";
+    compound_dir += fs;
+    compound_dir += "pegs4";
+    compound_dir += fs;
+    compound_dir += "density_corrections";
+    compound_dir += fs;
+    compound_dir += "compounds";
+
+    DIR *dir;
+    struct dirent *ent;
+    
+    if ((dir = opendir(compound_dir.c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            string filename = ent->d_name;
+
+            // removes the .density at the end of the file
+            if (filename.find(".density") != string::npos) {
+                filename = filename.substr(0, filename.find(".density"));
+                fileList.push_back(filename);
+            }
+        }
+        closedir(dir);
+    } else {
+        egsInformation("Failed to open density correction files directory\n");
+    }
+
+    // egsInformation("Printing file titles \n");
+    // for (const auto& file : fileList) {
+    //    egsInformation("%s\n", file.c_str());
+    // }
+
+    return fileList;
+}
+
 static void addmcBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     shared_ptr<EGS_BlockInput> mcBlock = blockPtr->addBlockInput("MC transport parameter");
     mcBlock->addSingleInput("Global ECUT", false, "Global electron transport cutoff");
@@ -113,7 +161,7 @@ static void addMediaDefBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     mediaBlockInput->addSingleInput("ue", false, "maximum energy for electrons (kinetic+0.511)");
     mediaBlockInput->addSingleInput("up", false, "maximum energy for photons (kinetic)");
 
-    shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->addBlockInput("pegsless");
+    shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->addBlockInput("myMediumName");
     mediumBlock->addSingleInput("elements", false, "");
     mediumBlock->addSingleInput("number of atoms", false, "");
     mediumBlock->addSingleInput("mass fractions", false, "");
@@ -122,6 +170,10 @@ static void addMediaDefBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     mediumBlock->addSingleInput("stopping powers", false, "{restricted total, unrestricted collision, unrestricted collision and radiative, unrestricted collision and restricted radiative, restricted collision and unrestricted radiative, unrestricted radiative}");
     mediumBlock->addSingleInput("bremsstrahlung correction", false, "");
     mediumBlock->addSingleInput("gas pressure", false, "");
+
+    vector<string> densityCorrectionFiles = findDensityCorrectionInputs();
+    mediumBlock->addSingleInput("density correction file", false, "", densityCorrectionFiles);
+
     mediumBlock->addSingleInput("e- stopping power output file", false, ""); 
 }
 
@@ -168,7 +220,7 @@ static string addMediaExample() {
     ue  = 50.511                # maximum energy for electrons (kinetic+0.511)
     up  = 50                    # maximum energy for photons (kinetic) # maximum energy for photons (kinetic)
     
-    :start pegsless:
+    :start myMediumName:
         elements = 
         number of atoms = 
         mass fractions = 
@@ -179,12 +231,13 @@ static string addMediaExample() {
         gas pressure = 
         density correction file = 
         e- stopping power output file = 
-    :stop pegsless:
+    :stop myMediumName:
 
     # Here is an example for defining water 
     :start water:
         density correction file = water_liquid.density
     :stop water:
+
 :stop media definition:
 )"};
     return example;

@@ -570,7 +570,8 @@ void EGS_Editor::autoComplete() {
             format.setUnderlineStyle(QTextCharFormat::NoUnderline);
 
             auto inputPtr = inputBlockTemplate->getBlockInput(blockTit.toStdString());
-            if (!inputPtr) {
+            // Don't do a red highlight if it's a material name, since they can be named anything
+            if (!inputPtr && !egsEquivStr(inputBlockTemplate->getTitle(), "myMediumName")) {
                 // Red underline the input tag
                 // Select the input tag
                 selection.cursor.movePosition(QTextCursor::StartOfBlock);
@@ -666,11 +667,11 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
     bool foundTag;
     QString library = getInputValue("library", cursor.block(), foundTag);
 
-    // egsInformation("Printing parentBlockTitle: %s\n", parentTitle.toLatin1().data());
+//     egsInformation("Printing parentBlockTitle: %s\n", parentTitle.toLatin1().data());
     // If the parent block is media definition, then just return pegsless
     if (parentTitle.toStdString() == "media definition") {
-        shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput("media definition")->getBlockInput("pegsless");
-        egsInformation("Input Block title test: %s\n", inputBlock->getTitle().c_str());
+        shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput("media definition")->getBlockInput("myMediumName");
+//         egsInformation("Input Block title test: %s\n", inputBlock->getTitle().c_str());
         return inputBlock;
     }
 
@@ -690,7 +691,7 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
         while (blockEnd.text().contains(":start ")) {
             blockEnd = getBlockEnd(blockEnd.next());
             if (++i > loopGuard) {
-                egsInformation("Warning: Encountered infinite loop while processing the input file. Contact the developers to report this bug.\n");
+                egsInformation("Warning: Encountered infinite loop (i>%d) while processing the input file. Contact the developers to report this bug.\n", loopGuard);
                 break;
             }
             if (blockEnd.isValid()) {
@@ -718,7 +719,7 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
             while (blockEnd.text().contains(":start ")) {
                 blockEnd = getBlockEnd(blockEnd.next());
                 if (++i > loopGuard) {
-                    egsInformation("Warning: Encountered infinite loop while processing the input file. Contact the developers to report this bug.\n");
+                    egsInformation("Warning: Encountered infinite loop (i>%d) while processing the input file. Contact the developers to report this bug.\n", loopGuard);
                     break;
                 }
                 if (blockEnd.isValid()) {

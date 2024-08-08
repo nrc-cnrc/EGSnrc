@@ -290,8 +290,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QMenu *exampleMenu2 = new QMenu("Choose application");
     menuBar->addMenu(exampleMenu2);
 
-    QAction *action = exampleMenu2->addAction("none");
-    action->setData("none");
+    QAction *action = exampleMenu2->addAction("None");
+    action->setData("None");
     connect(action,  &QAction::triggered, this, [this] { setApplication(); });
 
     for (const auto &lib : binLibraries) {
@@ -319,7 +319,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
             // before this was a BlockInput, now it is a InputStruct
             shared_ptr<EGS_InputStruct> app = getAppInputs();
-            
+
             if (app) {
                 inputStruct->addBlockInputs(app->getBlockInputs());
 
@@ -332,19 +332,19 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 // //                         }
 //                     }
 
-                // vector<shared_ptr<EGS_BlockInput>> inputBlocks = app->getBlockInputs();
-                // for (auto &block : inputBlocks) {
-                //     egsInformation("  block %s\n", block->getTitle().c_str());
-                //     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-                //     inputStruct->addBlockInput(block);
-                //     for (auto &inp : singleInputs) {
-                //         const vector<string> vals = inp->getValues();
-                //         egsInformation("   single %s\n", inp->getTag().c_str());
-                //         for (auto&& val : vals) {
-                //             egsInformation("      %s\n", val.c_str());
-                //         }
-                //     }
-                // }
+//                 vector<shared_ptr<EGS_BlockInput>> inputBlocks = app->getBlockInputs();
+//                 for (auto &block : inputBlocks) {
+//                     egsInformation("  block %s\n", block->getTitle().c_str());
+//                     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+//                     inputStruct->addBlockInput(block);
+//                     for (auto &inp : singleInputs) {
+//                         const vector<string> vals = inp->getValues();
+//                         egsInformation("   single %s\n", inp->getTag().c_str());
+//                         for (auto&& val : vals) {
+//                             egsInformation("      %s\n", val.c_str());
+//                         }
+//                     }
+//                 }
             }
         }
         //     getAppInputs(inputStruct);
@@ -3535,11 +3535,11 @@ void GeometryViewControl::setApplication() {
         } else {
             getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppSpecificInputs");
             egsInformation("getAppInputs %s\n", getAppInputs ? "true" : "false");
-      
+
             if (getAppInputs) {
                 shared_ptr<EGS_InputStruct> app = getAppInputs();
                 if (app) {
-                    inputStruct->addBlockInputs(app->getBlockInputs()); 
+                    inputStruct->addBlockInputs(app->getBlockInputs());
                 }
             }
 

@@ -47,7 +47,7 @@ class EGS_Input;
 static void addRngDefinitionBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     shared_ptr<EGS_BlockInput> rngBlock = blockPtr->addBlockInput("rng definition");
     rngBlock->addSingleInput("type", true, "Generator type (Only ranmar)");
-    rngBlock->addSingleInput("inital seeds", true, "Two integers that represent the inital seed");
+    rngBlock->addSingleInput("initial seeds", true, "Two integers that represent the inital seed");
     rngBlock->addSingleInput("high resolution", false, "Default is no", {"No", "Yes"});
 }
 

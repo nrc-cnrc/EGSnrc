@@ -765,7 +765,7 @@ extern "C" {
 :start scoring options:
     scale xcc = 1
     scale bc = 2
-    deflect electron after brems = yes 
+    deflect electron after brems = yes
     Russian Roulette = 5                # survival probability is 1/5
     pulse height regions = 1 2 3        # a list of regions to score pulse height
                                         # distributions
