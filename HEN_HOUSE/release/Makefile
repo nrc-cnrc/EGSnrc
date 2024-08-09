@@ -1,7 +1,7 @@
 
 ###############################################################################
 #
-#  EGSnrc makefile to create EGSnrc distribution files
+#  EGSnrc makefile to create EGSnrc release files
 #  Copyright (C) 2018 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -27,7 +27,7 @@
 #
 ###############################################################################
 #
-#  Builds GUIs and egs++ geometry library for distribution (including Windows
+#  Builds GUIs and egs++ geometry library for release (including Windows
 #  files).
 #
 #  Drawback:
@@ -42,12 +42,12 @@
 #  which should work as long as EGSnrc is installed on an identical system
 #  with the same Qt version.
 #
-#  To create only Linux distribution files use: make linux_distribution
+#  To create only Linux release files use: make linux_release
 #
 ###############################################################################
 
 
-egsnrc_list=distribution/egs_guis_list
+egsnrc_list=release/egs_guis_list
 version = EGSnrc
 arch=$(shell echo `getconf LONG_BIT`)
 
@@ -60,18 +60,18 @@ tar_files = $(addsuffix .tar,$(unix_files))
 self_files_unix = $(addsuffix .egsself,$(unix_files))
 self_files_win = $(addsuffix .egsself,$(win_files))
 
-all: distribution
+all: release
 
-linux_distribution: guis first $(version)-configure-linux
+linux_release: guis first $(version)-configure-linux
 
-distribution: guis first $(version)-configure-linux $(version)-configure-windows.exe
+release: guis first $(version)-configure-linux $(version)-configure-windows.exe
 
 configure: $(version)-configure-linux $(version)-configure-windows.exe
 
 first:
-	make make_distribution
+	make make_release
 	make mark_egszip
-	cd .. && ./distribution/make_distribution -l $(egsnrc_list) -p all
+	cd .. && ./release/make_release -l $(egsnrc_list) -p all
 	mv ../*.list ../*.gz ../*.tar ../*.egsself .
 
 fast: guis $(version)-configure-linux $(version)-configure-windows.exe
@@ -96,7 +96,7 @@ $(version)-configure-windows.exe: egs_configuration.exe $(self_files_win)
 	./mark_egszip $@
 	cat $(self_files_win) >>$@
 
-make_distribution: makefile_md
+make_release: makefile_md
 	make -f makefile_md
 
 mark_egszip: mark_self_exe.cpp
@@ -108,13 +108,13 @@ egs_configuration_$(arch): ../pieces/linux/egs_configuration_$(arch)
 egs_configuration.exe: ../pieces/windows/egs_configuration.exe
 	cp $< $@
 
-makefile_md: distribution.pro
+makefile_md: release.pro
 	$(QTDIR)/bin/qmake MAKEFILE=makefile_md
 
 clean:
 	rm -f *.o
 
 realclean:
-	rm -f *.o make_distribution mark_egszip makefile_md egs_configuration* $(version)-*
+	rm -f *.o make_release mark_egszip makefile_md egs_configuration* $(version)-*
 
-.PHONY: all first fast guis distribution linux_distribution clean realclean
+.PHONY: all first fast guis release linux_release clean realclean

@@ -1,7 +1,7 @@
 
 ###############################################################################
 #
-#  EGSnrc list of files to be included in a distribution package
+#  EGSnrc list of files to be included in a release package
 #  Copyright (C) 2018 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -27,16 +27,16 @@
 #
 ###############################################################################
 #
-#  This file is processed by the make_distribution utility
+#  This file is processed by the make_release utility
 #  to produce unix tar-files (uncompressed, compressed and gziped)
-#  as well as the distribution format used by the graphical installer.
+#  as well as the release format used by the graphical installer.
 #
 #  Syntax:
 #  - Lines starting with # are comments and are therefore ignored
 #  - Blank lines are ignored as well
 #  - Lines in the form
 #      tarfile: some_tar_file_name
-#    start a new distribution file named (version)some_tar_file_name.tar
+#    start a new release file named (version)some_tar_file_name.tar
 #      where version is defined in the first line.
 #  - The list must end with a line beginning with
 #    end list
@@ -55,9 +55,9 @@
 #          win:
 #          unix:
 #        mean that the subsequent file/directory will only get included,
-#        if we are preparing a distribution for Windows or Unix.
+#        if we are preparing a release for Windows or Unix.
 #        (this is determined via a command line argument of the
-#        make_distribution utility). Lines starting with win: or unix:
+#        make_release utility). Lines starting with win: or unix:
 #        behave otherwise as described above, i.e. there may be one or
 #        two file/directory names on the line.
 #
