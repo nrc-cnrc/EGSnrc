@@ -151,13 +151,13 @@ public:
     */
     virtual int isWhere(const EGS_Vector &x) = 0;
 
-    /* getNextGeom is the equivalent of getNextParticle but for the simulation object. It's goal is to determine the next state of the geometry, either by synchronizing itself to the
-     * source time parameter, or by sampling it's own time parameter and updating itself accordingly if the source has provided no time index.
+    /* getNextGeom is the equivalent of getNextParticle but for the simulation object. Its goal is to determine the next state of the geometry, either by synchronizing itself to the
+     * source time parameter, or by sampling its own time parameter and updating itself accordingly if the source has provided no time index.
      *
      *This function has a non-empty implementation in 2 cases.
-     *1) it is re implemented in any composite geometry, where it will call next geom on all of its components
-     *2) it is re implemented in the dynamic geometry class. This is where the code will find the current (non static) state of the geometry. */
-    virtual void getNextGeom(EGS_RandomGenerator *rndm){};
+     *1) it is reimplemented in any composite geometry, where it will call next geom on all of its components
+     *2) it is reimplemented in the dynamic geometry class. This is where the code will find the current (non static) state of the geometry. */
+    virtual void getNextGeom(EGS_RandomGenerator *rndm) {};
 
 
 
@@ -745,7 +745,7 @@ public:
 
     virtual void updatePosition(EGS_Float time) { };
 
-    /*this method is essentially used to determine whether the simulation geometry contains a dynamic geometry. Like get next geom, the only non-empty implementations of this
+    /*this method is essentially used to determine whether the simulation geometry contains a dynamic geometry. Like getNextGeom(), the only non-empty implementations of this
      * function are in composite geometries (where it simply calls containsDynamic on its components), and in the dynamic geometry, where it will update the boolean reference to true and call
      * on its base geometry. This function was conceived to be used in the view/viewcontrol (to determine whether time index objects are visible or hidden) */
     virtual void containsDynamic(bool &hasdynamic) { };

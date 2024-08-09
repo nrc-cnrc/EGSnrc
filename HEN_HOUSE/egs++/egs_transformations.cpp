@@ -68,7 +68,7 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(EGS_Input *i) {
     if (!err && tmp.size() == 3)
         result = new EGS_AffineTransform(
             EGS_RotationMatrix(EGS_Vector(tmp[0],tmp[1],tmp[2])),t);
-    else {       //egsWarning("getTransformation: rotation specified by 3 angles: %g   %g   %g\n\n",tmp[0],tmp[1],tmp[2]);
+    else {
         err = input->getInput("rotation",tmp);
         if (!err) {
             if (tmp.size() == 2) result = new EGS_AffineTransform(
@@ -110,7 +110,7 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(EGS_Input *i) {
 //////////// OVERLOADING FOR DYNAMIC GEOMETRY /////////////
 EGS_AffineTransform *EGS_AffineTransform::getTransformation(vector<EGS_Float> translation, vector<EGS_Float> rotation) {
     /* The following method is used by the dynamic geometry class to create a transformation corresponding to a certain translation and rotation vector. These vectors are determined
-     * through the control points and the sampled mu value. The sampled transformation coordinates are passed here to build a transformation */
+     * through the control points and the sampled time value. The sampled transformation coordinates are passed here to build a transformation */
 
     // First check that appropriate values have been provided. May work with either 2 or 3 rotation parameters, and exactly 3 translation parameters
     if (translation.size()!=3 || (rotation.size()!=2 && rotation.size()!=3)) {
@@ -134,4 +134,3 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(vector<EGS_Float> tr
     }
     return result;
 }
-
