@@ -43,6 +43,7 @@
 #include "egs_timer.h"
 #include "egs_input.h"
 #include "egs_ausgab_object.h"
+#include "egs_transformations.h"
 #include "ausgab_objects/egs_dose_scoring/egs_dose_scoring.h"
 
 #include <qmessagebox.h>
@@ -1217,8 +1218,17 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
         if (EGS_AusgabObject::getObject(q)->getObjectType() == "EGS_DoseScoring") {
             EGS_DoseScoring *o = static_cast<EGS_DoseScoring *>(EGS_AusgabObject::getObject(q));
             EGS_BaseGeometry *dgeom;
+            vector < EGS_AffineTransform* > t_form;
             int file_type;
             if (o->getOutputFile(dgeom, file_type)) {
+
+                //see if this is a transformed EGS_XYZGeometry
+                //if so, find the base EGS_XYZGeometry and the transforms
+                while(dgeom->getType().find_last_of("T") == dgeom->getType().length()-1)
+                {
+                    t_form.push_back(dgeom->getTransform()); //have to get transform first
+                    dgeom = dgeom->getBaseGeom();
+                }
 
                 int nx=dgeom->getNRegDir(0);
                 int ny=dgeom->getNRegDir(1);
@@ -1278,6 +1288,13 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                                         EGS_Float minx=dgeom->getBound(0,i);
                                         EGS_Float maxx=dgeom->getBound(0,i+1);
                                         EGS_Vector tp((minx+maxx)/2., (miny+maxy)/2., (minz+maxz)/2.);
+
+                                        //now transform tp if this is a transformed EGS_XYZGeometry
+                                        //do innermost transformation first
+                                        for (int m=t_form.size()-1; m>=0; m--)
+                                        {
+                                            t_form[m]->transform(tp);
+                                        }
 
                                         int g_reg = g->isWhere(tp);
 
