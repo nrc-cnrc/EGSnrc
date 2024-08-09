@@ -1,7 +1,7 @@
 /*
 ###############################################################################
 #
-#  EGSnrc make_distribution utility
+#  EGSnrc make_release utility
 #  Copyright (C) 2018 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -27,7 +27,7 @@
 #
 ###############################################################################
 #
-#  Reads a list of files to be archived for distribution with EGSnrc.
+#  Reads a list of files to be archived for release with EGSnrc.
 #
 #  Initially, the whole system was distributed in several unix tar archives
 #  (compressed and uncompressed).

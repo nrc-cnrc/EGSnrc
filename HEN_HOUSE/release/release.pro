@@ -1,7 +1,7 @@
 
 ###############################################################################
 #
-#  Qt project for tool to create archived files for EGSnrc distribution
+#  Qt project for tool to create archived files for EGSnrc release
 #  Copyright (C) 2018 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -36,11 +36,11 @@ QT += widgets
 LIBS += -lz
 QTPLUGIN.imageformats = -
 
-TARGET = make_distribution
+TARGET = make_release
 
 TEMPLATE = app
 INCLUDEPATH += .
 
 # Input
 HEADERS += egs_archive.h
-SOURCES += egs_archive.cpp make_distribution.cpp
+SOURCES += egs_archive.cpp make_release.cpp
