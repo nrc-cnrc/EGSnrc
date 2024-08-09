@@ -262,7 +262,6 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
         emin = app->top_p.E - prm;
     }
 
-
     // Store kinetic energy for IAEA format phsp, and total energy for egsphsp
     double E;
     if (oformat == 0) {
