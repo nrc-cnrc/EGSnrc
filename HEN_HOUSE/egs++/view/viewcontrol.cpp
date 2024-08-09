@@ -99,7 +99,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     c_phi = cos(phi);
     s_phi = sin(phi);
     a_light = 0.25;
-    int ilight = (int)(a_light*ambientLight->maximum());
+    int ilight = (int)(a_light *ambientLight->maximum());
     ambientLight->blockSignals(true);
     ambientLight->setValue(ilight);
     ambientLight->blockSignals(false);
@@ -295,7 +295,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         delete ij;
 
         // Build the geometry
-        newGeom = EGS_BaseGeometry::createGeometry(&input);
+        newGeom = EGS_BaseGeometry::createGeometry( &input);
         if (!newGeom) {
             QMessageBox::critical(this,"Geometry error",
                                   "The geometry is not correctly defined. Edit the input file and reload.",QMessageBox::Ok,0,0);
@@ -405,7 +405,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
 #ifdef VIEW_DEBUG
         egsInformation("GeometryViewControl::loadInput: Processing ausgab objects...\n");
 #endif
-        EGS_AusgabObject::createAusgabObjects(&input);
+        EGS_AusgabObject::createAusgabObjects( &input);
     }
     // Add the ausgab objects to the list of dose files
     updateAusgabObjects();
@@ -432,7 +432,7 @@ EGS_Vector GeometryViewControl::getHeatMapColor(EGS_Float value) {
         idx1 = idx2 = NUM_COLORS-1;
     }
     else {
-        value = value * (NUM_COLORS-1);
+        value = value *(NUM_COLORS-1);
         idx1  = floor(value);
         idx2  = idx1+1;
         fractBetween = value - EGS_Float(idx1);
@@ -469,7 +469,7 @@ void GeometryViewControl::saveConfig() {
     if (!configFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         return;
     }
-    QTextStream out(&configFile);
+    QTextStream out( &configFile);
 
     // Get the rendering parameters
     RenderParameters &rp = gview->pars;
@@ -1139,12 +1139,12 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                 egsInformation("Reading dose file: %s\n", userDoseFile.toLatin1().data());
 #endif
 
-                QTextStream in(&doseFile);
+                QTextStream in( &doseFile);
 
                 // Sanity check the number of voxels
                 int nx, ny, nz;
                 in >> nx >> ny >> nz;
-                if (g->regions() >= nx*ny*nz) {
+                if (g->regions() >= nx *ny *nz) {
 
                     scoreArrays[doseIndex].assign(g->regions(),0);
 
@@ -1218,14 +1218,13 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
         if (EGS_AusgabObject::getObject(q)->getObjectType() == "EGS_DoseScoring") {
             EGS_DoseScoring *o = static_cast<EGS_DoseScoring *>(EGS_AusgabObject::getObject(q));
             EGS_BaseGeometry *dgeom;
-            vector < EGS_AffineTransform* > t_form;
+            vector < EGS_AffineTransform * > t_form;
             int file_type;
             if (o->getOutputFile(dgeom, file_type)) {
 
                 //see if this is a transformed EGS_XYZGeometry
                 //if so, find the base EGS_XYZGeometry and the transforms
-                while(dgeom->getType().find_last_of("T") == dgeom->getType().length()-1)
-                {
+                while (dgeom->getType().find_last_of("T") == dgeom->getType().length()-1) {
                     t_form.push_back(dgeom->getTransform()); //have to get transform first
                     dgeom = dgeom->getBaseGeom();
                 }
@@ -1261,12 +1260,12 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                         egsInformation("Reading dose file: %s\n", doseFilename.toLatin1().data());
 #endif
 
-                        QTextStream in(&doseFile);
+                        QTextStream in( &doseFile);
 
                         // Sanity check the number of voxels
                         int nx_tmp, ny_tmp, nz_tmp;
                         in >> nx_tmp >> ny_tmp >> nz_tmp;
-                        if (nx == nx_tmp && ny == ny_tmp && nz == nz_tmp && g->regions() >= nx_tmp*ny_tmp*nz_tmp) {
+                        if (nx == nx_tmp && ny == ny_tmp && nz == nz_tmp && g->regions() >= nx_tmp *ny_tmp *nz_tmp) {
 
                             scoreArrays[doseIndex].assign(g->regions(),0);
 
@@ -1291,8 +1290,7 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
 
                                         //now transform tp if this is a transformed EGS_XYZGeometry
                                         //do innermost transformation first
-                                        for (int m=t_form.size()-1; m>=0; m--)
-                                        {
+                                        for (int m=t_form.size()-1; m>=0; m--) {
                                             t_form[m]->transform(tp);
                                         }
 
@@ -1581,12 +1579,12 @@ void GeometryViewControl::cameraTranslate(int dx, int dy) {
     }
 
     // compute displacement (in world units)
-    EGS_Float tx = -r*dx*scale;
-    EGS_Float ty = r*dy*scale;
+    EGS_Float tx = -r *dx *scale;
+    EGS_Float ty = r *dy *scale;
 
     // translation
-    camera  = camera  + camera_v2*ty + camera_v1*tx;
-    look_at = look_at + camera_v2*ty + camera_v1*tx;
+    camera  = camera  + camera_v2 *ty + camera_v1 *tx;
+    look_at = look_at + camera_v2 *ty + camera_v1 *tx;
 
     // debug information
 #ifdef VIEW_DEBUG
@@ -1622,9 +1620,9 @@ void GeometryViewControl::cameraRotate(int dx, int dy) {
     }
 
     // new position of camera
-    v0 = v0 + (camera_v2*dy + camera_v1*-dx)*scale*r;
+    v0 = v0 + (camera_v2 *dy + camera_v1 *-dx)*scale *r;
     v0.normalize();
-    camera = look_at + v0*r;
+    camera = look_at + v0 *r;
 
     // camera aim vector (unit vector pointing at look_at point)
     v0 *= -1;
@@ -1675,7 +1673,7 @@ void GeometryViewControl::thetaRotation(int Theta) {
 #ifdef VIEW_DEBUG
     egsWarning("In thetaRotation(%d)\n",Theta);
 #endif
-    theta = Theta*M_PI/180;
+    theta = Theta *M_PI/180;
     c_theta = cos(theta);
     s_theta = sin(theta);
     setCameraPosition();
@@ -1686,7 +1684,7 @@ void GeometryViewControl::phiRotation(int Phi) {
 #ifdef VIEW_DEBUG
     egsWarning("In phiRotation(%d)\n",Phi);
 #endif
-    phi = Phi*M_PI/180;
+    phi = Phi *M_PI/180;
     c_phi = cos(phi);
     s_phi = sin(phi);
     setCameraPosition();
@@ -1759,9 +1757,9 @@ void GeometryViewControl::setLightPosition() {
     egsWarning("In setLightPosition()\n");
 #endif
     bool ok_x, ok_y, ok_z;
-    EGS_Float xx = lightX->text().toDouble(&ok_x),
-              yy = lightY->text().toDouble(&ok_y),
-              zz = lightZ->text().toDouble(&ok_z);
+    EGS_Float xx = lightX->text().toDouble( &ok_x),
+              yy = lightY->text().toDouble( &ok_y),
+              zz = lightZ->text().toDouble( &ok_z);
     if (ok_x) {
         p_light.x = xx;
     }
@@ -1791,9 +1789,9 @@ void GeometryViewControl::setLookAt() {
     egsWarning("In setLookAt()\n");
 #endif
     bool ok_x, ok_y, ok_z;
-    EGS_Float xx = lookX->text().toDouble(&ok_x),
-              yy = lookY->text().toDouble(&ok_y),
-              zz = lookZ->text().toDouble(&ok_z);
+    EGS_Float xx = lookX->text().toDouble( &ok_x),
+              yy = lookY->text().toDouble( &ok_y),
+              zz = lookZ->text().toDouble( &ok_z);
 
     EGS_Vector look_at_orig = look_at;
     if (ok_x) {
@@ -1845,9 +1843,9 @@ void GeometryViewControl::setLookPosition() {
     EGS_Float dx = 0,
               dy = 0,
               dz = 0;
-    EGS_Float xx = cameraX->text().toDouble(&ok_x),
-              yy = cameraY->text().toDouble(&ok_y),
-              zz = cameraZ->text().toDouble(&ok_z);
+    EGS_Float xx = cameraX->text().toDouble( &ok_x),
+              yy = cameraY->text().toDouble( &ok_y),
+              zz = cameraZ->text().toDouble( &ok_z);
     if (ok_x) {
         dx = xx - camera.x;
     }
@@ -1957,12 +1955,12 @@ void GeometryViewControl::reportViewSettings(int x,int y) {
     int w=gview->width();
     int h=gview->height();
     EGS_Float xscreen, yscreen;
-    EGS_Float projection_m = size * pow(0.5, zoomlevel / 48.);
-    EGS_Float xscale = w > h ? projection_m * w / h : projection_m;
-    EGS_Float yscale = h > w ? projection_m * h / w : projection_m;
+    EGS_Float projection_m = size *pow(0.5, zoomlevel / 48.);
+    EGS_Float xscale = w > h ? projection_m *w / h : projection_m;
+    EGS_Float yscale = h > w ? projection_m *h / w : projection_m;
     xscreen = (x-w/2)*xscale/w;
     yscreen = -(y-h/2)*yscale/h;
-    EGS_Vector xp(screen_xo + screen_v2*yscreen + screen_v1*xscreen);
+    EGS_Vector xp(screen_xo + screen_v2 *yscreen + screen_v1 *xscreen);
     egsWarning("In reportViewSettings(%d,%d): xp=(%g,%g,%g)\n",x,y,xp.x,xp.y,xp.z);
     EGS_Vector u(xp-camera);
     u.normalize();
@@ -2168,11 +2166,11 @@ int GeometryViewControl::setGeometry(
             if (progress.wasCanceled()) {
                 return 2;
             }
-            xo.z = zmin + dz*(k+0.5);
+            xo.z = zmin + dz *(k+0.5);
             for (int i=0; i<100; i++) {
-                xo.x = xmin + dx*(i+0.5);
+                xo.x = xmin + dx *(i+0.5);
                 for (int j=0; j<100; j++) {
-                    xo.y = ymin + dy*(j+0.5);
+                    xo.y = ymin + dy *(j+0.5);
                     ireg = g->isWhere(xo);
                     if (ireg >= 0) {
                         found = true;
@@ -2202,11 +2200,11 @@ int GeometryViewControl::setGeometry(
                 if (progress.wasCanceled()) {
                     return 2;
                 }
-                xo.z = zmin + dz*(k+0.5);
+                xo.z = zmin + dz *(k+0.5);
                 for (int i=0; i<200; i++) {
-                    xo.x = xmin + dx*(i+0.5);
+                    xo.x = xmin + dx *(i+0.5);
                     for (int j=0; j<200; j++) {
-                        xo.y = ymin + dy*(j+0.5);
+                        xo.y = ymin + dy *(j+0.5);
                         ireg = g->isWhere(xo);
                         if (ireg >= 0) {
                             found = true;
@@ -2266,22 +2264,22 @@ int GeometryViewControl::setGeometry(
             for (int j=0; j<100; j++) {
                 EGS_Vector u;
                 if (isize == 0) {
-                    u = EGS_Vector(xmin+dx*i,ymin+dy*j,zmin);
+                    u = EGS_Vector(xmin+dx *i,ymin+dy *j,zmin);
                 }
                 else if (isize == 1) {
-                    u = EGS_Vector(xmin+dx*i,ymin+dy*j,zmax);
+                    u = EGS_Vector(xmin+dx *i,ymin+dy *j,zmax);
                 }
                 else if (isize == 2) {
-                    u = EGS_Vector(xmin,ymin+dy*j,zmin+dz*i);
+                    u = EGS_Vector(xmin,ymin+dy *j,zmin+dz *i);
                 }
                 else if (isize == 3) {
-                    u = EGS_Vector(xmax,ymin+dy*j,zmin+dz*i);
+                    u = EGS_Vector(xmax,ymin+dy *j,zmin+dz *i);
                 }
                 else if (isize == 4) {
-                    u = EGS_Vector(xmin+dx*i,ymin,zmin+dz*j);
+                    u = EGS_Vector(xmin+dx *i,ymin,zmin+dz *j);
                 }
                 else {
-                    u = EGS_Vector(xmin+dx*i,ymax,zmin+dz*j);
+                    u = EGS_Vector(xmin+dx *i,ymax,zmin+dz *j);
                 }
                 u -= xo;
                 u.normalize();
@@ -2306,7 +2304,7 @@ int GeometryViewControl::setGeometry(
                             break;
                         }
                     }
-                    x += u*t;
+                    x += u *t;
                     ir = inew;
                 }
                 while (ir >= 0);
@@ -2385,12 +2383,12 @@ int GeometryViewControl::setGeometry(
         }
         setProjectionLineEdit();
         //p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
-        p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*3*distance;
+        p_light = look_at+EGS_Vector(s_theta *s_phi,s_theta *s_phi,c_theta)*3*distance;
         setLightLineEdit();
         camera = p_light;
-        screen_xo = look_at-EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
+        screen_xo = look_at-EGS_Vector(s_theta *s_phi,s_theta *s_phi,c_theta)*distance;
         screen_v1 = EGS_Vector(c_phi,-s_phi,0);
-        screen_v2 = EGS_Vector(c_theta*s_phi,c_theta*c_phi,-s_theta);
+        screen_v2 = EGS_Vector(c_theta *s_phi,c_theta *c_phi,-s_theta);
 
         // camera orientation vectors (same as the screen vectors)
         camera_v1 = screen_v1;
@@ -2455,7 +2453,7 @@ void GeometryViewControl::updateView(bool transform) {
 
     rp.energyScaling = energyScaling;
 
-    rp.projection_m = size * pow(0.5, zoomlevel / 48.);
+    rp.projection_m = size *pow(0.5, zoomlevel / 48.);
     rp.screen_v1 = screen_v1;
     rp.screen_v2 = screen_v2;
     rp.screen_xo = screen_xo;
@@ -2651,7 +2649,7 @@ void GeometryViewControl::saveImage() {
         return;
     }
     int nx, ny;
-    save_image->getImageSize(&nx,&ny);
+    save_image->getImageSize( &nx,&ny);
     QString format = save_image->getImageFormat();
     QString fname = save_image->getImageFileName();
 #ifdef VIEW_DEBUG

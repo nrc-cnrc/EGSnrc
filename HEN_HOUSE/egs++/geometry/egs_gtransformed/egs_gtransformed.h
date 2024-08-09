@@ -195,7 +195,7 @@ public:
 
     EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
                               const EGS_Vector &u) {
-        return ireg >= 0 ? g->howfarToOutside(ireg,x*T,u*T.getRotation()) : 0;
+        return ireg >= 0 ? g->howfarToOutside(ireg,x *T,u *T.getRotation()) : 0;
     };
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
@@ -205,7 +205,7 @@ public:
         int inew = g->howfar(ireg,xt,ut,t,newmed,normal);
         //int inew = g->howfar(ireg,x*T,u*T.getRotation(),t,newmed,normal);
         if (inew != ireg && normal) {
-            *normal = T.getRotation()*(*normal);
+            *normal = T.getRotation()*( *normal);
         }
         return inew;
     };

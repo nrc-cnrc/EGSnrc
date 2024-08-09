@@ -157,7 +157,7 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         if (d_region.size() && d_region.size() < nreg) { // specific dose regions provided
             // Get maximum dose scoring region
             for (vector<int>::iterator it = d_region.begin(); it < d_region.end(); it++) {
-                if (*it > max_dreg) {
+                if ( *it > max_dreg) {
                     max_dreg = *it;
                 }
             }
@@ -220,11 +220,10 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         //global reg. no.
         EGS_Vector tp;
         EGS_BaseGeometry *d_geom = dose_geom;
-        vector < EGS_AffineTransform* > t_form;
+        vector < EGS_AffineTransform * > t_form;
         //now see if this is a transformed EGS_XYZGeometry
         //if so, find the base EGS_XYZGeometry and use that to set up the scoring array
-        while(d_geom->getType().find_last_of("T") == d_geom->getType().length()-1)
-        {
+        while (d_geom->getType().find_last_of("T") == d_geom->getType().length()-1) {
             t_form.push_back(d_geom->getTransform()); //have to get transform first
             d_geom = d_geom->getBaseGeom();
         }
@@ -246,17 +245,16 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
                     tp.z=(minz+maxz)/2.;
                     //now transform tp if this is a transformed EGS_XYZGeometry
                     //do innermost transformation first
-                    for (int m=t_form.size()-1; m>=0; m--)
-                    {
+                    for (int m=t_form.size()-1; m>=0; m--) {
                         t_form[m]->transform(tp);
                     }
                     int g_reg = app->isWhere(tp);
-                    df_reg[g_reg]=i+j*nx+k*nx*ny;
+                    df_reg[g_reg]=i+j *nx+k *nx *ny;
                 }
             }
         }
         //create an egs_scoring_array of the appropriate size
-        doseF =  new EGS_ScoringArray(nx*ny*nz);
+        doseF =  new EGS_ScoringArray(nx *ny *nz);
     }
 
     description = "\n*******************************************\n";
@@ -329,7 +327,7 @@ void EGS_DoseScoring::reportResults() {
     EGS_Float F = app->getFluence();
     egsInformation("=> last case = %lld fluence = %g\n", m_lastCase, F);
     /* Normalize to actual source fluence */
-    normE = m_lastCase/F*norm_u;
+    normE = m_lastCase/F *norm_u;
     normD = 1.602e-10*normE;
     int irmax_digits = getDigits(max_dreg);
     if (irmax_digits < 2) {
@@ -370,7 +368,7 @@ void EGS_DoseScoring::reportResults() {
                     dr=1;
                 }
                 egsInformation("%*d  %-*s  %11.8f  %13.6f  %12.4e  +/-  %-7.3f%%    %10.4e  +/-  %-7.3f%%\n",
-                               irmax_digits,ireg,max_medl,app->getMediumName(imed),rho,vol[ireg],r*normE,dr*100.,r*normD/mass,dr*100.);
+                               irmax_digits,ireg,max_medl,app->getMediumName(imed),rho,vol[ireg],r *normE,dr*100.,r *normD/mass,dr*100.);
             }
         }
         egsInformation("%s\n",line.c_str());
@@ -411,7 +409,7 @@ void EGS_DoseScoring::reportResults() {
                 dr = dr/r;
                 egsInformation(
                     "%-*s %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
-                    max_medl,app->getMediumName(im),r*normE,dr*100.,r*normD/massM[im],dr*100.);
+                    max_medl,app->getMediumName(im),r *normE,dr*100.,r *normD/massM[im],dr*100.);
             }
         }
         egsInformation("%s\n",line.c_str());
@@ -444,8 +442,7 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
         EGS_BaseGeometry *d_geom = dose_geom;
         //now see if this is a transformed EGS_XYZGeometry
         //if so, find the base EGS_XYZGeometry and use that for data output
-        while(d_geom->getType().find_last_of("T") == d_geom->getType().length()-1)
-        {
+        while (d_geom->getType().find_last_of("T") == d_geom->getType().length()-1) {
             d_geom = d_geom->getBaseGeom();
         }
         int nx=d_geom->getNRegDir(0);
@@ -472,15 +469,15 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
         }
         df_out << "\n";
         //divide dose by mass and output
-        for (int i=0; i<nx*ny*nz; i++) {
+        for (int i=0; i<nx *ny *nz; i++) {
             doseF->currentResult(i,r,dr);
             EGS_Float mass = d_geom->getVolume(i)*getRealRho(i); //local reg.
-            dose=r*normD/mass;
+            dose=r *normD/mass;
             df_out << dose << " ";
         }
         df_out << "\n";
         //output uncertainties
-        for (int i=0; i<nx*ny*nz; i++) {
+        for (int i=0; i<nx *ny *nz; i++) {
             doseF->currentResult(i,r,dr);
             if (r > 0) {
                 dr = dr/r;
@@ -552,31 +549,30 @@ int  EGS_DoseScoring::addTheStates(istream &data) {
         if (!tmp.setState(data)) {
             return 4402;
         }
-        (*dose) += tmp;
+        ( *dose) += tmp;
     }
     if (doseM) {
         EGS_ScoringArray tmpM(nmedia);
         if (!tmpM.setState(data)) {
             return 4403;
         }
-        (*doseM) += tmpM;
+        ( *doseM) += tmpM;
     }
     if (doseF) {
         EGS_BaseGeometry *d_geom = dose_geom;
         //now see if this is a transformed EGS_XYZGeometry
         //if so, find the base EGS_XYZGeometry and use its specs to output data
-        while(d_geom->getType().find_last_of("T") == d_geom->getType().length()-1)
-        {
+        while (d_geom->getType().find_last_of("T") == d_geom->getType().length()-1) {
             d_geom = d_geom->getBaseGeom();
         }
         int nx=d_geom->getNRegDir(0);
         int ny=d_geom->getNRegDir(1);
         int nz=d_geom->getNRegDir(2);
-        EGS_ScoringArray tmpF(nx*ny*nz);
+        EGS_ScoringArray tmpF(nx *ny *nz);
         if (!tmpF.setState(data)) {
             return 4404;
         }
-        (*doseF) += tmpF;
+        ( *doseF) += tmpF;
     }
     return 0;
 }
