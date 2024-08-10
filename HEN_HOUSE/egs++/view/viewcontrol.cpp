@@ -73,6 +73,7 @@
 #include <unistd.h>
 #include <chrono>
 #include <thread>
+#include <dirent.h>
 
 using namespace std;
 
@@ -116,6 +117,10 @@ static unsigned char standard_blue[] = {
     0,   0, 255, 255, 255,   0,   0,   0, 128, 128, 128,   0,   0,  0,
     0,  0, 191, 80, 127, 127, 192, 128
 };
+
+// Looks into \EGSnrc\HEN_HOUSE\pegs4\density_corrections\compounds for the density correction files
+// returns a string vector of the file names
+vector<string> findDensityCorrectionInputs(string compound_dir);
 
 GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     : QMainWindow(parent) {
@@ -398,6 +403,16 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             action->setData(QString::fromStdString(getExample()));
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
+
+        // Add the denstiy correction files 
+        shared_ptr<EGS_BlockInput> mediaBlockInput = inputStruct->getBlockInput("media definition");
+        shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->getBlockInput("pegsless");
+
+        string compound_dir;
+        EGS_Application::checkEnvironmentVar(appc,appv,"-H","--hen-house","HEN_HOUSE", compound_dir);
+        vector<string> densityCorrectionFiles = findDensityCorrectionInputs(compound_dir);
+        
+        mediumBlock->addSingleInput("density correction file", false, "", densityCorrectionFiles);
     }
 
     // Geometry definition block
@@ -3892,6 +3907,43 @@ void GeometryViewControl::setApplication() {
 
     selectedApplication = newlySelectedApp;
     egsinpEdit->setInputStruct(inputStruct);
+}
+
+vector<string> findDensityCorrectionInputs(string compound_dir) {
+    vector<string> fileList;
+
+    compound_dir += fs;
+    compound_dir += "pegs4";
+    compound_dir += fs;
+    compound_dir += "density_corrections";
+    compound_dir += fs;
+    compound_dir += "compounds";
+    egsInformation("density file path: %s\n", compound_dir.c_str());
+
+    DIR *dir;
+    struct dirent *ent;
+    
+    if ((dir = opendir(compound_dir.c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            string filename = ent->d_name;
+
+            // removes the .density at the end of the file
+            if (filename.find(".density") != string::npos) {
+                filename = filename.substr(0, filename.find(".density"));
+                fileList.push_back(filename);
+            }
+        }
+        closedir(dir);
+    } else {
+        egsInformation("Failed to open density correction files directory\n");
+    }
+
+    // egsInformation("Printing file titles \n");
+    // for (const auto& file : fileList) {
+    //    egsInformation("%s\n", file.c_str());
+    // }
+
+    return fileList;
 }
 
 bool GeometryViewControl::hasValidTime() {
