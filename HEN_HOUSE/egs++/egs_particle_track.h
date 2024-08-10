@@ -197,8 +197,10 @@ public:
         m_trspFile(NULL) {
         m_bufferSize = buf_size;
 
-        // initialize the arrays
-        incltime = time_bool; //incltime variable set from the time_bool passed from the constructor (track scoring object gets incltime from input file and calls and passes)
+        // Initialize the arrays. The incltime variable set from the time_bool
+        // passed from the constructor (track scoring object gets incltime from
+        // input file and calls and passes)
+        incltime = time_bool;
         m_buffer = new EGS_ParticleTrack* [m_bufferSize];
         m_stackMap = new int [m_bufferSize];
         m_isScoring = new bool [m_bufferSize];

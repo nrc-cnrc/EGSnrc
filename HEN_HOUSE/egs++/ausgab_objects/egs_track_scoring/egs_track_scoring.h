@@ -118,13 +118,13 @@ public:
             }
             else if (iarg == EGS_Application::BeforeTransport) {
                 int q = app->top_p.q;
-                EGS_Float timeindex = app->getTimeIndex(); //getting current time index from the source (through the application.cpp)
+                EGS_Float timeindex = app->getTimeIndex(); // get current time index from the source (through the application.cpp)
                 if ((q ==  0 && m_score_photons) ||
                         (q == -1 && m_score_electrons) ||
                         (q ==  1 && m_score_positrons)) {
                     m_pts->startNewTrack(np);
                     m_pts->setCurrentParticleInfo(new EGS_ParticleTrack::ParticleInfo(q));
-                    m_pts->setCurrentTimeIndex(timeindex); //sets current time index for the particle track container object
+                    m_pts->setCurrentTimeIndex(timeindex); // set current time index for the particle track container object
                     m_pts->addVertex(np,new EGS_ParticleTrack::Vertex(app->top_p.x,app->top_p.E));
                 }
             }

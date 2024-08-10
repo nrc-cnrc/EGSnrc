@@ -195,10 +195,9 @@ EGS_BeamSource::EGS_BeamSource(EGS_Input *input, EGS_ObjectFactory *f) :
         n_reuse_electron = ntmp;
     }
 
-    //now see if time is returned from the BEAM source
-    //use motionsample function, ttime will be -1 if not provided by BEAM
-    //have to save the values read here to use as the first particle in the
-    //simulation
+    // now see if time is returned from the BEAM source use motionsample
+    // function, ttime will be -1 if not provided by BEAM have to save the
+    // values read here to use as the first particle in the simulation
     motionsample(&tei,&txi,&tyi,&tzi,&tui,&tvi,&twi,&twti,&tqi,&tlatchi,&counti,&tiphati,&ttimei);
 
     if (!time_stored) {
@@ -329,8 +328,9 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
 
     if (time_stored) {
         setTimeIndex(time);
-        /* this is setting the time index using the base source set call. We get rid of the local getTimeIndex function and
-         * it should allow for saving time in the base source like all the other sources do */
+        /* this is setting the time index using the base source set call. We get
+         * rid of the local getTimeIndex function and it should allow for saving
+         * time in the base source like all the other sources do */
     }
     else {
         setTimeIndex(-1);

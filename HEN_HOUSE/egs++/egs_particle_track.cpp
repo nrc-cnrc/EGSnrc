@@ -84,7 +84,9 @@ int EGS_ParticleTrack::writeTrack(ofstream *trsp, bool incltime) {
     trsp->write((char *)&m_nVertices, sizeof(int));
     trsp->write((char *)m_pInfo, sizeof(ParticleInfo));
 
-    if (incltime) { //if user indicates to include time in inputfile then write the time index to the tracks file after the particle info
+    // If user indicates to include time in inputfile then write the time index
+    // to the tracks file after the particle info.
+    if (incltime) {
         trsp->write((char *) &time_index, sizeof(EGS_Float));
     }
     for (int i = 0; i < m_nVertices; i++) {
@@ -233,7 +235,10 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
         totalVertices += nvertices;
         data->read((char *)pinfo,sizeof(EGS_ParticleTrack::ParticleInfo));
         startNewTrack(pinfo);
-        if (incltime) { // If user indicates to include time in inputfile then read the time index from the tracks file after the particle info
+
+        // If user indicates to include time in inputfile then read the time
+        // index from the tracks file after the particle info.
+        if (incltime) {
             data->read((char *)&time,sizeof(EGS_Float));
         }
         for (int j = 0; j < nvertices; j++) {
@@ -287,15 +292,18 @@ void EGS_ParticleTrackContainer::reportResults(bool with_header) {
 }
 
 void EGS_ParticleTrackContainer::tracksFileSort() {
-    // Function to sort trackfile entries by time index.
-    // This is done by reading time indices, saving their positions in a vector of pairs,
-    // sorting the vector by time index, and then rewriting tracks into a new sorted file.
+
+    // Function to sort tracks file entries by time index. This is done by
+    // reading time indices, saving their positions in a vector of pairs,
+    // sorting the vector by time index, and then rewriting tracks into a new
+    // sorted file.
 
     const char *func_name = "EGS_ParticleTrackContainer::tracksFileSort()";
     const char *trackfile = m_trspFilename.c_str();
     ifstream *data = new ifstream(trackfile, ios::binary);
 
-    // New sorted tracks file where data from the original tracksfile will be rewritten.
+    // New sorted tracks file where data from the original tracksfile will be
+    // rewritten.
     string outstring = "sorted_trackfile.syncptracks";
     const char *outname = outstring.c_str();
     ofstream *sortout = new ofstream(outname, ios::binary);
@@ -321,14 +329,18 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
         data->read((char *)&time, sizeof(EGS_Float));
         vect.push_back(make_pair(time, position)); // Add the time index/file position pair to the vector.
 
-        // Determine the size of all the vertices for track i and skip these to get to the next track.
+        // Determine the size of all the vertices for track i and skip these to
+        // get to the next track.
         int vertsize = nvertices * sizeof(EGS_ParticleTrack::Vertex);
         data->seekg(vertsize, ios_base::cur);
     }
 
-    sort(vect.begin(), vect.end()); // Using the built-in C++ sort function, sort all the pairs by their time index (first element in the pair).
+    // Using the built-in C++ sort function, sort all the pairs by their time
+    // index (first element in the pair).
+    sort(vect.begin(), vect.end());
 
-    // Now, write the sorted trackfile by jumping around the unsorted file using the positions in the pairs vector.
+    // Now, write the sorted tracks file by jumping around the unsorted file
+    // using the positions in the pairs vector.
     for (int i = 0; i < m_totalTracks; i++) {
         int nvertices;
         EGS_ParticleTrack::ParticleInfo *pinfo = new EGS_ParticleTrack::ParticleInfo(0);
