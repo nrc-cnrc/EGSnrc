@@ -318,21 +318,27 @@ public:
         return g->hownear(ireg,x);
     };
 
-    void getNextGeom(EGS_RandomGenerator *rndm) { //calls getNextGeom on its component geometries to update dynamic geometries in the simulation
+    void getNextGeom(EGS_RandomGenerator *rndm) {
+        // calls getNextGeom on its component geometries to update dynamic
+        // geometries in the simulation
         for (int j=0; j<n_in; j++) {
             geometries[j]->getNextGeom(rndm);
         }
         g->getNextGeom(rndm);
     };
 
-    void updatePosition(EGS_Float time) {//calls updatePosition on its component geometries to update dynamic geometries in the simulation
+    void updatePosition(EGS_Float time) {
+        // calls updatePosition on its component geometries to update dynamic
+        // geometries in the simulation
         for (int j=0; j<n_in; j++) {
             geometries[j]->updatePosition(time);
         }
         g->updatePosition(time);
     };
 
-    void containsDynamic(bool &hasdynamic) {//calls containsDynamic on its component geometries (only calls if hasDynamic is false, as if it is true we already found one)
+    void containsDynamic(bool &hasdynamic) {
+        // calls containsDynamic on its component geometries (only calls if
+        // hasDynamic is false, as if it is true we already found one)
         for (int j=0; j<n_in; j++) {
             if (!hasdynamic) {
                 geometries[j]->containsDynamic(hasdynamic);

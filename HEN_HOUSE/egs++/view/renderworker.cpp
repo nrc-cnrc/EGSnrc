@@ -56,7 +56,9 @@ RenderWorker::~RenderWorker() {
 void RenderWorker::loadTracks(QString fileName) {
     vector<EGS_Float> timelist_p, timelist_e, timelist_po;
     vector<size_t> ntracks = vis->loadTracksData(fileName.toUtf8().constData(), timelist_p, timelist_e, timelist_po);
-    //time lists passed as arguments above are references in all the subsequent calls (Geometryvisualizer, then privateVisualizer, then Trackview creation which updates time list reference)
+    // time lists passed as arguments above are references in all the subsequent
+    // calls (Geometryvisualizer, then privateVisualizer, then Trackview
+    // creation which updates time list reference)
     emit tracksLoaded(ntracks, timelist_p, timelist_e, timelist_po);
 }
 
@@ -344,4 +346,3 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
 
     return r;
 }
-

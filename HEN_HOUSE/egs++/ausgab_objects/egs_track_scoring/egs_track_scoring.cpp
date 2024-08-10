@@ -78,14 +78,16 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
         sprintf(buf,"_w%d",i_parallel);
         fname += buf;
     }
-    //if incltime is false use .ptracks. If incltime is true use the new file format .syncptracks
+    // if incltime is false use .ptracks. If incltime is true use the new file
+    // format .syncptracks
     if (m_include_time) {
         fname += ".syncptracks";
     }
     else {
         fname += ".ptracks";
     }
-    //here new particleTrackContainer created using the m_include_time boolean which controls time index writting and filetype
+    // create new particleTrackContainer using the m_include_time boolean which
+    // controls time index writting and filetype
     m_pts = new EGS_ParticleTrackContainer(fname.c_str(),m_bufSize,m_include_time);
 
     description = "\nParticle Track Scoring (";
@@ -124,7 +126,6 @@ void EGS_TrackScoring::reportResults() {
     }
 }
 
-
 extern "C" {
 
     EGS_TRACK_SCORING_EXPORT EGS_AusgabObject *createAusgabObject(EGS_Input *input,
@@ -140,8 +141,11 @@ extern "C" {
         bool scph = input->getInput("score photons",sc_options,true);
         bool scel = input->getInput("score electrons",sc_options,true);
         bool scpo = input->getInput("score positrons",sc_options,true);
-        //include time index lets the program know whether to write the time index to the tracks file and determines the filetype (ptracks or syncptracks)
-        bool incltime = input->getInput("include time index",sc_options,false); //here false in argument makes time inclusion false by default
+
+        // include time index lets the program know whether to write the time
+        // index to the tracks file and determines the filetype (ptracks or
+        // syncptracks); false in argument makes time inclusion false by default
+        bool incltime = input->getInput("include time index",sc_options,false);
         if (!scph && !scel && !scpo) {
             return 0;
         }
@@ -156,7 +160,7 @@ extern "C" {
         result->setScorePhotons(scph);
         result->setScoreElectrons(scel);
         result->setScorePositrons(scpo);
-        result->setIncludeTime(incltime);//here incltime boolean is set from aquired input for the trackscoring object (sets m_include_time)
+        result->setIncludeTime(incltime); // incltime boolean is set from aquired input for the trackscoring object (sets m_include_time)
         result->setFirstEvent(first);
         result->setLastEvent(last);
         result->setBufferSize(bufSize);

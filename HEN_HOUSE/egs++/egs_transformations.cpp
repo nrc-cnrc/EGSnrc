@@ -23,8 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
-#                   Alexandre Demelo
+#  Contributors:    Alexandre Demelo
 #
 ###############################################################################
 */
@@ -107,12 +106,17 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(EGS_Input *i) {
     return result;
 }
 
-//////////// OVERLOADING FOR DYNAMIC GEOMETRY /////////////
+// Overload for dynamic geometry
 EGS_AffineTransform *EGS_AffineTransform::getTransformation(vector<EGS_Float> translation, vector<EGS_Float> rotation) {
-    /* The following method is used by the dynamic geometry class to create a transformation corresponding to a certain translation and rotation vector. These vectors are determined
-     * through the control points and the sampled time value. The sampled transformation coordinates are passed here to build a transformation */
 
-    // First check that appropriate values have been provided. May work with either 2 or 3 rotation parameters, and exactly 3 translation parameters
+    /* The following method is used by the dynamic geometry class to create a
+     * transformation corresponding to a certain translation and rotation
+     * vector. These vectors are determined through the control points and the
+     * sampled time value. The sampled transformation coordinates are passed
+     * here to build a transformation */
+
+    // First check that appropriate values have been provided. May work with
+    // either 2 or 3 rotation parameters, and exactly 3 translation parameters
     if (translation.size()!=3 || (rotation.size()!=2 && rotation.size()!=3)) {
         egsWarning("getTransformation: invalid transformation parameters\n");
         return 0;
@@ -120,9 +124,12 @@ EGS_AffineTransform *EGS_AffineTransform::getTransformation(vector<EGS_Float> tr
 
     EGS_AffineTransform *result; //the returned transformation
 
-    // EGS_vector holding translation parameters is defined to pass to the EGS_AffineTransform constructor
+    // EGS_vector holding translation parameters is defined to pass to the
+    // EGS_AffineTransform constructor
     EGS_Vector t = EGS_Vector(translation[0],translation[1],translation[2]);
-    // If statements check the size of the rotation vector provided and call the appropriate EGS_AffineTransform constructor (converting rotation vector to matrix)
+
+    // Check the size of the rotation vector provided and call the appropriate
+    // EGS_AffineTransform constructor (converting rotation vector to matrix)
     if (rotation.size() == 2) {
         result = new EGS_AffineTransform(EGS_RotationMatrix(rotation[0],rotation[1]),t);
     }

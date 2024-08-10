@@ -121,7 +121,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    //below getting the extension of the trackfile (either ptracks or syncptracks) if tracksfile provided in terminal to pass to the viewcontrol
+    // get the extension of the tracks file (either ptracks or syncptracks) if
+    // tracks file provided in terminal to pass to the viewcontrol
     if (tracks_file.endsWith("syncptracks")) {
         extension=QString("syncptracks");
     }
@@ -130,7 +131,7 @@ int main(int argc, char **argv) {
     }
 
     w.setTracksFilename(tracks_file);
-    w.setTracksExtension(extension);//setting the tracks extension in the viewcontrol
+    w.setTracksExtension(extension); // set the tracks extension in the viewcontrol
     if (!w.loadInput(false)) {
         return 1;
     }

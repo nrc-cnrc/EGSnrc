@@ -153,7 +153,8 @@ extern "C" {
         EGS_Input *currentInput;
         int rotsize = 0;
 
-        // Control points read one by one from motion block in dynamic geometry definition, and saved as a vector to points
+        // Control points read one by one from motion block in dynamic geometry
+        // definition, and saved as a vector to points
         while (true) {
             currentInput = dyninp->takeInputItem(inputTag);
             if (!currentInput || currentInput->getInput(inputTag, point)) {
@@ -202,8 +203,10 @@ extern "C" {
                     T_vect.push_back(point[2]);
                     T_vect.push_back(point[3]);
 
-                    // Add rotation coordinates to rotation vector (cases differentiate cpt formats, 6 is 2 rotation parameters, 7 is 3)
-                    // In each case vector order is determined by format of EGS_rotationMatrix constructor (EGS_Float arguments)
+                    // Add rotation coordinates to rotation vector (cases
+                    // differentiate cpt formats, 6 is 2 rotation parameters, 7
+                    // is 3) In each case vector order is determined by format
+                    // of EGS_rotationMatrix constructor (EGS_Float arguments)
                     if (point.size() == 6) {
                         R_vect.push_back(point[6]); // Rotation about z
                         R_vect.push_back(point[4]); // Rotation about x
@@ -257,7 +260,8 @@ extern "C" {
         int iindex = 0;
         int i;
 
-        // The following loop determines which 2 control points the current time index falls between
+        // The following loop determines which 2 control points the current time
+        // index falls between
         for (i = 0; i < ncpts; i++) {
             if (rand < cpts[i].time - epsilon) {
                 iindex = i;
@@ -270,15 +274,22 @@ extern "C" {
             return 1;
         }
 
-        // Below 3 vectors are defined, a vector containing the lower bound translation coordinates, a vector containing the upper bound translation coordinates, and a vector for the sampled translation coordinates
+        // Below 3 vectors are defined, a vector containing the lower bound
+        // translation coordinates, a vector containing the upper bound
+        // translation coordinates, and a vector for the sampled translation
+        // coordinates
         vector<EGS_Float> translation_LB = cpts[iindex - 1].trnsl;
         vector<EGS_Float> translation_UB = cpts[iindex].trnsl;
         vector<EGS_Float> translation_samp;
 
-        // The following is a factor (between 0 and 1) used for sampling. Essentially, it represents the fractional position within the interval
+        // The following is a factor (between 0 and 1) used for sampling.
+        // Essentially, it represents the fractional position within the
+        // interval
         EGS_Float factor = (rand - cpts[iindex - 1].time) / (cpts[iindex].time - cpts[iindex - 1].time);
 
-        // Translations are given as the lower bound plus the length of the interval multiplied by the fractional position factor. So its essentially lower bound + n% of the interval length
+        // Translations are given as the lower bound plus the length of the
+        // interval multiplied by the fractional position factor. So its
+        // essentially lower bound + n% of the interval length
         translation_samp.push_back(translation_LB[0] + (translation_UB[0] - translation_LB[0]) * factor);
         translation_samp.push_back(translation_LB[1] + (translation_UB[1] - translation_LB[1]) * factor);
         translation_samp.push_back(translation_LB[2] + (translation_UB[2] - translation_LB[2]) * factor);
@@ -286,13 +297,16 @@ extern "C" {
         // Update the translation coordinates in the current state control point object
         gipt.trnsl = translation_samp;
 
-        // Again 3 vectors defined, lower bound, upper bound, and sampled, this time for rotation coordinates
+        // Again 3 vectors defined, lower bound, upper bound, and sampled, this
+        // time for rotation coordinates
         vector<EGS_Float> rotation_LB = cpts[iindex - 1].rot;
         vector<EGS_Float> rotation_UB = cpts[iindex].rot;
         vector<EGS_Float> rotation_samp;
 
-        // Now set rotations. Current coordinates computed as before (lowerbound+n% of interval length), but now we also convert degrees to radians
-        // These must be done case by case (since order of arguments matters)
+        // Now set rotations. Current coordinates computed as before
+        // (lowerbound+n% of interval length), but now we also convert degrees
+        // to radians These must be done case by case (since order of arguments
+        // matters)
         if (cpts[iindex].rot.size() == 2) {
             rotation_samp.push_back((rotation_LB[0] + (rotation_UB[0] - rotation_LB[0]) * factor) * (M_PI / 180));
             rotation_samp.push_back((rotation_LB[1] + (rotation_UB[1] - rotation_LB[1]) * factor) * (M_PI / 180));
@@ -527,9 +541,11 @@ extern "C" {
     /**
      * @brief Determine the next state of the dynamic geometry.
      *
-     * This method obtains a time index, either from the simulation source or by sampling itself if the source yields nothing.
-     * It then obtains the corresponding position and orientation coordinates through the `getCoordGeom` method and creates
-     * and sets the dynamic geometry's transform.
+     * This method obtains a time index, either from the simulation source or by
+     * sampling itself if the source yields nothing. It then obtains the
+     * corresponding position and orientation coordinates through the
+     * `getCoordGeom` method and creates and sets the dynamic geometry's
+     * transform.
      *
      * @param rndm Random number generator.
      */
@@ -545,26 +561,33 @@ extern "C" {
             if (ptime < 0) {
                 // If no time is given by the source, randomly sample from 0 to 1
                 ptime = rndm->getUniform();
-                // Set randomly sampled time index for all objects in the simulation (through base source)
+                // Set randomly sampled time index for all objects in the
+                // simulation (through base source)
                 app->setTimeIndex(ptime);
             }
-            // Run the `getCoordGeom` method that will sample the control points given to find the transformation that will be applied for the current history
+            // Run the `getCoordGeom` method that will sample the control points
+            // given to find the transformation that will be applied for the
+            // current history
             errg = getCoordGeom(ptime, gipt);
         }
 
-        // Create and set the current geometry transformation using the sampled coordinates from `getCoordGeom`. This is where the overloaded `EGS_AffineTransform` is used
+        // Create and set the current geometry transformation using the sampled
+        // coordinates from `getCoordGeom`. This is where the overloaded
+        // `EGS_AffineTransform` is used
         EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
         setTransformation(*tDG);
 
-        // Call `getNextGeom` on base geometry in case there are lower-level dynamic geometries
+        // Call `getNextGeom` on base geometry in case there are lower-level
+        // dynamic geometries
         g->getNextGeom(rndm);
     }
 
     /**
      * @brief Update the position of the dynamic geometry.
      *
-     * This method is used to update the geometry state as needed in egs_view. It takes the desired time index,
-     * computes the corresponding coordinates, and sets the geometry transform to update the egs_view display.
+     * This method is used to update the geometry state as needed in egs_view.
+     * It takes the desired time index, computes the corresponding coordinates,
+     * and sets the geometry transform to update the egs_view display.
      *
      * @param time Desired time index for the update.
      */
@@ -572,27 +595,34 @@ extern "C" {
         int errg = 1;
         EGS_ControlPoint gipt;
 
-        // Run the `getCoordGeom` method that will use the control points given to find the transformation that will be applied for the current time index
+        // Run the `getCoordGeom` method that will use the control points given
+        // to find the transformation that will be applied for the current time
+        // index
         errg = getCoordGeom(time, gipt);
 
         // Create and set the geometry transform with the updated coordinates
         EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
         setTransformation(*tDG);
 
-        // Call `updatePosition` on the base to allow lower-level geometries to update as needed
+        // Call `updatePosition` on the base to allow lower-level geometries to
+        // update as needed
         g->updatePosition(time);
     }
 
     /**
      * @brief Check if the simulation geometry contains dynamic geometry.
      *
-     * This method is used to determine whether the simulation geometry contains dynamic geometry.
-     * It sets the `hasdynamic` flag to true if the simulation contains dynamic geometry.
+     * This method is used to determine whether the simulation geometry contains
+     * dynamic geometry. It sets the `hasdynamic` flag to true if the simulation
+     * contains dynamic geometry.
      *
-     * @param hasdynamic Boolean flag to indicate if dynamic geometry is present.
+     * @param hasdynamic Boolean flag to indicate if dynamic geometry is
+     * present.
      */
     void EGS_DynamicGeometry::containsDynamic(bool &hasdynamic) {
-        // If the dynamic geometry implementation of `containsDynamic` is called, the simulation does indeed contain a dynamic geometry, so the boolean flag is set to true
+        // If the dynamic geometry implementation of `containsDynamic` is
+        // called, the simulation does indeed contain a dynamic geometry, so the
+        // boolean flag is set to true
         hasdynamic = true;
     }
 

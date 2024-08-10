@@ -64,50 +64,42 @@
 
 /*! \brief A dynamic geometry.
 
-\ingroup Geometry
-\ingroup CompositeG
+\ingroup Geometry \ingroup CompositeG
 
-An dynamic geometry is a geometry that
-takes a random point from another geometry and then
-applies a transformation, using a time sampling and interpolating between
-control points.
+An dynamic geometry is a geometry that takes a random point from another
+geometry and then applies a transformation, using a time sampling and
+interpolating between control points.
 
-An dynamic geometry is defined using
-\verbatim
-:start geometry:
-    name        = ...
-    library     = egs_dynamic_geometry
-    my geometry = name of a predefined geometry that we want to add motion to
-    :start motion: # units of cm and degrees
-       control point = time(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
-       control point = time(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
+An dynamic geometry is defined using \verbatim :start geometry: name        =
+... library     = egs_dynamic_geometry my geometry = name of a predefined
+geometry that we want to add motion to :start motion: # units of cm and degrees
+control point = time(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
+control point = time(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
        .
        .
        .
        control point = time(N) xtrans(N) ytrans(N) ztrans(N) xrot(N) yrot(N) zrot(N)
     :stop motion:
-:stop geometry:
-\endverbatim
+:stop geometry: \endverbatim
 
-Control points must be defined such that time(i+1)>=time(i), where time(i)
-is the value of time for control point i. The time(i) are automatically
-normalized by time(N), where N is the number of control points.
+Control points must be defined such that time(i+1)>=time(i), where time(i) is
+the value of time for control point i. The time(i) are automatically normalized
+by time(N), where N is the number of control points.
 
 A translation from the starting position of the geometry is applied according to
 x, y and z. A rotation follows the same rotation technique as in
 EGS_AffineTransform, using the rotation input parameter for 2 or 3 values.
 Angles are in degrees and translations in cm.
 
-Continuous, dynamic motion between control points is simulated by choosing a random
-number, R, on (0,1] and, for time(i)<R<=time(i+1), setting the translation or
-rotation parameter P by interpolation:
+Continuous, dynamic motion between control points is simulated by choosing a
+random number, R, on (0,1] and, for time(i)<R<=time(i+1), setting the
+translation or rotation parameter P by interpolation:
 P=P(i)+[P(i+1)-P(i)]/[time(i+1)-time(i)]*[R-time(i)]
 
-Note that this scheme for generating incident source coordinates really
-only makes sense if time(1)=0.0.  However, the geometry can function
-with time(1)>0.0, in the case where a user desires to eliminate particles
-associated with a range of time values, but there will be a lot of
-warning messages.
+Note that this scheme for generating incident source coordinates really only
+makes sense if time(1)=0.0.  However, the geometry can function with
+time(1)>0.0, in the case where a user desires to eliminate particles associated
+with a range of time values, but there will be a lot of warning messages.
 
 */
 class EGS_DYNAMIC_GEOMETRY_EXPORT EGS_DynamicGeometry :
@@ -170,7 +162,8 @@ public:
     };
 
     /*!
-     * Sets the current state transform of the geometry. This is called when checking location. Same as gtransformed.
+     * Sets the current state transform of the geometry. This is called when
+     * checking location. Same as gtransformed.
      *
      * \param t Affine transformation to set.
      */
@@ -338,17 +331,18 @@ public:
     void setRelativeRho(int start, int end, EGS_Float rho);
 
     /*!
-     * Sets the relative density for a range of regions in the dynamic geometry using input specifications.
+     * Sets the relative density for a range of regions in the dynamic geometry
+     * using input specifications.
      *
      * \param input Input containing relative density specifications.
      */
     void setRelativeRho(EGS_Input *);
 
     /*!
-     * Gets the magnetic field scaling factor for a region in the dynamic geometry.
+     * Gets the magnetic field scaling factor for a region in the dynamic
+     * geometry.
      *
-     * \param ireg Region index.
-     * \return Magnetic field scaling factor.
+     * \param ireg Region index. \return Magnetic field scaling factor.
      */
     EGS_Float getBScaling(int ireg) const;
 
@@ -362,9 +356,11 @@ public:
     void setBScaling(int start, int end, EGS_Float bf);
 
     /*!
-     * Sets the magnetic field scaling factor for a range of regions in the dynamic geometry using input specifications.
+     * Sets the magnetic field scaling factor for a range of regions in the
+     * dynamic geometry using input specifications.
      *
-     * \param input Input containing magnetic field scaling factor specifications.
+     * \param input Input containing magnetic field scaling factor
+     * specifications.
      */
     void setBScaling(EGS_Input *);
 
@@ -377,7 +373,8 @@ public:
     void getLabelRegions(const string &str, vector<int> &regs);
 
     /*!
-     * Updates the next particle state for geometries. It is tasked with determining the next state of the dynamic geometry.
+     * Updates the next particle state for geometries. It is tasked with
+     * determining the next state of the dynamic geometry.
      *
      * \param rndm Random number generator.
      */
@@ -408,8 +405,9 @@ protected:
     /*!
      * \brief Don't define media in the transformed geometry definition.
      *
-     * This function is re-implemented to warn the user not to define media in the definition of a transformed geometry.
-     * Instead, media should be defined when specifying the geometry to be transformed.
+     * This function is re-implemented to warn the user not to define media in
+     * the definition of a transformed geometry. Instead, media should be
+     * defined when specifying the geometry to be transformed.
      */
     void setMedia(EGS_Input *inp, int, const int *);
 
