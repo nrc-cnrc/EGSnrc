@@ -200,7 +200,7 @@ vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs() {
 }
 
 vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs(string title) {
-    if (egsEquivStr(blockTitle, title) ||
+    if (egsEquivStr(blockTitle, title) ||  (egsEquivStr(parent->getTitle(), "media definition") &&  egsEquivStr(blockTitle, "pegsless")) ||
             // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
             (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
         return singleInputs;
@@ -222,7 +222,7 @@ vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs() {
 }
 
 vector<shared_ptr<EGS_BlockInput>> EGS_BlockInput::getBlockInputs(string title) {
-    if (egsEquivStr(this->getTitle(), title) ||
+    if (egsEquivStr(blockTitle, title) || (egsEquivStr(parent->getTitle(), "media definition") &&  egsEquivStr(blockTitle, "pegsless")) ||
             // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
             (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
         return blockInputs;
@@ -259,7 +259,7 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag) {
 
 shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag, string title) {
     // First search the top-level input block
-    if (egsEquivStr(blockTitle, title) ||
+    if (egsEquivStr(blockTitle, title) || (egsEquivStr(parent->getTitle(), "media definition") &&  egsEquivStr(blockTitle, "pegsless")) ||
             // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
             (egsEquivStr(blockTitle, "shape") && (egsEquivStr(title, "target shape") || egsEquivStr(title, "source shape")))) {
         for (auto &inp: singleInputs) {
@@ -304,6 +304,10 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getBlockInput(string title) {
                 }
             }
         }
+    }
+
+    if(egsEquivStr(parent->getTitle(), "media definition") && egsEquivStr(blockTitle, "pegsless")) {
+        return shared_from_this();
     }
 
     return nullptr;
