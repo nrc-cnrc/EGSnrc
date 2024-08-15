@@ -6423,7 +6423,7 @@ ELSEIF(IBRSPL=2) ["directional bremsstrahlung splitting"
          ]
        ]
 
-       IF(IARG=6) NUM_BREM=NUM_BREM+nbr_split;
+       NUM_BREM=count_nbrem;
 
        " now put a zero weight particle on top of the stack thus forcing "
        " a return to shower. "
