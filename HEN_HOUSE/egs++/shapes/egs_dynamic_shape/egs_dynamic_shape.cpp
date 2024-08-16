@@ -109,9 +109,9 @@ extern "C" {
         // Control points read one by one from motion block in dynamic geometry definition, and saved as a vector to points
         while (true) {
             currentInput = dyninp->takeInputItem(inputTag);
-            if(!currentInput || currentInput->getInput(inputTag, point)) {
+            if (!currentInput || currentInput->getInput(inputTag, point)) {
                 currentInput = dyninp->takeInputItem(inputTag_backCompat);
-                if(!currentInput || currentInput->getInput(inputTag_backCompat, point)) {
+                if (!currentInput || currentInput->getInput(inputTag_backCompat, point)) {
                     delete currentInput;
                     break;
                 }

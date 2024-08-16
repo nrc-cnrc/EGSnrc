@@ -211,7 +211,7 @@ public:
      *This function has a non-empty implementation in 2 cases.
      *1) it is re implemented in any composite shape, where it will call getNextShapePosition on all of its components
      *2) it is re implemented in the dynamic shape class. This is where the code will find the current (non static) state of the shape. */
-    virtual void getNextShapePosition(EGS_RandomGenerator *rndm){};
+    virtual void getNextShapePosition(EGS_RandomGenerator *rndm) {};
 
     /*! Get a random direction given a source position \a xo.
      *
