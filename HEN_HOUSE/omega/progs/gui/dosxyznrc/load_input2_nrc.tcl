@@ -205,7 +205,7 @@ proc read_input {} {
     global arr phspout phspoutopt
     global thphidef angfixed ang1 ang2 pang ivary numthphi nang
     global numsets nset iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
-    global iphant imuphspout calflag
+    global iphant imuphspout calflag iphspout
     global alpha beta
     global level ibcmp_min ibcmp_max iphter_min iphter_max
     global iraylr_min iraylr_max iedgfl_min iedgfl_max got_egsnrc_input
