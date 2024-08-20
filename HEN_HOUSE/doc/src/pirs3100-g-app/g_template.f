@@ -5832,7 +5832,7 @@ C> @cond
             IPLOTE=0
             MEDIUM=i
             XAXIS = 'kinetic energy / MeV'
-            YAXISE = 'dE/drhoX MeV/g/cm\\S2\\N'
+            YAXISE = 'dE/drhoX MeV/g/cm\S2\N'
             YAXISEmfp = 'mean free path / cm'
             YAXISPmfp = 'mean free path / cm'
             write(GRAPHTITLE,'(24a1)')(media(j,i),j=1,24)

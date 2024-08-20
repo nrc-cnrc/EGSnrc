@@ -4603,7 +4603,7 @@ IF(ISPRREG=1)["create the .plotdat file"
 
     IF(ISOURC=3|ISOURC=21|ISOURC=22|ISOURC=23)[
            YTITLE='dose per incident particle/Gy'; ]
-    ELSE[ YTITLE='dose per incident fluence/Gy cm\\S2\\N'; ]
+    ELSE[ YTITLE='dose per incident fluence/Gy cm\S2\N'; ]
     HISTXMIN=BIN_CUT;       "value of lower X-bin (histograms only)"
     AXISTYPE=0;             "0 for no logs"
     DO IZ=1, NZ [
@@ -4663,7 +4663,7 @@ IF(ISPRREG=1)["create the .plotdat file"
 
     IF(ISOURC=3|ISOURC=21|ISOURC=22|ISOURC=23)[
          YTITLE='dose per incident particle/Gy'; ]
-    ELSE[ YTITLE='dose per incident fluence/Gy cm\\S2\\N'; ]
+    ELSE[ YTITLE='dose per incident fluence/Gy cm\S2\N'; ]
      " --------------------- >
      " SUBTITLE='dose vs radius at ' // TIMEN // ' on ' // DATEN;
     HISTXMIN=BIN_CUT;       "value of lower X-bin (histograms only)"

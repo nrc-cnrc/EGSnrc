@@ -1642,7 +1642,7 @@ DO i=1,nmed[
     :got_outfile:
     IFLAG1=0;IFLAG2=0;IPLOTE=0;MEDIUM=i;
     XAXIS = 'kinetic energy / MeV';
-    YAXISE = 'dE/drhoX MeV/g/cm\\S2\\N';
+    YAXISE = 'dE/drhoX MeV/g/cm\S2\N';
     YAXISEmfp = 'mean free path / cm';
     YAXISPmfp = 'mean free path / cm';
     write(GRAPHTITLE,'(24a1)')(media(j,i),j=1,24);

@@ -3885,9 +3885,9 @@ IF (IOPLOT > 0)["plotting requested"
    	 "XVGRPLOT.MORTRAN"
 
    	 NPTS=NR;	     "number of points per graph"
-   	 SERIESTITLE='\\8q\\0 =' // ch_var(ini:fin) // '\\So';
+   	 SERIESTITLE='\\8q\\0 =' // ch_var(ini:fin) // '\So';
    	 XTITLE='radius r /cm';
-   	 YTITLE='dose per particle D(r)*r\\S2 \\N / Gy*cm\\S2\\N';
+   	 YTITLE='dose per particle D(r)*r\S2 \N / Gy*cm\S2\N';
    	 SUBTITLE='energy fraction vs. radius on '// time_and_date;
    	 UNITNUM=IPLTUNX;	 "Output file"
    	 "PLTYPE=1;		    histogram=1, XY-plot=0"
