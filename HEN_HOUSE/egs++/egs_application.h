@@ -163,10 +163,11 @@ static string addMediaExample() {
     // Not completed yet, need to fill in numbers for example
         R"(
 :start media definition:
-    ae = 0.1                   # lowest  energy for electron production (kinetic+0.511)
-    ap = 0.1                   # lowest  energy for photon production   (kinetic)
-    ue = 0.1                   # maximum energy for electrons (kinetic+0.511)
-    up = 0.1                   # maximum energy for photons (kinetic)
+    ae  = 0.521                 # lowest  energy for electron production (kinetic+0.511)
+    ap  = 0.01                  # lowest  energy for photon production   (kinetic)
+    ue  = 50.511                # maximum energy for electrons (kinetic+0.511)
+    up  = 50                    # maximum energy for photons (kinetic) # maximum energy for photons (kinetic)
+    
     :start pegsless:
         elements = 
         number of atoms = 
@@ -179,19 +180,11 @@ static string addMediaExample() {
         density correction file = 
         e- stopping power output file = 
     :stop pegsless:
-:stop media definition:
 
-# Here is an example for defining a material named water
-:start media definition:
-    ae  = 0.521
-    ap  = 0.01
-    ue  = 50.511
-    up  = 50
-
+    # Here is an example for defining water 
     :start water:
         density correction file = water_liquid.density
     :stop water:
-
 :stop media definition:
 )"};
     return example;
