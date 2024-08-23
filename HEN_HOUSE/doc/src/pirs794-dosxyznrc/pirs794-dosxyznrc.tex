@@ -1563,7 +1563,7 @@ blank.  See the BEAMnrc Manual\cite{Ro04a} for more information about
 Similar to {\tt isource = 2}, you can select particles from the BEAM simulation
 \indexm{LATCH}
 to use based on their charge and/or {\tt LATCH} values.   You can also
-select the size of the BEAM field considered using the
+select the maximum size of the BEAM field considered using the
 \indexm{BEAM\_SIZE}
 {\tt BEAM\_SIZE} input (discussed in more detail in its own section below).
 
@@ -2985,10 +2985,11 @@ Then recompile DOSXYZnrc.
 \subsection{{\tt BEAM\_SIZE}}
 \indexm{BEAM\_SIZE}
 
-{\tt BEAM\_SIZE} allows user control of incident beam size for sources 2 and
-8 (phase-space input), 9 and 10 (full BEAM simulation sources) and 4
-(beam model source). {\tt BEAM\_SIZE} is the side of a square field in cm. The default value for {\tt BEAM\_SIZE} is 100 cm. When phase-space particles are read from a
-data file or reconstructed by a multiple-source model, DOSXYZnrc will check their positions and discard those that fall outside of the specified field.
+{\tt BEAM\_SIZE} allows the user to control the maximum beam size for phase space sources (sources 2,
+8, 20), BEAM simulations sources (souces 9, 10, 21) and the beam model source (source 4).
+{\tt BEAM\_SIZE} is the side of a square field in cm. The default value for {\tt BEAM\_SIZE} is 100 cm.
+Particles are discarded immediately if they are outside the
+square defined by {\tt BEAM\_SIZE} centred on the beam axis in the source scoring plane.
 
 One should be careful with the use of this parameter because particles outside
 the specified field (defined by {\tt BEAM\_SIZE)} may have some effects on the dose
