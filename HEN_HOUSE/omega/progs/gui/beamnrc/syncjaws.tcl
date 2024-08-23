@@ -271,7 +271,7 @@ proc define_syncjaws { id } {
     catch { destroy .syncjaws$id.child }
     toplevel .syncjaws$id.child
     set top .syncjaws$id.child
-    wm title $top "Define dynamic jaws"
+    wm title $top "Define synchronized jaws"
 
     frame $top.f -bd 10
     set w $top.f
@@ -792,7 +792,7 @@ proc quiksyncdef { id } {
     pack $top.u.r -side left
 
     frame $top.but -bd 4
-    button $top.but.update -text "Update x/y coords." -command "quikdyncalc $id"\
+    button $top.but.update -text "Update x/y coords." -command "quiksynccalc $id"\
             -relief groove -bd 8
     button $top.but.quit -text "Quit" -command "destroy .syncjaws$id.child.qkdef"\
             -relief groove -bd 8
@@ -801,7 +801,7 @@ proc quiksyncdef { id } {
 
 }
 
-proc quikdyncalc { id } {
+proc quiksynccalc { id } {
     global cmval ssd halfwidth fieldfocus fmin fmax
 
 #   procedure to calculate X/Y coordinates based on field dimensions, ssd
