@@ -303,9 +303,12 @@
 "                      generator, INSEED1 is the luxury level and should
 "                      have a value >0 and <=4.  Otherwise, a default
 "                      luxury level of 1 will be used.
-"            BEAM_SIZE Beam size for a square field for the dose calculation
-"                      This parameter is only used by sources 2,3 and 4
-"                      (default to 100 cm for a 100x100 cm square field)
+"            BEAM_SIZE Size of maximum square beam field for the dose
+"                      calculation.  This parameter is only used by phase
+"                      space sources (sources 2, 8, 20), BEAM simulation
+"                      sources (sources 9, 10, 21) and the beam model source
+"                      (source 4).
+"                      (Defaults to 100 cm for a 100x100 cm square field)
 "            ISMOOTH   =1 re-distribute particles when re-start a ph-sp file
 "                       and/or recycle an individual particle
 "                      =0 re-use the ph-sp data once run out (no redistribution)
