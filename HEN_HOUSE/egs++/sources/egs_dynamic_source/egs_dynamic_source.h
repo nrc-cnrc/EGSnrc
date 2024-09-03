@@ -290,6 +290,8 @@ public:
         source->setSimulationChunk(nstart, nrun);
     };
 
+    void containsDynamic(bool &hasdynamic);
+
 protected:
 
     EGS_BaseSource *source; //!< The source being rotated

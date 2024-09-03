@@ -78,14 +78,15 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
         sprintf(buf,"_w%d",i_parallel);
         fname += buf;
     }
-    // if incltime is false use .ptracks. If incltime is true use the new file
-    // format .syncptracks
-    if (m_include_time) {
-        fname += ".syncptracks";
+
+    fname += ".ptracks";
+
+    // Determine whether a dynamic geometry or source was used
+    // Only do this if the user didn't explicitly say whether to include time indices
+    if(m_autoDetectDynamic) {
+        m_include_time = app->containsDynamic();
     }
-    else {
-        fname += ".ptracks";
-    }
+
     // create new particleTrackContainer using the m_include_time boolean which
     // controls time index writting and filetype
     m_pts = new EGS_ParticleTrackContainer(fname.c_str(),m_bufSize,m_include_time);
@@ -141,14 +142,22 @@ extern "C" {
         bool scph = input->getInput("score photons",sc_options,true);
         bool scel = input->getInput("score electrons",sc_options,true);
         bool scpo = input->getInput("score positrons",sc_options,true);
-
-        // include time index lets the program know whether to write the time
-        // index to the tracks file and determines the filetype (ptracks or
-        // syncptracks); false in argument makes time inclusion false by default
-        bool incltime = input->getInput("include time index",sc_options,false);
         if (!scph && !scel && !scpo) {
             return 0;
         }
+
+        // include time index lets the program know whether to write the time
+        // index to the tracks file
+        // The default is -1 so we know if this input wasn't specified
+        bool found = false;
+        bool incltime = input->getInput("include time index",sc_options,1,&found);
+        // If the user didn't specify whether or not to include time indices
+        // check if a dynamic source or geometry is in use
+        bool autoDetectDynamic = false;
+        if(!found) {
+            autoDetectDynamic = true;
+        }
+
         EGS_I64 first = 0, last = 1024;
         input->getInput("start scoring",first);
         input->getInput("stop scoring",last);
@@ -161,6 +170,7 @@ extern "C" {
         result->setScoreElectrons(scel);
         result->setScorePositrons(scpo);
         result->setIncludeTime(incltime); // incltime boolean is set from aquired input for the trackscoring object (sets m_include_time)
+        result->setAutoDetectDynamic(autoDetectDynamic);
         result->setFirstEvent(first);
         result->setLastEvent(last);
         result->setBufferSize(bufSize);

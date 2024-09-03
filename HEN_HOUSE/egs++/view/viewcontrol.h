@@ -209,6 +209,8 @@ private:
     bool showElectronTracks;
     bool showPositronTracks;
     bool hasDynamic; //boolean to track whether or not to make time objects visible or hidden
+    char head_inctime[20] = "include time index="; // must match the same in egs_particle_track.h
+    bool hasTrackTimeIndex;
     bool isPlaying;
     vector<bool> show_regions;
     bool    allowRegionSelection,

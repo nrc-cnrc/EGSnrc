@@ -67,7 +67,7 @@
 
 \ingroup AusgabObjects
 
-This ausgab object can be used to store pareticle track information during
+This ausgab object can be used to store particle track information during
 run time and to output this information into a file. The data collected
 by this ausgab object can then be used to visualize the geometry and particle
 tracks with \c egs_view.
@@ -79,7 +79,7 @@ This ausgab object is specified via
     score photons   = yes or no # optional, yes assumed if missing
     score electrons = yes or no # optional, yes assumed if missing
     score positrons = yes or no # optional, yes assumed if missing
-    include time index = yes or no #optional, no assumed if missing
+    include time index = yes or no # optional, automatically set if missing, depending on whether there's a dynamic geometry or source
     start scoring   = event_number # optional, 0 assumed if missing
     stop  scoring   = event_number # optional, 1024 assumed if missing
     buffer size     = size         # optional, 1024 assumed if missing
@@ -162,8 +162,11 @@ public:
     void setScorePositrons(bool score) {
         m_score_positrons = score;
     };
-    void setIncludeTime(bool score)   {
-        m_include_time = score;
+    void setIncludeTime(bool incltime) {
+        m_include_time = incltime;
+    };
+    void setAutoDetectDynamic(bool autoDetectDynamic) {
+        m_autoDetectDynamic = autoDetectDynamic;
     };
     void setFirstEvent(EGS_I64 first)  {
         m_start = first;
@@ -196,6 +199,7 @@ protected:
     bool                        m_score_electrons;    //!< Score electron tracks?
     bool                        m_score_positrons;    //!< Score positron tracks?
     bool                        m_include_time;       //!< include time index in tracks file?
+    bool                        m_autoDetectDynamic;  //!< Option for autodetecting whether to include time indices
 
     string                      m_fnExtra;            //!< String to append to output file name
 

@@ -192,6 +192,15 @@ int EGS_DynamicSource::getCoord(EGS_Float rand, EGS_ControlPoint &ipt) {
     return 0;
 };
 
+/**
+* @brief Check if the simulation source contains time indices.
+*
+* @param hasdynamic Boolean flag to indicate if time indices are included in particles returned by the source.
+*/
+void EGS_DynamicSource::containsDynamic(bool &hasdynamic) {
+    hasdynamic = true;
+}
+
 extern "C" {
 
     EGS_DYNAMIC_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,

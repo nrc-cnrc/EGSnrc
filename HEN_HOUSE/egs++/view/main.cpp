@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 
     QString tracks_file = QString("");
     QString config_file = QString("");
-    QString extension=QString("");
+    QString extension=QString("ptracks");
     if (argc >= 3) {
         QString argv2 = argv[2];
         if (argv2.endsWith("ptracks")) {
@@ -119,15 +119,6 @@ int main(int argc, char **argv) {
         else {
             config_file = argv3;
         }
-    }
-
-    // get the extension of the tracks file (either ptracks or syncptracks) if
-    // tracks file provided in terminal to pass to the viewcontrol
-    if (tracks_file.endsWith("syncptracks")) {
-        extension=QString("syncptracks");
-    }
-    else {
-        extension=QString("ptracks");
     }
 
     w.setTracksFilename(tracks_file);

@@ -756,7 +756,7 @@ public:
      * dynamic geometry, where it will update the boolean reference to true and
      * call on its base geometry. This function was conceived to be used in the
      * view/viewcontrol (to determine whether time index objects are visible or
-     * hidden) */
+     * hidden), and track scoring */
     virtual void containsDynamic(bool &hasdynamic) { };
 
 protected:

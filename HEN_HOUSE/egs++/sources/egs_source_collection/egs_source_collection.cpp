@@ -130,6 +130,23 @@ void EGS_SourceCollection::setUp(const vector<EGS_BaseSource *> &S,
     }
 }
 
+/**
+* @brief Check if the simulation source contains time indices.
+*
+* @param hasdynamic Boolean flag to indicate if time indices are included in particles returned by the source.
+*/
+void EGS_SourceCollection::containsDynamic(bool &hasdynamic) {
+    hasdynamic = false;
+    for (int j=0; j<nsource; j++) {
+        bool sourceContainsDynamic = false;
+        sources[j]->containsDynamic(sourceContainsDynamic);
+        if(sourceContainsDynamic) {
+            hasdynamic = true;
+            return;
+        }
+    }
+}
+
 extern "C" {
 
     EGS_SOURCE_COLLECTION_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
