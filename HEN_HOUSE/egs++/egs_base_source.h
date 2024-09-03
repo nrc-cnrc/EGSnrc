@@ -333,6 +333,18 @@ public:
         time_index=temp_time;
     };
 
+    /* This method is essentially used to determine whether the simulation
+     * source contains a dynamic source. The only
+     * non-empty implementations of this function are in composite sources
+     * (where it simply calls containsDynamic on its components), 
+     * where it will update the boolean reference to true and
+     * call containsDynamic on its base geometry, and sources that
+     * can contain time indices (dynamic, phsp, beam sources).
+     * This function was conceived to be used in the
+     * view/viewcontrol (to determine whether time index objects are visible or
+     * hidden), and track scoring */
+    virtual void containsDynamic(bool &hasdynamic) { };
+
 protected:
 
     /*! \brief A short source description.

@@ -177,7 +177,10 @@ void EGS_ParticleTrackContainer::flushBuffer() {
 void EGS_ParticleTrackContainer::updateHeader() {
     if (m_trspFile) {
         ostream::off_type pos = m_trspFile->tellp();
-        m_trspFile->seekp(0,ios::beg);
+
+        //m_trspFile->seekp(0,ios::beg);
+        m_trspFile->seekp(sizeof(head_inctime) + sizeof(bool));
+
         m_trspFile->write((char *) &m_totalTracks, sizeof(int));
         m_trspFile->seekp(pos,ios::beg);
     }
@@ -216,8 +219,19 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
         return -1;
     }
 
+    // Skip the first few bits related to the string head_inctime
+    data->seekg(sizeof(head_inctime));
+    // Read the boolean of whether or not time indices are included
+    data->read((char *)&incltime, sizeof(bool));
+
     data->read((char *)&m_totalTracks, sizeof(int));
     egsInformation("%s: Reading %d tracks from '%s' ...\n", func_name, m_totalTracks, filename);
+    if(incltime) {
+        egsInformation("%s: Time indices are included in the data.\n", func_name);
+    } else {
+        egsInformation("%s: Time indices are not included in the data.\n", func_name);
+    }
+
     m_nTracks = 0;
     int totalVertices = 0;
     m_bufferSize = m_totalTracks;
@@ -304,18 +318,36 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
 
     // New sorted tracks file where data from the original tracksfile will be
     // rewritten.
-    string outstring = "sorted_trackfile.syncptracks";
+    string outstring = "sorted_trackfile.ptracks.tmp";
     const char *outname = outstring.c_str();
     ofstream *sortout = new ofstream(outname, ios::binary);
+
+    // Skip the first few bits related to the string head_inctime
+    data->seekg(sizeof(head_inctime));
+    // Read the boolean of whether or not time indices are included
+    data->read((char *)&incltime, sizeof(bool));
+
+    int position = data->tellg();
+
+    if(!incltime) {
+        egsWarning("%s: Warning: Attempted to sort ptracks file that does not contain time index.\n", func_name);
+        sortout->close();
+        data->close();
+        return;
+    }
 
     int totalTrackNum;
     data->read((char *)&totalTrackNum, sizeof(int));
     egsInformation("%s: Sorting %d tracks from '%s' by time index ...\n", func_name, totalTrackNum, trackfile);
+
+    // Write whether or not time index is included (it must be true)
+    sortout->write(head_inctime, sizeof(head_inctime));
+    sortout->write((char *)&incltime, sizeof(bool));
+    
     sortout->write((char *)&totalTrackNum, sizeof(int));
 
     // Defining vector of pairs which will be used to sort.
     vector<pair<EGS_Float, int>> vect;
-    data->seekg(sizeof(int), ios_base::beg); // Skip the total number of tracks in the beginning.
 
     for (int i = 0; i < m_totalTracks; i++) {
         int nvertices;
@@ -366,6 +398,7 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
     }
 
     sortout->close();
+    data->close();
     int removal = remove(trackfile); // Delete unsorted file.
     int renaming = rename(outname, trackfile); // Rename sorted file to the unsorted file's old name.
 }

@@ -530,6 +530,15 @@ void IAEA_PhspSource::setFilter(int type, int nbit1, int nbit2, const int *bits)
     }
 }
 
+/**
+* @brief Check if the simulation source contains time indices.
+*
+* @param hasdynamic Boolean flag to indicate if time indices are included in particles returned by the source.
+*/
+void IAEA_PhspSource::containsDynamic(bool &hasdynamic) {
+    hasdynamic = time_stored;
+}
+
 extern "C" {
 
     IAEA_PHSP_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,

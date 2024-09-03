@@ -213,6 +213,12 @@ public:
         // open output file and write header
         m_trspFilename = string(fname);
         m_trspFile = new ofstream(m_trspFilename.c_str(), ios::binary);
+
+        // Now the file starts with whether or not the time index is included in the data per track
+        // E.g. "include time index=1" for true
+        m_trspFile->write(head_inctime, sizeof(head_inctime));
+        m_trspFile->write((char *)&incltime, sizeof(bool));
+
         int dummy = 0;
         // at the end this will be replaced with the number of recorded tracks
         m_trspFile->write((char *)&dummy, sizeof(int));
@@ -377,6 +383,8 @@ protected:
     EGS_ParticleTrack   **m_buffer;     //!< the tracks array
     ofstream            *m_trspFile;    //!< the file to which data is output
     string              m_trspFilename; //!< filename of output file
+
+    char head_inctime[20] = "include time index=";
 };
 
 #endif

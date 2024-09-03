@@ -1897,24 +1897,18 @@ void GeometryViewControl::loadTracksDialog() {
 #endif
     QFileInfo inputFileInfo = QFileInfo(filename);
     filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*ptracks");
-    // tracks_extension is set based on selected tracks file. syncptracks
-    // contain track time indices, ptracks do not
-    if (filename_tracks.endsWith("syncptracks")) {
-        tracks_extension=QString("syncptracks");
-        if (!hasDynamic) {
-            // if hasdynamic is not yet true (no dynamic geometry) and extension
-            // is syncptracks then check the time indices in the file. check
-            // done through hasValidTime function
-            hasDynamic=hasValidTime();
-        }
-    }
-    else {
-        tracks_extension=QString("ptracks");
-    }
+    tracks_extension=QString("ptracks");
 
     if (filename_tracks.isEmpty()) {
         return;
     }
+
+    hasTrackTimeIndex = hasValidTime();
+    if (!hasDynamic) {
+        // if hasdynamic is not yet true (no dynamic geometry) then check the time indices in the file
+        hasDynamic=hasTrackTimeIndex;
+    }
+
     // run timeObjectVisibility to either make visible or hide time index
     // related objects depending on input file and tracks file
     timeObjectVisibility();
@@ -2047,15 +2041,15 @@ int GeometryViewControl::setGeometry(
     // loop through the different layers of the geometry and makes hasdynamic
     // true if a dynamic geometry is found. This is independent of tracks file
     // type, such that visualizing geometry motion is possible even with a
-    // ptracks file
+    // ptracks file without time indices in it
     g->containsDynamic(hasDynamic);
     if (!filename_tracks.isEmpty()) {
         gview->loadTracks(filename_tracks);
-        // if hasdynamic is not yet true (no dynamic geometry) and extension is
-        // syncptracks then check the time indices in the file. check done
-        // through hasValidTime function
-        if (!hasDynamic && tracks_extension=="syncptracks") {
-            hasDynamic = hasValidTime();
+
+        hasTrackTimeIndex = hasValidTime();
+        if (!hasDynamic) {
+            // if hasdynamic is not yet true (no dynamic geometry) then check the time indices in the file
+            hasDynamic=hasTrackTimeIndex;
         }
     }
     // run timeObjectVisibility to either make visible or hide time index
@@ -2901,13 +2895,9 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
      * tracks list, and determines the start and end index of each particle type
      * boxes to be imposed on their min and max spin boxes */
 
-    /* first, all of these operations can only be performed given a syncptracks
-     * file is being used as we need time indices to compare too (note a
-     * syncptracks file is not a given, as one could have access to the time
-     * index view elements for a dynamic geometry where the time is not
-     * recorded, however given a syncptracks file we know the time indices are
-     * valid)*/
-    if (tracks_extension=="syncptracks") {
+    /* first, all of these operations can only be performed given a ptracks
+     * file is being used with time indices to compare to */
+    if (hasTrackTimeIndex) {
 
         // obtain size of the time window
         EGS_Float t_window = spin_timewindow->value();
@@ -3024,7 +3014,7 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         spin_tmaxpo->setValue(endindex);
         spin_tminpo->setValue(startindex);
     }
-    // if the file is not a syncptracks nothing at all occurs in this function
+    // if the file doesn't contain time indices then nothing at all occurs in this function
     // and the particle tracks are unchanged
 }
 // end of time index methods//
@@ -3275,27 +3265,21 @@ void GeometryViewControl::setFontSize(int size) {
     controlsText->setTextCursor(cursor);
 }
 
+
 bool GeometryViewControl::hasValidTime() {
-    /* This function is used to determine whether the time index elements should be shown in the case that no dynamic geometry is present.
-     * if the tracks file is a .syncptracks file (a condition for callling this function), it will check the first of the time indices written to it. If it is not -1
-     * then the time indices are valid and the time index visual elements are relevant. Otherwise there is no time in the simulation and the elements are unnecessary.
-     * note it is always (as far as I can tell) the case that either all of the time indices are -1 (not being set by any object) or none are -1 (all are set by some object), hence
-     * we need only check the first time index */
+    // This function is used to determine whether the time index elements should be shown in the case that no dynamic geometry is present
+    bool incltime;
+
     ifstream data(filename_tracks.toUtf8().constData(), ios::binary);
-    //define the number of bytes needed to skip to reach the first time index
-    int skipsize=sizeof(int)+sizeof(int)+sizeof(EGS_ParticleTrack::ParticleInfo);
-    //go to the position of the first time index and read it in
-    data.seekg(skipsize, ios::beg);
-    EGS_Float time;
-    data.read((char *)&time,sizeof(EGS_Float));
+
+    // Skip the first few bits related to the string head_inctime
+    data.seekg(sizeof(head_inctime));
+    // Read the boolean of whether or not time indices are included
+    data.read((char *)&incltime, sizeof(bool));
+
     data.close();
-    //check that the time index is between 0 and 1. if so return true (thus setting hasdynamic true). Otherwise return false (similarly setting hasdynamic false)
-    if (time>=0 && time<1) {
-        return true;
-    }
-    else {
-        return false;
-    }
+
+    return incltime;
 }
 
 void GeometryViewControl::timeObjectVisibility() {
@@ -3334,7 +3318,7 @@ void GeometryViewControl::timeObjectVisibility() {
         label_timeindex->show();
         groupBox_time->show();
     }
-    //has dynamic is true when a dynamic geometry is present, or when the tracks are being given some time index (exmaple due to a dynamic source or phasespace file) and include time = yes in input file (syncptracks file)
+    //has dynamic is true when a dynamic geometry is present, or when the tracks are being given some time index (exmaple due to a dynamic source or phasespace file)
 
 
 }

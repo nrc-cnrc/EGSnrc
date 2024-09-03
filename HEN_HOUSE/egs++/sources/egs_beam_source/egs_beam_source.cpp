@@ -339,6 +339,15 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
     return count;
 }
 
+/**
+* @brief Check if the simulation source contains time indices.
+*
+* @param hasdynamic Boolean flag to indicate if time indices are included in particles returned by the source.
+*/
+void EGS_BeamSource::containsDynamic(bool &hasdynamic) {
+    hasdynamic = time_stored;
+}
+
 EGS_BeamSource::~EGS_BeamSource() {
     if (lib) {
         if (is_valid) {

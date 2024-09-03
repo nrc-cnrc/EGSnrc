@@ -237,6 +237,8 @@ public:
     };
     void setFilter(int, int, int, const int *);
 
+    void containsDynamic(bool &hasdynamic);
+
 protected:
 
     bool        is_valid;

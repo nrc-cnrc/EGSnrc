@@ -179,6 +179,8 @@ public:
         Ymax = ymax;
     };
 
+    void containsDynamic(bool &hasdynamic);
+
 protected:
 
     EGS_Library    *lib;    //!< The BEAMnrc user code library

@@ -100,12 +100,21 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
         return;
     }
     streamsize size = data.tellg();
-    data.seekg(0, ios::beg);
 
+    // Skip the first few bits related to the string head_inctime
+    char head_inctime[20] = "include time index="; // must match the same in egs_particle_track.h
+    bool incltime;
+    data.seekg(sizeof(head_inctime));
+    // Read the boolean of whether or not time indices are included
+    data.read((char *)&incltime, sizeof(bool));
+
+    // Read the number of tracks
     data.read((char *)&tot_tracks, sizeof(int));
 
+    streamsize headerSize = sizeof(head_inctime)+sizeof(bool)+sizeof(int);
+
     // very conservative sanity check to avoid a huge allocation
-    if (tot_tracks * sizeof(Vert) > size - sizeof(int)) {
+    if (tot_tracks * sizeof(Vert) > size - headerSize) {
         egsInformation("%s: No tracks loaded: %d tracks can't fit in %d-byte file '%s'\n",
                        func_name, tot_tracks, size, filename);
         m_failed = true;
@@ -120,16 +129,16 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
         extension = readfile.substr(k+1, readfile.length() - k);
     }
 
-    tmp_buffer = new char[size-sizeof(int)];
+    tmp_buffer = new char[size-headerSize];
 
     // May want to look into memory mapping, but only if access patterns/OS sets matter
-    if (!data.read((char *)tmp_buffer, size-sizeof(int))) {
+    if (!data.read((char *)tmp_buffer, size-headerSize)) {
         egsWarning("%s: Unable to read %d bytes into memory! No tracks loaded\n",
                    func_name, size);
         m_failed = true;
         return;
     }
-    egsInformation("%s: Original size   : %d\n", func_name, size-sizeof(int));
+    egsInformation("%s: Original size   : %d\n", func_name, size-headerSize);
 
 
     char **tmp_index = new char *[tot_tracks];
@@ -149,8 +158,9 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
     for (int i=0; i<tot_tracks; i++) {
 
         // The general track structure is:
-        // [int nverts] [ParticleInfo b] [Vertex r]                        for ptracks
-        // [int nverts] [ParticleInfo b] [Vertex r] [EGS_Float time index] for syncptracks
+        // [int nverts] [ParticleInfo b] [Vertex r]
+        // or:
+        // [int nverts] [ParticleInfo b] [Vertex r] [EGS_Float time index]
 
         // this is where the track file is being read. Reads nvert and pinfo and
         // then moves onto reading vertices
@@ -160,8 +170,8 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
         PInfo pInfo =
             *(PInfo *)(loc+sizeof(int));
         EGS_Float timeindex;
-        if (extension=="syncptracks") {
-            // if the tracks file is a syncptracks file, the time index is also
+        if (incltime) {
+            // if it's there, the time index is also
             // read before moving on to reading vertices. Skip includes size of
             // EGS_Float if time indices present only
             timeindex = *(EGS_Float *)(loc+sizeof(int)+ sizeof(PInfo));
@@ -216,8 +226,8 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
         PInfo pInfo =
             *(PInfo *)(ind+sizeof(int));
         EGS_Float timeindex;
-        if (extension=="syncptracks") {
-            // if the tracks file is a syncptracks file, the time index is also
+        if (incltime) {
+            // If the tracks file includes time indices, the time index is also
             // read before moving on to reading vertices. Start includes size of
             // EGS_Float if time indices present only
             timeindex = *(EGS_Float *)(ind+sizeof(int)+ sizeof(PInfo));
@@ -256,7 +266,7 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
             m_index[type][i_off] = m_off;
             ind_rcnt[type]++;
             mem_rcnt[type] += nverts;
-            if (extension=="syncptracks") {
+            if (incltime) {
                 // update timelist vectors such that the time indices of the
                 // compressed particle list is available from the viewcontrol
                 // class lists updated here to ensure the time index vector

@@ -1198,6 +1198,14 @@ public:
     //************************************************************
     virtual void setLatch(int latch) {};
 
+    bool containsDynamic() {
+        bool hasDynamic = false;
+        geometry->containsDynamic(hasDynamic);
+        if(!hasDynamic) {
+            source->containsDynamic(hasDynamic);
+        }
+        return hasDynamic;
+    }
 };
 
 #define APP_MAIN(app_name) \
