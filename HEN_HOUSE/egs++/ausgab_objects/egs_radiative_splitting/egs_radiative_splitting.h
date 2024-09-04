@@ -109,26 +109,26 @@ public:
     /*! Switch for splitting + RR. Negative nsplit value switches OFF RR. */
     void setSplitting(const int &n_s) {
         nsplit = n_s;
-       if ( nsplit < 0 ){
-          nsplit *= -1;
-          i_play_RR = false;
-       }
-       else if ( nsplit > 1 ){
-          i_play_RR = true;
-       }
-       /* Avoid zero division. A zero value turns off brems */
-       wthin = nsplit ? 1./nsplit : 1.0;
+        if (nsplit < 0) {
+            nsplit *= -1;
+            i_play_RR = false;
+        }
+        else if (nsplit > 1) {
+            i_play_RR = true;
+        }
+        /* Avoid zero division. A zero value turns off brems */
+        wthin = nsplit ? 1./nsplit : 1.0;
     };
 
     bool needsCall(EGS_Application::AusgabCall iarg) const {
         if (
-             iarg == EGS_Application::BeforeBrems       ||
-             iarg == EGS_Application::BeforeAnnihFlight ||
-             iarg == EGS_Application::BeforeAnnihRest   ||
-             iarg == EGS_Application::AfterBrems        ||
-             iarg == EGS_Application::AfterAnnihFlight  ||
-             iarg == EGS_Application::AfterAnnihRest    ||
-             iarg == EGS_Application::FluorescentEvent  ){
+            iarg == EGS_Application::BeforeBrems       ||
+            iarg == EGS_Application::BeforeAnnihFlight ||
+            iarg == EGS_Application::BeforeAnnihRest   ||
+            iarg == EGS_Application::AfterBrems        ||
+            iarg == EGS_Application::AfterAnnihFlight  ||
+            iarg == EGS_Application::AfterAnnihRest    ||
+            iarg == EGS_Application::FluorescentEvent) {
             return true;
         }
         else {
@@ -143,27 +143,27 @@ public:
         bool is_primary = app->top_p.latch == 0 ? true : false;
 
         /* Split radiative events ONLY for primary and fat electrons */
-        if ( iarg == EGS_Application::BeforeBrems       ||
-             iarg == EGS_Application::BeforeAnnihFlight ||
-             iarg == EGS_Application::BeforeAnnihRest   && 
-             (is_primary || is_phat)                    ){
-           app->setRadiativeSplitting(nsplit);
+        if (iarg == EGS_Application::BeforeBrems       ||
+                iarg == EGS_Application::BeforeAnnihFlight ||
+                iarg == EGS_Application::BeforeAnnihRest   &&
+                (is_primary || is_phat)) {
+            app->setRadiativeSplitting(nsplit);
         }
-        /* Avoids higher order splitting of radiative events */        
-        else if ( iarg == EGS_Application::AfterBrems       ||
-                  iarg == EGS_Application::AfterAnnihFlight ||
-                  iarg == EGS_Application::AfterAnnihRest   ){
-           app->setRadiativeSplitting(1);
-           app->setLatch(app->getNpOld()+1,1);
+        /* Avoids higher order splitting of radiative events */
+        else if (iarg == EGS_Application::AfterBrems       ||
+                 iarg == EGS_Application::AfterAnnihFlight ||
+                 iarg == EGS_Application::AfterAnnihRest) {
+            app->setRadiativeSplitting(1);
+            app->setLatch(app->getNpOld()+1,1);
         }
-       /* Fluorescent photons created by charged particles surviving RR
-          when radiative splitting ON should be split to avoid having heavy photons.
-          This should happen in EGSnrc, but it is not implemented yet, so do it here!
-          Note that when this is implemented in EGSnrc, the weight check will make sure
-          photons aren't split again!
-       */
-        if (iarg == EGS_Application::FluorescentEvent && is_phat && nsplit > 1 ){
-           app->splitTopParticleIsotropically(nsplit);
+        /* Fluorescent photons created by charged particles surviving RR
+           when radiative splitting ON should be split to avoid having heavy photons.
+           This should happen in EGSnrc, but it is not implemented yet, so do it here!
+           Note that when this is implemented in EGSnrc, the weight check will make sure
+           photons aren't split again!
+        */
+        if (iarg == EGS_Application::FluorescentEvent && is_phat && nsplit > 1) {
+            app->splitTopParticleIsotropically(nsplit);
         }
 
 

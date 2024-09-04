@@ -1227,67 +1227,82 @@ void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
 
 // Turns ON/OFF EGSnrc internal Russian Roulette + UBS
 void EGS_AdvancedApplication::setRussianRoulette(const EGS_Float &iSwitchRR) {
-    if ( iSwitchRR > 1.0){
-       the_egsvr->i_play_RR = 1;
-       the_egsvr->prob_RR = 1.0/iSwitchRR;
-       the_egsvr->nbr_split = iSwitchRR;
+    if (iSwitchRR > 1.0) {
+        the_egsvr->i_play_RR = 1;
+        the_egsvr->prob_RR = 1.0/iSwitchRR;
+        the_egsvr->nbr_split = iSwitchRR;
     }
-    else{
-       the_egsvr->i_play_RR = 0;
-       the_egsvr->nbr_split = 1;
+    else {
+        the_egsvr->i_play_RR = 0;
+        the_egsvr->nbr_split = 1;
     }
 }
 
 // Splits top particle into nsplit particles uniformly in 4Pi
-void EGS_AdvancedApplication::splitTopParticleIsotropically(const EGS_Float &fsplit){
-     // Reset particle pointer
-     the_stack->npold = the_stack->np;
-     /* Initialize local variables */
-     int np = the_stack->np-1,
-         the_latch = the_stack->latch[np],
-         ir = the_stack->ir[np],
-         iq = the_stack->iq[np];
-     the_stack->wt[np] /= fsplit; double E = the_stack->E[np];
-     EGS_Float x = the_stack->x[np], y = the_stack->y[np], z = the_stack->z[np],
-               wthin = the_stack->wt[np], dnear = the_stack->dnear[np];
-     EGS_Float u,v,w;
+void EGS_AdvancedApplication::splitTopParticleIsotropically(const EGS_Float &fsplit) {
+    // Reset particle pointer
+    the_stack->npold = the_stack->np;
+    /* Initialize local variables */
+    int np = the_stack->np-1,
+        the_latch = the_stack->latch[np],
+        ir = the_stack->ir[np],
+        iq = the_stack->iq[np];
+    the_stack->wt[np] /= fsplit;
+    double E = the_stack->E[np];
+    EGS_Float x = the_stack->x[np], y = the_stack->y[np], z = the_stack->z[np],
+              wthin = the_stack->wt[np], dnear = the_stack->dnear[np];
+    EGS_Float u,v,w;
     /* If fsplit is a non-integer, sample between int(fsplit) and int(split)+1 */
-     int nsplit = int(fsplit); EGS_Float dsplit = fsplit - nsplit;
-     if ( dsplit > 0 ){// non-integer splitting number
-          if( rndm->getUniform() < dsplit ) ++nsplit;
-     }
-     for( int i=0; i < nsplit; i++ ){
-             np++;
-             if( np >= MXSTACK ){
-                 egsFatal("\n\n******************************************\n"
-                        "ERROR: In EGS_AdvancedApplication::splitTopParticleIsotropically() :\n"
-                         "max. stack depth MXSTACK=%d < np=%d\n"
-                         "Stack overflow due to splitting!\n"
-                         "******************************************\n"
-                         ,MXSTACK,np);
-             }
-             the_stack->x[np] = x; the_stack->y[np] = y; the_stack->z[np] = z;
-             the_stack->iq[np]= iq; the_stack->dnear[np] = dnear; the_stack->latch[np] = the_latch;
-             the_stack->ir[np]= ir; the_stack->E[np] = E; the_stack->wt[np]=wthin;
-             // Particles isotropically distributed in space
-             w = 2*rndm->getUniform()-1;
-             EGS_Float sinz = 1-w*w;
-             if (sinz > epsilon) {
-                sinz = sqrt(sinz);
-                EGS_Float cphi, sphi;
-                EGS_Float phi = 2*M_PI*rndm->getUniform();
-                cphi = cos(phi); sphi = sin(phi);
-               u = sinz*cphi; v = sinz*sphi;
-             }
-             else {
-                 u = 0; v = 0;
-             }
+    int nsplit = int(fsplit);
+    EGS_Float dsplit = fsplit - nsplit;
+    if (dsplit > 0) { // non-integer splitting number
+        if (rndm->getUniform() < dsplit) {
+            ++nsplit;
+        }
+    }
+    for (int i=0; i < nsplit; i++) {
+        np++;
+        if (np >= MXSTACK) {
+            egsFatal("\n\n******************************************\n"
+                     "ERROR: In EGS_AdvancedApplication::splitTopParticleIsotropically() :\n"
+                     "max. stack depth MXSTACK=%d < np=%d\n"
+                     "Stack overflow due to splitting!\n"
+                     "******************************************\n"
+                     ,MXSTACK,np);
+        }
+        the_stack->x[np] = x;
+        the_stack->y[np] = y;
+        the_stack->z[np] = z;
+        the_stack->iq[np]= iq;
+        the_stack->dnear[np] = dnear;
+        the_stack->latch[np] = the_latch;
+        the_stack->ir[np]= ir;
+        the_stack->E[np] = E;
+        the_stack->wt[np]=wthin;
+        // Particles isotropically distributed in space
+        w = 2*rndm->getUniform()-1;
+        EGS_Float sinz = 1-w*w;
+        if (sinz > epsilon) {
+            sinz = sqrt(sinz);
+            EGS_Float cphi, sphi;
+            EGS_Float phi = 2*M_PI*rndm->getUniform();
+            cphi = cos(phi);
+            sphi = sin(phi);
+            u = sinz*cphi;
+            v = sinz*sphi;
+        }
+        else {
+            u = 0;
+            v = 0;
+        }
 
-             the_stack->u[np] = u; the_stack->v[np] = v; the_stack->w[np] = w;
+        the_stack->u[np] = u;
+        the_stack->v[np] = v;
+        the_stack->w[np] = w;
 
-     }
+    }
 
-     the_stack->np = np+1;
+    the_stack->np = np+1;
 }
 
 //************************************************************

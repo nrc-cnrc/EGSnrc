@@ -236,10 +236,10 @@ public:
     //************************************************
 
     /* Turn ON/OFF EGSnrc internal radiative splitting (UBS) */
-    void setRadiativeSplitting( const EGS_Float &nsplit );
+    void setRadiativeSplitting(const EGS_Float &nsplit);
     /* Turn ON/OFF EGSnrc internal Russian Roultette + UBS */
-    void setRussianRoulette( const EGS_Float &iSwitchRR );
-    void splitTopParticleIsotropically( const EGS_Float &fsplit );
+    void setRussianRoulette(const EGS_Float &iSwitchRR);
+    void splitTopParticleIsotropically(const EGS_Float &fsplit);
 
 protected:
 

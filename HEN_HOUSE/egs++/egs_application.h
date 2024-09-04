@@ -1163,7 +1163,7 @@ public:
     //************************************************
     virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
     virtual void setRussianRoulette(const EGS_Float &iSwitchRR) {};
-    virtual void splitTopParticleIsotropically(const EGS_Float &fsplit){}
+    virtual void splitTopParticleIsotropically(const EGS_Float &fsplit) {}
 
     //************************************************************
     // Utility functions for use with ausgab fluence scoring objects
