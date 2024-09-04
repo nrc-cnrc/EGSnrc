@@ -68,22 +68,22 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
     char buf[32];
 
     // Set EGSnrc internal UBS + RR
-    if ( i_play_RR ){
-       app->setRussianRoulette(nsplit);
-      i_play_RR = true;
+    if (i_play_RR) {
+        app->setRussianRoulette(nsplit);
+        i_play_RR = true;
     }
     // Set EGSnrc internal radiative splitting number.
-    else if ( nsplit > 0 ){
-       app->setRadiativeSplitting(nsplit);
-       i_play_RR = false;
+    else if (nsplit > 0) {
+        app->setRadiativeSplitting(nsplit);
+        i_play_RR = false;
     }
-      
+
     description = "\n===========================================\n";
     description +=  "Radiative splitting Object (";
     description += name;
     description += ")\n";
     description += "===========================================\n";
-    if ( i_play_RR ){
+    if (i_play_RR) {
         description +="\n - Splitting radiative events in ";
         sprintf(buf,"%d",nsplit);
         description += buf;
