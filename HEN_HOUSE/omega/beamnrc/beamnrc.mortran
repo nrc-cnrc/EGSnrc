@@ -6423,6 +6423,9 @@ ELSEIF(IBRSPL=2) ["directional bremsstrahlung splitting"
            ZLAST(I)=Z(I);
          ]
        ]
+
+       NUM_BREM=count_nbrem;
+
        " now put a zero weight particle on top of the stack thus forcing "
        " a return to shower. "
        np=np+1;
