@@ -1508,7 +1508,7 @@ public:
             spe_output << "@    xaxis  label char size 1.560000\n";
             spe_output << "@    xaxis  label font 4\n";
             spe_output << "@    xaxis  ticklabel font 4\n";
-            spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
+            spe_output << "@    yaxis  label \"fluence / MeV\S-1\Ncm\S-2\"\n";
             spe_output << "@    yaxis  label char size 1.560000\n";
             spe_output << "@    yaxis  label font 4\n";
             spe_output << "@    yaxis  ticklabel font 4\n";
