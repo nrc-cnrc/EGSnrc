@@ -853,7 +853,7 @@ void EGS_PlanarFluence::ouputResults() {
         spe_output << "@    xaxis  label char size 1.560000\n";
         spe_output << "@    xaxis  label font 4\n";
         spe_output << "@    xaxis  ticklabel font 4\n";
-        spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
+        spe_output << "@    yaxis  label \"fluence / MeV\S-1\Ncm\S-2\"\n";
         spe_output << "@    yaxis  label char size 1.560000\n";
         spe_output << "@    yaxis  label font 4\n";
         spe_output << "@    yaxis  ticklabel font 4\n";
@@ -1551,10 +1551,10 @@ void EGS_VolumetricFluence::ouputResults() {
         spe_output << "@    xaxis  label font 4\n";
         spe_output << "@    xaxis  ticklabel font 4\n";
         if (src_norm == 1 || normLabel == "primary history") {
-            spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
+            spe_output << "@    yaxis  label \"fluence / MeV\S-1\Ncm\S-2\"\n";
         }
         else {
-            spe_output << "@    yaxis  label \"fluence / MeV\\S-1\"\n";
+            spe_output << "@    yaxis  label \"fluence / MeV\S-1\"\n";
         }
         spe_output << "@    yaxis  label char size 1.560000\n";
         spe_output << "@    yaxis  label font 4\n";
