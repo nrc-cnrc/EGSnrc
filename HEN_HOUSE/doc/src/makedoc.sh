@@ -23,7 +23,7 @@
 #
 #  Author:          Frederic Tessier, 2015
 #
-#  Contributors:
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 
@@ -130,5 +130,3 @@ else
     fi
     exit
 fi
-
-

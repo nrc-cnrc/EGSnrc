@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2008
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Blake Walters
 #
 ###############################################################################
 #

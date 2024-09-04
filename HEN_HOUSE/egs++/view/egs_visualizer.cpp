@@ -24,6 +24,8 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Manuel Stoeckl
+#                   Reid Townson
 #
 ###############################################################################
 */

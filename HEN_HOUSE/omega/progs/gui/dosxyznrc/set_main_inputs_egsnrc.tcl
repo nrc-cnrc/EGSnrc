@@ -27,6 +27,7 @@
 #                   Iwan Kawrakow
 #                   Frederic Tessier
 #                   Marc-Andre Renaud
+#                   Reid Townson
 #
 ###############################################################################
 #

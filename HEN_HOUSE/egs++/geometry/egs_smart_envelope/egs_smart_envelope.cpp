@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
+#                   Marc Chamberland
 #
 ###############################################################################
 #

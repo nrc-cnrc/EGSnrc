@@ -29,6 +29,8 @@
 #                   Ernesto Mainegra-Hing
 #                   Hugo Bouchard
 #                   Hubert Ho
+#                   Marc Chamberland
+#                   Reid Townson
 #
 ###############################################################################
 */

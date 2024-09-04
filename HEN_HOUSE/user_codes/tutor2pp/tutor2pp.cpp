@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 #
@@ -178,4 +179,3 @@ APP_LIB(Tutor2_Application);
 #else
 APP_MAIN(Tutor2_Application);
 #endif
-

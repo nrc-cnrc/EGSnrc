@@ -26,6 +26,8 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Reid Townson
 #                   Hubert Ho
+#                   Marc Chamberland
+#                   Max Orok
 #
 ###############################################################################
 */

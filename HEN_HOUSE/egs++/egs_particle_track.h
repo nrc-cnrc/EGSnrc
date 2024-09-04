@@ -24,6 +24,7 @@
 #  Author:          Georgi Gerganov, 2009
 #
 #  Contributors:    Iwan Kawrakow
+#                   Reid Townson
 #
 ###############################################################################
 */
