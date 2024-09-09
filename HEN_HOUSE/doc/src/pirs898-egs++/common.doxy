@@ -105,10 +105,28 @@ Here is an example, which was created using the \ref EGS_Box documentation. Noti
 Remember to view your geometry using the <b>egs_view</b> GUI! This viewer is essential for many situations where you need to know the region numbers within your geometry. For more description, see the \link Geometry geometry module \endlink.
 
 \section common_media Media definitions
-There are two ways to define media in EGSnrc, either with or without PEGS4 data files. If you are not dependent on old PEGS4 data, we recommend going with <b>pegsless</b> mode for improved versatility (you can now change AE in the input file!).
+There are two ways to define media in EGSnrc, either with or without PEGS4 data files. If you are not dependent on old PEGS4 data, we recommend going with <b>pegsless</b> mode for improved versatility (you can now change AE in the input file!). Materials can now be entirely defined inside the egsinp file.
 
 \subsection common_media_pegsless Pegsless mode
-For pegsless mode, the user needs to define media within the input file! However, this can be done very simply by indicating the density correction file to use. This is done in the <code>media definition</code> input block. All of the density correction files distributed with EGSnrc can be found in <b>$HEN_HOUSE/pegs4/density_corrections</b>. Pegsless mode is described in more detail in PIRS-702.
+For pegsless mode, the user needs to define media within the input file! The simplest way to do this is by providing the elements, number of atoms and bulk density of the element or compound. This is done in the <code>media definition</code> input block. When pegsless materials are defined without providing a density correction file (introduced below), all density corrections are calculated on-the-fly during simulation initialization. This is the recommended method. Pegsless mode is described in more detail in PIRS-701.
+
+\verbatim
+:start media definition:
+
+    ae  = lowest  energy for electron production (kinetic+0.511)
+    ap  = lowest  energy for photon production   (kinetic)
+    ue  = maximum energy for electrons (kinetic+0.511)
+    up  = maximum energy for photons   (kinetic)
+
+    :start water:
+        elements = H, O
+        number of atoms = 2, 1
+        bulk density = 1.0
+    :stop water:
+:stop media definition:
+\endverbatim
+
+EGSnrc is distributed with a number of materials pre-defined using density correction files. All of the density correction files distributed with EGSnrc can be found in <b>$HEN_HOUSE/pegs4/density_corrections</b>. Note that it is also possible to generate density correction files using EGSnrc (see PIRS-701).
 
 \verbatim
 :start media definition:
