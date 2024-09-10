@@ -130,7 +130,7 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
     verbose         = inp->getInput("verbose",        choice,0);
     score_primaries = inp->getInput("score primaries",choice,0);
     score_spe      = inp->getInput("score spectrum", choice,0);
-    
+
     EGS_Float norma;
     int err_norm = inp->getInput("normalization",norma);
     if (!err_norm) {
@@ -1409,7 +1409,6 @@ void EGS_VolumetricFluence::describeMe() {
 
 void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const double &norma) {
     double fe,dfe,dfer;
-    double norm = norma;
     int count = 0;
     int ir_digits = getDigits(nreg);
 
@@ -1421,7 +1420,7 @@ void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const d
         if (!is_sensitive[k]) {
             continue;
         }
-        norm = norma/volume[k];               //per volume
+        double norm = norma/volume[k];               //per volume
         egsInformation("  %*d      ",ir_digits,k);
         fT->currentResult(k,fe,dfe);
         if (fe > 0) {
@@ -1585,13 +1584,13 @@ void EGS_VolumetricFluence::ouputResults() {
                 continue;
             }
 
-            norm /= volume[j];                 //per volume
+            double norma = norm/volume[j];                 //per volume
 
             egsInformation("region # %d : ",j);
 
             if (verbose) {
                 egsInformation("Volume[%d] = %g", j, volume[j]);
-                egsInformation(" Normalization = Ncase/Fsrc/V = %g\n",norm);
+                egsInformation(" Normalization = Ncase/Fsrc/V = %g\n",norma);
             }
 
             if (verbose) {
@@ -1609,9 +1608,9 @@ void EGS_VolumetricFluence::ouputResults() {
                 if (flu_s) {
                     e = exp(e);
                 }
-                spe_output << e <<" "<< fe *norm<<" "<< dfe *norm<< "\n";
+                spe_output << e <<" "<< fe *norma <<" "<< dfe *norma << "\n";
                 if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
-                                                e, fe*norm, dfe*norm);
+                                                e, fe*norma, dfe*norma);
             }
             spe_output << "&\n";
 
@@ -1631,9 +1630,9 @@ void EGS_VolumetricFluence::ouputResults() {
                     if (flu_s) {
                         e = exp(e);
                     }
-                    spe_output << e <<" "<< fe *norm<<" "<< dfe *norm<< "\n";
+                    spe_output << e <<" "<< fe *norma <<" "<< dfe *norma << "\n";
                     if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
-                                                    e, fe*norm, dfe*norm);
+                                                    e, fe*norma, dfe*norma);
                 }
                 spe_output << "&\n";
             }
