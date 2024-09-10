@@ -1592,6 +1592,9 @@ void EGS_VolumetricFluence::ouputResults() {
                 egsInformation("Volume[%d] = %g", j, volume[j]);
                 egsInformation(" Normalization = Ncase/Fsrc/V = %g\n",norma);
             }
+            else{
+                egsInformation(" See Grace plot file %s\n", spe_name.c_str());
+            }
 
             if (verbose) {
                 egsInformation("\nTotal fluence:\n");
