@@ -406,7 +406,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
         // Add the denstiy correction files
         shared_ptr<EGS_BlockInput> mediaBlockInput = inputStruct->getBlockInput("media definition");
-        shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->getBlockInput("pegsless");
+        shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->getBlockInput("myMediumName");
 
         string compound_dir;
         EGS_Application::checkEnvironmentVar(appc,appv,"-H","--hen-house","HEN_HOUSE", compound_dir);
