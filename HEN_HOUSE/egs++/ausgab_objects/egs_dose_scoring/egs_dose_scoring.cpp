@@ -97,6 +97,7 @@
 #include "egs_dose_scoring.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+#include "egs_transformations.h"
 
 EGS_DoseScoring::EGS_DoseScoring(const string &Name,
                                  EGS_ObjectFactory *f) :
@@ -158,7 +159,7 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         if (d_region.size() && d_region.size() < nreg) { // specific dose regions provided
             // Get maximum dose scoring region
             for (vector<int>::iterator it = d_region.begin(); it < d_region.end(); it++) {
-                if (*it > max_dreg) {
+                if ( *it > max_dreg) {
                     max_dreg = *it;
                 }
             }
@@ -220,29 +221,42 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         //determine the region no. in the EGS_XYZGeometry and corresponding
         //global reg. no.
         EGS_Vector tp;
-        int nx=dose_geom->getNRegDir(0);
-        int ny=dose_geom->getNRegDir(1);
-        int nz=dose_geom->getNRegDir(2);
+        EGS_BaseGeometry *d_geom = dose_geom;
+        vector < EGS_AffineTransform * > t_form;
+        //now see if this is a transformed EGS_XYZGeometry
+        //if so, find the base EGS_XYZGeometry and use that to set up the scoring array
+        while (d_geom->getType().find_last_of("T") == d_geom->getType().length()-1) {
+            t_form.push_back(d_geom->getTransform()); //have to get transform first
+            d_geom = d_geom->getBaseGeom();
+        }
+        int nx=d_geom->getNRegDir(0);
+        int ny=d_geom->getNRegDir(1);
+        int nz=d_geom->getNRegDir(2);
         EGS_Float minx,maxx,miny,maxy,minz,maxz;
         for (int k=0; k<nz; k++) {
             for (int j=0; j<ny; j++) {
                 for (int i=0; i<nx; i++) {
-                    minx=dose_geom->getBound(0,i);
-                    maxx=dose_geom->getBound(0,i+1);
-                    miny=dose_geom->getBound(1,j);
-                    maxy=dose_geom->getBound(1,j+1);
-                    minz=dose_geom->getBound(2,k);
-                    maxz=dose_geom->getBound(2,k+1);
+                    minx=d_geom->getBound(0,i);
+                    maxx=d_geom->getBound(0,i+1);
+                    miny=d_geom->getBound(1,j);
+                    maxy=d_geom->getBound(1,j+1);
+                    minz=d_geom->getBound(2,k);
+                    maxz=d_geom->getBound(2,k+1);
                     tp.x=(minx+maxx)/2.;
                     tp.y=(miny+maxy)/2.;
                     tp.z=(minz+maxz)/2.;
+                    //now transform tp if this is a transformed EGS_XYZGeometry
+                    //do innermost transformation first
+                    for (int m=t_form.size()-1; m>=0; m--) {
+                        t_form[m]->transform(tp);
+                    }
                     int g_reg = app->isWhere(tp);
-                    df_reg[g_reg]=i+j*nx+k*nx*ny;
+                    df_reg[g_reg]=i+j *nx+k *nx *ny;
                 }
             }
         }
         //create an egs_scoring_array of the appropriate size
-        doseF =  new EGS_ScoringArray(nx*ny*nz);
+        doseF =  new EGS_ScoringArray(nx *ny *nz);
     }
 
     description = "\n*******************************************\n";
@@ -315,7 +329,7 @@ void EGS_DoseScoring::reportResults() {
     EGS_Float F = app->getFluence();
     egsInformation("=> last case = %lld fluence = %g\n", m_lastCase, F);
     /* Normalize to actual source fluence */
-    normE = m_lastCase/F*norm_u;
+    normE = m_lastCase/F *norm_u;
     normD = 1.602e-10*normE;
     int irmax_digits = getDigits(max_dreg);
     if (irmax_digits < 2) {
@@ -356,7 +370,7 @@ void EGS_DoseScoring::reportResults() {
                     dr=1;
                 }
                 egsInformation("%*d  %-*s  %11.8f  %13.6f  %12.4e  +/-  %-7.3f%%    %10.4e  +/-  %-7.3f%%\n",
-                               irmax_digits,ireg,max_medl,app->getMediumName(imed),rho,vol[ireg],r*normE,dr*100.,r*normD/mass,dr*100.);
+                               irmax_digits,ireg,max_medl,app->getMediumName(imed),rho,vol[ireg],r *normE,dr*100.,r *normD/mass,dr*100.);
             }
         }
         egsInformation("%s\n",line.c_str());
@@ -397,7 +411,7 @@ void EGS_DoseScoring::reportResults() {
                 dr = dr/r;
                 egsInformation(
                     "%-*s %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
-                    max_medl,app->getMediumName(im),r*normE,dr*100.,r*normD/massM[im],dr*100.);
+                    max_medl,app->getMediumName(im),r *normE,dr*100.,r *normD/massM[im],dr*100.);
             }
         }
         egsInformation("%s\n",line.c_str());
@@ -427,39 +441,45 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
             exit(1);
         }
         //output data
-        int nx=dose_geom->getNRegDir(0);
-        int ny=dose_geom->getNRegDir(1);
-        int nz=dose_geom->getNRegDir(2);
+        EGS_BaseGeometry *d_geom = dose_geom;
+        //now see if this is a transformed EGS_XYZGeometry
+        //if so, find the base EGS_XYZGeometry and use that for data output
+        while (d_geom->getType().find_last_of("T") == d_geom->getType().length()-1) {
+            d_geom = d_geom->getBaseGeom();
+        }
+        int nx=d_geom->getNRegDir(0);
+        int ny=d_geom->getNRegDir(1);
+        int nz=d_geom->getNRegDir(2);
         //output no. of voxels in x,y,z
         df_out << nx << " " << ny << " " << nz << "\n";
         //use single precision real for output
         float bound, dose, doseun;
         //output voxel boundaries
         for (int i=0; i<=nx; i++) {
-            bound=dose_geom->getBound(0,i);
+            bound=d_geom->getBound(0,i);
             df_out << bound << " ";
         }
         df_out << "\n";
         for (int j=0; j<=ny; j++) {
-            bound=dose_geom->getBound(1,j);
+            bound=d_geom->getBound(1,j);
             df_out << bound << " ";
         }
         df_out << "\n";
         for (int k=0; k<=nz; k++) {
-            bound=dose_geom->getBound(2,k);
+            bound=d_geom->getBound(2,k);
             df_out << bound << " ";
         }
         df_out << "\n";
         //divide dose by mass and output
-        for (int i=0; i<nx*ny*nz; i++) {
+        for (int i=0; i<nx *ny *nz; i++) {
             doseF->currentResult(i,r,dr);
-            EGS_Float mass = dose_geom->getVolume(i)*getRealRho(i); //local reg.
-            dose=r*normD/mass;
+            EGS_Float mass = d_geom->getVolume(i)*getRealRho(i); //local reg.
+            dose=r *normD/mass;
             df_out << dose << " ";
         }
         df_out << "\n";
         //output uncertainties
-        for (int i=0; i<nx*ny*nz; i++) {
+        for (int i=0; i<nx *ny *nz; i++) {
             doseF->currentResult(i,r,dr);
             if (r > 0) {
                 dr = dr/r;
@@ -531,24 +551,30 @@ int  EGS_DoseScoring::addTheStates(istream &data) {
         if (!tmp.setState(data)) {
             return 4402;
         }
-        (*dose) += tmp;
+        ( *dose) += tmp;
     }
     if (doseM) {
         EGS_ScoringArray tmpM(nmedia);
         if (!tmpM.setState(data)) {
             return 4403;
         }
-        (*doseM) += tmpM;
+        ( *doseM) += tmpM;
     }
     if (doseF) {
-        int nx=dose_geom->getNRegDir(0);
-        int ny=dose_geom->getNRegDir(1);
-        int nz=dose_geom->getNRegDir(2);
-        EGS_ScoringArray tmpF(nx*ny*nz);
+        EGS_BaseGeometry *d_geom = dose_geom;
+        //now see if this is a transformed EGS_XYZGeometry
+        //if so, find the base EGS_XYZGeometry and use its specs to output data
+        while (d_geom->getType().find_last_of("T") == d_geom->getType().length()-1) {
+            d_geom = d_geom->getBaseGeom();
+        }
+        int nx=d_geom->getNRegDir(0);
+        int ny=d_geom->getNRegDir(1);
+        int nz=d_geom->getNRegDir(2);
+        EGS_ScoringArray tmpF(nx *ny *nz);
         if (!tmpF.setState(data)) {
             return 4404;
         }
-        (*doseF) += tmpF;
+        ( *doseF) += tmpF;
     }
     return 0;
 }
@@ -674,7 +700,7 @@ extern "C" {
                 if (!dgeom) {
                     egsFatal("EGS_DoseScoring: Output dose file: %s does not name an existing geometry\n",gname.c_str());
                 }
-                else if (dgeom->getType()!="EGS_XYZGeometry") {
+                else if (dgeom->getType().find("EGS_XYZGeometry")==std::string::npos) {
                     egsFatal("EGS_DoseScoring: Output dose file: %s is not an EGS_XYZGeometry.\n",gname.c_str());
                 }
                 else {
