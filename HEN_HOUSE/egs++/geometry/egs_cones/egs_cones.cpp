@@ -27,6 +27,7 @@
 #                   Marc Chamberland
 #                   Randle Taylor
 #                   Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -51,6 +52,8 @@ string EGS_SimpleCone::type = "EGS_SimpleCone";
 string EGS_ParallelCones::type = "EGS_ParallelCones";
 string EGS_ConeSet::type = "EGS_ConeSet";
 string EGS_ConeStack::type = "EGS_ConeStack";
+
+static bool EGS_CONES_LOCAL inputSet = false;
 
 void EGS_ConeStack::clear(bool all) {
     if (nltot > 0) {
@@ -247,6 +250,149 @@ void EGS_ConeSet::printInfo() const {
 
 extern "C" {
 
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Cones"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of cone.", {"EGS_ConeStack", "EGS_SimpleCone", "EGS_ParallelCones", "EGS_ConeSet"});
+
+        geomBlockInput->addSingleInput("axis", false, "The unit vector defining the axis along the length of the cones. Layers or cones are added sequentially in the vector direction.");
+
+        auto inpPtr = geomBlockInput->addSingleInput("apex", false, "The position of the cone apex (x, y, z). For EGS_ParallelCones, this is the position of the first cone apex.");
+        inpPtr->addDependency(typePtr, "EGS_SimpleCone");
+        inpPtr->addDependency(typePtr, "EGS_ParallelCones");
+        inpPtr->addDependency(typePtr, "EGS_ConeSet");
+
+        // EGS_ConeStack
+        auto blockPtr = geomBlockInput->addBlockInput("layer");
+        blockPtr->addDependency(typePtr, "EGS_ConeStack");
+        blockPtr->addSingleInput("thickness", true, "The thickness of the layer.");
+        blockPtr->addSingleInput("top radii", false, "A list of the top cone radii. If omitted, the top radii are assumed to be the same as a bottom radii from the previous layer. This improves the algorithm efficiency.");
+        blockPtr->addSingleInput("bottom radii", true, "A list of the bottom cone radii.");
+        blockPtr->addSingleInput("media", true, "A list of media names, one for each region.");
+
+        // EGS_ConeSet
+        auto anglesPtr = geomBlockInput->addSingleInput("opening angles", false, "A list of angles in degrees.");
+        anglesPtr->addDependency(typePtr, "EGS_ConeSet");
+        auto anglesRadPtr = geomBlockInput->addSingleInput("opening angles in radian", false, "A list of angles in radians.");
+        anglesRadPtr->addDependency(typePtr, "EGS_ConeSet");
+        // Only one of these inputs two can be included
+        anglesRadPtr->addDependency(anglesPtr, "", true);
+        anglesPtr->addDependency(anglesRadPtr, "", true);
+        geomBlockInput->addSingleInput("flag", false, "0 or 1 or 2. This input affects the region numbering algorithm; see the documentation for details.")->addDependency(typePtr, "EGS_ConeSet");
+        auto mediaPtr = geomBlockInput->addBlockInput("media input");
+        mediaPtr->addDependency(typePtr, "EGS_ConeSet");
+        mediaPtr->addSingleInput("media", true, "");
+        mediaPtr->addSingleInput("set medium", false, "");
+
+        // EGS_SimpleCone
+        auto anglePtr = geomBlockInput->addSingleInput("opening angle", false, "The opening angle of the cone in degrees.");
+        anglePtr->addDependency(typePtr, "EGS_SimpleCone");
+        anglePtr->addDependency(typePtr, "EGS_ParallelCones");
+        geomBlockInput->addSingleInput("height", false, "The height of the cone.");
+        auto mediaPtr2 = geomBlockInput->addBlockInput("media input");
+        mediaPtr2->addDependency(typePtr, "EGS_SimpleCone");
+        mediaPtr2->addDependency(typePtr, "EGS_ParallelCones");
+        mediaPtr2->addSingleInput("media", true, "");
+        mediaPtr2->addSingleInput("set medium", false, "");
+
+        // EGS_ParallelCones
+        geomBlockInput->addSingleInput("apex distances", false, "A list of distances from the first apex.");
+    }
+
+    EGS_CONES_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Examples of each of the egs_cones types follow
+    # Simply uncomment the :start line for the example that you
+    # wish to use
+
+    # EGS_ConeStack example
+    #:start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = my_conestack
+        axis = 1.2417 0 0 -1 0 0
+        :start layer:
+            thickness = 0.0417
+            top radii = 0.
+            bottom radii = 0.0858
+            media = water
+        :stop layer:
+        :start layer:
+            thickness = 0.1283
+            top radii = 0. 0.0858
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 0.2217
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 2.05
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = water air water
+        :stop layer:
+    :stop geometry:
+
+    # EGS_SimpleCone example
+    #:start geometry:
+        library     = egs_cones
+        type        = EGS_SimpleCone
+        name        = my_simple_cone
+        apex        = 0 0 3
+        axis        = 0 0 -1
+        height      = 4
+        opening angle = 30 # deg
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    # EGS_ParallelCones example
+    #:start geometry:
+        library     = egs_cones
+        type        = EGS_ParallelCones
+        name        = my_parallel_cones
+        apex        = 0 0 6
+        axis        = 0 0 -1
+        apex distances  = 1 2 3
+        opening angle   = 30 # deg
+    :stop geometry:
+
+    # EGS_ConeSet example
+    #:start geometry:
+        name        = my_coneset
+        library     = egs_cones
+        type        = EGS_ConeSet
+        apex        = 0 0 3
+        axis        = 0 0 -1
+        opening angles = 10 20 30
+        :start media input:
+            media = water air water
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_CONES_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
+
     EGS_CONES_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 
         if (!input) {
@@ -310,7 +456,7 @@ extern "C" {
                 return 0;
             }
 
-            // adjust lable region numbering in each layer
+            // adjust label region numbering in each layer
             int count=0;
             for (size_t i=0; i<layerLabels.size(); i++) {
                 for (int j=0; j<layerLabels[i]; j++) {

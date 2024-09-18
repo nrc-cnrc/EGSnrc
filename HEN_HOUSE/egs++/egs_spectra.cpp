@@ -370,10 +370,10 @@ A spectrum is defined inline as follows:
     type = tabulated spectrum
     energies = list of discrete energies or bin edges
     probabilities = list of probabilities
-    spectrum type = 0 or 1 or 2 or 3
+    spectrum mode = 0 or 1 or 2 or 3
 :stop spectrum:
 \endverbatim
-where the meaning of the spectrum type is the same as the mode of a
+where the meaning of the spectrum mode is the same as the mode of a
 spectrum file.
  */
 class EGS_EXPORT EGS_TabulatedSpectrum : public EGS_BaseSpectrum {

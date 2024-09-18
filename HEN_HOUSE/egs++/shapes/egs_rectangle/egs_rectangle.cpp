@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -37,6 +37,9 @@
 #include "egs_rectangle.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_RECTANGLE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_RECTANGLE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 EGS_RectangularRing::EGS_RectangularRing(EGS_Float xmin, EGS_Float xmax,
         EGS_Float ymin, EGS_Float ymax, EGS_Float xmin_i, EGS_Float xmax_i,
@@ -96,6 +99,33 @@ EGS_RectangularRing::~EGS_RectangularRing() {
 
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Rectangle"});
+        shapeBlockInput->addSingleInput("rectangle", true, "x1 y1 x2 y2");
+        shapeBlockInput->addSingleInput("inner rectangle", false, "xp1 yp1 xp2 yp2");
+        setShapeInputs(shapeBlockInput);
+    }
+
+    EGS_RECTANGLE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_rectangle
+    #:start shape:
+        library = egs_rectangle
+        rectangle = -.1 -.1 .1 .1
+)"};
+        return example;
+    }
+
+    EGS_RECTANGLE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_RECTANGLE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {

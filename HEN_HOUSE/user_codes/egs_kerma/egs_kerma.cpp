@@ -1,3 +1,4 @@
+
 /*
 ###############################################################################
 #
@@ -85,6 +86,8 @@
 #include "egs_transformations.h"
 // Interpolators
 #include "egs_interpolator.h"
+// Get examples for autocomplete
+#include <egs_input_struct.h>
 
 #include <fstream>
 #include <iostream>
@@ -1428,6 +1431,72 @@ void EGS_KermaApplication::describeSimulation() {
             egsInformation(" NONE");
         }
         egsInformation("\n\n");
+    }
+}
+
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
+
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_kerma");
+        shared_ptr<EGS_BlockInput> calcBlock = scoreBlock->addBlockInput("calculation geometry");
+        scoreBlock->addSingleInput("correlated geometries", false, "");
+
+        shared_ptr<EGS_BlockInput> fluBlock = scoreBlock->addBlockInput("fluence scoring");
+        fluBlock->addSingleInput("minimum energy", false, "");
+        fluBlock->addSingleInput("maximum energy", false, "");
+        fluBlock->addSingleInput("number of bins", false, "");
+        fluBlock->addSingleInput("scale", false, "linear or logarithmic", {"linear", "logarithmic"});
+
+        scoreBlock->addSingleInput("muen file", false, "");
+        scoreBlock->addSingleInput("Default FD geometry", false, "");
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+
+    ### use the same geometry under two different names, for easier bookeeping
+    :start calculation geometry:
+        geometry name         = sphere_in_room_no_wall
+        scoring regions       = 2
+        excluded regions      = 0     # exclude contribution from these regions
+        scoring region masses = 0.631 # mass in g for each scoring region
+        #scoring volume mass  = 0.631 # alternatively: mass for whole scoring volume
+    :stop calculation geometry:
+
+    :start calculation geometry:
+        geometry name         = sphere_in_room_all
+        scoring regions       = 2
+        scoring region masses = 0.631 # mass in g for each region
+        #scoring volume mass  = 0.631 # mass in g for whole scoring volume
+    :stop calculation geometry:
+
+    ### ratio estimates wall contribution to air sphere
+    correlated geometries = sphere_in_room_all  sphere_in_room_no_wall
+
+    ### fluence scoring requested (common to all calculation geometries)
+    :start fluence scoring:
+        minimum energy = 0.001
+        maximum energy = 0.040
+        number of bins = 40
+        scale          = linear
+    :stop fluence scoring:
+
+    ### E*muen file (could also be E*mutr): absolute or relative file path
+    ### Use absolute path when submitting parallel jobs!!!
+    emuen file = $EGS_HOME/egs_kerma/emuen_icru90_1.5MeV.data
+
+    ### geometry for forced-detection (if omitted, score ONLY when reaching scoring region)
+    Default FD geometry = sphere
+
+:stop scoring options:
+)"};
+        return example;
     }
 }
 
