@@ -1,0 +1,131 @@
+================================================================================
+EGSnrc version 4 for x86_64-unknown-linux-gnu          Thu Aug 23 18:20:44 2018
+================================================================================
+configuration...............................................test
+user code...................................................g
+pegs file...................................................521icru on HEN_HOUSE
+using host..................................................irs25
+input file..................................................quality_test
+output file(s)..............................................quality_test
+================================================================================
+
+
+ Bound Compton start region
+  Setting all to            0
+ Rayleigh start region
+  Setting all to            0
+ Relaxations start region
+  Setting all to            0
+ PE sampling start region
+  Setting all to            0
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon cross sections                                       Compton cross sections                                     default
+ Photon transport cutoff(MeV)                                    0.1000E-01
+ Pair angular sampling                                       OFF
+ Pair cross sections                                         BH 
+ Triplet production                                          Off
+ Bound Compton scattering                                    OFF           
+ Radiative Compton corrections                               Off           
+ Rayleigh scattering                                         OFF           
+ Atomic relaxations                                          OFF           
+ Photoelectron angular sampling                              OFF           
+
+ Electron transport cutoff(MeV)                               0.7000
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             SIM
+ Spin effects                                                Off
+ Electron Impact Ionization                                  Off
+ Maxium electron step in cm (SMAX)                               0.1000E+11
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 EXACT     
+ Skin-depth for boundary crossing (MFP)                      3.000    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+ number of energies =            1
+E( 1)=25.00000
+ CALL HATCH to get cross-section data
+
+ ===> Photonuclear flag:   0
+
+(Re)-initializing photon cross sections with files from the series: xcom
+
+ Compton cross sections: default
+ Using Compton cross sections from /home/rwtownson/EGSnrc/HEN_HOUSE/data/compton_sigma.data
+ Working on medium   1 ... OK
+
+Reading screened Rutherford MS data ...............  done 
+  
+  Medium            1  sige =    7.2617356014797183        6.9919373721892928       monotone =  F F
+  
+  Initializing tmxs for estepe =   0.25000000000000000       and ximax =   0.50000000000000000     
+  
+Output from subroutine EDGSET:
+==============================
+ Atomic relaxations not requested! 
+
+ Bound Compton scattering not requested! 
+
+ EGSnrc SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+\f Start g value calculation: Version 1.14 
+
+
+
+          MEDIUM is: AL521ICRU               
+
+ knock-on electrons can be created and any electron followed down to
+                                          0.010 MeV kinetic energy
+   brem photons canbe created and any photon followed down to      
+                                          0.010 MeV 
+ electron and photon upper kinetic energies are:  55.000     55.000 MeV respectively
+ CPU time so far:      0.05
+
+ Starting shower simulation ...
+
+                        Source                                  
+================================================================
+ Incident charge              : Photon
+ Incident spectrum            :  0
+ Incident kinetic energy (MeV):     25.00000000
+
+
+
+ Number of histories to simulate =                200000
+ Will interrupt any calculation loop when accuracy better than    1.0000000000000000E-003
+
+ => First calculating mutr only
+
+ mu_tr converged after                 60000  histories
+
+  <E*mu_tr/rho>     =    76.819289128727775       10^-12 Gy cm^2  +/-    9.0946520256478341E-002 %
+
+
+ => Now calculating g and muen
+
+ 1-g converged after                160000  histories
+
+ Final:
+  <E*mu_tr/rho> i.e., K   =   76.903383229403573       10^-12 Gy cm^2 +/-    4.7132585197400351E-002 %
+  <E*mu_en/rho> i.e., Kcol=   65.551623019396004       10^-12 Gy cm^2  +/-    6.8360735216078897E-002 %
+  g                 =   0.14761067372218400       +/-   0.28592672382918261      %
+
+
+
+================================================================================
+Finished simulation
+
+  Elapsed time:                   14.8 s (  0.004 h)
+  CPU time:                       14.7 s (  0.004 h)
+  Ratio:                          1.006
+
+
+End of run                                             Thu Aug 23 18:20:59 2018
+================================================================================

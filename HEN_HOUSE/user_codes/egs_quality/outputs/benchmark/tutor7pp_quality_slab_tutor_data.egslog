@@ -1,0 +1,359 @@
+In EGS_Application::initSimulation()
+================================================================================
+EGSnrc version 4 for linux64                           Thu Aug 23 18:19:13 2018
+================================================================================
+configuration............................................test
+user code................................................tutor7pp
+pegs file................................................tutor_data on HEN_HOUSE
+using host...............................................irs25
+input file...............................................quality_slab
+output file(s)...........................................quality_slab
+================================================================================
+
+               ***************************************************
+               *                                                 *
+               *                  tutor7pp                       *
+               *                                                 *
+               ***************************************************
+
+This is Tutor7_Application   based on
+      EGS_AdvancedApplication  
+
+In initCrossSections(): spin effects = 1
+Property Photon cross-sections output: 0
+Property Photonuclear attenuation: 0
+Property Bound Compton scattering: 3
+Property Radiative Compton corrections: 0
+Property Rayleigh scattering: 1
+Property Atomic relaxations: 1
+Property Photoelectron angular sampling: 1
+Property Spin effects: 1
+Property Triplet production: 0
+Property Brems cross sections: 0
+Property Brems angular sampling: 1
+Property Pair cross sections: 0
+Property Pair angular sampling: 1
+Property Electron-step algorithm: 0
+Property Boundary crossing algorithm: 0
+ ===> Photonuclear flag:   0
+ RAYLEIGH OPTION REQUESTED FOR MEDIUM NUMBER  1
+
+ Rayleigh data available for medium  1 in PEGS4 data set.
+
+(Re)-initializing photon cross sections with files from the series: xcom
+
+ Compton cross sections: default
+ Using Compton cross sections from /home/rwtownson/EGSnrc/HEN_HOUSE/data/compton_sigma.data
+ Working on medium   1 ... 
+  ->  100 atomic ff values computed!
+      preparing data for Rayleigh sampling ... done
+
+OK
+
+Reading screened Rutherford MS data ...............  done 
+
+
+Reading spin data base from /home/rwtownson/EGSnrc/HEN_HOUSE/data/spinms.data
+EGSnrc spin data, version 2.0   
+Data generated on a machine with 1234 endianess
+The endianess of this CPU is 1234
+Ranges:      1.00   100.00  0.30054  1.00000
+
+
+  medium    1 .....................  done
+  
+  Medium            1  sige =    1.7946410123827998        1.7870816572288755       monotone =  T T
+  
+  Initializing tmxs for estepe =   0.25000000000000000       and ximax =   0.50000000000000000     
+  
+
+Bound Compton scattering requested, reading data ......  Done
+
+ Initializing Bound Compton scattering ......
+ Medium   1 has  21 shells: 
+   1  861   1  0.02740 0.141E+01    67.416
+   2  862   2  0.02740 0.503E+01    11.681
+   3  863   3  0.02740 0.247E+01    11.136
+   4  864   4  0.05479 0.271E+01     9.881
+   5  865   5  0.02740 0.111E+02     2.708
+   6  866   6  0.02740 0.652E+01     2.469
+   7  867   7  0.05479 0.696E+01     2.194
+   8  868   8  0.05479 0.452E+01     1.793
+   9  869   9  0.08219 0.462E+01     1.735
+  10  870  10  0.02740 0.234E+02     0.563
+  11  871  11  0.02740 0.148E+02     0.462
+  12  872  12  0.05479 0.158E+02     0.402
+  13  873  13  0.05479 0.121E+02     0.239
+  14  874  14  0.08219 0.124E+02     0.227
+  15  875  15  0.02740 0.607E+02     0.068
+  16  876  16  0.02740 0.414E+02     0.042
+  17  877  17  0.05479 0.444E+02     0.034
+  18  878  18  0.08219 0.117E+02     0.025
+  19  879  19  0.10959 0.118E+02     0.023
+  20  880  20  0.05479 0.944E+02     0.008
+  21  881  21  0.01370 0.221E+03     0.008
+ ...... Done.
+
+Output from subroutine EDGSET:
+==============================
+ Atomic relaxations requested! 
+
+ Reading simplified photo-absorption data ..... Done
+
+ Reading simplified relaxation data ..... Done
+
+ Reading parametrized XCOM photo cross section data ..... Done
+
+ Reading EADL relaxation data ......
+  Z =  73 has 22 shells
+ ...... Done.
+
+ EGSnrc SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+
+
+The following media are defined:
+================================
+
+  0  TA                       AE= 0.7000 AP= 0.0100 0
+
+
+Transport parameter and cross section options:
+==============================================
+Photon cross sections                             xcom            
+Compton cross sections                            default         
+Global Pcut                                       0.1
+Pair cross sections                               BH
+Pair angular sampling                             Simple
+Triplet production                                Off
+Bound Compton scattering                          norej
+Radiative Compton corrections                     Off
+Rayleigh scattering                               On
+Atomic relaxations                                eadl
+Photoelectron angular sampling                    On
+Photonuclear attenuation                          Off
+Photonuclear cross sections                       default         
+
+Global Ecut                                       1.5
+Brems cross sections                              BH
+Brems angular sampling                            KM
+Spin effects                                      On
+Electron Impact Ionization                        Off             
+Global Smax                                       1e+10
+ESTEPE                                            0.25
+Ximax                                             0.5
+Boundary crossing algorithm                       Exact
+Skin depth for BCA                                3
+Electron-step algorithm                           EGSnrc
+==============================================
+
+
+
+======================== geometry =====================
+ type = EGS_Zplanes
+ name = slab
+ number of regions = 1
+ first plane at 0, 1 slices of 0.1 thickness
+=======================================================
+
+
+The simulation uses the following source:
+=========================================
+ Parallel beam from a shape of type point with monoenergetic 20 MeV, positrons
+
+
+Random number generator:
+============================================
+  type                = ranmar
+  high resolution     = no
+  initial seeds       = 33 97
+  numbers used so far = 0
+
+
+The following ausgab objects are included in the simulation
+===========================================================
+
+
+Particle Track Scoring (EGS_TrackScoring_7)
+======================================================
+ - Scoring photon tracks       = YES
+ - Scoring electron tracks     = YES
+ - Scoring positron tracks     = YES
+ - First event to score        = 0
+ - Last event to score         = 1024
+ - Track buffer size           = 1024
+ - Output file name            = /home/rwtownson/EGSnrc/egs_home/tutor7pp/quality_slab.ptracks
+
+
+
+
+
+Starting simulation on Thu Aug 23 18:19:13 2018
+
+    Fresh simulation of 100000 histories
+
+
+
+Running 100000 histories
+
+  Batch             CPU time        Result   Uncertainty(%)
+==========================================================
+      1                0.18     0.00686653           7.32
+      2                0.37     0.00697147           5.18
+      3                0.54      0.0064483           4.32
+      4                0.71     0.00638626           3.78
+      5                0.88     0.00622737           3.41
+      6                1.05     0.00634361           3.11
+      7                1.22     0.00635316           2.85
+      8                1.39     0.00628596           2.67
+      9                1.56      0.0062614           2.52
+     10                1.73     0.00621954           2.38
+
+
+Finished simulation
+
+Total cpu time for this run:            1.73 (sec.) 0.0005(hours)
+Histories per hour:                     2.08092e+08   
+Number of random numbers used:          37922195      
+Number of electron CH steps:            1.84522e+06   
+Number of all electron steps:           2.51384e+06   
+
+
+ last case = 100000 Etot = 2e+06
+
+
+======================================================
+ Energy fractions
+======================================================
+The first and last items in the following list of energy fractions are the reflected and transmitted energy, respectively. These two values are only meaningful if the source is directed in the positive z-direction. The remaining values are the deposited energy fractions in the regions of the geometry, but notice that the identifying index is the region number offset by 1 (ir+1).
+
+ir+1 | Reflected, deposited, or transmitted energy fraction for 100000 particles:
+
+  0  6.219750e-03 +/- 1.480777e-04  
+  1  1.192520e-01 +/- 1.824763e-04  
+  2  9.256282e-01 +/- 2.727378e-04  
+
+
+ Pulse height distribution in region 1
+======================================================
+
+0.1   0.00025   0.000111801
+0.3   0.001   0.000223586
+0.5   0.0008   0.000199985
+0.7   0.00095   0.000217925
+0.9   0.0006   0.000173196
+1.1   0.00075   0.000193636
+1.3   0.0007   0.000187071
+1.5   0.0008   0.000199985
+1.7   0.00035   0.000132284
+1.9   0.0006   0.000173196
+2.1   0.0004   0.000141416
+2.3   0.0002   9.99985e-05
+2.5   0.00065   0.000180267
+2.7   0.0009   0.000212114
+2.9   0.0007   0.000187071
+3.1   0.00035   0.000132284
+3.3   0.0006   0.000173196
+3.5   0.0004   0.000141416
+3.7   0.0006   0.000173196
+3.9   0.0004   0.000141416
+4.1   0.00075   0.000193636
+4.3   0.0005   0.000158107
+4.5   0.0006   0.000173196
+4.7   0.00065   0.000180267
+4.9   0.00055   0.000165823
+5.1   0.0006   0.000173196
+5.3   0.00075   0.000193636
+5.5   0.0007   0.000187071
+5.7   0.0007   0.000187071
+5.9   0.0004   0.000141416
+6.1   0.0008   0.000199985
+6.3   0.0007   0.000187071
+6.5   0.0008   0.000199985
+6.7   0.0011   0.000234496
+6.9   0.0006   0.000173196
+7.1   0.00125   0.00024997
+7.3   0.0012   0.000244921
+7.5   0.00075   0.000193636
+7.7   0.0016   0.000282799
+7.9   0.001   0.000223586
+8.1   0.00135   0.000259774
+8.3   0.0015   0.000273822
+8.5   0.00105   0.000229106
+8.7   0.0008   0.000199985
+8.9   0.00165   0.000287182
+9.1   0.0015   0.000273822
+9.3   0.0011   0.000234496
+9.5   0.00135   0.000259774
+9.7   0.0017   0.000291499
+9.9   0.0015   0.000273822
+10.1   0.0022   0.000331591
+10.3   0.00185   0.000304083
+10.5   0.00235   0.000342704
+10.7   0.0019   0.000308164
+10.9   0.00205   0.000320092
+11.1   0.00235   0.000342704
+11.3   0.0025   0.000353467
+11.5   0.00255   0.000356982
+11.7   0.00265   0.000363911
+11.9   0.00265   0.000363911
+12.1   0.00315   0.00039674
+12.3   0.00325   0.000402984
+12.5   0.0035   0.000418186
+12.7   0.0044   0.000468837
+12.9   0.00405   0.00044982
+13.1   0.0058   0.000538207
+13.3   0.00395   0.000444236
+13.5   0.00545   0.000521733
+13.7   0.00605   0.00054967
+13.9   0.0075   0.000611916
+14.1   0.0073   0.000603714
+14.3   0.0083   0.000643673
+14.5   0.0084   0.000647533
+14.7   0.0097   0.000695747
+14.9   0.0101   0.000709919
+15.1   0.0123   0.000783258
+15.3   0.01255   0.000791158
+15.5   0.01485   0.000860408
+15.7   0.0153   0.000873308
+15.9   0.0159   0.000890213
+16.1   0.0191   0.000975378
+16.3   0.0228   0.00106528
+16.5   0.0264   0.00114588
+16.7   0.0327   0.00127449
+16.9   0.0378   0.00136957
+17.1   0.044   0.00147671
+17.3   0.0524   0.00161015
+17.5   0.0646   0.00178558
+17.7   0.0794   0.00197661
+17.9   0.1084   0.00230273
+18.1   0.1394   0.00260303
+18.3   0.19965   0.0030958
+18.5   0.28705   0.00367813
+18.7   0.44675   0.00451019
+18.9   0.72175   0.00555685
+19.1   1.1153   0.00658229
+19.3   1.3364   0.0069972
+19.5   0.00655   0.000571904
+19.7   0.00605   0.00054967
+19.9   0.0271   0.00116089
+
+Particle Track Scoring (EGS_TrackScoring_7)
+======================================================
+   Total events scored:     1024
+   Total tracks scored:     10587
+   Still being scored:      0
+   Output file name:        /home/rwtownson/EGSnrc/egs_home/tutor7pp/quality_slab.ptracks
+
+
+
+================================================================================
+Finished simulation
+
+  Elapsed time:                    1.9 s (  0.001 h)
+  CPU time:                        1.8 s (  0.001 h)
+  Ratio:                          1.062
+
+
+End of run                                             Thu Aug 23 18:19:14 2018
+================================================================================
+finishSimulation(tutor7pp) 0
