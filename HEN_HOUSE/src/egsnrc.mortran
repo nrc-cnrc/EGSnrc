@@ -6010,7 +6010,8 @@ REPLACE {$CHECK-RELAX-STACK(#,#);} WITH {;
        ' min_E = ', min_E,' iq = ',iqf);
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
       $egs_fatal('(//,3a,/,2(a,i9),/,a)',' In subroutine ',{P2},
-          ' stack size exceeded! ',' $MXSTACK = ',$MXSTACK,' np = ',{P1},
+          ' stack size exceeded! ',' $MXSTACK = ',
+          $MXSTACK,' np = ',{P1},
           ' Increase $MXSTACK and try again ');
   ]
 };
