@@ -44,6 +44,7 @@
 #define EGS_BASE_GEOMETRY_
 
 #include "egs_vector.h"
+#include "egs_rndm.h"
 
 #include <string>
 #include <vector>
@@ -732,6 +733,16 @@ public:
     /*! \brief Set the labels from an input string */
     int setLabels(const string &inp);
 
+    /*! \brief Calculate and print the volumes of regions in the geometry */
+    void printVolumes(EGS_Input *input, EGS_RandomGenerator *rndm);
+
+    /*! \brief Calculate the volumes of regions in the geometry */
+    int getVolumes(EGS_I64 &npass, EGS_I64 &nsample, vector<EGS_Float> &min,
+                   vector<EGS_Float> &max, unsigned int &nreg,
+                   vector<double> &sigma, vector<double> &volume,
+                   vector<EGS_I64> &nhit, vector<EGS_I64> &ntry, EGS_I64 &ntot,
+                   EGS_RandomGenerator *rndm, bool verbose);
+
 protected:
 
     /*! \brief Number of local regions in this geometry
@@ -1337,5 +1348,212 @@ struct EGS_GeometryIntersections {
   and the complete implementation:
 */
 
+class Volume_Info {
+public:
+    EGS_Vector          min, max;
+    EGS_BaseGeometry    *g;
+    EGS_RandomGenerator *rng;
+
+    // constructor
+    Volume_Info(EGS_Vector &bbmin, EGS_Vector &bbmax, EGS_BaseGeometry *geom,
+                EGS_RandomGenerator *generator) {
+        min  = bbmin;
+        max  = bbmax;
+        g    = geom;
+        rng  = generator;
+    }
+};
+
+class Volume_Node {
+public:
+    EGS_I64          ntry;
+    vector <EGS_I64> nhit;
+    int             ix, iy, iz;     //!< octree indices, representing the binary location code of the node in x, y, z
+    int             region;         //!< region number of the node
+    unsigned short  level;          //!< depth of the node (root node is level 0)
+    Volume_Node     *parent;        //!< pointer to the parent node (only root node can have parent set to NULL)
+    Volume_Node     **child;        //!< pointer to children nodes, NULL if there are no children
+
+    // constructor
+    Volume_Node(Volume_Info *v, Volume_Node *p, int index) {
+
+        // init child
+        child = NULL;
+
+        // set parent
+        parent = NULL;
+        if (p != NULL) {
+            parent = p;
+        }
+
+        // set level
+        if (parent != NULL) {
+            level = parent->level + 1;
+            ix = (parent->ix << 1) | (index>>0 & 0x1);
+            iy = (parent->iy << 1) | (index>>1 & 0x1);
+            iz = (parent->iz << 1) | (index>>2 & 0x1);
+        }
+        else {
+            level = 0;
+            ix = iy = iz = 0;
+        }
+
+        // set region number of the node
+        setRegion(v);
+
+        // allocate array of region hits
+        int nreg = v->g->regions();
+        for (int i=0; i<nreg; i++) {
+            nhit.push_back(0);
+        }
+        ntry = 0;
+    }
+
+    ~Volume_Node() {
+        deleteChildren();
+    }
+
+    // setRegion
+    void setRegion(Volume_Info *v) {
+        EGS_Vector d  = (v->max - v->min) * (1.0/(double)(1<<level));
+        EGS_Vector r0 = v->min;
+        r0.x += (ix+0.5)*d.x;
+        r0.y += (iy+0.5)*d.y;
+        r0.z += (iz+0.5)*d.z;
+        region = v->g->isWhere(r0);
+    }
+
+    // create children nodes
+    void createChildren(Volume_Info *v) { // create children to the this node
+        // ensure there are no children already
+        if (!child) {
+            // allocate memory for 8 new children nodes
+            child = new Volume_Node* [8];
+            for (int i=0; i<8; i++) {
+                child[i] = new Volume_Node(v, this, i);
+            }
+        }
+    }
+
+    // delete children (recursively)
+    void deleteChildren() { // delete children of this node
+        // if this node has children, delete them
+        if (child) {
+            for (int i=0; i<8; i++) {
+                // recursive calls to delete all children branches
+                child[i]->deleteChildren();
+                delete child[i];
+            }
+            // free the memory allocated for the 8 children
+            delete [] child;
+            // set children pointer to NULL to indicate that there are no children anymore
+            child = NULL;
+        }
+    }
+
+    // count the number of octree leaves
+    int countLeaves() {
+        int count = 1;
+        if (child) {
+            count -= 1;
+            for (int i=0; i<8; i++) {
+                count += child[i]->countLeaves();
+            }
+        }
+        return count;
+    }
+
+    // count memory
+    double countMem() {
+        int count = 1;
+        if (child) {
+            for (int i=0; i<8; i++) {
+                count += child[i]->countLeaves();
+            }
+        }
+        return (double)count*sizeof(Volume_Node)/1024.0/1024.0;
+    }
+
+    // sample region volumes
+    void sampleVolumes(Volume_Info *v, int nsample, vector<double> sigma, double avgSigma) {
+
+        if (child) {
+            for (int i=0; i<8; i++) {
+                child[i]->sampleVolumes(v, nsample, sigma, avgSigma);
+            }
+        }
+        else {
+            EGS_Vector d = (v->max - v->min) * (1.0/(double)(1<<level));
+            double minx = v->min.x + ix*d.x;
+            double miny = v->min.y + iy*d.y;
+            double minz = v->min.z + iz*d.z;
+            int nreg = v->g->regions();
+            int nsampleAdjusted;
+            if (avgSigma > 0) {
+                // Adjust the number sampled by this leaf using the
+                // deviation of the uncertainty from the average
+                // This increases the number of samples in regions with
+                // higher uncertainty
+                // The efficiency improvement is a factor of about 3.8
+                nsampleAdjusted = int(double(nsample) * sigma[region]*sigma[region] / (avgSigma*avgSigma));
+            }
+            else {
+                nsampleAdjusted = nsample;
+            }
+
+            for (long long i=0; i<nsampleAdjusted; i++) {
+                EGS_Vector r;
+                double rx = v->rng->getUniform();
+                double ry = v->rng->getUniform();
+                double rz = v->rng->getUniform();
+                r.x = minx + (d.x*rx);
+                r.y = miny + (d.y*ry);
+                r.z = minz + (d.z*rz);
+                int ireg = v->g->isWhere(r);
+                if (level < 8 && ireg != region) {
+                    createChildren(v);
+                    break;
+                }
+                else if (ireg >= 0 && ireg < nreg) {
+                    nhit[ireg]++;
+                }
+                ntry++;
+            }
+        }
+    }
+
+    // calculate region volumes
+    void calculateVolumes(Volume_Info *v, vector<double> &volume,
+                          vector<double> &sigma, unsigned int nreg,
+                          EGS_I64 &ntot, vector<EGS_I64> &regionHits,
+                          vector<EGS_I64> &regionTrys) {
+
+        if (child) {
+            for (unsigned int i=0; i<8; i++) {
+                child[i]->calculateVolumes(v, volume, sigma, nreg, ntot, regionHits, regionTrys);
+            }
+        }
+        else {
+            EGS_Vector d = (v->max - v->min) * (1.0/(double)(1<<level));
+            double vol = d.x*d.y*d.z;
+            if (region >= 0 && nhit[region] == ntry) {
+                volume[region] += vol;
+                regionHits[region] += nhit[region];
+                regionTrys[region] += ntry;
+            }
+            else if (ntry > 0) {
+                for (unsigned int i=0; i<nreg; i++) {
+                    double ave = nhit[i]/ntry;
+                    double var = (ave-ave*ave)/ntry;
+                    volume[i] += ave*vol;
+                    sigma[i]  += var*vol*vol;
+                    regionHits[i] += nhit[i];
+                    regionTrys[i] += ntry;
+                }
+            }
+            ntot += ntry;
+        }
+    }
+};
 
 #endif

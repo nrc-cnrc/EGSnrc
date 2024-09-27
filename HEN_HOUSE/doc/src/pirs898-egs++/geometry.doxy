@@ -42,13 +42,14 @@
 
   \anchor geometry_anchor
 
-\ref geometry_general <br>
-\ref geometry_design <br>
-\ref geometry_common <br>
-\ref geometry_media <br>
-\ref geometry_implementing <br>
-\ref geometry_view <br>
-\ref geometry_examples <br>
+\ref geometry_general<br>
+\ref geometry_design<br>
+\ref geometry_common<br>
+\ref geometry_media<br>
+\ref geometry_implementing<br>
+\ref volume_calculation<br>
+\ref geometry_view<br>
+\ref geometry_examples<br>
 
 \section geometry_general General discussion
 
@@ -316,6 +317,52 @@ provided with the distribution is very helpful in the process of
 developing new geometries and has helped to find numerous bugs
 in the initial implementations of the various geometry classes
 provided with \c egspp.
+
+\section volume_calculation Calculating volumes
+
+The volumes of regions or media in your geometry can be calculated via
+Monte Carlo sampling using the built in volume calculation. To perform the
+volume calculation, you define a box within which test points will be generated.
+Make sure that the box encloses your entire volume(s) of interest.
+
+The volumes of each region and medium are automatically printed as output.
+The user may also specify regions to calculate the volume in using labels.
+After setting labels in geometries of interest, list the labels under
+the \c labels input. For each label, the sum of the region volumes is output.
+
+To turn on <tt>volume calculation</tt>, include a new control block in your
+input file:
+\verbatim
+:start volume calculation:
+    passes = the number of recursion passes to create the octree
+    samples = the number samples to perform per node per pass
+    box min = minX minY minZ
+    box max = maxX maxY maxZ
+    labels = labels you have added to your geometry using `set label`
+:stop volume calculation:
+\endverbatim
+
+For example:
+\verbatim
+:start volume calculation:
+    passes = 20
+    samples = 1e7
+    box min = -100 -100 -100
+    box max = 100 100 100
+    labels = detector
+:stop volume calculation:
+\endverbatim
+
+For the volume calculation, the sampling box is divided into progressively
+smaller voxels as the geometry is analyzed on each pass. The algorithm follows
+the creation of an \em octree. Areas with a greater density of geometry
+regions end up with a higher density of voxels and thus are sampled more often
+in the volume calculation.
+
+As the volume calculation progresses, the number of samplings in each octree
+node is also adjusted. On each pass, regions with a higher uncertainty
+on the volume are sampled more often, while regions with lower uncertainty
+are sampled less often.
 
 \section geometry_view The geometry viewer: egs_view
 

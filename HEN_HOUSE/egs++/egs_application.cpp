@@ -691,6 +691,11 @@ int EGS_Application::initGeometry() {
     }
     geometry->ref();
     geometry->setApplication(this);
+
+    if(rndm) {
+        geometry->printVolumes(input,rndm);
+    }
+
     return 0;
 }
 
@@ -750,9 +755,17 @@ int EGS_Application::initRNG() {
 
 int EGS_Application::initSimulation() {
     //if( !input ) { egsWarning("%s no input\n",__egs_app_msg2); return -1; }
-    egsInformation("In EGS_Application::initSimulation()\n");
+
+    egsInformation("\n================================================================================\n");
+    egsInformation("EGS_Application::initSimulation()\n");
+    egsInformation("Initializing simulation...\n\n");
     int err;
     bool ok = true;
+    err = initRNG();
+    if (err) {
+        egsWarning("\n\n%s RNG initialization failed\n",__egs_app_msg2);
+        ok = false;
+    }
     err = initGeometry();
     if (err) {
         egsWarning("\n\n%s geometry initialization failed\n",__egs_app_msg2);
@@ -761,11 +774,6 @@ int EGS_Application::initSimulation() {
     err = initSource();
     if (err) {
         egsWarning("\n\n%s source initialization failed\n",__egs_app_msg2);
-        ok = false;
-    }
-    err = initRNG();
-    if (err) {
-        egsWarning("\n\n%s RNG initialization failed\n",__egs_app_msg2);
         ok = false;
     }
     err = initRunControl();
