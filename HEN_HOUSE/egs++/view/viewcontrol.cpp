@@ -2868,8 +2868,8 @@ void GeometryViewControl::slideTime() {
     int sliderpos=slider_timeindex->sliderPosition();
 
     // the time index corresponding to the position integer is determined by
-    // dividing the position by 1000
-    EGS_Float slidertime = sliderpos/(float)1000;
+    // dividing the position by the number of time steps
+    EGS_Float slidertime = sliderpos/(float)spin_numTimeSteps->value();
 
     // update the time index spinbox. The signals are blocked as it would lead
     // to an infinite loop between the slider and the time index spin box
