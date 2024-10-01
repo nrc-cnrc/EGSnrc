@@ -2888,6 +2888,13 @@ void GeometryViewControl::slideTime() {
     updateView();
 }
 
+void GeometryViewControl::updateNumTimeSteps() {
+    int newMaximum = spin_numTimeSteps->value()-1;
+    slider_timeindex->blockSignals(true);
+    slider_timeindex->setMaximum(newMaximum);
+    slider_timeindex->blockSignals(false);
+    spinTime();
+}
 
 void GeometryViewControl::particleSlider(EGS_Float slidertime) {
     /* this function is called by the time index slider, the time window box,
