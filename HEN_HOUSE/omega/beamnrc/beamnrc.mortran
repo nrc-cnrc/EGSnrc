@@ -5748,6 +5748,7 @@ IF( use_bcse & ibrspl < 2 ) [
     ]
 ]
 
+IRL = IR(NP);  "Local region number"
 
 " The following splits eii photons both for UBS & BCSE whether the two       "
 " are used individually or in conjunction with each other. Not automatically "
@@ -5775,7 +5776,6 @@ $USER-AUSGAB;
 
 " Check if particle is leaving the transport geometry
 " ***************************************************
-IRL = IR(NP);  "Local region number"
 IF(IRL =  1)[
    IF(IARG ~= 3 & IARG ~=5)[
        "if properly coded we should only get IRL=1 when being discarded"
