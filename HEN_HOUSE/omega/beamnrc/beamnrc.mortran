@@ -5748,7 +5748,7 @@ IF( use_bcse & ibrspl < 2 ) [
     ]
 ]
 
-IRL = IR(NP);  "Local region number"
+IRL = IR(NP);"  Local region number"
 
 " The following splits eii photons both for UBS & BCSE whether the two       "
 " are used individually or in conjunction with each other. Not automatically "
