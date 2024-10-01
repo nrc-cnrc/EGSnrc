@@ -162,6 +162,12 @@ clean:
 	@$(MAKE) -s WHAT=_noopt execlean
 	@$(MAKE) -s WHAT= execlean
 
+libclean:
+	@echo "$(REMOVE) mortjob.mortran $(LIB_FORTRAN_FILE).$(FEXT) $(LIB_FORTRAN_FILE).mortlst"
+	@$(REMOVE) mortjob.mortran $(LIB_FORTRAN_FILE).$(FEXT) $(LIB_FORTRAN_FILE).mortlst
+	@echo "$(REMOVE) $(LIB_FORTRAN_FILE).$(FOBJE) $(LIB_FILE)"
+	$(REMOVE) $(LIB_FILE) $(LIB_FORTRAN_FILE).$(FOBJE)
+
 execlean:
 	@echo "$(REMOVE) $(EXE_FILE)"
 	$(REMOVE) $(EXE_FILE)
