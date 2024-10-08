@@ -156,30 +156,31 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
             if (err_f) egsFatal("\n**** EGS_FluenceScoring::initScoring"
                                     "       Missing input: maximum kinetic energy.\n"
                                     "       Aborting!\n\n");
-        }
+        
 
-        vector<string> scale;
-        scale.push_back("linear");
-        scale.push_back("logarithmic");
-        flu_s = inp->getInput("scale",scale,0);
-        if (flu_s == 0) {
+            vector<string> scale;
+            scale.push_back("linear");
+            scale.push_back("logarithmic");
+            flu_s = eGrid->getInput("scale",scale,0);
+            if (flu_s == 0) {
             flu_xmin = flu_Emin;
             flu_xmax = flu_Emax;
-        }
-        else {
+            }
+            else {
             flu_xmin = log(flu_Emin);
             flu_xmax = log(flu_Emax);
+            }
+            flu_a = flu_nbin;
+            flu_a /= (flu_xmax - flu_xmin);
+            flu_b = -flu_xmin*flu_a;
+            /******************************************************
+              Algorithm assigns E in [Ei,Ei+1), one could add extra
+              bin for E = Emax cases. Alternatively, push those
+              events into last bin (bias?) during scoring.
+              Which approach is correct?
+            ******************************************************/
+            //flu_nbin++;
         }
-        flu_a = flu_nbin;
-        flu_a /= (flu_xmax - flu_xmin);
-        flu_b = -flu_xmin*flu_a;
-        /******************************************************
-           Algorithm assigns E in [Ei,Ei+1), one could add extra
-           bin for E = Emax cases. Alternatively, push those
-           events into last bin (bias?) during scoring.
-           Which approach is correct?
-         ******************************************************/
-        //flu_nbin++;
     }
 
     /*
