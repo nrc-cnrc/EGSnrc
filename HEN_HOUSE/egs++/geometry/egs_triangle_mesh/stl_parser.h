@@ -69,8 +69,8 @@ static inline void trim(std::string &s) {
 }
 
 EGS_TriangleMeshSpec::Triangle parse_ascii_stl_triangle(std::string facet_line,
-                                                        std::istream& input,
-                                                        const std::string& filename) {
+        std::istream &input,
+        const std::string &filename) {
     EGS_TriangleMeshSpec::Triangle tri;
     // parse triangle normal
     {
@@ -132,8 +132,8 @@ EGS_TriangleMeshSpec::Triangle parse_ascii_stl_triangle(std::string facet_line,
 
 // Parse the body of an ascii STL file into an EGS_TriangleMeshSpec. Throws a
 // std::runtime_error if parsing fails.
-EGS_TriangleMeshSpec parse_ascii_stl_file(std::istream& input,
-                                          const std::string& filename) {
+EGS_TriangleMeshSpec parse_ascii_stl_file(std::istream &input,
+        const std::string &filename) {
     // discard any remaining characters after `solid`
     std::string line;
     std::getline(input, line);
@@ -159,11 +159,11 @@ EGS_TriangleMeshSpec parse_ascii_stl_file(std::istream& input,
 
 // Parse the body of a binary STL file into an EGS_TriangleMeshSpec. Throws a
 // std::runtime_error if parsing fails.
-EGS_TriangleMeshSpec parse_binary_stl_file(std::istream& input,
-                                           const std::string& filename) {
+EGS_TriangleMeshSpec parse_binary_stl_file(std::istream &input,
+        const std::string &filename) {
     // parse the number of triangles
     std::uint32_t n_tri = 0;
-    input.read(reinterpret_cast<char*>(&n_tri), 4);
+    input.read(reinterpret_cast<char *>(&n_tri), 4);
     if (!input.good()) {
         throw std::runtime_error("failed to parse the number of triangles");
     }
@@ -188,30 +188,30 @@ EGS_TriangleMeshSpec parse_binary_stl_file(std::istream& input,
     raw_triangles.resize(n_tri);
     for (std::uint32_t i = 0; i < n_tri; i++) {
         // assumed to be an outward-facing unit normal as per STL spec
-        input.read(reinterpret_cast<char*>(&xf), sizeof(float));
-        input.read(reinterpret_cast<char*>(&yf), sizeof(float));
-        input.read(reinterpret_cast<char*>(&zf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&xf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&yf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&zf), sizeof(float));
         fill_egsvec(raw_triangles[i].n);
 
         // nodes assumed to be in CCW order as viewed from outside
-        input.read(reinterpret_cast<char*>(&xf), sizeof(float));
-        input.read(reinterpret_cast<char*>(&yf), sizeof(float));
-        input.read(reinterpret_cast<char*>(&zf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&xf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&yf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&zf), sizeof(float));
         fill_egsvec(raw_triangles[i].a);
 
-        input.read(reinterpret_cast<char*>(&xf), sizeof(float));
-        input.read(reinterpret_cast<char*>(&yf), sizeof(float));
-        input.read(reinterpret_cast<char*>(&zf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&xf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&yf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&zf), sizeof(float));
         fill_egsvec(raw_triangles[i].b);
 
-        input.read(reinterpret_cast<char*>(&xf), sizeof(float));
-        input.read(reinterpret_cast<char*>(&yf), sizeof(float));
-        input.read(reinterpret_cast<char*>(&zf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&xf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&yf), sizeof(float));
+        input.read(reinterpret_cast<char *>(&zf), sizeof(float));
         fill_egsvec(raw_triangles[i].c);
 
         // Skip any attribute bytes. These are usually zero but just in case.
         std::uint16_t attr_bytes = 0;
-        input.read(reinterpret_cast<char*>(&attr_bytes), 2);
+        input.read(reinterpret_cast<char *>(&attr_bytes), 2);
         input.ignore(attr_bytes);
 
         if (!input.good()) {
