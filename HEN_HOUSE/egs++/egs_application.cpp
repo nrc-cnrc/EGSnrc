@@ -926,6 +926,7 @@ int EGS_Application::simulateSingleShower() {
                        " attempts\n");
             return 1;
         }
+
         current_case =
             source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,p.x,p.u);
         ireg = geometry->isWhere(p.x);
@@ -1043,6 +1044,7 @@ int EGS_Application::finishSimulation() {
     int err = 0;
     if (run) {
         err = run->finishSimulation();
+        geometry->printTriCheck(); //output number of checked triangles by trimesh in howfar method
         if (err < 0) {
             return err;
         }

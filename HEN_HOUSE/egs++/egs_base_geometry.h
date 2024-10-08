@@ -732,6 +732,9 @@ public:
     /*! \brief Set the labels from an input string */
     int setLabels(const string &inp);
 
+    virtual void printTriCheck() { }; //A.D debugging
+    virtual void debugtool() { }; //A.D debugging
+
 protected:
 
     /*! \brief Number of local regions in this geometry
