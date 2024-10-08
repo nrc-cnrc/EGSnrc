@@ -156,19 +156,19 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
             if (err_f) egsFatal("\n**** EGS_FluenceScoring::initScoring"
                                     "       Missing input: maximum kinetic energy.\n"
                                     "       Aborting!\n\n");
-        
+
 
             vector<string> scale;
             scale.push_back("linear");
             scale.push_back("logarithmic");
             flu_s = eGrid->getInput("scale",scale,0);
             if (flu_s == 0) {
-            flu_xmin = flu_Emin;
-            flu_xmax = flu_Emax;
+                flu_xmin = flu_Emin;
+                flu_xmax = flu_Emax;
             }
             else {
-            flu_xmin = log(flu_Emin);
-            flu_xmax = log(flu_Emax);
+                flu_xmin = log(flu_Emin);
+                flu_xmax = log(flu_Emax);
             }
             flu_a = flu_nbin;
             flu_a /= (flu_xmax - flu_xmin);
@@ -1385,19 +1385,19 @@ void EGS_VolumetricFluence::describeMe() {
     EGS_FluenceScoring::describeMe();
 
     if (scoring_charge) {
-       if (flu_stpwr) {
-           if (flu_stpwr == stpwr) {
-               description += "   O(eps^3) approach: accounts for change in stpwr\n";
-               description +=                "   along the step with eps=edep/Emid\n";
-           }
-           else if (flu_stpwr == stpwrO5) {
-               description += "   O(eps^5) approach: accounts for change in stpwr\n";
-               description += "   along the step with eps=edep/Emid\n";
-           }
-       }
-       else {
-           description += "   Fluence calculated a-la-FLURZ using Lave=EDEP/TVSTEP.\n";
-       }
+        if (flu_stpwr) {
+            if (flu_stpwr == stpwr) {
+                description += "   O(eps^3) approach: accounts for change in stpwr\n";
+                description +=                "   along the step with eps=edep/Emid\n";
+            }
+            else if (flu_stpwr == stpwrO5) {
+                description += "   O(eps^5) approach: accounts for change in stpwr\n";
+                description += "   along the step with eps=edep/Emid\n";
+            }
+        }
+        else {
+            description += "   Fluence calculated a-la-FLURZ using Lave=EDEP/TVSTEP.\n";
+        }
     }
 
     if (norm_u != 1.0) {
@@ -1593,7 +1593,7 @@ void EGS_VolumetricFluence::ouputResults() {
                 egsInformation("Volume[%d] = %g", j, volume[j]);
                 egsInformation(" Normalization = Ncase/Fsrc/V = %g\n",norma);
             }
-            else{
+            else {
                 egsInformation(" See Grace plot file %s\n", spe_name.c_str());
             }
 
