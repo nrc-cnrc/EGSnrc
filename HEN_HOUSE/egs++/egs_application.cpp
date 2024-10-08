@@ -926,7 +926,7 @@ int EGS_Application::simulateSingleShower() {
                        " attempts\n");
             return 1;
         }
-        cout<<endl<<"NEW HISTORY"<<endl;
+
         current_case =
             source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,p.x,p.u);
         ireg = geometry->isWhere(p.x);

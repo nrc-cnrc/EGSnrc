@@ -207,22 +207,22 @@ public:
     }
 
     /// Returns the three triangle node x-coordinates.
-    const std::array<EGS_Float, 3>& triangle_xs(int tri) const {
+    const std::array<EGS_Float, 3> &triangle_xs(int tri) const {
         return xs.at(tri);
     }
 
     /// Returns the three triangle node y-coordinates.
-    const std::array<EGS_Float, 3>& triangle_ys(int tri) const {
+    const std::array<EGS_Float, 3> &triangle_ys(int tri) const {
         return ys.at(tri);
     }
 
     /// Returns the three triangle node z-coordinates.
-    const std::array<EGS_Float, 3>& triangle_zs(int tri) const {
+    const std::array<EGS_Float, 3> &triangle_zs(int tri) const {
         return zs.at(tri);
     }
 
     /// Returns the outward-facing triangle unit normal.
-    const EGS_Vector& triangle_normal(int tri) const {
+    const EGS_Vector &triangle_normal(int tri) const {
         return ns.at(tri);
     }
 
@@ -232,40 +232,40 @@ public:
         return EGS_TriangleMesh::type;
     }
 
-    void setOctBool(bool octset){
+    void setOctBool(bool octset) {
         octree_acc_on=octset;
     }
-    bool getOctBool(){
+    bool getOctBool() {
         return octree_acc_on;
     }
-    void inctricheck_OHF(){
+    void inctricheck_OHF() {
         tri_check_OHF++;
     }
-    void inctricheck_OHN(){
+    void inctricheck_OHN() {
         tri_check_OHN++;
     }
-    void inctricheck_OIW(){
+    void inctricheck_OIW() {
         tri_check_OIW++;
     }
-    void inctricheck_NHF(){
+    void inctricheck_NHF() {
         tri_check_NHF++;
     }
-    void inctricheck_NHN(){
+    void inctricheck_NHN() {
         tri_check_NHN++;
     }
-    void inctricheck_NIW(){
+    void inctricheck_NIW() {
         tri_check_NIW++;
     }
-    void printTriCheck(){
-        if(octree_acc_on){
-        cout<<endl<<"In this simualtion (Octree) each each geometry checked "<<endl<<tri_check_OHF<<" triangles (howfar)"<<endl<<tri_check_OHN<<" triangles (hownear)"<<endl<<tri_check_OIW<<" triangles (iswhere)"<<endl;
+    void printTriCheck() {
+        if (octree_acc_on) {
+            cout<<endl<<"In this simualtion (Octree) each each geometry checked "<<endl<<tri_check_OHF<<" triangles (howfar)"<<endl<<tri_check_OHN<<" triangles (hownear)"<<endl<<tri_check_OIW<<" triangles (iswhere)"<<endl;
         }
-        else{
-        cout<<endl<<"In this simualtion (Naive) each each geometry checked "<<endl<<tri_check_NHF<<" triangles (howfar)"<<endl<<tri_check_NHN<<" triangles (hownear)"<<endl<<tri_check_NIW<<" triangles (iswhere)"<<endl;
+        else {
+            cout<<endl<<"In this simualtion (Naive) each each geometry checked "<<endl<<tri_check_NHF<<" triangles (howfar)"<<endl<<tri_check_NHN<<" triangles (hownear)"<<endl<<tri_check_NIW<<" triangles (iswhere)"<<endl;
         }
     }
 
-    void debugtool(){
+    void debugtool() {
         string outstring = "trimesh_"+name+"_debug.txt";
         const char *outname=outstring.c_str();
         sortout = new ofstream(outname, ios::trunc);

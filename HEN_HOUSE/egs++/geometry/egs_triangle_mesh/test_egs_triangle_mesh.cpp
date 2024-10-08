@@ -116,7 +116,7 @@ namespace stl_parser {
 
 static void missing_file() {
     EXPECT_ERROR(stl_parser::parse_stl_file("temp_missing.stl"), "STL file "
-            "`temp_missing.stl` does not exist or is not readable");
+                 "`temp_missing.stl` does not exist or is not readable");
 }
 
 static void empty_file() {
@@ -156,24 +156,21 @@ endsolid)");
                                  + std::to_string(mesh.elements.size()));
     }
     if (!egsvec_approx_eq(mesh.elements[0].n, EGS_Vector(0.6229f, 0.35962f, 0.694744f)) ||
-        !egsvec_approx_eq(mesh.elements[0].a, EGS_Vector(43.062f, 20.491f, -149.441f)) ||
-        !egsvec_approx_eq(mesh.elements[0].b, EGS_Vector(41.768f, 19.197f, -147.611f)) ||
-        !egsvec_approx_eq(mesh.elements[0].c, EGS_Vector(43.946f, 19.607f, -149.776f)))
-    {
+            !egsvec_approx_eq(mesh.elements[0].a, EGS_Vector(43.062f, 20.491f, -149.441f)) ||
+            !egsvec_approx_eq(mesh.elements[0].b, EGS_Vector(41.768f, 19.197f, -147.611f)) ||
+            !egsvec_approx_eq(mesh.elements[0].c, EGS_Vector(43.946f, 19.607f, -149.776f))) {
         throw std::runtime_error("element 0 parsing failed");
     }
     if (!egsvec_approx_eq(mesh.elements[1].n, EGS_Vector(0.730297f, 0.632387f, 0.258365f)) ||
-        !egsvec_approx_eq(mesh.elements[1].a, EGS_Vector(43.536f, 20.965f, -151.941f)) ||
-        !egsvec_approx_eq(mesh.elements[1].b, EGS_Vector(43.062f, 20.491f, -149.441f)) ||
-        !egsvec_approx_eq(mesh.elements[1].c, EGS_Vector(43.946f, 19.607f, -149.776f)))
-    {
+            !egsvec_approx_eq(mesh.elements[1].a, EGS_Vector(43.536f, 20.965f, -151.941f)) ||
+            !egsvec_approx_eq(mesh.elements[1].b, EGS_Vector(43.062f, 20.491f, -149.441f)) ||
+            !egsvec_approx_eq(mesh.elements[1].c, EGS_Vector(43.946f, 19.607f, -149.776f))) {
         throw std::runtime_error("element 1 parsing failed");
     }
     if (!egsvec_approx_eq(mesh.elements[2].n, EGS_Vector(0.81508f, 0.547608f, 0.189131f)) ||
-        !egsvec_approx_eq(mesh.elements[2].a, EGS_Vector(43.536f, 20.965f, -151.941f)) ||
-        !egsvec_approx_eq(mesh.elements[2].b, EGS_Vector(43.946f, 19.607f, -149.776f)) ||
-        !egsvec_approx_eq(mesh.elements[2].c, EGS_Vector(44.593f, 18.96f, -150.691f)))
-    {
+            !egsvec_approx_eq(mesh.elements[2].a, EGS_Vector(43.536f, 20.965f, -151.941f)) ||
+            !egsvec_approx_eq(mesh.elements[2].b, EGS_Vector(43.946f, 19.607f, -149.776f)) ||
+            !egsvec_approx_eq(mesh.elements[2].c, EGS_Vector(44.593f, 18.96f, -150.691f))) {
         throw std::runtime_error("element 2 parsing failed");
     }
 }
@@ -191,7 +188,9 @@ static void truncated_file() {
     // 1. 80 byte comment
     std::string header(80, 'A');
     // 2. Number of triangles (LE bytes for 100,000)
-    for (auto b : {0xA0, 0x86, 0x1, 0}) {
+    for (auto b : {
+                0xA0, 0x86, 0x1, 0
+            }) {
         header.push_back(b);
     }
     TempFile binfile("temp_truncated_file.stl", header);
@@ -211,24 +210,21 @@ static void parse_binary_file() {
     }
 
     if (!egsvec_approx_eq(mesh.elements[0].n, EGS_Vector(0.6229f, 0.35962f, 0.694744f)) ||
-        !egsvec_approx_eq(mesh.elements[0].a, EGS_Vector(43.062f, 20.491f, -149.441f)) ||
-        !egsvec_approx_eq(mesh.elements[0].b, EGS_Vector(41.768f, 19.197f, -147.611f)) ||
-        !egsvec_approx_eq(mesh.elements[0].c, EGS_Vector(43.946f, 19.607f, -149.776f)))
-    {
+            !egsvec_approx_eq(mesh.elements[0].a, EGS_Vector(43.062f, 20.491f, -149.441f)) ||
+            !egsvec_approx_eq(mesh.elements[0].b, EGS_Vector(41.768f, 19.197f, -147.611f)) ||
+            !egsvec_approx_eq(mesh.elements[0].c, EGS_Vector(43.946f, 19.607f, -149.776f))) {
         throw std::runtime_error("element 0 parsing failed");
     }
     if (!egsvec_approx_eq(mesh.elements[1].n, EGS_Vector(0.730297f, 0.632387f, 0.258365f)) ||
-        !egsvec_approx_eq(mesh.elements[1].a, EGS_Vector(43.536f, 20.965f, -151.941f)) ||
-        !egsvec_approx_eq(mesh.elements[1].b, EGS_Vector(43.062f, 20.491f, -149.441f)) ||
-        !egsvec_approx_eq(mesh.elements[1].c, EGS_Vector(43.946f, 19.607f, -149.776f)))
-    {
+            !egsvec_approx_eq(mesh.elements[1].a, EGS_Vector(43.536f, 20.965f, -151.941f)) ||
+            !egsvec_approx_eq(mesh.elements[1].b, EGS_Vector(43.062f, 20.491f, -149.441f)) ||
+            !egsvec_approx_eq(mesh.elements[1].c, EGS_Vector(43.946f, 19.607f, -149.776f))) {
         throw std::runtime_error("element 1 parsing failed");
     }
     if (!egsvec_approx_eq(mesh.elements[2].n, EGS_Vector(0.81508f, 0.547608f, 0.189131f)) ||
-        !egsvec_approx_eq(mesh.elements[2].a, EGS_Vector(43.536f, 20.965f, -151.941f)) ||
-        !egsvec_approx_eq(mesh.elements[2].b, EGS_Vector(43.946f, 19.607f, -149.776f)) ||
-        !egsvec_approx_eq(mesh.elements[2].c, EGS_Vector(44.593f, 18.96f, -150.691f)))
-    {
+            !egsvec_approx_eq(mesh.elements[2].a, EGS_Vector(43.536f, 20.965f, -151.941f)) ||
+            !egsvec_approx_eq(mesh.elements[2].b, EGS_Vector(43.946f, 19.607f, -149.776f)) ||
+            !egsvec_approx_eq(mesh.elements[2].c, EGS_Vector(44.593f, 18.96f, -150.691f))) {
         throw std::runtime_error("element 2 parsing failed");
     }
 }
@@ -314,10 +310,9 @@ static void check_scale() {
 
     for (int i = 0; i < mesh.elements.size(); i++) {
         if (!egsvec_eq(mesh.elements[i].n, scaled_mesh.elements[i].n) ||
-            !egsvec_eq(0.1 * mesh.elements[i].a, scaled_mesh.elements[i].a) ||
-            !egsvec_eq(0.1 * mesh.elements[i].b, scaled_mesh.elements[i].b) ||
-            !egsvec_eq(0.1 * mesh.elements[i].c, scaled_mesh.elements[i].c))
-        {
+                !egsvec_eq(0.1 * mesh.elements[i].a, scaled_mesh.elements[i].a) ||
+                !egsvec_eq(0.1 * mesh.elements[i].b, scaled_mesh.elements[i].b) ||
+                !egsvec_eq(0.1 * mesh.elements[i].c, scaled_mesh.elements[i].c)) {
             throw std::runtime_error("STL mesh scaling failed");
         }
     }
