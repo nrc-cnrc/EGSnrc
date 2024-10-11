@@ -37,6 +37,9 @@ Explain what actually happened.
 Add any other relevant context, such as simulation input or output, screenshots,
 logs, etc.
 
+If the issue is a compiler error, or you recently installed EGSnrc, please
+provide the installation log, found in `HEN_HOUSE/log`.
+
 ## Contribute
 
 If you can fix this bug yourself, feel free to submit a [pull
