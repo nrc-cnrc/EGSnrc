@@ -7,31 +7,38 @@ assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## Summary
 
-**To Reproduce**
-A precise description of the steps to reproduce the behavior:
+Provide a clear and concise summary of the bug.
+
+## Steps to reproduce
+
+List the steps to reproduce the behaviour:
 
 1. ...
 2. ...
 3. ...
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## Expected behaviour
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+Describe what you expected to happen.
 
-**Operating system**
+## Actual behaviour
 
-- [ ] Linux
-- [ ] Windows
-- [ ] macOS
-- [ ] Other: 
+Explain what actually happened.
 
-**EGSnrc version**
-[e.g., v2021, develop, or commit hash]
+## Environment
 
-**Additional context**
-Add any other context about the problem here.
+- OS: `Linux | Windows | macOS | Other: ...`
+- EGSnrc version: `v2023 | branch | commit`
+
+## Additional Information
+
+Add any other relevant context, such as simulation input or output, screenshots,
+logs, etc.
+
+## Contribute
+
+If you can fix this bug yourself, feel free to submit a [pull
+request](https://github.com/nrc-cnrc/EGSnrc/pulls)!! Your contributions are
+highly appreciated and help improve the project for everyone.
