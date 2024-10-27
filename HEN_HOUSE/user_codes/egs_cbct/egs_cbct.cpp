@@ -150,8 +150,8 @@ defined(false), swap(false)
         // If projection index provided, determine angle. If no
         // projection entry or error in angle, iproj will be negative.
         //**********************************************************
-        error = 0;error = setup->getInput("projection",ipr);
-        if (!error && ipr >= 0){angle = amin + iproj*step;}
+        error = 0;error = setup->getInput("projection",iproj);
+        if (!error && iproj >= 0){angle = amin + iproj*step;}
         else{
           error = 0;error = setup->getInput("angle",ang);
           if (!error){angle=ang;iproj=(angle-amin)/step;}
