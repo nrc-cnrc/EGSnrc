@@ -32,7 +32,7 @@
 #
 ###############################################################################
 #
-#  This code was originally adapter from the egs++ application cavity by
+#  This code was originally adapted from the egs++ application cavity by
 #  Joerg Wulff in 2007.
 #
 ###############################################################################

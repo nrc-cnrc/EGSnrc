@@ -1,0 +1,140 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ egs_chamber application sample input file
+#  Copyright (C) 2024 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Frederic Tessier, 2024
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An simple slab input file for tutor4pp.
+#
+###############################################################################
+
+
+#==============================================================================
+# Run control
+#==============================================================================
+:start run control:
+    ncase = 1
+:stop run control:
+
+#==============================================================================
+# Geometry
+#==============================================================================
+:start geometry definition:
+
+    ### plate
+    :start geometry:
+        name     = slab
+        library  = egs_ndgeometry
+        type     = EGS_XYZGeometry
+        x-planes = -5, 5                    # in cm
+        y-planes = -5, 5                    # in cm
+        z-planes = -10, 0, 0.1, 10          # in cm
+        :start media input:
+            media = vacuum tantalum
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    ### use this geometry for the simulation
+    simulation geometry = slab
+
+:stop geometry definition:
+
+#==============================================================================
+# Media
+#==============================================================================
+:start media definition:
+
+    ### cutoff energies
+    ae  = 0.521
+    ap  = 0.010
+    ue  = 50.511
+    up  = 50
+
+    ### tantalum
+    :start tantalum:
+        density correction file = tantalum
+    :stop tantalum:
+
+    ### lead
+    :start lead:
+        density correction file = lead
+    :stop lead:
+
+    ### water
+    :start water:
+        density correction file = water_liquid
+    :stop water:
+
+:stop media definition:
+
+#==============================================================================
+# Source
+#==============================================================================
+:start source definition:
+
+    ### pencil beam
+    :start source:
+        name      = pencil_beam
+        library   = egs_parallel_beam
+        charge    = -1
+        direction = 0 0 1
+        :start spectrum:
+            type = monoenergetic
+            energy = 20                     # in MeV
+        :stop spectrum:
+        :start shape:
+            type     = point
+            position = 0 0 -10
+        :stop shape:
+    :stop source:
+
+    ### use this source for the simulation
+    simulation source = pencil_beam
+
+:stop source definition:
+
+#==============================================================================
+# Viewer control
+#==============================================================================
+:start view control:
+    set color = lead      120 120 200 200
+    set color = tantalum  120 255 120 255
+    set color = water       0 220 255 200
+:stop view control:
+
+#==============================================================================
+# Ausgab objects
+#==============================================================================
+:start ausgab object definition:
+
+    ### particle tracks
+    :start ausgab object:
+        name    = tracks
+        library = egs_track_scoring
+    :stop ausgab object:
+
+:stop ausgab object definition:
