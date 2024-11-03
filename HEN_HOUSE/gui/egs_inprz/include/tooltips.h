@@ -159,14 +159,14 @@ static const char* electron_transport[] = {
 "<br>to do a full CSDA calculation."
 };
 
-static const char* irestart[] = {
+static const char* iresume[] = {
 
 "First run for this input file.",
 
-"Restart a previous run, <i> i.e. </i> add more histories.",
+"Resume a previous run, <i> i.e. </i> add more histories.",
 
 "Just read in the raw data and do the statistical"
-"\nanalysis( gives no timing - restart 100 histories"
+"\nanalysis( gives no timing - resume 100 histories"
 "\nto get the same effect and more info)",
 
 "Read starting random numbers from a file <br>"

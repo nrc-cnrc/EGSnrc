@@ -1,6 +1,6 @@
 EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam      #!GUI1.0
 AIR700ICRU
-0, 0, 0, 1, 0, 0, 0,  IWATCH,ISTORE,IRESTART,etc
+0, 0, 0, 1, 0, 0, 0,  IWATCH,ISTORE,IRESUME,etc
 70000.0, 0, 0, 0.99, 0, 0, 0, 0,  NCASE, etc
 9, 21, 1, 0.0, 0.0, 0.0, 0.0, 0.0,0.0,0.0,  Phase space source incident on CM 1
 $EGS_HOME/BEAM_EX10MeVe/EX10MeVe.egsphsp1

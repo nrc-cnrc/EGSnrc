@@ -1026,7 +1026,7 @@ test1.egsdat
 test1.output
 \end{lstlisting}
 
-The \Verb+.egsdat+ file can generally be ignored - it is used by EGSnrc to restart jobs that crashed, or combine parallel runs. The \Verb+.output+ file is where we manually redirected the output from the simulation (if you ran the simulation using the GUI, this file was not created). Looking at the output, we can observe the reflected, deposited and transmitted energy fractions for the simulation of electrons through a single slab. Below this, is the pulse height distribution for region 1 (the slab itself).
+The \Verb+.egsdat+ file can generally be ignored - it is used by EGSnrc to resume jobs that crashed, or combine parallel runs. The \Verb+.output+ file is where we manually redirected the output from the simulation (if you ran the simulation using the GUI, this file was not created). Looking at the output, we can observe the reflected, deposited and transmitted energy fractions for the simulation of electrons through a single slab. Below this, is the pulse height distribution for region 1 (the slab itself).
 
 \subsection{Write a new input file}
 When writing an egs++ input file, you will find yourself frequently referencing the full online documentation, \Verb+PIRS-898+:

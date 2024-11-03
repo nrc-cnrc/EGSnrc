@@ -196,8 +196,8 @@ companion program {\tt ctcreate} is capable of reading in a CT data set
 of Hounsfield numbers and converting it into the information needed by
 DOSXYZnrc to simulate transport in a phantom (i.e.  ~the appropriate
 material and density are specified in each voxel).  Any of the available
-beams can be incident on this CT phantom.  The code includes a restart
-facility and can be run on parallel computing platforms.  The statistical
+beams can be incident on this CT phantom.  The code includes a resume
+option and can be run on parallel computing platforms.  The statistical
 analysis is based on a history by history method as opposed to the batch
 method used in DOSXYZ.
 
@@ -262,7 +262,7 @@ BEAMnrc simulation, or a model-based beam reconstruction produced by BEAMDP.
 DOSXYZnrc has a number of important and unique features such as dose
 component calculations, a wide variety of source configurations and beam
 reconstruction techniques, CT to phantom conversion
-(via {\tt ctcreate}), restart capabilities, phase-space redistribution, \etc.
+(via {\tt ctcreate}), resume capabilities, phase-space redistribution, \etc.
 \indexm{ctcreate}
 
 {\tt ctcreate} is a stand alone program which converts CT data sets into the
@@ -727,7 +727,7 @@ EGSnrcMP Users Manual\cite{Ka03}.
 DOSXYZnrc outputs the following files: {\tt
 inputfile.egslst, inputfile.egslog} (for batch runs only, where it
 contains screen output), {\tt
-inputfile.egsdat} (which can be used to restart the calculation) and {\tt
+inputfile.egsdat} (which can be used to resume the calculation) and {\tt
 inputfile.3ddose} which contains a summary of the data in all regions and
 can be used by STATDOSE to create {\tt xmgr/xmgrace} graphs (see ``STATDOSE
 Users Manual''\cite{MC95} ).  If this is a parallel run, then the
@@ -2956,11 +2956,11 @@ Note that \verb+INSEED1+ and \verb+INSEED2+ are only used to initialize
 the random number generator, and, during a simulation, they no longer
 reflect the values of the seeds that are actually used to generate
 the random numbers.
-During restarts
-({\tt IRESTART} = 1), the state of the random number generator at the end
-of the previous run is read from the {\tt .egsdat} file and is used at the
-beginning of the restart.
-Thus, a restarted run with a total of
+When resuming
+({\tt IRESUME} = 1), the state of the random number generator at the end
+of the previous run is read from the {\tt .egsdat} file and is used when the
+simulation resumes.
+Thus, a resumed run with a total of
 10000+10000 histories should generate results identical to a single run
 of the same simulation with 20000 histories.  Also note that
 when running parallel jobs
@@ -3170,17 +3170,17 @@ go through the entire phase space source, the user would have to set
 would be restarted at least once during the run.  After restarting, particle
 recycling continues as before.
 
-\subsection{{\tt IRESTART}}
-\label{irestartsect}
-\indexm{IRESTART}
-\indexm{restarting}
+\subsection{{\tt IRESUME}}
+\label{iresumesect}
+\indexm{IRESUME}
+\indexm{resuming}
 
 \indexm{.egsdat}
-The possible settings of {\tt IRESTART} are:
+The possible settings of {\tt IRESUME} are:
 \begin{description}
 \item [~~~~= 0] (default) DOSXYZnrc initiates a new run, deleting all of the output
 files ({\tt .egslog,} {\tt .egslst}, {\tt .egsdat}, \etc) if present
-\item [~~~~= 1] Restart of a previous run; DOSXYZnrc opens the
+\item [~~~~= 1] Resume a previous run; DOSXYZnrc opens the
 {\tt .egsdat} from the previous run and reads:
 \begin{enumerate}
 \item $\sum_{i=1}^{nhist}edep_i$ and $\sum_{i=1}^{nhist}edep_i^2$ for
@@ -3200,7 +3200,7 @@ uncertainties are calculated using data from the current run and from
 the previous run~\cite{Wa02a}.  Note that the
 number of histories to run and the total CPU time allowed for the
 simulation do not include the histories and CPU time from the previous run.
-Also note that, currently, although a restarted simulation with, for example
+Also note that, currently, although a resumed simulation with, for example
 100000+100000 histories will have identical dose results to a one-off
 simulation
 with 200000 histories, the uncertainty estimates on the doses may not be
@@ -3226,9 +3226,9 @@ more about parallel jobs).
 The possible settings of the variable {\tt IDAT} are:
 \begin{description}
 \item [~~~~= 0] (default) DOSXYZnrc outputs {\tt .egsdat} file with
-restart data after every batch.
+resume data after every batch.
 \item [~~~~= 1] DOSXYZnrc does not output a {\tt .egsdat} file at all.
-\item [~~~~= 2] DOSXYZnrc outputs a {\tt .egsdat} with restart data only at
+\item [~~~~= 2] DOSXYZnrc outputs a {\tt .egsdat} with resume data only at
 the end of the entire run.
 \end{description}
 For large phantoms, writing this file will take a lot of time. For
@@ -4234,16 +4234,16 @@ are finished, the last job uses the C subroutine {\tt read\_pardose.c}
 {\tt .pardose} files from all jobs and then recombines the data to
 create {\tt inputfile.3ddose}.
 
-\indexm{IRESTART}
+\indexm{IRESUME}
 {\tt .pardose} files can be recombined separately by re-running
-DOSXYZnrc with the input parameter, {\tt IRESTART}=4 after all
+DOSXYZnrc with the input parameter, {\tt IRESUME}=4 after all
 jobs have completed.
-Use of {\tt IRESTART}=4 is generally not necessary
+Use of {\tt IRESUME}=4 is generally not necessary
 now that the last job automatically recombines parallel results, however,
 it may be useful if, for some reason, all of the {\tt .pardose} files were
 not moved out of their temporary working directories or if you wish to
 add more {\tt .pardose} files from a separate group of parallel runs.
-See section~\ref{irestartsect}(page~\pageref{irestartsect}) for more on {\tt IRESTART}.
+See section~\ref{iresumesect}(page~\pageref{iresumesect}) for more on {\tt IRESUME}.
 
 \indexm{.egsdat}
 Note that {\tt .egsdat} files could have been used for recombining after
@@ -4269,16 +4269,16 @@ N*\$N\_CHUNKS}\right)}
 where {\tt nshist} is the total number of particles in the phase
 space source.  See the BEAMnrc Manual\cite{Ro04a} for more details.
 
-\indexm{restarting parallel jobs}
-Parallel runs can be restarted, provided that you have the {\tt .egsdat} files
+\indexm{resuming parallel jobs}
+Parallel runs can be resumed, provided that you have the {\tt .egsdat} files
 from all of the previous parallel jobs available.  If you are using a
-phase space source, however, restarting presents a problem in that a
+phase space source, however, resuming presents a problem in that a
 particular partition of the source may get used by a different job the
 second time around.  At the end of the run, results from the second
 use of this partition will be recombined with those from its first use
 with no attention paid to the correlation between the two results.  This
 will result in the uncertainties being underestimated.  We recommend that
-you do not restart a parallel run if you are using a phase space source.
+you do not resume a parallel run if you are using a phase space source.
 
 \section{Adjustable Parameters in the Source Code}
 \label{mortran-parameters}
@@ -5361,19 +5361,19 @@ is read from the {\tt \$HEN\_HOUSE/src} directory
 
 \section{Known Bugs/Restrictions}
 
-A restarted run that uses a phase space source with particle recycling will
+A resumed run that uses a phase space source with particle recycling will
 not produce dose/uncertainty results identical to a single run with
 the same total number of histories.  This is because the last particle
-used before the restart may not have been recycled the full
-{\tt NRCYCL} times, and restarting automatically skips to the next particle.
+used before resuming may not have been recycled the full
+{\tt NRCYCL} times, and resuming automatically skips to the next particle.
 Results will agree within uncertainty, however.
 
 It is recommended that when using the built-in parallel processing
-functionality you do not restart parallel runs that use
+functionality you do not resume parallel runs that use
 a phase space source.  In this case, parallel jobs have lost track
 of which chunks of the phase space source they were using in the
 original run and the uncertainty analysis after recombining the
-restarted runs will not take into account correlations due to reusing
+resumed runs will not take into account correlations due to reusing
 chunks of the phase space source.
 
 \section{Acknowledgments}

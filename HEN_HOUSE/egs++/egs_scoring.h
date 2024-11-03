@@ -134,7 +134,7 @@ public:
       \a data. Returns \c true on success, \a false on failure.
 
       This function can be used for storing intermediate results into a
-      data file for later recovery in \em e.g. restarted calculations.
+      data file for later recovery in \em e.g. resumed calculations.
       The data stored is the sum of scores, sum of scores squared and the
       16 bit integer representing the last statistically independent event
       that contributed to the score.
@@ -306,7 +306,7 @@ public:
       stream \a data.
 
       This function can be used for storing intermediate results into a
-      data file for later recovery in \em e.g. restarted calculations.
+      data file for later recovery in \em e.g. resumed calculations.
       The information stored in the number of element in the array #nreg,
       the current short integer history counter, the current history
       counter, the current history counter divided by 65536 and
@@ -335,7 +335,7 @@ public:
 
       This function is useful for seting the state of the scoring object
       to a state previously stored using storeState() in \em e.g.
-      restarted simulations.
+      resumed simulations.
     */
     bool setState(istream &data) {
         int nreg1;

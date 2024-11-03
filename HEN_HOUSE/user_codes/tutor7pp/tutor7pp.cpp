@@ -38,7 +38,7 @@
 #  in the simulation.
 #
 #  In addition, tutor7pp derives from the EGS_AdvancedApplication class and
-#  therefore automatically inherits the ability to do restarted and parallel
+#  therefore automatically inherits the ability to resume or run parallel
 #  simulations, to combine the results of parallel runs or to re-analyze the
 #  results of single/parallel runs. It also inherits the ability to run for a
 #  user specified maximum amount of cpu time or to terminate the simulation
@@ -114,7 +114,7 @@
 #    nbatch                      = number of batches to use
 #    statistical accuracy sought = required uncertainty, in %
 #    max cpu hours allowed       = max. processor time allowed
-#    calculation                 = first | restart | combine | analyze
+#    calculation                 = first | resume | combine | analyze
 #
 #    All inputs except for ncase are optional (a missing ncase key will result
 #    in a simulation with 0 particles).
@@ -233,13 +233,13 @@ public:
 
     /*! Output intermediate results to the .egsdat file.
      This function is called at the end of each batch. We must store
-     the results in the file so that simulations can be restarted and results
+     the results in the file so that simulations can be resumed and results
      of parallel runs recombined.
      */
     int outputData();
 
     /*! Read results from a .egsdat file.
-     This function is used to read simulation results in restarted
+     This function is used to read simulation results in resumed
      calculations.
      */
     int readData();

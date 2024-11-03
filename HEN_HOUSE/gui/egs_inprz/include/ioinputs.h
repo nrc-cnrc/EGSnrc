@@ -61,7 +61,7 @@ public:
 
  	QString iwatch;
  	QString strnd;
- 	QString irestart;
+ 	QString iresume;
  	QString strdat;
  	QString outopt;
  	QString etransport;

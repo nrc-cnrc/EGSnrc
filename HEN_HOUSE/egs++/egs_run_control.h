@@ -80,7 +80,7 @@ class EGS_Input;
      for single job control. This RCO provides the ability to run simulations
      with a user specified number of particles and up to a user specified
      statistical uncertainty. It also provides the ability to restrict
-     the simulation to a user specified maximum CPU time, to perform restarted
+     the simulation to a user specified maximum CPU time, to resume
      simulations or to simply analyze the results of a previous run or to
      combine the results of previously performed parallel runs.
    - A \link EGS_JCFControl 'job control file' (JCF) RCO \endlink.
@@ -243,8 +243,8 @@ protected:
     EGS_Float       maxt;   // maximum time to run in hours.
     EGS_Float       accu;   // statistical uncertainty sought.
     int             nbatch; // number of batches.
-    int             restart;// =0 => fresh calculation
-    // =1 => restart calculation
+    int             resume;// =0 => fresh calculation
+    // =1 => resume calculation
     // =2 => analyze results
     // =3 => combine parallel run
     int             nchunk; // number of simulation "chunks"

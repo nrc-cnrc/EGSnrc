@@ -280,7 +280,7 @@ of a signal map (\em *.egsmap) file containing \f$Katt\f$, \f$Kscat\f$ and \f$Kt
 The \c store \c data \c arrays input key defines whether the user wants to create
 \em *.egsdat files containing a snapshot of the simulation which gets updated after
 every batch.
-This is necessary to be able to restart a calculation, for instance
+This is necessary to be able to resume a calculation, for instance
 when computing a real scan. However, if you are running very fast simulations
 (eg. computing scatter for many projections) in a cluster environment, generation of such
 files could slow down the network significantly. The \c verbose option outputs several

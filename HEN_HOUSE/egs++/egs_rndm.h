@@ -213,7 +213,7 @@ public:
     /*! \brief Functions for storing, seting and reseting the state of a RNG
      * object.
      *
-     * These functions are useful for being able to perform restarted
+     * These functions are useful for being able to resume
      * calculations and to combine the result of parallel runs.
      * They are used by the default implementations of the
      * outputData(), readData(), etc. of the EGS_Application class.
