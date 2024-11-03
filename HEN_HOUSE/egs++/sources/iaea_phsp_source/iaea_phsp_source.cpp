@@ -62,7 +62,7 @@ void IAEA_PhspSource::init() {
     description = "Invalid IAEA phase space source";
     Nread = 0;
     count = 0;
-    Nrestart = 0;
+    Nrewind = 0;
     Npos = 0;
     Nlast = 0;
     wmin = -veryFar;
@@ -325,9 +325,9 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
                        Nlast,Nfirst);
             iaea_set_record(&iaea_fileid,&Nfirst,&iaea_iostat);
             if (iaea_iostat<0) {
-                egsFatal("IAEA_PhspSource::getNextParticle(): error restarting phase space chunk\n");
+                egsFatal("IAEA_PhspSource::getNextParticle(): error rewinding phase space chunk\n");
             }
-            Nrestart++;
+            Nrewind++;
             Npos = Nfirst;
         }
         iaea_get_particle(&iaea_fileid,&nstat,&p.q,&p.E,&p.wt,&p.x,&p.y,&p.z,&p.u,&p.v,&p.w,extrafloattemp,extrainttemp);

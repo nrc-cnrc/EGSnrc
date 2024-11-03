@@ -1781,22 +1781,22 @@ requires an additional {\tt REAL*8} array for each ratio scored.
 \index{recycling}
 \index{NRCYCL}
 Both the batch method and the history by history method underestimate
-uncertainty if a phase space source file is restarted (which happens
+uncertainty if a phase space source file is rewinded (which happens
 automatically if all particles in the source have been used).  In the
 case of the history by history method, this is because particles
-that are re-used because of a restart are not associated with the
+that are re-used because of a rewind are not associated with the
 same primary history as on the first pass through the source file,
 and thus correlations between these re-used particles are ignored.
 To overcome this problem, we recommend re-using each particle enough
 times before moving on to the next particle in the phase space source to
-avoid restarting the source.  This re-use of particles ``on the spot"
+avoid rewinding the source.  This re-use of particles ``on the spot"
 is called particle recycling.  To facilitate particle recycling we
 introduced the recycling number, {\tt NRCYCL}, input with sources 21
 and 22 (See Table~\ref{tab:srcrz}).  Each particle in the source will be
 used a total of {\tt NRCYCL}+1 times before moving on to the next one.
 If the user sets {\tt NRCYCL}$<=$0, then {\tt NRCYCL} will automatically
 be calculated to sample the entire phase space source while avoiding
-a restart.  The particle recycling scheme is identical to that currently
+a rewind.  The particle recycling scheme is identical to that currently
 in use in BEAMnrc and DOSXYZnrc.
 \index{recycling}
 \index{NRCYCL}
