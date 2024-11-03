@@ -1102,8 +1102,8 @@ used,  this section contains a summary of the source
 characteristics (number of electrons, number of photons, maximum energy,
 \etc) determined from those particles actually used in the simulation.
 Some warning messages, such as those printed when all particles in a
-phase space source have been used and the source must be restarted with the
-\index{restart!phase space file input}
+phase space source have been used and the source must be rewinded with the
+\index{rewind!phase space file input}
 first particle, are printed in this section.
 
 \item [Number, Fluence, Average Energy and Average Angle Results]
@@ -1185,8 +1185,8 @@ and that no run-time errors, such as endless loops, or negative
 errors, occurred.  When using a phase space file for the source,
 the log file contains a warning
 line every time all particles in the phase space source have been
-used, necessitating a restart of the source from the beginning.
-\index{phase space sources!when restarted}
+used, necessitating a rewind of the source from the beginning.
+\index{phase space sources!when rewinded}
 
 \item [.egsdat]
 This file contains all of the information required to resume a run and
@@ -2849,7 +2849,7 @@ particle will be used a total of {\tt NRCYCL} + 1 times before moving
 on to the next one.  If set $\leq$ 0, then BEAMnrc will automatically
 calculate a value of {\tt NRCYCL} based on the number of incident histories
 and the number of particles in the phase space file that should prevent
-restarting of the phase space source.  If set $>$ 0, the user-input value
+rewinding of the phase space source.  If set $>$ 0, the user-input value
 is used.  See below for details.
 \index{NRCYCL}
 \item [IPARALLEL]  No longer necessary if using BEAMnrc's built-in
@@ -2901,28 +2901,28 @@ help reduce the inherent uncertainty in the dose calculation. The overall
 uncertainty will also be governed by the latent variance of the phase space file (see the
 report on history by history
 statistics in BEAMnrc and DOSXYZnrc\cite{Wa02a}).
-In addition to recycling, particles are also re-used whenever a phase space source is restarted
+In addition to recycling, particles are also re-used whenever a phase space source is rewinded
 (which happens automatically when the simulation has used all particles in the
-source).  However, restarting may result in an underestimate of
+source).  However, rewinding may result in an underestimate of
 uncertainties~\cite{Wa02a}, making it important to choose a value
 of {\tt NRCYCL} that both ensures adequate sampling of the phase space
-source and also prevents restarting.
+source and also prevents rewinding.
 
 \index{NRCYCL! calculation of}
 If you are unsure of the value of {\tt NRCYCL} to use, set
 {\tt NRCYCL}$\leq$ 0 and BEAMnrc will automatically calculate its value
 based on the number of histories and the total number of particles in the
 phase space file.  Even with an automatically-calculated value of
-{\tt NRCYCL}, the phase space source may still restart, either because
+{\tt NRCYCL}, the phase space source may still rewind, either because
 the algorithm used to calculate {\tt NRCYCL} has determined that
 setting {\tt NRCYCL}$>$ 0 will cause the phase space source to
 be undersampled, or because some incident particles were
 multiple-passers (i.e., had crossed the phase space scoring plane
 more than once) and were rejected from the simulation.  If the
-phase space source has only been restarted once and only a small fraction
+phase space source has only been rewinded once and only a small fraction
 of it has been re-used on the second pass, the effect on uncertainty will not
 be significant.  However, if a significant portion of the source has been
-re-used on the second pass, or if the source has been restarted more than
+re-used on the second pass, or if the source has been rewinded more than
 once, we recommend re-running the simulation with a new value of
 {\tt NRCYCL} given by:
 %\begin{footnotesize}
@@ -4619,7 +4619,7 @@ possible to remove this limit on phase space file size and either:
 the header, which will require other modifications to codes using this phase space
 file as a source since, currently, BEAMnrc (and other EGSnrc user codes) compares
 the number of histories run to {\tt NPPHSP} in order to determine whether the
-source needs to be restarted from the beginning or not, or
+source needs to be rewinded from the beginning or not, or
 \item redefine {\tt NPPSHP} as a 4-byte real variable, in the process losing
 precision in terms of the actual number of particles stored in the file.
 \end{itemize}
@@ -6463,7 +6463,7 @@ where {\tt INPHSP} is the particle number used.
 Note that particles may be recycled within a partition, depending on
 the setting of {\tt NRCYCL} (see section~\ref{phspsrcsect}).  Also, if
 all the particles in a partition are used up during a run, the partition
-is restarted at its first particle
+is rewinded at its first particle
 (ie {\tt INPHSP = (n\_run\_chunk-1)*p\_per\_phsp\_chunk+1)}.
 
 \subsection{Combining Results from Parallel Jobs}

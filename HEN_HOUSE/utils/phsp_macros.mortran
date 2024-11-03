@@ -128,7 +128,7 @@ REPLACE {;COMIN/RWPHSP/;} WITH {
    LATCHTMP,  "modified version of LATCH to be written to phsp"
    WRITE_PHSP_COUNTER, "counter up to 1000 used for group write"
    WRITE_PHSP_SOFAR, "how many particles written so far to file"
-   PHSP_RESTART, "set to 1 if this is a phsp restart"
+   PHSP_REWIND, "set to 1 if this is a phsp rewind"
    PHSP_RECL, "the record length"
    PHSP_RECL_OLD, "saves record length"
    iaea_extra_ints, "array in which LATCH will be stored for iaea format"
@@ -165,7 +165,7 @@ INTEGER NUM_PHSP_TOT,PHOT_PHSP_TOT,
         iaea_result,iaea_n_stat,iaea_q_typ(3),iaea_typ_q(3),iaea_q_index,I_PHSP,
         IERR_PHSP,LATCHTMP,
         WRITE_PHSP_COUNTER($MAX_SC_PLANES),WRITE_PHSP_SOFAR($MAX_SC_PLANES),
-        PHSP_RESTART,PHSP_RECL,PHSP_RECL_OLD,iaea_extra_ints(10),
+        PHSP_REWIND,PHSP_RECL,PHSP_RECL_OLD,iaea_extra_ints(10),
         iaea_extra_int_types(10),iaea_extra_float_types(10),iaea_i_zlast,
         iaea_i_latch,iaea_i_muidx,iaea_n_extra_ints,iaea_n_extra_floats,
         i_iaea_open_for_write,iaea_i_zlast_out,iaea_i_latch_out,
@@ -213,7 +213,7 @@ DO I_PHSP=1,$MAX_SC_PLANES[
   WRITE_PHSP_SOFAR(I_PHSP)=0;
   IHSTRY_PHSP(I_PHSP)=0;
 ]
-PHSP_RESTART=0;
+PHSP_REWIND=0;
 PHSP_RECL_OLD=0;
 
 iaea_q_typ(1)=2;iaea_q_typ(2)=1;iaea_q_typ(3)=3;
@@ -546,9 +546,9 @@ REPLACE {$WRITE_PHSP_RECORD(#,#,#,#,#:#,#,#,#);} WITH {;
 "{P9}=E,WT,X,Y,U,V"
 
 IF({P4}>2 & WRITE_PHSP_COUNTER({P5})=0 & WRITE_PHSP_SOFAR({P5})=0)[
-   "we have a restart or its the start of a new batch"
+   "we have a rewind or its the start of a new batch"
    IF(({P4}-1)-1000*(({P4}-1)/1000)~=0)[
-   "make what was the buffer flush part of the first record of the restart"
+   "make what was the buffer flush part of the first record of the rewind"
     CLOSE({P2});
     IF({P1}~=0)["have ZLAST"
       PHSP_RECL=$RECL-FACTOR*8;
@@ -579,7 +579,7 @@ IF({P4}>2 & WRITE_PHSP_COUNTER({P5})=0 & WRITE_PHSP_SOFAR({P5})=0)[
    ]
    WRITE_PHSP_SOFAR({P5})=1000*INT(dble({P4}-1)/1000);
    IF(WRITE_PHSP_SOFAR({P5})>0)[
-       PHSP_RESTART=1;
+       PHSP_REWIND=1;
        WRITE_PHSP_COUNTER({P5})=({P4}-1)-1000*(({P4}-1)/1000);
    ]
    ELSE[
@@ -591,7 +591,7 @@ $SET_NEGATIVE_E({P5},{P6},{P9});
 
 $PARSE_TEMP_FOR_WRITE({P1},{P7},{P8},{P9});
 
-IF({P4}<=1000 & PHSP_RESTART=0)["do not use first 7/8 elements"
+IF({P4}<=1000 & PHSP_REWIND=0)["do not use first 7/8 elements"
    IF({P1}~=0)["have ZLAST"
      STRING_TEMP_ZLAST_OUT({P5})(32*WRITE_PHSP_COUNTER({P5})+33:
        32*WRITE_PHSP_COUNTER({P5})+64)=REC_TEMP_OUT(1:32);

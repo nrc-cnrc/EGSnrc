@@ -322,7 +322,7 @@ IF(iaea_n_stat=-1)[
   $CALL_EXIT(1);
 ]
 ELSEIF(iaea_n_stat=-2)[
-  WRITE(i_log,*)' WARNING: Reached end of IAEA phsp file.  File restarted.';
+  WRITE(i_log,*)' WARNING: Reached end of IAEA phsp file.  File rewinded.';
 ]
 ELSEIF(iaea_n_stat>=0)[
   {P3}={P3}+iaea_n_stat;
