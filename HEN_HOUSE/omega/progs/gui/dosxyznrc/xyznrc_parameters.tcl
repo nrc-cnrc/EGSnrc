@@ -444,14 +444,14 @@ next particle.  Even with NRCYCL, the total number of histories is still\
 determined by the user-input value of NCASE.  NRCYCL is an essential input\
 when phase space data is sparse (ie fewer particles in the source than required\
 for the simulation).  Choose a value of NRCYCL that will sample the source\
-fully but will prevent the source from being restarted (happens automatically\
-after the last particle gets used).  This is because restarts may cause\
+fully but will prevent the source from being rewinded (happens automatically\
+after the last particle gets used).  This is because rewinds may cause\
 uncertainties to be underestimated.  If you are unsure of the value to use,\
 set NRCYCL<=0 and DOSXYZnrc will automatically calculate a value.  The source\
-may restart even with an automatically-calculated value of NRCYCL.  If there\
-is only one restart and only a small fraction of the source is re-used on the\
+may rewind even with an automatically-calculated value of NRCYCL.  If there\
+is only one rewind and only a small fraction of the source is re-used on the\
 second pass, this is unlikely to affect uncertainties.  However, if a\
-significant fraction is re-used on the second pass, or if the source restarts\
+significant fraction is re-used on the second pass, or if the source rewinds\
 more than once, we suggest rerunning with a recalculated value of NRCYCL, given\
 by:
 

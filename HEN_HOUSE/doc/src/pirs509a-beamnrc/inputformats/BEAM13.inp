@@ -14,7 +14,7 @@
                          going on to the next particle.
                          If NRCYCL is set <=0 then NRCYCL is automatically
                          calculated to use the entire phase space file with no
-                         restarts.  The calculated NRCYCL does not take into
+                         rewinds.  The calculated NRCYCL does not take into
                          account particles that are rejected because they
                          miss the geometry.
                          If NRCYCL is set > 0, then the user-input value is
@@ -23,7 +23,7 @@
                          then use of NRCYCL is essential for accurate
                          statistics.  If you are unsure of how many times to
                          recycle, use the automatically-calculated value of
-                         NRCYCL.  If this still results in many restarts
+                         NRCYCL.  If this still results in many rewinds
                          (because of multiple passers being rejected and/or
                          photons rejected because they fall outside the DBS
                          splitting radius--see below)

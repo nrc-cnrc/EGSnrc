@@ -3016,10 +3016,10 @@ NRCYCL, the number of times each particle is recycled before moving on to the\
 next one.  Thus, each particle is used NRCYCL+1 times before moving on.\
 Note that, even using NRCYCL, the total number of histories is still\
 determined by the user-input value of NCASE.\
-NRCYCL is necessary to avoid restarting phase space source if phase space data\
-is sparse, since restarting may cause underestimates of the uncertainty.\
+NRCYCL is necessary to avoid rewinding phase space source if phase space data\
+is sparse, since rewinding may cause underestimates of the uncertainty.\
 Set <=0 and BEAMnrc will automatically calculate a value of NRCYCL.  The\
-source may restart even with automatically calculated value of NRCYCL.\
+source may rewind even with automatically calculated value of NRCYCL.\
 This is not a problem if only a small fraction of the source is re-used on\
 the second pass.  Otherwise, we recommend re-running the simulation with\
 NRCYCL re-calculated using:

@@ -812,13 +812,13 @@ file). Hence, one cannot reduce the uncertainty in any dose calculation
 below that level by recycling the data a large number of times.  However,
 one can get an artificially low statistical result which ignores this
 latent variance
-if the phase space source is allowed to restart the phase space file
+if the phase space source is allowed to rewind the phase space file
 instead of using the recycle option (whereby each particle is used multiple
 times as it is read in - see section~\ref{nrcycl}, page~\pageref{nrcycl}).
 Thus, in order to get accurate uncertainty estimates,
-restarting the phase space file should be avoided.
+rewinding the phase space file should be avoided.
 \indexm{NRCYCL}
-\indexm{restart phase space}
+\indexm{rewind phase space}
 
 
 \section{DOSXYZnrc Input Parameters}
@@ -2627,7 +2627,7 @@ because we have found~\cite{Wa02a} that in the cases we studied,
 the underestimate is not significant.
 
 When using a phase space source, if the entire phase space file is read
-before the requested number of histories is run, then DOSXYZnrc restarts
+before the requested number of histories is run, then DOSXYZnrc rewinds
 the phase space file from the beginning.  For the reasons discussed in
 section~\ref{nrcycl}, page~\pageref{nrcycl}, this is not a desirable
 occurrence and one should strive to avoid this by using the recycling
@@ -3077,14 +3077,14 @@ each source particle is used a total of {\tt NRCYCL} + 1 times
 before moving on to the next particle in the source.
 When phase space data is sparse, then particles must be re-used to obtain
 adequate statistics.  In addition to recycling, particles may also
-be re-used whenever a phase space source is restarted
+be re-used whenever a phase space source is rewinded
 (happens automatically when the simulation has reached
-the end of the source).  Restarting is not recommended, however,
+the end of the source).  Rewinding is not recommended, however,
 because it may lead to underestimates of the uncertainty in the
 final results~\cite{Wa02a}.  We recommend setting {\tt NRCYCL} to a value
 that will ensure that the entire phase space source gets sampled (ie
 the simulation uses almost all the particles in the source) but
-prevents the source from being restarted.
+prevents the source from being rewinded.
 
 If you are unsure of
 the correct value of {\tt NRCYCL} to use, then
@@ -3093,17 +3093,17 @@ a value of {\tt NRCYCL} based on the number of histories and
 the number of particles (with appropriate charge) in the phase space source.
 There is a possibility
 that, even with the automatically calculated value of {\tt NRCYCL},
-the phase space source will restart.  This may be due to particles
+the phase space source will rewind.  This may be due to particles
 that have been rejected because they missed the geometry, were multiple
 passers and/or were beyond the beam field defined by {\tt BEAM\_SIZE}) or
 else the algorithm for calculating {\tt NRCYCL} may have determined that
 setting {\tt NRCYCL}$>$ 0 will result in the phase space source not being
 sampled adequately.
 If the
-source has only been restarted once and only a small fraction of it
+source has only been rewinded once and only a small fraction of it
 has been covered on the second pass, this is not likely to have a significant
 impact on the estimated uncertainties.  However, if a large portion of the
-source is covered on the second pass, or if it is restarted more than once,
+source is covered on the second pass, or if it is rewinded more than once,
 we recommend re-running the simulation with a new value of
 {\tt NRCYCL} calculated as:
 \begin{eqnarray}
@@ -3136,14 +3136,14 @@ the phase space source based on {\tt LATCH} settings.  In these cases,
 the information required for an a-priori calculation of {\tt NRCYCL}
 is not available in the header of the phase space source.
 We recommend setting {\tt NRCYCL} manually to a ``best guess" value.  Then,
-if the source restarts, calculate {\tt NRCYCL} using Equation~\ref{nrcycleqn}
+if the source rewinds, calculate {\tt NRCYCL} using Equation~\ref{nrcycleqn}
 where {\tt NRJCT} includes the number of particles rejected because they
 were multiple passers, the number of particles rejected because they were
 the wrong charge and the number of particles rejected because they did not
 have the right {\tt LATCH} setting.
 
 If the phase space source is stored on a remote disk, then using
-{\tt NRCYCL} to avoid restarting a phase space source also has
+{\tt NRCYCL} to avoid rewinding a phase space source also has
 the beneficial effect of reducing network traffic
 because it reduces the number of times that a phase space
 source is accessed during a run (particle data is stored in temporary
@@ -3167,7 +3167,7 @@ phase space source has 1000 suitable particles and the user sets {\tt NRCYCL}=9
 recycle) the first 500 particles before the simulation stops.  In order to
 go through the entire phase space source, the user would have to set
 {\tt NCASE}=10000.  If {\tt NCASE}$>$10000 then the phase space source
-would be restarted at least once during the run.  After restarting, particle
+would be rewinded at least once during the run.  After rewinding, particle
 recycling continues as before.
 
 \subsection{{\tt IRESUME}}

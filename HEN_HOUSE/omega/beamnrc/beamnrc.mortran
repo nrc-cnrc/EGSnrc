@@ -725,7 +725,7 @@ WITH {,' ',}
 "I>                        going on to the next particle.
 "I>                        If NRCYCL is set <=0 then NRCYCL is automatically
 "I>                        calculated to use the entire phase space file with no
-"I>                        restarts.  The calculated NRCYCL does not take into
+"I>                        rewinds.  The calculated NRCYCL does not take into
 "I>                        account particles that are rejected because they
 "I>                        miss the geometry.
 "I>                        If NRCYCL is set > 0, then the user-input value is
@@ -734,7 +734,7 @@ WITH {,' ',}
 "I>                        then use of NRCYCL is essential for accurate
 "I>                        statistics.  If you are unsure of how many times to
 "I>                        recycle, use the automatically-calculated value of
-"I>                        NRCYCL.  If this still results in many restarts
+"I>                        NRCYCL.  If this still results in many rewinds
 "I>                        (because of multiple passers being rejected and/or
 "I>                        photons rejected because they fall outside the DBS
 "I>                        splitting radius--see below)
@@ -3902,7 +3902,7 @@ ELSEIF(IRESUME = 1)["Resume, read old data from unit 4"
 
     OUTPUT;(/' ***Successfully read previous dose and fluence data file ***'/);
 
-    $BEAM_READ_PHSP_FOR_RESTART;
+    $BEAM_READ_PHSP_FOR_REWIND;
 
 ] "end of IRESUME=1 block"
 
@@ -5167,9 +5167,9 @@ ELSEIF(IRESUME = 4 | is_finished)[
 
 IF(OUTCNT>0)[
    OUTPUT;(//' ***WARNING***'/
-       ' The phsp source was restarted at least once.  This may lead'/
-       ' to an underestimate of uncertainty, especially if restarted'/
-       ' many times.  If restarted many times, try re-running with'/
+       ' The phsp source was rewinded at least once.  This may lead'/
+       ' to an underestimate of uncertainty, especially if rewinded'/
+       ' many times.  If rewinded many times, try re-running with'/
        ' NRCYCL recalculated as described at top of beamnrc.mortran'//);
 ]
 IF((ISOURC=3 & i_dsb=1)|ISOURC=23)[
@@ -9076,9 +9076,9 @@ IF (NSC_PLANES >  0) [
    ]
    IF(OUTCNT>0)[
       WRITE(IOUTLIST,'(//'' ***WARNING***''/
-'' The phsp source was restarted at least once.  This may lead''/
-'' to an underestimate of uncertainty, especially if restarted''/
-'' many times.  If restarted many times, try re-running with''/
+'' The phsp source was rewinded at least once.  This may lead''/
+'' to an underestimate of uncertainty, especially if rewinded''/
+'' many times.  If rewinded many times, try re-running with''/
 '' NRCYCL recalculated as described at top of beamnrc.mortran''//)');
    ]
 
@@ -12222,7 +12222,7 @@ ELSEIF(ISOURC = 21 | ISOURC=24)["Full phase space for each particle"
     "since that is what it is in the phase space file"
 
 #ifdef HAVE_C_COMPILER;
-     "output a warning if we are restarting the chunk of the phase"
+     "output a warning if we are rewinding the chunk of the phase"
      "space source"
      IF(n_parallel>0 & INPHSP>INPHSP_MAX)[
         "rewind phsp source and output a warning"
@@ -12230,7 +12230,7 @@ ELSEIF(ISOURC = 21 | ISOURC=24)["Full phase space for each particle"
         OUTCNT=OUTCNT+1;
        OUTPUT ;
      (///' ***WARNING*** USED ALL PARTICLES FROM CHUNK IN SOURCE FILE!'/
-       '               RESTARTING FROM FIRST PARTICLE IN THIS CHUNK.'//
+       '               REWINDING FROM FIRST PARTICLE IN THIS CHUNK.'//
        /1x,79('*')// );
       IF(i_iaea_in=1)[ NHSTRY=OUTCNT*NINCSRC/(n_parallel*$N_CHUNKS);
                     "above ensures that NHSTRY is accurate"
@@ -12245,7 +12245,7 @@ ELSEIF(ISOURC = 21 | ISOURC=24)["Full phase space for each particle"
        OUTCNT=OUTCNT+1;
        OUTPUT ;
      (///' ***WARNING*** USED ALL PARTICLES FROM PARTITION IN SOURCE FILE!'/
-       '               RESTARTING FROM FIRST PARTICLE IN THIS PARTITION.'//
+       '               REWINDING FROM FIRST PARTICLE IN THIS PARTITION.'//
        /1x,79('*')// );
        IF(i_iaea_in=1)[ NHSTRY=OUTCNT*NINCSRC/IPARALLEL;
                   $IAEA_SET_PHSP_RECORD(IINSRC,INPHSP); ]
@@ -12255,7 +12255,7 @@ ELSEIF(ISOURC = 21 | ISOURC=24)["Full phase space for each particle"
        INPHSP=1;"set the pointer back to the beginning of the ph-sp file"
        OUTCNT=OUTCNT+1;
        OUTPUT ;(///' ***WARNING*** USED ALL PARTICLES FROM SOURCE FILE!'/
-       '               RESTARTING FROM FIRST PARTICLE IN FILE.'//
+       '               REWINDING FROM FIRST PARTICLE IN FILE.'//
        /1x,79('*')// );
        IF(i_iaea_in=1)[ NHSTRY=OUTCNT*NINCSRC;
                  $IAEA_SET_PHSP_RECORD(IINSRC,1); ]
@@ -12272,20 +12272,20 @@ ELSEIF(ISOURC = 21 | ISOURC=24)["Full phase space for each particle"
                EREAD,WEIGHT,XIN,YIN,UIN,VIN);
    ]
    IF((i_iaea_in=0 & IERR_PHSP>0) | (i_iaea_in=1 & iaea_n_stat=-2))[
-         "end of file encountered -restart same file"
+         "end of file encountered -rewind same file"
        IF(IPARALLEL>1 & PARNUM>0)[
          INPHSP=INT((PARNUM-1)*NNPHSP/IPARALLEL)+1;
          OUTCNT=OUTCNT+1;
          OUTPUT ;
      (///' ***WARNING*** USED ALL PARTICLES FROM PARTITION IN SOURCE FILE!'/
-       '               RESTARTING FROM FIRST PARTICLE IN THIS PARTITION.'//
+       '               REWINDING FROM FIRST PARTICLE IN THIS PARTITION.'//
        /1x,79('*')// );
        ]
        ELSE[
          INPHSP=1;"set the pointer back to the beginning of the ph-sp file"
          OUTCNT=OUTCNT+1;
          OUTPUT ;(///' ***WARNING*** USED ALL PARTICLES FROM SOURCE FILE!'/
-         '               RESTARTING FROM FIRST PARTICLE IN FILE.'//
+         '               REWINDING FROM FIRST PARTICLE IN FILE.'//
        /1x,79('*')// );
        ]
        GOTO :SOURCE_READ:;
