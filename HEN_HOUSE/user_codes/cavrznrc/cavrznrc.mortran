@@ -2760,7 +2760,7 @@ DO IBATCH=1,$NBATCH[
             IF( ISOURC ~= 23 ) IHSTRY = IHSTRY+1; "increment history counter"
               " For source 23 ihstry is set in srchst "
 
-            :CORRELATION-RESTART:; "restart here for a correlated history"
+            :CORRELATED-HISTORY:; "start here for correlated history"
 
             NFTIME = 0; "reset the photon forced interaction counter"
 

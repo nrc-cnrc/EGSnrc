@@ -2284,7 +2284,7 @@ DO IBATCH=1,$STAT[
             IHSTRY=IHSTRY+1; "INCREMENT HISTORY COUNTER"
             the_case = IHSTRY;
 
-            :CORRELATION-RESTART:; "RESTART HERE FOR A CORRELATED HISTORY"
+            :CORRELATED-HISTORY:; "START HERE FOR CORRELATED HISTORY"
 
             NFTIME = 0; "reset the photon forced interaction counter"
 
@@ -2411,7 +2411,7 @@ DO IBATCH=1,$STAT[
                 INEED2=0;       "ZERO THIS FLAG"
                 IF(IDECAV.NE.0) IDECV1=IDECAV; "1ST PASS ENERGY DEPOSITION"
                 $SWITCH-TO-PARALLEL-BEAM-SOURCE;
-                GO TO :CORRELATION-RESTART:; "RESTART THE HISTORY"
+                GO TO :CORRELATED-HISTORY:; "START HERE FOR CORRELATED HISTORY"
                 ]
             ELSEIF((IFULL.EQ.3).AND.(IPTSRC.EQ.0).AND.(IPASS.EQ.0)
                    .AND.(INEED2.EQ.1))[
@@ -2428,7 +2428,7 @@ DO IBATCH=1,$STAT[
                 DO IRL=2,NREG[ "SWITCH TO UNIFORM WALL MATERIAL"
                     MED(IRL)=1;RHOR(IRL)=RHO(1);
                     ]
-                GO TO :CORRELATION-RESTART:; "RESTART THE HISTORY"
+                GO TO :CORRELATED-HISTORY:; "START HERE FOR CORRELATED HISTORY"
                 ]
             ELSEIF((IFULL.EQ.3).AND.(IPTSRC.EQ.1).AND.(IPASS.EQ.1)
                   .AND.(INEED2.EQ.1))[
@@ -2442,7 +2442,7 @@ DO IBATCH=1,$STAT[
                 DO IRL=2,NREG[ "SWITCH TO UNIFORM WALL MATERIAL"
                     MED(IRL)=1;RHOR(IRL)=RHO(1);
                     ]
-                GO TO :CORRELATION-RESTART:; "RESTART THE HISTORY"
+                GO TO :CORRELATED-HISTORY:; "START HERE FOR CORRELATED HISTORY"
                 ]
 "JAN CHANGE: IPASS.EQ.2 to IPASS.GE.1 BECAUSE OTHERWISE NO BACKUP FOR"
 " IFULL=3 AND IPASS=1 AND INEED2=0"
