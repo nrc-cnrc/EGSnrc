@@ -215,14 +215,14 @@ set values(4) $options(4,0)
 
 set names(5) "Run option";
 set help_text(5) {
-Restart option, IRESTART:
+Resume option, IRESUME:
 
 "first time" (0) means that this is the first run for this data\
 	set (default).  BEAMnrc initiates a new run, deleting all\
 	of the output files from previous runs of the same\
 	name if present (.egslog, .egslst, .egsrns, .egsphsp1, etc.).
 
-"restart" (1) means that this is a restart of a previous run.  BEAMnrc reads\
+"resume" (1) means that this is resuming a previous run.  BEAMnrc reads\
 	fluence and dose data from the previous run, the number of\
 	histories already run, the time taken by the previous run, and\
 	the random number seeds from the last batch of the previous run\
@@ -247,7 +247,7 @@ Restart option, IRESTART:
 }
 set numopts(5) 5;
 set options(5,0) "first time";
-set options(5,1) "restart";
+set options(5,1) "resume";
 set options(5,3) "analyze previous";
 set options(5,4) "analyze parallel jobs";
 set values(5) $options(5,0)
@@ -445,7 +445,7 @@ This is the maximum CPU time in hours allowed for this run.  \
 	each batch, an estimate is made of how much time is needed\
 	to complete another batch.  If the next batch cannot be\
 	completed in this time limit, BEAMnrc terminates the run and\
-	analyzes the results for the shortened run.  The restart\
+	analyzes the results for the shortened run.  The resume\
 	feature can be used to continue the run if needed, as long\
 	as data arrays are stored ("Store Data Arrays" option).
 }

@@ -68,7 +68,7 @@
 # The backslash at the end of the comment line below is a continuation
 # character in wish, but not in sh.
 #
-# The next line restarts using wishx\
+# The next line relaunches using wishx\
 exec wish "$0" ${1+"$@"}
 
 # THIS IS THE MAIN PROGRAM FOR A GUI FOR BEAMDP
@@ -1636,4 +1636,3 @@ proc help_gif { w iconfile } {
 #REPLACE {$MAXANGLE} WITH {0.1745};
 set maxvals(nb) [get_1_default NB]
 set maxvals(nbinangle) [get_1_default NBINANGLE]
-

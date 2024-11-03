@@ -155,7 +155,7 @@ MIOInputs* inputRZImpl::GetIO()
 
 	EGSio->iwatch     = iwatchComboBox->currentText();
 	EGSio->strnd      = TextRadioBChecked(3, rb);
-	EGSio->irestart   = irestartComboBox->currentText();
+	EGSio->iresume    = iresumeComboBox->currentText();
 	EGSio->strdat     = (storeDataCheckBox->isChecked()) ? "yes" : "no";
 	EGSio->outopt     = outoptComboBox->currentText ();
 	EGSio->etransport = etransportComboBox->currentText ();

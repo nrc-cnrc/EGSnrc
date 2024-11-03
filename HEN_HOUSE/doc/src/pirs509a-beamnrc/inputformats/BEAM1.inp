@@ -1,7 +1,7 @@
 \begin{verbatim}
    Next Record
    ***********
-      IWATCH,ISTORE,IRESTART,IO_OPT,IDAT,LATCH_OPTION,IZLAST
+      IWATCH,ISTORE,IRESUME,IO_OPT,IDAT,LATCH_OPTION,IZLAST
 
               IWATCH = 0 for normal output (the default)
                      = 1 output for every discrete interaction
@@ -16,8 +16,8 @@
                          This is a debugging tool. If run quits, rerun with
                          ISTORE=1, then again ISTORE=-1 and IWATCH = 1/2
                          and/or the debugger on.
-            IRESTART = 0 first run for this data set (the default)
-                     = 1 restart of a previous run
+            IRESUME = 0 first run for this data set (the default)
+                     = 1 resume a previous run
                      = 2 just create the input file and exit
                      = 3 read in the raw data from a previous run and do
                         the statistical analysis on dose etc.
@@ -26,7 +26,7 @@
                          with the extension _w#, where #
                          can be any positive integer.  These .egsdat files
                          will be summed and then the result analyzed similar
-                         to IRESTART=3.
+                         to IRESUME=3.
               IO_OPT = 0 phase-space output at each scoring plane(the default)
                      = 1 no phase-space output when particles cross scoring
                          plane

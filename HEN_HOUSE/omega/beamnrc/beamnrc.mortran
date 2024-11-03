@@ -142,12 +142,12 @@ WITH {,' ',}
 "
 "       1    listing file for user
 "       2    state of random no. generator at start of history(ISTORE non-zero)
-"       3    ploting file
-"       4    stored scoring arrays written end each batch for restart
+"       3    plotting file
+"       4    stored scoring arrays written end each batch for resuming
 "       5    user input from keyboard or input file
 "       6    echo of user input / log file
-"       7    echo of input file - for restart or creating a file interactively
-"       8    EGSnrc echos the cross section data read in to this unit
+"       7    echo of input file - for resuming or creating a file interactively
+"       8    EGSnrc echoes the cross section data read in to this unit
 "      17    EGS_windows geometry file
 "      12    HATCH reads the cross section data prepared by PEGS4 from this unit
 "      13    EGS_windows file  for graphical display particle histories
@@ -247,7 +247,7 @@ WITH {,' ',}
 "%A00
 "I>  Next Record
 "I>  ***********
-"I>     IWATCH,ISTORE,IRESTART,IO_OPT,IDAT,LATCH_OPTION,IZLAST
+"I>     IWATCH,ISTORE,IRESUME,IO_OPT,IDAT,LATCH_OPTION,IZLAST
 "I>
 "I>             IWATCH = 0 for normal output (the default)
 "I>                    = 1 output for every discrete interaction
@@ -262,8 +262,8 @@ WITH {,' ',}
 "I>                        This is a debugging tool. If run quits, rerun with
 "I>                        ISTORE=1, then again ISTORE=-1 and IWATCH = 1/2
 "I>                        and/or the debugger on.
-"I>           IRESTART = 0 first run for this data set (the default)
-"I>                    = 1 restart of a previous run
+"I>           IRESUME = 0 first run for this data set (the default)
+"I>                    = 1 resume a previous run
 "I>                    = 2 just create the input file and exit
 "I>                    = 3 read in the raw data from a previous run and do
 "I>                       the statistical analysis on dose etc.
@@ -272,7 +272,7 @@ WITH {,' ',}
 "I>                        with the extension _w#, where #
 "I>                        can be any positive integer.  These .egsdat files
 "I>                        will be summed and then the result analyzed similar
-"I>                        to IRESTART=3.
+"I>                        to IRESUME=3.
 "I>             IO_OPT = 0 phase-space output at each scoring plane(the default)
 "I>                    = 1 no phase-space output when particles cross scoring
 "I>                        plane
@@ -2479,7 +2479,7 @@ INTEGER NREG; }
 "V>Unit numbers passed in common:
 "V>IOUTLIST = listing
 "V>IOUTPLOT = plot file
-"V>IORSTRT  = restart file, mainly containing scoring arrays (input)
+"V>IORSTRT  = resume file, mainly containing scoring arrays (input)
 "V>IOUTGPH  = EGS_Windows file for graphical display of particle history
 "V>           note this is hardwired as 13 in the WATCH subroutine
 "V>IOUTGEOM = EGS_Windows geometry file
@@ -2544,8 +2544,8 @@ INTEGER IOUTLIST,IOUTPLOT,IORSTRT,IOUTGPH,IOUTGEOM,IOUTRN,
 "V>          in previous runs (ISOURC=21 only)
 "V>NCASET = number of histories already done.
 "V>JCASE  = no. of histories in each batch
-"V>IRESTART = 0 => initial run
-"V>         = 1 => restarted run
+"V>IRESUME = 0 => initial run
+"V>         = 1 => resumed run
 "V>         = 2 => creation of input file only
 "V>         = 3 => data analysis only
 "V>is_finished = .true. on finishing the last job in a parallel run
@@ -2667,7 +2667,7 @@ REPLACE {;COMIN/SCORE/;} WITH {
    NPPHSP, NPHOTPHSP, INPHSP,NPFLU, SCFLU_NUM,
    is_finished, data_unit,MXNP,ISTORE,IWATCH,IO_OPT,IOUTSP,ID,
    NSC_PLANES,NSC_ZONES, IPLANE_to_CM,IZLAST,I_MU_PHSP,IZSCORE,JHSTRY,
-   ISCORE,ISZ,IDAT, IRESTART, IQIN,MZONE_TYPE,NDOSE_ZONE,DOSE_ZONE,
+   ISCORE,ISZ,IDAT, IRESUME, IQIN,MZONE_TYPE,NDOSE_ZONE,DOSE_ZONE,
    MAX_BIT,IREGION_TO_BIT, LNEXC, LNINC, L_N_EXC,L_N_INC,
    FLUENCERR,IPLOTFLAG,DOSE_STAT,NUM_BREM,
    SCFLU_NOCOV,NHSTRY_LAST,SCSTP_LAST,SCDSTP_LAST, SCDOSE_LAST, SCFLU_LAST;
@@ -2698,7 +2698,7 @@ $LOGICAL is_finished;
 INTEGER data_unit,MXNP,ISTORE,IWATCH,IO_OPT,IOUTSP,ID,
    NSC_PLANES,NSC_ZONES($MAX_SC_PLANES),
    IPLANE_to_CM($MAX_SC_PLANES),IZLAST,I_MU_PHSP,IZSCORE,JHSTRY,
-   ISCORE,ISZ,IDAT, IRESTART,
+   ISCORE,ISZ,IDAT, IRESUME,
    IQIN,MZONE_TYPE($MAX_SC_PLANES),NDOSE_ZONE,DOSE_ZONE($MXREG),
    MAX_BIT,IREGION_TO_BIT($MXREG),
    LNEXC, LNINC, L_N_EXC($MAXIT, 32),L_N_INC($MAXIT,32),
@@ -3710,15 +3710,15 @@ IF(IO_OPT = 0  | IO_OPT >= 3) ["requested phase space files be output"
     ]
   ]
 
-  IF(IRESTART = 0)["start a new run"
+  IF(IRESUME = 0)["start a new run"
      DO I=1,NSC_PLANES [
          $BEAM_OPEN_PHSP_FOR_WRITE;
      ]
-  ] "end of IRESTART = 0 block"
+  ] "end of IRESUME = 0 block"
 
-  ELSEIF(IRESTART =  1)["restart from a previous run"
+  ELSEIF(IRESUME =  1)["resume from a previous run"
       $BEAM_OPEN_PHSP_FOR_READ;
-  ] "end of IRESTART = 1 block"
+  ] "end of IRESUME = 1 block"
 ]  "end of block opening phase space files if there"
 
 "initialize counters for phase space output for 1st scorig plane only"
@@ -3865,7 +3865,7 @@ IF(ISOURC~=21 & ISOURC~=24)[
     NRCYCL=0;
 ]
 
-IF(IRESTART =  0)[ "Fresh start, set everything to zero"
+IF(IRESUME =  0)[ "Fresh start, set everything to zero"
 
    DO I=1,NSC_PLANES [
        NPPHSP(I)=0;"Initialize the counters + variables for the ph-sp I/O"
@@ -3874,9 +3874,9 @@ IF(IRESTART =  0)[ "Fresh start, set everything to zero"
        NPHOTPHSP(I)=0;
    ]
    NINCPHSP=0;
-] "END IF IRESTART=0"
+] "END IF IRESUME=0"
 
-ELSEIF(IRESTART = 1)["Restart, read old data from unit 4"
+ELSEIF(IRESUME = 1)["Resume, read old data from unit 4"
     "Open unit 4 as an old file"
     OUTPUT; (/' *** About to read dose/fluence data from previous run ***');
     data_unit=egs_open_datfile(IORSTRT,0,1,'.egsdat');
@@ -3904,9 +3904,9 @@ ELSEIF(IRESTART = 1)["Restart, read old data from unit 4"
 
     $BEAM_READ_PHSP_FOR_RESTART;
 
-] "end of IRESTART=1 block"
+] "end of IRESUME=1 block"
 
-ELSEIF(IRESTART = 3)[
+ELSEIF(IRESUME = 3)[
     "Analysis only, read old data from unit 4"
     "Open unit 4 as an old file"
     OUTPUT; (/' *** About to read dose/fluence data from previous run ***');
@@ -3931,14 +3931,14 @@ ELSEIF(IRESTART = 3)[
     CLOSE(data_unit);
     NCASE=0;"no new cases, just analyze old data"
 
-] "end of IRESTART = 3 loop"
+] "end of IRESUME = 3 loop"
 
-ELSEIF(IRESTART = 4)[
+ELSEIF(IRESUME = 4)[
     call egs_combine_runs(combine_results,'.egsdat');
     NCASE=0;"no new cases, just analyze old data"
-] "end of IRESTART = 4 loop"
+] "end of IRESUME = 4 loop"
 
-IF(IRESTART=1|IRESTART=3)[
+IF(IRESUME=1|IRESUME=3)[
 "set NPFLU(I)=the total no. of particles that have already crossed"
 "scoring plane I"
     DO I=1,NSC_PLANES[
@@ -4371,7 +4371,7 @@ DO I=1,NMED[
         ' IS GREATER THAN COVERED BY DATA FILE WHERE UP,UE=',2F10.1,' MeV'/
         '     EXECUTION WILL TERMINATE AFTER COMPLETION OF INPUT FILE'//
         1X,50('*')//);
-        IRESTART=2; "Signal an early exit"
+        IRESUME=2; "Signal an early exit"
     ]
 ] "End of loop over media"
 
@@ -4421,8 +4421,8 @@ WRITE(IOUTLIST,200);
 WRITE(i_log,200);
 
 " Print execution mode
-IF(IRESTART =  0)[WRITE(i_log,201);WRITE(IOUTLIST,201);]
-ELSEIF(IRESTART =  1)[
+IF(IRESUME =  0)[WRITE(i_log,201);WRITE(IOUTLIST,201);]
+ELSEIF(IRESUME =  1)[
     IF(ISOURC=21 | ISOURC=24)[
        WRITE(i_log,205) NCASE,NCASEO,NHSTRYO,NPASS_ph_spO,NFAT_ph_spO,
                     (NPPHSP(IS),IS=1,NSC_PLANES);
@@ -4440,23 +4440,23 @@ ELSEIF(IRESTART =  1)[
        WRITE(IOUTLIST,202)NCASE,NCASEO,(NPPHSP(IS),IS=1,NSC_PLANES);
     ]
 ]
-ELSEIF(IRESTART =  2)[
+ELSEIF(IRESUME =  2)[
     WRITE(i_log,203); WRITE(IOUTLIST,203);
     ircode = 2; return;
 ]
-ELSEIF(IRESTART =  3)[
+ELSEIF(IRESUME =  3)[
     WRITE(i_log,204); WRITE(IOUTLIST,204);
     ircode = 1; return;
 ]
 201  FORMAT(/'********* NEW INPUT FILE *********'/);
-202  FORMAT(/' ********* RESTARTED INPUT FILE ********* '/
+202  FORMAT(/' ********* RESUMED INPUT FILE ********* '/
            ' ',10X,I12,' NEW + ',I12,' OLD HISTORIES'/
            ' ',10X,'USING RN SEEDS FROM PREVIOUS RUN'/
            ' ',10X,'# OF PARTICLES IN THE PH-SP FILE FROM PREVIOUS RUN ='/
            ' ',20X,4(1X,I12)/);
 203  FORMAT(/' ********* INPUT FILE CREATION ONLY *********'/);
 204  FORMAT(/' ********* DATA ANALYSIS ONLY *********'/);
-205  FORMAT(/' ********* RESTARTED INPUT FILE ********* '/
+205  FORMAT(/' ********* RESUMED INPUT FILE ********* '/
       ' ',10X,I12,' NEW + ',I12,' OLD HISTORIES (',I12,' PRIMARY HISTORIES)'/
       ' ',10X,'# OF MULTIPLE PASSERS REJECTED FROM PREVIOUS RUN = ',I12/
       ' ',10X,'# OF PHOTONS REJECTED BECAUSE THEY FALL OUTSIDE '/
@@ -4464,7 +4464,7 @@ ELSEIF(IRESTART =  3)[
       ' ',10X,'USING RN SEEDS FROM PREVIOUS RUN'/
       ' ',10X,'# OF PARTICLES IN THE PH-SP FILE FROM PREVIOUS RUN ='/
       ' ',20X,4(1X,I12)/);
-206  FORMAT(/' ********* RESTARTED INPUT FILE ********* '/
+206  FORMAT(/' ********* RESUMED INPUT FILE ********* '/
       ' ',10X,I12,' NEW + ',I12,' OLD HISTORIES (',I12,' PRIMARY HISTORIES)'/
       ' ',10X,'# OF FAT PHOTONS REJECTED=',I12/
       ' ',10X,'USING RN SEEDS FROM PREVIOUS RUN'/
@@ -4848,10 +4848,10 @@ IF( n_parallel > 0 ) [  "Job is part of a parallel run "
 "another batch.  Note: these are not statistical batches, they are only for
 "output purposes.
 
-IF(IRESTART=3)[
+IF(IRESUME=3)[
    OUTPUT;(/' Analyzing data from a previous run'//);
 ]
-ELSEIF(IRESTART=4)[
+ELSEIF(IRESUME=4)[
    OUTPUT;(/' Combining and analyzing data from parallel runs'//);
 ]
 ELSE[
@@ -5080,7 +5080,7 @@ IF(ISOURC=21 | ISOURC=24)[
 
 :TIME-PLUS-ANAL:
 
-IF(IRESTART~=4 & ~is_finished)[
+IF(IRESUME~=4 & ~is_finished)[
   WRITE(IOUTLIST,250);
   $SHOW-RNG-STATE(IOUTLIST);
   WRITE(i_log,250);
@@ -5091,7 +5091,7 @@ $SET_ELAPSED_CPUTIME(CPUT2);
 TIMCPU=CPUT2-tzero;
 ETIMETOT=ETIMETOT+TIMEB;
 RATIO=ETIMETOT/TIMCPU;
-IF(IRESTART ~= 3 & IRESTART ~=4 & ~is_finished)[
+IF(IRESUME ~= 3 & IRESUME ~=4 & ~is_finished)[
     WRITE(IOUTLIST,260)ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
     WRITE(i_log,260)ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO;
     IF(ientry=1) [
@@ -5107,7 +5107,7 @@ IF(IRESTART ~= 3 & IRESTART ~=4 & ~is_finished)[
       3600.*dble((IBATCH-1)*JCASE)/TIMCPU;
     ]
 ]
-IF(IRESTART = 1)[
+IF(IRESUME = 1)[
     WRITE(IOUTLIST,270) TIMCPU+TMCPUO,(TIMCPU+TMCPUO)/3600.;
     WRITE(i_log,270) TIMCPU+TMCPUO,(TIMCPU+TMCPUO)/3600.;
     WRITE(IOUTLIST,280)(TIMCPU+TMCPUO)/dble(IHSTRY),
@@ -5115,7 +5115,7 @@ IF(IRESTART = 1)[
     WRITE(i_log,280)(TIMCPU+TMCPUO)/dble(IHSTRY),
                  3600.*dble(IHSTRY)/(TIMCPU+TMCPUO);
 ]
-ELSEIF(IRESTART = 3)[
+ELSEIF(IRESUME = 3)[
     WRITE(IOUTLIST,275) TMCPUO,TMCPUO/3600.;
     WRITE(i_log,275) TMCPUO,TMCPUO/3600.;
     WRITE(IOUTLIST,280)TMCPUO/dble(IHSTRY),
@@ -5123,7 +5123,7 @@ ELSEIF(IRESTART = 3)[
     WRITE(i_log,280)TMCPUO/dble(IHSTRY),
                  3600.*dble(IHSTRY)/TMCPUO;
 ]
-ELSEIF(IRESTART = 4 | is_finished)[
+ELSEIF(IRESUME = 4 | is_finished)[
     WRITE(IOUTLIST,285) DATCOUNT,TMCPUO,TMCPUO/3600.,TMCPUO/FLOAT(DATCOUNT);
     WRITE(i_log,285) DATCOUNT,TMCPUO,TMCPUO/3600.,TMCPUO/FLOAT(DATCOUNT);
     WRITE(IOUTLIST,290)TMCPUO/dble(IHSTRY),
@@ -7687,33 +7687,33 @@ DO J=1,24[MEDIA(J,1)=MED_IN(J);]              "medium 1 is nominal AIR
 "next record
 "***********
 
-OUTPUT;(/' IWATCH(-N-4), ISTOR(0,+-1), IRESTART(0-3), IO_OPT(0-4), ',/
+OUTPUT;(/' IWATCH(-N-4), ISTOR(0,+-1), IRESUME(0-3), IO_OPT(0-4), ',/
          ' IDAT(0-1), LATCH_OPTION (1-3), IZLAST(0-2): ',$);
-;MINPUT (INPUTS) IWATCH,ISTORE,IRESTART,IO_OPT,IDAT,LATCH_OPTION ,IZLAST;
+;MINPUT (INPUTS) IWATCH,ISTORE,IRESUME,IO_OPT,IDAT,LATCH_OPTION ,IZLAST;
                (7I12);
-OUTPUT IWATCH,ISTORE,IRESTART,IO_OPT,IDAT,LATCH_OPTION ,IZLAST;
+OUTPUT IWATCH,ISTORE,IRESUME,IO_OPT,IDAT,LATCH_OPTION ,IZLAST;
        (2I12,3I10,2I12);
 IF(IWATCH >  4)IWATCH=0;
 IF((ISTORE < -1)   |  (ISTORE >  1))  ISTORE=0;
-IF((IRESTART  < 0) |  (IRESTART >  4))IRESTART=0;
+IF((IRESUME  < 0) |  (IRESUME >  4))IRESUME=0;
 IF((IO_OPT  < 0)   |  (IO_OPT >  4))  IO_OPT=0;
 IF((IDAT    < 0)   |  (IDAT   >  1))  IDAT  =0;
 IF((IZLAST < 0)    |  (IZLAST > 2))   IZLAST = 0;
 IF(LATCH_OPTION <=0| LATCH_OPTION>3)  LATCH_OPTION = 2;
 $BEAMMODEL_INPUT_OPTION;
-OUTPUT IWATCH,ISTORE,IRESTART,IO_OPT,IDAT,LATCH_OPTION ,IZLAST;
+OUTPUT IWATCH,ISTORE,IRESUME,IO_OPT,IDAT,LATCH_OPTION ,IZLAST;
     (/' Do not track(0) or track(>0) every interaction or track Nth'/
       ' history only(-N):',T60,I12/
     ' Store random # for a batch(0),a history(1) or read random #(-1):',T70,I2/
-    ' First run(0),restarted(1),make(2),analyze(3):',T70,I2/
+    ' First run(0),resumed(1),make(2),analyze(3):',T70,I2/
     ' Output to PH-SP(0),not(1),BEAM-MODEL(2),PH-SP&MODEL(3),'/
     '      output to PH-SP in IAEA format(4):',T70,I2/
     ' Store data(0) or not(1):',T70,I2/
     ' LATCH OPTION,do not inherit(1),inherit+record origin(2,3):',T70,I2/
     ' Do not score ZLAST(0), score ZLAST(1), output file for graphics(2):',
     T70,I2);
-"IF((IRESTART =  2) |  (IDAT =  1))[INEXT=0;]ELSE[INEXT=1;]"
-IF(IRESTART =  1)[INEXT=1;]ELSE[INEXT=0;]"Only leave restart=1 if already is"
+"IF((IRESUME =  2) |  (IDAT =  1))[INEXT=0;]ELSE[INEXT=1;]"
+IF(IRESUME =  1)[INEXT=1;]ELSE[INEXT=0;]"Only leave resume=1 if already is"
 OUTPUT;(' ');
 
 "                       MONTE CARLO CONTROL INPUT            ""toc:
@@ -8143,7 +8143,7 @@ IF (NSC_PLANES > $MAX_SC_PLANES)[ OUTPUT NSC_PLANES, $MAX_SC_PLANES;
 IF(IO_OPT ~= 1)&(NSC_PLANES = 0) [
    OUTPUT;
    (//' AT LEAST ONE SCORING PLANE HAS TO BE GIVEN FOR PH-SP OUTPUT!!'/
-             ' PLEASE RESTART AND USE NSC_PLANES > 0.'///);
+             ' PLEASE RELAUNCH AND USE NSC_PLANES > 0.'///);
    $CALL_EXIT(1);
 ]
 
@@ -8990,7 +8990,7 @@ SCSTP2,(count_pII_steps+PIISTP)/SCSTP,SCSTP2;
            1PE10.3,' +/-',0PF4.1,'%'/
            ' ','# PRESTA-II STEPS/TOTAL # CHARGED PARTICLE STEPS',T60,
            F7.3,' +/-',0PF4.1,'%');
-IF(IRESTART~=4 & ~is_finished)[ "do not keep track of this when combining"
+IF(IRESUME~=4 & ~is_finished)[ "do not keep track of this when combining"
                                 "parallel runs"
 WRITE(IOUTLIST,
           '(/''        NO. OF BREMSSTRAHLUNG EVENTS IN THIS RUN:'',T60,I12)')
@@ -9049,7 +9049,7 @@ IF (NSC_PLANES >  0) [
       DO ICM=1,MAX_CMs [
          ISCORE=ICM_to_SCORE(ICM);
          IF (ISCORE ~= 0) [
-            IF(IRESTART=3|IRESTART=4|is_finished)[
+            IF(IRESUME=3|IRESUME=4|is_finished)[
                WRITE(IOUTLIST,'(I4,I7,I11,I9,''**'',F11.4,''**'',F15.4,''**'',
                                 F14.3,''**''/)')
                ISCORE,ISCORE,NPPHSP(ISCORE),
@@ -9126,11 +9126,11 @@ IF (NSC_PLANES >  0) [
       ]
    ]
    WRITE(IOUTLIST, '(/'' *Includes all particles of all weights'')');
-   IF(IRESTART=3 | IRESTART=4 | is_finished)[
+   IF(IRESUME=3 | IRESUME=4 | is_finished)[
      WRITE(IOUTLIST,
    '(/'' **Information not available from runs in which previous data''/
-      ''   is simply analyzed (IRESTART=3) or combined from parallel''/
-      ''   runs (automatically or with IRESTART=4).  The missing phase''/
+      ''   is simply analyzed (IRESUME=3) or combined from parallel''/
+      ''   runs (automatically or with IRESUME=4).  The missing phase''/
       ''   space file info is available in the header of the (combined)''/
       ''   phase space file.'')');
    ]
@@ -9245,7 +9245,7 @@ IF (NSC_PLANES >  0) [
    ]
     "End of fluence summary"
    "output min and max overall particle weights"
-  IF(IRESTART < 2 & ~is_finished)[
+  IF(IRESUME < 2 & ~is_finished)[
    IF(NUMTOT=0.) MINWEIGHT=0.; "reset from 999 if no particles scored"
    IF(MINWEIGHT > 0.0000030 )[
       WRITE(IOUTLIST,

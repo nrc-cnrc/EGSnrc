@@ -121,7 +121,7 @@ proc create_file { file } {
 		}
 	    }
 	} elseif $i==5 {
-	    # IRESTART option (0,1,3,4)
+	    # IRESUME option (0,1,3,4)
 	    foreach j {0 1 3 4} {
 		if { [string compare $values($i) $options($i,$j)]==0 } {
 		    set val $j
@@ -781,5 +781,3 @@ proc create_file { file } {
 
     close $file
 }
-
-

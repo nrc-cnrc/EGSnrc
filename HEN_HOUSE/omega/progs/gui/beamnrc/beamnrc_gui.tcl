@@ -67,7 +67,7 @@
 #
 #  cd /usr; find . -name "*wish*" -print;
 #
-# The next line restarts using wish \
+# The next line relaunches using wish \
 exec wish "$0" ${1+"$@"}
 
 
@@ -633,7 +633,7 @@ if {$argc > 1} {
      tk_dialog .pegs_file_error "PEGS file does not exist." "The pegs file $pegs4filename\
                 specified on the command line does not exist in either the local or main\
                 pegs4 data directory.  You will have to browse for the PEGS4 data\
-                or restart with another argument." error 0 OK
+                or relaunch with another argument." error 0 OK
       set pegs4filename {}
    }
 }
@@ -665,7 +665,7 @@ if {$argc > 0} {
    if {![file exists $full_inp_file]} {
       tk_dialog .inp_file_error "Input file does not exist." "The input file $full_inp_file\
                 specified on the command line does not exist.  Use the GUI to browse for\
-                an existing input file or restart with another argument." error 0 OK
+                an existing input file or relaunch with another argument." error 0 OK
       set inp_file {}
       return
    } else {

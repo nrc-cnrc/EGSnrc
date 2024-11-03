@@ -52,9 +52,9 @@
                                    #      history in .egsrns
                                    #all: store initial random numbers for each
                                    #     history
- IRESTART= first        #first,restart,make,analyze,start-RNS;
+ IRESUME= first         #first,resume,make,analyze,start-RNS;
                         #first: first run
-                        #restart: restart of old run (requires .egsdat file)
+                        #resume: resume old run (requires .egsdat file)
                         #make: just create an input file and exit
                         #analyze: read in data from .egsdat file and
                         #         do statistical analysis and output results
@@ -63,7 +63,7 @@
                         #         .egsrns
 
  STORE DATA ARRAYS= yes #yes,no;
-                        #yes: output .egsdat file for restarts, parallel
+                        #yes: output .egsdat file for resuming, parallel
                         #     post-processing, etc
 
  SPR OUTPUT= slabs/cylinders   #regions,slabs/cylinders;
