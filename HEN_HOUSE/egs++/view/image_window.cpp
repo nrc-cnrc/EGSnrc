@@ -92,7 +92,7 @@ ImageWindow::ImageWindow(QWidget *parent, const char *name) :
     qRegisterMetaType<vector<EGS_Float>>("vector<EGS_Float>");
 
     // Initialize render worker and put it in a thread
-    restartWorker();
+    relaunchWorker();
 
     // disable Qt's background refill for the Widget, so we can paint
     // over our existing buffer when picking regions
@@ -245,7 +245,7 @@ void ImageWindow::stopWorker() {
 }
 
 
-void ImageWindow::restartWorker() {
+void ImageWindow::relaunchWorker() {
     worker = new RenderWorker();
     thread = new Thread();
     worker->moveToThread(thread);
