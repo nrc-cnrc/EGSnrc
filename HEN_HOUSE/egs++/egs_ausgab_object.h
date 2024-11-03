@@ -122,7 +122,7 @@ public:
      *
      *   Every ausgab object should reimplement this method to store
      *   the data needed to set the state of the object to its current
-     *   state into the stream \a data_out. This is used for restarted
+     *   state into the stream \a data_out. This is used for resumed
      *   calculations. Should return \c true on success, \c false on failure.
      *   \sa setState(), addState(), resetCounter().
      */
@@ -134,7 +134,7 @@ public:
      *
      *   Every ausgab object should reimplement this method to read from the stream
      *   \a data_in data previously stored using storeState() and to set its
-     *   state according to this data. This is used for restarted calculations.
+     *   state according to this data. This is used for resumed calculations.
      *   Should return \c true on success, \c false on failure (\em e.g. I/O error).
      *
      *   \sa addState(), storeState(), resetCounter()

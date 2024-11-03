@@ -221,11 +221,11 @@ REPLACE {$USER-INIT;} WITH {;}
 "tasks to be performed at the end of the run (eg data analysis, output)"
 REPLACE {$USER-FINISH;} WITH {;}
 
-"extra data to be written to .egsdat file for restarts, recombination"
+"extra data to be written to .egsdat file for resuming, recombination"
 "after parallel.  {P1} is the unit number of the file."
 REPLACE {$USER-WRITE-DAT(#);} WITH {;}
 
-"extra data to be from .egsdat file for restarts, recombination"
+"extra data to be from .egsdat file for resuming, recombination"
 "after parallel.  {P1} is the unit number of the file."
 REPLACE {$USER-READ-DAT(#);} WITH {;}
 

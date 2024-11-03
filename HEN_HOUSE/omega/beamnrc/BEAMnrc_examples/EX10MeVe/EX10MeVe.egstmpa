@@ -1,6 +1,6 @@
 EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 AIR521ICRU
-           0  0   0  0  0  2  0,                 IWATCH,ISTORE,IRESTART,etc
+           0  0   0  0  0  2  0,                 IWATCH,ISTORE,IRESUME,etc
           50000.          97          33 500.00 0      0 0 NCASE, etc
  -1  0   0.100000       0.00000       0.00000       1.00000    , IQIN,ISOURCE etc
    0,                                            MONOEN

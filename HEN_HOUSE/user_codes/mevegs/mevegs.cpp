@@ -148,13 +148,13 @@ public:
 
     /*! Output intermediate results to the .egsdat file.
      This function is called at the end of each batch. We must store
-     the results in the file so that simulations can be restarted and results
+     the results in the file so that simulations can be resumed and results
      of parallel runs recombined.
      */
     int outputData();
 
     /*! Read results from a .egsdat file.
-     This function is used to read simulation results in restarted
+     This function is used to read simulation results when resuming
      calculations.
      */
     int readData();

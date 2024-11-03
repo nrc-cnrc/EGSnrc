@@ -258,7 +258,7 @@ protected:
                 Nlast,     //!< Last record this source can use
                 count;     /*!< Particles delivered so far (may be less than
                            Nread because some particles were rejected */
-    int         Nrestart;  //!< Number of times the file was restarted
+    int         Nrestart;  //!< Number of times the phsp file was restarted
     int         Nrecycle_g;  //!< Number of times to recycle a photon
     int         Nrecycle_e;  //!< Number of times to recycle a charged particle
     int         Nrecycle;    //!< Number of times to recycle current particle

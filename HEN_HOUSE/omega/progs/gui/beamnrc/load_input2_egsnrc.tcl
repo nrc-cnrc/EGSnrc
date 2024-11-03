@@ -283,7 +283,7 @@ proc read_input {} {
     set data [get_str $data values 2]
 
     gets $fileid data
-    #   IWATCH,ISTORE,IRESTART,IO_OPT,IDAT,LATCH_OPTION,IZLAST
+    #   IWATCH,ISTORE,IRESUME,IO_OPT,IDAT,LATCH_OPTION,IZLAST
     for {set i 3} {$i <= 9} {incr i} {
 	set data [get_val $data values $i]
 	if { $i==3 & [expr $values($i)]<0 } {

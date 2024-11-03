@@ -111,8 +111,8 @@ key is present, particles having statistical weights less than \c wmin
 or greater than \c wmax will be rejected. This is useful to \em e.g.
 reject "phat" particles from a simulation using DBS.
 
-<b>BEWARE:</b> When restarting calculations using this source, one must make
-sure that the <code>RESTART</code> calculation option is defined in
+<b>BEWARE:</b> When resuming calculations using this source, one must make
+sure that the <code>RESUME</code> calculation option is defined in
 both, the source and the application input files.
 
 A simple example. Note that you must build the required shared library for

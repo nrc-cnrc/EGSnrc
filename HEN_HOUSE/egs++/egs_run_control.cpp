@@ -56,7 +56,7 @@ static int n_run_controls = 0;
 
 EGS_RunControl::EGS_RunControl(EGS_Application *a) : geomErrorCount(0),
     geomErrorMax(0), app(a), input(0), ncase(0), ndone(0), maxt(-1), accu(-1),
-    nbatch(10), restart(0), nchunk(1), cpu_time(0), previous_cpu_time(0),
+    nbatch(10), resume(0), nchunk(1), cpu_time(0), previous_cpu_time(0),
     rco_type(simple) {
     n_run_controls++;
     if (!app) egsFatal("EGS_RunControl::EGS_RunControl: it is not allowed\n"
@@ -110,10 +110,10 @@ EGS_RunControl::EGS_RunControl(EGS_Application *a) : geomErrorCount(0),
 
     vector<string> ctype;
     ctype.push_back("first");
-    ctype.push_back("restart");
+    ctype.push_back("resume");
     ctype.push_back("analyze");
     ctype.push_back("combine");
-    restart = input->getInput("calculation",ctype,0);
+    resume = input->getInput("calculation",ctype,0);
 }
 
 EGS_RunControl::~EGS_RunControl() {
@@ -183,17 +183,17 @@ void EGS_RunControl::resetCounter() {
 }
 
 int EGS_RunControl::startSimulation() {
-    if (restart == 1 || restart == 2) {
+    if (resume == 1 || resume == 2) {
         if (app->readData()) {
             return -1;
         }
-        if (restart == 2) {
+        if (resume == 2) {
             ncase = ndone;
             egsInformation("\n\nResult analysis only\n\n");
             return 1;
         }
     }
-    else if (restart == 3) {
+    else if (resume == 3) {
         app->describeSimulation();
         egsInformation("\n\nCombine results only\n\n");
         egsInformation("calling combineResults()\n");
@@ -205,11 +205,11 @@ int EGS_RunControl::startSimulation() {
     time_t tinfo = time(0);
     egsInformation("\n\nStarting simulation on %s\n",
                    asctime(localtime(&tinfo)));
-    if (restart == 0) {
+    if (resume == 0) {
         egsInformation("    Fresh simulation of %lld histories\n\n\n",ncase);
     }
     else {
-        egsInformation("    Restarted simulation with %lld old and %lld"
+        egsInformation("    Resumed simulation with %lld old and %lld"
                        " new histories\n\n\n",ndone,ncase-ndone);
     }
     timer.start();

@@ -128,7 +128,7 @@ REPLACE {;COMIN/RWPHSP/;} WITH {
    LATCHTMP,  "modified version of LATCH to be written to phsp"
    WRITE_PHSP_COUNTER, "counter up to 1000 used for group write"
    WRITE_PHSP_SOFAR, "how many particles written so far to file"
-   PHSP_RESTART, "set to 1 if this is a restart"
+   PHSP_RESTART, "set to 1 if this is a phsp restart"
    PHSP_RECL, "the record length"
    PHSP_RECL_OLD, "saves record length"
    iaea_extra_ints, "array in which LATCH will be stored for iaea format"
@@ -511,7 +511,7 @@ REPLACE {$WRITE_PHSP_RECORD(#,#,#,#,#:#,#,#,#);} WITH {;
 "first block of 1000 particles, however, it will be overwritten with nulls."
 "This is fine since the header info should be recalculated and rewritten at"
 "the top of the file after all data has been written out anyway."
-"Also note that restarting with this writing scheme requires that any"
+"Also note that resuming with this writing scheme requires that any"
 "blocks of N (N<1000) particles at the end of a phase space file from"
 "the previous run must immediately be read into the first N spaces of"
 "STRING_TEMP(_ZLAST)_OUT before continuing on with outputting the data"
@@ -1098,7 +1098,7 @@ REPLACE {$BEAM_OPEN_PHSP_FOR_WRITE;} WITH {;
 
 REPLACE {$BEAM_OPEN_PHSP_FOR_READ;} WITH {;
     OUTPUT;
-    (/' Restarting after previous run, will read old data & phase-space',
+    (/' Resuming after previous run, will read old data & phase-space',
       ' files');
     DO I=1,NSC_PLANES [
         OUTPUT IOUTFLU(I);(//' Checking ph-sp file on logical unit ',I4);
@@ -1202,13 +1202,13 @@ REPLACE {$BEAM_PHSP_BUFFER_FLUSH;} WITH {;
      ]"end of standard BEAMnrc format"
 };
 
-REPLACE {$BEAM_READ_PHSP_FOR_RESTART;} WITH {;
+REPLACE {$BEAM_READ_PHSP_FOR_RESUME;} WITH {;
     DO I=1,NSC_PLANES[
        OUTPUT I,NPPHSP(I);
        (//' PH-SP FILE',I4,': '/
           '               TOTAL NO. OF PARTICLES =',I12);
        IF(IO_OPT=0 | IO_OPT=3)["check to see that the user has not"
-                               "added phase space files before restarting"
+                               "added phase space files before resuming"
            IF(IO_OPT=4)[
               $IAEA_READ_PHSP_HEADER(IOUTFLU(I),NPPHSP(I),NPHOTPHSP(I),
                EKMAXPHSP(I),NINCPHSP,Z_SCORE,IZLAST1,I_MU_PHSP,IZSCORE);
@@ -1216,14 +1216,14 @@ REPLACE {$BEAM_READ_PHSP_FOR_RESTART;} WITH {;
               IF(IZLAST=0 & IZLAST1=1)[
                OUTPUT;
     (//' Error: Phase space file was scored with ZLAST in previous run '/
-       ' but you have restarted this run with IZLAST=0.  Restart with'/
+       ' but you have resumed this run with IZLAST=0.  Resume with'/
        ' IZLAST=1.'//);
                STOP;
               ]
               ELSEIF(IZLAST=1 & IZLAST1=0)[
               OUTPUT;
     (//' Error: Phase space file was scored  without ZLAST in previous run '/
-       ' but you have restarted this run with IZLAST=1.  Restart with'/
+       ' but you have resumed this run with IZLAST=1.  Resume with'/
        ' IZLAST=0.'//);
                STOP;
               ]
@@ -1237,9 +1237,9 @@ REPLACE {$BEAM_READ_PHSP_FOR_RESTART;} WITH {;
             NINCSRC*(NCASEO+(NRCYCL+1)*(NPASS_ph_spO+NFAT_ph_spO))/NNPHSP)[
                                         "files have been added"
              OUTPUT I;(//' ***ERROR:'/
-' Phase space file',I4,' has been added to (using beamdp?) before restarting.'/
+' Phase space file',I4,' has been added to (using beamdp?) before resuming.'/
 ' The code currently does not support this.  Please add phase space'/
-' files only after all runs, including restarts, are complete.'//);
+' files only after all runs, including resumes, are complete.'//);
              "STOP;"
            ]
        ]
@@ -1290,11 +1290,11 @@ REPLACE {$DOSXYZ_OPEN_PHSP_FOR_WRITE;} WITH {;
     "Added by T. popescu and J.Lobo to write phsps in dosxyz."
     "only done for IAEAphsps."
     "Some mods by BW."
-    IF(IRESTART=0) [
+    IF(IRESUME=0) [
      $IAEA_OPEN_PHSP_FOR_WRITE(i_unit_out,$cstring(phsp_out_fn),
             0,0,z_score_tmp,i_muidx_out,1);
     ]
-    ELSEIF(IRESTART=1) [
+    ELSEIF(IRESUME=1) [
      $IAEA_OPEN_PHSP_FOR_WRITE(i_unit_out,$cstring(phsp_out_fn),
             0,1,z_score_tmp,i_muidx_out,1);
     ]
