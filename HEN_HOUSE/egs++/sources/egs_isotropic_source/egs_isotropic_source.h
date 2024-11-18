@@ -107,6 +107,11 @@ It is defined most simply using the following input:
                                   # no region provided, region selection switches to:
                                   #        IncludeAll if IncludeSelected
                                   #        ExcludeAll if ExcludeSelected
+
+    medium selection = IncludeSelected # Optional, only for a valid geometry defined as above. Valid options are IncludeSelected or ExcludeSelected
+    selected media = med1 med2    # If IncludeSelected or ExcludeSelected is set for medium selection
+                                  # enter a list of medium names
+
 :stop source:
 \endverbatim
 
@@ -128,6 +133,13 @@ corresponding condition:
 \li <tt>ExcludeSelected</tt> - particle is not inside \c geometry OR not in
 one of <tt>selected regions</tt>
 
+AND meets the corresponding condition, for filtering by <tt>medium selection</tt>:
+
+\li <tt>IncludeSelected</tt> - particle is inside \c geometry AND in one of
+<tt>selected media</tt>
+\li <tt>ExcludeSelected</tt> - particle is not inside \c geometry OR not in
+one of <tt>selected media</tt>
+
 \verbatim
 :start source:
     library = egs_isotropic_source
@@ -135,6 +147,8 @@ one of <tt>selected regions</tt>
     geometry = a geometry to modify particle generation (optional)
     region selection = IncludeAll or ExcludeAll or IncludeSelected or ExcludeSelected (optional)
     selected regions = regions to use (only for IncludeSelected or ExcludeSelected)
+    medium selection = IncludeSelected or ExcludeSelected (optional)
+    selected media = media to use (only for IncludeSelected or ExcludeSelected)
     :start shape:
         definition of the shape to generate particles within
     :stop shape:
@@ -245,7 +259,7 @@ public:
         EGS_BaseSimpleSource(Q,Spec,Name,f), shape(Shape),
         geom(geometry), regions(0), min_theta(85.), max_theta(95.),
         buf_1(1), buf_2(-1), min_phi(0), max_phi(2*M_PI),
-        nrs(0), gc(IncludeAll) {
+        nrs(0), gc(IncludeAll), media(0), nms(0), gcm(IncludeSelected) {
         setUp();
     };
 
@@ -264,14 +278,19 @@ public:
         if (nrs > 0 && regions) {
             delete [] regions;
         }
+        if (nms > 0 && media) {
+            delete [] media;
+        }
     };
 
     void getPositionDirection(EGS_RandomGenerator *rndm,
                               EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) {
         bool ok = true;
+        bool ok2 = true;
         do {
             x = shape->getRandomPoint(rndm);
             if (geom) {
+                // Filter by region
                 if (gc == IncludeAll) {
                     ok = geom->isInside(x);
                 }
@@ -288,7 +307,7 @@ public:
                         }
                     }
                 }
-                else {
+                else if (gc == ExcludeSelected) {
                     ok = true;
                     int ireg = geom->isWhere(x);
                     for (int j=0; j<nrs; ++j) {
@@ -297,6 +316,36 @@ public:
                             break;
                         }
                     }
+                }
+
+                // Filter by medium
+                if (ok && nms > 0) {
+                    if (gcm == IncludeSelected) {
+                        ok2 = false;
+                        int ireg = geom->isWhere(x);
+                        int currentMedium = geom->medium(ireg);
+                        for (int j=0; j<nms; ++j) {
+                            if (currentMedium == media[j]) {
+                                ok2 = true;
+                                break;
+                            }
+                        }
+                    }
+                    else if (gcm == ExcludeSelected) {
+                        ok2 = true;
+                        int ireg = geom->isWhere(x);
+                        for (int j=0; j<nrs; ++j) {
+                            if (ireg == media[j]) {
+                                ok2 = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Combine the filtering by region and medium
+                if (ok2 == false) {
+                    ok = false;
                 }
             }
         }
@@ -339,7 +388,7 @@ protected:
 
     EGS_BaseShape    *shape;  //!< The shape from which particles are emitted.
     EGS_BaseGeometry *geom;
-    int              *regions;
+    int              *regions, *media;
 
     void setUp();
 
@@ -347,8 +396,8 @@ protected:
     EGS_Float buf_1, buf_2; //! avoid multi-calculating cos(min_theta) and cos(max_theta)
     EGS_Float min_phi, max_phi;
 
-    int                 nrs;
-    GeometryConfinement gc;
+    int                 nrs, nms;
+    GeometryConfinement gc, gcm;
 };
 
 #endif
