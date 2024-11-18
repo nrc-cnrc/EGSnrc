@@ -28,6 +28,7 @@
 #                   Randle Taylor
 #                   Marc Chamberland
 #                   Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -45,7 +46,7 @@
 EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSimpleSource(input,f), shape(0), geom(0),
     regions(0), min_theta(0), max_theta(M_PI), min_phi(0), max_phi(2*M_PI),
-    nrs(0), gc(IncludeAll) {
+    nrs(0), gc(IncludeAll), media(0), nms(0), gcm(IncludeSelected) {
     vector<EGS_Float> pos;
     EGS_Input *ishape = input->takeInputItem("shape");
     if (ishape) {
@@ -71,6 +72,7 @@ EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
         if (!geom) egsWarning("EGS_IsotropicSource: no geometry named %s\n",
                                   geom_name.c_str());
         else {
+            // Filter by region
             vector<string> reg_options;
             reg_options.push_back("IncludeAll");
             reg_options.push_back("ExcludeAll");
@@ -90,6 +92,23 @@ EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
                 regions = new int [nrs];
                 for (int j=0; j<nrs; j++) {
                     regions[j] = regs[j];
+                }
+            }
+
+            // Filter by medium
+            gcm = (GeometryConfinement) input->getInput("medium selection",reg_options,0);
+            if (gcm == IncludeSelected || gcm == ExcludeSelected) {
+                vector<string> selectedMedia;
+                err = input->getInput("selected media",selectedMedia);
+                if (err || selectedMedia.size() < 1) {
+                    egsWarning("EGS_IsotropicSource: medium selection %d used "
+                               "but no 'selected media' input found\n",gcm);
+                }
+                nms = selectedMedia.size();
+                media = new int [nms];
+                for (int j=0; j<nms; j++) {
+                    int mediaID = geom->getMediumIndex(selectedMedia[j]);
+                    media[j] = mediaID;
                 }
             }
         }
@@ -146,6 +165,24 @@ void EGS_IsotropicSource::setUp() {
 
         if (geom) {
             geom->ref();
+
+            description += "\n\n";
+            description += " Filtered by regions using option: " + std::to_string(gc);
+
+            if (nms > 0) {
+                description += "\n\n";
+                description += " Filtered by media using option: " + std::to_string(gcm);
+                description += "\n";
+                description += " Media:";
+                for (auto i=0; i<nms; ++i) {
+                    string mediumName = geom->getMediumName(media[i]);
+                    description += " " + mediumName + "(" + std::to_string(media[i]) + ")";
+                }
+
+                description += "\n\n Regions are only included if they match both the region filter and the medium filter.";
+            }
+
+
         }
     }
 }
