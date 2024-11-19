@@ -56,6 +56,7 @@ using std::vector;
 
 class EGS_Application; // forward declaration
 class EGS_Input;
+class EGS_AffineTransform; // forward declaration
 struct EGS_GeometryIntersections;
 
 #ifdef BPROPERTY64
@@ -267,6 +268,22 @@ public:
         return 0.0;
     }
 
+    /*! \brief Returns base geometry of a transformed geometry
+
+      Currently only implemented in EGS_TransformedGeometry
+    */
+    virtual EGS_BaseGeometry *getBaseGeom() {
+        return NULL;
+    }
+
+    /*! \brief Returns the transform for a transformed geometry
+
+      Currently only implemented in EGS_TransformedGeometry
+    */
+    virtual EGS_AffineTransform *getTransform() {
+        return NULL;
+    }
+
     /*! Returns number of planar slabs/cylinders/etc in direction idir
 
       Currently only implemented in EGS_XYZGeometry, where idir=0--> X-boundaries,
@@ -460,7 +477,7 @@ public:
     virtual EGS_Float getBScaling(int ireg) const {
         if (has_Ref_rho && has_B_scaling) {
             if (bfactor && ireg >= 0 && ireg < nreg) {
-                return getMediumRho(medium(ireg))/rhoRef*bfactor[ireg];
+                return getMediumRho(medium(ireg))/rhoRef *bfactor[ireg];
             }
             else {
                 return 1.0;
@@ -630,9 +647,9 @@ public:
      */
     virtual bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
         if (!bp_array) {
-            return (prop & bproperty);
+            return (prop &bproperty);
         }
-        return ireg >= 0 && ireg < nreg ? prop & bp_array[ireg] : false;
+        return ireg >= 0 && ireg < nreg ? prop &bp_array[ireg] : false;
     };
 
     /*! \brief Set the boolean properties of the entire geometry to \a prop
