@@ -36,16 +36,34 @@ expect "Input libraries that your compiler may need:"   { send "\n" }
 expect "Input C compiler:"                              { send "\n" }
 expect "Input C compiler flags to use:"                 { send "\n" }
 
-# Configuration
-expect "Input path to EGSnrc HEN_HOUSE directory:"      { send "\n" }
-expect "Choose a configuration name:"                   { send "$confname\n" }
-set timeout 1
-expect "Do you want to overwrite ?"                     { puts "no\n"; exit }
-set timeout -1
+expect {
+    # Configuration
+    "Input path to EGSnrc HEN_HOUSE directory:" {
+        send "\n"
+        exp_continue
+    }
+    "Choose a configuration name:" {
+        send "$confname\n"
+        exp_continue
+    }
+    "Do you want to overwrite ?" {
+        send "yes\n"
+        exp_continue
+    }
 
-# C++ compiler
-expect "Input C++ compiler:"                            { send "\n" }
-expect "Input option to change, or enter to proceed:"   { send "\n" }
+    # C++ compiler
+    "Input C++ compiler:" {
+        send "\n"
+        exp_continue
+    }
+    "Do you want to overwrite?" {
+        send "yes\n"
+        exp_continue
+    }
+    "Input option to change, or enter to proceed:" {
+        send "\n"
+    }
+}
 
 # Finalize for user
 expect "Do you want to finalize"                        { send "yes\n" }
