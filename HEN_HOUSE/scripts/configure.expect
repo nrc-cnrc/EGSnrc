@@ -2,55 +2,87 @@
 
 set timeout -1
 
-# configuration filename
+# configuration filename to create (default: expect.conf)
 set confname "expect.conf"
 if {$argc > 0} {
     set confname [lindex $argv 0]
 }
 
-# compilation option for applications: default to 1 (all)
+# compilation option for user codes: 1 = all, 2 = some, 3 = none (default: 1)
 set compile 1
 if {$argc > 1} {
     set compile [lindex $argv 1]
 }
 
-# clear environment variables
+# clear any pre-existing EGSnrc environment variables to ensure a clean run
 set env(HEN_HOUSE)  ""
 set env(EGS_CONFIG) ""
 set env(EGS_HOME)   ""
 
-# spawn EGSnrc configuration script
+# spawn the interactive EGSnrc configuration script
 spawn HEN_HOUSE/scripts/configure
 
-# Information
+# welcome
 expect "Press enter to continue."                       { send "\n" }
 
-# Fortran compiler
+# Fortran compiler settings (accept defaults)
 expect "Input fortran compiler:"                        { send "\n" }
 expect "Input standard compilation flags:"              { send "\n" }
 expect "Input optimization flags:"                      { send "\n" }
 expect "Input flags for debugging:"                     { send "\n" }
 expect "Input libraries that your compiler may need:"   { send "\n" }
 
-# C compiler
+# C compiler settings (accept defaults)
 expect "Input C compiler:"                              { send "\n" }
 expect "Input C compiler flags to use:"                 { send "\n" }
 
-# Configuration
-expect "Input path to EGSnrc HEN_HOUSE directory:"      { send "\n" }
-expect "Choose a configuration name:"                   { send "$confname\n" }
-set timeout 1
-expect "Do you want to overwrite ?"                     { puts "no\n"; exit }
-set timeout -1
+# configuration name and C++ compiler settings.
+# These prompts may appear in varying order depending on the platform,
+# so they are handled together with exp_continue.
 
-# C++ compiler
-expect "Input C++ compiler:"                            { send "\n" }
-expect "Input option to change, or enter to proceed:"   { send "\n" }
+expect {
+    "Input path to EGSnrc HEN_HOUSE directory:" {
+        send "\n"
+        exp_continue
+    }
+    "Choose a configuration name:" {
+        send "$confname\n"
+        exp_continue
+    }
+    "Do you want to overwrite ?" {
+        puts "\nError: a configuration named '$confname' already exists."
+        puts "Remove the following files and directories, and try again:"
+        puts "  HEN_HOUSE/specs/$confname.conf"
+        puts "  HEN_HOUSE/specs/egspp_$confname.conf"
+        puts "  HEN_HOUSE/bin/$confname/"
+        puts "  HEN_HOUSE/lib/$confname/"
+        puts "  HEN_HOUSE/egs++/dso/$confname/"
+        exit 1
+    }
+    "Input C++ compiler:" {
+        send "\n"
+        exp_continue
+    }
+    "Do you want to overwrite?" {
+        puts "\nError: a configuration named '$confname' already exists."
+        puts "Remove the following files and directories, and try again:"
+        puts "  HEN_HOUSE/specs/$confname.conf"
+        puts "  HEN_HOUSE/specs/egspp_$confname.conf"
+        puts "  HEN_HOUSE/bin/$confname/"
+        puts "  HEN_HOUSE/lib/$confname/"
+        puts "  HEN_HOUSE/egs++/dso/$confname/"
+        exit 1
+    }
+    "Input option to change, or enter to proceed:" {
+        send "\n"
+    }
+}
 
-# Finalize for user
+# confirm and finalize the configuration
 expect "Do you want to finalize"                        { send "yes\n" }
 expect "Press enter to continue."                       { send "\n" }
 
+# user codes directory and compilation scope
 expect "Choose a directory for your user codes:"        { send "\n" }
 expect "Choose 1 (all), 2 (some) or 3 (none):"          { send "$compile\n" }
-expect "EOF"
+expect eof
