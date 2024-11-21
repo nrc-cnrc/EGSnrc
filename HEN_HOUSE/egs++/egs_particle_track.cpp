@@ -227,9 +227,10 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
 
     data->read((char *)&m_totalTracks, sizeof(int));
     egsInformation("%s: Reading %d tracks from '%s' ...\n", func_name, m_totalTracks, filename);
-    if(incltime) {
+    if (incltime) {
         egsInformation("%s: Time indices are included in the data.\n", func_name);
-    } else {
+    }
+    else {
         egsInformation("%s: Time indices are not included in the data.\n", func_name);
     }
 
@@ -319,7 +320,9 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
 
     // New sorted tracks file where data from the original tracksfile will be
     // rewritten.
-    string outstring = "sorted_trackfile.ptracks.tmp";
+    size_t lastindex = m_trspFilename.find_last_of(".ptracks");
+    string rawname = m_trspFilename.substr(0, lastindex-7);
+    string outstring = rawname+"-sorted.ptracks";
     const char *outname = outstring.c_str();
     ofstream *sortout = new ofstream(outname, ios::binary);
 
@@ -330,7 +333,7 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
 
     int position = data->tellg();
 
-    if(!incltime) {
+    if (!incltime) {
         egsWarning("%s: Warning: Attempted to sort ptracks file that does not contain time index.\n", func_name);
         sortout->close();
         data->close();
@@ -344,7 +347,7 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
     // Write whether or not time index is included (it must be true)
     sortout->write(head_inctime, sizeof(head_inctime));
     sortout->write((char *)&incltime, sizeof(bool));
-    
+
     sortout->write((char *)&totalTrackNum, sizeof(int));
 
     // Defining vector of pairs which will be used to sort.
@@ -400,6 +403,16 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
 
     sortout->close();
     data->close();
+
     int removal = remove(trackfile); // Delete unsorted file.
-    int renaming = rename(outname, trackfile); // Rename sorted file to the unsorted file's old name.
+    if (removal) {
+        egsWarning("\nWarning: Failed to remove %s. Error code %d.\n", trackfile, errno);
+        egsWarning("Note that the sorted ptracks file will be left as a separate file, because your system seems to block file deletion: %s\n\n", outstring.c_str());
+    }
+    else {
+        int renaming = rename(outname, trackfile); // Rename sorted file to the unsorted file's old name.
+        if (renaming) {
+            egsWarning("Warning: Failed to rename %s to %s. Error code %d.\n", outname, trackfile, errno);
+        }
+    }
 }
