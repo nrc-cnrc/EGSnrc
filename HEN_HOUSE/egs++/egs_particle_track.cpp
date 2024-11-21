@@ -320,7 +320,9 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
 
     // New sorted tracks file where data from the original tracksfile will be
     // rewritten.
-    string outstring = "sorted_trackfile.ptracks.tmp";
+    size_t lastindex = m_trspFilename.find_last_of(".ptracks");
+    string rawname = m_trspFilename.substr(0, lastindex-7);
+    string outstring = rawname+"-sorted.ptracks";
     const char *outname = outstring.c_str();
     ofstream *sortout = new ofstream(outname, ios::binary);
 
@@ -401,6 +403,16 @@ void EGS_ParticleTrackContainer::tracksFileSort() {
 
     sortout->close();
     data->close();
+
     int removal = remove(trackfile); // Delete unsorted file.
-    int renaming = rename(outname, trackfile); // Rename sorted file to the unsorted file's old name.
+    if (removal) {
+        egsWarning("\nWarning: Failed to remove %s. Error code %d.\n", trackfile, errno);
+        egsWarning("Note that the sorted ptracks file will be left as a separate file, because your system seems to block file deletion: %s\n\n", outstring.c_str());
+    }
+    else {
+        int renaming = rename(outname, trackfile); // Rename sorted file to the unsorted file's old name.
+        if (renaming) {
+            egsWarning("Warning: Failed to rename %s to %s. Error code %d.\n", outname, trackfile, errno);
+        }
+    }
 }
