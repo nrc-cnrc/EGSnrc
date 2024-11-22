@@ -167,8 +167,8 @@ int main(int argc, char **argv) {
                 QString command = QString("tar -cf %1.tar").arg(archive);
                 command += QString(" --files-from=%1.list").arg(archive);
                 //qDebug("Command: %s",command.toLatin1().data());
-                command += QString(" --exclude=CVS");
-                command += QString(" --exclude=\"*~\"");
+                //command += QString(" --exclude=CVS");
+                //command += QString(" --exclude=\"*~\"");
                 int res = system(command.toLatin1().data());
                 if( res ) qDebug("tar failed ?");
                 else {
