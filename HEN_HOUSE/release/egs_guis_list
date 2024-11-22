@@ -99,6 +99,8 @@ unix:egs++/dso/linux-static/libegs_conez.so
 unix:egs++/dso/linux-static/libegs_conical_shell.so
 unix:egs++/dso/linux-static/libegs_cylinders.so
 unix:egs++/dso/linux-static/libegs_dose_scoring.so
+unix:egs++/dso/linux-static/libegs_dynamic_geometry.so
+unix:egs++/dso/linux-static/libegs_dynamic_shape.so
 unix:egs++/dso/linux-static/libegs_ellipse.so
 unix:egs++/dso/linux-static/libegs_elliptic_cylinders.so
 unix:egs++/dso/linux-static/libegs_extended_shape.so
@@ -151,6 +153,8 @@ win:egs++/dso/win-static/egs_conez.dll
 win:egs++/dso/win-static/egs_conical_shell.dll
 win:egs++/dso/win-static/egs_cylinders.dll
 win:egs++/dso/win-static/egs_dose_scoring.dll
+win:egs++/dso/win-static/egs_dynamic_geometry.dll
+win:egs++/dso/win-static/egs_dynamic_shape.dll
 win:egs++/dso/win-static/egs_ellipse.dll
 win:egs++/dso/win-static/egs_elliptic_cylinders.dll
 win:egs++/dso/win-static/egs_extended_shape.dll
