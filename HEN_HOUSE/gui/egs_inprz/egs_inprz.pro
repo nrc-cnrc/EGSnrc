@@ -25,6 +25,8 @@
 #
 #  Contributors:    Iwan Kawrakow
 #                   Blake Walters
+#                   Cody Crewson
+#                   Reid Townson
 #
 ###############################################################################
 
@@ -137,4 +139,3 @@ FORMS	= ui/inputRZ.ui \
 TEMPLATE	=app
 INCLUDEPATH	+= include ui ../egs_gui
 LANGUAGE	= C++
-

@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Reid Townson
+#                   Blake Walters
 #
 ###############################################################################
 */
@@ -186,8 +187,16 @@ public:
         return (source != 0);
     };
 
-    void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) {
-        source->setSimulationChunk(nstart, nrun);
+    void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) {
+        source->setSimulationChunk(nstart, nrun, npar, nchunk);
+    };
+
+    void printSampledEmissions() {
+        source->printSampledEmissions();
+    }
+
+    vector<EGS_Ensdf *> getRadionuclideEnsdf() {
+        return source->getRadionuclideEnsdf();
     };
 
 protected:

@@ -1460,8 +1460,8 @@ IF(CHOICE1>0 & CHOICE1<10)[
     YPLOTT=FLOAT(IPARANOT-1);"this is the total number of particles read"
     IF(CHOICE1=1)[
        GRAPHTITLE='fluence vs position';
-       IF(FLUTYPE=1)[ YTITLE='planar fluence/incident particle /cm\\S-2\\N'; ]
-       ELSE[ YTITLE='fluence/incident particle /cm\\S-2\\N'; ]
+       IF(FLUTYPE=1)[ YTITLE='planar fluence/incident particle /cm\S-2\N'; ]
+       ELSE[ YTITLE='fluence/incident particle /cm\S-2\N'; ]
        IF(MSMFXY=0)["circular field"
           XTITLE='R /cm ';
           DO II=1,NFIELD[
@@ -1559,10 +1559,10 @@ IF(CHOICE1>0 & CHOICE1<10)[
     IF(CHOICE1=2)[
        GRAPHTITLE='energy fluence vs position';
        IF(FLUTYPE=1)[
-          YTITLE='planar energy fluence/incident particle /MeV cm\\S-2\\N)';
+          YTITLE='planar energy fluence/incident particle /MeV cm\S-2\N';
        ]
        ELSE[
-          YTITLE='energy fluence/incident particle /MeV cm\\S-2\\N)';
+          YTITLE='energy fluence/incident particle /MeV cm\S-2\N';
        ]
        IF(MSMFXY=0)["circular field"
           XTITLE='R /cm';
@@ -1649,10 +1649,10 @@ IF(CHOICE1>0 & CHOICE1<10)[
     ELSEIF(CHOICE1=3)[
        GRAPHTITLE='spectral distribution';
        IF(FLUTYPE=1)[
-          YTITLE='planar fluence/MeV/incident particle /cm\\S-2\\N MeV\\S-1\\N';
+          YTITLE='planar fluence/MeV/incident particle /cm\S-2\N MeV\S-1\N';
        ]
        ELSE[
-          YTITLE='fluence/MeV/incident particle /cm\\S-2\\N MeV\\S-1\\N';
+          YTITLE='fluence/MeV/incident particle /cm\S-2\N MeV\S-1\N';
        ]
        XTITLE='energy /MeV';
        DO II=1,NSMFEE[
@@ -1677,10 +1677,10 @@ IF(CHOICE1>0 & CHOICE1<10)[
     ELSEIF(CHOICE1=4)[
        GRAPHTITLE='energy fluence distribution';
        IF(FLUTYPE=1)[
-          YTITLE='planar energy fluence/MeV/incident particle  /cm\\S-2\\N';
+          YTITLE='planar energy fluence/MeV/incident particle  /cm\S-2\N';
        ]
        ELSE[
-          YTITLE='energy fluence/MeV/incident particle  /cm\\S-2\\N';
+          YTITLE='energy fluence/MeV/incident particle  /cm\S-2\N';
        ]
        XTITLE='energy /MeV';
        DO II=1,NSMFEE[

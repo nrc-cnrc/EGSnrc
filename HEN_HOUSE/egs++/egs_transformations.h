@@ -23,7 +23,11 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Marc Chamberland
+#                   Frederic Tessier
+#                   Reid Townson
+#                   Jan Weidner
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -45,6 +49,7 @@
 #include "egs_functions.h"
 
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -652,6 +657,7 @@ public:
     */
     static EGS_AffineTransform *getTransformation(EGS_Input *inp);
 
+    static EGS_AffineTransform *getTransformation(vector<EGS_Float> trnsl, vector<EGS_Float> rot);
 };
 
 #endif

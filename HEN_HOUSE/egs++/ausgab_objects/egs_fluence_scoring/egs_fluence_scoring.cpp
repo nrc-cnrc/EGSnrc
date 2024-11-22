@@ -131,6 +131,15 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
     score_primaries = inp->getInput("score primaries",choice,0);
     score_spe      = inp->getInput("score spectrum", choice,0);
 
+    EGS_Float norma;
+    int err_norm = inp->getInput("normalization",norma);
+    if (!err_norm) {
+        norm_u = norma;
+    }
+    else {
+        norm_u = 1.0;
+    }
+
     if (score_spe) {
         EGS_Float flu_Emin, flu_Emax;
         EGS_Input *eGrid = inp->takeInputItem("energy grid");
@@ -147,38 +156,31 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
             if (err_f) egsFatal("\n**** EGS_FluenceScoring::initScoring"
                                     "       Missing input: maximum kinetic energy.\n"
                                     "       Aborting!\n\n");
-        }
-        EGS_Float norma;
-        int err_norm = inp->getInput("normalization",norma);
-        if (!err_norm) {
-            norm_u = norma;
-        }
-        else {
-            norm_u = 1.0;
-        }
 
-        vector<string> scale;
-        scale.push_back("linear");
-        scale.push_back("logarithmic");
-        flu_s = inp->getInput("scale",scale,0);
-        if (flu_s == 0) {
-            flu_xmin = flu_Emin;
-            flu_xmax = flu_Emax;
+
+            vector<string> scale;
+            scale.push_back("linear");
+            scale.push_back("logarithmic");
+            flu_s = eGrid->getInput("scale",scale,0);
+            if (flu_s == 0) {
+                flu_xmin = flu_Emin;
+                flu_xmax = flu_Emax;
+            }
+            else {
+                flu_xmin = log(flu_Emin);
+                flu_xmax = log(flu_Emax);
+            }
+            flu_a = flu_nbin;
+            flu_a /= (flu_xmax - flu_xmin);
+            flu_b = -flu_xmin*flu_a;
+            /******************************************************
+              Algorithm assigns E in [Ei,Ei+1), one could add extra
+              bin for E = Emax cases. Alternatively, push those
+              events into last bin (bias?) during scoring.
+              Which approach is correct?
+            ******************************************************/
+            //flu_nbin++;
         }
-        else {
-            flu_xmin = log(flu_Emin);
-            flu_xmax = log(flu_Emax);
-        }
-        flu_a = flu_nbin;
-        flu_a /= (flu_xmax - flu_xmin);
-        flu_b = -flu_xmin*flu_a;
-        /******************************************************
-           Algorithm assigns E in [Ei,Ei+1), one could add extra
-           bin for E = Emax cases. Alternatively, push those
-           events into last bin (bias?) during scoring.
-           Which approach is correct?
-         ******************************************************/
-        //flu_nbin++;
     }
 
     /*
@@ -853,7 +855,7 @@ void EGS_PlanarFluence::ouputResults() {
         spe_output << "@    xaxis  label char size 1.560000\n";
         spe_output << "@    xaxis  label font 4\n";
         spe_output << "@    xaxis  ticklabel font 4\n";
-        spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
+        spe_output << "@    yaxis  label \"fluence / MeV\S-1\Ncm\S-2\"\n";
         spe_output << "@    yaxis  label char size 1.560000\n";
         spe_output << "@    yaxis  label font 4\n";
         spe_output << "@    yaxis  ticklabel font 4\n";
@@ -1086,7 +1088,7 @@ bool  EGS_PlanarFluence::addState(istream &data) {
 
 
 EGS_VolumetricFluence::EGS_VolumetricFluence(const string &Name, EGS_ObjectFactory *f) :
-    EGS_FluenceScoring(Name,f)
+    EGS_FluenceScoring(Name,f), flu_stpwr(stpwr)
 #ifdef DEBUG
     ,one_bin(0), multi_bin(0), max_step(-100.0), n_step_bins(10000)
 #endif
@@ -1382,18 +1384,20 @@ void EGS_VolumetricFluence::describeMe() {
 
     EGS_FluenceScoring::describeMe();
 
-    if (flu_stpwr) {
-        if (flu_stpwr == stpwr) {
-            description += "   O(eps^3) approach: accounts for change in stpwr\n";
-            description +=                "   along the step with eps=edep/Emid\n";
+    if (scoring_charge) {
+        if (flu_stpwr) {
+            if (flu_stpwr == stpwr) {
+                description += "   O(eps^3) approach: accounts for change in stpwr\n";
+                description +=                "   along the step with eps=edep/Emid\n";
+            }
+            else if (flu_stpwr == stpwrO5) {
+                description += "   O(eps^5) approach: accounts for change in stpwr\n";
+                description += "   along the step with eps=edep/Emid\n";
+            }
         }
-        else if (flu_stpwr == stpwrO5) {
-            description += "   O(eps^5) approach: accounts for change in stpwr\n";
-            description += "   along the step with eps=edep/Emid\n";
+        else {
+            description += "   Fluence calculated a-la-FLURZ using Lave=EDEP/TVSTEP.\n";
         }
-    }
-    else {
-        description += "   Fluence calculated a-la-FLURZ using Lave=EDEP/TVSTEP.\n";
     }
 
     if (norm_u != 1.0) {
@@ -1406,9 +1410,10 @@ void EGS_VolumetricFluence::describeMe() {
 
 void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const double &norma) {
     double fe,dfe,dfer;
-    double norm = norma;
     int count = 0;
     int ir_digits = getDigits(nreg);
+
+    //egsInformation("-> norma = %10.4le\n", norma);
 
     egsInformation("\n  region#    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
                    "-----------------------------------------------------\n");
@@ -1416,7 +1421,7 @@ void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const d
         if (!is_sensitive[k]) {
             continue;
         }
-        norm /= volume[k];               //per volume
+        double norm = norma/volume[k];               //per volume
         egsInformation("  %*d      ",ir_digits,k);
         fT->currentResult(k,fe,dfe);
         if (fe > 0) {
@@ -1425,6 +1430,7 @@ void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const d
         else {
             dfer = 100;
         }
+        //egsInformation(" %10.4le +/- %10.4le [%-7.3lf%] %10.4le\n",fe,dfe,dfer,norm);
         egsInformation(" %10.4le +/- %10.4le [%-7.3lf%]\n",fe*norm,dfe*norm,dfer);
     }
 }
@@ -1551,10 +1557,10 @@ void EGS_VolumetricFluence::ouputResults() {
         spe_output << "@    xaxis  label font 4\n";
         spe_output << "@    xaxis  ticklabel font 4\n";
         if (src_norm == 1 || normLabel == "primary history") {
-            spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
+            spe_output << "@    yaxis  label \"fluence / MeV\S-1\Ncm\S-2\"\n";
         }
         else {
-            spe_output << "@    yaxis  label \"fluence / MeV\\S-1\"\n";
+            spe_output << "@    yaxis  label \"fluence / MeV\S-1\"\n";
         }
         spe_output << "@    yaxis  label char size 1.560000\n";
         spe_output << "@    yaxis  label font 4\n";
@@ -1579,13 +1585,16 @@ void EGS_VolumetricFluence::ouputResults() {
                 continue;
             }
 
-            norm /= volume[j];                 //per volume
+            double norma = norm/volume[j];                 //per volume
 
             egsInformation("region # %d : ",j);
 
             if (verbose) {
                 egsInformation("Volume[%d] = %g", j, volume[j]);
-                egsInformation(" Normalization = Ncase/Fsrc/V = %g\n",norm);
+                egsInformation(" Normalization = Ncase/Fsrc/V = %g\n",norma);
+            }
+            else {
+                egsInformation(" See Grace plot file %s\n", spe_name.c_str());
             }
 
             if (verbose) {
@@ -1603,9 +1612,9 @@ void EGS_VolumetricFluence::ouputResults() {
                 if (flu_s) {
                     e = exp(e);
                 }
-                spe_output << e <<" "<< fe *norm<<" "<< dfe *norm<< "\n";
+                spe_output << e <<" "<< fe *norma <<" "<< dfe *norma << "\n";
                 if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
-                                                e, fe*norm, dfe*norm);
+                                                e, fe*norma, dfe*norma);
             }
             spe_output << "&\n";
 
@@ -1625,9 +1634,9 @@ void EGS_VolumetricFluence::ouputResults() {
                     if (flu_s) {
                         e = exp(e);
                     }
-                    spe_output << e <<" "<< fe *norm<<" "<< dfe *norm<< "\n";
+                    spe_output << e <<" "<< fe *norma <<" "<< dfe *norma << "\n";
                     if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
-                                                    e, fe*norm, dfe*norm);
+                                                    e, fe*norma, dfe*norma);
                 }
                 spe_output << "&\n";
             }

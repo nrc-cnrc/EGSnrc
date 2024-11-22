@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2004
 #
 #  Contributors:    Blake Walters
+#                   Reid Townson
 #
 ###############################################################################
 

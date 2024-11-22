@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2003
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Cody Crewson
 #
 ###############################################################################
 */
@@ -717,4 +718,3 @@ bool EGS_RunPage::getVariable(const QString &from, const QString &what,
     }
     return false;
 }
-

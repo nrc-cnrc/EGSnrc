@@ -26,6 +26,7 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Blake Walters
 #                   Reid Townson
+#                   Max Orok
 #
 ###############################################################################
 */
@@ -97,7 +98,7 @@
     functions */
 #define MXAUS 35  /* there are 35 different calls to ausgab */
 
-/*! \brief A structure corresponding to the the EGSnrc particle stack
+/*! \brief A structure corresponding to the EGSnrc particle stack
   common block \c STACK.
 
   Note that the stack size \c MXSTACK is defined in a file
@@ -958,4 +959,3 @@ extern __extc__ void egsAusgab(EGS_I32 *iarg);
 extern __extc__ void egsStartParticle(void);
 
 #endif
-

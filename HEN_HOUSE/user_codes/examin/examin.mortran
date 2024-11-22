@@ -208,7 +208,7 @@
  YAXISPcom = 'fractional component of photon cross section';
  YAXISPmfp = 'mean free path / cm';
  YAXISEmfp = 'mean free path / cm';
- YAXISE = 'dE/drhoX MeV/g/cm\\S2\\N';
+ YAXISE = 'dE/drhoX MeV/g/cm\S2\N';
 
  XAXIS = 'kinetic energy / MeV';
 
@@ -853,4 +853,3 @@ END;
 
 SUBROUTINE AUSGAB(IARG);RETURN;END;
 SUBROUTINE HOWFAR;RETURN;END;  "DUMMIES TO FOOL LINKER";
-

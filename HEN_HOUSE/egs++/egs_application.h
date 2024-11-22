@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Blake Walters
 #                   Reid Townson
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -316,11 +317,12 @@ public:
 
       Tells the application that the next chunk of particles to be
       simulated starts at \a nstart and will consist of \a nrun particles.
+      It also provides the source with the parallel run parameters, \a npar and \a nchunk.
       This is necessary for parallel runs using phase space files. The default
       implementation simply calls the EGS_BaseSource::setSimulationChunk()
       method.
     */
-    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun);
+    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk);
 
     /*! \brief Runs an EGSnrc simulation.
 
@@ -694,16 +696,23 @@ public:
         geometry->getLabelRegions(str, regs);
     }
 
-    /*! \brief Returns the value of the \a mu synchronization parameter
+    /*! \brief Returns the value of the \a time synchronization parameter
 
-      The parameter, \a mu, is a random number on \a [0,1) associated with each
+      The parameter, \a time, is a random number on \a [0,1) associated with each
       primary history and is retrieved from \a source.  It can be used to
-      synchronize geometric parameters throughout a simulation.  If \a mu is
-      not available in \a source (i.e., the \a getMu function has not been
+      synchronize geometric parameters throughout a simulation.  If \a time is
+      not available in \a source (i.e., the \a getTime function has not been
       reimplemented in \a source), then this returns -1.
      */
-    EGS_Float getMU() {
-        return source->getMu();
+    EGS_Float getTimeIndex() {
+        return source->getTimeIndex();
+    }
+
+    /*! Sets the value of the time synchronization parameter. This will mainly
+     * be used by the dynamic geometry if it does not receive time from a source
+     * */
+    void setTimeIndex(EGS_Float temp_time) {
+        source->setTimeIndex(temp_time);
     }
 
     /*! \brief User scoring function for accumulation of results and VRT implementation
@@ -924,7 +933,7 @@ protected:
 
      This function is re-implemented in the EGS_AdvancedApplication
      class, from which EGSnrc applications using the mortran EGSnrc
-     physics subroutines should be derived. The defualt implementation
+     physics subroutines should be derived. The default implementation
      is to set transport parameter and cross section options
      from input between :start MC Transport parameter: and
      :stop MC Transport parameter: in the input file,
@@ -1148,7 +1157,13 @@ public:
     virtual EGS_Float getRM() {
         return -1.0;
     };
+
+    //************************************************
+    // For use with ausgab radiative splitting objects
+    //************************************************
     virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
+    virtual void setRussianRoulette(const EGS_Float &iSwitchRR) {};
+    virtual void splitTopParticleIsotropically(const EGS_Float &fsplit) {}
 
     //************************************************************
     // Utility functions for use with ausgab fluence scoring objects
@@ -1190,6 +1205,14 @@ public:
     //************************************************************
     virtual void setLatch(int latch) {};
 
+    bool containsDynamic() {
+        bool hasDynamic = false;
+        geometry->containsDynamic(hasDynamic);
+        if(!hasDynamic) {
+            source->containsDynamic(hasDynamic);
+        }
+        return hasDynamic;
+    }
 };
 
 #define APP_MAIN(app_name) \

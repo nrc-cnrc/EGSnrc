@@ -24,6 +24,9 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Marc Chamberland
+#                   Randle Taylor
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */

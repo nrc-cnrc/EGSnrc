@@ -69,13 +69,11 @@ studied.  In the following sections, sometimes only partial listings of
 User Codes are presented.  The complete source for each (and the
 corresponding Fortran 77 code) is found on the EGSnrc Distribution.
 
-Note that we changed the default parameters in EGSnrc after this section of
-the manual was written so there will be some minor differences when you run
-the calculations (e.g. bound Compton scattering and atomic relaxations are
-modelled by default, \$REAL now defaults to real*8).  Also, use of the MP
-system requires a Step 0: {\tt call egs\_init;} and a Step 9: {\tt call
-egs\_finish;} which are in the distributed versions but not updated here.
-\index{\$REAL}
+Note that default parameters in EGSnrc may change from time to time, in which
+case there could be some minor differences when you run the calculations. Also,
+use of the MP system requires a Step 0: {\tt call egs\_init;} and a Step 9:
+{\tt call egs\_finish;} which are in the distributed versions but not updated
+here. \index{\$REAL}
 
 % To see the expected output, see
 % {\tt \$HEN\_HOUSE/test\_distribution\_outputs/}.
@@ -648,4 +646,3 @@ handle cylindrical geometries, properly score fluence, use complex LATCH algorit
 statistical analysis etc.  The BEAM system is for
 modelling linear accelerators and doing dose calculations in a CT-based patient
 phantom\cite{Ro95,Ro98a,Ma01b}.
-

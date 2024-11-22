@@ -1246,8 +1246,10 @@ $start_new_particle;
                 is_ch_step = .false.;
                 IF((tustep <= tperp) & ((~exact_bca) | (tustep > skindepth)))
                 [
-                    "We are further way from a boundary than a skindepth, so
-                    "perform a normal condensed-history step
+                    "We are further away from a boundary than a skindepth and
+                    "either: we are not using exact boundary-crossing, or the
+                    "requested condensed-history step is greater than the
+                    "skindepth. So perform a normal condensed-history step
                     callhowfar = .false.; "Do not call HAWFAR
                     domultiple = .false.; "Multiple scattering done here
                     dosingle   = .false.; "MS => no single scattering
@@ -8309,7 +8311,7 @@ IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
    Figure out if custom ff needed for medium: check that medium
    is in the list iray_ff_media, else the default atomic ff used.
    This used to be done in subroutine get_transport_parameter
-   but was moved here, since it is up to the the user-code to
+   but was moved here, since it is up to the user-code to
    read in the information and it is not ensured that the media
    information will be read before getting the transport parameters.
 ****************************************************************/

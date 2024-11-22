@@ -23,7 +23,8 @@
 #
 #  Author:          Martin Martinov, 2019
 #
-#  Contributors:
+#  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 #

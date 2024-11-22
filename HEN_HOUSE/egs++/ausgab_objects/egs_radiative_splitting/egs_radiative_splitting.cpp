@@ -67,15 +67,31 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
 
     char buf[32];
 
-    // Set EGSnrc internal radiative splitting number .
-    app->setRadiativeSplitting(nsplit);
+    // Set EGSnrc internal UBS + RR
+    if (i_play_RR) {
+        app->setRussianRoulette(nsplit);
+        i_play_RR = true;
+    }
+    // Set EGSnrc internal radiative splitting number.
+    else if (nsplit > 0) {
+        app->setRadiativeSplitting(nsplit);
+        i_play_RR = false;
+    }
 
     description = "\n===========================================\n";
     description +=  "Radiative splitting Object (";
     description += name;
     description += ")\n";
     description += "===========================================\n";
-    if (nsplit > 1) {
+    if (i_play_RR) {
+        description +="\n - Splitting radiative events in ";
+        sprintf(buf,"%d",nsplit);
+        description += buf;
+        description +="\n - Play RR with higher order e-/e+ with probability 1/";
+        sprintf(buf,"%d\n\n",nsplit);
+        description += buf;
+    }
+    else if (nsplit > 1) {
         description +="\n - Splitting radiative events in ";
         sprintf(buf,"%d\n\n",nsplit);
         description += buf;
@@ -104,6 +120,7 @@ extern "C" {
         }
 
         EGS_Float nsplit = 1.0;
+        /*! Switch for splitting + RR. Negative nsplit value switches OFF RR. */
         int err = input->getInput("splitting",nsplit);
 
         //=================================================

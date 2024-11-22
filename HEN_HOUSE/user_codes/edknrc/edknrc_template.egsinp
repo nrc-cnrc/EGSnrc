@@ -150,9 +150,9 @@ INCIDENT KINETIC ENERGY(MEV)= 1.0 # only use for "monoenergetic"
                                    # include: output spectrum data to .egslst file
 
 SOURCE NUMBER= 0 # 0,1,2
-                 # 0: point source AT origin,   emission along Z-axis
-                 # 1: point source AT origin,   isotropically radiating in 4Pi
-                 # 2: point source NEAR origin, emission along Z-axis
+                 # 0: Photon moving along Z axis forced to interact at origin
+                 # 1: Point source at origin, isotropically radiating into 4 Pi
+                 # 2: Same as 0 but interaction point as in old code
 
 # ZIN= 0.000001  # only for source number 2
                  # source offset on Z-axis
@@ -400,4 +400,3 @@ Set SMAX stop region= 1
 
  :stop plot control:
  ########################
-

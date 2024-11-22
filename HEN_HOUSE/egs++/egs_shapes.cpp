@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -56,6 +56,7 @@ EGS_BaseShape *EGS_BaseShape::createShape(EGS_Input *i) {
         shape_creator.addKnownObject(new EGS_CylinderShape);
     }
     __shape_count++;
+
     EGS_Object *o = shape_creator.createSingleObject(i,"createShape",true);
     return dynamic_cast<EGS_BaseShape *>(o);
 }
@@ -189,11 +190,11 @@ EGS_Object *EGS_CylinderShape::createObject(EGS_Input *input) {
     bool has_A = (err2 == 0 && A.size() == 3);
     EGS_CylinderShape *result;
     if (has_Xo && has_A) result = new EGS_CylinderShape(r,H,
-                EGS_Vector(Xo[0],Xo[1],Xo[2]),EGS_Vector(A[0],A[1],A[2]));
+            EGS_Vector(Xo[0],Xo[1],Xo[2]),EGS_Vector(A[0],A[1],A[2]));
     else if (has_Xo) result = new EGS_CylinderShape(r,H,
-                EGS_Vector(Xo[0],Xo[1],Xo[2]));
+            EGS_Vector(Xo[0],Xo[1],Xo[2]));
     else if (has_A) result = new EGS_CylinderShape(r,H,
-                EGS_Vector(0,0,0),EGS_Vector(A[0],A[1],A[2]));
+            EGS_Vector(0,0,0),EGS_Vector(A[0],A[1],A[2]));
     else {
         result = new EGS_CylinderShape(r,H);
     }

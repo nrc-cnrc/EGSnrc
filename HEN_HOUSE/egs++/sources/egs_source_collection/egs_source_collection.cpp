@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Marc Chamberland
+#                   Blake Walters
 #
 ###############################################################################
 */
@@ -40,7 +41,7 @@
 EGS_SourceCollection::EGS_SourceCollection(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSource(input,f), nsource(0), count(0) {
     vector<EGS_BaseSource *> s;
-    egsInformation("EGS_BaseSource::EGS_BaseSource: input is:\n");
+    egsInformation("EGS_SourceCollection::EGS_BaseSource: input is:\n");
     input->print(0,cout);
     EGS_Input *isource;
     while ((isource = input->takeInputItem("source",false))) {
@@ -96,6 +97,8 @@ void EGS_SourceCollection::setUp(const vector<EGS_BaseSource *> &S,
     description = "Invalid source collection";
     if (isValid()) {
         p = new EGS_Float [nsource];
+        last_flu = new EGS_Float [nsource];
+        p_group = new vector<EGS_I64> [nsource];
         sources = new EGS_BaseSource* [nsource];
         Emax = 0;
         for (int j=0; j<nsource; j++) {
@@ -126,6 +129,25 @@ void EGS_SourceCollection::setUp(const vector<EGS_BaseSource *> &S,
         last_cases = new EGS_I64 [ nsource ];
         for (int i=0; i<nsource; i++) {
             last_cases[i] = 0;
+            last_flu[i]=0.;
+        }
+        i_add = false;
+    }
+}
+
+/**
+* @brief Check if the simulation source contains time indices.
+*
+* @param hasdynamic Boolean flag to indicate if time indices are included in particles returned by the source.
+*/
+void EGS_SourceCollection::containsDynamic(bool &hasdynamic) {
+    hasdynamic = false;
+    for (int j=0; j<nsource; j++) {
+        bool sourceContainsDynamic = false;
+        sources[j]->containsDynamic(sourceContainsDynamic);
+        if(sourceContainsDynamic) {
+            hasdynamic = true;
+            return;
         }
     }
 }

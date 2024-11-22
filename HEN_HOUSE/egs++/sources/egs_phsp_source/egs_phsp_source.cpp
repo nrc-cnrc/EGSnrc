@@ -336,16 +336,29 @@ union __egs_data32 {
 };
 #endif
 
-void EGS_PhspSource::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) {
-    if (nstart < 0 || nrun < 1 || nstart + nrun > Nparticle) {
-        egsWarning("EGS_PhspSource::setSimulationChunk(): illegal attempt "
-                   "to set the simulation chunk between %lld and %lld ignored\n",
-                   nstart+1,nstart+nrun);
-        return;
+void EGS_PhspSource::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) {
+    //determine the simulation chunk and use this to calculate first/last particles
+    //in the phase space chunk
+    EGS_I64 particlesPerChunk = Nparticle/(npar*nchunk);
+    int ichunk = nstart/nrun;
+    if (ichunk > npar*nchunk-1)
+    {
+        //remainder of histories, reuse the last chunk of the phsp
+        //there may be a more clever strategy
+        egsWarning("EGS_PhspSource: Remainder of histories will reuse the last chunk of the phase space source.\n");
+        ichunk = npar*nchunk-1;
     }
-    Nfirst = nstart+1;
-    Nlast = nstart + nrun;
-    Npos = nstart;
+    Nfirst = ichunk*particlesPerChunk+1;
+    if (ichunk == npar*nchunk-1)
+    {
+        //last chunk of the phsp file, just go to the end of the file
+        Nlast = Nparticle;
+    }
+    else
+    {
+        Nlast = Nfirst-1+particlesPerChunk;
+    }
+    Npos = Nfirst-1; //we increment Npos before attempting to read a particle
     istream::off_type pos = Nfirst*recl;
     the_file.seekg(pos,ios::beg);
     egsInformation("EGS_PhspSource: using phsp portion between %lld and %lld\n",
@@ -359,7 +372,8 @@ void EGS_PhspSource::readParticle() {
                    "of the chunk (%lld) but this "
                    "implies that uncertainty estimates will be inaccurate\n",
                    Nlast,Nfirst);
-        the_file.seekg(recl,ios::beg);
+        istream::off_type pos = Nfirst*recl;
+        the_file.seekg(pos,ios::beg);
         Nrestart++;
         Npos = Nfirst;
     }

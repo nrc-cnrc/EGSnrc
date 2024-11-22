@@ -601,7 +601,7 @@ proc define_izscan {} {
     if [string compare $izrow ""]==0 { set izrow 1 }
 
     message $w.message -text "Define a group of voxels by entering\
-	    the voxel indices, then set the direction of the the scan\
+	    the voxel indices, then set the direction of the scan\
 	    per page.  Unless declared here, the default is no output.  \
 	    Click 'Add a group' to define a new group." \
 	    -width 500 -font $helvfont
@@ -701,4 +701,3 @@ proc remove_scan_group { w } {
     }
     incr izrow -1
 }
-

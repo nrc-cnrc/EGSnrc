@@ -26,6 +26,9 @@
 #  Contributors:    Frederic Tessier
 #                   Hubert Ho
 #                   Ernesto Mainegra-Hing
+#                   Blake Walters
+#                   Marc Chamberland
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -378,7 +381,7 @@ void EGS_UniformRunControl::describeRCO() {
     #define CLOSE_FILE _close
     #define CREATE_FLAGS _O_CREAT | _O_EXCL | _O_RDWR, _S_IREAD | _S_IWRITE
     #define OPEN_FLAGS _O_RDWR,_S_IREAD | _S_IWRITE
-    #define WAIT_FOR_FILE _sleep(1000)
+    #define WAIT_FOR_FILE Sleep(1000)
     #define WRITE_FILE _write
     #define READ_FILE _read
 
@@ -781,7 +784,7 @@ EGS_I64 EGS_JCFControl::getNextChunk() {
         nrun = nleft;
     }
     if (nrun > 0) {
-        app->setSimulationChunk(ntot,nrun);
+        app->setSimulationChunk(ntot,nrun,npar,nchunk);
     }
     nleft -= nrun;
     ntot += nrun;

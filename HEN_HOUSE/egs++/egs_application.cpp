@@ -28,6 +28,8 @@
 #                   Blake Walters
 #                   Reid Townson
 #                   Hubert Ho
+#                   Max Orok
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -47,6 +49,7 @@
 #include "egs_base_source.h"
 #include "egs_simple_container.h"
 #include "egs_ausgab_object.h"
+#include "egs_base_geometry.h"
 
 #include <cstring>
 #include <cstdio>
@@ -798,9 +801,9 @@ int EGS_Application::initSimulation() {
     return 0;
 }
 
-void EGS_Application::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) {
+void EGS_Application::setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) {
     if (source) {
-        source->setSimulationChunk(nstart,nrun);
+        source->setSimulationChunk(nstart,nrun,npar,nchunk);
     }
 }
 
@@ -925,8 +928,14 @@ int EGS_Application::simulateSingleShower() {
                        " attempts\n");
             return 1;
         }
+        setTimeIndex(-1);
         current_case =
             source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,p.x,p.u);
+
+        // For dynamic geometries, update positions according to the current
+        // time index, which may have been set by getNextParticle
+        geometry->getNextGeom(rndm);
+
         ireg = geometry->isWhere(p.x);
         if (ireg < 0) {
             EGS_Float t = veryFar;

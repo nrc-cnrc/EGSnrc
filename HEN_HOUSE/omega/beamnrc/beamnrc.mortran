@@ -37,6 +37,7 @@
 "                   Ernesto Mainegra-Hing                                     "
 "                   Frederic Tessier                                          "
 "                   Reid Townson                                              "
+"                   Ernesto Mainegra-Hing                                     "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -1306,7 +1307,7 @@ WITH {,' ',}
 "I>                        [ pair_nrc ]
 "I>       Photoelectron angular sampling= Off or On (Default is On)
 "I>                        If Off, photo-electrons get the direction of the
-"I>                        `mother' photon, with On, Sauter's furmula is
+"I>                        `mother' photon, with On, Sauter's formula is
 "I>                        used (which is, strictly speaking, valid only for
 "I>                        K-shell photo-absorption).
 "I>                        If the user has a better approach, replace the macro
@@ -5747,6 +5748,7 @@ IF( use_bcse & ibrspl < 2 ) [
     ]
 ]
 
+IRL = IR(NP);"  Local region number"
 
 " The following splits eii photons both for UBS & BCSE whether the two       "
 " are used individually or in conjunction with each other. Not automatically "
@@ -5774,7 +5776,6 @@ $USER-AUSGAB;
 
 " Check if particle is leaving the transport geometry
 " ***************************************************
-IRL = IR(NP);  "Local region number"
 IF(IRL =  1)[
    IF(IARG ~= 3 & IARG ~=5)[
        "if properly coded we should only get IRL=1 when being discarded"
@@ -6222,7 +6223,7 @@ IF (IARG =  5) ["Particle step just taken"
          "as 1."
 
             NFTIME(NP)=NFTIME(NP)+1;
-                             "increment the the number of interactions in the"
+                             "increment the number of interactions in the"
                              "forcing CMs"
             $RANDOMSET RNNO35;IF(RNNO35 = 0.0)RNNO35=1.E-30;
             ;$SELECT-PHOTON-MFP-FOR-FORCING(DPMFP);
@@ -6422,6 +6423,9 @@ ELSEIF(IBRSPL=2) ["directional bremsstrahlung splitting"
            ZLAST(I)=Z(I);
          ]
        ]
+
+       NUM_BREM=count_nbrem;
+
        " now put a zero weight particle on top of the stack thus forcing "
        " a return to shower. "
        np=np+1;

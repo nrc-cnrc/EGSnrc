@@ -28,6 +28,9 @@
 #                   Frederic Tessier
 #                   Reid Townson
 #                   Randle Taylor
+#                   Marc Chamberland
+#                   Martin Martinov
+#                   Alexandre Demelo
 #
 ###############################################################################
 */
@@ -371,7 +374,7 @@ public:
                EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
         if (ireg >= 0) {
             int itmp = ireg;
-            int inext = -1, idelta, lnew_j=0;
+            int inext = -1, idelta=0, lnew_j=0;
             for (int j=N-1; j>=0; j--) {
                 int l = itmp/n[j];
                 int lnew = g[j]->howfar(l,x,u,t,0,normal);
@@ -552,6 +555,32 @@ public:
             nstep += g[j]->getMaxStep();
         }
         return nstep;
+    };
+
+    void getNextGeom(EGS_RandomGenerator *rndm) {
+        // calls getNextGeom on its component geometries to update dynamic
+        // geometries in the simulation
+        for (int j=0; j<N; j++) {
+            g[j]->getNextGeom(rndm);
+        }
+    };
+
+    void updatePosition(EGS_Float time) {
+        // calls updatePosition on its component geometries to update dynamic
+        // geometries in the simulation
+        for (int j=0; j<N; j++) {
+            g[j]->updatePosition(time);
+        }
+    };
+
+    void containsDynamic(bool &hasdynamic) {
+        // calls containsDynamic on its component geometries (only calls if
+        // hasDynamic is false, as if it is true we already found one)
+        for (int j=0; j<N; j++) {
+            if (!hasdynamic) {
+                g[j]->containsDynamic(hasdynamic);
+            }
+        }
     };
 
     const string &getType() const {
@@ -1866,7 +1895,7 @@ public:
                         for (int iiz=iz-1; iiz<=iz+1; ++iiz) {
                             if (iiz >= 0 && iiz < nz) {
                                 if (iix != ix || iiy != iy || iiz != iz) {
-                                    int cell1 = iix+iiy*nx+iiz*nz;
+                                    int cell1 = iix+iiy*nx+iiz*nxy;
                                     EGS_Vector tmp(x-translation[cell1]);
                                     EGS_Float t1 = g->hownear(-1,tmp);
                                     if (t1 < t) {

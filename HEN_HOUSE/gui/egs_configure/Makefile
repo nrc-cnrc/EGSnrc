@@ -21,7 +21,7 @@
 #
 ###############################################################################
 #
-#  Author:          Ernesto Mainegra, 2015
+#  Author:          Ernesto Mainegra-Hing, 2015
 #
 #  Contributors:
 #

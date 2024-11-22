@@ -41,6 +41,7 @@ html
 .obj/
 .moc/
 .ui/
+.qmake.stash
 
 ### ignore OS generated files
 *~
@@ -52,3 +53,7 @@ html
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+### ignore devcontainer files
+*devcontainer*
+

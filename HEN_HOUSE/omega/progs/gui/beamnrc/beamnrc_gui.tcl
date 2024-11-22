@@ -27,6 +27,7 @@
 #                   Iwan Kawrakow
 #                   Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 #
@@ -776,4 +777,3 @@ proc exit_prompt {} {
 	        Exit the BEAMnrc GUI?" question 0 No Yes]
     if $result==1 { exit }
 }
-

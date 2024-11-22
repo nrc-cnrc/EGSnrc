@@ -21,13 +21,14 @@
 #
 ###############################################################################
 #
-#  Authors:          Dave Macrillo, 2020
-#                    Matt Ronan,
-#                    Nigel Vezeau,
-#                    Lou Thompson,
-#                    Max Orok
+#  Authors:         Dave Macrillo, 2020
+#                   Matt Ronan,
+#                   Nigel Vezeau,
+#                   Lou Thompson,
+#                   Max Orok
 #
-#  Contributors:     Pascal Michaud
+#  Contributors:    Pascal Michaud
+#                   Reid Townson
 #
 ###############################################################################
 #
@@ -365,9 +366,9 @@ public:
         const auto &node_indices = elt_node_indices_.at(element);
         return Nodes {
             nodes_.at(node_indices[0]),
-            nodes_.at(node_indices[1]),
-            nodes_.at(node_indices[2]),
-            nodes_.at(node_indices[3])
+                  nodes_.at(node_indices[1]),
+                  nodes_.at(node_indices[2]),
+                  nodes_.at(node_indices[3])
         };
     }
 
