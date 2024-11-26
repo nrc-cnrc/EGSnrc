@@ -72,12 +72,6 @@ void EGS_DynamicGeometry::setBScaling(EGS_Input *) {
 // External C function to create EGS_DynamicGeometry
 extern "C" {
 
-    /*! \brief Create a dynamic geometry from input.
-     *
-     * This function is part of the EGSnrc dynamic geometry plugin interface.
-     * \param input The input specifying the dynamic geometry.
-     * \return A pointer to the created EGS_DynamicGeometry object.
-     */
     EGS_DYNAMIC_GEOMETRY_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         EGS_BaseGeometry *g = 0;
         EGS_Input *ij = input->takeInputItem("geometry", false);
@@ -120,12 +114,6 @@ extern "C" {
         }
     }
 
-    /*! \brief Get label regions for dynamic geometry.
-     *
-     * This function is part of the EGSnrc dynamic geometry plugin interface.
-     * \param str Label string.
-     * \param regs Vector to store label regions.
-     */
     void EGS_DynamicGeometry::getLabelRegions(const string &str, vector<int> &regs) {
         // label defined in the geometry being transformed
         g->getLabelRegions(str, regs);
@@ -134,12 +122,6 @@ extern "C" {
         EGS_BaseGeometry::getLabelRegions(str, regs);
     }
 
-    /*! \brief Build dynamic geometry from input.
-     *
-     * This function is part of the EGSnrc dynamic geometry plugin interface.
-     * \param g Pointer to the base geometry.
-     * \param dyninp Input specifying the dynamic geometry.
-     */
     void EGS_DynamicGeometry::buildDynamicGeometry(EGS_BaseGeometry *g, EGS_Input *dyninp) {
         stringstream itos;
         ncpts = 0;
@@ -249,13 +231,6 @@ extern "C" {
         updatePosition(0);
     }
 
-    /*! \brief Get interpolated coordinates based on the time index
-     *
-     * This function is part of the EGSnrc dynamic geometry plugin interface.
-     * \param rand Random number for sampling.
-     * \param gipt Control point struct used to track the current state of the geometry.
-     * \return 0 if successful, 1 otherwise.
-     */
     int EGS_DynamicGeometry::getCoordGeom(EGS_Float rand, EGS_ControlPoint &gipt) {
         int iindex = 0;
         int i;
@@ -326,16 +301,6 @@ extern "C" {
         return 0;
     }
 
-    /*! \brief Compute intersections for dynamic geometry.
-     *
-     * This function is part of the EGSnrc dynamic geometry plugin interface.
-     * \param ireg Current region index.
-     * \param n Number of particles.
-     * \param x Position vector.
-     * \param u Direction vector.
-     * \param isections Pointer to EGS_GeometryIntersections object.
-     * \return Number of intersections.
-     */
     int EGS_DynamicGeometry::computeIntersections(int ireg, int n, const EGS_Vector &x,
             const EGS_Vector &u, EGS_GeometryIntersections *isections) {
         EGS_Vector xt(x), ut(u);
@@ -344,84 +309,35 @@ extern "C" {
         return g->computeIntersections(ireg, n, xt, ut, isections);
     }
 
-    /**
-     * @brief Check if the given region index corresponds to a real region in the dynamic geometry.
-     *
-     * @param ireg The region index.
-     * @return True if the region is real, false otherwise.
-     */
     bool EGS_DynamicGeometry::isRealRegion(int ireg) const {
         return g->isRealRegion(ireg);
     }
 
-    /**
-     * @brief Check if a point is inside the dynamic geometry.
-     *
-     * @param x The point to check.
-     * @return True if the point is inside, false otherwise.
-     */
     bool EGS_DynamicGeometry::isInside(const EGS_Vector &x) {
         EGS_Vector xt(x);
         T.inverseTransform(xt);
         return g->isInside(xt);
     }
 
-    /**
-     * @brief Determine the region of a point
-     *
-     * @param x The point to check.
-     * @return The region number (see EGS_BaseGeometry::isWhere() for details).
-     */
     int EGS_DynamicGeometry::isWhere(const EGS_Vector &x) {
         EGS_Vector xt(x);
         T.inverseTransform(xt);
         return g->isWhere(xt);
     }
 
-    /**
-     * @brief Alias for EGS_DynamicGeometry::isWhere().
-     *
-     * @param x The point to check.
-     * @return The region number (see EGS_BaseGeometry::isWhere() for details).
-     */
     int EGS_DynamicGeometry::inside(const EGS_Vector &x) {
         return isWhere(x);
     }
 
-    /**
-     * @brief Get the medium index for a given region in the dynamic geometry.
-     *
-     * @param ireg The region index.
-     * @return The medium index.
-     */
     int EGS_DynamicGeometry::medium(int ireg) const {
         return g->medium(ireg);
     }
 
-    /**
-     * @brief Calculate the distance to the outside of the dynamic geometry from a point along a direction.
-     *
-     * @param ireg The current region index.
-     * @param x The starting point.
-     * @param u The direction vector.
-     * @return The distance to the outside or 0 if the current region is invalid.
-     */
     EGS_Float EGS_DynamicGeometry::howfarToOutside(int ireg, const EGS_Vector &x,
             const EGS_Vector &u) {
         return ireg >= 0 ? g->howfarToOutside(ireg, x * T, u * T.getRotation()) : 0;
     }
 
-    /**
-     * @brief Calculate the distance to the next boundary in the dynamic geometry.
-     *
-     * @param ireg The current region index.
-     * @param x The starting point.
-     * @param u The direction vector.
-     * @param t The distance to the next boundary.
-     * @param newmed The medium index after boundary crossing.
-     * @param normal The normal vector at the boundary.
-     * @return The new region index after boundary crossing.
-     */
     int EGS_DynamicGeometry::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                                     EGS_Float &t, int *newmed, EGS_Vector *normal) {
         EGS_Vector xt(x), ut(u);
@@ -434,121 +350,48 @@ extern "C" {
         return inew;
     }
 
-    /**
-     * @brief Calculate the distance to the nearest boundary of the dynamic geometry from a point.
-     *
-     * @param ireg The current region index.
-     * @param x The point.
-     * @return The distance to the nearest boundary.
-     */
     EGS_Float EGS_DynamicGeometry::hownear(int ireg, const EGS_Vector &x) {
         EGS_Vector xt(x);
         T.inverseTransform(xt);
         return g->hownear(ireg, xt);
     }
 
-    /**
-     * @brief Get the maximum step size allowed in the dynamic geometry.
-     *
-     * @return The maximum step size.
-     */
     int EGS_DynamicGeometry::getMaxStep() const {
         return g->getMaxStep();
     }
 
-    /**
-     * @brief Check if the specified region has a boolean property.
-     *
-     * @param ireg The region index.
-     * @param prop The boolean property to check.
-     * @return True if the region has the specified boolean property, false otherwise.
-     */
     bool EGS_DynamicGeometry::hasBooleanProperty(int ireg, EGS_BPType prop) const {
         return g->hasBooleanProperty(ireg, prop);
     }
 
-    /**
-     * @brief Set a boolean property for the dynamic geometry.
-     *
-     * @param prop The boolean property to set.
-     */
     void EGS_DynamicGeometry::setBooleanProperty(EGS_BPType prop) {
         g->setBooleanProperty(prop);
     }
 
-    /**
-     * @brief Add a boolean property to the dynamic geometry.
-     *
-     * @param bit The bit index of the boolean property to add.
-     */
     void EGS_DynamicGeometry::addBooleanProperty(int bit) {
         g->addBooleanProperty(bit);
     }
 
-    /**
-     * @brief Set a boolean property for a range of regions in the dynamic geometry.
-     *
-     * @param prop The boolean property to set.
-     * @param start The starting region index.
-     * @param end The ending region index.
-     * @param step The step size between regions.
-     */
     void EGS_DynamicGeometry::setBooleanProperty(EGS_BPType prop, int start, int end, int step) {
         g->setBooleanProperty(prop, start, end, step);
     }
 
-    /**
-     * @brief Add a boolean property to a range of regions in the dynamic geometry.
-     *
-     * @param bit The bit index of the boolean property to add.
-     * @param start The starting region index.
-     * @param end The ending region index.
-     * @param step The step size between regions.
-     */
     void EGS_DynamicGeometry::addBooleanProperty(int bit, int start, int end, int step) {
         g->addBooleanProperty(bit, start, end, step);
     }
 
-    /**
-     * @brief Get the type of the dynamic geometry.
-     *
-     * @return The type as a string reference.
-     */
     const string &EGS_DynamicGeometry::getType() const {
         return type;
     }
 
-    /**
-     * @brief Get the relative density scaling factor for a given region in the dynamic geometry.
-     *
-     * @param ireg The region index.
-     * @return The relative density scaling factor.
-     */
     EGS_Float EGS_DynamicGeometry::getRelativeRho(int ireg) const {
         return g->getRelativeRho(ireg);
     }
 
-    /**
-     * @brief Get the boundary scaling factor for a given region in the dynamic geometry.
-     *
-     * @param ireg The region index.
-     * @return The boundary scaling factor.
-     */
     EGS_Float EGS_DynamicGeometry::getBScaling(int ireg) const {
         return g->getBScaling(ireg);
     }
 
-    /**
-     * @brief Determine the next state of the dynamic geometry.
-     *
-     * This method obtains a time index, either from the simulation source or by
-     * sampling itself if the source yields nothing. It then obtains the
-     * corresponding position and orientation coordinates through the
-     * `getCoordGeom` method and creates and sets the dynamic geometry's
-     * transform.
-     *
-     * @param rndm Random number generator.
-     */
     void EGS_DynamicGeometry::getNextGeom(EGS_RandomGenerator *rndm) {
         int errg = 1;
         EGS_ControlPoint gipt;
@@ -582,15 +425,6 @@ extern "C" {
         g->getNextGeom(rndm);
     }
 
-    /**
-     * @brief Update the position of the dynamic geometry.
-     *
-     * This method is used to update the geometry state as needed in egs_view.
-     * It takes the desired time index, computes the corresponding coordinates,
-     * and sets the geometry transform to update the egs_view display.
-     *
-     * @param time Desired time index for the update.
-     */
     void EGS_DynamicGeometry::updatePosition(EGS_Float time) {
         int errg = 1;
         EGS_ControlPoint gipt;
@@ -609,16 +443,6 @@ extern "C" {
         g->updatePosition(time);
     }
 
-    /**
-     * @brief Check if the simulation geometry contains dynamic geometry.
-     *
-     * This method is used to determine whether the simulation geometry contains
-     * dynamic geometry. It sets the `hasdynamic` flag to true if the simulation
-     * contains dynamic geometry.
-     *
-     * @param hasdynamic Boolean flag to indicate if dynamic geometry is
-     * present.
-     */
     void EGS_DynamicGeometry::containsDynamic(bool &hasdynamic) {
         // If the dynamic geometry implementation of `containsDynamic` is
         // called, the simulation does indeed contain a dynamic geometry, so the

@@ -41,12 +41,6 @@
 
 extern "C" {
 
-    /*!
-     * \brief Factory function to create an instance of EGS_DynamicShape
-     * \param input Input specifying the dynamic shape
-     * \param f EGS_ObjectFactory pointer
-     * \return Pointer to the created EGS_DynamicShape instance
-     */
     EGS_DYNAMIC_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {
         if (!input) {
@@ -89,10 +83,6 @@ extern "C" {
         }
     }
 
-    /*!
-     * \brief Builds the dynamic shape using input specifications
-     * \param dyninp Input containing dynamic shape specifications
-     */
     void EGS_DynamicShape::buildDynamicShape(EGS_Input *dyninp) {
         stringstream itos;
         ncpts=0;
@@ -187,10 +177,6 @@ extern "C" {
         updatePosition(0); // Sets position to initial time in egs_view upon opening
     };
 
-    /*!
-     * \brief Get the next state of the dynamic shape
-     * \param rndm Random number generator
-     */
     void EGS_DynamicShape::getNextShapePosition(EGS_RandomGenerator *rndm) {
         int errg = 1;
         EGS_ControlPoint gipt;
@@ -222,12 +208,6 @@ extern "C" {
         shape->getNextShapePosition(rndm);
     };
 
-    /*!
-     * \brief Extract coordinates for the next dynamic shape position
-     * \param rand Random number for time sampling
-     * \param gipt EGS_ControlPoint structure to store the coordinates
-     * \return 0 if successful, otherwise 1
-     */
     int EGS_DynamicShape::getCoord(EGS_Float rand, EGS_ControlPoint &gipt) {
         int iindex=0;
         int i;

@@ -66,12 +66,9 @@
 
 \ingroup Shapes
 
-An dynamic shape is a shape that
-takes a random point from another shape and then
-applies a transformation, using a time sampling and interpolating between
-control points.
+A dynamic shape provides the functionality to model motion of shapes during the simulation. This is automatically synchronized with the motion of sources and geometries. To do this, the dynamic shape applies transformations to any other egs++ shape. By sampling a time index, continuous motion is modelled by interpolating between user-defined control points.
 
-An dynamic shape is defined using
+A dynamic shape is defined using
 \verbatim
 :start shape:
     library = egs_dynamic_shape
@@ -79,35 +76,31 @@ An dynamic shape is defined using
         definition of the shape to be 'dynamic'
     :stop shape:
     :start motion: # units of cm and degrees
-       control point = time(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
-       control point = time(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
-       .
-       .
-       .
-       control point = time(N) xtrans(N) ytrans(N) ztrans(N) xrot(N) yrot(N) zrot(N)
+        control point = timeIndex(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
+        control point = timeIndex(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
+        .
+        .
+        .
+        control point = timeIndex(N) xtrans(N) ytrans(N) ztrans(N) xrot(N) yrot(N) zrot(N)
     :stop motion:
 :stop shape:
 \endverbatim
 
-Control points must be defined such that time(i+1)>=time(i), where time(i)
-is the value of time for control point i. The time(i) are automatically
-normalized by time(N), where N is the number of control points.
+Control points must be defined such that timeIndex(i+1)>=timeIndex(i), where timeIndex(i)
+is the value of time index for control point i. The timeIndex(i) are automatically
+normalized by timeIndex(N), where N is the number of control points.
 
 A translation from the starting position of the shape is applied according to
-x, y and z. A rotation follows the same rotation technique as in
+xtrans, ytrans and ztrans. A rotation follows the same rotation technique as in
 EGS_AffineTransform, using the rotation input parameter for 2 or 3 values.
 Angles are in degrees and translations in cm.
 
 Continuous, dynamic motion between control points is simulated by choosing a random
-number, R, on (0,1] and, for time(i)<R<=time(i+1), setting the translation or
+number, R, on (0,1] and, for timeIndex(i)<R<=timeIndex(i+1), setting the translation or
 rotation parameter P by interpolation:
-P=P(i)+[P(i+1)-P(i)]/[time(i+1)-time(i)]*[R-time(i)]
+P=P(i)+[P(i+1)-P(i)]/[timeIndex(i+1)-timeIndex(i)]*[R-timeIndex(i)]
 
-Note that this scheme for generating incident source coordinates really
-only makes sense if time(1)=0.0.  However, the source can function
-with time(1)>0.0, in the case where a user desires to eliminate particles
-associated with a range of time values, but there will be a lot of
-warning messages.
+It is generally expected that the user provide timeIndex(1)=0.0. However, the geometry can function with timeIndex(1)>0.0, in the case where a user desires to eliminate particles associated with a range of timeIndex values, but there will be a lot of warning messages.
 
 */
 class EGS_DYNAMIC_SHAPE_EXPORT EGS_DynamicShape : public EGS_BaseShape {

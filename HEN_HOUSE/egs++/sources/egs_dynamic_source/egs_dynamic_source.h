@@ -96,28 +96,25 @@ The generic input is:
     source name = the name of a previously defined source
     synchronize motion = yes or no (default)
     :start motion:
-       control point = xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) time(1)
-       control point = xiso(2) yiso(2) ziso(2) dsource(2) theta(2) phi(2) phicol(2) time(2)
+       control point = xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) timeIndex(1)
+       control point = xiso(2) yiso(2) ziso(2) dsource(2) theta(2) phi(2) phicol(2) timeIndex(2)
        .
        .
        .
-       control point = xiso(N) yiso(N) ziso(N) dsource(N) theta(N) phi(N) phicol(N) time(N)
+       control point = xiso(N) yiso(N) ziso(N) dsource(N) theta(N) phi(N) phicol(N) timeIndex(N)
     :stop motion:
 :stop source:
 \endverbatim
-Control points must be defined such that time(i+1)>=time(i), where time(i)
-is the value of time for control point i.  The time(i) are automatically
-normalized by time(N), where N is the number of control points.
+Control points must be defined such that timeIndex(i+1)>=timeIndex(i), where timeIndex(i)
+is the value of time index for control point i.  The timeIndex(i) are automatically
+normalized by timeIndex(N), where N is the number of control points.
 Continuous, dynamic motion between control points is simulated by choosing a random
-number, R, on (0,1] and, for time(i)<R<=time(i+1), setting incident source
+number, R, on (0,1] and, for timeIndex(i)<R<=timeIndex(i+1), setting incident source
 coordinate, P, where P is one of xiso, yiso, ziso, dsource, theta,
 phi, or phicol, using:
-P=P(i)+[P(i+1)-P(i)]/[time(i+1)-time(i)]*[R-time(i)]
-Note that this scheme for generating incident source coordinates really
-only makes sense if time(1)=0.0.  However, the source can function
-with time(1)>0.0, in the case where a user desires to eliminate particles
-associated with a range of time values, but there will be a lot of
-warning messages.
+P=P(i)+[P(i+1)-P(i)]/[timeIndex(i+1)-timeIndex(i)]*[R-timeIndex(i)]
+
+It is generally expected that the user provide timeIndex(1)=0.0. However, the geometry can function with timeIndex(1)>0.0, in the case where a user desires to eliminate particles associated with a range of timeIndex values, but there will be a lot of warning messages.
 
 A simple example is shown below.  This first defines a monoenergetic
 (1 MV) photon source in the Z-direction collimated to a 2x2 field

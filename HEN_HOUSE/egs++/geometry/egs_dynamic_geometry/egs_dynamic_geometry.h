@@ -68,42 +68,42 @@
 
 /*! \brief A dynamic geometry.
 
-\ingroup Geometry \ingroup CompositeG
+\ingroup Geometry
+\ingroup CompositeG
 
-An dynamic geometry is a geometry that takes a random point from another
-geometry and then applies a transformation, using a time sampling and
-interpolating between control points.
+A dynamic geometry provides the functionality to model motion of geometries during the simulation. This is automatically synchronized with the motion of sources and shapes. To do this, the geometry applies transformations to a previously defined geometry. By sampling a time index, continuous motion is modelled by interpolating between user-defined control points.
 
-An dynamic geometry is defined using \verbatim :start geometry: name        =
-... library     = egs_dynamic_geometry my geometry = name of a predefined
-geometry that we want to add motion to :start motion: # units of cm and degrees
-control point = time(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
-control point = time(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
-       .
-       .
-       .
-       control point = time(N) xtrans(N) ytrans(N) ztrans(N) xrot(N) yrot(N) zrot(N)
+A dynamic geometry is defined using
+\verbatim
+:start geometry:
+    name        = ...
+    library     = egs_dynamic_geometry
+    my geometry = name of a predefined geometry that we want to add motion to :start motion: # units of cm and degrees
+        control point = timeIndex(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
+        control point = timeIndex(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
+        .
+        .
+        .
+        control point = timeIndex(N) xtrans(N) ytrans(N) ztrans(N) xrot(N) yrot(N) zrot(N)
     :stop motion:
-:stop geometry: \endverbatim
+:stop geometry:
+\endverbatim
 
-Control points must be defined such that time(i+1)>=time(i), where time(i) is
-the value of time for control point i. The time(i) are automatically normalized
-by time(N), where N is the number of control points.
+Control points must be defined such that timeIndex(i+1)>=timeIndex(i), where timeIndex(i) is
+the value of time index for control point i. The timeIndex(i) are automatically normalized
+by timeIndex(N), where N is the number of control points.
 
 A translation from the starting position of the geometry is applied according to
-x, y and z. A rotation follows the same rotation technique as in
+xtrans, ytrans and ztrans. A rotation follows the same rotation technique as in
 EGS_AffineTransform, using the rotation input parameter for 2 or 3 values.
 Angles are in degrees and translations in cm.
 
 Continuous, dynamic motion between control points is simulated by choosing a
-random number, R, on (0,1] and, for time(i)<R<=time(i+1), setting the
+random number, R, on (0,1] and, for timeIndex(i)<R<=timeIndex(i+1), setting the
 translation or rotation parameter P by interpolation:
-P=P(i)+[P(i+1)-P(i)]/[time(i+1)-time(i)]*[R-time(i)]
+P=P(i)+[P(i+1)-P(i)]/[timeIndex(i+1)-timeIndex(i)]*[R-timeIndex(i)]
 
-Note that this scheme for generating incident source coordinates really only
-makes sense if time(1)=0.0.  However, the geometry can function with
-time(1)>0.0, in the case where a user desires to eliminate particles associated
-with a range of time values, but there will be a lot of warning messages.
+It is generally expected that the user provide timeIndex(1)=0.0. However, the geometry can function with timeIndex(1)>0.0, in the case where a user desires to eliminate particles associated with a range of timeIndex values, but there will be a lot of warning messages.
 
 */
 
@@ -168,8 +168,7 @@ public:
     };
 
     /*!
-     * Sets the current state transform of the geometry. This is called when
-     * checking location. Same as gtransformed.
+     * \brief Sets the current state transform of the geometry. This is called when checking location. Same as gtransformed.
      *
      * \param t Affine transformation to set.
      */
@@ -178,7 +177,7 @@ public:
     };
 
     /*!
-     * Computes intersections of a particle with the dynamic geometry.
+     * \brief Computes intersections of a particle with the dynamic geometry.
      *
      * \param ireg Region index.
      * \param n Number of particles.
@@ -191,7 +190,7 @@ public:
                              const EGS_Vector &u, EGS_GeometryIntersections *isections);
 
     /*!
-     * Checks if a region is real.
+     * \brief Checks if a region is real.
      *
      * \param ireg Region index.
      * \return True if the region is real, false otherwise.
@@ -199,7 +198,7 @@ public:
     bool isRealRegion(int ireg) const;
 
     /*!
-     * Checks if a point is inside the dynamic geometry.
+     * \brief Checks if a point is inside the dynamic geometry.
      *
      * \param x Point to check.
      * \return True if the point is inside, false otherwise.
@@ -207,7 +206,7 @@ public:
     bool isInside(const EGS_Vector &x);
 
     /*!
-     * Checks the location of a point.
+     * \brief Checks the location of a point.
      *
      * \param x Point to check.
      * \return Index of the region containing the point.
@@ -215,7 +214,7 @@ public:
     int isWhere(const EGS_Vector &x);
 
     /*!
-     * Alias for isWhere method.
+     * \brief Alias for isWhere method.
      *
      * \param x Point to check.
      * \return Index of the region containing the point.
@@ -223,7 +222,7 @@ public:
     int inside(const EGS_Vector &x);
 
     /*!
-     * Returns the medium index of a region.
+     * \brief Returns the medium index of a region.
      *
      * \param ireg Region index.
      * \return Medium index.
@@ -231,7 +230,7 @@ public:
     int medium(int ireg) const;
 
     /*!
-     * Computes the distance to the outside of the dynamic geometry.
+     * \brief Computes the distance to the outside of the dynamic geometry.
      *
      * \param ireg Region index.
      * \param x Particle position.
@@ -241,7 +240,7 @@ public:
     EGS_Float howfarToOutside(int ireg, const EGS_Vector &x, const EGS_Vector &u);
 
     /*!
-     * Computes the distance to the nearest boundary.
+     * \brief Computes the distance to the nearest boundary.
      *
      * \param ireg Region index.
      * \param x Particle position.
@@ -254,7 +253,7 @@ public:
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u, EGS_Float &t, int *newmed=0, EGS_Vector *normal=0);
 
     /*!
-     * Computes the distance to the nearest boundary.
+     * \brief Computes the distance to the nearest boundary.
      *
      * \param ireg Region index.
      * \param x Particle position.
@@ -263,14 +262,14 @@ public:
     EGS_Float hownear(int ireg, const EGS_Vector &x);
 
     /*!
-     * Returns the maximum step allowed for the dynamic geometry.
+     * \brief Returns the maximum step allowed for the dynamic geometry.
      *
      * \return Maximum allowed step.
      */
     int getMaxStep() const;
 
     /*!
-     * Checks if the dynamic geometry has a specific boolean property in a region.
+     * \brief Checks if the dynamic geometry has a specific boolean property in a region.
      *
      * \param ireg Region index.
      * \param prop Boolean property type.
@@ -279,21 +278,21 @@ public:
     bool hasBooleanProperty(int ireg, EGS_BPType prop) const;
 
     /*!
-     * Sets a boolean property for the dynamic geometry.
+     * \brief Sets a boolean property for the dynamic geometry.
      *
      * \param prop Boolean property type.
      */
     void setBooleanProperty(EGS_BPType prop);
 
     /*!
-     * Adds a boolean property for the dynamic geometry.
+     * \brief Adds a boolean property for the dynamic geometry.
      *
      * \param bit Bit index of the property to add.
      */
     void addBooleanProperty(int bit);
 
     /*!
-     * Sets a boolean property for a range of regions in the dynamic geometry.
+     * \brief Sets a boolean property for a range of regions in the dynamic geometry.
      *
      * \param prop Boolean property type.
      * \param start Start index of the range.
@@ -303,7 +302,7 @@ public:
     void setBooleanProperty(EGS_BPType prop, int start, int end, int step=1);
 
     /*!
-     * Adds a boolean property for a range of regions in the dynamic geometry.
+     * \brief Adds a boolean property for a range of regions in the dynamic geometry.
      *
      * \param bit Bit index of the property to add.
      * \param start Start index of the range.
@@ -313,14 +312,14 @@ public:
     void addBooleanProperty(int bit, int start, int end, int step=1);
 
     /*!
-     * Returns the type of the dynamic geometry.
+     * \brief Returns the type of the dynamic geometry.
      *
      * \return Type of the dynamic geometry.
      */
     const string &getType() const;
 
     /*!
-     * Gets the relative density of a region in the dynamic geometry.
+     * \brief Gets the relative density of a region in the dynamic geometry.
      *
      * \param ireg Region index.
      * \return Relative density of the region.
@@ -328,7 +327,7 @@ public:
     EGS_Float getRelativeRho(int ireg) const;
 
     /*!
-     * Sets the relative density for a range of regions in the dynamic geometry.
+     * \brief Sets the relative density for a range of regions in the dynamic geometry.
      *
      * \param start Start index of the range.
      * \param end End index of the range.
@@ -337,23 +336,21 @@ public:
     void setRelativeRho(int start, int end, EGS_Float rho);
 
     /*!
-     * Sets the relative density for a range of regions in the dynamic geometry
-     * using input specifications.
+     * \brief This is just a placeholder function.
      *
-     * \param input Input containing relative density specifications.
      */
     void setRelativeRho(EGS_Input *);
 
     /*!
-     * Gets the magnetic field scaling factor for a region in the dynamic
-     * geometry.
+     * \brief Gets the magnetic field scaling factor for a region in the dynamic geometry.
      *
-     * \param ireg Region index. \return Magnetic field scaling factor.
+     * \param ireg Region index.
+     * \return Magnetic field scaling factor.
      */
     EGS_Float getBScaling(int ireg) const;
 
     /*!
-     * Sets the magnetic field scaling factor for a range of regions in the dynamic geometry.
+     * \brief Sets the magnetic field scaling factor for a range of regions in the dynamic geometry.
      *
      * \param start Start index of the range.
      * \param end End index of the range.
@@ -362,16 +359,12 @@ public:
     void setBScaling(int start, int end, EGS_Float bf);
 
     /*!
-     * Sets the magnetic field scaling factor for a range of regions in the
-     * dynamic geometry using input specifications.
-     *
-     * \param input Input containing magnetic field scaling factor
-     * specifications.
+     * \brief This is just a placeholder function
      */
     void setBScaling(EGS_Input *);
 
     /*!
-     * Retrieves regions labeled with a given string.
+     * \brief Retrieves regions labeled with a given string.
      *
      * \param str Label to search for.
      * \param regs Output: List of region indices with the specified label.
@@ -379,22 +372,21 @@ public:
     void getLabelRegions(const string &str, vector<int> &regs);
 
     /*!
-     * Updates the next particle state for geometries. It is tasked with
-     * determining the next state of the dynamic geometry.
+     * \brief Updates the next particle state for geometries. It is tasked with determining the next state of the dynamic geometry.
      *
      * \param rndm Random number generator.
      */
     void getNextGeom(EGS_RandomGenerator *rndm);
 
     /*!
-     * Updates the position of the dynamic geometry to the specified time.
+     * \brief Updates the position of the dynamic geometry to the specified time.
      *
      * \param time Time index to update to.
      */
     void updatePosition(EGS_Float time);
 
     /*!
-     * Determines whether the simulation geometry contains a dynamic geometry.
+     * \brief Determines whether the simulation geometry contains a dynamic geometry.
      *
      * \param hasdynamic Output: True if the simulation contains a dynamic geometry, false otherwise.
      */
