@@ -67,8 +67,9 @@ manual created.
 
 In the current version (1.6) the original algorithm of a `calculation type` 1 has been slightly adjusted to ensure @muen_rho is calculated to a user-requested relative precision @accu and it has been made independent of the number of histories. The target statistical precision now defaults to 1%. The possibility to further optimize `calculation type` 1 in the megavoltage energy range is introduced. The calculation progress messages during a type 1 calculation were made clearer and the documentation has been updated to reflect these changes.
 
+The refinements introduced in 2017 to correctly classify subthreshold events were initially implemented only for `calculation type` 0. As of October 2024, these refinements have also been incorporated into `calculation type` 1 for consistency (see git `commit b9627ee3`). Notably, the NIST \muen_rho values align only when this bug fix is excluded, suggesting that the NIST database may require an update to reflect these corrections.
 
-\section g_method Calculation method
+\section g_method Methods
 
 A description of the physical quantities and the equations used for their calculation is presented in this section. Most of these definitions can be found in basic radiation physics textbooks, hence users more interested with practical aspects of using the code can skip to the next section \ref g_calc_types.
 
@@ -251,10 +252,14 @@ is scored as part of \Etr.
 
 \section g_calc_types Calculation types
 
+\subsection g_calc_type_0 Calculation type 0
+
 In its default implementation, the \c g code loops over a fixed number of histories
 for a source of \a photons or <em>charged particles</em> sampling the initial particle parameters
 and invoking the electromagnetic shower routine. This calculation can be explicitly requested by setting the `calculation type` input to 0. Collision kerma is calculated using Eq.(\reflh{eq_kerma_0,10})
 and the energy fluence averaged mass energy absorption coefficient \muen_rho_ave is calculated using Eq.(\reflh{eq_muen_0,15})
+
+\subsection g_calc_type_1 Calculation type 1
 
 A `calculation type` 1, for use with photon sources only, is tailored to the efficient calculation of the mass energy absorption coefficient \muen_rho_ave. In this mode the `g` application takes advantage of the faster convergence of \mutr and 1-\g  (when \g is small) to a desired statistical precision and collision kerma is calculated with Eq.(\reflh{eq_kerma_1,11})
 and the energy fluence averaged mass energy absorption coefficient \muen_rho_ave is calculated using Eq.(\reflh{eq_muen_1,16}).
@@ -281,7 +286,7 @@ be placed between delimiters as is customary in most EGSnrc applications. An exa
 \latexonly
 \\
 \endlatexonly
-\code
+```
   ####################################################################
   # calculation types
   #
@@ -297,6 +302,23 @@ be placed between delimiters as is customary in most EGSnrc applications. An exa
   ######################
   precision = 0.001    # relative precision
   #############
+```
+
+\subsubsection g_nist Reproducing NIST values
+
+The refinements introduced in 2017, which account for both radiative and non-radiative subthreshold events, result in discrepancies with the current NIST XCOM \muen_rho values. This suggests that the NIST data may have been derived without explicitly distinguishing between radiative and non-radiative subthreshold events, despite their documentation implying otherwise. Supporting this interpretation is the observation that values calculated without these modifications to the g application align closely with the NIST data.
+
+To request a \muen_rho calculation matching NIST values the user should use the 'CLASSIFY SUB-THRESHOLD RELAXATIONS' input key (case-insensitive):
+\latexonly
+\\
+\endlatexonly
+\code
+#####
+# Option to reproduce NIST values
+# Defaults to 'yes'
+#####
+CLASSIFY SUB-THRESHOLD RELAXATIONS = NO
+...
 \endcode
 
 
@@ -307,7 +329,7 @@ delimiters. For instance, to define a monoenergetic source emitting particles of
 and charge \f$q\f$, the input keys required are:
 
 \verbatim
- :Start Source Input:
+:Start Source Input:
   Incident Charge         = q # 0 for photons -1 or 1 for e- or e+
   INCIDENT SPECTRUM       = mono-energy
   INCIDENT KINETIC ENERGY = E # in MeV
@@ -318,7 +340,7 @@ Several individual energies can be requested by adding comma separated
 energy values:
 
 \verbatim
- :Start Source Input:
+:Start Source Input:
   Incident Charge         = q # 0 for photons -1 or 1 for e- or e+
   INCIDENT SPECTRUM       = mono-energy
   INCIDENT KINETIC ENERGY = E1,...,EN # in MeV
@@ -331,7 +353,7 @@ To generate a database of \mutr or \muen values as function of energy, one can d
 a logarithmic energy grid. A linear (equidistant) energy grid is defined using the input keys
 
 \verbatim
- :Start Source Input:
+:Start Source Input:
   Incident Charge         = q # 0 for photons -1 or 1 for e- or e+
   INCIDENT SPECTRUM       = mono-energy-lin-range
   INCIDENT KINETIC ENERGY = Emin, Emax, deltaE
@@ -344,7 +366,7 @@ where the input key `deltaE` defines the bin width \f$\Delta\mathrm{E}\f$ defini
 Similarly, a logarithmic energy grid is defined using the input keys
 
 \verbatim
- :Start Source Input:
+:Start Source Input:
 
  INCIDENT SPECTRUM=       mono-energy-log-range
  INCIDENT KINETIC ENERGY= Emin, Emax, N
