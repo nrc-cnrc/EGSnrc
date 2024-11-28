@@ -46,7 +46,7 @@ while test $# -gt 0; do
       dir=*) docdir=`echo $1 | sed 's/dir=//'` ;;
        eh=*) eh=`echo $1 | sed 's/eh=//'` ;;
        eq=*) update_eq=`echo $1 | sed 's/eq=//'` ;;
-    latex=*) latex_build=`echo $1 | sed 's/eq=//'` ;;
+    latex=*) latex_build=`echo $1 | sed 's/latex=//'` ;;
    config=*) my_machine=`echo $1 | sed 's/config=//'` ;;
     esac
     shift
