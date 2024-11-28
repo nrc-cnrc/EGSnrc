@@ -304,7 +304,7 @@ be placed between delimiters as is customary in most EGSnrc applications. An exa
   #############
 ```
 
-\subsubsection g_nist Reproducing NIST values
+\subsection g_nist Reproducing NIST values
 
 The refinements introduced in 2017, which account for both radiative and non-radiative subthreshold events, result in discrepancies with the current NIST XCOM \muen_rho values. This suggests that the NIST data may have been derived without explicitly distinguishing between radiative and non-radiative subthreshold events, despite their documentation implying otherwise. Supporting this interpretation is the observation that values calculated without these modifications to the g application align closely with the NIST data.
 
