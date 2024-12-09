@@ -44,6 +44,7 @@
 #include "egs_functions.h"
 
 #include <fstream>
+#include <cstring>
 using namespace std;
 
 /*! \brief A class representing a single track of a particle.
@@ -197,6 +198,7 @@ public:
         m_nTracks(0), m_totalTracks(0), m_isScoring(NULL), m_bufferSize(0), m_buffer(0),
         m_trspFile(NULL) {
         m_bufferSize = buf_size;
+        strncpy(head_inctime, "include time index=", 20);
 
         // Initialize the arrays. The incltime variable set from the time_bool
         // passed from the constructor (track scoring object gets incltime from
@@ -385,7 +387,7 @@ protected:
     ofstream            *m_trspFile;    //!< the file to which data is output
     string              m_trspFilename; //!< filename of output file
 
-    char head_inctime[20] = "include time index=";
+    char head_inctime[20];
 };
 
 #endif
