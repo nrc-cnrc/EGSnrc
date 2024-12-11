@@ -31,7 +31,7 @@
 #  egs-parallel-pbsdsh (PBS distributed shell)
 #
 ###############################################################################
-
+#set -x
 
 ### help function
 function help {
@@ -108,7 +108,7 @@ delay=$5
 command=$6
 
 ### task label and task file
-task=${PBS_TASKNUM}
+task="${PBS_TASKNUM}_$(date +%s)_$$"
 taskstr="task $task"
 prefix="$pbsdsh_dir/${basename}_"
 taskfile=${prefix}${task}.task
@@ -117,9 +117,18 @@ touch $taskfile
 
 ### wait until all tasks have launched
 delta=2
+timeWaited=0
+maxWaitTime=60
 filecount=$(ls -Ub1 -- $prefix*.task | wc -l)
 while [ $filecount -lt $nthread ]; do
     log "$taskstr: wait $delta seconds for all tasks to start ($filecount/$nthread)"
+
+    timeWaited=$(($timeWaited+$delta))
+    if [ $timeWaited -gt $maxWaitTime ]; then
+        log "$taskstr: QUIT (no $taskfile file after $maxWaitTime seconds)"
+        exit
+    fi
+
     sleep $delta
     filecount=$(ls -Ub1 -- $prefix*.task | wc -l)
 done
@@ -190,17 +199,17 @@ else
     quit_if_done
 
     # offset all jobs by a fixed delay (relative to previous job)
-    delta=100000
-    log "$jobstr: wait $((job*$delta)) microseconds (default job offset delay)"
+    delta=0.1
+    log "$jobstr: wait $(($job*$delta)) microseconds (default job offset delay)"
     for j in $(seq 1 $job); do
-        usleep $delta
+        sleep $delta
         quit_if_done
     done
 
     # extra user-specified delay between each job
     delta=$delay
     if [ $delta -gt 0 ]; then
-        log "$jobstr: wait $((job*$delta)) seconds (user job offset delay)"
+        log "$jobstr: wait $(($job*$delta)) seconds (user job offset delay)"
         for j in $(seq 1 $job); do
             sleep $delta
             quit_if_done
