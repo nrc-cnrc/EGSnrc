@@ -1,0 +1,280 @@
+#!/bin/bash
+###############################################################################
+#
+#  EGSnrc script to submit parallel jobs as combined PBS jobs
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Allan Fields, 2024
+#
+#  Contributors:    Reid Townson
+#
+###############################################################################
+#
+#  This script is not meant to be called directly, but rather via the script
+#  egs-parallel, with the batch option "--batch pbs"
+#
+###############################################################################
+
+
+### help function
+function help {
+    log "HELP"
+    cat <<EOF
+
+    usage:
+
+        $(basename $0) queue nthread delay first basename 'command' ['others'] [verbose]
+
+    arguments:
+
+        queue       queue name on the pbs scheduler
+        nthread     number of threads to use (number of jobs)
+        delay       delay in seconds between individual jobs
+        first       first job index
+        basename    simulation input file name, without ".egsinp" extension
+        command     command to run, in quotes
+        others      other options passed to scheduler, in quotes
+        verbose     echo detailed egs-parallel log messages to terminal
+
+    note:
+
+        This script is not meant to be called directly, but rather via the
+        egs-parallel script with the batch option "--batch pbs"
+
+EOF
+}
+
+### timestamp function
+function timestamp {
+    printf "EGSnrc egs-parallel $(date -u "+%Y-%m-%d (UTC) %H:%M:%S.%N")"
+}
+
+### log function to write messages to log file and standard output
+function log {
+    msg="$(timestamp): $1\n"
+    printf "$msg" >&3
+    if [ "$verbosity" = "verbose" ]; then
+        printf "$msg"
+    fi
+}
+
+### quit function for errors, with source, line, message and command
+function quit {
+    lineno=$1
+    msg=$2
+    case $3 in
+        help)  cmd="help";;
+        *)     cmd="";;
+    esac
+    verbosity="verbose"
+    log "$(basename $0): line $lineno: $msg"; $cmd; log "QUIT."; exit 1
+}
+
+### quit function if simulation is done
+function quit_if_done {
+    if [ -r $basename.egsjob ]; then
+        done=$(grep -o END $basename.egsjob)
+        if [ "$done" = "END" ]; then
+            log "$jobstr: QUIT (simulation already finished)"
+            exit
+        fi
+    fi
+}
+
+### begin script
+log "BEGIN $0"
+
+### parse command-line arguments (simplistic)
+args_min=6
+if [ "$#" -lt $args_min ]; then
+    quit $LINENO "only $# arguments provided; at least $args_min required" help
+fi
+queue=$1
+nthread=$2
+delay=$3
+first=$4
+basename=$5
+command=$6
+scheduler_options=$7
+verbosity=$8
+
+### link file descriptor 3 to egs-parallel log file
+exec 3>>$basename.egsparallel
+
+### set scheduler job name (skip leading non alnum chars, maximum 14 characters)
+jobname=$(echo "${basename}_$nthread" | sed 's/^[^[:alnum:]]*//')
+trim=$(( $(echo $jobname | wc -c) - 14 ))
+if [ $trim -gt 0 ]; then
+    jobname=$(echo $jobname | cut -c $trim-)
+    jobname=$(echo $jobname | sed 's/^[^[:alnum:]]*//')
+fi
+log "job name: $jobname"
+
+### remove existing egsjob and lock files
+if [ -e $basename.egsjob ]; then
+    log "remove existing egsjob file: $basename.egsjob"
+    /bin/rm $basename.egsjob
+fi
+if [ -e $basename.lock ]; then
+    log "remove existing lock file: $basename.lock"
+    /bin/rm $basename.lock
+fi
+
+pbscommand="qsub -q $queue $scheduler_options"
+
+### launch the job
+jobpid=$(eval "$pbscommand" <<-_EOF_
+#!/bin/bash
+#PBS -j eo
+#PBS -e ${basename}_jobarr.eo
+#PBS -N $jobname
+#PBS -v HEN_HOUSE,EGS_HOME,EGS_CONFIG
+#PBS -J ${first}-${nthread}:1
+
+### go to pbs working directory
+cd \$PBS_O_WORKDIR
+
+echo PBS_ARRAY_INDEX=\$PBS_ARRAY_INDEX
+job=\$PBS_ARRAY_INDEX
+jobstr=\$(printf "job %04d" \$job)
+
+### link file descriptor 3 to egs-parallel log file
+exec 3>>$basename.egsparallel
+
+### timestamp function
+function timestamp {
+    printf "EGSnrc egs-parallel \$(date -u "+%Y-%m-%d (UTC) %H:%M:%S.%N")"
+}
+
+### log function to write messages to log file and standard output
+function log {
+    msg="\$(timestamp): \$1\n"
+    printf "\$msg" >&3
+    if [ "\$verbosity" = "verbose" ]; then
+    printf "\$msg"
+    fi
+}
+
+### quit function for errors, with source, line, message and command
+function quit {
+    lineno=\$1
+    msg=\$2
+    case \$3 in
+    help)  cmd="help";;
+    *)     cmd="";;
+    esac
+    verbosity="verbose"
+    log "\$(basename \$0): line \$lineno: \$msg"; \$cmd; log "QUIT."; exit 1
+}
+
+### quit function if simulation is done
+function quit_if_done {
+    if [ -r $basename.egsjob ]; then
+    done=\$(grep -o END $basename.egsjob)
+    if [ "\$done" = "END" ]; then
+        log "\$jobstr: QUIT (simulation already finished)"
+        exit
+    fi
+    fi
+}
+
+
+###
+    # job 1 should define .egsjob
+    if [ \$job -eq 1 ]; then
+
+        # log host and pid of job 1 in .egsjob file
+        echo "\$jobstr: BEGIN host=\$(hostname) pid=\$\$" > $basename.egsjob
+        echo HERE: $basename.egsjob
+
+    # job 2 does all the waiting
+    elif [ \$job -eq \$[ \$first + 1 ] ]; then
+        delta=2
+        log "\$jobstr: wait \$delta seconds (initial delay)"
+        sleep \$delta
+    fi
+
+    # wait until there is an .egsjob file (maximum 120 seconds)
+    total=2
+    delta=10
+    limit=120
+    while [ ! -e $basename.egsjob ]; do
+    quit_if_done
+
+    # otherwise wait for egsjob file
+    log "\$jobstr: wait \$delta seconds (no $basename.egsjob file after \$total seconds)"
+    sleep \$delta
+    total=\$[ \$total + \$delta ]
+    if [ \$total -gt \$limit ]; then
+        log "\$jobstr: QUIT (no $basename.egsjob file after \$limit seconds)"
+        exit
+    fi
+    done
+
+    ### manage jobs to avoid bottleneck and race conditions
+    if [ \$job -gt \$first ]; then
+        # quit if simulation is already done
+        quit_if_done
+
+        # offset all jobs by a fixed delay (relative to previous job)
+        delta=0.25
+        log "\$jobstr: wait \$delta microseconds (default job offset delay)"
+        sleep \$delta
+        quit_if_done
+
+        # extra user-specified delay between each job
+        delta=\$delay
+        if [ \$delta -gt 0 ]; then
+            log "\$jobstr: wait \$delta seconds (user job offset delay)"
+            sleep \$delta
+        fi
+        quit_if_done
+
+        # report on lock file content
+        if [ -r $basename.lock ]; then
+            content=\$(cat $basename.lock)
+            log "\$jobstr: found $basename.lock: \$content"
+        fi
+        quit_if_done
+    fi
+
+### run command
+#$command
+$command -b -P $nthread -j \$job -f $first
+_EOF_
+
+# Example: $command -n $[$first+$PBS_ARRAY_INDEX]
+# HREF: https://centers.hpc.mil/users/docs/advancedTopics/Job_Arrays.html
+)
+
+# Extract the job ID (last line of qsub output)
+jobpid=$(echo "$jobpid" | tail -n 1 | xargs)
+
+base_jobpid=$(echo "$jobpid" | sed 's/\[[^]]*\]//')
+
+# Validate that the job ID matches the expected format
+if ! [[ "$base_jobpid" =~ ^[0-9]+\.[a-zA-Z0-9._-]+$ ]]; then
+    log "FAILED to launch job $job"
+    if [[ "$job" = "1" ]]; then
+        quit $LINENO "FAILED to submit first job"
+    fi
+fi
+echo "Job pid: $jobpid"
+
