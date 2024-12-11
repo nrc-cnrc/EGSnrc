@@ -1,0 +1,174 @@
+#!/bin/bash
+###############################################################################
+#
+#  EGSnrc script to submit parallel jobs under one PBS distributed shell job
+#  Copyright (C) 2020 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Frederic Tessier, 2020
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  This script is not meant to be called directly, but rather via the script
+#  egs-parallel, with the batch option "--batch pdsh"
+#
+###############################################################################
+
+
+### help function
+function help {
+    log "HELP"
+    cat <<EOF
+
+    usage:
+
+        $(basename $0) queue nthread delay first basename 'command' ['others'] [verbose]
+
+    arguments:
+
+        queue       queue name on the pbs scheduler
+        nthread     number of threads to use (number of jobs)
+        delay       delay in seconds between individual jobs
+        first       first job index
+        basename    simulation input file name, without ".egsinp" extension
+        command     command to run, in quotes
+        others      other options passed to scheduler, in quotes
+        verbose     echo detailed egs-parallel log messages to terminal
+
+    note:
+
+        This script is not meant to be called directly, but rather via the
+        egs-parallel script with the batch option "--batch pdsh"
+
+EOF
+}
+
+### timestamp function
+function timestamp {
+    printf "EGSnrc egs-parallel $(date -u "+%Y-%m-%d (UTC) %H:%M:%S.%N")"
+}
+
+### log function to write messages to log file and standard output
+function log {
+    msg="$(timestamp): $1\n"
+    printf "$msg" >&3
+    if [ "$verbosity" = "verbose" ]; then
+        printf "$msg"
+    fi
+}
+
+### quit function for errors, with source, line, message and command
+function quit {
+    lineno=$1
+    msg=$2
+    case $3 in
+        help)  cmd="help";;
+        *)     cmd="";;
+    esac
+    verbosity="verbose"
+    log "$(basename $0): line $lineno: $msg"; $cmd; log "QUIT."; exit 1
+}
+
+### parse command-line arguments (simplistic)
+args_min=6
+if [ "$#" -lt $args_min ]; then
+    exec 3>/dev/null
+    quit $LINENO "only $# arguments provided; at least $args_min required" help
+fi
+queue=$1
+nthread=$2
+delay=$3
+first=$4
+basename=$5
+command=$6
+scheduler_options=$7
+verbosity=$8
+
+### link file descriptor 3 to egs-parallel log file
+exec 3>>$basename.egsparallel
+
+### begin script
+log "BEGIN $0"
+
+### set scheduler job name (skip leading non alnum chars, maximum 14 characters)
+jobname=$(echo "${basename}_$nthread" | sed 's/^[^[:alnum:]]*//')
+trim=$(( $(echo $jobname | wc -c) - 14 ))
+if [ $trim -gt 0 ]; then
+    jobname=$(echo $jobname | cut -c $trim-)
+    jobname=$(echo $jobname | sed 's/^[^[:alnum:]]*//')
+fi
+log "job name: $jobname"
+
+### create pdsh directory to store task files for job numbers (remove existing directory)
+pdsh_dir=$basename.pdsh
+if [ -e $pdsh_dir ]; then
+    log "remove existing directory $pdsh_dir"
+    /bin/rm -r $pdsh_dir
+fi
+log "create temporary directory $pdsh_dir"
+err=$(mkdir $pdsh_dir 2>&1)
+if ! [ -z $err ]; then
+    quit $LINENO "$err"
+fi
+
+### remove existing egsjob and lock files
+if [ -e $basename.egsjob ]; then
+    log "remove existing egsjob file: $basename.egsjob"
+    /bin/rm $basename.egsjob
+fi
+if [ -e $basename.lock ]; then
+    log "remove existing lock file: $basename.lock"
+    /bin/rm $basename.lock
+fi
+
+### launch pdsh tasks
+task_script=$HEN_HOUSE/scripts/egs-parallel-dshtask
+pbscommand="qsub -q $queue $scheduler_options"
+log "SUBMIT $pbscommand"
+jobpid=$(eval "$pbscommand" <<EOF
+#!/bin/bash
+#PBS -j eo
+#PBS -e ${basename}.eo
+#PBS -N $jobname
+#PBS -l select=$nthread:ncpus=1
+#PBS -v HEN_HOUSE,EGS_HOME,EGS_CONFIG,PATH
+set -x
+echo "env: PBS_*:"
+cat \$PBS_NODEFILE
+export PDSH_RCMD_TYPE=ssh
+env|grep ^PBS
+pdsh -f $(($nthread*2)) -w \$(tr $'\n' ',' <\$PBS_NODEFILE) /usr/bin/env PBS_TASKNUM=\$PBS_TASKNUM PBS_O_WORKDIR=\$PBS_O_WORKDIR $task_script $pdsh_dir $basename $nthread $first $delay \"$command\"
+EOF
+)
+
+# Extract the job ID (last line of qsub output)
+jobpid=$(echo "$jobpid" | tail -n 1 | xargs)
+
+# Validate that the job ID matches the expected format
+if ! [[ "$jobpid" =~ ^[0-9]+\.[a-zA-Z0-9._-]+$ ]]; then
+    quit $LINENO "FAILED to submit job: $jobpid"
+fi
+
+log "LAUNCH $nthread pdsh tasks on $jobpid"
+log "pdsh task logs will be collated in ${basename}.eo"
+
+### print pid
+printf "$jobpid\n"
