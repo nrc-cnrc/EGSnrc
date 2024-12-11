@@ -98,6 +98,33 @@ function quit_if_done {
     fi
 }
 
+### Function to get PBS version
+function check_pbs_version {
+    pbs_version=$(qstat --version 2>/dev/null || pbsnodes --version 2>/dev/null)
+    if [[ $? -ne 0 || -z "$pbs_version" ]]; then
+        quit $LINENO "Unable to determine PBS version. Ensure PBS is installed and in your PATH."
+    fi
+    log "Detected PBS version: $pbs_version"
+
+    # Extract version number (assumes format like "PBSPro 22.05.11")
+    version_number=$(echo "$pbs_version" | grep -oP '\d+\.\d+\.\d+')
+    if [[ -z "$version_number" ]]; then
+        quit $LINENO "Failed to parse PBS version: $pbs_version"
+    fi
+
+    # Parse version into components (major.minor.patch)
+    IFS='.' read -r major minor patch <<< "$version_number"
+
+    # Handle versions below PBS major version 22 differently
+    # Note that I am not exactly sure when the output format changed, somewhere after version 19 and before or during 22
+    if (( major < 22 )); then
+        log "Older PBS version detected: $version_number. Adjusting job ID parsing."
+        old_pbs_version=true
+    else
+        old_pbs_version=false
+    fi
+}
+
 ### begin script
 log "BEGIN $0"
 
@@ -115,11 +142,14 @@ command=$6
 scheduler_options=$7
 verbosity=$8
 
+### Check the version of PBS being used
+check_pbs_version
+
 ### link file descriptor 3 to egs-parallel log file
 exec 3>>$basename.egsparallel
 
 ### set scheduler job name (skip leading non alnum chars, maximum 14 characters)
-jobname=$(echo "${basename}[$nthread]" | sed 's/^[^[:alnum:]]*//')
+jobname=$(echo "${basename}_n$nthread" | sed 's/^[^[:alnum:]]*//')
 trim=$(( $(echo $jobname | wc -c) - 14 ))
 if [ $trim -gt 0 ]; then
     jobname=$(echo $jobname | cut -c $trim-)
@@ -152,7 +182,7 @@ for job in $(seq 1 $nthread); do
         sleep $delta
 
         # wait until there is an .egsjob file (maximum 120 seconds)
-        total=0
+        total=2
         delta=10
         limit=120
         while [ ! -e $basename.egsjob ]; do
@@ -178,9 +208,10 @@ for job in $(seq 1 $nthread); do
         quit_if_done
 
         # offset all jobs by a fixed delay (relative to previous job)
-        delta=250000
-        log "$jobstr: wait $delta microseconds (default job offset delay)"
-        usleep $delta
+        delta=0.25
+        log "$jobstr: wait $delta seconds (default job offset delay)"
+        #usleep $delta
+        sleep $delta
         quit_if_done
 
         # extra user-specified delay between each job
@@ -193,7 +224,8 @@ for job in $(seq 1 $nthread); do
 
         # report on lock file content
         if [ -r $basename.lock ]; then
-            content=$(cat $basename.lock)
+            #content=$(cat $basename.lock)
+            content=$(cat $basename.lock | tr -d '\0')
             log "$jobstr: found $basename.lock: $content"
         fi
         quit_if_done
@@ -238,12 +270,31 @@ if [ $job -eq 1 ]; then
 fi
 EOF
     )
-    if ! [[ "${jobpid%%.*}" =~ ^[0-9]+$ ]] ; then
-        log "FAILED to launch job $job"
-        if [[ "$job" = "1" ]]; then
-            quit $LINENO "FAILED to submit first job"
+
+    # Extract the job ID and check the first job launched
+    if [ "$old_pbs_version" = true ]; then
+        # For older PBS versions
+        if ! [[ "${jobpid%%.*}" =~ ^[0-9]+$ ]] ; then
+            log "FAILED to launch job $job"
+            if [[ "$job" = "1" ]]; then
+                quit $LINENO "FAILED to submit first job"
+            fi
+        fi
+    else
+        # For newer PBS versions
+        jobpid=$(echo "$jobpid" | tail -n 1 | xargs)
+
+        # Validate that the job ID matches the expected format
+        if ! [[ "$jobpid" =~ ^[0-9]+\.[a-zA-Z0-9._-]+$ ]]; then
+            log $LINENO "FAILED to submit job: $jobpid"
+            if [[ "$job" = "1" ]]; then
+                quit $LINENO "FAILED to submit first job"
+            fi
         fi
     fi
+
+
+
     echo $jobpid
 
 done
