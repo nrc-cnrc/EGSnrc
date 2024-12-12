@@ -23,7 +23,7 @@
 #
 #  Author:          Frederic Tessier, 2020
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 #
@@ -31,7 +31,6 @@
 #  egs-parallel-pbsdsh (PBS distributed shell)
 #
 ###############################################################################
-#set -x
 
 ### help function
 function help {
@@ -200,7 +199,7 @@ else
 
     # offset all jobs by a fixed delay (relative to previous job)
     delta=0.1
-    log "$jobstr: wait $(($job*$delta)) microseconds (default job offset delay)"
+    log "$jobstr: wait $(($job*$delta)) seconds (default job offset delay)"
     for j in $(seq 1 $job); do
         sleep $delta
         quit_if_done
