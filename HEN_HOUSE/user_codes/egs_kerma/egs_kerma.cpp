@@ -237,19 +237,20 @@ public:
 
                     }
                 }
-                /* Mark photon inside cavity */
-                latch = 1;
+                /* Mark photon inside cavity <= why did I need this?*/
+                //latch = 1;
             }
             /* Mark photons in exclusion regions */
-            else if (is_excluded[ig][ir]) {
-                latch = -1;
+            else if (is_excluded[ig][ir] && latch >= 0 ){
+                latch *= -1;
+                the_stack->latch[np] = latch;
             }
-            /* photon outside cavity and has not been in any exclusion zone */
+            /* photon outside cavity and has not been in any exclusion zone <= why?
             else if (latch >= 0) {
                 latch = 0;
-            }
+            }*/
 
-            the_stack->latch[np] = latch;
+            //the_stack->latch[np] = latch; <= if commented blocks above used
         }
         return 0;
     }
@@ -270,7 +271,7 @@ public:
             Nel     += p.wt;
             p.E += the_useful->rm;// source provides K.E.
         }
-        p.latch = 0; // Reset to 0
+        //p.latch = 0; // Reset to 0
         //if ( p.q != 0 )
         //   egsInformation("q = %d E = %g RM = %g wt = %g \n",p.q,p.E,the_useful->rm,p.wt);
 
