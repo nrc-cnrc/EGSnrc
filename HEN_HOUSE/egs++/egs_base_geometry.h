@@ -731,7 +731,7 @@ public:
     virtual void getNumberRegions(const string &str, vector<int> &regs);
 
     /*! \brief Get the list of all regions labeled with \a str */
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
     /*! \brief Get the name of the i-th explicit label in the geometry */
     virtual const string &getLabelName(const int i) {
