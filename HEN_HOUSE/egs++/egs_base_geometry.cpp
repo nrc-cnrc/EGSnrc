@@ -1066,7 +1066,7 @@ void EGS_BaseGeometry::getNumberRegions(const string &str, vector<int> &regs) {
     }
 }
 
-void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
     // Tokenize the input string - this allows for multiple labels
     vector<string> tokens;
@@ -1080,18 +1080,40 @@ void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs) {
     }
     while (*ptr++ != '\0');
 
+    // Start insertion at the beginning of regs
+    size_t insert_pos = 0;
+    bool foundLabel;
+
     // Get all regions lists for this named label
-    for (int j=0; j<tokens.size(); j++) {
-        for (int i=0; i<labels.size(); i++) {
+    for (int j = 0; j < tokens.size(); j++) {
+        foundLabel = false;
+        for (int i = 0; i < labels.size(); i++) {
             if (labels[i].name.compare(tokens[j]) == 0) {
-                regs.insert(regs.end(), labels[i].regions.begin(), labels[i].regions.end());
+
+                // Insert at the current position
+                regs.insert(regs.begin() + insert_pos, labels[i].regions.begin(), labels[i].regions.end());
+
+                // Update the insertion position to reflect the newly added elements
+                insert_pos += labels[i].regions.size();
+
+                foundLabel = true;
+                break;
             }
+        }
+
+        // Just increment the insertion position by one, because this token was a number not a label
+        if(!foundLabel) {
+            insert_pos += 1;
         }
     }
 
     // Sort region list and remove duplicates
-    sort(regs.begin(), regs.end());
-    regs.erase(unique(regs.begin(), regs.end()), regs.end());
+    // By default this is always done
+    // Turn it off if the list contains parameters that are not regions and/or you want to maintain the original order
+    if(sanitize) {
+        sort(regs.begin(), regs.end());
+        regs.erase(unique(regs.begin(), regs.end()), regs.end());
+    }
 }
 
 
