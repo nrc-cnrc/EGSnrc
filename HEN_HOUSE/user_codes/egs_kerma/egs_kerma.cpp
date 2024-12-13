@@ -113,8 +113,10 @@ public:
         EGS_AdvancedApplication(argc,argv), ngeom(0),
         kerma(0), kerma_r(0), scg(0), fd_geom(0),
         ncg(0), flug(0),flugT(0) {
-        Eph_ave = 0.0; Nph = 0.0;
-        Eph_sc  = 0.0; Nsc = 0.0;
+        Eph_ave = 0.0;
+        Nph = 0.0;
+        Eph_sc  = 0.0;
+        Nsc = 0.0;
         Eel_ave = 0.0, Nel = 0.0;
     };
 
@@ -241,7 +243,7 @@ public:
                 //latch = 1;
             }
             /* Mark photons in exclusion regions */
-            else if (is_excluded[ig][ir] && latch >= 0 ){
+            else if (is_excluded[ig][ir] && latch >= 0) {
                 latch *= -1;
                 the_stack->latch[np] = latch;
             }
@@ -528,8 +530,8 @@ public:
             }
         }
 
-        (*data_out) << Eph_ave << " " << Nph << " " 
-                    << Eel_ave << " " << Nel << " "  
+        (*data_out) << Eph_ave << " " << Nph << " "
+                    << Eel_ave << " " << Nel << " "
                     << Eph_sc  << " " << Nsc << endl;
         if (!data_out->good()) {
             return 1031;
@@ -603,10 +605,13 @@ public:
             }
         }
 
-        Eph_sc  = 0; Nsc = 0;
-        Eph_ave = 0; Nph = 0; 
-        Eel_ave = 0; Nel = 0; 
-        
+        Eph_sc  = 0;
+        Nsc = 0;
+        Eph_ave = 0;
+        Nph = 0;
+        Eel_ave = 0;
+        Nel = 0;
+
     };
 
     /*! Add simulation results */
@@ -661,7 +666,7 @@ public:
         }
 
         Eph_sc  += aux_Eph_sc;
-        Nsc     += aux_Nsc; 
+        Nsc     += aux_Nsc;
         Eph_ave += aux_Eph_ave;
         Nph     += aux_Nph;
         Eel_ave += aux_Eel_ave;
@@ -678,38 +683,38 @@ public:
 
         EGS_Float F = current_case/getFluence();
 
-        if (Eph_sc > kermaEpsilon && Nsc > kermaEpsilon ){
+        if (Eph_sc > kermaEpsilon && Nsc > kermaEpsilon) {
             Eph_sc /= Nsc;
             egsInformation(" Mean scoring photon energy <Epsc> = %g MeV\n\n",Eph_sc);
         }
 
-        if (Eph_ave > kermaEpsilon && Nph > kermaEpsilon ){
+        if (Eph_ave > kermaEpsilon && Nph > kermaEpsilon) {
             Eph_ave /= Nph;
             egsInformation(" Mean source photon energy <Ep> = %g MeV\n\n",Eph_ave);
         }
 
-        if (Eel_ave > kermaEpsilon && Nel > kermaEpsilon ){
+        if (Eel_ave > kermaEpsilon && Nel > kermaEpsilon) {
             Eel_ave /= Nel;
             egsInformation(" Mean source electron energy <Ee> = %g MeV\n\n",Eel_ave);
         }
 
-        outputKermaResults( F );
+        outputKermaResults(F);
 
         if (flug || flugT) {
-            outputFluenceResults( F );
+            outputFluenceResults(F);
         }
 
     };
 
     /*! Output the dosimetry results of a simulation. */
-    void outputKermaResults(const EGS_Float & F) {
+    void outputKermaResults(const EGS_Float &F) {
         /************************************************************/
         /* Print out kerma in scoring volume regions and the total. */
         /************************************************************/
-        
+
         /* Normalize to actual source fluence */
         EGS_Float MeVtoJgtokg = 1.6021773e-10, // energy and mass conversion
-                        normD = MeVtoJgtokg*F;
+                  normD = MeVtoJgtokg*F;
         int irmax_digits = getDigits(max_sc_reg),
             max_medl     = getMaxMedLength();
         int count = 0;
@@ -720,7 +725,7 @@ public:
         int imed = -1, nreg = 0;
         /* Compute deposited energy and dose */
         for (int j=0; j<ngeom; j++) {
-            if ( F == 1 ) {
+            if (F == 1) {
                 egsInformation("\n\n==> Calculation summary (per particle) in geometry: %s\n\n",
                                geoms[j]->getName().c_str());
                 if (flug) {
@@ -772,21 +777,21 @@ public:
                         else {
                             dr=100.0;
                         }
-                        if (flug){
-                           flugT[j]->currentResult(ir,fe,dfe);
-                           if (fe > 0) {
-                               dfe = 100*dfe/fe;
-                           }
-                           else {
-                               dfe = 100;
-                           }
-                           egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
-                                          irmax_digits, ir, m, r*F, dr, r*normD/m, dr,
-                                          fe*F*rho/m, dfe, r/(fe*rho)/Eph_sc, sqrt(dr*dr+dfe*dfe));
+                        if (flug) {
+                            flugT[j]->currentResult(ir,fe,dfe);
+                            if (fe > 0) {
+                                dfe = 100*dfe/fe;
+                            }
+                            else {
+                                dfe = 100;
+                            }
+                            egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
+                                           irmax_digits, ir, m, r*F, dr, r*normD/m, dr,
+                                           fe*F*rho/m, dfe, r/(fe*rho)/Eph_sc, sqrt(dr*dr+dfe*dfe));
                         }
-                        else{
-                           egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
-                                          irmax_digits, ir, m, r*F, dr, r*normD/m, dr);
+                        else {
+                            egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
+                                           irmax_digits, ir, m, r*F, dr, r*normD/m, dr);
 
                         }
                     }
@@ -843,7 +848,7 @@ public:
     }
 
     /*! Output the fluence results of a simulation. */
-    void outputFluenceResults(const EGS_Float & F) {
+    void outputFluenceResults(const EGS_Float &F) {
 
         string spe_name = constructIOFileName(".agr",true);
         ofstream spe_output(spe_name.c_str());
@@ -884,56 +889,56 @@ public:
                 line.append(count,'-');
                 egsInformation("  %s\n",line.c_str());
 
-               for (int ir = 0; ir < nreg; ir++) {
-                   if (is_sensitive[j][ir]) {
-                      int imed = getMedium(ir);
-                      /* Per volume */
-                      EGS_Float m = mass[j][ir];
-                      EGS_Float normT = F*getMediumRho(imed)/m;
-                      flugT[j]->currentResult(ir,fe,dfe);
-                      if (fe > 0) {
-                          dfe = 100*dfe/fe;
-                      }
-                      else {
-                          dfe = 100;
-                      }
-                      egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%%\n",
-                                             irmax_digits, ir, m,fe*normT, dfe);
-                   }                        
-               }
+                for (int ir = 0; ir < nreg; ir++) {
+                    if (is_sensitive[j][ir]) {
+                        int imed = getMedium(ir);
+                        /* Per volume */
+                        EGS_Float m = mass[j][ir];
+                        EGS_Float normT = F*getMediumRho(imed)/m;
+                        flugT[j]->currentResult(ir,fe,dfe);
+                        if (fe > 0) {
+                            dfe = 100*dfe/fe;
+                        }
+                        else {
+                            dfe = 100;
+                        }
+                        egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%%\n",
+                                       irmax_digits, ir, m,fe*normT, dfe);
+                    }
+                }
             }
 
-            if (flug){ 
-               /* Diff. fluence currently in whole scoring volume */
-               EGS_Float normV = F/(mass_cv[j]/rho_cv[j]);//per unit volume
-               EGS_Float norm, expbw, DE;
-               if ( flu_s ){
-                  expbw = exp(1.0/flu_a);// exp{log(Emax/Emin)/Nbin}
-               }
-               else{
-                 norm = normV*flu_a; //per unit bin width (linear scale)
-               }
-               spe_output<<"@    s"<<j<<" errorbar linestyle 0\n";
-               spe_output<<"@    s"<<j<<" legend \""<<
-                         geoms[j]->getName().c_str()<<"\"\n";
-               spe_output<<"@target G0.S"<<j<<"\n";
-               spe_output<<"@type xydy\n";
-               egsInformation("\n\n"
-                              "   Emid/MeV    dFlu/dE/[MeV-1/cm2]   DFlu/[MeV-1/cm2]\n"
-                              "   --------------------------------------------------\n");
-               for (int i=0; i<flu_nbin; i++) {
-                   flug[j]->currentResult(i,fe,dfe);
-                   EGS_Float e = (i+0.5-flu_b)/flu_a;
-                   if (flu_s) {
-                       e = exp(e);
-                       DE    = exp(flu_xmin)*pow(expbw,i)*(expbw-1);
-                       norm  = normV/DE; //per unit bin width (log scale)
-                   }
-                   spe_output<<e<<" "<<fe *norm<<" "<<dfe *norm<< "\n";
-                   egsInformation("%11.6f  %14.6e      %14.6e\n",
-                                  e,fe*norm,dfe*norm);
-               }
-               spe_output << "&\n";
+            if (flug) {
+                /* Diff. fluence currently in whole scoring volume */
+                EGS_Float normV = F/(mass_cv[j]/rho_cv[j]);//per unit volume
+                EGS_Float norm, expbw, DE;
+                if (flu_s) {
+                    expbw = exp(1.0/flu_a);// exp{log(Emax/Emin)/Nbin}
+                }
+                else {
+                    norm = normV*flu_a; //per unit bin width (linear scale)
+                }
+                spe_output<<"@    s"<<j<<" errorbar linestyle 0\n";
+                spe_output<<"@    s"<<j<<" legend \""<<
+                          geoms[j]->getName().c_str()<<"\"\n";
+                spe_output<<"@target G0.S"<<j<<"\n";
+                spe_output<<"@type xydy\n";
+                egsInformation("\n\n"
+                               "   Emid/MeV    dFlu/dE/[MeV-1/cm2]   DFlu/[MeV-1/cm2]\n"
+                               "   --------------------------------------------------\n");
+                for (int i=0; i<flu_nbin; i++) {
+                    flug[j]->currentResult(i,fe,dfe);
+                    EGS_Float e = (i+0.5-flu_b)/flu_a;
+                    if (flu_s) {
+                        e = exp(e);
+                        DE    = exp(flu_xmin)*pow(expbw,i)*(expbw-1);
+                        norm  = normV/DE; //per unit bin width (log scale)
+                    }
+                    spe_output<<e<<" "<<fe *norm<<" "<<dfe *norm<< "\n";
+                    egsInformation("%11.6f  %14.6e      %14.6e\n",
+                                   e,fe*norm,dfe*norm);
+                }
+                spe_output << "&\n";
             }
         }
     }
@@ -1411,7 +1416,7 @@ int EGS_KermaApplication::initScoring() {
                         cavity_masses.push_back(m_g);
                         n_cavity_masses.push_back(cmass.size());
                         transformations.push_back(
-                                           EGS_AffineTransform::getTransformation(aux));
+                            EGS_AffineTransform::getTransformation(aux));
                         /* excluded regions */
                         if (!err4 && apert.size() > 0) {
                             int *ap = new int [apert.size()];
