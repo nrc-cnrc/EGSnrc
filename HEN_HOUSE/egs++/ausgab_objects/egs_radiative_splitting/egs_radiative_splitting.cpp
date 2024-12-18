@@ -49,6 +49,7 @@
 #include "egs_radiative_splitting.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+#include "egs_transformations.h"
 
 //local structures required
 struct DBS_Aux {
@@ -156,11 +157,8 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
         if      ( split_type == URS ) {
             description +=" using URS\n\n";
         }
-        else if ( split_type == DRS ) {
+        else if ( split_type == DRS || split_type == DRSf) {
             description +=" using DRS\n\n";
-        }
-        else if ( split_type == DRSf ) {
-            description +=" using BEAMnrc-style DRS\n\n";
         }
         else {
             description +=" using an unknown splitting algorithm? :-(";
@@ -176,12 +174,22 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
     description += "\n===========================================\n\n";
 }
 
-void EGS_RadiativeSplitting::initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr) {
+void EGS_RadiativeSplitting::initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr, const EGS_AffineTransform *t) {
     fs = field_rad;
     ssd = field_ssd;
     ireg_esplit = splitreg;
     irad_esplit = irad;
     zrr_esplit = zrr;
+    if (T) {
+        delete T;
+        T = 0;
+    }
+    if (t) {
+        T = new EGS_AffineTransform(*t);
+        if (!T) {
+            egsWarning("Invalid transform for DBS radiative splitting cone.");
+        }
+    }
 }
 
 //at least try to get brems working with this
@@ -191,6 +199,8 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     //data for initiating particle
     int np = app->getNp();
     EGS_Particle pi = app->getParticleFromStack(np);
+    //DBS calculations assume splitting field is centred on Z-axis and ssd is defined relative to Z=0
+    inverseTransformP(pi,T);
     EGS_Float dneari = app->getDnear(np);
     int latch = pi.latch;
 
@@ -307,6 +317,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 //keep the photon, increase weight and label as phat
                 pi.wt = pi.wt*nsplit;
                 pi.latch = pi.latch | (1 << 0);
+                transformP(pi,T);
                 app->updateParticleOnStack(np,pi,dneari);
                 is_fat = 1;
             }
@@ -331,6 +342,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 latch = latch & ~(1 << 0);
                 EGS_Particle p = pi;
                 p.latch = latch;
+                transformP(p,T);
                 app->updateParticleOnStack(np,p,dneari);
                 doSmartCompton(nint);
             }
@@ -341,6 +353,8 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 EGS_Particle p = pi;
                 p.latch = latch;
                 p.wt = p.wt/nint;
+                //Do transform here.  Seems more efficient than inside the loop below.
+                transformP(p,T);
                 app->deleteParticleFromStack(np);
                 for (int i=0; i<nint; i++)
                 {
@@ -378,6 +392,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 //adjust scatter angles and apply to particle
                 doUphi21(sinthe,costhe,p.u);
                 //add the particle to the stack
+                transformP(p,T);
                 app->addParticleToStack(p,dneari);
                 //now potentially kill it -- seems like we should kill the particle before adding to the stack
                 int nstart = app->getNp(), aux=0;
@@ -441,6 +456,7 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     particle_stack.clear();
 
     EGS_Particle pi = app->getParticleFromStack(np);
+    inverseTransformP(pi,T);
     EGS_Float dneari = app->getDnear(np);
 
     double E = pi.E;
@@ -458,6 +474,13 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     imed = app->getMedium(irl);
     EGS_Float f_max_KM = 1, q_KM, p_KM;
     int j_KM;
+
+    //for now do not use doSmartBrems when IBRDST=1 (full KM expression used for brems angular sampling)
+    //this may be implemented in the future with another DBS option in which we use the implementation from beampp
+    //For this reason we have not deleted coding for ibrdbst=1 below.
+    if(app->getIbrdst() == 1) {
+        return 1;
+    }
 
     if(app->getIbrdst() == 1) {
         q_KM = a_KM[imed]*log(ener) + b_KM[imed];
@@ -797,6 +820,9 @@ int EGS_RadiativeSplitting::doSmartBrems() {
     //now add particles to the stack
     for (int i=0; i<particle_stack.size(); i++)
     {
+        //transform particles back to original position/direction before adding them to the stack
+        transformP(particle_stack[i],T);
+
         app->addParticleToStack(particle_stack[i],dneari);
     }
 
@@ -869,7 +895,6 @@ void EGS_RadiativeSplitting::getBremsEnergies() {
     EGS_Particle pi = app->getParticleFromStack(np);
     EGS_Float dneari = app->getDnear(np);
 
-    EGS_Vector x = pi.x;
     int irl = pi.ir;
     imed = app->getMedium(irl);
 
@@ -975,6 +1000,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
     EGS_Float dnear = app->getDnear(idbs);
     do {
         EGS_Particle p = app->getParticleFromStack(idbs);
+        inverseTransformP(p,T);
         if (p.q == 0)
         {
             i_playrr = 0;
@@ -1003,6 +1029,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
                     p.wt = p.wt*n_split;
                     //set bit 0 of latch to mark as phat
                     p.latch = p.latch | (1 << 0);
+                    transformP(p,T);
                     app->updateParticleOnStack(idbs,p,dnear);
                     idbs++;
                 }
@@ -1033,6 +1060,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
                     //keep the particle, increase weight and label as phat
                     p.wt = p.wt*n_split;
                     p.latch = p.latch | (1 << 0);
+                    transformP(p,T);
                     app->updateParticleOnStack(idbs,p,dnear);
                     idbs++;
                 }
@@ -1071,6 +1099,7 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
 
     //get properties of interacting particle (annihilating positron or radiative photon being split)
     EGS_Particle pi = app->getParticleFromStack(app->getNp());
+    inverseTransformP(pi,T);
     EGS_Float x = pi.x.x;
     EGS_Float y = pi.x.y;
     EGS_Float z = pi.x.z;
@@ -1158,8 +1187,8 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
             p.wt = weight*ns;
             p.u = EGS_Vector(sint*cphi, sint*sphi, cost);
 
-            EGS_Float dist = (ssd - p.x.z)/p.u.z;
-            EGS_Float r = sqrt((p.x.x+dist*p.u.x)*(p.x.x+dist*p.u.x) + (p.x.y+dist*p.u.y)*(p.x.y+dist*p.u.y));
+            transformP(p,T);
+
             app->addParticleToStack(p,dnear);
         }
     }
@@ -1194,6 +1223,9 @@ void EGS_RadiativeSplitting::uniformPhotons(int nsample, int n_split, EGS_Float 
             p.E = energy;
             p.wt = weight*n_split;
             p.u = EGS_Vector(sint*cphi, sint*sphi, cost);
+
+            transformP(p,T);
+
             app->addParticleToStack(p,dnear);
         }
     }
@@ -1207,6 +1239,7 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
     //get properties of interacting particle
     int np = app->getNp();
     EGS_Particle pi = app->getParticleFromStack(np);
+    inverseTransformP(pi,T);
     EGS_Float E = pi.E;
     EGS_Vector x = pi.x;
     EGS_Vector u = pi.u;
@@ -1364,6 +1397,8 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
             p.q = 0;
             p.E = E*br;
 
+            transformP(p,T);
+
             app->addParticleToStack(p,dnear);
 
         }
@@ -1391,6 +1426,9 @@ void EGS_RadiativeSplitting::doSmartCompton(int nint)
     p.q = -1;
     p.E = Eelec + app->getRM();
     //replace original interacting photon with the e-
+
+    transformP(p,T);
+
     app->updateParticleOnStack(np,p,dnear);
 }
 
@@ -1508,8 +1546,7 @@ extern "C" {
         vector<string> allowed_split_type;
         allowed_split_type.push_back("uniform");
         allowed_split_type.push_back("directional");
-        //disable BEAMnrc-style DBS until we either implement/eliminate it
-        //allowed_split_type.push_back("BEAMnrc directional");
+        //TODO: Implement beampp-style DBS
         int split_type;
         string str;
         if(input->getInput("splitting type",str) < 0)
@@ -1529,6 +1566,7 @@ extern "C" {
         EGS_Float fs,ssd,zrr;
         int irad = 0;
         vector<int> esplit_reg;
+        EGS_AffineTransform *t;
         int err = input->getInput("splitting",nsplit);
         if (err)
         {
@@ -1572,6 +1610,9 @@ extern "C" {
                     egsWarning("\nEGS_RadiativeSplitting: Missing/invalid input for Z of russian roulette plane.  Will always subject split charged particles to russian roulette.\n");
                 }
             }
+
+            //option to transform DBS splitting cone
+            t = EGS_AffineTransform::getTransformation(input);
         }
 
         printf("\nAbout to set up\n");
@@ -1583,7 +1624,8 @@ extern "C" {
         result->setSplitting(nsplit);
         if (split_type == EGS_RadiativeSplitting::DRS ||
                 split_type == EGS_RadiativeSplitting::DRSf) {
-            result->initDBS(fs,ssd,esplit_reg,irad,zrr);
+            result->initDBS(fs,ssd,esplit_reg,irad,zrr,t);
+            delete t;
         }
         result->setName(input);
         return result;

@@ -32,7 +32,8 @@
 #  TODO:
 #
 #  - Testing/debugging directional radiative splitting (DRS)
-#  - Implement BEAMnrc-style DRS (DRSf)
+#  - Implement e- splitting
+#  - Implement beampp-style DBS (DRSf)
 #
 ###############################################################################
 */
@@ -52,6 +53,7 @@
 #include "egs_base_geometry.h"
 #include "egs_rndm.h"
 #include "egs_interpolator.h"
+#include "egs_transformations.h"
 
 #ifdef WIN32
 
@@ -84,21 +86,29 @@ events. This ausgab object is specified via:
 :start ausgab object:
     library   = egs_radiative_splitting
     name      = some_name
-    splitting type   = uniform (default), directional, or BEAMnrc directional (currently unavailable)
+    splitting type   = uniform (default) or directional (based on BEAMnrc DBS)
     splitting = the splitting number (n_split)
- The following inputs apply to directional or BEAMnrc directional splitting only:
-    field size = radius of splitting field (cm) -- required
-    ssd = source-to-surface distance (SSD) at which splitting field is defined (cm) -- required
+
+ The following inputs apply to directional splitting only:
+    field size = radius of splitting field centred on Z-axis (cm) -- required
+    ssd = distance of splitting field from Z=0 along +Z-axis (cm) -- required
     e-/e+ split region = region number(s) for e-/e+ splitting.  On entering this(ese) region(s), charged particles will be split n_split times.
                          If set to 0 or omitted, charged particles will not be split.
     radially redistribute e-/e+ = "yes" or "no" (default) -- if "yes", evenly distribute split e-/e+ in a circle of radius sqrt(x(np)^2+y(np)^2) about the Z-axis
     Z of russian roulette plane = Z below which russian roulette is not played on low-weight charged particles resulting from e-/e+ splitting (cm)
+    Below is an optional input for an affine transform to be applied to the directional splitting cone defined by field size and ssd:
+    :start transformation:
+       rotation = optional 3D rotation vector to be applied to the splitting cone (applied first)
+       translation = optional 3D translation to be applied to the splitting cone
+    :stop transformation:
+
 :stop ausgab object:
 \endverbatim
 
 TODO:
  - Testing/debugging directional radiative splitting (DRS)
- - Implement BEAMnrc-style DRS (DRSf)
+ - Implement e-/e+ splitting
+ - Implement beampp-style DRS (DRSf)
 
 */
 
@@ -109,8 +119,8 @@ public:
     /*! Splitting algortihm type */
     enum {
         URS, // EGSnrc Uniform Radiative Splitting
-        DRS, // Directional Radiative Splitting
-        DRSf // Directional Radiative Splitting (BEAMnrc)
+        DRS, // Directional Radiative Splitting (based on BEAMnrc DBS)
+        DRSf // Directional Radiative Splitting (based on beampp DBS)
     };
 
     EGS_RadiativeSplitting(const string &Name="", EGS_ObjectFactory *f = 0);
@@ -161,7 +171,7 @@ public:
         split_type = type;
     };
 
-    void initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr);
+    void initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr, const EGS_AffineTransform *t);
 
     bool needsCall(EGS_Application::AusgabCall iarg) const override {
         if ( split_type == DRS || split_type == DRSf ) {
@@ -202,6 +212,24 @@ public:
         return 0;
     };
 
+    //function to rotate/translate particle position and rotate particle direction
+    void transformP(EGS_Particle &p, const EGS_AffineTransform *t) {
+        if (t)
+        {
+            t->transform(p.x);
+            t->rotate(p.u);
+        }
+    }
+
+    //function to inverse rotate/translate particle position and inverse rotate direction
+    void inverseTransformP(EGS_Particle &p, const EGS_AffineTransform *t) {
+        if (t)
+        {
+            t->inverseTransform(p.x);
+            t->rotateInverse(p.u);
+        }
+    }
+
 protected:
 
     int split_type; //0 = uniform, 1 = DBS, 2 = BEAMnrc DBS
@@ -228,6 +256,8 @@ protected:
     int              nmed_KM;
 
     bool flag_fluor = false;
+
+    EGS_AffineTransform *T; //optional transformation of the splitting cone
 
     vector<EGS_Particle> particle_stack; //store a stack of brems particles in do_smart_brems
     vector<EGS_Float> dnear_stack; //similar for dnear
