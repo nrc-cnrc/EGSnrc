@@ -199,10 +199,9 @@ public:
         int np = the_stack->np-1, ir = the_stack->ir[np]-2, iq = the_stack->iq[np];
         /* Photon about to be transported in geometry */
         if (iarg == BeforeTransport &&  !iq && ir >= 0) {
-            int latch = the_stack->latch[np];
             /* Track-Length Kerma scoring (classic) */
             if (is_sensitive[ig][ir]) {
-                if (!fd_geom && latch >= 0) {
+                if (!fd_geom) {
                     EGS_Float E = the_stack->E[np], gle = log(E),
                               emuen   = E_Muen_Rho->interpolateFast(gle)*rho_cv[ig],
                               wtstep  = the_stack->wt[np]*the_epcont->tvstep;
@@ -228,7 +227,6 @@ public:
                             je = min((int)ae,flu_nbin-1);//je = (int) ae;
                             EGS_ScoringArray *aux = flug[ig];
                             aux->score(je,wtstep);
-                            //flugT->score(ig,wtstep);
                             flugT[ig]->score(ir,wtstep);
                         }
                     }
@@ -239,20 +237,12 @@ public:
 
                     }
                 }
-                /* Mark photon inside cavity <= why did I need this?*/
-                //latch = 1;
             }
             /* Mark photons in exclusion regions */
-            else if (is_excluded[ig][ir] && latch >= 0) {
-                latch *= -1;
-                the_stack->latch[np] = latch;
+            else if (is_excluded[ig][ir]) {
+                the_epcont->idisc = -1;// i.e. discard after the step.
+                the_stack->wt[np] = 0; // do not contribute energy deposition
             }
-            /* photon outside cavity and has not been in any exclusion zone <= why?
-            else if (latch >= 0) {
-                latch = 0;
-            }*/
-
-            //the_stack->latch[np] = latch; <= if commented blocks above used
         }
         return 0;
     }
@@ -273,9 +263,6 @@ public:
             Nel     += p.wt;
             p.E += the_useful->rm;// source provides K.E.
         }
-        //p.latch = 0; // Reset to 0
-        //if ( p.q != 0 )
-        //   egsInformation("q = %d E = %g RM = %g wt = %g \n",p.q,p.E,the_useful->rm,p.wt);
 
         int err = startNewShower();
         if (err) {
@@ -994,8 +981,7 @@ public:
         // region (latch >= 0). Photons inside this geometry or any scoring
         // region are also ray-traced.
         //******************************************************************
-        //if ( fd_geom && !the_stack->latch[np] && // TAKES ONLY PRIMARIES!!!!
-        if (fd_geom && the_stack->latch[np] >= 0 &&  // TAKES ALL PHOTONS !!!
+        if (fd_geom &&  // TAKES ALL PHOTONS !!!
                 (is_sensitive[ig][ireg] ||
                  fd_geom->howfar(-1,x,u,tstep,&newmed)>= 0 ||
                  fd_geom->isInside(x))) {
@@ -1548,10 +1534,42 @@ int EGS_KermaApplication::initScoring() {
 
             //if (n_excluded_regions.size()>0){
             if (!n_excluded_regions.empty()) {
+                vector<int> ir_sensitive_excluded;
                 for (i=0; i<n_excluded_regions[j]; i++) {
                     int areg = excluded_regions[j][i];
-                    is_excluded[j][areg] = true;
+                    /* is_sensitive takes priority */
+                    if (is_sensitive[j][areg]) {
+                        is_excluded[j][areg] = false;
+                        ir_sensitive_excluded.push_back(areg);
+                    }
+                    else {
+                        is_excluded[j][areg] = true;
+                    }
                 }
+
+                if (ir_sensitive_excluded.size()) {
+                    egsWarning(
+                        "\n*******************\n"
+                        "Error(initScoring):\n"
+                        "*******************\n"
+                        "Regions defined as sensitive and excluded in geometry %s:\n\n",
+                        geoms[j]->getName().c_str());
+                    // Loop through the vector and print 25 elements per line
+                    for (size_t i = 0; i < ir_sensitive_excluded.size(); ++i) {
+                        cout << ir_sensitive_excluded[i] << " ";
+                        if ((i + 1) % 25 == 0) { // New line after every 25th element
+                            cout << endl;
+                        }
+                    }
+                    // Ensure the output ends with a newline if the last line has fewer than 25 elements
+                    if (ir_sensitive_excluded.size() % 25 != 0) {
+                        cout << endl;
+                    }
+                    egsFatal(
+                        "\nalthough in the code preference is given to sensitive regions,"
+                        "\nwe have opted for aborting to avoid unintended consequences\n\n");
+                }
+
                 delete [] excluded_regions[j];
             }
         }
@@ -1830,9 +1848,9 @@ void EGS_KermaApplication::describeSimulation() {
 }
 
 #ifdef BUILD_APP_LIB
-    APP_LIB(EGS_KermaApplication);
+APP_LIB(EGS_KermaApplication);
 #else
-    APP_MAIN(EGS_KermaApplication);
+APP_MAIN(EGS_KermaApplication);
 #endif
 // int main(int argc, char **argv) {
 //
