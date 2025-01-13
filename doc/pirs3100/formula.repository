@@ -1,0 +1,48 @@
+\form#0:$\overline{g}$
+\form#1:$\textrm{K}$
+\form#2:$\textrm{K}_\mathrm{col}$
+\form#3:$\overline{\mu}_\mathrm{tr}/\rho$
+\form#4:$\overline{\mu}_\mathrm{en}/\rho$
+\form#5:$\mu_\mathrm{en}$
+\form#6:$\mu_\mathrm{en}/\rho$
+\form#7:$\mu_\mathrm{tr}/\rho$
+\form#8:$\sigma$
+\form#9:$T_0$
+\form#10:$\overline{E}_\mathrm{rad}$
+\form#11:\begin{equation} Y = \frac{\overline{E}_\mathrm{rad}}{T_0}. \end{equation}
+\form#12:$Y_\mathrm{brems}$
+\form#13:$\overline{E}_\mathrm{tot}$
+\form#14:$T(E)$
+\form#15:$\overline{T}$
+\form#16:\begin{equation}\label{def_mutr} \left(\frac{\mu_\mathrm{tr}}{\rho}\right) = \frac{\overline{E}_\mathrm{tr}}{E} \cdot \left(\frac{\mu}{\rho}\right), \end{equation}
+\form#17:$\overline{E}_\mathrm{tr}$
+\form#18:$\mu/\rho$
+\form#19:\begin{equation}\label{def_muen} \left(\frac{\mu_\mathrm{en}}{\rho}\right) = \left(1-\overline{g}\right) \cdot \left(\frac{\mu_\mathrm{tr}}{\rho}\right) = \frac{\overline{E}_\mathrm{ab}}{E} \cdot \left(\frac{\mu}{\rho}\right), \end{equation}
+\form#20:$\overline{E}_\mathrm{ab}$
+\form#21:$\overline{\overline{E}}_\mathrm{rad}$
+\form#22:\begin{equation}\label{eq_g_mono} \overline{g} = \frac{\overline{\overline{E}}_\mathrm{rad}}{\overline{E}_\mathrm{tr}}, \end{equation}
+\form#23:\begin{equation}\label{EradP} \overline{\overline{E}}_\mathrm{rad} = \overline{E}_\mathrm{tr} - \overline{E}_\mathrm{ab}. \end{equation}
+\form#24:\begin{equation}\label{eq:K} \frac{K}{\phi} = E \cdot \left(\mu_\mathrm{tr}/\rho\right), \end{equation}
+\form#25:\begin{equation}\label{eq:Kcol} \frac{K_\mathrm{col}}{\phi} = E \cdot \left(\mu_\mathrm{en}/\rho\right). \end{equation}
+\form#26:\begin{equation}\label{eq:def} \frac{K}{\phi} = \int \phi(E) \cdot E \cdot \left[\frac{\mu_\mathrm{tr}(E)}{\rho}\right] \cdot dE/\int \phi(E) \cdot dE. \end{equation}
+\form#27:\begin{equation}\label{eq:Kpoly} \frac{K}{\phi} = \left<\mu_\mathrm{tr}/\rho\right>_{\psi} \cdot \left<E\right>_{\phi} = \left<E\cdot\mu_\mathrm{tr}/\rho\right>_{\phi}. \end{equation}
+\form#28:$\mu_\mathrm{tr}$
+\form#29:\begin{equation}\label{eq:Kpolycol}\label{eq_kerma_0} \frac{K_\mathrm{col}}{\phi} = \left<\mu_\mathrm{en}/\rho\right>_{\psi} \cdot \left<E\right>_{\phi} = \left<E\cdot\mu_\mathrm{en}/\rho\right>_{\phi}. \end{equation}
+\form#30:\begin{equation}\label{eq_kerma_1} \frac{K_\mathrm{col}}{\phi} = \left(1-\overline{g}\right) \frac{K}{\phi} = \left(1-\overline{g}\right) \left<E\cdot\mu_\mathrm{tr}/\rho\right>_{\phi}, \end{equation}
+\form#31:\begin{equation} \overline{g} = 1 - \frac{\left<E\cdot\mu_\mathrm{en}\right>_{\phi}}{\left<E\cdot\mu_\mathrm{tr}\right>_{\phi}}, \end{equation}
+\form#32:\begin{equation}\label{eq:g} \overline{g} = 1 - \frac{\left<\overline{E}_\mathrm{en}\cdot\mu\right>_{\phi}}{\left<\overline{E}_\mathrm{tr}\cdot\mu\right>_{\phi}} = \frac{\left<\overline{\overline{E}}_\mathrm{rad}\cdot\mu\right>_{\phi}}{\left<\overline{E}_\mathrm{tr}\cdot\mu\right>_{\phi}} \end{equation}
+\form#33:$\left<\mu_\mathrm{tr}/\rho\right>_{\psi}$
+\form#34:\begin{equation} \left<\mu_\mathrm{tr}/\rho\right>_{\psi} = \frac{\left<E\cdot\mu_\mathrm{tr}/\rho\right>_{\phi}}{\left<E\right>_{\phi}} = \frac{\left<\overline{E}_\mathrm{tr}\cdot\mu\right>_{\phi}}{\left<E\right>_{\phi}}, \end{equation}
+\form#35:$\left<\mu_\mathrm{en}/\rho\right>_{\psi}$
+\form#36:\begin{equation}\label{eq_muen_0} \left<\mu_\mathrm{en}/\rho\right>_{\psi} = \frac{\left<E\cdot\mu_\mathrm{en}/\rho\right>_{\phi}}{\left<E\right>_{\phi}} = \frac{\left<\overline{E}_\mathrm{en}\cdot\mu\right>_{\phi}}{\left<E\right>_{\phi}}, \end{equation}
+\form#37:\begin{equation}\label{eq_muen_1} \left<\mu_\mathrm{en}/\rho\right>_{\psi} = \left(1-\overline{g}\right) \left<\mu_\mathrm{tr}/\rho\right>_{\psi}, \end{equation}
+\form#38:$\sigma/\sqrt{4/3}$
+\form#39:$\sigma/2$
+\form#40:$E$
+\form#41:$q$
+\form#42:$\Delta\mathrm{E}$
+\form#43:$E_\mathrm{min}, ..., E_\mathrm{min} + i \cdot \Delta\mathrm{E}, ..., E_\mathrm{max}$
+\form#44:$\Delta_\mathrm{log}$
+\form#45:\begin{equation} \Delta_\mathrm{log} = log\left(\frac{E_\mathrm{max}}{E_\mathrm{min}}\right)/\left(N-1\right) \end{equation}
+\form#46:\begin{equation} E_i = e^{log(E_\mathrm{min})+i \cdot \Delta_\mathrm{log}} \end{equation}
+\form#47:\begin{equation} \sigma(\mu_\mathrm{tr}) = \frac{\sigma}{\sqrt{m}} \qquad \textrm{and} \qquad \sigma(1-\overline{g}) = \frac{\sigma}{\sqrt{m/(m-1)}} \end{equation}

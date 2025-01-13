@@ -1,0 +1,289 @@
+\_form#0=6x11:$i$
+\_form#1=11x12:$\vec{x}$
+\_form#2=11x12:$\vec{u}$
+\_form#3=6x11:$t$
+\_form#4=24x14:$i_1, i$
+\_form#5=12x14:$i_1$
+\_form#6=44x14:$i_1, i_2, i$
+\_form#7=12x14:$i_2$
+\_form#8=36x11:$n-1$
+\_form#9=11x8:$n$
+\_form#10=18x9:$^{125}$
+\_form#11=8x14:$j$
+\_form#12=63x14:$i + j n_{\rm max}$
+\_form#13=33x11:$n_{\rm max}$
+\_form#14=8x11:$q$
+\_form#15=12x11:$E$
+\_form#16=12x8:$w$
+\_form#17=26x15:$\vec{x}, \vec{u}$
+\_form#18=33x15:$A_{\rm wall}$
+\_form#19=26x17:$A_{\rm pn}$
+\_form#20=29x15:$A_{att}$
+\_form#21=35x15:$A_{scat}$
+\_form#22=39x15:$A_{eloss}$
+\_form#23=26x17:$A_{ap}$
+\_form#24=18x17:$A_{g}$
+\_form#25=41x15:$A_{CPE}$
+\_form#26=20x15:$A_{x}$
+\_form#27=87x30:$E\times\left(\frac{\mu_{en}}{\rho}\right)_{air}$
+\_form#28=56x30:$\left(\frac{\mu_{en}}{\rho}\right)_{air}$
+\_form#29=29x15:$ K_{air}$
+\_form#30=12x12:$R$
+\_form#31=14x17:$ \phi_j $
+\_form#32=17x15:$E_j$
+\_form#33=32x15:$E_{j+1}$
+\_form#34=86x38:\[ \phi_j=\frac{\sum_{i=1}^{N_j} l_i}{V} \]
+\_form#35=9x15:$\displaystyle l_i$
+\_form#36=18x15:$\displaystyle i^{th} $
+\_form#37=33x14:$ E_{min} $
+\_form#38=35x14:$ E_{max} $
+\_form#39=11x12:$ \Phi $
+\_form#40=74x48:\[ \Phi=\sum_{j=0}^{N-1} \phi_j \]
+\_form#41=41x18:$\displaystyle e^-/e^+$
+\_form#42=17x14:$\displaystyle E_b $
+\_form#43=122x15:$\displaystyle E_e = E_b - EDEP $
+\_form#44=98x41:\[ l_i = \int_{E_e}^{E_b} \frac{dE}{L(E)} \]
+\_form#45=33x17:$L(E)$
+\_form#46=17x14:$ E_e $
+\_form#47=17x14:$ E_b $
+\_form#48=342x48:\[ l_i = \int_{E_e}^{E_{j_e+1}} \frac{dE}{L(E)} + \sum_{j=j_e+1}^{j_b}\int_{E_{j-1}}^{E_j} \frac{dE}{L(E)} + \int_{E_{j_b}}^{E_b} \frac{dE}{L(E)} \]
+\_form#49=14x14:$ \displaystyle j_b $
+\_form#50=17x14:$ \displaystyle E_b $
+\_form#51=14x14:$ \displaystyle j_e $
+\_form#52=314x17:\[ L(E) = a_j + b_j \cdot ln E \qquad \textrm{for} \qquad E_j < E < E_{j+1} \]
+\_form#53=188x42:\[ \int_{E_j}^{E} \frac{dE'}{a_j + b_j \cdot ln E'} \approx \frac{E - E_j}{L_j} \]
+\_form#54=9x15:$ l_i $
+\_form#55=318x48:\[ l_i = \frac{E_{j_e+1} - E_e}{L(E_e)} + \sum_{j=j_e+1}^{j_b}\frac{E_j - E_{j-1}}{L(E_{j-1})} + \frac{E_b - E_{j_b}}{L(E_{j_b})} \]
+\_form#56=14x14:$ j_e $
+\_form#57=14x14:$ j_b $
+\_form#58=33x17:$ L(E) $
+\_form#59=174x17:$N_{\rm split} = N_0/(1 - \exp(-\Lambda))$
+\_form#60=12x12:$\Lambda$
+\_form#61=45x15:$N_0 \ge 5$
+\_form#62=35x17:$N_{\rm split}$
+\_form#63=32x17:$1/N_r$
+\_form#64=18x15:$N_r$
+\_form#65=33x14:$E_{\rm save}$
+\_form#66=15x14:$t_\perp$
+\_form#67=45x15:$R \le t_\perp$
+\_form#68=45x15:$N_r=1$
+\_form#69=11x11:$s_{i}$
+\_form#70=42x23:$- ln \frac{R_i}{b_i}$
+\_form#71=11x15:$b_i$
+\_form#72=15x15:$R_i$
+\_form#73=23x11:$90^{o}$
+\_form#74=30x11:$360^o$
+\_form#75=14x11:$2^o$
+\_form#76=62x29:$E\cdot\left(\frac{\mu_{en}}{\rho}\right)$
+\_form#77=23x11:$90^o$
+\_form#78=33x12:$Katt$
+\_form#79=41x12:$Kscat$
+\_form#80=32x12:$Ktot$
+\_form#81=18x17:$N_p$
+\_form#82=32x17:$1/N_s$
+\_form#83=18x15:$N_s$
+\_form#84=15x17:$C_j$
+\_form#85=18x18:$\bar{K}_j$
+\_form#86=14x14:$\bar{K}$
+\_form#87=18x20:$N_p^i$
+\_form#88=47x17:$C_j \cdot N_{\rm p}$
+\_form#89=56x18:$K_a/\bar{K}_{att}$
+\_form#90=29x17:$\bar{K}_{att}$
+\_form#91=20x15:$K_a$
+\_form#92=101x18:$Ka/\bar{K}_{att} \cdot f_{split}$
+\_form#93=111x17:$K_a(j)/K_a(i) \cdot N_s$
+\_form#94=11x15:$\ne$
+\_form#95=24x15:$P_{cel}$
+\_form#96=32x15:$P_{wall}$
+\_form#97=20x15:$A_x$
+\_form#98=18x15:$A_{b}$
+\_form#99=12x11:$ E $
+\_form#100=53x20:$ E \times \frac{\mu_{en}}{\rho} $
+\_form#101=23x15:$K_\mathrm{m}$
+\_form#102=18x15:$V_\mathrm{m}$
+\_form#103=221x45:\[ K_\mathrm{m}=\sum_{i=1}^{N} w_i \cdot \frac{l_i}{V_\mathrm{m}} \cdot E_i \cdot \left(\frac{\mu_\mathrm{en}}{\rho}\right)_{\mathrm{m},i} \]
+\_form#104=9x15:$l_i$
+\_form#105=18x14:$ i^\mathrm{th}$
+\_form#106=17x11:$w_i$
+\_form#107=20x20:$ \frac{\mu_{tr}}{\rho} $
+\_form#108=20x14:$ k^{th} $
+\_form#109=33x12:$k-1$
+\_form#110=396x45:\[ K_\mathrm{m}=\sum_{i=1}^{N} \frac{w_i}{V_\mathrm{m}} \cdot E_i \cdot \left(\frac{\mu_\mathrm{en}}{\rho}\right)_{\mathrm{m},i} \cdot e^{- \sum_{j=1}^{N_j} \mu_{ij} \cdot l_{ij}} \cdot \frac{\left(1-e^{-\mu_\mathrm{m} \cdot l_\mathrm{m}}\right)}{\mu_\mathrm{m}} \]
+\_form#111=17x17:$N_j$
+\_form#112=20x12:$\mu_{ij}$
+\_form#113=14x17:$l_{ij}$
+\_form#114=20x11:$\mu_\mathrm{m}$
+\_form#115=14x15:$l_\mathrm{m}$
+\_form#116=24x12:$V\mathrm{m}$
+\_form#117=23x15:$\mathrm{V_m}$
+\_form#118=113x39:\[ \phi_j=\frac{\sum_{i=1}^{N_j} w_i \cdot l_i}{V_\mathrm{m}} \]
+\_form#119=30x14:$ E_\mathrm{min} $
+\_form#120=33x14:$E_\mathrm{max}$
+\_form#121=14x12:$N$
+\_form#122=11x12:$\Phi$
+\_form#123=20x11:$\rho_\mathrm{m} $
+\_form#124=129x17:$n = \sum_i \left(ire_{i} - iri_{i}\right)$
+\_form#125=89x17:$\sum f_i \delta(x - x_i)$
+\_form#126=8x12:$\delta$
+\_form#127=14x11:$x_i$
+\_form#128=29x12:$x_{i+1}$
+\_form#129=12x15:$f_i$
+\_form#130=33x15:$x_i,f_i$
+\_form#131=63x17:$x_{i+1},f_{i+1}$
+\_form#132=17x11:$u_z$
+\_form#133=9x15:$\phi$
+\_form#134=17x11:$2 \pi$
+\_form#135=258x20:$ u_x = \sqrt{1 - u_z^2} \cos \phi, u_y = \sqrt{1 - u_z^2} \sin \phi$
+\_form#136=95x29:$x'_z, \sqrt{x_x^{\prime 2} + x_y^{\prime 2}}$
+\_form#137=75x15:$\vec{x}' = \vec{x} - \vec{x}_0$
+\_form#138=14x12:$\vec{x}'$
+\_form#139=17x11:$2 \pi $
+\_form#140=135x17:$\vec{u}=(\vec{x}' - \vec{x})/|\vec{x}' - \vec{x}|$
+\_form#141=12x11:$T$
+\_form#142=110x17:$(\vec{x}-\vec{x}_0)/|\vec{x}-\vec{x}_0|$
+\_form#143=17x14:$E_0$
+\_form#144=48x14:$E < E_0$
+\_form#145=15x14:$E_i$
+\_form#146=14x11:$p_i$
+\_form#147=59x15:$E_i ... E_{i+1}$
+\_form#148=39x14:$N+1$
+\_form#149=33x14:$E_{\rm max}$
+\_form#150=66x20:$T = (R,\vec{t})$
+\_form#151=11x15:$\vec{t}$
+\_form#152=89x17:$T \vec{x} = R \vec{x} + \vec{t}$
+\_form#153=32x14:$ R R^T$
+\_form#154=20x14:$ R^T$
+\_form#155=117x17:$R_x(\alpha) R_y(\beta) R_z(\gamma)$
+\_form#156=75x17:$R_z(\phi) R_x(\theta)$
+\_form#157=32x12:$ R \cdot \vec{v}$
+\_form#158=96x15:$ R \cdot M \ne R \cdot M$
+\_form#159=86x17:$ \cos(\phi), \sin(\phi)$
+\_form#160=84x20:$T_1=(R_1,\vec{t_1})$
+\_form#161=84x20:$T_2=(R_2,\vec{t_2})$
+\_form#162=66x20:$T=(R,\vec{t})$
+\_form#163=15x14:$T_1$
+\_form#164=17x14:$T_2$
+\_form#165=77x15:$ R = R_2 \cdot R_1$
+\_form#166=98x18:$ t = R_2 \cdot \vec{t}_1 + \vec{t}_2$
+\_form#167=59x20:$ (R \cdot m, \vec{t})$
+\_form#168=8x12:$\theta$
+\_form#169=270x17:$R_{xx}, R_{xy}, R_{xz}, R_{yx}, R_{yy}, R_{yz}, R_{zx} R_{zy}, R_{zz}$
+\_form#170=26x15:$V_{BS}$
+\_form#171=59x15:$V_{inscribed}$
+\_form#172=347x17:\[ V_{inscribed} =(total\_in\_inscribed / n\_total\_points) * V_{BS} \]
+\_form#173=75x17:$V_{inscribed}(i)$
+\_form#174=341x17:\[ V_{inscribed}(i) = (n\_inscribed(i)/n\_total\_points) * V_{BS} \]
+\_form#175=449x17:\[ V_{corrected}(i) = V_{uncorrected}(i) - (n\_inscribed(i)/n\_total\_points) * V_{BS} \]
+\_form#176=21x15:$G_B$
+\_form#177=20x11:$n_B$
+\_form#178=113x17:$G_0, G_1, ..., G_{n_B-1}$
+\_form#179=39x12:$N-1$
+\_form#180=17x17:$G_j$
+\_form#181=63x14:$j n_{\rm max} + i$
+\_form#182=68x15:$j n_{\rm max} + i'$
+\_form#183=11x12:$i'$
+\_form#184=12x15:$j'$
+\_form#185=72x15:$j' n_{\rm max} + i'$
+\_form#186=20x17:$G_{j'}$
+\_form#187=71x17:$\vec{a} \cdot (\vec{x} - \vec{x}_0)$
+\_form#188=9x12:$\vec{a}$
+\_form#189=15x15:$\vec{x}_0$
+\_form#190=21x12:$2 N$
+\_form#191=87x15:$0,1,...,N-1$
+\_form#192=132x15:$N+1, N+2, ..., 2 N$
+\_form#193=47x14:$2 N + 1$
+\_form#194=95x15:$G_i, i=1,...,N$
+\_form#195=84x11:$n_1, n_2, ..., n_N$
+\_form#196=12x15:$i_j$
+\_form#197=144x17:$n_B + n_{\rm max} (j-1) + i_j$
+\_form#198=84x15:$n_B + n_{\rm max} N$
+\_form#199=113x14:$n_B + n_1 + \cdots n_N$
+\_form#200=33x14:$j+1$
+\_form#201=33x14:$j-1$
+\_form#202=129x15:$boundaryTolerance$
+\_form#203=63x12:$tolerance$
+\_form#204=123x15:$boundary tolerance$
+\_form#205=47x20:$T(R,\vec{t})$
+\_form#206=81x17:$\vec{x}' = R \vec{x} + \vec{t}$
+\_form#207=117x17:$ i \Delta \phi, ~\Delta \phi = 2 \pi/N$
+\_form#208=60x15:$\phi_0 + i \Delta \phi$
+\_form#209=98x17:$\phi_0 + (i+1) \Delta \phi$
+\_form#210=15x15:$\phi_o$
+\_form#211=44x15:$\phi_0 = 0$
+\_form#212=15x15:$\phi_0$
+\_form#213=21x15:$\Delta \phi$
+\_form#214=44x14:$n_x+1$
+\_form#215=42x15:$n_y+1$
+\_form#216=42x14:$n_z+1$
+\_form#217=71x12:$n_x \cdot n_y \cdot n_z$
+\_form#218=32x12:$i+1$
+\_form#219=8x12:$k$
+\_form#220=129x17:$i + n_x j + n_x \cdot n_y \cdot k$
+\_form#221=14x14:$t_x$
+\_form#222=14x15:$t_y$
+\_form#223=12x14:$t_z$
+\_form#224=33x15:$t_x, t_y$
+\_form#225=17x11:$n_r$
+\_form#226=44x11:$n_z \cdot n_r$
+\_form#227=57x14:$i + n_z \cdot j$
+\_form#228=12x14:$t_r$
+\_form#229=107x15:$G_0, G_1, ..., G_{N-1}$
+\_form#230=99x11:$n_0, n_1, ..., n_{N-1}$
+\_form#231=113x11:$n_0 \cdot n_1 \cdot ... \cdot n_{N-1}$
+\_form#232=81x15:$G_0, ..., G_{N-1}$
+\_form#233=89x14:$i_0, i_1, ..., i_{N-1}$
+\_form#234=503x48:\[ i = \sum_{j=0}^{N-1} i_j m_j~, \quad m_0 = 1~,~~~m_1 = n_0,~~~m_2 = n_0 n_1, ~~~ \cdots ~~~ m_i = m_{i-1} n_{i-1}~, \]
+\_form#235=56x14:$t_1,...,t_N$
+\_form#236=44x15:$i + m_j$
+\_form#237=12x15:$t_j$
+\_form#238=47x17:$\vec{x} + \vec{u} t_j$
+\_form#239=312x45:\begin{equation} \label{tperp_ortho} t_\perp = \sqrt{ \sum_{j} t_{\perp, j}^2 }~. \end{equation}
+\_form#240=84x29:$\sqrt{t_{\perp,y}^2 + t_{\perp,z}^2}$
+\_form#241=26x15:$t_{\perp,y}$
+\_form#242=26x15:$t_{\perp,z}$
+\_form#243=128x29:$\sqrt{t_{\perp,x}^2 + t_{\perp,y}^2 + t_{\perp,z}^2}$
+\_form#244=93x17:$N_x \times N_y \times N_z$
+\_form#245=156x17:$N_x \times N_y \times N_z \times N_r + 1$
+\_form#246=131x17:$N_x \times N_y \times N_z \times N_r$
+\_form#247=480x17:$-Delta x/2 \cdots Delta x/2, -Delta y/2 \cdots Delta y/2,-Delta z/2 \cdots Delta z/2$
+\_form#248=21x12:$\Delta x$
+\_form#249=30x12:$\vec{x} \cdot \vec{a}$
+\_form#250=30x12:$\vec{u} \cdot \vec{a}$
+\_form#251=59x15:$ \vec{a} \cdot \vec{x} = p_i$
+\_form#252=41x12:$N=1$
+\_form#253=23x12:$3 N$
+\_form#254=66x14:$0...n_B-1$
+\_form#255=153x14:$n_B+j,j=0,...,n_1-1$
+\_form#256=15x11:$n_1$
+\_form#257=186x14:$n_B+n_1+j,j=0,...,n_2-1$
+\_form#258=17x11:$n_2$
+\_form#259=17x15:$G_1$
+\_form#260=17x15:$G_2$
+\_form#261=92x15:$G_1, G_2,..., G_N$
+\_form#262=15x15:$G_i$
+\_form#263=33x14:$i < j$
+\_form#264=14x12:$p_j$
+\_form#265=17x17:$O_j$
+\_form#266=29x12:$p_{j+1}$
+\_form#267=11x5:$\sim$
+\_form#268=101x17:$M_x \times M_y \times M_z$
+\_form#269=78x17:$M_x, M_y, M_z$
+\_form#270=71x17:$N_x, N_y, N_z$
+\_form#271=213x17:$M_x \times M_y \times M_z \times N_x \times N_y \times N_z$
+\_form#272=20x12:$\Delta z$
+\_form#273=60x15:$z_1$ and $z_2$
+\_form#274=126x17:$\Delta \vec{x} = (\Delta x, \Delta y, \Delta z)$
+\_form#275=48x15:$\Delta x, \Delta y$
+\_form#276=38x12:$\sigma_x, \sigma_y$
+\_form#277=14x11:$\sigma_z$
+\_form#278=78x15:$\sigma_y = \sigma_z = 0$
+\_form#279=42x14:$\sigma_z = 0$
+\_form#280=74x11:$s_1, s_2, ..., s_n$
+\_form#281=12x12:$s_j$
+\_form#282=135x17:$\vec{u}=(\vec{x}'-\vec{x})/|\vec{x}'-\vec{x}|$
+\_form#283=42x12:$\vec{x}'-\vec{x}$
+\_form#284=33x18:$N/d^2$
+\_form#285=18x11:$4 \pi$
+\_form#286=77x11:$s_1, s_2, ..., s_N$
+\_form#287=90x11:$w_1, w_2, ..., w_N$
+\_form#288=17x12:$w_j$
