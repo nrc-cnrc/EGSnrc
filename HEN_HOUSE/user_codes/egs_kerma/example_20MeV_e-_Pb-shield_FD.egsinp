@@ -152,6 +152,8 @@
     :stop fluence scoring:
 
     ### E*muen file (could also be E*mutr): absolute or relative file path
+
+    # Calculated with the g application and the mcdf-xcom photon cross section option
     emuen file = $EGS_HOME/egs_kerma/emuen_rho_air_1keV-20MeV.data
 
     ### geometry for forced-detection (if omitted, score ONLY when reaching scoring region)
