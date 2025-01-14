@@ -253,7 +253,9 @@ public:
     int simulateSingleShower() {
         last_case = current_case;
         EGS_Vector x,u;
+
         current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
+
         if (p.q == 0) {
             Eph_ave += p.wt*p.E;
             Nph += p.wt;
@@ -261,13 +263,13 @@ public:
         else {
             Eel_ave += p.wt*p.E;
             Nel     += p.wt;
-            p.E += the_useful->rm;// source provides K.E.
         }
 
         int err = startNewShower();
         if (err) {
             return err;
         }
+
         EGS_BaseGeometry *save_geometry = geometry;
         for (ig=0; ig<ngeom; ig++) {
             geometry = geoms[ig];
