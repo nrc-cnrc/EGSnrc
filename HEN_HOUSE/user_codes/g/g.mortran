@@ -183,13 +183,10 @@ C> @param[out] e_brem/e_tot the average fraction of the kinetic energy
 C>             subsequently lost in bremsstrahlung (photon-emitting) events
 C> @param[out] e_rad/e_tot same as g above
 C> @param anorm
-C> @param npgi
-C> @param npei
 C> @param E_ave   Average spectrum energy
 C> @param factor  Converts e_mutr and e_muen scored as
 C>                \f$\mathrm{MeV}\,\mathrm{cm}^2/\mathrm{g}\f$
 C>                to \f$\mathrm{Gy}\,\mathrm{cm}^2\f$
-C> @param de_pulsei
 C> @param mutr The correct definition for a spectrum is that given by Attix
 C>             of an energy fluence weighted average mass transfer coefficient
 C>  \f[
@@ -255,7 +252,8 @@ REPLACE {$CALL-HOWFAR-IN-PHOTON;} WITH {;
 REPLACE {;COMIN/SCORE/;} WITH {;
   common/score/ e_tot,e_tot2,e_brem,e_brem2,e_bremc,e_rad,e_rad2,e_radc,
                 etot_tmp,ebrem_tmp,erad_tmp,my_gle,accu,ncase,calc_type,
-                during_pe_compt,during_eii,verbose,m_balance;
+                during_pe_compt,during_eii,verbose,m_balance,
+                classify_sub_threshold_relaxations;
                 "It is always a good idea to score in double precision!"
   real*8        e_tot,e_tot2,e_brem,e_brem2,e_rad,e_rad2,
                 etot_tmp,ebrem_tmp,erad_tmp,e_radc,e_bremc;
@@ -263,6 +261,7 @@ REPLACE {;COMIN/SCORE/;} WITH {;
   $REAL         my_gle,accu;
   $INTEGER      calc_type,during_pe_compt,during_eii,m_balance;
   $LOGICAL      verbose;
+  $LOGICAL classify_sub_threshold_relaxations;
 };
 
 REPLACE {$MXENE} WITH {2000};  "maximum number of energies to be looped over"
@@ -323,16 +322,16 @@ real*8       ert, ert2, ett, ett2, g, g_rel_err;
 real*8       accu0, m;
 $REAL        weight,weight2,cov,covt,rel_e;
 $LONG_INT    nperbatch,ncasei,icase,nmutr,nmuen;
-$REAL        de_pulsei, Eave, err_Eave,factor,gmfp;
+$REAL        Eave, err_Eave,factor,gmfp;
 $REAL        t_mutr, t_muen;
 "For interacting with the source routine and shower"
 $REAL        ein,uin,vin,win,wtin,xin,yin,zin,ecut_ask,pcut_ask;
-$REAL        gbr1,gbr2,rnno,err_frac;
-$INTEGER     iqin,irin,ip;
+$REAL        gbr1, gbr2, rnno, err_frac;
+$INTEGER     iqin, irin, ip, iarg;
 $INTEGER     itimes, ntimes;"loop through different energies"
 real*4       cpu,etime,time_array(2);
 $INTEGER     datcount;
-$INTEGER     npgi,npei,nspliti,nbini,lmy_gle;
+$INTEGER     lmy_gle;
 $INTEGER     nbatch, "$INTEGER and $REAL are defined in egsnrc.macros"
              ibatch, "they can be used (if employed consistently throughout"
              i,j,i_log;    "the user code) e.g. to switch to double precision"
@@ -540,15 +539,33 @@ IF( calc_type = 1 ) [  "will seek a given precision -- default does not do this"
         $EVALUATE gbr1 USING gbr1(my_gle);
         $EVALUATE gbr2 USING gbr2(my_gle);
         np = 1; e(np) = ein; u(np)=0; v(np)=0; w(np)=1; iq(np) = 0;
-        $RANDOMSET rnno; edep = 0;
+        $RANDOMSET rnno; edep = 0; etot_tmp = 0.0;
         IF( rnno < gbr1 & ein > rmt2 )[
-                 call pair;
+           IF (classify_sub_threshold_relaxations)[
+              $AUSCALL($PAIRAUSB);
+           ]
+              call pair;
+           IF (classify_sub_threshold_relaxations)[
+              $AUSCALL($PAIRAUSA);
+           ]
         ]
         ELSE IF( rnno < gbr2 )        [
+           IF (classify_sub_threshold_relaxations)[
+              $AUSCALL($COMPAUSB);
+           ]
                  call compt;
+           IF (classify_sub_threshold_relaxations)[
+              $AUSCALL($COMPAUSA);
+           ]
         ]
         ELSE [
+           IF (classify_sub_threshold_relaxations)[
+              $AUSCALL($PHOTOAUSB);
+           ]
                  call photo;
+           IF (classify_sub_threshold_relaxations)[
+              $AUSCALL($PHOTOAUSA);
+           ]
         ]
         /****************************************************
           Collects photons' kinetic energy transferred to e-
@@ -558,12 +575,19 @@ IF( calc_type = 1 ) [  "will seek a given precision -- default does not do this"
           transfer is of interest in this block, there is no need
           for further classification.
         *******************************************************/
-        DO ip=1,np [
-           IF( iq(ip) ~= 0 ) edep = edep + e(ip)-prm;
+        IF (~ classify_sub_threshold_relaxations)[
+          DO ip=1,np [
+             IF( iq(ip) ~= 0 ) edep = edep + e(ip)-prm;
+          ]
         ]
         nmutr = nmutr + 1;
         IF(gmfp > 0) [
-            aux = edep/gmfp/rho(1);
+            IF (classify_sub_threshold_relaxations)[
+               aux = etot_tmp/gmfp/rho(1);
+            ]
+            ELSE[
+                aux = (edep)/gmfp/rho(1);
+            ]
         ] ELSE [
             aux = 0;
         ]
@@ -887,7 +911,7 @@ DO icase=1,ncase [
   erad_tmp = 0.0;            "loses just to annihilation"
   "initialize etot_tmp differently for photons and electrons"
   IF( iqin .ne. 0 ) [ etot_tmp = (ein - rm); ]
-  ELSE [ etot_tmp = 0; ]
+  ELSE              [ etot_tmp = 0; ]
 "============================================================================"
 
   call shower(iqin,ein,xin,yin,zin,uin,vin,win,irin,wtin);
@@ -1096,6 +1120,7 @@ accu = 0.01;
 m_balance = 1;
 calc_type = 0;"Defaults to allow photon/electron calculations"
 verbose = .false.;
+classify_sub_threshold_relaxations = .true.;
                                  "print a summary on unit 6"
 ival = 0;
 delimeter = 'NONE';
@@ -1163,7 +1188,7 @@ IF( error_flag = 0 ) [
 ELSE                 [ error_flag = 0; ]
 
 "----------------------------------------------------------------------"
-" precision sought and calculation type                                 "
+" precision sought and calculation type                                "
 "----------------------------------------------------------------------"
 ival                   = ival + 1;
 values_sought(ival)    = 'PRECISION';
@@ -1204,6 +1229,31 @@ IF( error_flag = 0 ) [ calc_type = value(ival,1); ]
 ELSE                 [ error_flag = 0; ]
 
 "-------------------------------------------------"
+" Ignore sub-threshold relaxations?               "
+"-------------------------------------------------"
+ival                = ival + 1;
+values_sought(ival) = 'CLASSIFY SUB-THRESHOLD RELAXATIONS';
+nvalue(ival)        = 1;
+type(ival)          = 3;
+allowed_inputs(ival,0) = 'NO';
+allowed_inputs(ival,1) = 'YES';
+$GET_INPUT(IVAL);
+IF( error_flag = 0 ) [
+    IF( value(ival,1) = 0 )[
+      classify_sub_threshold_relaxations = .false.;
+      write(*,*);
+      write(*,*) '==> Sub-threshold relaxations during Compton';
+      write(*,*) '     and photo-electric events NOT classified!';
+      write(*,*) '             (Matches NIST values)';
+      write(*,*);
+    ]
+    ELSE[
+      classify_sub_threshold_relaxations = .true.;
+    ]
+]
+ELSE                 [ error_flag = 0; ]
+
+"-------------------------------------------------"
 "       verbose output?                           "
 "-------------------------------------------------"
 ival                = ival + 1;
@@ -1218,7 +1268,7 @@ IF( error_flag = 0 ) [
       verbose = .true.;
     ]
 ]
-ELSE                 [ error_flag = 0; ]
+ELSE                  [ error_flag = 0; ]
 
 "---------------------------------------------------------------------"
 "STEP 6   DETERMINATION-OF-INICIDENT-PARTICLE-PARAMETERS              "
