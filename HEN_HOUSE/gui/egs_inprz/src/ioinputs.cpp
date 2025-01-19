@@ -39,7 +39,7 @@ MIOInputs::MIOInputs()
 {
 	iwatch     = "off";
 	strnd      = "no";
-	irestart   = "first";
+	iresume    = "first";
 	strdat     = "yes";
   outopt     = "short";
   etransport = "normal";
@@ -69,7 +69,7 @@ std::ifstream & operator >> ( std::ifstream & in, MIOInputs*  rIO )
 	std::vector<string> codes;
 	codes.push_back("IWATCH");
 	codes.push_back("STORE INITIAL RANDOM NUMBERS");
-	codes.push_back("IRESTART");
+	codes.push_back("IRESUME");
 	codes.push_back("STORE DATA ARRAYS");
 	codes.push_back("OUTPUT OPTIONS");
 	codes.push_back("ELECTRON TRANSPORT");
@@ -93,7 +93,7 @@ std::ifstream & operator >> ( std::ifstream & in, MIOInputs*  rIO )
 	DE_Parser *p = new DE_Parser(codes,0,"I/O control", in, false);
 	rIO->iwatch     = getIt( codes[0] , "off"   , rIO->errors, p ) ;
 	rIO->strnd      = getIt( codes[1] , "no"    , rIO->errors, p ) ;
-	rIO->irestart   = getIt( codes[2] , "first" , rIO->errors, p ) ;
+	rIO->iresume    = getIt( codes[2] , "first" , rIO->errors, p ) ;
 	rIO->strdat     = getIt( codes[3] , "no"    , rIO->errors, p ) ;
   	if ( ( rIO->gusercode() != sprrznrc) && ( rIO->gusercode() != flurznrc) )
 	   rIO->outopt     = getIt( codes[4] , "short", rIO->errors, p ) ;
@@ -148,7 +148,7 @@ Q3TextStream & operator << ( Q3TextStream & t, MIOInputs * rIO )
 
 	t << "IWATCH= "                       << rIO->iwatch   << "\n";
 	t << "STORE INITIAL RANDOM NUMBERS= " << rIO->strnd    << "\n";
-	t << "IRESTART= "                     << rIO->irestart << "\n";
+	t << "IRESUME= "                      << rIO->iresume  << "\n";
 	t << "STORE DATA ARRAYS= "            << rIO->strdat   << "\n";
 
 	if ( ( rIO->gusercode() != sprrznrc ) && ( rIO->gusercode() != flurznrc ) ){
@@ -205,7 +205,7 @@ QTextStream & operator << ( QTextStream & t, MIOInputs * rIO )
 
         t << "IWATCH= "                       << rIO->iwatch   << "\n";
         t << "STORE INITIAL RANDOM NUMBERS= " << rIO->strnd    << "\n";
-        t << "IRESTART= "                     << rIO->irestart << "\n";
+        t << "IRESUME= "                      << rIO->iresume  << "\n";
         t << "STORE DATA ARRAYS= "            << rIO->strdat   << "\n";
 
         if ( ( rIO->gusercode() != sprrznrc ) && ( rIO->gusercode() != flurznrc ) ){

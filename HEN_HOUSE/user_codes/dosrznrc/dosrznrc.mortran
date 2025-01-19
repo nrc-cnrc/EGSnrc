@@ -326,17 +326,17 @@ REPLACE {$VERSION} WITH {
 "        = last        (1)  STORE THE INITIAL RANDOM NUMBER FOR THE LAST HISTORY
 "        = all         (2)  STORE ALL THE INITIAL RANDOM NUMBERS
 "
-"  IRESTART
+"  IRESUME
 "        = first       (0)  first run for this input file
-"        = restart     (1)  restart of a previous run, i.e. add more histories
+"        = resume      (1)  resume a previous run, i.e. add more histories
 "        = analyze     (3)  just read in the raw data and do the statistical
-"                           analysis( gives no timing - restart 100 histories
+"                           analysis( gives no timing - resume 100 histories
 "                           to get the same effect and more info)
 "        = start-RNS   (4)  read starting random numbers from a filE (e.g. FOR
 "                           OUTPUT TO A GRAPHICS PACKAGE)
 "        = parallel    (5)  post-process distributed runs (all files
 "                           named <filenamebase>_w#)
-"                           [IRESTART ]
+"                           [IRESUME ]
 "
 "  OUTPUT OPTIONS
 "        = short                      (0)  short output -just dose grid(DG)
@@ -2058,9 +2058,9 @@ REPLACE {;COMIN/IODAT2/;} WITH
 COMMON/IODAT2/
 NCASE,NCASEO,NCASET,
 AMASS($MAXZREG,$MAXRADII),TMCPUO,TIMMAX,STATLM,EIN,EKMAX,
-IDAT,IRESTART,IQIN,NESTEP,NSMAX,IXXIN,JXXIN,IVAL,DATCOUNT;
+IDAT,IRESUME,IQIN,NESTEP,NSMAX,IXXIN,JXXIN,IVAL,DATCOUNT;
 $REAL    AMASS,TMCPUO,TIMMAX,STATLM,EIN,EKMAX;
-$INTEGER IDAT,IRESTART,IQIN,NESTEP,NSMAX,
+$INTEGER IDAT,IRESUME,IQIN,NESTEP,NSMAX,
          IXXIN,JXXIN,IVAL,DATCOUNT;
 $LONG_INT NCASE,NCASEO,NCASET;
 "Added type declaration, IK, Jan 5 2000"
@@ -2076,8 +2076,8 @@ $LONG_INT NCASE,NCASEO,NCASET;
 "NCASE         number of histories remaining to be done
 "NCASEO        number of histories done in previous sessions
 "NCASET        number of histories already done
-"IRESTART      = 0 => initial run
-"              = 1 => restarted run
+"IRESUME       = 0 => initial run
+"              = 1 => resumed run
 "              = 3 => data analysis only
 "              = 4 => read random number seeds
 "              = 5 => post-process distributed runs
@@ -2519,7 +2519,7 @@ IF (ERROR_FLAG=1) [
 IF( istore > 0 ) [ "We want to store the rng state in a file"
     rng_unit = egs_open_file(2,0,1,'.egsrns');
 ]
-ELSE IF( irestart = 4 ) [ "We well read RN's from a file"
+ELSE IF( iresume = 4 ) [ "We well read RN's from a file"
     rng_unit = egs_open_datfile(2,0,1,'.egsrns');
 ]
 
@@ -2528,9 +2528,9 @@ ELSE IF( irestart = 4 ) [ "We well read RN's from a file"
 IF((IFULL.EQ.0).OR.(IFULL.EQ.2).OR.(IFULL.EQ.3))[ITMAX=2;]
 ELSE[ITMAX=$MAXIT;]
 
-" THE IRESTART=5 case, post-processing for distributed runs, goes here
+" THE IRESUME=5 case, post-processing for distributed runs, goes here
 " ADDED BY JT, NOV.98
-IF(IRESTART.EQ.5)[
+IF(IRESUME.EQ.5)[
 
     "IK: the egs_combine_runs subroutine checks for files named "
     "    output_file_wiii.egsdat (iii=1,99) in the user code directory "
@@ -2547,7 +2547,7 @@ IF(IRESTART.EQ.5)[
 
     NBATCH=0; "DON'T WANT IT TO RUN ANY HISTORIES"
     NCASET=NCASEO;
-] "end of IRESTART = 5, DISTRIBUTED POST-PROCESSING"
+] "end of IRESUME = 5, DISTRIBUTED POST-PROCESSING"
 ELSE [
     IF(NCASE/$NBATCH=0)[NCASE=$NBATCH;]
     JCASE=NCASE/$NBATCH; NCASE=JCASE*$NBATCH;"number of histories per batch"
@@ -2762,8 +2762,8 @@ write(iout,100) ' '; call egs_fdate(iout); write(iout,*);
 WRITE(IOUT,200);WRITE(6,200); "PRINT HEADER FOR EXECUTION MESSAGES"
 
 "PRINT EXECUTION MODE"
-IF(IRESTART .EQ.0)[WRITE(6,201);WRITE(IOUT,201);]
-ELSEIF(IRESTART .EQ.1)[
+IF(IRESUME .EQ.0)[WRITE(6,201);WRITE(IOUT,201);]
+ELSEIF(IRESUME .EQ.1)[
     WRITE(6,202) NCASE,NCASEO;
     write(6,'(21x,a,$)') 'New RNG state: ';
     $SHOW-RNG-STATE(6); write(6,*);
@@ -2771,9 +2771,9 @@ ELSEIF(IRESTART .EQ.1)[
     write(iout,'(21x,a,$)') 'New RNG state: ';
     $SHOW-RNG-STATE(iout); write(iout,*);
 ]
-ELSEIF(IRESTART .EQ.3)[WRITE(6,204);WRITE(IOUT,204);GO TO :END-SIM:;]
-ELSEIF(IRESTART.EQ.4)[ WRITE(6,206); WRITE(IOUT,206); ]
-ELSEIF(IRESTART.EQ.5)[WRITE(6,205);WRITE(IOUT,205);GO TO :END-SIM:;]
+ELSEIF(IRESUME .EQ.3)[WRITE(6,204);WRITE(IOUT,204);GO TO :END-SIM:;]
+ELSEIF(IRESUME.EQ.4)[ WRITE(6,206); WRITE(IOUT,206); ]
+ELSEIF(IRESUME.EQ.5)[WRITE(6,205);WRITE(IOUT,205);GO TO :END-SIM:;]
 
 "INITIALIZE IWATCH ROUTINE"
 IF(IWATCH.NE.0) CALL WATCH(-99,IWATCH);
@@ -2900,7 +2900,7 @@ DO IBATCH=1,$NBATCH[
 
             NFTIME=0; "RESET THE PHOTON FORCED INTERACTION COUNTER"
 
-            IF(IRESTART=4) [
+            IF(IRESUME=4) [
                $RETRIEVE RNG STATE FROM UNIT rng_unit;
             ]
 
@@ -3161,13 +3161,13 @@ ETIMETOT=ETIMETOT+TIMEB;
 $SET_ELAPSED_CPUTIME(CPUT2);
 TIMCPU=CPUT2-CPUT1+TMCPUO;
 IF(TMCPUO.EQ.0)[RATIO=ETIMETOT/TIMCPU;]ELSE[RATIO=0.;] "ONLY FOR SINGLE RUN"
-IF(IRESTART=3)["just analyzing data--no elapsed time"
+IF(IRESUME=3)["just analyzing data--no elapsed time"
   WRITE(IOUT,250)TMCPUO,TMCPUO/3600;
   WRITE(6,250)TMCPUO,TMCPUO/3600;
   WRITE(IOUT,280)TMCPUO/dble(IHSTRY),3600.*dble(IHSTRY)/TMCPUO;
   WRITE(6,280)TMCPUO/dble(IHSTRY),3600.*dble(IHSTRY)/TMCPUO;
 ]
-ELSEIF(IRESTART=5)["output time results for parallel runs"
+ELSEIF(IRESUME=5)["output time results for parallel runs"
   WRITE(IOUT,255)DATCOUNT,TMCPUO,TMCPUO/3600.,TMCPUO/dble(DATCOUNT);
   WRITE(6,255)DATCOUNT,TMCPUO,TMCPUO/3600.,TMCPUO/dble(DATCOUNT);
   WRITE(IOUT,280)TMCPUO/dble(IHSTRY),3600.*dble(IHSTRY)/TMCPUO;
@@ -3562,7 +3562,7 @@ $CALL_EXIT(0);
             /' ',79('*')/
             /' USING DOSRZnrc(EGSnrc) '$VERSION' ');
 201  FORMAT(/' ********* NEW INPUT FILE *********'/);
-202  FORMAT(/' ********* RESTARTED INPUT FILE ********* '/
+202  FORMAT(/' ********* RESUMED INPUT FILE ********* '/
              ' ',10X,I12,' NEW + ',I12,' OLD HISTORIES'/
              ' ',20X,'NEW RN SEEDS=',$);
 204  FORMAT(/' ********* DATA ANALYSIS ONLY *********'/);
@@ -4511,7 +4511,7 @@ $INTEGER NUM_TITLE,
 "I/O Contol"
         NUM_IWATCH,
         NUM_STRAND,
-        NUM_IRESTART ,
+        NUM_IRESUME ,
         NUM_OUTOPTS,
         NUM_STORE,
         NUM_ETRANS,
@@ -4639,12 +4639,12 @@ ALLOWED_INPUTS(IVAL,1)='LAST';
 ALLOWED_INPUTS(IVAL,2)='ALL';
 
 IVAL=IVAL+1;
-NUM_IRESTART =IVAL;
-VALUES_SOUGHT(IVAL)='IRESTART';
+NUM_IRESUME =IVAL;
+VALUES_SOUGHT(IVAL)='IRESUME';
 NVALUE(IVAL)=1;
 TYPE(IVAL)=3;
 ALLOWED_INPUTS(IVAL,0)='FIRST';
-ALLOWED_INPUTS(IVAL,1)='RESTART';
+ALLOWED_INPUTS(IVAL,1)='RESUME';
 ALLOWED_INPUTS(IVAL,3)='ANALYZE';
 ALLOWED_INPUTS(IVAL,4)='START-RNS';
 ALLOWED_INPUTS(IVAL,5)='PARALLEL';
@@ -4720,7 +4720,7 @@ $GET_INPUTS(NUM_IWATCH,NUM_DRMAX);
 OUTPUT;(' *** INPUT CARD IO2 ***');
 IWATCH=VALUE(NUM_IWATCH,1);
 ISTORE=VALUE(NUM_STRAND,1);
-IRESTART =VALUE(NUM_IRESTART ,1);
+IRESUME =VALUE(NUM_IRESUME ,1);
 IOOPTN=VALUE(NUM_OUTOPTS,1);
 IDAT=VALUE(NUM_STORE,1);
 ICSDA=VALUE(NUM_ETRANS,1);
@@ -4730,11 +4730,11 @@ NRDMIN=VALUE(NUM_DRMIN,1);
 NRDMAX=VALUE(NUM_DRMAX,1);
 NZDOSE=NZDMAX-NZDMIN;
 NRDOSE=NRDMAX-NRDMIN;
-OUTPUT IWATCH,ISTORE,IRESTART ,IOOPTN,IDAT,ICSDA;
+OUTPUT IWATCH,ISTORE,IRESUME ,IOOPTN,IDAT,ICSDA;
   ( /
 ' DO NOT TRACK(0) OR TRACK(>0) EVERY INTERACTION:',T72,I4/
 ' DO NOT STORE(0) OR STORE(1,2) INITIAL RANDOM #s:',T72,I4/
-' FIRST RUN(0),RESTARTED(1),ANALYZE(3),start-RNS(4),parallel(5):',
+' FIRST RUN(0),RESUMED(1),ANALYZE(3),start-RNS(4),parallel(5):',
     T72,I4/
 ' OUTPUT OPTION (1 THRU 4):',T72,I4/
 ' STORE DATA(0) OR NOT(1):',T72,I4/
@@ -4745,7 +4745,7 @@ OUTPUT NZDMIN,NZDMAX,NRDMIN,NRDMAX;
 $SKIP-LINE;
 
 IF(IDAT.EQ.1)[INEXT=0;]ELSE[INEXT=1;]
-IF(IRESTART .EQ.4) [
+IF(IRESUME .EQ.4) [
     IDAT=1;   "DO NOT STORE OUTPUT IN THIS CASE TO AVOID BIASING"
     ISTORE=0; "DO NOT STORE THE STARTING RANDOM NUMBERS EITHER"
 ]
@@ -5403,7 +5403,7 @@ ELSE[ITMAX=$MAXIT;]
 
 NCASEO=0;NCASET=0;TMCPUO=0;
 
-IF(IRESTART.EQ.0.OR.IRESTART.EQ.5)[ "0-FRESH START, SET EVERYTHING TO"
+IF(IRESUME.EQ.0.OR.IRESUME.EQ.5)[ "0-FRESH START, SET EVERYTHING TO"
     "ZERO OR 5- INITIALIZE ALL ARRAYS TO 0 FOR PARALLEL POST-PROCESSING"
 
     NNREAD=0; "have not read any particles from phase space source"
@@ -5448,14 +5448,14 @@ IF(IRESTART.EQ.0.OR.IRESTART.EQ.5)[ "0-FRESH START, SET EVERYTHING TO"
          SCPTOT2=0.0;
          SCPDST_LAST=0;
     ]
-] "END OF IRESTART =0 OR 5"
+] "END OF IRESUME =0 OR 5"
 
-ELSEIF(IRESTART.EQ.4)[ "retrieve random numbers from .egsrns file"
+ELSEIF(IRESUME.EQ.4)[ "retrieve random numbers from .egsrns file"
     OUTPUT;(/' Will READ RANDOM NUMBER PARAMETERS FROM UNIT 2:');
 ]
 
 ELSE[
-    "RESTART OR STATS ANALYSIS ONLY, READ OLD DATA FROM UNIT 4"
+    "RESUME OR STATS ANALYSIS ONLY, READ OLD DATA FROM UNIT 4"
     "OPEN UNIT 4 AS AN OLD FILE"
     OUTPUT;(/' ***START READING DATA FILE from PREVIOUS RUN***'/);
     "IK: we don't wont ro rely upon a symbolic link to the .egsdat file "
@@ -5498,7 +5498,7 @@ ELSE[
     CLOSE(data_unit);
 ]
 
-IF(IRESTART .EQ.3)[NCASE=0;]
+IF(IRESUME .EQ.3)[NCASE=0;]
 
 NCASET=NCASE+NCASEO;
 

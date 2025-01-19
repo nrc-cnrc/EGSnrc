@@ -1,6 +1,6 @@
 EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
 AIR700ICRU
-           0  0   0  1  0  2  0,                 IWATCH,ISTORE,IRESTART,etc
+           0  0   0  1  0  2  0,                 IWATCH,ISTORE,IRESUME,etc
           70000.        1802        9373   0.99 0      0 0 NCASE, etc
   0 21    1.00000       0.00000       0.00000       0.00000    , IQIN,ISOURCE etc
    0.00000       0.00000       0.00000       0.00000    , IQIN,ISOURCE etc

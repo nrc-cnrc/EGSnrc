@@ -519,8 +519,8 @@ protected:
     float emax; //max. k.e. of particles in phsp file
     mutable bool first_flush; //first time writing to file in this run -- mutable so we can change it in storeState
 
-    bool is_restart; //true if this is a restart
-    EGS_I64 countprev; //no. of particles written to file before restart
+    bool is_resume; //true if this is a resumed simulation
+    EGS_I64 countprev; //no. of particles written to file before resume
 
     EGS_I64    last_case;   //last primary history scored
     EGS_I64    current_case; //current primary history

@@ -43,8 +43,8 @@ TITLE= Energy deposition kernel for 1 MeV photons
 ##########################
 :start I/O control:
 
-IRESTART= first         # first    (0) First run for this data set
-                        # restart  (1) Restart a previous run
+IRESUME= first          # first    (0) First run for this data set
+                        # resume   (1) Resume a previous run
                         # analyze  (3) Just read in the raw data and do the statistical analysis
                         # parallel (5) Combine results from previous parallel runs
 

@@ -69,7 +69,7 @@ public slots:
     void saveView(EGS_BaseGeometry *geo, int nx, int ny, QString name, QString ext);
 
     void stopWorker();
-    void restartWorker();
+    void relaunchWorker();
 
     void startTransformation();
     void endTransformation();

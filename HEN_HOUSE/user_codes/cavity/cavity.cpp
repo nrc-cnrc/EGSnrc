@@ -105,7 +105,7 @@
 #    nbatch                      = number of batches to use
 #    statistical accuracy sought = required uncertainty, in %
 #    max cpu hours allowed       = max. processor time allowed
-#    calculation                 = first | restart | combine | analyze
+#    calculation                 = first | resume | combine | analyze
 #
 #    All inputs except for ncase are optional (a missing ncase key will result
 #    in a simulation with 0 particles).

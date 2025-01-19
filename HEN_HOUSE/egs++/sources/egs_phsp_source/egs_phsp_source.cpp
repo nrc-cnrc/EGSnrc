@@ -64,7 +64,7 @@ void EGS_PhspSource::init() {
     description = "Invalid phase space source";
     Nread = 0;
     count = 0;
-    Nrestart = 0;
+    Nrewind = 0;
     Npos = 0;
     Nlast = 0;
     wmin = -veryFar;
@@ -371,7 +371,7 @@ void EGS_PhspSource::readParticle() {
                    Nlast,Nfirst);
         istream::off_type pos = Nfirst*recl;
         the_file.seekg(pos,ios::beg);
-        Nrestart++;
+        Nrewind++;
         Npos = Nfirst;
     }
     the_file.read(record,recl*sizeof(char));
