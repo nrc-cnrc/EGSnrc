@@ -3071,8 +3071,10 @@ DO irl = 1,irmax-1 [
    ]
    "divide by rhor so that we do not have to store rhor in the .pardose"
    "file during parallel runs."
-   endep(irl)=endep(irl)/rhor(irl+1);
-   endep2(irl)=endep2(irl)/(rhor(irl+1)*rhor(irl+1));
+   if(rhor(irl+1)>0.0)[
+       endep(irl)=endep(irl)/rhor(irl+1);
+       endep2(irl)=endep2(irl)/(rhor(irl+1)*rhor(irl+1));
+   ]
 ]
 
 #ifdef HAVE_C_COMPILER;
