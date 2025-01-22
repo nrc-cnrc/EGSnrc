@@ -92,10 +92,10 @@ events. This ausgab object is specified via:
  The following inputs apply to directional splitting only:
     field size = radius of splitting field centred on Z-axis (cm) -- required
     ssd = distance of splitting field from Z=0 along +Z-axis (cm) -- required
-    e-/e+ split region = region number(s) for e-/e+ splitting.  On entering this(ese) region(s), charged particles will be split n_split times.
+    e-/e+ split regions = region number(s) for e-/e+ splitting.  On entering this(ese) region(s), phat charged particles will be split n_split times.
                          If set to 0 or omitted, charged particles will not be split.
     radially redistribute e-/e+ = "yes" or "no" (default) -- if "yes", evenly distribute split e-/e+ in a circle of radius sqrt(x(np)^2+y(np)^2) about the Z-axis
-    Z of russian roulette plane = Z below which russian roulette is not played on low-weight charged particles resulting from e-/e+ splitting (cm)
+    Z of russian roulette plane = Z below which russian roulette is not played on low-weight charged particles resulting from e-/e+ splitting (cm) -- optimally set to some value < Z at which particles enter the splitting region(s)
     Below is an optional input for an affine transform to be applied to the directional splitting cone defined by field size and ssd:
     :start transformation:
        rotation = optional 3D rotation vector to be applied to the splitting cone (applied first)
@@ -171,7 +171,7 @@ public:
         split_type = type;
     };
 
-    void initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr, const EGS_AffineTransform *t);
+    void initDBS(const EGS_Float field_rad, const EGS_Float field_ssd, const vector<int> splitreg, const int irad, const EGS_Float zrr, const EGS_AffineTransform *t);
 
     bool needsCall(EGS_Application::AusgabCall iarg) const override {
         if ( split_type == DRS || split_type == DRSf ) {
@@ -184,6 +184,9 @@ public:
                     iarg == EGS_Application::BeforeRayleigh ||
                     iarg == EGS_Application::FluorescentEvent ||
                     iarg == EGS_Application::BeforeTransport) {
+                return true;
+            }
+            if ( ireg_esplit.size()>0 && iarg == EGS_Application::AfterTransport) {
                 return true;
             }
         }
@@ -239,9 +242,9 @@ protected:
     EGS_Float be_factor = 0; //Brems enhancement factor--currently set to zero and not used
     EGS_Float fs; //radius of splitting field
     EGS_Float ssd; //ssd at which splitting field is defined
-    vector<int> ireg_esplit; //numbers of regions on entering which charged particles are split
+    vector<int> ireg_esplit; //numbers of regions on entering which phat charged particles are split
     int irad_esplit; //set to 1 to radially redistribute split e-/e+
-    int zrr_esplit; //Z value below which Russian Roulette will not be played with split e-/e+
+    EGS_Float zrr_esplit; //Z value below which Russian Roulette will not be played with split e-/e+
 
     bool use_cyl_sym = false; //set to true to use cylindrical symmetry, hard coded as false for now
     EGS_Float zcyls; //Z below which cylindrical symmetry does not exist

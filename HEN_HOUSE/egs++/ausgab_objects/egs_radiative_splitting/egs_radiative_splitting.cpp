@@ -50,6 +50,7 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 #include "egs_transformations.h"
+#include "egs_math.h"
 
 //local structures required
 struct DBS_Aux {
@@ -135,7 +136,7 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
         return;
     }
 
-    char buf[32];
+    char buf[64];
 
     // Set EGSnrc internal radiative splitting number .
     app->setRadiativeSplitting(nsplit);
@@ -158,7 +159,47 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
             description +=" using URS\n\n";
         }
         else if ( split_type == DRS || split_type == DRSf) {
-            description +=" using DRS\n\n";
+            description +=" using DRS with the following parameters:\n";
+            description +="   fs = ";
+            sprintf(buf,"%g",fs);
+            description += buf;
+            description += " cm\n";
+            description +="   ssd = ";
+            sprintf(buf,"%g",ssd);
+            description += buf;
+            description += " cm\n\n";
+            if (ireg_esplit.size()>0) {
+              //we are splitting e-/e+
+              description += "   phat e-/e+ will be split ";
+              sprintf(buf,"%d",nsplit);
+              description += buf;
+              description += " times on entering the following regions: ";
+              for (int i=0; i<ireg_esplit.size(); i++) {
+                 sprintf(buf,"%d ",ireg_esplit[i]);
+                 description += buf;
+              }
+              description += "\n";
+              if (irad_esplit) {
+                 description += "   split e-/e+ will be radially redistributed about Z-axis\n";
+              }
+              sprintf(buf,"%g",zrr_esplit);
+              description += "   Russian Roulette will not be played with e-/e+ below Z = ";
+              description += buf;
+              description += " cm\n\n";
+            }
+            if (T) {
+              description += "    Splitting cone will be transformed by:\n";
+              description += "      rotation matrix =\n";
+              sprintf(buf,"            %.5f %.5f %.5f\n",T->getRotation().xx(),T->getRotation().xy(),T->getRotation().xz());
+              description += buf;
+              sprintf(buf,"            %.5f %.5f %.5f\n",T->getRotation().yx(),T->getRotation().yy(),T->getRotation().yz());
+              description += buf;
+              sprintf(buf,"            %.5f %.5f %.5f\n",T->getRotation().zx(),T->getRotation().zy(),T->getRotation().zz());
+              description += buf;
+              description += "      translation vector = ";
+              sprintf(buf,"%.5f %.5f %.5f\n\n",T->getTranslation().x,T->getTranslation().y,T->getTranslation().z);
+              description += buf;
+            }
         }
         else {
             description +=" using an unknown splitting algorithm? :-(";
@@ -174,7 +215,7 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
     description += "\n===========================================\n\n";
 }
 
-void EGS_RadiativeSplitting::initDBS(const float &field_rad, const float &field_ssd, const vector<int> &splitreg, const int &irad, const float &zrr, const EGS_AffineTransform *t) {
+void EGS_RadiativeSplitting::initDBS(const EGS_Float field_rad, const EGS_Float field_ssd, const vector<int> splitreg, const int irad, const EGS_Float zrr, const EGS_AffineTransform *t) {
     fs = field_rad;
     ssd = field_ssd;
     ireg_esplit = splitreg;
@@ -218,10 +259,48 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     //seems like a temporary solution
     int is_fat = (latch & (1 << 0));
 
-    if(pi.wt < 1 && is_fat) exit(1);
+    //below was used for debugging but could be true in general
+    //if(pi.wt < 1 && is_fat) exit(1);
 
     if( iarg == EGS_Application::BeforeTransport)
     {
+        return 0;
+    }
+
+    if( iarg == EGS_Application::AfterTransport)
+    {
+        if (pi.q && pi.u.z > 0 && is_fat && ireg_esplit.size()>0)
+        {
+            //see if charged particle has entered a splitting region
+            auto it = std::find(ireg_esplit.begin(),ireg_esplit.end(),pi.ir);
+            if (it != ireg_esplit.end())
+            {
+                //split charged particle nsplit times and radially redistributed (if required)
+                EGS_Float wt = pi.wt/nsplit;
+                latch = latch & ~(1 << 0);
+                EGS_Float ang_dbs = 0;
+                if (irad_esplit)
+                {
+                    ang_dbs = 2*M_PI/nsplit;
+                }
+                //delete the charged particle and replace with nsplit (possibly redistributed) particles
+                app->deleteParticleFromStack(np);
+                for (int i=0; i<nsplit; i++)
+                {
+                    EGS_Particle p = pi;
+                    p.wt = wt;
+                    p.latch = latch;
+                    p.x.x = pi.x.x*cos(i*ang_dbs)+pi.x.y*sin(i*ang_dbs);
+                    p.x.y = -pi.x.x*sin(i*ang_dbs)+pi.x.y*cos(i*ang_dbs);
+                    p.u.x = pi.u.x*cos(i*ang_dbs)+pi.u.y*sin(i*ang_dbs);
+                    p.u.y = -pi.u.x*sin(i*ang_dbs)+pi.u.y*cos(i*ang_dbs);
+                    transformP(p,T);
+                    //Note: for dneari to be valid after redistribution, splitting must be at a
+                    //plane and there must be radial symmetry!
+                    app->addParticleToStack(p,dneari);
+                }
+             }
+        }
         return 0;
     }
 
@@ -300,10 +379,11 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
             iarg == EGS_Application::BeforeRayleigh )
     {
 
-        //currently only phat photons undergo interactions
+        //if e- splitting is off or Z <= the Russian Roulette plane, only allow phat photons to undergo interaction
         //unless it is Rayleigh or bound compton
         if(!is_fat && (iarg == EGS_Application::BeforePhoto || iarg == EGS_Application::BeforePair ||
-                       (iarg == EGS_Application::BeforeCompton && !app->getIbcmp())))
+                       (iarg == EGS_Application::BeforeCompton && !app->getIbcmp())) &&
+                       (ireg_esplit.size()==0 || pi.x.z <= zrr_esplit))
         {
             if (app->getRngUniform()*nsplit > 1)
             {
@@ -327,16 +407,55 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
 
         if(iarg == EGS_Application::BeforePair)
         {
-            app->callPair();
+            //only split phat interactions if e-/e+ splitting is on and Z > zrr_esplit
+            if (ireg_esplit.size() > 0 && pi.x.z > zrr_esplit)
+            {
+                latch = latch & ~(1 << 0);
+                EGS_Particle p = pi;
+                p.latch = latch;
+                p.wt = p.wt/nint;
+                //Do transform here.  Seems more efficient than inside the loop below.
+                transformP(p,T);
+                app->deleteParticleFromStack(np);
+                for (int i=0; i<nint; i++)
+                {
+                    app->addParticleToStack(p,dneari);
+                    app->callPair();
+                }
+            }
+            else
+            {
+               //let EGSnrc take care of the interaction
+               app->callPair();
+            }
         }
         if(iarg == EGS_Application::BeforePhoto)
         {
-            app->callPhoto();
+            //only split phat interactions if e-/e+ splitting is on and Z > zrr_esplit
+            if (ireg_esplit.size() > 0 && pi.x.z > zrr_esplit)
+            {
+                //label interacting photon as non-phat and reduce weight (if phat)
+                latch = latch & ~(1 << 0);
+                EGS_Particle p = pi;
+                p.latch = latch;
+                p.wt = p.wt/nint;
+                transformP(p,T);
+                app->deleteParticleFromStack(np);
+                for (int i=0; i<nint; i++)
+                {
+                    app->addParticleToStack(p,dneari);
+                    app->callPhoto();
+                }
+            }
+            else
+            {
+                app->callPhoto();
+            }
         }
         if(iarg == EGS_Application::BeforeCompton)
         {
             int npold = np;
-            if(is_fat && !app->getIbcmp())
+            if(is_fat && !app->getIbcmp() && (ireg_esplit.size()==0 || pi.x.z <= zrr_esplit) )
             {
                 //label as nonphat to be passed on to descendents
                 latch = latch & ~(1 << 0);
@@ -353,7 +472,6 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 EGS_Particle p = pi;
                 p.latch = latch;
                 p.wt = p.wt/nint;
-                //Do transform here.  Seems more efficient than inside the loop below.
                 transformP(p,T);
                 app->deleteParticleFromStack(np);
                 for (int i=0; i<nint; i++)
@@ -362,9 +480,10 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                     int nstart = app->getNp();
                     app->callCompt();
                     int aux = 1;
-                    if (nint == 1)
+                    if (nint == 1 || (ireg_esplit.size()>0 && pi.x.z > zrr_esplit))
                     {
-                        aux = 0; //do not kill electron--why not?
+                        //not sure why we do not kill the electron if nint=1, but this is copied from BEAMnrc
+                        aux = 0;
                     }
                     killThePhotons(fs,ssd,nsplit,nstart,aux);
                 }
@@ -997,6 +1116,7 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
     if (npstart > app->getNp()) return;
     int i_playrr = 0;
     int idbs = npstart;
+    int np;
     EGS_Float dnear = app->getDnear(idbs);
     do {
         EGS_Particle p = app->getParticleFromStack(idbs);
@@ -1066,7 +1186,8 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
                 }
             }
         }
-    } while (idbs <= app->getNp());
+        np = app->getNp();
+    } while (idbs <= np);
 
     return;
 }
@@ -1563,7 +1684,7 @@ extern "C" {
             }
         }
         EGS_Float nsplit = 1.0;
-        EGS_Float fs,ssd,zrr;
+        EGS_Float fs,ssd,zrr=0;
         int irad = 0;
         vector<int> esplit_reg;
         EGS_AffineTransform *t;
@@ -1585,7 +1706,7 @@ extern "C" {
             {
                 egsFatal("\nEGS_RadiativeSplitting: Missing/invalid input for splitting field ssd.\n");
             }
-            int err03 = input->getInput("e-/e+ split region",esplit_reg);
+            int err03 = input->getInput("e-/e+ split regions",esplit_reg);
             if (err03)
             {
                 egsWarning("\nEGS_RadiativeSplitting: Missing/invalid input for e+/e- splitting region.\nCharged particles will not be split.\n");
@@ -1607,15 +1728,13 @@ extern "C" {
                 int err04 = input->getInput("Z of russian roulette plane",zrr);
                 if (err04)
                 {
-                    egsWarning("\nEGS_RadiativeSplitting: Missing/invalid input for Z of russian roulette plane.  Will always subject split charged particles to russian roulette.\n");
+                    egsWarning("\nEGS_RadiativeSplitting: Missing/invalid input for Z of Russian Roulette plane.  Defaults to 0.\n");
                 }
             }
 
             //option to transform DBS splitting cone
             t = EGS_AffineTransform::getTransformation(input);
         }
-
-        printf("\nAbout to set up\n");
 
         //=================================================
         /* Setup radiative splitting object with input parameters */
