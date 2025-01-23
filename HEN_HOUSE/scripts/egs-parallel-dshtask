@@ -199,7 +199,8 @@ else
 
     # offset all jobs by a fixed delay (relative to previous job)
     delta=0.1
-    log "$jobstr: wait $(($job*$delta)) seconds (default job offset delay)"
+    waitTime=$(echo "$job * $delta" | bc)
+    log "$jobstr: wait $waitTime seconds (default job offset delay)"
     for j in $(seq 1 $job); do
         sleep $delta
         quit_if_done
@@ -207,8 +208,9 @@ else
 
     # extra user-specified delay between each job
     delta=$delay
-    if [ $delta -gt 0 ]; then
-        log "$jobstr: wait $(($job*$delta)) seconds (user job offset delay)"
+    waitTime=$(echo "$job * $delta" | bc)
+    if [ "$(echo "$delta > 0" | bc)" -eq 1 ]; then
+        log "$jobstr: wait $waitTime seconds (user job offset delay)"
         for j in $(seq 1 $job); do
             sleep $delta
             quit_if_done
