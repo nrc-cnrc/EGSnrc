@@ -54,7 +54,7 @@ test_egs_mesh: test_egs_mesh.cpp egs_mesh.h egs_mesh.cpp msh_parser.h \
         ../../egs_base_geometry.h \
         ../../egs_vector.h ../../../lib/$(my_machine)/egs_config1.h \
         ../../egs_libconfig.h ../../egs_functions.h $(ABS_DSO)$(libpre)egspp$(libext) \
-        ../../dso/linux/libegs_mesh.so
+        ../../dso/$(my_machine)/libegs_mesh.so
 	$(CXX) $(INC1) -I../../ -I../../../lib/$(my_machine)/ $(DEF1) $(opt) $(lib_link1) test_egs_mesh.cpp -otest_egs_mesh $(lib_link2) -legs_mesh
 
 .PHONY: clean

@@ -749,8 +749,7 @@ public:
     /*! \brief Set the labels from an input string */
     int setLabels(const string &inp);
 
-    virtual void printTriCheck() { }; //A.D debugging
-    virtual void debugtool() { }; //A.D debugging
+    //virtual void printTriCheck() { }; // For debugging egs_triangle_mesh
 
     virtual void updatePosition(EGS_Float time) { };
 

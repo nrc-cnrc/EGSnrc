@@ -285,9 +285,9 @@ public:
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
-    void printTriCheck() { //A.D debugging
+    /*void printTriCheck() { // For debugging egs_triangle_mesh
         g->printTriCheck();
-    };
+    };*/
 
 protected:
 
