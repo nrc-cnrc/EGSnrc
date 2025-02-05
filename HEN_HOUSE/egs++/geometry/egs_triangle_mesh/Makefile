@@ -48,7 +48,7 @@ test_egs_triangle_mesh: test_egs_triangle_mesh.cpp egs_triangle_mesh.h \
         ../../egs_base_geometry.h \
         ../../egs_vector.h ../../../lib/$(my_machine)/egs_config1.h \
         ../../egs_libconfig.h ../../egs_functions.h $(ABS_DSO)$(libpre)egspp$(libext) \
-        ../../dso/linux/libegs_triangle_mesh.so
+        ../../dso/$(my_machine)/libegs_triangle_mesh.so
 	$(CXX) $(INC1) -I../../ -I../../../lib/$(my_machine)/ $(DEF1) $(opt) $(lib_link1) test_egs_triangle_mesh.cpp -otest_egs_triangle_mesh $(lib_link2) -legs_triangle_mesh
 
 .PHONY: clean
