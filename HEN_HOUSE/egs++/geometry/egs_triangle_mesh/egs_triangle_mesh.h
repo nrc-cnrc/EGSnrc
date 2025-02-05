@@ -256,21 +256,19 @@ public:
     void inctricheck_NIW() {
         tri_check_NIW++;
     }
+
+    /*
+    // This is useful for debugging efficiency
+    // Will also have to uncomment declaration in egs_base_geometry.h
+    // and calls in egs_application.cpp, envelope and gtransformed
     void printTriCheck() {
         if (octree_acc_on) {
-            cout<<endl<<"In this simualtion (Octree) each each geometry checked "<<endl<<tri_check_OHF<<" triangles (howfar)"<<endl<<tri_check_OHN<<" triangles (hownear)"<<endl<<tri_check_OIW<<" triangles (iswhere)"<<endl;
+            cout<<endl<<"In this simulation (Octree) each each geometry checked "<<endl<<tri_check_OHF<<" triangles (howfar)"<<endl<<tri_check_OHN<<" triangles (hownear)"<<endl<<tri_check_OIW<<" triangles (iswhere)"<<endl;
         }
         else {
-            cout<<endl<<"In this simualtion (Naive) each each geometry checked "<<endl<<tri_check_NHF<<" triangles (howfar)"<<endl<<tri_check_NHN<<" triangles (hownear)"<<endl<<tri_check_NIW<<" triangles (iswhere)"<<endl;
+            cout<<endl<<"In this simulation (Naive) each each geometry checked "<<endl<<tri_check_NHF<<" triangles (howfar)"<<endl<<tri_check_NHN<<" triangles (hownear)"<<endl<<tri_check_NIW<<" triangles (iswhere)"<<endl;
         }
-    }
-
-    void debugtool() {
-        string outstring = "trimesh_"+name+"_debug.txt";
-        const char *outname=outstring.c_str();
-        sortout = new ofstream(outname, ios::trunc);
-        *sortout<<"debugging tool"<<endl;
-    }
+    }*/
 
     bool isInside(const EGS_Vector &x) override;
     int inside(const EGS_Vector &x) override;
@@ -291,7 +289,7 @@ private:
     std::vector<std::array<EGS_Float, 3>> ys;
     std::vector<std::array<EGS_Float, 3>> zs;
     std::vector<EGS_Vector> ns;
-    ofstream *sortout;
+    //ofstream *sortout;
 
     // Axis-aligned mesh bounding box used to accelerate geometry routines
     std::unique_ptr<EGS_TriangleMeshBbox> bbox;

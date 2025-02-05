@@ -417,26 +417,20 @@ public:
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
-        //cout<<"current region: "<<ireg<<endl;
-        cout<<"genv initial:: t="<<t<<endl;
-        int region_out;
+
         if (ireg >= 0) {
             // inside.
             if (ireg < nbase) {
                 // in one of the regions of the base geometry
                 // check if we hit a boundary in the base geometry.
                 // if we do, newmed and normal get set accordingly.
-                cout<<"genv base:: t_i="<<t;
                 int ibase = g->howfar(ireg,x,u,t,newmed,normal);
-                cout<<" becomes t_f="<<t<<endl;
                 int ij = -1, jg;
                 // check if we will enter any of the inscribed geometries
                 // before entering a new region in the base geometry.
                 for (int j=0; j<n_in; j++) {
-                    cout<<"genv (1)inscribed #"<<j<<":: t="<<t;
                     int ireg_j =
                         geometries[j]->howfar(-1,x,u,t,newmed,normal);
-                    cout<<" becomes t_f="<<t<<endl;
                     if (ireg_j >= 0) {
                         // we do. remember the inscribed geometry index
                         // and local region
@@ -445,16 +439,12 @@ public:
                     }
                 }
                 if (ij < 0) {
-                    region_out=ibase;
-                    //cout<<"genveloppe:: debug howfar (1): "<<region_out<<endl;
                     return ibase;
                 }
                 // ij<0 implies that we have not hit any of the
                 // inscribed geometries => return the base geometry index.
                 // ij>=0 implies that we entered inscribed geometry
                 // jg in its local region ij.
-                region_out=new_indexing ? local_start[jg] + ij : nbase + jg*nmax + ij;
-                //cout<<"genveloppe:: debug howfar (2): "<<region_out<<endl;
                 return new_indexing ? local_start[jg] + ij : nbase + jg*nmax + ij;
             }
             // if here, we are in an inscribed geometry.
@@ -469,13 +459,10 @@ public:
                 ilocal = ireg - nbase - jg*nmax;
             }
             // and then check if we will hit a boundary in this geometry.
-            cout<<"genv (2)inscribed #"<<jg<<":: t="<<t;
             int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
-            cout<<" becomes t_f="<<t<<endl;
-            if (inew >= 0){
-                region_out=new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;
-                //cout<<"genveloppe:: debug howfar (3): "<<region_out<<endl;
-                return new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;}
+            if (inew >= 0) {
+                return new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;
+            }
             // inew >= 0 implies that we either stay in the same
             // region (inew=ilocal) or we entered a new region
             // (inew!=ilocal), which is still inside the inscribed geometry
@@ -485,15 +472,11 @@ public:
             if (inew >= 0 && newmed) {
                 *newmed = g->medium(inew);
             }
-            region_out=inew;
-            //cout<<"genveloppe:: debug howfar (4): "<<region_out<<endl;
             return inew;
         }
         // if here, we are outside the base geometry.
         // check to see if we will enter.
-        cout<<"genv outbase:: t="<<t;
         int ienter = g->howfar(ireg,x,u,t,newmed,normal);
-        cout<<" becomes t_f="<<t<<endl;
         if (ienter >= 0) {
             // yes, we do. see if we are already inside of one of the
             // inscribed geometries.
@@ -504,14 +487,10 @@ public:
                     if (newmed) {
                         *newmed = geometries[j]->medium(i);
                     }
-                    region_out=new_indexing ? local_start[j] + i : nbase + nmax*j + i;
-                    //cout<<"genveloppe:: debug howfar (5): "<<region_out<<endl;
                     return new_indexing ? local_start[j] + i : nbase + nmax*j + i;
                 }
             }
         }
-        region_out=ienter;
-        //cout<<"genveloppe:: debug howfar (6): "<<region_out<<endl;
         return ienter;
     };
 
@@ -650,12 +629,12 @@ public:
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
-    void printTriCheck() { //A.D debugging
+    /*void printTriCheck() { // For debugging egs_triangle_mesh
         for (int j=0; j<n_in; j++) {
             geometries[j]->printTriCheck();
         }
         g->printTriCheck();
-    };
+    };*/
 
 protected:
 
