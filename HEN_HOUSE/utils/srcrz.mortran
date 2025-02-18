@@ -2109,6 +2109,8 @@ ELSEIF((ISOURC = 21) | (ISOURC = 22))["full phase space"
 ]
 
 
+$INIT_PHSP_COUNTERS;
+
 RETURN;
 
 "************************************************************************
