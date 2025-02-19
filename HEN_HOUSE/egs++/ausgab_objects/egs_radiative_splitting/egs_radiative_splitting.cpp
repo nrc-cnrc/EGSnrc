@@ -181,6 +181,11 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
               description += "\n";
               if (irad_esplit) {
                  description += "   split e-/e+ will be radially redistributed about Z-axis\n";
+                 if (T) {
+                     description += "\n     Warning! You are transforming the splitting cone, but split e-/e+\n";
+                     description += "     are redistributed about the Z-axis in the untransformed geometry.\n";
+                     description += "     Hope you know what you are doing.\n\n";
+                 }
               }
               sprintf(buf,"%g",zrr_esplit);
               description += "   Russian Roulette will not be played with e-/e+ below Z = ";
@@ -209,7 +214,7 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
         description +="\n - NO radiative splitting";
     }
     else {
-        description +="\n - BEWARE: Turning OFF radiative events !!!";
+        description +="\n - BEWARE: Turning OFF EGSnrc radiative events !!!";
     }
 
     description += "\n===========================================\n\n";
@@ -283,18 +288,20 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 {
                     ang_dbs = 2*M_PI/nsplit;
                 }
-                //delete the charged particle and replace with nsplit (possibly redistributed) particles
+                //delete the charged particle and replace with nsplit particles (possibly redistributed
+                //about the Z-axis in untransformed space)
                 app->deleteParticleFromStack(np);
                 for (int i=0; i<nsplit; i++)
                 {
                     EGS_Particle p = pi;
                     p.wt = wt;
                     p.latch = latch;
-                    p.x.x = pi.x.x*cos(i*ang_dbs)+pi.x.y*sin(i*ang_dbs);
-                    p.x.y = -pi.x.x*sin(i*ang_dbs)+pi.x.y*cos(i*ang_dbs);
-                    p.u.x = pi.u.x*cos(i*ang_dbs)+pi.u.y*sin(i*ang_dbs);
-                    p.u.y = -pi.u.x*sin(i*ang_dbs)+pi.u.y*cos(i*ang_dbs);
                     transformP(p,T);
+                    //redistributed after transforming back (i.e. in untransformed space)
+                    p.x.x = p.x.x*cos(i*ang_dbs)+p.x.y*sin(i*ang_dbs);
+                    p.x.y = -p.x.x*sin(i*ang_dbs)+p.x.y*cos(i*ang_dbs);
+                    p.u.x = p.u.x*cos(i*ang_dbs)+p.u.y*sin(i*ang_dbs);
+                    p.u.y = -p.u.x*sin(i*ang_dbs)+p.u.y*cos(i*ang_dbs);
                     //Note: for dneari to be valid after redistribution, splitting must be at a
                     //plane and there must be radial symmetry!
                     app->addParticleToStack(p,dneari);
@@ -397,8 +404,10 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 //keep the photon, increase weight and label as phat
                 pi.wt = pi.wt*nsplit;
                 pi.latch = pi.latch | (1 << 0);
-                transformP(pi,T);
-                app->updateParticleOnStack(np,pi,dneari);
+                //copy pi because we are transforming it before putting it back on the stack
+                EGS_Particle p = pi;
+                transformP(p,T);
+                app->updateParticleOnStack(np,p,dneari);
                 is_fat = 1;
             }
         }
@@ -445,6 +454,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
                 {
                     app->addParticleToStack(p,dneari);
                     app->callPhoto();
+                    EGS_Particle pj = app->getParticleFromStack(app->getNp());
                 }
             }
             else
@@ -543,7 +553,7 @@ int EGS_RadiativeSplitting::doInteractions(int iarg, int &killed)
     {
                 EGS_Particle p = app->getParticleFromStack(i);
                 int is_fat_test = (p.latch & (1 << 0));
-                if (i==1106)
+                if (p.x.z < 0)
                 {
                    egsInformation("after everything: iarg=%d i=%d np=%d iq=%d E=%g wt=%g is_fat=%d x=%g y=%g z=%g u=%g v=%g w=%g\n",iarg,i,np,p.q,p.E,p.wt,is_fat_test,p.x.x,p.x.y,p.x.z,p.u.x,p.u.y,p.u.z);
                 }
@@ -1144,8 +1154,6 @@ void EGS_RadiativeSplitting::killThePhotons(EGS_Float fs, EGS_Float ssd, int n_s
                 else
                 {
                     //keep the particle and increase weight
-                    //do this by saving the particle info, deleting the particle, changing the weight and adding it
-                    //back to the stack
                     p.wt = p.wt*n_split;
                     //set bit 0 of latch to mark as phat
                     p.latch = p.latch | (1 << 0);
