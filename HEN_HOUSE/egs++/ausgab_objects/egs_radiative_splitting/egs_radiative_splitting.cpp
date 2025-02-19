@@ -45,6 +45,7 @@
 #include <fstream>
 #include <string>
 #include <cstdlib>
+#include <algorithm>
 
 #include "egs_radiative_splitting.h"
 #include "egs_input.h"
@@ -227,7 +228,7 @@ void EGS_RadiativeSplitting::initDBS(const EGS_Float field_rad, const EGS_Float 
     irad_esplit = irad;
     zrr_esplit = zrr;
     if (T) {
-        delete T;
+        //delete T;
         T = 0;
     }
     if (t) {
