@@ -609,8 +609,7 @@ public:
                 /* Score photon fluence */
                 if (iarg == EGS_Application::BeforeTransport) {
                     /* Linear track-Length scoring */
-                    //EGS_Float wtstep  = app->top_p.wt*app->getTVSTEP();
-                    EGS_Float wtstep  = app->top_p.wt;
+                    EGS_Float wtstep  = app->top_p.wt*app->getTVSTEP();
                     /* Score total fluence */
                     fluT->score(ir,wtstep);
                     if (score_primaries && !latch) {
