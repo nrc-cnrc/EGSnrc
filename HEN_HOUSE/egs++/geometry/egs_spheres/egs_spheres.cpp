@@ -314,7 +314,6 @@ EGS_Float EGS_cSpheres::hownear(int ireg, const EGS_Vector &x) {
     else {
         d=r-R[nreg-1];
     }
-
     return d;
 }
 

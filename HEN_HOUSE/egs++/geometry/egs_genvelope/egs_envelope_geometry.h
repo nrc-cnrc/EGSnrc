@@ -417,6 +417,7 @@ public:
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
+
         if (ireg >= 0) {
             // inside.
             if (ireg < nbase) {
@@ -444,8 +445,7 @@ public:
                 // inscribed geometries => return the base geometry index.
                 // ij>=0 implies that we entered inscribed geometry
                 // jg in its local region ij.
-                return new_indexing ? local_start[jg] + ij :
-                       nbase + jg*nmax + ij;
+                return new_indexing ? local_start[jg] + ij : nbase + jg*nmax + ij;
             }
             // if here, we are in an inscribed geometry.
             // calculate its index (jg) and its local region (ilocal).
@@ -460,8 +460,9 @@ public:
             }
             // and then check if we will hit a boundary in this geometry.
             int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
-            if (inew >= 0) return new_indexing ? local_start[jg] + inew :
-                                      nbase + jg*nmax + inew;
+            if (inew >= 0) {
+                return new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;
+            }
             // inew >= 0 implies that we either stay in the same
             // region (inew=ilocal) or we entered a new region
             // (inew!=ilocal), which is still inside the inscribed geometry
@@ -486,8 +487,7 @@ public:
                     if (newmed) {
                         *newmed = geometries[j]->medium(i);
                     }
-                    return new_indexing ? local_start[j] + i :
-                           nbase + nmax*j + i;
+                    return new_indexing ? local_start[j] + i : nbase + nmax*j + i;
                 }
             }
         }
@@ -628,6 +628,13 @@ public:
     };
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
+
+    /*void printTriCheck() { // For debugging egs_triangle_mesh
+        for (int j=0; j<n_in; j++) {
+            geometries[j]->printTriCheck();
+        }
+        g->printTriCheck();
+    };*/
 
 protected:
 

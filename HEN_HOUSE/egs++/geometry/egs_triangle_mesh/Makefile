@@ -1,7 +1,7 @@
 ###############################################################################
 #
-#  EGSnrc egs++ makefile to build the mesh geometry library
-#  Copyright (C) 2020 Mevex Corporation
+#  EGSnrc egs++ makefile to build the triangle mesh geometry library
+#  Copyright (C) 2022 Max Orok
 #
 #  This file is part of EGSnrc.
 #
@@ -20,11 +20,7 @@
 #
 ###############################################################################
 #
-#  Authors:          Dave Macrillo, 2020
-#                    Matt Ronan,
-#                    Nigel Vezeau,
-#                    Lou Thompson,
-#                    Max Orok
+#  Author:           Max Orok, 2022
 #
 #  Contributors:
 #
@@ -34,13 +30,11 @@ include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
-DEFS = $(DEF1) -DBUILD_EGS_MESH_DLL
+DEFS = $(DEF1) -DBUILD_EGS_TRIANGLE_MESH_DLL
 
-library = egs_mesh
-lib_files = egs_mesh
-my_deps = egs_transformations.h geometry$(DSEP)$(library)$(DSEP)msh_parser.h \
-	geometry$(DSEP)$(library)$(DSEP)mesh_neighbours.h \
-	geometry$(DSEP)$(library)$(DSEP)tetgen_parser.h
+library = egs_triangle_mesh
+lib_files = egs_triangle_mesh
+my_deps = egs_transformations.h geometry$(DSEP)$(library)$(DSEP)stl_parser.h
 
 extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
@@ -49,13 +43,13 @@ include $(SPEC_DIR)egspp_libs.spec
 $(make_depend)
 
 # unit tests
-test_egs_mesh: test_egs_mesh.cpp egs_mesh.h egs_mesh.cpp msh_parser.h \
-		mesh_neighbours.h \
+test_egs_triangle_mesh: test_egs_triangle_mesh.cpp egs_triangle_mesh.h \
+        egs_triangle_mesh.cpp \
         ../../egs_base_geometry.h \
         ../../egs_vector.h ../../../lib/$(my_machine)/egs_config1.h \
         ../../egs_libconfig.h ../../egs_functions.h $(ABS_DSO)$(libpre)egspp$(libext) \
-        ../../dso/$(my_machine)/libegs_mesh.so
-	$(CXX) $(INC1) -I../../ -I../../../lib/$(my_machine)/ $(DEF1) $(opt) $(lib_link1) test_egs_mesh.cpp -otest_egs_mesh $(lib_link2) -legs_mesh
+        ../../dso/$(my_machine)/libegs_triangle_mesh.so
+	$(CXX) $(INC1) -I../../ -I../../../lib/$(my_machine)/ $(DEF1) $(opt) $(lib_link1) test_egs_triangle_mesh.cpp -otest_egs_triangle_mesh $(lib_link2) -legs_triangle_mesh
 
 .PHONY: clean
 clean:

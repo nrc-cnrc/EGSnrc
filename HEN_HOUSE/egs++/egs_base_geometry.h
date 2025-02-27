@@ -749,6 +749,8 @@ public:
     /*! \brief Set the labels from an input string */
     int setLabels(const string &inp);
 
+    //virtual void printTriCheck() { }; // For debugging egs_triangle_mesh
+
     virtual void updatePosition(EGS_Float time) { };
 
     /* This method is essentially used to determine whether the simulation
@@ -792,6 +794,7 @@ protected:
         the same medium.
      */
     int med;
+
 
     /*! \brief Does this geometry have relative mass density scvaling?
 
@@ -1145,6 +1148,7 @@ struct EGS_GeometryIntersections {
     \until make_depend
     That's all.
 
+
     Here is the complete source code of the EGS_Box class.<br>
     The header file:
     \include geometry/egs_box/egs_box.h
@@ -1152,6 +1156,7 @@ struct EGS_GeometryIntersections {
     \include geometry/egs_box/egs_box.cpp
     The Makefile:
     \include geometry/egs_box/Makefile
+
 */
 
 /* \example geometry/example1/geometry_example1.cpp
