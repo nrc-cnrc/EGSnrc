@@ -257,18 +257,8 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    ]
 
    "===============read the value(i)======================="
-   IF ( (lnblnk1(TEXT)=0) | (lnblnk1(TEXT)=1) )
+   IF ( (lnblnk1(TEXT)=0) )
    [
-        IF (vname(:ivname)='TITLE')
-        [
-           READ (UNITNUM,FMT='(A256)') TEXTPIECE;
-           IF (lnblnk1(TEXTPIECE)~=0) [
-              TEXT=TEXTPIECE(:lnblnk1(TEXTPIECE));
-              $SKIP LEADING BLANKS IN text;
-              $SKIP LEADING BLANKS IN origtext;
-              GOTO :TITLE-THERE:;
-           ]
-        ]
         IF( error_level > 0 ) [
         WRITE (ERR,*) '*************ERROR*************';
         WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
@@ -278,7 +268,6 @@ DO I = NMIN, NMAX  [ "for each value_sought"
         ERROR_FLAGS(I)=1;
         RETURN;
    ]
-:TITLE-THERE:
    CONTINUE;
 
    " Always check for default. The following sets the value to "
@@ -452,16 +441,11 @@ DO I = NMIN, NMAX  [ "for each value_sought"
               ERROR_FLAGS(I)=1;
               RETURN;
            ]
-           IF (vname(:ivname)='TITLE') [
-              TEXTPIECE=origtext;
-              GOTO :READ-IT:
-           ]
            iindex = INDEX(origtext,',');
            IF ( iindex ~= 0 ) [ TEXTPIECE=origtext(:iindex-1); ]
            ELSE               [ TEXTPIECE=origtext;            ]
                       "The above is to avoid conversion to upper case"
                       "for e.g. media names                          "
-           :READ-IT:
            CONTINUE;
            READ(TEXTPIECE,ERR=:GI1008:,FMT='(A256)') CHAR_VALUE(I,IVAL);
            $SKIP LEADING BLANKS IN CHAR_VALUE(I,IVAL);
@@ -1333,16 +1317,16 @@ DO i=1,NMED[
    IF(densityfile_specified)[
      "if a file separator is specified in the name, assume the full path + name"
      "of the file is specified"
-    write(*,*)' density_file ',density_file;
-    IF(index(density_file,$file_sep)>0) [
+      write(*,*)' density_file ',density_file;
+      IF(index(density_file,$file_sep)>0) [
        tmp_string=$cstring(density_file);
        inquire(file=tmp_string,exist=ex);
        IF(~ex)[
               $WRITE_MEDERR(' Error: Density correction file ',tmp_string);
               $WRITE_MEDERR(' cannot be found.');
        ]
-    ]
-    ELSE [
+      ]
+      ELSE [
        density_file=$cstring(density_file)//'.density';
        "first look in $EGS_HOME/pegs4/density_corrections"
        tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
@@ -1387,10 +1371,10 @@ DO i=1,NMED[
        $WRITE_MEDERR(
         ' $HEN_HOUSE/pegs4/density_corrections/compounds.');
        :density_file_found:
-        ]
-     ]
+      ]
+   ]
 
-       IF(densityfile_specified)[
+   IF(densityfile_specified)[
              "now try to open it"
          i_density=19;
          i_density=egs_get_unit(i_density);
@@ -1503,7 +1487,7 @@ DO i=1,NMED[
 
          "close the density file"
          close(i_density);
-       ]
+   ]
 
    "okay, now commit this to the media library"
    IF(elements_specified & rho_specified)[
