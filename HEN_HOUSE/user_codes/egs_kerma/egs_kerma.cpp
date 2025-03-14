@@ -112,7 +112,7 @@ public:
     EGS_KermaApplication(int argc, char **argv) :
         EGS_AdvancedApplication(argc,argv), ngeom(0),
         kerma(0), kerma_r(0), scg(0), fd_geom(0),
-        ncg(0), flug(0),flugT(0) {
+        ncg(0), flug(0),flugT(0), score_int_flu(false) {
         Eph_ave = 0.0;
         Nph = 0.0;
         Eph_sc  = 0.0;
@@ -134,6 +134,7 @@ public:
                     delete kerma;
                 }
             }
+
             if (flug) {
                 for (int j=0; j<ngeom; j++) if (flug[j]) {
                         delete flug[j];
@@ -141,10 +142,12 @@ public:
                 if (flug) {
                     delete [] flug;
                 }
-                if (flugT) {
-                    delete [] flugT;
-                }
             }
+
+            if (flugT) {
+               delete [] flugT;
+            }
+
             delete [] geoms;
             delete [] fd_geoms;
             delete [] mass;
@@ -419,7 +422,7 @@ public:
                     edepCV     = emuen_rho*rho_cv[ig];// Data base contains E_muen/rho values
                     exp_CV     = exp(-mu_cv*t_sc[i]);
                     exp_Att    = sigma ? exp_Lambda*(1-exp_CV)/mu_cv : 1.0 ;//Attenuation in scoring region
-                    edepCV    *= exp_Att;
+                    edepCV     *= exp_Att;// per density, needs division by volume only
                     //--------------------------------------------
                     // score kerma in scoring region
                     //--------------------------------------------
@@ -430,7 +433,9 @@ public:
                     // score photon fluence
                     //--------------------------------------------
                     if (flug) {
-                        flugT[ig]->score(ir_sc[i],wt*exp_Att);
+                        if (flugT){
+                            flugT[ig]->score(ir_sc[i],wt*exp_Att);
+                        }
                         EGS_Float e = the_stack->E[np];
                         if (flu_s) {
                             e = log(e);
@@ -513,12 +518,15 @@ public:
                 if (!flug[j]->storeState(*data_out)) {
                     return 108+2*(ngeom+j);
                 }
+            }
+        }
+        if (flugT) {
+            for (int j=0; j<ngeom; j++) {
                 if (!flugT[j]->storeState(*data_out)) {
-                    return 109+4*(ngeom+j);
+                   return 109+4*(ngeom+j);
                 }
             }
         }
-
         (*data_out) << Eph_ave << " " << Nph << " "
                     << Eel_ave << " " << Nel << " "
                     << Eph_sc  << " " << Nsc << endl;
@@ -559,9 +567,13 @@ public:
                 if (!flug[j]->setState(*data_in)) {
                     return 108+2*(ngeom+j);
                 }
-                if (!flugT[j]->setState(*data_in)) {
-                    return 109+4*(ngeom+j);
-                }
+            }
+        }
+        if (flugT) {
+            for (int j=0; j<ngeom; j++) {
+                 if (!flugT[j]->setState(*data_in)) {
+                     return 109+4*(ngeom+j);
+                 }
             }
         }
 
@@ -590,6 +602,10 @@ public:
         if (flug) {
             for (int j=0; j<ngeom; j++) {
                 flug[j]->reset();
+            }
+        }
+        if (flugT) {
+            for (int j=0; j<ngeom; j++) {
                 flugT[j]->reset();
             }
         }
@@ -641,6 +657,11 @@ public:
                     return 108+2*(ngeom+j);
                 }
                 (*flug[j]) += tg;
+            }
+        }
+        if (flugT) {
+            EGS_ScoringArray tgT(ngeom);
+            for (int j=0; j<ngeom; j++) {
                 if (!tgT.setState(data)) {
                     return 109+4*(ngeom+j);
                 }
@@ -717,7 +738,7 @@ public:
             if (F == 1) {
                 egsInformation("\n\n==> Calculation summary (per particle) in geometry: %s\n\n",
                                geoms[j]->getName().c_str());
-                if (flug) {
+                if (flugT) {
                     egsInformation(
                         "  %*s        m/g          Edep/[MeV]                   K/[Gy]            "
                         "      Flu/[cm-2]           (muen/rho)=K/Flu/Eave[cm^2/g]      %n\n",
@@ -732,7 +753,7 @@ public:
             else {
                 egsInformation("\n==> Calculation summary (per fluence) in geometry: %s\n\n",
                                geoms[j]->getName().c_str());
-                if (flug) {
+                if (flugT) {
                     egsInformation(
                         "  %*s        m/g        Edep/[MeV*cm2]                 K/[Gy*cm2]       "
                         "        Flu/[cm-2]           (muen/rho)=K/Flu/Eave[cm^2/g]      %n\n",
@@ -752,7 +773,7 @@ public:
                 nreg = geoms[j]->regions();
                 for (int ir = 0; ir < nreg; ir++) {
                     if (is_sensitive[j][ir]) {
-                        imed     = getMedium(ir);
+                        imed     = geoms[j]->medium(ir);
                         rho      = getMediumRho(imed);
                         med_name = getMediumName(imed);
                         m = mass[j][ir];
@@ -766,7 +787,7 @@ public:
                         else {
                             dr=100.0;
                         }
-                        if (flug) {
+                        if (flugT) {
                             flugT[j]->currentResult(ir,fe,dfe);
                             if (fe > 0) {
                                 dfe = 100*dfe/fe;
@@ -787,19 +808,21 @@ public:
                 }
                 egsInformation("  %s\n",line.c_str());
             }
-            kerma->currentResult(j,r,dr);
-            if (r > 0) {
-                dr = dr/r;
-                if (dr < kermaEpsilon) {
-                    dr = 1.0;
+            else{
+                kerma->currentResult(j,r,dr);
+                if (r > 0) {
+                    dr = dr/r;
+                    if (dr < kermaEpsilon) {
+                        dr = 1.0;
+                    }
                 }
+                else {
+                    dr=1.0;
+                }
+                egsInformation("  Total: %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
+                               mass_cv[j],r*F,dr*100.,r*normD/mass_cv[j],dr*100.);
+                egsInformation("  %s\n",line.c_str());
             }
-            else {
-                dr=1.0;
-            }
-            egsInformation("  Total: %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
-                           mass_cv[j],r*F,dr*100.,r*normD/mass_cv[j],dr*100.);
-            egsInformation("  %s\n",line.c_str());
             count = 0;
             line.clear();// reset line
         }
@@ -862,11 +885,15 @@ public:
             spe_output << "@    subtitle font 4\n";
             spe_output << "@    subtitle size 1.000000\n";
         }
-        egsInformation("\n\nPhoton fluence summary\n"
-                       "======================\n");
+        egsInformation("\n\nDifferential Photon fluence\n"
+                           "===========================\n");
         double fe,dfe,fp,dfp;
         for (int j=0; j<ngeom; j++) {
-            egsInformation("\nGeometry: %s \n\n",geoms[j]->getName().c_str());
+            egsInformation("\n   Geometry: %s \n",geoms[j]->getName().c_str());
+            /* Integral fluence is ouput now in kerma output routine. Do not duplicate!
+               One could argue that it belongs where fluence output is handled.
+               But, it is used in the kerma output routine to obtain mass-energy
+               absorption coefficients.
             if (flugT) {
                 int count = 0;
                 int nreg = geoms[j]->regions();
@@ -880,8 +907,8 @@ public:
 
                 for (int ir = 0; ir < nreg; ir++) {
                     if (is_sensitive[j][ir]) {
-                        int imed = getMedium(ir);
-                        /* Per volume */
+                        int imed = geoms[j]->medium(ir);
+                        // Per volume
                         EGS_Float m = mass[j][ir];
                         EGS_Float normT = F*getMediumRho(imed)/m;
                         flugT[j]->currentResult(ir,fe,dfe);
@@ -895,7 +922,7 @@ public:
                                        irmax_digits, ir, m,fe*normT, dfe);
                     }
                 }
-            }
+            }*/
 
             if (flug) {
                 /* Diff. fluence currently in whole scoring volume */
@@ -912,7 +939,7 @@ public:
                           geoms[j]->getName().c_str()<<"\"\n";
                 spe_output<<"@target G0.S"<<j<<"\n";
                 spe_output<<"@type xydy\n";
-                egsInformation("\n\n"
+                egsInformation("\n"
                                "   Emid/MeV    dFlu/dE/[MeV-1/cm2]   DFlu/[MeV-1/cm2]\n"
                                "   --------------------------------------------------\n");
                 for (int i=0; i<flu_nbin; i++) {
@@ -1018,6 +1045,10 @@ protected:
             if (flug) {
                 for (int j=0; j<ngeom; j++) {
                     flug[j]->setHistory(current_case);
+                }
+            }
+            if (flugT) {
+                for (int j=0; j<ngeom; j++) {
                     flugT[j]->setHistory(current_case);
                 }
             }
@@ -1060,21 +1091,22 @@ private:
 
     /****************************************************************/
 
-    EGS_ScoringArray **flug;    // Differential fluence in ALL scoring regions
-    EGS_ScoringArray **flugT;   // Integral fluence in EACH scoring region
+    EGS_ScoringArray **flug;    // Differential fluence for ALL scoring regions
+    EGS_ScoringArray **flugT;   // Integral     fluence in EACH scoring region
     EGS_Float       flu_a,
                     flu_b,
                     flu_xmin,
                     flu_xmax;
     int             flu_s,
                     flu_nbin;
-    EGS_Float      *rho_cv;       // mass density of scoring volume
-    EGS_Float      *mass_cv;      // mass of scoring volume material
-    EGS_Float       **mass;       // masses of the CV regions.
+    EGS_Float      *rho_cv;      // mass density of scoring volume
+    EGS_Float      *mass_cv;     // mass of scoring volume material
+    EGS_Float     **mass;        // masses of the CV regions.
     int            *n_scoring_r; // Number of scoring regions in geometry.
     int             max_sc_reg;  // Largest scoring region in all geometries
     int             active_reg;  // Scoring region in first geometry shown in progress
     int            *active_med;  // Scoring medium in each geometry
+    bool         score_int_flu;  // Integral fluence scoring switch.
 
     /*! Force-Detection geometry.
       If no FD geometry defined, kerma scoring only done when photons
@@ -1608,7 +1640,31 @@ int EGS_KermaApplication::initScoring() {
             }
         }
 
-        aux = options->takeInputItem("fluence scoring");
+        /*********************************************
+         Request integral fluence scoring explicitely
+        **********************************************/
+        vector<string> choice;
+        choice.push_back("no");
+        choice.push_back("yes");
+        score_int_flu  = options->getInput("score integral fluence", choice,0);
+
+        if (score_int_flu){
+            // Integral fluence array
+            flugT = new EGS_ScoringArray* [ngeom];
+            for (int j=0; j<ngeom; j++) {
+                flugT[j] = new EGS_ScoringArray(geoms[j]->regions());
+            }
+        }
+
+        vector<string> diff_f_key = {"fluence scoring",
+                                     "differential fluence scoring"};
+        for (short int i = 0; i < diff_f_key.size(); i++){
+            aux = options->takeInputItem( diff_f_key[i] );
+            if ( aux ) break;
+        }
+        /***************************************************
+         If input block found, score differential fluence.
+         ***************************************************/
         if (aux) {
             EGS_Float flu_Emin, flu_Emax;
             int er1 = aux->getInput("minimum energy",flu_Emin);
@@ -1643,14 +1699,17 @@ int EGS_KermaApplication::initScoring() {
                 flu_b = -flu_xmin*flu_a;
             }
             else {
-                egsInformation("\n\n******* Missing differential fluence inputs"
-                               " errors: %d %d %d\n",er1,er2,er3);
-                egsInformation("            => Integral fluence scoring ONLY\n\n");
-            }
-            // Integral fluence array
-            flugT = new EGS_ScoringArray* [ngeom];
-            for (int j=0; j<ngeom; j++) {
-                flugT[j] = new EGS_ScoringArray(geoms[j]->regions());
+                egsWarning("\n\n******* Errors in differential fluence input block\n");
+                if (er1) {
+                    egsWarning("        minimum energy entry (err=%d)\n",er1);
+                }
+                if (er2) {
+                    egsWarning("        maximum energy entry (err=%d)\n",er2);
+                }
+                if (er3) {
+                    egsWarning("        number of bins entry (err=%d)\n",er3);
+                }
+                egsFatal("Fix errors or remove differential fluence scoring block!!!\n\n");
             }
 
             delete aux;
@@ -1845,8 +1904,31 @@ void EGS_KermaApplication::describeSimulation() {
         if (!nexcl) {
             egsInformation(" NONE");
         }
+
         egsInformation("\n\n");
     }
+
+
+    egsInformation("\nFluence scoring inputs\n"
+                     "======================\n");
+    vector<string> scale;
+    scale.push_back("linear");
+    scale.push_back("logarithmic");
+
+    if (flugT && flug) {
+       egsInformation("---> Scoring differential (%s) and integral fluence\n", scale[flu_s].c_str());
+    }
+    else if (flugT){
+       egsInformation("---> Scoring integral fluence\n");
+    }
+    else if (flug){
+       egsInformation("---> Scoring differential (%s) fluence\n", scale[flu_s].c_str());
+    }
+    else {
+       egsInformation("---> No fluence scoring requested\n");
+    }
+
+    egsInformation("\n");
 }
 
 #ifdef BUILD_APP_LIB
