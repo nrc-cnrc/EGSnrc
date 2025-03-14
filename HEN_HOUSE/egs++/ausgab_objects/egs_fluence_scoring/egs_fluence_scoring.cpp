@@ -542,7 +542,7 @@ void EGS_PlanarFluence::initScoring(EGS_Input *inp) {
             ux = EGS_Vector(1,0,0);
             uy = EGS_Vector(0,1,0);
             /* Request a scoring plane transformation for initial position and orientation */
-            EGS_AffineTransform *t = EGS_AffineTransform::getTransformation(inp);
+            EGS_AffineTransform *t = EGS_AffineTransform::getTransformation(pScoringInput);
             if (t) {
                 t->rotate(m_normal) ;
                 t->transform(m_midpoint);
