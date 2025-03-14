@@ -163,13 +163,21 @@ REPLACE {;COMIN/ELEMTB/;} WITH
      $REAL4 ITBL,WATBL,RHOTBL;
      $TYPE ASYMT;
    }
-
+"ISCOMP is 1 only if medium is specified"
+"with number of atoms."
+"1 means the medium is a compound."
 REPLACE {;COMIN/MIXDAT/;} WITH
    {;COMMON/MIXDAT/NEP,LMED,PZP($MXEL),ZELEMP($MXEL),WAP($MXEL),RHOZP($MXEL),
-     GASPP,EZ,TPZ,IDSTRN(24);
-     $INTEGER NEP,LMED;
-     $REAL4 PZP,ZELEMP,WAP,RHOZP,GASPP,EZ,TPZ;
+     GASPP,EZ,TPZ,IDSTRN(24),ELEM_NAMES($MXEL),ISCOMP,IPOTVAL,LDENSITY,MEDID,
+     OUTDENSITY,COMP_NAMES($MXEL),COMP_FRACS($MXEL),NCOMPOUNDS;
+     $INTEGER NEP,LMED,NCOMPOUNDS;
+     $REAL4 PZP,ZELEMP,WAP,RHOZP,GASPP,EZ,TPZ,COMP_FRACS;
      $TYPE IDSTRN;
+     CHARACTER*50 ELEM_NAMES,COMP_NAMES;
+     $INTEGER ISCOMP;
+     $REAL4 IPOTVAL, LDENSITY;
+     $INTEGER MEDID;
+     character*256 OUTDENSITY;
    }
 
 REPLACE {;COMIN/DBRPR/;} WITH
@@ -185,10 +193,16 @@ REPLACE {;COMIN/DBRPR/;} WITH
 REPLACE {;COMIN/MEDINP/;} WITH
    {;COMMON/MEDINP/inpdensity_file($MXMED),inpasym($MXMED,$MXEL),
      inpstrn(24,$MXMED),pz4($MXMED,$MXEL),
-     rhoz4($MXMED,$MXEL),wa4($MXMED,$MXEL),inpgasp($MXMED);
-     character*256 inpdensity_file;
-     $TYPE inpasym,inpstrn;
-     $REAL4 pz4,rhoz4,wa4,inpgasp;
+     rhoz4($MXMED,$MXEL),wa4($MXMED,$MXEL),inpgasp($MXMED),
+     iscompound($MXMED),ipot($MXMED),localDensity($MXMED),
+     outdensity_file($MXMED),ncomp($MXMED),
+     compoundList($MXMED,$MXEL),compoundFractions($MXMED,$MXEL);
+     character*256 inpdensity_file,outdensity_file;
+     character*50 inpasym,compoundList;
+     $TYPE inpstrn;
+     $REAL4 pz4,rhoz4,wa4,inpgasp,compoundFractions;
+     $INTEGER iscompound,ncomp;
+     $REAL4 ipot,localDensity;
    };
 
 REPLACE {$DECLARE-PEGS4-COMMON-BLOCKS;} WITH {
@@ -222,6 +236,12 @@ DO IM=1,NMED[
   APP=AP(IM);
   UPP=UP(IM);
   NEP=NNE(IM);
+  NCOMPOUNDS=NCOMP(IM);
+  MEDID = IM;
+  ISCOMP = iscompound(IM);
+  IPOTVAL = ipot(IM);
+  LDENSITY = localDensity(IM);
+  OUTDENSITY = outdensity_file(IM);
   IUNRSTP=IUNRST(IM);
   IAPRIMP=IAPRIM(IM);
   EPSTFLP=EPSTFL(IM);
@@ -234,7 +254,14 @@ DO IM=1,NMED[
     PZP(J)=PZ4(IM,J);
     RHOZP(J)=RHOZ4(IM,J);
     WAP(J)=WA4(IM,J);
+    ELEM_NAMES(J) = inpasym(IM,J);
+
+     IF (NCOMPOUNDS > 0) [
+        COMP_NAMES(J) = compoundList(IM,J);
+        COMP_FRACS(J) = compoundFractions(IM,J);
+    ]
  ]
+
  DO IB=1,LMDN[
    IDSTRN(IB)=INPSTRN(IB,IM);
  ]

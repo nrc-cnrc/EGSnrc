@@ -1,0 +1,81 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc manual: estar density corrections
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Author: Reid Townson
+%
+%  Contributors:
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Replace commented line for the one with fixed date when commiting
+% Beware: Using the macro below conflicts between CVS and latex!!!
+% \lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2013/09/26 17:59:27 $
+\lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2013/09/26 17:59:27 $
+}}
+
+
+\section{Integrated ESTAR density effect corrections}
+\label{estar}
+
+Density effect correction calculations from {\tt NIST ESTAR} have been fully integrated into EGSnrc. Users may now specify the media data in the .egsinp file and the density correction factors will be computed on-the-fly by the {\tt ESTAR} module in EGSnrc. This allows users to skip the step of manually generating density correction files using the {\tt ESTAR} website or standalone application. In addition to convenience, a number of improvements were made to the calculations.
+
+There are two ways to define materials that will enable ESTAR to calculate density corrections. The user may either provide a list of compounds that make up a mixture, using the {\tt mixture compounds} input, or they may provide a list of {\tt elements} and the {\tt number of atoms} for each. A list of the {\tt mass fractions} for each of the elements of compounds must then be provided, along with the {\tt bulk density}. Users can also optionally specify the {\tt ivalue} if they wish to override the default value calculated by ESTAR.
+
+For comparison with existing density correction files, use the input option {\tt output density file} to provide the path and name of the file that will be created. If no path is provided, it is placed in the current directory. This also allows the user to save the density corrections to be re-used easily, or for record-keeping.
+
+Note that if a user also specifies their own density correction file using the {\tt density correction file} input, the density factors and media parameters from the density correction file will be used and density correction factors will not be calculated by the integrated {\tt ESTAR} module. For more details on all the inputs that can be used to define materials, see Section~\ref{pegsless}.
+
+The implementation of {\tt ESTAR} density effect corrections in EGSnrc includes improvements over the original software by Sternheimer {\em et al.} \cite{St82}, and these are detailed below.
+
+\subsection{Modifications to graphite from ICRU Report 90}
+A change to the valence electrons of carbon has been included in the EGSnrc density corrections algorithm, in line with recommendations from ICRU Report 90. In particular, this will have impact for simulations involving graphite ionization chambers.
+
+\subsection{ESTAR algorithm improvements}
+The original ESTAR code made a few approximations in the algorithm. In equation 1 in Sternheimer {\em et al.} \cite{St82}, the density correction is expressed in terms of a parameter $l$, which is the solution to an equation relating the velocity of the particle to the oscillator strengths of the material. The authors use an approximate method to find the upper and lower bounds of $l$. Instead of this, a bisection root-finding algorithm has been introduced to determine $l$, which slightly improves the accuracy of the density correction factors.
+
+Now that the density correction factors are calculated on-the-fly, full double precision is maintained, rather than writing a fixed number of digits to a file. This change should have negligible impact on simulation results.
+
+\subsection{Tests of the integrated density corrections}
+An array of tests have been performed to validate the new algorithm, and check the impact of changes. It was found that the updated root finding method always increases the density correction factors. The maximum absolute increase in density correction factors was found to be 0.023. The average relative increase in density correction factors was found to be $3\%$ across the materials distributed within EGSnrc. A summary of the tests conducted using the updated root finding method is given below in Table $\ref{estarTable}$. For fuzzy testing, density, compound composition and mixture compositions were randomly selected over a reasonable range to produce a large set of tests between the updated density correction algorithm in EGSnrc, and the original ESTAR fortran code. To test a particular material against legacy density correction files, use the {\tt output density file} option.
+\begin{table}[phtb]
+\begin{center}
+\begin{tabular}{|c | c c c |}
+ \hline
+ $ $ & \textbf{Number of Tests} & \textbf{Average Difference} & \textbf{Maximum Difference}\\ [0.5ex]
+ \hline\hline
+ \textbf{EGSnrc Materials} & $441$ & $0.0049$ & $0.023$\\
+ \hline
+ \textbf{Fuzzy Test Elements} & $882$ & $0.0028$ & $0.023$ \\
+ \hline
+ \textbf{Fuzzy Test Compounds} & $54$ & $0.0031$ & $0.023$ \\
+  \hline
+ \textbf{Fuzzy Test Mixtures} & $24000$ & $0.0035$ & $0.023$ \\[1ex]
+ \hline
+\end{tabular}
+\caption{\label{estarTable}Summary of tests using the updated root finding method}
+\end{center}
+\end{table}
+
+
+
