@@ -358,26 +358,29 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             egsInformation("EGS_Ensdf::parseEnsdf: %s\n", line.c_str());
         }
 
-        if (line[6]==' ' && line[7]==' ' && line[8]==' ') {
+        if (line.size() > 8 && line[6]==' ' && line[7]==' ' && line[8]==' ') {
             // Identification
 
         }
-        else if (line[6]==' ' && line[7]=='H' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='H' && line[8]==' ') {
             // History
 
         }
-        else if (line[6]== ' ' && line[7]=='Q' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]== ' ' && line[7]=='Q' && line[8]==' ') {
             // Q-value
 
         }
-        else if (line[6]==' ' && line[7]=='X') {
+        else if (line.size() > 7 && line[6]==' ' && line[7]=='X') {
             // Cross-Reference
 
         }
-        else if ((line[6]=='C' || line[6]=='D' || line[6]=='T' ||
+        else if (line.size() > 4 && line[3]=='N' && line[4]=='N') {
+            // Neutron nuclei we skip
+        }
+        else if (line.size() > 6 && (line[6]=='C' || line[6]=='D' || line[6]=='T' ||
                   line[6]=='c' || line[6]=='d' || line[6]=='t')) {
 
-            if (line[7]=='G') {
+            if (line.size() > 7 && line[7]=='G') {
                 // If this is related to a gamma record, keep it
                 recordStack[12].push_back(line);
             }
@@ -387,7 +390,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             }
 
         }
-        else if (line[6]==' ' && line[7]=='P') {
+        else if (line.size() > 7 && line[6]==' ' && line[7]=='P') {
             //Parent
             if (line[5]==' ') {
                 buildRecords();
@@ -395,7 +398,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[5].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='N') {
+        else if (line.size() > 7 && line[6]==' ' && line[7]=='N') {
             // Normalization
             if (line[5]==' ') {
                 buildRecords();
@@ -403,7 +406,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[6].push_back(line);
 
         }
-        if (line[6]==' ' && line[7]=='L' && line[8]== ' ') {
+        if (line.size() > 8 && line[6]==' ' && line[7]=='L' && line[8]== ' ') {
             // Level
             if (line[5]==' ') {
                 buildRecords();
@@ -411,7 +414,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[7].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='B' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='B' && line[8]==' ') {
             // Beta-
             if (line[5]==' ') {
                 buildRecords();
@@ -419,7 +422,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[8].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='E' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='E' && line[8]==' ') {
             // Beta+ and Electron Capture
             if (line[5]==' ') {
                 buildRecords();
@@ -427,7 +430,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[9].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='A' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='A' && line[8]==' ') {
             // Alpha
             if (line[5]==' ') {
                 buildRecords();
@@ -435,7 +438,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[10].push_back(line);
 
         }
-        else if (line[6]==' ' && (line[7]=='D' || line[7]==' ') &&
+        else if (line.size() > 8 && line[6]==' ' && (line[7]=='D' || line[7]==' ') &&
                  (line[8]=='N' || line[8]=='P' || line[8]=='A')) {
             // Delayed Particle
             if (line[5]==' ') {
@@ -444,7 +447,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[11].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='G' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='G' && line[8]==' ') {
             // Gamma
             if (line[5]==' ') {
                 buildRecords();
@@ -1702,7 +1705,7 @@ vector<string> Record::getRecords() const {
 // converted to a double
 double Record::recordToDouble(int startPos, int endPos) {
     if (!lines.empty()) {
-        if (lines.front().length() < startPos) {
+        if (lines.front().length() < endPos) {
             egsWarning("Record::recordToDouble: Warning: Record too short to "
                        "contain desired quantity\n");
             return 0;
@@ -1721,7 +1724,7 @@ double Record::recordToDouble(int startPos, int endPos) {
 // lines array
 string Record::recordToString(int startPos, int endPos) {
     if (!lines.empty()) {
-        if (lines.front().length() < startPos) {
+        if (lines.front().length() < endPos) {
             egsWarning("Record::recordToString: Warning: Record too short to "
                        "contain desired quantity\n");
             return "";
@@ -1869,7 +1872,7 @@ double Record::parseHalfLife(int startPos, int endPos) {
         egsWarning("Record::parseHalfLife: Error: Record is empty\n");
         return -5;
     }
-    if (lines.front().length() < startPos) {
+    if (lines.front().length() < endPos) {
         egsWarning("Record::parseHalfLife: Warning: Record too short to "
                    "contain desired quantity\n");
         return -5;
