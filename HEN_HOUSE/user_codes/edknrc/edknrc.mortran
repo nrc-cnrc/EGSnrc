@@ -131,9 +131,9 @@
 "                       **************************
 "*******************************************************************************
 "
-"  IRESTART
+"  IRESUME
 "       = first    (0) First run for this data set
-"       = restart  (1) Restart a previous run
+"       = resume   (1) Resume a previous run
 "       = analyze  (3) Just read in the raw data and do the statistical analysis
 "       = parallel (5) Combine results from previous parallel runs
 "  STORE DATA ARRAYS
@@ -1227,10 +1227,10 @@ REPLACE {;COMIN/IODAT2/;} WITH
 {;
 COMMON/IODAT2/
 NCASEO, NCASET, AMASS($MAXCDOSE,$MAXRADII),TMCPUO,ECUTIN,PCUTIN,
-EDKF, IDAT,IRESTART,IDORAY,IDOPES,IVAL,datcount;
+EDKF, IDAT,IRESUME,IDORAY,IDOPES,IVAL,datcount;
 $LONG_INT NCASEO, NCASET;
 $REAL    AMASS,TMCPUO,ECUTIN,PCUTIN;
-$INTEGER IDAT,IDORAY,IDOPES,IVAL,IRESTART,EDKF,datcount;
+$INTEGER IDAT,IDORAY,IDOPES,IVAL,IRESUME,EDKF,datcount;
 "Added type declarations, IK January 10 2000"
 }
 "
@@ -1488,9 +1488,9 @@ $SET_ELAPSED_CPUTIME(CPUT0); "OBTAIN THE INITIAL STARTING TIME"
 
 call inputs;
 
-" THE IRESTART=5 CASE, POST-PROCESSING FOR DISTRIBUTED RUNS, GOES HERE
+" THE IRESUME=5 CASE, POST-PROCESSING FOR DISTRIBUTED RUNS, GOES HERE
 " ADDED BY JT, NOV.98
-IF(IRESTART.EQ.5)[
+IF(IRESUME.EQ.5)[
 
     call egs_combine_runs(combine_results,'.egsdat');
 
@@ -1498,7 +1498,7 @@ IF(IRESTART.EQ.5)[
     NBATCH= 0;      "DON'T WANT IT TO RUN ANY HISTORIES"
     NCASET= NCASEO; "To prevent a wrong normalization if some of the "
                     "parallel runs not available, IK, Jan 21 1999"
-] "end of IRESTART = 5, DISTRIBUTED POST-PROCESSING"
+] "end of IRESUME = 5, DISTRIBUTED POST-PROCESSING"
 ELSE[
 
     jcase = ncase;
@@ -1638,16 +1638,16 @@ WRITE(IOUT,200);WRITE(6,200); "PRINT HEADER FOR EXECUTION MESSAGES"
 OUTPUT61;(' ');
 
 "PRINT EXECUTION MODE"
-IF(IRESTART.EQ.0)[WRITE(6,201);WRITE(IOUT,201);]
-ELSEIF(IRESTART.EQ.1)[
+IF(IRESUME.EQ.0)[WRITE(6,201);WRITE(IOUT,201);]
+ELSEIF(IRESUME.EQ.1)[
     WRITE(6,202) NCASE,NCASEO;
     write(6,'(21x,a,$)') 'New RNG state: ';
     $SHOW-RNG-STATE(6); write(6,*);
     write(iout,'(21x,a,$)') 'New RNG state: ';
     $SHOW-RNG-STATE(iout); write(iout,*);
 ]
-ELSEIF(IRESTART.EQ.3)[WRITE(6,204);WRITE(IOUT,204);GO TO :END-SIM:;]
-ELSEIF(IRESTART.EQ.5)[WRITE(6,206);WRITE(IOUT,206);GO TO :END-SIM:;]
+ELSEIF(IRESUME.EQ.3)[WRITE(6,204);WRITE(IOUT,204);GO TO :END-SIM:;]
+ELSEIF(IRESUME.EQ.5)[WRITE(6,206);WRITE(IOUT,206);GO TO :END-SIM:;]
 
 "SET CLOCK AT THE BEGINNING OF SIMULATIONS"
 $INITIALIZE_ELAPSED_CPU_TIME;
@@ -1794,13 +1794,13 @@ OUTPUT61 ihstry,TIMCPU+TMCPUO;(//I15,' histories run in ',f7.1);
 $UPDATE_LAST_HISTORY;"This is done always, $UPDATE_BATCH_LAST_HISTORY"
                      "is done only if idat = 0"
 
-IF(IRESTART=3)["just analyzing data--no elapsed time"
+IF(IRESUME=3)["just analyzing data--no elapsed time"
   WRITE(IOUT,250)TMCPUO,TMCPUO/3600;
   WRITE(6,250)TMCPUO,TMCPUO/3600;
   WRITE(IOUT,280)TMCPUO/dble(IHSTRY),3600.*dble(IHSTRY)/TMCPUO;
   WRITE(6,280)TMCPUO/dble(IHSTRY),3600.*dble(IHSTRY)/TMCPUO;
 ]
-ELSEIF(IRESTART=5)["output time results for parallel runs"
+ELSEIF(IRESUME=5)["output time results for parallel runs"
   WRITE(IOUT,255)DATCOUNT,TMCPUO,TMCPUO/3600.,TMCPUO/dble(DATCOUNT);
   WRITE(6,255)DATCOUNT,TMCPUO,TMCPUO/3600.,TMCPUO/dble(DATCOUNT);
   WRITE(IOUT,280)TMCPUO/dble(IHSTRY),3600.*dble(IHSTRY)/TMCPUO;
@@ -2166,7 +2166,7 @@ $CALL_EXIT(0);
             // ,79('*')/
             //'USING EDKnrc(EGSnrc) '$VERSION' ON '$MACHINE' ');
 201  FORMAT(/'********* NEW INPUT FILE *********'/);
-202  FORMAT(/'********* RESTARTED INPUT FILE ********* '/
+202  FORMAT(/'********* RESUMED INPUT FILE ********* '/
              ' ',10X,I12,' NEW + ',I12,' OLD HISTORIES');
 204  FORMAT(/'********* DATA ANALYSIS ONLY *********'/);
 206  FORMAT(/' ********* ANALYZING RESULTS FROM PARALLEL RUNS *******'/);
@@ -2258,7 +2258,7 @@ $INTEGER data_unit, egs_get_unit, egs_open_datfile;
 INTEGER NUM_TITLE,
 
 "I/O Contol"
-        NUM_IRESTART,
+        NUM_IRESUME,
         NUM_STORE,
         NUM_EDKF,
 "M-C Input"
@@ -2349,12 +2349,12 @@ $SKIP-LINE;
 DELIMETER='I/O CONTROL';
 
 IVAL=IVAL+1;
-NUM_IRESTART =IVAL;
-VALUES_SOUGHT(IVAL)='IRESTART';
+NUM_IRESUME =IVAL;
+VALUES_SOUGHT(IVAL)='IRESUME';
 NVALUE(IVAL)=1;
 TYPE(IVAL)=3;
 ALLOWED_INPUTS(IVAL,0)='FIRST';
-ALLOWED_INPUTS(IVAL,1)='RESTART';
+ALLOWED_INPUTS(IVAL,1)='RESUME';
 ALLOWED_INPUTS(IVAL,3)='ANALYZE';
 ALLOWED_INPUTS(IVAL,5)='PARALLEL';
 
@@ -2375,14 +2375,14 @@ ALLOWED_INPUTS(IVAL,0)='YES';
 ALLOWED_INPUTS(IVAL,1)='NO';
 
 "********************************"
-$GET_INPUTS(NUM_IRESTART,NUM_EDKF);
+$GET_INPUTS(NUM_IRESUME,NUM_EDKF);
 "********************************"
-IRESTART =VALUE(NUM_IRESTART ,1);
+IRESUME =VALUE(NUM_IRESUME ,1);
 IDAT=VALUE(NUM_STORE,1);
 EDKF=VALUE(NUM_EDKF,1);
-OUTPUT IRESTART,IDAT;
+OUTPUT IRESUME,IDAT;
   ( /
-' FIRST RUN(0),RESTARTED(1),ANALYZE(3),parallel(5):',
+' FIRST RUN(0),RESUMED(1),ANALYZE(3),parallel(5):',
     T72,I4/
 ' STORE DATA(0) OR NOT(1):',T72,I4/);
 IF (EDKF = 0)[
@@ -2811,11 +2811,11 @@ DO j=1,$MXREG[
 ]
 cavdose = 0.0; cavdose2 = 0.0; cavdose_tmp = 0.0;
 
-IF(IRESTART > 0 & IRESTART < 5)[ "Analize or restart run"
+IF(IRESUME > 0 & IRESUME < 5)[ "Analize or resume run"
  $READ_OLD_DATA;
 ]
 
-IF(IRESTART = 3)[NCASE=0;]
+IF(IRESUME = 3)[NCASE=0;]
 
 NCASET=NCASE+NCASEO;
 

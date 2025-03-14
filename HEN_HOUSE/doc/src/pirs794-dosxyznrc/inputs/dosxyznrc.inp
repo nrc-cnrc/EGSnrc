@@ -22,7 +22,7 @@
      Unit 1   Output summary and results
      Unit 2   .egsrns file for storing random numbers
      Unit 3   output .3ddose file containing dose arrays
-     Unit 4   Raw data output file for restarts
+     Unit 4   Raw data output file for resuming simulation
      Unit 5   Input stream - file or terminal
      Unit 6   prompts for and echoes input
      Unit 8   echoes input cross-section data (usually assigned to a null file)
@@ -841,7 +841,7 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
 
    Record 13 (9 if NMED=0)
             NCASE, IWATCH, TIMMAX, INSEED1, INSEED2,
-       BEAM_SIZE, ISMOOTH,IRESTART,IDAT,IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,
+       BEAM_SIZE, ISMOOTH,IRESUME,IDAT,IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,
        PARNUM,n_split,ihowfarless,i_phsp_out,i_bindos
 
             NCASE     Number of histories
@@ -864,15 +864,15 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
             ISMOOTH   =1 re-distribute particles when re-start a ph-sp file
                        and/or recycle an individual particle
                       =0 re-use the ph-sp data once run out (no redistribution)
-            IRESTART  = 0 first run for this data set (the default)
-                      = 1 restart of a previous run
+            IRESUME  = 0 first run for this data set (the default)
+                      = 1 resume a previous run
                       = 2 just create the input file and exit
                       = 3 just read in the raw data and do the statistical
                           analysis
                       = 4 recombine .pardose files from parallel runs
-            IDAT      = 0 output intermediate files for restarts
+            IDAT      = 0 output intermediate files to resume run
                       = 1 do not output intermediate data files at all
-                      = 2 output the data file for restart at end only
+                      = 2 output the resume data file at end only
             IREJECT   = 0 (default) do not perform charged particle range
                           rejection.
                       = 1 perform charged particle range rejection.  If
@@ -887,7 +887,7 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
                       going on to the next particle.
                       If NRCYCL is set <=0 then NRCYCL is automatically
                       calculated to use the entire phase space file with no
-                      restarts, unless the incident charge is +1 (positron) or
+                      rewinds, unless the incident charge is +1 (positron) or
                       the user filters incident particles based on their LATCH
                       values (enflag=3), in which case NRCYCL is set to 0.
                       The calculated NRCYCL does not take into account
@@ -899,7 +899,7 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
                       then use of NRCYCL is essential for accurate statistics.
                       If you are unsure of how many times to recycle, use
                       the automatically-calculated value of NRCYCL.  If this
-                      still results in many restarts (because of many
+                      still results in many rewinds (because of many
                       particles missing the geometry or beyond beam field),
                       then re-run the simulation with NRCYCL set manually to:
            NCASE/(NPHSP - NSMISS/NRCYCL_prev - NOUTSIDE - NRJCT - NDBSRJCT)-1

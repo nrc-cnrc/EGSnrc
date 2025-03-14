@@ -47,7 +47,7 @@
 EGS_PhspScoring::EGS_PhspScoring(const string &Name,
                                  EGS_ObjectFactory *f) :
     EGS_AusgabObject(Name,f), phsp_index(0), store_max(1000), phsp_file(),
-    count(0), countg(0), emin(1.e30), emax(-1.e30), first_flush(true), is_restart(false) {
+    count(0), countg(0), emin(1.e30), emax(-1.e30), first_flush(true), is_resume(false) {
     otype = "EGS_PhspScoring";
 }
 
@@ -302,7 +302,7 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
 void EGS_PhspScoring::openPhspFile() const {
 //the file has already been named at this point
     if (oformat==0) { //EGSnrc format
-        if (is_restart) {
+        if (is_resume) {
             phsp_file.open(phsp_fname.c_str(),ios::binary|ios::out|ios::in);
             if (!(phsp_file))
                 egsFatal("\nEGS_PhspScoring: Failed to open phase space file %s for appending.\n",
@@ -335,7 +335,7 @@ void EGS_PhspScoring::openPhspFile() const {
         int iaea_iostat;
         iaea_id = 1; //numerical index indicating this is the 1st file associated with this object scored
         //hard coded to 1
-        if (is_restart) {
+        if (is_resume) {
             int rwmode = 3;
             iaea_new_source(&iaea_id,phsp_fname_char,&rwmode,&iaea_iostat,len);
             if (iaea_iostat < 0) {
@@ -395,7 +395,7 @@ int EGS_PhspScoring::flushBuffer() const {
     if (first_flush) {
         openPhspFile();    //here's where we open the phase space file
     }
-    //awkward logic because we do not know if this is a restart
+    //awkward logic because we do not know if this is a resumed simulation
     //until after initialization
     first_flush = false;
 
@@ -496,7 +496,7 @@ bool  EGS_PhspScoring::setState(istream &data) {
         return false;
     }
     countprev = count;
-    is_restart = true;
+    is_resume = true;
     return true;
 }
 

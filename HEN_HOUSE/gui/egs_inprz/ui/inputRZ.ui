@@ -1251,10 +1251,10 @@
            <item>
             <widget class="QFrame" name="Frame4">
              <property name="toolTip">
-              <string>output *.egsdat file for restarts, parallel post-processing, etc</string>
+              <string>output *.egsdat file for resuming, parallel post-processing, etc</string>
              </property>
              <property name="whatsThis">
-              <string>output *.egsdat file for restarts, parallel post-processing, etc</string>
+              <string>output *.egsdat file for resuming, parallel post-processing, etc</string>
              </property>
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
@@ -1266,10 +1266,10 @@
               <item>
                <widget class="QCheckBox" name="storeDataCheckBox">
                 <property name="toolTip">
-                 <string>output *.egsdat file for restarts, parallel post-processing, etc</string>
+                 <string>output *.egsdat file for resuming, parallel post-processing, etc</string>
                 </property>
                 <property name="whatsThis">
-                 <string>output *.egsdat file for restarts, parallel post-processing, etc</string>
+                 <string>output *.egsdat file for resuming, parallel post-processing, etc</string>
                 </property>
                 <property name="text">
                  <string>store data array</string>
@@ -1522,7 +1522,7 @@
                 <item>
                  <layout class="QHBoxLayout">
                   <item>
-                   <widget class="QLabel" name="restartTextLabel">
+                   <widget class="QLabel" name="resumeTextLabel">
                     <property name="toolTip">
                      <string>Define run mode</string>
                     </property>
@@ -1530,7 +1530,7 @@
                      <string>Define run mode</string>
                     </property>
                     <property name="text">
-                     <string>irestart :</string>
+                     <string>iresume :</string>
                     </property>
                     <property name="wordWrap">
                      <bool>false</bool>
@@ -1554,7 +1554,7 @@
                    </spacer>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="irestartComboBox">
+                   <widget class="QComboBox" name="iresumeComboBox">
                     <property name="toolTip">
                      <string>run mode</string>
                     </property>
@@ -1571,7 +1571,7 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>restart</string>
+                      <string>resume</string>
                      </property>
                     </item>
                     <item>
@@ -11394,7 +11394,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
   <tabstop>outoptComboBox</tabstop>
   <tabstop>etransportComboBox</tabstop>
   <tabstop>iwatchComboBox</tabstop>
-  <tabstop>irestartComboBox</tabstop>
+  <tabstop>iresumeComboBox</tabstop>
   <tabstop>minPlnSpinBox</tabstop>
   <tabstop>maxPlnSpinBox</tabstop>
   <tabstop>minCylSpinBox</tabstop>

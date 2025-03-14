@@ -35,7 +35,7 @@
 
  IWATCH= off
  STORE INITIAL RANDOM NUMBERS= no
- IRESTART= first
+ IRESUME= first
  OUTPUT OPTIONS= cavity details
  STORE DATA ARRAYS= yes
 

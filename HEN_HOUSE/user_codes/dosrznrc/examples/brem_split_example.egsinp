@@ -42,11 +42,11 @@
 			#relaxations.
 
  STORE INITIAL RANDOM NUMBERS= no
- IRESTART= first        #First time for this run
+ IRESUME= first         #First time for this run
 
  OUTPUT OPTIONS= material summary    #Output material summary in addition to
                                      #dose output
- STORE DATA ARRAYS= yes #Allow possibility for restart by storing data arrays
+ STORE DATA ARRAYS= yes #Enable resuming by storing data arrays
                         #at the end of each batch
  ELECTRON TRANSPORT= normal    #Discrete interactions
 

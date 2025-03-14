@@ -1531,7 +1531,6 @@ void QInstallPage::timeStamp(){
 #ifdef CONF_DEBUG
    qDebug("Time elapsed: %g s", t_elapsed);
 #endif
-   //the_time.restart();
 }
 
 void QInstallPage::finalize_cpp(){

@@ -37,9 +37,9 @@
 #
 #
 1  .egslst
-#  Unit 2 is explicitly opened if needed, depending on istore and/or irestart
+#  Unit 2 is explicitly opened if needed, depending on istore and/or iresume
 #2  .egsrns
-#  Unit 4 is explicitly opened if needed, depending on idat and/or irestart
+#  Unit 4 is explicitly opened if needed, depending on idat and/or iresume
 #4  .egsdat
 #9  .egseff
 #  Unit 13 is explicitly opened if needed
