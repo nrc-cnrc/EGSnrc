@@ -1,5 +1,6 @@
 ### ignore EGSnrc configuration generated files
 egs_home/
+egs_homebin/
 egsnrc_mp/
 mortjob.mortran
 *.mortlst
