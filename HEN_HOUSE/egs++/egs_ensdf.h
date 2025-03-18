@@ -165,6 +165,8 @@ protected:
     string recordToString(int startPos, int endPos);
     double getTag(string searchString, string notAfter);
     double parseHalfLife(int startPos, int endPos);
+    unsigned short parseSpin(int startPos, int endPos);
+    bool parseParity(int startPos, int endPos);
     double parseStdUncertainty(string value, string stdUncertainty);
     string getStringAfter(string searchString, size_t len);
 
@@ -251,11 +253,15 @@ public:
     bool levelCanDecay() const;
     double getEnergy() const;
     double getHalfLife() const;
+    unsigned short getSpin() const;
+    bool getParity() const;
 
 protected:
     double disintegrationIntensity;
     double energy;
     double halfLife;
+    unsigned short spin;
+    bool parity;
     bool canDecay;
 
 private:
