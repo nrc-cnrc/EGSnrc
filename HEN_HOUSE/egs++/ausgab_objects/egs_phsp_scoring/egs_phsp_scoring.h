@@ -261,6 +261,12 @@ public:
             EGS_Vector x = app->top_p.x;
             int ir = app->top_p.ir;
             int latch = app->top_p.latch;
+
+            // Skip this particle if it's outside the overall geometry and we're scoring on entry only
+            if(scoredir == 1 && ir < 0) {
+                return 0;
+            }
+
             //only score if: 1) it has not been scored before or
             //2) we are scoring multiple crossers (EGSnrc format only)
             if (!(latch & bsmc()) || (oformat==0 && score_mc)) {
@@ -308,6 +314,11 @@ public:
     };
 
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
+        // Skip this particle if it's outside the overall geometry and we're scoring on entry only
+        if(scoredir == 1 && ir < 0) {
+            return 0;
+        }
+
         //same as above, we don't need the region no.
         if (ocharge==0 || 1+abs(app->top_p.q)==ocharge) {
             EGS_Vector x = app->top_p.x;
