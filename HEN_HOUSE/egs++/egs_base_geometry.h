@@ -727,6 +727,9 @@ public:
         return boundaryTolerance;
     };
 
+    /*! \brief Get the global region number for the first region in the geometry */
+    virtual int getGlobalRegionOffset(const string geomName);
+
     /*! \brief Get a list of all the regions labeled with a number */
     virtual void getNumberRegions(const string &str, vector<int> &regs);
 

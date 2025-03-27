@@ -414,6 +414,7 @@ public:
         return geometries[j]->getBScaling(ireg-local_start[j]);
     };
 
+    virtual int getGlobalRegionOffset(const string geomName);
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 protected:

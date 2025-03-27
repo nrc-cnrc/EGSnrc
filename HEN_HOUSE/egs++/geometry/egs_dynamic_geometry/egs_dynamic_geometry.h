@@ -364,6 +364,13 @@ public:
     void setBScaling(EGS_Input *);
 
     /*!
+     * \brief Pass along getGlobalRegionOffset calls to the original geometry
+     *
+     * \param geomName The name of the geometry being queried.
+     */
+    int getGlobalRegionOffset(const string geomName);
+
+    /*!
      * \brief Retrieves regions labeled with a given string.
      *
      * \param str Label to search for.

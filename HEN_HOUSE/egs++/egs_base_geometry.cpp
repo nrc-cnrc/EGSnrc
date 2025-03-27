@@ -1038,6 +1038,18 @@ void EGS_BaseGeometry::addBooleanProperty(int bit, int start, int end,
     }
 }
 
+// This function should be overwritten in all composite geometries
+// It is not overwritten by egs_lattice because that geometry effectively creates many geometries with the same name, so there's no way to identify which one to use
+int EGS_BaseGeometry::getGlobalRegionOffset(const string geomName) {
+    if(getName() == geomName) {
+        // If this geometry hasn't overwritten getGlobalRegionOffset, then it doesn't add an offset
+        return 0;
+    } else {
+        // If this is not the named geometry, return -1 for not found
+        return -1;
+    }
+}
+
 // Gets region numbers from a string
 // Pushes the regions onto the array regs
 void EGS_BaseGeometry::getNumberRegions(const string &str, vector<int> &regs) {
@@ -1067,7 +1079,6 @@ void EGS_BaseGeometry::getNumberRegions(const string &str, vector<int> &regs) {
 }
 
 void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs) {
-
     // Tokenize the input string - this allows for multiple labels
     vector<string> tokens;
     const char *ptr = str.c_str();
