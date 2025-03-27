@@ -665,6 +665,11 @@ public:
         return geometry->isWhere(r);
     }
 
+    /*! \brief Get the global region number for the first region in the geometry */
+    int getGlobalRegionOffset(const string geomName) {
+        return geometry->getGlobalRegionOffset(geomName);
+    }
+
     /*! \brief Gets numbers out of \a str and pushes them onto \a regs
 
       Finds integer numbers in \a str and pushes them onto the vector \a regs.

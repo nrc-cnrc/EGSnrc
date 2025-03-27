@@ -162,27 +162,27 @@ A volume value is necessary to compute the mass for each dose scoring zone. For
 this reason, if there are more dose scoring regions than volume entries, either
 the first volume entry or a default of 1 g/cm3 is used.
 
-If one of the geometries in the simulation is an EGS_XYZGeometry, then the user
-has the option to output the dose in the voxels of this geometry to a file.  Currently,
-the only available output format is the .3ddose format, which is familiar to users
-of DOSXYZnrc (see DOSXYZnrc users manual for more details). In this case,
-masses of each voxel are available through the member function getVolume of
-EGS_XYZGeometry.  An example input to obtain a .3ddose file for an EGS_XYZGeometry is given below:
+If one of the geometries in the simulation is an EGS_XYZGeometry or EGS_Mesh, then the user
+has the option to output the dose in the voxels of this geometry to a file. Note that it is assumed that these geometries are not cut or overlapped by any other geometries in the simulation. If the geometry does not exist in its entirety in the simulation, then the mass and thus the dose to those voxels will be incorrect.
+
+For EGS_XYZGeometry, output format is in 3ddose (see the DOSXYZnrc user manual). For EGS_Mesh, the output format is in .vtk (visualized in the third party Paraview application) or a simple csv format.
+
+When `output dose file` is used, note that the masses corresponding only to those regions for the output geometry are automatically calculated for `medium dose` output. These values will overwrite any user-provided volumes (using `volume =`) for the same regions.
 
 \verbatim
 :start ausgab object:
   library           = egs_dose_scoring
   name              = some_name
-  medium dose = no
+  medium dose = yes
   region dose = no
   :start output dose file:
-     geometry name = must name an EGS_XYZGeometry
-     file type = 3ddose (currently the only format available)
+     geometry name = must name an EGS_XYZGeometry (for 3ddose output) or EGS_Mesh (for vtk or csv)
+     file type = 3ddose, vtk, or csv
   :stop output dose file:
 :stop ausgab object:
 \endverbatim
 
-Output is to the file some_name.3ddose.  Note that in this example, region doses for the
+Output is to the file some_name.3ddose (or .vtk, .csv).  Note that in this example, region doses for the
 simulation geometry have been turned off to avoid outputting the dose for every voxel
 in the EGS_XYZGeometry to the screen/.egslog file.
 
@@ -363,9 +363,9 @@ protected:
     bool score_medium_dose,
          score_region_dose;
 
-    EGS_BaseGeometry *dose_geom; //EGS_XYZGeometry for which to output dose to file
-    EGS_ScoringArray *doseF;  //!< Scoring dose in each voxel in EGS_XYZGeometry
-    vector<int> df_reg; //array mapping global reg. no. onto reg. no. in EGS_XYZGeometry
+    EGS_BaseGeometry *dose_geom; // Geometry for which to output dose to file
+    EGS_ScoringArray *doseF;  //!< Scoring dose in each region in the specified geometry
+    vector<int> df_reg; //array mapping global reg. no. onto reg. no. in the specified geometry
     bool output_dose_file; //set to true if outputting a dose file
     int file_type;           //output file type--currently only .3ddose (file_type=0) supported
     string df_name;          //output file name--put here for convenience sake

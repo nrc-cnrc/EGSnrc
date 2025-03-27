@@ -97,6 +97,7 @@
 #include "egs_dose_scoring.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+#include "egs_mesh.h"
 
 EGS_DoseScoring::EGS_DoseScoring(const string &Name,
                                  EGS_ObjectFactory *f) :
@@ -217,32 +218,73 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         for (int i=0; i<nreg; i++) {
             df_reg.push_back(-1);
         }
-        //determine the region no. in the EGS_XYZGeometry and corresponding
-        //global reg. no.
-        EGS_Vector tp;
-        int nx=dose_geom->getNRegDir(0);
-        int ny=dose_geom->getNRegDir(1);
-        int nz=dose_geom->getNRegDir(2);
-        EGS_Float minx,maxx,miny,maxy,minz,maxz;
-        for (int k=0; k<nz; k++) {
-            for (int j=0; j<ny; j++) {
-                for (int i=0; i<nx; i++) {
-                    minx=dose_geom->getBound(0,i);
-                    maxx=dose_geom->getBound(0,i+1);
-                    miny=dose_geom->getBound(1,j);
-                    maxy=dose_geom->getBound(1,j+1);
-                    minz=dose_geom->getBound(2,k);
-                    maxz=dose_geom->getBound(2,k+1);
-                    tp.x=(minx+maxx)/2.;
-                    tp.y=(miny+maxy)/2.;
-                    tp.z=(minz+maxz)/2.;
-                    int g_reg = app->isWhere(tp);
-                    df_reg[g_reg]=i+j*nx+k*nx*ny;
+
+        // Determine the region no. in the specified geometry and the corresponding global reg. no.
+        if(file_type==0) {
+
+            int nx=dose_geom->getNRegDir(0);
+            int ny=dose_geom->getNRegDir(1);
+            int nz=dose_geom->getNRegDir(2);
+
+            // Let's keep this commented out but around, because it was really
+            // useful for debugging that the below method worked correctly
+            // Note that the following did *not* work for transformed geometries, because it looks at the original positioning of the voxels before they were transformed!
+            /*
+            EGS_Vector tp;
+            EGS_Float minx,maxx,miny,maxy,minz,maxz;
+            for (int k=0; k<nz; k++) {
+                for (int j=0; j<ny; j++) {
+                    for (int i=0; i<nx; i++) {
+                        minx=dose_geom->getBound(0,i);
+                        maxx=dose_geom->getBound(0,i+1);
+                        miny=dose_geom->getBound(1,j);
+                        maxy=dose_geom->getBound(1,j+1);
+                        minz=dose_geom->getBound(2,k);
+                        maxz=dose_geom->getBound(2,k+1);
+                        tp.x=(minx+maxx)/2.;
+                        tp.y=(miny+maxy)/2.;
+                        tp.z=(minz+maxz)/2.;
+                        int g_reg = app->isWhere(tp);
+                        df_reg[g_reg]=i+j*nx+k*nx*ny;
+                        //egsInformation("%d %d\n", df_reg[g_reg], g_reg);
+                    }
                 }
             }
+            */
+
+            int globalOffset = app->getGlobalRegionOffset(dose_geom->getName());
+            if(globalOffset < 0) {
+                globalOffset = 0;
+            }
+            int count = 0;
+            for (int k=0; k<nz; k++) {
+                for (int j=0; j<ny; j++) {
+                    for (int i=0; i<nx; i++) {
+                        df_reg[globalOffset+count]=count;
+                        //egsInformation("%d %d\n", df_reg[globalOffset+count], globalOffset+count);
+                        ++count;
+                    }
+                }
+            }
+
+            //create an egs_scoring_array of the appropriate size
+            doseF =  new EGS_ScoringArray(nx*ny*nz);
+
+        } else if(file_type==1 || file_type==2) {
+            int globalOffset = app->getGlobalRegionOffset(dose_geom->getName());
+            int count = 0;
+
+            EGS_Mesh *mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
+            if(!mesh) {
+                egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
+            }
+
+            for (int i = 0; i < mesh->num_elements(); i++) {
+                df_reg[globalOffset+i]=i;
+            }
+
+            doseF =  new EGS_ScoringArray(mesh->num_elements());
         }
-        //create an egs_scoring_array of the appropriate size
-        doseF =  new EGS_ScoringArray(nx*ny*nz);
     }
 
     description = "\n*******************************************\n";
@@ -276,26 +318,30 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         sprintf(buf,"%g\n",norm_u);
         description += buf;
     }
-    description += "\n*******************************************\n\n";
+
     vol_list.clear();
     if (d_region.size()) {
         d_region.clear();
     }
     if (doseF) {
-        description += "\n Will output dose to file:\n";
-        description += " EGS_XYZGeometry: " + dose_geom->getName();
-        description += "\n file format: ";
+        description += "\nWill output dose to file:\n";
+        description += " Geometry name: " + dose_geom->getName();
+        description += "\n File format: ";
+        string ext;
         if (file_type==0) {
-            //only type supported so far
-            description += " 3ddose";
+            ext = "3ddose";
+        } else if (file_type==1) {
+            ext = "vtk";
+        } else if (file_type==2) {
+            ext = "csv";
         }
-        description += "\n file name: ";
-        if (file_type==0) {
-            df_name=getObjectName() + ".3ddose";
-            df_name=egsJoinPath(app->getAppDir(),df_name);
-        }
+        description += " " + ext;
+        description += "\n File name: ";
+        df_name=getObjectName() + "." + ext;
+        df_name=egsJoinPath(app->getAppDir(),df_name);
         description += df_name;
     }
+    description += "\n*******************************************\n\n";
 }
 
 void EGS_DoseScoring::getNumberRegions(const string &str, vector<int> &regs) {
@@ -364,6 +410,20 @@ void EGS_DoseScoring::reportResults() {
     if (doseM) {
         vector<EGS_Float> massM(nmedia,0);
         int imed = 0;
+
+        EGS_Mesh *mesh;
+        if(doseF) {
+            if(file_type == 0) {
+
+            } else if(file_type == 1 || file_type == 2) {
+                mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
+                if(!mesh) {
+                    egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
+                }
+            }
+        }
+
+        // Use any user-provided volumes
         for (int ir=0; ir<nreg; ir++) {
             if (app->isRealRegion(ir)) {
                 imed = app->getMedium(ir);
@@ -371,20 +431,42 @@ void EGS_DoseScoring::reportResults() {
                 if (imed == -1) {
                     continue;
                 }
-                EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
-                massM[imed] += app->getMediumRho(imed)*volume;
+
+                if(doseF) {
+                    if(file_type == 0) {
+                        // If this region corresponds to one in the dose grid
+                        if(df_reg[ir] >= 0) {
+                            massM[imed] += dose_geom->getVolume(df_reg[ir])*getRealRho(df_reg[ir]);
+                        } else {
+                            EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
+                            massM[imed] += app->getMediumRho(imed)*volume;
+                        }
+                    } else if(file_type == 1 || file_type == 2) {
+                        // If this region corresponds to one in the dose grid
+                        if(df_reg[ir] >= 0) {
+                            massM[imed] += mesh->element_density(df_reg[ir]) * mesh->element_volume(df_reg[ir]);
+                        } else {
+                            EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
+                            massM[imed] += app->getMediumRho(imed)*volume;
+                        }
+                    }
+                } else {
+                    EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
+                    massM[imed] += app->getMediumRho(imed)*volume;
+                }
             }
         }
+
         if (normE==1) {
             egsInformation("\n\n==> Summary of media dosimetry (per particle)\n");
             egsInformation(
-                "%*s %*s     Edep/[MeV]              D/[Gy]            %n\n",
+                "%*s %*s Mass/[g]    Edep/[MeV]              D/[Gy]            %n\n",
                 max_medl/2,"medium",max_medl/2," ",&count);
         }
         else {
             egsInformation("\n\n==> Summary of media dosimetry (per fluence)\n");
             egsInformation(
-                "%*s %*s     Edep/[MeV*cm2]              D/[Gy*cm2]            %n\n",
+                "%*s %*s Mass/[g]    Edep/[MeV*cm2]              D/[Gy*cm2]            %n\n",
                 max_medl/2,"medium",max_medl/2," ",&count);
         }
         line="";
@@ -396,8 +478,8 @@ void EGS_DoseScoring::reportResults() {
             if (r > 0) {
                 dr = dr/r;
                 egsInformation(
-                    "%-*s %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
-                    max_medl,app->getMediumName(im),r*normE,dr*100.,r*normD/massM[im],dr*100.);
+                    "%-*s %7.4f %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
+                    max_medl,app->getMediumName(im),massM[im],r*normE,dr*100.,r*normD/massM[im],dr*100.);
             }
         }
         egsInformation("%s\n",line.c_str());
@@ -416,9 +498,10 @@ void EGS_DoseScoring::reportResults() {
 void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
     double r,dr;
     ofstream df_out;
-    egsInformation("\n EGS_DoseScoring: Writing dose data for EGS_XYZGeometry %s... \n",dose_geom->getName().c_str());
+    egsInformation("\n EGS_DoseScoring: Writing dose data for %s... \n",dose_geom->getName().c_str());
     egsInformation(" Output file name: %s\n",df_name.c_str());
-    //idea is to add new file_types as they become available
+
+    // 3ddose
     if (file_type==0) {
         //open file
         df_out.open(df_name.c_str());
@@ -472,8 +555,131 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
         }
         df_out << "\n";
         df_out.close();
-    }
-    else {
+
+    // vtk for mesh
+    } else if(file_type==1) {
+        EGS_Mesh *mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
+        if(!mesh) {
+            egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
+        }
+
+        // Open file
+        df_out.open(df_name.c_str());
+        if (!df_out) {
+            egsFatal("\n EGS_DoseScoring: Error: Failed to open file %s\n",df_name.c_str());
+            exit(1);
+        }
+
+        //output data
+        df_out << std::setprecision(std::numeric_limits<double>::max_digits10);
+        // legacy header
+        df_out << "# vtk DataFile Version 4.1\n"
+            "EGS_Mesh results\n"
+            "ASCII\n"
+            "DATASET UNSTRUCTURED_GRID\n"
+            "POINTS " << mesh->num_nodes() << " double\n";
+
+        // point data
+        for (int i = 0; i < mesh->num_nodes(); i++) {
+            const EGS_Vector &node = mesh->node_coordinates(i);
+            df_out << node.x << " " << node.y << " " << node.z << "\n";
+        }
+        // 5 numbers per line
+        df_out << "CELLS " << mesh->num_elements() << " "
+            << 5 * mesh->num_elements() << "\n";
+        // unstructured grid
+        for (int i = 0; i < mesh->num_elements(); i++) {
+            const auto &node_offsets = mesh->element_node_offsets(i);
+            // four nodes per tetrahedron
+            df_out << "4 " << node_offsets[0] << " " << node_offsets[1] << " " <<
+                node_offsets[2] << " " << node_offsets[3] << "\n";
+        }
+
+        df_out << "CELL_TYPES " << mesh->num_elements() << "\n";
+        for (int i = 0; i < mesh->num_elements(); i++) {
+            // vtk code for tetrahedron
+            df_out << "10\n";
+        }
+
+        // doses
+        df_out << "CELL_DATA " << mesh->num_elements() << "\n";
+        // adjust number here vvvv if the number of fields written out changes
+        df_out << "FIELD FieldData 2\n";
+        // %20 url-encoded space, Paraview errors on space character
+        df_out << "dose%20[Gy] 1 " << mesh->num_elements() << " double\n";
+        const double JOULES_PER_MEV = 1.602e-13;
+        for (int i = 0; i < mesh->num_elements(); i++) {
+            double e_dep, uncert;
+            doseF->currentResult(i,e_dep,uncert);
+
+            const auto mass_kg = mesh->element_density(i) * mesh->element_volume(i) / 1000.0;
+
+            df_out << JOULES_PER_MEV *e_dep / mass_kg << "\n";
+        }
+
+        // uncertainties
+        df_out << "uncertainty%20[%25] 1 " << mesh->num_elements() << " double\n";
+        for (int i = 0; i < mesh->num_elements(); i++) {
+            double e_dep, uncert;
+            doseF->currentResult(i,e_dep,uncert);
+
+            // if edep is exactly zero, there is 100% uncertainty
+            if (e_dep == 0.0) {
+                df_out << 100.0 << "\n";
+            }
+            else {
+                df_out << uncert / e_dep * 100.0 << "\n";
+            }
+        }
+    // csv for mesh
+    } else if(file_type==2) {
+        EGS_Mesh *mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
+        if(!mesh) {
+            egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
+        }
+
+        // Open file
+        df_out.open(df_name.c_str());
+        if (!df_out) {
+            egsFatal("\n EGS_DoseScoring: Error: Failed to open file %s\n",df_name.c_str());
+            exit(1);
+        }
+
+        df_out << std::setprecision(std::numeric_limits<double>::max_digits10);
+
+        const double JOULES_PER_MEV = 1.602e-13;
+
+        // header
+        df_out << "x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4,dose,uncertainty\n";
+
+        for (int i = 0; i < mesh->num_elements(); i++) {
+            // Get node id's for each element
+            // four nodes per tetrahedron
+            const auto &node_offsets = mesh->element_node_offsets(i);
+
+            // Look up those coordinates for each of the 4 nodes
+            for (int j = 0; j < 4; j++) {
+                const EGS_Vector &node = mesh->node_coordinates(node_offsets[j]);
+                df_out << node.x << "," << node.y << "," << node.z << ",";
+            }
+
+            // Output dose
+            double e_dep, uncert;
+            doseF->currentResult(i,e_dep,uncert);
+            const auto mass_kg = mesh->element_density(i) * mesh->element_volume(i) / 1000.0;
+
+            df_out << JOULES_PER_MEV *e_dep / mass_kg << ",";
+
+            // Output uncertainty in %
+            // if edep is exactly zero, there is 100% uncertainty
+            if (e_dep == 0.0) {
+                df_out << 100.0 << "\n";
+            }
+            else {
+                df_out << uncert / e_dep * 100.0 << "\n";
+            }
+        }
+    } else {
         egsFatal("\n EGS_DoseScoring: Warning: Dose output file type not recognized.\n");
     }
 }
@@ -541,10 +747,18 @@ int  EGS_DoseScoring::addTheStates(istream &data) {
         (*doseM) += tmpM;
     }
     if (doseF) {
-        int nx=dose_geom->getNRegDir(0);
-        int ny=dose_geom->getNRegDir(1);
-        int nz=dose_geom->getNRegDir(2);
-        EGS_ScoringArray tmpF(nx*ny*nz);
+        unsigned long numElements = 0;
+        if(file_type == 0) {
+            int nx=dose_geom->getNRegDir(0);
+            int ny=dose_geom->getNRegDir(1);
+            int nz=dose_geom->getNRegDir(2);
+            numElements = nx*ny*nz;
+        } else if(file_type == 1 || file_type == 2) {
+            EGS_Mesh *mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
+            numElements = mesh->num_elements();
+        }
+
+        EGS_ScoringArray tmpF(numElements);
         if (!tmpF.setState(data)) {
             return 4404;
         }
@@ -674,8 +888,8 @@ extern "C" {
                 if (!dgeom) {
                     egsFatal("EGS_DoseScoring: Output dose file: %s does not name an existing geometry\n",gname.c_str());
                 }
-                else if (dgeom->getType()!="EGS_XYZGeometry") {
-                    egsFatal("EGS_DoseScoring: Output dose file: %s is not an EGS_XYZGeometry.\n",gname.c_str());
+                else if (dgeom->getType()!="EGS_XYZGeometry" && dgeom->getType()!="EGS_Mesh") {
+                    egsFatal("EGS_DoseScoring: Output dose file: %s is not an EGS_XYZGeometry or EGS_Mesh.\n",gname.c_str());
                 }
                 else {
                     string str;
@@ -685,12 +899,20 @@ extern "C" {
                     else {
                         vector<string> allowed_ftype;
                         allowed_ftype.push_back("3ddose");
+                        allowed_ftype.push_back("vtk");
+                        allowed_ftype.push_back("csv");
                         ftype = fileinp->getInput("file type", allowed_ftype, -1);
                         if (ftype < 0) {
-                            egsFatal("EGS_DoseScoring: Output dose file: Invalid file type.  Currently only 3ddose is supported.\n");
+                            egsFatal("EGS_DoseScoring: Output dose file: Invalid file type. The supported types are: 3ddose, vtk, and csv.\n");
                         }
                     }
                     outputdosefile=true;
+                }
+
+                if(ftype == 0 && dgeom->getType()!="EGS_XYZGeometry") {
+                    egsFatal("EGS_DoseScoring: Output dose file: For 3ddose format, the geometry must be of type EGS_XYZGeometry.\n");
+                } else if ((ftype == 1 || ftype == 2) && dgeom->getType()!="EGS_Mesh") {
+                    egsFatal("EGS_DoseScoring: Output dose file: For vtk and csv formats, the geometry must be of type EGS_Mesh.\n");
                 }
             }
         }

@@ -115,6 +115,10 @@ extern "C" {
         }
     }
 
+    int EGS_DynamicGeometry::getGlobalRegionOffset(const string geomName) {
+        return g->getGlobalRegionOffset(geomName);
+    }
+
     void EGS_DynamicGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
         // label defined in the geometry being transformed
         g->getLabelRegions(str, regs, sanitize);
