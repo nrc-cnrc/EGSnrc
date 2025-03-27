@@ -635,6 +635,7 @@ public:
         return geometries[jg]->getBScaling(ireg - nbase - jg*nmax);
     };
 
+    virtual int getGlobalRegionOffset(const string geomName);
     virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
@@ -1069,6 +1070,7 @@ public:
         return geometries[jg]->getBScaling(ireg - nbase - jg*nmax);
     };
 
+    virtual int getGlobalRegionOffset(const string geomName);
     virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
