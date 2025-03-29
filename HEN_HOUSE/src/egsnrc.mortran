@@ -1772,8 +1772,7 @@ IF( medium > 0 ) [
         IF(lelec < 0) [edep = e(np) - prm;] ELSE[$POSITRON-ECUT-DISCARD;]
     ]
     ELSE [ idr = $PEGSCUTAUS; edep = e(np) - prm; ]
-] ELSE [idr = $EGSCUTAUS; edep = e(np) - prm; ]
-
+] ELSE [idr = $EGSCUTAUS; edep = 0.0; ] "zero edep in vacuum"
 
 $ELECTRON-TRACK-END; "The default replacement for this macros is "
                      "          $AUSCALL(idr);                   "
