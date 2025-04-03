@@ -49,7 +49,7 @@ USER_CODE = egs_app
 # file(s) specified here are added after egsnrc.macros, machine.macros and
 # egs_c_interface2.macros but before any files that have executable code.
 
-EGSPP_USER_MACROS = # egs_app.macros (for example)
+EGSPP_USER_MACROS = egs_app.macros
 
 
 # Specify from which base class this application is being derived. This has the
