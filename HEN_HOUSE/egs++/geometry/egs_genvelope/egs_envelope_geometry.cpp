@@ -495,6 +495,72 @@ extern "C" {
 
     }
 
+    int EGS_EnvelopeGeometry::getGlobalRegionOffset(const string geomName) {
+        // Look for the named geometry in the inscribed geometries
+        for (int i=0; i<n_in; i++) {
+            if (geometries[i] && geometries[i]->getName() == geomName) {
+                int shift = 0;
+                if (new_indexing) {
+                    shift = local_start[i];
+                }
+                else {
+                    shift = nbase+i*nmax;
+                }
+                return shift;
+            }
+        }
+
+        // If it's not found above, search through the inscribed geometries in case they are composite geometries
+        for (int i=0; i<n_in; i++) {
+            int shift = geometries[i]->getGlobalRegionOffset(geomName);
+            if(shift >= 0) {
+                if (new_indexing) {
+                    shift += local_start[i];
+                }
+                else {
+                    shift += nbase+i*nmax;
+                }
+                return shift;
+            }
+        }
+
+        // Return -1 for not found
+        return -1;
+    }
+
+    int EGS_FastEnvelope::getGlobalRegionOffset(const string geomName) {
+        // Look for the named region in the inscribed regions
+        for (int i=0; i<n_in; i++) {
+            if (geometries[i] && geometries[i]->getName() == geomName) {
+                int shift = 0;
+                if (new_indexing) {
+                    shift = local_start[i];
+                }
+                else {
+                    shift = nmax;
+                }
+
+                return shift;
+            }
+        }
+
+        // If it's not found above, search through the inscribed geometries in case they are composite geometries
+        for (int i=0; i<n_in; i++) {
+            int shift = geometries[i]->getGlobalRegionOffset(geomName);
+            if(shift > 0) {
+                if (new_indexing) {
+                    shift += local_start[i];
+                }
+                else {
+                    shift = nmax;
+                }
+                return shift;
+            }
+        }
+
+        // Return -1 for not found
+        return -1;
+    }
 
     void EGS_EnvelopeGeometry::getLabelRegions(const string &str, vector<int> &regs) {
 

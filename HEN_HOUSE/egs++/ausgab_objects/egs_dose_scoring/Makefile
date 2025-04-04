@@ -41,6 +41,10 @@ extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
 include $(SPEC_DIR)egspp_libs.spec
 
+INC2 = -I$(IEGS2) -I..$(DSEP).. -I..$(DSEP)..$(DSEP)geometry$(DSEP)egs_mesh
+
+link2_libs = egspp egs_mesh
+
 $(make_depend)
 
 test:

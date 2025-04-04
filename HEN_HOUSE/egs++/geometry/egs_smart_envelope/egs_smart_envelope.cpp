@@ -336,6 +336,27 @@ extern "C" {
 
     }
 
+    int EGS_SmartEnvelope::getGlobalRegionOffset(const string geomName) {
+        // Look for the named geometry in the inscribed geometries
+        for (int i=0; i<n_in; i++) {
+            if (geometries[i] && geometries[i]->getName() == geomName) {
+                return local_start[i];
+            }
+        }
+
+        // If it's not found above, search through the inscribed geometries in case they are composite geometries
+        for (int i=0; i<n_in; i++) {
+            int shift = geometries[i]->getGlobalRegionOffset(geomName);
+            if(shift >= 0) {
+                shift += local_start[i];
+                return shift;
+            }
+        }
+
+        // Return -1 for not found
+        return -1;
+    }
+
     void EGS_SmartEnvelope::getLabelRegions(const string &str, vector<int> &regs) {
 
         // label defined in the envelope geometry

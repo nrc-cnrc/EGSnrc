@@ -258,6 +258,37 @@ extern "C" {
 
     }
 
+    int EGS_CDGeometry::getGlobalRegionOffset(const string geomName) {
+        // Look for the named geometry in the set geometries
+        for (int i=0; i<nbase; i++) {
+            if (g[i] && g[i]->getName() == geomName) {
+                int shift = 0;
+                if (new_indexing) {
+                    shift = local_start[i];
+                }
+                else {
+                    shift = i*nmax;
+                }
+                return shift;
+            }
+        }
+
+        // If it's not found above, search through the set geometries in case they are composite geometries
+        for (int i=0; i<nbase; i++) {
+            int shift = g[i]->getGlobalRegionOffset(geomName);
+            if(shift >= 0) {
+                if (new_indexing) {
+                    shift += local_start[i];
+                }
+                else {
+                    shift += i*nmax;
+                }
+                return shift;
+            }
+        }
+
+        return -1;
+    }
 
     void EGS_CDGeometry::getLabelRegions(const string &str, vector<int> &regs) {
 
