@@ -156,7 +156,7 @@ echo "env: PBS_*:"
 cat \$PBS_NODEFILE
 export PDSH_RCMD_TYPE=ssh
 env|grep ^PBS
-pdsh -f $(($nthread*2)) -w \$(tr $'\n' ',' <\$PBS_NODEFILE) /usr/bin/env PBS_TASKNUM=\$PBS_TASKNUM PBS_O_WORKDIR=\$PBS_O_WORKDIR $task_script $pdsh_dir $basename $nthread $first $delay \"$command\"
+pdsh -b -f $(($nthread*2)) -w \$(tr $'\n' ',' <\$PBS_NODEFILE) /usr/bin/env PBS_TASKNUM=\$PBS_TASKNUM PBS_O_WORKDIR=\$PBS_O_WORKDIR $task_script $pdsh_dir $basename $nthread $first $delay \"$command\"
 EOF
 )
 
