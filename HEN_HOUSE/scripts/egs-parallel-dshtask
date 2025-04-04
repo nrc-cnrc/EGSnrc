@@ -107,7 +107,7 @@ delay=$5
 command=$6
 
 ### task label and task file
-task="${PBS_TASKNUM}_$(date +%s)_$$"
+task="${PBS_TASKNUM}_$(date+%s)_$$_${HOSTNAME}
 taskstr="task $task"
 prefix="$pbsdsh_dir/${basename}_"
 taskfile=${prefix}${task}.task
