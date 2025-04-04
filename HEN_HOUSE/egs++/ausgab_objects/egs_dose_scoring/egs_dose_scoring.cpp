@@ -464,13 +464,13 @@ void EGS_DoseScoring::reportResults() {
         if (normE==1) {
             egsInformation("\n\n==> Summary of media dosimetry (per particle)\n");
             egsInformation(
-                "%*s %*s Mass/[g]    Edep/[MeV]              D/[Gy]            %n\n",
+                "%*s %*sMass/[g]      Edep/[MeV]                D/[Gy]            %n\n",
                 max_medl/2,"medium",max_medl/2," ",&count);
         }
         else {
             egsInformation("\n\n==> Summary of media dosimetry (per fluence)\n");
             egsInformation(
-                "%*s %*s Mass/[g]    Edep/[MeV*cm2]              D/[Gy*cm2]            %n\n",
+                "%*s %*sMass/[g]      Edep/[MeV*cm2]                D/[Gy*cm2]            %n\n",
                 max_medl/2,"medium",max_medl/2," ",&count);
         }
         line="";
@@ -482,7 +482,7 @@ void EGS_DoseScoring::reportResults() {
             if (r > 0) {
                 dr = dr/r;
                 egsInformation(
-                    "%-*s %7.4f %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
+                    "%-*s %7.4e %10.4e +/- %-7.3f%% %10.4e +/- %-7.3f%%\n",
                     max_medl,app->getMediumName(im),massM[im],r*normE,dr*100.,r*normD/massM[im],dr*100.);
             }
         }
