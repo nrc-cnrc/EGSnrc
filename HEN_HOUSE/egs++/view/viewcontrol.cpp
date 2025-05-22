@@ -19,7 +19,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
-####################################################################8###########
+###############################################################################
 #
 #  Author:          Iwan Kawrakow, 2005
 #
@@ -634,6 +634,9 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         }
     }
     egsinpEdit->setInputStruct(inputStruct);
+
+    // Set the play button active boolean to false
+    isPlaying=false;
 }
 
 GeometryViewControl::~GeometryViewControl() {
@@ -712,6 +715,10 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
             g = 0;
         }
         EGS_BaseGeometry::clearGeometries();
+
+        // solve loading new input file from file tab in egsview. Previously
+        // name array is never cleared after loading new input file
+        geometryNames.clear();
 
         // Delete any previous ausgab objects
 #ifdef VIEW_DEBUG
@@ -1607,6 +1614,10 @@ void GeometryViewControl::setTracksFilename(QString str) {
     filename_tracks = str;
 }
 
+void GeometryViewControl::setTracksExtension(QString str) {
+    tracks_extension = str;
+}
+
 void GeometryViewControl::loadDose() {
     // Prompt the user to select a previous config file
     QFileInfo inputFileInfo = QFileInfo(filename);
@@ -2425,18 +2436,36 @@ void GeometryViewControl::loadTracksDialog() {
     egsWarning("In loadTracksDialog()\n");
 #endif
     QFileInfo inputFileInfo = QFileInfo(filename);
-    filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*.ptracks");
+    filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*ptracks");
+    tracks_extension=QString("ptracks");
 
     if (filename_tracks.isEmpty()) {
         return;
     }
+
+    hasTrackTimeIndex = hasValidTime();
+    if (!hasDynamic) {
+        // if hasdynamic is not yet true (no dynamic geometry) then check the time indices in the file
+        hasDynamic=hasTrackTimeIndex;
+    }
+
+    // run timeObjectVisibility to either make visible or hide time index
+    // related objects depending on input file and tracks file
+    timeObjectVisibility();
+
     gview->loadTracks(filename_tracks);
 }
 
-void GeometryViewControl::updateTracks(vector<size_t> ntracks) {
+void GeometryViewControl::updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po) {
     if (ntracks.size() != 3) {
         return;
     }
+
+    // vectors containing the sorted list of time indices corresponding to the
+    // compressed particle tracks list is saved
+    timelist_p=timeindexlist_p;
+    timelist_e=timeindexlist_e;
+    timelist_po=timeindexlist_po;
 
 #ifdef VIEW_DEBUG
     egsWarning("In updateTracks(%d %d %d)\n",ntracks[0], ntracks[1], ntracks[2]);
@@ -2476,7 +2505,9 @@ void GeometryViewControl::updateTracks(vector<size_t> ntracks) {
     spin_tmine->setValue(1);
     spin_tminpo->setValue(1);
 
-    updateView();
+    // Update the time window value
+    // This includes an updateView() call
+    slideTime();
 }
 
 void GeometryViewControl::viewAllMaterials() {
@@ -2558,6 +2589,15 @@ int GeometryViewControl::setGeometry(
     }
     g = geom;
 
+    // check the geometry and the tracks file to determine whether the time
+    // index objects should be made visible (i.e., setting hasdynamic)
+    hasDynamic=false;
+
+    // loop through the different layers of the geometry and makes hasdynamic
+    // true if a dynamic geometry is found. This is independent of tracks file
+    // type, such that visualizing geometry motion is possible even with a
+    // ptracks file without time indices in it
+    g->containsDynamic(hasDynamic);
     if (!filename_tracks.isEmpty()) {
         gview->loadTracks(filename_tracks);
 
@@ -2567,6 +2607,9 @@ int GeometryViewControl::setGeometry(
             hasDynamic=hasTrackTimeIndex;
         }
     }
+    // run timeObjectVisibility to either make visible or hide time index
+    // related objects depending on input file and tracks file
+    timeObjectVisibility();
 
     // run timeObjectVisibility to either make visible or hide time index
     // related objects depending on input file and tracks file
@@ -3804,6 +3847,67 @@ void GeometryViewControl::setFontSize(int size) {
     controlsText->selectAll();
     controlsText->setFontPointSize(controlsFont.pointSize() + changeInSize);
     controlsText->setTextCursor(cursor);
+}
+
+bool GeometryViewControl::hasValidTime() {
+    // This function is used to determine whether the time index elements should be shown in the case that no dynamic geometry is present
+    bool incltime;
+
+    ifstream data(filename_tracks.toUtf8().constData(), ios::binary);
+
+    // Skip the first few bits related to the string head_inctime
+    data.seekg(sizeof(head_inctime));
+    // Read the boolean of whether or not time indices are included
+    data.read((char *)&incltime, sizeof(bool));
+
+    data.close();
+
+    return incltime;
+}
+
+void GeometryViewControl::timeObjectVisibility() {
+    //this function is used to make the time index objects visible or hidden as necessary. It will use the hasdynamic boolean, which indicates if they have any relevance in the uploaded files
+    if (!hasDynamic) { //if false all objects are hidden and the particle index spin boxes are allowed to be manually edited
+        button_timereset->hide();
+        button_timeplay->hide();
+        slider_timeindex->hide();
+        spin_timewindow->hide();
+        label_timewindow->hide();
+        spin_timeindex->hide();
+        label_timeindex->hide();
+        groupBox_time->hide();
+        spin_numTimeSteps->hide();
+        label_numTimeSteps->hide();
+        spin_tmaxe->setReadOnly(false);
+        spin_tmine->setReadOnly(false);
+        spin_tmaxpo->setReadOnly(false);
+        spin_tminpo->setReadOnly(false);
+        spin_tmaxp->setReadOnly(false);
+        spin_tminp->setReadOnly(false);
+    }
+    else { //if trueall objects are made visible and the particle index spin boxes cannot be manually edited
+        /* disable manual spinbox editing as the particle min and max indices will be determined by the time window and current time index (either from slider or spinbox). It is simpler in this case to simply
+         * have them modified only by interactions with time index objects to avoid any bugs or inconsistensies between the visual display and the dashboard settings*/
+        spin_tmaxe->setReadOnly(true);
+        spin_tmine->setReadOnly(true);
+        spin_tmaxpo->setReadOnly(true);
+        spin_tminpo->setReadOnly(true);
+        spin_tmaxp->setReadOnly(true);
+        spin_tminp->setReadOnly(true);
+        button_timereset->show();
+        button_timeplay->show();
+        slider_timeindex->show();
+        spin_timewindow->show();
+        label_timewindow->show();
+        spin_timeindex->show();
+        label_timeindex->show();
+        groupBox_time->show();
+        spin_numTimeSteps->show();
+        label_numTimeSteps->show();
+    }
+    //has dynamic is true when a dynamic geometry is present, or when the tracks are being given some time index (exmaple due to a dynamic source or phasespace file)
+
+
 }
 
 void GeometryViewControl::insertInputExample() {
