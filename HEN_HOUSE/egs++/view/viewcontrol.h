@@ -159,7 +159,6 @@ public slots:
     virtual void updateNumTimeSteps();
     virtual void particleSlider(EGS_Float slidertime);
     virtual void updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po);
-    virtual void updateTracks(vector<size_t> ntracks);
     virtual void insertInputExample();
     virtual void setApplication();
 

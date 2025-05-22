@@ -42,10 +42,11 @@
 #include "egs_advanced_application.h"
 #include "egs_interface2.h"
 
-// main
+#ifdef BUILD_APP_LIB
+APP_LIB (EGS_AdvancedApplication);
+#else
 APP_MAIN (EGS_AdvancedApplication);
-
-
+#endif
 
 
 /*
