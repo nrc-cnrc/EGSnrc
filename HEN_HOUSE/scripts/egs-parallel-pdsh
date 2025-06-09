@@ -156,16 +156,9 @@ echo "env: PBS_*:"
 cat \$PBS_NODEFILE
 export PDSH_RCMD_TYPE=ssh
 env|grep ^PBS
-declare CMD_PID=""
-while read node; do
-    [ -n \${node} ]|| continue
-    echo "NODE: \${node}"
-    ssh -oConnectTimeout=600 -2 -a -x \${node} \
-       /usr/bin/env PBS_O_WORKDIR=\${PBS_O_WORKDIR} \
-       ${task_script} ${pdsh_dir} $basename $nthread $first $delay \"${command}\" &
-    CMD_PID="\$CMD_PID \$!"
-    #sleep $step
-done < \${PBS_NODEFILE}
+trap 'echo "caught SIGTERM, aborting \$CMD_PID.." >&2; pkill -15 -P \$CMD_PID' 15 1 2 20
+setsid -w pdsh -b -f $(($nthread*2)) -w \$(tr $'\n' ',' <\$PBS_NODEFILE) /usr/bin/env PBS_TASKNUM=\$PBS_TASKNUM PBS_O_WORKDIR=\$PBS_O_WORKDIR $task_script $pdsh_dir $basename $nthread $first $delay \"$command\" &
+CMD_PID=\$!
 wait \$CMD_PID
 EOF
 )

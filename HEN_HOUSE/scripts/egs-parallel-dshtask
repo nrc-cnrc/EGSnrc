@@ -228,7 +228,22 @@ fi
 ### launch the job if simulation is not done already
 quit_if_done
 log "$jobstr: RUN $command -b -P $nthread -j $job -f $first"
-$command -b -P $nthread -j $job -f $first
+#$command -b -P $nthread -j $job -f $first
+
+( $command -b -P $nthread -j $job -f $first ) &
+CMD_PID="$!"
+
+# Add a process reaper that requires parent alive, for child to continue:
+reap_proc() {
+    while sleep 0.5; do
+        if [ ! -d /proc/$PPID ]; then
+            rm -f $basename.lock
+            rm -f $basename.egsjob
+            kill -15 $CMD_PID
+        fi
+    done
+}; reap_proc &
+wait $CMD_PID
 
 ### report that this job is done
 log "$jobstr: DONE."
