@@ -561,7 +561,9 @@ public:
         // calls getNextGeom on its component geometries to update dynamic
         // geometries in the simulation
         for (int j=0; j<N; j++) {
-            g[j]->getNextGeom(rndm);
+            if (g[j]) {
+                g[j]->getNextGeom(rndm);
+            }
         }
     };
 
@@ -569,7 +571,9 @@ public:
         // calls updatePosition on its component geometries to update dynamic
         // geometries in the simulation
         for (int j=0; j<N; j++) {
-            g[j]->updatePosition(time);
+            if (g[j]) {
+                g[j]->updatePosition(time);
+            }
         }
     };
 
@@ -577,7 +581,7 @@ public:
         // calls containsDynamic on its component geometries (only calls if
         // hasDynamic is false, as if it is true we already found one)
         for (int j=0; j<N; j++) {
-            if (!hasdynamic) {
+            if (!hasdynamic && g[j]) {
                 g[j]->containsDynamic(hasdynamic);
             }
         }

@@ -242,6 +242,10 @@ public:
         return media[ind].c_str();
     };
 
+    void containsDynamic(bool &hasdynamic) {
+        hasdynamic = false;
+    };
+
     EGS_Float getMediumRho(int ind) const {
         if (ind==-1) {
             return -1;
