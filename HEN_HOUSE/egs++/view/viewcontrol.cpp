@@ -2053,6 +2053,7 @@ int GeometryViewControl::setGeometry(
             hasDynamic=hasTrackTimeIndex;
         }
     }
+
     // run timeObjectVisibility to either make visible or hide time index
     // related objects depending on input file and tracks file
     timeObjectVisibility();
