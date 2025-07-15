@@ -316,6 +316,26 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
             setExtraSelections(extraSelections);
         }
         cursor.endEditBlock();
+    } else {
+        cursor.beginEditBlock();
+        QList<QTextEdit::ExtraSelection> extraSelections = this->extraSelections();
+        QTextEdit::ExtraSelection selection;
+        selection.cursor = cursor;
+        selection.cursor.joinPreviousEditBlock();
+
+        // Select the whole line
+        selection.cursor.movePosition(QTextCursor::StartOfBlock);
+        selection.cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+
+        // Reset the format to have no red underline
+        QTextCharFormat format;
+        //format.setUnderlineStyle(QTextCharFormat::NoUnderline);
+        format.setToolTip("");
+        selection.cursor.setCharFormat(format);
+        selection.cursor.endEditBlock();
+        extraSelections.append(selection);
+        setExtraSelections(extraSelections);
+        cursor.endEditBlock();
     }
 }
 
