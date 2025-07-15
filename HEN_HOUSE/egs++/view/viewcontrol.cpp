@@ -292,13 +292,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QMenu *sourceMenu = exampleMenu->addMenu("Sources");
     QMenu *shapeMenu = exampleMenu->addMenu("Shapes");
     QMenu *ausgabMenu = exampleMenu->addMenu("Ausgab/Output");
-    QMenu *mediaMenu = exampleMenu->addMenu("Media");
-    QMenu *runMenu = exampleMenu->addMenu("Run Control");
+    QMenu *transportMenu = exampleMenu->addMenu("General Inputs");
 
-    appMenu = exampleMenu->addMenu("Applications");
+    appMenu = exampleMenu->addMenu("Application Specific");
 
     // Creates the example menu for different applications
-    QMenu *exampleMenu2 = new QMenu("Choose application");
+    QMenu *exampleMenu2 = new QMenu("Application...");
     menuBar->addMenu(exampleMenu2);
 
     QAction *action = exampleMenu2->addAction("None");
@@ -375,31 +374,30 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         //     }
         // }
 
-        // Add the examples from the Application library
-        getExampleFunction getExample = (getExampleFunction) app_lib.resolve("getRunControlExample");
+        getExampleFunction getExample = (getExampleFunction) app_lib.resolve("getMediaExample");
         if (getExample) {
-            QAction *action = runMenu->addAction("egs_run_control");
+            QAction *action = transportMenu->addAction("Media Definition");
+            action->setData(QString::fromStdString(getExample()));
+            connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
+        }
+
+        getExample = (getExampleFunction) app_lib.resolve("getRunControlExample");
+        if (getExample) {
+            QAction *action = transportMenu->addAction("Run Control");
             action->setData(QString::fromStdString(getExample()));
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
 
         getExample = (getExampleFunction) app_lib.resolve("getmcExample");
         if (getExample) {
-            QAction *action = appMenu->addAction("egs_monte_carlo_parameters");
+            QAction *action = transportMenu->addAction("Transport Parameters");
             action->setData(QString::fromStdString(getExample()));
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
 
         getExample = (getExampleFunction) app_lib.resolve("getRngDefinitionExample");
         if (getExample) {
-            QAction *action = appMenu->addAction("egs_rng_definition");
-            action->setData(QString::fromStdString(getExample()));
-            connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
-        }
-
-        getExample = (getExampleFunction) app_lib.resolve("getMediaExample");
-        if (getExample) {
-            QAction *action = mediaMenu->addAction("Media definition");
+            QAction *action = transportMenu->addAction("RNG Seeds");
             action->setData(QString::fromStdString(getExample()));
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
