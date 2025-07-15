@@ -3069,12 +3069,12 @@ extern "C" {
         // should also have a section for sub-geometries but I dont know how it should be implemented/formatted
 
         scoreBlock->addSingleInput("correlated geometries", false, "enter as many as needed to compute desired perturbation factors");
-        
+
         shared_ptr<EGS_BlockInput> isoBlock = scoreBlock->addBlockInput("isocenter positioning uncertainty");
         isoBlock->addSingleInput("ncase per position", false, "");
         isoBlock->addSingleInput("positions per sample", false, "");
         shared_ptr<EGS_BlockInput> transBlock = isoBlock->addBlockInput("translation");
-        transBlock->addSingleInput("distribution", false, "gaussian or uniform");    
+        transBlock->addSingleInput("distribution", false, "gaussian or uniform");
         transBlock->addSingleInput("max shift", false, "3 values");
         transBlock->addSingleInput("sigma", false, "3 values");
         shared_ptr<EGS_BlockInput> rotBlock = isoBlock->addBlockInput("rotation");
@@ -3115,11 +3115,11 @@ extern "C" {
 
 :start scoring options:
     silent = 0;
-    start scale photon x-sections:
+    :start scale photon x-sections:
         factor = 1.0
         medium = 1
         cross section = all
-    stop scale photon x-sections:                       # all, Rayleigh, Compton, Pair, or Photo
+    :stop scale photon x-sections:                       # all, Rayleigh, Compton, Pair, or Photo
     onegeom = 0                                         # when set to 1, only one geometry is used
     scale xcc = 5
 
@@ -3154,7 +3154,7 @@ extern "C" {
         :stop translation:
         :start rotation:
             distribution = uniform                      # gaussian or uniform
-            max shift = 0, 0.1, 0                       
+            max shift = 0, 0.1, 0
         :stop rotation:
     :stop isocenter positioning uncertainty:
 
@@ -3164,13 +3164,13 @@ extern "C" {
 
         :start translation:
             distribution = gaussian                     # gaussian or uniform
-            max shift = 0, 0.1, 0                   
-            sigma = 0.05, 0.05, 0.05                    
+            max shift = 0, 0.1, 0
+            sigma = 0.05, 0.05, 0.05
         :stop translation:
 
         :start rotation:
             distribution = uniform                      # gaussian or uniform
-            max shift = 0, 0.1, 0                       
+            max shift = 0, 0.1, 0
         :stop rotation:
     :stop cavity positioning uncertainty:
 :stop scoring options:

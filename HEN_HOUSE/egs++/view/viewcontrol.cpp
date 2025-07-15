@@ -399,7 +399,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
         getExample = (getExampleFunction) app_lib.resolve("getMediaExample");
         if (getExample) {
-            QAction *action = mediaMenu->addAction("egs_example_media");
+            QAction *action = mediaMenu->addAction("Media definition");
             action->setData(QString::fromStdString(getExample()));
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
@@ -3815,6 +3815,9 @@ void GeometryViewControl::enlargeFont() {
     controlsText->setTextCursor(cursor);
 
     egsinpEdit->zoomIn();
+    const int tabStop = 4; // 4 characters
+    QFontMetrics metrics(egsinpEdit->font());
+    egsinpEdit->setTabStopWidth(tabStop * metrics.width(' '));
 }
 
 void GeometryViewControl::shrinkFont() {
@@ -3831,6 +3834,9 @@ void GeometryViewControl::shrinkFont() {
     controlsText->setTextCursor(cursor);
 
     egsinpEdit->zoomOut();
+    const int tabStop = 4; // 4 characters
+    QFontMetrics metrics(egsinpEdit->font());
+    egsinpEdit->setTabStopWidth(tabStop * metrics.width(' '));
 }
 
 void GeometryViewControl::setFontSize(int size) {

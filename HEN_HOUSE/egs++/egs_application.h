@@ -94,19 +94,6 @@ static void addmcBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     mcBlock->addSingleInput("Photonuclear cross sections", false, "Default is default, or is user-supplied", {"default"});
 }
 
-static void addvrBlock(shared_ptr<EGS_InputStruct> blockPtr) {
-    shared_ptr<EGS_BlockInput> vrBlock = blockPtr->addBlockInput("variance reduction");
-    vrBlock->addSingleInput("photon splitting", false, "N_split");
-    vrBlock->addSingleInput("TmpPhsp", false, "Score phase space, use once in each geometry");
-    vrBlock->addSingleInput("cs enhancement", false, "0 (XCSE off) or >0 (XCSE on)");
-
-    shared_ptr<EGS_BlockInput> rangePtr = vrBlock->addBlockInput("range rejection");
-    rangePtr->addSingleInput("rejection", false, "N_r");
-    rangePtr->addSingleInput("Esave", false, "E_save");
-    rangePtr->addSingleInput("cavity geometry", false, "The name of a previously defined geometry");
-    rangePtr->addSingleInput("rejection range medium", false, "index of the medium to calculate electron ranges");
-}
-
 static void addMediaDefBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     shared_ptr<EGS_BlockInput> mediaBlockInput = blockPtr->addBlockInput("media definition");
     mediaBlockInput->addSingleInput("ae", false, "lowest  energy for electron production (kinetic+0.511)");
@@ -123,7 +110,7 @@ static void addMediaDefBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     mediumBlock->addSingleInput("stopping powers", false, "{restricted total, unrestricted collision, unrestricted collision and radiative, unrestricted collision and restricted radiative, restricted collision and unrestricted radiative, unrestricted radiative}");
     mediumBlock->addSingleInput("bremsstrahlung correction", false, "");
     mediumBlock->addSingleInput("gas pressure", false, "");
-    mediumBlock->addSingleInput("e- stopping power output file", false, ""); 
+    mediumBlock->addSingleInput("e- stopping power output file", false, "");
 }
 
 static string addmcExample() {
@@ -168,23 +155,10 @@ static string addMediaExample() {
     ap  = 0.01                  # lowest  energy for photon production   (kinetic)
     ue  = 50.511                # maximum energy for electrons (kinetic+0.511)
     up  = 50                    # maximum energy for photons (kinetic) # maximum energy for photons (kinetic)
-    
-    :start myMediumName:
-        elements = 
-        number of atoms = 
-        mass fractions = 
-        rho = 
-        sterncid = 
-        stopping powers = 
-        bremsstrahlung correction =
-        gas pressure = 
-        density correction file = 
-        e- stopping power output file = 
-    :stop myMediumName:
 
-    # Here is an example for defining water 
+    # Here is an example for defining water
     :start water:
-        density correction file = water_liquid.density
+        density correction file = water_liquid
     :stop water:
 
 :stop media definition:
@@ -1377,7 +1351,6 @@ public:
         APP_EXPORT shared_ptr<EGS_InputStruct> getAppInputs() {\
             shared_ptr<EGS_InputStruct> appInputStruct = make_shared<EGS_InputStruct>();\
             addmcBlock(appInputStruct);\
-            addvrBlock(appInputStruct);\
             addRngDefinitionBlock(appInputStruct);\
             addRunControlBlock(appInputStruct);\
             addMediaDefBlock(appInputStruct);\
