@@ -540,35 +540,7 @@ extern "C" {
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("activity", false, "The total activity of mixture, assumed constant.");
         srcBlockInput->addSingleInput("experiment time", false, "Time length of the experiment");
-        auto srcPtr = srcBlockInput->addSingleInput("source type", false, "Either isotropic or collimated", {"isotropic", "collimated"});
-
-        // If source type is isotropic
-        auto geomPtr = srcBlockInput->addSingleInput("geometry", false, "The name of a geometry, used for complex source shapes. Only particles generated inside the geometry or some of its regions are used.");
-        geomPtr->addDependency(srcPtr, "isotropic");
-        geomPtr->addDependency(srcPtr, "");
-        auto regPtr = srcBlockInput->addSingleInput("region selection", false, "Include or exclude regions from the named geometry, to define a volume for source particle generation.", {"IncludeAll", "ExcludeAll","IncludeSelected","ExcludeSelected"});
-        regPtr->addDependency(geomPtr);
-        auto selPtr = srcBlockInput->addSingleInput("selected regions", false, "If region selection = IncludeSelected or ExcludeSelected, then this is a list of the regions in the named geometry to include or exclude.");
-        selPtr->addDependency(geomPtr);
-        selPtr->addDependency(regPtr, "IncludeSelected");
-        selPtr->addDependency(regPtr, "ExcludeSelected");
-
-        auto shapePtr = srcBlockInput->addBlockInput("shape");
-        shapePtr->addDependency(srcPtr, "isotropic");
-
-        setShapeInputs(shapePtr);
-
-        // If source is collimated
-        auto disPtr = srcBlockInput->addSingleInput("distance", false, "The source-target minimum distance");
-        disPtr->addDependency(srcPtr, "collimated");
-
-        auto src_shapePtr = srcBlockInput->addBlockInput("source shape");
-        src_shapePtr->addDependency(srcPtr, "collimated");
-        auto targetPtr = srcBlockInput->addBlockInput("target shape");
-        targetPtr->addDependency(srcPtr, "collimated");
-
-        setShapeInputs(src_shapePtr);
-        setShapeInputs(targetPtr);
+        srcBlockInput->addSingleInput("base source", true, "The name of another source you have defined, that specifies the spatial distribution (e.g. an isotropic source).");
     }
 
     EGS_RADIONUCLIDE_SOURCE_EXPORT string getExample() {
