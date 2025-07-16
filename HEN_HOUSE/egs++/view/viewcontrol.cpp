@@ -297,12 +297,9 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     appMenu = exampleMenu->addMenu("Application Specific");
 
     // Creates the example menu for different applications
-    QMenu *exampleMenu2 = new QMenu("Application...");
+    QMenu *exampleMenu2 = new QMenu("Application: egs_app");
     menuBar->addMenu(exampleMenu2);
-
-    QAction *action = exampleMenu2->addAction("None");
-    action->setData("None");
-    connect(action,  &QAction::triggered, this, [this] { setApplication(); });
+    selectedApplication = "egs_app";
 
     for (const auto &lib : binLibraries) {
         // Remove the extension
@@ -3921,23 +3918,36 @@ void GeometryViewControl::insertInputExample() {
 
 void GeometryViewControl::setApplication() {
 
+
     // Gets the selected application from the menu
     QAction *pAction = qobject_cast<QAction *>(sender());
     string newlySelectedApp = pAction->data().toString().toStdString();
     egsInformation("Selected application: %s\n", newlySelectedApp.c_str());
 
     // Removes previous application inputs
-    if (selectedApplication != "None") {
+    // We don't need to do this for egs_app because it has no special inputs
+    if (selectedApplication != "egs_app") {
         inputStruct->removeBlockInputByApp(selectedApplication);
+
+        // Delete the previous application example
+        QList<QAction*> actions = appMenu->actions();
+        for (QAction* action : actions) {
+            //if (action->text() == "egs_current_app") {
+            appMenu->removeAction(action);
+            delete action;
+            //    break;
+            //}
+        }
     }
 
     // Load the new library
     // Do not load if the default is selected
-    if (newlySelectedApp != "None") {
+    if (newlySelectedApp != "egs_app") {
+
         egsInformation("Loading library: %s\n", newlySelectedApp.c_str());
         EGS_Library app_lib(newlySelectedApp.c_str(),lib_dir.c_str());
         if (!app_lib.load()) {
-            egsWarning("Failed to load inputs and example for applications\n");
+            egsWarning("Failed to load inputs and example for application\n");
         } else {
             getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppSpecificInputs");
             egsInformation("getAppInputs %s\n", getAppInputs ? "true" : "false");
@@ -3949,23 +3959,22 @@ void GeometryViewControl::setApplication() {
                 }
             }
 
-            // Delete the previous application example
-            QList<QAction*> actions = appMenu->actions();
-            for (QAction* action : actions) {
-                if (action->text() == "egs_current_app") {
-                    appMenu->removeAction(action);
-                    delete action;
-                    break;
-                }
-            }
-
             // Load the new application example
             getExampleFunction getExample = (getExampleFunction) app_lib.resolve("getAppSpecificExample");
             if (getExample) {
-                QAction *action = appMenu->addAction("egs_current_app");
+                QAction *action = appMenu->addAction(QString::fromStdString(newlySelectedApp));
                 action->setData(QString::fromStdString(getExample()));
                 connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
             }
+        }
+    }
+
+    // Update the "Application: ..." menu bar title
+    QList<QAction*> menuBarActions = editorLayout->menuBar()->actions();
+    for (QAction* action : menuBarActions) {
+        QMenu* retrievedMenu = action->menu();
+        if (retrievedMenu && retrievedMenu->title() == QString::fromStdString("Application: " + selectedApplication)) {
+            retrievedMenu->setTitle(QString::fromStdString("Application: " + newlySelectedApp));
         }
     }
 
