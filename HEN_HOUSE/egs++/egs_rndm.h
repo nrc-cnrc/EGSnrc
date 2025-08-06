@@ -40,6 +40,7 @@
 #include "egs_libconfig.h"
 #include "egs_math.h"
 #include "egs_functions.h"
+#include "egs_vector.h"
 
 class EGS_Input;
 
@@ -127,9 +128,9 @@ public:
     };
 
     /*! \brief Sets \a cphi and \a sphi to the cosine and sine of a random
-     * angle uniformely distributed between 0 and \f$2 \pi \f$.
+     * angle uniformly distributed between 0 and \f$2 \pi \f$.
      *
-     * The default implementation uses a box method as this is faster on
+     * The default implementation uses a box method since this is faster on
      * AMD and Intel CPUs. If the preprocessor macro FAST_SINCOS is defined,
      * then an azimuthal angle \f$\phi\f$ is drawn uniformly between
      * 0 and \f$2 \pi \f$ and \a cphi and \a sphi are calculated using the
@@ -170,6 +171,33 @@ public:
         the_x = r*sphi;
         return r*cphi;
     };
+
+    /*! \brief
+    Get a random unit vector uniformly distributed across the unit sphere.
+    */
+    inline EGS_Vector randomDir(){
+        EGS_Float mu = 2 * getUniform() - 1;
+        EGS_Float phi = (2 * getUniform() - 1) * M_PI;
+        EGS_Float sin_theta = sqrt(1-mu*mu);
+        // [sin(θ) cos(φ), sin(θ) sin(φ), cos(θ)]
+        return {sin_theta * cos(phi), sin_theta * sin(phi), mu};
+    }
+
+    /*! \brief
+    Get a random unit vector orthogonal to `other`.
+    */
+    inline EGS_Vector randomDirOrthogonalTo(EGS_Vector other){
+
+        other.normalize();
+        EGS_Vector rand_dir = randomDir();
+        EGS_Vector parallel_part = (rand_dir * other) * other;
+        EGS_Vector perp_part = rand_dir - parallel_part;
+        if(perp_part.length2() < 1e-5){
+            // avoid zero division error
+            return randomDirOrthogonalTo(other);
+        }
+        return perp_part.normalized();
+    }
 
     /*! \brief Create a RNG object from the information pointed to by
      * \a inp and return a pointer to it.

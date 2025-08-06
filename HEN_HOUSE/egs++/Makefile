@@ -220,4 +220,71 @@ realclean:
 	$(REMOVE) $(egspp_objects) $(lib_objects) $(DSO1)egspp.$(obje) $(DSO1)test.exe
 	$(REMOVE) $(DSO1)egs_envelope_geometry.$(obje) $(DSO1)egs_stack_geometry.$(obje) $(DSO1)egs_union_geometry.$(obje) $(DSO1)egs_angular_spread_source.$(obje)
 
-.PHONY: libs $(all_libs) clean realclean
+style:
+	@echo "Styling .cpp and .h files"
+	@astyle --options=${HEN_HOUSE}scripts$(DSEP)egs_style_standard $(test_compliant_sources) $(test_compliant_headers)
+	@python3 cpplint.py --linelength 120 --filter -build/include_subdir,-whitespace/blank_line,-legal/copyright,-whitespace/comments,-readability/braces,-whitespace/indent,-whitespace/newline $(test_compliant_sources)
+	@python3 cpplint.py --linelength 120 --filter -build/include_subdir,-whitespace/blank_line,-legal/copyright,-whitespace/comments,-build/header_guard,-whitespace/indent,-whitespace/newline $(test_compliant_headers)
+	@$(REMOVE) *.orig
+
+.PHONY: libs $(all_libs) clean realclean style tests
+
+#----------------------------------------------------------------------------------------------
+
+TEST_DIR = .$(DSEP)tests$(DSEP)
+
+# Find the files in the ./tests/ directory 
+# that start with test_ and end with .cpp
+UNIT_TEST_SRCS = $(wildcard $(HEN_HOUSE)egs++/tests/test_*.cpp)
+UNIT_TEST_NAMES = $(basename $(notdir $(UNIT_TEST_SRCS)))
+
+# Add extensions to the classes that are being tested
+SRC_H = $(addsuffix .h, $(UNIT_TEST_NAMES))
+SRC_CPP = $(addsuffix .cpp, $(UNIT_TEST_NAMES))
+SRC_GCOV = $(addsuffix .cpp.gcov, $(UNIT_TEST_NAMES))
+
+# compile flags
+TEST_INCL = $(INC1) -I. -I$(TEST_DIR) -I../pieces -I../interface
+TEST_COV = --coverage -g -fprofile-arcs -ftest-coverage -fno-inline
+TEST_OPTS = $(DEF1) -O0 -mtune=native -mcmodel=medium -std=c++14
+
+
+
+# Build the tests
+tests: $(UNIT_TEST_SRCS)
+	@echo "$(CLASSES_CPP) $(CLASSES_GCOV)"
+	@echo "Building test suite from $(UNIT_TEST_NAMES)"
+	$(REMOVE) $(TEST_DIR)run_tests $(TEST_DIR)*.gcno $(TEST_DIR)*.gcda
+	$(CXX) $(TEST_INCL) $(TEST_COV) $(TEST_OPTS) $(lib_link1) \
+		$(UNIT_TEST_SRCS) $(lib_link2) -lgcov -o $(TEST_DIR)run_tests
+
+# Run the tests
+#
+# These create .gcda and .gcno files but they have the wrong signature 
+# for gcov. The loops fix the prefix (at runtime!) to match with what gcov expects
+run-tests: tests
+	@echo "Running the test suite"
+	$(REMOVE) $(TEST_DIR)*.gcda
+	$(TEST_DIR)run_tests
+
+	@echo "Renaming coverage output files in $(TEST_DIR)..."
+	@for file in $(TEST_DIR)run_tests-*.gc*;               \
+	do                                                     \
+		if [ -e "$$file" ]; then                           \
+			echo "$$file";                                 \
+			base=$$(basename "$$file");                    \
+			new=$$(echo "$$base" | sed 's/^run_tests-//'); \
+			mv "$$file" "$(TEST_DIR)$$new";                \
+		fi;                                                \
+	done
+
+# Pull out the coverage details from the tests
+coverage: run-tests
+	@echo "Building coverage report for test suite"
+	gcov $(TEST_DIR)$(UNIT_TEST_NAMES) -o $(TEST_DIR)
+	mv $(SRC_GCOV) $(TEST_DIR)
+	$(REMOVE) *.gcov $(TEST_DIR)*.gc*
+
+
+
+

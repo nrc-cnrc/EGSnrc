@@ -108,14 +108,15 @@ public:
         return length2() < tolerance;
     }
     /*! \brief
-      Comparison operator; returns true when all components of the two vectors are equal (up to tolerance)
+      Comparison operator; returns true when all components
+      of the two vectors are equal (up to the default tolerance of 1e-10)
     */
     bool operator==(const EGS_Vector &v) const {
         return operator-(v).isZero();
     }
     /*! \brief
-      Comparison operator; returns true when all components of the two vectors are different (relative to tolerance)
-    */
+      Comparison operator; returns true when all components 
+      of the two vectors are equal (relative to the default tolerance of 1e-10)    */
     bool operator!=(const EGS_Vector &v) const {
         return !operator-(v).isZero();
     }
@@ -139,7 +140,7 @@ public:
     /*! \brief
       Negation operator; flips the sign of each component in the vector
     */
-    EGS_Vector operator=(const EGS_Vector &v) const {
+    EGS_Vector operator-() const {
         return EGS_Vector(-x, -y, -z);
     }
     /*! \brief
@@ -337,10 +338,13 @@ public:
     }
 
     /*! \brief
-      Sets the tolerance of the `isZero` method
+      Sets the tolerance of the `isZero` method. 
+      
+      Returns a reference to itself so the operation can be chained.
     */
-    void setTolerance(EGS_Float tol) {
+    EGS_Vector &setTolerance(EGS_Float tol) {
         tolerance = tol;
+        return *this;
     }
 
     /*! \brief
@@ -355,13 +359,6 @@ public:
                      + to_string(y*pow(10, -avg_magnitude)) + ", "
                      + to_string(z*pow(10, -avg_magnitude)) + ")x10^" + to_string(avg_magnitude);
         return str;
-    }
-
-    /*! \brief
-      Returns a c-string representation of the vector
-    */
-    const char *cStr() const {
-        return toString().c_str();
     }
 
     /*! \brief
