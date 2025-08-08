@@ -78,7 +78,8 @@ A dynamic geometry is defined using
 :start geometry:
     name        = ...
     library     = egs_dynamic_geometry
-    my geometry = name of a predefined geometry that we want to add motion to :start motion: # units of cm and degrees
+    my geometry = name of a predefined geometry that we want to add motion to
+    :start motion: # units of cm and degrees
         control point = timeIndex(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
         control point = timeIndex(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
         .
