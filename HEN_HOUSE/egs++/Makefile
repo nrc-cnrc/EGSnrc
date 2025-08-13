@@ -227,7 +227,7 @@ style:
 	@python3 cpplint.py --linelength 120 --filter -build/include_subdir,-whitespace/blank_line,-legal/copyright,-whitespace/comments,-build/header_guard,-whitespace/indent,-whitespace/newline $(test_compliant_headers)
 	@$(REMOVE) *.orig
 
-.PHONY: libs $(all_libs) clean realclean style tests
+.PHONY: libs $(all_libs) clean realclean style tests run-tests coverage
 
 #----------------------------------------------------------------------------------------------
 
@@ -237,26 +237,34 @@ TEST_DIR = .$(DSEP)tests$(DSEP)
 # that start with test_ and end with .cpp
 UNIT_TEST_SRCS = $(wildcard $(HEN_HOUSE)egs++/tests/test_*.cpp)
 UNIT_TEST_NAMES = $(basename $(notdir $(UNIT_TEST_SRCS)))
+TESTED_CLASSES := $(patsubst test_%,%,$(UNIT_TEST_NAMES))
 
-# Add extensions to the classes that are being tested
-SRC_H = $(addsuffix .h, $(UNIT_TEST_NAMES))
-SRC_CPP = $(addsuffix .cpp, $(UNIT_TEST_NAMES))
-SRC_GCOV = $(addsuffix .cpp.gcov, $(UNIT_TEST_NAMES))
+# Find the headers and source files that are being tested
+SRC_H = $(addsuffix .h, $(TESTED_CLASSES))
+SRC_H_EXIST = $(filter $(wildcard $(SRC_H)), $(SRC_H))
+SRC_H_GCOV = $(addsuffix .gcov, $(SRC_H_EXIST))
+SRC_H_HTML = $(addsuffix .html, $(SRC_H_EXIST))
+
+SRC_CPP = $(addsuffix .cpp, $(TESTED_CLASSES))
+SRC_CPP_EXIST = $(filter $(wildcard $(SRC_CPP)), $(SRC_CPP))
+SRC_CPP_GCOV = $(addsuffix .gcov, $(SRC_CPP_EXIST))
+SRC_CPP_FCOV = $(addsuffix .fcov, $(SRC_CPP_EXIST))
 
 # compile flags
 TEST_INCL = $(INC1) -I. -I$(TEST_DIR) -I../pieces -I../interface
 TEST_COV = --coverage -g -fprofile-arcs -ftest-coverage -fno-inline
-TEST_OPTS = $(DEF1) -O0 -mtune=native -mcmodel=medium -std=c++14
+TEST_OPTS = $(DEF1) -O0 -mtune=native -std=c++14
 
 
-
-# Build the tests
-tests: $(UNIT_TEST_SRCS)
+$(TEST_DIR)run_tests: $(UNIT_TEST_SRCS)
 	@echo "$(CLASSES_CPP) $(CLASSES_GCOV)"
-	@echo "Building test suite from $(UNIT_TEST_NAMES)"
+	@echo "Building test suite from $(UNIT_TEST_NAMES)\n on headers $(TESTED_CLASSES)\n and sources $()"
 	$(REMOVE) $(TEST_DIR)run_tests $(TEST_DIR)*.gcno $(TEST_DIR)*.gcda
 	$(CXX) $(TEST_INCL) $(TEST_COV) $(TEST_OPTS) $(lib_link1) \
 		$(UNIT_TEST_SRCS) $(lib_link2) -lgcov -o $(TEST_DIR)run_tests
+
+# Build the tests
+tests: $(TEST_DIR)run_tests
 
 # Run the tests
 #
@@ -279,12 +287,18 @@ run-tests: tests
 	done
 
 # Pull out the coverage details from the tests
-coverage: run-tests
+#
+# The tests are run every time, so we should delete the 
+coverage: $(TEST_DIR)fix_coverage_report run-tests 
 	@echo "Building coverage report for test suite"
-	gcov $(TEST_DIR)$(UNIT_TEST_NAMES) -o $(TEST_DIR)
-	mv $(SRC_GCOV) $(TEST_DIR)
-	$(REMOVE) *.gcov $(TEST_DIR)*.gc*
+	@gcov $(TEST_DIR)$(UNIT_TEST_NAMES) -q -o $(TEST_DIR) >/dev/null
+	$(TEST_DIR)fix_coverage_report $(SRC_H_GCOV) $(SRC_CPP_GCOV)
+	@mv $(SRC_H_HTML) $(SRC_CPP_FCOV) $(TEST_DIR)
+	@$(REMOVE) *.gcov
 
+$(TEST_DIR)fix_coverage_report: $(TEST_DIR)fix_gcov.cpp
+	@echo "Compiling tool to fix gcov handling of uninstrumented functions"
+	$(CXX) $(TEST_DIR)fix_gcov.cpp -std=c++20 -o $(TEST_DIR)fix_coverage_report 
 
-
-
+clean-tests:
+	$(REMOVE) $(TEST_DIR)*.gcda $(TEST_DIR)*.gcno $(TEST_DIR)run_tests $(TEST_DIR)*.gcov $(TEST_DIR)*.fcov 

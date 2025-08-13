@@ -6,7 +6,6 @@
 // The tested class
 #include "egs_vector.h"
 
-
 TEST_CASE("Math") { 
     REQUIRE(2 * 2 == 4); 
 }
@@ -122,6 +121,15 @@ TEST_CASE("Representation as a string"){
     EGS_Vector large( 1e8,  3.141592e8, 2.718282e8);
     REQUIRE( large.toString() == "(1.000000, 3.141592, 2.718282)x10^8" );
 
+}
 
+TEST_CASE("Rotation of a vector"){
+
+    EGS_Vector zhat( 0, 0, 1);
+    float ctheta = 0, stheta=1;
+    float cphi = 1, sphi = 0;
+
+    zhat.rotate(ctheta, stheta, cphi, sphi);
+    REQUIRE( zhat == EGS_Vector(1, 0, 0) );
 
 }

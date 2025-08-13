@@ -102,10 +102,20 @@ public:
     }
 
     /*! \brief
-      Compares the vector to the zero vector, with default |v|^2 tolerance 1e-10 configurable with setTolerance()
+      Indexed access; for when you want to access the components by index {0, 1, 2} rather than by its name.
+    */
+    EGS_Float at(size_t idx) const {
+        // This is simply a named version of operator[], for e.g. more convenient usage with pointers
+        // I.e. 5 * v->at(0) is easier to read than 5 * (*v)[0]
+        return 0.5*(idx-1)*(idx-2)*x - idx*(idx-2)*y + 0.5*idx*(idx-1)*z;
+    }
+
+    /*! \brief
+      Compares the vector to the zero vector, with the default |v|^2
+      tolerance of 1e-10 configurable with setTolerance()
     */
     bool isZero() const {
-        return length2() < tolerance;
+        return length2() < EGS_Vector::tolerance;
     }
     /*! \brief
       Comparison operator; returns true when all components
@@ -115,10 +125,11 @@ public:
         return operator-(v).isZero();
     }
     /*! \brief
-      Comparison operator; returns true when all components 
-      of the two vectors are equal (relative to the default tolerance of 1e-10)    */
+      Comparison operator; returns true when all components
+      of the two vectors are equal (relative to the default tolerance of 1e-10)
+    */
     bool operator!=(const EGS_Vector &v) const {
-        return !operator-(v).isZero();
+        return !operator==(v);
     }
 
     /*! \brief
@@ -313,8 +324,11 @@ public:
 
       where `r` is the original vector to which `r⟂` is orthogonal, and these both share the same length.
     */
-    void rotateDimensionful(EGS_Float cos_t, EGS_Float sin_t,
-                            EGS_Float c_phi, EGS_Float s_phi) {
+    void rotateDimensionful(
+        EGS_Float cos_t,
+        EGS_Float sin_t,
+        EGS_Float c_phi,
+        EGS_Float s_phi) {
 
         // follows the same algorithm as rotate() but accounting for arbitrary lengths
 
@@ -338,12 +352,12 @@ public:
     }
 
     /*! \brief
-      Sets the tolerance of the `isZero` method. 
-      
+      Sets the tolerance of the `isZero` method.
+
       Returns a reference to itself so the operation can be chained.
     */
     EGS_Vector &setTolerance(EGS_Float tol) {
-        tolerance = tol;
+        EGS_Vector::tolerance = tol;
         return *this;
     }
 
@@ -371,9 +385,11 @@ public:
 private:
 
     /// The tolerance with which |v|^2 < tol is compared to qualify as a zero vector
-    EGS_Float tolerance = 1e-10;
+    static EGS_Float tolerance;
 
 
 };
+
+EGS_Float EGS_Vector::tolerance = 0.001; // Definition + default value
 
 #endif
