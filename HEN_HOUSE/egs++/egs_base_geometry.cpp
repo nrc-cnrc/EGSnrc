@@ -53,6 +53,9 @@
 #include <cstdarg>
 #include <cstdlib>
 
+#include <string>     // for std::string
+#include <sstream>    // for std::istringstream
+
 using namespace std;
 
 typedef EGS_BaseGeometry *(*EGS_GeometryCreationFunction)(EGS_Input *);
@@ -1124,46 +1127,91 @@ int EGS_BaseGeometry::setLabels(EGS_Input *input) {
 
 int EGS_BaseGeometry::setLabels(const string &inp) {
 
-    // tokenize input string
     vector<string> tokens;
-    const char *ptr = inp.c_str();
-    do {
-        const char *begin = ptr;
-        while (*ptr != ' ' && *ptr) {
-            ptr++;
-        }
-        tokens.push_back(string(begin, ptr));
-    }
-    while (*ptr++ != '\0');
+    istringstream iss(inp);
+    string token;
 
-    // bail out if there are no label tokens
-    if (tokens.size() < 1) {
-        egsWarning("EGS_BaseGeometry::setLabels(): no label name\n");
+    // label class to store label name and region list
+    label lab;
+
+    // tokenize input string
+    while (iss >> token) {
+        tokens.push_back(token);
+    }
+
+    // bail out if there are no tokens at all
+    if (tokens.empty()) {
+        egsWarning("EGS_BaseGeometry::setLabels(): no label specified\n");
         return 0;
     }
 
-    // parse label into a label class
-    label lab;
+    // parse label name
     lab.name = tokens[0];
-    for (int i=1; i<tokens.size(); i++) {
-        int reg = atoi(tokens[i].c_str());
-        if (reg < nreg && reg >= 0) {
-            lab.regions.push_back(reg);
+
+    // if no regions are listed, apply label to all regions by default
+    if (tokens.size() == 1) {
+        lab.regions.reserve(nreg);          // allocate once
+        for (int i = 0; i < nreg; i++) {
+            lab.regions.push_back(i);
         }
+    }
+
+    // process remaining tokens as regions or region ranges
+    for (size_t i = 1; i < tokens.size(); i++) {
+        int start, end;
+
+        // try to parse token as range (e.g., "10-20")
+        if (sscanf(tokens[i].c_str(), "%d-%d", &start, &end) == 2) {
+
+            int first_reg = std::min(start, end);
+            int last_reg = std::max(start, end);
+
+            for (int reg = first_reg; reg <= last_reg; reg++) {
+                if (reg >= 0 && reg < nreg) {
+                    lab.regions.push_back(reg);
+                }
+                else {
+                    egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": region %d in range %s is out of bounds\n",
+                               lab.name.c_str(), reg, tokens[i].c_str());
+                }
+            }
+        }
+
+        // otherwise parse as a single region number
         else {
-            egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": region %d is beyond the number " \
-                       "of regions in this geometry\n", lab.name.c_str(), reg);
+            int reg;
+            char extra;
+            int parsed = sscanf(tokens[i].c_str(), "%d%c", &reg, &extra);
+
+            // successfully parsed exactly one integer (no extra chars)
+            if (parsed == 1) {
+                if (reg >= 0 && reg < nreg) {
+                    lab.regions.push_back(reg);
+                }
+                else {
+                    egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": region %d is out of bounds\n",
+                               lab.name.c_str(), reg);
+                }
+            }
+            else {
+                egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": invalid region specifier '%s'\n",
+                           lab.name.c_str(), tokens[i].c_str());
+            }
         }
     }
 
     // continue if there is no region
     if (lab.regions.size() <= 0) {
+        egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": no valid regions specified\n",
+                   lab.name.c_str());
         return 0;
     }
 
-    // sort region list and remove duplicates
-    sort(lab.regions.begin(), lab.regions.end());
-    lab.regions.erase(unique(lab.regions.begin(), lab.regions.end()), lab.regions.end());
+    // only sort and unique if we have potential duplicates
+    if (tokens.size() > 2) {
+        sort(lab.regions.begin(), lab.regions.end());
+        lab.regions.erase(unique(lab.regions.begin(), lab.regions.end()), lab.regions.end());
+    }
 
     // push current label onto vector of labels
     labels.push_back(lab);
