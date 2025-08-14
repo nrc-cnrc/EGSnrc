@@ -68,7 +68,7 @@ struct EGS_GeometryIntersections;
     typedef unsigned char EGS_BPType;
 #endif
 
-class label {
+class EGS_Label {
 public:
     string      name;
     vector<int> regions;
@@ -759,6 +759,32 @@ public:
         (void)time;
     };
 
+    /*!
+    * \brief Validate that all region numbers are within valid bounds
+    *
+    * Checks that each region number in the provided vector is within the
+    * valid range [0, nreg) for this geometry. Validation stops at the
+    * first invalid region encountered.
+    *
+    * \param regions Vector of region numbers to validate
+    * \return true if all regions are valid, false if any region is out of bounds
+    *
+    * \note Validation stops immediately upon encountering the first invalid region
+    * \note Valid region range is [0, nreg) where nreg is the total number of regions
+    * \note Invalid regions trigger a warning message with geometry name and region number
+    *
+    * Example:
+    * \code
+    * vector<int> regions = {0, 5, 10, 15};
+    * if (geometry.validateRegions(regions)) {
+    *     // All regions are valid, proceed with operation
+    * } else {
+    *     // At least one region is invalid, handle error
+    * }
+    * \endcode
+    */
+    bool validateRegions(const std::vector<int> &regions);
+
     /* This method is essentially used to determine whether the simulation
      * geometry contains a dynamic geometry. Like getNextGeom(), the only
      * non-empty implementations of this function are in composite geometries
@@ -894,7 +920,7 @@ protected:
         determine region numbers in complicated geometrical constructs. They
         are also useful to track region numbers upon modyfying the geometry.
      */
-    vector<label> labels;
+    vector<EGS_Label> labels;
 
     /*! \brief The application this object belongs to */
     EGS_Application *app;

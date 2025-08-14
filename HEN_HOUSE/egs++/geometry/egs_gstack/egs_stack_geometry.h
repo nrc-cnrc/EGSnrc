@@ -335,7 +335,7 @@ protected:
 
     void setMedia(EGS_Input *,int,const int *);
 
-    vector<label> stack_labels;
+    vector<EGS_Label> stack_labels;
 
 private:
 
