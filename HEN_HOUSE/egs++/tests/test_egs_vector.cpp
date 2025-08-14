@@ -1,16 +1,11 @@
 
 // Testing framework
-#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
 // The tested class
 #include "egs_vector.h"
 
-TEST_CASE("Math") { 
-    REQUIRE(2 * 2 == 4); 
-}
-
-TEST_CASE("Constructors"){
+TEST_CASE("EGS_Vector Constructors"){
 
     // default
     EGS_Vector def;
@@ -39,7 +34,7 @@ TEST_CASE("Constructors"){
 
 }
 
-TEST_CASE("Comparators"){
+TEST_CASE("EGS_Vector Comparators"){
 
     // check that floating numbers don't trick the EGS_Vector
     // implementation of equals
@@ -58,7 +53,7 @@ TEST_CASE("Comparators"){
 
 }
 
-TEST_CASE("Standard math operators"){
+TEST_CASE("EGS_Vector Standard math operators"){
 
     // summation and subtraction
     EGS_Vector one(   3,  5,  7);
@@ -103,7 +98,7 @@ TEST_CASE("Standard math operators"){
 
 
 
-TEST_CASE("Representation as a string"){
+TEST_CASE("EGS_Vector Representation as a string"){
 
     EGS_Vector one( 3,  5,  7);
     cout << one << endl;
@@ -123,7 +118,7 @@ TEST_CASE("Representation as a string"){
 
 }
 
-TEST_CASE("Rotation of a vector"){
+TEST_CASE("EGS_Vector Rotation of a vector"){
 
     EGS_Vector zhat( 0, 0, 1);
     float ctheta = 0, stheta=1;

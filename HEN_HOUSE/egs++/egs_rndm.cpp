@@ -337,7 +337,7 @@ void EGS_Ranmar::setState(int ixx, int jxx) {
 
 void EGS_Ranmar::fillArray(int n, EGS_Float *array) {
     for (int ii=0; ii<n; ii++) {
-        register int r = u[ix] - u[jx--];
+        int r = u[ix] - u[jx--];
 #ifdef MSVC
         if (r > 16777219) {
             egsWarning("r = %d\n",r);
@@ -370,7 +370,7 @@ void EGS_Ranmar::fillArray(int n, EGS_Float *array) {
     }
     if (high_res) {
         for (int ii=0; ii<n; ii++) {
-            register int r = u[ix] - u[jx--];
+            int r = u[ix] - u[jx--];
 #ifdef MSVC
             if (r > 16777219) {
                 egsWarning("r = %d\n",r);

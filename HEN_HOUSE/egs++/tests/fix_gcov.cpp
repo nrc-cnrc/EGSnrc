@@ -543,14 +543,14 @@ void fix_file(const char *filename) {
     std::string ifname = std::string(filename);
     std::ifstream ifile(ifname);
     if (!ifile.is_open()) {
-        std::cout << "Could not open " << filename << std::endl;
+        std::cout << "fix_coverage_report: Could not open " << filename << std::endl;
         return;
     }
 
     std::string ofilename = std::string(ifname).substr(0, ifname.size()-4) + "html";
     std::ofstream ofile(ofilename);
     if (!ofile.is_open()) {
-        std::cout << "Could not open " << ofilename << std::endl;
+        std::cout << "fix_coverage_report: Could not open " << ofilename << std::endl;
         return;
     }
     ofile << "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n";

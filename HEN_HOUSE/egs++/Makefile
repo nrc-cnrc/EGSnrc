@@ -227,7 +227,7 @@ style:
 	@python3 cpplint.py --linelength 120 --filter -build/include_subdir,-whitespace/blank_line,-legal/copyright,-whitespace/comments,-build/header_guard,-whitespace/indent,-whitespace/newline $(test_compliant_headers)
 	@$(REMOVE) *.orig
 
-.PHONY: libs $(all_libs) clean realclean style tests run-tests coverage
+.PHONY: libs $(all_libs) clean realclean style tests run-tests clean-tests coverage 
 
 #----------------------------------------------------------------------------------------------
 
@@ -248,38 +248,36 @@ SRC_H_HTML = $(addsuffix .html, $(SRC_H_EXIST))
 SRC_CPP = $(addsuffix .cpp, $(TESTED_CLASSES))
 SRC_CPP_EXIST = $(filter $(wildcard $(SRC_CPP)), $(SRC_CPP))
 SRC_CPP_GCOV = $(addsuffix .gcov, $(SRC_CPP_EXIST))
-SRC_CPP_FCOV = $(addsuffix .fcov, $(SRC_CPP_EXIST))
+SRC_CPP_HTML = $(addsuffix .html, $(SRC_CPP_EXIST))
 
 # compile flags
 TEST_INCL = $(INC1) -I. -I$(TEST_DIR) -I../pieces -I../interface
 TEST_COV = --coverage -g -fprofile-arcs -ftest-coverage -fno-inline
-TEST_OPTS = $(DEF1) -O0 -mtune=native -std=c++14
+TEST_OPTS = $(DEF1) -O0 -mtune=native -std=c++17
 
-
-$(TEST_DIR)run_tests: $(UNIT_TEST_SRCS)
+# Build the run_tests executable in the tests dir, with dependencies
+$(TEST_DIR)run_tests: $(UNIT_TEST_SRCS) $(SRC_CPP_EXIST) $(SRC_H_EXIST)
 	@echo "$(CLASSES_CPP) $(CLASSES_GCOV)"
-	@echo "Building test suite from $(UNIT_TEST_NAMES)\n on headers $(TESTED_CLASSES)\n and sources $()"
+	@echo "Building test suite from $(UNIT_TEST_NAMES)\n on headers $(SRC_H_EXIST)\n and sources $(SRC_CPP_EXIST)"
 	$(REMOVE) $(TEST_DIR)run_tests $(TEST_DIR)*.gcno $(TEST_DIR)*.gcda
 	$(CXX) $(TEST_INCL) $(TEST_COV) $(TEST_OPTS) $(lib_link1) \
-		$(UNIT_TEST_SRCS) $(lib_link2) -lgcov -o $(TEST_DIR)run_tests
+		$(TEST_DIR)catch2_main.cpp $(UNIT_TEST_SRCS) $(lib_link2) -lgcov -o $(TEST_DIR)run_tests
 
-# Build the tests
+# Build the tests, with keyword
 tests: $(TEST_DIR)run_tests
 
 # Run the tests
 #
-# These create .gcda and .gcno files but they have the wrong signature 
+# These create .gcda files but they have the wrong signature prefix 
 # for gcov. The loops fix the prefix (at runtime!) to match with what gcov expects
 run-tests: tests
 	@echo "Running the test suite"
 	$(REMOVE) $(TEST_DIR)*.gcda
 	$(TEST_DIR)run_tests
 
-	@echo "Renaming coverage output files in $(TEST_DIR)..."
 	@for file in $(TEST_DIR)run_tests-*.gc*;               \
 	do                                                     \
 		if [ -e "$$file" ]; then                           \
-			echo "$$file";                                 \
 			base=$$(basename "$$file");                    \
 			new=$$(echo "$$base" | sed 's/^run_tests-//'); \
 			mv "$$file" "$(TEST_DIR)$$new";                \
@@ -288,17 +286,19 @@ run-tests: tests
 
 # Pull out the coverage details from the tests
 #
-# The tests are run every time, so we should delete the 
+# To do cpp as well use 	$(TEST_DIR)fix_coverage_report $(SRC_H_GCOV) $(SRC_CPP_GCOV)
+# and 	@mv $(SRC_H_HTML) $(SRC_CPP_FCOV) $(TEST_DIR)
+# but that only works if you compile all of egs++ with coverage flags
 coverage: $(TEST_DIR)fix_coverage_report run-tests 
 	@echo "Building coverage report for test suite"
-	@gcov $(TEST_DIR)$(UNIT_TEST_NAMES) -q -o $(TEST_DIR) >/dev/null
-	$(TEST_DIR)fix_coverage_report $(SRC_H_GCOV) $(SRC_CPP_GCOV)
+	gcov $(TEST_DIR)$(UNIT_TEST_NAMES) -q -o $(TEST_DIR) >/dev/null
+	$(TEST_DIR)fix_coverage_report $(SRC_H_GCOV)
 	@mv $(SRC_H_HTML) $(SRC_CPP_FCOV) $(TEST_DIR)
 	@$(REMOVE) *.gcov
 
 $(TEST_DIR)fix_coverage_report: $(TEST_DIR)fix_gcov.cpp
 	@echo "Compiling tool to fix gcov handling of uninstrumented functions"
-	$(CXX) $(TEST_DIR)fix_gcov.cpp -std=c++20 -o $(TEST_DIR)fix_coverage_report 
+	@$(CXX) $(TEST_DIR)fix_gcov.cpp -std=c++20 -o $(TEST_DIR)fix_coverage_report 
 
 clean-tests:
-	$(REMOVE) $(TEST_DIR)*.gcda $(TEST_DIR)*.gcno $(TEST_DIR)run_tests $(TEST_DIR)*.gcov $(TEST_DIR)*.fcov 
+	$(REMOVE) $(TEST_DIR)*.gcda $(TEST_DIR)*.gcno $(TEST_DIR)run_tests $(TEST_DIR)*.gcov $(TEST_DIR)*.html

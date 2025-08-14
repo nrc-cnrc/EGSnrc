@@ -352,16 +352,6 @@ public:
     }
 
     /*! \brief
-      Sets the tolerance of the `isZero` method.
-
-      Returns a reference to itself so the operation can be chained.
-    */
-    EGS_Vector &setTolerance(EGS_Float tol) {
-        EGS_Vector::tolerance = tol;
-        return *this;
-    }
-
-    /*! \brief
       Returns a string representation of the vector
     */
     string toString() const {
@@ -382,14 +372,27 @@ public:
         return os << v.toString();
     }
 
+#if __cplusplus >= 201703L
+
+    /*! \brief
+      Sets the tolerance of the `isZero` method.
+
+      Returns a reference to itself so the operation can be chained.
+    */
+    EGS_Vector &setTolerance(EGS_Float tol) {
+        EGS_Vector::tolerance = tol;
+        return *this;
+    }
+
 private:
 
     /// The tolerance with which |v|^2 < tol is compared to qualify as a zero vector
-    static EGS_Float tolerance;
+    inline static EGS_Float tolerance = 1e-10;
 
-
+#else
+private:
+    constexpr static EGS_Float tolarance = 1e-10;
+#endif
 };
-
-EGS_Float EGS_Vector::tolerance = 0.001; // Definition + default value
 
 #endif

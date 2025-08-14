@@ -3,12 +3,9 @@
 <style>pre {margin: 0;}
 </style>
 <body>
-<pre style="background-color:#AA6000;"> Overall percentage 65.57%</pre>
+<pre style="background-color:#AA3E00;"> Overall percentage 56.75%</pre>
 
 <pre>        -:    0:Source:egs_vector.h</pre>
-<pre>        -:    0:Graph:./tests/test_egs_vector.gcno</pre>
-<pre>        -:    0:Data:./tests/test_egs_vector.gcda</pre>
-<pre>        -:    0:Runs:1</pre>
 <pre>        -:    1:/*</pre>
 <pre>        -:    2:###############################################################################</pre>
 <pre>        -:    3:#</pre>
@@ -85,12 +82,26 @@
 <pre>        -:   71:    /*! \brief</pre>
 <pre>        -:   72:      Component constructor; sets individual components x, y, z.</pre>
 <pre>        -:   73:    */</pre>
-<pre style="background-color:#00BB00;">       55:   74:    EGS_Vector(EGS_Float xx, EGS_Float yy, EGS_Float zz) : x(xx), y(yy), z(zz) {}</pre>
+<pre style="background-color:#00BB00;"> 1000059*:   74:    EGS_Vector(EGS_Float xx, EGS_Float yy, EGS_Float zz) : x(xx), y(yy), z(zz) {}</pre>
+<pre>------------------</pre>
+<pre>_ZN10EGS_VectorC2Eddd:</pre>
+<pre style="background-color:#00BB00;">  1000059:   74:    EGS_Vector(EGS_Float xx, EGS_Float yy, EGS_Float zz) : x(xx), y(yy), z(zz) {}</pre>
+<pre>------------------</pre>
+<pre>_ZN10EGS_VectorC2Eddd:</pre>
+<pre style="background-color:#00BB00;">    #####:   74:    EGS_Vector(EGS_Float xx, EGS_Float yy, EGS_Float zz) : x(xx), y(yy), z(zz) {}</pre>
+<pre>------------------</pre>
 <pre>        -:   75:</pre>
 <pre>        -:   76:    /*! \brief</pre>
 <pre>        -:   77:      Copy constructor; copies x, y, z components of \a v.</pre>
 <pre>        -:   78:    */</pre>
-<pre style="background-color:#00BB00;">        2:   79:    EGS_Vector(const EGS_Vector &v) : x(v.x), y(v.y), z(v.z) {}</pre>
+<pre style="background-color:#00BB00;">  200003*:   79:    EGS_Vector(const EGS_Vector &v) : x(v.x), y(v.y), z(v.z) {}</pre>
+<pre>------------------</pre>
+<pre>_ZN10EGS_VectorC2ERKS_:</pre>
+<pre style="background-color:#00BB00;">   200003:   79:    EGS_Vector(const EGS_Vector &v) : x(v.x), y(v.y), z(v.z) {}</pre>
+<pre>------------------</pre>
+<pre>_ZN10EGS_VectorC2ERKS_:</pre>
+<pre style="background-color:#00BB00;">    #####:   79:    EGS_Vector(const EGS_Vector &v) : x(v.x), y(v.y), z(v.z) {}</pre>
+<pre>------------------</pre>
 <pre>        -:   80:</pre>
 <pre>        -:   81:    /*! \brief</pre>
 <pre>        -:   82:      Default constructor; all components set to zero.</pre>
@@ -118,7 +129,7 @@
 <pre>        -:  104:    /*! \brief</pre>
 <pre>        -:  105:      Indexed access; for when you want to access the components by index {0, 1, 2} rather than by its name.</pre>
 <pre>        -:  106:    */</pre>
-<pre style="background-color:#BB0000;">        0:  107:    EGS_Float at(size_t idx) const { </pre>
+<pre style="background-color:#BB0000;">        0:  107:    EGS_Float at(size_t idx) const {</pre>
 <pre style="background-color:#BB0000;">        0:  108:        // This is simply a named version of operator[], for e.g. more convenient usage with pointers</pre>
 <pre style="background-color:#BB0000;">        0:  109:        // I.e. 5 * v-&gtat(0) is easier to read than 5 * (*v)[0]</pre>
 <pre style="background-color:#BB0000;">        0:  110:        return 0.5*(idx-1)*(idx-2)*x - idx*(idx-2)*y + 0.5*idx*(idx-1)*z;</pre>
@@ -129,7 +140,7 @@
 <pre>        -:  115:      tolerance of 1e-10 configurable with setTolerance()</pre>
 <pre>        -:  116:    */</pre>
 <pre style="background-color:#00BB00;">       21:  117:    bool isZero() const {</pre>
-<pre style="background-color:#00BB00;">       21:  118:        return this-&gtlength2() &lt EGS_Vector:tolerance;</pre>
+<pre style="background-color:#00BB00;">       21:  118:        return length2() &lt EGS_Vector:tolerance;</pre>
 <pre>        -:  119:    }</pre>
 <pre>        -:  120:    /*! \brief</pre>
 <pre>        -:  121:      Comparison operator; returns true when all components</pre>
@@ -139,7 +150,7 @@
 <pre style="background-color:#00BB00;">       18:  125:        return operator-(v).isZero();</pre>
 <pre>        -:  126:    }</pre>
 <pre>        -:  127:    /*! \brief</pre>
-<pre>        -:  128:      Comparison operator; returns true when all components </pre>
+<pre>        -:  128:      Comparison operator; returns true when all components</pre>
 <pre>        -:  129:      of the two vectors are equal (relative to the default tolerance of 1e-10)</pre>
 <pre>        -:  130:    */</pre>
 <pre style="background-color:#00BB00;">        2:  131:    bool operator!=(const EGS_Vector &v) const {</pre>
@@ -171,9 +182,20 @@
 <pre>        -:  157:    /*! \brief</pre>
 <pre>        -:  158:      Subtraction of an EGS_Vector by another EGS_Vector \a v</pre>
 <pre>        -:  159:    */</pre>
-<pre style="background-color:#00BB00;">       20:  160:    EGS_Vector operator-(const EGS_Vector &v) const {</pre>
-<pre style="background-color:#00BB00;">       20:  161:        return EGS_Vector(x-v.x, y-v.y, z-v.z);</pre>
+<pre>  200021*:  160:    EGS_Vector operator-(const EGS_Vector &v) const {</pre>
+<pre>  200021*:  161:        return EGS_Vector(x-v.x, y-v.y, z-v.z);</pre>
 <pre>        -:  162:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_VectormiERKS_:</pre>
+<pre style="background-color:#00BB00;">   200021:  160:    EGS_Vector operator-(const EGS_Vector &v) const {</pre>
+<pre style="background-color:#00BB00;">   200021:  161:        return EGS_Vector(x-v.x, y-v.y, z-v.z);</pre>
+<pre>        -:  162:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_VectormiERKS_:</pre>
+<pre style="background-color:#BB0000;">    #####:  160:    EGS_Vector operator-(const EGS_Vector &v) const {</pre>
+<pre style="background-color:#BB0000;">    #####:  161:        return EGS_Vector(x-v.x, y-v.y, z-v.z);</pre>
+<pre>        -:  162:    }</pre>
+<pre>------------------</pre>
 <pre>        -:  163:    /*! \brief</pre>
 <pre>        -:  164:      In-place subtraction of an EGS_Vector by another EGS_Vector \a  v</pre>
 <pre>        -:  165:    */</pre>
@@ -187,9 +209,20 @@
 <pre>        -:  173:    /*! \brief</pre>
 <pre>        -:  174:      Multiplication of an EGS_Vector by a float \a f on the right</pre>
 <pre>        -:  175:    */</pre>
-<pre style="background-color:#00BB00;">        2:  176:    EGS_Vector operator*(const EGS_Float f) const {</pre>
-<pre style="background-color:#00BB00;">        2:  177:        return EGS_Vector(x*f, y*f, z*f);</pre>
+<pre>  200003*:  176:    EGS_Vector operator*(const EGS_Float f) const {</pre>
+<pre>  200003*:  177:        return EGS_Vector(x*f, y*f, z*f);</pre>
 <pre>        -:  178:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_VectormlEd:</pre>
+<pre style="background-color:#00BB00;">   200003:  176:    EGS_Vector operator*(const EGS_Float f) const {</pre>
+<pre style="background-color:#00BB00;">   200003:  177:        return EGS_Vector(x*f, y*f, z*f);</pre>
+<pre>        -:  178:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_VectormlEd:</pre>
+<pre style="background-color:#BB0000;">    #####:  176:    EGS_Vector operator*(const EGS_Float f) const {</pre>
+<pre style="background-color:#BB0000;">    #####:  177:        return EGS_Vector(x*f, y*f, z*f);</pre>
+<pre>        -:  178:    }</pre>
+<pre>------------------</pre>
 <pre>        -:  179:    /*! \brief</pre>
 <pre>        -:  180:      In-place multiplication of an EGS_Vector by a float \a f</pre>
 <pre>        -:  181:    */</pre>
@@ -202,9 +235,20 @@
 <pre>        -:  188:    /*! \brief</pre>
 <pre>        -:  189:      Multiplication of an EGS_Vector by a float \a f on the left</pre>
 <pre>        -:  190:    */</pre>
-<pre style="background-color:#00BB00;">        1:  191:    friend EGS_Vector operator*(EGS_Float f, const EGS_Vector &v) {</pre>
-<pre style="background-color:#00BB00;">        1:  192:        return v*f;</pre>
+<pre>  200002*:  191:    friend EGS_Vector operator*(EGS_Float f, const EGS_Vector &v) {</pre>
+<pre>  200002*:  192:        return v*f;</pre>
 <pre>        -:  193:    }</pre>
+<pre>------------------</pre>
+<pre>_ZmldRK10EGS_Vector:</pre>
+<pre style="background-color:#00BB00;">   200002:  191:    friend EGS_Vector operator*(EGS_Float f, const EGS_Vector &v) {</pre>
+<pre style="background-color:#00BB00;">   200002:  192:        return v*f;</pre>
+<pre>        -:  193:    }</pre>
+<pre>------------------</pre>
+<pre>_ZmldRK10EGS_Vector:</pre>
+<pre style="background-color:#BB0000;">    #####:  191:    friend EGS_Vector operator*(EGS_Float f, const EGS_Vector &v) {</pre>
+<pre style="background-color:#BB0000;">    #####:  192:        return v*f;</pre>
+<pre>        -:  193:    }</pre>
+<pre>------------------</pre>
 <pre>        -:  194:</pre>
 <pre>        -:  195:    /*! \brief</pre>
 <pre>        -:  196:      Division of an EGS_Vector by a float \a f</pre>
@@ -225,16 +269,40 @@
 <pre>        -:  211:    /*! \brief</pre>
 <pre>        -:  212:      Returns the inner product (dot product) of an EGS_Vector with another EGS_Vector \a v</pre>
 <pre>        -:  213:    */</pre>
-<pre style="background-color:#00BB00;">        1:  214:    EGS_Float dot(const EGS_Vector &v) const {</pre>
-<pre style="background-color:#00BB00;">        1:  215:        return x*v.x + y*v.y + z*v.z;</pre>
+<pre>  200001*:  214:    EGS_Float dot(const EGS_Vector &v) const {</pre>
+<pre>  200001*:  215:        return x*v.x + y*v.y + z*v.z;</pre>
 <pre>        -:  216:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_Vector3dotERKS_:</pre>
+<pre style="background-color:#00BB00;">   200001:  214:    EGS_Float dot(const EGS_Vector &v) const {</pre>
+<pre style="background-color:#00BB00;">   200001:  215:        return x*v.x + y*v.y + z*v.z;</pre>
+<pre>        -:  216:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_Vector3dotERKS_:</pre>
+<pre style="background-color:#BB0000;">    #####:  214:    EGS_Float dot(const EGS_Vector &v) const {</pre>
+<pre style="background-color:#BB0000;">    #####:  215:        return x*v.x + y*v.y + z*v.z;</pre>
+<pre>        -:  216:    }</pre>
+<pre>------------------</pre>
 <pre>        -:  217:    /*! \brief</pre>
 <pre>        -:  218:      Returns the inner product (dot product) of an EGS_Vector with another EGS_Vector \a v.</pre>
 <pre>        -:  219:    */</pre>
-<pre style="background-color:#00BB00;">        1:  220:    EGS_Float operator*(const EGS_Vector &v) const {</pre>
+<pre>  200002*:  220:    EGS_Float operator*(const EGS_Vector &v) const {</pre>
 <pre>        -:  221:        // Syntactic sugar for the `dot` function</pre>
-<pre style="background-color:#00BB00;">        1:  222:        return x*v.x + y*v.y + z*v.z;</pre>
+<pre>  200002*:  222:        return x*v.x + y*v.y + z*v.z;</pre>
 <pre>        -:  223:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_VectormlERKS_:</pre>
+<pre style="background-color:#00BB00;">   200002:  220:    EGS_Float operator*(const EGS_Vector &v) const {</pre>
+<pre>        -:  221:        // Syntactic sugar for the `dot` function</pre>
+<pre style="background-color:#00BB00;">   200002:  222:        return x*v.x + y*v.y + z*v.z;</pre>
+<pre>        -:  223:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_VectormlERKS_:</pre>
+<pre style="background-color:#BB0000;">    #####:  220:    EGS_Float operator*(const EGS_Vector &v) const {</pre>
+<pre>        -:  221:        // Syntactic sugar for the `dot` function</pre>
+<pre style="background-color:#BB0000;">    #####:  222:        return x*v.x + y*v.y + z*v.z;</pre>
+<pre>        -:  223:    }</pre>
+<pre>------------------</pre>
 <pre>        -:  224:</pre>
 <pre>        -:  225:    /*! \brief</pre>
 <pre>        -:  226:      Returns the vector product (cross product, symbol \times), of this EGS_Vector and another EGS_Vector \a v</pre>
@@ -272,34 +340,90 @@
 <pre>        -:  258:    /*! \brief</pre>
 <pre>        -:  259:      The L2 norm of the EGS_Vector</pre>
 <pre>        -:  260:    */</pre>
-<pre style="background-color:#00BB00;">        3:  261:    EGS_Float length() const {</pre>
-<pre style="background-color:#00BB00;">        3:  262:        return sqrt(x*x+y*y+z*z);</pre>
+<pre>  400004*:  261:    EGS_Float length() const {</pre>
+<pre>  400004*:  262:        return sqrt(x*x+y*y+z*z);</pre>
 <pre>        -:  263:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_Vector6lengthEv:</pre>
+<pre style="background-color:#00BB00;">   400004:  261:    EGS_Float length() const {</pre>
+<pre style="background-color:#00BB00;">   400004:  262:        return sqrt(x*x+y*y+z*z);</pre>
+<pre>        -:  263:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_Vector6lengthEv:</pre>
+<pre style="background-color:#BB0000;">    #####:  261:    EGS_Float length() const {</pre>
+<pre style="background-color:#BB0000;">    #####:  262:        return sqrt(x*x+y*y+z*z);</pre>
+<pre>        -:  263:    }</pre>
+<pre>------------------</pre>
 <pre>        -:  264:    /*! \brief</pre>
 <pre>        -:  265:      The squared length of the EGS_Vector</pre>
 <pre>        -:  266:    */</pre>
-<pre style="background-color:#00BB00;">       22:  267:    EGS_Float length2() const {</pre>
-<pre style="background-color:#00BB00;">       22:  268:        return x*x+y*y+z*z;</pre>
+<pre>  200023*:  267:    EGS_Float length2() const {</pre>
+<pre>  200023*:  268:        return x*x+y*y+z*z;</pre>
 <pre>        -:  269:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_Vector7length2Ev:</pre>
+<pre style="background-color:#00BB00;">   200023:  267:    EGS_Float length2() const {</pre>
+<pre style="background-color:#00BB00;">   200023:  268:        return x*x+y*y+z*z;</pre>
+<pre>        -:  269:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_Vector7length2Ev:</pre>
+<pre style="background-color:#BB0000;">    #####:  267:    EGS_Float length2() const {</pre>
+<pre style="background-color:#BB0000;">    #####:  268:        return x*x+y*y+z*z;</pre>
+<pre>        -:  269:    }</pre>
+<pre>------------------</pre>
 <pre>        -:  270:</pre>
 <pre>        -:  271:    /*! \brief</pre>
 <pre>        -:  272:      Returns a normalized copy of the EGS_Vector</pre>
 <pre>        -:  273:    */</pre>
-<pre style="background-color:#00BB00;">        1:  274:    EGS_Vector normalized() const {</pre>
+<pre>  200001*:  274:    EGS_Vector normalized() const {</pre>
 <pre>        -:  275:        // In c++17 this should come with the [[nodiscard]] attribute</pre>
-<pre style="background-color:#00BB00;">        1:  276:        EGS_Float norm = 1./length();</pre>
-<pre style="background-color:#00BB00;">        1:  277:        return EGS_Vector(x*norm, y*norm, z*norm);</pre>
+<pre>  200001*:  276:        EGS_Float norm = 1./length();</pre>
+<pre>  200001*:  277:        return EGS_Vector(x*norm, y*norm, z*norm);</pre>
 <pre>        -:  278:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_Vector10normalizedEv:</pre>
+<pre style="background-color:#00BB00;">   200001:  274:    EGS_Vector normalized() const {</pre>
+<pre>        -:  275:        // In c++17 this should come with the [[nodiscard]] attribute</pre>
+<pre style="background-color:#00BB00;">   200001:  276:        EGS_Float norm = 1./length();</pre>
+<pre style="background-color:#00BB00;">   200001:  277:        return EGS_Vector(x*norm, y*norm, z*norm);</pre>
+<pre>        -:  278:    }</pre>
+<pre>------------------</pre>
+<pre>_ZNK10EGS_Vector10normalizedEv:</pre>
+<pre style="background-color:#BB0000;">    #####:  274:    EGS_Vector normalized() const {</pre>
+<pre>        -:  275:        // In c++17 this should come with the [[nodiscard]] attribute</pre>
+<pre style="background-color:#BB0000;">    #####:  276:        EGS_Float norm = 1./length();</pre>
+<pre style="background-color:#BB0000;">    #####:  277:        return EGS_Vector(x*norm, y*norm, z*norm);</pre>
+<pre>        -:  278:    }</pre>
+<pre>------------------</pre>
 <pre>        -:  279:    /*! \brief</pre>
 <pre>        -:  280:      In-place normalization of the EGS_Vector</pre>
 <pre>        -:  281:    */</pre>
-<pre style="background-color:#00BB00;">        1:  282:    void normalize() {</pre>
+<pre>  200002*:  282:    void normalize() {</pre>
 <pre>        -:  283:        // equivalent to v /= v.length();</pre>
-<pre style="background-color:#00BB00;">        1:  284:        EGS_Float tmp = 1./length();</pre>
-<pre style="background-color:#00BB00;">        1:  285:        x *= tmp;</pre>
-<pre style="background-color:#00BB00;">        1:  286:        y *= tmp;</pre>
-<pre style="background-color:#00BB00;">        1:  287:        z *= tmp;</pre>
-<pre>        1:  288:    }</pre>
+<pre>  200002*:  284:        EGS_Float tmp = 1./length();</pre>
+<pre>  200002*:  285:        x *= tmp;</pre>
+<pre>  200002*:  286:        y *= tmp;</pre>
+<pre>  200002*:  287:        z *= tmp;</pre>
+<pre>  200002*:  288:    }</pre>
+<pre>------------------</pre>
+<pre>_ZN10EGS_Vector9normalizeEv:</pre>
+<pre style="background-color:#00BB00;">   200002:  282:    void normalize() {</pre>
+<pre>        -:  283:        // equivalent to v /= v.length();</pre>
+<pre style="background-color:#00BB00;">   200002:  284:        EGS_Float tmp = 1./length();</pre>
+<pre style="background-color:#00BB00;">   200002:  285:        x *= tmp;</pre>
+<pre style="background-color:#00BB00;">   200002:  286:        y *= tmp;</pre>
+<pre style="background-color:#00BB00;">   200002:  287:        z *= tmp;</pre>
+<pre>   200002:  288:    }</pre>
+<pre>------------------</pre>
+<pre>_ZN10EGS_Vector9normalizeEv:</pre>
+<pre style="background-color:#BB0000;">    #####:  282:    void normalize() {</pre>
+<pre>        -:  283:        // equivalent to v /= v.length();</pre>
+<pre style="background-color:#BB0000;">    #####:  284:        EGS_Float tmp = 1./length();</pre>
+<pre style="background-color:#BB0000;">    #####:  285:        x *= tmp;</pre>
+<pre style="background-color:#BB0000;">    #####:  286:        y *= tmp;</pre>
+<pre style="background-color:#BB0000;">    #####:  287:        z *= tmp;</pre>
+<pre>    #####:  288:    }</pre>
+<pre>------------------</pre>
 <pre>        -:  289:</pre>
 <pre>        -:  290:    /*! \brief</pre>
 <pre>        -:  291:      In-place rotation of an EGS_Vector that is assumed to be already normalized.</pre>
@@ -339,9 +463,9 @@
 <pre>        -:  325:      where `r` is the original vector to which `r⟂` is orthogonal, and these both share the same length.</pre>
 <pre>        -:  326:    */</pre>
 <pre>        -:  327:    void rotateDimensionful(</pre>
-<pre>        -:  328:        EGS_Float cos_t, </pre>
+<pre>        -:  328:        EGS_Float cos_t,</pre>
 <pre>        -:  329:        EGS_Float sin_t,</pre>
-<pre>        -:  330:        EGS_Float c_phi, </pre>
+<pre>        -:  330:        EGS_Float c_phi,</pre>
 <pre style="background-color:#BB0000;">        0:  331:        EGS_Float s_phi) {</pre>
 <pre style="background-color:#BB0000;">        0:  332</pre>
 <pre style="background-color:#BB0000;">        0:  333:        // follows the same algorithm as rotate() but accounting for arbitrary lengths</pre>
@@ -366,47 +490,50 @@
 <pre>        -:  352:    }</pre>
 <pre>        -:  353:</pre>
 <pre>        -:  354:    /*! \brief</pre>
-<pre>        -:  355:      Sets the tolerance of the `isZero` method. </pre>
-<pre>        -:  356:      </pre>
-<pre>        -:  357:      Returns a reference to itself so the operation can be chained.</pre>
-<pre>        -:  358:    */</pre>
-<pre style="background-color:#00BB00;">        2:  359:    EGS_Vector &setTolerance(EGS_Float tol) {</pre>
-<pre style="background-color:#00BB00;">        2:  360:        EGS_Vector:tolerance = tol;</pre>
-<pre style="background-color:#00BB00;">        2:  361:        return *this;</pre>
-<pre>        -:  362:    }</pre>
-<pre>        -:  363:</pre>
-<pre>        -:  364:    /*! \brief</pre>
-<pre>        -:  365:      Returns a string representation of the vector</pre>
-<pre>        -:  366:    */</pre>
-<pre style="background-color:#00BB00;">        6:  367:    string toString() const {</pre>
-<pre>        -:  368</pre>
-<pre style="background-color:#00BB00;">        6:  369:        EGS_Float log10x = log10(x), log10y = log10(y), log10z = log10(z);</pre>
-<pre style="background-color:#00BB00;">        6:  370:        int avg_magnitude = floor((log10x+log10y+log10z) / 3.);</pre>
-<pre>        -:  371:        string str = "("</pre>
-<pre style="background-color:#00BB00;">       12:  372:                     + to_string(x*pow(10, -avg_magnitude)) + ", "</pre>
-<pre style="background-color:#00BB00;">       24:  373:                     + to_string(y*pow(10, -avg_magnitude)) + ", "</pre>
-<pre style="background-color:#00BB00;">       18:  374:                     + to_string(z*pow(10, -avg_magnitude)) + ")x10^" + to_string(avg_magnitude);</pre>
-<pre style="background-color:#00BB00;">        6:  375:        return str;</pre>
-<pre>        -:  376:    }</pre>
-<pre>        -:  377:</pre>
-<pre>        -:  378:    /*! \brief</pre>
-<pre>        -:  379:      Adds a representation of the vector to the ostream</pre>
-<pre>        -:  380:    */</pre>
-<pre style="background-color:#00BB00;">        1:  381:    friend std:ostream &operator&lt&lt(std:ostream &os, const EGS_Vector &v) {</pre>
-<pre style="background-color:#00BB00;">        1:  382:        return os &lt&lt v.toString();</pre>
-<pre>        -:  383:    }</pre>
-<pre>        -:  384:</pre>
-<pre>        -:  385:private:</pre>
+<pre>        -:  355:      Returns a string representation of the vector</pre>
+<pre>        -:  356:    */</pre>
+<pre style="background-color:#00BB00;">        6:  357:    string toString() const {</pre>
+<pre>        -:  358</pre>
+<pre style="background-color:#00BB00;">        6:  359:        EGS_Float log10x = log10(x), log10y = log10(y), log10z = log10(z);</pre>
+<pre style="background-color:#00BB00;">        6:  360:        int avg_magnitude = floor((log10x+log10y+log10z) / 3.);</pre>
+<pre>        -:  361:        string str = "("</pre>
+<pre style="background-color:#00BB00;">       12:  362:                     + to_string(x*pow(10, -avg_magnitude)) + ", "</pre>
+<pre style="background-color:#00BB00;">       24:  363:                     + to_string(y*pow(10, -avg_magnitude)) + ", "</pre>
+<pre style="background-color:#00BB00;">       18:  364:                     + to_string(z*pow(10, -avg_magnitude)) + ")x10^" + to_string(avg_magnitude);</pre>
+<pre style="background-color:#00BB00;">        6:  365:        return str;</pre>
+<pre>        -:  366:    }</pre>
+<pre>        -:  367:</pre>
+<pre>        -:  368:    /*! \brief</pre>
+<pre>        -:  369:      Adds a representation of the vector to the ostream</pre>
+<pre>        -:  370:    */</pre>
+<pre style="background-color:#00BB00;">        1:  371:    friend std:ostream &operator&lt&lt(std:ostream &os, const EGS_Vector &v) {</pre>
+<pre style="background-color:#00BB00;">        1:  372:        return os &lt&lt v.toString();</pre>
+<pre>        -:  373:    }</pre>
+<pre>        -:  374:</pre>
+<pre>        -:  375:#if __cplusplus &gt= 201703L</pre>
+<pre>        -:  376:</pre>
+<pre>        -:  377:    /*! \brief</pre>
+<pre>        -:  378:      Sets the tolerance of the `isZero` method.</pre>
+<pre>        -:  379:</pre>
+<pre>        -:  380:      Returns a reference to itself so the operation can be chained.</pre>
+<pre>        -:  381:    */</pre>
+<pre style="background-color:#00BB00;">        2:  382:    EGS_Vector &setTolerance(EGS_Float tol) {</pre>
+<pre style="background-color:#00BB00;">        2:  383:        EGS_Vector:tolerance = tol;</pre>
+<pre style="background-color:#00BB00;">        2:  384:        return *this;</pre>
+<pre>        -:  385:    }</pre>
 <pre>        -:  386:</pre>
-        -:  387:    /// The tolerance with which |v|^2 < tol is compared to qualify as a zero vector
-<pre>        -:  387:    /// The tolerance with which |v|^2 &lt tol is compared to qualify as a zero vector</pre>
-<pre>        -:  388:    static EGS_Float tolerance;</pre>
-<pre>        -:  389:</pre>
-<pre>        -:  390:</pre>
-<pre>        -:  391:};</pre>
-<pre>        -:  392:</pre>
-<pre>        -:  393:EGS_Float EGS_Vector::tolerance = 0.001; // Definition + default value</pre>
-<pre>        -:  394:</pre>
+<pre>        -:  387:private:</pre>
+<pre>        -:  388:</pre>
+        -:  389:    /// The tolerance with which |v|^2 < tol is compared to qualify as a zero vector
+<pre>        -:  389:    /// The tolerance with which |v|^2 &lt tol is compared to qualify as a zero vector</pre>
+<pre>        -:  390:    inline static EGS_Float tolerance = 1e-10;</pre>
+<pre>        -:  391:</pre>
+<pre>        -:  392:#else</pre>
+<pre>        -:  393:private:</pre>
+<pre>        -:  394:    constexpr static EGS_Float tolarance = 1e-10;</pre>
 <pre>        -:  395:#endif</pre>
+<pre>        -:  396:};</pre>
+<pre>        -:  397:</pre>
+<pre>        -:  398:#endif</pre>
 
 </body></html>
