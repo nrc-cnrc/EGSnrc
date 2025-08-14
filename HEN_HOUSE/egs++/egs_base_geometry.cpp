@@ -1134,7 +1134,7 @@ int EGS_BaseGeometry::setLabels(const string &inp) {
     // label class to store label name and region list
     label lab;
 
-    // tokenize input string
+    // tokenize input string (commas already replaced by spaces by egs_input)
     while (iss >> token) {
         tokens.push_back(token);
     }
