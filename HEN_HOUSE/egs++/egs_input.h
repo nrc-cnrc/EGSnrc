@@ -338,6 +338,56 @@ public:
 
 };
 
+/*!
+ * \brief Tokenize a string into individual tokens
+ *
+ * Splits the input string into tokens separated by whitespace or commas.
+ * Multiple consecutive whitespace characters are treated as a single separator.
+ * Commas are converted to spaces before tokenization.
+ *
+ * \param str The input string to tokenize
+ * \return A vector of strings containing the individual tokens
+ *
+ * \note Returns an empty vector if the input string is empty
+ *
+ * Example:
+ * \code
+ * auto tokens = egsTokenize("1,2   3-5, 6");
+ * // Result: {"1", "2", "3-5", "6"}
+ * \endcode
+ */
+vector<string> egsTokenize(const string &inp);
+
+/*!
+ * \brief Parse integers and integer ranges from string tokens
+ *
+ * Parses a sequence of string tokens, where each token can be either:
+ * - A single integer (e.g., "42")
+ * - An integer range using hyphen notation (e.g., "10-15")
+ *
+ * Ranges are expanded to include all integers between the bounds (inclusive).
+ * The order of range bounds doesn't matter (e.g., "15-10" works the same as
+ * "10-15").
+ *
+ * \param begin Iterator to the first token to parse
+ * \param end Iterator one past the last token to parse
+ * \return Sorted vector of unique integers with duplicates removed
+ *
+ * \note Invalid tokens (non-numeric strings) are silently ignored
+ * \note The returned vector is automatically sorted and deduplicated
+ *
+ * Examples:
+ * \code
+ * vector<string> tokens = {"5", "10-12", "8", "10"};
+ * auto result = egsParseIntegers(tokens.begin(), tokens.end());
+ * // Result: {5, 8, 10, 11, 12}
+ *
+ * vector<string> tokens2 = {"20-15", "invalid", "18"};
+ * auto result2 = egsParseIntegers(tokens2.begin(), tokens2.end());
+ * // Result: {15, 16, 17, 18, 19, 20}
+ * \endcode
+ */
+vector<int> egsParseIntegerRanges(vector<string>::const_iterator begin,
+                                  vector<string>::const_iterator end);
+
 #endif
-
-

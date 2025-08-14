@@ -53,9 +53,6 @@
 #include <cstdarg>
 #include <cstdlib>
 
-#include <string>     // for std::string
-#include <sstream>    // for std::istringstream
-
 using namespace std;
 
 typedef EGS_BaseGeometry *(*EGS_GeometryCreationFunction)(EGS_Input *);
@@ -1105,7 +1102,7 @@ int EGS_BaseGeometry::setLabels(EGS_Input *input) {
 
         // get input string
         string inp;
-        int err = i->getInput("set label",inp);
+        int err = i->getInput("set label", inp);
         delete i;
 
         // bail out on read error
@@ -1124,20 +1121,13 @@ int EGS_BaseGeometry::setLabels(EGS_Input *input) {
     return labelCount;
 }
 
-
 int EGS_BaseGeometry::setLabels(const string &inp) {
 
-    vector<string> tokens;
-    istringstream iss(inp);
-    string token;
-
     // label class to store label name and region list
-    label lab;
+    EGS_Label label;
 
-    // tokenize input string (commas already replaced by spaces by egs_input)
-    while (iss >> token) {
-        tokens.push_back(token);
-    }
+    // list of tokens
+    vector<string> tokens = egsTokenize(inp);
 
     // bail out if there are no tokens at all
     if (tokens.empty()) {
@@ -1145,74 +1135,47 @@ int EGS_BaseGeometry::setLabels(const string &inp) {
         return 0;
     }
 
-    // parse label name
-    lab.name = tokens[0];
+    // set label name
+    label.name = tokens[0];
 
-    // if no regions are listed, apply label to all regions by default
+    // if no region is listed, apply label to all regions by default
     if (tokens.size() == 1) {
-        lab.regions.reserve(nreg);          // allocate once
+        label.regions.reserve(nreg);          // allocate once
         for (int i = 0; i < nreg; i++) {
-            lab.regions.push_back(i);
+            label.regions.push_back(i);
+        }
+    }
+    else {
+        // parse numbers and number ranges
+        label.regions = egsParseIntegerRanges(tokens.begin() + 1, tokens.end());
+
+        // validate regions
+        if (!validateRegions(label.regions)) {
+            egsWarning("EGS_BaseGeometry::setLabels(): geometry %s, label %s, invalid regions\n", getName().c_str(), name.c_str());
+            return 0;
         }
     }
 
-    // process remaining tokens as regions or region ranges
-    for (size_t i = 1; i < tokens.size(); i++) {
-        int start, end;
-        char dash;
-        std::istringstream iss(tokens[i]);
-
-        // try to parse token as range (e.g., "10-20")
-        if ((iss >> start >> dash >> end) && dash == '-' && iss.eof()) {
-            int first_reg = std::min(start, end);
-            int last_reg = std::max(start, end);
-            for (int reg = first_reg; reg <= last_reg; reg++) {
-                if (reg >= 0 && reg < nreg) {
-                    lab.regions.push_back(reg);
-                }
-                else {
-                    egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": region %d in range %s is out of bounds\n",
-                               lab.name.c_str(), reg, tokens[i].c_str());
-                }
-            }
-        }
-
-        // otherwise parse as a single region number
-        else {
-            int reg;
-
-            // parse exactly one integer (no extra chars)
-            if ((iss >> reg) && iss.eof()) {
-                if (reg >= 0 && reg < nreg) {
-                    lab.regions.push_back(reg);
-                }
-                else {
-                    egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": region %d is out of bounds\n",
-                               lab.name.c_str(), reg);
-                }
-            }
-            else {
-                egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": invalid region specifier '%s'\n",
-                           lab.name.c_str(), tokens[i].c_str());
-            }
-        }
-    }
-
-    // continue if there is no region
-    if (lab.regions.size() <= 0) {
-        egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": no valid regions specified\n",
-                   lab.name.c_str());
+    // warn if there is no region for this label
+    if (label.regions.size() == 0) {
+        egsWarning("EGS_BaseGeometry::setLabels(): geometry %s, label \"%s\": no region specified\n", getName().c_str(), label.name.c_str());
         return 0;
     }
 
-    // only sort and unique if we have potential duplicates
-    if (tokens.size() > 2) {
-        sort(lab.regions.begin(), lab.regions.end());
-        lab.regions.erase(unique(lab.regions.begin(), lab.regions.end()), lab.regions.end());
-    }
-
     // push current label onto vector of labels
-    labels.push_back(lab);
+    labels.push_back(label);
 
     return 1;
+}
+
+bool EGS_BaseGeometry::validateRegions(const vector<int> &regions) {
+
+    // validate region numbers (stop upon first invalid region)
+    for (int reg : regions) {
+        if (reg < 0 || reg >= nreg) {
+            egsWarning("EGS_BaseGeometry::validateRegions(): geometry %s, region %d is out of bounds\n", getName().c_str(), reg);
+            return false;
+        }
+    }
+    return true;
 }
