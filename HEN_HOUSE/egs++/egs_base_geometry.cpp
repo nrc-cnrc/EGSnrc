@@ -1159,13 +1159,13 @@ int EGS_BaseGeometry::setLabels(const string &inp) {
     // process remaining tokens as regions or region ranges
     for (size_t i = 1; i < tokens.size(); i++) {
         int start, end;
+        char dash;
+        std::istringstream iss(tokens[i]);
 
         // try to parse token as range (e.g., "10-20")
-        if (sscanf(tokens[i].c_str(), "%d-%d", &start, &end) == 2) {
-
+        if ((iss >> start >> dash >> end) && dash == '-' && iss.eof()) {
             int first_reg = std::min(start, end);
             int last_reg = std::max(start, end);
-
             for (int reg = first_reg; reg <= last_reg; reg++) {
                 if (reg >= 0 && reg < nreg) {
                     lab.regions.push_back(reg);
@@ -1180,11 +1180,9 @@ int EGS_BaseGeometry::setLabels(const string &inp) {
         // otherwise parse as a single region number
         else {
             int reg;
-            char extra;
-            int parsed = sscanf(tokens[i].c_str(), "%d%c", &reg, &extra);
 
-            // successfully parsed exactly one integer (no extra chars)
-            if (parsed == 1) {
+            // parse exactly one integer (no extra chars)
+            if ((iss >> reg) && iss.eof()) {
                 if (reg >= 0 && reg < nreg) {
                     lab.regions.push_back(reg);
                 }
