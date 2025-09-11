@@ -44,7 +44,8 @@
 
 #include <iostream>
 #include <string>
-using namespace std;
+#include <algorithm>  // copy
+#include <vector>
 
 void EGS_RandomGenerator::allocate(int n) {
     if (n < 1) {
@@ -67,7 +68,7 @@ void EGS_RandomGenerator::copyBaseState(const EGS_RandomGenerator &r) {
     have_x = r.have_x;
     the_x = r.the_x;
     count = r.count;
-    for (int j=ip; j<np; j++) {
+    for (int j=ip; j < np; j++) {
         rarray[j] = r.rarray[j];
     }
 }
@@ -75,17 +76,17 @@ void EGS_RandomGenerator::copyBaseState(const EGS_RandomGenerator &r) {
 EGS_RandomGenerator::EGS_RandomGenerator(int n) : count(0), np(0) {
     allocate(n);
     have_x = false;
-    for (int j=0; j<np; j++) {
+    for (int j=0; j < np; j++) {
         rarray[j] = 0;
     }
 }
 
 bool EGS_RandomGenerator::storeState(ostream &data) {
-    if (!egsStoreI64(data,count)) {
+    if (!egsStoreI64(data, count)) {
         return false;
     }
     data << " " << np << "  " << ip << endl;
-    for (int j=0; j<np; j++) {
+    for (int j=0; j < np; j++) {
         data << rarray[j] << " ";
     }
     data << endl;
@@ -96,7 +97,7 @@ bool EGS_RandomGenerator::storeState(ostream &data) {
 }
 
 bool EGS_RandomGenerator::setState(istream &data) {
-    if (!egsGetI64(data,count)) {
+    if (!egsGetI64(data, count)) {
         return false;
     }
     int np1;
@@ -109,10 +110,10 @@ bool EGS_RandomGenerator::setState(istream &data) {
     }
     if (np1 != np && np > 0) {
         delete [] rarray;
-        rarray = new EGS_Float [np1];
+        rarray = new EGS_Float[np1];
     }
     np = np1;
-    for (int j=0; j<np; j++) {
+    for (int j=0; j < np; j++) {
         data >> rarray[j];
     }
     if (!data.good()) {
@@ -142,15 +143,15 @@ public:
     /*! \brief Construct a ranmar RNG using \a ixx and \a jxx as the
      * initial seeds.
      */
-    EGS_Ranmar(int ixx=1802, int jxx=9373, int n=128) :
+    explicit EGS_Ranmar(int ixx = 1802, int jxx = 9373, int n = 128) :
         EGS_RandomGenerator(n), high_res(false), copy(0) {
-        setState(ixx,jxx);
+        setState(ixx, jxx);
     };
 
     EGS_Ranmar(const EGS_Ranmar &r) : EGS_RandomGenerator(r),
         ix(r.ix), jx(r.jx), c(r.c), iseed1(r.iseed1), iseed2(r.iseed2),
         high_res(r.high_res) {
-        for (int j=0; j<97; j++) {
+        for (int j=0; j < 97; j++) {
             u[j] = r.u[j];
         }
     };
@@ -199,7 +200,7 @@ protected:
         c = r.c;
         iseed1 = r.iseed1;
         iseed2 = r.iseed2;
-        for (int j=0; j<97; j++) {
+        for (int j = 0; j < 97; j++) {
             u[j] = r.u[j];
         }
     };
@@ -257,7 +258,7 @@ void EGS_Ranmar::setState(EGS_RandomGenerator *r) {
     c = r1->c;
     iseed1 = r1->iseed1;
     iseed2 = r1->iseed2;
-    for (int j=0; j<97; j++) {
+    for (int j = 0; j < 97; j++) {
         u[j] = r1->u[j];
     }
 }
@@ -265,7 +266,7 @@ void EGS_Ranmar::setState(EGS_RandomGenerator *r) {
 bool EGS_Ranmar::storePrivateState(ostream &data) {
     data << ix << " " << jx << " " << c << " "
          << iseed1 << " " << iseed2 << " " << high_res << endl;
-    for (int j=0; j<97; j++) {
+    for (int j=0; j < 97; j++) {
         data << u[j] << " ";
     }
     data <<  endl;
@@ -274,7 +275,7 @@ bool EGS_Ranmar::storePrivateState(ostream &data) {
 
 bool EGS_Ranmar::setPrivateState(istream &data) {
     data >> ix >> jx >> c >> iseed1 >> iseed2 >> high_res;
-    for (int j=0; j<97; j++) {
+    for (int j=0; j < 97; j++) {
         data >> u[j];
     }
     return data.good();
@@ -296,8 +297,8 @@ void EGS_Ranmar::describeRNG() const {
     else {
         egsInformation("no\n");
     }
-    egsInformation("  initial seeds       = %d %d\n",iseed1,iseed2);
-    egsInformation("  numbers used so far = %lld\n",count);
+    egsInformation("  initial seeds       = %d %d\n", iseed1, iseed2);
+    egsInformation("  numbers used so far = %lld\n", count);
 }
 
 void EGS_Ranmar::setState(int ixx, int jxx) {
@@ -314,10 +315,10 @@ void EGS_Ranmar::setState(int ixx, int jxx) {
     int k = (jxx/169)%178 + 1;
     int l = jxx%169;
 
-    for (int ii=0; ii<97; ii++) {
+    for (int ii=0; ii < 97; ii++) {
         int s = 0;
         int t = 8388608;
-        for (int jj=0; jj<24; jj++) {
+        for (int jj=0; jj < 24; jj++) {
             int m = (((i*j)%179)*k)%179;
             i = j;
             j = k;
@@ -336,11 +337,11 @@ void EGS_Ranmar::setState(int ixx, int jxx) {
 }
 
 void EGS_Ranmar::fillArray(int n, EGS_Float *array) {
-    for (int ii=0; ii<n; ii++) {
+    for (int ii=0; ii < n; ii++) {
         int r = u[ix] - u[jx--];
 #ifdef MSVC
         if (r > 16777219) {
-            egsWarning("r = %d\n",r);
+            egsWarning("r = %d\n", r);
         }
 #endif
         if (r < 0) {
@@ -363,17 +364,17 @@ void EGS_Ranmar::fillArray(int n, EGS_Float *array) {
         }
 #ifdef MSVC
         if (r > 16777219) {
-            egsWarning("r = %d\n",r);
+            egsWarning("r = %d\n", r);
         }
 #endif
         array[ii] = twom24*r;
     }
     if (high_res) {
-        for (int ii=0; ii<n; ii++) {
+        for (int ii=0; ii < n; ii++) {
             int r = u[ix] - u[jx--];
 #ifdef MSVC
             if (r > 16777219) {
-                egsWarning("r = %d\n",r);
+                egsWarning("r = %d\n", r);
             }
 #endif
             if (r < 0) {
@@ -396,7 +397,7 @@ void EGS_Ranmar::fillArray(int n, EGS_Float *array) {
             }
 #ifdef MSVC
             if (r > 16777219) {
-                egsWarning("r = %d\n",r);
+                egsWarning("r = %d\n", r);
             }
 #endif
             array[ii] += twom24*twom24*r;
@@ -427,27 +428,27 @@ EGS_RandomGenerator *EGS_RandomGenerator::createRNG(EGS_Input *input,
         delete_it = true;
     }
     string type;
-    int err = i->getInput("type",type);
+    int err = i->getInput("type", type);
     if (err) {
         egsWarning("EGS_RandomGenerator::createRNG: no RNG type specified\n"
                    "  Assuming ranmar.\n");
         type = "ranmar";
     }
     EGS_RandomGenerator *result;
-    if (i->compare(type,"ranmar")) {
+    if (i->compare(type, "ranmar")) {
         vector<int> seeds;
-        err = i->getInput("initial seeds",seeds);
+        err = i->getInput("initial seeds", seeds);
         EGS_Ranmar *res;
         if (!err && seeds.size() == 2) {
-            res = new EGS_Ranmar(seeds[0],seeds[1] + sequence);
+            res = new EGS_Ranmar(seeds[0], seeds[1] + sequence);
         }
         else {
-            res = new EGS_Ranmar(1802,9373+sequence);
+            res = new EGS_Ranmar(1802, 9373+sequence);
         }
         vector<string> hr_options;
         hr_options.push_back("no");
         hr_options.push_back("yes");
-        bool hr = i->getInput("high resolution",hr_options,0);
+        bool hr = i->getInput("high resolution", hr_options, 0);
         res->setHighResolution(hr);
         result = res;
     }
@@ -470,7 +471,7 @@ EGS_RandomGenerator *EGS_RandomGenerator::defaultRNG(int sequence) {
     if (iaux > 0) {
         ixx += iaux;
         if (iaux > 31328) egsFatal("EGS_RandomGenerator::defaultRNG: "
-                                       "sequence %d is outside of allowed range\n",sequence);
+                                       "sequence %d is outside of allowed range\n", sequence);
     }
-    return new EGS_Ranmar(ixx,jxx);
+    return new EGS_Ranmar(ixx, jxx);
 }

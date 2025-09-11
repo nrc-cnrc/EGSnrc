@@ -36,10 +36,42 @@
 #
 ###############################################################################
 
+BUILD_TYPE ?= release
 
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
+
+ifeq ($(BUILD_TYPE),coverage)
+  # these manipulations only target the creation of a test build for the libegspp.so library.
+  # Further changes would need to be made to target e.g. libegs_spheres.so or other sublibraries.
+
+  $(info Working with $(BUILD_TYPE) build)
+  $(info and parameters $(INC1) || $(DEF1) || $(opt))
+
+  opt = --coverage -g -fprofile-arcs -ftest-coverage -fno-inline -O0 -mtune=native -mcmodel=medium --std=c++17
+
+  dso = dso$(DSEP)$(my_machine)_test
+  DSO = $(dso)$(DSEP)
+
+  abs_dso = $(HEN_HOUSE)egs++$(DSEP)$(dso)
+  ABS_DSO = $(abs_dso)$(DSEP)
+
+  IAEA_LIB = -L$(abs_dso) -Wl,-rpath,$(abs_dso) -liaea_phsp
+  lib_link1 = -L$(abs_dso) -Wl,-rpath,$(abs_dso)
+
+  DSO1 = $(dso)$(DSEP)
+  DSO2 = $(DSOLIBS)$(DSO)
+
+  lib_objects = $(addprefix $(DSO2), $(addsuffix .$(obje), $(lib_files)))
+  common_h2 = $(addprefix $(DSOLIBS), $(common_h)) $(IEGS2)$(DSEP)egs_config1.h
+
+  depend_rule = $(DSO2)$(1).$(obje): $(1).cpp $(1).h
+
+  $(info abs_dso = "$(abs_dso)")
+
+
+endif
 
 DEFS = $(DEF1) -DBUILD_DLL
 
@@ -220,14 +252,7 @@ realclean:
 	$(REMOVE) $(egspp_objects) $(lib_objects) $(DSO1)egspp.$(obje) $(DSO1)test.exe
 	$(REMOVE) $(DSO1)egs_envelope_geometry.$(obje) $(DSO1)egs_stack_geometry.$(obje) $(DSO1)egs_union_geometry.$(obje) $(DSO1)egs_angular_spread_source.$(obje)
 
-style:
-	@echo "Styling .cpp and .h files"
-	@astyle --options=${HEN_HOUSE}scripts$(DSEP)egs_style_standard $(test_compliant_sources) $(test_compliant_headers)
-	@python3 cpplint.py --linelength 120 --filter -build/include_subdir,-whitespace/blank_line,-legal/copyright,-whitespace/comments,-readability/braces,-whitespace/indent,-whitespace/newline $(test_compliant_sources)
-	@python3 cpplint.py --linelength 120 --filter -build/include_subdir,-whitespace/blank_line,-legal/copyright,-whitespace/comments,-build/header_guard,-whitespace/indent,-whitespace/newline $(test_compliant_headers)
-	@$(REMOVE) *.orig
-
-.PHONY: libs $(all_libs) clean realclean style tests run-tests clean-tests coverage 
+.PHONY: libs $(all_libs) clean realclean style tests run-tests clean-tests coverage compile_test_dso
 
 #----------------------------------------------------------------------------------------------
 
@@ -254,13 +279,23 @@ SRC_CPP_HTML = $(addsuffix .html, $(SRC_CPP_EXIST))
 TEST_INCL = $(INC1) -I. -I$(TEST_DIR) -I../pieces -I../interface
 TEST_COV = --coverage -g -fprofile-arcs -ftest-coverage -fno-inline
 TEST_OPTS = $(DEF1) -O0 -mtune=native -std=c++17
+lib_link1_test = $(addsuffix _test, $(lib_link1))
+
+$(dso)_test$(DSEP)libegspp.so: $(SRC_CPP_EXIST) $(SRC_H_EXIST)
+	@echo "Compiling egspp with coverage flags"
+	$(REMOVE) $(dso)_test/*.gc* $(TEST_DIR)*.gc*
+	@make BUILD_TYPE=coverage
+
+compile_test_dso: $(dso)_test$(DSEP)libegspp.so
 
 # Build the run_tests executable in the tests dir, with dependencies
 $(TEST_DIR)run_tests: $(UNIT_TEST_SRCS) $(SRC_CPP_EXIST) $(SRC_H_EXIST)
 	@echo "$(CLASSES_CPP) $(CLASSES_GCOV)"
 	@echo "Building test suite from $(UNIT_TEST_NAMES)\n on headers $(SRC_H_EXIST)\n and sources $(SRC_CPP_EXIST)"
+	@echo "         and lib links 1 ${lib_link1_test} and 2 $(lib_link2)"
+
 	$(REMOVE) $(TEST_DIR)run_tests $(TEST_DIR)*.gcno $(TEST_DIR)*.gcda
-	$(CXX) $(TEST_INCL) $(TEST_COV) $(TEST_OPTS) $(lib_link1) \
+	$(CXX) $(TEST_INCL) $(TEST_COV) $(TEST_OPTS) $(lib_link1_test) \
 		$(TEST_DIR)catch2_main.cpp $(UNIT_TEST_SRCS) $(lib_link2) -lgcov -o $(TEST_DIR)run_tests
 
 # Build the tests, with keyword
@@ -272,7 +307,7 @@ tests: $(TEST_DIR)run_tests
 # for gcov. The loops fix the prefix (at runtime!) to match with what gcov expects
 run-tests: tests
 	@echo "Running the test suite"
-	$(REMOVE) $(TEST_DIR)*.gcda
+	$(REMOVE) $(TEST_DIR)*.gcda $(dso)_test$(DSEP)*.gcda
 	$(TEST_DIR)run_tests
 
 	@for file in $(TEST_DIR)run_tests-*.gc*;               \
@@ -285,15 +320,13 @@ run-tests: tests
 	done
 
 # Pull out the coverage details from the tests
-#
-# To do cpp as well use 	$(TEST_DIR)fix_coverage_report $(SRC_H_GCOV) $(SRC_CPP_GCOV)
-# and 	@mv $(SRC_H_HTML) $(SRC_CPP_FCOV) $(TEST_DIR)
-# but that only works if you compile all of egs++ with coverage flags
-coverage: $(TEST_DIR)fix_coverage_report run-tests 
+
+coverage: compile_test_dso $(TEST_DIR)fix_coverage_report run-tests 
 	@echo "Building coverage report for test suite"
-	gcov $(TEST_DIR)$(UNIT_TEST_NAMES) -q -o $(TEST_DIR) >/dev/null
-	$(TEST_DIR)fix_coverage_report $(SRC_H_GCOV)
-	@mv $(SRC_H_HTML) $(SRC_CPP_FCOV) $(TEST_DIR)
+	@-gcov --demangled-names $(TESTED_CLASSES) -q -o $(dso)_test >/dev/null 2>&1 || true
+	@-gcov --demangled-names $(UNIT_TEST_NAMES) -q -o $(TEST_DIR) >/dev/null 2>&1 || true
+	$(TEST_DIR)fix_coverage_report $(SRC_H_GCOV) $(SRC_CPP_GCOV)
+	@mv $(SRC_H_HTML) $(SRC_CPP_HTML) $(TEST_DIR)
 	@$(REMOVE) *.gcov
 
 $(TEST_DIR)fix_coverage_report: $(TEST_DIR)fix_gcov.cpp
@@ -301,4 +334,19 @@ $(TEST_DIR)fix_coverage_report: $(TEST_DIR)fix_gcov.cpp
 	@$(CXX) $(TEST_DIR)fix_gcov.cpp -std=c++20 -o $(TEST_DIR)fix_coverage_report 
 
 clean-tests:
-	$(REMOVE) $(TEST_DIR)*.gcda $(TEST_DIR)*.gcno $(TEST_DIR)run_tests $(TEST_DIR)*.gcov $(TEST_DIR)*.html
+	$(REMOVE) -r $(TEST_DIR)*.gcda $(TEST_DIR)*.gcno $(TEST_DIR)run_tests \
+                $(TEST_DIR)*.gcov $(TEST_DIR)*.html $(dso)_test
+
+#
+# styling requires `astyle` and `cpplint`
+# install `astyle` on mac with brew install astyle
+# install `astyle` on ubuntu with sudo apt install astyle
+# `cpplint` requires a working version of python3. Download the single-file requirement at https://github.com/cpplint/cpplint/blob/develop/cpplint.py
+#
+STYLE_EXCEPTIONS = -build/include_subdir,-whitespace/blank_line,-legal/copyright,-whitespace/comments,-whitespace/indent,-whitespace/newline,-runtime/references
+style:
+	@echo "Styling .cpp and .h files"
+	@astyle --options=${HEN_HOUSE}scripts$(DSEP)egs_style_standard $(SRC_CPP_EXIST) $(SRC_H_EXIST)
+	@python3 cpplint.py --linelength 120 --filter $(STYLE_EXCEPTIONS),-readability/braces $(SRC_CPP_EXIST) $(TEST_DIR)test_*.cpp $(TEST_DIR)fix_gcov.cpp
+	@python3 cpplint.py --linelength 120 --filter $(STYLE_EXCEPTIONS),-build/header_guard,-whitespace/empty_loop_body $(SRC_H_EXIST)
+	@$(REMOVE) *.orig

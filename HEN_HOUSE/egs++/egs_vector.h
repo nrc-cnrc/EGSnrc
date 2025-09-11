@@ -391,7 +391,7 @@ private:
 
 #else
 private:
-    constexpr static EGS_Float tolarance = 1e-10;
+    constexpr static EGS_Float tolerance = 1e-10;
 #endif
 };
 
