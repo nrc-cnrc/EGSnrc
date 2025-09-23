@@ -124,6 +124,10 @@ EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
         max_theta = tmp_theta/180.0*M_PI;
     }
 
+    if (min_theta > max_theta) {
+        egsFatal("EGS_IsotropicSource: Max_theta must be greater than Min_theta. If collimation across the branch point is required use a value for Max_theta greater than 180 degrees.\n");
+    }
+
     err = input->getInput("min phi", tmp_theta);
     if (!err) {
         min_phi = tmp_theta/180.0*M_PI;
@@ -132,6 +136,10 @@ EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
     err = input->getInput("max phi", tmp_theta);
     if (!err) {
         max_phi = tmp_theta/180.0*M_PI;
+    }
+
+    if (min_phi > max_phi) {
+        egsFatal("EGS_IsotropicSource: Max_phi must be greater than Min_phi. If collimation across the branch point is required use a value for Max_phi greater than 360 degrees.\n");
     }
 
     buf_1 = cos(min_theta);
