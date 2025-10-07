@@ -106,6 +106,7 @@ extern "C" {
             result->setName(input);
             result->setBoundaryTolerance(input);
             result->setLabels(input);
+            delete dyninp;
             return result;
         }
         else {
@@ -419,6 +420,7 @@ extern "C" {
         // `EGS_AffineTransform` is used
         EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
         setTransformation(*tDG);
+        delete tDG;
 
         // Call `getNextGeom` on base geometry in case there are lower-level
         // dynamic geometries
@@ -437,6 +439,7 @@ extern "C" {
         // Create and set the geometry transform with the updated coordinates
         EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
         setTransformation(*tDG);
+        delete tDG;
 
         // Call `updatePosition` on the base to allow lower-level geometries to
         // update as needed
