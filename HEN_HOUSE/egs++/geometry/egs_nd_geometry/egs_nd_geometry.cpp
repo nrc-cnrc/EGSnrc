@@ -197,6 +197,15 @@ void EGS_XYZGeometry::printInfo() const {
         "=======================================================\n");
 }
 
+int EGS_XYZGeometry::medIndex(char medium) {
+    std::string medIdx = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    size_t pos = medIdx.find(medium);
+    if (pos == std::string::npos) {
+        pos = -1; // Assume vacuum if not found
+    }
+    return static_cast<int>(pos);
+}
+
 void EGS_XYZGeometry::setMedia(EGS_Input *input, int nmed, const int *mind) {
     EGS_Input *i;
     med = mind[0];
@@ -303,11 +312,13 @@ void EGS_XYZGeometry::setMedia(EGS_Input *input, int nmed, const int *mind) {
 EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         const char *ramp_file, int dens_or_egsphant_or_interfile) {
     const static char *func = "EGS_XYZGeometry::constructGeometry";
-    if (!dens_file || !ramp_file) {
+    // A ramp file is only needed for density matrix or interfile
+    if (!dens_file || (dens_or_egsphant_or_interfile != 1 && !ramp_file)) {
         return 0;
     }
+
     ifstream ramp(ramp_file);
-    if (!ramp) {
+    if (dens_or_egsphant_or_interfile != 1 && !ramp) {
         egsWarning("%s: failed to open CT ramp file %s\n",func,ramp_file);
         return 0;
     }
@@ -333,8 +344,14 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             rho_max.push_back(rmax+1);
             rho_def.push_back(rdef);
         }
+        if (med_names.size() < 1) {
+            egsWarning("%s: no media defined in the CT ramp "
+                       "file %s!\n",func,ramp_file);
+            return 0;
+        }
     }
-    else {
+    else if (dens_or_egsphant_or_interfile == 0) {
+        // Density matrix format uses a ramp
         for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
             if (loopCount == loopMax) {
                 egsFatal("EGS_XYZGeometry::constructGeometry: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
@@ -354,12 +371,13 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             rho_max.push_back(rmax);
             rho_def.push_back(rdef);
         }
+        if (med_names.size() < 1) {
+            egsWarning("%s: no media defined in the CT ramp "
+                       "file %s!\n",func,ramp_file);
+            return 0;
+        }
     }
-    if (med_names.size() < 1) {
-        egsWarning("%s: no media defined in the CT ramp "
-                   "file %s!\n",func,ramp_file);
-        return 0;
-    }
+
     int Nx, Ny, Nz;
     EGS_Float *xx, *yy, *zz;
     float *rho;
@@ -639,10 +657,15 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         (*data).getline(buf,1023);
         for (imed=0; imed<nmed; ++imed) {
             (*data).getline(buf,1023);
+
             if ((*data).fail()) {
                 egsWarning("%s: failed reading medium name for %d'th medium\n",func,imed+1);
             }
-            //egsInformation("Got line <%s>\n",buf);
+
+            med_names.push_back(string(buf));
+            addMedium(med_names.back());
+            egsInformation("Using medium %s as mednum %d\n",
+                           med_names.back().c_str(),med_names.size());
         }
         // ignore estepe
         EGS_Float dum;
@@ -689,39 +712,64 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             return 0;
         }
         int nr = Nx*Ny*Nz;
+
+        EGS_PlanesX *xp = new EGS_PlanesX(Nx+1,xx,"",EGS_XProjector("x-planes"));
+        EGS_PlanesY *yp = new EGS_PlanesY(Ny+1,yy,"",EGS_YProjector("y-planes"));
+        EGS_PlanesZ *zp = new EGS_PlanesZ(Nz+1,zz,"",EGS_ZProjector("z-planes"));
+        EGS_XYZGeometry *result = new EGS_XYZGeometry(xp,yp,zp);
+
+        for (int i=0; i<Nz; ++i) {
+            for (j=0; j<Ny; ++j) {
+                string medLine;
+                //(*data).getline(buf,1023);
+                (*data) >> medLine;
+
+                if (medLine.size() < Nx) {
+                    egsWarning("%s: Number of media per line in correct.\n",func);
+                    delete [] xx;
+                    delete [] yy;
+                    delete [] zz;
+                    delete result;
+                    return 0;
+                }
+                for (int k=0; k<Nx; ++k) {
+                    int index = i * (Ny * Nx) + j * Nx + k;
+                    result->setMedium(index,index,result->medIndex(medLine[k]));
+                    //egsInformation("%d",result->medIndex(medLine[k]));
+                }
+                //egsInformation("\n");
+            }
+            //egsInformation("\n");
+            (*data).getline(buf,1023); // Skip a blank line
+        }
+
         //int med;
         //for(j=0; j<nr; ++j) data >> med;
-        (*data).getline(buf,1023);
+        /*(*data).getline(buf,1023);
         for (int iz=0; iz<Nz; ++iz) {
             for (int iy=0; iy<Ny; ++iy) {
                 (*data).getline(buf,1023);
             }
             (*data).getline(buf,1023);
-        }
+        }*/
         if ((*data).fail()) {
             egsWarning("%s: failed reading media indeces matrix\n",func);
             delete [] xx;
             delete [] yy;
             delete [] zz;
+            delete result;
             return 0;
         }
-        rho = new float [nr];
-        for (j=0; j<nr; ++j) {
-            (*data) >> rho[j];
-        }
-        if ((*data).fail()) {
-            egsWarning("%s: failed reading mass density matrix\n",func);
-            delete [] xx;
-            delete [] yy;
-            delete [] zz;
-            delete [] rho;
-            return 0;
-        }
+
+        return result;
     }
+
+    // Only get here for density matrix or interfile
     EGS_PlanesX *xp = new EGS_PlanesX(Nx+1,xx,"",EGS_XProjector("x-planes"));
     EGS_PlanesY *yp = new EGS_PlanesY(Ny+1,yy,"",EGS_YProjector("y-planes"));
     EGS_PlanesZ *zp = new EGS_PlanesZ(Nz+1,zz,"",EGS_ZProjector("z-planes"));
     EGS_XYZGeometry *result = new EGS_XYZGeometry(xp,yp,zp);
+
     EGS_Float rhomin=1e30,rhomax=0;
     int j;
     for (j=0; j<Nx*Ny*Nz; j++) {
@@ -769,6 +817,127 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
     delete [] rho;
     delete [] imed;
     return result;
+}
+
+int EGS_XYZGeometry::finishInitialization() {
+    // Return if this isn't egsphant input
+    if(dens_or_egsphant_or_interfile != 1) {
+        return 1;
+    }
+    const static char *func = "EGS_XYZGeometry::finishInitialization";
+
+    ifstream tempf(dens_file, ios::binary);
+    istream *data;
+    ifstream textf;
+#ifdef HAS_GZSTREAM
+    igzstream binf;
+#endif
+
+    if (!tempf) {
+        egsWarning("%s: failed to open .egsphant file %s\n",func,dens_file);
+        return 0;
+    }
+
+    bool is_gzip = (tempf.get() == 0x1f && tempf.get() == 0x8b);
+    tempf.close();
+
+    if (is_gzip) {
+#ifdef HAS_GZSTREAM
+        binf.open(dens_file);
+        data = &binf;
+#else
+        egsWarning("Tried to read gzipped egsphant but egs_ndgeometry was not compiled with gzip support\n");
+        return 0;
+#endif
+    }
+    else {
+        textf.open(dens_file);
+        data = &textf;
+    }
+
+    int nmed;
+    (*data) >> nmed;
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading number of media\n",func);
+        return 0;
+    }
+
+    char buf [1024];
+    int imed;
+    (*data).getline(buf,1023);
+    for (imed=0; imed<nmed; ++imed) {
+        (*data).getline(buf,1023);
+
+        if ((*data).fail()) {
+            egsWarning("%s: failed reading medium name for %d'th medium\n",func,imed+1);
+        }
+    }
+
+    // ignore estepe
+    EGS_Float dum;
+    for (imed=0; imed<nmed; ++imed) {
+        (*data) >> dum;
+    }
+    int Nx, Ny, Nz;
+    (*data) >> Nx >> Ny >> Nz;
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading number of voxels\n",func);
+        return 0;
+    }
+
+    int j;
+    for (j=0; j<=Nx; ++j) {
+        (*data) >> dum;
+    }
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading x-planes\n",func);
+        return 0;
+    }
+    for (j=0; j<=Ny; ++j) {
+        (*data) >> dum;
+    }
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading y-planes\n",func);
+        return 0;
+    }
+    for (j=0; j<=Nz; ++j) {
+        (*data) >> dum;
+    }
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading z-planes\n",func);
+        return 0;
+    }
+    int nr = Nx*Ny*Nz;
+
+    for (int i=0; i<Nz; ++i) {
+        for (j=0; j<Ny; ++j) {
+            //string medLine;
+            (*data).getline(buf,1023);
+            //(*data) >> medLine;
+        }
+        //egsInformation("\n");
+        (*data).getline(buf,1023); // Skip a blank line
+    }
+
+    for (j=0; j<nr; ++j) {
+        float rho;
+        (*data) >> rho;
+
+        EGS_Float rrho = rho / getMediumRho(medium(j));
+        if(j < 10) {
+            egsInformation("test %d\n",region_media[j]);
+            egsInformation("%d %f\n",medium(j), rrho);
+        }
+        if (fabs(rrho-1) > epsilon) {
+            setRelativeRho(j,j,rrho);
+        }
+    }
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading mass density matrix\n",func);
+        return 0;
+    }
+
+    return 1;
 }
 
 string EGS_DeformedXYZ::def_type = "EGS_DeformedXYZ";
@@ -1182,7 +1351,7 @@ extern "C" {
                     egsWarning("%s: no 'density matrix', 'egsphant file' or 'interfile header' input\n",func);
                     return 0;
                 }
-                if (ierr2) {
+                if (dens_or_egsphant_or_interfile != 1 && ierr2) {
                     egsWarning("%s: no 'ct ramp' input\n",func);
                     return 0;
                 }
@@ -1190,6 +1359,8 @@ extern "C" {
                     EGS_XYZGeometry::constructGeometry(dens_file.c_str(),ramp_file.c_str(),dens_or_egsphant_or_interfile);
 
                 if (result) {
+                    result->dens_file = dens_file;
+                    result->dens_or_egsphant_or_interfile = dens_or_egsphant_or_interfile;
                     result->setName(input);
                     result->setBoundaryTolerance(input);
                     result->setBScaling(input);

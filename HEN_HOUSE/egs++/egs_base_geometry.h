@@ -788,6 +788,8 @@ public:
     */
     bool validateRegions(const std::vector<int> &regions);
 
+    virtual int finishInitialization() { return 1; };
+
     /* This method is essentially used to determine whether the simulation
      * geometry contains a dynamic geometry. Like getNextGeom(), the only
      * non-empty implementations of this function are in composite geometries
