@@ -799,6 +799,10 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     egsInformation("==============================================\n\n");
 
     delete [] ind;
+
+    // For the geometry, update using material densities
+    geometry->finishInitialization();
+
     return 0;
 }
 

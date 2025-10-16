@@ -775,6 +775,8 @@ public:
 
     ~EGS_XYZGeometry();
 
+    int medIndex(char medium);
+
     bool isInside(const EGS_Vector &x) {
         if (!xp->isInside(x)) {
             return false;
@@ -1263,6 +1265,8 @@ public:
         zp->getLabelRegions(str, regs);
     }
 
+    int finishInitialization();
+
 protected:
 
     EGS_PlanesX      *xp;
@@ -1377,6 +1381,10 @@ protected:
         }
         return -1;
     };
+
+public:
+    string           dens_file;
+    int              dens_or_egsphant_or_interfile;
 };
 
 /*! \brief A deformed XYZ-geometry
