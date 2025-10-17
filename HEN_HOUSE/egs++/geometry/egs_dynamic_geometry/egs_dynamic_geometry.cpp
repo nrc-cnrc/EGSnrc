@@ -457,4 +457,16 @@ extern "C" {
         hasdynamic = true;
     }
 
+    bool EGS_DynamicGeometry::hasRhoScaling() {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        return g->hasRhoScaling();
+    };
+
+    void EGS_DynamicGeometry::finishInitialization() {
+        g->finishInitialization();
+    };
+
 }
