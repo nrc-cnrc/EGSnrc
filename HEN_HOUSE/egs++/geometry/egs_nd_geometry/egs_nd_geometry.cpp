@@ -820,6 +820,7 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
 }
 
 int EGS_XYZGeometry::finishInitialization() {
+
     // Return if this isn't egsphant input
     if(dens_or_egsphant_or_interfile != 1) {
         return 1;
