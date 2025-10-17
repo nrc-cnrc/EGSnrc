@@ -371,6 +371,19 @@ void EGS_DoseScoring::reportResults() {
     if (irmax_digits < 2) {
         irmax_digits = 2;
     }
+
+    EGS_Mesh *mesh;
+    if(doseF) {
+        if(file_type == 0) {
+
+        } else if(file_type == 1 || file_type == 2) {
+            mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
+            if(!mesh) {
+                egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
+            }
+        }
+    }
+
     string line;
     double r,dr;
     if (dose) {
@@ -396,8 +409,37 @@ void EGS_DoseScoring::reportResults() {
                     continue;
                 }
                 int imed = app->getMedium(ireg);
-                EGS_Float rho = app->getMediumRho(imed);
-                EGS_Float mass = vol[ireg]*rho;
+                EGS_Float rho;
+                EGS_Float mass;
+
+                // If we're told about an output dose file then we
+                // can use the geometry it points to to calculate masses
+                // Otherwise, dose to XYZ or mesh geometries could be incorrect if they provide a different density for a given material aside from its default
+                if(doseF) {
+                    if(file_type == 0) {
+                        // If this region corresponds to one in the dose grid
+                        if(df_reg[ireg] >= 0) {
+                            rho = getRealRho(df_reg[ireg]);
+                            mass = dose_geom->getVolume(df_reg[ireg])*rho;
+                        } else {
+                            rho = app->getMediumRho(imed);
+                            mass = rho*vol[ireg];
+                        }
+                    } else if(file_type == 1 || file_type == 2) {
+                        // If this region corresponds to one in the dose grid
+                        if(df_reg[ireg] >= 0) {
+                            rho = mesh->element_density(df_reg[ireg]);
+                            mass = rho * mesh->element_volume(df_reg[ireg]);
+                        } else {
+                            rho = app->getMediumRho(imed);
+                            mass = rho*vol[ireg];
+                        }
+                    }
+                } else {
+                    rho = app->getMediumRho(imed);
+                    mass = vol[ireg]*rho;
+                }
+
                 dose->currentResult(d_reg_index[ireg],r,dr);
                 if (r > 0) {
                     dr = dr/r;
@@ -414,18 +456,6 @@ void EGS_DoseScoring::reportResults() {
     if (doseM) {
         vector<EGS_Float> massM(nmedia,0);
         int imed = 0;
-
-        EGS_Mesh *mesh;
-        if(doseF) {
-            if(file_type == 0) {
-
-            } else if(file_type == 1 || file_type == 2) {
-                mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
-                if(!mesh) {
-                    egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
-                }
-            }
-        }
 
         // Use any user-provided volumes
         for (int ir=0; ir<nreg; ir++) {
