@@ -347,7 +347,7 @@ extern "C" {
         // If it's not found above, search through the inscribed geometries in case they are composite geometries
         for (int i=0; i<n_in; i++) {
             int shift = geometries[i]->getGlobalRegionOffset(geomName);
-            if(shift >= 0) {
+            if (shift >= 0) {
                 shift += local_start[i];
                 return shift;
             }

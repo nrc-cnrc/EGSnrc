@@ -416,7 +416,7 @@ public:
     /*! \brief Does this geometry object have a mass density scaling feature?
 
      */
-    inline bool hasRhoScaling() const {
+    virtual bool hasRhoScaling() {
         return has_rho_scaling;
     };
 
@@ -754,7 +754,7 @@ public:
 
     virtual void updatePosition(EGS_Float time) { };
 
-    virtual int finishInitialization() { return 1; };
+    virtual void finishInitialization() { };
 
     /* This method is essentially used to determine whether the simulation
      * geometry contains a dynamic geometry. Like getNextGeom(), the only

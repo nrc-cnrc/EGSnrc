@@ -239,6 +239,18 @@ public:
         }
     };
 
+    bool hasRhoScaling() {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        return g->hasRhoScaling();
+    };
+
+    void finishInitialization() {
+        g->finishInitialization();
+    };
+
     int getMaxStep() const {
         return g->getMaxStep();
     };

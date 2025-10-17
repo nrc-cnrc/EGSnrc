@@ -399,6 +399,10 @@ public:
      */
     void containsDynamic(bool &hasdynamic);
 
+    bool hasRhoScaling() override;
+
+    void finishInitialization() override;
+
 protected:
     EGS_BaseGeometry *g;   //!< The geometry undergoing dynamic motion
     string type;           //!< The geometry type

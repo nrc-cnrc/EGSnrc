@@ -349,6 +349,29 @@ public:
         }
     };
 
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        for (int j=0; j<n_in; j++) {
+            bool hasRS = geometries[j]->hasRhoScaling();
+            if (hasRS) {
+                has_rho_scaling = hasRS;
+                return has_rho_scaling;
+            }
+        }
+
+        return g->hasRhoScaling();
+    };
+
+    void finishInitialization() override {
+        for (int j=0; j<n_in; j++) {
+            geometries[j]->finishInitialization();
+        }
+        g->finishInitialization();
+    };
+
     int getMaxStep() const {
         int nstep = g->getMaxStep() + n_in;
         for (int j=0; j<n_in; ++j) {

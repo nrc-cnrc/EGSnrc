@@ -734,7 +734,17 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
                 }
                 for (int k=0; k<Nx; ++k) {
                     int index = i * (Ny * Nx) + j * Nx + k;
-                    result->setMedium(index,index,result->medIndex(medLine[k]));
+
+                    string medName;
+                    int medIndex = result->medIndex(medLine[k]);
+                    if (medIndex > -1) {
+                        medName = med_names[medIndex];
+                    }
+                    else {
+                        medName = "vacuum";
+                    }
+
+                    result->setMedium(index,index,medName);
                     //egsInformation("%d",result->medIndex(medLine[k]));
                 }
                 //egsInformation("\n");
@@ -819,11 +829,11 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
     return result;
 }
 
-int EGS_XYZGeometry::finishInitialization() {
+void EGS_XYZGeometry::finishInitialization() {
 
     // Return if this isn't egsphant input
-    if(dens_or_egsphant_or_interfile != 1) {
-        return 1;
+    if (dens_or_egsphant_or_interfile != 1 || useEgsphantDensities == false) {
+        return;
     }
     const static char *func = "EGS_XYZGeometry::finishInitialization";
 
@@ -836,7 +846,7 @@ int EGS_XYZGeometry::finishInitialization() {
 
     if (!tempf) {
         egsWarning("%s: failed to open .egsphant file %s\n",func,dens_file);
-        return 0;
+        return;
     }
 
     bool is_gzip = (tempf.get() == 0x1f && tempf.get() == 0x8b);
@@ -848,7 +858,7 @@ int EGS_XYZGeometry::finishInitialization() {
         data = &binf;
 #else
         egsWarning("Tried to read gzipped egsphant but egs_ndgeometry was not compiled with gzip support\n");
-        return 0;
+        return;
 #endif
     }
     else {
@@ -860,7 +870,7 @@ int EGS_XYZGeometry::finishInitialization() {
     (*data) >> nmed;
     if ((*data).fail()) {
         egsWarning("%s: failed reading number of media\n",func);
-        return 0;
+        return;
     }
 
     char buf [1024];
@@ -883,7 +893,7 @@ int EGS_XYZGeometry::finishInitialization() {
     (*data) >> Nx >> Ny >> Nz;
     if ((*data).fail()) {
         egsWarning("%s: failed reading number of voxels\n",func);
-        return 0;
+        return;
     }
 
     int j;
@@ -892,21 +902,21 @@ int EGS_XYZGeometry::finishInitialization() {
     }
     if ((*data).fail()) {
         egsWarning("%s: failed reading x-planes\n",func);
-        return 0;
+        return;
     }
     for (j=0; j<=Ny; ++j) {
         (*data) >> dum;
     }
     if ((*data).fail()) {
         egsWarning("%s: failed reading y-planes\n",func);
-        return 0;
+        return;
     }
     for (j=0; j<=Nz; ++j) {
         (*data) >> dum;
     }
     if ((*data).fail()) {
         egsWarning("%s: failed reading z-planes\n",func);
-        return 0;
+        return;
     }
     int nr = Nx*Ny*Nz;
 
@@ -925,20 +935,16 @@ int EGS_XYZGeometry::finishInitialization() {
         (*data) >> rho;
 
         EGS_Float rrho = rho / getMediumRho(medium(j));
-        if(j < 10) {
-            egsInformation("test %d\n",region_media[j]);
-            egsInformation("%d %f\n",medium(j), rrho);
-        }
         if (fabs(rrho-1) > epsilon) {
             setRelativeRho(j,j,rrho);
         }
     }
     if ((*data).fail()) {
         egsWarning("%s: failed reading mass density matrix\n",func);
-        return 0;
+        return;
     }
 
-    return 1;
+    return;
 }
 
 string EGS_DeformedXYZ::def_type = "EGS_DeformedXYZ";
@@ -1365,6 +1371,14 @@ extern "C" {
                     result->setName(input);
                     result->setBoundaryTolerance(input);
                     result->setBScaling(input);
+
+                    if (dens_or_egsphant_or_interfile == 1) {
+                        vector<string> options;
+                        options.push_back("no");
+                        options.push_back("yes");
+                        bool useEgsphantDensities = input->getInput("use egsphant densities",options,1);
+                        result->useEgsphantDensities = useEgsphantDensities;
+                    }
                 }
 
                 return result;

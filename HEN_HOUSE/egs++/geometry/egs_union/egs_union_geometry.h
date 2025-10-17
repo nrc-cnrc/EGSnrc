@@ -306,6 +306,31 @@ public:
         }
     };
 
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        for (int j=0; j<ng; j++) {
+            if (!g[j]) {
+                continue;
+            }
+            bool hasRS = g[j]->hasRhoScaling();
+            if (hasRS) {
+                has_rho_scaling = hasRS;
+                return has_rho_scaling;
+            }
+        }
+
+        return false;
+    };
+
+    void finishInitialization() override {
+        for (int j=0; j<ng; j++) {
+            g[j]->finishInitialization();
+        }
+    };
+
     int getMaxStep() const {
         int nstep = 1;
         for (int j=0; j<ng; ++j) {

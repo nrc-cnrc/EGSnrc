@@ -846,6 +846,29 @@ do_checks:
         }
     };
 
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        for (int j=0; j<bg->regions(); j++) {
+            bool hasRS = g[j]->hasRhoScaling();
+            if (hasRS) {
+                has_rho_scaling = hasRS;
+                return has_rho_scaling;
+            }
+        }
+
+        return bg->hasRhoScaling();
+    };
+
+    void finishInitialization() override {
+        for (int j=0; j<bg->regions(); j++) {
+            g[j]->finishInitialization();
+        }
+        bg->finishInitialization();
+    };
+
 
     bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
         if (ireg >= 0 && ireg < nreg) {
