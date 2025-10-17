@@ -170,7 +170,7 @@ extern "C" {
         // If it's not found above, search through the inscribed geometries in case they are composite geometries
         for (int i=0; i<ng; i++) {
             int shift = g[i]->getGlobalRegionOffset(geomName);
-            if(shift >= 0) {
+            if (shift >= 0) {
                 shift += i*nmax;
                 return shift;
             }
