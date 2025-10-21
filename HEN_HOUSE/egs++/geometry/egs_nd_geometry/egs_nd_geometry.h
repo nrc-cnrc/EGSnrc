@@ -583,6 +583,28 @@ public:
         }
     };
 
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        for (int j=0; j<N; j++) {
+            bool hasRS = g[j]->hasRhoScaling();
+            if (hasRS) {
+                has_rho_scaling = hasRS;
+                return has_rho_scaling;
+            }
+        }
+
+        return false;
+    };
+
+    void finishInitialization() override {
+        for (int j=0; j<N; j++) {
+            g[j]->finishInitialization();
+        }
+    };
+
     const string &getType() const {
         return type;
     };
@@ -693,10 +715,10 @@ PIRS-794 and the CTCreate program):
     library = egs_ndgeometry
     type = EGS_XYZGeometry
     egsphant file = your_phant.egsphant
-    ct ramp = ramp_file
+    use egsphant densities = yes # Yes or no, defaults to yes
 :stop geometry:
 \endverbatim
-with `ct ramp` being the same format as discussed above. If you've compiled
+If you've compiled
 egs_nd_geometry with GZIP support (distrbuted separately from EGSnrc due to
 licensing requirements. See
 https://github.com/clrp-code/egspp-geometry-lib-extras/) you may also
@@ -706,7 +728,6 @@ directly use egsphant files which have been compressed with gzip.
     library = egs_ndgeometry
     type = EGS_XYZGeometry
     egsphant file = your_phant.egsphant.gz
-    ct ramp = ramp_file
 :stop geometry:
 \endverbatim
 
@@ -774,6 +795,8 @@ public:
                     const string &Name = "");
 
     ~EGS_XYZGeometry();
+
+    int medIndex(char medium);
 
     bool isInside(const EGS_Vector &x) {
         if (!xp->isInside(x)) {
@@ -1263,6 +1286,8 @@ public:
         zp->getLabelRegions(str, regs);
     }
 
+    void finishInitialization();
+
 protected:
 
     EGS_PlanesX      *xp;
@@ -1377,6 +1402,11 @@ protected:
         }
         return -1;
     };
+
+public:
+    string           dens_file;
+    int              dens_or_egsphant_or_interfile;
+    bool             useEgsphantDensities;
 };
 
 /*! \brief A deformed XYZ-geometry

@@ -118,6 +118,9 @@ extern "C" {
 
     }
 
+    int EGS_TransformedGeometry::getGlobalRegionOffset(const string geomName) {
+        return g->getGlobalRegionOffset(geomName);
+    }
 
     void EGS_TransformedGeometry::getLabelRegions(const string &str, vector<int> &regs) {
 

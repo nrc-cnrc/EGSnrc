@@ -416,7 +416,7 @@ public:
     /*! \brief Does this geometry object have a mass density scaling feature?
 
      */
-    inline bool hasRhoScaling() const {
+    virtual bool hasRhoScaling() {
         return has_rho_scaling;
     };
 
@@ -727,6 +727,9 @@ public:
         return boundaryTolerance;
     };
 
+    /*! \brief Get the global region number for the first region in the geometry */
+    virtual int getGlobalRegionOffset(const string geomName);
+
     /*! \brief Get a list of all the regions labeled with a number */
     virtual void getNumberRegions(const string &str, vector<int> &regs);
 
@@ -750,6 +753,8 @@ public:
     int setLabels(const string &inp);
 
     virtual void updatePosition(EGS_Float time) { };
+
+    virtual void finishInitialization() { };
 
     /* This method is essentially used to determine whether the simulation
      * geometry contains a dynamic geometry. Like getNextGeom(), the only

@@ -217,6 +217,27 @@ extern "C" {
         return result;
     }
 
+    int EGS_UnionGeometry::getGlobalRegionOffset(const string geomName) {
+        // Look for the named geometry in the inscribed geometries
+        for (int i=0; i<ng; i++) {
+            if (g[i] && g[i]->getName() == geomName) {
+                return i*nmax;
+            }
+        }
+
+        // If it's not found above, search through the inscribed geometries in case they are composite geometries
+        for (int i=0; i<ng; i++) {
+            int shift = g[i]->getGlobalRegionOffset(geomName);
+            if (shift >= 0) {
+                shift += i*nmax;
+                return shift;
+            }
+        }
+
+        // Return -1 for not found
+        return -1;
+    }
+
     void EGS_UnionGeometry::getLabelRegions(const string &str, vector<int> &regs) {
 
         // label defined in the sub-geometries

@@ -639,6 +639,29 @@ void EGS_AEnvelope::containsDynamic(bool &hasdynamic) {
     }
 };
 
+bool EGS_AEnvelope::hasRhoScaling() {
+    if (has_rho_scaling) {
+        return has_rho_scaling;
+    }
+
+    for (int j=0; j< inscribed_geoms.size(); j++) {
+        bool hasRS = inscribed_geoms[j]->hasRhoScaling();
+        if (hasRS) {
+            has_rho_scaling = hasRS;
+            return has_rho_scaling;
+        }
+    }
+
+    return base_geom->hasRhoScaling();
+};
+
+void EGS_AEnvelope::finishInitialization() {
+    for (int j=0; j< inscribed_geoms.size(); j++) {
+        inscribed_geoms[j]->finishInitialization();
+    }
+    base_geom->finishInitialization();
+};
+
 
 EGS_Float EGS_AEnvelope::getVolume(int ireg) {
 

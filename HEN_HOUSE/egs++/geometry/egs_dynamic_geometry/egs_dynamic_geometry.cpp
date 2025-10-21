@@ -114,6 +114,10 @@ extern "C" {
         }
     }
 
+    int EGS_DynamicGeometry::getGlobalRegionOffset(const string geomName) {
+        return g->getGlobalRegionOffset(geomName);
+    }
+
     void EGS_DynamicGeometry::getLabelRegions(const string &str, vector<int> &regs) {
         // label defined in the geometry being transformed
         g->getLabelRegions(str, regs);
@@ -449,5 +453,17 @@ extern "C" {
         // boolean flag is set to true
         hasdynamic = true;
     }
+
+    bool EGS_DynamicGeometry::hasRhoScaling() {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        return g->hasRhoScaling();
+    };
+
+    void EGS_DynamicGeometry::finishInitialization() {
+        g->finishInitialization();
+    };
 
 }

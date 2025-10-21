@@ -324,6 +324,55 @@ public:
     void setBScaling(int start, int end, EGS_Float bf);
     void setBScaling(EGS_Input *);
 
+    void getNextGeom(EGS_RandomGenerator *rndm) {
+        // calls getNextGeom on its component geometries to update dynamic
+        // geometries in the simulation
+        for (int j=0; j<ng; j++) {
+            g[j]->getNextGeom(rndm);
+        }
+    };
+
+    void updatePosition(EGS_Float time) {
+        // calls updatePosition on its component geometries to update dynamic
+        // geometries in the simulation
+        for (int j=0; j<ng; j++) {
+            g[j]->updatePosition(time);
+        }
+    };
+
+    void containsDynamic(bool &hasdynamic) {
+        // calls containsDynamic on its component geometries (only calls if
+        // hasDynamic is false, as if it is true we already found one)
+        for (int j=0; j<ng; j++) {
+            if (!hasdynamic) {
+                g[j]->containsDynamic(hasdynamic);
+            }
+        }
+    };
+
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        for (int j=0; j<ng; j++) {
+            bool hasRS = g[j]->hasRhoScaling();
+            if (hasRS) {
+                has_rho_scaling = hasRS;
+                return has_rho_scaling;
+            }
+        }
+
+        return false;
+    };
+
+    void finishInitialization() override {
+        for (int j=0; j<ng; j++) {
+            g[j]->finishInitialization();
+        }
+    };
+
+    virtual int getGlobalRegionOffset(const string geomName);
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 protected:
