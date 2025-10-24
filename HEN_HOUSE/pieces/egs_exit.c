@@ -28,6 +28,7 @@
 ###############################################################################
 */
 
+#include <stdlib.h>
 
 #ifdef STDCALL
 #define C_CONVENTION __stdcall
