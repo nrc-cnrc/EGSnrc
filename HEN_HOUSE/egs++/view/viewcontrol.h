@@ -57,7 +57,7 @@ class GeometryViewControl : public QMainWindow, public Ui::GeometryViewControl {
 
 public:
 
-    GeometryViewControl(QWidget *parent = 0);
+    explicit GeometryViewControl(QWidget *parent = nullptr);
     virtual ~GeometryViewControl();
 
     virtual void setFilename(QString str);
@@ -157,6 +157,7 @@ public slots:
 
 private:
 
+    Ui::GeometryViewControl *ui;
     ClippingPlanesWidget *cplanes;
     ImageWindow *gview;
     SaveImage *save_image;
