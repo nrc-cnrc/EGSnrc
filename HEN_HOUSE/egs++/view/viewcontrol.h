@@ -57,7 +57,7 @@ class GeometryViewControl : public QMainWindow, public Ui::GeometryViewControl {
 
 public:
 
-    GeometryViewControl(QWidget *parent = 0, const char *name = 0);
+    explicit GeometryViewControl(QWidget *parent = nullptr);
     virtual ~GeometryViewControl();
 
     virtual void setFilename(QString str);
@@ -157,6 +157,7 @@ public slots:
 
 private:
 
+    Ui::GeometryViewControl *ui;
     ClippingPlanesWidget *cplanes;
     ImageWindow *gview;
     SaveImage *save_image;
@@ -211,7 +212,7 @@ private:
     bool showElectronTracks;
     bool showPositronTracks;
     bool hasDynamic; //boolean to track whether or not to make time objects visible or hidden
-    char head_inctime[20] = "include time index="; // must match the same in egs_particle_track.h
+    char head_inctime[20] = {'i','n','c','l','u','d','e',' ','t','i','m','e',' ','i','n','d','e','x','='}; // must match the same in egs_particle_track.h
     bool hasTrackTimeIndex;
     bool isPlaying;
     vector<bool> show_regions;
