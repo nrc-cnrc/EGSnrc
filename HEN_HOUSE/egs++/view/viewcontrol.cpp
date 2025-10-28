@@ -88,9 +88,9 @@ static unsigned char standard_blue[] = {
     0,  0, 191, 80, 127, 127, 192, 128
 };
 
-GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
+GeometryViewControl::GeometryViewControl(QWidget *parent)
     : QMainWindow(parent) {
-    setObjectName(name);
+    setObjectName("GeometryViewControl");
     setupUi(this);
 
 #ifdef VIEW_DEBUG

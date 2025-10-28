@@ -57,7 +57,7 @@ class GeometryViewControl : public QMainWindow, public Ui::GeometryViewControl {
 
 public:
 
-    GeometryViewControl(QWidget *parent = 0, const char *name = 0);
+    GeometryViewControl(QWidget *parent = 0);
     virtual ~GeometryViewControl();
 
     virtual void setFilename(QString str);
