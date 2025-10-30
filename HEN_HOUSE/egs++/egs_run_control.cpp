@@ -113,6 +113,7 @@ EGS_RunControl::EGS_RunControl(EGS_Application *a) : geomErrorCount(0),
     ctype.push_back("resume");
     ctype.push_back("analyze");
     ctype.push_back("combine");
+    ctype.push_back("restart"); // Just for backwards compatibility, use "resume" instead
     resume = input->getInput("calculation",ctype,0);
 }
 
@@ -183,7 +184,7 @@ void EGS_RunControl::resetCounter() {
 }
 
 int EGS_RunControl::startSimulation() {
-    if (resume == 1 || resume == 2) {
+    if (resume == 1 || resume == 2 || resume == 4) {
         if (app->readData()) {
             return -1;
         }
