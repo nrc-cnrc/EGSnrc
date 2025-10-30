@@ -332,7 +332,7 @@ protected:
     \ref Geometry "geometry package" for any particle source that can be
     defined using the \c egspp \ref Sources "source package".
     In addition, tutor7pp provides the functionality of being able
-    to restart a calculation, run a calculation in parallel and
+    to resume a calculation, run a calculation in parallel and
     automatically recombine the results, limit the simulation time
     to a user defined maximum time, or abort the simulation if
     a user defined statistical uncertainty has been reached.
@@ -374,7 +374,7 @@ protected:
     \until int initScoring
     the function for scoring the quantities of interest at run time,
     \until int ausgab
-    the functions needed for restarting simulations and parallel runs,
+    the functions needed for resuming simulations and parallel runs,
     \until int addState
     the function to output the results of the simulation,
     \until void outputResults()
@@ -689,7 +689,7 @@ protected:
     EGS_SimpleApplication (see \em e.g.
     <a href=tutor2pp_8cpp-example.html>this example</a>).
     However, a closer examination shows that a significant part
-    of the code is neede to implement the restart/parallel runs/combine
+    of the code is needed to implement the resume/parallel runs/combine
     results functionality and to provide the user with the
     capability to specify the regions for PHD calculation in
     the input file. Without this added functionality, the tutor7pp

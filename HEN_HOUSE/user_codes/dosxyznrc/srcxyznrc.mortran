@@ -2544,7 +2544,7 @@ ELSEIF(isource = 2 | isource=8)["Full phase-space source"
 "------------------------------------------------------------------------"
    dsource = -dsource;
    esrc = 0; "initialize counter"
-   OUTCNT = 0; "initialize no. of times phsp file restarts during this run"
+   OUTCNT = 0; "initialize no. of times phsp file rewinds during this run"
 ]
 "------------------------------------------------------------------------"
 ELSEIF(isource = 3 )[   "Frontal point source"
@@ -2740,7 +2740,7 @@ ELSEIF(isource = 20)["Phase Space Incident from multiple settings and "
 
    ]
    esrc = 0; "initialize counter"
-   OUTCNT = 0; "initialize no. of times phsp file restarts during this run"
+   OUTCNT = 0; "initialize no. of times phsp file rewinds during this run"
 ]
 "------------------------------------------------------------------------"
 ELSEIF(isource = 21)["Full BEAM sim. incident from multiple settings and "
@@ -3597,7 +3597,7 @@ ELSEIF(isource = 2 | isource=8)[ "Full phase space for each particle"
            OUTCNT=OUTCNT+1;
            OUTPUT ;
      (///' ***WARNING*** USED ALL PARTICLES FROM CHUNK IN SOURCE FILE!'/
-       '               RESTARTING FROM FIRST PARTICLE IN THIS CHUNK.'//
+       '               REWINDING FROM FIRST PARTICLE IN THIS CHUNK.'//
        /1x,79('*')// );
            IF(i_iaea_in=1)[nhist=OUTCNT*NINCSRC/(n_parallel*$N_CHUNKS);
                 $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);
@@ -3609,7 +3609,7 @@ ELSEIF(isource = 2 | isource=8)[ "Full phase space for each particle"
            OUTCNT=OUTCNT+1;
            OUTPUT61;
     (/' *** Warning *** Used all particles from partition of source file'/
-      '                 Restarting from first particle in this partition'/);
+      '                 Rewinding from first particle in this partition'/);
            nnphsp = INT((PARNUM-1)*nshist/IPARALLEL)+1;
            IF(i_iaea_in=1)[nhist=OUTCNT*NINCSRC/IPARALLEL;
                 $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);
@@ -3621,7 +3621,7 @@ ELSEIF(isource = 2 | isource=8)[ "Full phase space for each particle"
            OUTCNT=OUTCNT+1;
            OUTPUT61;
            (/' *** Warning *** Used all particles from source file'/
-            '                 Restarting from first particle in file'/);
+            '                 Rewinding from first particle in file'/);
            nnphsp = 1;
            IF(i_iaea_in=1)[nhist=OUTCNT*NINCSRC;
                $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);
@@ -3843,7 +3843,7 @@ ELSEIF( isource = 20 ) [ "Phase Space Incident from multiple settings"
            OUTCNT=OUTCNT+1;
            OUTPUT ;
            (///' ***WARNING*** USED ALL PARTICLES FROM CHUNK IN SOURCE FILE!'/
-           '               RESTARTING FROM FIRST PARTICLE IN THIS CHUNK.'//
+           '               REWINDING FROM FIRST PARTICLE IN THIS CHUNK.'//
            /1x,79('*')// );
 	       IF(i_iaea_in=1)[nhist=OUTCNT*NINCSRC/(n_parallel*$N_CHUNKS);
                 $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);
@@ -3854,7 +3854,7 @@ ELSEIF( isource = 20 ) [ "Phase Space Incident from multiple settings"
            OUTCNT=OUTCNT+1;
            OUTPUT61;
         (/' *** Warning *** Used all particles from partition of source file'/
-          '                 Restarting from first particle in this partition'/);
+          '                 Rewinding from first particle in this partition'/);
            nnphsp = INT((PARNUM-1)*nshist/IPARALLEL)+1;
 	       IF(i_iaea_in=1)[nhist=OUTCNT*NINCSRC/IPARALLEL;
                 $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);
@@ -3866,7 +3866,7 @@ ELSEIF( isource = 20 ) [ "Phase Space Incident from multiple settings"
            OUTCNT=OUTCNT+1;
            OUTPUT61;
            (/' *** Warning *** Used all particles from source file'/
-            '                 Restarting from first particle in file'/);
+            '                 Rewinding from first particle in file'/);
            nnphsp = 1;
 	       IF(i_iaea_in=1)[nhist=OUTCNT*NINCSRC;
                $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);

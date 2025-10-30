@@ -88,7 +88,7 @@
     ncase = 1000000
     statistical accuracy sought = 1  # this input is optional
     max cpu hours allowed = 15       # this input is optional
-    #calculation = combine   # could als be first or restart or analyze
+    #calculation = combine   # could also be first or resume or analyze,
                              # the input is optional and if missing, a
                              # fresh calculation will be done
 :stop run control:

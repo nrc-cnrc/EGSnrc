@@ -32,7 +32,7 @@
 #  This file replaces files write_pardose.c and read_pardose.c. Since 2004 the
 #  .pardose files are automatically recombined at the end of a parallel run
 #  or when the user recombines them manually by running dosxyznrc with the
-#  input flag IRESTART=4.
+#  input flag IRESUME=4.
 #
 ###############################################################################
 */

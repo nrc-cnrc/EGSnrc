@@ -62,9 +62,9 @@
                                    #can store initial random numbers for
                                    #last history or each history in .egsrns
                                    #(useful for debugging)
- IRESTART= first        #first,restart,make,analyze,start-RNS,parallel;
+ IRESUME= first         #first,resume,make,analyze,start-RNS,parallel;
                         #first: first run
-                        #restart: restart of old run (requires .egsdat file)
+                        #resume: resume of old run (requires .egsdat file)
                         #make: just create an input file and exit
                         #analyze: read in data from .egsdat file and
                         #         do statistical analysis and output results
@@ -84,7 +84,7 @@
                         #long=> MG + DG + DS
 
  STORE DATA ARRAYS= yes #yes,no;
-                        #yes: output .egsdat file for restarts, parallel
+                        #yes: output .egsdat file for resuming, parallel
                         #     post-processing, etc
 
  ELECTRON TRANSPORT= normal   #normal, no interactions;

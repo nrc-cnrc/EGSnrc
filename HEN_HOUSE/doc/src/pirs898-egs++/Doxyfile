@@ -1321,7 +1321,7 @@ QHG_LOCATION           =
 # Eclipse, the contents of the directory containing the HTML and XML files needs
 # to be copied into the plugins directory of eclipse. The name of the directory
 # within the plugins directory should be the same as the ECLIPSE_DOC_ID value.
-# After copying Eclipse needs to be restarted before the help appears.
+# After copying Eclipse needs to be relaunched before the help appears.
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 

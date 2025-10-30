@@ -252,7 +252,7 @@ proc make_menu_button {i w} {
 		    -command "set_value $i $iopt $w.inp"
 	}
     } elseif $i==5 {
-	# IT'S IRESTART (0,1,3,4) (no create input file option)
+	# IT'S IRESUME (0,1,3,4) (no create input file option)
 	foreach iopt {0 1 3 4} {
 	    $w.inp.m add command -label $options($i,$iopt) \
 		    -command "set_value $i $iopt $w.inp"
@@ -2452,4 +2452,3 @@ proc set_pegs_file { tree filename } {
     if $extindex<0 {set extindex [expr $len-1]}
     set the_pegs_file [string range $the_pegs_file 0 $extindex]
 }
-

@@ -66,13 +66,13 @@
 #
 #  cd /usr; find . -name "*wish*" -print;
 #
-# The next line restarts using wishx \
+# The next line relaunches using wishx \
 exec wish "$0" "$@"
 
 #note: either wishx is on your system path of you must modify the following
 #       line to put the explicit path to wishx
 #       To find wishx: cd /usr;find . -name "*wish*" -print ;
-# the next line restarts using wishx \
+# the next line relaunches using wishx \
 exec wish "$0" "$@"
 
 
@@ -550,7 +550,7 @@ if {$argc > 1} {
      tk_dialog .pegs_file_error "PEGS file does not exist." "The pegs file $pegs4filename\
                 specified on the command line does not exist in either the local or main\
                 pegs4 data directory.  You will have to browse for the PEGS4 data\
-                or restart with another argument." error 0 OK
+                or relaunch with another argument." error 0 OK
       set pegs4filename {}
    }
 }
@@ -566,7 +566,7 @@ if {$argc > 0} {
    if {![file exists $full_inp_file]} {
       tk_dialog .inp_file_error "Input file does not exist." "The input file $full_inp_file\
                 specified on the command line does not exist.  Use the GUI to browse for\
-                an existing input file or restart with another argument." error 0 OK
+                an existing input file or relaunch with another argument." error 0 OK
       set inp_file {}
       return
    } else {
@@ -672,4 +672,3 @@ proc exit_prompt {} {
            input file!  Exit the DOSXYZnrc GUI?" question 0 No Yes]
     if $result==1 { exit }
 }
-

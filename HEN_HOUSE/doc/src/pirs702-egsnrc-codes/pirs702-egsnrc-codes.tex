@@ -1439,9 +1439,9 @@ very large}}.
 All user codes give the user the option of storing random
 numbers at the beginning of each history using
 the {\tt STORE INITIAL RANDOM NUMBERS} input.  Random numbers are stored
-in a {\tt .egsrns} file.  You can restart the simulation
-using these random numbers using one of the {\tt IRESTART} options,
-described in section~\ref{restartsect}\lpage{restartsect}.
+in a {\tt .egsrns} file.  You can resume the simulation
+with these random numbers using one of the {\tt IRESUME} options,
+described in section~\ref{resumesect}\lpage{resumesect}.
 
 The options for {\tt STORE INITIAL RANDOM NUMBERS} are:
 
@@ -1472,44 +1472,44 @@ section~\ref{cavrziosect}\lpage{cavrziosect} for more details.
 Note that the {\tt STORE INITIAL RANDOM NUMBERS} option is mostly used for
 debugging purposes.
 
-\subsubsection{IRESTART - restarting runs}
-\label{restartsect}
-\index{IRESTART}
-\index{restarting runs}
+\subsubsection{IRESUME - resuming runs}
+\label{resumesect}
+\index{IRESUME}
+\index{resuming runs}
 \index{recovery after crashes}
 
-All user codes offer several restart options.  These are:
+All user codes offer several resume options.  These are:
 
 \begin{verbatim}
-  IRESTART
+  IRESUME
         = first       (0)  first run for this data set
-        = restart     (1)  restart of a previous run
+        = resume      (1)  resume a previous run
         = analyze     (3)  just read in the raw data and do the statistical
                            analysis
         = start-RNS   (4)  read starting random numbers from a file
         = parallel    (5)  Combine results from previous parallel runs
 \end{verbatim}
 
-Set {\tt IRESTART= first} if this is the first run of this simulation.
+Set {\tt IRESUME= first} if this is the first run of this simulation.
 
-Use {\tt IRESTART= restart} if you wish to take the data from this simulation
+Use {\tt IRESUME= resume} if you wish to take the data from this simulation
 and append it to the data from a previous run.  If you use this option, your
 previous run must have been done with {\tt STORE DATA ARRAYS= yes}
 (see section~\ref{dataarrsect}\lpage{dataarrsect}).  Note that CPU times
-are cumulative, so if you're restarting a run, then the maximum CPU time
+are cumulative, so if you're resuming a run, then the maximum CPU time
 allowed (see section~\ref{cpusect}\lpage{cpusect}) must account for the time of
 the previous run as well.
 
 \index{STORE DATA ARRAYS}
 \index{interim data storage}
-Use {\tt IRESTART= analyze} if you have data from a previous run in
+Use {\tt IRESUME= analyze} if you have data from a previous run in
 a {\tt .egsdat} file (you must have run it with {\tt STORE DATA ARRAYS= yes}--
 see section~\ref{dataarrsect}\lpage{dataarrsect}) and you want to reanalyze it and output
 the results to the {\tt .egslst} file.  This is very useful if
 you want to change the quantity that you are outputting from the data after
 you have already run the simulation.
 
-When {\tt IRESTART= start-RNS}, then your user code will use the
+When {\tt IRESUME= start-RNS}, then your user code will use the
 random numbers stored in the {\tt .egsrns} file (see
 section~\ref{rnssect}\lpage{rnssect}) to run the simulation.  If you ran the previous simulation
 with {\tt STORE INITIAL RANDOM NUMBERS= last}, then the current simulation
@@ -1527,7 +1527,7 @@ to this last history as long as nothing else has changed.
 compared to code which appears to just reread first value every time}
 
 \index{parallel processing}
-{\tt IRESTART= parallel} is used to read the {\tt .egsdat} files from
+{\tt IRESUME= parallel} is used to read the {\tt .egsdat} files from
 separate parallel jobs, combine them, analyze them, and output the
 combined results to the {\tt .egslst} file.  See
 section~\ref{parallelsect}\lpage{parallelsect}
@@ -1537,7 +1537,7 @@ is:\\
 {\tt inputfile\_w(i).egsdat}, {\tt inputfile\_w(i+1).egdat},... \\
 This is the naming scheme used by the {\tt pprocess} script described
 in section~\ref{parallelsect}\lpage{parallelsect}.  Note that the user
-code SPRRZnrc does not have the {\tt IRESTART= parallel} option.
+code SPRRZnrc does not have the {\tt IRESUME= parallel} option.
 \index{SPRRZnrc}
 
 \subsubsection{STORE DATA ARRAYS}
@@ -1556,17 +1556,17 @@ batch, the {\tt .egsdat} file will be overwritten with:
 
 \begin{enumerate}
 \item the current random number state
-\item the total number of histories so far (including restarts)
-\item total fluence so far (including restarts) (not for all codes)
-\item the total CPU time so far (including restarts)
+\item the total number of histories so far (including resumes)
+\item total fluence so far (including resumes) (not for all codes)
+\item the total CPU time so far (including resumes)
 \item the total number of particles read from a phase space source
-        (including restarts)
-\item the total number of charged particle steps taken (including restarts)
+        (including resumes)
+\item the total number of charged particle steps taken (including resumes)
 \item the total number of times multiple scattering has been switched off
-      (including restarts)
+      (including resumes)
 \item Raw data needed by the code to calculate quantities of interest.
-      These data are cumulative and include data from previous runs if
-      this is a restart.  Just the required sums are stored.  The raw
+      These data are cumulative and include data from previous runs when
+      resuming a run.  Just the required sums are stored.  The raw
       data stored will depend on the user code AND the output options
       requested by the user.  For example, DOSRZnrc could store the
       total energy deposited in each region, the total-minus-stopper
@@ -1574,9 +1574,9 @@ batch, the {\tt .egsdat} file will be overwritten with:
       the kerma deposited in each region.
 \end{enumerate}
 
-The {\tt .egsdat} file is necessary for {\tt IRESTART= restart},
-{\tt IRESTART= analyze} and {\tt IRESTART= parallel} options described in
-Section~\ref{restartsect}\lpage{restartsect}.  Note that the {\tt .egsdat}
+The {\tt .egsdat} file is necessary for {\tt IRESUME= resume},
+{\tt IRESUME= analyze} and {\tt IRESUME= parallel} options described in
+Section~\ref{resumesect}\lpage{resumesect}.  Note that the {\tt .egsdat}
 file can become very large (we have seen 100 Mbyte), especially for
 the code FLURZnrc.  For short runs, writing this file can dominate the
 simulation time and so it may be best not to store it, at least for any
@@ -1662,7 +1662,7 @@ The user also enters the maximum CPU time allowed for the run in
 this section using the {\tt MAX CPU HOURS ALLOWED} input.
 The default is {\tt MAX CPU HOURS ALLOWED= 999.}, and the
 current maximum is 1000 hrs.  This is the total CPU time for the run,
-including restarts.  For parallel runs using EGSnrcMP's built-in
+including resumes.  For parallel runs using EGSnrcMP's built-in
 parallel processing functionality
 (see section~\ref{parallelsect}\lpage{parallelsect}), it is the maximum
 CPU time for each parallel job.  At the end of each output batch, the amount
@@ -1781,22 +1781,22 @@ requires an additional {\tt REAL*8} array for each ratio scored.
 \index{recycling}
 \index{NRCYCL}
 Both the batch method and the history by history method underestimate
-uncertainty if a phase space source file is restarted (which happens
+uncertainty if a phase space source file is rewinded (which happens
 automatically if all particles in the source have been used).  In the
 case of the history by history method, this is because particles
-that are re-used because of a restart are not associated with the
+that are re-used because of a rewind are not associated with the
 same primary history as on the first pass through the source file,
 and thus correlations between these re-used particles are ignored.
 To overcome this problem, we recommend re-using each particle enough
 times before moving on to the next particle in the phase space source to
-avoid restarting the source.  This re-use of particles ``on the spot"
+avoid rewinding the source.  This re-use of particles ``on the spot"
 is called particle recycling.  To facilitate particle recycling we
 introduced the recycling number, {\tt NRCYCL}, input with sources 21
 and 22 (See Table~\ref{tab:srcrz}).  Each particle in the source will be
 used a total of {\tt NRCYCL}+1 times before moving on to the next one.
 If the user sets {\tt NRCYCL}$<=$0, then {\tt NRCYCL} will automatically
 be calculated to sample the entire phase space source while avoiding
-a restart.  The particle recycling scheme is identical to that currently
+a rewind.  The particle recycling scheme is identical to that currently
 in use in BEAMnrc and DOSXYZnrc.
 \index{recycling}
 \index{NRCYCL}
@@ -2140,7 +2140,7 @@ SPRRZnrc & {\tt SCEDPN(Z,R,IT)} and & 1: in local material \\
 \index{.egsdat}
 After the completion of a batch, the \verb+.egsdat+ file will be
 updated and will contain the complete scoring arrays, random generator
-state, etc calculated so far, and consequently, a run can be restarted
+state, etc calculated so far, and consequently, a run can be resumed
 from that point on. So although the batch results are no-longer used for
 statistical analysis, the calculations are still done in 10 batches to
 facilitate storage of partial results.
@@ -2431,8 +2431,8 @@ the {\tt .egsdat} files are output.
 
 The {\tt inputfile\_w[i\_parallel].egsdat} can also be manually combined
 by rerunning your code with the input parameter
-\index{IRESTART!parallel}
-\verb+IRESTART= PARALLEL+.  This may be useful if you want to combine
+\index{IRESUME!parallel}
+\verb+IRESUME= PARALLEL+.  This may be useful if you want to combine
 results from several different groups of parallel runs.
 
 This system of combining results works very well unless you have
@@ -2440,28 +2440,28 @@ huge {\tt .egsdat}
 files (can happen with FLURZnrc), in which case you can quickly run out of
 disk space and or bring your network to its knees.
 
-\subsubsection{Restarting parallel runs}
-\index{parallel jobs!restarting}
+\subsubsection{Resuming parallel runs}
+\index{parallel jobs!resuming}
 
-Parallel jobs can be restarted the same way as a single run, by
-rerunning with {\tt IRESTART= restart} (see section~\ref{restartsect})
+Parallel jobs can be resumed in the same way as a single run, by
+rerunning with {\tt IRESUME= resume} (see section~\ref{resumesect})
 in {\tt inputfile.egsinp}.
 Note that all of the {\tt .egsdat} files from the previous parallel
 jobs must be available and you must submit the same number of parallel
 jobs beginning with the same value of {\tt i\_start} (see section~\ref{subparsect} above).
 If you are using a
-phase space source, however, restarting presents a problem in that a
+phase space source, however, resuming presents a problem in that a
 particular partition of the source may get used by a different job the
 second time around.  At the end of the run, results from the second
 use of this partition will be recombined with those from its first use
 with no attention paid to the correlation between the two results.  This
 will result in the uncertainties being underestimated.  We recommend that
-you do not restart a parallel run if you are using a phase space source.
+you do not resume a parallel run if you are using a phase space source.
 
-If you are restarting a parallel run that uses a full BEAMnrc simulation
+If you are resuming a parallel run that uses a full BEAMnrc simulation
 source (source 23--See Section~\ref{source_inputs}).  Then you must go
 into the input file for the simulation source and set the input variable
-{\tt IRESTART} to 1.  Otherwise, the simulation source in the restarted run
+{\tt IRESUME} to 1.  Otherwise, the simulation source in the resumed run
 will use identical random numbers as in the original run.
 
 \subsection{Pegsless Mode}
@@ -2666,7 +2666,7 @@ messages too, so get in the habit of reading this file.
 
 \index{.egsdat}
 \item [input.egsdat:] A file containing all the information needed to
-allow a calculation to be restarted again.
+allow a calculation to be resumed.
 
 \index{.egsrns}
 \item [input.egsrns:] Some codes allow a record of random number seeds
@@ -4155,8 +4155,8 @@ that is not included in the other user codes (see
 section~\ref{rnssect}\lpage{rnssect}).
 With this option, the initial random numbers from only those histories that
 end up depositing energy in the cavity region are stored in the
-{\tt .egsrns} file.  Then, if the run is restarted with
-{\tt IRESTART= start-RNS} (see section~\ref{restartsect}\lpage{restartsect}),
+{\tt .egsrns} file.  Then, if the run is resumed with
+{\tt IRESUME= start-RNS} (see section~\ref{resumesect}\lpage{resumesect}),
 all histories will end up depositing energy in the cavity region.
 
 \index{CAVRZnrc!output options}
@@ -4635,9 +4635,9 @@ is shown below:
 \begin{verbatim}
 
 :start I/O control:
-  IRESTART
+  IRESUME
        = first    (0) First run for this data set
-       = restart  (1) Restart a previous run
+       = resume   (1) Resume a previous run
        = analyze  (3) Just read in the raw data and do the statistical analysis
        = parallel (5) Combine results from previous parallel runs
   STORE DATA ARRAYS

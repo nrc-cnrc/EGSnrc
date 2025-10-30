@@ -315,7 +315,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     else {
         newGeom = simGeom;
     }
-    // restart from scratch (copied from main.cpp)
+    // reset (copied from main.cpp)
     EGS_Float xmin = -50, xmax = 50;
     EGS_Float ymin = -50, ymax = 50;
     EGS_Float zmin = -50, zmax = 50;
@@ -382,7 +382,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     RenderParameters &rp = gview->pars;
     rp.allowRegionSelection = allowRegionSelection;
     rp.trackIndices.assign(6,1);
-    gview->restartWorker();
+    gview->relaunchWorker();
     if (!simGeom) {
         setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
         origSimGeom = g;
@@ -3349,4 +3349,3 @@ void GeometryViewControl::timeObjectVisibility() {
 
 
 }
-

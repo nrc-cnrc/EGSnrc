@@ -249,7 +249,7 @@ The run control input block specifies generic parameters about the simulation. I
     nbatch                      = [optional] number of batches to use (default is 10)
     statistical accuracy sought = [optional] required uncertainty in %
     max cpu hours allowed       = [optional] max. CPU time allowed
-    calculation                 = [optional] first or restart or combine or analyze
+    calculation                 = [optional] first or resume or combine or analyze
     geometry error limit        = [optional] number of geometry errors allowed before crashing
 :stop run control:
 \endverbatim
@@ -274,7 +274,7 @@ simulation time
 to some maximum time in hours. With the <b>\c calculation</b> input
 one determines the type of simulation:
  - <b> \c first</b> means a fresh simulation (the default)
- - with <b> \c restart</b> one can restart a previously performed simulation
+ - with <b> \c resume</b> one can resume a previously interrupted simulation
  - with <b>\c combine</b> one can combine the results of parallel runs. This is needed
    when one or more of the parallel jobs has not finished so that the
    results are not automatically combined or when one uses a simple RCO

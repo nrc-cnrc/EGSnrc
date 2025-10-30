@@ -65,11 +65,11 @@ REPLACE {$IAEA_OPEN_PHSP_FOR_WRITE(#,#,#,#,#,#,#);} WITH {;
 "{P1}=unit number"
 "{P2}=file name"
 "{P3}=IZLAST"
-"{P4}=IRESTART=0 for first run, 1 for restart"
+"{P4}=IRESUME=0 for first run, 1 for resuming"
 "{P5}=Z position of the scoring plane"
 "{P6}=IMUPHSP"
 "{P7}=IZSCORE, set to 1 to score Z for each particle"
-"note that if IRESTART=1, then nothing is done with {P3} and {P5}"
+"note that if IRESUME=1, then nothing is done with {P3} and {P5}"
 
 call iaea_new_source({P1},{P2},{P4}+2,iaea_result);
 IF(iaea_result<0)[
@@ -322,7 +322,7 @@ IF(iaea_n_stat=-1)[
   $CALL_EXIT(1);
 ]
 ELSEIF(iaea_n_stat=-2)[
-  WRITE(i_log,*)' WARNING: Reached end of IAEA phsp file.  File restarted.';
+  WRITE(i_log,*)' WARNING: Reached end of IAEA phsp file.  File rewinded.';
 ]
 ELSEIF(iaea_n_stat>=0)[
   {P3}={P3}+iaea_n_stat;
