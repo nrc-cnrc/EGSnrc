@@ -41,7 +41,6 @@
 #define EGS_CSPHERES_
 
 #include <vector>
-
 #include "egs_base_geometry.h"
 
 #ifdef WIN32
