@@ -388,13 +388,13 @@ extern "C" {
     }
 
 
-    void EGS_RadialRepeater::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_RadialRepeater::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         vector<int> local_regs;
 
         // label in repeated geometry
         local_regs.clear();
-        g->getLabelRegions(str, local_regs);
+        g->getLabelRegions(str, local_regs, sanitize);
         for (int i=0; i<nrep; i++) {
             for (int r=0; r<local_regs.size(); r++) {
                 regs.push_back(ng*i + local_regs[r]);
@@ -403,7 +403,7 @@ extern "C" {
 
         // labels defined in iplanes
         local_regs.clear();
-        iplanes->getLabelRegions(str, local_regs);
+        iplanes->getLabelRegions(str, local_regs, sanitize);
         for (int i=0; i<local_regs.size(); i++) {
             for (int r=0; r<ng; r++) {
                 regs.push_back(ng*local_regs[i] + r);
@@ -411,7 +411,7 @@ extern "C" {
         }
 
         // label defined in self (repeater input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

@@ -259,7 +259,7 @@ extern "C" {
     }
 
 
-    void EGS_CDGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_CDGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         // label defined in the base geometry
         vector<int> bgregs;
@@ -295,7 +295,7 @@ extern "C" {
             // add regions from set geometries
             gregs.clear();
             if (g[i]) {
-                g[i]->getLabelRegions(str, gregs);
+                g[i]->getLabelRegions(str, gregs, sanitize);
             }
 
             // shift region numbers according to indexing style
@@ -315,7 +315,7 @@ extern "C" {
         }
 
         // label defined in self (cd input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

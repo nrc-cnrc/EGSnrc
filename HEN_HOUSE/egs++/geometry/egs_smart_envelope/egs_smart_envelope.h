@@ -414,7 +414,7 @@ public:
         return geometries[j]->getBScaling(ireg-local_start[j]);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 
