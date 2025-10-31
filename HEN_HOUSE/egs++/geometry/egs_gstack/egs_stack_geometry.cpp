@@ -160,21 +160,21 @@ extern "C" {
     }
 
 
-    void EGS_StackGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_StackGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         vector<int> local_regs;
 
         // label defined in the stacked geometries
         for (int i=0; i<ng; i++) {
             local_regs.clear();
-            g[i]->getLabelRegions(str, local_regs);
+            g[i]->getLabelRegions(str, local_regs, sanitize);
             for (int j=0; j<local_regs.size(); j++) {
                 regs.push_back(i*nmax + local_regs[j]);
             }
         }
 
         // label defined in self (stack input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

@@ -1066,7 +1066,7 @@ void EGS_BaseGeometry::getNumberRegions(const string &str, vector<int> &regs) {
     }
 }
 
-void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
     // Tokenize the input string - this allows for multiple labels
     vector<string> tokens;
@@ -1080,18 +1080,40 @@ void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs) {
     }
     while (*ptr++ != '\0');
 
+    // Start insertion at the beginning of regs
+    size_t insert_pos = 0;
+    bool foundLabel;
+
     // Get all regions lists for this named label
-    for (int j=0; j<tokens.size(); j++) {
-        for (int i=0; i<labels.size(); i++) {
+    for (int j = 0; j < tokens.size(); j++) {
+        foundLabel = false;
+        for (int i = 0; i < labels.size(); i++) {
             if (labels[i].name.compare(tokens[j]) == 0) {
-                regs.insert(regs.end(), labels[i].regions.begin(), labels[i].regions.end());
+
+                // Insert at the current position
+                regs.insert(regs.begin() + insert_pos, labels[i].regions.begin(), labels[i].regions.end());
+
+                // Update the insertion position to reflect the newly added elements
+                insert_pos += labels[i].regions.size();
+
+                foundLabel = true;
+                break;
             }
+        }
+
+        // Just increment the insertion position by one, because this token was a number not a label
+        if(!foundLabel) {
+            insert_pos += 1;
         }
     }
 
     // Sort region list and remove duplicates
-    sort(regs.begin(), regs.end());
-    regs.erase(unique(regs.begin(), regs.end()), regs.end());
+    // By default this is always done
+    // Turn it off if the list contains parameters that are not regions and/or you want to maintain the original order
+    if(sanitize) {
+        sort(regs.begin(), regs.end());
+        regs.erase(unique(regs.begin(), regs.end()), regs.end());
+    }
 }
 
 
@@ -1102,7 +1124,7 @@ int EGS_BaseGeometry::setLabels(EGS_Input *input) {
 
         // get input string
         string inp;
-        int err = i->getInput("set label",inp);
+        int err = i->getInput("set label", inp);
         delete i;
 
         // bail out on read error
@@ -1121,52 +1143,61 @@ int EGS_BaseGeometry::setLabels(EGS_Input *input) {
     return labelCount;
 }
 
-
 int EGS_BaseGeometry::setLabels(const string &inp) {
 
-    // tokenize input string
-    vector<string> tokens;
-    const char *ptr = inp.c_str();
-    do {
-        const char *begin = ptr;
-        while (*ptr != ' ' && *ptr) {
-            ptr++;
-        }
-        tokens.push_back(string(begin, ptr));
-    }
-    while (*ptr++ != '\0');
+    // label class to store label name and region list
+    EGS_Label label;
 
-    // bail out if there are no label tokens
-    if (tokens.size() < 1) {
-        egsWarning("EGS_BaseGeometry::setLabels(): no label name\n");
+    // list of tokens
+    vector<string> tokens = egsTokenize(inp);
+
+    // bail out if there are no tokens at all
+    if (tokens.empty()) {
+        egsWarning("EGS_BaseGeometry::setLabels(): no label specified\n");
         return 0;
     }
 
-    // parse label into a label class
-    label lab;
-    lab.name = tokens[0];
-    for (int i=1; i<tokens.size(); i++) {
-        int reg = atoi(tokens[i].c_str());
-        if (reg < nreg && reg >= 0) {
-            lab.regions.push_back(reg);
+    // set label name
+    label.name = tokens[0];
+
+    // if no region is listed, apply label to all regions by default
+    if (tokens.size() == 1) {
+        label.regions.reserve(nreg);          // allocate once
+        for (int i = 0; i < nreg; i++) {
+            label.regions.push_back(i);
         }
-        else {
-            egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": region %d is beyond the number " \
-                       "of regions in this geometry\n", lab.name.c_str(), reg);
+    }
+    else {
+        // parse numbers and number ranges
+        label.regions = egsParseIntegerRanges(tokens.begin() + 1, tokens.end());
+
+        // validate regions
+        if (!validateRegions(label.regions)) {
+            egsWarning("EGS_BaseGeometry::setLabels(): geometry %s, label %s, invalid regions\n", getName().c_str(), name.c_str());
+            return 0;
         }
     }
 
-    // continue if there is no region
-    if (lab.regions.size() <= 0) {
+    // warn if there is no region for this label
+    if (label.regions.size() == 0) {
+        egsWarning("EGS_BaseGeometry::setLabels(): geometry %s, label \"%s\": no region specified\n", getName().c_str(), label.name.c_str());
         return 0;
     }
-
-    // sort region list and remove duplicates
-    sort(lab.regions.begin(), lab.regions.end());
-    lab.regions.erase(unique(lab.regions.begin(), lab.regions.end()), lab.regions.end());
 
     // push current label onto vector of labels
-    labels.push_back(lab);
+    labels.push_back(label);
 
     return 1;
+}
+
+bool EGS_BaseGeometry::validateRegions(const vector<int> &regions) {
+
+    // validate region numbers (stop upon first invalid region)
+    for (int reg : regions) {
+        if (reg < 0 || reg >= nreg) {
+            egsWarning("EGS_BaseGeometry::validateRegions(): geometry %s, region %d is out of bounds\n", getName().c_str(), reg);
+            return false;
+        }
+    }
+    return true;
 }

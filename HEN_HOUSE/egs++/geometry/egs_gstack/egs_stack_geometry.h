@@ -324,7 +324,7 @@ public:
     void setBScaling(int start, int end, EGS_Float bf);
     void setBScaling(EGS_Input *);
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 
@@ -335,7 +335,7 @@ protected:
 
     void setMedia(EGS_Input *,int,const int *);
 
-    vector<label> stack_labels;
+    vector<EGS_Label> stack_labels;
 
 private:
 

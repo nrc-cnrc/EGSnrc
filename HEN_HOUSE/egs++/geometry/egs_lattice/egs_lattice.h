@@ -500,7 +500,7 @@ public:
         return sub->getBScaling(ireg - base->regions()); // then check sub regions
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
     void setMedia(EGS_Input *inp,int,const int *);
@@ -936,7 +936,7 @@ public:
         return sub->getBScaling(ireg - base->regions()); // then check sub regions
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
     void setMedia(EGS_Input *inp,int,const int *);

@@ -589,7 +589,7 @@ public:
 
     void printInfo() const;
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
     void ndRegions(int r, int dim, int dimk, int k, vector<int> &regs);
 
 protected:
@@ -1252,15 +1252,15 @@ public:
 
     void setXYZLabels(EGS_Input *input);
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
-    void getXLabelRegions(const string &str, vector<int> &regs) {
-        xp->getLabelRegions(str, regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
+    void getXLabelRegions(const string &str, vector<int> &regs, bool sanitize=true) {
+        xp->getLabelRegions(str, regs, sanitize);
     }
-    void getYLabelRegions(const string &str, vector<int> &regs) {
-        yp->getLabelRegions(str, regs);
+    void getYLabelRegions(const string &str, vector<int> &regs, bool sanitize=true) {
+        yp->getLabelRegions(str, regs, sanitize);
     }
-    void getZLabelRegions(const string &str, vector<int> &regs) {
-        zp->getLabelRegions(str, regs);
+    void getZLabelRegions(const string &str, vector<int> &regs, bool sanitize=true) {
+        zp->getLabelRegions(str, regs, sanitize);
     }
 
 protected:
@@ -1925,7 +1925,7 @@ public:
         xyz->setXYZLabels(input);
     }
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 

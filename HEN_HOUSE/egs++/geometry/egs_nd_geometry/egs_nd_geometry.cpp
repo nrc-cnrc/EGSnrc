@@ -1440,14 +1440,14 @@ extern "C" {
     }
 
 
-    void EGS_NDGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_NDGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         // label defined in the sub-geometries
         vector<int> local_regs;
         for (int i=0; i<N; i++) {
             local_regs.clear();
             if (g[i]) {
-                g[i]->getLabelRegions(str, local_regs);
+                g[i]->getLabelRegions(str, local_regs, sanitize);
             }
             if (local_regs.size() == 0) {
                 continue;
@@ -1460,18 +1460,18 @@ extern "C" {
         }
 
         // label defined in self (nd input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 
 
-    void EGS_XYZGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_XYZGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         vector<int> local_regs;
 
         // x plane labels
         local_regs.clear();
-        xp->getLabelRegions(str, local_regs);
+        xp->getLabelRegions(str, local_regs, sanitize);
         for (int i=0; i<local_regs.size(); i++) {
             for (int j=0; j<ny; j++) {
                 for (int k=0; k<nz; k++) {
@@ -1482,7 +1482,7 @@ extern "C" {
 
         // y plane labels
         local_regs.clear();
-        yp->getLabelRegions(str, local_regs);
+        yp->getLabelRegions(str, local_regs, sanitize);
         for (int j=0; j<local_regs.size(); j++) {
             for (int i=0; i<nx; i++) {
                 for (int k=0; k<nz; k++) {
@@ -1493,7 +1493,7 @@ extern "C" {
 
         // z plane labels
         local_regs.clear();
-        zp->getLabelRegions(str, local_regs);
+        zp->getLabelRegions(str, local_regs, sanitize);
         for (int k=0; k<local_regs.size(); k++) {
             for (int i=0; i<nx; i++) {
                 for (int j=0; j<ny; j++) {
@@ -1503,18 +1503,18 @@ extern "C" {
         }
 
         // label defined in self (xyz input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 
 
-    void EGS_XYZRepeater::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_XYZRepeater::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         vector<int> local_regs;
 
         // label in repeated geometry
         local_regs.clear();
-        g->getLabelRegions(str, local_regs);
+        g->getLabelRegions(str, local_regs, sanitize);
         for (int i=0; i<nx; i++) {
             for (int j=0; j<ny; j++) {
                 for (int k=0; k<nz; k++) {
@@ -1527,7 +1527,7 @@ extern "C" {
 
         // x plane labels
         local_regs.clear();
-        xyz->getXLabelRegions(str, local_regs);
+        xyz->getXLabelRegions(str, local_regs, sanitize);
         for (int i=0; i<local_regs.size(); i++) {
             for (int j=0; j<ny; j++) {
                 for (int k=0; k<nz; k++) {
@@ -1540,7 +1540,7 @@ extern "C" {
 
         // y plane labels
         local_regs.clear();
-        xyz->getYLabelRegions(str, local_regs);
+        xyz->getYLabelRegions(str, local_regs, sanitize);
         for (int j=0; j<local_regs.size(); j++) {
             for (int i=0; i<nx; i++) {
                 for (int k=0; k<nz; k++) {
@@ -1553,7 +1553,7 @@ extern "C" {
 
         // z plane labels
         local_regs.clear();
-        xyz->getZLabelRegions(str, local_regs);
+        xyz->getZLabelRegions(str, local_regs, sanitize);
         for (int k=0; k<local_regs.size(); k++) {
             for (int i=0; i<nx; i++) {
                 for (int j=0; j<ny; j++) {
@@ -1565,7 +1565,7 @@ extern "C" {
         }
 
         // label defined in self (repeater input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

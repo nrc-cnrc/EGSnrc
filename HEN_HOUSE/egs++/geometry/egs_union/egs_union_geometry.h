@@ -340,7 +340,7 @@ public:
         return g[jg]->getBScaling(ireg-jg*nmax);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize);
 
 protected:
 

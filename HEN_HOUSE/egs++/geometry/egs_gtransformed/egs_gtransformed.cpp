@@ -119,13 +119,13 @@ extern "C" {
     }
 
 
-    void EGS_TransformedGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_TransformedGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         // label defined in the geometry being transformed
-        g->getLabelRegions(str, regs);
+        g->getLabelRegions(str, regs, sanitize);
 
         // label defined in self (transformation input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

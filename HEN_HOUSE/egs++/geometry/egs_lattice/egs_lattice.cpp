@@ -295,25 +295,25 @@ extern "C" {
         return result;
     }
 
-    void EGS_Lattice::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_Lattice::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
         // labels defined in base geometry (matching indices)
-        base->getLabelRegions(str, regs);
+        base->getLabelRegions(str, regs, sanitize);
         int index = regs.size();
 
         // labels defined in sub geometries (shifting by base nreg)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
         for (; index<regs.size(); index++) {
             regs[index] += base->regions();
         }
     }
 
-    void EGS_Hexagonal_Lattice::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_Hexagonal_Lattice::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
         // labels defined in base geometry (matching indices)
-        base->getLabelRegions(str, regs);
+        base->getLabelRegions(str, regs, sanitize);
         int index = regs.size();
 
         // labels defined in sub geometries (shifting by base nreg)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
         for (; index<regs.size(); index++) {
             regs[index] += base->regions();
         }
