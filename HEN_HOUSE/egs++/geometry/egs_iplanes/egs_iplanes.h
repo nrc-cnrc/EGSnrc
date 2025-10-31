@@ -477,7 +477,7 @@ public:
     void printInfo() const;
 
     void setRLabels(EGS_Input *input);
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 

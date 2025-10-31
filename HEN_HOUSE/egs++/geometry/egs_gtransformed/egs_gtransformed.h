@@ -286,7 +286,7 @@ public:
 
     void setBScaling(EGS_Input *);
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 

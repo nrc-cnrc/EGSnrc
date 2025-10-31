@@ -635,7 +635,7 @@ public:
         return geometries[jg]->getBScaling(ireg - nbase - jg*nmax);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 
@@ -1069,7 +1069,7 @@ public:
         return geometries[jg]->getBScaling(ireg - nbase - jg*nmax);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 
