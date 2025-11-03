@@ -144,7 +144,12 @@ public:
       It may also be re-implemented, if one wanted to use some sort of
       a systematic sampling of the phase space.
     */
-    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) { };
+    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) {
+        (void)nstart;
+        (void)nrun;
+        (void)npar;
+        (void)nchunk;
+    };
 
     /*! \brief Get the charge of the source.
      *
@@ -217,6 +222,7 @@ public:
      * \sa setState(), addState(), resetCounter().
      */
     virtual bool storeState(ostream &data_out) const {
+        (void)data_out;
         return true;
     };
 
@@ -231,6 +237,7 @@ public:
      * \sa addState(), storeState(), resetCounter()
      */
     virtual bool setState(istream &data_in) {
+        (void)data_in;
         return true;
     };
 
@@ -247,6 +254,7 @@ public:
      * \sa storeState(), setState(), resetCounter().
      */
     virtual bool addState(istream &data_in) {
+        (void)data_in;
         return true;
     };
 
@@ -356,7 +364,9 @@ public:
      * This function was conceived to be used in the
      * view/viewcontrol (to determine whether time index objects are visible or
      * hidden), and track scoring */
-    virtual void containsDynamic(bool &hasdynamic) { };
+    virtual void containsDynamic(bool &hasdynamic) {
+        (void)hasdynamic;
+    };
 
 protected:
 
@@ -730,6 +740,7 @@ public:
      * EGS_BaseSource::addState() and EGS_BaseSource::resetCounter().
      */
     virtual bool storeFluenceState(ostream &data_out) const {
+        (void)data_out;
         return true;
     };
 
@@ -794,6 +805,7 @@ public:
      * setState(), storeState(), resetCounter() and addState().
      */
     virtual bool addFluenceData(istream &data) {
+        (void)data;
         return true;
     }
 
@@ -820,6 +832,7 @@ public:
      * setState(), storeState(), resetCounter() and addState().
      */
     virtual bool setFluenceState(istream &data) {
+        (void)data;
         return true;
     };
 

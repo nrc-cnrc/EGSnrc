@@ -813,7 +813,7 @@ void MCompiler::setLanguage(Language l){
     switch(l){
       case F:
         the_name = "gfortran";
-        optimiz = "-O2 -mtune=native -mcmodel=medium";
+        optimiz = "-O2 -mtune=native -mcmodel=medium -std=legacy";
         break;
       case C:
         the_name = "gcc";
