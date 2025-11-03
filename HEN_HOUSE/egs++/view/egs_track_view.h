@@ -144,8 +144,8 @@ protected:
 
     bool        m_vis_particle[3];  // Extra make indices 1-3 incl.
 
-    EGS_ParticleTrack::Vertex  *m_points[3]; // Data from file
-    int        *m_index[3];       // Pointers to the starts of each track set
+    vector<EGS_ParticleTrack::Vertex> m_points[3]; // Data from file
+    vector<int> m_index[3];       // Pointers to the starts of each track set
     size_t      m_tracks[3];      // Number of tracks in each index
 
     vector<size_t> trackIndices;
