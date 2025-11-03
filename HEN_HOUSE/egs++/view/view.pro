@@ -52,7 +52,7 @@ FORMS           = saveimage.ui clippingplanes.ui viewcontrol.ui
 win32 {
     CONFIG	+= qt warn_off release windows exceptions_off thread
     DEFINES += WIN32
-    DEFINES += VDEBUG
+    #DEFINES += VDEBUG
     RC_FILE = egs_view.rc
     LIBS	+= ../dso/$$my_machine/egspp.lib
     DESTDIR = ../dso/$$my_machine
@@ -99,9 +99,9 @@ unix {
 
 # Use c++14 for gcc 5 or higher
 greaterThan(QMAKE_GCC_MAJOR_VERSION, 4) {
-    QMAKE_CXXFLAGS+=-std=c++14
+    QMAKE_CXXFLAGS+=-std=c++14 -Wno-deprecated-copy
 } else {
-    QMAKE_CXXFLAGS+=-std=c++11
+    QMAKE_CXXFLAGS+=-std=c++11 -Wno-deprecated-copy
 }
 
 UI_DIR = .ui/$$my_machine

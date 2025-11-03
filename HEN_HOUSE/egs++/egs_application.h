@@ -1142,12 +1142,15 @@ public:
         return geometry->getMediumName(ind);
     };
     virtual EGS_Float getMediumRho(int ind) {
+        (void)ind;
         return -1.0;
     };
     virtual EGS_Float getEdep() {
         return 0.0;
     };
-    virtual void setEdep(EGS_Float edep) {};
+    virtual void setEdep(EGS_Float edep) {
+        (void)edep;
+    };
     virtual EGS_Float getEcut() {
         return 0.0;
     };
@@ -1161,9 +1164,15 @@ public:
     //************************************************
     // For use with ausgab radiative splitting objects
     //************************************************
-    virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
-    virtual void setRussianRoulette(const EGS_Float &iSwitchRR) {};
-    virtual void splitTopParticleIsotropically(const EGS_Float &fsplit) {}
+    virtual void setRadiativeSplitting(const EGS_Float &nsplit) {
+        (void)nsplit;
+    };
+    virtual void setRussianRoulette(const EGS_Float &iSwitchRR) {
+        (void)iSwitchRR;
+    };
+    virtual void splitTopParticleIsotropically(const EGS_Float &fsplit) {
+        (void)fsplit;
+    }
 
     //************************************************************
     // Utility functions for use with ausgab fluence scoring objects
@@ -1173,6 +1182,8 @@ public:
     };
 
     virtual EGS_Interpolator *getDEDX(const int &imed, const int &iq) {
+        (void)imed;
+        (void)iq;
         return 0;
     };
 
@@ -1188,9 +1199,15 @@ public:
         return source->getEmax();
     }
 
-    virtual void setLatch(const int &ip, const int &latch) {};
+    virtual void setLatch(const int &ip, const int &latch) {
+        (void)ip;
+        (void)latch;
+    };
 
-    virtual void incLatch(const int &ip, const int &increment) {};
+    virtual void incLatch(const int &ip, const int &increment) {
+        (void)ip;
+        (void)increment;
+    };
 
     virtual int getNp() {
         return 0;
@@ -1203,7 +1220,9 @@ public:
     //************************************************************
     // Utility function for ausgab phase space scoring objects
     //************************************************************
-    virtual void setLatch(int latch) {};
+    virtual void setLatch(int latch) {
+        (void)latch;
+    };
 
     bool containsDynamic() {
         bool hasDynamic = false;
