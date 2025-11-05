@@ -40,6 +40,7 @@
 #include "egs_libconfig.h"
 #include "egs_math.h"
 #include "egs_functions.h"
+#include "egs_vector.h"
 
 class EGS_Input;
 
@@ -75,7 +76,7 @@ public:
      * #ip is set to point beyond the array (so that at the next call
      * of getUniform() #rarray gets filled via a call to fillArray() ).
      */
-    EGS_RandomGenerator(int n=128);
+    explicit EGS_RandomGenerator(int n = 128);
 
     /*! \brief Copy constructor.
      *
@@ -84,7 +85,7 @@ public:
      */
     EGS_RandomGenerator(const EGS_RandomGenerator &r) : np(0) {
         copyBaseState(r);
-    };
+    }
 
     /*! \brief Destructor.
      *
@@ -92,7 +93,7 @@ public:
      */
     virtual ~EGS_RandomGenerator() {
         delete [] rarray;
-    };
+    }
 
     /*! \brief Returns a random number uniformly distributed between
      * zero (inclusive) and 1 (exclusive).
@@ -102,11 +103,11 @@ public:
      */
     inline EGS_Float getUniform() {
         if (ip >= np) {
-            fillArray(np,rarray);
+            fillArray(np, rarray);
             ip = 0;
         }
         return rarray[ip++];
-    };
+    }
 
     /*! \brief Returns the number of random numbers generated so far.
      *
@@ -115,7 +116,7 @@ public:
      */
     EGS_I64 numbersGenerated() const {
         return count;
-    };
+    }
 
     /*! \brief Returns the number of random numbers used so far.
      *
@@ -123,13 +124,13 @@ public:
      * numbers in the array #rarray may not have been used yet.
      */
     EGS_I64 numbersUsed() const {
-        return ip<np ? count - np + ip : count;
-    };
+        return ip <np ? count - np + ip : count;
+    }
 
     /*! \brief Sets \a cphi and \a sphi to the cosine and sine of a random
-     * angle uniformely distributed between 0 and \f$2 \pi \f$.
+     * angle uniformly distributed between 0 and \f$2 \pi \f$.
      *
-     * The default implementation uses a box method as this is faster on
+     * The default implementation uses a box method since this is faster on
      * AMD and Intel CPUs. If the preprocessor macro FAST_SINCOS is defined,
      * then an azimuthal angle \f$\phi\f$ is drawn uniformly between
      * 0 and \f$2 \pi \f$ and \a cphi and \a sphi are calculated using the
@@ -137,7 +138,7 @@ public:
      */
     inline void getAzimuth(EGS_Float &cphi, EGS_Float &sphi) {
 #ifndef FAST_SINCOS
-        register EGS_Float xphi,xphi2,yphi,yphi2,rhophi;
+        EGS_Float xphi, xphi2, yphi, yphi2, rhophi;
         do {
             xphi = 2*getUniform() - 1;
             xphi2 = xphi*xphi;
@@ -153,7 +154,7 @@ public:
         cphi = cos(phi);
         sphi = sin(phi);
 #endif
-    };
+    }
 
     /*! \brief Returns a Gaussian distributed random number with mean zero
      * and standard deviation 1.
@@ -165,11 +166,38 @@ public:
         }
         EGS_Float r = sqrt(-2*log(1-getUniform()));
         EGS_Float cphi, sphi;
-        getAzimuth(cphi,sphi);
+        getAzimuth(cphi, sphi);
         have_x = true;
         the_x = r*sphi;
         return r*cphi;
-    };
+    }
+
+    /*! \brief
+    Get a random unit vector uniformly distributed across the unit sphere.
+    */
+    inline EGS_Vector randomDir() {
+        EGS_Float mu = 2 * getUniform() - 1;
+        EGS_Float phi = (2 * getUniform() - 1) * M_PI;
+        EGS_Float sin_theta = sqrt(1-mu*mu);
+        // [sin(θ) cos(φ), sin(θ) sin(φ), cos(θ)]
+        return {sin_theta * cos(phi), sin_theta * sin(phi), mu};
+    }
+
+    /*! \brief
+    Get a random unit vector orthogonal to `other`.
+    */
+    inline EGS_Vector randomDirOrthogonalTo(EGS_Vector other) {
+
+        other.normalize();
+        EGS_Vector rand_dir = randomDir();
+        EGS_Vector parallel_part = (rand_dir * other) * other;
+        EGS_Vector perp_part = rand_dir - parallel_part;
+        if (perp_part.length2() < 1e-5) {
+            // avoid zero division error
+            return randomDirOrthogonalTo(other);
+        }
+        return perp_part.normalized();
+    }
 
     /*! \brief Create a RNG object from the information pointed to by
      * \a inp and return a pointer to it.
@@ -185,7 +213,7 @@ public:
      * but this functionality is not there yet. For now, the only RNG
      * type available is a ranmar RNG.
      */
-    static EGS_RandomGenerator *createRNG(EGS_Input *inp, int sequence=0);
+    static EGS_RandomGenerator *createRNG(EGS_Input *inp, int sequence = 0);
 
     /*! \brief Returns a pointer to the default egspp RNG.
      *
@@ -193,7 +221,7 @@ public:
      * by increasing the second ranmar default initial seed by
      * \a sequence.
      */
-    static EGS_RandomGenerator *defaultRNG(int sequence=0);
+    static EGS_RandomGenerator *defaultRNG(int sequence = 0);
 
     /*! \brief Fill the array of \a n elements pointed to by \a array with
      * random numbers.
@@ -229,7 +257,7 @@ public:
     bool addState(istream &data);
     void resetCounter() {
         count = 0;
-    };
+    }
     //@}
 
     /*! \brief Get a copy of the RNG */
@@ -253,7 +281,7 @@ public:
      * some information about the RNG being used in ther simulation.
      * This is handy for EGSnrc C++ applications.
      */
-    virtual void describeRNG() const {};
+    virtual void describeRNG() const {}
 
 protected:
 
@@ -290,7 +318,7 @@ protected:
     int  baseSize() const {
         return 2*sizeof(EGS_I32) + sizeof(EGS_I64) + sizeof(bool) +
                sizeof(EGS_Float) + np*sizeof(EGS_Float);
-    };
+    }
 
 
 private:
