@@ -258,7 +258,7 @@ realclean:
 
 TEST_DIR = .$(DSEP)tests$(DSEP)
 
-# Find the files in the ./tests/ directory 
+# Find the files in the ./tests/ directory
 # that start with test_ and end with .cpp
 UNIT_TEST_SRCS = $(wildcard $(HEN_HOUSE)egs++/tests/test_*.cpp)
 UNIT_TEST_NAMES = $(basename $(notdir $(UNIT_TEST_SRCS)))
@@ -299,11 +299,11 @@ $(TEST_DIR)run_tests: $(UNIT_TEST_SRCS) $(SRC_CPP_EXIST) $(SRC_H_EXIST)
 		$(TEST_DIR)catch2_main.cpp $(UNIT_TEST_SRCS) $(lib_link2) -lgcov -o $(TEST_DIR)run_tests
 
 # Build the tests, with keyword
-tests: $(TEST_DIR)run_tests
+tests: compile_test_dso $(TEST_DIR)run_tests
 
 # Run the tests
 #
-# These create .gcda files but they have the wrong signature prefix 
+# These create .gcda files but they have the wrong signature prefix
 # for gcov. The loops fix the prefix (at runtime!) to match with what gcov expects
 run-tests: tests
 	@echo "Running the test suite"
@@ -321,7 +321,7 @@ run-tests: tests
 
 # Pull out the coverage details from the tests
 
-coverage: compile_test_dso $(TEST_DIR)fix_coverage_report run-tests 
+coverage: $(TEST_DIR)fix_coverage_report run-tests
 	@echo "Building coverage report for test suite"
 	@-gcov --demangled-names $(TESTED_CLASSES) -q -o $(dso)_test >/dev/null 2>&1 || true
 	@-gcov --demangled-names $(UNIT_TEST_NAMES) -q -o $(TEST_DIR) >/dev/null 2>&1 || true
@@ -331,7 +331,7 @@ coverage: compile_test_dso $(TEST_DIR)fix_coverage_report run-tests
 
 $(TEST_DIR)fix_coverage_report: $(TEST_DIR)fix_gcov.cpp
 	@echo "Compiling tool to fix gcov handling of uninstrumented functions"
-	@$(CXX) $(TEST_DIR)fix_gcov.cpp -std=c++20 -o $(TEST_DIR)fix_coverage_report 
+	@$(CXX) $(TEST_DIR)fix_gcov.cpp -std=c++20 -o $(TEST_DIR)fix_coverage_report
 
 clean-tests:
 	$(REMOVE) -r $(TEST_DIR)*.gcda $(TEST_DIR)*.gcno $(TEST_DIR)run_tests \
