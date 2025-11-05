@@ -1,0 +1,86 @@
+########################################################################
+#
+# EGSnrc egs++ cavity application simulating a CT scanner with air, with al equivalent ct source
+#
+########################################################################
+# 
+# Author: Marie-Luise Kuhlmann, 2021
+#
+########################################################################
+
+:start media definition:    
+    ### energy transport cutoffs    
+    ae = 0.512    
+    ue = 1.000
+    ap = 0.001    
+    up = 1.000   
+
+    :start AIR:        
+        density correction file     = air_dry_nearsealevel
+        bremsstrahlung correction   = NRC    
+    :stop AIR:
+    
+:stop media definition:
+
+
+:start geometry definition:
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 150
+        :start media input:
+            media = AIR
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_box
+
+:stop geometry definition:
+
+:start source definition:
+    :start source:
+        library = egs_al_eq_ct_source
+        name = my_al_equivalent_ct_source
+        distance = 54.1 # Abstand Quelle-Isontrum in cm
+        collimation = 4 # Kollimation in cm
+        bowtie distribution = 201110_attenuationData_100kV_body.dat # Bowtie distribution
+        al equivalent bowtie = 201110_equivBowtie_100kV_body.dat # Al equivalenter Bowtie
+        :start spectrum:
+            type = tabulated spectrum
+            spectrum file = 201110_HVLDyn_spec_100kV_body.spectrum # base spectrum
+            charge = 0 # photons
+        :stop spectrum:
+        
+    :stop source:
+
+    simulation source = my_al_equivalent_ct_source
+
+:stop source definition:
+
+################################ Run control
+:start run control:
+
+    ncase = 1000 
+
+:stop run control:
+
+################################ Ausgabeobject 
+:start ausgab object definition:
+    :start ausgab object:
+        name = tracks
+        library = egs_track_scoring
+        start scoring   = 0
+        stop  scoring   = 5000
+        buffer size     = 5000
+    :stop ausgab object:
+
+:stop ausgab object definition:
+
+
+###################################### Transport parameters
+:start MC transport parameter:
+    Global ECUT = 0.521
+    Global PCUT = 0.001
+    Compton cross sections = xcom
+    Rayleigh scattering = On 
+:stop MC transport parameter:
