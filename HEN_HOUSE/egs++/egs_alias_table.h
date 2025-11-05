@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Marc Chamberland
+#                   Marie-Luise Kuhlmann
 #
 ###############################################################################
 */
@@ -147,6 +148,26 @@ public:
     EGS_Float getMaximum() const {
         return xi[n-1];
     };
+
+    /*! \brief Gets abscissa values of this alias table object. */
+    EGS_Float * getX() const {
+        return xi;
+    };
+
+    /*! \brief Gets ordinate values of this alias table object. */
+    EGS_Float * getF() const {
+        return fi;
+    };
+
+    /*! \brief Gets length of this alias table object. */
+    int get_length() const {
+        if (type == 0){
+            return n;
+        }
+        else{
+            return np;
+        }
+    }
 
 private:
 

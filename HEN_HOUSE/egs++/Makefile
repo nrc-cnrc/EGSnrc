@@ -34,6 +34,7 @@
 #                   Max Orok
 #                   Reid Townson
 #                   Alexandre Demelo
+#                   Marie-Luise Kuhlmann
 #
 ###############################################################################
 
@@ -73,7 +74,7 @@ source_libs = egs_collimated_source egs_isotropic_source egs_parallel_beam \
               egs_point_source egs_source_collection egs_transformed_source \
               egs_beam_source egs_phsp_source egs_angular_spread \
               iaea_phsp_source egs_radionuclide_source egs_dynamic_source \
-              egs_fano_source egs_focal_spot_source
+              egs_fano_source egs_focal_spot_source egs_al_eq_ct_source
 
 shape_libs = egs_circle egs_ellipse egs_extended_shape egs_gaussian_shape \
              egs_line_shape egs_polygon_shape egs_rectangle egs_shape_collection \
@@ -136,7 +137,7 @@ $(DSO1)egs_alias_table.$(obje): egs_alias_table.cpp egs_alias_table.h \
 $(DSO1)egs_object_factory.$(obje): egs_object_factory.cpp egs_object_factory.h \
     egs_library.h egs_input.h $(config1h)
 
-$(DSO1)egs_spectra.$(obje): egs_spectra.cpp egs_base_source.h $(config1h) \
+$(DSO1)egs_spectra.$(obje): egs_spectra.cpp egs_spectra.h egs_base_source.h $(config1h) \
     egs_rndm.h egs_object_factory.h egs_alias_table.h egs_vector.h \
     egs_input.h egs_math.h egs_ensdf.h
 
