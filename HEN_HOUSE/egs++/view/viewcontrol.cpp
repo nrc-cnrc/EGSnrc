@@ -216,6 +216,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     egsinpEdit = new EGS_Editor();
     editorLayout->addWidget(egsinpEdit);
     highlighter = new EGS_Highlighter(egsinpEdit->document());
+    egsinpEdit->setDarkMode(highlighter->isDarkMode());
 
 
     // Load the egs_application library
@@ -393,14 +394,14 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
 
-        // Add the denstiy correction files 
+        // Add the denstiy correction files
         shared_ptr<EGS_BlockInput> mediaBlockInput = inputStruct->getBlockInput("media definition");
         shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->getBlockInput("myMediumName");
 
         string compound_dir;
         EGS_Application::checkEnvironmentVar(appc,appv,"-H","--hen-house","HEN_HOUSE", compound_dir);
         vector<string> densityCorrectionFiles = findDensityCorrectionInputs(compound_dir);
-        
+
         mediumBlock->addSingleInput("density correction file", false, "", densityCorrectionFiles);
     }
 
