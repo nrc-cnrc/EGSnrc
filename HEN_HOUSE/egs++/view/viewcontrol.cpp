@@ -19,7 +19,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
-###############################################################################
+####################################################################8###########
 #
 #  Author:          Iwan Kawrakow, 2005
 #
@@ -227,6 +227,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     egsinpEdit = new EGS_Editor();
     editorLayout->addWidget(egsinpEdit);
     highlighter = new EGS_Highlighter(egsinpEdit->document());
+    egsinpEdit->setDarkMode(highlighter->isDarkMode());
 
 
     // Load the egs_application library

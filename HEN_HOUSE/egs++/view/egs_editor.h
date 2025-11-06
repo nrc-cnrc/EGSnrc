@@ -57,6 +57,7 @@ public:
     int lineNumberAreaWidth();
     void setInputStruct(shared_ptr<EGS_InputStruct> inp);
     void validateEntireInput();
+    void setDarkMode(bool isDarkMode);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -86,6 +87,7 @@ private:
     QListView *popup;
     QStringListModel *model;
     bool popupGrabbing;
+    bool isDarkMode = false;
 };
 
 

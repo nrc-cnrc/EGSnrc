@@ -41,6 +41,7 @@ class EGS_Highlighter : public QSyntaxHighlighter {
     Q_OBJECT
 public:
     explicit EGS_Highlighter(QTextDocument *parent = nullptr);
+    bool isDarkMode() const;
 
 protected:
     void highlightBlock(const QString &text) override;
@@ -52,19 +53,18 @@ private:
     };
     QVector<HighlightingRule> highlightingRules;
 
-    QRegularExpression  commentStartExpression,
-                        commentEndExpression;
+    QTextCharFormat keywordFormat;
+    QTextCharFormat attributeFormat;
+    QTextCharFormat numberFormat;
+    QTextCharFormat definitionFormat;
+    QTextCharFormat nameFormat;
+    QTextCharFormat quotationFormat;
+    QTextCharFormat squotationFormat;
+    QTextCharFormat singleLineCommentFormat;
+    QTextCharFormat multiLineCommentFormat;
 
-    QTextCharFormat keywordFormat,
-                    attributeFormat,
-                    numberFormat,
-                    definitionFormat,
-                    nameFormat,
-                    singleLineCommentFormat,
-                    multiLineCommentFormat,
-                    quotationFormat,
-                    squotationFormat,
-                    functionFormat;
+    QRegularExpression commentStartExpression;
+    QRegularExpression commentEndExpression;
 
 signals:
 
