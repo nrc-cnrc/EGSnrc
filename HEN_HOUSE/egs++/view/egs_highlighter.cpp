@@ -30,62 +30,124 @@
 
 #include "egs_highlighter.h"
 
-EGS_Highlighter::EGS_Highlighter(QTextDocument *parent) : QSyntaxHighlighter(parent) {
+#include <QTextDocument>
+#include <QApplication>
+#include <QPalette>
+#include <QProcess>
+#include <QSettings>
+#include <QColor>
+#include <QDir>
 
+bool EGS_Highlighter::isDarkMode() const {
+#ifdef Q_OS_WIN
+    QSettings settings(
+        "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+        QSettings::NativeFormat);
+    return settings.value("AppsUseLightTheme", 1).toInt() == 0;
+
+#elif defined(Q_OS_MAC)
+    QProcess process;
+    process.start("defaults", {"read", "-g", "AppleInterfaceStyle"});
+    process.waitForFinished(100);
+    QString output = process.readAllStandardOutput().trimmed();
+    return output.compare("Dark", Qt::CaseInsensitive) == 0;
+
+#elif defined(Q_OS_LINUX)
+    // Try GNOME
+    {
+        QProcess process;
+        process.start("gsettings", {"get", "org.gnome.desktop.interface", "color-scheme"});
+        process.waitForFinished(100);
+        QString output = process.readAllStandardOutput();
+        if (output.contains("dark", Qt::CaseInsensitive))
+            return true;
+    }
+    // Try KDE
+    {
+        QSettings kdeSettings(QDir::homePath() + "/.config/kdeglobals", QSettings::IniFormat);
+        QString colorScheme = kdeSettings.value("General/ColorScheme", "").toString();
+        if (colorScheme.contains("dark", Qt::CaseInsensitive))
+            return true;
+    }
+    // Fallback heuristic: check app palette brightness
+    QColor bg = QApplication::palette().color(QPalette::Base);
+    int brightness = qRound(0.299 * bg.red() + 0.587 * bg.green() + 0.114 * bg.blue());
+    return brightness < 128;
+
+#else
+    // Generic fallback
+    QColor bg = QApplication::palette().color(QPalette::Base);
+    int brightness = qRound(0.299 * bg.red() + 0.587 * bg.green() + 0.114 * bg.blue());
+    return brightness < 128;
+#endif
+}
+
+EGS_Highlighter::EGS_Highlighter(QTextDocument *parent)
+    : QSyntaxHighlighter(parent)
+{
+    bool dark = isDarkMode();
+
+    // ---------- Define color palettes ----------
+    QColor keywordColor   = dark ? QColor("#ff8080") : QColor(Qt::darkRed);
+    QColor attrColor      = dark ? QColor("#82aaff") : QColor(Qt::darkBlue);
+    QColor numberColor    = dark ? QColor("#c3e88d") : QColor(Qt::darkGreen);
+    QColor defColor       = dark ? QColor("#c792ea") : QColor(Qt::darkMagenta);
+    QColor nameColor      = dark ? QColor("#82aaff") : QColor(Qt::darkBlue);
+    QColor quoteColor     = dark ? QColor("#f07178") : QColor(Qt::darkRed);
+    QColor squoteColor    = dark ? QColor("#ff5370") : QColor(Qt::red);
+    QColor commentColor   = dark ? QColor("#808080") : QColor(Qt::gray);
+
+    // ---------- Define highlighting rules ----------
     HighlightingRule rule;
 
-    keywordFormat.setForeground(Qt::darkRed);
+    keywordFormat.setForeground(keywordColor);
     keywordFormat.setFontWeight(QFont::Bold);
-
     QStringList keywordPatterns;
     keywordPatterns << ":(start|stop).*\\S:";
-
-    foreach (const QString &pattern, keywordPatterns) {
+    for (const QString &pattern : keywordPatterns) {
         rule.pattern = QRegularExpression(pattern);
         rule.format = keywordFormat;
         highlightingRules.append(rule);
     }
 
-    attributeFormat.setForeground(Qt::darkBlue);
+    attributeFormat.setForeground(attrColor);
     rule.pattern = QRegularExpression(".*=");
     rule.format = attributeFormat;
     highlightingRules.append(rule);
 
-    numberFormat.setForeground(Qt::darkGreen);
+    numberFormat.setForeground(numberColor);
     rule.pattern = QRegularExpression("[+-]?(\\d*\\.)?\\d");
     rule.format = numberFormat;
     highlightingRules.append(rule);
 
-    definitionFormat.setForeground(Qt::darkMagenta);
+    definitionFormat.setForeground(defColor);
     definitionFormat.setFontWeight(QFont::Bold);
     rule.pattern = QRegularExpression(":(start|stop).*(definition|MC transport parameter|run control|scoring options):");
     rule.format = definitionFormat;
     highlightingRules.append(rule);
 
-    nameFormat.setForeground(Qt::darkBlue);
+    nameFormat.setForeground(nameColor);
     nameFormat.setFontWeight(QFont::Bold);
     rule.pattern = QRegularExpression("( )*name( )*=.*");
     rule.format = nameFormat;
     highlightingRules.append(rule);
 
-    quotationFormat.setForeground(Qt::darkRed);
+    quotationFormat.setForeground(quoteColor);
     rule.pattern = QRegularExpression("\".*\"");
     rule.format = quotationFormat;
     highlightingRules.append(rule);
 
-    squotationFormat.setForeground(Qt::red);
+    squotationFormat.setForeground(squoteColor);
     rule.pattern = QRegularExpression("\'.*\'");
     rule.format = squotationFormat;
     highlightingRules.append(rule);
 
-    // Comment highlighting must come last
-    singleLineCommentFormat.setForeground(Qt::gray);
+    singleLineCommentFormat.setForeground(commentColor);
     rule.pattern = QRegularExpression("(#|//|!)[^\n]*");
     rule.format = singleLineCommentFormat;
     highlightingRules.append(rule);
 
-    // For multi-line comments
-    multiLineCommentFormat.setForeground(Qt::gray);
+    multiLineCommentFormat.setForeground(commentColor);
     commentStartExpression = QRegularExpression("/\\*");
     commentEndExpression = QRegularExpression("\\*/");
 }
