@@ -29,6 +29,8 @@
 ###############################################################################
 */
 
+#include <QPalette>
+
 #include "egs_editor.h"
 #include "egs_functions.h"
 
@@ -64,6 +66,21 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
     popup->setParent(nullptr);
     popup->setFocusPolicy(Qt::StrongFocus);
     popup->installEventFilter(this);
+
+    // Get the background color of the current text edit
+    QColor baseColor = this->palette().color(QPalette::Base);
+
+    // Make it slightly lighter (e.g., 110% brightness)
+    QColor popupColor = baseColor.lighter(110);
+
+    // Apply it to the popup
+    QPalette p = popup->palette();
+    p.setColor(QPalette::Base, popupColor);
+    p.setColor(QPalette::Window, popupColor);  // for some styles
+    popup->setPalette(p);
+
+    // Optional: ensure the background is filled
+    popup->setAutoFillBackground(true);
 
 
     // The Qt::Popup option seems to take control of mouse + key inputs
@@ -156,7 +173,9 @@ void EGS_Editor::highlightCurrentLine() {
     if (!isReadOnly()) {
         QTextEdit::ExtraSelection selection;
 
-        QColor lineColor = QColor(Qt::lightGray).lighter(120);
+        QColor lineColor = isDarkMode
+            ? QColor("#3a3d41")   // subtle dark gray highlight
+            : QColor(Qt::lightGray).lighter(120);
 
         selection.format.setBackground(lineColor);
         selection.format.setProperty(QTextFormat::FullWidthSelection, true);
@@ -182,6 +201,10 @@ void EGS_Editor::validateEntireInput() {
         cursor.movePosition(QTextCursor::NextBlock);
         validateLine(cursor);
     }
+}
+
+void EGS_Editor::setDarkMode(bool isDark) {
+    isDarkMode = isDark;
 }
 
 void EGS_Editor::validateLine(QTextCursor cursor) {
@@ -805,7 +828,6 @@ QString EGS_Editor::getBlockTitle(QTextCursor cursor) {
 
     vector<QString> innerList;
     QString blockTitle;
-    bool withinOtherBlock = false;
 
     // Starting at the current line, starting iterating in reverse through
     // the previous lines
@@ -822,7 +844,6 @@ QString EGS_Editor::getBlockTitle(QTextCursor cursor) {
                 if (innerList.size() > 0 && blockTitle == innerList.back()) {
                     innerList.pop_back();
                     blockTitle.clear();
-                    withinOtherBlock = false;
                 }
                 else {
                     break;
@@ -840,7 +861,6 @@ QString EGS_Editor::getBlockTitle(QTextCursor cursor) {
             if (endPos > 0) {
                 QString stopTitle = line.mid(pos, endPos-pos);
                 innerList.push_back(stopTitle);
-                withinOtherBlock = true;
             }
         }
     }
