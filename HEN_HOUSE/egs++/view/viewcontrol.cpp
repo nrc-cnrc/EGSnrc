@@ -61,6 +61,7 @@
 #include <qprogressdialog.h>
 #include <QTextStream>
 #include <QMenuBar>
+#include <QSplitter>
 
 #include <cmath>
 #include <cstdlib>
@@ -184,8 +185,65 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     energyScaling = this->energyScalingCheckbox->isChecked();
     initColorSwatches();
 
-    gview = new ImageWindow(this,"gview");
-    gview->resize(512,512);
+    // Create gview as child (splitter will manage it)
+    gview = new ImageWindow(this, "gview");
+
+    // Create horizontal splitter
+    QSplitter *splitter = new QSplitter(Qt::Horizontal);
+    splitter->addWidget(this);   // left pane
+    splitter->addWidget(gview);  // right pane
+
+    // Initial relative widths
+    int leftWidth = 700;
+    int rightWidth = 600;
+
+    // Get screen info
+    QScreen *screen = QApplication::screenAt(QCursor::pos()); // screen where cursor is
+    if (!screen)
+        screen = QApplication::primaryScreen();
+
+    QRect available = screen->availableGeometry();
+
+    // --- Compute usable height accounting for menu bar ---
+    int totalHeight = static_cast<int>(available.height() * 0.75);
+
+    // If left pane is a QMainWindow, subtract menu bar / toolbars height
+    int menuHeight = 0;
+    if (auto mw = qobject_cast<QMainWindow*>(this)) {
+        menuHeight = mw->menuBar() ? mw->menuBar()->height() : 0;
+        menuHeight += mw->statusBar() ? mw->statusBar()->height() : 0;
+        // You can also add toolbars if present:
+        for (QToolBar* tb : mw->findChildren<QToolBar*>()) {
+            menuHeight += tb->height();
+        }
+    }
+
+    // Height available for the splitter contents
+    int contentHeight = totalHeight - menuHeight;
+
+    // Scale widths if total width exceeds screen width
+    int totalWidth = leftWidth + rightWidth;
+    if (totalWidth > available.width()) {
+        double scaleFactor = static_cast<double>(available.width()) / totalWidth;
+        leftWidth  = static_cast<int>(leftWidth * scaleFactor);
+        rightWidth = static_cast<int>(rightWidth * scaleFactor);
+        totalWidth = leftWidth + rightWidth;
+    }
+
+    // Center the window on screen
+    int leftX = available.left() + (available.width() - totalWidth) / 2;
+    int topY  = available.top() + (available.height() - totalHeight) / 2;
+
+    // Apply geometry to the splitter
+    splitter->setGeometry(leftX, topY, totalWidth, contentHeight);
+
+    // Set initial splitter sizes
+    splitter->setSizes({leftWidth, rightWidth});
+
+    // Show the splitter
+    splitter->show();
+
+    // Turn on or off the region list popup in the visualization
     gview->showRegions(this->showRegionsCheckbox->isChecked());
 
     // connect signals and slots for mouse navigation
