@@ -709,12 +709,14 @@ GeometryViewControl::~GeometryViewControl() {
             delete EGS_AusgabObject::getObject(i);
         }
     }
+    /* These were causing a double-delete segmentation fault
     if (egsinpEdit) {
         delete egsinpEdit;
     }
     if (highlighter) {
         delete highlighter;
     }
+    */
 }
 
 void GeometryViewControl::selectInput() {
@@ -2597,7 +2599,7 @@ void GeometryViewControl::setRotationPoint(EGS_Vector hitCoord) {
 }
 
 void GeometryViewControl::quitApplication() {
-    delete gview;
+    //delete gview;
     close();
 }
 
