@@ -488,6 +488,18 @@ public:
         }
     };
 
+    // Explicitly declare the copy assignment operator
+    EGS_AffineTransform& operator=(const EGS_AffineTransform& other) {
+        if (this != &other) { // Protect against self-assignment
+            // Copy all member variables manually:
+            this->R = other.R;
+            this->t = other.t;
+            this->has_t = other.has_t;
+            this->has_R = other.has_R;
+        }
+        return *this;
+    };
+
     /*! \brief Returns the multiplication of the invoking object with \a tr.
 
       The multiplication of 2 affine transformations \f$T_1=(R_1,\vec{t_1})\f$

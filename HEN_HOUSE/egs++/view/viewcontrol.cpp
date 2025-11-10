@@ -3530,7 +3530,7 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         int startindex=1,endindex=1;
 
         // loop through the photons time index list one at a time
-        for (int j=0; j<timelist_p.size(); j++) {
+        for (size_t j=0; j<timelist_p.size(); j++) {
 
             // check whether the jth photon time index is within the +/- half
             // time window range centered at the current time index
@@ -3572,7 +3572,7 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         endindex=1;
 
         // loop through the electrons time index list one at a time
-        for (int j=0; j<timelist_e.size(); j++) {
+        for (size_t j=0; j<timelist_e.size(); j++) {
 
             // check whether the jth electron time index is within the +/- half
             // time window range centered at the current time index
@@ -3612,7 +3612,7 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
         startindex=1;
         endindex=1;
         // loop through the positron time index list one at a time
-        for (int j=0; j<timelist_po.size(); j++) {
+        for (size_t j=0; j<timelist_po.size(); j++) {
             // check whether the jth positron time index is within the +/- half
             // time window range centered at the current time index
             if (timelist_po[j]<(slidertime+(t_window/2)) && timelist_po[j]>(slidertime-(t_window/2))) {

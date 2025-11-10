@@ -180,7 +180,9 @@ public:
      *
      * 2) it is reimplemented in the dynamic geometry class. This is where the
      *    code will find the current (non static) state of the geometry. */
-    virtual void getNextGeom(EGS_RandomGenerator *rndm) {};
+    virtual void getNextGeom(EGS_RandomGenerator *rndm) {
+        (void)rndm;
+    };
 
     /*! \brief Find the bin to which \a xp belongs, given \a np bin edges \a p
 
@@ -270,6 +272,7 @@ public:
       EGS_cSphericalShell, EGS_AEnvelope, and EGS_RZGeometry
     */
     virtual EGS_Float getVolume(int ireg) {
+        (void)ireg;
         return 1.0;
     }
 
@@ -279,6 +282,8 @@ public:
       idir=1--> Y-boundaries, idir=2--> Z-boundaries
     */
     virtual EGS_Float getBound(int idir, int ind) {
+        (void)idir;
+        (void)ind;
         return 0.0;
     }
 
@@ -288,6 +293,7 @@ public:
       idir=1--> Y-boundaries, idir=2--> Z-boundaries
     */
     virtual int getNRegDir(int idir) {
+        (void)idir;
         return 0;
     }
 
@@ -764,7 +770,9 @@ public:
     /*! \brief Set the labels from an input string */
     int setLabels(const string &inp);
 
-    virtual void updatePosition(EGS_Float time) { };
+    virtual void updatePosition(EGS_Float time) {
+        (void)time;
+    };
 
     /* This method is essentially used to determine whether the simulation
      * geometry contains a dynamic geometry. Like getNextGeom(), the only
@@ -774,7 +782,9 @@ public:
      * call on its base geometry. This function was conceived to be used in the
      * view/viewcontrol (to determine whether time index objects are visible or
      * hidden), and track scoring */
-    virtual void containsDynamic(bool &hasdynamic) { };
+    virtual void containsDynamic(bool &hasdynamic) {
+        (void)hasdynamic;
+    };
 
 protected:
 

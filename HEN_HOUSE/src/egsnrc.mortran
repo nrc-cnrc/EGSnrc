@@ -2475,7 +2475,7 @@ IF( ~getd ) [
     return;
 ]
 
-$egs_info('(/a$)','Bound Compton scattering requested, reading data ......');
+$egs_info('(/a,$)','Bound Compton scattering requested, reading data ......');
 rewind($INCOHUNIT);
 DO j=1,18 [ read($INCOHUNIT,*); ]  "skip 1st 18 lines of comments"
 iz = 0;
@@ -5344,7 +5344,7 @@ data labels/'  K',' L1',' L2',' L3',
 /*********************************************
    Open PE shellwise data file photo_shellwise.data
  **********************************************/
-$egs_info('(/a$)',
+$egs_info('(/a,$)',
 ' Reading renormalized photoelectric cross sections ......');
 data_dir = $cstring(hen_house) // 'data' // $file_sep;
 pe_sw_file = $cstring(data_dir) // 'photo_shellwise.data';
@@ -6367,7 +6367,7 @@ IF( ~do_relax ) [
 
 $egs_info('(a/)',' Atomic relaxations requested! ');
 
-$egs_info('(a$)',' Reading simplified photo-absorption data .....');
+$egs_info('(a,$)',' Reading simplified photo-absorption data .....');
 
 got_data = .true.;
 rewind($PHOTOUNIT);
@@ -6393,7 +6393,7 @@ DO i=1,$MXELEMENT
 ]
 $egs_info('(a)',' Done');
 
-$egs_info('(/a$)',' Reading simplified relaxation data .....');
+$egs_info('(/a,$)',' Reading simplified relaxation data .....');
 read($PHOTOUNIT,*);
 DO i=1,$MXELEMENT [
         read($PHOTOUNIT,*) j,(relaxation_prob(k,i),k=1,19);   "K-shell"
@@ -6415,7 +6415,7 @@ DO i=1,$MXELEMENT [
         read($PHOTOUNIT,*) j,relaxation_prob(38,i);   "M-shell"
 ]
 $egs_info('(a)',' Done');
-$egs_info('(/a$)',' Reading parametrized XCOM photo cross section data .....');
+$egs_info('(/a,$)',' Reading parametrized XCOM photo cross section data .....');
 rewind($PHOCSUNIT);
 DO i=1,$MXELEMENT [
     read($PHOCSUNIT,*) j,edge_number(i);
@@ -8008,7 +8008,7 @@ character  data_dir*128,photo_file*140,pair_file*140,rayleigh_file*144,
 "Ali:photonuc, 1 line"
            photonuc_file*144;
 
-$egs_info('(/a$)','(Re)-initializing photon cross sections');
+$egs_info('(/a,$)','(Re)-initializing photon cross sections');
 $egs_info('(a,a/)',' with files from the series: ',
       prefix(:lnblnk1(prefix)));
 
@@ -8627,7 +8627,7 @@ $INTEGER i,j,k,ibin;
 
 ;COMIN/USEFUL/;
 
-write(*,'(a$)') '      preparing data for Rayleigh sampling ... ';
+write(*,'(a,$)') '      preparing data for Rayleigh sampling ... ';
 
 /* this to avoid NAN in the log(f(i)) below */
 DO i=1,ndat [IF (f(i) = 0.0) f(i) = zero();]
