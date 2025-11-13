@@ -50,7 +50,7 @@ using std::string;
 
 class EGS_Input;
 
-static void setShapeInputs(shared_ptr<EGS_BlockInput> shapePtr) {
+inline void setShapeInputs(shared_ptr<EGS_BlockInput> shapePtr) {
     auto libPtr = shapePtr->addSingleInput("library", false, "The type of shape, loaded by shared library in egs++/dso.");
     auto typePtr = shapePtr->addSingleInput("type", false, "The type of shape - this input includes only a small set of simple shapes. For more options, use the 'library' input instead.", {"point", "box", "sphere", "cylinder"});
 
@@ -180,6 +180,7 @@ public:
      * distribution using the random number generator \a rndm.
      */
     virtual EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
+        (void)rndm;
         egsFatal("You need to implement the getPoint function in your "
                  "derived class\n");
         return EGS_Vector();
@@ -244,7 +245,9 @@ public:
      *This function has a non-empty implementation in 2 cases.
      *1) it is re implemented in any composite shape, where it will call getNextShapePosition on all of its components
      *2) it is re implemented in the dynamic shape class. This is where the code will find the current (non static) state of the shape. */
-    virtual void getNextShapePosition(EGS_RandomGenerator *rndm) {};
+    virtual void getNextShapePosition(EGS_RandomGenerator *rndm) {
+        (void)rndm;
+    };
 
     /*! Get a random direction given a source position \a xo.
      *
@@ -260,6 +263,10 @@ public:
      */
     virtual void getPointSourceDirection(const EGS_Vector &xo,
                                          EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
+        (void)xo;
+        (void)rndm;
+        (void)u;
+        (void)wt;
         egsFatal("getPointSourceDirection: you have to implement this "
                  "method for the %s shape if you want to use it\n",otype.c_str());
     };
@@ -276,7 +283,9 @@ public:
 
     /*! \brief Update the position of the shape if it is in motion
      */
-    virtual void updatePosition(EGS_Float time) { };
+    virtual void updatePosition(EGS_Float time) {
+        (void)time;
+    };
 
 protected:
 
@@ -680,6 +689,8 @@ public:
     EGS_CylinderShape(const string &Name="",EGS_ObjectFactory *f=0) :
         EGS_BaseShape(), R(1), h(1), xo(), a(0,0,1),
         phi_min(0), phi_max(2*M_PI), has_phi(false) {
+        (void)Name;
+        (void)f;
         otype="cylinder";
     };
     EGS_CylinderShape(EGS_Float r, EGS_Float H,

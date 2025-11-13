@@ -56,7 +56,7 @@ using namespace std;
 
 class EGS_Input;
 
-static void addTransformationBlock(shared_ptr<EGS_BlockInput> blockPtr) {
+inline void addTransformationBlock(shared_ptr<EGS_BlockInput> blockPtr) {
     shared_ptr<EGS_BlockInput> transBlock = blockPtr->addBlockInput("transformation");
     transBlock->addSingleInput("translation", false, "The x, y, z translation offsets in cm.");
     auto vecPtr = transBlock->addSingleInput("rotation vector", false, "Defines a rotation which, when applied to the 3D vector defined by this input, transforms it into a vector along the positive z-axis.");

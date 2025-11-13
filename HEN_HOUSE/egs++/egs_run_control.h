@@ -50,7 +50,7 @@ using namespace std;
 class EGS_Application;
 class EGS_Input;
 
-static void addRunControlBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+inline void addRunControlBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     shared_ptr<EGS_BlockInput> runBlock = blockPtr->addBlockInput("run control");
     runBlock->addSingleInput("ncase", true, "The number of histories to simulate.");
     runBlock->addSingleInput("nbatch", false, "The number of batches to divide the simulation into. After each batch, a checkpoint is created to allow for simulation restarts. Defaults to 10.");
@@ -60,16 +60,16 @@ static void addRunControlBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     runBlock->addSingleInput("calculation", false, "The calculation type: first (default, runs a new simulation), restart (resumes a terminated simulation), analyze (prints results), combine (combines results from a parallel run). Defaults to 'first'.", {"first", "restart", "analyze", "combine"});
 }
 
-static string addRunControlExample() {
+inline string addRunControlExample() {
     string example = {
         R"(
 :start run control:
     ncase                       = 1e4
-    nbatch                      = 10    #[optional] 
-    statistical accuracy sought = 5     #[optional] 
-    max cpu hours allowed       = 0.5   #[optional] 
-    calculation                 = first #[optional] 
-    geometry error limit        = 2     #[optional] 
+    nbatch                      = 10    #[optional]
+    statistical accuracy sought = 5     #[optional]
+    max cpu hours allowed       = 0.5   #[optional]
+    calculation                 = first #[optional]
+    geometry error limit        = 2     #[optional]
 :stop run control:
 )"};
     return example;

@@ -189,7 +189,7 @@ void EGS_Editor::highlightCurrentLine() {
 
 int EGS_Editor::countStartingWhitespace(const QString &s) {
     int i, l = s.size();
-    for (i = 0; i < l && s[i] == ' ' || s[i] == '\t'; ++i);
+    for (i = 0; i < l && (s[i] == ' ' || s[i] == '\t'); ++i);
     return i;
 }
 
@@ -876,7 +876,6 @@ QString EGS_Editor::getParentBlockTitle(QTextCursor cursor) {
 
     vector<QString> innerList;
     QString blockTitle;
-    bool withinOtherBlock = false;
     bool findingParent = false;
 
     // Starting at the current line, start iterating in reverse through
@@ -894,7 +893,6 @@ QString EGS_Editor::getParentBlockTitle(QTextCursor cursor) {
                 if (innerList.size() > 0 && blockTitle == innerList.back()) {
                     innerList.pop_back();
                     blockTitle.clear();
-                    withinOtherBlock = false;
                 }
                 else {
                     if (findingParent) {
@@ -915,7 +913,6 @@ QString EGS_Editor::getParentBlockTitle(QTextCursor cursor) {
             if (endPos > 0) {
                 QString stopTitle = line.mid(pos, endPos - pos);
                 innerList.push_back(stopTitle);
-                withinOtherBlock = true;
             }
         }
     }
@@ -1002,7 +999,6 @@ QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &fo
 
 QTextBlock EGS_Editor::getBlockEnd(QTextBlock currentBlock) {
     vector<QString> innerList;
-    bool withinOtherBlock = false;
 
     // Starting at the current line, starting iterating in forward through
     // the next lines
@@ -1019,7 +1015,6 @@ QTextBlock EGS_Editor::getBlockEnd(QTextBlock currentBlock) {
             if (endPos > 0) {
                 QString startTitle = line.mid(pos, endPos-pos);
                 innerList.push_back(startTitle);
-                withinOtherBlock = true;
             }
         }
 
@@ -1034,7 +1029,6 @@ QTextBlock EGS_Editor::getBlockEnd(QTextBlock currentBlock) {
                 if (innerList.size() > 0 && blockTitle == innerList.back()) {
                     innerList.pop_back();
                     blockTitle.clear();
-                    withinOtherBlock = false;
                 }
                 else {
                     return block;
@@ -1312,7 +1306,7 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
 
                 // Get the current indentation amount
                 QString indentation;
-                for (size_t i = 0; i < line.size(); ++i) {
+                for (int i = 0; i < line.size(); ++i) {
                     if (line.at(i) == ' ') {
                         indentation += ' ';
                     }

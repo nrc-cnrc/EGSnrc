@@ -88,6 +88,21 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // Detect Wayland session and avoid using it
+    // This switches to X11 instead, and avoids a crash when navigating menus in egs_editor
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+    const char *wayland = std::getenv("WAYLAND_DISPLAY");
+    if (wayland && *wayland) {
+        setenv("QT_QPA_PLATFORM", "xcb", 1);
+    }
+#else
+    // Qt 5+
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    if (env.contains("WAYLAND_DISPLAY")) {
+        qputenv("QT_QPA_PLATFORM", "xcb");
+    }
+#endif
+
     QApplication a(argc, argv);
     QString input_file = argc >= 2 ? QString(argv[1]) :
                          QFileDialog::getOpenFileName(NULL,"Select geometry definition file");

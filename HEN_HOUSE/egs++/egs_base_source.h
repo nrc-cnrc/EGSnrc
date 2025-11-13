@@ -59,7 +59,7 @@ class EGS_Input;
 class EGS_RandomGenerator;
 
 static shared_ptr<EGS_BlockInput> srcBlockInput = make_shared<EGS_BlockInput>("source");
-static void setBaseSourceInputs(bool isSimpleSource = true, bool includeSpectrumBlock = true) {
+inline void setBaseSourceInputs(bool isSimpleSource = true, bool includeSpectrumBlock = true) {
     srcBlockInput->addSingleInput("library", true, "The type of source, loaded by shared library in egs++/dso.");
     srcBlockInput->addSingleInput("name", true, "The user-declared unique name of this source. This is the name you may refer to elsewhere in the input file");
 
