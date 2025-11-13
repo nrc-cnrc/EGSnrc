@@ -66,7 +66,7 @@ class EGS_AusgabObject;
 class EGS_Interpolator;
 //template <class T> class EGS_SimpleContainer;
 
-static void addmcBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+inline void addmcBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     shared_ptr<EGS_BlockInput> mcBlock = blockPtr->addBlockInput("MC transport parameter");
     mcBlock->addSingleInput("Global ECUT", false, "Global electron transport cutoff");
     mcBlock->addSingleInput("Global PCUT", false, "Global photon transport cutoff");
@@ -94,7 +94,7 @@ static void addmcBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     mcBlock->addSingleInput("Photonuclear cross sections", false, "Default is default, or is user-supplied", {"default"});
 }
 
-static void addMediaDefBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+inline void addMediaDefBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     shared_ptr<EGS_BlockInput> mediaBlockInput = blockPtr->addBlockInput("media definition");
     mediaBlockInput->addSingleInput("ae", false, "lowest  energy for electron production (kinetic+0.511)");
     mediaBlockInput->addSingleInput("ap", false, "lowest  energy for photon production   (kinetic)");
@@ -113,7 +113,7 @@ static void addMediaDefBlock(shared_ptr<EGS_InputStruct> blockPtr) {
     mediumBlock->addSingleInput("e- stopping power output file", false, "");
 }
 
-static string addmcExample() {
+inline string addmcExample() {
     string example = {
         R"(
 :start MC transport parameter:
@@ -146,7 +146,7 @@ static string addmcExample() {
     return example;
 }
 
-static string addMediaExample() {
+inline string addMediaExample() {
     string example = {
     // Not completed yet, need to fill in numbers for example
         R"(

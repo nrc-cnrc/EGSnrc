@@ -77,7 +77,7 @@ public:
 };
 
 static shared_ptr<EGS_BlockInput> geomBlockInput = make_shared<EGS_BlockInput>("geometry");
-static void setBaseGeometryInputs(bool includeMediaBlock = true) {
+inline void setBaseGeometryInputs(bool includeMediaBlock = true) {
     geomBlockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso.");
     geomBlockInput->addSingleInput("name", true, "The user-declared unique name of this geometry. This is the name you may refer to elsewhere in the input file");
     geomBlockInput->addSingleInput("set label", false, "A name for the label, followed by a list of local region numbers (found by viewing only this geometry). Then use the label name elsewhere in the input file to refer to those regions. E.g. 'set label = myLabel 0 1'");

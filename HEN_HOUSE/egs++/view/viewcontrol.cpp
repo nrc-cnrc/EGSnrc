@@ -290,14 +290,24 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // Load the egs_application library
     string app_name;
-    int appc = 5;
-    char *appv[] = { "egspp", "-a", "tutor7pp", "-i", "tracks1.egsinp", "-p", "tutor_data"};
+    std::vector<std::string> args = {
+        "egspp", "-a", "tutor7pp", "-i", "tracks1.egsinp"
+    };
 
-    if (!EGS_Application::getArgument(appc,appv,"-a","--application",app_name)) {
-        egsFatal("test fail\n\n");
+    // Create a mutable array of char* pointers because that's what getArgument() expects
+    std::vector<char*> appv;
+    appv.reserve(args.size());
+    for (auto &arg : args) {
+        appv.push_back(&arg[0]);
     }
 
-    EGS_Application::checkEnvironmentVar(appc,appv,"-e","--egs-home","EGS_HOME",lib_dir);
+    int appc = static_cast<int>(appv.size());
+
+    if (!EGS_Application::getArgument(appc,appv.data(),"-a","--application",app_name)) {
+        egsFatal("Error: Failed to load tutor7pp as a shared library.\n\n");
+    }
+
+    EGS_Application::checkEnvironmentVar(appc,appv.data(),"-e","--egs-home","EGS_HOME",lib_dir);
     lib_dir += "bin";
     lib_dir += fs;
     lib_dir += CONFIG_NAME;
@@ -316,12 +326,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             egsWarning("\n%s: Failed to resolve the address of the 'createApplication' function in the application library %s\n\n",appv[0],app_lib.libraryFile());
             app_loaded = false;
         } else {
-            EGS_Application *app = createApp(appc,appv);
+            EGS_Application *app = createApp(appc,appv.data());
             if (!app) {
                 egsWarning("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
                 app_loaded = false;
             }
-            egsInformation("Testapp %f\n",app->getRM());
+            //egsInformation("Testapp %f\n",app->getRM());
             delete app;
         }
     }
@@ -332,7 +342,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // Get a list of all the libraries in the dso directory
     string dso_dir;
-    EGS_Application::checkEnvironmentVar(appc,appv,"-H","--hen-house","HEN_HOUSE",dso_dir);
+    EGS_Application::checkEnvironmentVar(appc,appv.data(),"-H","--hen-house","HEN_HOUSE",dso_dir);
     dso_dir += "egs++";
     dso_dir += fs;
     dso_dir += "dso";
@@ -344,9 +354,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     QStringList libraries = directory.entryList(QStringList() << (lib_prefix+"*"+lib_suffix).c_str(), QDir::Files);
 
     // Create an examples drop down menu on the editor tab
-    QMenuBar *menuBar = new QMenuBar();
-    QMenu *exampleMenu = new QMenu("Insert example...");
+    QMenuBar *menuBar = new QMenuBar(tab);
+    menuBar->setNativeMenuBar(false);
+
+    QMenu *exampleMenu = new QMenu("Insert example ▸", menuBar);
     menuBar->addMenu(exampleMenu);
+
     QMenu *geomMenu = exampleMenu->addMenu("Geometries");
     QMenu *sourceMenu = exampleMenu->addMenu("Sources");
     QMenu *shapeMenu = exampleMenu->addMenu("Shapes");
@@ -356,7 +369,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     appMenu = exampleMenu->addMenu("Application Specific");
 
     // Creates the example menu for different applications
-    QMenu *exampleMenu2 = new QMenu("Application: egs_app");
+    QMenu *exampleMenu2 = new QMenu("Application (egs_app) ▸", menuBar);
     menuBar->addMenu(exampleMenu2);
     selectedApplication = "egs_app";
 
@@ -463,7 +476,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->getBlockInput("myMediumName");
 
         string compound_dir;
-        EGS_Application::checkEnvironmentVar(appc,appv,"-H","--hen-house","HEN_HOUSE", compound_dir);
+        EGS_Application::checkEnvironmentVar(appc,appv.data(),"-H","--hen-house","HEN_HOUSE", compound_dir);
         vector<string> densityCorrectionFiles = findDensityCorrectionInputs(compound_dir);
 
         mediumBlock->addSingleInput("density correction file", false, "", densityCorrectionFiles);
