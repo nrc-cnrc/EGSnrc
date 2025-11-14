@@ -169,9 +169,9 @@ public:
         if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi = v.x/sinz;
-            register EGS_Float sphi = v.y/sinz;
+            EGS_Float sphi = v.y/sinz;
             EGS_Float cost = v.z/norm;
-            register EGS_Float sint = -sinz/norm;
+            EGS_Float sint = -sinz/norm;
             *this = rotY(cost,sint)*rotZ(cphi,sphi);
         }
         else if (v.z < 0.) {
