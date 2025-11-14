@@ -35,8 +35,6 @@
 #ifndef GEOMETRYVIEWCONTROL_H
 #define GEOMETRYVIEWCONTROL_H
 
-#include "ui_viewcontrol.h"
-
 #include <vector>
 #include "egs_user_color.h"
 #include "egs_vector.h"
@@ -46,6 +44,8 @@
 
 #include <QMainWindow>
 
+#include "ui_viewcontrol.h"
+
 class EGS_BaseGeometry;
 class EGS_GeometryVisualizer;
 class ImageWindow;
@@ -54,13 +54,13 @@ class QImage;
 class SaveImage;
 class ClippingPlanesWidget;
 
-
-class GeometryViewControl : public QMainWindow, public Ui::GeometryViewControl {
+class GeometryViewControl : public QMainWindow, private Ui::GeometryViewControl {
     Q_OBJECT
 
 public:
 
-    GeometryViewControl(QWidget *parent = 0, const char *name = 0);
+    explicit GeometryViewControl(QWidget *parent = nullptr, const char *name = nullptr);
+
     virtual ~GeometryViewControl();
 
     virtual void setFilename(QString str);

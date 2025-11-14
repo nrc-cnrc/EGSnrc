@@ -48,6 +48,18 @@ SaveImage::SaveImage(QWidget *parent, const char *name)
     setModal(false);
     setupUi(this);
 
+    // Connect standard dialog buttons
+    connect(pushButton11, &QPushButton::clicked, this, &QDialog::reject);
+    connect(okButton,    &QPushButton::clicked, this, &QDialog::accept);
+
+    // Connect custom slots
+    connect(pushButton9, &QPushButton::clicked, this, &SaveImage::selectFileName);
+
+    // Connect QLineEdit signals
+    connect(fileName, &QLineEdit::editingFinished, this, &SaveImage::enableOkButton);
+    connect(fileName, &QLineEdit::textChanged,     this, &SaveImage::fnameTextChanged);
+
+    // Populate formats
     QList<QByteArray> blist = QImageWriter::supportedImageFormats();
     int ind = -1;
     for (int i=0; i<blist.size(); i++) {

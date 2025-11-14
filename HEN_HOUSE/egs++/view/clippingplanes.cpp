@@ -48,6 +48,8 @@ ClippingPlanesWidget::ClippingPlanesWidget(QWidget *parent, const char *name)
     setObjectName(name);
     setupUi(this);
 
+    connect(planeTable, &QTableWidget::cellChanged, this, &ClippingPlanesWidget::applyClipping);
+
     planeTable->setColumnWidth(0,60);
     planeTable->setColumnWidth(1,60);
     planeTable->setColumnWidth(2,60);

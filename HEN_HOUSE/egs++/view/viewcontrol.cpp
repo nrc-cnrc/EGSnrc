@@ -65,6 +65,7 @@
 #include <QTextStream>
 #include <QMenuBar>
 #include <QSplitter>
+#include <QDebug>
 
 #include <cmath>
 #include <cstdlib>
@@ -129,8 +130,226 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     setupUi(this);
 
 #ifdef VIEW_DEBUG
-    egsWarning("In init()\n");
+    egsWarning("GeometryViewControl:: Initializing...\n");
 #endif
+
+    connect(applyLook, &QPushButton::clicked, this, &GeometryViewControl::setLookAt);
+    connect(applyPosition, &QPushButton::clicked, this, &GeometryViewControl::setLookPosition);
+
+    // Table cell changed
+    connect(regionTable, &QTableWidget::cellChanged,
+            this, &GeometryViewControl::toggleRegion);
+
+    // Buttons
+    connect(regionUncheckAllButton, &QPushButton::clicked,
+            this, &GeometryViewControl::hideAllRegions);
+
+    connect(regionCheckAllButton, &QPushButton::clicked,
+            this, &GeometryViewControl::showAllRegions);
+
+    connect(actionQuit, &QAction::triggered,
+            this, &GeometryViewControl::quitApplication);
+
+    connect(actionSave_image, &QAction::triggered,
+            this, &GeometryViewControl::saveImage);
+
+    // Camera buttons
+    connect(homeButton, &QPushButton::released,
+            this, &GeometryViewControl::cameraHome);
+
+    connect(setHomeButton, &QPushButton::released,
+            this, &GeometryViewControl::cameraHomeDefine);
+
+    connect(xButton, &QPushButton::released,
+            this, &GeometryViewControl::camera_x);
+
+    connect(yButton, &QPushButton::released,
+            this, &GeometryViewControl::camera_y);
+
+    connect(zButton, &QPushButton::released,
+            this, &GeometryViewControl::camera_z);
+
+    connect(mxButton, &QPushButton::released,
+            this, &GeometryViewControl::camera_mx);
+
+    connect(myButton, &QPushButton::released,
+            this, &GeometryViewControl::camera_my);
+
+    connect(mzButton, &QPushButton::released,
+            this, &GeometryViewControl::camera_mz);
+
+    // Checkboxes
+    connect(showAxesCheckbox, &QCheckBox::toggled,
+            this, &GeometryViewControl::checkboxAxes);
+
+    connect(showAxesLabelsCheckbox, &QCheckBox::toggled,
+            this, &GeometryViewControl::checkboxAxesLabels);
+
+    connect(showRegionsCheckbox, &QCheckBox::toggled,
+            this, &GeometryViewControl::checkboxShowRegions);
+
+    connect(showPhotonsCheckbox, &QCheckBox::toggled,
+            this, &GeometryViewControl::showPhotonsCheckbox_toggled);
+
+    connect(showElectronsCheckbox, &QCheckBox::toggled,
+            this, &GeometryViewControl::showElectronsCheckbox_toggled);
+
+    connect(showPositronsCheckbox, &QCheckBox::toggled,
+            this, &GeometryViewControl::showPositronsCheckbox_toggled);
+
+    // Actions
+    connect(actionReload, &QAction::triggered,
+            this, &GeometryViewControl::reloadInput);
+
+    connect(actionOpen, &QAction::triggered,
+            this, &GeometryViewControl::selectInput);
+
+    connect(actionOpen_tracks, &QAction::triggered,
+            this, &GeometryViewControl::loadTracksDialog);
+
+    connect(actionOpen_dose, &QAction::triggered,
+            this, &GeometryViewControl::loadDose);
+
+    connect(actionOpen_settings, &QAction::triggered, this, [this](){
+        loadConfig();
+    });
+
+    connect(actionSave_settings, &QAction::triggered,
+            this, &GeometryViewControl::saveConfig);
+
+    connect(actionSave_egsinp, &QAction::triggered,
+            this, &GeometryViewControl::saveEgsinp);
+
+    // Transparency slider
+    connect(transparency, &QSlider::sliderReleased,
+            this, &GeometryViewControl::endTransformation);
+
+    connect(transparency, &QSlider::sliderPressed,
+            this, &GeometryViewControl::startTransformation);
+
+    connect(transparency, &QSlider::valueChanged,
+            this, &GeometryViewControl::changeTransparency);
+
+    // Dose slider
+    connect(slider_dose, &QSlider::valueChanged,
+            this, &GeometryViewControl::changeDoseTransparency);
+
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    // Track min spinners
+    connect(spin_tminp, &QSpinBox::valueChanged,
+            this, &GeometryViewControl::changeTrackMin);
+
+    connect(spin_tmine, &QSpinBox::valueChanged,
+            this, &GeometryViewControl::changeTrackMin);
+
+    connect(spin_tminpo, &QSpinBox::valueChanged,
+            this, &GeometryViewControl::changeTrackMin);
+
+    // Track max spinners
+    connect(spin_tmaxp, &QSpinBox::valueChanged,
+            this, &GeometryViewControl::changeTrackMaxP);
+
+    connect(spin_tmaxe, &QSpinBox::valueChanged,
+            this, &GeometryViewControl::changeTrackMaxE);
+
+    connect(spin_tmaxpo, &QSpinBox::valueChanged,
+            this, &GeometryViewControl::changeTrackMaxPo);
+#else
+    // Track min spinners
+    connect(spin_tminp, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GeometryViewControl::changeTrackMin);
+
+    connect(spin_tmine, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GeometryViewControl::changeTrackMin);
+
+    connect(spin_tminpo, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GeometryViewControl::changeTrackMin);
+
+    // Track max spinners
+    connect(spin_tmaxp, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GeometryViewControl::changeTrackMaxP);
+
+    connect(spin_tmaxe, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GeometryViewControl::changeTrackMaxE);
+
+    connect(spin_tmaxpo, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
+            this, &GeometryViewControl::changeTrackMaxPo);
+#endif
+
+    connect(comboBox_simGeom, QOverload<int>::of(&QComboBox::activated),
+    this, &GeometryViewControl::updateSimulationGeometry);
+
+    connect(ambientLight, &QSlider::sliderPressed,
+            this, &GeometryViewControl::startTransformation);
+
+    connect(ambientLight, &QSlider::sliderReleased,
+            this, &GeometryViewControl::endTransformation);
+
+    connect(ambientLight, &QSlider::valueChanged,
+            this, &GeometryViewControl::changeAmbientLight);
+
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    connect(moveLight, &QCheckBox::checkStateChanged,
+            this, &GeometryViewControl::moveLightChanged);
+#else
+    connect(moveLight, &QCheckBox::stateChanged,
+            this, &GeometryViewControl::moveLightChanged);
+#endif
+
+    connect(pickColor, &QPushButton::clicked,
+            this, &GeometryViewControl::changeColor);
+
+    connect(applyLight, &QPushButton::clicked,
+            this, &GeometryViewControl::setLightPosition);
+
+    connect(materialCB, QOverload<int>::of(&QComboBox::activated),
+            this, &GeometryViewControl::updateColorLabel);
+
+    connect(cBackgroundButton, &QPushButton::clicked,
+            this, &GeometryViewControl::setBackgroundColor);
+
+    connect(cTextButton, &QPushButton::clicked,
+            this, &GeometryViewControl::setTextColor);
+
+    connect(cAxisButton, &QPushButton::clicked,
+    this, &GeometryViewControl::setAxisColor);
+
+    connect(cPhotonsButton, &QPushButton::clicked,
+            this, &GeometryViewControl::setPhotonColor);
+
+    connect(cElectronsButton, &QPushButton::clicked,
+            this, &GeometryViewControl::setElectronColor);
+
+    connect(cPositronsButton, &QPushButton::clicked,
+            this, &GeometryViewControl::setPositronColor);
+
+    connect(energyScalingCheckbox, &QCheckBox::toggled,
+            this, &GeometryViewControl::setEnergyScaling);
+
+    connect(action_Enlarge_font, &QAction::triggered,
+            this, &GeometryViewControl::enlargeFont);
+
+    connect(action_Shrink_font, &QAction::triggered,
+            this, &GeometryViewControl::shrinkFont);
+
+    connect(button_timeplay, &QPushButton::pressed,
+            this, &GeometryViewControl::playTime);
+
+    connect(slider_timeindex, &QSlider::valueChanged,
+            this, &GeometryViewControl::slideTime);
+
+    connect(spin_timewindow, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &GeometryViewControl::slideTime);
+
+    connect(button_timereset, &QPushButton::pressed,
+            this, &GeometryViewControl::resetTime);
+
+    connect(spin_timeindex, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            this, &GeometryViewControl::spinTime);
+
+    connect(spin_numTimeSteps, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &GeometryViewControl::updateNumTimeSteps);
+
     g = 0;
     origSimGeom = 0;
     theta = 0;
@@ -379,7 +598,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
         // Remove the prefix (EGS_Library adds it automatically)
         libName = libName.right(libName.length() - lib_prefix.length());
-        egsInformation("Trying %s\n", libName.toLatin1().data());
+        //egsInformation("Trying %s\n", libName.toLatin1().data());
 
         // Adds the button to the menu
         QAction *action = exampleMenu2->addAction(libName);
@@ -707,6 +926,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 }
 
 GeometryViewControl::~GeometryViewControl() {
+
     if (m_colors) {
         delete [] m_colors;
     }
@@ -835,8 +1055,16 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         // Build the geometry
         newGeom = EGS_BaseGeometry::createGeometry(&input);
         if (!newGeom) {
-            QMessageBox::critical(this,"Geometry error",
-                                  "The geometry is not correctly defined. Edit the input file and reload.",QMessageBox::Ok,0,0);
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            QMessageBox::critical(this, "Geometry error",
+                          "The geometry is not correctly defined. Edit the input file and reload.",
+                          QMessageBox::StandardButton::Ok);
+#else
+            QMessageBox::critical(this, "Geometry error",
+                          "The geometry is not correctly defined. Edit the input file and reload.",
+                          QMessageBox::Ok, 0, 0);
+#endif
 
             return false;
         }
@@ -1019,83 +1247,83 @@ void GeometryViewControl::saveConfig() {
     RenderParameters &rp = gview->pars;
 
     // General window settings
-    out << ":start general:" << endl;
-    out << "    font size = " << this->font().pointSize() << endl;
-    out << "    controls position = " << this->x() << " " << this->y() << endl;
-    out << "    controls size = " << this->width() << " " << this->height() << endl;
-    out << "    view position = " << gview->x() << " " << gview->y() << endl;
-    out << "    view size = " << gview->width() << " " << gview->height() << endl;
-    out << ":stop general:" << endl;
+    out << ":start general:" << "\n";
+    out << "    font size = " << this->font().pointSize() << "\n";
+    out << "    controls position = " << this->x() << " " << this->y() << "\n";
+    out << "    controls size = " << this->width() << " " << this->height() << "\n";
+    out << "    view position = " << gview->x() << " " << gview->y() << "\n";
+    out << "    view size = " << gview->width() << " " << gview->height() << "\n";
+    out << ":stop general:" << "\n";
 
-    out << ":start camera view:" << endl;
+    out << ":start camera view:" << "\n";
     out << "    rotation point = " << lookX->text() << " "
         << lookY->text() << " "
-        << lookZ->text() << endl;
+        << lookZ->text() << "\n";
     out << "    camera = " << camera.x << " "
         << camera.y << " "
-        << camera.z << endl;
+        << camera.z << "\n";
     out << "    camera v1 = " << camera_v1.x << " "
         << camera_v1.y << " "
-        << camera_v1.z << endl;
+        << camera_v1.z << "\n";
     out << "    camera v2 = " << camera_v2.x << " "
         << camera_v2.y << " "
-        << camera_v2.z << endl;
-    out << "    zoom = " << zoomlevel << endl;
-    out << ":stop camera view:" << endl;
+        << camera_v2.z << "\n";
+    out << "    zoom = " << zoomlevel << "\n";
+    out << ":stop camera view:" << "\n";
 
-    out << ":start home view:" << endl;
+    out << ":start home view:" << "\n";
     out << "    home position = " << look_at_home.x << " "
         << look_at_home.y << " "
-        << look_at_home.z << endl;
+        << look_at_home.z << "\n";
     out << "    home = " << camera_home.x << " "
         << camera_home.y << " "
-        << camera_home.z << endl;
+        << camera_home.z << "\n";
     out << "    home v1 = " << camera_home_v1.x << " "
         << camera_home_v1.y << " "
-        << camera_home_v1.z << endl;
+        << camera_home_v1.z << "\n";
     out << "    home v2 = " << camera_home_v2.x << " "
         << camera_home_v2.y << " "
-        << camera_home_v2.z << endl;
-    out << "    zoom = " << zoomlevel_home << endl;
-    out << ":stop home view:" << endl;
+        << camera_home_v2.z << "\n";
+    out << "    zoom = " << zoomlevel_home << "\n";
+    out << ":stop home view:" << "\n";
 
-    out << ":start tracks:" << endl;
-    out << "    show tracks = " << showTracks << endl;
-    out << "    photons = " << showPhotonTracks << endl;
-    out << "    electrons = " << showElectronTracks << endl;
-    out << "    positrons = " << showPositronTracks << endl;
-    out << ":stop tracks:" << endl;
+    out << ":start tracks:" << "\n";
+    out << "    show tracks = " << showTracks << "\n";
+    out << "    photons = " << showPhotonTracks << "\n";
+    out << "    electrons = " << showElectronTracks << "\n";
+    out << "    positrons = " << showPositronTracks << "\n";
+    out << ":stop tracks:" << "\n";
 
-    out << ":start overlay:" << endl;
-    out << "    show axis = " << showAxes << endl;
-    out << "    show axis labels = " << showAxesLabels << endl;
-    out << "    show regions = " << showRegionsCheckbox->isChecked() << endl;
-    out << ":stop overlay:" << endl;
+    out << ":start overlay:" << "\n";
+    out << "    show axis = " << showAxes << "\n";
+    out << "    show axis labels = " << showAxesLabels << "\n";
+    out << "    show regions = " << showRegionsCheckbox->isChecked() << "\n";
+    out << ":stop overlay:" << "\n";
 
-    out << ":start dose:" << endl;
-    out << "    alpha = " << slider_dose->value() << endl;
-    out << ":stop dose:" << endl;
+    out << ":start dose:" << "\n";
+    out << "    alpha = " << slider_dose->value() << "\n";
+    out << ":stop dose:" << "\n";
 
     if (rp.material_colors.size() > 0) {
-        out << ":start material colors:" << endl;
+        out << ":start material colors:" << "\n";
         for (size_t i=0; i<rp.material_colors.size(); ++i) {
-            out << "    :start material:" << endl;
+            out << "    :start material:" << "\n";
             if (i==size_t(nmed)) {
-                out << "        material = vacuum" << endl;
+                out << "        material = vacuum" << "\n";
             }
             else {
-                out << "        material = " << g->getMediumName(i) << endl;
+                out << "        material = " << g->getMediumName(i) << "\n";
             }
             out << "        rgb = " << qRed(m_colors[i]) << " "
                 << qGreen(m_colors[i]) << " "
-                << qBlue(m_colors[i]) << endl;
-            out << "        alpha = " << qAlpha(m_colors[i]) << endl;
-            out << "    :stop material:" << endl;
+                << qBlue(m_colors[i]) << "\n";
+            out << "        alpha = " << qAlpha(m_colors[i]) << "\n";
+            out << "    :stop material:" << "\n";
         }
-        out << ":stop material colors:" << endl;
+        out << ":stop material colors:" << "\n";
     }
 
-    out << ":start clipping planes:" << endl;
+    out << ":start clipping planes:" << "\n";
     for (int i=0; i<cplanes->numPlanes(); i++) {
         QTableWidgetItem *itemAx = cplanes->getItem(i,0),
                           *itemAy = cplanes->getItem(i,1),
@@ -1103,27 +1331,27 @@ void GeometryViewControl::saveConfig() {
                             *itemD = cplanes->getItem(i,3),
                              *itemApplied = cplanes->getItem(i,4);
 
-        out << "    :start plane:" << endl;
+        out << "    :start plane:" << "\n";
         if (itemAx) {
-            out << "        ax = " << itemAx->text() << endl;
+            out << "        ax = " << itemAx->text() << "\n";
         }
         if (itemAy) {
-            out << "        ay = " << itemAy->text() << endl;
+            out << "        ay = " << itemAy->text() << "\n";
         }
         if (itemAz) {
-            out << "        az = " << itemAz->text() << endl;
+            out << "        az = " << itemAz->text() << "\n";
         }
         if (itemD) {
-            out << "        d = " << itemD->text() << endl;
+            out << "        d = " << itemD->text() << "\n";
         }
         if (itemApplied) {
-            out << "        applied = " << itemApplied->checkState() << endl;
+            out << "        applied = " << itemApplied->checkState() << "\n";
         }
-        out << "    :stop plane:" << endl;
+        out << "    :stop plane:" << "\n";
     }
-    out << ":stop clipping planes:" << endl;
+    out << ":stop clipping planes:" << "\n";
 
-    out << ":start hidden regions:" << endl;
+    out << ":start hidden regions:" << "\n";
     out << "    region list =";
     for (size_t i = 0; i < show_regions.size(); ++i) {
         // List all the unchecked regions
@@ -1134,30 +1362,30 @@ void GeometryViewControl::saveConfig() {
             }
         }
     }
-    out << endl;
-    out << ":stop hidden regions:" << endl;
+    out << "\n";
+    out << ":stop hidden regions:" << "\n";
 
-    out << ":start colors:" << endl;
+    out << ":start colors:" << "\n";
     out << "    background = " << backgroundColor.red() << " " <<
         backgroundColor.green() << " " <<
-        backgroundColor.blue() << endl;
+        backgroundColor.blue() << "\n";
     out << "    text = " << textColor.red() << " " <<
         textColor.green() << " " <<
-        textColor.blue() << endl;
+        textColor.blue() << "\n";
     out << "    axis = " << axisColor.red() << " " <<
         axisColor.green() << " " <<
-        axisColor.blue() << endl;
+        axisColor.blue() << "\n";
     out << "    photons = " << photonColor.red() << " " <<
         photonColor.green() << " " <<
-        photonColor.blue() << endl;
+        photonColor.blue() << "\n";
     out << "    electrons = " << electronColor.red() << " " <<
         electronColor.green() << " " <<
-        electronColor.blue() << endl;
+        electronColor.blue() << "\n";
     out << "    positrons = " << positronColor.red() << " " <<
         positronColor.green() << " " <<
-        positronColor.blue() << endl;
-    out << "    energy scaling = " << energyScaling << endl;
-    out << ":stop colors:" << endl;
+        positronColor.blue() << "\n";
+    out << "    energy scaling = " << energyScaling << "\n";
+    out << ":stop colors:" << "\n";
 }
 
 void GeometryViewControl::loadConfig() {
@@ -1179,8 +1407,15 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     EGS_Input *input = new EGS_Input;
     if (configFilename.size() > 0) {
         if (input->setContentFromFile(configFilename.toLatin1().data())) {
-            QMessageBox::critical(this,"Config file read error",
-                                  "Failed to open the config file for reading.",QMessageBox::Ok,0,0);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            QMessageBox::critical(this, "Config file read error",
+                          "Failed to open the config file for reading.",
+                          QMessageBox::StandardButton::Ok);
+#else
+            QMessageBox::critical(this, "Config file read error",
+                          "Failed to open the config file for reading.",
+                          QMessageBox::Ok, 0, 0);
+#endif
             delete input;
             return;
         }
@@ -1671,7 +1906,8 @@ void GeometryViewControl::saveEgsinp() {
     QTextStream out(&egsinpFile);
 
     // Write the text from the editor window
-    out << egsinpEdit->toPlainText() << flush;
+    out << egsinpEdit->toPlainText();
+    out.flush();
 
     // Reload the input so that the changes are recognized
     reloadInput();
@@ -2710,8 +2946,15 @@ int GeometryViewControl::setGeometry(
     // get number of media from geometry
     nmed = g->nMedia();
     if (nmed < 1) {
-        QMessageBox::critical(this,"Geometry error",
-                              "The geometry defines no media",QMessageBox::Ok,0,0);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        QMessageBox::critical(this, "Geometry error",
+                          "The geometry defines no media",
+                          QMessageBox::StandardButton::Ok);
+#else
+        QMessageBox::critical(this, "Geometry error",
+                          "The geometry defines no media",
+                          QMessageBox::Ok, 0, 0);
+#endif
         delete [] saveColors;
         delete [] saveName;
         return 1;
@@ -2890,9 +3133,15 @@ int GeometryViewControl::setGeometry(
         if (!found) {
             progress.setValue(132);
             qApp->processEvents();
-            QMessageBox::critical(this,"Geometry error",
-                                  "Failed to find a point that is inside the geometry",
-                                  QMessageBox::Ok,0,0);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            QMessageBox::critical(this, "Geometry error",
+                          "Failed to find a point that is inside the geometry",
+                          QMessageBox::StandardButton::Ok);
+#else
+            QMessageBox::critical(this, "Geometry error",
+                          "Failed to find a point that is inside the geometry",
+                          QMessageBox::Ok, 0, 0);
+#endif
             return 3;
         }
         progress.setValue(100);
@@ -3168,14 +3417,29 @@ void GeometryViewControl::changeColor() {
     egsWarning(" widget size = %d %d\n",width(),height());
 #endif
     int med = materialCB->currentIndex();
-    bool ok;
-    QRgb newc = QColorDialog::getRgba(m_colors[med],&ok,this);
+    bool ok = false;
+
+// Qt6 change: getRgba() is gone, use getColor() which returns a QColor.
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QColor c = QColorDialog::getColor(QColor::fromRgba(m_colors[med]), this);
+    if (c.isValid()) {
+        ok = true;
+        m_colors[med] = c.rgba();   // ✅ Convert QColor -> QRgb
+        transparency->setValue(qAlpha(c.rgba()));
+    }
+#else
+    QRgb c = QColorDialog::getRgba(m_colors[med], &ok, this);
     if (ok) {
-        m_colors[med] = newc;
+        m_colors[med] = c;
+        transparency->setValue(qAlpha(c));
+    }
+#endif
+
+    if (ok) {
         QPixmap pixmap(10,10);
         pixmap.fill(m_colors[med]);
         materialCB->setItemIcon(med, pixmap);
-        transparency->setValue(qAlpha(newc));
+
         if (allowRegionSelection) {
             updateRegionTable(med);
         }
@@ -3886,7 +4150,15 @@ void GeometryViewControl::enlargeFont() {
     egsinpEdit->zoomIn();
     const int tabStop = 4; // 4 characters
     QFontMetrics metrics(egsinpEdit->font());
+
+    // QTextEdit::setTabStopWidth(int) is removed in Qt6. Replace with setTabStopDistance, which takes qreal pixels.
+    // QFontMetrics::width() is removed in Qt6. Use horizontalAdvance() instead.
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    egsinpEdit->setTabStopDistance(tabStop * metrics.horizontalAdvance(' '));
+#else
     egsinpEdit->setTabStopWidth(tabStop * metrics.width(' '));
+#endif
+
 }
 
 void GeometryViewControl::shrinkFont() {
@@ -3905,7 +4177,13 @@ void GeometryViewControl::shrinkFont() {
     egsinpEdit->zoomOut();
     const int tabStop = 4; // 4 characters
     QFontMetrics metrics(egsinpEdit->font());
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    egsinpEdit->setTabStopDistance(tabStop * metrics.horizontalAdvance(' '));
+#else
     egsinpEdit->setTabStopWidth(tabStop * metrics.width(' '));
+#endif
+
 }
 
 void GeometryViewControl::setFontSize(int size) {
@@ -4057,6 +4335,7 @@ void GeometryViewControl::setApplication() {
     egsinpEdit->setInputStruct(inputStruct);
 }
 
+//TODO: This should really provide two folders for elements and compounds in the popup
 vector<string> findDensityCorrectionInputs(string compound_dir) {
     vector<string> fileList;
 
