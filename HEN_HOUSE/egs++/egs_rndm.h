@@ -157,7 +157,7 @@ public:
      */
     inline void getAzimuth(EGS_Float &cphi, EGS_Float &sphi) {
 #ifndef FAST_SINCOS
-        register EGS_Float xphi,xphi2,yphi,yphi2,rhophi;
+        EGS_Float xphi,xphi2,yphi,yphi2,rhophi;
         do {
             xphi = 2*getUniform() - 1;
             xphi2 = xphi*xphi;
