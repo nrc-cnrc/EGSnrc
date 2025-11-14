@@ -378,7 +378,13 @@ void ImageWindow::paintEvent(QPaintEvent *) {
                 egsFatal("ImageWindow::paintEvent: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
                 return;
             }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+            int wmax = p.fontMetrics().horizontalAdvance(mxstring);
+#else
             int wmax = p.fontMetrics().width(mxstring);
+#endif
+
             if (wmax < 41) {
                 break;
             }
@@ -524,8 +530,16 @@ void ImageWindow::mouseDoubleClickEvent(QMouseEvent *event) {
 }
 
 void ImageWindow::mouseReleaseEvent(QMouseEvent *event) {
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    int ex = int(event->position().x());
+    int ey = int(event->position().y());
+#else
+    int ex = event->x();
+    int ey = event->y();
+#endif
+
 #ifdef VIEW_DEBUG
-    egsWarning("In mouseReleaseEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
+    egsWarning("In mouseReleaseEvent(): mouse location = (%d, %d)\n", ex, ey);
     egsWarning("  Mouse buttons: %0x\n", event->button());
 #endif
     // 500 msec before returning to full resolution (after button released)
@@ -534,18 +548,28 @@ void ImageWindow::mouseReleaseEvent(QMouseEvent *event) {
         navigating=false;
     }
     else if (event->button() == Qt::LeftButton) {
-        egsWarning("release event at %d %d\n",event->x(),event->y());
-        emit leftMouseClick(event->x(),event->y());
+        egsWarning("release event at %d %d\n",ex, ey);
+        emit leftMouseClick(ex, ey);
     }
 }
 
 void ImageWindow::mouseMoveEvent(QMouseEvent *event) {
-    int dx = event->x()-xyMouse.x();
-    int dy = event->y()-xyMouse.y();
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    int dx = int(event->position().x()) - xyMouse.x();
+    int dy = int(event->position().y()) - xyMouse.y();
+    xyMouse = QPoint(int(event->position().x()), int(event->position().y()));  // convert to QPoint
+
+    int midButton = Qt::MiddleButton;
+#else
+    int dx = event->x() - xyMouse.x();
+    int dy = event->y() - xyMouse.y();
     xyMouse = event->pos();
 
+    int midButton = Qt::MidButton;
+#endif
+
     // set up navigation
-    if (event->buttons() & (Qt::LeftButton|Qt::MidButton)) {
+    if (event->buttons() & (Qt::LeftButton|midButton)) {
         // Keep the timer off so long holds with depressed button work
         navigating  = true;
         navigationTimer->stop();
@@ -566,7 +590,7 @@ void ImageWindow::mouseMoveEvent(QMouseEvent *event) {
             emit cameraRotation(dx, dy);
         }
     }
-    else if (event->buttons() & Qt::MidButton) {
+    else if (event->buttons() & midButton) {
         // camera zoom
         emit cameraZooming(-dy);
     }
@@ -582,7 +606,14 @@ void ImageWindow::wheelEvent(QWheelEvent *event) {
     egsWarning("  Buttons: %0x\n", event->buttons());
 #endif
     startTransformation();
+
+// Qt6’s angleDelta().y() returns the same wheel movement in “8th of a degree” units. Dividing by 120 approximates old delta() units.
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    emit cameraZooming(event->angleDelta().y()/120); // 120 = old single step
+#else
     emit cameraZooming(event->delta()/20);
+#endif
+
 }
 
 void ImageWindow::keyPressEvent(QKeyEvent *event) {
