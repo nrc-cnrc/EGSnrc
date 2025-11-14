@@ -393,22 +393,4 @@
   <include location="local">egs_vector.h</include>
  </includes>
  <resources/>
- <connections>
-  <connection>
-   <sender>planeTable</sender>
-   <signal>cellChanged(int, int)</signal>
-   <receiver>ClippingPlanesWidget</receiver>
-   <slot>applyClipping()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
 </ui>

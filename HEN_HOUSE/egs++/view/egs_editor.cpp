@@ -48,7 +48,14 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
     // Set the tab width to 4 spaces
     const int tabStop = 4; // 4 characters
     QFontMetrics metrics(fixedFont);
+
+    // QTextEdit::setTabStopWidth(int) is removed in Qt6. Replace with setTabStopDistance, which takes qreal pixels.
+    // QFontMetrics::width() is removed in Qt6. Use horizontalAdvance() instead.
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    this->setTabStopDistance(tabStop * metrics.horizontalAdvance(' '));
+#else
     this->setTabStopWidth(tabStop * metrics.width(' '));
+#endif
 
     // Initialize an area for displaying line numbers
     lineNumberArea = new LineNumberArea(this);
