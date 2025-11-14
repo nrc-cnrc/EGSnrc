@@ -201,6 +201,10 @@ void EGS_Editor::validateEntireInput() {
         cursor.movePosition(QTextCursor::NextBlock);
         validateLine(cursor);
     }
+
+#ifdef EDITOR_DEBUG
+    egsInformation("EGS_Editor::validateEntireInput: Done validating input file.\n");
+#endif
 }
 
 void EGS_Editor::setDarkMode(bool isDark) {
@@ -713,9 +717,13 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
 //     egsInformation("Printing parentBlockTitle: %s\n", parentTitle.toLatin1().data());
     // If the parent block is media definition, then just return pegsless
     if (parentTitle.toStdString() == "media definition") {
-        shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput("media definition")->getBlockInput("myMediumName");
+        shared_ptr<EGS_BlockInput> medDefBlock = inputStruct->getBlockInput("media definition");
+        if(medDefBlock) {
+            shared_ptr<EGS_BlockInput> inputBlock = medDefBlock->getBlockInput("myMediumName");
+            return inputBlock;
+        }
 //         egsInformation("Input Block title test: %s\n", inputBlock->getTitle().c_str());
-        return inputBlock;
+        return nullptr;
     }
 
     // If we couldn't find a library tag in the current block,

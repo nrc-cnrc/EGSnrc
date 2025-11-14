@@ -291,7 +291,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // Load the egs_application library
     string app_name;
     std::vector<std::string> args = {
-        "egspp", "-a", "tutor7pp", "-i", "tracks1.egsinp"
+        "egspp", "-a", "egs_app", "-i", "slab.egsinp"
     };
 
     // Create a mutable array of char* pointers because that's what getArgument() expects
@@ -304,7 +304,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     int appc = static_cast<int>(appv.size());
 
     if (!EGS_Application::getArgument(appc,appv.data(),"-a","--application",app_name)) {
-        egsFatal("Error: Failed to load tutor7pp as a shared library.\n\n");
+        egsWarning("Warning: Failed to load egs_app as a shared library. It should be compiled as a shared library by default, so check that it has been copied into egs_home and compiled since the last EGSnrc update.\n\n");
     }
 
     EGS_Application::checkEnvironmentVar(appc,appv.data(),"-e","--egs-home","EGS_HOME",lib_dir);
@@ -4018,19 +4018,20 @@ void GeometryViewControl::setApplication() {
     // Do not load if the default is selected
     if (newlySelectedApp != "egs_app") {
 
-        egsInformation("Loading library: %s\n", newlySelectedApp.c_str());
+        egsInformation("  Loading library: %s\n", newlySelectedApp.c_str());
         EGS_Library app_lib(newlySelectedApp.c_str(),lib_dir.c_str());
         if (!app_lib.load()) {
             egsWarning("Failed to load inputs and example for application\n");
         } else {
             getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppSpecificInputs");
-            egsInformation("getAppInputs %s\n", getAppInputs ? "true" : "false");
 
             if (getAppInputs) {
                 shared_ptr<EGS_InputStruct> app = getAppInputs();
                 if (app) {
                     inputStruct->addBlockInputs(app->getBlockInputs());
                 }
+            } else {
+                egsInformation("  The selected application doesn't support input autocompletion.\n");
             }
 
             // Load the new application example
