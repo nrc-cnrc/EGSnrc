@@ -4296,7 +4296,7 @@ void GeometryViewControl::setApplication() {
     // Do not load if the default is selected
     if (newlySelectedApp != "egs_app") {
 
-        egsInformation("  Loading library: %s\n", newlySelectedApp.c_str());
+        //egsInformation("  Loading library: %s\n", newlySelectedApp.c_str());
         EGS_Library app_lib(newlySelectedApp.c_str(),lib_dir.c_str());
         if (!app_lib.load()) {
             egsWarning("Failed to load inputs and example for application\n");
@@ -4326,8 +4326,8 @@ void GeometryViewControl::setApplication() {
     QList<QAction*> menuBarActions = editorLayout->menuBar()->actions();
     for (QAction* action : menuBarActions) {
         QMenu* retrievedMenu = action->menu();
-        if (retrievedMenu && retrievedMenu->title() == QString::fromStdString("Application: " + selectedApplication)) {
-            retrievedMenu->setTitle(QString::fromStdString("Application: " + newlySelectedApp));
+        if (retrievedMenu && retrievedMenu->title() == QString::fromStdString("Application (" + selectedApplication) + ") ▸") {
+            retrievedMenu->setTitle(QString::fromStdString("Application (" + newlySelectedApp) + ") ▸");
         }
     }
 
