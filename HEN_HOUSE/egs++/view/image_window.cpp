@@ -489,19 +489,25 @@ void ImageWindow::paintEvent(QPaintEvent *) {
 
 void ImageWindow::mouseDoubleClickEvent(QMouseEvent *event) {
 #ifdef VIEW_DEBUG
-    egsWarning("In mouseDoubleClickEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
-    egsWarning("  Mouse buttons: %0x\n", event->button());
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    const auto pos = event->position();
+    egsWarning("In mouseDoubleClickEvent(): mouse location = (%d, %d)\n",
+               int(pos.x()), int(pos.y()));
+#else
+    const auto pos = event->pos();
+    egsWarning("In mouseDoubleClickEvent(): mouse location = (%d, %d)\n",
+               pos.x(), pos.y());
 #endif
+
+    egsWarning("  Mouse buttons: 0x%x\n", int(event->button()));
+#endif
+
     // 500 msec before returning to full resolution (after button released)
     if (navigating) {
         navigationTimer->start(500);
         navigating=false;
     }
     else if (event->button() == Qt::LeftButton) {
-
-#ifdef VIEW_DEBUG
-        egsWarning("double click event at %d %d\n",event->x(),event->y());
-#endif
 
         const RenderParameters &q = lastRequest;
         int w = (q.nx*q.nxr);
@@ -602,9 +608,19 @@ void ImageWindow::mouseMoveEvent(QMouseEvent *event) {
 
 void ImageWindow::wheelEvent(QWheelEvent *event) {
 #ifdef VIEW_DEBUG
-    egsWarning("In wheelEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
-    egsWarning("  Buttons: %0x\n", event->buttons());
+#if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
+    const auto pos = event->position();
+    egsWarning("In wheelEvent(): mouse location = (%d, %d)\n",
+               int(pos.x()), int(pos.y()));
+#else
+    const auto pos = event->pos();
+    egsWarning("In wheelEvent(): mouse location = (%d, %d)\n",
+               pos.x(), pos.y());
 #endif
+
+    egsWarning("  Buttons: 0x%x\n", int(event->buttons()));
+#endif
+
     startTransformation();
 
 // Qt6’s angleDelta().y() returns the same wheel movement in “8th of a degree” units. Dividing by 120 approximates old delta() units.
