@@ -1399,6 +1399,10 @@ void GeometryViewControl::loadConfig() {
 }
 
 void GeometryViewControl::loadConfig(QString configFilename) {
+    if (configFilename.isEmpty()) {
+        return;
+    }
+
     // Get the rendering parameters
     RenderParameters &rp = gview->pars;
 
@@ -2888,6 +2892,7 @@ int GeometryViewControl::setGeometry(
     const std::vector<EGS_UserColor> &ucolors,
     EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax,
     EGS_Float zmin, EGS_Float zmax, bool justReloading) {
+
     if (!geom) {
         egsWarning("setGeometry(): got null geometry\n");
         return 1;
@@ -2903,7 +2908,11 @@ int GeometryViewControl::setGeometry(
     // type, such that visualizing geometry motion is possible even with a
     // ptracks file without time indices in it
     g->containsDynamic(hasDynamic);
+
     if (!filename_tracks.isEmpty()) {
+#ifdef VIEW_DEBUG
+        egsWarning("Loading tracks from: %s\n",filename_tracks.toUtf8().constData());
+#endif
         gview->loadTracks(filename_tracks);
 
         hasTrackTimeIndex = hasValidTime();
@@ -2912,6 +2921,7 @@ int GeometryViewControl::setGeometry(
             hasDynamic=hasTrackTimeIndex;
         }
     }
+
     // run timeObjectVisibility to either make visible or hide time index
     // related objects depending on input file and tracks file
     timeObjectVisibility();
@@ -3703,17 +3713,7 @@ void GeometryViewControl::playTime() {
 }
 
 void GeometryViewControl::resetTime() {
-    /* this function controls the reset button, and allows for the time index
-    * settings to be returned to their initial state. need only reset the slider
-    * and time window values to their original state. These will automatically
-    * call the particleslider() and slidetime() methods respectively due to
-    * 'valuechanged' signal emissions. All other elements (time index spinbox
-    * and the particle bounds) are returned to their initial states through
-    * these */
     slider_timeindex->setValue(0);
-
-    // Default the time window to 1% of the simulation time
-    spin_timewindow->setValue(0.01);
 }
 
 void GeometryViewControl::spinTime() {
