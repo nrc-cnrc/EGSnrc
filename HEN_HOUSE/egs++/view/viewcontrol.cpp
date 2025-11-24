@@ -387,6 +387,24 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         showTracks = true;
     }
 
+    // Hide particle tracks controls and colours by default
+    label_particles->show();
+    spin_tmaxp->hide();
+    showPositronsCheckbox->hide();
+    showPhotonsCheckbox->hide();
+    showElectronsCheckbox->hide();
+    spin_tminp->hide();
+    spin_tmine->hide();
+    spin_tmaxe->hide();
+    spin_tminpo->hide();
+    spin_tmaxpo->hide();
+
+    label_particle_colours->show();
+    cPhotonsButton->hide();
+    cElectronsButton->hide();
+    cPositronsButton->hide();
+    energyScalingCheckbox->hide();
+
     // camera orientation vectors (same as the screen vectors)
     camera_v1 = screen_v1;
     camera_v2 = screen_v2;
@@ -505,6 +523,24 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     editorLayout->addWidget(egsinpEdit);
     highlighter = new EGS_Highlighter(egsinpEdit->document());
     egsinpEdit->setDarkMode(highlighter->isDarkMode());
+
+#ifdef Q_OS_WIN
+    if (highlighter->isDarkMode()) {
+        QColor bg(30, 30, 30);   // Windows dark mode typical background
+        QColor fg(220, 220, 220);
+
+        QPalette pal = egsinpEdit->palette();
+        pal.setColor(QPalette::Base, bg);
+        pal.setColor(QPalette::Text, fg);
+        pal.setColor(QPalette::Highlight, QColor(60, 100, 160));
+        pal.setColor(QPalette::HighlightedText, Qt::white);
+
+        egsinpEdit->setPalette(pal);
+
+        // Optional: disable Windows forcing white backgrounds
+        egsinpEdit->viewport()->setAutoFillBackground(true);
+    }
+#endif
 
 
     // Load the egs_application library
