@@ -56,7 +56,7 @@ FORMS           = saveimage.ui clippingplanes.ui viewcontrol.ui
 win32 {
     CONFIG	+= qt warn_off release windows exceptions_off thread
     DEFINES += WIN32
-    #DEFINES += VDEBUG
+    #DEFINES += VDEBUG # Writes output to a file view_debug
     RC_FILE = egs_view.rc
     LIBS	+= ../dso/$$my_machine/egspp.lib
     DESTDIR = ../dso/$$my_machine
