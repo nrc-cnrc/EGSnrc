@@ -625,11 +625,27 @@ void ImageWindow::wheelEvent(QWheelEvent *event) {
 
 // Qt6’s angleDelta().y() returns the same wheel movement in “8th of a degree” units. Dividing by 120 approximates old delta() units.
 #if QT_VERSION >= QT_VERSION_CHECK(6,0,0)
-    emit cameraZooming(event->angleDelta().y()/120); // 120 = old single step
+    int stepSize = event->angleDelta().y()/120; // 120 = old single step
+    if (stepSize == 0) {
+        if (event->angleDelta().y() < 0) {
+            stepSize = -1;
+        } else {
+            stepSize = 1;
+        }
+    }
 #else
-    emit cameraZooming(event->delta()/20);
+    int stepSize = event->delta()/20;
+    if (stepSize == 0) {
+        if (event->delta() < 0) {
+            stepSize = -1;
+        } else {
+            stepSize = 1;
+        }
+    }
 #endif
 
+
+    emit cameraZooming(-stepSize);
 }
 
 void ImageWindow::keyPressEvent(QKeyEvent *event) {
