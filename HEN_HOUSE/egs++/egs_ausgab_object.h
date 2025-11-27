@@ -39,6 +39,7 @@
 
 #include "egs_application.h"
 #include "egs_object_factory.h"
+#include "egs_input_struct.h"
 
 #include <string>
 #include <iostream>
@@ -60,6 +61,12 @@ using namespace std;
 
 class EGS_Input;
 class EGS_Application;
+
+static shared_ptr<EGS_BlockInput> ausBlockInput = make_shared<EGS_BlockInput>("ausgab object");
+inline void setBaseAusgabObjectInputs() {
+    ausBlockInput->addSingleInput("library", true, "The type of ausgab object, loaded by shared library in egs++/dso.");
+    ausBlockInput->addSingleInput("name", true, "The user-declared unique name of this ausgab object. This is the name you may refer to elsewhere in the input file.");
+}
 
 class EGS_EXPORT EGS_AusgabObject : public EGS_Object {
 
@@ -89,6 +96,8 @@ public:
      */
     virtual int processEvent(EGS_Application::AusgabCall iarg) = 0;
     virtual int processEvent(EGS_Application::AusgabCall iarg, int ir) {
+        (void)iarg; // Explicitly silence the "unused parameter" compiler warning
+        (void)ir;
         return 0;
     };
 
@@ -98,6 +107,7 @@ public:
      * for ausgab calls that are of interest to them.
      */
     virtual bool needsCall(EGS_Application::AusgabCall iarg) const {
+        (void)iarg;
         return false;
     };
 
@@ -107,7 +117,9 @@ public:
     };
 
     /*! \brief Set the current event */
-    virtual void setCurrentCase(EGS_I64 ncase) {};
+    virtual void setCurrentCase(EGS_I64 ncase) {
+        (void)ncase;
+    };
 
     /*!  \brief Get a short description of this ausgab object.
      *
@@ -127,6 +139,7 @@ public:
      *   \sa setState(), addState(), resetCounter().
      */
     virtual bool storeState(ostream &data_out) const {
+        (void)data_out;
         return true;
     };
 
@@ -140,6 +153,7 @@ public:
      *   \sa addState(), storeState(), resetCounter()
      */
     virtual bool setState(istream &data_in) {
+        (void)data_in;
         return true;
     };
 
@@ -152,6 +166,7 @@ public:
      *  \sa storeState(), setState(), resetCounter().
      */
     virtual bool addState(istream &data_in) {
+        (void)data_in;
         return true;
     };
 
@@ -230,7 +245,7 @@ public:
     static int nObjects();
 
     /*! \brief Returns the j'th ausgab object in the internal list */
-    static EGS_AusgabObject *getObject(int j);
+    static EGS_AusgabObject *getObject(size_t j);
 
 protected:
 

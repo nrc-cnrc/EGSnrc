@@ -43,11 +43,42 @@
 #include "egs_transformations.h"
 #include "egs_rndm.h"
 #include "egs_object_factory.h"
+#include "egs_input_struct.h"
 
 #include <string>
 using std::string;
 
 class EGS_Input;
+
+inline void setShapeInputs(shared_ptr<EGS_BlockInput> shapePtr) {
+    auto libPtr = shapePtr->addSingleInput("library", false, "The type of shape, loaded by shared library in egs++/dso.");
+    auto typePtr = shapePtr->addSingleInput("type", false, "The type of shape - this input includes only a small set of simple shapes. For more options, use the 'library' input instead.", {"point", "box", "sphere", "cylinder"});
+
+    // Only one of "library" or "type" are allowed
+    libPtr->addDependency(typePtr, "", true);
+    typePtr->addDependency(libPtr, "", true);
+
+    // Point
+    shapePtr->addSingleInput("position", true, "The x, y, z position that the source will emit particles from.")->addDependency(typePtr, "point");
+
+    // Box
+    shapePtr->addSingleInput("box size", true, "The side lengths of the box, in cm. Enter 1 number for a cube, or 3 numbers to denote the x, y, and z side lengths.")->addDependency(typePtr, "box");
+
+    // Sphere
+    auto radiusPtr = shapePtr->addSingleInput("radius", true, "The radius of the sphere or cylinder, in cm.");
+    radiusPtr->addDependency(typePtr, "sphere");
+    auto midPtr = shapePtr->addSingleInput("midpoint", false, "The x, y and z coordinates of the midpoint of the sphere or cylinder, in cm. Defaults to 0, 0, 0.");
+    midPtr->addDependency(typePtr, "sphere");
+
+    // Cylinder
+    radiusPtr->addDependency(typePtr, "cylinder");
+    midPtr->addDependency(typePtr, "cylinder");
+    shapePtr->addSingleInput("height", true, "The height of the cylinder, in cm.")->addDependency(typePtr, "cylinder");
+    shapePtr->addSingleInput("phi range", false, "The minimum and maximum phi values, in degrees. This allows you restrict the cylinder to a shape like a slice of pie!")->addDependency(typePtr, "cylinder");
+    shapePtr->addSingleInput("axis", true, "A unit vector that defines the axis of the cylinder.")->addDependency(typePtr, "cylinder");
+
+    addTransformationBlock(shapePtr);
+}
 
 /*! \defgroup Shapes Shapes
   \brief Shapes are objects that can pick random points within
@@ -149,6 +180,7 @@ public:
      * distribution using the random number generator \a rndm.
      */
     virtual EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
+        (void)rndm;
         egsFatal("You need to implement the getPoint function in your "
                  "derived class\n");
         return EGS_Vector();
@@ -213,7 +245,9 @@ public:
      *This function has a non-empty implementation in 2 cases.
      *1) it is re implemented in any composite shape, where it will call getNextShapePosition on all of its components
      *2) it is re implemented in the dynamic shape class. This is where the code will find the current (non static) state of the shape. */
-    virtual void getNextShapePosition(EGS_RandomGenerator *rndm) {};
+    virtual void getNextShapePosition(EGS_RandomGenerator *rndm) {
+        (void)rndm;
+    };
 
     /*! Get a random direction given a source position \a xo.
      *
@@ -229,6 +263,10 @@ public:
      */
     virtual void getPointSourceDirection(const EGS_Vector &xo,
                                          EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
+        (void)xo;
+        (void)rndm;
+        (void)u;
+        (void)wt;
         egsFatal("getPointSourceDirection: you have to implement this "
                  "method for the %s shape if you want to use it\n",otype.c_str());
     };
@@ -245,7 +283,9 @@ public:
 
     /*! \brief Update the position of the shape if it is in motion
      */
-    virtual void updatePosition(EGS_Float time) { };
+    virtual void updatePosition(EGS_Float time) {
+        (void)time;
+    };
 
 protected:
 
@@ -649,6 +689,8 @@ public:
     EGS_CylinderShape(const string &Name="",EGS_ObjectFactory *f=0) :
         EGS_BaseShape(), R(1), h(1), xo(), a(0,0,1),
         phi_min(0), phi_max(2*M_PI), has_phi(false) {
+        (void)Name;
+        (void)f;
         otype="cylinder";
     };
     EGS_CylinderShape(EGS_Float r, EGS_Float H,

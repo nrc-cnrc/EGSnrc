@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Marc Chamberland
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -65,6 +66,8 @@
 using namespace std;
 
 string EGS_SMART_ENVELOPE_LOCAL EGS_SmartEnvelope::type = "EGS_SmartEnvelope";
+
+static bool EGS_SMART_ENVELOPE_LOCAL inputSet = false;
 
 void EGS_SmartEnvelope::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_SmartEnvelope::setMedia: don't use this method. Use the\n"
@@ -254,6 +257,25 @@ static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword2[] = "geometry";
 //static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword3[] = "inscribed geometries";
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_SmartEnvelope"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry");
+        geomBlockInput->addSingleInput("inscribed geometries", true, "A list of previously defined geometries");
+    }
+
+    EGS_SMART_ENVELOPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_SMART_ENVELOPE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {

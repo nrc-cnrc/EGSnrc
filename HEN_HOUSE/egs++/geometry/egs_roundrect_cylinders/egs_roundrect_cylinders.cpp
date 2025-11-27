@@ -23,7 +23,7 @@
 #
 #  Author:          Manuel Stoeckl, 2016
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 #
@@ -41,7 +41,58 @@
 #include "egs_roundrect_cylinders.h"
 #include "egs_input.h"
 
+static bool EGS_ROUNDRECT_CYLINDERS_LOCAL inputSet = false;
+
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs();
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_RoundRect_Cylinders"});
+
+        // Format: name, isRequired, description, vector string of allowed inputs
+        auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of rounded rectangle cylinder", {"EGS_RoundRectCylinders", "EGS_RoundRectCylindersXY", "EGS_RoundRectCylindersYZ", "EGS_RoundRectCylindersXZ"});
+
+        geomBlockInput->addSingleInput("x-widths", true, "A list of cylinder half-widths in the x-direction, must be in increasing order");
+        geomBlockInput->addSingleInput("y-widths", true, "A list of cylinder half-widths in the y-direction, must be in increasing order");
+        geomBlockInput->addSingleInput("radii", true, "A list of fillet radii, must be in increasing order");
+        geomBlockInput->addSingleInput("midpoint", false, "The position of the midpoint (x, y, z)");
+        
+        // EGS_RoundRectCylinders
+        auto inpPtr = geomBlockInput->addSingleInput("x-axis", true, "x-axis of rounded rectangle (x, y, z)");
+        inpPtr->addDependency(typePtr, "EGS_RoundRectCylinders");
+        auto yinpPtr = geomBlockInput->addSingleInput("y-axis", true, "y-axis of rounded rectangle (x, y, z)");
+        yinpPtr->addDependency(typePtr, "EGS_RoundRectCylinders");
+    }
+
+    EGS_ROUNDRECT_CYLINDERS_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of rounded reactangle cylinder
+    #:start geometry:
+        name = my_roundedrectcylinder
+        library = egs_roundrect_cylinders
+        type = EGS_RoundRectCylindersXY
+        x-widths = 1 2
+        y-widths = 0.5 1
+        radii = 0.1 0.5
+        :start media input:
+            media = air water
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_ROUNDRECT_CYLINDERS_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_ROUNDRECT_CYLINDERS_EXPORT
     EGS_BaseGeometry *createGeometry(EGS_Input *input) {

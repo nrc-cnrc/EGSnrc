@@ -35,13 +35,16 @@
 #ifndef GEOMETRYVIEWCONTROL_H
 #define GEOMETRYVIEWCONTROL_H
 
-#include "ui_viewcontrol.h"
-
 #include <vector>
 #include "egs_user_color.h"
 #include "egs_vector.h"
+#include "egs_highlighter.h"
+#include "egs_editor.h"
+#include "egs_advanced_application.h"
 
 #include <QMainWindow>
+
+#include "ui_viewcontrol.h"
 
 class EGS_BaseGeometry;
 class EGS_GeometryVisualizer;
@@ -51,13 +54,13 @@ class QImage;
 class SaveImage;
 class ClippingPlanesWidget;
 
-
-class GeometryViewControl : public QMainWindow, public Ui::GeometryViewControl {
+class GeometryViewControl : public QMainWindow, private Ui::GeometryViewControl {
     Q_OBJECT
 
 public:
 
-    GeometryViewControl(QWidget *parent = 0, const char *name = 0);
+    explicit GeometryViewControl(QWidget *parent = nullptr, const char *name = nullptr);
+
     virtual ~GeometryViewControl();
 
     virtual void setFilename(QString str);
@@ -89,6 +92,7 @@ public slots:
     virtual void loadDose();
     virtual void loadConfig();
     virtual void saveConfig();
+    virtual void saveEgsinp();
     virtual void updateSimulationGeometry(int ind);
     virtual void checkboxAxes(bool toggle);
     virtual void checkboxAxesLabels(bool toggle);
@@ -110,6 +114,7 @@ public slots:
     virtual void phiRotation(int Phi);
     virtual void changeAmbientLight(int alight);
     virtual void changeTransparency(int t);
+    virtual void changeGlobalTransparency(int t);
     virtual void moveLightChanged(int toggle);
     virtual void setLightPosition();
     virtual void setLookAt();
@@ -154,6 +159,8 @@ public slots:
     virtual void updateNumTimeSteps();
     virtual void particleSlider(EGS_Float slidertime);
     virtual void updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po);
+    virtual void insertInputExample();
+    virtual void setApplication();
 
 private:
 
@@ -219,7 +226,16 @@ private:
             energyScaling;
     vector<vector<EGS_Float>> scoreArrays;
     vector<string> geometryNames;
+    vector<string> inputExamples;
     EGS_BaseGeometry *origSimGeom;
+    EGS_Editor *egsinpEdit;
+    EGS_Highlighter *highlighter;
+    EGS_AdvancedApplication *egsApp;
+    shared_ptr<EGS_InputStruct> inputStruct;
+    QMenu *exampleMenu;
+    string selectedApplication;
+    string lib_dir;
+    QMenu *appMenu;
 
 protected slots:
 

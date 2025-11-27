@@ -84,12 +84,6 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
     typedef EGS_ParticleTrack::Vertex Vert;
     typedef EGS_ParticleTrack::ParticleInfo PInfo;
 
-    // zero pointers
-    for (int i=0; i<3; i++) {
-        m_index[i] = NULL;
-        m_points[i] = NULL;
-    }
-
     int tot_tracks = 0;
     // Slurp file
     char *tmp_buffer = 0;
@@ -116,7 +110,7 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
     streamsize headerSize = sizeof(head_inctime)+sizeof(bool)+sizeof(int);
 
     // very conservative sanity check to avoid a huge allocation
-    if (tot_tracks * sizeof(Vert) > size - headerSize) {
+    if ((long long)tot_tracks * (long long)sizeof(Vert) > (long long)size - (long long)headerSize) {
         egsInformation("%s: No tracks loaded: %d tracks can't fit in %d-byte file '%s'\n",
                        func_name, tot_tracks, size, filename);
         m_failed = true;
@@ -171,12 +165,10 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
         int nverts = *((int *)loc);
         PInfo pInfo =
             *(PInfo *)(loc+sizeof(int));
-        EGS_Float timeindex;
         if (incltime) {
             // if it's there, the time index is also
             // read before moving on to reading vertices. Skip includes size of
             // EGS_Float if time indices present only
-            timeindex = *(EGS_Float *)(loc+sizeof(int)+ sizeof(PInfo));
             skip = sizeof(int) + sizeof(PInfo)+sizeof(EGS_Float);
         }
         else {
@@ -210,11 +202,13 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
     // Copying data into a more efficient and compact representation.
     // This doubles the initial memory use but is more efficient afterwards.
 
-    for (int i=0; i<3; i++) {
-        // In theory we could calculate above exactly how much track
-        // compression saves, so overcopies aren't necessary.
-        m_points[i] = new EGS_ParticleTrack::Vertex[count_vert[i]];
-        m_index[i] = new int[count_num[i]+1];
+    // In theory we could calculate above exactly how much track
+    // compression saves, so overcopies aren't necessary.
+
+    // Pre-allocate to required size (or slightly over) to avoid frequent reallocations in the loop
+    for (size_t i=0; i<3; i++) {
+        m_points[i].reserve(count_vert[i]);
+        m_index[i].reserve(count_num[i]+1);
     }
 
     int mem_rcnt[3] = {0,0,0};
@@ -229,9 +223,6 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
             *(PInfo *)(ind+sizeof(int));
         EGS_Float timeindex;
         if (incltime) {
-            // If the tracks file includes time indices, the time index is also
-            // read before moving on to reading vertices. Start includes size of
-            // EGS_Float if time indices present only
             timeindex = *(EGS_Float *)(ind+sizeof(int)+ sizeof(PInfo));
             start = ind+sizeof(int)+sizeof(PInfo)+sizeof(EGS_Float);
         }
@@ -241,31 +232,49 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
 
         int type = particleType(pInfo);
         int m_off = mem_rcnt[type];
-        int i_off = ind_rcnt[type];
+        // int i_off = ind_rcnt[type]; // i_off is derived from m_index[type].size() now
         bool join = false;
         bool append = false;
+
+        // Check if we can join/append
         if (m_off > 0) {
+            // NOTE: This check still relies on casting from the raw char* buffer 'start',
+            // which is necessary given the file reading structure of this application.
             const Vert &v = *(Vert *)start;
-            const Vert &w = m_points[type][m_off-1];
+            const Vert &w = m_points[type].back(); // Use vector's back() instead of m_points[type][m_off-1]
+
             append = w.x.x == v.x.x && w.x.y == v.x.y &&
                      w.x.z == v.x.z;
             join = append && w.e == v.e;
         }
+
+        // Calculate the pointers/iterators for the source data
+        Vert* src_begin = (Vert*)start;
+
         if (join) {
             // First point/energy pair coincides with the previous last p/e pair
-            memcpy(&m_points[type][m_off],start+sizeof(Vert),sizeof(Vert)*(nverts-1));
+            // memcpy(&m_points[type][m_off],start+sizeof(Vert),sizeof(Vert)*(nverts-1)); // Original
+            m_points[type].insert(m_points[type].end(),
+                                    src_begin + 1, // Start copying from the second vertex
+                                    src_begin + nverts);
             mem_rcnt[type] += nverts - 1;
         }
         else if (append) {
             // First point matches last point, but energies are different
-            // This often concatenates things unrealistically, but to the
-            // rendering code it's all the same
-            memcpy(&m_points[type][m_off],start,sizeof(Vert)*nverts);
+            // memcpy(&m_points[type][m_off],start,sizeof(Vert)*nverts); // Original
+             m_points[type].insert(m_points[type].end(),
+                                    src_begin,
+                                    src_begin + nverts);
             mem_rcnt[type] += nverts;
         }
         else {
-            memcpy(&m_points[type][m_off],start,sizeof(Vert)*nverts);
-            m_index[type][i_off] = m_off;
+            // memcpy(&m_points[type][m_off],start,sizeof(Vert)*nverts); // Original
+             m_points[type].insert(m_points[type].end(),
+                                    src_begin,
+                                    src_begin + nverts);
+
+            // Use vector push_back instead of raw indexing
+            m_index[type].push_back(m_off);
             ind_rcnt[type]++;
             mem_rcnt[type] += nverts;
             if (incltime) {
@@ -282,26 +291,32 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
                 else if (type==2) {
                     timelist_po.push_back(timeindex);
                 }
-
             }
         }
     }
+
     // Sentinel at the end; get lengths
     ntracks.clear();
     for (int i=0; i<3; i++) {
-        m_index[i][ind_rcnt[i]] = mem_rcnt[i];
+        // Use vector push_back instead of raw indexing for sentinel
+        m_index[i].push_back(mem_rcnt[i]);
         m_tracks[i] = size_t(ind_rcnt[i]);
         ntracks.push_back(m_tracks[i]);
     }
+
     // Cleanup temporaries
     delete[] tmp_index;
     delete[] tmp_buffer;
-    // Resize everything to fit -- a second copy :-(.
-    // But it decreases runtime memory, sometimes significantly
+
+    // --- THIS SECTION IS NOW OBSOLETE ---
+    // With std::vector, we no longer need the manual shrink/resize step or the second copy.
+    // The vectors are already precisely sized and allocated.
+    /*
     for (int i=0; i<3; i++) {
         m_index[i] = shrink(m_index[i], count_num[i]+1, ind_rcnt[i]+1);
         m_points[i] = shrink(m_points[i], count_vert[i], mem_rcnt[i]);
     }
+    */
 
     int csze = ind_rcnt[0] + ind_rcnt[1] + ind_rcnt[2];
     int msze = mem_rcnt[0] + mem_rcnt[1] + mem_rcnt[2];

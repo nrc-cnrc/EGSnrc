@@ -68,7 +68,7 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout_9">
+   <layout class="QVBoxLayout" name="verticalLayout_18">
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -92,9 +92,9 @@
          <property name="geometry">
           <rect>
            <x>0</x>
-           <y>0</y>
-           <width>713</width>
-           <height>626</height>
+           <y>-27</y>
+           <width>699</width>
+           <height>655</height>
           </rect>
          </property>
          <property name="sizePolicy">
@@ -135,17 +135,17 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,0">
                 <property name="sizeConstraint">
-                 <enum>QLayout::SetDefaultConstraint</enum>
+                 <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
                 </property>
                 <item>
                  <layout class="QVBoxLayout" name="clipLayout">
                   <item>
                    <spacer name="verticalSpacer_2">
                     <property name="orientation">
-                     <enum>Qt::Vertical</enum>
+                     <enum>Qt::Orientation::Vertical</enum>
                     </property>
                     <property name="sizeType">
-                     <enum>QSizePolicy::Fixed</enum>
+                     <enum>QSizePolicy::Policy::Fixed</enum>
                     </property>
                     <property name="sizeHint" stdset="0">
                      <size>
@@ -158,7 +158,7 @@
                   <item>
                    <widget class="QGroupBox" name="groupBox_5">
                     <property name="title">
-                     <string>Simulation geometry</string>
+                     <string>View geometry</string>
                     </property>
                     <layout class="QHBoxLayout" name="horizontalLayout_14">
                      <item>
@@ -174,10 +174,10 @@
                   <item>
                    <spacer name="verticalSpacer_3">
                     <property name="orientation">
-                     <enum>Qt::Vertical</enum>
+                     <enum>Qt::Orientation::Vertical</enum>
                     </property>
                     <property name="sizeType">
-                     <enum>QSizePolicy::Fixed</enum>
+                     <enum>QSizePolicy::Policy::Fixed</enum>
                     </property>
                     <property name="sizeHint" stdset="0">
                      <size>
@@ -207,10 +207,29 @@
                       <height>16777215</height>
                      </size>
                     </property>
+                    <property name="toolTip">
+                     <string>Use egs_track_scoring to output a ptracks file</string>
+                    </property>
                     <property name="title">
                      <string>Particle tracks</string>
                     </property>
                     <layout class="QGridLayout">
+                     <item row="2" column="1">
+                      <widget class="QSpinBox" name="spin_tminpo">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
                      <item row="1" column="0">
                       <widget class="QCheckBox" name="showElectronsCheckbox">
                        <property name="text">
@@ -221,34 +240,8 @@
                        </property>
                       </widget>
                      </item>
-                     <item row="2" column="0">
-                      <widget class="QCheckBox" name="showPositronsCheckbox">
-                       <property name="text">
-                        <string>Positrons</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="1" column="2">
-                      <widget class="QSpinBox" name="spin_tmaxe">
-                       <property name="minimum">
-                        <number>1</number>
-                       </property>
-                       <property name="value">
-                        <number>1</number>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="2" column="1">
-                      <widget class="QSpinBox" name="spin_tminpo">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
+                     <item row="0" column="2">
+                      <widget class="QSpinBox" name="spin_tmaxp">
                        <property name="minimum">
                         <number>1</number>
                        </property>
@@ -267,13 +260,39 @@
                        </property>
                       </widget>
                      </item>
-                     <item row="0" column="2">
-                      <widget class="QSpinBox" name="spin_tmaxp">
+                     <item row="1" column="1">
+                      <widget class="QSpinBox" name="spin_tmine">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
                        <property name="minimum">
                         <number>1</number>
                        </property>
                        <property name="value">
                         <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="0">
+                      <widget class="QLabel" name="label_particles">
+                       <property name="text">
+                        <string>No particle tracks found</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignCenter</set>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="0">
+                      <widget class="QCheckBox" name="showPositronsCheckbox">
+                       <property name="text">
+                        <string>Positrons</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
                        </property>
                       </widget>
                      </item>
@@ -303,55 +322,13 @@
                        </property>
                       </widget>
                      </item>
-                     <item row="1" column="1">
-                      <widget class="QSpinBox" name="spin_tmine">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
+                     <item row="1" column="2">
+                      <widget class="QSpinBox" name="spin_tmaxe">
                        <property name="minimum">
                         <number>1</number>
                        </property>
                        <property name="value">
                         <number>1</number>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="3" column="0">
-                      <widget class="QLabel" name="label_timewindow">
-                       <property name="text">
-                        <string>Time window</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="3" column="1">
-                      <widget class="QDoubleSpinBox" name="spin_timewindow">
-                       <property name="decimals">
-                        <number>3</number>
-                       </property>
-                       <property name="maximum">
-                        <double>2.000000000000000</double>
-                       </property>
-                       <property name="singleStep">
-                        <double>0.001000000000000</double>
-                       </property>
-                       <property name="value">
-                        <double>0.010000000000000</double>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="3" column="2">
-                      <widget class="QPushButton" name="button_timereset">
-                       <property name="maximumSize">
-                        <size>
-                         <width>62</width>
-                         <height>29</height>
-                        </size>
-                       </property>
-                       <property name="text">
-                        <string>Reset</string>
                        </property>
                       </widget>
                      </item>
@@ -371,8 +348,8 @@
                     </property>
                     <property name="minimumSize">
                      <size>
-                      <width>0</width>
-                      <height>114</height>
+                      <width>260</width>
+                      <height>146</height>
                      </size>
                     </property>
                     <property name="title">
@@ -381,8 +358,8 @@
                     <widget class="QSlider" name="slider_timeindex">
                      <property name="geometry">
                       <rect>
-                       <x>10</x>
-                       <y>30</y>
+                       <x>11</x>
+                       <y>25</y>
                        <width>231</width>
                        <height>21</height>
                       </rect>
@@ -400,14 +377,14 @@
                       <number>1</number>
                      </property>
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Orientation::Horizontal</enum>
                      </property>
                     </widget>
                     <widget class="QPushButton" name="button_timeplay">
                      <property name="geometry">
                       <rect>
                        <x>180</x>
-                       <y>50</y>
+                       <y>44</y>
                        <width>62</width>
                        <height>26</height>
                       </rect>
@@ -432,7 +409,7 @@
                      <property name="geometry">
                       <rect>
                        <x>110</x>
-                       <y>50</y>
+                       <y>44</y>
                        <width>63</width>
                        <height>26</height>
                       </rect>
@@ -457,7 +434,7 @@
                      <property name="geometry">
                       <rect>
                        <x>10</x>
-                       <y>50</y>
+                       <y>44</y>
                        <width>91</width>
                        <height>26</height>
                       </rect>
@@ -470,7 +447,7 @@
                      <property name="geometry">
                       <rect>
                        <x>180</x>
-                       <y>80</y>
+                       <y>75</y>
                        <width>61</width>
                        <height>29</height>
                       </rect>
@@ -492,13 +469,67 @@
                      <property name="geometry">
                       <rect>
                        <x>10</x>
-                       <y>85</y>
+                       <y>80</y>
                        <width>151</width>
                        <height>20</height>
                       </rect>
                      </property>
                      <property name="text">
                       <string>Number of time steps</string>
+                     </property>
+                    </widget>
+                    <widget class="QLabel" name="label_timewindow">
+                     <property name="geometry">
+                      <rect>
+                       <x>10</x>
+                       <y>115</y>
+                       <width>147</width>
+                       <height>20</height>
+                      </rect>
+                     </property>
+                     <property name="text">
+                      <string>Time window</string>
+                     </property>
+                    </widget>
+                    <widget class="QDoubleSpinBox" name="spin_timewindow">
+                     <property name="geometry">
+                      <rect>
+                       <x>110</x>
+                       <y>111</y>
+                       <width>61</width>
+                       <height>29</height>
+                      </rect>
+                     </property>
+                     <property name="decimals">
+                      <number>3</number>
+                     </property>
+                     <property name="maximum">
+                      <double>2.000000000000000</double>
+                     </property>
+                     <property name="singleStep">
+                      <double>0.001000000000000</double>
+                     </property>
+                     <property name="value">
+                      <double>0.010000000000000</double>
+                     </property>
+                    </widget>
+                    <widget class="QPushButton" name="button_timereset">
+                     <property name="geometry">
+                      <rect>
+                       <x>180</x>
+                       <y>110</y>
+                       <width>62</width>
+                       <height>29</height>
+                      </rect>
+                     </property>
+                     <property name="maximumSize">
+                      <size>
+                       <width>62</width>
+                       <height>29</height>
+                      </size>
+                     </property>
+                     <property name="text">
+                      <string>Reset</string>
                      </property>
                     </widget>
                    </widget>
@@ -514,7 +545,7 @@
                     <property name="minimumSize">
                      <size>
                       <width>0</width>
-                      <height>120</height>
+                      <height>110</height>
                      </size>
                     </property>
                     <property name="baseSize">
@@ -610,16 +641,31 @@
                       <number>6</number>
                      </property>
                      <item>
-                      <widget class="QSlider" name="slider_dose">
-                       <property name="maximum">
-                        <number>100</number>
+                      <widget class="QGroupBox" name="groupBox_7">
+                       <property name="title">
+                        <string>Opacity</string>
                        </property>
-                       <property name="value">
-                        <number>50</number>
-                       </property>
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
+                       <layout class="QHBoxLayout" name="horizontalLayout_15">
+                        <item>
+                         <widget class="QSlider" name="slider_dose">
+                          <property name="maximum">
+                           <number>100</number>
+                          </property>
+                          <property name="value">
+                           <number>50</number>
+                          </property>
+                          <property name="orientation">
+                           <enum>Qt::Orientation::Horizontal</enum>
+                          </property>
+                          <property name="tickPosition">
+                           <enum>QSlider::TickPosition::TicksBelow</enum>
+                          </property>
+                          <property name="tickInterval">
+                           <number>10</number>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
                       </widget>
                      </item>
                      <item>
@@ -627,7 +673,7 @@
                        <item>
                         <widget class="QScrollArea" name="scrollArea_2">
                          <property name="frameShape">
-                          <enum>QFrame::Box</enum>
+                          <enum>QFrame::Shape::NoFrame</enum>
                          </property>
                          <property name="widgetResizable">
                           <bool>true</bool>
@@ -637,7 +683,7 @@
                            <rect>
                             <x>0</x>
                             <y>0</y>
-                            <width>232</width>
+                            <width>247</width>
                             <height>68</height>
                            </rect>
                           </property>
@@ -650,10 +696,10 @@
                              <item>
                               <widget class="QLabel" name="label_dose">
                                <property name="text">
-                                <string>No ausgab objects found</string>
+                                <string>No dose files found</string>
                                </property>
                                <property name="alignment">
-                                <set>Qt::AlignCenter</set>
+                                <set>Qt::AlignmentFlag::AlignCenter</set>
                                </property>
                               </widget>
                              </item>
@@ -690,10 +736,10 @@
                 <item>
                  <spacer name="verticalSpacer_11">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeType">
-                   <enum>QSizePolicy::Fixed</enum>
+                   <enum>QSizePolicy::Policy::Fixed</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -753,7 +799,7 @@
                      <item>
                       <widget class="QGroupBox" name="groupBox19">
                        <property name="title">
-                        <string>Transparency</string>
+                        <string>Opacity</string>
                        </property>
                        <layout class="QHBoxLayout" name="horizontalLayout_2">
                         <item>
@@ -765,10 +811,38 @@
                            <number>255</number>
                           </property>
                           <property name="orientation">
-                           <enum>Qt::Horizontal</enum>
+                           <enum>Qt::Orientation::Horizontal</enum>
                           </property>
                           <property name="tickPosition">
-                           <enum>QSlider::TicksBelow</enum>
+                           <enum>QSlider::TickPosition::TicksBelow</enum>
+                          </property>
+                          <property name="tickInterval">
+                           <number>25</number>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QGroupBox" name="groupBox_6">
+                       <property name="title">
+                        <string>Global Opacity</string>
+                       </property>
+                       <layout class="QHBoxLayout" name="horizontalLayout_9">
+                        <item>
+                         <widget class="QSlider" name="global_transparency">
+                          <property name="maximum">
+                           <number>255</number>
+                          </property>
+                          <property name="value">
+                           <number>255</number>
+                          </property>
+                          <property name="orientation">
+                           <enum>Qt::Orientation::Horizontal</enum>
+                          </property>
+                          <property name="tickPosition">
+                           <enum>QSlider::TickPosition::TicksBelow</enum>
                           </property>
                           <property name="tickInterval">
                            <number>25</number>
@@ -862,7 +936,7 @@
                 <item>
                  <spacer name="verticalSpacer_9">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -882,10 +956,10 @@
                 <item>
                  <spacer name="verticalSpacer_12">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeType">
-                   <enum>QSizePolicy::Fixed</enum>
+                   <enum>QSizePolicy::Policy::Fixed</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -909,6 +983,16 @@
                   <layout class="QHBoxLayout" name="horizontalLayout_11">
                    <item>
                     <layout class="QVBoxLayout" name="verticalLayout_10">
+                     <item>
+                      <widget class="QLabel" name="label_particle_colours">
+                       <property name="text">
+                        <string>No particle tracks found</string>
+                       </property>
+                       <property name="alignment">
+                        <set>Qt::AlignmentFlag::AlignCenter</set>
+                       </property>
+                      </widget>
+                     </item>
                      <item>
                       <widget class="QPushButton" name="cPhotonsButton">
                        <property name="sizePolicy">
@@ -984,7 +1068,7 @@
                 <item>
                  <spacer name="verticalSpacer_10">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -997,7 +1081,7 @@
                 <item>
                  <spacer name="horizontalSpacer_5">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1024,10 +1108,10 @@
                 <item>
                  <spacer name="verticalSpacer_7">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeType">
-                   <enum>QSizePolicy::Fixed</enum>
+                   <enum>QSizePolicy::Policy::Fixed</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1078,10 +1162,10 @@
                 <item>
                  <spacer name="horizontalSpacer_2">
                   <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
+                   <enum>Qt::Orientation::Horizontal</enum>
                   </property>
                   <property name="sizeType">
-                   <enum>QSizePolicy::Preferred</enum>
+                   <enum>QSizePolicy::Policy::Preferred</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1094,7 +1178,7 @@
                 <item>
                  <spacer name="verticalSpacer_8">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1211,10 +1295,10 @@
               <item>
                <spacer name="horizontalSpacer_3">
                 <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                 <property name="sizeType">
-                 <enum>QSizePolicy::Preferred</enum>
+                 <enum>QSizePolicy::Policy::Preferred</enum>
                 </property>
                 <property name="sizeHint" stdset="0">
                  <size>
@@ -1236,10 +1320,10 @@
                 <item>
                  <spacer name="verticalSpacer_4">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeType">
-                   <enum>QSizePolicy::Fixed</enum>
+                   <enum>QSizePolicy::Policy::Fixed</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1419,7 +1503,7 @@
                      <item>
                       <spacer name="horizontalSpacer_4">
                        <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
+                        <enum>Qt::Orientation::Horizontal</enum>
                        </property>
                        <property name="sizeHint" stdset="0">
                         <size>
@@ -1482,10 +1566,10 @@
                 <item>
                  <spacer name="verticalSpacer_6">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeType">
-                   <enum>QSizePolicy::Fixed</enum>
+                   <enum>QSizePolicy::Policy::Fixed</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1516,10 +1600,10 @@
                    <item>
                     <spacer name="spacer_cam">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Orientation::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Expanding</enum>
+                      <enum>QSizePolicy::Policy::Expanding</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -1542,10 +1626,10 @@
                 <item>
                  <spacer name="verticalSpacer">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeType">
-                   <enum>QSizePolicy::Fixed</enum>
+                   <enum>QSizePolicy::Policy::Fixed</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1576,10 +1660,10 @@
                    <item>
                     <spacer name="spacer4">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Orientation::Horizontal</enum>
                      </property>
                      <property name="sizeType">
-                      <enum>QSizePolicy::Expanding</enum>
+                      <enum>QSizePolicy::Policy::Expanding</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
@@ -1602,7 +1686,7 @@
                 <item>
                  <spacer name="verticalSpacer_14">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1622,10 +1706,10 @@
                 <item>
                  <spacer name="verticalSpacer_5">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeType">
-                   <enum>QSizePolicy::Fixed</enum>
+                   <enum>QSizePolicy::Policy::Fixed</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1731,10 +1815,10 @@
                         <item>
                          <spacer name="spacer6">
                           <property name="orientation">
-                           <enum>Qt::Horizontal</enum>
+                           <enum>Qt::Orientation::Horizontal</enum>
                           </property>
                           <property name="sizeType">
-                           <enum>QSizePolicy::Expanding</enum>
+                           <enum>QSizePolicy::Policy::Expanding</enum>
                           </property>
                           <property name="sizeHint" stdset="0">
                            <size>
@@ -1790,10 +1874,10 @@
                            <number>100</number>
                           </property>
                           <property name="orientation">
-                           <enum>Qt::Horizontal</enum>
+                           <enum>Qt::Orientation::Horizontal</enum>
                           </property>
                           <property name="tickPosition">
-                           <enum>QSlider::TicksBelow</enum>
+                           <enum>QSlider::TickPosition::TicksBelow</enum>
                           </property>
                           <property name="tickInterval">
                            <number>10</number>
@@ -1811,10 +1895,10 @@
                 <item>
                  <spacer name="verticalSpacer_13">
                   <property name="orientation">
-                   <enum>Qt::Vertical</enum>
+                   <enum>Qt::Orientation::Vertical</enum>
                   </property>
                   <property name="sizeType">
-                   <enum>QSizePolicy::Minimum</enum>
+                   <enum>QSizePolicy::Policy::Minimum</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
@@ -1846,17 +1930,20 @@
                     <widget class="QTextBrowser" name="controlsText">
                      <property name="html">
                       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;meta charset=&quot;utf-8&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Rotate: &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;hold left MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Zoom:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; scroll or hold middle MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Pan: &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Ctrl + left MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Roll:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; Shift + left MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Set rotation point:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; double left MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Home:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; Home&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Set home:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; Alt + Home&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Look along X (Y or Z): &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;x (y or z)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+hr { height: 1px; border-width: 0; }
+li.unchecked::marker { content: &quot;\2610&quot;; }
+li.checked::marker { content: &quot;\2612&quot;; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Noto Sans'; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Cantarell'; font-weight:600;&quot;&gt;Rotate: &lt;/span&gt;&lt;span style=&quot; font-family:'Cantarell';&quot;&gt;hold left MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Cantarell'; font-weight:600;&quot;&gt;Zoom:&lt;/span&gt;&lt;span style=&quot; font-family:'Cantarell';&quot;&gt; scroll or hold middle MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Cantarell'; font-weight:600;&quot;&gt;Pan: &lt;/span&gt;&lt;span style=&quot; font-family:'Cantarell';&quot;&gt;Ctrl + left MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Cantarell'; font-weight:600;&quot;&gt;Roll:&lt;/span&gt;&lt;span style=&quot; font-family:'Cantarell';&quot;&gt; Shift + left MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Cantarell'; font-weight:600;&quot;&gt;Set rotation point:&lt;/span&gt;&lt;span style=&quot; font-family:'Cantarell';&quot;&gt; double left MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Cantarell'; font-weight:600;&quot;&gt;Home:&lt;/span&gt;&lt;span style=&quot; font-family:'Cantarell';&quot;&gt; Home&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Cantarell'; font-weight:600;&quot;&gt;Set home:&lt;/span&gt;&lt;span style=&quot; font-family:'Cantarell';&quot;&gt; Alt + Home&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'Cantarell'; font-weight:600;&quot;&gt;Look along X (Y or Z): &lt;/span&gt;&lt;span style=&quot; font-family:'Cantarell';&quot;&gt;x (y or z)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                      </property>
                     </widget>
                    </item>
@@ -1866,6 +1953,18 @@ p, li { white-space: pre-wrap; }
                </layout>
               </item>
              </layout>
+            </widget>
+            <widget class="QWidget" name="tab">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <attribute name="title">
+              <string>Editor (experimental)</string>
+             </attribute>
+             <layout class="QGridLayout" name="editorLayout"/>
             </widget>
            </widget>
           </item>
@@ -1883,7 +1982,7 @@ p, li { white-space: pre-wrap; }
      <x>0</x>
      <y>0</y>
      <width>717</width>
-     <height>25</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -1895,6 +1994,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionOpen_dose"/>
     <addaction name="actionOpen_settings"/>
     <addaction name="separator"/>
+    <addaction name="actionSave_egsinp"/>
     <addaction name="actionSave_image"/>
     <addaction name="actionSave_settings"/>
     <addaction name="separator"/>
@@ -1914,7 +2014,7 @@ p, li { white-space: pre-wrap; }
   </widget>
   <action name="actionOpen">
    <property name="text">
-    <string>&amp;Open...</string>
+    <string>&amp;Open egsinp...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -1930,7 +2030,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionSave_image">
    <property name="text">
-    <string>Save &amp;image...</string>
+    <string>Save &amp;image</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
@@ -1938,10 +2038,10 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionSave_settings">
    <property name="text">
-    <string>&amp;Save settings...</string>
+    <string>Save settin&amp;gs</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+S</string>
+    <string>Ctrl+G</string>
    </property>
   </action>
   <action name="actionReload">
@@ -1978,7 +2078,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionOpen_dose">
    <property name="text">
-    <string>Open &amp;dose...</string>
+    <string>Open 3d&amp;dose...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+D</string>
@@ -1986,10 +2086,18 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionOpen_tracks">
    <property name="text">
-    <string>Open trac&amp;ks...</string>
+    <string>Open ptrac&amp;ks...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+K</string>
+   </property>
+  </action>
+  <action name="actionSave_egsinp">
+   <property name="text">
+    <string>&amp;Save egsinp</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
  </widget>
@@ -1999,966 +2107,5 @@ p, li { white-space: pre-wrap; }
   <include location="local">egs_user_color.h</include>
  </includes>
  <resources/>
- <connections>
-  <connection>
-   <sender>applyLook</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setLookAt()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>applyPosition</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setLookPosition()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>regionTable</sender>
-   <signal>cellChanged(int,int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>toggleRegion(int,int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>regionUncheckAllButton</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>hideAllRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>regionCheckAllButton</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>showAllRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionQuit</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>quitApplication()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionSave_image</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>saveImage()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>homeButton</sender>
-   <signal>released()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>cameraHome()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>setHomeButton</sender>
-   <signal>released()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>cameraHomeDefine()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>xButton</sender>
-   <signal>released()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>camera_x()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>yButton</sender>
-   <signal>released()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>camera_y()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>zButton</sender>
-   <signal>released()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>camera_z()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>mxButton</sender>
-   <signal>released()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>camera_mx()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>myButton</sender>
-   <signal>released()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>camera_my()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>mzButton</sender>
-   <signal>released()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>camera_mz()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>showAxesCheckbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>checkboxAxes(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>showAxesLabelsCheckbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>checkboxAxesLabels(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>showRegionsCheckbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>checkboxShowRegions(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionReload</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>reloadInput()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionOpen</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>selectInput()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionOpen_tracks</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>loadTracksDialog()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionOpen_dose</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>loadDose()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionOpen_settings</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>loadConfig()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionSave_settings</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>saveConfig()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>showPhotonsCheckbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>showPhotonsCheckbox_toggled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>showElectronsCheckbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>showElectronsCheckbox_toggled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>showPositronsCheckbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>showPositronsCheckbox_toggled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>transparency</sender>
-   <signal>sliderReleased()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>endTransformation()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>transparency</sender>
-   <signal>sliderPressed()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>startTransformation()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>transparency</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeTransparency(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>slider_dose</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeDoseTransparency(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spin_tminp</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeTrackMin()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spin_tmine</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeTrackMin()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spin_tminpo</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeTrackMin()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spin_tmaxp</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeTrackMaxP(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spin_tmaxe</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeTrackMaxE(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spin_tmaxpo</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeTrackMaxPo(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>comboBox_simGeom</sender>
-   <signal>activated(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>updateSimulationGeometry(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ambientLight</sender>
-   <signal>sliderPressed()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>startTransformation()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ambientLight</sender>
-   <signal>sliderReleased()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>endTransformation()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ambientLight</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeAmbientLight(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>moveLight</sender>
-   <signal>stateChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>moveLightChanged(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pickColor</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>changeColor()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>applyLight</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setLightPosition()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>materialCB</sender>
-   <signal>activated(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>updateColorLabel(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cBackgroundButton</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setBackgroundColor()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cTextButton</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setTextColor()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cAxisButton</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setAxisColor()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cPhotonsButton</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setPhotonColor()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cElectronsButton</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setElectronColor()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cPositronsButton</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setPositronColor()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>energyScalingCheckbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>setEnergyScaling(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>action_Enlarge_font</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>enlargeFont()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>action_Shrink_font</sender>
-   <signal>triggered()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>shrinkFont()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>button_timeplay</sender>
-   <signal>pressed()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>playTime()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>488</x>
-     <y>321</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>358</x>
-     <y>327</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>slider_timeindex</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>slideTime()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>608</x>
-     <y>321</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>358</x>
-     <y>327</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spin_timewindow</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>slideTime()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>590</x>
-     <y>241</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>358</x>
-     <y>327</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>button_timereset</sender>
-   <signal>pressed()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>resetTime()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>658</x>
-     <y>241</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>358</x>
-     <y>327</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spin_timeindex</sender>
-   <signal>valueChanged(double)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>spinTime()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>594</x>
-     <y>334</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>358</x>
-     <y>327</y>
-    </hint>
-   </hints>
-  </connection>
-    <connection>
-   <sender>spin_numTimeSteps</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>updateNumTimeSteps()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>594</x>
-     <y>334</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>358</x>
-     <y>327</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

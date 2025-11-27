@@ -117,6 +117,6 @@ $(user_objects):
 
 clean:
 	$(REMOVE) mortjob.mortran egsnrc_$(my_machine).F egsnrc_$(my_machine).mortlst
-	$(REMOVE) $(target) $(user_objects) $(egs_objects)
+	$(REMOVE) $(target) $(user_objects) $(user_lib_objects) $(egs_objects) $(egs_lib_objects)
 
 .PHONY: clean library

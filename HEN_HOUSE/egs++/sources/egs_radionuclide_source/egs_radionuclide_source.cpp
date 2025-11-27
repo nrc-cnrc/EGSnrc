@@ -25,6 +25,7 @@
 #
 #  Contributors:    Martin Martinov
 #                   Ernesto Mainegra-Hing
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -39,6 +40,8 @@
 #include "egs_input.h"
 #include "egs_math.h"
 #include "egs_application.h"
+
+static bool EGS_RADIONUCLIDE_SOURCE_LOCAL inputSet = false;
 
 EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSource(input,f),
@@ -526,6 +529,55 @@ bool EGS_RadionuclideSource::setState(istream &data) {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs();
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Radionuclide_Source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("activity", false, "The total activity of mixture, assumed constant.");
+        srcBlockInput->addSingleInput("experiment time", false, "Time length of the experiment");
+        srcBlockInput->addSingleInput("base source", true, "The name of another source you have defined, that specifies the spatial distribution (e.g. an isotropic source).");
+    }
+
+    EGS_RADIONUCLIDE_SOURCE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_radionuclide_source
+    #:start source:
+        name = my_source
+        library = egs_radionuclide_source
+        activity = 28e6
+        geometry = my_envelope
+        #create geometry called my_envelope
+        region selection = IncludeSelected
+        selected regions = 1 2
+        :start shape:
+            type = box
+            box size = 1 2 3
+            :start media input:
+                media = H2O521ICRU
+            :stop media input:
+        :stop shape:
+        :start spectrum:
+            type = radionuclide
+            nuclide = Ir-192
+        :stop spectrum:
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_RADIONUCLIDE_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input
             *input, EGS_ObjectFactory *f) {

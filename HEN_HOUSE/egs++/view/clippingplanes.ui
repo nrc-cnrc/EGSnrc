@@ -125,11 +125,11 @@
         <attribute name="horizontalHeaderCascadingSectionResizes">
          <bool>true</bool>
         </attribute>
-        <attribute name="horizontalHeaderDefaultSectionSize">
-         <number>71</number>
-        </attribute>
         <attribute name="horizontalHeaderMinimumSectionSize">
          <number>12</number>
+        </attribute>
+        <attribute name="horizontalHeaderDefaultSectionSize">
+         <number>71</number>
         </attribute>
         <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
          <bool>true</bool>
@@ -181,6 +181,26 @@
           <string/>
          </property>
         </column>
+        <item row="0" column="0">
+         <property name="text">
+          <string>1</string>
+         </property>
+        </item>
+        <item row="0" column="1">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item row="0" column="2">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item row="0" column="3">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
         <item row="0" column="4">
          <property name="text">
           <string/>
@@ -195,10 +215,30 @@
           </brush>
          </property>
          <property name="checkState">
-          <enum>Checked</enum>
+          <enum>Unchecked</enum>
          </property>
          <property name="flags">
           <set>ItemIsUserCheckable|ItemIsEnabled</set>
+         </property>
+        </item>
+        <item row="1" column="0">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item row="1" column="1">
+         <property name="text">
+          <string>1</string>
+         </property>
+        </item>
+        <item row="1" column="2">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item row="1" column="3">
+         <property name="text">
+          <string>0</string>
          </property>
         </item>
         <item row="1" column="4">
@@ -215,10 +255,30 @@
           </brush>
          </property>
          <property name="checkState">
-          <enum>Checked</enum>
+          <enum>Unchecked</enum>
          </property>
          <property name="flags">
           <set>ItemIsUserCheckable|ItemIsEnabled</set>
+         </property>
+        </item>
+        <item row="2" column="0">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item row="2" column="1">
+         <property name="text">
+          <string>0</string>
+         </property>
+        </item>
+        <item row="2" column="2">
+         <property name="text">
+          <string>1</string>
+         </property>
+        </item>
+        <item row="2" column="3">
+         <property name="text">
+          <string>0</string>
          </property>
         </item>
         <item row="2" column="4">
@@ -235,7 +295,7 @@
           </brush>
          </property>
          <property name="checkState">
-          <enum>Checked</enum>
+          <enum>Unchecked</enum>
          </property>
          <property name="flags">
           <set>ItemIsUserCheckable|ItemIsEnabled</set>
@@ -393,22 +453,5 @@
   <include location="local">egs_vector.h</include>
  </includes>
  <resources/>
- <connections>
-  <connection>
-   <sender>planeTable</sender>
-   <signal>cellChanged(int, int)</signal>
-   <receiver>ClippingPlanesWidget</receiver>
-   <slot>applyClipping()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

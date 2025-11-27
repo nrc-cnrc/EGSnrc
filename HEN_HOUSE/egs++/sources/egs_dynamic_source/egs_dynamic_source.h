@@ -93,8 +93,8 @@ The generic input is:
 :start source:
     library = egs_dynamic_source
     name = some_name
-    source name = the name of a previously defined source
-    synchronize motion = yes or no (default)
+    base source = the name of a previously defined source
+    synchronize motion = yes or no (default) # Only useful if "base source" contains time indices. Has no impact on egs_dynamic_geometry.
     :start motion:
        control point = xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) timeIndex(1)
        control point = xiso(2) yiso(2) ziso(2) dsource(2) theta(2) phi(2) phicol(2) timeIndex(2)
@@ -149,7 +149,7 @@ to "yes".
     :start source:
         library = egs_dynamic_source
         name = my_source
-        source name = my_parallel_source
+        base source = my_parallel_source
         :start motion:
             control point = 0 0 0 100 0 0 0 0
             control point = 0 0 0 100 360 0 0 0.5

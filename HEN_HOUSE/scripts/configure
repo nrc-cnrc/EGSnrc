@@ -335,7 +335,7 @@ EOF
 f_v_output=
 f_version=
 f_fflags=-fPIC
-f_oflags=-O2
+f_oflags="-O2 -std=legacy"
 f_dflags=
 #for test_arg in -v -V --version; do
 dir_element=3
@@ -350,7 +350,7 @@ for test_arg in -v; do
             junk=$(echo $f_test_output | grep "GNU Fortran")
             if test "x$junk" != x; then
                 f_version=$(echo $junk | grep -o -m1 'GNU Fortran [^\s]* version [0-9.]*'| head -1)
-                f_oflags="-O2 -mtune=native $memory_model"
+                f_oflags="-O2 -mtune=native $memory_model -std=legacy"
                 f_dflags="-g"
                 if test ! x$is_x86_64 = x; then
                     f_fflags="-fPIC"
@@ -363,7 +363,7 @@ for test_arg in -v; do
                 f_version="GNU F77 version $junk"
                 #f_fflags="-fno-automatic -finit-local-zero"
                 # don't need this with new EGSnrc
-                f_oflags="-O2 -mtune=native"
+                f_oflags="-O2 -mtune=native -std=legacy"
                 f_dflags="-g"
                 if test ! x$is_x86_64 = x; then
                     f_fflags="-fPIC"
@@ -374,7 +374,7 @@ for test_arg in -v; do
             if test "x$junk" != x; then
                 junk=$(echo $junk | sed 's/.*GNU F95 version//g' | awk '{print $1}')
                 f_version="GNU F95 version $junk"
-                f_oflags="-O2 -mtune=native $memory_model"
+                f_oflags="-O2 -mtune=native $memory_model -std=legacy"
                 f_dflags="-g"
                 if test ! x$is_x86_64 = x; then
                     f_fflags="-fPIC"
