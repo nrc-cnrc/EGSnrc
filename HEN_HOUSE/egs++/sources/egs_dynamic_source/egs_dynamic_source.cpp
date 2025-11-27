@@ -49,15 +49,19 @@ EGS_DynamicSource::EGS_DynamicSource(EGS_Input *input,
     }
     if (!source) {
         string sname;
-        int err = input->getInput("source name",sname);
-        if (err)
-            egsWarning("EGS_DynamicSource: missing/wrong inline source "
-                       "definition and missing wrong 'source name' input\n");
-        else {
-            source = EGS_BaseSource::getSource(sname);
-            if (!source) egsWarning("EGS_DynamicSource: a source named %s"
-                                        " does not exist\n",sname.c_str());
+        int err = input->getInput("base source",sname);
+        if (err) {
+            err = input->getInput("source name",sname);
+            if (err) {
+                egsWarning("EGS_DynamicSource: missing/wrong inline source "
+                        "definition and missing wrong 'base source' input\n");
+                return;
+            }
         }
+
+        source = EGS_BaseSource::getSource(sname);
+        if (!source) egsWarning("EGS_DynamicSource: base source %s"
+            " does not exist\n",sname.c_str());
     }
     //now read inputs relevant to dynamic source
     //see if user wants to synchronize source with time read from
@@ -214,11 +218,11 @@ extern "C" {
         srcBlockInput->getSingleInput("library")->setValues({"EGS_Dynamic_Source"});
 
         // Format:name, isRequired, description, vector string of allowed
-        srcBlockInput->addSingleInput("source name", true, "The name of a previously defined source");
-        srcBlockInput->addSingleInput("synchronize motion", false, "yes or no", {"yes", "no"});
+        srcBlockInput->addSingleInput("base source", true, "The name of a previously defined source");
+        srcBlockInput->addSingleInput("synchronize motion", false, "Whether or not to synchronize with time indices in original 'base source'. Does not impact egs_dynamic_geometry.", {"yes", "no"});
 
         auto motionPtr = srcBlockInput->addBlockInput("motion");
-        motionPtr->addSingleInput("control point 1", false, "xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) mu(1)");
+        motionPtr->addSingleInput("control point", false, "xiso(1) yiso(1) ziso(1) dsource(1) theta(1) phi(1) phicol(1) mu(1)");
     }
 
     EGS_DYNAMIC_SOURCE_EXPORT string getExample() {
@@ -229,13 +233,14 @@ extern "C" {
     #:start source:
         library = egs_dynamic_source
         name = my_source
-        source name = my_parallel_source
-        #create a soource called my_parallel_source
+        base source = orig_source
+        # Source orig_source must already be defined
+        # Units in cm and degrees
         :start motion:
-            control point 1 = 0 0 0 100 0 0 0 0
-            control point 2 = 0 0 0 100 360 0 0 0.5
-            control point 3 = 0 0 0 100 90 0 0 0.5
-            control point 4 = 0 0 0 100 90 360 0 1.0
+            control point = 0 0 0 100 0 0 0 0
+            control point = 0 0 0 100 360 0 0 0.5
+            control point = 0 0 0 100 90 0 0 0.5
+            control point = 0 0 0 100 90 360 0 1.0
         :stop motion:
     :stop source:
 )"};

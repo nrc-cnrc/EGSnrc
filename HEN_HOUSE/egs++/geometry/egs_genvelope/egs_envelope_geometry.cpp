@@ -383,9 +383,9 @@ extern "C" {
     #:start geometry:
         name = my_envelope
         library = egs_genvelope
-        base_geometry = my_box
-        inscribed geometries: geom1 geom2
-        # create geometries geom1 geom2
+        base geometry = my_box
+        inscribed geometries = geom1 geom2
+        # geometries geom1 and geom2 must be defined before this one
     #:stop geometry:
 )"};
         return example;
