@@ -100,7 +100,7 @@ extern "C" {
         name = my_gtransform
         library = egs_gtransformed
         my geometry = geom
-        # created a geometry called geom
+        # geometry geom must be defined before this one
         :start transformation:
             translation = 0 0.5 0
             rotation = 0.05 0 -1
