@@ -29,10 +29,6 @@ library to model elaborate geometries and particle sources.
 - [**BEAMDP advanced**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509c-beamdp.pdf) manual (PIRS-509c)
 - [**STATDOSE**](https://nrc-cnrc.github.io/EGSnrc/doc/pirs509f-statdose.pdf) 3D dose processor (PIRS-509f)
 
-## Copyright
-
-© 2000–2025 National Research Council of Canada — Conseil national de recherches du Canada
-
 ## Licence
 
 EGSnrc is distributed as free software under the terms of the GNU Affero
@@ -45,6 +41,12 @@ EGSnrc component (including any such work operated remotely over a
 network), you must do so under the same licence terms.
 [Contact us](https://nrc.canada.ca/en/research-development/products-services/software-applications/egsnrc-software-tool-model-radiation-transport)
 if you wish to licence EGSnrc under different terms.
+
+## Copyright
+
+© 2000–2025 National Research Council of Canada — Conseil national de recherches du Canada
+
+Unless otherwise noted, EGSnrc is copyright National Research Council of Canada. Where external contributors have retained copyright on their contributions, this is clearly indicated at the top of the files in question.
 
 ## Prerequisites
 
