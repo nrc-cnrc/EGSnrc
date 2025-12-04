@@ -31,7 +31,7 @@ library to model elaborate geometries and particle sources.
 
 ## Copyright
 
-© 2000–2025 National Research Council Canada
+© 2000–2025 National Research Council of Canada — Conseil national de recherches du Canada
 
 ## Licence
 
