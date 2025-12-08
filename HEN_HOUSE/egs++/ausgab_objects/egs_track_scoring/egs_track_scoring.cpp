@@ -142,12 +142,12 @@ extern "C" {
 
         // Format: name, isRequired, description, vector string of allowed values
         ausBlockInput->addSingleInput("score photons", false, "Score photons? Default is yes.", {"yes", "no"});
-        ausBlockInput->addSingleInput("score electrons", false, "Score the elctrons? Default is yes.", {"yes", "no"});
+        ausBlockInput->addSingleInput("score electrons", false, "Score the electrons? Default is yes.", {"yes", "no"});
         ausBlockInput->addSingleInput("score positrons", false, "Score positrons? Default is yes.", {"yes", "no"});
-        ausBlockInput->addSingleInput("start scoring", false, "Event_number, default is 0.");
-        ausBlockInput->addSingleInput("stop scoring", false, "Event_number, default is 1024.");
-        ausBlockInput->addSingleInput("buffer size", false, "Size, default is 1024.");
-        ausBlockInput->addSingleInput("file name addition", false, "A string that constructs the output file name");
+        ausBlockInput->addSingleInput("start scoring", false, "The history at which to start recording tracks. Defaults to 0.");
+        ausBlockInput->addSingleInput("stop scoring", false, "The history at which to stop recording tracks. Defaults to 1024.");
+        ausBlockInput->addSingleInput("buffer size", false, "The number of tracks to save in a buffer before writing out to a file. Defaults to 1024.");
+        ausBlockInput->addSingleInput("file name addition", false, "A string that is appended to the input file name for the .ptracks file");
     }
 
     EGS_TRACK_SCORING_EXPORT string getExample() {

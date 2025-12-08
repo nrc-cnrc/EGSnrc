@@ -121,7 +121,7 @@ extern "C" {
         ausBlockInput->getSingleInput("library")->setValues({"EGS_Radiative_Splitting"});
 
         // Format: name, isRequired, description, vector string of allowed values
-        ausBlockInput->addSingleInput("splitting", false, "N-split");
+        ausBlockInput->addSingleInput("splitting", false, "The number of times to split every radiative event");
     }
 
     EGS_RADIATIVE_SPLITTING_EXPORT string getExample() {
@@ -132,7 +132,7 @@ extern "C" {
     :start ausgab object:
         library   = egs_radiative_splitting
         name      = my_score
-        splitting = n_split
+        splitting = 128
     :stop ausgab object:
 )"};
         return example;
