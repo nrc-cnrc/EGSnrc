@@ -549,23 +549,24 @@ extern "C" {
             R"(
     # Example of egs_radionuclide_source
     #:start source:
-        name = my_source
-        library = egs_radionuclide_source
-        activity = 28e6
-        geometry = my_envelope
-        #create geometry called my_envelope
-        region selection = IncludeSelected
-        selected regions = 1 2
-        :start shape:
-            type = box
-            box size = 1 2 3
-            :start media input:
-                media = H2O521ICRU
-            :stop media input:
-        :stop shape:
+        name                = my_mixture
+        library             = egs_radionuclide_source
+        base source         = name of the source used to generate decay locations
+        activity            = [optional, default=1] total activity of mixture,
+                            assumed constant. The activity only affects the
+                            emission times assigned to particles.
+        charge              = [optional] list including at least one of -1, 0, 1, 2
+                            to include electrons, photons, positrons and alphas.
+                            Filtering is applied to ALL emissions (including
+                            relaxation particles).
+                            Omit this option to include all charges - this is
+                            recommended.
+        experiment time     = [optional, default=0] time length of the experiment,
+                            set to 0 for no time limit. Source particles generated
+                            after the experiment time are not transported.
+
         :start spectrum:
-            type = radionuclide
-            nuclide = Ir-192
+            definition of an EGS_RadionuclideSpectrum (see link below)
         :stop spectrum:
     :stop source:
 )"};
