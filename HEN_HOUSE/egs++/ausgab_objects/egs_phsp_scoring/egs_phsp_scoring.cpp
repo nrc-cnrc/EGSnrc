@@ -531,7 +531,7 @@ extern "C" {
         ausBlockInput->getSingleInput("library")->setValues({"EGS_Phsp_Scoring"});
 
         // Format: name, isRequired, description, vector string of allowed values
-        auto formatPtr = ausBlockInput->addSingleInput("output format", false, "The type of file the data is output to", {"EGSnrc", "IAEA"});
+        auto formatPtr = ausBlockInput->addSingleInput("output format", false, "The phase-space format to output. Defaults to EGSnrc", {"EGSnrc", "IAEA"});
 
         auto xPtr = ausBlockInput->addSingleInput("constant X", false, "X values(cm) at which all particles are scored.");
         xPtr->addDependency(formatPtr, "IAEA");
@@ -539,18 +539,18 @@ extern "C" {
         yPtr->addDependency(formatPtr, "IAEA");
         auto zPtr = ausBlockInput->addSingleInput("constant Z", false, "Z values(cm) at which all particles are scored.");
         zPtr->addDependency(formatPtr, "IAEA");
-        auto muPtr = ausBlockInput->addSingleInput("score mu", false, "Default is no", {"yes", "no"});
+        auto muPtr = ausBlockInput->addSingleInput("score time index", false, "Whether to score the time index for each particle. Only valid for IAEA phase-spaces. Default is no.", {"yes", "no"});
         muPtr->addDependency(formatPtr, "IAEA");
 
-        auto multiPtr = ausBlockInput->addSingleInput("score multiple crossers", false, "Default is no", {"yes", "no"});
+        auto multiPtr = ausBlockInput->addSingleInput("score multiple crossers", false, "Whether to score the same particle multiple times, if it happens to cross the phase-space surface more than once. Default is no.", {"yes", "no"});
         multiPtr->addDependency(formatPtr, "EGSnrc");
 
-        ausBlockInput->addSingleInput("particle type", true, "The type of particle", {"all", "photons", "charged"});
-        ausBlockInput->addSingleInput("output directory", true, "The name of output directory");
+        ausBlockInput->addSingleInput("particle type", true, "The type of particle to score", {"all", "photons", "charged"});
+        ausBlockInput->addSingleInput("output directory", true, "The name of the output directory");
 
         // Method 1: Score particles on entry to/exit from a predefined geometry
         auto spacePtr = ausBlockInput->addSingleInput("phase space geometry", true, "The name of a previously defined geometry");
-        auto scorePtr = ausBlockInput->addSingleInput("score particles on", false, "entry, exit, entry and exit", {"entry", "exit", "entry and exit"});
+        auto scorePtr = ausBlockInput->addSingleInput("score particles on", false, "Which situation to score particles as they cross the geometry boundary. On entry, exit, or entry and exit. Default is entry and exit.", {"entry", "exit", "entry and exit"});
 
         // Method 2: Score particles on exiting one region and entering another
         auto fromPtr = ausBlockInput->addSingleInput("from regions", true, "A list of exit region numbers");
@@ -580,7 +580,7 @@ extern "C" {
         output format = IAEA
         constant Z = 10.0
         particle type = all
-        score mu = no
+        score time index = no
     :stop ausgab object:
 
     #:start ausgab object:
