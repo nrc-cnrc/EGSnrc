@@ -27,6 +27,7 @@
 #  Contributors:    Marc Chamberland
 #                   Rowan Thomson
 #                   Dave Rogers
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -50,8 +51,41 @@
 #include "egs_functions.h"
 #include "egs_glib.h"
 
+static bool EGS_GLIB_LOCAL inputSet = false;
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Glib"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("include file", true, "The path to some geometry.");
+    }
+
+    EGS_GLIB_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of egs_glib
+    #:start geometry:
+        name = my_glib
+        library = egs_glib
+        include file = /path to some external file/
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_GLIB_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     /*! createGeometry function for glib shim */
     EGS_GLIB_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {

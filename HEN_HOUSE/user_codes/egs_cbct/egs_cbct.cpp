@@ -67,6 +67,8 @@
 
 #include "egs_timer.h"
 
+#include "egs_input_struct.h"
+
 const int __debug_case = -1;
 
 class EGS_RectangularBeam;
@@ -4261,6 +4263,75 @@ void EGS_CBCT::doKleinNishina(EGS_CBCT_Photon &p) {
     EGS_Float w2 = alpha1_t*(Ko2-2*Ko-2)+
           (eps2_t-eps1_t)*(1./eps1_t/eps2_t + broi + Ko2*(eps1_t+eps2_t)/2);
     EGS_Float sigt = w2/(Ko*Ko2);
+}
+
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_cbct");
+
+        scoreBlock->addSingleInput("calculation type", false, "planar, volumetric, both, or ray-tracing", {"planar", "volumetric", "both", " ray-tracing"});
+        scoreBlock->addSingleInput("angle", false, "");
+        scoreBlock->addSingleInput("orbit", false, "");
+        scoreBlock->addSingleInput("step", false, "");
+
+        shared_ptr<EGS_BlockInput> planarBlock = scoreBlock->addBlockInput("planar scoring");
+        planarBlock->addSingleInput("surrounding medium", false, "defaults to vaccum");
+        planarBlock->addSingleInput("target uncertainty", false, "defaults to 1%");
+        planarBlock->addSingleInput("maximum Aatt fraction", false, "defaults to 0.1");
+        planarBlock->addSingleInput("screen resolution", false, "");
+        planarBlock->addSingleInput("uncertainty estimation", false, "");
+        planarBlock->addSingleInput("voxel size", false, "");
+        planarBlock->addSingleInput("muen file", false, "get E*muen/rho values");
+
+        shared_ptr<EGS_BlockInput> smoothingBlock = scoreBlock->addBlockInput("smoothing options");
+        smoothingBlock->addSingleInput("nmax", false, "");
+        smoothingBlock->addSingleInput("nmax2d", false, "");
+        smoothingBlock->addSingleInput("chi2max", false, "");
+
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+# egs_cbct example input
+:start scoring options:
+    calculation type = planar                   # planar, volumetric, both, or ray-tracing
+    angle = 0
+    orbit = 0
+    step = 0
+    
+    # only available for planar calculation type
+    :start planar scoring:
+        surrounding medium = vacuum             # defaults to vaccum
+        target uncertainty = 1%                 # defaults to 1%
+        maximum Aatt fraction = 0.1             # defaults to 0.1
+        screen resolution = 64 64
+        uncertainty estimation = 1
+        voxel size = 1.25
+        muen file = replace with your own
+    :stop planar scoring:
+
+    #############################################
+    # Smoothing of the scatter distribution.
+    # Shown to contribute about 50% of the
+    # large efficiency increase when estimating
+    # scatter. This part uses a 2D locally adaptive
+    # Savitzky-Golay filter.
+    #############################################
+    start smoothing options:
+        nmax = 10
+        nmax2d = 6
+        chi2max = 2
+    :stop smoothing options:
+
+:stop scoring options:
+)"};
+        return example;
+    }
 }
 
 #ifdef BUILD_APP_LIB

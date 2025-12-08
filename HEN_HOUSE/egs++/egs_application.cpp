@@ -45,7 +45,6 @@
 #include "egs_input.h"
 #include "egs_base_source.h"
 #include "egs_rndm.h"
-#include "egs_run_control.h"
 #include "egs_base_source.h"
 #include "egs_simple_container.h"
 #include "egs_ausgab_object.h"
@@ -102,6 +101,8 @@ static EGS_LOCAL bool __egs_find_pegsfile(const vector<string> &paths,
 static EGS_LOCAL EGS_Application *active_egs_application = 0;
 
 int EGS_Application::n_apps = 0;
+
+unique_ptr<EGS_InputStruct> EGS_Application::inputStructure = unique_ptr<EGS_InputStruct>();
 
 EGS_EXPORT EGS_Application *EGS_Application::activeApplication() {
     return active_egs_application;

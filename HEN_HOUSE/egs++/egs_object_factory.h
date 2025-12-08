@@ -124,6 +124,7 @@ public:
       \a null (which is the default implementation)
     */
     virtual EGS_Object *createObject(EGS_Input *inp) {
+        (void)inp;
         return 0;
     };
 
@@ -353,8 +354,8 @@ public:
     };
 
     /*! \brief Get the \a j'th object */
-    EGS_Object *getObject(int j) {
-        return (j>=0 && j<objects.size()) ? objects[j] : 0;
+    EGS_Object *getObject(size_t j) {
+        return j<objects.size() ? objects[j] : 0;
     };
 
 protected:

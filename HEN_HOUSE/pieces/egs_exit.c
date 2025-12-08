@@ -28,6 +28,11 @@
 ###############################################################################
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdlib.h>
 
 #ifdef STDCALL
 #define C_CONVENTION __stdcall
@@ -35,9 +40,6 @@
 #define C_CONVENTION
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 void my_exit(int *status){
    int s = *status;
    exit(s);

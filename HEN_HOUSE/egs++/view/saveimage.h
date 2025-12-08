@@ -40,7 +40,7 @@ class SaveImage : public QDialog, public Ui::SaveImage {
 
 public:
 
-    SaveImage(QWidget *parent=0, const char *name=0);
+    explicit SaveImage(QWidget *parent = nullptr, const char *name = nullptr);
     virtual ~SaveImage();
 
     virtual void getImageSize(int *, int *);

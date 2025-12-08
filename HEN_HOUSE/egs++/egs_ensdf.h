@@ -286,7 +286,14 @@ public:
     virtual void relax(int shell,
                        EGS_Float ecut, EGS_Float pcut,
                        EGS_RandomGenerator *rndm, double &edep,
-                       EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {};
+                       EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
+        (void)shell;
+        (void)ecut;
+        (void)pcut;
+        (void)rndm;
+        (void)edep;
+        (void)particles;
+    };
     virtual void setBetaIntensity(double newIntensity)  = 0;
     int getCharge() const;
     void incrNumSampled();

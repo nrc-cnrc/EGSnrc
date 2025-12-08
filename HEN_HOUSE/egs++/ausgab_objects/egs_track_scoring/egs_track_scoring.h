@@ -88,10 +88,11 @@ This ausgab object is specified via
 \endverbatim
 The output file name is normally constructed from the output file name,
 the string specified by <code>file name addition</code> (if present and not empty),
-and <code>_wJob</code> in case of parallel runs. The extension given is <code>ptracks</code>.
+and <code>_wJob</code> in case of parallel runs. It is generally recommended to turn off track scoring for parallel runs. The extension given is <code>ptracks</code>.
 Using <code>start scoring</code> and <code>stop scoring</code> one can select a
 range of histories for which to score the particle track info. One can also
 select specific particle type(s).
+The buffer size controls the number of tracks to save in a memory buffer before writing out to a file. This only impacts efficiency.
 */
 class EGS_TRACK_SCORING_EXPORT EGS_TrackScoring : public EGS_AusgabObject {
 

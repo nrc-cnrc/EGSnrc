@@ -25,6 +25,7 @@
 #
 #  Contributors:    Marc Chamberland
 #                   Blake Walters
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -37,6 +38,8 @@
 
 #include "egs_source_collection.h"
 #include "egs_input.h"
+
+static bool EGS_SOURCE_COLLECTION_LOCAL inputSet = false;
 
 EGS_SourceCollection::EGS_SourceCollection(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSource(input,f), nsource(0), count(0) {
@@ -153,6 +156,41 @@ void EGS_SourceCollection::containsDynamic(bool &hasdynamic) {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs(false, false);
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Source_Collection"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("source names", true, "A list of names of previously defined sources.");
+        srcBlockInput->addSingleInput("weights", true, "A list of weights for the sources");
+    }
+
+    EGS_SOURCE_COLLECTION_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_source_collection
+    :start source:
+        library = egs_source_collection
+        name = my_source
+        source name = p1 p2
+        # create sources called p1 and p2
+        weights = 0.1 0.9
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_SOURCE_COLLECTION_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_SOURCE_COLLECTION_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

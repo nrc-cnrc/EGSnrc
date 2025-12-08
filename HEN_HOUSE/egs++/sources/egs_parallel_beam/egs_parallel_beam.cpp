@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -36,6 +37,8 @@
 
 #include "egs_parallel_beam.h"
 #include "egs_input.h"
+
+static bool EGS_PARALLEL_BEAM_LOCAL inputSet = false;
 
 EGS_ParallelBeam::EGS_ParallelBeam(EGS_Input *input,
                                    EGS_ObjectFactory *f) : EGS_BaseSimpleSource(input,f), shape(0), uo(0,0,1) {
@@ -108,6 +111,54 @@ void EGS_ParallelBeam::setUp() {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs();
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Parallel_Beam"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto shapePtr = srcBlockInput->addBlockInput("shape");
+
+        setShapeInputs(shapePtr);
+
+        srcBlockInput->addSingleInput("direction", true, "Direction of the beam (x, y, z)");
+    }
+
+    EGS_PARALLEL_BEAM_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_parallel_beam
+    #:start source:
+        library = egs_parallel_beam
+        name = my_source
+        :start shape:
+            type = cylinder
+            radius = 1
+            height = 2
+            axis = 0 0 1
+            midpoint = 0
+        :stop shape:
+        direction = 0 0 1
+        charge = 0
+        :start spectrum:
+            type = monoenergetic
+            energy = 6
+        :stop spectrum:
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_PARALLEL_BEAM_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+            return srcBlockInput;
+    }
 
     EGS_PARALLEL_BEAM_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

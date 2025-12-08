@@ -121,6 +121,7 @@ private:
     QTimer  *navigationTimer;
     bool    navigating;
     bool rerenderRequested;
+    double m_wheel_accum = 0.0; // accumulates fractional wheel steps
 
     // regionPicking synchronized with image on screen
     EGS_GeometryVisualizer *vis;

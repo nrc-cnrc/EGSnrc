@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2006
 #
 #  Contributors:    Marc Chamberland
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -44,10 +45,38 @@
 #include "egs_elliptic_cylinders.h"
 #include "egs_input.h"
 
+static bool EGS_ELLIPTIC_CYLINDERS_LOCAL inputSet = false;
+
 extern "C" {
 
-    EGS_ELLIPTIC_CYLINDERS_EXPORT
-    EGS_BaseGeometry *createGeometry(EGS_Input *input) {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs();
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_EllipticCylinders"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of elliptic cylinder", {"EGS_EllipticCylindersXY", "EGS_EllipticCylindersXZ", "EGS_EllipticCylindersYZ", "EGS_EllipticCylinders"});
+
+        geomBlockInput->addSingleInput("midpoint", false, "The midpoint of the cylinder (x, y, z)");
+        geomBlockInput->addSingleInput("x-radii", true, "The x radii of the cylinder");
+        geomBlockInput->addSingleInput("y-radii", true, "The y radii of the cylinder");
+
+        auto xaxPtr = geomBlockInput->addSingleInput("x-axis", true, "The x-axis of the cylider (x, y, z)");
+        xaxPtr->addDependency(typePtr, "EGS_EllipticCylinders");
+        auto yaxPtr = geomBlockInput->addSingleInput("y-axis", true, "The y-axis of the cylinder (x, y, z)");
+        yaxPtr->addDependency(typePtr, "EGS_EllipticCylinders");
+    }
+
+    EGS_ELLIPTIC_CYLINDERS_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
+
+    EGS_ELLIPTIC_CYLINDERS_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         // check for valid input
         if (!input) {
             egsWarning("createGeometry(elliptic cylinders): null input?\n");

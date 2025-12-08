@@ -49,7 +49,7 @@ egspp_files = egs_input egs_base_geometry egs_library egs_transformations \
              egs_base_source egs_functions egs_application egs_run_control \
              egs_scoring egs_interpolator egs_atomic_relaxations \
              egs_ausgab_object egs_particle_track egs_fortran_geometry \
-             egs_ensdf
+             egs_ensdf egs_input_struct
 
 egspp_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(egspp_files)))
 config1h = $(IEGS1)$(DSEP)egs_config1.h egs_libconfig.h egs_functions.h
@@ -137,7 +137,10 @@ $(DSO1)egs_base_source.$(obje): egs_base_source.cpp egs_base_source.h \
     egs_vector.h $(config1h) egs_object_factory.h egs_input.h
 
 $(DSO1)egs_ensdf.$(obje): egs_ensdf.cpp egs_ensdf.h \
-    $(config1h) egs_functions.h egs_math.h egs_alias_table.h egs_atomic_relaxations.h
+    $(config1h) egs_math.h egs_alias_table.h egs_atomic_relaxations.h
+
+$(DSO1)egs_input_struct.$(obje): egs_input_struct.cpp egs_input_struct.h \
+    $(config1h)
 
 $(DSO1)egs_geometry_tester.$(obje): egs_geometry_tester.cpp \
     egs_geometry_tester.h egs_input.h egs_vector.h egs_base_geometry.h \
