@@ -1828,6 +1828,193 @@ bool  EGS_VolumetricFluence::addState(istream &data) {
 
 extern "C" {
 
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseAusgabObjectInputs();
+
+        ausBlockInput->getSingleInput("library")->setValues({"EGS_Fluence_Scoring"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = ausBlockInput->addSingleInput("type", true, "Whether to score volumetric or planar fluence", {"planar", "volumetric"});
+        ausBlockInput->addSingleInput("scoring particle", true, "Which type of particle we are scoring the fluence for", {"photon", "electron", "positron"});
+        ausBlockInput->addSingleInput("source particle", false, "Optional, only required to score primary fluence. Defaults to source particles if all the same, or if mixed, defaults to scoring particle.", {"photon", "electron", "positron"});
+        ausBlockInput->addSingleInput("score primaries", false, "Whether to score primary fluence as well as differential fluence. Defaults to no.", {"no", "yes"});
+        auto specPtr = ausBlockInput->addSingleInput("score spectrum", false, "Whether to score a spectrum. If so, add an 'energy grid' input block. Defaults to no.", {"no", "yes"});
+        ausBlockInput->addSingleInput("verbose", false, "Print extra information about the fluence scoring. Defaults to no.", {"no", "yes"});
+        ausBlockInput->addSingleInput("normalization", false, "Perform a multiplicative normalization to the results. Defaults to 1.");
+
+        auto blockPtr = ausBlockInput->addBlockInput("energy grid");
+        blockPtr->addDependency(specPtr, "yes");
+        blockPtr->addSingleInput("number of bins", true, "The number of energy bins in the spectrum");
+        blockPtr->addSingleInput("minimum kinetic energy", true, "The minimum energy to score in the spectrum");
+        blockPtr->addSingleInput("maximum kinetic energy", true, "The maximum energy to score in the spectrum");
+        blockPtr->addSingleInput("scale", false, "Whether to score on a linear or logarithmic scale. Default is linear.", {"linear", "logarithmic"});
+
+        blockPtr = ausBlockInput->addBlockInput("volumetric scoring");
+        blockPtr->addDependency(typePtr, "volumetric");
+        auto regionPtr = blockPtr->addSingleInput("scoring regions", false, "A list of regions to score fluence in");
+        auto startPtr = blockPtr->addSingleInput("start region", false, "For a series of region ranges, list the 'starting region' for each range here (inclusive)");
+        auto stopPtr = blockPtr->addSingleInput("stop region", false, "For a series of region ranges, list the 'ending region' for each range here (inclusive)");
+        blockPtr->addSingleInput("volumes", false, "Either a single volume, which will be the same for all regions or a list of individual volumes for each region or region group. Default is 1 cm^3");
+        blockPtr->addSingleInput("method", false, "The algorithm to use for charged particle scoring (ignored for photon scoring). See documentation for full explanation. Defaults to 'stpwr'.", {"flurz", "stpwr", "stpwrO5"});
+
+        regionPtr->addDependency(startPtr, "", true);
+        regionPtr->addDependency(stopPtr, "", true);
+        startPtr->addDependency(regionPtr, "", true);
+        stopPtr->addDependency(regionPtr, "", true);
+
+        blockPtr = ausBlockInput->addBlockInput("planar scoring");
+        blockPtr->addDependency(typePtr, "planar");
+        regionPtr = blockPtr->addSingleInput("contributing regions", false, "A list of regions to score fluence in");
+        startPtr = blockPtr->addSingleInput("start contributing region", false, "For a series of region ranges, list the 'starting region' for each range here (inclusive)");
+        stopPtr = blockPtr->addSingleInput("stop contributing region", false, "For a series of region ranges, list the 'ending region' for each range here (inclusive)");
+        auto circlePtr = blockPtr->addSingleInput("scoring circle", false, "The center point and radius of the circle: x y z R");
+        auto circleNormPtr = blockPtr->addSingleInput("scoring plane normal", false, "The unit vector for the normal of the scoring circle: ux uy uz");
+        auto rectPtr = blockPtr->addSingleInput("scoring rectangle", false, "The x and y ranges for the rectangle edges, initially defined in the x-y plane. Use a transformation input block to rotate. Format is: xmin xmax ymin ymax");
+
+        regionPtr->addDependency(startPtr, "", true);
+        regionPtr->addDependency(stopPtr, "", true);
+        startPtr->addDependency(regionPtr, "", true);
+        stopPtr->addDependency(regionPtr, "", true);
+
+        circlePtr->addDependency(rectPtr, "", true);
+        circleNormPtr->addDependency(rectPtr, "", true);
+        rectPtr->addDependency(circlePtr, "", true);
+
+        addTransformationBlock(blockPtr);
+    }
+
+    EGS_FLUENCE_SCORING_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_fluence_scoring for planar fluence
+    #:start ausgab object:
+        name    = id-string            # Arbitrary identifying string
+        library = egs_fluence_scoring  # Library name
+        type    = planar               # Score on circular or square field
+        scoring particle = photon, or electron, or positron
+        source particle  = photon, or electron, or positron
+                                    # Optional. Only required to score primary fluence.
+                                    # Defaults to source particles if all the same.
+                                    # In the case of multiple particles,
+                                    # defaults to scoring particle. Useful for
+                                    # bremsstrahlung targets and radioactive sources.
+        score primaries = yes or no    # Defaults to `no`.
+        score spectrum  = yes or no    # Defaults to `no`.
+        verbose         = yes or no    # Defaults to `no`.
+        normalization   = norm         # User-requested normalization. Defaults to 1.
+        #########
+        # If scoring spectrum, define energy grid
+        # Default: 128 linear energy bins between 1 keV and 1 MeV
+        #########
+        :start energy grid:
+            number of bins = nbins
+            minimum kinetic energy = Emin
+            maximum kinetic energy = Emax
+            scale = linear or logarithmic # Defaults to `linear`.
+        :stop energy grid:
+        ########
+        # Define scoring based on type
+        ########
+        :start planar scoring:
+            # Define contributing regions
+            contributing regions = ir1 ir2 ... irn
+            ### Alternatively:
+            # start contributing region = iri_1, iri_2, ..., iri_n
+            # stop contributing region =  irf_1, irf_2, ..., irf_n
+            ###
+            ################################
+            # If a circular field desired:
+            ################################
+            scoring circle = x y z R
+            scoring plane normal = ux uy uz
+            ########################################################
+            # If a rectangular field desired:
+            #
+            #scoring rectangle = xmin xmax ymin ymax
+            #####
+            # See documentation for EGS_AffineTransform
+            #####
+            #:start transformation:
+            #   rotation = 2, 3 or 9 floating point numbers
+            #   translation = tx, ty, tz
+            #:stop transformation:
+            ##########################################################
+        :stop planar scoring:
+    :stop ausgab object:
+
+    # Example of egs_fluence_scoring for volumetric fluence
+    #:start ausgab object:
+        name    = id-string            # Arbitrary identifying string
+        library = egs_fluence_scoring  # Library name
+        type    = volumetric           # Score in a volume
+        scoring particle = photon, or electron, or positron
+        source particle  = photon, or electron, or positron
+                                    # Optional. Only required to score primary fluence.
+                                    # Defaults to source particles if all the same.
+                                    # In the case of multiple particles,
+                                    # defaults to scoring particle. Useful for
+                                    # bremsstrahlung targets and radioactive sources.
+        score primaries = yes or no    # Defaults to `no`.
+        score spectrum  = yes or no    # Defaults to `no`.
+        verbose         = yes or no    # Defaults to `no`.
+        normalization   = norm         # User-requested normalization. Defaults to 1.
+        # If scoring spectrum, define energy grid
+        # Default: 128 linear energy bins between 1 keV and 1 MeV
+        :start energy grid:
+            number of bins = nbins
+            minimum kinetic energy = Emin
+            maximum kinetic energy = Emax
+            scale = linear or logarithmic # Defaults to `linear`.
+        :stop energy grid:
+        :start volumetric scoring:
+            scoring regions = ir1 ir2 ... irn
+            ### Alternatively:
+            #start region = iri_1, iri_2, ..., iri_n
+            #stop region  = irf_1, irf_2, ..., irf_n
+            ###
+            volumes = V1, V2, ..., VN # Enter as many as scoring regions. If same number
+                                    # of entries as group of regions, assumes groups of
+                                    # equal volume regions. If only one entry, assumes
+                                    # equal volumes in all regions. Defaults to 1.
+            method  = flurz or stpwr or stpwrO5 # For charged particle scoring.
+                    #
+                    # flurz   => FLURZnrc algorithm
+                    #
+                    # Path length at each energy interval from energy
+                    # deposited EDEP and total particle step TVSTEP.
+                    # Assumes stopping power constancy along the particle's
+                    # step. It might introduce artifacts if ESTEPE or the
+                    # scoring bin width are too large.
+                    #
+                    # stpwr   => Accounts for stopping power variation
+                    #          along the particle's step. More accurate
+                    #          than method used in FLURZnrc albeit about
+                    #          about 10% slower in electron beam cases.
+                    #
+                    # Uses an O(3) series expansion of the integral of the
+                    # inverse of the stopping power with respect to energy.
+                    # Stopping power is represented as a linear interpolation
+                    # over a log energy grid.
+                    #
+                    # stpwrO5 => Uses an O(5) series expansion. Slightly slower.
+                    #
+                    # Defaults to `stpwr`.
+        :stop volumetric scoring:
+    :stop ausgab object:
+)"};
+        return example;
+    }
+
+    EGS_FLUENCE_SCORING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return ausBlockInput;
+    }
+
     EGS_FLUENCE_SCORING_EXPORT EGS_AusgabObject *
     createAusgabObject(EGS_Input *input, EGS_ObjectFactory *f) {
         const static char *func = "createAusgabObject(fluence_scoring)";
@@ -1855,33 +2042,4 @@ extern "C" {
             return 0;
         }
     }
-
-    // Not finished
-    // static void setInputs() {
-    //     inputSet = true;
-
-    //     setBaseAusgabObjectInputs();
-
-    //     ausBlockInput->getSingleInput("library")->setValues({"EGS_Fluence_Scoring"});
-
-    //     // Format: name, isRequired, description, vector string of allowed values
-        
-    // }
-
-//     EGS_FLUENCE_SCORING_EXPORT string getExample() {
-//         string example;
-//         example = {
-//             R"(
-    
-// )"};
-    //     return example;
-    // }
-
-    // EGS_FLUENCE_SCORING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
-    //     if (!inputSet) {
-    //         setInputs();
-    //     }
-    //     return ausBlockInput;
-    // }
-
 }

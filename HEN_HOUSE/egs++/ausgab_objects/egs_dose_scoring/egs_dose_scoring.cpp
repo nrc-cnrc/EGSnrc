@@ -604,10 +604,10 @@ extern "C" {
         // Format: name, isRequired, description, vector string of allowed values
         ausBlockInput->addSingleInput("medium dose", false, "Requests the dose deposited in each medium to be scored, default is no", {"yes", "no"});
         ausBlockInput->addSingleInput("region dose", false, "Requests the dose deposited in each region to be scored, default is yes", {"yes", "no"});
-        ausBlockInput->addSingleInput("volume", false, "Either a unique volume, which will be the same for all regions or a list of individual volumes for each region, default is 1g/cm3");
-        auto dosePtr = ausBlockInput->addSingleInput("dose regions", false, "A list of individual regions");
-        auto startPtr = ausBlockInput->addSingleInput("dose start region", false, "A list of starts for regions");
-        auto stopPtr = ausBlockInput->addSingleInput("dose stop region", false, "A list of stops for regions");
+        ausBlockInput->addSingleInput("volume", false, "Either a single volume, which will be the same for all regions or a list of individual volumes for each region in 'dose regions', default is 1 cm^3");
+        auto dosePtr = ausBlockInput->addSingleInput("dose regions", false, "A list of individual regions to report the dose in");
+        auto startPtr = ausBlockInput->addSingleInput("dose start region", false, "For a series of region ranges, list the 'starting region' for each range here (inclusive)");
+        auto stopPtr = ausBlockInput->addSingleInput("dose stop region", false, "For a series of region ranges, list the 'ending region' for each range here (inclusive)");
 
         dosePtr->addDependency(startPtr, "", true);
         dosePtr->addDependency(stopPtr, "", true);
@@ -625,7 +625,7 @@ extern "C" {
         example = {
             R"(
     # Example of egs_dose_scoring
-    :start ausgab object:
+    #:start ausgab object:
         library      = egs_dose_scoring
         name         = my_score
         medium dose  = yes # no  (default)

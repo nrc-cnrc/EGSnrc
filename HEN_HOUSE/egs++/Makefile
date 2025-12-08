@@ -81,7 +81,6 @@ lib_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(all_libs)))
 
 #******************************************************************************
 
-#all: $(EGS_BINDIR)egspp$(EXE) $(ABS_DSO)$(libpre)egspp$(libext) $(ABS_DSO)$(libpre)egs_input_struct$(libext) glibs slibs shapes aobjects gtest
 all: $(EGS_BINDIR)egspp$(EXE) $(ABS_DSO)$(libpre)egspp$(libext) glibs slibs shapes aobjects gtest
 
 $(EGS_BINDIR)egspp$(EXE): $(dso) $(DSO1)egspp.$(obje) $(ABS_DSO)$(libpre)egspp$(libext)
@@ -93,9 +92,6 @@ $(ABS_DSO)$(libpre)egspp$(libext): $(dso) $(egspp_objects)
 $(DSO1)egspp.$(obje): egspp.cpp egs_application.h egs_base_geometry.h egs_vector.h \
 	               egs_math.h egs_library.h $(config1h)
 	$(CXX) $(INC1) $(DEF1) $(opt) -c $(COUT)$@ $(notdir $(basename $@)).cpp
-
-#$(ABS_DSO)$(libpre)egs_input_struct$(libext): $(dso) $(DSO1)egs_input_struct.$(obje) $(egspp_objects)
-#	$(CXX) $(INC1) $(DEFS) $(opt) $(shared) $(DSO1)egs_input_struct.$(obje) $(egspp_objects) $(extra)
 
 $(DSO1)egs_interpolator.$(obje): egs_interpolator.cpp egs_interpolator.h \
                                  $(config1h)
