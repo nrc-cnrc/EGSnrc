@@ -100,12 +100,12 @@ EGS_FocalSpot::EGS_FocalSpot(EGS_Input *input, EGS_ObjectFactory *f) :
     bool err_y = abs(input->getInput("y rotation",y_rotation));
 
     if ((x_rotation<=-90) || (x_rotation>=90)) {
-        egsWarning("EGS_FocalSpot: wrong input for variable 'x rotation' the value should be within -90° < x rotation < 90°\n");
+        egsWarning("EGS_FocalSpot: wrong input for variable 'x rotation' the value should be within -90 degrees < x rotation < 90 degrees\n");
         valid = false; 
     }
 
     if ((y_rotation<=-90) || (y_rotation>=90)) {
-        egsWarning("EGS_FocalSpot: wrong input for variable 'y rotation' the value should be within -90° < y rotation < 90°\n");
+        egsWarning("EGS_FocalSpot: wrong input for variable 'y rotation' the value should be within -90 degrees < y rotation < 90 degrees\n");
         valid = false; 
     }
     
@@ -148,8 +148,8 @@ void EGS_FocalSpot::setUp() {
         // Output Angular Distribution Information
         if (is_deviating) {
             description += "   The sampling of the direction vector determines the azimuth depending on the polar arc with \n";
-            if (sigma_x_angle) description += " - " + to_string(sigma_x_angle) + " ° standard deviation along x \n";
-            if (sigma_y_angle) description += " - " + to_string(sigma_y_angle) + " ° standard deviation along y \n";
+            if (sigma_x_angle) description += " - " + to_string(sigma_x_angle) + " degree standard deviation along x \n";
+            if (sigma_y_angle) description += " - " + to_string(sigma_y_angle) + " degree standard deviation along y \n";
             // Convert Units after reporting to log
             sigma_x_angle = sigma_x_angle*DEGREE_TO_RAD; //CONVERT UNITS
             sigma_y_angle = sigma_y_angle*DEGREE_TO_RAD; //CONVERT UNITS
@@ -161,8 +161,8 @@ void EGS_FocalSpot::setUp() {
         if (is_rotated) {
             description += "   Additionally the focal spot is rotated around the point (X,Y,Z) = (";
             description += to_string(x_translation)+","+to_string(y_translation)+","+to_string(z_point_of_rotation)+")\n";
-            if (x_rotation) description += " - " + to_string(x_rotation) + " ° rotation around x \n";
-            if (y_rotation) description += " - " + to_string(y_rotation) + " ° rotation around y \n";
+            if (x_rotation) description += " - " + to_string(x_rotation) + " degree rotation around x \n";
+            if (y_rotation) description += " - " + to_string(y_rotation) + " degree rotation around y \n";
             description += "   afterwards the particles are shifted along their new direction of motion to the z specified.\n";
             // Convert Units after reporting to log
             x_rotation = x_rotation*DEGREE_TO_RAD; //CONVERT UNITS

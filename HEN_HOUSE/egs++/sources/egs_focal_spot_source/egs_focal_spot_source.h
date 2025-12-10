@@ -45,7 +45,7 @@
 
 #ifdef WIN32
 
-    #ifdef BUILD_GAUSSIAN_SOURCE_DLL
+    #ifdef BUILD_FOCAL_SPOT_DLL
         #define EGS_FOCAL_SPOT_EXPORT __declspec(dllexport)
     #else
         #define EGS_FOCAL_SPOT_EXPORT __declspec(dllimport)
