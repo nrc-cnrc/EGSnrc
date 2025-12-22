@@ -974,18 +974,28 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_AEnvelope"});
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_AutoEnvelope"});
 
         // Format: name, isRequired, description, vector string of allowed values
-        geomBlockInput->addSingleInput("type", false, "The type of auto envelope", {"EGS_ASwitchedEnvelope"});
+        geomBlockInput->addSingleInput("type", false, "The type of auto envelope. A switched envelope only provides extra functionality in applications that specifically utilize it.", {"EGS_AEnvelope", "EGS_ASwitchedEnvelope"});
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a predefined geometry that other geometries will be inscribed inside. They must not touch the surfaces of this geometry.");
+        geomBlockInput->addSingleInput("print debug info", false, "Whether or not to output additional debugging information. Defaults to No.", {"Yes", "No"});
+        geomBlockInput->addSingleInput("output volume correction file", false, "Whether to output, or the format for the output of a file containing volume corrections. Defaults to No. Using Yes is equivalent to Text.", {"Yes", "No", "Text", "gzip"});
 
-        geomBlockInput->addSingleInput("incribed geometries", true, "A list of predefined geometries");
-        geomBlockInput->addSingleInput("base geometry", true, "The name of a predefined geometry");
+        auto inscribedPtr = geomBlockInput->addBlockInput("inscribed geometry", true);
+        inscribedPtr->addSingleInput("inscribed geometry name", true, "Name of a previously defined geometry");
+        auto transfPtr = inscribedPtr->addBlockInput("transformations", false);
+        addTransformationBlock(transfPtr);
 
-        auto blockPtr = geomBlockInput->addBlockInput("transformation");
-        blockPtr->addSingleInput("translation", false, "The translation for the geometry (x, y ,z)");
-        auto rotPtr = blockPtr->addSingleInput("rotation", false, "2, 3, or 9 floating point numbers");
-        auto vectPtr = blockPtr->addSingleInput("rotation vector", false, "3 floating point numbers");
+        auto regionPtr = inscribedPtr->addBlockInput("region discovery", true);
+        regionPtr->addSingleInput("action", false, "Optionally apply volume corrections or zero volumes. Defaults to Discover.", {"discover", "discover and correct volume", "discover and zero volume"});
+        auto volFilePtr = regionPtr->addSingleInput("volume correction file", false, "The path to a volume correction file to use instead of calculating volumes by sampling.");
+        regionPtr->addSingleInput("density of random points (cm^-3)", false, "Sampling density for volume corrections. Defaults to 1e8.");
+
+        auto shapePtr = regionPtr->addBlockInput("shape", false);
+        setShapeInputs(shapePtr);
+
+        addRngDefinitionBlock(regionPtr);
     }
 
     EGS_AENVELOPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
