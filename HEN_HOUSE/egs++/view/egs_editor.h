@@ -75,7 +75,7 @@ private:
     shared_ptr<EGS_BlockInput> getBlockInput(QString &blockTitle, QTextCursor cursor = QTextCursor());
     QString getBlockTitle(QTextCursor cursor = QTextCursor());
     QString getParentBlockTitle(QTextCursor cursor = QTextCursor());
-    QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag);
+    QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream = false);
     QTextBlock getBlockEnd(QTextBlock currentBlock);
     bool inputHasDependency(shared_ptr<EGS_SingleInput> inp);
     bool inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QTextCursor cursor = QTextCursor());

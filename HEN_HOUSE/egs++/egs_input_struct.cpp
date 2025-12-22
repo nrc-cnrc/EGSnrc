@@ -215,6 +215,14 @@ vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getSingleInputs(string title
                 return inp;
             }
         }
+        // If we don't find it in the first pass, recurse
+        for (auto &block: blockInputs) {
+            auto result = block->getBlockInputs(title);
+            if(result.size() > 0) {
+                auto inp = block->getSingleInputs(title);
+                return inp;
+            }
+        }
     }
 
     return {};
@@ -276,13 +284,11 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag, stri
         }
     }
 
-    // If not found, go through input lower level blocks
-    for (auto &block: blockInputs) {
-        if (egsEquivStr(block->getTitle(), title)) {
-            auto inp = block->getSingleInput(inputTag, title);
-            if (inp) {
-                return inp;
-            }
+    auto block = getBlockInput(title);
+    if(block) {
+        auto inp = block->getSingleInput(inputTag);
+        if (inp) {
+            return inp;
         }
     }
 
@@ -314,9 +320,9 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getBlockInput(string title) {
 
     if(parent != nullptr && egsEquivStr(parent->getTitle(), "media definition") && egsEquivStr(blockTitle, "pegsless")) {
             return shared_from_this();
-       
+
     }
-    
+
 
     return nullptr;
 }

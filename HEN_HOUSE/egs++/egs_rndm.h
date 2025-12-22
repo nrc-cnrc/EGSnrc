@@ -44,11 +44,20 @@
 
 class EGS_Input;
 
-inline void addRngDefinitionBlock(shared_ptr<EGS_InputStruct> blockPtr) {
-    shared_ptr<EGS_BlockInput> rngBlock = blockPtr->addBlockInput("rng definition");
-    rngBlock->addSingleInput("type", true, "Generator type (Only ranmar)");
-    rngBlock->addSingleInput("initial seeds", true, "Two integers that represent the inital seed");
-    rngBlock->addSingleInput("high resolution", false, "Default is no", {"No", "Yes"});
+inline void addRngDefinitionBlockImpl(EGS_BlockInput &rngBlock) {
+    rngBlock.addSingleInput("type", true, "Algorithm used for RNG. Defaults to ranmar", {"ranmar"});
+    rngBlock.addSingleInput("initial seeds", true, "Two integers that represent the inital seed. The same input file running on the same computer will give idential results for the same seeds, and statistically independent for different seeds. Parallel runs automatically vary the seeds for each job.");
+    rngBlock.addSingleInput("high resolution", false, "Defaults to no. Microscale simulations may require high resolution RNG.", {"No", "Yes"});
+}
+
+inline void addRngDefinitionBlock(const std::shared_ptr<EGS_InputStruct> &blockPtr) {
+    auto rngBlock = blockPtr->addBlockInput("rng definition");
+    addRngDefinitionBlockImpl(*rngBlock);
+}
+
+inline void addRngDefinitionBlock(const std::shared_ptr<EGS_BlockInput> &blockPtr) {
+    auto rngBlock = blockPtr->addBlockInput("rng definition");
+    addRngDefinitionBlockImpl(*blockPtr);
 }
 
 inline string addRngDefinitionExample() {
