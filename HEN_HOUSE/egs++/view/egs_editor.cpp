@@ -718,10 +718,6 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
         return nullptr;
     }
 
-    bool foundTag;
-    QString library = getInputValue("library", cursor.block(), foundTag);
-
-//     egsInformation("Printing parentBlockTitle: %s\n", parentTitle.toLatin1().data());
     // If the parent block is media definition, then just return pegsless
     if (parentTitle.toStdString() == "media definition") {
         shared_ptr<EGS_BlockInput> medDefBlock = inputStruct->getBlockInput("media definition");
@@ -732,6 +728,11 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
 //         egsInformation("Input Block title test: %s\n", inputBlock->getTitle().c_str());
         return nullptr;
     }
+
+    bool foundTag;
+    QString library = getInputValue("library", cursor.block(), foundTag, true);
+
+//     egsInformation("Printing parentBlockTitle: %s\n", parentTitle.toLatin1().data());
 
     // If we couldn't find a library tag in the current block,
     // try searching the containing block (if there is one)
@@ -744,7 +745,7 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
         // so that we're actually starting within the block
         QTextBlock blockEnd;
         blockEnd = cursor.block();
-        int loopGuard = 10000;
+        int loopGuard = 100000;
         int i = 0;
         while (blockEnd.text().contains(":start ")) {
             blockEnd = getBlockEnd(blockEnd.next());
@@ -772,7 +773,6 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
 #endif
             // If we're currently on a :start line, start searching on the next line
             // so that we're actually starting within the block
-            int loopGuard = 10000;
             int i = 0;
             while (blockEnd.text().contains(":start ")) {
                 blockEnd = getBlockEnd(blockEnd.next());
@@ -935,7 +935,7 @@ QString EGS_Editor::getParentBlockTitle(QTextCursor cursor) {
     return blockTitle;
 }
 
-QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag) {
+QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream) {
     QString value;
     vector<QString> innerList;
     bool withinOtherBlock = false;
@@ -989,7 +989,8 @@ QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &fo
                 else {
                     // If we got to the start of the block,
                     // then we failed to find the input
-                    return "";
+                    foundTag = false;
+                    break;
                 }
             }
         }
@@ -1007,6 +1008,11 @@ QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &fo
                 withinOtherBlock = true;
             }
         }
+    }
+
+    if(!foundTag && searchUpstream) {
+        QTextBlock upstreamBlock = blockEnd.next().next(); // This might be a :stop of the upstream block
+        value = getInputValue(inp, upstreamBlock, foundTag, searchUpstream);
     }
 
     return value;
