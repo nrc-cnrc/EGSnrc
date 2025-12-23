@@ -29,6 +29,7 @@
 #                   Dave Rogers
 #                   Martin Martinov
 #                   Alexandre Demelo
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -72,6 +73,7 @@ static char EGS_AENVELOPE_LOCAL transformations_keyword[] = "transformations";
 static char EGS_AENVELOPE_LOCAL type_keyword[] = "type";
 static char EGS_AENVELOPE_LOCAL transformation_keyword[] = "transformation";
 
+static bool EGS_AENVELOPE_LOCAL inputSet = false;
 
 EGS_AEnvelope::EGS_AEnvelope(EGS_BaseGeometry *base_geom,
                              const vector<AEnvelopeAux> inscribed, const string &Name, bool debug, string output_vc_file) :
@@ -837,7 +839,7 @@ EGS_ASwitchedEnvelope::EGS_ASwitchedEnvelope(EGS_BaseGeometry *base_geom,
 };
 
 
-//TODO: this gets called a lot and is probably quite slow.  Instead fo doing a
+//TODO: this gets called a lot and is probably quite slow.  Instead of doing a
 //set intersection on every call we can probably do it once when activated
 //geometries change and cache it
 vector<EGS_BaseGeometry *> EGS_ASwitchedEnvelope::getGeomsInRegion(int ireg) {
@@ -966,6 +968,42 @@ vector<EGS_AffineTransform *> EGS_AEnvelope::createTransforms(EGS_Input *input) 
 
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_AutoEnvelope"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("type", false, "The type of auto envelope. A switched envelope only provides extra functionality in applications that specifically utilize it.", {"EGS_AEnvelope", "EGS_ASwitchedEnvelope"});
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a predefined geometry that other geometries will be inscribed inside. They must not touch the surfaces of this geometry.");
+        geomBlockInput->addSingleInput("print debug info", false, "Whether or not to output additional debugging information. Defaults to No.", {"Yes", "No"});
+        geomBlockInput->addSingleInput("output volume correction file", false, "Whether to output, or the format for the output of a file containing volume corrections. Defaults to No. Using Yes is equivalent to Text.", {"Yes", "No", "Text", "gzip"});
+
+        auto inscribedPtr = geomBlockInput->addBlockInput("inscribed geometry", true);
+        inscribedPtr->addSingleInput("inscribed geometry name", true, "Name of a previously defined geometry");
+        auto transfPtr = inscribedPtr->addBlockInput("transformations", false);
+        addTransformationBlock(transfPtr);
+
+        auto regionPtr = inscribedPtr->addBlockInput("region discovery", true);
+        regionPtr->addSingleInput("action", false, "Optionally apply volume corrections or zero volumes. Defaults to Discover.", {"discover", "discover and correct volume", "discover and zero volume"});
+        auto volFilePtr = regionPtr->addSingleInput("volume correction file", false, "The path to a volume correction file to use instead of calculating volumes by sampling.");
+        regionPtr->addSingleInput("density of random points (cm^-3)", false, "Sampling density for volume corrections. Defaults to 1e8.");
+
+        auto shapePtr = regionPtr->addBlockInput("shape", false);
+        setShapeInputs(shapePtr);
+
+        addRngDefinitionBlock(regionPtr);
+    }
+
+    EGS_AENVELOPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_AENVELOPE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 

@@ -31,6 +31,7 @@
 #                   Manuel Stoeckl
 #                   Marc Chamberland
 #                   Martin Martinov
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -1079,9 +1080,149 @@ const char *err_msg1 = "createGeometry(EGS_XYZRepeater)";
 
 #endif
 
-string EGS_NDGeometry::type = "EGS_NDGeometry";
+static string EGS_NDG_LOCAL typeStr("EGS_NDGeometry");
+string EGS_NDGeometry::type(typeStr);
+
+static bool EGS_NDG_LOCAL inputSet = false;
 
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs();
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_NDGeometry"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", false, "type of nd_geometry", {"EGS_XYZGeometry", "EGS_XYZRepeater"});
+
+        auto dimPtr = geomBlockInput->addSingleInput("dimensions", true, "A list of previously defined geometries.");
+        dimPtr->addDependency(typePtr, "", true);
+        auto hownPtr = geomBlockInput->addSingleInput("hownear method", false, "0(for orthogonal constituent geometries) or 1");
+        hownPtr->addDependency(typePtr, "", true);
+
+        // EGS_XYZGeometry
+        // First method
+        auto xPtr = geomBlockInput->addSingleInput("x-planes", false, "A list of the x-plane positions");
+        xPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto yPtr = geomBlockInput->addSingleInput("y-planes", false, "A list of the y-plane positions");
+        yPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto zPtr = geomBlockInput->addSingleInput("z-planes", false, "A list of the z-plane positions");
+        zPtr->addDependency(typePtr, "EGS_XYZGeometry");
+
+        // Second method
+        auto densityPtr = geomBlockInput->addSingleInput("density matrix", false, "Density file");
+        densityPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto ctPtr = geomBlockInput->addSingleInput("ct ramp", false, "Ramp file");
+        ctPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto phantPtr = geomBlockInput->addSingleInput("egsphant file", false, "An egsphant file");
+        phantPtr->addDependency(typePtr, "EGS_XYZGeometry");
+
+        // For second method, must either use "ct ramp" or "egsphant file"
+        densityPtr->addDependency(phantPtr, "", true);
+        phantPtr->addDependency(densityPtr, "", true);
+
+        // Third method
+        auto xslabPtr = geomBlockInput->addSingleInput("x-slabs", false, "Xo Dx Nx");
+        xslabPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto yslabPtr = geomBlockInput->addSingleInput("y-slabs", false, "Yo Dy Ny");
+        yslabPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto zslabPtr = geomBlockInput->addSingleInput("z-slabs", false, "Zo Dz Nz");
+        zslabPtr->addDependency(typePtr, "EGS_XYZGeometry");
+
+        // Can only use one method
+        xPtr->addDependency(densityPtr, "", true);
+        yPtr->addDependency(densityPtr, "", true);
+        zPtr->addDependency(densityPtr, "", true);
+        xPtr->addDependency(ctPtr, "", true);
+        yPtr->addDependency(ctPtr, "", true);
+        zPtr->addDependency(ctPtr, "", true);
+        xPtr->addDependency(phantPtr, "", true);
+        yPtr->addDependency(phantPtr, "", true);
+        zPtr->addDependency(phantPtr, "", true);
+        xPtr->addDependency(xslabPtr, "", true);
+        yPtr->addDependency(xslabPtr, "", true);
+        zPtr->addDependency(xslabPtr, "", true);
+        xPtr->addDependency(yslabPtr, "", true);
+        yPtr->addDependency(yslabPtr, "", true);
+        zPtr->addDependency(yslabPtr, "", true);
+        xPtr->addDependency(zslabPtr, "", true);
+        yPtr->addDependency(zslabPtr, "", true);
+        zPtr->addDependency(zslabPtr, "", true);
+        densityPtr->addDependency(xPtr, "", true);
+        ctPtr->addDependency(xPtr, "", true);
+        phantPtr->addDependency(xPtr, "", true);
+        densityPtr->addDependency(yPtr, "", true);
+        ctPtr->addDependency(yPtr, "", true);
+        phantPtr->addDependency(yPtr, "", true);
+        densityPtr->addDependency(zPtr, "", true);
+        ctPtr->addDependency(zPtr, "", true);
+        phantPtr->addDependency(zPtr, "", true);
+        densityPtr->addDependency(xslabPtr, "", true);
+        ctPtr->addDependency(xslabPtr, "", true);
+        phantPtr->addDependency(xslabPtr, "", true);
+        densityPtr->addDependency(yslabPtr, "", true);
+        ctPtr->addDependency(yslabPtr, "", true);
+        phantPtr->addDependency(yslabPtr, "", true);
+        densityPtr->addDependency(zslabPtr, "", true);
+        ctPtr->addDependency(zslabPtr, "", true);
+        phantPtr->addDependency(zslabPtr, "", true);
+        xslabPtr->addDependency(xPtr, "", true);
+        xslabPtr->addDependency(yPtr, "", true);
+        xslabPtr->addDependency(zPtr, "", true);
+        xslabPtr->addDependency(densityPtr, "", true);
+        xslabPtr->addDependency(ctPtr, "", true);
+        xslabPtr->addDependency(phantPtr, "", true);
+        yslabPtr->addDependency(xPtr, "", true);
+        yslabPtr->addDependency(yPtr, "", true);
+        yslabPtr->addDependency(zPtr, "", true);
+        yslabPtr->addDependency(densityPtr, "", true);
+        yslabPtr->addDependency(ctPtr, "", true);
+        yslabPtr->addDependency(phantPtr, "", true);
+        zslabPtr->addDependency(xPtr, "", true);
+        zslabPtr->addDependency(yPtr, "", true);
+        zslabPtr->addDependency(zPtr, "", true);
+        zslabPtr->addDependency(densityPtr, "", true);
+        zslabPtr->addDependency(ctPtr, "", true);
+        zslabPtr->addDependency(phantPtr, "", true);
+
+
+        // EGS_XYZRepeater
+        auto regeomPtr = geomBlockInput->addSingleInput("repeated geometry", true, "The name of a previously defined geometry");
+        regeomPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto medPtr = geomBlockInput->addSingleInput("medium", false, "The medium the space between  xmin..xmax, ymin..ymax, and zmin..zmax is filled with");
+        medPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto rexPtr = geomBlockInput->addSingleInput("repeat x", true, "xmin xmax Nx");
+        rexPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto reyPtr = geomBlockInput->addSingleInput("repeat y", true, "ymin ymax Ny");
+        reyPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto rezPtr = geomBlockInput->addSingleInput("repeat z", true, "zmin zmax Nz");
+        rezPtr->addDependency(typePtr, "EGS_XYZRepeater");
+    }
+
+    EGS_NDG_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_ndgeometry
+    #:start geometry:
+        library = EGS_NDGeometry
+        name = my_ndgeometry
+        dimensions = geom1 geom2
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_NDG_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_NDG_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 #ifdef EXPLICIT_XYZ

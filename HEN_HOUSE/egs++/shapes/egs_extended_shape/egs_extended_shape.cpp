@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -38,7 +38,41 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
+static bool EGS_EXTENDED_SHAPE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_EXTENDED_SHAPE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Extended_Shape"});
+        shapeBlockInput->addSingleInput("extension", true, "Adds delta z to the z-component of the position vector (z1, z2)");
+
+        auto shapePtr = shapeBlockInput->addBlockInput("shape");
+        setShapeInputs(shapePtr);
+    }
+
+    EGS_EXTENDED_SHAPE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_extended_shape
+    #:start shape:
+        library = egs_extended_shape
+        :start shape:
+            definition of the shape to be 'extended'
+        :stop shape:
+        extension = z1 z2
+)"};
+        return example;
+    }
+
+    EGS_EXTENDED_SHAPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_EXTENDED_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {

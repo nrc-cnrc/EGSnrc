@@ -28,6 +28,7 @@
 #                   Reid Townson
 #                   Ernesto Mainegra-Hing
 #                   Alexandre Demelo
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -51,6 +52,8 @@
 #define HELP_S(s) #s
 #define F77_NAME(fname,FNAME) STRINGIFY(F77_OBJ(fname,FNAME))
 #define F77_NAME_(fname,FNAME) STRINGIFY(F77_OBJ_(fname,FNAME))
+
+static bool EGS_BEAM_SOURCE_LOCAL inputSet = false;
 
 EGS_BeamSource::EGS_BeamSource(EGS_Input *input, EGS_ObjectFactory *f) :
     EGS_BaseSource(input,f) {
@@ -358,6 +361,45 @@ EGS_BeamSource::~EGS_BeamSource() {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs(false, false);
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Beam_Source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("beam code", true, "The name of the BEAMnrc user code");
+        srcBlockInput->addSingleInput("pegs file", true, "The name of the PEGS file to be used in the BEAMnrc simulation");
+        srcBlockInput->addSingleInput("input file", true, "The name of the input file specifying the BEAMnrc simulation");
+        srcBlockInput->addSingleInput("cutout", false, "Cutout of a rectangle defined by x1, y1, x2, y2");
+        srcBlockInput->addSingleInput("particle type", false, "The type of particle.", {"all", "electrons", "photons", "positrons", "charged"});
+        srcBlockInput->addSingleInput("weight window", true, "wmin wmax");
+    }
+
+    EGS_BEAM_SOURCE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_beam_source
+    #:start source:
+        library = egs_beam_source
+        name = my_source
+        beam code = BEAM_EX10MeVe
+        pegs file = 521icru
+        particle type = all
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_BEAM_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_BEAM_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

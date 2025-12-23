@@ -25,6 +25,7 @@
 #
 #  Contributors:    Marc Chamberland
 #                   Randle Taylor
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -38,6 +39,9 @@
 #include "egs_shape_collection.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_SHAPE_COLLECTION_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_SHAPE_COLLECTION_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 EGS_ShapeCollection::EGS_ShapeCollection(const vector<EGS_BaseShape *> &Shapes,
         const vector<EGS_Float> &Probs, const string &Name, EGS_ObjectFactory *f) :
@@ -60,6 +64,45 @@ EGS_ShapeCollection::EGS_ShapeCollection(const vector<EGS_BaseShape *> &Shapes,
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Shape_Collection"});
+        shapeBlockInput->addSingleInput("probabilities", true, "p1 p2 ... pn");
+
+        auto shapePtr = shapeBlockInput->addBlockInput("shape");
+        setShapeInputs(shapePtr);
+    }
+
+    EGS_SHAPE_COLLECTION_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_shape_collection
+    #:start shape:
+        library = egs_shape_collection
+        :start shape:
+            definition of the first shape in the collection:
+        :stop shape:
+        :start shape:
+            definition of the second shape in the collection
+        :stop shape:
+        ...
+        :start shape:
+            definition of the last shape in the collection
+        :stop shape:
+        probablities = p1 p2 ... pn
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_SHAPE_COLLECTION_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_SHAPE_COLLECTION_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {
@@ -105,7 +148,7 @@ extern "C" {
         }
         if (shapes.size() != probs.size()) {
             egsWarning("createShape(shape collection): the number of shapes (%d)"
-                       " is not the same as the number of input probabilities (%d)\n");
+            " is not the same as the number of input probabilities (%d)\n");
             ok = false;
         }
         for (unsigned int i=0; i<probs.size(); i++) {

@@ -155,7 +155,7 @@ public:
             EGS_Float temp = sin_t/sin_z;
             EGS_Float temp_phi = z*c_phi;
             EGS_Float temp_x = x*cos_t;
-            register EGS_Float temp_y = y*cos_t;
+            EGS_Float temp_y = y*cos_t;
             EGS_Float temp_x1 = temp_phi*x-y*s_phi;
             EGS_Float temp_y1 = temp_phi*y+x*s_phi;
             x = temp*temp_x1+temp_x;

@@ -54,6 +54,8 @@
 #include "egs_mesh.h"
 //! To handle EGS_Mesh in an EGS_EnvelopeGeometry
 #include "egs_envelope_geometry.h"
+//! To handle input examples
+#include "egs_input_struct.h"
 
 #include <algorithm>
 #include <cstdlib>
@@ -774,6 +776,39 @@ int Mevegs_Application::startNewShower() {
     }
     current_weight = p.wt;
     return 0;
+}
+
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
+
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("mevegs");
+        scoreBlock->addSingleInput("scale xcc", false, "");
+        scoreBlock->addSingleInput("scale bc", false, "");
+        scoreBlock->addSingleInput("deflect electron after brems", false, "yes or no", {"yes", "no"});
+        scoreBlock->addSingleInput("Russian Roulette", false, "survival probability is 1/input");
+        scoreBlock->addSingleInput("pulse height regions", false, "");
+        scoreBlock->addSingleInput("pulse height bins", false, "");
+
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+    scale xcc =
+    scale bc =
+    deflect electron after brems = no       # or yes
+    Russian Roulette = 5                    # survival probability is 1/input
+    pulse height regions = 1 2 3
+    pulse height bins = 1 2 3
+:stop scoring options:
+)"};
+        return example;
+    }
 }
 
 #ifdef BUILD_APP_LIB

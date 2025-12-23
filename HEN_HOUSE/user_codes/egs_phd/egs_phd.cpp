@@ -52,6 +52,7 @@
 
 
 #include "egs_phd.h"
+#include "egs_input_struct.h"
 
 // describeUserCode
 void phd_app::describeUserCode() const {
@@ -340,6 +341,43 @@ int phd_app::startNewShower() {
     return 0;
 }
 
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
 
-// main application macro
-APP_MAIN(phd_app);
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_phd");
+
+        shared_ptr<EGS_BlockInput> specBlock = scoreBlock->addBlockInput("spectrum");
+        specBlock->addSingleInput("label", false, "");
+        specBlock->addSingleInput("Emin", false, "");
+        specBlock->addSingleInput("Emax", false, "");
+        specBlock->addSingleInput("bins", false, "");
+        specBlock->addSingleInput("spectrum file", false, "");
+        
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+    :start spectrum:
+        label = detector
+        Emin  = 0.0
+        Emax  = 1.0
+        bins  = 100
+        spectrum file = spectrum.dat
+    :stop spectrum:
+:stop scoring options:
+)"};
+        return example;
+    }
+}
+
+#ifdef BUILD_APP_LIB
+    APP_LIB(phd_app);
+#else
+    APP_MAIN(phd_app);
+#endif

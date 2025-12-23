@@ -47,6 +47,7 @@
 #include "egs_libconfig.h"
 #include "egs_math.h"
 #include "egs_functions.h"
+#include "egs_input_struct.h"
 
 #include <iostream>
 #include <vector>
@@ -54,6 +55,15 @@
 using namespace std;
 
 class EGS_Input;
+
+inline void addTransformationBlock(shared_ptr<EGS_BlockInput> blockPtr) {
+    shared_ptr<EGS_BlockInput> transBlock = blockPtr->addBlockInput("transformation");
+    transBlock->addSingleInput("translation", false, "The x, y, z translation offsets in cm.");
+    auto vecPtr = transBlock->addSingleInput("rotation vector", false, "Defines a rotation which, when applied to the 3D vector defined by this input, transforms it into a vector along the positive z-axis.");
+    auto rotPtr = transBlock->addSingleInput("rotation", false, "2, 3 or 9 floating point numbers define a rotation. See the documentation for details.");
+    vecPtr->addDependency(rotPtr, "", true);
+    rotPtr->addDependency(vecPtr, "", true);
+}
 
 /*! \brief A class for vector rotations.
 
@@ -159,9 +169,9 @@ public:
         if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi = v.x/sinz;
-            register EGS_Float sphi = v.y/sinz;
+            EGS_Float sphi = v.y/sinz;
             EGS_Float cost = v.z/norm;
-            register EGS_Float sint = -sinz/norm;
+            EGS_Float sint = -sinz/norm;
             *this = rotY(cost,sint)*rotZ(cphi,sphi);
         }
         else if (v.z < 0.) {
@@ -476,6 +486,18 @@ public:
         else {
             has_t = false;
         }
+    };
+
+    // Explicitly declare the copy assignment operator
+    EGS_AffineTransform& operator=(const EGS_AffineTransform& other) {
+        if (this != &other) { // Protect against self-assignment
+            // Copy all member variables manually:
+            this->R = other.R;
+            this->t = other.t;
+            this->has_t = other.has_t;
+            this->has_R = other.has_R;
+        }
+        return *this;
     };
 
     /*! \brief Returns the multiplication of the invoking object with \a tr.

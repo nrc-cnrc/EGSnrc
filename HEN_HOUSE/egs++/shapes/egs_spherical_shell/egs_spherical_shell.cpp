@@ -27,6 +27,7 @@
 #  Contributors:    Marc Chamberland
 #                   Rowan Thomson
 #                   Dave Rogers
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -45,6 +46,9 @@
 #include "egs_spherical_shell.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_SPHERICAL_SHELL_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_SPHERICAL_SHELL_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 EGS_SphericalShellShape::EGS_SphericalShellShape(EGS_Float ri, EGS_Float ro, int hemisph, EGS_Float halfangle, const EGS_Vector &Xo,
         const string &Name,EGS_ObjectFactory *f) :
@@ -127,6 +131,42 @@ EGS_Float EGS_SphericalShellShape::area() const {
 };
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Spherical_Shape"});
+        shapeBlockInput->addSingleInput("midpoint", true, "The midpoint of the shape, (x y z)");
+        shapeBlockInput->addSingleInput("inner radius", true, "The inner radius");
+        shapeBlockInput->addSingleInput("outer radius", true, "The outer radius");
+        shapeBlockInput->addSingleInput("hemisphere", false, "Hemisphere");
+        shapeBlockInput->addSingleInput("hemisphere", false, "The half angle, in degrees");
+        setShapeInputs(shapeBlockInput);
+    }
+
+    EGS_SPHERICAL_SHELL_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_spherical_shell
+    #:start shape:
+        library = egs_spherical_shell
+        midpoint = 0 0 0
+        inner radius = 0.5
+        outer radius = 1
+        hemisphere = 1
+        half angle = 35
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_SPHERICAL_SHELL_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_SPHERICAL_SHELL_EXPORT EGS_BaseShape *createShape(EGS_Input *input, EGS_ObjectFactory *f) {
 

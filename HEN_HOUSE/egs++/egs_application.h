@@ -28,6 +28,7 @@
 #                   Blake Walters
 #                   Reid Townson
 #                   Alexandre Demelo
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -45,9 +46,15 @@
 #include "egs_base_source.h"
 #include "egs_simple_container.h"
 #include "egs_interpolator.h"
+#include "egs_input_struct.h"
+#include "egs_run_control.h"
+#include "egs_scoring.h"
+#include "egs_rndm.h"
 
+#include <memory>
 #include <string>
 #include <iostream>
+#include <dirent.h>
 using namespace std;
 
 class EGS_Input;
@@ -58,6 +65,113 @@ class EGS_GeometryHistory;
 class EGS_AusgabObject;
 class EGS_Interpolator;
 //template <class T> class EGS_SimpleContainer;
+
+inline void addmcBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+    shared_ptr<EGS_BlockInput> mcBlock = blockPtr->addBlockInput("MC transport parameter");
+    mcBlock->addSingleInput("Global ECUT", false, "Global electron transport cutoff");
+    mcBlock->addSingleInput("Global PCUT", false, "Global photon transport cutoff");
+    mcBlock->addSingleInput("Global SMAX", false, "Global maximum step-size restriction for e-transport");
+    mcBlock->addSingleInput("ESTEPE", false, "The maximum fractional energy loss in an electron step due to continuous energy loss. Defaults to 0.25");
+    mcBlock->addSingleInput("XIMAX", false, "Maximum first GS moment per step. Defaults to 0.5, maximum value is 1.");
+    mcBlock->addSingleInput("Boundary crossing algorithm", false, "Defaults to exact", {"exact", "PRESTA-I"});
+    mcBlock->addSingleInput("Skin depth for BCA", false, "The distance from a boundary to turn on electron single scattering, in mean free paths of the current medium. Set to a very large value to do a single scattering simulation. Defaults to 3 for exact boundary crossing");
+    mcBlock->addSingleInput("Electron-step algorithm", false, "Defaults to PRESTA-II", {"PRESTA_II", "PRESTA_I"});
+    mcBlock->addSingleInput("Spin effects", false, "Includes relativistic spin effects in electron scattering (On is highly recommended). Defaults to On", {"On", "Off"});
+    mcBlock->addSingleInput("Brems angular sampling", false, "Defaults to KM", {"KM", "Simple"});
+    mcBlock->addSingleInput("Brems cross sections", false, "Defaults to BH", {"BH", "NIST"});
+    mcBlock->addSingleInput("Pair angular sampling", false, "Defaults to Simple", {"Simple", "Off", "KM"});
+    mcBlock->addSingleInput("Pair cross sections", false, "Defaults to BH. Use NRC at low energies to consider asymmetry in positron-electron energy distribution.", {"BH", "NRC"});
+    mcBlock->addSingleInput("Triplet production", false, "Defaults to On", {"On", "Off"});
+    mcBlock->addSingleInput("Electron Impact Ionization", false, "For more accurate kV x-ray simulations, turn this on. Defaults to Off", {"On", "Off", "casnati", "kolbenstvedt", "gryzinski"});
+    mcBlock->addSingleInput("Bound Compton scattering", false, "Defaults to norej", {"On", "Off", "Simple", "norej"});
+    mcBlock->addSingleInput("Radiative Compton corrections", false, "Defaults to Off", {"On", "Off"});
+    mcBlock->addSingleInput("Rayleigh scattering", false, "Defaults to Off", {"On", "Off", "custom"});
+    mcBlock->addSingleInput("Photoelectron angular sampling", false, "Defaults to On", {"On", "Off"});
+    mcBlock->addSingleInput("Atomic relaxations", false, "Defaults to on", {"On", "Off"});
+    mcBlock->addSingleInput("Photon cross sections", false, "Defaults to xcom, can also be user-supplied", {"si", "epdl", "xcom"});
+    mcBlock->addSingleInput("Photon cross-sections output", false, "Defaults to Off", {"On", "Off"});
+    mcBlock->addSingleInput("Compton cross sections", false, "User-supplied, Defaults to comp-xsections");
+    mcBlock->addSingleInput("Photonuclear attenuation", false, "Defaults to Off", {"On", "Off"});
+    mcBlock->addSingleInput("Photonuclear cross sections", false, "Defaults to default, or is user-supplied", {"default"});
+}
+
+inline void addMediaDefBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+    shared_ptr<EGS_BlockInput> mediaBlockInput = blockPtr->addBlockInput("media definition");
+    mediaBlockInput->addSingleInput("ae", false, "Lowest energy for electron production (kinetic+0.511) in MeV. Minimum and most accurate value is 0.521.");
+    mediaBlockInput->addSingleInput("ap", false, "Lowest energy for photon production (kinetic) in MeV. Minimum and most accurate value is 0.001.");
+    mediaBlockInput->addSingleInput("ue", false, "Maximum energy for electrons (kinetic+0.511) in MeV. Set to just above the maximum source energy.");
+    mediaBlockInput->addSingleInput("up", false, "Maximum energy for photons (kinetic) in MeV. Set to just above the maximum source energy.");
+
+    mediaBlockInput->addSingleInput("material data file", false, "The full file path to a file containing material data. See HEN_HOUSE/pegs4/data/material.dat for an example containing all the materials from 521ICRU.pegs4dat and 700ICRU.pegs4dat.");
+
+    shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->addBlockInput("myMediumName");
+    mediumBlock->addSingleInput("elements", false, "A list of elements, separated by commas");
+    auto atomsPtr = mediumBlock->addSingleInput("number of atoms", false, "For each of the elements, the number of atoms in a molecule of the medium, separated by commas. If the medium is a mixture, use mass fractions instead.");
+    auto fractionsPtr = mediumBlock->addSingleInput("mass fractions", false, "For each of the elements, the mass fraction of that element in the mixture, comma separated.");
+    mediumBlock->addSingleInput("rho", false, "The bulk density of the medium in g/cm^3");
+    mediumBlock->addSingleInput("sterncid", false, "Material ID for the STERNHEIMER-SELTZER-BERGER (SSB) lookup table");
+    mediumBlock->addSingleInput("stopping powers", false, "This parameter allows various stopping powers to be calculated, rather than just the restricted total stopping powers. This allows for simulations that model various types of CSDA calculations. Defaults to restricted total.", {"restricted total", "unrestricted collision", "unrestricted collision and radiative", "unrestricted collision and restricted radiative", "restricted collision and unrestricted radiative", "unrestricted radiative"});
+    mediumBlock->addSingleInput("bremsstrahlung correction", false, "Corrections to apply to calculated bremsstrahlung cross-sections. Defaults to KM", {"KM", "NRC", "None"});
+    mediumBlock->addSingleInput("gas pressure", false, "The pressure in atm of this medium, assuming it is a gas. This is only applied if a density correction file is not used. To apply a gas pressure in that case, generate a new density correction file with the appropriately scaled density.");
+    mediumBlock->addSingleInput("e- stopping power output file", false, "An output filename to write electron stopping powers to.");
+
+    atomsPtr->addDependency(fractionsPtr, "", true);
+    fractionsPtr->addDependency(atomsPtr, "", true);
+}
+
+inline string addmcExample() {
+    string example = {
+        R"(
+:start MC transport parameter:
+    Global ECUT                    = 0.521          # Global electron transport cutoff
+    Global PCUT                    = 0.001          # Global photon transport cutoff
+    Global SMAX                    = 1e10           # Global maximum step-size restriction for e- transport
+    ESTEPE                         = 0.25           # Defaults to 0.25
+    XIMAX                          = 0.5            # Defaults to 0.5, max. value is 1.
+    Boundary crossing algorithm    = exact          # exact (default), PRESTA-I
+    Skin depth for BCA             = 3              # Default value is 3 for exact boundary crossing
+    Electron-step algorithm        = PRESTA-II      # PRESTA-II (default),PRESTA-I
+    Spin effects                   = On             # On (default), Off
+    Brems angular sampling         = KM             # Simple, KM (default)
+    Brems cross sections           = BH             # BH (default), NIST, NRC
+    Pair angular sampling          = Simple         # Off, Simple (default), KM
+    Pair cross sections            = BH             # NRC, BH (default)
+    Triplet production             = Off            # On, Off (default)
+    Electron Impact Ionization     = Off            # On, Off (default), casnati, kolbenstvedt, gryzinski
+    Bound Compton scattering       = norej          # On, Off, Simple, norej (default)
+    Radiative Compton corrections  = Off            # On,  Off (default)
+    Rayleigh scattering            = Off            # On, Off (default), custom
+    Photoelectron angular sampling = On             # On (default), Off
+    Atomic relaxations             = On             # On (default), Off
+    Photon cross sections          = xcom           # si, epdl, xcom (default) or user-supplied
+    Photon cross-sections output   = Off            # Off (default), On
+    Compton cross sections         = comp_xsections # User-supplied
+    Photonuclear attenuation       = Off            # Off (default), On
+    Photonuclear cross sections    = default        # default (default), user-supplied
+:stop MC transport parameter:
+)"};
+    return example;
+}
+
+inline string addMediaExample() {
+    string example = {
+    // Not completed yet, need to fill in numbers for example
+        R"(
+:start media definition:
+    ae  = 0.521                 # lowest  energy for electron production (kinetic+0.511)
+    ap  = 0.01                  # lowest  energy for photon production   (kinetic)
+    ue  = 50.511                # maximum energy for electrons (kinetic+0.511)
+    up  = 50                    # maximum energy for photons (kinetic) # maximum energy for photons (kinetic)
+
+    # Here is an example for defining water
+    :start water:
+        density correction file = water_liquid
+    :stop water:
+
+:stop media definition:
+)"};
+    return example;
+}
 
 /*! \brief A structure holding the information of one particle
   \ingroup egspp_main
@@ -1142,12 +1256,15 @@ public:
         return geometry->getMediumName(ind);
     };
     virtual EGS_Float getMediumRho(int ind) {
+        (void)ind;
         return -1.0;
     };
     virtual EGS_Float getEdep() {
         return 0.0;
     };
-    virtual void setEdep(EGS_Float edep) {};
+    virtual void setEdep(EGS_Float edep) {
+        (void)edep;
+    };
     virtual EGS_Float getEcut() {
         return 0.0;
     };
@@ -1161,9 +1278,15 @@ public:
     //************************************************
     // For use with ausgab radiative splitting objects
     //************************************************
-    virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
-    virtual void setRussianRoulette(const EGS_Float &iSwitchRR) {};
-    virtual void splitTopParticleIsotropically(const EGS_Float &fsplit) {}
+    virtual void setRadiativeSplitting(const EGS_Float &nsplit) {
+        (void)nsplit;
+    };
+    virtual void setRussianRoulette(const EGS_Float &iSwitchRR) {
+        (void)iSwitchRR;
+    };
+    virtual void splitTopParticleIsotropically(const EGS_Float &fsplit) {
+        (void)fsplit;
+    }
 
     //************************************************************
     // Utility functions for use with ausgab fluence scoring objects
@@ -1173,6 +1296,8 @@ public:
     };
 
     virtual EGS_Interpolator *getDEDX(const int &imed, const int &iq) {
+        (void)imed;
+        (void)iq;
         return 0;
     };
 
@@ -1188,9 +1313,15 @@ public:
         return source->getEmax();
     }
 
-    virtual void setLatch(const int &ip, const int &latch) {};
+    virtual void setLatch(const int &ip, const int &latch) {
+        (void)ip;
+        (void)latch;
+    };
 
-    virtual void incLatch(const int &ip, const int &increment) {};
+    virtual void incLatch(const int &ip, const int &increment) {
+        (void)ip;
+        (void)increment;
+    };
 
     virtual int getNp() {
         return 0;
@@ -1203,7 +1334,11 @@ public:
     //************************************************************
     // Utility function for ausgab phase space scoring objects
     //************************************************************
-    virtual void setLatch(int latch) {};
+    virtual void setLatch(int latch) {
+        (void)latch;
+    };
+
+    static unique_ptr<EGS_InputStruct> inputStructure;
 
     bool containsDynamic() {
         bool hasDynamic = false;
@@ -1237,9 +1372,28 @@ public:
 #define APP_LIB(app_name) \
     extern "C" {\
         APP_EXPORT EGS_Application* createApplication(int argc, char **argv) {\
-            return new app_name(argc,argv);\
+            return new app_name(argc, argv);\
         }\
-    }
-
+        APP_EXPORT shared_ptr<EGS_InputStruct> getAppInputs() {\
+            shared_ptr<EGS_InputStruct> appInputStruct = make_shared<EGS_InputStruct>();\
+            addmcBlock(appInputStruct);\
+            addRngDefinitionBlock(appInputStruct);\
+            addRunControlBlock(appInputStruct);\
+            addMediaDefBlock(appInputStruct);\
+            return appInputStruct;\
+        }\
+        APP_EXPORT string getmcExample() {\
+            return addmcExample();\
+        }\
+        APP_EXPORT string getRunControlExample() {\
+            return addRunControlExample();\
+        }\
+        APP_EXPORT string getRngDefinitionExample() {\
+            return addRngDefinitionExample();\
+        }\
+        APP_EXPORT string getMediaExample() {\
+            return addMediaExample();\
+        }\
+    }\
 
 #endif

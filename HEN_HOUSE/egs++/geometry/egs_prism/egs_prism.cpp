@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Marc Chamberland
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -47,7 +48,51 @@ static EGS_PRISM_LOCAL string __prismY("EGS_PrismY");
 static EGS_PRISM_LOCAL string __prismZ("EGS_PrismZ");
 static EGS_PRISM_LOCAL string __prism("EGS_Prism");
 
+static bool EGS_PRISM_LOCAL inputSet = false;
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs();
+
+        geomBlockInput->getSingleInput("library")->setValues({"EGS_Prism"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of prism", {"EGS_PrismX", "EGS_PrismY", "EGS_PrismZ", "EGS_Prism"});
+
+        geomBlockInput->addSingleInput("closed", false, "Two inputs that define the distance from the top and bottom prism plane to the plane used to define the polygon");
+        geomBlockInput->addSingleInput("points", true, "A list of 2D or 3D positions.");
+    }
+
+    EGS_PRISM_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example of egs_prisms
+
+    # EGS_PrismZ example
+    #:start geometry:
+        name = my_prism
+        library = egs_prism
+        type = EGS_PrismZ
+        points = 1 1  -1 1  -1 -1  4 -1
+        closed = 1 4
+        :start media input:
+            media = air
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_PRISM_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_PRISM_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 

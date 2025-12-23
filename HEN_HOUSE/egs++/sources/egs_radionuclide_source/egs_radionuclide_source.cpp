@@ -25,6 +25,7 @@
 #
 #  Contributors:    Martin Martinov
 #                   Ernesto Mainegra-Hing
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -39,6 +40,8 @@
 #include "egs_input.h"
 #include "egs_math.h"
 #include "egs_application.h"
+
+static bool EGS_RADIONUCLIDE_SOURCE_LOCAL inputSet = false;
 
 EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSource(input,f),
@@ -526,6 +529,56 @@ bool EGS_RadionuclideSource::setState(istream &data) {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs();
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Radionuclide_Source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("activity", false, "The total activity of mixture, assumed constant.");
+        srcBlockInput->addSingleInput("experiment time", false, "Time length of the experiment");
+        srcBlockInput->addSingleInput("base source", true, "The name of another source you have defined, that specifies the spatial distribution (e.g. an isotropic source).");
+    }
+
+    EGS_RADIONUCLIDE_SOURCE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_radionuclide_source
+    #:start source:
+        name                = my_mixture
+        library             = egs_radionuclide_source
+        base source         = name of the source used to generate decay locations
+        activity            = [optional, default=1] total activity of mixture,
+                            assumed constant. The activity only affects the
+                            emission times assigned to particles.
+        charge              = [optional] list including at least one of -1, 0, 1, 2
+                            to include electrons, photons, positrons and alphas.
+                            Filtering is applied to ALL emissions (including
+                            relaxation particles).
+                            Omit this option to include all charges - this is
+                            recommended.
+        experiment time     = [optional, default=0] time length of the experiment,
+                            set to 0 for no time limit. Source particles generated
+                            after the experiment time are not transported.
+
+        :start spectrum:
+            definition of an EGS_RadionuclideSpectrum (see link below)
+        :stop spectrum:
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_RADIONUCLIDE_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input
             *input, EGS_ObjectFactory *f) {

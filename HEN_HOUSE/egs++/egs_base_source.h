@@ -47,6 +47,7 @@
 #include "egs_object_factory.h"
 #include "egs_functions.h"
 #include "egs_ensdf.h"
+#include "egs_input_struct.h"
 
 #include <string>
 #include <iostream>
@@ -56,6 +57,69 @@ using namespace std;
 
 class EGS_Input;
 class EGS_RandomGenerator;
+
+static shared_ptr<EGS_BlockInput> srcBlockInput = make_shared<EGS_BlockInput>("source");
+inline void setBaseSourceInputs(bool isSimpleSource = true, bool includeSpectrumBlock = true) {
+    srcBlockInput->addSingleInput("library", true, "The type of source, loaded by shared library in egs++/dso.");
+    srcBlockInput->addSingleInput("name", true, "The user-declared unique name of this source. This is the name you may refer to elsewhere in the input file");
+
+    if (isSimpleSource) {
+        includeSpectrumBlock = true;
+        srcBlockInput->addSingleInput("charge", true, "The type of particle to emit from the source, as defined by the charge. Use 0 for photons, -1 for electrons and 1 for positrons.", {"0", "1", "-1"});
+    }
+    if (includeSpectrumBlock) {
+        shared_ptr<EGS_BlockInput> specBlock = srcBlockInput->addBlockInput("spectrum");
+        auto typePtr = specBlock->addSingleInput("type", true, "The type of energy distribution for the spectrum.", {"monoenergetic", "Gaussian", "Double Gaussian", "uniform", "tabulated spectrum", "radionuclide"});
+
+        // Monoenergetic
+        specBlock->addSingleInput("energy", false, "The kinetic energy of the source particles in MeV.")->addDependency(typePtr, "monoenergetic");
+
+        // Gaussian & double Gaussian
+        specBlock->addSingleInput("mean energy", false, "The mean kinetic energy of the source particles in MeV.")->addDependency(typePtr, "Gaussian");
+        auto sigmaPtr = specBlock->addSingleInput("sigma", false, "The sigma of the spectrum. For a double Gaussian, input two values.");
+        sigmaPtr->addDependency(typePtr, "Gaussian");
+        sigmaPtr->addDependency(typePtr, "Double Gaussian");
+        auto fwhmPtr = specBlock->addSingleInput("fwhm", false, "The full-width-at-half-maximum of the spectrum. For a double Gaussian, input two values.");
+        fwhmPtr->addDependency(typePtr, "Gaussian");
+        fwhmPtr->addDependency(typePtr, "Double Gaussian");
+        fwhmPtr->addDependency(sigmaPtr, "", true);
+        sigmaPtr->addDependency(fwhmPtr, "", true);
+
+        // Uniform
+        auto rangePtr = specBlock->addSingleInput("range", false, "The minimum and maximum energy for the spectrum, in MeV.");
+        rangePtr->addDependency(typePtr, "uniform");
+        auto minEPtr = specBlock->addSingleInput("minimum energy", false, "The minimum energy for the spectrum, in MeV.");
+        minEPtr->addDependency(typePtr, "uniform");
+        auto maxEPtr = specBlock->addSingleInput("maximum energy", false, "The maximum energy for the spectrum, in MeV.");
+        maxEPtr->addDependency(typePtr, "uniform");
+        minEPtr->addDependency(rangePtr, "", true);
+        maxEPtr->addDependency(rangePtr, "", true);
+        rangePtr->addDependency(minEPtr, "", true);
+        rangePtr->addDependency(maxEPtr, "", true);
+
+        // Tabulated
+        auto specFilePtr = specBlock->addSingleInput("spectrum file", false, "The full file path to the spectrum file. See documentation for the format of the file.");
+        specFilePtr->addDependency(typePtr, "tabulated spectrum");
+        auto modePtr = specBlock->addSingleInput("spectrum mode", false, "The mode number that denotes how to create the spectrum. Use 0 for histogram counts/bin, 1 for counts/MeV, 2 for a line spectrum and 3 for an interpolated spectrum.");
+        modePtr->addDependency(typePtr, "tabulated spectrum");
+        auto energiesPtr = specBlock->addSingleInput("energies", false, "A list of energies for the spectrum, in MeV. When applicable, this is the upper edge of the bin.");
+        energiesPtr->addDependency(typePtr, "tabulated spectrum");
+        auto probsPtr = specBlock->addSingleInput("probabilities", false, "A list of probabilities for the spectrum. Does not need to be normalized.");
+        probsPtr->addDependency(typePtr, "tabulated spectrum");
+        modePtr->addDependency(specFilePtr, "", true);
+        energiesPtr->addDependency(specFilePtr, "", true);
+        probsPtr->addDependency(specFilePtr, "", true);
+
+        // Radionuclide
+        specBlock->addSingleInput("nuclide", true, "The name of the nuclide to model, e.g. Co-60 or Tc-99m. If the 'ensdf file' input is not specified, then the ENSDF file will be searched for as $HEN_HOUSE/spectra/lnhb/ensdf/nuclide.txt, where nuclide is the text you input. Note that a radionuclide spectrum is ONLY compatible with a radionuclide source.")->addDependency(typePtr, "radionuclide");
+        specBlock->addSingleInput("ensdf file", false, "The full path to the ENSDF file to use.")->addDependency(typePtr, "radionuclide");
+        specBlock->addSingleInput("relative activity", false, "If multiple radionuclide spectra are specified for a single radionuclide source, this is the relative weight of this spectrum. Defaults to 1.")->addDependency(typePtr, "radionuclide");
+        specBlock->addSingleInput("atomic relaxations", false, "The model to use for atomic relaxations resulting from radionuclide decay. Defaults to EADL.", {"eadl", "ensdf", "off"})->addDependency(typePtr, "radionuclide");
+        specBlock->addSingleInput("output beta spectra", false, "Whether or not to output as files the beta spectra that are used for sampling beta decay energies. Defaults to No.", {"yes", "no"})->addDependency(typePtr, "radionuclide");
+        specBlock->addSingleInput("alpha scoring", false, "The model to use for scoring alpha particles during radionuclide decay. Defaults to Discard.", {"local", "discard"})->addDependency(typePtr, "radionuclide");
+        specBlock->addSingleInput("extra transition approximation", false, "Whether or not to use the option that automatically balances transition intensities. Defaults to Off.", {"on","off"})->addDependency(typePtr, "radionuclide");
+    }
+}
 
 /*! \brief Base source class. All particle sources must be derived from
   this class.
@@ -144,7 +208,12 @@ public:
       It may also be re-implemented, if one wanted to use some sort of
       a systematic sampling of the phase space.
     */
-    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) { };
+    virtual void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun, int npar, int nchunk) {
+        (void)nstart;
+        (void)nrun;
+        (void)npar;
+        (void)nchunk;
+    };
 
     /*! \brief Get the charge of the source.
      *
@@ -217,6 +286,7 @@ public:
      * \sa setState(), addState(), resetCounter().
      */
     virtual bool storeState(ostream &data_out) const {
+        (void)data_out;
         return true;
     };
 
@@ -231,6 +301,7 @@ public:
      * \sa addState(), storeState(), resetCounter()
      */
     virtual bool setState(istream &data_in) {
+        (void)data_in;
         return true;
     };
 
@@ -247,6 +318,7 @@ public:
      * \sa storeState(), setState(), resetCounter().
      */
     virtual bool addState(istream &data_in) {
+        (void)data_in;
         return true;
     };
 
@@ -356,7 +428,9 @@ public:
      * This function was conceived to be used in the
      * view/viewcontrol (to determine whether time index objects are visible or
      * hidden), and track scoring */
-    virtual void containsDynamic(bool &hasdynamic) { };
+    virtual void containsDynamic(bool &hasdynamic) {
+        (void)hasdynamic;
+    };
 
 protected:
 
@@ -730,6 +804,7 @@ public:
      * EGS_BaseSource::addState() and EGS_BaseSource::resetCounter().
      */
     virtual bool storeFluenceState(ostream &data_out) const {
+        (void)data_out;
         return true;
     };
 
@@ -794,6 +869,7 @@ public:
      * setState(), storeState(), resetCounter() and addState().
      */
     virtual bool addFluenceData(istream &data) {
+        (void)data;
         return true;
     }
 
@@ -820,6 +896,7 @@ public:
      * setState(), storeState(), resetCounter() and addState().
      */
     virtual bool setFluenceState(istream &data) {
+        (void)data;
         return true;
     };
 

@@ -77,6 +77,6 @@ int EGS_AusgabObject::nObjects() {
     return ausgab_object_creator.nObjects();
 }
 
-EGS_AusgabObject *EGS_AusgabObject::getObject(int j) {
+EGS_AusgabObject *EGS_AusgabObject::getObject(size_t j) {
     return (EGS_AusgabObject *) ausgab_object_creator.getObject(j);
 }

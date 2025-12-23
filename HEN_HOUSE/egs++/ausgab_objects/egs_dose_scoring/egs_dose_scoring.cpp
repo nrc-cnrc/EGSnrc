@@ -29,6 +29,7 @@
 #                   Blake Walters
 #                   Max Orok
 #                   Martin Martinov
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -97,6 +98,8 @@
 #include "egs_dose_scoring.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_DOSE_SCORING_LOCAL inputSet = false;
 
 EGS_DoseScoring::EGS_DoseScoring(const string &Name,
                                  EGS_ObjectFactory *f) :
@@ -590,6 +593,56 @@ void EGS_DoseScoring::resetCounter() {
 //
 //**********************************************************************
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseAusgabObjectInputs();
+
+        ausBlockInput->getSingleInput("library")->setValues({"EGS_Dose_Scoring"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        ausBlockInput->addSingleInput("medium dose", false, "Requests the dose deposited in each medium to be scored, default is no", {"yes", "no"});
+        ausBlockInput->addSingleInput("region dose", false, "Requests the dose deposited in each region to be scored, default is yes", {"yes", "no"});
+        ausBlockInput->addSingleInput("volume", false, "Either a single volume, which will be the same for all regions or a list of individual volumes for each region in 'dose regions', default is 1 cm^3");
+        auto dosePtr = ausBlockInput->addSingleInput("dose regions", false, "A list of individual regions to report the dose in");
+        auto startPtr = ausBlockInput->addSingleInput("dose start region", false, "For a series of region ranges, list the 'starting region' for each range here (inclusive)");
+        auto stopPtr = ausBlockInput->addSingleInput("dose stop region", false, "For a series of region ranges, list the 'ending region' for each range here (inclusive)");
+
+        dosePtr->addDependency(startPtr, "", true);
+        dosePtr->addDependency(stopPtr, "", true);
+        startPtr->addDependency(dosePtr, "", true);
+        stopPtr->addDependency(dosePtr, "", true);
+
+        // This can only be used if one of the geometries is an EGS_XYZGeometry
+        auto blockPtr = ausBlockInput->addBlockInput("output dose file");
+        blockPtr->addSingleInput("geometry name", true, "The name of a predefined EGS_XYZGeometry");
+        blockPtr->addSingleInput("file type", true, "The type of file", {"3ddose"});
+    }
+
+    EGS_DOSE_SCORING_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_dose_scoring
+    #:start ausgab object:
+        library      = egs_dose_scoring
+        name         = my_score
+        medium dose  = yes # no  (default)
+        region dose  = no  # yes (default)
+        volume       =  v1 ... vn  # in cm**3
+        dose regions = ir1 ... irn # individual regions
+    :stop ausgab object:
+)"};
+        return example;
+    }
+
+    EGS_DOSE_SCORING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return ausBlockInput;
+    }
 
     EGS_DOSE_SCORING_EXPORT EGS_AusgabObject *createAusgabObject(EGS_Input *input,
             EGS_ObjectFactory *f) {

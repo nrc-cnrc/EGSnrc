@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Marc Chamberland
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -47,7 +48,10 @@
     #define S_STREAM std::istringstream
 #endif
 
-string EGS_CDGeometry::type = "EGS_CDGeometry";
+static string EGS_CDGEOMETRY_LOCAL typeStr("EGS_CDGeometry");
+string EGS_CDGeometry::type(typeStr);
+
+static bool EGS_CDGEOMETRY_LOCAL inputSet = false;
 
 void EGS_CDGeometry::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_CDGeometry::setMedia: don't use this method. Use the\n"
@@ -111,6 +115,42 @@ void EGS_CDGeometry::setUpIndexing() {
 
 extern "C" {
 
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues(vector<string>(1, typeStr));
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("base geometry", true, "The name of the geometry that defines regions for this 'cutting device'. It is within these regions that other geometries will be placed to create a composite geometry.");
+        geomBlockInput->addSingleInput("set geometry", true, "The region number in the base geometry, followed by the name of the geometry to place in that region. If this geometry extends beyond the region boundaries, it will be cut to size.");
+        geomBlockInput->addSingleInput("new indexing style", false, "Set to 1 to use a new region numbering algorithm. Defaults to 0, to use the original indexing style.");
+    }
+
+    EGS_CDGEOMETRY_EXPORT string getExample() {
+        string example {
+            R"(
+    :start geometry:
+        library         = EGS_CDGeometry
+        name            = my_cd
+        base geometry   = my_regions
+        # set geometry = 1 geom means:
+        # in region 1 of the basegeometry, use geometry named "geom"
+        set geometry   = 0 my_geom1
+        set geometry   = 1 my_geom2
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_CDGEOMETRY_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
+
     EGS_CDGEOMETRY_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
             egsWarning("createGeometry(CD_Geometry): null input?\n");
@@ -121,8 +161,9 @@ extern "C" {
             EGS_BaseGeometry::createSingleGeometry(ij);
             delete ij;
         }
+
         string bg_name;
-        int err = input->getInput("base geometry",bg_name);
+        int err = input->getInput("base geometry", bg_name);
         if (err) {
             egsWarning("createGeometry(CD_Geometry): no 'base geometry' input\n");
             return 0;
