@@ -44,17 +44,14 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
     // Set the font
     const QFont fixedFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     this->setFont(fixedFont);
-
-    // Set the tab width to 4 spaces
-    const int tabStop = 4; // 4 characters
     QFontMetrics metrics(fixedFont);
 
     // QTextEdit::setTabStopWidth(int) is removed in Qt6. Replace with setTabStopDistance, which takes qreal pixels.
     // QFontMetrics::width() is removed in Qt6. Use horizontalAdvance() instead.
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    this->setTabStopDistance(tabStop * metrics.horizontalAdvance(' '));
+    this->setTabStopDistance(indentWidth * metrics.horizontalAdvance(' '));
 #else
-    this->setTabStopWidth(tabStop * metrics.width(' '));
+    this->setTabStopWidth(indentWidth * metrics.width(' '));
 #endif
 
     // Initialize an area for displaying line numbers
@@ -111,6 +108,15 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
     //connect(this, SIGNAL(keyboardGrabber()), this, SIGNAL(QAbstractItemView::MoveDown));
 
     popupGrabbing = false;
+
+    // Add shortcuts for find next and previous
+    QShortcut *findNextShortcut =
+    new QShortcut(QKeySequence(Qt::Key_F3), this);
+    connect(findNextShortcut, &QShortcut::activated, this, &EGS_Editor::findNext);
+    QShortcut *findPrevShortcut =
+        new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F3), this);
+    connect(findPrevShortcut, &QShortcut::activated, this, &EGS_Editor::findPrevious);
+
 }
 
 EGS_Editor::~EGS_Editor() {
@@ -1279,6 +1285,223 @@ void EGS_Editor::lineNumberAreaPaintEvent(QPaintEvent *event) {
     }
 }
 
+void EGS_Editor::indentSelection(bool unindent)
+{
+    QTextCursor cursor = textCursor();
+
+    // No selection means it's a single line to indent
+    if (!cursor.hasSelection()) {
+        cursor.movePosition(QTextCursor::StartOfBlock);
+
+        // Unindenting instead of indenting
+        if (unindent) {
+            QTextCursor lineCursor = cursor;
+
+            lineCursor.movePosition(QTextCursor::NextCharacter,
+                                     QTextCursor::KeepAnchor,
+                                     indentWidth);
+            if (lineCursor.selectedText() == QString(indentWidth, ' ')) {
+                lineCursor.removeSelectedText();
+            } else {
+                lineCursor = cursor;
+                lineCursor.movePosition(QTextCursor::NextCharacter,
+                                         QTextCursor::KeepAnchor, 1);
+                if (lineCursor.selectedText() == "\t")
+                    lineCursor.removeSelectedText();
+            }
+        } else {
+            cursor.insertText(QString(indentWidth, ' '));
+        }
+        return;
+    }
+
+    QTextCursor startCursor = cursor;
+    QTextCursor endCursor   = cursor;
+
+    startCursor.setPosition(cursor.selectionStart());
+    endCursor.setPosition(cursor.selectionEnd());
+
+    int startBlock = startCursor.blockNumber();
+    int endBlock   = endCursor.blockNumber();
+
+    cursor.beginEditBlock();
+
+    for (int block = startBlock; block <= endBlock; ++block) {
+        QTextBlock textBlock = document()->findBlockByNumber(block);
+        if (!textBlock.isValid())
+            continue;
+
+        QTextCursor lineCursor(textBlock);
+
+        // Unindenting instead of indenting
+        if (unindent) {
+            QTextCursor removeCursor = lineCursor;
+
+            removeCursor.movePosition(QTextCursor::NextCharacter,
+                                      QTextCursor::KeepAnchor,
+                                      indentWidth);
+            if (removeCursor.selectedText() == QString(indentWidth, ' ')) {
+                removeCursor.removeSelectedText();
+            } else {
+                removeCursor = lineCursor;
+                removeCursor.movePosition(QTextCursor::NextCharacter,
+                                          QTextCursor::KeepAnchor, 1);
+                if (removeCursor.selectedText() == "\t")
+                    removeCursor.removeSelectedText();
+            }
+        } else {
+            lineCursor.insertText(QString(indentWidth, ' '));
+        }
+    }
+
+    cursor.endEditBlock();
+}
+
+void EGS_Editor::showFindDialog(bool withReplace)
+{
+    if (!findDialog) {
+        findDialog = new QDialog(this);
+        findDialog->setWindowTitle("Find / Replace");
+        findDialog->setModal(false);
+        findDialog->setFixedWidth(420);   // wider so title & fields fit
+
+        // --- Widgets ---
+        findEdit  = new QLineEdit(findDialog);
+        findEdit->setMinimumWidth(300);
+
+        replaceEdit = new QLineEdit(findDialog);
+
+        caseCheck = new QCheckBox("Case sensitive", findDialog);
+
+        findNextButton = new QPushButton("Find Next", findDialog);
+        findPrevButton = new QPushButton("Find Previous", findDialog);
+        replaceButton  = new QPushButton("Replace", findDialog);
+        replaceAllButton = new QPushButton("Replace All", findDialog);
+
+        QLabel *findLabel = new QLabel("Find:", findDialog);
+        replaceLabel = new QLabel("Replace:", findDialog);
+
+        // --- Connections ---
+        connect(findNextButton, &QPushButton::clicked,
+                this, &EGS_Editor::findNext);
+
+        connect(findPrevButton, &QPushButton::clicked,
+                this, &EGS_Editor::findPrevious);
+
+        connect(replaceButton, &QPushButton::clicked,
+                this, &EGS_Editor::replaceOne);
+
+        connect(replaceAllButton, &QPushButton::clicked,
+                this, &EGS_Editor::replaceAll);
+
+        // Enter = Find Next, and keep working on repeated Enter presses
+        connect(findEdit, &QLineEdit::returnPressed, this, [this]() {
+            findEdit->clearFocus();
+            findNextButton->setFocus();
+            findNext();
+        });
+
+        // --- Layout ---
+        QVBoxLayout *layout = new QVBoxLayout(findDialog);
+
+        QHBoxLayout *findLayout = new QHBoxLayout;
+        findLayout->addWidget(findLabel);
+        findLayout->addWidget(findEdit);
+
+        QHBoxLayout *replaceLayout = new QHBoxLayout;
+        replaceLayout->addWidget(replaceLabel);
+        replaceLayout->addWidget(replaceEdit);
+
+        QHBoxLayout *buttonLayout = new QHBoxLayout;
+        buttonLayout->addWidget(findPrevButton);
+        buttonLayout->addWidget(findNextButton);
+        buttonLayout->addWidget(replaceButton);
+        buttonLayout->addWidget(replaceAllButton);
+
+        layout->addLayout(findLayout);
+        layout->addLayout(replaceLayout);
+        layout->addWidget(caseCheck);
+        layout->addLayout(buttonLayout);
+    }
+
+    // --- Toggle replace UI ---
+    replaceLabel->setVisible(withReplace);
+    replaceEdit->setVisible(withReplace);
+    replaceButton->setVisible(withReplace);
+    replaceAllButton->setVisible(withReplace);
+
+    findDialog->show();
+    findDialog->raise();
+    findDialog->activateWindow();
+
+    findEdit->setFocus();
+    findEdit->selectAll();
+}
+
+
+void EGS_Editor::findNext()
+{
+    if (!findEdit || findEdit->text().isEmpty())
+        return;
+
+    QTextDocument::FindFlags flags;
+    if (caseCheck->isChecked())
+        flags |= QTextDocument::FindCaseSensitively;
+
+    bool found = find(findEdit->text(), flags);
+
+    // Wrap around
+    if (!found) {
+        QTextCursor c = textCursor();
+        c.movePosition(QTextCursor::Start);
+        setTextCursor(c);
+        find(findEdit->text(), flags);
+    }
+}
+
+void EGS_Editor::findPrevious() {
+    const QString text = findEdit->text();
+    if (text.isEmpty())
+        return;
+
+    QTextDocument::FindFlags flags = QTextDocument::FindBackward;
+    bool found = find(text, flags);
+
+    if (!found) {
+        QTextCursor cursor = textCursor();
+        cursor.movePosition(QTextCursor::End);
+        setTextCursor(cursor);
+        find(text, flags);
+    }
+}
+
+void EGS_Editor::replaceOne() {
+    QTextCursor c = textCursor();
+    if (c.hasSelection()) {
+        c.insertText(replaceEdit->text());
+        setTextCursor(c);
+    }
+    findNext();
+}
+
+void EGS_Editor::replaceAll() {
+    QTextCursor c = textCursor();
+    c.movePosition(QTextCursor::Start);
+    setTextCursor(c);
+
+    int count = 0;
+    while (find(findEdit->text())) {
+        QTextCursor cur = textCursor();
+        cur.insertText(replaceEdit->text());
+        count++;
+    }
+
+#ifdef EDITOR_DEBUG
+    egsWarning("Replace All: %d replacements\n", count);
+#endif
+}
+
+
 bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
 
     if (event->type() == QEvent::MouseButtonRelease) {
@@ -1296,27 +1519,12 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
     else if (event->type() == QEvent::KeyPress) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
 
-        // Insert 4 spaces instead of tabs
-        if (keyEvent->key() == Qt::Key_Tab) {
-            if (!popup->isVisible()) {
-                insertPlainText("    ");
-                return true;
-            }
+        if (keyEvent->key() == Qt::Key_Tab && !popup->isVisible()) {
+            indentSelection(false);
+            return true;
         }
         else if (keyEvent->key() == Qt::Key_Backtab) {
-            // Delete 4 spaces from the front of the line
-            QTextCursor cursor = textCursor();
-            QString line = cursor.block().text();
-            if (line.startsWith("    ")) {
-                cursor.movePosition(QTextCursor::StartOfBlock);
-                cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, 4);
-                cursor.removeSelectedText();
-            }
-            else if (line.startsWith("\t")) {
-                cursor.movePosition(QTextCursor::StartOfBlock);
-                cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, 1);
-                cursor.removeSelectedText();
-            }
+            indentSelection(true);
             return true;
         }
         else if (keyEvent->key() == Qt::Key_Return) {
@@ -1375,7 +1583,16 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
                 popup->QWidget::grabKeyboard();
                 return true;
             }
+        } else if (keyEvent->key() == Qt::Key_F &&
+            (keyEvent->modifiers() & Qt::ControlModifier)) {
+            showFindDialog(false);
+            return true;
+        } else if (keyEvent->key() == Qt::Key_H &&
+            (keyEvent->modifiers() & Qt::ControlModifier)) {
+            showFindDialog(true);
+            return true;
         }
+
 //     } else if(event->type() == QEvent::FocusOut || event->type() == QEvent::Move || event->type() == QEvent::Resize || event->type() == QEvent::Scroll || event->type() == QEvent::WindowDeactivate) {
 
         //} else if(event->type() == QEvent::Wheel || event->type() == QEvent::WindowDeactivate) {
