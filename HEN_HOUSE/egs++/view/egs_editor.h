@@ -70,6 +70,11 @@ private slots:
     void autoComplete();
     void insertCompletion(QModelIndex index);
     void updateLineNumberArea(const QRect &, int);
+    void showFindDialog(bool withReplace);
+    void findNext();
+    void findPrevious();
+    void replaceOne();
+    void replaceAll();
 
 private:
     shared_ptr<EGS_BlockInput> getBlockInput(QString &blockTitle, QTextCursor cursor = QTextCursor());
@@ -81,6 +86,7 @@ private:
     bool inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QTextCursor cursor = QTextCursor());
     QTextBlock findSiblingBlock(QString title, QTextBlock currentBlock);
     int countStartingWhitespace(const QString &s);
+    void indentSelection(bool unindent);
 
     QWidget *lineNumberArea;
     shared_ptr<EGS_InputStruct> inputStruct;
@@ -88,6 +94,18 @@ private:
     QStringListModel *model;
     bool popupGrabbing;
     bool isDarkMode = false;
+    static constexpr int indentWidth = 4;
+
+    QDialog           *findDialog = nullptr;
+    QLineEdit         *findEdit   = nullptr;
+    QLineEdit        *replaceEdit = nullptr;
+    QCheckBox         *caseCheck  = nullptr;
+    QPushButton   *findNextButton = nullptr;
+    QPushButton   *findPrevButton = nullptr;
+    QPushButton    *replaceButton = nullptr;
+    QPushButton *replaceAllButton = nullptr;
+    QLabel          *replaceLabel = nullptr;
+    bool replaceMode = false;
 };
 
 
