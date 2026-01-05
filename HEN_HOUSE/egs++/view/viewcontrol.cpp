@@ -136,6 +136,13 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(applyLook, &QPushButton::clicked, this, &GeometryViewControl::setLookAt);
     connect(applyPosition, &QPushButton::clicked, this, &GeometryViewControl::setLookPosition);
 
+    // On clicking the region tab, load the list of regions
+    connect(tabWidget, &QTabWidget::currentChanged, this, [this](int index){
+        if (tabWidget->widget(index) == regionTab && !allowRegionSelection) {
+            QTimer::singleShot(0, this, &GeometryViewControl::loadRegions);
+        }
+    });
+
     // Table cell changed
     connect(regionTable, &QTableWidget::cellChanged,
             this, &GeometryViewControl::toggleRegion);
@@ -1161,18 +1168,17 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         delete vc;
     }
 
-    // Only allow region selection for up to 1k regions
+    // Don't load the list of regions until after the tab gets clicked, if there are lots of regions
     int nreg = newGeom->regions();
-    if (nreg < 1001) {
+    if (nreg < 10000) {
         allowRegionSelection = true;
         show_regions.resize(nreg,true);
     }
     else {
         allowRegionSelection = false;
         show_regions.resize(0);
-        egsInformation("Region selection tab has been disabled due to >1000 regions (for performance reasons)\n");
     }
-    tabWidget->setTabEnabled(2,allowRegionSelection);
+    //tabWidget->setTabEnabled(2,allowRegionSelection);
 
     // Get the rendering parameters
     RenderParameters &rp = gview->pars;
@@ -3413,6 +3419,7 @@ void GeometryViewControl::updateView(bool transform) {
     rp.show_positrons = showPositronTracks;
     rp.size = size;
     rp.show_regions = show_regions;
+    rp.allowRegionSelection = allowRegionSelection;
     rp.doseTransparency = doseTransparency;
 
     if (spin_tminp->value() > 0) {
@@ -3968,6 +3975,14 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
 }
 // end of time index methods//
 
+void GeometryViewControl::loadRegions() {
+    allowRegionSelection = true;
+    updateRegionTable();
+}
+
+// ======================
+//TODO: deselecting regions no longer removing them from view
+// ======================
 void GeometryViewControl::updateRegionTable() {
     if (!g) {
         return;
@@ -4373,7 +4388,6 @@ void GeometryViewControl::setApplication() {
     egsinpEdit->setInputStruct(inputStruct);
 }
 
-//TODO: This should really provide two folders for elements and compounds in the popup
 vector<string> findDensityCorrectionInputs(string compound_dir) {
     vector<string> fileList;
 

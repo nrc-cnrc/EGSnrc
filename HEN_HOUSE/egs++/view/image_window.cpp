@@ -97,6 +97,9 @@ ImageWindow::ImageWindow(QWidget *parent, const char *name) :
     // disable Qt's background refill for the Widget, so we can paint
     // over our existing buffer when picking regions
     setAttribute(Qt::WA_OpaquePaintEvent);
+
+    // Focus the widget so we capture key press events
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 ImageWindow::~ImageWindow() {

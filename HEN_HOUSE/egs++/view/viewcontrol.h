@@ -162,6 +162,9 @@ public slots:
     virtual void insertInputExample();
     virtual void setApplication();
 
+private slots:
+    void loadRegions();
+
 private:
 
     ClippingPlanesWidget *cplanes;
