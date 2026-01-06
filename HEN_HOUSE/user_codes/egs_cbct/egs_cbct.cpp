@@ -2726,6 +2726,8 @@ if(K_min)
         bfile->writeBinary(0);
         delete bfile;
      }
+
+     printScans();
 }
 
 /*! Output egsmap or profile if requested. */
@@ -2996,7 +2998,7 @@ int EGS_CBCT::finishSimulation() {
     err = combineResults(); if (egsdat) outputData();
     if( err ) return err;
     run->finishSimulation();
-    outputResults(); printScans();
+    outputResults();
     egsInformation("\n Running %d parallel jobs!!!\n\n",getNparallel());
     finishRun();
     return 0;
