@@ -995,6 +995,12 @@ GeometryViewControl::~GeometryViewControl() {
     */
 }
 
+void GeometryViewControl::updateMainWindowTitle(const QString &title) {
+    if (QWidget *top = window()) {
+        top->setWindowTitle(title);
+    }
+}
+
 void GeometryViewControl::selectInput() {
     QFileInfo inputFileInfo = QFileInfo(filename);
     QString input_file = QFileDialog::getOpenFileName(this, "Select geometry definition file", inputFileInfo.canonicalPath());
@@ -1027,11 +1033,10 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         return false;
     }
 
-    QFileInfo fileInfo = QFileInfo(file);
+    updateMainWindowTitle("Working...");
 
-    // Set the title of the viewer
-    this->setProperty("windowTitle", "View Controls ("+fileInfo.baseName()+")");
-    gview->setProperty("windowTitle", "egs_view ("+fileInfo.baseName()+")");
+    QFileInfo fileInfo = QFileInfo(file);
+    fileBasename = fileInfo.baseName();
 
     // Clear the current geometry
     gview->stopWorker();
@@ -1223,6 +1228,8 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         egsinpEdit->setPlainText(file.readAll());
         egsinpEdit->validateEntireInput();
     }
+
+    updateMainWindowTitle("egs_view ("+fileBasename+")");
 
     return true;
 }
@@ -1834,13 +1841,13 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         delete iClip;
     }
 
-    if (allowRegionSelection) {
-        updateRegionTable();
-    }
-
     // Load the hidden regions
     EGS_Input *iReg = input->takeInputItem("hidden regions");
     if (iReg) {
+        // We need the enable and load the region table for this to work
+        // This means loading egs_view may take a while if there are many regions
+        loadRegions();
+
         vector<int> regionList;
         err = iReg->getInput("region list",regionList);
         // For every region in the table, check to see if it
@@ -3976,8 +3983,12 @@ void GeometryViewControl::particleSlider(EGS_Float slidertime) {
 // end of time index methods//
 
 void GeometryViewControl::loadRegions() {
+    updateMainWindowTitle("Working...");
+
     allowRegionSelection = true;
     updateRegionTable();
+
+    updateMainWindowTitle("egs_view ("+fileBasename+")");
 }
 
 // ======================

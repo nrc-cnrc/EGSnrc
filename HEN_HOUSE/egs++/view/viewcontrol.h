@@ -63,6 +63,7 @@ public:
 
     virtual ~GeometryViewControl();
 
+    virtual void updateMainWindowTitle(const QString &title);
     virtual void setFilename(QString str);
     virtual void setTracksFilename(QString str);
     virtual void setTracksExtension(QString str);
@@ -239,6 +240,7 @@ private:
     string selectedApplication;
     string lib_dir;
     QMenu *appMenu;
+    QString fileBasename;
 
 protected slots:
 
