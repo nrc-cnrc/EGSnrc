@@ -82,8 +82,10 @@ private:
     QString getParentBlockTitle(QTextCursor cursor = QTextCursor());
     QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream = false);
     QTextBlock getBlockEnd(QTextBlock currentBlock);
-    bool inputHasDependency(shared_ptr<EGS_SingleInput> inp);
-    bool inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QTextCursor cursor = QTextCursor());
+    template <typename T>
+    bool inputHasDependency(const shared_ptr<T>& inp);
+    template <typename T>
+    bool inputDependencySatisfied(const shared_ptr<T>& inp, QTextCursor cursor = QTextCursor());
     QTextBlock findSiblingBlock(QString title, QTextBlock currentBlock);
     int countStartingWhitespace(const QString &s);
     void indentSelection(bool unindent);
