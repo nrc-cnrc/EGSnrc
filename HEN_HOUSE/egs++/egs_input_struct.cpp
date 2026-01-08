@@ -373,17 +373,35 @@ bool EGS_BlockInput::contains(string inputTag) {
     return false;
 }
 
-void EGS_BlockInput::addDependency(shared_ptr<EGS_SingleInput> inp, string val) {
-    dependencyInp = inp;
-    dependencyVal = val;
+void EGS_BlockInput::addDependency(shared_ptr<EGS_SingleInput> inp, string val, bool isAntiDependency) {
+    dependencyInp.push_back(inp);
+    dependencyVal.push_back(val);
+    dependencyAnti.push_back(isAntiDependency);
 }
 
-shared_ptr<EGS_SingleInput> EGS_BlockInput::getDependencyInp() {
+void EGS_BlockInput::addDependency(shared_ptr<EGS_BlockInput> block, bool isAntiDependency) {
+    dependencyBlock = block;
+    dependencyBlockAnti = isAntiDependency;
+}
+
+vector<shared_ptr<EGS_SingleInput>> EGS_BlockInput::getDependencyInp() {
     return dependencyInp;
 }
 
-string EGS_BlockInput::getDependencyVal() {
+vector<string> EGS_BlockInput::getDependencyVal() {
     return dependencyVal;
+}
+
+vector<bool> EGS_BlockInput::getDependencyAnti() {
+    return dependencyAnti;
+}
+
+shared_ptr<EGS_BlockInput> EGS_BlockInput::getDependencyBlock() {
+    return dependencyBlock;
+}
+
+bool EGS_BlockInput::getDependencyBlockAnti() {
+    return dependencyBlockAnti;
 }
 
 EGS_SingleInput::EGS_SingleInput() {}

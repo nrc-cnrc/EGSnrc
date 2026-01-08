@@ -560,6 +560,11 @@ void EGS_Editor::autoComplete() {
         // Store the block titles in a set to remove duplicates
         QSet<QString> blockTitles;
         for (auto &block: blockInputs) {
+            // Skip any inputs that have a dependency which is not satisfied
+            if (inputHasDependency(block) && inputDependencySatisfied(block, cursor) == false) {
+                continue;
+            }
+
             blockTitles << QString((":start " + block->getTitle() + ":").c_str());
         }
         for (auto &title: blockTitles) {
@@ -1067,18 +1072,26 @@ QTextBlock EGS_Editor::getBlockEnd(QTextBlock currentBlock) {
     return QTextBlock();
 }
 
-bool EGS_Editor::inputHasDependency(shared_ptr<EGS_SingleInput> inp) {
-    auto dependencyInp = inp->getDependencyInp();
-    auto dependencyBlock = inp->getDependencyBlock();
-    if (dependencyInp.size() < 1 && !dependencyBlock) {
-        return false;
-    }
-    else {
-        return true;
-    }
+template <typename T>
+bool EGS_Editor::inputHasDependency(const shared_ptr<T>& inp) {
+    static_assert(
+        std::is_same_v<T, EGS_SingleInput> ||
+        std::is_same_v<T, EGS_BlockInput>,
+        "EGS_Editor::inputHasDependency only supports EGS_SingleInput or EGS_BlockInput"
+    );
+
+    return !inp->getDependencyInp().empty()
+        || inp->getDependencyBlock() != nullptr;
 }
 
-bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QTextCursor cursor) {
+template <typename T>
+bool EGS_Editor::inputDependencySatisfied(const shared_ptr<T>& inp, QTextCursor cursor) {
+    static_assert(
+        std::is_same_v<T, EGS_SingleInput> ||
+        std::is_same_v<T, EGS_BlockInput>,
+        "EGS_Editor::inputDependencySatisfied only supports EGS_SingleInput or EGS_BlockInput"
+    );
+
     if (cursor == QTextCursor()) {
         cursor = textCursor();
     }
@@ -1144,7 +1157,7 @@ bool EGS_Editor::inputDependencySatisfied(shared_ptr<EGS_SingleInput> inp, QText
                     continue;
                 }
                 else {
-                    if (egsEquivStr(val.toLatin1().data(), dependencyVal[j])) {
+                    if (egsEquivStr(val.toLatin1().data(), dependencyVal[j]) && !dependencyAnti[j]) {
                         satisfied = true;
                         // If we hit the end because all the tags matched, reset i
                         if (j == dependencyInp.size()-1) {

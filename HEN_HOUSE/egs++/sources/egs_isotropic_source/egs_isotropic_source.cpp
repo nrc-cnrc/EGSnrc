@@ -220,8 +220,8 @@ extern "C" {
         auto regPtr = srcBlockInput->addSingleInput("region selection", false, "Include or exclude regions from the named geometry, to define a volume for source particle generation.", {"IncludeAll", "ExcludeAll","IncludeSelected","ExcludeSelected"});
         regPtr->addDependency(geomPtr);
         auto selPtr = srcBlockInput->addSingleInput("selected regions", false, "If region selection = IncludeSelected or ExcludeSelected, then this is a list of the regions in the named geometry to include or exclude.");
-        selPtr->addDependency(geomPtr);
-        selPtr->addDependency(regPtr);
+        selPtr->addDependency(regPtr, "IncludeSelected");
+        selPtr->addDependency(regPtr, "ExcludeSelected");
         srcBlockInput->addSingleInput("min theta", false, "The minimum theta angle in degrees, to restrict the directions of source particles. Defaults to 0.");
         srcBlockInput->addSingleInput("max theta", false, "The maximum theta angle in degrees, to restrict the directions of source particles. Defaults to 180.");
         srcBlockInput->addSingleInput("min phi", false, "The minimum phi angle in degrees, to restrict the directions of source particles. Defaults to 0.");

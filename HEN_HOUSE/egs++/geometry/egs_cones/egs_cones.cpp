@@ -266,6 +266,7 @@ extern "C" {
         inpPtr->addDependency(typePtr, "EGS_SimpleCone");
         inpPtr->addDependency(typePtr, "EGS_ParallelCones");
         inpPtr->addDependency(typePtr, "EGS_ConeSet");
+        inpPtr->addDependency(typePtr, "EGS_ConeStack", true);
 
         // EGS_ConeStack
         auto blockPtr = geomBlockInput->addBlockInput("layer");
@@ -293,7 +294,8 @@ extern "C" {
         auto anglePtr = geomBlockInput->addSingleInput("opening angle", false, "The opening angle of the cone in degrees.");
         anglePtr->addDependency(typePtr, "EGS_SimpleCone");
         anglePtr->addDependency(typePtr, "EGS_ParallelCones");
-        geomBlockInput->addSingleInput("height", false, "The height of the cone.");
+        auto heightPtr = geomBlockInput->addSingleInput("height", false, "The height of the cone.");
+        heightPtr->addDependency(typePtr, "EGS_SimpleCone");
         auto mediaPtr2 = geomBlockInput->addBlockInput("media input");
         mediaPtr2->addDependency(typePtr, "EGS_SimpleCone");
         mediaPtr2->addDependency(typePtr, "EGS_ParallelCones");
@@ -301,7 +303,8 @@ extern "C" {
         mediaPtr2->addSingleInput("set medium", false, "");
 
         // EGS_ParallelCones
-        geomBlockInput->addSingleInput("apex distances", false, "A list of distances from the first apex.");
+        auto apexPtr = geomBlockInput->addSingleInput("apex distances", false, "A list of distances from the first apex.");
+        apexPtr->addDependency(typePtr, "EGS_ParallelCones");
     }
 
     EGS_CONES_EXPORT string getExample(string type) {

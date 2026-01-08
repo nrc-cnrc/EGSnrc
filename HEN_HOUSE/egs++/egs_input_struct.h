@@ -195,13 +195,25 @@ public:
     bool contains(string inputTag);
 
     /*! \brief Add a dependency of this input block on input \a inp being value \a val. */
-    void addDependency(shared_ptr<EGS_SingleInput> inp, string val="");
+    void addDependency(shared_ptr<EGS_SingleInput> inp, string val = "", bool isAntiDependency = false);
+
+    /*! \brief Add a dependency on an input block (there can only be one). */
+    void addDependency(shared_ptr<EGS_BlockInput> block, bool isAntiDependency = false);
 
     /*! \brief Get the input dependency. */
-    shared_ptr<EGS_SingleInput> getDependencyInp();
+    vector<shared_ptr<EGS_SingleInput>> getDependencyInp();
 
     /*! \brief Get the input dependency required value. */
-    string getDependencyVal();
+    vector<string> getDependencyVal();
+
+    /*! \brief Get a list of whether or not these are anti-dependencies. */
+    vector<bool> getDependencyAnti();
+
+    /*! \brief Get the dependency block (can be only one). */
+    shared_ptr<EGS_BlockInput> getDependencyBlock();
+
+    /*! \brief Get whether or not the block dependency is an anti-dependency. */
+    bool getDependencyBlockAnti();
 
 
 private:
@@ -213,8 +225,11 @@ private:
     bool isRequired;
     string application;
     const string desc;
-    shared_ptr<EGS_SingleInput> dependencyInp;
-    string dependencyVal;
+    vector<shared_ptr<EGS_SingleInput>> dependencyInp;
+    vector<string> dependencyVal;
+    vector<bool> dependencyAnti;
+    shared_ptr<EGS_BlockInput> dependencyBlock;
+    bool dependencyBlockAnti;
 };
 
 /*! \brief A class to represent an egsinp input structure.
