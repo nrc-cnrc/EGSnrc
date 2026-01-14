@@ -92,7 +92,7 @@ extern "C" {
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("source name", true, "The name of a previously defined source.");
-        srcBlockInput->addSingleInput("sigma", false, "Angular spread in degrees.");
+        srcBlockInput->addSingleInput("sigma", false, "If positive, it is the sigma of the Gaussian distribution in degrees. If negative, it is the FWHM of the distribution.");
     }
 
     EGS_ANGULAR_SPREAD_SOURCE_EXPORT string getExample() {

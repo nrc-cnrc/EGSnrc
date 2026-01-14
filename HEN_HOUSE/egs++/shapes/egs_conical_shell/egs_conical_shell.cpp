@@ -197,16 +197,15 @@ extern "C" {
     static void setInputs() {
         inputSet = true;
 
-        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Conical_Shell"});
-        shapeBlockInput->addSingleInput("radius", false, "The radius");
-        shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the concical shell.");
+        setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Conical_Shell"});
+
+        shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the conical shell, (x, y, z). Defaults to '0 0 0'.");
 
         auto blockPtr = shapeBlockInput->addBlockInput("layer");
         blockPtr->addSingleInput("thickness", true, "The thickness of the layer");
         blockPtr->addSingleInput("top radii", false, "1 (outer radius, inner radius assumed to be 0) or 2 (outer and inner radius) inputs, only required for top layer");
         blockPtr->addSingleInput("bottom radii", true, "1 (outer radius, inner radius assumed to be 0) or 2 (outer and inner radius) inputs");
-
-        setShapeInputs(shapeBlockInput);
     }
 
     EGS_CONICAL_SHELL_EXPORT string getExample() {

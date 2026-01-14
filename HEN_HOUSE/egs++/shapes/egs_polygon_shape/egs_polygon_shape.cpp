@@ -147,9 +147,11 @@ extern "C" {
 
     static void setInputs() {
         inputSet = true;
-        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Polygon_Shape"});
-        shapeBlockInput->addSingleInput("points", true, "A list of at least 3 2D points (at least 6 floating numbers)");
+
         setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Polygon_Shape"});
+
+        shapeBlockInput->addSingleInput("points", true, "A list of at least 3 2D points (at least 6 floating numbers). By default these are in the x-y plane at z=0; use a transformation to adjust.");
     }
 
     EGS_POLYGON_SHAPE_EXPORT string getExample() {

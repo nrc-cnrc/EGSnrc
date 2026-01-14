@@ -275,7 +275,7 @@ extern "C" {
 
         // EGS_IPlane
         auto anglesPtr = geomBlockInput->addSingleInput("angles", false, "A list of angles of rotation around the axis for the planes in degrees, must be in increasing order and between 0 and 180");
-        auto anglesRadPtr = geomBlockInput->addSingleInput("angles in radian", false, "A list of angles of ratation around the axis for the planes in degrees, in increasing order");
+        auto anglesRadPtr = geomBlockInput->addSingleInput("angles in radian", false, "A list of angles of rotation around the axis for the planes in degrees, in increasing order");
         // Only one of these two inputs can be included
         anglesRadPtr->addDependency(anglesPtr, "", true);
         anglesRadPtr->addDependency(typePtr, "", true);
@@ -289,8 +289,14 @@ extern "C" {
         numPtr->addDependency(typePtr, "EGS_RadialRepeater");
         auto medPtr = geomBlockInput->addSingleInput("medium", false, "The medium with which the space outside the replicated geometry is filled");
         medPtr->addDependency(typePtr, "EGS_RadialRepeater");
-        auto firstanglePtr = geomBlockInput->addSingleInput("first angle", false, "First angle, phi_o");
+        auto firstanglePtr = geomBlockInput->addSingleInput("first angle", false, "First angle of the repetitions, phi_o, in degrees");
         firstanglePtr->addDependency(typePtr, "EGS_RadialRepeater");
+        auto firstangleRadPtr = geomBlockInput->addSingleInput("first angle in radians", false, "First angle of the repetitions, phi_o, in radians");
+        firstangleRadPtr->addDependency(typePtr, "EGS_RadialRepeater");
+
+        // Only one of these two inputs can be included
+        firstangleRadPtr->addDependency(firstanglePtr, "", true);
+        firstanglePtr->addDependency(firstangleRadPtr, "", true);
     }
 
     EGS_IPLANES_EXPORT string getExample(string type) {

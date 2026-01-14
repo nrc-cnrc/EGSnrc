@@ -525,12 +525,12 @@ extern "C" {
         srcBlockInput->getSingleInput("library")->setValues({"EGS_Phsp_Source"});
 
         // Format: name, isRequired, description, vector string of allowed values
-        srcBlockInput->addSingleInput("phase space file", true, "The name of the phase space file.");
-        srcBlockInput->addSingleInput("particle type", true, "The type of particle", {"all", "charged", "electrons", "positrons", "photons"});
-        srcBlockInput->addSingleInput("cutout", false, "A rectangular cutout defined by x1, x2, y1, y2");
-        srcBlockInput->addSingleInput("weight window", false, "wmin, wmax, the min and max particle weights to use. If the particle is not in this range, it is rejected.");
-        srcBlockInput->addSingleInput("recyle photons", false, "The number of time to recycle each photon");
-        srcBlockInput->addSingleInput("recycle electrons", false, "The number of times to recycle each electron");
+        srcBlockInput->addSingleInput("phase space file", true, "The name of the phase-space file.");
+        srcBlockInput->addSingleInput("particle type", true, "The type of particle to keep from the phase-space. Other types are discarded.", {"all", "charged", "electrons", "positrons", "photons"});
+        srcBlockInput->addSingleInput("cutout", false, "Discard particles outside of a rectanglular field: 'x1 y1 x2 y2'");
+        srcBlockInput->addSingleInput("weight window", false, "A weight window, outside of which particles are discarded: 'wtmin wtmax'. This allows you to discard high weight particles.");
+        srcBlockInput->addSingleInput("recycle photons", false, "The number of time to recycle each photon. E.g. set to 1 to use each photon twice. Set <1 or neglect to disable.");
+        srcBlockInput->addSingleInput("recycle electrons", false, "The number of time to recycle each electron. E.g. set to 1 to use each electron twice. Set <1 or neglect to disable.");
     }
 
     EGS_PHSP_SOURCE_EXPORT string getExample() {

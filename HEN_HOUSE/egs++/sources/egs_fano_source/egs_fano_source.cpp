@@ -159,7 +159,7 @@ extern "C" {
         setShapeInputs(shapePtr);
 
         srcBlockInput->addSingleInput("geometry", true, "The name of a predefined geometry");
-        srcBlockInput->addSingleInput("max mass density", true, "The maximum mass density");
+        srcBlockInput->addSingleInput("max mass density", true, "The maximum mass density within the geometry");
     }
 
     EGS_FANO_SOURCE_EXPORT string getExample() {
@@ -185,6 +185,7 @@ extern "C" {
         max mass density = 1.2
         geometry = some_name
         #create a geometry called some_name
+    :stop source:
 )"};
         return example;
     }

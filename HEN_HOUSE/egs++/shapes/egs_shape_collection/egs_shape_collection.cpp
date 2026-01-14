@@ -68,7 +68,7 @@ extern "C" {
     static void setInputs() {
         inputSet = true;
         shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Shape_Collection"});
-        shapeBlockInput->addSingleInput("probabilities", true, "p1 p2 ... pn");
+        shapeBlockInput->addSingleInput("probabilities", true, "A list of the relative sampling weight for each of the shapes: p1 p2 ... pn");
 
         auto shapePtr = shapeBlockInput->addBlockInput("shape");
         setShapeInputs(shapePtr);

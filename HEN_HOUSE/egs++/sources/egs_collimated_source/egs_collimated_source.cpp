@@ -138,7 +138,7 @@ extern "C" {
         setShapeInputs(source_shapePtr);
         setShapeInputs(target_shapePtr);
 
-        srcBlockInput->addSingleInput("distance", false, "source-target minimum distance");
+        srcBlockInput->addSingleInput("distance", false, "The source-target minimum distance, used for weighting the final result. This input does not impact the physical positioning of the source in any way. See the documentation for details.");
     }
 
     EGS_COLLIMATED_SOURCE_EXPORT string getExample() {

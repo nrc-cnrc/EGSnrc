@@ -102,10 +102,12 @@ extern "C" {
 
     static void setInputs() {
         inputSet = true;
-        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Rectangle"});
-        shapeBlockInput->addSingleInput("rectangle", true, "x1 y1 x2 y2");
-        shapeBlockInput->addSingleInput("inner rectangle", false, "xp1 yp1 xp2 yp2");
+
         setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Rectangle"});
+
+        shapeBlockInput->addSingleInput("rectangle", true, "Two 2D coordinates to define a rectangle: x1 y1 x2 y2. By default these are in the x-y plane at z=0; use a transformation to adjust.");
+        shapeBlockInput->addSingleInput("inner rectangle", false, "Two 2D coordinates to define an inner rectangle, and create a 'rectangular ring': xp1 yp1 xp2 yp2");
     }
 
     EGS_RECTANGLE_EXPORT string getExample() {
@@ -115,7 +117,9 @@ extern "C" {
     # Example of egs_rectangle
     #:start shape:
         library = egs_rectangle
-        rectangle = -.1 -.1 .1 .1
+        rectangle = x1 y1 x2 y2
+        inner rectangle = xp1 yp1 xp2 yp2 (optional)
+    :stop shape:
 )"};
         return example;
     }

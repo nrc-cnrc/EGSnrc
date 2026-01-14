@@ -109,9 +109,9 @@ extern "C" {
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of pyramid", {"EGS_PyramidX", "EGS_PyramidY", "EGS_PyramidZ", "EGS_Pyramid"});
 
-        geomBlockInput->addSingleInput("points", true, "A list of 2D or 3D positions");
+        geomBlockInput->addSingleInput("points", true, "A list of 2D or 3D (for type=EGS_Pyramid) positions. For 3D points, they must reside on a plane. These create a polygon that define the base of the pyramid.");
         geomBlockInput->addSingleInput("tip", true, "The 3D position of the tip of the pyramid (x, y ,z)");
-        geomBlockInput->addSingleInput("closed", false, "0 (open) or 1 (closed)");
+        geomBlockInput->addSingleInput("closed", false, "0 (open) or 1 (closed). When missing or set to 0, the pyramid is open, otherwise it is closed by the plane in which the pyramid base is defined.", {"0", "1"});
     }
 
     EGS_PYRAMID_EXPORT string getExample(string type) {

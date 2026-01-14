@@ -242,7 +242,7 @@ extern "C" {
         // Or can define using slabs and shells
         auto num_shellPtr = geomBlockInput->addSingleInput("number of shells", false, "A list of the number of shells");
         auto shellPtr = geomBlockInput->addSingleInput("shell thickness", false, "A list of shell thicknesses");
-        auto firstPtr = geomBlockInput->addSingleInput("first plane", false, "first plane");
+        auto firstPtr = geomBlockInput->addSingleInput("first plane", false, "The z position of the first plane, when listing a number of slabs");
         auto num_slabPtr = geomBlockInput->addSingleInput("number of slabs", false, "A list of the number of slabs");
         auto slabPtr = geomBlockInput->addSingleInput("slab thickness", false, "A list of the slab thicknesses");
 

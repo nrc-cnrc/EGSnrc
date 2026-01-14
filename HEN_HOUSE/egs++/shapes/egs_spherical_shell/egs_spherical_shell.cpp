@@ -135,13 +135,17 @@ extern "C" {
     static void setInputs() {
         inputSet = true;
 
-        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Spherical_Shape"});
-        shapeBlockInput->addSingleInput("midpoint", true, "The midpoint of the shape, (x y z)");
+        setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Spherical_Shell"});
+
+        shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the shape, (x y z). Defaults to '0 0 0'.");
         shapeBlockInput->addSingleInput("inner radius", true, "The inner radius");
         shapeBlockInput->addSingleInput("outer radius", true, "The outer radius");
-        shapeBlockInput->addSingleInput("hemisphere", false, "Hemisphere");
-        shapeBlockInput->addSingleInput("hemisphere", false, "The half angle, in degrees");
-        setShapeInputs(shapeBlockInput);
+        auto hemiPtr = shapeBlockInput->addSingleInput("hemisphere", false, "Truncates the sphere to a hemisphere in positive or negative z, by setting to 1 or -1, respectively.", {"1", "-1"});
+        auto halfAngPtr = shapeBlockInput->addSingleInput("half angle", false, "The half angle, in degrees. The shell is truncated by a conical section with the half angle specified. If 'half angle' is negative, the points will sampled with negative z coordinates.");
+
+        hemiPtr->addDependency(halfAngPtr, "", true);
+        halfAngPtr->addDependency(hemiPtr, "", true);
     }
 
     EGS_SPHERICAL_SHELL_EXPORT string getExample() {
