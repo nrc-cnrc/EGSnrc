@@ -166,7 +166,7 @@ extern "C" {
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("source names", true, "A list of names of previously defined sources.");
-        srcBlockInput->addSingleInput("weights", true, "A list of weights for the sources");
+        srcBlockInput->addSingleInput("weights", true, "A list of weights for the sources, used as the relative sampling probabilities.");
     }
 
     EGS_SOURCE_COLLECTION_EXPORT string getExample() {

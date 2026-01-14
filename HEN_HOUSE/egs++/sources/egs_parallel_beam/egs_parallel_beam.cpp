@@ -124,7 +124,7 @@ extern "C" {
 
         setShapeInputs(shapePtr);
 
-        srcBlockInput->addSingleInput("direction", true, "Direction of the beam (x, y, z)");
+        srcBlockInput->addSingleInput("direction", true, "Direction of the beam, as a unit vector: 'ux uy uz'");
     }
 
     EGS_PARALLEL_BEAM_EXPORT string getExample() {

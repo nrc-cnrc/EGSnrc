@@ -266,8 +266,8 @@ extern "C" {
         geomBlockInput->getSingleInput("library")->setValues({"EGS_SmartEnvelope"});
 
         // Format: name, isRequired, description, vector string of allowed values
-        geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry");
-        geomBlockInput->addSingleInput("inscribed geometries", true, "A list of previously defined geometries");
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry, that other geometries will be placed strictly inside.");
+        geomBlockInput->addSingleInput("inscribed geometries", true, "A list of previously defined geometries to place inside the base geometry. They must not intersect each other or extend beyond the base geometry.");
     }
 
     EGS_SMART_ENVELOPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {

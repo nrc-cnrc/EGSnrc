@@ -539,7 +539,7 @@ extern "C" {
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("activity", false, "The total activity of mixture, assumed constant.");
-        srcBlockInput->addSingleInput("experiment time", false, "Time length of the experiment");
+        srcBlockInput->addSingleInput("experiment time", false, "Time length of the experiment. Depending on the activity and decay half-life, decays sampled to occur after the experiment duration are discarded.");
         srcBlockInput->addSingleInput("base source", true, "The name of another source you have defined, that specifies the spatial distribution (e.g. an isotropic source).");
     }
 
@@ -561,12 +561,12 @@ extern "C" {
                             relaxation particles).
                             Omit this option to include all charges - this is
                             recommended.
-        experiment time     = [optional, default=0] time length of the experiment,
+        experiment time     = [optional, default=0] time duration of the experiment,
                             set to 0 for no time limit. Source particles generated
                             after the experiment time are not transported.
 
         :start spectrum:
-            definition of an EGS_RadionuclideSpectrum (see link below)
+            must be a definition of an EGS_RadionuclideSpectrum (see link below)
         :stop spectrum:
     :stop source:
 )"};

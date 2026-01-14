@@ -88,13 +88,7 @@ extern "C" {
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("source name", true, "The name of a previously defined source.");
 
-        auto blockPtr = srcBlockInput->addBlockInput("transformation");
-        blockPtr->addSingleInput("translation", false, "The translation for the geometry (x, y ,z)");
-        auto rotPtr = blockPtr->addSingleInput("rotation", false, "2, 3, or 9 floating point numbers");
-        auto vectPtr = blockPtr->addSingleInput("rotation vector", false, "3 floating point numbers");
-        // Can either have "rotation" or "rotation vector"
-        rotPtr->addDependency(vectPtr, "", true);
-        vectPtr->addDependency(rotPtr, "", true);
+        addTransformationBlock(srcBlockInput);
     }
 
     EGS_TRANSFORMED_SOURCE_EXPORT string getExample() {

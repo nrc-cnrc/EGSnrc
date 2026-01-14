@@ -562,11 +562,11 @@ extern "C" {
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("iaea phase space file", true, "The path to and name of the phase-space file, no extension. Both the .IAEAphsp and .IAEAheader file must be in the same directory.");
-        srcBlockInput->addSingleInput("particle type", true, "The type of particle to use from the phase-space", {"all", "charged", "electrons", "positrons", "photons"});
-        srcBlockInput->addSingleInput("cutout", false, "A rectangular cutout defined by x1, x2, y1, y2");
-        srcBlockInput->addSingleInput("weight window", false, "wmin, wmax; the min and max particle weights to use. If the particle is not in this (inclusive) range, it is rejected.");
-        srcBlockInput->addSingleInput("recycle photons", false, "The number of time to recycle each photon");
-        srcBlockInput->addSingleInput("recycle electrons", false, "The number of times to recycle each electron");
+        srcBlockInput->addSingleInput("particle type", true, "The type of particle to keep from the phase-space. Other types are discarded.", {"all", "charged", "electrons", "positrons", "photons"});
+        srcBlockInput->addSingleInput("cutout", false, "Discard particles outside of a rectanglular field: 'x1 y1 x2 y2'");
+        srcBlockInput->addSingleInput("weight window", false, "A weight window, outside of which particles are discarded: 'wtmin wtmax'. This allows you to discard high weight particles.");
+        srcBlockInput->addSingleInput("recycle photons", false, "The number of time to recycle each photon. E.g. set to 1 to use each photon twice. Set <1 or neglect to disable.");
+        srcBlockInput->addSingleInput("recycle electrons", false, "The number of time to recycle each electron. E.g. set to 1 to use each electron twice. Set <1 or neglect to disable.");
     }
 
     IAEA_PHSP_SOURCE_EXPORT string getExample() {

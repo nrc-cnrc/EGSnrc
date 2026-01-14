@@ -26,7 +26,7 @@
 #
 #  Contributors:    Marc Chamberland
 #                   Frederic Tessier
-#  Contributors:    Hannah Gallop
+#                   Hannah Gallop
 #
 ###############################################################################
 */

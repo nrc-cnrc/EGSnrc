@@ -180,7 +180,7 @@ extern "C" {
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("geometries", true, "A list of names of previously defined geometries");
-        geomBlockInput->addSingleInput("priorities", false, "A list of integers defining the geometry priorities");
+        geomBlockInput->addSingleInput("priorities", false, "A list of integers defining the geometry priorities. If neglected, the priority decreases when moving from the first to the last of the geometry list.");
     }
 
     EGS_UNIONG_EXPORT string getExample(string type) {

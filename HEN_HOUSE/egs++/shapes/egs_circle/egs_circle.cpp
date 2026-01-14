@@ -46,11 +46,13 @@ extern "C" {
 
     static void setInputs() {
         inputSet = true;
-        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", vector<string>(1, typeStr));
+
+        setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({typeStr});
+
         shapeBlockInput->addSingleInput("radius", false, "The radius of the circle.");
         shapeBlockInput->addSingleInput("midpoint", false, "The x, y midpoint of the circle, which is in the x-y plane located at z=0. Use an EGS_AffineTransform block to translate or rotate the shape.");
         shapeBlockInput->addSingleInput("inner radius", false, "The inner radius, to define a ring. Points will only be sampled within the ring between the 'inner radius' and 'radius'.");
-        setShapeInputs(shapeBlockInput);
     }
 
     EGS_CIRCLE_EXPORT string getExample() {

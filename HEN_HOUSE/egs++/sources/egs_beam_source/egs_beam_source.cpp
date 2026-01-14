@@ -370,12 +370,12 @@ extern "C" {
         srcBlockInput->getSingleInput("library")->setValues({"EGS_Beam_Source"});
 
         // Format: name, isRequired, description, vector string of allowed values
-        srcBlockInput->addSingleInput("beam code", true, "The name of the BEAMnrc user code");
-        srcBlockInput->addSingleInput("pegs file", true, "The name of the PEGS file to be used in the BEAMnrc simulation");
-        srcBlockInput->addSingleInput("input file", true, "The name of the input file specifying the BEAMnrc simulation");
-        srcBlockInput->addSingleInput("cutout", false, "Cutout of a rectangle defined by x1, y1, x2, y2");
-        srcBlockInput->addSingleInput("particle type", false, "The type of particle.", {"all", "electrons", "photons", "positrons", "charged"});
-        srcBlockInput->addSingleInput("weight window", true, "wmin wmax");
+        srcBlockInput->addSingleInput("beam code", true, "The name of the BEAMnrc user code. Note that it must be compiled as a shared library, which is not done by default.");
+        srcBlockInput->addSingleInput("pegs file", true, "The name of the PEGS file to be used in the BEAMnrc simulation. Use 'pegsless' if a pegs file is not used.");
+        srcBlockInput->addSingleInput("input file", true, "The name of the BEAMnrc input file, that must reside in the accelerator directory. Make sure to test running BEAMnrc with it before using it here!");
+        srcBlockInput->addSingleInput("cutout", false, "Discard particles outside of a rectanglular field: 'x1 y1 x2 y2'");
+        srcBlockInput->addSingleInput("particle type", false, "The type of particle to keep from the BEAMnrc simulation. Other types are discarded.", {"all", "electrons", "photons", "positrons", "charged"});
+        srcBlockInput->addSingleInput("weight window", false, "A weight window, outside of which particles are discarded: 'wtmin wtmax'. This allows you to discard high weight particles.");
     }
 
     EGS_BEAM_SOURCE_EXPORT string getExample() {

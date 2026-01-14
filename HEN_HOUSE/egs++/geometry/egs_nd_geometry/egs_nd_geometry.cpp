@@ -1270,7 +1270,7 @@ extern "C" {
         geomBlockInput->getSingleInput("library")->setValues({"EGS_NDGeometry"});
 
         // Format: name, isRequired, description, vector string of allowed values
-        auto typePtr = geomBlockInput->addSingleInput("type", false, "type of nd_geometry", {"EGS_XYZGeometry", "EGS_XYZRepeater"});
+        auto typePtr = geomBlockInput->addSingleInput("type", false, "Alternative types of nd_geometry. Neglect this input to use a standard egs_nd_geometry.", {"EGS_XYZGeometry", "EGS_XYZRepeater"});
 
         auto dimPtr = geomBlockInput->addSingleInput("dimensions", true, "A list of previously defined geometries.");
         dimPtr->addDependency(typePtr, "", true);
@@ -1287,16 +1287,17 @@ extern "C" {
         zPtr->addDependency(typePtr, "EGS_XYZGeometry");
 
         // Second method
-        auto densityPtr = geomBlockInput->addSingleInput("density matrix", false, "Density file");
+        auto densityPtr = geomBlockInput->addSingleInput("density matrix", false, "A binary file containing the density for every region. See the documentation for format details.");
         densityPtr->addDependency(typePtr, "EGS_XYZGeometry");
-        auto ctPtr = geomBlockInput->addSingleInput("ct ramp", false, "Ramp file");
+        auto ctPtr = geomBlockInput->addSingleInput("ct ramp", false, "A ramp file for converting density to medium.");
         ctPtr->addDependency(typePtr, "EGS_XYZGeometry");
-        auto phantPtr = geomBlockInput->addSingleInput("egsphant file", false, "An egsphant file");
+        auto phantPtr = geomBlockInput->addSingleInput("egsphant file", false, "An egsphant file, as defined in the DOSXYZnrc documentation.");
         phantPtr->addDependency(typePtr, "EGS_XYZGeometry");
 
-        // For second method, must either use "ct ramp" or "egsphant file"
+        // For second method, must either use "density matrix" or "egsphant file"
         densityPtr->addDependency(phantPtr, "", true);
         phantPtr->addDependency(densityPtr, "", true);
+        ctPtr->addDependency(densityPtr);
 
         // Third method
         auto xslabPtr = geomBlockInput->addSingleInput("x-slabs", false, "Xo Dx Nx");

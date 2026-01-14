@@ -63,7 +63,7 @@ extern "C" {
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of prism", {"EGS_PrismX", "EGS_PrismY", "EGS_PrismZ", "EGS_Prism"});
 
         geomBlockInput->addSingleInput("closed", false, "Two inputs that define the distance from the top and bottom prism plane to the plane used to define the polygon");
-        geomBlockInput->addSingleInput("points", true, "A list of 2D or 3D positions.");
+        geomBlockInput->addSingleInput("points", true, "A list of 2D or 3D (for type=EGS_Prism) positions. For 3D points, they must reside on a plane. These create a polygon that define the base of the prism.");
     }
 
     EGS_PRISM_EXPORT string getExample(string type) {

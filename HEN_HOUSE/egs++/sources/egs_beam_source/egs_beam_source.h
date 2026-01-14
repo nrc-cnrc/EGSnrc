@@ -115,6 +115,8 @@ reject "phat" particles from a simulation using DBS.
 sure that the <code>RESUME</code> calculation option is defined in
 both, the source and the application input files.
 
+If the BEAMnrc simulation does not use a pegs4dat file, set 'pegs file=pegsless'.
+
 A simple example. Note that you must build the required shared library for
 the accelerator (i.e. use the command 'make library' in the BEAM_EX10MeVe
 directory).

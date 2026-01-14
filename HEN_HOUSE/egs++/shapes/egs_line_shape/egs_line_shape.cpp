@@ -69,9 +69,10 @@ extern "C" {
     static void setInputs() {
         inputSet = true;
 
-        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Line_Shape"});
-        shapeBlockInput->addSingleInput("points", true, "A list of 2D positions, at least 2 required");
         setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Line_Shape"});
+
+        shapeBlockInput->addSingleInput("points", true, "A list of 2D positions, at least 2 required. By default these are in the x-y plane at z=0; use a transformation to adjust.");
     }
 
     EGS_LINE_SHAPE_EXPORT string getExample() {

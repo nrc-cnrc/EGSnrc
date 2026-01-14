@@ -47,7 +47,7 @@ extern "C" {
         inputSet = true;
 
         shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Gaussian_Shape"});
-        shapeBlockInput->addSingleInput("sigma", true, "1 or 2 or 3 inputs");
+        shapeBlockInput->addSingleInput("sigma", true, "1 or 2 or 3 inputs, the sigma for Gaussian spread along x, y and z, respectively.");
 
         auto shapePtr = shapeBlockInput->addBlockInput("shape");
         setShapeInputs(shapePtr);

@@ -3326,52 +3326,53 @@ extern "C" {
 
         shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
         scoreBlock->setAppName("cavity");
-        shared_ptr<EGS_BlockInput> scaleBlock = scoreBlock->addBlockInput("scale photon x-sections");
-        scaleBlock->addSingleInput("factor", false, "");
-        scaleBlock->addSingleInput("medium", false, "");
-        scaleBlock->addSingleInput("cross section", false, "options are: all, Rayleigh, Compton, Pair, or Photo", {"all", "Rayleigh", "Compton", "Pair", "Photo"});
 
-        scoreBlock->addSingleInput("calculation type", false, "options are: Dose, Awall, Fano, HVL, FAC", {"Dose", "Awall", "Fano", "HVL", "FAC"});
-        // not sure about inputs for scale xcc
-        scoreBlock->addSingleInput("scale xcc", false, "");
+        scoreBlock->addSingleInput("calculation type", false, "The type of calculation to run, out of several options specific to cavity.", {"Dose", "Awall", "Fano", "HVL", "FAC"});
+
+        scoreBlock->addSingleInput("scale xcc", false, "Apply a scaling factor to the Xcc parameter in elastic scattering. First give the medium index, followed by the scaling factor.");
 
         shared_ptr<EGS_BlockInput> calcBlock = scoreBlock->addBlockInput("calculation geometry");
-        calcBlock->addSingleInput("geometry name", false, "");
-        calcBlock->addSingleInput("calculation name", true, "");
-        calcBlock->addSingleInput("cavity regions", false, "");
-        calcBlock->addSingleInput("aperture regions", false, "");
-        calcBlock->addSingleInput("cavity mass", false, "");
-        calcBlock->addSingleInput("charge regions", false, "");
+        calcBlock->addSingleInput("geometry name", false, "The name of the geometry to use for this simulation (there may be many 'calculation geometry' input blocks).");
+        calcBlock->addSingleInput("calculation name", true, "An arbitrary title or name to give to this simulation. Defaults to the geometry name.");
+        calcBlock->addSingleInput("cavity regions", false, "A list of regions that make up the cavity detector volume. Not needed for HVL calculations.");
+        calcBlock->addSingleInput("aperture regions", false, "For FAC simulations, this is the list of region numbers that define the aperture.");
+        calcBlock->addSingleInput("cavity mass", false, "The total mass of the cavity in grams. Not needed for HVL calculations.");
+        calcBlock->addSingleInput("charge regions", false, "A list of regions in which to score the net charge. Not needed for HVL calculations.");
 
-        scoreBlock->addSingleInput("correlated geometries", false, "only available with types Dose, HVL, and FAC");
-        
+        scoreBlock->addSingleInput("correlated geometries", false, "The names of two geometries. Turns on the scoring of ratios between the two geometries, to take advantage of correlations for efficiency. Only available with for Dose, HVL, and FAC calculations.");
+
         shared_ptr<EGS_BlockInput> fluenceBlock = scoreBlock->addBlockInput("fluence scoring");
-        fluenceBlock->addSingleInput("minimum energy", false, "");
-        fluenceBlock->addSingleInput("maximum energy", false, "");
-        fluenceBlock->addSingleInput("number of bins", false, "");
-        fluenceBlock->addSingleInput("scale", false, "options are: linear, logarithmic", {"linear", "logarithmic"});
+        fluenceBlock->addSingleInput("minimum energy", false, "The minimum energy of the first energy bin.");
+        fluenceBlock->addSingleInput("maximum energy", false, "The maximum energy of the last energy bin.");
+        fluenceBlock->addSingleInput("number of bins", false, "The number of energy bins used for fluence scoring.");
+        fluenceBlock->addSingleInput("scale", false, "The scale of the energy axis.", {"linear", "logarithmic"});
 
         shared_ptr<EGS_BlockInput> hvlBlock = scoreBlock->addBlockInput("HVL scoring");
-        hvlBlock->addSingleInput("scoring circle", false, "");
-        hvlBlock->addSingleInput("scoring plane normal", false, "");
-        hvlBlock->addSingleInput("muen file", false, "");
-        hvlBlock->addSingleInput("absorber thicknesses", false, "");
-        hvlBlock->addSingleInput("scatter", false, "yes or no", {"yes", "no"});
+        hvlBlock->addSingleInput("scoring circle", false, "The position and radius of the circle used for scoring: 'x y z R'");
+        hvlBlock->addSingleInput("scoring plane normal", false, "The unit vector defining the normal of the scoring plane: 'ux uy uz'");
+        hvlBlock->addSingleInput("muen file", false, "The filename for the E*meun file. Note that the 'g' application can be used to generate muen values, which should then be multiplied by E for this file.");
+        hvlBlock->addSingleInput("absorber thicknesses", false, "A list of the absorber thicknesses (in cm) for each of the calculation geometries, in order. If provided, cavity will do a least-squares linear fir to the air-kerma ratios to extract the HVL.");
+        hvlBlock->addSingleInput("scatter", false, "Whether or not to include the contribution from scattered photons in the air-kerma. Defaults to yes.", {"yes", "no"});
 
         shared_ptr<EGS_BlockInput> kermaBlock = scoreBlock->addBlockInput("kerma scoring");
-        kermaBlock->addSingleInput("scoring circle", false, "");
-        kermaBlock->addSingleInput("scoring plane normal", false, "");
-        kermaBlock->addSingleInput("muen file", false, "");
+        kermaBlock->addSingleInput("scoring circle", false, "The position and radius of the circle used for scoring: 'x y z R'");
+        kermaBlock->addSingleInput("scoring plane normal", false, "The unit vector defining the normal of the scoring plane: 'ux uy uz'");
+        kermaBlock->addSingleInput("muen file", false, "The filename for the E*meun file. Note that the 'g' application can be used to generate muen values, which should then be multiplied by E for this file.");
 
         shared_ptr<EGS_BlockInput> varBlock = appInput->addBlockInput("variance reduction");
         varBlock->setAppName("cavity");
-        varBlock->addSingleInput("photon splitting", false, "");
+        varBlock->addSingleInput("photon splitting", false, "Turn on photon splitting everywhere by setting this >0.");
         shared_ptr<EGS_BlockInput> rejBlock = varBlock->addBlockInput("range rejection");
-        rejBlock->addSingleInput("rejection", false, "");
-        rejBlock->addSingleInput("Esave", false, "");
-        rejBlock->addSingleInput("cavity geometry", false, "");
-        rejBlock->addSingleInput("rejection range medium", false, "");
-        
+        rejBlock->addSingleInput("rejection", false, "The rejection number for Russian Roulette. If provided, must be >1.");
+        rejBlock->addSingleInput("Esave", false, "The total energy below which electrons that are in the cavity and can not escape the current region are immediately discarded (and energy deposited).");
+        rejBlock->addSingleInput("cavity geometry", false, "The name of the cavity geometry.");
+        rejBlock->addSingleInput("rejection range medium", false, "The index of the medium that's used to calculate ranges for determining whether they will reach the cavity.");
+
+        shared_ptr<EGS_BlockInput> scaleBlock = scoreBlock->addBlockInput("scale photon x-sections");
+        scaleBlock->addSingleInput("factor", false, "A factor by which to muliply cross sections.");
+        scaleBlock->addSingleInput("medium", false, "Only apply the scaling factor to the named medium. To apply it everywhere, use 'all'.");
+        scaleBlock->addSingleInput("cross section", false, "Only apply the scaling to the selected type of interaction cross section.", {"all", "Rayleigh", "Compton", "Pair", "Photo"});
+
         return appInput;
     }
 
@@ -3382,14 +3383,8 @@ extern "C" {
         example = {
         R"(
 :start scoring options:
-    :start scale photon x-sections:
-        factor = 1.5
-        medium = ALL
-        cross section = all                 # Rayleigh, Compton, Pair, or Photo
-    :stop scale photon x-sections:
 
     calculation type = Dose                 # Dose, Awall, Fano, HVL, or FAC
-    scale xcc = 1.5           
 
     :start calculation geometry:
         geometry name = fac_1
@@ -3401,14 +3396,14 @@ extern "C" {
         :stop transformation:
     :stop calculation geometry:
 
-    correlated geometries = fac_1   
+    correlated geometries = fac_1
 
     :start fluence scoring:
         minimum energy = Emin
         maximum energy = Emax
         number of bins = N
         scale = linear                      # linear or logarithmic
-    :stop fluence scoring:  
+    :stop fluence scoring:
 
     # if type is HVL
     :start HVL scoring:
@@ -3425,6 +3420,14 @@ extern "C" {
         scoring plane normal = 0 0 1
         muen file = E*muen file name
     :stop kerma scoring
+
+    # Only for advanced users
+    # scale xcc = 1 1.5
+    # :start scale photon x-sections:
+        factor = 1.5
+        medium = ALL
+        cross section = all # Rayleigh, Compton, Pair, or Photo
+    :stop scale photon x-sections:
 :stop scoring options:
 
 :start variance reduction:
