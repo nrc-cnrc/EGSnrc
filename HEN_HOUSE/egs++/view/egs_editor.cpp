@@ -30,6 +30,7 @@
 */
 
 #include <QPalette>
+#include <type_traits>
 
 #include "egs_editor.h"
 #include "egs_functions.h"
@@ -1075,8 +1076,8 @@ QTextBlock EGS_Editor::getBlockEnd(QTextBlock currentBlock) {
 template <typename T>
 bool EGS_Editor::inputHasDependency(const shared_ptr<T>& inp) {
     static_assert(
-        std::is_same_v<T, EGS_SingleInput> ||
-        std::is_same_v<T, EGS_BlockInput>,
+        std::is_same<T, EGS_SingleInput>::value ||
+        std::is_same<T, EGS_BlockInput>::value,
         "EGS_Editor::inputHasDependency only supports EGS_SingleInput or EGS_BlockInput"
     );
 
@@ -1087,9 +1088,9 @@ bool EGS_Editor::inputHasDependency(const shared_ptr<T>& inp) {
 template <typename T>
 bool EGS_Editor::inputDependencySatisfied(const shared_ptr<T>& inp, QTextCursor cursor) {
     static_assert(
-        std::is_same_v<T, EGS_SingleInput> ||
-        std::is_same_v<T, EGS_BlockInput>,
-        "EGS_Editor::inputDependencySatisfied only supports EGS_SingleInput or EGS_BlockInput"
+        std::is_same<T, EGS_SingleInput>::value ||
+        std::is_same<T, EGS_BlockInput>::value,
+        "EGS_Editor::inputHasDependency only supports EGS_SingleInput or EGS_BlockInput"
     );
 
     if (cursor == QTextCursor()) {
