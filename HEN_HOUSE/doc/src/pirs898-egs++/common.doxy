@@ -257,7 +257,7 @@ The run control input block specifies generic parameters about the simulation. I
 For example, to simulate 1 million histories:
 \verbatim
 :start run control:
-    ncase = 1e5
+    ncase = 1e6
 :stop run control:
 \endverbatim
 
