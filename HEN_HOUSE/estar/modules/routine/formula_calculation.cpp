@@ -100,7 +100,7 @@ public:
             i = i + 1;
         }
         cout << "\n";
-        cout << "The medium " << mediaNum << " is a compound with formula: " << compoundFormula << "\n";
+        cout << "The medium " << mediaNum << " is a compound of " << NEP << " elements with formula: " << compoundFormula << "\n";
         return compoundFormula;
     }
 };
