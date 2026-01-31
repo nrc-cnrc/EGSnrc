@@ -58,6 +58,10 @@ public:
         GetElementsStruct GElem;
         int k = 0;
         while (k < NEP) {
+            if(components[k].size() > 1) {
+                components[k][0] = std::toupper(components[k][0]);
+                components[k][1] = std::tolower(components[k][1]);
+            }
             GElem.elemArrayStrut[k] = components[k];
             k = k + 1;
         }
