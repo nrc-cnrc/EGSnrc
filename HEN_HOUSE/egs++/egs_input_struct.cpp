@@ -37,6 +37,7 @@
 
 #include "egs_functions.h"
 #include "egs_input_struct.h"
+#include <algorithm>
 
 EGS_InputStruct::EGS_InputStruct() {}
 
@@ -178,6 +179,15 @@ string EGS_BlockInput::getAppName() {
 }
 
 shared_ptr<EGS_SingleInput> EGS_BlockInput::addSingleInput(string inputTag, bool isReq, const string desc, const vector<string> vals) {
+    // If an input by with the same tag already exists, delete the old one
+    // We don't allow duplicate tags. So new ones overwrite old ones
+    singleInputs.erase(
+        std::remove_if(singleInputs.begin(), singleInputs.end(),
+            [&](const std::shared_ptr<EGS_SingleInput> &inp) {
+                return inp && egsEquivStr(inp->getTag(), inputTag);
+            }),
+        singleInputs.end()
+    );
     singleInputs.push_back(make_shared<EGS_SingleInput>(inputTag, isReq, desc, vals));
     return singleInputs.back();
 }
