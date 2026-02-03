@@ -837,13 +837,13 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
         }
     }
 
+#ifdef EDITOR_DEBUG
+    egsInformation("EGS_Editor::getBlockInput: No library found, searching for '%s' by input block title only\n", blockTitle.toLatin1().data());
+#endif
+
     // If we didn't get the library tag, we might be in a top-level block
     // like a geometry definition. Just return the block with the matching title
     shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput(blockTitle.toStdString());
-
-#ifdef EDITOR_DEBUG
-    egsInformation("EGS_Editor::getBlockInput: No library found, assuming '%s' is top-level block\n", blockTitle.toLatin1().data());
-#endif
 
     return inputBlock;
 }
