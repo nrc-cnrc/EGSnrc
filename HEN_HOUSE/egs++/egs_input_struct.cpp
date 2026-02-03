@@ -86,9 +86,19 @@ vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
 }
 
 shared_ptr<EGS_BlockInput> EGS_InputStruct::getBlockInput(string title) {
+    // Search for top-level matches first
     for (auto &block: blockInputs) {
         if (egsEquivStr(block->getTitle(), title)) {
             return block;
+        }
+    }
+
+    // If not found as a top-level block, do a recursive search
+    for (auto &block: blockInputs) {
+        // Do a search (this calls the EGS_BlockInput version of getBlockInput)
+        auto foundBlock = block->getBlockInput(title);
+        if (foundBlock) {
+            return foundBlock;
         }
     }
 
