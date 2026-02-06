@@ -243,7 +243,7 @@ void EGS_CBCTSetup::describeMe(){
                     orbit/convert,amin/convert,amax/convert);
      egsInformation("step = %g degrees\n",step/convert);
      if(hasTranslation()) egsInformation("translation = (%g, %g, %g)\n",t.x,t.y,t.z);
-     if (swap) egsInformation("Writting X coordinates as Y coordinates.\n");
+     if (swap) egsInformation("Writing X coordinates as Y coordinates.\n");
      if(hasRotation()){
        if(      irot == 0 ) egsInformation("CBCT rotation around x-axis\n");
        else if( irot == 1 ) egsInformation("CBCT rotation around y-axis\n");
@@ -278,7 +278,7 @@ min(0), max(100), hsize(1024), nscores(0), istatus(0)
 /*! Constructor.  */
 EGS_CBCT::EGS_CBCT(int argc, char **argv) :
         EGS_AdvancedApplication(argc,argv), type(planar), ngeom(0),
-        kermaT(0),kermaA(0),kermaS(0), cker(0), cut_off(0.5), epsilon(1.0),
+        kermaT(0),kermaA(0),kermaS(0), cker(0), cut_off(0.5),
         nsplit_p(1), nsplit_s(1), mfptr_do(false), mfptr_lamo(1),
         isize(512), dt_medium(-1), profile(0),
         patt_have(false), patt_med(-1), patt_using(false),
@@ -1026,20 +1026,27 @@ int EGS_CBCT::initScoring() {
 
             /* get target uncertainty and kerma cut_off */
             // defaults set to 1% and 0.5 respectively
-            err0 = 0; EGS_Float eps, cut;
-            err0 = aux->getInput("target uncertainty",eps);
-            if (!err0 && eps > 0.0 && eps <= 100.0){epsilon=eps;}
+            //err0 = 0; EGS_Float eps;
+            //err0 = aux->getInput("target uncertainty",eps);
+            //if (!err0 && eps > 0.0 && eps <= 100.0){epsilon=eps;}
+            EGS_Float cut;
             err0 = 0;
-            err0 = aux->getInput("maximum Aatt fraction",cut);
+            err0 = aux->getInput("RMSE cutoff",cut);
             if( !err0 ) {
                 if( (cut >= 0 && cut <= 1) || cut < 0 ) cut_off=cut;
-            }
-            else{
-              err0 = 0;err0 = aux->getInput("minimum Kscat fraction",cut);
-              if( !err0 ) {
-                if(cut >= 0 && cut < 1) cut_off=cut;
-                else cut_off = 0;
-              }
+            } else {
+                // Backwards compatibility
+                err0 = aux->getInput("maximum Aatt fraction",cut);
+                if( !err0 ) {
+                    if( (cut >= 0 && cut <= 1) || cut < 0 ) cut_off=cut;
+                } else {
+                    // Backwards compatibility
+                    err0 = 0;err0 = aux->getInput("minimum Kscat fraction",cut);
+                    if( !err0 ) {
+                        if(cut >= 0 && cut < 1) cut_off=cut;
+                        else cut_off = 0;
+                    }
+                }
             }
 
             /* get screen resolution */
@@ -1065,46 +1072,57 @@ int EGS_CBCT::initScoring() {
                 }
             }
 
-            /* get voxel size */
+            /* get pixel size */
             err0 = 0;
+            ax = 0;
+            ay = 0;
             vector<EGS_Float> voxel;
-            err0 = aux->getInput("voxel size",voxel);
+            err0 = aux->getInput("pixel size",voxel);
             if( err0 ) {
-             /* get field size instead */
-             err0 = 0;
-             err0 = aux->getInput("scoring field size",voxel);
-             if( err0 ) egsFatal(
-              "\n\n***  Missing 'field size' or 'voxel size' input "
-              "for a planar calculation\n    This is a fatal error\n\n");
-             switch (voxel.size()){
-             case 1:
-               ax = voxel[0]; ay = voxel[0];
-               break;
-             case 2:
-               ax = voxel[0]; ay = voxel[1];
-               break;
-             default:
-              egsFatal(
-              "\n\n***  Wrong 'voxel size' input "
-              "for a planar calculation\n    This is a fatal error\n\n");
-             }
-             vx = ax/Nx; vy = ay/Ny;
+                // Backwards compatibility, but they're not really voxels
+                err0 = aux->getInput("voxel size",voxel);
+                if( err0 ) {
+                    /* get field size instead */
+                    err0 = 0;
+                    err0 = aux->getInput("scoring field size",voxel);
+                    if( err0 ) egsFatal(
+                    "\n\n***  Missing 'field size' or 'pixel size' input "
+                    "for a planar calculation\n    This is a fatal error\n\n");
+
+                    switch (voxel.size()) {
+                        case 1:
+                            ax = voxel[0]; ay = voxel[0];
+                            break;
+                        case 2:
+                            ax = voxel[0]; ay = voxel[1];
+                            break;
+                        default:
+                            egsFatal(
+                            "\n\n***  Wrong 'scoring field size' input "
+                            "for a planar calculation\n    This is a fatal error\n\n");
+                    }
+
+                    vx = ax/Nx; vy = ay/Ny;
+                }
             }
-            else {// get field size from voxel and resolution
-             switch (voxel.size()){
-             case 1:
-               vx = voxel[0]; vy = voxel[0];
-               break;
-             case 2:
-               vx = voxel[0]; vy = voxel[1];
-               break;
-             default:
-              egsFatal(
-              "\n\n***  Wrong 'voxel size' input "
-              "for a planar calculation\n    This is a fatal error\n\n");
-             }
-             ax = Nx*vx; ay = Ny*vy;
+
+            // If not provided field size, get it from pixel and resolution
+            if(ax == 0) {
+                switch (voxel.size()) {
+                    case 1:
+                        vx = voxel[0]; vy = voxel[0];
+                        break;
+                    case 2:
+                        vx = voxel[0]; vy = voxel[1];
+                        break;
+                    default:
+                        egsFatal(
+                        "\n\n***  Wrong 'pixel size' input "
+                        "for a planar calculation\n    This is a fatal error\n\n");
+                }
+                ax = Nx*vx; ay = Ny*vy;
             }
+
             /**********************************************************/
             // Scoring plane definition: Defaults to plane at origin
             // with normal along positive z-axis to mimic default used
@@ -1828,7 +1846,7 @@ void EGS_CBCT::describeSimulation() {
    cbctS->describeMe();
 
    egsInformation("scoring screen resolution: %d X %d \n",Nx,Ny);
-   egsInformation("voxel size: %g X %g cm^2 \n",vx,vy);
+   egsInformation("pixel size: %g X %g cm^2 \n",vx,vy);
    egsInformation("scoring screen size:  %g X %g cm^2 \n",ax,ay);
    egsInformation("\nscoring plane at: (%g,%g,%g)\n",
    midpoint.x,midpoint.y,midpoint.z);
@@ -4273,24 +4291,90 @@ extern "C" {
         shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
         scoreBlock->setAppName("egs_cbct");
 
-        scoreBlock->addSingleInput("calculation type", false, "planar, volumetric, both, or ray-tracing", {"planar", "volumetric", "both", " ray-tracing"});
-        scoreBlock->addSingleInput("angle", false, "");
-        scoreBlock->addSingleInput("orbit", false, "");
-        scoreBlock->addSingleInput("step", false, "");
+        scoreBlock->addSingleInput("calculation type", true, "Whether to score on a plane, or switch to ray-tracing mode to produce an ideal scan where particles are projected directly from the source to the scoring plane.", {"planar", "ray-tracing"});
+        //scoreBlock->addSingleInput("calculation type", true, "Whether to score on a plane, in a volume, or both. Or, switch to ray-tracing mode to produce an ideal scan where particles are projected directly from the source to the scoring plane.", {"planar", "volumetric", "both", " ray-tracing"}); // Volumetric not yet implemented
 
+        // CBCT setup
+        shared_ptr<EGS_BlockInput> setupBlock = scoreBlock->addBlockInput("cbct setup");
+        setupBlock->addSingleInput("minimum angle", false, "The starting angle for rotation of the source, in degrees. Must be positive and < maximum angle.");
+        setupBlock->addSingleInput("maximum angle", false, "The ending angle for rotation of the source, in degrees. Must be positive and > minimum angle.");
+        setupBlock->addSingleInput("step", true, "The angular step between each projection, in degrees. Use the sign of this input to denote the rotation direction: positive for clockwise and negative for counterclockwise.");
+        setupBlock->addSingleInput("rotation axis", false, "The axis to rotate about: x, y or z.");
+        setupBlock->addSingleInput("translation", false, "A translation to apply to the source and scoring plane: 'x y z'.");
+        auto projPtr = setupBlock->addSingleInput("projection", false, "The integer index for the current projection to simulate. Update this number and run multiple simulations to calculate all projections, starting from 0.");
+        auto angPtr = setupBlock->addSingleInput("angle", false, "The angle of the projection, used to calculate the projection index. Only provide one of 'angle' or 'projection'.");
+        setupBlock->addSingleInput("swap", false, "Whether or not to swap the X and Y coodinates in the scoring plane. Defaults to no.", {"yes", "no"});
+
+        projPtr->addDependency(angPtr, "", true);
+        angPtr->addDependency(projPtr, "", true);
+
+        // Planar scoring
         shared_ptr<EGS_BlockInput> planarBlock = scoreBlock->addBlockInput("planar scoring");
-        planarBlock->addSingleInput("surrounding medium", false, "defaults to vaccum");
-        planarBlock->addSingleInput("target uncertainty", false, "defaults to 1%");
-        planarBlock->addSingleInput("maximum Aatt fraction", false, "defaults to 0.1");
-        planarBlock->addSingleInput("screen resolution", false, "");
-        planarBlock->addSingleInput("uncertainty estimation", false, "");
-        planarBlock->addSingleInput("voxel size", false, "");
-        planarBlock->addSingleInput("muen file", false, "get E*muen/rho values");
+        planarBlock->addSingleInput("screen resolution", true, "The number of x and y pixels in the scoring plane, 'nx ny'.");
+        planarBlock->addSingleInput("pixel size", false, "The number of pixels in x and y of the scoring plane: 'nx ny'.");
+        planarBlock->addSingleInput("muen file", true, "The path to a file containing E*muen/rho values for the surrounding medium. These can be computed using 'g', see the documentation for details.");
+        planarBlock->addSingleInput("surrounding medium", false, "The name of the medium that is surrounding the phantom (which may be between the geometry and the source). Defaults to vacuum.");
+        planarBlock->addSingleInput("uncertainty estimation", false, "Turns on error estimation of the various signals, and efficiency calculations.Optionally restricts the error estimation to just part of the scoring plane, from pixels xmin to xmax, ymin to ymax. The first number is always 1 to turn on, optionally followed by the windowing: '1 xmin xmax ymin ymax'.");
+        planarBlock->addSingleInput("RMSE cutoff", false, "The cut-off for RMSE calculations, either as a fraction of the maximum attenuation or of the scatter. For example, RMSE is computed only for 'A/T > cutoff*Amax'. Defaults to 0.5.");
+        addTransformationBlock(planarBlock);
 
-        shared_ptr<EGS_BlockInput> smoothingBlock = scoreBlock->addBlockInput("smoothing options");
-        smoothingBlock->addSingleInput("nmax", false, "");
-        smoothingBlock->addSingleInput("nmax2d", false, "");
-        smoothingBlock->addSingleInput("chi2max", false, "");
+        // Output options
+        shared_ptr<EGS_BlockInput> outputBlock = appInput->addBlockInput("output options");
+        outputBlock->setAppName("egs_cbct");
+        outputBlock->addSingleInput("display type", false, "Whether to record the total, attenuated (primary), or scatter Kerma. Defaults to total.", {"total", "attenuated", "scattered"});
+        outputBlock->addSingleInput("store signal map", false, "Whether to a printout of the detector scan in a .egsmap file.", {"yes", "no"});
+        outputBlock->addSingleInput("store data arrays", false, "Whether to store .egsdat files during the simulation, to allow for restarting crashed runs. Defaults to yes.", {"yes", "no"});
+        outputBlock->addSingleInput("verbose", false, "Whether to print extra information during the simulation. Defaults to no.", {"yes", "no"});
+        shared_ptr<EGS_BlockInput> outputScanBlock = outputBlock->addBlockInput("scan output");
+        outputScanBlock->addSingleInput("scan file", false, "The filename to output the scan from the simulation.");
+        outputScanBlock->addSingleInput("blank scan", false, "The filename of a blank scan that you generated previously.");
+        outputScanBlock->addSingleInput("scan type", false, "The type of scan to generate. Defaults to none.", {"blank", "real", "ideal", "scatter", "real_ideal", "all", "none"});
+        shared_ptr<EGS_BlockInput> profileBlock = outputBlock->addBlockInput("xy-profile");
+        auto profOutPtr = profileBlock->addSingleInput("output by", false, "Whether the 'scan regions' list corresponds to global XYZgeometry region numbers, or indices in the x- or y- profile ('locations'). Defaults to off.", {"off", "regions", "locations"});
+        auto profTypePtr = profileBlock->addSingleInput("scan type", false, "Whether the scan region list corresponds to a profile along x or y. Defaults to x-scan.", {"x-scan", "y-scan"});
+        profTypePtr->addDependency(profOutPtr, "locations");
+        profileBlock->addSingleInput("scan regions", false, "A list of region numbers or profile indices to produce an output profile.");
+
+        // Variance reduction
+        shared_ptr<EGS_BlockInput> vrtBlock = appInput->addBlockInput("variance reduction");
+        vrtBlock->setAppName("egs_cbct");
+        vrtBlock->addSingleInput("scoring type", false, "The kerma scoring method. Track length scoring uses photons crossing the scoring plane, while forced detection uses photons aimed at the scoring plane. Defaults to forced_detection.", {"forced_detection", "track_length"});
+        auto deltaPtr = vrtBlock->addSingleInput("delta transport medium", false, "The name of the medium with the maximum cross section, to be used for Woodcock transport. This must be used when splitting is turned on.");
+        vrtBlock->addSingleInput("mfp transform", false, "The eta0 parameter for path length biasing, where 2*eta0**2/(eta + eta0)**3.");
+        auto fsSplitPtr = vrtBlock->addSingleInput("FS splitting", false, "Photons aimed at detector are split Np times, otherwise Russian rouletted with probability 1/Ns and split Ns times: 'Np Ns'.");
+        auto rdisSplitPtr = vrtBlock->addSingleInput("RDIS splitting", false, "Photons aimed at detector are split Np times, otherwise Russian rouletted with probability 1/Ns and split Ns times: 'Np Ns'. Use RDIS splitting setup to configure.");
+
+        auto rdisSetupBlock = vrtBlock->addBlockInput("RDIS splitter setup");
+        rdisSetupBlock->addSingleInput("signal type", false, "Whether the type of signal is attenuated (primary) or scattered. Defaults to scattered.", {"attenuated", "scattered", "scattered average", "scattered total"});
+        rdisSetupBlock->addSingleInput("splitter geometry", true, "The number of voxels of the splitter in x, y and z: 'nx ny nz'.");
+        rdisSetupBlock->addSingleInput("minimum splitting", false, "A minimum splitting number cutoff, so that splitting numbers don't become too small. Defaults to 10.");
+        rdisSetupBlock->addSingleInput("maximum splitting", false, "A maximum splitting number cutoff, so that splitting numbers don't become too large. Defaults to 1000.");
+        auto pdisSplitPtr = vrtBlock->addSingleInput("PDIS splitting", false, "Photons aimed at detector are split Np times, otherwise Russian rouletted with probability 1/Ns and split Ns times: 'Np Ns'. Optionally also include 'attenuation plane' and/or 'PDIS corrector setup' blocks.");
+
+        auto attPlaneBlock = vrtBlock->addBlockInput("attenuation plane");
+        attPlaneBlock->addSingleInput("attenuation medium", false, "The name of the medium to use for attenuation calculations. If omitted, an 'average' medium is calculated.");
+        addTransformationBlock(attPlaneBlock);
+        auto pdisBlock = vrtBlock->addBlockInput("PDIS corrector setup");
+        pdisBlock->addSingleInput("corrector geometry", true, "The number of voxels of the corrector in x, y and z: 'nx ny nz'.");
+        pdisBlock->addSingleInput("minimum correction", false, "The minimum correction allowed. Defaults to 0.");
+        pdisBlock->addSingleInput("maximum correction", false, "The maximum correction allowed. Defaults to 100.");
+        pdisBlock->addSingleInput("adaptive grid", false, "Whether to use an adaptive grid, starting from a lower resolution. Defaults to no.", {"yes", "no"});
+        pdisBlock->addSingleInput("update step", false, "The grid is changed after this number of updates. Defaults to 1.");
+        pdisBlock->addSingleInput("maximum resolution", false, "The maximum resolution to use. Defaults to the number of x-voxels in the XYZgeometry that is the simulation geometry.");
+
+        fsSplitPtr->addDependency(rdisSplitPtr, "", true);
+        fsSplitPtr->addDependency(pdisSplitPtr, "", true);
+        rdisSplitPtr->addDependency(fsSplitPtr, "", true);
+        rdisSplitPtr->addDependency(pdisSplitPtr, "", true);
+        pdisSplitPtr->addDependency(fsSplitPtr, "", true);
+        pdisSplitPtr->addDependency(rdisSplitPtr, "", true);
+
+        // Smoothing options
+        shared_ptr<EGS_BlockInput> smoothingBlock = appInput->addBlockInput("smoothing options");
+        smoothingBlock->setAppName("egs_cbct");
+        smoothingBlock->addSingleInput("nmax", false, "The maximum 1D smoothing half-window size, in pixels.");
+        smoothingBlock->addSingleInput("nmax2d", false, "The maximum 2D smoothing half-window size, in pixels.");
+        smoothingBlock->addSingleInput("chi2max", false, "A chi2 tolerance parameter, set close to 1 for strict (window shrinks aggressively), or larger for stronger smoothing.");
 
         return appInput;
     }
@@ -4300,37 +4384,120 @@ extern "C" {
         example = {
         R"(
 # egs_cbct example input
+:start cbct setup:
+    minimum angle = 0
+    maximum angle = 360
+    step  = -45
+    rotation axis = z
+:stop cbct setup:
+
 :start scoring options:
-    calculation type = planar                   # planar, volumetric, both, or ray-tracing
-    angle = 0
-    orbit = 0
-    step = 0
-    
-    # only available for planar calculation type
+
+    calculation type = planar # fixed for now as only scoring at a plane
+
+    :start calculation geometry:
+        #geometry name = blank_phantom # use this one first to create blank scan
+        geometry name = phantom
+    :stop calculation geometry:
+
     :start planar scoring:
-        surrounding medium = vacuum             # defaults to vaccum
-        target uncertainty = 1%                 # defaults to 1%
-        maximum Aatt fraction = 0.1             # defaults to 0.1
+        RMSE cutoff = 0.5
+        surrounding medium = VACUUM #AIR521ICRU
         screen resolution = 64 64
-        uncertainty estimation = 1
-        voxel size = 1.25
-        muen file = replace with your own
+        pixel size = 1.25
+        :start transformation:
+            translation = 55 0 0
+            rotation = 0 1.570796326794896619 0
+        :stop transformation:
+        # Uses file provided in the distribution
+        muen file = $HEN_HOUSE/user_codes/egs_fac/examples/muen_air.data
     :stop planar scoring:
 
-    #############################################
-    # Smoothing of the scatter distribution.
-    # Shown to contribute about 50% of the
-    # large efficiency increase when estimating
-    # scatter. This part uses a 2D locally adaptive
-    # Savitzky-Golay filter.
-    #############################################
-    start smoothing options:
-        nmax = 10
-        nmax2d = 6
-        chi2max = 2
-    :stop smoothing options:
-
 :stop scoring options:
+
+:start output options:
+    display type = scattered # total, attenuated, scattered
+    store signal map  = no # yes, no (default)
+    store data arrays = yes # yes (default), no
+    #verbose = yes # no (default), yes
+    :start scan output:
+        ###############################################
+        # Use the 2 lines below to produce a blank scan
+        ###############################################
+        #scan file = $EGS_HOME/egs_cbct/blank_coll_64.scan
+	#scan type = blank
+        ###############################################
+        # Use the 3 lines below to produce real scans
+        ###############################################
+        scan file  = $EGS_HOME/egs_cbct/scan_w5br_coll_64.scan
+        blank scan = $EGS_HOME/egs_cbct/blank_coll_64.scan
+	scan type = scatter
+        ###############################################
+    :stop scan output:
+:stop output options:
+
+######
+# Not needed for blank scan calculations. For real scans one should
+# avoid using VRTs since these techniques are aimed at enhancing scatter
+# but could cause undersampling of the primary contribution for instance.
+######
+:start variance reduction:
+    #scoring type = track_length      # scores photons CROSSING scoring plane
+    scoring type =  forced_detection  # scores photons AIMED at scoring plane (forced detection)
+    #mfp transform = 40
+    delta transport medium = ICRPBONE521ICRU
+
+    ####################################
+    # FS # Could be used for measured scan
+    ####################################
+    # Simplest splitting scheme. Gives some gain
+    # even when computing a "measured" scan.
+    # Combined with smoothing gives already
+    # 1000 times increase in efficiency for a chest case.
+    # Use of the other more sophisticated splitting
+    # schemes gives a factor of 2 over FS
+    ####################################
+    #FS splitting = 70 120 # Np Ns
+
+    ################################
+    # RDIS # Uncomment lines below!#
+    ################################
+    #RDIS splitting = 120 120 # Np Ns
+    #################################################
+    # Splitter used in conjunction with RDIS. Required.
+    # Defines importance regions in a phantom. Number
+    # of importance regions cannot be larger than the
+    # number of phantom regions and MUST be a factor
+    # of the number of phantom regions.
+    #################################################
+    #:start RDIS splitter setup:
+        splitter geometry = 20 20 20
+        minimum splitting = 40
+        maximum splitting = 1000
+    #:stop RDIS splitter setup:
+
+    ###########################################
+    # PDIS # Uncomment lines below !          #
+    ###########################################
+    PDIS splitting = 0.8 30 # f_split Ns
+    #:start attenuation plane:
+        :start transformation:
+            translation = 21.21320343559642573 0 0
+            rotation = 0 1.570796326794896619 0
+        :stop transformation:
+        attenuation medium = H2O521ICRU
+    #:stop attenuation plane:
+    #################################################
+    # Corrector used in conjunction with PDIS. Optional
+    # Corrects for the fact that the estimated contribution
+    # to signal is made before the interaction.
+    #################################################
+    #:start PDIS corrector setup:
+        corrector geometry = 10 10 10
+        minimum correction = 0.5
+    #:stop PDIS corrector setup:
+
+:stop variance reduction:
 )"};
         return example;
     }

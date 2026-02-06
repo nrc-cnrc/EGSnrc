@@ -157,32 +157,33 @@
 # Didn't want to overwhelm with too many files!
 ###########################################
 :start cbct setup:
-        orbit = 360.0
-        step  = -45
-        z-rotation = 0
+    minimum angle = 0
+    maximum angle = 360
+    step  = -45
+    rotation axis = z
 :stop cbct setup:
 
 :start scoring options:
 
-        calculation type = planar # fixed for now as only scoring at a plane
+    calculation type = planar # fixed for now as only scoring at a plane
 
-        :start calculation geometry:
-           #geometry name = blank_phantom # use this one first to create blank scan
-            geometry name = phantom
-        :stop calculation geometry:
+    :start calculation geometry:
+        #geometry name = blank_phantom # use this one first to create blank scan
+        geometry name = phantom
+    :stop calculation geometry:
 
-        :start planar scoring:
-           minimum Kscat fraction = 0.5
-           surrounding medium = VACUUM #AIR521ICRU
-           screen resolution = 64 64
-           voxel size = 1.25
-           :start transformation:
-              translation = 55 0 0
-              rotation = 0 1.570796326794896619 0
-           :stop transformation:
-            # Uses file provided in the distribution
-            muen file = $HEN_HOUSE/user_codes/egs_fac/examples/muen_air.data
-        :stop planar scoring:
+    :start planar scoring:
+        RMSE cutoff = 0.5
+        surrounding medium = VACUUM #AIR521ICRU
+        screen resolution = 64 64
+        pixel size = 1.25
+        :start transformation:
+            translation = 55 0 0
+            rotation = 0 1.570796326794896619 0
+        :stop transformation:
+        # Uses file provided in the distribution
+        muen file = $HEN_HOUSE/user_codes/egs_fac/examples/muen_air.data
+    :stop planar scoring:
 
 :stop scoring options:
 
