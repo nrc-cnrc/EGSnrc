@@ -843,7 +843,7 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
 
     // If we didn't get the library tag, we might be in a top-level block
     // like a geometry definition. Just return the block with the matching title
-    shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput(blockTitle.toStdString());
+    shared_ptr<EGS_BlockInput> inputBlock = inputStruct->getBlockInput(blockTitle.toStdString(), parentTitle.toStdString());
 
     return inputBlock;
 }

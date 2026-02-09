@@ -85,7 +85,7 @@ vector<shared_ptr<EGS_BlockInput>> EGS_InputStruct::getBlockInputs() {
     return blockInputs;
 }
 
-shared_ptr<EGS_BlockInput> EGS_InputStruct::getBlockInput(string title) {
+shared_ptr<EGS_BlockInput> EGS_InputStruct::getBlockInput(string title, string parentTitle) {
     // Search for top-level matches first
     for (auto &block: blockInputs) {
         if (egsEquivStr(block->getTitle(), title)) {
@@ -95,6 +95,9 @@ shared_ptr<EGS_BlockInput> EGS_InputStruct::getBlockInput(string title) {
 
     // If not found as a top-level block, do a recursive search
     for (auto &block: blockInputs) {
+        if (egsEquivStr(title, "planar scoring") && !egsEquivStr(block->getTitle(), parentTitle.c_str())) {
+            continue;
+        }
         // Do a search (this calls the EGS_BlockInput version of getBlockInput)
         auto foundBlock = block->getBlockInput(title);
         if (foundBlock) {
@@ -316,6 +319,7 @@ shared_ptr<EGS_SingleInput> EGS_BlockInput::getSingleInput(string inputTag, stri
 }
 
 shared_ptr<EGS_BlockInput> EGS_BlockInput::getBlockInput(string title) {
+
     if (egsEquivStr(blockTitle, title)) {
         return shared_from_this();
     }
@@ -323,9 +327,9 @@ shared_ptr<EGS_BlockInput> EGS_BlockInput::getBlockInput(string title) {
         for (auto &block: blockInputs) {
             if (egsEquivStr(block->getTitle(), title)) {
                 return block;
-                // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
             }
             else if (egsEquivStr(block->getTitle(), "shape") && (egsEquivStr(title, "source shape") || egsEquivStr(title, "target shape"))) {
+                // Handle the special case where "target shape" and "source shape" for egs_collimated_source need to match just "shape".
                 return block;
             }
             else {
