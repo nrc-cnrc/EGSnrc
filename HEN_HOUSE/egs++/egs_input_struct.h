@@ -291,7 +291,7 @@ public:
     vector<shared_ptr<EGS_BlockInput>> getBlockInputs();
 
     /*! \brief Get the input block named \a title. */
-    shared_ptr<EGS_BlockInput> getBlockInput(string title);
+    shared_ptr<EGS_BlockInput> getBlockInput(string title, string parentTitle = "");
 
     /*! \brief Get the input block \a blockTitle that contains the library \a libraryName. */
     shared_ptr<EGS_BlockInput> getLibraryBlock(string blockTitle, string libraryName);

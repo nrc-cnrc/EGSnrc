@@ -4397,6 +4397,7 @@ void GeometryViewControl::setApplication() {
 
     selectedApplication = newlySelectedApp;
     egsinpEdit->setInputStruct(inputStruct);
+    egsinpEdit->validateEntireInput();
 }
 
 vector<string> findDensityCorrectionInputs(string compound_dir) {
