@@ -40,7 +40,9 @@
 
 Density effect correction calculations from {\tt NIST ESTAR} have been fully integrated into EGSnrc. Users may now specify the media data in the .egsinp file and the density correction factors will be computed on-the-fly by the {\tt ESTAR} module in EGSnrc. This allows users to skip the step of manually generating density correction files using the {\tt ESTAR} website or standalone application. In addition to convenience, a number of improvements were made to the calculations.
 
-There are two ways to define materials that will enable ESTAR to calculate density corrections. The user may either provide a list of compounds that make up a mixture, using the {\tt mixture compounds} input, or they may provide a list of {\tt elements} and the {\tt number of atoms} for each. A list of the {\tt mass fractions} for each of the elements of compounds must then be provided, along with the {\tt bulk density}. Users can also optionally specify the {\tt ivalue} if they wish to override the default value calculated by ESTAR.
+There are two ways to define materials that will enable ESTAR to calculate density corrections. The user may either provide a list of compounds that make up a mixture, using the {\tt mixture compounds} input, or they may provide a list of {\tt elements} and the {\tt number of atoms} for each. A list of the {\tt mass fractions} for each of the elements of compounds must then be provided, along with the {\tt bulk density}. {\em Warning:} these lists must be comma separated, not only space separated.
+
+Users can also optionally specify the {\tt ivalue} (mean excitation energy, in MeV) if they wish to override the default value calculated by ESTAR.
 
 For comparison with existing density correction files, use the input option {\tt output density file} to provide the path and name of the file that will be created. If no path is provided, it is placed in the current directory. This also allows the user to save the density corrections to be re-used easily, or for record-keeping.
 
