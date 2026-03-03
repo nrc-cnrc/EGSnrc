@@ -344,12 +344,12 @@ extern "C" {
         scoreBlock->setAppName("egs_phd");
 
         shared_ptr<EGS_BlockInput> specBlock = scoreBlock->addBlockInput("spectrum");
-        specBlock->addSingleInput("label", false, "");
-        specBlock->addSingleInput("Emin", false, "");
-        specBlock->addSingleInput("Emax", false, "");
-        specBlock->addSingleInput("bins", false, "");
-        specBlock->addSingleInput("spectrum file", false, "");
-        
+        specBlock->addSingleInput("label", false, "The name of a region label that refers to the scoring regions. This label must be defined in the geometry using the 'set label' input.");
+        specBlock->addSingleInput("Emin", false, "The minimum energy for the energy bins.");
+        specBlock->addSingleInput("Emax", false, "The maximum energy for the energy bins.");
+        specBlock->addSingleInput("bins", false, "The number of energy bins.");
+        specBlock->addSingleInput("spectrum file", false, "The filepath for an output file that will contain the deposited energy spectrum.");
+
         return appInput;
     }
 

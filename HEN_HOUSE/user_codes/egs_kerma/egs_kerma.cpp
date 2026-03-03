@@ -1932,7 +1932,42 @@ extern "C" {
         shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
         scoreBlock->setAppName("egs_kerma");
         shared_ptr<EGS_BlockInput> calcBlock = scoreBlock->addBlockInput("calculation geometry");
-        scoreBlock->addSingleInput("correlated geometries", false, "");
+        calcBlock->addSingleInput("geometry name", true, "The name of the geometry to use as the simulation geometry.");
+
+        auto regPtr = calcBlock->addSingleInput("scoring regions", false, "A list of the regions to score in.");
+        auto regRangePtr = calcBlock->addSingleInput("scoring region ranges", false, "A list of pairs of regions, defining inclusive ranges to score in.");
+        auto regStartPtr = calcBlock->addSingleInput("scoring start region", false, "A list of regions to start scoring in, paired with corresponding 'scoring stop region' inputs to create ranges.");
+        auto regStopPtr = calcBlock->addSingleInput("scoring stop region", false, "A list of regions to stop scoring in, paired with corresponding 'scoring start region' inputs to create ranges.");
+        auto regIncrPtr = calcBlock->addSingleInput("incremental scoring regions", false, "A list of triplets: the start region, the stop region, and the region step size (i.e. ir_min ir_max ir_delta). This creates ranges of regions with steps between each included region.");
+        regPtr->addDependency(regRangePtr, "", true);
+        regPtr->addDependency(regStartPtr, "", true);
+        regPtr->addDependency(regStopPtr, "", true);
+        regPtr->addDependency(regIncrPtr, "", true);
+        regRangePtr->addDependency(regPtr, "", true);
+        regRangePtr->addDependency(regStartPtr, "", true);
+        regRangePtr->addDependency(regStopPtr, "", true);
+        regRangePtr->addDependency(regIncrPtr, "", true);
+        regStartPtr->addDependency(regPtr, "", true);
+        regStartPtr->addDependency(regRangePtr, "", true);
+        regStartPtr->addDependency(regStopPtr, "", false);
+        regStartPtr->addDependency(regIncrPtr, "", true);
+        regStopPtr->addDependency(regPtr, "", true);
+        regStopPtr->addDependency(regRangePtr, "", true);
+        regStopPtr->addDependency(regStartPtr, "", false);
+        regStopPtr->addDependency(regIncrPtr, "", true);
+        regIncrPtr->addDependency(regPtr, "", true);
+        regIncrPtr->addDependency(regRangePtr, "", true);
+        regIncrPtr->addDependency(regStartPtr, "", true);
+        regIncrPtr->addDependency(regStopPtr, "", true);
+
+        auto regMassPtr = calcBlock->addSingleInput("scoring region masses", false, "A list of the masses for each scoring region.");
+        auto volMassPtr = calcBlock->addSingleInput("scoring volume mass", false, "The total mass of the scoring volume.");
+        regMassPtr->addDependency(volMassPtr, "", true);
+        volMassPtr->addDependency(regMassPtr, "", true);
+        calcBlock->addSingleInput("excluded regions", false, "Exclude histories that have interacted in these regions.");
+        calcBlock->addSingleInput("FD geometry", false, "The name of a geometry to be used for forced detection.");
+
+        scoreBlock->addSingleInput("correlated geometries", false, "Two geometry names where the ratios between the output values should be calculated (provides better uncertainty estimate). May repeat this input multiple times.");
 
         shared_ptr<EGS_BlockInput> fluBlock = scoreBlock->addBlockInput("fluence scoring");
         fluBlock->addSingleInput("minimum energy", false, "");
