@@ -642,6 +642,57 @@ int EGS_GammaSpecApplication::startNewShower() {
     return 0;
 }
 
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
 
-// main
-APP_MAIN(EGS_GammaSpecApplication);
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_phd");
+
+        shared_ptr<EGS_BlockInput> specBlock = scoreBlock->addBlockInput("output spectrum");
+        specBlock->addSingleInput("scoring regions", true, "A list of regions (or labels) that denote the sensitive regions for scoring.");
+        specBlock->addSingleInput("minimum spectrum energy", false, "The minimum energy for the energy bins. Defaults to 0.");
+        specBlock->addSingleInput("maximum spectrum energy", false, "The maximum energy for the energy bins. Defaults to the maximum energy in the source.");
+        specBlock->addSingleInput("number of bins", false, "The number of energy bins. Defaults to 1000.");
+        specBlock->addSingleInput("automatic analysis energies", false, "Get the analysis energies automatically, using all of the gamma energies from the radionuclide decay scheme. They will be combined with the manually entered 'gamma analysis energies', so make sure they don't overlap. Only works for egs_radionuclide_source. Defaults to yes.", {"Yes", "No"});
+        specBlock->addSingleInput("gamma analysis energies", false, "The energies to use for analysis. I.e. coincidence summing corrections will be calculated for each of these.");
+        specBlock->addSingleInput("minimum detectable energy", false, "The minimum energy from a single shower that can be detected in the sensitive regions. If the total energy deposited by the shower is less than this value, it is not added to the recorded spectrum. Defaults to 1e-6.");
+
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+
+    :start output spectrum:
+        scoring regions = crystal_no_dead_label # The region numbers or region label(s) denoting the sensitive regions
+
+        minimum spectrum energy  = 0.0 # Optional, MeV, default=0, minimum energy in output spectrum
+        maximum spectrum energy = 0.4 # Optional, MeV, defaults=maximum in source, maximum energy in output spectrum
+        number of bins  = 2000 # Optional, default=1000, number of bins in output spectrum
+
+        # Optional, yes or no, default=yes, get the analysis energies automatically, using all of the gamma energies from the radionuclide decay scheme. They will be combined with the manually entered 'gamma analysis energies', so make sure they don't overlap. Only works for egs_radionuclide_source.
+        automatic analysis energies = no
+
+        # Example: these are peaks of interest for Ba-133, in MeV
+        # Optional, coincidence summing corrections will be calculated for each of these
+        gamma analysis energies = .0309 .035 .0531 .0796 .0810 .1606 .2232 .2764 .3028 .356 .3838
+
+        # Optional, MeV, default=1e-6, the minimum energy from a single shower that can be detected in the sensitive regions. If the total energy deposited by the shower is less than this value, it is not added to the recorded spectrum.
+        minimum detectable energy = 1e-6
+    :stop output spectrum:
+
+:stop scoring options:
+)"};
+        return example;
+    }
+}
+
+#ifdef BUILD_APP_LIB
+    APP_LIB(EGS_GammaSpecApplication);
+#else
+    APP_MAIN(EGS_GammaSpecApplication);
+#endif

@@ -95,7 +95,8 @@ shared_ptr<EGS_BlockInput> EGS_InputStruct::getBlockInput(string title, string p
 
     // If not found as a top-level block, do a recursive search
     for (auto &block: blockInputs) {
-        if (egsEquivStr(title, "planar scoring") && !egsEquivStr(block->getTitle(), parentTitle.c_str())) {
+        // Special exceptions for application input blocks that have the same title as an existing input block
+        if ((egsEquivStr(title, "planar scoring") || egsEquivStr(title, "spectrum")) && !egsEquivStr(block->getTitle(), parentTitle.c_str())) {
             continue;
         }
         // Do a search (this calls the EGS_BlockInput version of getBlockInput)
