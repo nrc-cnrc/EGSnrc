@@ -643,10 +643,18 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         libName = libName.right(libName.length() - lib_prefix.length());
         //egsInformation("Trying %s\n", libName.toLatin1().data());
 
-        // Adds the button to the menu
-        QAction *action = exampleMenu2->addAction(libName);
-        action->setData(libName);
-        connect(action,  &QAction::triggered, this, [this] { setApplication(); });
+        // Check if the application has the getAppSpecificInputs, and only add it to the drop-down menu if it does
+        EGS_Library app_lib(libName.toLatin1().data(),lib_dir.c_str());
+        if (app_lib.load()) {
+            getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppSpecificInputs");
+
+            if (getAppInputs) {
+                // Adds the button to the menu
+                QAction *action = exampleMenu2->addAction(libName);
+                action->setData(libName);
+                connect(action,  &QAction::triggered, this, [this] { setApplication(); });
+            }
+        }
     }
     editorLayout->setMenuBar(menuBar);
 
