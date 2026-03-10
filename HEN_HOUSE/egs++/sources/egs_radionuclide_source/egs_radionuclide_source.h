@@ -24,6 +24,7 @@
 #  Author:          Reid Townson, 2016
 #
 #  Contributors:    Martin Martinov
+#                   Patrick Saull
 #
 ###############################################################################
 */
@@ -1020,6 +1021,11 @@ public:
     /*! \brief Returns the emission time of the most recent particle */
     double getTime() const {
         return time;
+    };
+
+    /*! \brief Returns the time of the last emission for decay */
+    double getLastTime() const {
+        return lastDisintTime;
     };
 
     /*! \brief Get the total possible length of the experiment that is being modelled
