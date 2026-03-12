@@ -2907,8 +2907,7 @@ void GeometryViewControl::setRotationPoint(EGS_Vector hitCoord) {
 }
 
 void GeometryViewControl::quitApplication() {
-    //delete gview;
-    close();
+    QApplication::quit();
 }
 
 void GeometryViewControl::setProjectionLineEdit() {
@@ -4417,7 +4416,7 @@ vector<string> findDensityCorrectionInputs(string compound_dir) {
     compound_dir += "density_corrections";
     compound_dir += fs;
     compound_dir += "compounds";
-    egsInformation("density file path: %s\n", compound_dir.c_str());
+    //egsInformation("density file path: %s\n", compound_dir.c_str());
 
     DIR *dir;
     struct dirent *ent;
