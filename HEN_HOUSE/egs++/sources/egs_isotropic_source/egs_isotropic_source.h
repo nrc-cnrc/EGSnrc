@@ -115,6 +115,14 @@ It is defined most simply using the following input:
 :stop source:
 \endverbatim
 
+Collimation of the source may be performed by providing a range over phi (0–360
+degrees) or theta (0–180 degrees). In both cases, max must be strictly greater
+than min. For phi, note that the range may straddle the 0/360 degree boundary.
+For example, to collimate from 350 to 10 degrees, set min_phi = 350 and max_phi
+= 370 (i.e. add 360 to the desired upper value). For theta, no such wrap-around
+is possible: max_theta must simply be greater than min_theta within the 0–180
+degree range.
+
 It is also possible to generate source particles from a more complex shape
 by including or excluding geometry regions. This is done by providing
 the \c geometry name to operate on, a <tt>region selection</tt> mode, and
