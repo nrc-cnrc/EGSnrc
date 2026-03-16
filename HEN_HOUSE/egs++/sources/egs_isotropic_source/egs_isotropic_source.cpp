@@ -113,25 +113,33 @@ EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
             }
         }
     }
-    EGS_Float tmp_theta;
-    err = input->getInput("min theta", tmp_theta);
+    EGS_Float tmp_angle;
+    err = input->getInput("min theta", tmp_angle);
     if (!err) {
-        min_theta = tmp_theta/180.0*M_PI;
+        min_theta = tmp_angle/180.0*M_PI;
     }
 
-    err = input->getInput("max theta", tmp_theta);
+    err = input->getInput("max theta", tmp_angle);
     if (!err) {
-        max_theta = tmp_theta/180.0*M_PI;
+        max_theta = tmp_angle/180.0*M_PI;
     }
 
-    err = input->getInput("min phi", tmp_theta);
-    if (!err) {
-        min_phi = tmp_theta/180.0*M_PI;
+    if (min_theta > max_theta) {
+        egsFatal("EGS_IsotropicSource: max theta must be greater than min theta (theta ranges from 0 to 180 degrees).\n");
     }
 
-    err = input->getInput("max phi", tmp_theta);
+    err = input->getInput("min phi", tmp_angle);
     if (!err) {
-        max_phi = tmp_theta/180.0*M_PI;
+        min_phi = tmp_angle/180.0*M_PI;
+    }
+
+    err = input->getInput("max phi", tmp_angle);
+    if (!err) {
+        max_phi = tmp_angle/180.0*M_PI;
+    }
+
+    if (min_phi > max_phi) {
+        egsFatal("EGS_IsotropicSource: max phi must be greater than min phi. To collimate across the 0/360 degree boundary (e.g. from 300 degrees to 60 degrees), set max phi greater than 360 (e.g. min phi = 300, max phi = 420).\n");
     }
 
     buf_1 = cos(min_theta);
