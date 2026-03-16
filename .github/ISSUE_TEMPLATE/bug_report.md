@@ -32,7 +32,7 @@ Explain what actually happened.
 - OS: `Linux | Windows | macOS | Other: ...`
 - EGSnrc version: `v2023 | branch | commit`
 
-## Additional Information
+## Additional information
 
 Add any other relevant context, such as simulation input or output, screenshots,
 logs, etc.
@@ -43,5 +43,5 @@ provide the installation log, found in `HEN_HOUSE/log`.
 ## Contribute
 
 If you can fix this bug yourself, feel free to submit a [pull
-request](https://github.com/nrc-cnrc/EGSnrc/pulls)!! Your contributions are
+request](https://github.com/nrc-cnrc/EGSnrc/pulls)! Your contributions are
 highly appreciated and help improve the project for everyone.
