@@ -40,6 +40,9 @@
 
 static bool EGS_ANGULAR_SPREAD_SOURCE_LOCAL inputSet = false;
 
+// 1 / (2*sqrt(2*ln(2)))
+static const EGS_Float FWHM_TO_SIGMA = 0.4246609001440095285;
+
 EGS_AngularSpreadSource::EGS_AngularSpreadSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSource(input,f), source(0), sigma(0) {
     EGS_Input *isource = input->takeInputItem("source",false);
@@ -56,14 +59,35 @@ EGS_AngularSpreadSource::EGS_AngularSpreadSource(EGS_Input *input,
         else {
             source = EGS_BaseSource::getSource(sname);
             if (!source) egsWarning("EGS_AngularSpreadSource: a source named %s"
-                                        " does not exist\n");
+                                        " does not exist\n", sname.c_str());
         }
     }
-    int err = input->getInput("sigma",sigma);
-    if (!err) {
-        if (sigma < 0) {
-            sigma = -0.4246609001440095285*sigma;
+    // Check for the new 'fwhm' input key first
+    EGS_Float fwhm = 0;
+    int err_fwhm = input->getInput("fwhm",fwhm);
+    int err_sigma = input->getInput("sigma",sigma);
+
+    if (!err_fwhm && !err_sigma) {
+        egsFatal("EGS_AngularSpreadSource: both 'sigma' and 'fwhm' inputs "
+                 "provided. Please use only one.\n");
+    }
+    else if (!err_fwhm) {
+        if (fwhm < 0) {
+            egsFatal("EGS_AngularSpreadSource: 'fwhm' must be positive, "
+                     "got %g\n", fwhm);
         }
+        // Convert FWHM (degrees) to sigma (radians), then store as sigma^2 (rad^2)
+        sigma = FWHM_TO_SIGMA * fwhm;
+        sigma *= M_PI/180;
+        sigma *= sigma;
+    }
+    else if (!err_sigma) {
+        if (sigma < 0) {
+            egsFatal("EGS_AngularSpreadSource: negative 'sigma' input is no "
+                     "longer supported. To specify the angular spread as FWHM, "
+                     "use the 'fwhm' input key instead.\n");
+        }
+        // Convert sigma (degrees) to sigma^2 (rad^2)
         sigma *= M_PI/180;
         sigma *= sigma;
     }
