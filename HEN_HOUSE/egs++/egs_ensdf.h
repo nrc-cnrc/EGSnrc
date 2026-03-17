@@ -563,6 +563,9 @@ private:
            augerEnergies,
            augerIntensities;
     ParentRecord *previousParent;
+
+    // The ENSDF format defines an isomeric transition as having a half-life of greater than 0.1 seconds
+    float isomerCutoff = 0.1;
 };
 
 

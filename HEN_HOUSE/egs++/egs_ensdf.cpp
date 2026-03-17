@@ -562,7 +562,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     }
 
     // Check for isomeric transitions with low probability
-    // This was specifically implemented to handle Th-134 in the LNHB library. I haven't found any other radionuclide with a ENSDF file formatted like this.
+    // This was specifically implemented to handle Th-234 in the LNHB library. I haven't found any other radionuclide with a ENSDF file formatted like this.
     for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
             it!=myLevelRecords.end(); it++) {
 
@@ -574,7 +574,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
                 // Check if this is an isomer (T1/2 > 0.1s as defined by ensdf format)
                 // If the spin is larger this isomeric transition is probably unlikely
                 // We don't have a way to extract the probability, so we'll just neglect the lower probability level
-                if ((*itprev)->getHalfLife() > 0.1 && (*itprev)->getSpin() < (*it)->getSpin()) {
+                if ((*itprev)->getHalfLife() > isomerCutoff && (*itprev)->getSpin() < (*it)->getSpin()) {
 
                     egsWarning("\nEGS_Ensdf::parseEnsdf: Warning: Levels with identical energy, long half-life and different spin have been detected. Assuming a low probability isomeric transition - the lower probability level will be removed. Removing level with energy = %f, spin = %d. Decays toward and transitions away from this level will also be removed. Double check the decay scheme and report any issues!\n\n", (*it)->getEnergy(), (*it)->getSpin());
 
@@ -2034,7 +2034,7 @@ unsigned short Record::parseSpin(int startPos, int endPos) {
         egsWarning("Record::parseSpin: Error: Record is empty\n");
         return -5;
     }
-    if (lines.front().length() < startPos) {
+    if (lines.front().length() < endPos) {
         egsWarning("Record::parseSpin: Warning: Record too short to "
                    "contain desired quantity\n");
         return -5;
@@ -2043,12 +2043,19 @@ unsigned short Record::parseSpin(int startPos, int endPos) {
     string spinParityStr = egsTrimString(lines.front().substr(startPos-1,
                                          endPos-startPos+1));
 
-    size_t digitIndex = -1;
+    size_t digitIndex;
+    bool foundDigit = false;
     for (auto i = 0; i < spinParityStr.length(); i++) {
         if (isdigit(spinParityStr[i])) {
             digitIndex = i;
+            foundDigit = true;
             break;
         }
+    }
+
+    if (!foundDigit) {
+        egsWarning("Record::parseSpin: Warning: Spin didn't contain a number\n");
+        return -5;
     }
 
     unsigned short spin = spinParityStr[digitIndex] - '0';
@@ -2060,11 +2067,11 @@ unsigned short Record::parseSpin(int startPos, int endPos) {
 // 0 (false) is negative, 1 (true) is positive
 bool Record::parseParity(int startPos, int endPos) {
     if (lines.empty()) {
-        egsWarning("Record::parseSpin: Error: Record is empty\n");
+        egsWarning("Record::parseParity: Error: Record is empty\n");
         return -5;
     }
     if (lines.front().length() < startPos) {
-        egsWarning("Record::parseSpin: Warning: Record too short to "
+        egsWarning("Record::parseParity: Warning: Record too short to "
                    "contain desired quantity\n");
         return -5;
     }
@@ -2072,16 +2079,18 @@ bool Record::parseParity(int startPos, int endPos) {
     string spinParityStr = egsTrimString(lines.front().substr(startPos-1,
                                          endPos-startPos+1));
 
-    size_t digitIndex = -1;
+    size_t signIndex;
+    bool foundSign = false;
     for (auto i = 0; i < spinParityStr.length(); i++) {
         if (spinParityStr[i] == '-' || spinParityStr[i] == '+') {
-            digitIndex = i;
+            signIndex = i;
+            foundSign = true;
             break;
         }
     }
 
     bool parity;
-    if (digitIndex < 0 || spinParityStr[digitIndex] == '+') {
+    if (foundSign == false || spinParityStr[signIndex] == '+') {
         parity = true;
     }
     else {
