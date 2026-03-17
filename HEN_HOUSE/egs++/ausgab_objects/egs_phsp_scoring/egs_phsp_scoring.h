@@ -263,7 +263,7 @@ public:
             int latch = app->top_p.latch;
 
             // Skip this particle if it's outside the overall geometry and we're scoring on entry only
-            if(scoredir == 1 && ir < 0) {
+            if (scoredir == 1 && ir < 0) {
                 return 0;
             }
 
@@ -315,7 +315,7 @@ public:
 
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
         // Skip this particle if it's outside the overall geometry and we're scoring on entry only
-        if(scoredir == 1 && ir < 0) {
+        if (scoredir == 1 && ir < 0) {
             return 0;
         }
 
