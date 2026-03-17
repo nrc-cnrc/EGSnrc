@@ -379,11 +379,11 @@ vector<string> egsTokenize(const string &inp);
  * Examples:
  * \code
  * vector<string> tokens = {"5", "10-12", "8", "10"};
- * auto result = egsParseIntegers(tokens.begin(), tokens.end());
+ * auto result = egsParseIntegerRanges(tokens.begin(), tokens.end());
  * // Result: {5, 8, 10, 11, 12}
  *
  * vector<string> tokens2 = {"20-15", "invalid", "18"};
- * auto result2 = egsParseIntegers(tokens2.begin(), tokens2.end());
+ * auto result2 = egsParseIntegerRanges(tokens2.begin(), tokens2.end());
  * // Result: {15, 16, 17, 18, 19, 20}
  * \endcode
  */
