@@ -1105,8 +1105,17 @@ void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs, boo
             }
         }
 
-        // Just increment the insertion position by one, because this token was a number not a label
-        if(!foundLabel) {
+        // Just increment the insertion position by one, because this token was a number not a label.
+        // Precondition: regs must be pre-populated by getNumberRegions() before calling this function
+        // with sanitize=false, so that each non-label token has a corresponding entry already in regs.
+        // Otherwise, advancing insert_pos will walk out of bounds.
+        if (!foundLabel) {
+            if (insert_pos >= regs.size()) {
+                egsFatal("EGS_BaseGeometry::getLabelRegions(): insert_pos out of bounds "
+                        "for geometry %s. Was getNumberRegions() called before "
+                        "getLabelRegions() for input \"%s\"?\n",
+                        getName().c_str(), str.c_str());
+            }
             insert_pos += 1;
         }
     }
@@ -1119,7 +1128,6 @@ void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs, boo
         regs.erase(unique(regs.begin(), regs.end()), regs.end());
     }
 }
-
 
 int EGS_BaseGeometry::setLabels(EGS_Input *input) {
     EGS_Input *i;
