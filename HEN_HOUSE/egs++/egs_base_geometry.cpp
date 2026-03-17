@@ -1063,7 +1063,7 @@ void EGS_BaseGeometry::getNumberRegions(const string &str, vector<int> &regs) {
         for (int i=0; i<tokens.size(); i++) {
             // Search for tokens that are numbers, not strings
             // Push the region numbers onto the regions array
-            if (tokens[i].find_first_not_of(" -0123456789") == std::string::npos) {
+            if (tokens[i].find_first_not_of("-0123456789") == std::string::npos) {
                 regs.push_back(atoi(tokens[i].c_str()));
             }
         }
