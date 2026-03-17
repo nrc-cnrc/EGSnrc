@@ -146,38 +146,11 @@ int phd_app::ausgab(int iarg) {
     // score energy deposited in each region before particle is discarded
     if (iarg <= 4) {
         if (ir >= 0) {
-            score->score(ir, the_epcont->edep);    // don't include weight here; see simulateSingleShower()
+            score->score(ir, the_epcont->edep);    // don't include weight here; see startNewShower()
         }
     }
 
     return 0;
-}
-
-
-// simulate one shower
-int phd_app::simulateSingleShower() {
-
-    // call base class function
-    int err = EGS_AdvancedApplication::simulateSingleShower();
-
-    // sum all energy deposited in the spectrum regions for the current shower
-    EGS_Float myEnergy = 0.0;
-    for (int k=0; k<spectrum_regions.size(); k++) {
-        myEnergy += score->thisHistoryScore(spectrum_regions[k]);
-    }
-
-    // calculate spectrum bin number and score count
-    if (myEnergy > 1e-9) {
-        int mybin = (int)((myEnergy-Emin)/Ebin);
-        if (mybin == nbin) {
-            mybin--;
-        }
-        if (mybin >= 0 && mybin < nbin) {
-            spectrum->score(mybin, initial_weight);          // apply incident particle weight here to the bin count
-        }
-    }
-
-    return err;
 }
 
 
@@ -331,7 +304,29 @@ int phd_app::startNewShower() {
         return res;
     }
 
+    // Whenever we are about to start a new history, first score
+    // the results for the previous history into the PHD spectrum
+    // Caution: This means that the very last history will not be scored
+    // into the PHD spectrum
     if (current_case != last_case) {
+        // sum all energy deposited in the spectrum regions for the current shower
+        EGS_Float myEnergy = 0.0;
+        for (int k=0; k<spectrum_regions.size(); k++) {
+            myEnergy += score->thisHistoryScore(spectrum_regions[k]);
+        }
+
+        // calculate spectrum bin number and score count
+        if (myEnergy > 1e-9) {
+            int mybin = (int)((myEnergy-Emin)/Ebin);
+            if (mybin == nbin) {
+                mybin--;
+            }
+            if (mybin >= 0 && mybin < nbin) {
+                spectrum->score(mybin, initial_weight);          // apply incident particle weight here to the bin count
+            }
+        }
+
+        // Reset the scoring arrays for the new history that's about to start
         score->setHistory(current_case);
         spectrum->setHistory(current_case);
         last_case = current_case;
