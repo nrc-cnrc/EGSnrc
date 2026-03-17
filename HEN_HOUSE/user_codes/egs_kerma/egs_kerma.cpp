@@ -145,7 +145,7 @@ public:
             }
 
             if (flugT) {
-               delete [] flugT;
+                delete [] flugT;
             }
 
             delete [] geoms;
@@ -433,7 +433,7 @@ public:
                     // score photon fluence
                     //--------------------------------------------
                     if (flug) {
-                        if (flugT){
+                        if (flugT) {
                             flugT[ig]->score(ir_sc[i],wt*exp_Att);
                         }
                         EGS_Float e = the_stack->E[np];
@@ -523,7 +523,7 @@ public:
         if (flugT) {
             for (int j=0; j<ngeom; j++) {
                 if (!flugT[j]->storeState(*data_out)) {
-                   return 109+4*(ngeom+j);
+                    return 109+4*(ngeom+j);
                 }
             }
         }
@@ -571,9 +571,9 @@ public:
         }
         if (flugT) {
             for (int j=0; j<ngeom; j++) {
-                 if (!flugT[j]->setState(*data_in)) {
-                     return 109+4*(ngeom+j);
-                 }
+                if (!flugT[j]->setState(*data_in)) {
+                    return 109+4*(ngeom+j);
+                }
             }
         }
 
@@ -808,7 +808,7 @@ public:
                 }
                 egsInformation("  %s\n",line.c_str());
             }
-            else{
+            else {
                 kerma->currentResult(j,r,dr);
                 if (r > 0) {
                     dr = dr/r;
@@ -886,43 +886,10 @@ public:
             spe_output << "@    subtitle size 1.000000\n";
         }
         egsInformation("\n\nDifferential Photon fluence\n"
-                           "===========================\n");
+                       "===========================\n");
         double fe,dfe,fp,dfp;
         for (int j=0; j<ngeom; j++) {
             egsInformation("\n   Geometry: %s \n",geoms[j]->getName().c_str());
-            /* Integral fluence is ouput now in kerma output routine. Do not duplicate!
-               One could argue that it belongs where fluence output is handled.
-               But, it is used in the kerma output routine to obtain mass-energy
-               absorption coefficients.
-            if (flugT) {
-                int count = 0;
-                int nreg = geoms[j]->regions();
-                int irmax_digits = getDigits(max_sc_reg);
-                egsInformation(
-                    "  %*s      m/g            Flu/[cm-2]         %n\n",
-                    irmax_digits,"ir",&count);
-                string line;
-                line.append(count,'-');
-                egsInformation("  %s\n",line.c_str());
-
-                for (int ir = 0; ir < nreg; ir++) {
-                    if (is_sensitive[j][ir]) {
-                        int imed = geoms[j]->medium(ir);
-                        // Per volume
-                        EGS_Float m = mass[j][ir];
-                        EGS_Float normT = F*getMediumRho(imed)/m;
-                        flugT[j]->currentResult(ir,fe,dfe);
-                        if (fe > 0) {
-                            dfe = 100*dfe/fe;
-                        }
-                        else {
-                            dfe = 100;
-                        }
-                        egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%%\n",
-                                       irmax_digits, ir, m,fe*normT, dfe);
-                    }
-                }
-            }*/
 
             if (flug) {
                 /* Diff. fluence currently in whole scoring volume */
@@ -1648,7 +1615,7 @@ int EGS_KermaApplication::initScoring() {
         choice.push_back("yes");
         score_int_flu  = options->getInput("score integral fluence", choice,0);
 
-        if (score_int_flu){
+        if (score_int_flu) {
             // Integral fluence array
             flugT = new EGS_ScoringArray* [ngeom];
             for (int j=0; j<ngeom; j++) {
@@ -1657,10 +1624,13 @@ int EGS_KermaApplication::initScoring() {
         }
 
         vector<string> diff_f_key = {"fluence scoring",
-                                     "differential fluence scoring"};
-        for (short int i = 0; i < diff_f_key.size(); i++){
-            aux = options->takeInputItem( diff_f_key[i] );
-            if ( aux ) break;
+                                     "differential fluence scoring"
+                                    };
+        for (short int i = 0; i < diff_f_key.size(); i++) {
+            aux = options->takeInputItem(diff_f_key[i]);
+            if (aux) {
+                break;
+            }
         }
         /***************************************************
          If input block found, score differential fluence.
@@ -1910,39 +1880,30 @@ void EGS_KermaApplication::describeSimulation() {
 
 
     egsInformation("\nFluence scoring inputs\n"
-                     "======================\n");
+                   "======================\n");
     vector<string> scale;
     scale.push_back("linear");
     scale.push_back("logarithmic");
 
     if (flugT && flug) {
-       egsInformation("---> Scoring differential (%s) and integral fluence\n", scale[flu_s].c_str());
+        egsInformation("---> Scoring differential (%s) and integral fluence\n", scale[flu_s].c_str());
     }
-    else if (flugT){
-       egsInformation("---> Scoring integral fluence\n");
+    else if (flugT) {
+        egsInformation("---> Scoring integral fluence\n");
     }
-    else if (flug){
-       egsInformation("---> Scoring differential (%s) fluence\n", scale[flu_s].c_str());
+    else if (flug) {
+        egsInformation("---> Scoring differential (%s) fluence\n", scale[flu_s].c_str());
     }
     else {
-       egsInformation("---> No fluence scoring requested\n");
+        egsInformation("---> No fluence scoring requested\n");
     }
 
     egsInformation("\n");
 }
 
 #ifdef BUILD_APP_LIB
-APP_LIB(EGS_KermaApplication);
+    APP_LIB(EGS_KermaApplication);
 #else
-APP_MAIN(EGS_KermaApplication);
+    APP_MAIN(EGS_KermaApplication);
 #endif
-// int main(int argc, char **argv) {
-//
-//     EGS_KermaApplication app(argc,argv);
-//     int err = app.initSimulation();
-//     if( err ) return err;
-//     err = app.runSimulation();
-//     if( err < 0 ) return err;
-//     return app.finishSimulation();
-//
-// }
+
