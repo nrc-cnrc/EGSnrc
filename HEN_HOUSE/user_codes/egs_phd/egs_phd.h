@@ -89,9 +89,6 @@ private:
     // initialize scoring
     int initScoring();
 
-    // simulate a single shower
-    int simulateSingleShower();
-
     // accumulate quantities of interest at run time
     int ausgab(int iarg);
 
