@@ -203,7 +203,6 @@ function quit_if_done {
 
         # log host and pid of job 1 in .egsjob file
         echo "\$jobstr: BEGIN host=\$(hostname) pid=\$\$" > $basename.egsjob
-        echo HERE: $basename.egsjob
 
     # job 2 does all the waiting
     elif [ \$job -eq \$[ \$first + 1 ] ]; then
@@ -236,7 +235,7 @@ function quit_if_done {
 
         # offset all jobs by a fixed delay (relative to previous job)
         delta=0.25
-        log "\$jobstr: wait \$delta microseconds (default job offset delay)"
+        log "\$jobstr: wait \$delta seconds (default job offset delay)"
         sleep \$delta
         quit_if_done
 
