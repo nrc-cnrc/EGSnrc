@@ -1049,20 +1049,11 @@ void EGS_BaseGeometry::getNumberRegions(const string &str, vector<int> &regs) {
     if (!str.empty()) {
 
         // Tokenize the input string
-        vector<string> tokens;
-        const char *ptr = str.c_str();
-        do {
-            const char *begin = ptr;
-            while (*ptr != ' ' && *ptr) {
-                ptr++;
-            }
-            tokens.push_back(string(begin, ptr));
-        }
-        while (*ptr++ != '\0');
+        vector<string> tokens = egsTokenize(str);
 
+        // Search for tokens that are numbers, not strings
+        // Push the region numbers onto the regions array
         for (int i=0; i<tokens.size(); i++) {
-            // Search for tokens that are numbers, not strings
-            // Push the region numbers onto the regions array
             if (tokens[i].find_first_not_of("-0123456789") == std::string::npos) {
                 regs.push_back(atoi(tokens[i].c_str()));
             }
@@ -1072,17 +1063,8 @@ void EGS_BaseGeometry::getNumberRegions(const string &str, vector<int> &regs) {
 
 void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
-    // Tokenize the input string - this allows for multiple labels
-    vector<string> tokens;
-    const char *ptr = str.c_str();
-    do {
-        const char *begin = ptr;
-        while (*ptr != ' ' && *ptr) {
-            ptr++;
-        }
-        tokens.push_back(string(begin, ptr));
-    }
-    while (*ptr++ != '\0');
+    // Tokenize the input string
+    vector<string> tokens = egsTokenize(str);
 
     // Start insertion at the beginning of regs
     size_t insert_pos = 0;
