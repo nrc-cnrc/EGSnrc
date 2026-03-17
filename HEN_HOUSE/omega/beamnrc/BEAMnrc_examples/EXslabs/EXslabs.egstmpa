@@ -1,6 +1,6 @@
 EXslabs: pencil beam of 20  MeV electrons thru 100 cm air phase space
 AIR700ICRU
-           0  0   0  0  0  2  0,                 IWATCH,ISTORE,IRESTART,etc
+           0  0   0  0  0  2  0,                 IWATCH,ISTORE,IRESUME,etc
            1000.        1802        9373   0.99 0      0 0 NCASE, etc
  -1  0    0.00000       0.00000       0.00000       0.00000    , IQIN,ISOURCE etc
    0,                                            MONOEN

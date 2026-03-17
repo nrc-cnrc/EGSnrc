@@ -61,7 +61,7 @@ using namespace std;
 #define WARNING_IWATCH    "Wrong IWATCH in input file!\n"
 #define WARNING_STRAND    "Wrong value for random number store mode !\n"
 #define WARNING_STRDAT    "Wrong value for data store mode !\n"
-#define WARNING_IRESTART  "Wrong value for irestart mode !\n"
+#define WARNING_IRESUME   "Wrong value for iresume mode !\n"
 #define WARNING_OUTOPT    "Wrong value for output options !\n"
 #define WARNING_ETRANS    "Wrong value for e- transport options !\n"
 #define WARNING_SPROUT    "Wrong value for stopp. pwr out option !\n"

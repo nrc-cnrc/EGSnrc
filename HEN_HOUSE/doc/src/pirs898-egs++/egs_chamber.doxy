@@ -1512,7 +1512,7 @@ simulation source = the_source
 :start run control:
 
     ncase = 100000000
-    #calculation = restart
+    #calculation = resume
 
 :stop run control:
 

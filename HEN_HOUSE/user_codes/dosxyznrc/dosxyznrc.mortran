@@ -133,7 +133,7 @@
 "     Unit 1   Output summary and results
 "     Unit 2   .egsrns file for storing random numbers
 "     Unit 3   output .3ddose file containing dose arrays
-"     Unit 4   Raw data output file for restarts
+"     Unit 4   Raw data output file for resuming
 "     Unit 5   Input stream - file or terminal
 "     Unit 6   prompts for and echoes input
 "     Unit 8   echoes input cross-section data (usually assigned to a null file)
@@ -290,7 +290,7 @@
 "
 "   Record 13 (9 if NMED=0)
 "            NCASE, IWATCH, TIMMAX, INSEED1, INSEED2,
-"       BEAM_SIZE, ISMOOTH,IRESTART,IDAT,IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,
+"       BEAM_SIZE, ISMOOTH,IRESUME,IDAT,IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,
 "       PARNUM,n_split,ihowfarless,i_phsp_out,i_bindos
 "
 "            NCASE     Number of histories
@@ -313,15 +313,15 @@
 "            ISMOOTH   =1 re-distribute particles when re-start a ph-sp file
 "                       and/or recycle an individual particle
 "                      =0 re-use the ph-sp data once run out (no redistribution)
-"            IRESTART  = 0 first run for this data set (the default)
-"                      = 1 restart of a previous run
+"            IRESUME   = 0 first run for this data set (the default)
+"                      = 1 resume a previous run
 "                      = 2 just create the input file and exit
 "                      = 3 just read in the raw data and do the statistical
 "                          analysis
 "                      = 4 recombine .pardose files from parallel runs
-"            IDAT      = 0 output intermediate files for restarts
+"            IDAT      = 0 output intermediate files for resuming
 "                      = 1 do not output intermediate data files at all
-"                      = 2 output the data file for restart at end only
+"                      = 2 output the data file for resuming at end only
 "            IREJECT   = 0 (default) do not perform charged particle range
 "                          rejection.
 "                      = 1 perform charged particle range rejection.  If
@@ -336,7 +336,7 @@
 "                      going on to the next particle.
 "                      If NRCYCL is set <=0 then NRCYCL is automatically
 "                      calculated to use the entire phase space file with no
-"                      restarts, unless the incident charge is +1 (positron) or
+"                      rewinds, unless the incident charge is +1 (positron) or
 "                      the user filters incident particles based on their LATCH
 "                      values (enflag=3), in which case NRCYCL is set to 0.
 "                      The calculated NRCYCL does not take into account
@@ -348,7 +348,7 @@
 "                      then use of NRCYCL is essential for accurate statistics.
 "                      If you are unsure of how many times to recycle, use
 "                      the automatically-calculated value of NRCYCL.  If this
-"                      still results in many restarts (because of many
+"                      still results in many rewinds (because of many
 "                      particles missing the geometry or beyond beam field),
 "                      then re-run the simulation with NRCYCL set manually to:
 "           NCASE/(NPHSP - NSMISS/NRCYCL_prev - NOUTSIDE - NRJCT - NDBSRJCT)-1
@@ -1186,7 +1186,7 @@ REPLACE {;COMIN/TIMEINFO/;} WITH {
 REPLACE {$CTUnitNumber} WITH {45} "assign a unit number for the CT data"
 
 REPLACE {$MXDATA}       WITH {1}  "To get over nrccaux(p).mortran definition
-REPLACE {$NBATCH}       WITH {10} "Use 10 batches for restart features, etc.
+REPLACE {$NBATCH}       WITH {10} "Use 10 batches for resuming features, etc.
 REPLACE {$MXDOS}        WITH {7}  "Max number of groups of regions to analyse
 
 "Some macros for facilitating access to boundaries and regions
@@ -1375,7 +1375,7 @@ REAL XMIN_YMIN_ZMIN,YMIN_XMIN_ZMIN,ZMIN_XMIN_YMIN,
      XMAX_YMIN_ZMAX,YMIN_XMAX_ZMAX,ZMAX_XMAX_YMIN; "used to output"
                                                    "rep of source plane"
                                                    "to .egsgeom file"
-INTEGER IRESTART,ibatch,ncaseold;
+INTEGER IRESUME,ibatch,ncaseold;
 character title(80);
 REAL   BATCHT,       "T>used by timing
        TIMEB,        "T>used by timing routines
@@ -1879,12 +1879,12 @@ dose_stat=0; "assume non phsp source or we can get nhist from phsp source"
 call srcinput(ieof);
 
 OUTPUT61;
-(//' NCASE,IWATCH,TIMMAX,INSEED1,INSEED2,BEAM_SIZE,ISMOOTH,IRESTART,IDAT,'/
+(//' NCASE,IWATCH,TIMMAX,INSEED1,INSEED2,BEAM_SIZE,ISMOOTH,IRESUME,IDAT,'/
 ' IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,PARNUM,n_split,ihowfarless,i_phsp_out,'/
 ' i_bindos '/
    ' : ',$);
 read(5,'(2I16,F15.0,2I10,F15.0,4I10,F15.0,7I10)')
-NCASE,IWATCH,TIMMAX,IXXIN,JXXIN,BEAM_SIZE,ISMOOTH,IRESTART,IDAT,IREJECT,
+NCASE,IWATCH,TIMMAX,IXXIN,JXXIN,BEAM_SIZE,ISMOOTH,IRESUME,IDAT,IREJECT,
 ESAVE_GLOBAL,NRCYCL,IPARALLEL,PARNUM,n_split,ihowfarless,i_phsp_out,i_bindos;
 
 IF(n_split<=1 & e_split>1)[
@@ -1917,7 +1917,7 @@ IF( i_parallel > 0 ) JXXIN = JXXIN - 1 + i_parallel;
 
 IF(BEAM_SIZE <= 0.0) BEAM_SIZE=100.;
 
-IF(IRESTART < 0 | IRESTART > 4)IRESTART=0;"SET UP THE DEFAULT VALUE"
+IF(IRESUME < 0 | IRESUME > 4)IRESUME=0;"SET UP THE DEFAULT VALUE"
 
 IF(IPARALLEL<0) IPARALLEL=0;
 IF(PARNUM<0) PARNUM=0;
@@ -2003,10 +2003,10 @@ ELSE[
 "                     reset for other sources elsewhere"
 IF(iqin = 0)[etotin = ein;] ELSE [etotin = ein + prm;]
 
-OUTPUT61 NCASE,IWATCH,TIMMAX,IXXIN,JXXIN,BEAM_SIZE,ISMOOTH,IRESTART,IDAT,
+OUTPUT61 NCASE,IWATCH,TIMMAX,IXXIN,JXXIN,BEAM_SIZE,ISMOOTH,IRESUME,IDAT,
 IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,PARNUM,n_split,ihowfarless,i_phsp_out;
         (/i12,i4,f7.2,2i10,f7.2,i7,i5,i4,i4,F7.2,i4,i4,i4,i4,i4,i4/);
-IF(IRESTART=1)[
+IF(IRESUME=1)[
  OUTPUT61;(/' Above RNG seeds will be replaced by those from previous run.');
 ]
 
@@ -2153,19 +2153,19 @@ IF( isource = 2 | isource = 8 | isource = 20)["phase space source"
    ]
    IF( ISMOOTH = 1) [
      OUTPUT;(/' Will redistribute phase space particles if phase space file'/
-              ' restarted and/or individual particles recycled');
+              ' rewinded and/or individual particles recycled');
    ]
-   ELSE [OUTPUT;(' Restarted phase space files and recycled particles are not'/
+   ELSE [OUTPUT;(' Rewinded phase space files and recycled particles are not'/
                  ' redistributed');
    ]
 ]
 
-IF(IRESTART = 0) [OUTPUT;(/' Starting a new calculation');]
-ELSEIF(IRESTART = 1) [OUTPUT;(/' Restarting from a previous run');]
-ELSEIF(IRESTART = 2) [OUTPUT;(/' Just create input file and exit');]
-ELSEIF(IRESTART = 3) [OUTPUT;(/' Read in stored data and analyse');]
-ELSEIF(IRESTART = 4) [OUTPUT;(/' Recombining parallel runs');]
-ELSE [ IRESTART = 0; OUTPUT;(/' IRESTART set to 0, start new caln');]
+IF(IRESUME = 0) [OUTPUT;(/' Starting a new calculation');]
+ELSEIF(IRESUME = 1) [OUTPUT;(/' Resuming from a previous run');]
+ELSEIF(IRESUME = 2) [OUTPUT;(/' Just create input file and exit');]
+ELSEIF(IRESUME = 3) [OUTPUT;(/' Read in stored data and analyse');]
+ELSEIF(IRESUME = 4) [OUTPUT;(/' Recombining parallel runs');]
+ELSE [ IRESUME = 0; OUTPUT;(/' IRESUME set to 0, start new caln');]
 
 IF(IDAT = 0) [OUTPUT;(/' Store intermediate files for each batch');]
 ELSEIF (IDAT = 1) [OUTPUT;(/' Do not store intermediate files at all');]
@@ -2405,13 +2405,13 @@ IF(howfarless) call modify_tmxs(MIN(mindelX,mindelY,mindelZ));
 OUTPUT61;(/' Medium',t24,'AE',t34,'AP');
 DO n=1,NMED[OUTPUT61 (media(j,n),j=1,15),ae(n),ap(n);(1x,15a1,2f10.3);]
 
-"RESTART FEATURES"
+"RESUME FEATURES"
 "================"
 DO irl=1,irmax[endep_last(irl)=0;] "always zero this array"
 
 IHSTRY=0; "always zero this as well"
 
-IF(IRESTART = 0)["START A NEW RUN"
+IF(IRESUME = 0)["START A NEW RUN"
     nnread = 0;"initialize counter"
     nsmiss=0;       nmissm=0; ncaseold=0;
     nsrjct=0;       nsoutside=0; ndbsrjct=0;
@@ -2439,7 +2439,7 @@ IF(IRESTART = 0)["START A NEW RUN"
      ]
      tcpuold=0.;
 ]
-ELSEIF(IRESTART = 1)["READ DATA FROM A PREVIOUS RUN"
+ELSEIF(IRESUME = 1)["READ DATA FROM A PREVIOUS RUN"
     OUTPUT; (/' *** About to read dose data from previous run ***');
     i_par_temp=i_parallel;
     IF(IPARALLEL>0 & n_parallel=0) i_parallel=0;
@@ -2458,14 +2458,14 @@ ELSEIF(IRESTART = 1)["READ DATA FROM A PREVIOUS RUN"
          OUTPUT61 nhist; (/' Equivalent no. of primary histories',i12);
     ]
     OUTPUT61 tcpuold/3600.;(/' Total previou CPU time (hour)    ',f10.3);
-    OUTPUT61;(/' Random number seeds for restart  ',$);
+    OUTPUT61;(/' Random number seeds for resuming  ',$);
     $SHOW-RNG-STATE(6);
     $SHOW-RNG-STATE(1);
     OUTPUT;(/' ***Successfully read previous dose data file ***');
     ]
-ELSEIF(IRESTART = 2)["Just create the input file and then quit" GO TO :END:; ]
+ELSEIF(IRESUME = 2)["Just create the input file and then quit" GO TO :END:; ]
 
-ELSEIF(IRESTART = 3)["Just do a data analysis"
+ELSEIF(IRESUME = 3)["Just do a data analysis"
     NCASE=0;
     OUTPUT; (/' *** About to read dose data from previous run ***');
     i_par_temp=i_parallel;
@@ -2487,7 +2487,7 @@ ELSEIF(IRESTART = 3)["Just do a data analysis"
     OUTPUT;(/' ***Successfully read previous dose data file ***');
     GO TO :STAT-ANALYSIS:;
 ]
-ELSEIF(IRESTART=4)["just combine .pardose files"
+ELSEIF(IRESUME=4)["just combine .pardose files"
     call egs_combine_runs(combine_results,'.pardose');
     ainflu=temp2; "need to define this because it is used to normalize dose"
     IF((isource = 0 | isource = 1 | isource = 3 | isource = 7) &
@@ -2870,18 +2870,18 @@ IF(i_phsp_out>0)[" close output phsp file (JL 2013)"
 :STAT-ANALYSIS:;                 "toc:
 "=============="
 
-IF (IRESTART ~= 3)[
+IF (IRESUME ~= 3)[
    OUTPUT61 timcpu,timcpu/3600.,dble(IHSTRY)/(timcpu/3600.);
          (/' Total CPU time for run =',f8.1,' s =',f8.3,' hr =>',
          F12.0,' hist/hr'/T3,' On  '$MACHINE' ');
 ]
-IF (IRESTART = 1) ["Case of restarting"
+IF (IRESUME = 1) ["Case of resuming"
     OUTPUT61 timcpu+tcpuold,(timcpu+tcpuold)/3600.,dble(IHSTRY+ncaseold)
              /((timcpu+tcpuold)/3600.);
     (/' CPU time for this+previous run =',f8.1,' s =',f8.3,' hr =>',
        F12.0,' hist/hr'/T3,' On  '$MACHINE' ');
 ]
-ELSEIF (IRESTART = 3)["just data analysis"
+ELSEIF (IRESUME = 3)["just data analysis"
     OUTPUT61 timcpu+tcpuold,(timcpu+tcpuold)/3600.,float(ncaseold)
              /((timcpu+tcpuold)/3600.);
     (/' Total CPU time for old run =',f8.1,' s =',f8.3,' hr =>',
@@ -2904,7 +2904,7 @@ OUTPUT61 nnread,nhist,nsrjct,nsoutside,ndbsrjct,nsmiss,
     ' # of times each particle in ph-sp file recycled                 '/
     '         (last particle may be recycled less than this)         =',i12/
     ' # of ph-sp particles simulated (N_used)                        =',i12/
-    ' # of times ph-sp file restarted in this run                    =',i12/
+    ' # of times ph-sp file rewinded in this run                    =',i12/
    /'  ********************************************************************');
 
 ]
@@ -2939,7 +2939,7 @@ OUTPUT61 NCASE,survival_ratio,compensated_NCASE,nnread,nsrjct,nsoutside,
     ' # of particles that got blocked by shared library modules      =',i12/
     ' # of particles used in DOSXYZnrc (N_used)                      =',i12/
     '                N_used/(nnread x N_recycle)                     =',f12.3/
-    ' # of times ph-sp file restarted in this run                    =',i12/
+    ' # of times ph-sp file rewinded in this run                    =',i12/
    /'  ********************************************************************');
 ]
 ELSEIF(isource=21)["BEAM simulation used as source, incident from any angle"
@@ -3058,9 +3058,9 @@ IF(dose_stat=1)[
 ]
 ELSEIF(OUTCNT>0)[
    OUTPUT61;(//' ***WARNING***'/
-       ' The ph-sp source was restarted at least once.  This may lead'/
-       ' to an underestimate of uncertainty, especially if restarted'/
-       ' many times.  If restarted many times, try re-running with'/
+       ' The ph-sp source was rewinded at least once.  This may lead'/
+       ' to an underestimate of uncertainty, especially if rewinded'/
+       ' many times.  If rewinded many times, try re-running with'/
        ' NRCYCL recalculated as described at top of dosxyznrc.mortran'//);
 ]
 DO irl = 1,irmax-1 [
@@ -3136,7 +3136,7 @@ DO i=1,IMAX [
 "       ==============
 
 REPLACE {$PRINT-HEADER;} WITH {;
-  IF((n_parallel>0 & is_finished)|IRESTART=4 )[
+  IF((n_parallel>0 & is_finished)|IRESUME=4 )[
                        "fluence meaningless in final analysis"
     OUTPUT1 title;
     (//,'1',80a1 //
@@ -3442,7 +3442,7 @@ $SET_ELAPSED_CPUTIME(cput2);
 timcpu=$CONVERSION_TO_SECONDS*(cput2-cput0);
 OUTPUT61 timcpu,timcpu/3600.;
     (/' Total CPU time for this run =',f8.1,' s =',f8.3,' hr');
-IF(IRESTART=4)[
+IF(IRESUME=4)[
     OUTPUT61;(/' CPU time is for combining .pardose files only.');
 ]
 ELSEIF(n_parallel>0 & is_finished)[

@@ -75,7 +75,7 @@ class EGS_RandomGenerator;
   - getFluence(): returns the fluence the source has emitted so far
   - getSourceDescription(): returns a string describing the source
   - storeState(), setState(), resetCounter(), addState(): these are functions
-    needed for restarting calculations or combining the results of parallel
+    needed to resume calculations or combining the results of parallel
     runs
 
   \todo Add time dependence
@@ -209,7 +209,7 @@ public:
      *
      * Every source should reimplement this method to store
      * the data needed to set the state of the source to its current
-     * state into the stream \a data_out. This is used for restarted
+     * state into the stream \a data_out. This is used to resume
      * calculations. Examples of data needed is the number of statistically
      * independent particles delivered so far by the source.
      * Should return \c true on success, \c false on failure.
@@ -224,7 +224,7 @@ public:
      *
      * Every source should reimplement this method to read from the stream
      * \a data_in data previously stored using storeState() and to set its
-     * state according to this data. This is used for restarted calculations.
+     * state according to this data. This is used to resume calculations.
      * Should return \c true on success, \c false on failure (\em e.g. I/O
      * error).
      *
@@ -453,7 +453,7 @@ public:
      * additional information to the stream, if needed.
      *
      * storeState(), setState(), addState() and resetCounter() are needed
-     * for restarted calculations and for combining the results of
+     * to resume calculations and for combining the results of
      * parallel runs.
      */
     virtual bool storeState(ostream &data_out) const {
@@ -477,7 +477,7 @@ public:
      * if they are storing additional data in the storeState() method.
      *
      * storeState(), setState(), addState() and resetCounter() are needed
-     * for restarted calculations and for combining the results of
+     * to resume calculations and for combining the results of
      * parallel runs.
      */
     virtual bool setState(istream &data_in) {
@@ -500,7 +500,7 @@ public:
      * are storing extra information using storeState().
      *
      * storeState(), setState(), addState() and resetCounter() are needed
-     * for restarted calculations and for combining the results of
+     * to resume calculations and for combining the results of
      * parallel runs.
      */
     virtual bool addState(istream &data_in) {
@@ -523,7 +523,7 @@ public:
      * object to reset this data as well.
      *
      * storeState(), setState(), addState() and resetCounter() are needed
-     * for restarted calculations and for combining the results of
+     * to resume calculations and for combining the results of
      * parallel runs.
      */
     virtual void resetCounter() {
@@ -724,7 +724,7 @@ public:
      *
      * Must be implemented in derived classes to store the data needed to set
      * the state of this source object to its current state. This is needed
-     * in restarted calculations.
+     * to resume calculations.
      *
      * \sa EGS_BaseSource::storeState(), EGS_BaseSource::setState(),
      * EGS_BaseSource::addState() and EGS_BaseSource::resetCounter().
@@ -969,7 +969,7 @@ getNextParticle() \endlink function.
 
 The next task is to implement the functions that store the state
 of a point source object to a data stream and restore the state
-from a data stream. This is needed for the ability to restart
+from a data stream. This is needed for the ability to resume
 simulations. Because our source class is very simple, no
 data needs to be stored/restored in addition to the data already
 stored/restored by EGS_BaseSource and EGS_BaseSimpleSource.

@@ -373,11 +373,11 @@ With this option, DOSXYZnrc can redistribute the phase-space particles when\
 }
 set names(12) "Run option";
 set help_text(12) {
-Restart option, IRESTART:
+Resume option, IRESUME:
 
 "first time" means that this is the first run for this data\
         set (default).
-"restart" means that this is a restart of a previous run.
+"resume" means that this run is resuming a previous run.
 "create input file and exit" does just that.
 "analyze previous" means read in the raw data from a\
         previous run and do the statistical analysis on dose etc.
@@ -386,20 +386,20 @@ Restart option, IRESTART:
         scheme: inputfile_w1.pardose, inputfile_w2.pardose, etc.}
 set numopts(12) 5;
 set options(12,0) "first time";
-set options(12,1) "restart";
+set options(12,1) "resume";
 set options(12,2) "create input file and exit"
 set options(12,3) "analyze previous"
 set options(12,4) "combine parallel"
-set names(13) "Output restart data"
+set names(13) "Output resume data"
 set numopts(13) 3
 set options(13,0) "after every batch"
 set options(13,1) "never"
 set options(13,2) "at end of run only"
 set help_text(13) {
-Output restart data, IDAT:
+Output resume data, IDAT:
 
 For large phantoms, writing this file will take a lot of time.  For production\
-	runs, output with restart data at the end of the run only.
+	runs, output with resume data at the end of the run only.
 }
 set names(14) "Range rejection"
 set numopts(14) 2
@@ -444,14 +444,14 @@ next particle.  Even with NRCYCL, the total number of histories is still\
 determined by the user-input value of NCASE.  NRCYCL is an essential input\
 when phase space data is sparse (ie fewer particles in the source than required\
 for the simulation).  Choose a value of NRCYCL that will sample the source\
-fully but will prevent the source from being restarted (happens automatically\
-after the last particle gets used).  This is because restarts may cause\
+fully but will prevent the source from being rewinded (happens automatically\
+after the last particle gets used).  This is because rewinds may cause\
 uncertainties to be underestimated.  If you are unsure of the value to use,\
 set NRCYCL<=0 and DOSXYZnrc will automatically calculate a value.  The source\
-may restart even with an automatically-calculated value of NRCYCL.  If there\
-is only one restart and only a small fraction of the source is re-used on the\
+may rewind even with an automatically-calculated value of NRCYCL.  If there\
+is only one rewind and only a small fraction of the source is re-used on the\
 second pass, this is unlikely to affect uncertainties.  However, if a\
-significant fraction is re-used on the second pass, or if the source restarts\
+significant fraction is re-used on the second pass, or if the source rewinds\
 more than once, we suggest rerunning with a recalculated value of NRCYCL, given\
 by:
 

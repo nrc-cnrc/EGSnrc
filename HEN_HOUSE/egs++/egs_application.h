@@ -131,7 +131,7 @@ struct EGS_Particle {
     }
     \endverbatim
   - Re-implement the outputData() function to output the current simulation
-    results to a data file. This is necessary for the ability to restart a
+    results to a data file. This is necessary for the ability to resume a
     simulation or to combine the results of a parallel run. In most cases
     the implementation will involve calling the EGS_AdvancedApplication
     version first, so that data related to the state of the particle source,
@@ -150,7 +150,7 @@ struct EGS_Particle {
     the function returns this error code. Otherwise it stores the dose data
     and returns a special error code if EGS_ScoringArray::storeState() fails.
   - Re-implement the readData() function to read results from a data file.
-    This is necessary for restarted calculations and is basically the
+    This is necessary for resumed calculations and is basically the
     same as outputData() but now readData() and setState() are used instead
     of outputData() and storeState():
     \verbatim
@@ -453,7 +453,7 @@ public:
      Derived classes should re-implement to
      add their own data to the above after invoking the base class
      outputData() function.
-     The data stored should be enough to be able to restart a previous
+     The data stored should be enough to be able to resume a previous
      calculation and/or to combine the results of parallel runs.
     */
     virtual int  outputData();
@@ -470,7 +470,7 @@ public:
      the state of the random number generator.
      Derived classes should re-implement to read their additional data
      after invoking the base class readData() function.
-     This function is intended to be used for restarted calculations.
+     This function is intended to be used for resumed calculations.
     */
     virtual int  readData();
 

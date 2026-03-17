@@ -274,9 +274,9 @@ REPLACE {$VERSION} WITH {
 "        = last        (1)  store the initial random number for the last history
 "        = all         (2)  store all the initial random numbers
 "
-"  IRESTART
+"  IRESUME
 "        = first       (0)  first run for this data set
-"        = restart     (1)  restart of a previous run
+"        = resume      (1)  resume a previous run
 "        = analyze     (3)  just read in the raw data and do the statistical
 "                           analysis
 "        = start-RNS   (4)  read starting random numbers from a file (e.g. for
@@ -1834,7 +1834,7 @@ $LONG_INT NCASE,NCASEO,NCASET;
 "NCASEO        NUMBER OF HISTORIES DONE IN PREVIOUS SESSIONS
 "NCASET        NUMBER OF HISTORIES ALREADY DONE
 "IRSTRT      = 0 => INITIAL RUN
-"              = 1 => RESTARTED RUN
+"              = 1 => RESUMED RUN
 "              = 3 => DATA ANALYSIS ONLY
 "              = 4 => READ RANDOM NUMBER SEEDS FROM UNIT 2
 "              = 5 => PARALLEL POST-PROCESSING
@@ -3000,7 +3000,7 @@ $CALL_EXIT(0);
 %F
 %I0
 201   FORMAT(/' ********* NEW INPUT FILE *********'/)
-202   FORMAT(/' ********* RESTARTED INPUT FILE ********* '/
+202   FORMAT(/' ********* RESUMED INPUT FILE ********* '/
      1' ',10X,I12,' NEW + ',I12,' OLD HISTORIES'/
      2' ',20X,'NEW RN SEEDS=',$)
 204   FORMAT(/' ********* DATA ANALYSIS ONLY *********'/)
@@ -3788,11 +3788,11 @@ ALLOWED_INPUTS(IVAL,2)='ALL';
 
 IVAL = IVAL + 1;
 NUM_IRSTRT = IVAL;
-VALUES_SOUGHT(IVAL)='IRESTART';
+VALUES_SOUGHT(IVAL)='IRESUME';
 NVALUE(IVAL)=1;
 TYPE(IVAL)=3;
 ALLOWED_INPUTS(IVAL,0)='FIRST';
-ALLOWED_INPUTS(IVAL,1)='RESTART';
+ALLOWED_INPUTS(IVAL,1)='RESUME';
 ALLOWED_INPUTS(IVAL,3)='ANALYZE';
 ALLOWED_INPUTS(IVAL,4)='START-RNS';
 ALLOWED_INPUTS(IVAL,5)='PARALLEL';
@@ -3859,7 +3859,7 @@ IPRIM=VALUE(NUM_IPRIM,1);
 OUTPUT IWATCH,ISTORE,IRSTRT,IPRNTP,IDAT,IPRIM;
 (/' DO NOT TRACK(0) OR TRACK(>0) EVERY INTERACTION:',T60,I12/
 ' DO NOT STORE(0) OR STORE(1,2) INITIAL RANDOM #s:',T60,I12/
-' FIRST RUN(0),RESTARTED(1),ANALYZE(3),READ RNS(4),'/
+' FIRST RUN(0),RESUMED(1),ANALYZE(3),READ RNS(4),'/
 '   PARALLEL(5):',T60,I12/
 ' LIST ALL(0), SHORT PHOT(1),SPECIFIED REGIONS(2), NONE(>2):',T60,I12/
 ' STORE DATA(0) OR NOT(1):',T60,I12/
@@ -4264,7 +4264,7 @@ IF(IRSTRT = 0 | IRSTRT = 5)[ "FRESH START, SET EVERYTHING TO ZERO"
  ]
 ]
 ELSEIF(IRSTRT ~= 4)[
-             "RESTART OR STATS ANALYSIS ONLY, READ OLD DATA FROM UNIT 4"
+             "RESUME OR STATS ANALYSIS ONLY, READ OLD DATA FROM UNIT 4"
   OUTPUT;(/'   START READING OLD DATA FILE');
 
   "OPEN UNIT 4 AS AN OLD FILE"
