@@ -2,7 +2,7 @@
 ###############################################################################
 #
 #  EGSnrc egs++ focal spot source headers
-#  Copyright (C) 2015 National Research Council Canada
+#  Copyright (C) 2025 Marvin Apel
 #
 #  This file is part of EGSnrc.
 #
@@ -23,16 +23,16 @@
 #
 #  Author:          Marvin Apel, 2025
 #
-#  Contributors:    -
-#
+#  Contributors:
 #
 ###############################################################################
 */
 
-/*! \file egs_egs_focal_spot_source.h
+
+/*! \file egs_focal_spot_source.h
  *  \brief A source with gaussian distribution for XY and UV that
  *  is an expanded version of BEAMnrc's ISOURC19
- *  \MA
+ *  \author MA
  */
 
 #ifndef EGS_FOCAL_SPOT_
@@ -104,7 +104,7 @@ class EGS_FOCAL_SPOT_EXPORT EGS_FocalSpot : public EGS_BaseSimpleSource {
     EGS_Float  sigma_x_space;       //!< The std of Gaussian describing the spatial distribution in x
     EGS_Float  sigma_y_space;       //!< The std of Gaussian describing the spatial distribution in y
     EGS_Float  space_cutoff_x;      //!< The std of Gaussian describing the spatial distribution in x
-    EGS_Float  space_cutoff_y;      //!< The std of Gaussian describing the spatial distribution in x
+    EGS_Float  space_cutoff_y;      //!< The std of Gaussian describing the spatial distribution in y
     EGS_Float  sigma_x_angle=0;     //!< (optional) The std of Gaussian describing the angular distribution in x
     EGS_Float  sigma_y_angle=0;     //!< (optional) The std of Gaussian describing the angular distribution in y
     EGS_Float  x_translation=0;     //!< (optional) Offset in x-direction
@@ -139,7 +139,7 @@ public:
             // Only Accept points within cutoff limits
         }
         while (pow(x.x/space_cutoff_x,2) + pow(x.y/space_cutoff_y,2) > 1);
-        x.x += x_translation; // safe computation time by only applying translation after finding a valid point
+        x.x += x_translation; // save computation time by only applying translation after finding a valid point
         x.y += y_translation; // otherwise it will be done in the while condition above repeatedly
         x.z = z_pos;
 
@@ -242,4 +242,3 @@ protected:
 };
 
 #endif
-

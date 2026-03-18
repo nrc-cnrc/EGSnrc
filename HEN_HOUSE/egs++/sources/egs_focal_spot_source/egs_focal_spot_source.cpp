@@ -2,7 +2,7 @@
 ###############################################################################
 #
 #  EGSnrc egs++ source with gaussian distribution in XY and UV
-#  Copyright (C) 2015 National Research Council Canada
+#  Copyright (C) 2025 Marvin Apel
 #
 #  This file is part of EGSnrc.
 #
@@ -29,10 +29,10 @@
 */
 
 
-/*! \file egs_egs_focal_spot_source.cpp
+/*! \file egs_focal_spot_source.cpp
  *  \brief A source with gaussian distribution for XY and UV that
  *  is an expanded version of BEAMnrc's ISOURC19
- *  \MA
+ *  \author MA
  */
 
 #include "egs_focal_spot_source.h"
@@ -175,7 +175,7 @@ void EGS_FocalSpot::setUp() {
             // Convert Units after reporting to log
             x_rotation = x_rotation*DEGREE_TO_RAD; //CONVERT UNITS
             y_rotation = y_rotation*DEGREE_TO_RAD; //CONVERT UNITS
-            //Store Auxilarry variables to safe computational time
+            //Store Auxilarry variables to save computational time
             CALPHA = cos(x_rotation);
             CBETA  = cos(y_rotation);
             SALPHA = sin(x_rotation);
@@ -194,4 +194,3 @@ extern "C" {
     }
 
 }
-
