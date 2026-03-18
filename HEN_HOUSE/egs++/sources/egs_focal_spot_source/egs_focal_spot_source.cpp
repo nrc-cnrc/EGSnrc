@@ -68,6 +68,7 @@ EGS_FocalSpot::EGS_FocalSpot(EGS_Input *input, EGS_ObjectFactory *f) :
     space_cutoff_x = (err_cut_x) ? 5*sigma_x_space : space_cutoff_x;
     space_cutoff_y = (err_cut_y) ? 5*sigma_y_space : space_cutoff_y;
 
+    ANGLE_MODE = 0;
     if ((sigma_x_angle != 0) || (sigma_y_angle != 0)) {
         is_deviating = true;
         // Set ANGLE_MODE for sampling of direction of motion (default is u.x=u.y=0, u.z=1)
