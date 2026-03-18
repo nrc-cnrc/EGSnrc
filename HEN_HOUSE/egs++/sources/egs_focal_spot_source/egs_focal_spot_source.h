@@ -132,10 +132,10 @@ public:
         wt = 1;
         //1. Sample position
         do {
-            x.z = sqrt(-2*log(1-rndm->getUniform())); // store value characteristic for Gaussian Sampling
-            x.y = PI2*rndm->getUniform();             // store value for phi
-            x.x = sigma_x_space * x.z * cos(x.y);
-            x.y = sigma_y_space * x.z * sin(x.y);
+            double r = sqrt(-2*log(1-rndm->getUniform())); // store value characteristic for Gaussian Sampling
+            double phi = PI2*rndm->getUniform();             // store value for phi
+            x.x = sigma_x_space * r * cos(phi);
+            x.y = sigma_y_space * r * sin(phi);
             // Only Accept points within cutoff limits
         }
         while (pow(x.x/space_cutoff_x,2) + pow(x.y/space_cutoff_y,2) > 1);
@@ -143,24 +143,23 @@ public:
         x.y += y_translation; // otherwise it will be done in the while condition above repeatedly
         x.z = z_pos;
 
-
         //2. Sample direction
         switch (ANGLE_MODE) {
-        case 1: // Deviation in x and y
-            x.z = PI2 * rndm->getUniform(); // store value of rotation arc phi !
+        case 1: { // Deviation in x and y
+            double phi = PI2 * rndm->getUniform(); // store value of rotation arc phi !
             do {
                 u.z = sqrt(-2*pow((sigma_x_angle*sigma_y_angle), 2)/
-                           (pow(sigma_x_angle*sin(x.z),2) + pow(sigma_y_angle*cos(x.z),2)) * (log(1- rndm->getUniform())));
+                           (pow(sigma_x_angle*sin(phi),2) + pow(sigma_y_angle*cos(phi),2)) * (log(1- rndm->getUniform())));
                 u.z = cos(u.z);
             }
             while (u.z < 0);
 
-            u.x = sqrt((1-u.z)*(1+u.z));
-            u.y = u.x * sin(x.z);
-            u.x = u.x * cos(x.z);
+            double r = sqrt((1-u.z)*(1+u.z));
+            u.y = r * sin(phi);
+            u.x = r * cos(phi);
 
-            x.z = z_pos;// substitute value that held phi to z again
             break;
+        }
 
         case 2: // Deviation only in x, deviation is planar only along x-direction ! (u.y = 0 !!!)
             do {
@@ -191,19 +190,18 @@ public:
         //3. Rotate X, Y, Z, U, V, W and interpolate them into the z-pos plane !
         if (is_rotated) {
             // rotate position and direction vectors
-            x.z  =  z_pos - DIST - x.x*CALPHA*SBETA - x.y*SALPHA + DIST*CALPHA*CBETA;
+            double tmp  =  z_pos - DIST - x.x*CALPHA*SBETA - x.y*SALPHA + DIST*CALPHA*CBETA;
             x.y  = -x.x*SALPHA*SBETA + x.y*CALPHA + DIST*SALPHA*CBETA;
             x.x  =  x.x*CBETA + DIST*SBETA;
-            TEMP = u.z;
+            double tmp_uz = u.z;
             u.z  = -u.x*CALPHA*SBETA - u.y*SALPHA + u.z*CALPHA*CBETA;
-            u.y  = -u.x*SALPHA*SBETA + u.y*CALPHA + TEMP*SALPHA*CBETA;
-            u.x  =  u.x*CBETA + TEMP*SBETA;
+            u.y  = -u.x*SALPHA*SBETA + u.y*CALPHA + tmp_uz*SALPHA*CBETA;
+            u.x  =  u.x*CBETA + tmp_uz*SBETA;
 
             // SHIFT Particles along direction of motion back into plane !
-            TEMP = (z_pos - x.z)/u.z; //u.z will never be 0 ! [limitation of x/y rotation to (-90,90)]
-            x.x += TEMP * u.x;
-            x.y += TEMP * u.y;
-            x.z = z_pos;
+            tmp_uz = (z_pos - tmp)/u.z; //u.z will never be 0 ! [limitation of x/y rotation to (-90,90)]
+            x.x += tmp_uz * u.x;
+            x.y += tmp_uz * u.y;
         }
     };
 
