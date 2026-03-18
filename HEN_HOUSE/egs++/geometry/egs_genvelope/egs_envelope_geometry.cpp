@@ -529,7 +529,7 @@ extern "C" {
     }
 
     int EGS_FastEnvelope::getGlobalRegionOffset(const string geomName) {
-        // Look for the named region in the inscribed regions
+        // Look for the named geometry in the inscribed geometries
         for (int i=0; i<n_in; i++) {
             if (geometries[i] && geometries[i]->getName() == geomName) {
                 int shift = 0;
@@ -537,7 +537,7 @@ extern "C" {
                     shift = local_start[i];
                 }
                 else {
-                    shift = nmax;
+                    shift = nbase+i*nmax;
                 }
 
                 return shift;
@@ -547,12 +547,12 @@ extern "C" {
         // If it's not found above, search through the inscribed geometries in case they are composite geometries
         for (int i=0; i<n_in; i++) {
             int shift = geometries[i]->getGlobalRegionOffset(geomName);
-            if(shift > 0) {
+            if(shift >= 0) {
                 if (new_indexing) {
                     shift += local_start[i];
                 }
                 else {
-                    shift = nmax;
+                    shift += nbase+i*nmax;
                 }
                 return shift;
             }
@@ -620,7 +620,7 @@ extern "C" {
                 shift = local_start[i];
             }
             else {
-                shift = nmax;
+                shift = nbase+i*nmax;
             }
             for (int j=0; j<gregs.size(); j++) {
                 gregs[j] += shift;
