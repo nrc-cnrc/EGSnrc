@@ -268,7 +268,6 @@ DO I = NMIN, NMAX  [ "for each value_sought"
         ERROR_FLAGS(I)=1;
         RETURN;
    ]
-   CONTINUE;
 
    " Always check for default. The following sets the value to "
    " default(i) for a numeric input (type=1 or 2) and to 0 for "
