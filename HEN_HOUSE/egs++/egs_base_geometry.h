@@ -758,8 +758,6 @@ public:
     virtual void updatePosition(EGS_Float time) {
         (void)time;
     };
-    virtual void printTriCheck() { }; //A.D debugging
-    virtual void debugtool() { }; //A.D debugging
 
     /* This method is essentially used to determine whether the simulation
      * geometry contains a dynamic geometry. Like getNextGeom(), the only

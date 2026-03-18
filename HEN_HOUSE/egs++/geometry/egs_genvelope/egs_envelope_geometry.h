@@ -637,13 +637,6 @@ public:
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
-    /*void printTriCheck() { // For debugging egs_triangle_mesh
-        for (int j=0; j<n_in; j++) {
-            geometries[j]->printTriCheck();
-        }
-        g->printTriCheck();
-    };*/
-
 protected:
 
     EGS_BaseGeometry *g;           //!< The envelope geometry
