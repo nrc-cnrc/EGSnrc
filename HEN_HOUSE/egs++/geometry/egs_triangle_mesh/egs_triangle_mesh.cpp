@@ -369,7 +369,7 @@ public:
     // part as these will likely be false positives (harmless extra checks)
     // instead of false negatives (missed intersections, a huge problem if
     // present).
-    bool intersects_triangle(const EGS_Vector &a, const EGS_Vector &b, const EGS_Vector &c, int e) const {
+    bool intersects_triangle(const EGS_Vector &a, const EGS_Vector &b, const EGS_Vector &c) const {
         const EGS_Float eps = 1e-30;
         if (min3(a.x, b.x, c.x) >= max_x+1e-10 ||
                 min3(a.y, b.y, c.y) >= max_y+1e-10 ||
@@ -845,7 +845,6 @@ int EGS_TriangleMesh::inside(const EGS_Vector &x) {
 int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
     n_hist++;
     // Bounding box check to avoid isWhere mesh search
-    EGS_Float xo_dist=distance(x, EGS_Vector(0,0,0));
     if (!bbox->contains(x)) {
         return -1;
     }

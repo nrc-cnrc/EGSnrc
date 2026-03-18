@@ -50,7 +50,7 @@ namespace stl_parser {
 /// Top-level STL file parser. Only binary STL files are currently supported.
 ///
 /// Throws a std::runtime_error if parsing fails.
-EGS_TriangleMeshSpec parse_stl_file(const std::string &filename,
+inline EGS_TriangleMeshSpec parse_stl_file(const std::string &filename,
                                     EGS_InfoFunction info = nullptr);
 
 /// The stl_parser::internal namespace is for internal API functions and is
@@ -68,7 +68,7 @@ static inline void trim(std::string &s) {
     }).base(), s.end());
 }
 
-EGS_TriangleMeshSpec::Triangle parse_ascii_stl_triangle(std::string facet_line,
+inline EGS_TriangleMeshSpec::Triangle parse_ascii_stl_triangle(std::string facet_line,
         std::istream &input,
         const std::string &filename) {
     EGS_TriangleMeshSpec::Triangle tri;
@@ -132,7 +132,7 @@ EGS_TriangleMeshSpec::Triangle parse_ascii_stl_triangle(std::string facet_line,
 
 // Parse the body of an ascii STL file into an EGS_TriangleMeshSpec. Throws a
 // std::runtime_error if parsing fails.
-EGS_TriangleMeshSpec parse_ascii_stl_file(std::istream &input,
+inline EGS_TriangleMeshSpec parse_ascii_stl_file(std::istream &input,
         const std::string &filename) {
     // discard any remaining characters after `solid`
     std::string line;
@@ -159,7 +159,7 @@ EGS_TriangleMeshSpec parse_ascii_stl_file(std::istream &input,
 
 // Parse the body of a binary STL file into an EGS_TriangleMeshSpec. Throws a
 // std::runtime_error if parsing fails.
-EGS_TriangleMeshSpec parse_binary_stl_file(std::istream &input,
+inline EGS_TriangleMeshSpec parse_binary_stl_file(std::istream &input,
         const std::string &filename) {
     // parse the number of triangles
     std::uint32_t n_tri = 0;
@@ -224,7 +224,7 @@ EGS_TriangleMeshSpec parse_binary_stl_file(std::istream &input,
 
 } // namespace stl_parser::internal
 
-EGS_TriangleMeshSpec parse_stl_file(const std::string &filename,
+inline EGS_TriangleMeshSpec parse_stl_file(const std::string &filename,
                                     EGS_InfoFunction info /* = nullptr */) {
 
     std::ifstream stl_file(filename, std::ios::binary);
