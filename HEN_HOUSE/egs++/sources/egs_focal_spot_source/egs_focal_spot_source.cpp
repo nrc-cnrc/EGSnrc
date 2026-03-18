@@ -50,9 +50,19 @@ EGS_FocalSpot::EGS_FocalSpot(EGS_Input *input, EGS_ObjectFactory *f) :
         egsWarning("EGS_FocalSpot: missing input for parameter 'spatial spread x\n");
         valid = false;
     }
+    else if (sigma_x_space <= 0) {
+        egsWarning("EGS_FocalSpot: 'spatial spread x' must be positive (got %g)\n",
+                sigma_x_space);
+        valid = false;
+    }
 
     if (input->getInput("spatial spread y",sigma_y_space)) {
         egsWarning("EGS_FocalSpot: missing input for parameter 'spatial spread y'\n");
+        valid = false;
+    }
+    else if (sigma_y_space <= 0) {
+        egsWarning("EGS_FocalSpot: 'spatial spread y' must be positive (got %g)\n",
+                sigma_y_space);
         valid = false;
     }
 
@@ -67,6 +77,13 @@ EGS_FocalSpot::EGS_FocalSpot(EGS_Input *input, EGS_ObjectFactory *f) :
     // if no input for spatial cutoff is available set it to 5*standard deviation
     space_cutoff_x = (err_cut_x) ? 5*sigma_x_space : space_cutoff_x;
     space_cutoff_y = (err_cut_y) ? 5*sigma_y_space : space_cutoff_y;
+
+    // guard against negative or zero cutoff values
+    if (space_cutoff_x <= 0 || space_cutoff_y <= 0) {
+        egsFatal("EGS_FocalSpot: spatial cutoff values must be positive "
+                "(got cutoff_x=%g, cutoff_y=%g)\n",
+                space_cutoff_x, space_cutoff_y);
+    }
 
     ANGLE_MODE = 0;
     if ((sigma_x_angle != 0) || (sigma_y_angle != 0)) {
