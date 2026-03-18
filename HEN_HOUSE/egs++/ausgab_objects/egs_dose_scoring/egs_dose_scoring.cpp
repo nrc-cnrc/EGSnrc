@@ -230,32 +230,6 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
             int ny=dose_geom->getNRegDir(1);
             int nz=dose_geom->getNRegDir(2);
 
-            // Let's keep this commented out but around, because it was really
-            // useful for debugging that the below method worked correctly
-            // Note that the following did *not* work for transformed geometries, because it looks at the original positioning of the voxels before they were transformed!
-            /*
-            EGS_Vector tp;
-            EGS_Float minx,maxx,miny,maxy,minz,maxz;
-            for (int k=0; k<nz; k++) {
-                for (int j=0; j<ny; j++) {
-                    for (int i=0; i<nx; i++) {
-                        minx=dose_geom->getBound(0,i);
-                        maxx=dose_geom->getBound(0,i+1);
-                        miny=dose_geom->getBound(1,j);
-                        maxy=dose_geom->getBound(1,j+1);
-                        minz=dose_geom->getBound(2,k);
-                        maxz=dose_geom->getBound(2,k+1);
-                        tp.x=(minx+maxx)/2.;
-                        tp.y=(miny+maxy)/2.;
-                        tp.z=(minz+maxz)/2.;
-                        int g_reg = app->isWhere(tp);
-                        df_reg[g_reg]=i+j*nx+k*nx*ny;
-                        //egsInformation("%d %d\n", df_reg[g_reg], g_reg);
-                    }
-                }
-            }
-            */
-
             int globalOffset = app->getGlobalRegionOffset(dose_geom->getName());
             if(globalOffset < 0) {
                 globalOffset = 0;
@@ -361,12 +335,13 @@ void EGS_DoseScoring::reportResults() {
     egsInformation("Dose Scoring Object(%s)\n",name.c_str());
     egsInformation("======================================================\n");
     EGS_Float normD = 1., normE=1.;
+    const double JOULES_PER_MEV = 1.602176634e-13;
     int count = 0;
     EGS_Float F = app->getFluence();
     egsInformation("=> last case = %lld fluence = %g\n", m_lastCase, F);
     /* Normalize to actual source fluence */
     normE = m_lastCase/F*norm_u;
-    normD = 1.602e-10*normE;
+    normD = JOULES_PER_MEV * 1000. * normE;
     int irmax_digits = getDigits(max_dreg);
     if (irmax_digits < 2) {
         irmax_digits = 2;
@@ -610,15 +585,15 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
         // adjust number here vvvv if the number of fields written out changes
         df_out << "FIELD FieldData 2\n";
         // %20 url-encoded space, Paraview errors on space character
-        df_out << "dose%20[Gy] 1 " << mesh->num_elements() << " double\n";
-        const double JOULES_PER_MEV = 1.602e-13;
+        df_out << "dose%20[Gy/fluence] 1 " << mesh->num_elements() << " double\n";
+
         for (int i = 0; i < mesh->num_elements(); i++) {
             double e_dep, uncert;
             doseF->currentResult(i,e_dep,uncert);
 
-            const auto mass_kg = mesh->element_density(i) * mesh->element_volume(i) / 1000.0;
+            const auto mass = mesh->element_density(i) * mesh->element_volume(i);
 
-            df_out << JOULES_PER_MEV *e_dep / mass_kg << "\n";
+            df_out << normD *e_dep / mass << "\n";
         }
 
         // uncertainties
@@ -651,8 +626,6 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
 
         df_out << std::setprecision(std::numeric_limits<double>::max_digits10);
 
-        const double JOULES_PER_MEV = 1.602e-13;
-
         // header
         df_out << "x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4,dose,uncertainty\n";
 
@@ -670,9 +643,9 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
             // Output dose
             double e_dep, uncert;
             doseF->currentResult(i,e_dep,uncert);
-            const auto mass_kg = mesh->element_density(i) * mesh->element_volume(i) / 1000.0;
+            const auto mass = mesh->element_density(i) * mesh->element_volume(i);
 
-            df_out << JOULES_PER_MEV *e_dep / mass_kg << ",";
+            df_out << normD * e_dep / mass << ",";
 
             // Output uncertainty in %
             // if edep is exactly zero, there is 100% uncertainty
