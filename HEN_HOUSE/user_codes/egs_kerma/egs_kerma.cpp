@@ -1626,7 +1626,7 @@ int EGS_KermaApplication::initScoring() {
         vector<string> diff_f_key = {"fluence scoring",
                                      "differential fluence scoring"
                                     };
-        for (short int i = 0; i < diff_f_key.size(); i++) {
+        for (size_t i = 0; i < diff_f_key.size(); i++) {
             aux = options->takeInputItem(diff_f_key[i]);
             if (aux) {
                 break;
