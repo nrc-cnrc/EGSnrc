@@ -75,18 +75,18 @@ A simple example:
 :start source:
     library              = egs_focal_spot_source
     name                 = focal_spot_test
-    z position           = 1   #cm
-    spatial spread x     = 0.2 #cm standard deviation always never FWHM !
-    spatial spread y     = 0.2 #cm standard deviation always never FWHM !
-    spatial cutoff x     = 0.3 #cm particles will not be generated outside [x0-cutoff, x0+cutoff] (optional)
-    spatial cutoff y     = 0.3 #cm particles will not be generated outside [y0-cutoff, y0+cutoff] (optional)
-    angular spread x     = 1.5 #degrees (optional) (standard deviation from z-axis)
-    angular spread y     = 0.9 #degrees (optional) (standard deviation from z-axis)
-    x translation        = 0   #cm (optional)
-    y translation        = 0   #cm (optional)
-    Z of rotation        = 0   #cm (optional)
-    x rotation           = 1   #cm (optional)
-    y rotation           = 0   #cm (optional)
+    z position           = 1        # cm
+    spatial spread x     = 0.2      # cm standard deviation always never FWHM
+    spatial spread y     = 0.2      # cm standard deviation always never FWHM
+    spatial cutoff x     = 0.3      # cm particles will not be generated outside [x0-cutoff, x0+cutoff] (optional)
+    spatial cutoff y     = 0.3      # cm particles will not be generated outside [y0-cutoff, y0+cutoff] (optional)
+    angular spread x     = 1.5      # degrees (optional) (standard deviation from z-axis)
+    angular spread y     = 0.9      # degrees (optional) (standard deviation from z-axis)
+    x translation        = 0        # cm (optional)
+    y translation        = 0        # cm (optional)
+    z of rotation        = 0        # cm (optional)
+    x rotation           = 1        # degrees, clockwise when viewed from +x axis
+    y rotation           = 0        # degrees, clockwise when viewed from +y axis
     :start spectrum:
         definition of the spectrum
     :stop spectrum:
@@ -130,7 +130,7 @@ public:
 
     void getPositionDirection(EGS_RandomGenerator *rndm, EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) {
         wt = 1;
-        //1. Sample position
+        // 1. Sample position
         do {
             double r = sqrt(-2*log(1-rndm->getUniform())); // store value characteristic for Gaussian Sampling
             double phi = PI2*rndm->getUniform();             // store value for phi
@@ -143,7 +143,7 @@ public:
         x.y += y_translation; // otherwise it will be done in the while condition above repeatedly
         x.z = z_pos;
 
-        //2. Sample direction
+        // 2. Sample direction
         switch (angle_mode) {
         case 1: { // Deviation in x and y
             double phi = PI2 * rndm->getUniform(); // store value of rotation arc phi !
@@ -187,21 +187,16 @@ public:
             u.z = 1;
         }
 
-        //3. Rotate X, Y, Z, U, V, W and interpolate them into the z-pos plane !
+        // 3. Rotate X, Y, Z, U, V, W and project them into the z-pos plane
         if (is_rotated) {
-            // rotate position and direction vectors
-            double tmp  =  z_pos - dist - x.x*calpha*sbeta - x.y*salpha + dist*calpha*cbeta;
-            x.y  = -x.x*salpha*sbeta + x.y*calpha + dist*salpha*cbeta;
-            x.x  =  x.x*cbeta + dist*sbeta;
-            double tmp_uz = u.z;
-            u.z  = -u.x*calpha*sbeta - u.y*salpha + u.z*calpha*cbeta;
-            u.y  = -u.x*salpha*sbeta + u.y*calpha + tmp_uz*salpha*cbeta;
-            u.x  =  u.x*cbeta + tmp_uz*sbeta;
+            rotation.transform(x);   // position: rotation + pivot translation
+            rotation.rotate(u);      // direction: rotation only, no translation
 
-            // SHIFT Particles along direction of motion back into plane !
-            tmp_uz = (z_pos - tmp)/u.z; //u.z will never be 0 ! [limitation of x/y rotation to (-90,90)]
-            x.x += tmp_uz * u.x;
-            x.y += tmp_uz * u.y;
+            // project back onto z_pos plane (ray-plane intersection)
+            double t = (z_pos - x.z) / u.z;
+            x.x += t * u.x;
+            x.y += t * u.y;
+            x.z = z_pos;
         }
     };
 
@@ -227,12 +222,8 @@ protected:
     static constexpr double DEGREE_TO_RAD = 0.017453292519943295;
     //!< governs angular sampling
     int angle_mode;
-    //!< auxilarry variables used when beam is rotated
-    EGS_Float calpha;
-    EGS_Float cbeta ;
-    EGS_Float salpha;
-    EGS_Float sbeta;
-    EGS_Float dist;
+    //!< rotation about z_point_of_rotation
+    EGS_AffineTransform rotation;
     /*! \brief Sets up the source type and description */
     void setUp();
 

@@ -181,24 +181,11 @@ void EGS_FocalSpot::setUp() {
         }
         // Output Information on Rotation of focal spot
         if (is_rotated) {
-            description += "   Additionally the focal spot is rotated around the point (X,Y,Z) = (";
-            description += to_string(x_translation)+","+to_string(y_translation)+","+to_string(z_point_of_rotation)+")\n";
-            if (x_rotation) {
-                description += " - " + to_string(x_rotation) + " degree rotation around x \n";
-            }
-            if (y_rotation) {
-                description += " - " + to_string(y_rotation) + " degree rotation around y \n";
-            }
-            description += "   afterwards the particles are shifted along their new direction of motion to the z specified.\n";
-            // Convert Units after reporting to log
-            x_rotation = x_rotation*DEGREE_TO_RAD; //CONVERT UNITS
-            y_rotation = y_rotation*DEGREE_TO_RAD; //CONVERT UNITS
-            //Store Auxilarry variables to save computational time
-            CALPHA = cos(x_rotation);
-            CBETA  = cos(y_rotation);
-            SALPHA = sin(x_rotation);
-            SBETA  = sin(y_rotation);
-            DIST   = z_pos - z_point_of_rotation;
+            // EGSnrc convention: positive angle = clockwise viewed from positive end of axis
+            EGS_RotationMatrix R = EGS_RotationMatrix::rotX(x_rotation) * EGS_RotationMatrix::rotY(y_rotation);
+            EGS_Vector pivot(0, 0, z_point_of_rotation);
+            EGS_Vector t = pivot - R*pivot;
+            rotation = EGS_AffineTransform(R, t);
         }
     }
 }
