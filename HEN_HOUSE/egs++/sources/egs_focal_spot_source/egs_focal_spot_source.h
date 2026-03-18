@@ -144,7 +144,7 @@ public:
         x.z = z_pos;
 
         //2. Sample direction
-        switch (ANGLE_MODE) {
+        switch (angle_mode) {
         case 1: { // Deviation in x and y
             double phi = PI2 * rndm->getUniform(); // store value of rotation arc phi !
             do {
@@ -190,13 +190,13 @@ public:
         //3. Rotate X, Y, Z, U, V, W and interpolate them into the z-pos plane !
         if (is_rotated) {
             // rotate position and direction vectors
-            double tmp  =  z_pos - DIST - x.x*CALPHA*SBETA - x.y*SALPHA + DIST*CALPHA*CBETA;
-            x.y  = -x.x*SALPHA*SBETA + x.y*CALPHA + DIST*SALPHA*CBETA;
-            x.x  =  x.x*CBETA + DIST*SBETA;
+            double tmp  =  z_pos - dist - x.x*calpha*sbeta - x.y*salpha + dist*calpha*cbeta;
+            x.y  = -x.x*salpha*sbeta + x.y*calpha + dist*salpha*cbeta;
+            x.x  =  x.x*cbeta + dist*sbeta;
             double tmp_uz = u.z;
-            u.z  = -u.x*CALPHA*SBETA - u.y*SALPHA + u.z*CALPHA*CBETA;
-            u.y  = -u.x*SALPHA*SBETA + u.y*CALPHA + tmp_uz*SALPHA*CBETA;
-            u.x  =  u.x*CBETA + tmp_uz*SBETA;
+            u.z  = -u.x*calpha*sbeta - u.y*salpha + u.z*calpha*cbeta;
+            u.y  = -u.x*salpha*sbeta + u.y*calpha + tmp_uz*salpha*cbeta;
+            u.x  =  u.x*cbeta + tmp_uz*sbeta;
 
             // SHIFT Particles along direction of motion back into plane !
             tmp_uz = (z_pos - tmp)/u.z; //u.z will never be 0 ! [limitation of x/y rotation to (-90,90)]
@@ -226,14 +226,13 @@ protected:
     static constexpr double PI2 = 6.283185307179586;
     static constexpr double DEGREE_TO_RAD = 0.017453292519943295;
     //!< governs angular sampling
-    int ANGLE_MODE;
+    int angle_mode;
     //!< auxilarry variables used when beam is rotated
-    EGS_Float CALPHA;
-    EGS_Float CBETA ;
-    EGS_Float SALPHA;
-    EGS_Float SBETA;
-    EGS_Float DIST;
-    EGS_Float TEMP;
+    EGS_Float calpha;
+    EGS_Float cbeta ;
+    EGS_Float salpha;
+    EGS_Float sbeta;
+    EGS_Float dist;
     /*! \brief Sets up the source type and description */
     void setUp();
 

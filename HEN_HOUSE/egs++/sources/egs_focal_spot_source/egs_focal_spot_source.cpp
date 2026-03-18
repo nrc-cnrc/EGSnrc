@@ -52,7 +52,7 @@ EGS_FocalSpot::EGS_FocalSpot(EGS_Input *input, EGS_ObjectFactory *f) :
     }
     else if (sigma_x_space <= 0) {
         egsWarning("EGS_FocalSpot: 'spatial spread x' must be positive (got %g)\n",
-                sigma_x_space);
+                   sigma_x_space);
         valid = false;
     }
 
@@ -62,7 +62,7 @@ EGS_FocalSpot::EGS_FocalSpot(EGS_Input *input, EGS_ObjectFactory *f) :
     }
     else if (sigma_y_space <= 0) {
         egsWarning("EGS_FocalSpot: 'spatial spread y' must be positive (got %g)\n",
-                sigma_y_space);
+                   sigma_y_space);
         valid = false;
     }
 
@@ -81,25 +81,25 @@ EGS_FocalSpot::EGS_FocalSpot(EGS_Input *input, EGS_ObjectFactory *f) :
     // guard against negative or zero cutoff values
     if (space_cutoff_x <= 0 || space_cutoff_y <= 0) {
         egsFatal("EGS_FocalSpot: spatial cutoff values must be positive "
-                "(got cutoff_x=%g, cutoff_y=%g)\n",
-                space_cutoff_x, space_cutoff_y);
+                 "(got cutoff_x=%g, cutoff_y=%g)\n",
+                 space_cutoff_x, space_cutoff_y);
     }
 
-    ANGLE_MODE = 0;
+    angle_mode = 0;
     if ((sigma_x_angle != 0) || (sigma_y_angle != 0)) {
         is_deviating = true;
-        // Set ANGLE_MODE for sampling of direction of motion (default is u.x=u.y=0, u.z=1)
+        // Set angle_mode for sampling of direction of motion (default is u.x=u.y=0, u.z=1)
         if ((sigma_x_angle != 0) && (sigma_y_angle != 0)) {
             // 1 - deviation from z-axis in both directions !
-            ANGLE_MODE = 1;
+            angle_mode = 1;
         }
         else if (sigma_x_angle != 0) {
             // 2 - only deviation along x-axis
-            ANGLE_MODE = 2;
+            angle_mode = 2;
         }
         else if (sigma_y_angle != 0) {
             // 3 - only deviation along y-axis
-            ANGLE_MODE = 3;
+            angle_mode = 3;
         }
     }
 
