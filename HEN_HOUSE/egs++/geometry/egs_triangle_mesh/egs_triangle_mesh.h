@@ -23,7 +23,7 @@
 #
 #  Author:          Max Orok, 2022
 #
-#  Contributors:
+#  Contributors:    Alexandre Demelo
 #
 ###############################################################################
 */
