@@ -4323,7 +4323,7 @@ extern "C" {
         outputBlock->setAppName("egs_cbct");
         outputBlock->addSingleInput("display type", false, "Whether to record the total, attenuated (primary), or scatter Kerma. Defaults to total.", {"total", "attenuated", "scattered"});
         outputBlock->addSingleInput("store signal map", false, "Whether to a printout of the detector scan in a .egsmap file.", {"yes", "no"});
-        outputBlock->addSingleInput("store data arrays", false, "Whether to store .egsdat files during the simulation, to allow for restarting crashed runs. Defaults to yes.", {"yes", "no"});
+        outputBlock->addSingleInput("store data arrays", false, "Whether to store .egsdat files during the simulation, to allow for resuming crashed runs. Defaults to yes.", {"yes", "no"});
         outputBlock->addSingleInput("verbose", false, "Whether to print extra information during the simulation. Defaults to no.", {"yes", "no"});
         shared_ptr<EGS_BlockInput> outputScanBlock = outputBlock->addBlockInput("scan output");
         outputScanBlock->addSingleInput("scan file", false, "The filename to output the scan from the simulation.");

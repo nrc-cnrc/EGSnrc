@@ -1129,7 +1129,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         newGeom = simGeom;
     }
 
-    // restart from scratch (copied from main.cpp)
+    // relaunch from scratch (copied from main.cpp)
     EGS_Float xmin = -50, xmax = 50;
     EGS_Float ymin = -50, ymax = 50;
     EGS_Float zmin = -50, zmax = 50;
