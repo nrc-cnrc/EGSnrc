@@ -520,11 +520,12 @@ public:
     }
 
     // Octants are returned ordered by minimum intersection distance
-    std::vector<int> findOtherIntersectedOctants(const EGS_Vector &p, const EGS_Vector &v, int exclude_octant) const {
+    std::array<std::pair<EGS_Float, int>, 7> findOtherIntersectedOctants(const EGS_Vector &p, const EGS_Vector &v, int exclude_octant, int &n) const {
         if (isLeaf()) {
             throw std::runtime_error("findOtherIntersectedOctants called on leaf node");
         }
-        std::vector<std::pair<EGS_Float, int>> intersections;
+        std::array<std::pair<EGS_Float, int>, 7> intersections;
+        n = 0;
         for (int i = 0; i < 8; i++) {
             if (i == exclude_octant) {
                 continue;
@@ -532,15 +533,11 @@ public:
             EGS_Vector intersection;
             EGS_Float dist;
             if (children_[i].bbox_.ray_intersection(p, v, dist, intersection)) {
-                intersections.push_back({dist, i});
+                intersections[n++] = {dist, i};
             }
         }
-        std::sort(intersections.begin(), intersections.end());
-        std::vector<int> octants;
-        for (const auto &i : intersections) {
-            octants.push_back(i.second);
-        }
-        return octants;
+        std::sort(intersections.begin(), intersections.begin() + n);
+        return intersections;
     }
 
     int howfar(const EGS_Vector &x, const EGS_Vector &u, double &min_dist, int &min_tri, const bool inside_mesh, EGS_TriangleMesh &trimesh) const {
@@ -641,8 +638,10 @@ public:
         // Otherwise, if there was no intersection in the most likely
         // octant, examine the other octants that are intersected by
         // the ray:
-        for (const auto &o : findOtherIntersectedOctants(x, u, octant)) {
-            auto elt = children_[o].howfar(x, u, min_dist, min_tri, inside_mesh, trimesh);
+        int n_octants = 0;
+        const auto others = findOtherIntersectedOctants(x, u, octant, n_octants);
+        for (int i = 0; i < n_octants; i++) {
+            auto elt = children_[others[i].second].howfar(x, u, min_dist, min_tri, inside_mesh, trimesh);
             // If we find a valid element, return it
             if (elt != -1) {
                 return elt;
@@ -707,8 +706,10 @@ public:
         // Otherwise, if there was no intersection in the most likely
         // octant, examine the other octants that are intersected by
         // the ray:
-        for (const auto &o : findOtherIntersectedOctants(x, arbitrary_unit_velocity, octant)) {
-            auto elt = children_[o].isWhere(x, arbitrary_unit_velocity, min_dist_interior, min_dist_exterior, trimesh);
+        int n_octants = 0;
+        const auto others = findOtherIntersectedOctants(x, arbitrary_unit_velocity, octant, n_octants);
+        for (int i = 0; i < n_octants; i++) {
+            auto elt = children_[others[i].second].isWhere(x, arbitrary_unit_velocity, min_dist_interior, min_dist_exterior, trimesh);
             // If we find a valid element, return it
             if (elt != -1) {
                 return elt;
