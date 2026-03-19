@@ -1174,12 +1174,12 @@ extern "C" {
         vector<string> oct_options;
         oct_options.push_back("no");
         oct_options.push_back("yes");
-        bool oct_set = input->getInput("octree accelerate",oct_options,false); // here false in argument makes time inclusion false by default
+        bool oct_set = input->getInput("octree accelerate", oct_options, 1); // default: yes
         if (oct_set) {
-            egsInformation("code will be octree accelerated\n");
+            egsInformation("EGS_TriangleMesh: octree acceleration enabled\n");
         }
         else {
-            egsInformation("naive approach will be employed\n");
+            egsInformation("EGS_TriangleMesh: octree acceleration disabled\n");
         }
 
         vector<string> normal_options;
