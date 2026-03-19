@@ -401,19 +401,19 @@ public:
         const std::array<EGS_Vector, 3> unit_vecs { ux, uy, uz};
         for (const EGS_Vector &u : unit_vecs) {
             for (const EGS_Vector &f : edge_vecs) {
-                const EGS_Vector a = cross(u, f);
-                if (is_zero(a)) {
+                const EGS_Vector u_cross_f = cross(u, f);
+                if (is_zero(u_cross_f)) {
                     // Ignore testing this axis, likely won't be a separating
                     // axis. This may lead to false positives, but not false
                     // negatives.
                     continue;
                 }
                 // find box projection radius
-                const EGS_Float r = ex * std::abs(dot(ux, a)) + ey * std::abs(dot(uy, a)) + ez * std::abs(dot(uz, a));
-                // find three projections onto axis a
-                const EGS_Float p0 = dot(v0, a);
-                const EGS_Float p1 = dot(v1, a);
-                const EGS_Float p2 = dot(v2, a);
+                const EGS_Float r = ex * std::abs(dot(ux, u_cross_f)) + ey * std::abs(dot(uy, u_cross_f)) + ez * std::abs(dot(uz, u_cross_f));
+                // find three projections onto axis u_cross_f
+                const EGS_Float p0 = dot(v0, u_cross_f);
+                const EGS_Float p1 = dot(v1, u_cross_f);
+                const EGS_Float p2 = dot(v2, u_cross_f);
                 if (std::max(-max3(p0, p1, p2), min3(p0, p1, p2)) > r+ 1e-10) {
                     return false;
                 }
