@@ -478,7 +478,7 @@ public:
             int added = -1;
             for (int i = 0; i < 8; i++) {
                 // check if the triangle corresponding to element e intersects the bounding box of our current node
-                if (bbs[i].intersects_triangle(EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]),e)) {
+                if (bbs[i].intersects_triangle(EGS_Vector(xs[0], ys[0], zs[0]), EGS_Vector(xs[1], ys[1], zs[1]), EGS_Vector(xs[2], ys[2], zs[2]))) {
                     added++;
                     octants[i].push_back(e);
                 }
@@ -733,7 +733,8 @@ public:
         EGS_Vector intersection;
         EGS_Float dist;
         auto hit = root_.bbox_.ray_intersection(x, u, dist, intersection);
-        if (!hit || dist > max_dist) { // egsmesh also has maxdistance condition here ???
+        if (!hit || dist > max_dist) {
+            // ray doesn't reach the bounding box within the current step
             return -1;
         }
         return root_.howfar(x, u, min_dist, min_tri, inside_mesh, trimesh);
@@ -808,11 +809,11 @@ EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec, bool oct_set) :
     // at this point, we have saved all the triangle vertices and normals, we have created and properly sized the bounding box, and the media has been "initialized' by the usual getinput
     // so we have essentially all we need to get started on creating the octrtee
     if (getOctBool()) {
-        egsInformation("INITIALIZING OCTREE");
+        egsInformation("INITIALIZING OCTREE\n");
         initializeOctree();
     }
     else {
-        egsInformation("SKIP OCTREE CREATION");
+        egsInformation("SKIP OCTREE CREATION\n");
     }
 }
 
@@ -915,7 +916,7 @@ EGS_Float EGS_TriangleMesh::hownear(int ireg, const EGS_Vector &x) {
     // If the point is outside the mesh bounding box, the HOWNEAR spec allows
     // for returning a lower bound, which in this case is the minimum distance
     // to the bounding box.
-    if (ireg == -1 && !bbox->contains(x)) { // if (ireg == -1 && !bbox->contains(x))
+    if (ireg == -1 && !bbox->contains(x)) {
         // TODO test potential performance improvement by calculating the
         // distance explicitly without finding the closest point.
         return distance(bbox->closest_point(x), x);
@@ -1099,10 +1100,10 @@ extern "C" {
         oct_options.push_back("yes");
         bool oct_set = input->getInput("octree accelerate",oct_options,false); // here false in argument makes time inclusion false by default
         if (oct_set) {
-            egsInformation("code will be octree accelerated");
+            egsInformation("code will be octree accelerated\n");
         }
         else {
-            egsInformation("naive approach will be employed");
+            egsInformation("naive approach will be employed\n");
         }
 
         EGS_TriangleMesh *result = nullptr;
