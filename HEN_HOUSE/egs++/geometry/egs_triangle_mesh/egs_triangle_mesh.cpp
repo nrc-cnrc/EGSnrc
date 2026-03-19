@@ -615,7 +615,6 @@ public:
         return -1;
 
     }
-    // howfar end
 
     int isWhere(const EGS_Vector &x, const EGS_Vector &arbitrary_unit_velocity, double &min_dist_interior, double &min_dist_exterior, EGS_TriangleMesh &trimesh) {
         // leaf
@@ -681,6 +680,7 @@ public:
         }
         return -1;
     }
+
     void hownear(const EGS_Vector &x, EGS_Float &min_t, EGS_Vector &min_point, EGS_TriangleMesh &trimesh) {
         // leaf
         if (isLeaf()) {
@@ -853,6 +853,7 @@ int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
     // for intersection. Compute the minimum distances to an interior face and
     // an exterior face. If the interior face is closer than the exterior face,
     // point `x` is inside the mesh (region 0), otherwise it is outside (-1).
+    //
 
     const double FRAC_1_SQRT_3 = 0.57735026919;
     const EGS_Vector arbitrary_unit_velocity(FRAC_1_SQRT_3, FRAC_1_SQRT_3, FRAC_1_SQRT_3);
@@ -889,9 +890,11 @@ int EGS_TriangleMesh::isWhere(const EGS_Vector &x) {
             }
         }
     }
+
     // If there were no intersections found, we must have been outside of the
-    // mesh (ignoring watertightness issues at mesh corners and edges if the
-    // point is inside of the mesh).
+    // mesh, ignoring watertightness issues at mesh corners and edges, or if
+    // the point lies exactly on a mesh feature aligned with the fixed test
+    // ray direction (1/√3, 1/√3, 1/√3).
     if (min_dist_interior == veryFar && min_dist_exterior == veryFar) {
         return -1;
     }
