@@ -484,7 +484,7 @@ public:
                 }
             }
             if (added==-1) {
-            egsInformation("no octant intersection found for triangle %d with points "
+            egsInformation("EGS_TriangleMesh: no octant intersection found for triangle %d with points "
                         "a = (%g, %g, %g)  b = (%g, %g, %g)  c = (%g, %g, %g)\n",
                         e,
                         xs[0], ys[0], zs[0],
@@ -885,11 +885,11 @@ EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec, bool oct_set, bool
     // at this point, we have saved all the triangle vertices and normals, we have created and properly sized the bounding box, and the media has been "initialized' by the usual getinput
     // so we have essentially all we need to get started on creating the octrtee
     if (getOctBool()) {
-        egsInformation("INITIALIZING OCTREE\n");
+        egsInformation("EGS_TriangleMesh: initializing octree\n");
         initializeOctree();
     }
     else {
-        egsInformation("SKIP OCTREE CREATION\n");
+        egsInformation("EGS_TriangleMesh: skip octree creation\n");
     }
 }
 
