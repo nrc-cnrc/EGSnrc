@@ -587,7 +587,43 @@ public:
             }
             return min_tri; // return min tri. Program knows there was no intersect in this octant if it is still -1
         }
+
+        // TODO: the current traversal resets to the root node on every
+        // octant transition, then searches sibling octants via
+        // findOtherIntersectedOctants. This could be replaced with a
+        // location-code traversal that encodes each leaf position as a
+        // binary code, allowing direct neighbour lookup by bit manipulation
+        // without ascending the whole tree. This could reduce traversal
+        // cost for rays crossing many octant boundaries in fine meshes.
+        //
+        // This was implemented in egs_octree: see getNeighborNodeX in
+        // egs_octree.h for inspiration. The idea is to leverage the fact
+        // that the path to reach any leaf uniquely maps to a bit field.
+        // This generalizes to an octree (using one bit field per axis).
+        // To find the next octant in any direction, we only need to walk
+        // up to the common parent node of adjacent nodes in a given direction,
+        // which is determined by XOR logic. Then we descend directly in
+        // the neighbour.
+        //
+        // The storage overhead in each TriNode would be:
+        //
+        //     - a parent pointer
+        //     - one level integer
+        //     - 3 integer location codes (one per axis)
+        //
+        // This adds 24 bytes for each TriNode, a 25% increase. For a tree
+        // with a depth of d, the computational savings are a factor of d:
+        // For k octant traversals, resetting to the tree root means the
+        // algorithm is ~ O(k*d), whereas with location codes it is
+        // ~ O(k*log2(d)). There would be cache hit degradation on account
+        // of more memory per node, however fewer nodes are hit. Overall,
+        // since the octree currently bottoms out at 30 triangles per node,
+        // the depth d for n triangles is a modest ~ log8(n/30) ~ 5 for up
+        // to a million triangles, for an efficiency gain of ~ 2. At any rate,
+        // this may be worth a try!
+
         // parent
+
         EGS_Vector intersection;
         EGS_Float interdist;
         auto hit = bbox_.ray_intersection(x, u, interdist, intersection);
