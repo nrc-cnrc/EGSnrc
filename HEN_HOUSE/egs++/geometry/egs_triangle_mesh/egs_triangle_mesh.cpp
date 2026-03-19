@@ -371,7 +371,6 @@ public:
     // instead of false negatives (missed intersections, a huge problem if
     // present).
     bool intersects_triangle(const EGS_Vector &a, const EGS_Vector &b, const EGS_Vector &c) const {
-        const EGS_Float eps = 1e-30;
         if (min3(a.x, b.x, c.x) >= max_x+1e-10 ||
                 min3(a.y, b.y, c.y) >= max_y+1e-10 ||
                 min3(a.z, b.z, c.z) >= max_z+1e-10 ||
