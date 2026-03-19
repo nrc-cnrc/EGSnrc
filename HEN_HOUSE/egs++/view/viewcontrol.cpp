@@ -2982,10 +2982,6 @@ int GeometryViewControl::setGeometry(
     // related objects depending on input file and tracks file
     timeObjectVisibility();
 
-    // run timeObjectVisibility to either make visible or hide time index
-    // related objects depending on input file and tracks file
-    timeObjectVisibility();
-
 #ifdef VIEW_DEBUG
     qDebug("Got %d user defined colors",int(ucolors.size()));
 #endif
@@ -4442,65 +4438,4 @@ vector<string> findDensityCorrectionInputs(string compound_dir) {
     // }
 
     return fileList;
-}
-
-bool GeometryViewControl::hasValidTime() {
-    // This function is used to determine whether the time index elements should be shown in the case that no dynamic geometry is present
-    bool incltime;
-
-    ifstream data(filename_tracks.toUtf8().constData(), ios::binary);
-
-    // Skip the first few bits related to the string head_inctime
-    data.seekg(sizeof(head_inctime));
-    // Read the boolean of whether or not time indices are included
-    data.read((char *)&incltime, sizeof(bool));
-
-    data.close();
-
-    return incltime;
-}
-
-void GeometryViewControl::timeObjectVisibility() {
-    //this function is used to make the time index objects visible or hidden as necessary. It will use the hasdynamic boolean, which indicates if they have any relevance in the uploaded files
-    if (!hasDynamic) { //if false all objects are hidden and the particle index spin boxes are allowed to be manually edited
-        button_timereset->hide();
-        button_timeplay->hide();
-        slider_timeindex->hide();
-        spin_timewindow->hide();
-        label_timewindow->hide();
-        spin_timeindex->hide();
-        label_timeindex->hide();
-        groupBox_time->hide();
-        spin_numTimeSteps->hide();
-        label_numTimeSteps->hide();
-        spin_tmaxe->setReadOnly(false);
-        spin_tmine->setReadOnly(false);
-        spin_tmaxpo->setReadOnly(false);
-        spin_tminpo->setReadOnly(false);
-        spin_tmaxp->setReadOnly(false);
-        spin_tminp->setReadOnly(false);
-    }
-    else { //if trueall objects are made visible and the particle index spin boxes cannot be manually edited
-        /* disable manual spinbox editing as the particle min and max indices will be determined by the time window and current time index (either from slider or spinbox). It is simpler in this case to simply
-         * have them modified only by interactions with time index objects to avoid any bugs or inconsistensies between the visual display and the dashboard settings*/
-        spin_tmaxe->setReadOnly(true);
-        spin_tmine->setReadOnly(true);
-        spin_tmaxpo->setReadOnly(true);
-        spin_tminpo->setReadOnly(true);
-        spin_tmaxp->setReadOnly(true);
-        spin_tminp->setReadOnly(true);
-        button_timereset->show();
-        button_timeplay->show();
-        slider_timeindex->show();
-        spin_timewindow->show();
-        label_timewindow->show();
-        spin_timeindex->show();
-        label_timeindex->show();
-        groupBox_time->show();
-        spin_numTimeSteps->show();
-        label_numTimeSteps->show();
-    }
-    //has dynamic is true when a dynamic geometry is present, or when the tracks are being given some time index (exmaple due to a dynamic source or phasespace file)
-
-
 }
