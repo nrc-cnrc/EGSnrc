@@ -28,6 +28,7 @@
 ###############################################################################
 */
 
+#include "egs_functions.h"
 #include "egs_input.h"
 #include "egs_triangle_mesh.h"
 
@@ -756,7 +757,7 @@ public:
 };
 
 // No checks are done on element validity, triangles are used as-is
-EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec, bool oct_set) :
+EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec, bool oct_set, bool use_stored_normals) :
     n_tris(spec.elements.size()), EGS_BaseGeometry(EGS_BaseGeometry::getUniqueName()),octree_acc_on(oct_set) {
 
     egsInformation("EGS_TriangleMesh: mesh contains %d triangles\n", n_tris);
@@ -781,12 +782,11 @@ EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec, bool oct_set) :
     EGS_Float bbox_max_y = -veryFar;
     EGS_Float bbox_max_z = -veryFar;
 
+    int n_bad_normals = 0;
     for (const auto &tri: spec.elements) {
         xs.push_back({tri.a.x, tri.b.x, tri.c.x});
         ys.push_back({tri.a.y, tri.b.y, tri.c.y});
         zs.push_back({tri.a.z, tri.b.z, tri.c.z});
-        // TODO add check for degenerate triangle normals?
-        ns.push_back(tri.n);
 
         bbox_min_x = std::min(bbox_min_x, std::min(tri.a.x, std::min(tri.b.x, tri.c.x)));
         bbox_min_y = std::min(bbox_min_y, std::min(tri.a.y, std::min(tri.b.y, tri.c.y)));
@@ -795,6 +795,46 @@ EGS_TriangleMesh::EGS_TriangleMesh(EGS_TriangleMeshSpec spec, bool oct_set) :
         bbox_max_x = std::max(bbox_max_x, std::max(tri.a.x, std::max(tri.b.x, tri.c.x)));
         bbox_max_y = std::max(bbox_max_y, std::max(tri.a.y, std::max(tri.b.y, tri.c.y)));
         bbox_max_z = std::max(bbox_max_z, std::max(tri.a.z, std::max(tri.b.z, tri.c.z)));
+
+        // Validate and correct triangle normals. Recompute the normal
+        // from the vertex winding order and check it agrees with the
+        // stored normal. Correct silently but count corrections.
+        EGS_Vector ab = tri.b - tri.a;
+        EGS_Vector ac = tri.c - tri.a;
+        EGS_Vector normal = ab.times(ac);
+        EGS_Float normal_len2 = normal.length2();
+        EGS_Float edge_scale = std::max(ab.length2(), ac.length2());
+        if (edge_scale < epsilon || normal_len2 < epsilon * edge_scale) {
+            // Degenerate triangle: cannot recompute normal from winding
+            // order, keep stored normal as-is regardless of normals option.
+            ns.push_back(tri.n);
+        }
+        else {
+            EGS_Vector normal_unit = (1.0 / std::sqrt(normal_len2)) * normal;
+            if (use_stored_normals) {
+                // Trust the stored STL normals, but warn if they disagree
+                // with the winding order.
+                if (tri.n * normal_unit < 0.0) {
+                    n_bad_normals++;
+                }
+                ns.push_back(tri.n);
+            } else {
+                // Use normals recomputed from vertex winding order.
+                // Warn if they disagree with the stored normals, but
+                // push normal_unit unconditionally: it is by definition
+                // consistent with the winding order.
+                if (tri.n * normal_unit < 0.0) {
+                    n_bad_normals++;
+                }
+                ns.push_back(normal_unit);
+            }
+        }
+    }
+
+    if (n_bad_normals > 0) {
+        egsWarning("EGS_TriangleMesh: %d triangles had normals inconsistent "
+                "with vertex winding order. Using %s normals.\n",
+                n_bad_normals, use_stored_normals ? "stored" : "calculated");
     }
 
     bbox = std::unique_ptr<EGS_TriangleMeshBbox>(new EGS_TriangleMeshBbox(
@@ -1106,9 +1146,15 @@ extern "C" {
             egsInformation("naive approach will be employed\n");
         }
 
+        vector<string> normal_options;
+        normal_options.push_back("calculate");
+        normal_options.push_back("stored");
+        int normal_opt = input->getInput("normals", normal_options, 0); // default: calculate
+        bool use_stored_normals = (normal_opt == 1);
+
         EGS_TriangleMesh *result = nullptr;
         try {
-            result = new EGS_TriangleMesh(std::move(mesh_spec),oct_set);
+            result = new EGS_TriangleMesh(std::move(mesh_spec), oct_set, use_stored_normals);
         }
         catch (const std::runtime_error &e) {
             std::string error_msg = std::string("createGeometry(EGS_TriangleMesh): ") +

@@ -191,7 +191,7 @@ correctly and not terminated immediately after initially exiting the mesh.
 
 class EGS_TRIANGLE_MESH_EXPORT EGS_TriangleMesh : public EGS_BaseGeometry {
 public:
-    explicit EGS_TriangleMesh(EGS_TriangleMeshSpec, bool);
+    explicit EGS_TriangleMesh(EGS_TriangleMeshSpec spec, bool oct_set, bool use_stored_normals);
 
     // EGS_TriangleMesh is move-only
     EGS_TriangleMesh(const EGS_TriangleMesh &) = delete;
