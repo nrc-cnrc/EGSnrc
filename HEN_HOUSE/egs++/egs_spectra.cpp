@@ -405,6 +405,18 @@ public:
         return table->getAverage();
     };
 
+    EGS_Float * getF() {
+        return table->getF();
+    };
+
+    EGS_Float * getX() {
+        return table->getX();
+    };
+
+    int get_length() {
+        return table->get_length();
+    };
+
 protected:
 
     EGS_AliasTable *table; //!< The alias table object used to sample energies.
