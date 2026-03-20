@@ -1,0 +1,44 @@
+name: Coding style
+
+on:
+  workflow_call:
+
+jobs:
+
+  eol:
+    name: eol whitespace
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Check whitespace
+        run: |
+          for f in $(grep -ERl -I '\s+$' HEN_HOUSE | grep -v "^HEN_HOUSE/spectra/lnhb/ensdf"); do
+              echo $f;
+              sed -i -e's/[[:space:]]*$//' $f;
+          done
+          git diff
+          (! git status | grep "modified")
+
+  astyle:
+
+    name: astyle standard
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install astyle
+        run: |
+          wget https://sourceforge.net/projects/astyle/files/astyle/astyle%203.1/astyle_3.1_linux.tar.gz
+          tar -xzf astyle_3.1_linux.tar.gz
+          (cd astyle/build/gcc; make)
+
+      - name: Check astyle formatting standard
+        run: |
+          astyle/build/gcc/bin/astyle --options=HEN_HOUSE/scripts/egs_style_standard --recursive "HEN_HOUSE/egs++/*.cpp,*.h"
+          git diff
+          (! git status | grep ".orig")

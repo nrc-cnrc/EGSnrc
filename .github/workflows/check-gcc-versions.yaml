@@ -1,0 +1,45 @@
+name: Compiler versions
+
+on:
+  workflow_call:
+
+jobs:
+
+  gcc-versions:
+    name: gcc versions
+
+    strategy:
+      matrix:
+        gcc-version: [4.8, 5, 6, 7, 8, 9]
+        os: [ubuntu-18.04]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-18.04'
+        run: |
+          sudo apt-get update -q
+          sudo apt remove -qy gcc g++
+          sudo apt install gfortran
+          sudo apt install gcc-${{ matrix.gcc-version }}
+          sudo apt install g++-${{ matrix.gcc-version }}
+          sudo apt-get install -qy expect
+          sudo apt-get install -qy libmotif-dev
+
+      - name: Compiler versions
+        run: |
+          gfortran --version
+          gcc  --version
+          g++ --version
+          make --version
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build EGSnrc
+        run: |
+          HEN_HOUSE/scripts/configure.expect ${{ runner.os }}.conf | tee configure.log
+          cat *.log log/*.log
+          (! grep -i fail *.log log/*.log)
