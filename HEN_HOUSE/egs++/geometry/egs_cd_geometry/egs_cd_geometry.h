@@ -906,7 +906,7 @@ do_checks:
                bg->getBScaling(ibase);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 

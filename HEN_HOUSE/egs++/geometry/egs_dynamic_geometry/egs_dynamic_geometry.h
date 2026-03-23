@@ -369,7 +369,7 @@ public:
      * \param str Label to search for.
      * \param regs Output: List of region indices with the specified label.
      */
-    void getLabelRegions(const string &str, vector<int> &regs);
+    void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
     /*!
      * \brief Updates the next particle state for geometries. It is tasked with determining the next state of the dynamic geometry.

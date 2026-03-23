@@ -336,10 +336,10 @@ extern "C" {
 
     }
 
-    void EGS_SmartEnvelope::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_SmartEnvelope::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         // label defined in the envelope geometry
-        g->getLabelRegions(str, regs);
+        g->getLabelRegions(str, regs, sanitize);
 
         // label defined in the inscribed geometries
         vector<int> gregs;
@@ -348,7 +348,7 @@ extern "C" {
             // add regions from set geometries
             gregs.clear();
             if (geometries[i]) {
-                geometries[i]->getLabelRegions(str, gregs);
+                geometries[i]->getLabelRegions(str, gregs, sanitize);
             }
 
             // shift region numbers according to indexing style
@@ -362,7 +362,7 @@ extern "C" {
         }
 
         // label defined in self (envelope geometry input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 
