@@ -68,11 +68,11 @@ delimiters, {\tt :start media definition:} and {\tt :stop media definition:}. Wi
 
     # Now salt water with 1% salt, a mixture of compounds
     # This will do on-the-fly ESTAR density corrections
-    :start water:
+    :start saline:
         mixture compounds = H2O, NaCl
         mass fractions = 0.99, 0.01
         bulk density = 1.027
-    :stop water:
+    :stop saline:
 
     # The usual air definition
     # Here we just use the density correction file that is distributed with EGSnrc

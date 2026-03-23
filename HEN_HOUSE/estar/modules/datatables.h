@@ -55,9 +55,9 @@ double atb[] = {1.007940,       4.0026020,      6.9410,         9.0121820,
                 247.07030,      251.07960,      252.0830,       257.09510
                };
 
-// The dictionary (per_table) contains the elements of the periodic table (atomic numbers 1 - 100).
+// The dictionary (per_table) contains the elements of the periodic table (atomic numbers 1 to 100).
 // In NIST ESTAR, elements with
-// atomic numbers 1 -98 were included (source: https://physics.nist.gov/PhysRefData/Star/Text/method.html).
+// atomic numbers 1 to 98 were included (source: https://physics.nist.gov/PhysRefData/Star/Text/method.html).
 map<string, int>per_table =     {{"H", 1}, {"He", 2}, {"Li",3}, {"Be",4},
     {"B",5}, {"C",6}, {"N",7}, {"O",8}, {"F",9}, {"Ne",10}, {"Na",11}, {"Mg",12},
     {"Al",13}, {"Si",14}, {"P",15}, {"S",16}, {"Cl",17}, {"Ar",18}, {"K",19}, {"Ca",20},

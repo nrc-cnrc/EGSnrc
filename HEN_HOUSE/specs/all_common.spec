@@ -30,7 +30,7 @@
 #  This file is included by EGSnrc makefiles via the configuration file. It
 #  contains definitions of various directories, the default random number
 #  generator, the default set of sources, etc. These definitions are the same
-#  on all plarforms.
+#  on all platforms.
 #
 ###############################################################################
 

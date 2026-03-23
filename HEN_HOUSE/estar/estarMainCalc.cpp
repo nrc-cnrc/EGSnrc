@@ -208,7 +208,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         record = iz-1; // this is the index used for simplicity (atomic number - 1)
         nmax = ds.nmax[record];
 
-        if (iz == 6 and mmax==1) { // elemental carbon is dealt differently
+        if (iz == 6 && mmax==1) { // elemental carbon is dealt differently
             ds.nc[record][nmax -1] = 1;
             ds.nc[record][nmax] = -1;
             ds.bd[record][nmax] = ds.bd[record][nmax-1];
