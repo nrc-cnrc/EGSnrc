@@ -30,7 +30,7 @@
 #  This file is included by EGSnrc makefiles via the configuration file. It
 #  contains definitions of various directories, the default random number
 #  generator, the default set of sources, etc. These definitions are the same
-#  on all plarforms.
+#  on all platforms.
 #
 ###############################################################################
 
@@ -61,6 +61,16 @@ USER_LIBDIR = $(EGS_HOME)$(LIB_SUBDIR)
 # EGSnrc sources
 #
 EGS_SOURCEDIR = $(HEN_HOUSE)src$(DSEP)
+
+# ESTAR sources
+#
+ESTAR_DIR = $(HEN_HOUSE)estar$(DSEP)
+ESTAR_MODULES = $(ESTAR_DIR)modules$(DSEP)
+ESTAR_ROUTINE = $(ESTAR_MODULES)routine$(DSEP)
+ESTAR_S_HELPERS = $(ESTAR_MODULES)solverHelpers$(DSEP)
+
+# ESTAR linking keyword
+F77_CPP_LINKER = -lstdc++ -std=c++11
 
 # Utilities coming with EGSnrc
 #
