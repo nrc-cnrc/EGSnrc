@@ -41,6 +41,7 @@
 #include "egs_base_source.h"
 #include "egs_vector.h"
 #include "egs_rndm.h"
+#include "egs_transformations.h"
 
 
 #ifdef WIN32
