@@ -26,6 +26,7 @@
 %                   Dave Rogers
 %                   Frederic Tessier
 %                   Blake Walters
+%                   Reid Townson
 %
 %  Contributors:
 %
@@ -118,11 +119,6 @@
 \rhead[{\sffamily NRCC Report PIRS-701 }]{{\sffamily ~\thepage}}
 %\rfoot[{\sffamily {\rightmark}}]{{\sffamily {\rightmark}}}
 \rfoot[]{{\sffamily {\rightmark}}}
-% Replace line with fixed date with the one below when commiting
-% Beware: Using the macro below conflicts between CVS and latex!!!
-% \lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2013/09/26 17:59:57 $
-\lfoot[{\sffamily {\leftmark}}]{{\small Last edited 2011/05/02 18:36:27
-}}
 \cfoot{}
 
 \begin{latexonly}
@@ -347,12 +343,25 @@ page}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%               ESTAR User Guide
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+%\mbox{}  \newpage              %needed to get next section on odd page
+\renewcommand{\leftmark}{{8:  ESTAR User's Manual}}
+
+
+\input{inputs/estar_um.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %		Mortran3 Users Guide
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\newpage
 \mbox{}  \newpage		%needed to get next section on odd page
-\renewcommand{\leftmark}{{8:  Users Guide to Mortran3}}
+\renewcommand{\leftmark}{{9:  Users Guide to Mortran3}}
 \typeout{Starting Mortran3 manual - should be odd page}
 \input{inputs/mortran3_man.tex}
 
@@ -365,7 +374,7 @@ page}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
-\renewcommand{\leftmark}{{9: EGSnrc System Considerations}}
+\renewcommand{\leftmark}{{10: EGSnrc System Considerations}}
 
 \typeout{Starting ``EGSnrc System Considerations'' should be odd page}
 %This is just before egsnrc\_system\_considerations
@@ -416,4 +425,3 @@ page}
 \typeout{*********************************************************}
 
 \end{document}
-
