@@ -410,6 +410,10 @@ public:
 
     void containsDynamic(bool &hasdynamic);
 
+    bool hasRhoScaling() override;
+
+    void finishInitialization() override;
+
     virtual EGS_Float getVolume(int ireg);
 
     virtual EGS_Float getCorrectionRatio(int ireg);

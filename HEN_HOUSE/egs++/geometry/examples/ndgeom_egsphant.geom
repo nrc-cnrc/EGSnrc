@@ -33,7 +33,7 @@
 #  An example geometry input file for the egs++ geometry package.
 #
 #  This input demonstrates loading an egsphant geometry using the nd_geometry
-#  library. Requires files ndgeom_egsphant.egsphant and ndgeom_egsphant.ramp
+#  library. Requires file ndgeom_egsphant.egsphant
 #  to be in the same directory.
 #
 ###############################################################################
@@ -45,7 +45,6 @@
         type = EGS_XYZGeometry
         name = my_egsphant_geom
         egsphant file = ndgeom_egsphant.egsphant
-        ct ramp = ndgeom_egsphant.ramp
     :stop geometry:
 
     simulation geometry = my_egsphant_geom
