@@ -81,8 +81,8 @@ IAEA format: iq,E,[x],[y],[z],u,v,wt,latch,[time]
 
 Note that in IAEA format, the user has the option of specifying a fixed x, y, and/or z coordinate
 of the scoring plane/line/point, in which case the fixed coordinates shall not be scored for each
-particle but will be specified in the header (.IAEAheader) file.  Also, in this format, the
-user has the option of scoring the time index synchronization parameter, time, passed from the source.
+particle but will be specified in the header (.IAEAheader) file. Even for constant x/y/z, the scoring plane must rest on the boundary between regions. Also, in IAEA format, the
+user has the option of scoring the particle time index for dynamic simulations.
 
 Can be used in any C++ user code by entering the proper input block in
 the ausgab object definition block.

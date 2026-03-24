@@ -40,6 +40,7 @@
 #include "egs_libconfig.h"
 #include "egs_functions.h"
 #include "egs_math.h"
+#include "egs_input_struct.h"
 
 #include <iostream>
 using namespace std;

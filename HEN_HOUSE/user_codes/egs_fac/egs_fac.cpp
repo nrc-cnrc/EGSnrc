@@ -198,6 +198,7 @@
 #include "egs_range_rejection.h"
 #include "egs_fac_simulation.h"
 #include "egs_math.h"
+#include "egs_input_struct.h"
 
 #include <fstream>
 using namespace std;
@@ -1081,6 +1082,104 @@ void EGS_FACApplication::describeSimulation() {
                        "=======================\n");
     for(int j=0; j<ngeom; j++){
         sim[j]->describeSimulation();
+    }
+}
+
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
+
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_fac");
+
+        shared_ptr<EGS_BlockInput> calcBlock = scoreBlock->addBlockInput("calculation geometry");
+        calcBlock->addSingleInput("geometry name", true, "The name of the geometry to use as the simulation geometry.");
+        calcBlock->addSingleInput("cavity regions", true, "A list of region numbers that define the cavity.");
+        calcBlock->addSingleInput("cavity mass", false, "The total mass of the cavity, in g. Used only to convert from energy to dose deposited.");
+        calcBlock->addSingleInput("aperture regions", false, "A list of region numbers that define the aperture. Used for aperture correction calculation.");
+        calcBlock->addSingleInput("front and back regions", true, "A list of regions that make up the front and back windows.");
+        calcBlock->addSingleInput("POM", true, "The z-position, followed by the radius of the point of measurement.");
+        calcBlock->addSingleInput("include scatter", false, "Whether or not to include contributions from scattered photons.", {"Yes", "No"});
+        calcBlock->addSingleInput("photon splitting", false, "The splitting number, turns on generic photon splitting.");
+        calcBlock->addSingleInput("splitting on in regions", false, "A list of regions in which to turn on photon splitting.");
+        calcBlock->addSingleInput("splitting off in regions", false, "A list of regions in which to turn off photon splitting.");
+
+        addTransformationBlock(calcBlock);
+
+        scoreBlock->addSingleInput("correlated geometries", false, "Two geometry names where the ratios between the dose values should be calculated (provides better uncertainty estimate). May repeat this input multiple times.");
+        scoreBlock->addSingleInput("Ax calculation", false, "Three geometry names: the realistic FAC geometry (no tube), the tube filled with air, the tube filled with vacuum.");
+        scoreBlock->addSingleInput("muen file", false, "The filename of the file containing E*muen/rho values. Calculate muen/rho using the 'g' application.");
+        scoreBlock->addSingleInput("scale xcc", false, "Scale elastic photon scattering by this factor.");
+
+        shared_ptr<EGS_BlockInput> scaleBlock = scoreBlock->addBlockInput("scale photon x-sections");
+        scaleBlock->addSingleInput("factor", false, "The scaling factor to apply to the cross sections.");
+        scaleBlock->addSingleInput("medium", false, "The medium name to adjust the cross sections for. To apply to all media, use 'all'.");
+        scaleBlock->addSingleInput("cross section", false, "Which cross sections to scale.", {"all", "Rayleigh", "Compton", "Pair", "Photo"});
+
+
+
+        shared_ptr<EGS_BlockInput> varBlock = appInput->addBlockInput("variance reduction");
+        varBlock->setAppName("egs_fac");
+        varBlock->addSingleInput("photon splitting", false, "The splitting number, turns on generic photon splitting.");
+        varBlock->addSingleInput("increase scatter", false, "Increases photon scatter.", {"Yes", "No"});
+
+        shared_ptr<EGS_BlockInput> rrBlock = varBlock->addBlockInput("range rejection");
+        rrBlock->addSingleInput("rejection", false, "The rejection factor for Russian Roulette.");
+        rrBlock->addSingleInput("Esave", false, "Particles below this energy (MeV) and unable to reach the nearest boundary are terminated.");
+        rrBlock->addSingleInput("cavity geometry", false, "A cavity geometry. Just used to initialize materials for range rejection.");
+        rrBlock->addSingleInput("rejection range medium", false, "The medium in the cavity geometry with the highest cross section.");
+
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+    :start calculation geometry:
+        geometry name = fac_air_tube
+        cavity regions = 132
+        aperture regions = 13 16 19 30
+        front and back regions = 83 181
+        cavity mass = 0.009462477073                        # cylinder defined by diaphragm and plates
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+        POM = 0.45 0.5
+    :stop calculation geometry:
+
+    :start calculation geometry:
+        geometry name = fac_vacuum_tube
+        cavity regions = 132
+        aperture regions = 13 16 19 30
+        front and back regions = 83 181
+        cavity mass = 0.009462477073                        # cylinder defined by diaphragm and plates
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+        POM = 0.45 0.5
+    :stop calculation geometry:
+
+    correlated geometries = fac_air_tube fac_vacuum_tube
+    Ax calculation = fac_air_tube fac_vacuum_tube
+    muen file =                                             # absolute or relative file path
+
+    #:start scale photon x-sections:
+        factor = 1.5
+        medium = ALL
+        cross section = all
+    :stop scale photon x-sections:
+    #scale xcc = 1.5
+
+:stop scoring options:
+
+:start variance reduction:
+    photon splitting = 200
+    increase scatter = no
+:stop variance reduction:
+)"};
+        return example;
     }
 }
 

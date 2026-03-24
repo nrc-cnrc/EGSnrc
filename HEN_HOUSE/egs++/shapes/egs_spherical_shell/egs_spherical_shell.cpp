@@ -27,6 +27,7 @@
 #  Contributors:    Marc Chamberland
 #                   Rowan Thomson
 #                   Dave Rogers
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -45,6 +46,9 @@
 #include "egs_spherical_shell.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_SPHERICAL_SHELL_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_SPHERICAL_SHELL_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 EGS_SphericalShellShape::EGS_SphericalShellShape(EGS_Float ri, EGS_Float ro, int hemisph, EGS_Float halfangle, const EGS_Vector &Xo,
         const string &Name,EGS_ObjectFactory *f) :
@@ -127,6 +131,46 @@ EGS_Float EGS_SphericalShellShape::area() const {
 };
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Spherical_Shell"});
+
+        shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the shape, (x y z). Defaults to '0 0 0'.");
+        shapeBlockInput->addSingleInput("inner radius", true, "The inner radius");
+        shapeBlockInput->addSingleInput("outer radius", true, "The outer radius");
+        auto hemiPtr = shapeBlockInput->addSingleInput("hemisphere", false, "Truncates the sphere to a hemisphere in positive or negative z, by setting to 1 or -1, respectively.", {"1", "-1"});
+        auto halfAngPtr = shapeBlockInput->addSingleInput("half angle", false, "The half angle, in degrees. The shell is truncated by a conical section with the half angle specified. If 'half angle' is negative, the points will sampled with negative z coordinates.");
+
+        hemiPtr->addDependency(halfAngPtr, "", true);
+        halfAngPtr->addDependency(hemiPtr, "", true);
+    }
+
+    EGS_SPHERICAL_SHELL_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_spherical_shell
+    #:start shape:
+        library = egs_spherical_shell
+        midpoint = 0 0 0
+        inner radius = 0.5
+        outer radius = 1
+        hemisphere = 1
+        half angle = 35
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_SPHERICAL_SHELL_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_SPHERICAL_SHELL_EXPORT EGS_BaseShape *createShape(EGS_Input *input, EGS_ObjectFactory *f) {
 

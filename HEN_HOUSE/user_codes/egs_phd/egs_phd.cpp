@@ -52,6 +52,7 @@
 
 
 #include "egs_phd.h"
+#include "egs_input_struct.h"
 
 // describeUserCode
 void phd_app::describeUserCode() const {
@@ -335,6 +336,43 @@ int phd_app::startNewShower() {
     return 0;
 }
 
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
 
-// main application macro
-APP_MAIN(phd_app);
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_phd");
+
+        shared_ptr<EGS_BlockInput> specBlock = scoreBlock->addBlockInput("spectrum");
+        specBlock->addSingleInput("label", false, "The name of a region label that refers to the scoring regions. This label must be defined in the geometry using the 'set label' input.");
+        specBlock->addSingleInput("Emin", false, "The minimum energy for the energy bins.");
+        specBlock->addSingleInput("Emax", false, "The maximum energy for the energy bins.");
+        specBlock->addSingleInput("bins", false, "The number of energy bins.");
+        specBlock->addSingleInput("spectrum file", false, "The filepath for an output file that will contain the deposited energy spectrum.");
+
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+    :start spectrum:
+        label = detector
+        Emin  = 0.0
+        Emax  = 1.0
+        bins  = 100
+        spectrum file = spectrum.dat
+    :stop spectrum:
+:stop scoring options:
+)"};
+        return example;
+    }
+}
+
+#ifdef BUILD_APP_LIB
+    APP_LIB(phd_app);
+#else
+    APP_MAIN(phd_app);
+#endif

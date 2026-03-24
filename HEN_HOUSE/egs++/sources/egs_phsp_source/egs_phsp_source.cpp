@@ -26,6 +26,7 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -40,6 +41,8 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 #include "egs_application.h"
+
+static bool EGS_PHSP_SOURCE_LOCAL inputSet = false;
 
 EGS_PhspSource::EGS_PhspSource(const string &phsp_file,
                                const string &Name, EGS_ObjectFactory *f) : EGS_BaseSource(Name,f) {
@@ -513,6 +516,47 @@ void EGS_PhspSource::setFilter(int type, int nbit1, int nbit2, const int *bits) 
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs(false, false);
+
+        srcBlockInput->getSingleInput("library")->setValues({"EGS_Phsp_Source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("phase space file", true, "The name of the phase-space file.");
+        srcBlockInput->addSingleInput("particle type", true, "The type of particle to keep from the phase-space. Other types are discarded.", {"all", "charged", "electrons", "positrons", "photons"});
+        srcBlockInput->addSingleInput("cutout", false, "Discard particles outside of a rectanglular field: 'x1 y1 x2 y2'");
+        srcBlockInput->addSingleInput("weight window", false, "A weight window, outside of which particles are discarded: 'wtmin wtmax'. This allows you to discard high weight particles.");
+        srcBlockInput->addSingleInput("recycle photons", false, "The number of time to recycle each photon. E.g. set to 1 to use each photon twice. Set <1 or neglect to disable.");
+        srcBlockInput->addSingleInput("recycle electrons", false, "The number of time to recycle each electron. E.g. set to 1 to use each electron twice. Set <1 or neglect to disable.");
+    }
+
+    EGS_PHSP_SOURCE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_phsp_soure
+    #:start source:
+        name = my_source
+        library = egs_phsp_source
+        phase space file = ../BEAM_EX16MVp/EX16MVp.egsphsp1
+        particle type = all
+        cutout = -1 1 -2 2
+        recycle photons = 10
+        recycle electrons = 10
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_PHSP_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_PHSP_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

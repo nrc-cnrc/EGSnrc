@@ -739,8 +739,4 @@ int Tutor7_Application::startNewShower() {
     return 0;
 }
 
-#ifdef BUILD_APP_LIB
-APP_LIB(Tutor7_Application);
-#else
 APP_MAIN(Tutor7_Application);
-#endif

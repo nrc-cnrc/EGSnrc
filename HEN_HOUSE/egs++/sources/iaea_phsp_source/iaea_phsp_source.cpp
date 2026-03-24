@@ -41,6 +41,8 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
+static bool IAEA_PHSP_SOURCE_LOCAL inputSet = false;
+
 IAEA_PhspSource::IAEA_PhspSource(const string &phsp_file,
                                  const string &Name, EGS_ObjectFactory *f) : EGS_BaseSource(Name,f) {
     init();
@@ -551,6 +553,47 @@ void IAEA_PhspSource::containsDynamic(bool &hasdynamic) {
 
 extern "C" {
 
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs(false, false);
+
+        srcBlockInput->getSingleInput("library")->setValues({"IAEA_Phsp_Source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("iaea phase space file", true, "The path to and name of the phase-space file, no extension. Both the .IAEAphsp and .IAEAheader file must be in the same directory.");
+        srcBlockInput->addSingleInput("particle type", true, "The type of particle to keep from the phase-space. Other types are discarded.", {"all", "charged", "electrons", "positrons", "photons"});
+        srcBlockInput->addSingleInput("cutout", false, "Discard particles outside of a rectanglular field: 'x1 y1 x2 y2'");
+        srcBlockInput->addSingleInput("weight window", false, "A weight window, outside of which particles are discarded: 'wtmin wtmax'. This allows you to discard high weight particles.");
+        srcBlockInput->addSingleInput("recycle photons", false, "The number of time to recycle each photon. E.g. set to 1 to use each photon twice. Set <1 or neglect to disable.");
+        srcBlockInput->addSingleInput("recycle electrons", false, "The number of time to recycle each electron. E.g. set to 1 to use each electron twice. Set <1 or neglect to disable.");
+    }
+
+    IAEA_PHSP_SOURCE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of iaea_phsp_soure
+    #:start source:
+        name = my_source
+        library = iaea_phsp_source
+        iaea phase space file = myPhsp # No extension, both .IAEAphsp and .IAEAheader must be present
+        particle type = all
+        cutout      = -1 1 -2 2
+        recycle photons = 10
+        recycle electrons = 10
+    :stop source:
+)"};
+        return example;
+    }
+
+    IAEA_PHSP_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
+
     IAEA_PHSP_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {
         return
@@ -558,3 +601,4 @@ extern "C" {
     }
 
 }
+

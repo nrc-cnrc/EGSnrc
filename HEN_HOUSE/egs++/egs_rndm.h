@@ -40,8 +40,37 @@
 #include "egs_libconfig.h"
 #include "egs_math.h"
 #include "egs_functions.h"
+#include "egs_input_struct.h"
 
 class EGS_Input;
+
+inline void addRngDefinitionBlockImpl(EGS_BlockInput &rngBlock) {
+    rngBlock.addSingleInput("type", true, "Algorithm used for RNG. Defaults to ranmar", {"ranmar"});
+    rngBlock.addSingleInput("initial seeds", true, "Two integers that represent the inital seed. The same input file running on the same computer will give idential results for the same seeds, and statistically independent for different seeds. Parallel runs automatically vary the seeds for each job.");
+    rngBlock.addSingleInput("high resolution", false, "Defaults to no. Microscale simulations may require high resolution RNG.", {"No", "Yes"});
+}
+
+inline void addRngDefinitionBlock(const std::shared_ptr<EGS_InputStruct> &blockPtr) {
+    auto rngBlock = blockPtr->addBlockInput("rng definition");
+    addRngDefinitionBlockImpl(*rngBlock);
+}
+
+inline void addRngDefinitionBlock(const std::shared_ptr<EGS_BlockInput> &blockPtr) {
+    auto rngBlock = blockPtr->addBlockInput("rng definition");
+    addRngDefinitionBlockImpl(*blockPtr);
+}
+
+inline string addRngDefinitionExample() {
+    string example = {
+        R"(
+:start rng definition:
+    type = ranmar
+    initial seeds = 33 97
+    high resolution = no
+:stop rng definition:
+)"};
+    return example;
+}
 
 /*! \brief Base random number generator class. All random number generators
  * should be derived from this class.
@@ -137,7 +166,7 @@ public:
      */
     inline void getAzimuth(EGS_Float &cphi, EGS_Float &sphi) {
 #ifndef FAST_SINCOS
-        register EGS_Float xphi,xphi2,yphi,yphi2,rhophi;
+        EGS_Float xphi,xphi2,yphi,yphi2,rhophi;
         do {
             xphi = 2*getUniform() - 1;
             xphi2 = xphi*xphi;
