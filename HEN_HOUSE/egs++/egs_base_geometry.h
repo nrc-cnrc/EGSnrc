@@ -422,7 +422,7 @@ public:
     /*! \brief Does this geometry object have a mass density scaling feature?
 
      */
-    inline bool hasRhoScaling() const {
+    virtual bool hasRhoScaling() {
         return has_rho_scaling;
     };
 
@@ -787,6 +787,8 @@ public:
     * \endcode
     */
     bool validateRegions(const std::vector<int> &regions);
+
+    virtual void finishInitialization() { };
 
     /* This method is essentially used to determine whether the simulation
      * geometry contains a dynamic geometry. Like getNextGeom(), the only

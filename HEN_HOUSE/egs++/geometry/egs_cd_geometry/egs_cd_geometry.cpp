@@ -276,7 +276,7 @@ extern "C" {
         // If it's not found above, search through the set geometries in case they are composite geometries
         for (int i=0; i<nbase; i++) {
             int shift = g[i]->getGlobalRegionOffset(geomName);
-            if(shift >= 0) {
+            if (shift >= 0) {
                 if (new_indexing) {
                     shift += local_start[i];
                 }
