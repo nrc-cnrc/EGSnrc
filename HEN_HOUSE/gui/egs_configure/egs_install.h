@@ -494,7 +494,7 @@ static const char spec_file[]={
 "\n"\
 "$BEAMLIB_EXTRA_LIBS_HEADER\n"\
 "#\n"\
-"BEAMLIB_EXTRA_LIBS = $dlopen_flags $(IAEA_LIB)\n"\
+"BEAMLIB_EXTRA_LIBS = $dlopen_flags $(IAEA_LIB) $(ESTAR_LIB)\n"\
 "\n"\
 "# FC_FLAGS gets used for compiling the EGSnrc fortran routines and for \n"\
 "# linking for EGSnrc user codes written in C. We set FC_FLAGS by \n"\
@@ -518,10 +518,12 @@ static const char spec_file[]={
 };
 
 #define IAEA_VARS "IAEA_LIB = $lib_link1 $link2_prefix_iaea_phsp$link2_suffix \n"\
-"IAEA_PHSP_MACROS = $iaea_phsp_macros\n"
+"IAEA_PHSP_MACROS = $iaea_phsp_macros\n"\
+"ESTAR_LIB = $link2_prefix_iaea_phsp$link2_suffix"
 
 #define NO_IAEA_VARS "IAEA_LIB = \n"\
-"IAEA_PHSP_MACROS = \n"
+"IAEA_PHSP_MACROS = \n"\
+"ESTAR_LIB = \n"
 
 static const char egspp_spec_file[]={
 "#*************************************************************************\n"\

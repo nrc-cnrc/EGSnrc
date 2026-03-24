@@ -41,11 +41,13 @@ include $(SPEC_DIR)egspp1.spec
 
 all: $(target) $(lib_target) compare
 
-$(target): $(user_objects) $(egs_objects)
-	$(CXX) $(opt) $(EOUT)$@ $^ $(lib_link1) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) $(user_libs)
+estar_lib = $(abs_dso)$(DSEP)$(libpre)estar$(libext)
 
-$(lib_target): $(user_lib_objects) $(egs_lib_objects)
-	$(CXX) $(opt) $(shared) $(lib_link1) $^ $(extra) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) $(user_libs)
+$(target): $(user_objects) $(egs_objects) $(estar_lib)
+	$(CXX) $(opt) $(EOUT)$@ $^ $(lib_link1) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) -lestar $(user_libs)
+
+$(lib_target): $(user_lib_objects) $(egs_lib_objects) $(estar_lib)
+	$(CXX) $(opt) $(shared) $(lib_link1) $^ $(extra) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) -lestar $(user_libs)
 
 EXISTS =
 ifeq ($(OS),Windows_NT)
