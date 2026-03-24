@@ -286,6 +286,7 @@ public:
 
     void setBScaling(EGS_Input *);
 
+    virtual int getGlobalRegionOffset(const string geomName);
     virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:

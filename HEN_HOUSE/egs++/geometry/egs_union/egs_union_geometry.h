@@ -344,6 +344,7 @@ public:
         return g[jg]->getBScaling(ireg-jg*nmax);
     };
 
+    virtual int getGlobalRegionOffset(const string geomName);
     virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize);
 
 protected:
