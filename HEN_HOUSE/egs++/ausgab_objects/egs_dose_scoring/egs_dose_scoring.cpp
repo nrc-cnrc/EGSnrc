@@ -132,7 +132,7 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         return;
     }
 
-    if (d_regionString.length() > 0 && d_region.size() < 1) {
+    if (d_regionString.length() > 0) {
         getNumberRegions(d_regionString, d_region);
         getLabelRegions(d_regionString, d_region);
     }
