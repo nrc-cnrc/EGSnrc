@@ -1104,7 +1104,7 @@ void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs, boo
         // Precondition: regs must be pre-populated by getNumberRegions() before calling this function
         // with sanitize=false, so that each non-label token has a corresponding entry already in regs.
         // Otherwise, advancing insert_pos will walk out of bounds.
-        if (!foundLabel) {
+        if (!foundLabel && regs.size() > 0) {
             if (insert_pos >= regs.size()) {
                 egsFatal("EGS_BaseGeometry::getLabelRegions(): insert_pos out of bounds "
                         "for geometry %s. Was getNumberRegions() called before "
