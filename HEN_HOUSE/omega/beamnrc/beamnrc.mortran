@@ -3902,7 +3902,7 @@ ELSEIF(IRESUME = 1)["Resume, read old data from unit 4"
 
     OUTPUT;(/' ***Successfully read previous dose and fluence data file ***'/);
 
-    $BEAM_READ_PHSP_FOR_REWIND;
+    $BEAM_READ_PHSP_FOR_RESUME;
 
 ] "end of IRESUME=1 block"
 
