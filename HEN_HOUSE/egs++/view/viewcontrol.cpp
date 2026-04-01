@@ -1967,6 +1967,7 @@ void GeometryViewControl::saveEgsinp() {
     // Write the text from the editor window
     out << egsinpEdit->toPlainText();
     out.flush();
+    egsinpFile.close();
 
     // Reload the input so that the changes are recognized
     reloadInput();
