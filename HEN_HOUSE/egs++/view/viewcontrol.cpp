@@ -549,54 +549,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     }
 #endif
 
-
-    // Load the egs_application library
-    string app_name;
-    std::vector<std::string> args = {
-        "egspp", "-a", "egs_app", "-i", "slab.egsinp"
-    };
-
-    // Create a mutable array of char* pointers because that's what getArgument() expects
-    std::vector<char*> appv;
-    appv.reserve(args.size());
-    for (auto &arg : args) {
-        appv.push_back(&arg[0]);
-    }
-
-    int appc = static_cast<int>(appv.size());
-
-    if (!EGS_Application::getArgument(appc,appv.data(),"-a","--application",app_name)) {
-        egsWarning("Warning: Failed to load egs_app as a shared library. It should be compiled as a shared library by default, so check that it has been copied into egs_home and compiled since the last EGSnrc update.\n\n");
-    }
-
-    EGS_Application::checkEnvironmentVar(appc,appv.data(),"-e","--egs-home","EGS_HOME",lib_dir);
+    const char* egs_home = std::getenv("EGS_HOME");
+    lib_dir = egs_home ? egs_home : "";
     lib_dir += "bin";
     lib_dir += fs;
     lib_dir += CONFIG_NAME;
     lib_dir += fs;
-
-    // Load the application library
-    // We don't require the application to be compiled, just give a warning if it isn't.
-    EGS_Library app_lib(app_name.c_str(),lib_dir.c_str());
-    bool app_loaded = true;
-    if (!app_lib.load()) {
-        egsWarning("\n%s: Failed to load the %s application library from %s\n\n", appv[0],app_name.c_str(),lib_dir.c_str());
-        app_loaded = false;
-    } else {
-        createAppFunction createApp = (createAppFunction) app_lib.resolve("createApplication");
-        if (!createApp) {
-            egsWarning("\n%s: Failed to resolve the address of the 'createApplication' function in the application library %s\n\n",appv[0],app_lib.libraryFile());
-            app_loaded = false;
-        } else {
-            EGS_Application *app = createApp(appc,appv.data());
-            if (!app) {
-                egsWarning("\n%s: Failed to construct the application %s\n\n",appv[0],app_name.c_str());
-                app_loaded = false;
-            }
-            //egsInformation("Testapp %f\n",app->getRM());
-            delete app;
-        }
-    }
 
     // Get a list of all the libraries in the bin directory for applications
     QDir binDirectory(lib_dir.c_str());
@@ -604,7 +562,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // Get a list of all the libraries in the dso directory
     string dso_dir;
-    EGS_Application::checkEnvironmentVar(appc,appv.data(),"-H","--hen-house","HEN_HOUSE",dso_dir);
+    const char* hen_house = std::getenv("HEN_HOUSE");
+    dso_dir = hen_house ? hen_house : "";
     dso_dir += "egs++";
     dso_dir += fs;
     dso_dir += "dso";
@@ -635,6 +594,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     menuBar->addMenu(exampleMenu2);
     selectedApplication = "egs_app";
 
+    EGS_Library *existingApp = nullptr;
     for (const auto &lib : binLibraries) {
         // Remove the extension
         QString libName = lib.left(lib.lastIndexOf("."));
@@ -644,9 +604,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         //egsInformation("Trying %s\n", libName.toLatin1().data());
 
         // Check if the application has the getAppSpecificInputs, and only add it to the drop-down menu if it does
-        EGS_Library app_lib(libName.toLatin1().data(),lib_dir.c_str());
-        if (app_lib.load()) {
-            getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppSpecificInputs");
+        EGS_Library* app_lib = new EGS_Library(libName.toLatin1().data(), lib_dir.c_str());
+        if(!existingApp) {
+            existingApp = app_lib;
+        }
+        if (app_lib->load()) {
+            getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib->resolve("getAppSpecificInputs");
 
             if (getAppInputs) {
                 // Adds the button to the menu
@@ -661,9 +624,10 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // The input template structure
     inputStruct = make_shared<EGS_InputStruct>();
 
-    if(app_loaded) {
-
-        getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppInputs");
+    // ============
+    // Application level inputs (but not app specific)
+    if(existingApp) {
+        getAppInputsFunction getAppInputs = (getAppInputsFunction) existingApp->resolve("getAppInputs");
         if(getAppInputs) {
 
             // before this was a BlockInput, now it is a InputStruct
@@ -672,28 +636,28 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             if (app) {
                 inputStruct->addBlockInputs(app->getBlockInputs());
 
-//                     vector<shared_ptr<EGS_SingleInput>> singleInputs = app->getSingleInputs();
-//                     for (auto &inp : singleInputs) {
-//                         const vector<string> vals = inp->getValues();
-// //                         egsInformation("  single %s\n", inp->getTag().c_str());
-// //                         for (auto&& val : vals) {
-// //                             egsInformation("      %s\n", val.c_str());
-// //                         }
-//                     }
+    //                     vector<shared_ptr<EGS_SingleInput>> singleInputs = app->getSingleInputs();
+    //                     for (auto &inp : singleInputs) {
+    //                         const vector<string> vals = inp->getValues();
+    // //                         egsInformation("  single %s\n", inp->getTag().c_str());
+    // //                         for (auto&& val : vals) {
+    // //                             egsInformation("      %s\n", val.c_str());
+    // //                         }
+    //                     }
 
-//                 vector<shared_ptr<EGS_BlockInput>> inputBlocks = app->getBlockInputs();
-//                 for (auto &block : inputBlocks) {
-//                     egsInformation("  block %s\n", block->getTitle().c_str());
-//                     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-//                     inputStruct->addBlockInput(block);
-//                     for (auto &inp : singleInputs) {
-//                         const vector<string> vals = inp->getValues();
-//                         egsInformation("   single %s\n", inp->getTag().c_str());
-//                         for (auto&& val : vals) {
-//                             egsInformation("      %s\n", val.c_str());
-//                         }
-//                     }
-//                 }
+    //                 vector<shared_ptr<EGS_BlockInput>> inputBlocks = app->getBlockInputs();
+    //                 for (auto &block : inputBlocks) {
+    //                     egsInformation("  block %s\n", block->getTitle().c_str());
+    //                     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+    //                     inputStruct->addBlockInput(block);
+    //                     for (auto &inp : singleInputs) {
+    //                         const vector<string> vals = inp->getValues();
+    //                         egsInformation("   single %s\n", inp->getTag().c_str());
+    //                         for (auto&& val : vals) {
+    //                             egsInformation("      %s\n", val.c_str());
+    //                         }
+    //                     }
+    //                 }
             }
         }
         //     getAppInputs(inputStruct);
@@ -713,28 +677,28 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         //     }
         // }
 
-        getExampleFunction getExample = (getExampleFunction) app_lib.resolve("getMediaExample");
+        getExampleFunction getExample = (getExampleFunction) existingApp->resolve("getMediaExample");
         if (getExample) {
             QAction *action = transportMenu->addAction("Media Definition");
             action->setData(QString::fromStdString(getExample()));
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
 
-        getExample = (getExampleFunction) app_lib.resolve("getRunControlExample");
+        getExample = (getExampleFunction) existingApp->resolve("getRunControlExample");
         if (getExample) {
             QAction *action = transportMenu->addAction("Run Control");
             action->setData(QString::fromStdString(getExample()));
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
 
-        getExample = (getExampleFunction) app_lib.resolve("getmcExample");
+        getExample = (getExampleFunction) existingApp->resolve("getmcExample");
         if (getExample) {
             QAction *action = transportMenu->addAction("Transport Parameters");
             action->setData(QString::fromStdString(getExample()));
             connect(action,  &QAction::triggered, this, [this] { insertInputExample(); });
         }
 
-        getExample = (getExampleFunction) app_lib.resolve("getRngDefinitionExample");
+        getExample = (getExampleFunction) existingApp->resolve("getRngDefinitionExample");
         if (getExample) {
             QAction *action = transportMenu->addAction("RNG Seeds");
             action->setData(QString::fromStdString(getExample()));
@@ -745,12 +709,15 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         shared_ptr<EGS_BlockInput> mediaBlockInput = inputStruct->getBlockInput("media definition");
         shared_ptr<EGS_BlockInput> mediumBlock = mediaBlockInput->getBlockInput("myMediumName");
 
-        string compound_dir;
-        EGS_Application::checkEnvironmentVar(appc,appv.data(),"-H","--hen-house","HEN_HOUSE", compound_dir);
-        vector<string> densityCorrectionFiles = findDensityCorrectionInputs(compound_dir);
+        vector<string> densityCorrectionFiles = findDensityCorrectionInputs(hen_house);
 
         mediumBlock->addSingleInput("density correction file", false, "", densityCorrectionFiles);
+
+        delete existingApp;
+        existingApp = nullptr;
     }
+    // Done getting application inputs
+    // ============
 
     // Geometry definition block
     auto geomDefPtr = inputStruct->addBlockInput("geometry definition");
