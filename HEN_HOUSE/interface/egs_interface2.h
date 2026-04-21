@@ -770,6 +770,38 @@ extern __extc__ void egsHatch(void);
  */
 extern __extc__ void egsShower(void);
 
+/*! Shorthand notation for the \c estar subroutine (which is renamed to
+    \c egs_estar for the C/C++ interface using mortran's replacemant
+    capabilities) */
+#define estar F77_OBJ_(estar,ESTAR)
+/*! \brief Calculates estar density corrections
+
+
+ */
+extern __extc__ int estar_(char *formulaStr,
+                      float *massFraction,
+                      float *numOfAtoms,
+                      float *mediaDensity,
+                      double *densityCorr,
+                      double *enGrid,
+                      int *NEP,
+                      int *ISCOMP,
+                      float *meanIval,
+                      float *ipotval,
+                      int *mediaID,
+                      char *outputFilename);
+
+#define compoundstoelements F77_OBJ_(compoundstoelements,COMPOUNDSTOELEMENTS)
+
+extern __extc__ int compoundstoelements_(char *formulaStr,
+                                   double *massFraction,
+                                   char *elementStr,
+                                   double *rhoz,
+                                   double *zelem,
+                                   int *ncomp,
+                                   int *NEP
+                                  );
+
 /****************************************************************************
             Functions for using the EGSnrc random number generator
             Only relevant for user codes written in C

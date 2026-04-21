@@ -1702,8 +1702,7 @@ OUTPUT;(//' *****IN SPINIT*** WARNING: I-value seems too large.',
 ]
 IPOTVAL = IPOTVAL * 1000000;
 
-"Here we call estar"
-"The parameters are described in estarCalc.cpp"
+"Call estar through the egs++ interface"
 IF (NCOMPOUNDS > 0) [
     CALL estar(COMP_NAMES,COMP_FRACS,PZP,LDENSITY,densityCorr,
     enGrid,NCOMPOUNDS,ISCOMP,IEV,IPOTVAL,MEDID,OUTDENSITY);

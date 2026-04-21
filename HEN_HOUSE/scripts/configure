@@ -2007,7 +2007,7 @@ BEAMLIB_OBJECTS = \$(HEN_HOUSE)lib/\$(my_machine)/load_beamlib.$test_objext
 # access to these system calls is dl. If this is not the case for you,
 # adjust accordingly.
 #
-BEAMLIB_EXTRA_LIBS = $dlopen_flags \$(IAEA_LIB) \$(ESTAR_LIB)
+BEAMLIB_EXTRA_LIBS = $dlopen_flags \$(IAEA_LIB)
 
 _ACEOF
 else
@@ -2665,7 +2665,6 @@ if test $cxx_ok = yes; then
 cat >>$HEN_HOUSE/specs/$conf_file <<EOF
 IAEA_LIB = $lib_link1 ${link2_prefix}iaea_phsp${link2_suffix}
 IAEA_PHSP_MACROS = \$(EGS_UTILS)iaea_phsp_macros.mortran
-ESTAR_LIB = ${link2_prefix}estar${link2_suffix}
 EOF
 else
 cat >>$HEN_HOUSE/specs/$conf_file <<EOF
@@ -2674,7 +2673,6 @@ cat >>$HEN_HOUSE/specs/$conf_file <<EOF
 #
 IAEA_LIB =
 IAEA_PHSP_MACROS =
-ESTAR_LIB =
 EOF
 fi
 echo "OK" >&2

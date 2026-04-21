@@ -76,12 +76,10 @@ C_ADVANCED_SOURCES = $(EGS_SOURCEDIR)egsnrc.macros $(MACHINE_MACROS) \
 # The base class from which the application is derived
 #EGS_BASE_APPLICATION = egs_simple_application
 
-ESTAR_APPLICATION = estar_advanced_application
-
 # The standard set of object files needed
-egs_files = $(EGS_BASE_APPLICATION) $(ESTAR_APPLICATION) egsnrc egs_interface2
+egs_files = $(EGS_BASE_APPLICATION) egsnrc egs_interface2
 egs_objects = $(addsuffix _$(my_machine).$(obje),$(egs_files))
-egs_lib_files = $(EGS_BASE_APPLICATION)_lib $(ESTAR_APPLICATION)_lib egsnrc egs_interface2
+egs_lib_files = $(EGS_BASE_APPLICATION)_lib egsnrc egs_interface2
 egs_lib_objects = $(addsuffix _$(my_machine).$(obje),$(egs_lib_files))
 
 # The user objects
@@ -123,9 +121,6 @@ dep_advanced_application = $(ABS_EGSPP)egs_advanced_application.cpp \
         $(ABS_EGSPP)egs_input.h $(ABS_EGSPP)egs_base_source.h \
         $(ABS_EGSPP)egs_object_factory.h $(ABS_EGSPP)egs_timer.h \
         $(ABS_EGSPP)egs_application.h $(ABS_EGSPP)egs_run_control.h
-
-estar_advanced_application_files = $(ESTAR_DIR)estar.cpp \
-        $(ESTAR_DIR)estar.h
 
 dep_user_code = $(USER_CODE).cpp array_sizes.h $(common_h_files1) \
         $(ABS_EGSPP)$(EGS_BASE_APPLICATION).h \
