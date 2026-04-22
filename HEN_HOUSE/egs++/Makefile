@@ -45,7 +45,7 @@ include $(SPEC_DIR)egspp_$(my_machine).conf
 DEFS = $(DEF1) -DBUILD_DLL
 
 ESTAR = estar$(DSEP)
-ESTAR_INC = -I$(ESTAR)
+ESTAR_INC = -I$(ESTAR) -I.
 
 egspp_files = egs_input egs_base_geometry egs_library egs_transformations \
              egs_rndm egs_shapes egs_geometry_tester egs_timer egs_polygon \

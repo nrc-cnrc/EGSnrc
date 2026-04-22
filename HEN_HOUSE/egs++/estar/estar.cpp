@@ -8,10 +8,9 @@
 #include <assert.h>
 #include <cmath>
 
-using namespace std;
-
 #include "estar.h"
 #include "estar_dataTables.h"
+#include "egs_functions.h"
 
 /*
     The purpose of this module is to process the arrays and data received from
@@ -26,6 +25,7 @@ using namespace std;
     This class is used to process the formula array from fortran
     to make the formula array readable by c++
 */
+namespace {
 class GetElements {
 public:
     struct GetElementsStruct {
@@ -49,8 +49,7 @@ public:
     // without this pre-processing.
     //
     // Returns true on success, false if the component list is inconsistent
-    // with NEP. Using a bool return instead of assert keeps error handling
-    // consistent with the rest of the codebase (cout + early return).
+    // with NEP.
     bool getElemArray(char *formulaStr, int NEP, GetElementsStruct &GElem) {
         const char delim = ' ';
         std::vector<std::string> components;
@@ -67,8 +66,8 @@ public:
         int k = 0;
         while (k < NEP) {
             if(components[k].size() > 1) {
-                components[k][0] = std::toupper(components[k][0]);
-                components[k][1] = std::tolower(components[k][1]);
+                components[k][0] = static_cast<char>(std::toupper(static_cast<unsigned char>(components[k][0])));
+                components[k][1] = static_cast<char>(std::tolower(static_cast<unsigned char>(components[k][1])));
             }
             GElem.elemArrayStrut[k] = components[k];
             k = k + 1;
@@ -76,6 +75,7 @@ public:
         return true;
     }
 };
+}
 
 /*
     The function below takes inputs from pegs4_routines.mortran and then
@@ -144,12 +144,61 @@ extern "C" int estar_(char *formulaStr,
                       char *outputFilename
                      ) {
 
-    cout << "\n-------------------------\n";
-    cout << "== MEDIUM " << *mediaID << " BLOCK FOR ESTAR ==\n";
+    // Validate all pointers before dereferencing
+    if (!formulaStr) {
+        egsFatal("estar::estar_: formulaStr pointer is null for medium.\n");
+    }
+    if (!massFraction) {
+        egsFatal("estar::estar_: massFraction pointer is null.\n");
+    }
+    if (!numOfAtoms) {
+        egsFatal("estar::estar_: numOfAtoms pointer is null.\n");
+    }
+    if (!mediaDensity) {
+        egsFatal("estar::estar_: mediaDensity pointer is null.\n");
+    }
+    if (!densityCorr) {
+        egsFatal("estar::estar_: densityCorr pointer is null.\n");
+    }
+    if (!enGrid) {
+        egsFatal("estar::estar_: enGrid pointer is null.\n");
+    }
+    if (!NEP) {
+        egsFatal("estar::estar_: NEP pointer is null.\n");
+    }
+    if (!ISCOMP) {
+        egsFatal("estar::estar_: ISCOMP pointer is null.\n");
+    }
+    if (!meanIval) {
+        egsFatal("estar::estar_: meanIval pointer is null.\n");
+    }
+    if (!ipotval) {
+        egsFatal("estar::estar_: ipotval pointer is null.\n");
+    }
+    if (!mediaID) {
+        egsFatal("estar::estar_: mediaID pointer is null.\n");
+    }
+    if (!outputFilename) {
+        egsFatal("estar::estar_: outputFilename pointer is null.\n");
+    }
 
-    string mainFormula;
-    string mainFormula_temp_1;
-    string mainFormula_temp_2;
+    // Validate the values pointed to
+    if (*NEP <= 0 || *NEP > 100) {
+        egsFatal("estar::estar_: NEP=%d is out of valid range [1, 100].\n", *NEP);
+    }
+    if (*mediaID <= 0) {
+        egsFatal("estar::estar_: mediaID=%d is invalid, must be > 0.\n", *mediaID);
+    }
+    if (*ISCOMP != 0 && *ISCOMP != 1) {
+        egsFatal("estar::estar_: ISCOMP=%d is invalid, must be 0 or 1.\n", *ISCOMP);
+    }
+    if (*mediaDensity <= 0.0f) {
+        egsFatal("estar::estar_: mediaDensity=%g is invalid, must be > 0.\n",
+                *mediaDensity);
+    }
+
+    egsInformation("\n-------------------------\n"
+                "== MEDIUM %d BLOCK FOR ESTAR ==\n", *mediaID);
 
     // The lines below process formula_str to make the array readable by estar c++
     GetElements elemObject;
@@ -174,7 +223,8 @@ extern "C" int estar_(char *formulaStr,
         estarFormulaArrayInput[i] = GeElems.elemArrayStrut[i];
         estarWeightArrayInput[i] = massFraction[i];
 
-        cout << "Formula is " << estarFormulaArrayInput[i] << " with fraction " << estarWeightArrayInput[i] << endl;
+        egsInformation("estar::estar_: Formula is %s with fraction %g\n",
+                    estarFormulaArrayInput[i].c_str(), estarWeightArrayInput[i]);
 
         i = i + 1;
     }
@@ -191,14 +241,12 @@ extern "C" int estar_(char *formulaStr,
                                   meanIval, ipotval, mediaNum,
                                   string(outputFilename));
     if (result != 0) {
-        cout << "\n***************\n";
-        cout << "Error! estarCalculation failed for medium " << mediaNum
-             << " with error code " << result << ".\n";
-        cout << "\n***************\n";
+        egsFatal("estar::estar_: estarCalculation failed for medium %d with error code %d.\n",
+         mediaNum, result);
         return result;
     }
 
-    cout << "-------------------------\n";
+    egsInformation("-------------------------\n");
 
     return 0;
 }
@@ -212,12 +260,46 @@ extern "C" int compoundstoelements_(char *formulaStr,
                                    int *ncomp,
                                    int *NEP
                                   ) {
+
+    // Validate all pointers before dereferencing
+    if (!formulaStr) {
+        egsFatal("estar::compoundstoelements_: formulaStr pointer is null.\n");
+    }
+    if (!massFraction) {
+        egsFatal("estar::compoundstoelements_: massFraction pointer is null.\n");
+    }
+    if (!elementStr) {
+        egsFatal("estar::compoundstoelements_: elementStr pointer is null.\n");
+    }
+    if (!rhoz) {
+        egsFatal("estar::compoundstoelements_: rhoz pointer is null.\n");
+    }
+    if (!zelem) {
+        egsFatal("estar::compoundstoelements_: zelem pointer is null.\n");
+    }
+    if (!ncomp) {
+        egsFatal("estar::compoundstoelements_: ncomp pointer is null.\n");
+    }
+    if (!NEP) {
+        egsFatal("estar::compoundstoelements_: NEP pointer is null.\n");
+    }
+
+    // Validate the values pointed to
+    if (*ncomp <= 0 || *ncomp > 100) {
+        egsFatal("estar::compoundstoelements_: ncomp=%d is out of valid range "
+                "[1, 100].\n", *ncomp);
+    }
+
+    // In egsnrc.macros, the max number of elements per medium is $MXELE=50
+    // And these arrays are 50 characters long, so we can restrict to that size
+    const size_t MAX_ELEMENT_STR_SIZE = 50 * 50; // 50 elements * 50 chars each
+
     GetElements elemObject;
     GetElements::GetElementsStruct GeElems;
     int numCompounds = *ncomp;
 
     // getElemArray now returns bool; propagate any parse failure back to the
-    // Fortran caller rather than crashing via assert.
+    // Fortran
     if (!elemObject.getElemArray(formulaStr, numCompounds, GeElems)) {
         return 9;
     }
@@ -248,6 +330,10 @@ extern "C" int compoundstoelements_(char *formulaStr,
         // They are already sorted by increasing Z
         for (auto it = per_table.begin(); it != per_table.end(); ++it) {
             if (it->second == fc.jz[i]) {
+                if (charPos >= MAX_ELEMENT_STR_SIZE) {
+                    egsFatal("estar::compoundstoelements_: elementStr buffer overflow at "
+                            "charPos=%zu. Buffer may be too small.\n", charPos);
+                }
 
                 // For each character in the element string
                 for (auto &ch : it->first) {
@@ -297,9 +383,16 @@ void outputDensityFile(float mediaDensity, double *densityCorr, double *enGrid, 
         return;
     }
 
-    cout << "Writing density correction file: '" << outputFilename.c_str() << "'" << endl;
+    egsInformation("estar::outputDensityFile: Writing density correction file '%s'.\n",
+               outputFilename.c_str());
 
     std::ofstream f(outputFilename.c_str());
+
+    if (!f.is_open()) {
+        egsFatal("estar::outputDensityFile: Could not open output file '%s'.\n",
+                outputFilename.c_str());
+        return;
+    }
 
     f << getFileNameWithoutExtension(outputFilename).c_str() << endl;
     f << setprecision(8);
@@ -367,12 +460,10 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
     formula_calc fc;
     double rho;
-    string elem_name;
     rho = mediaDensity;
     if (rho <= 0) {
-        cout << "\n***************\n";
-        cout << "Error! Density must be greater than 0";
-        cout << "\n***************\n";
+        egsFatal("estar::estarCalculation: Density must be greater than 0, got %g "
+                "for medium %d.\n", rho, mediaNum);
         return 9;
     };
 
@@ -383,13 +474,15 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
     if (*ipotval >= 0) {
         fc.pot = *ipotval;
-        cout << "For medium " << mediaNum << " I-value (eV) given in egsinp file is " << fc.pot << "\n";
+
+        egsInformation("estar::estarCalculation: For medium %d I-value (eV) given "
+               "in egsinp file is %g.\n", mediaNum, fc.pot);
     }
     else {
-        cout << "For medium " << mediaNum << " I value (eV) not provided in egsinp file.\n";
-        cout << "I value (eV) as calulated by ESTAR is: " << fc.pot << "\n";
+        egsInformation("estar::estarCalculation: For medium %d I-value (eV) not "
+               "provided in egsinp file. I-value calculated by ESTAR is %g.\n",
+               mediaNum, fc.pot);
     }
-    double estarIval = fc.pot; // This is the I-value obtained by calculation
     *meanIval = fc.pot;
 
     // Removed: int p = 0; was declared here but never used at this scope;
@@ -400,15 +493,12 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
     //================================================//
     // define q here. Further information about q is given in 2.1 of report.
-    int numq = 50;
-    long double temp_qfac = log(10)/numq;
-    long double qfac = exp(temp_qfac);
+    long double qfac = exp(log(10)/50);
 
     double qbeg = 1e-04;
     long double q[1200];
     int lmax = 1101;
     q[0] = qbeg;
-    int i = 0;
 
     /*
         The q[] array we find below will help us to find an approximate solution of l^2
@@ -432,9 +522,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     // Guard against mmax exceeding the fixed array sizes below.
     // at[] and g[] are sized 50; if mmax exceeds this we would overflow.
     if (mmax <= 0 || mmax > 50) {
-        cout << "\n***************\n";
-        cout << "Error! mmax=" << mmax << " is out of valid range [1, 50].\n";
-        cout << "\n***************\n";
+        egsFatal("estar::estarCalculation: mmax=%d is out of valid range [1, 50] "
+                "for medium %d.\n", mmax, mediaNum);
         return 9;
     }
 
@@ -451,10 +540,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
         // Guard against an out-of-bounds index into atb[] before we use it.
         if (jz <= 0 || jz > ATB_SIZE) {
-            cout << "\n***************\n";
-            cout << "Error! Atomic number Z=" << jz << " at index " << i
-                 << " is out of valid range [1, " << ATB_SIZE << "].\n";
-            cout << "\n***************\n";
+            egsFatal("estar::estarCalculation: Atomic number Z=%d at index %d is out of "
+                    "valid range [1, %d] for medium %d.\n", jz, i, ATB_SIZE, mediaNum);
             return 9;
         }
 
@@ -465,10 +552,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         // Guard against divide-by-zero: atomic mass should never be zero for a
         // real element. A zero here means the atb table entry is missing or corrupt.
         if (a == 0.0) {
-            cout << "\n***************\n";
-            cout << "Error! Atomic mass is zero for Z=" << jz << " at index " << i
-                 << ". Check atb table entry.\n";
-            cout << "\n***************\n";
+            egsFatal("estar::estarCalculation: Atomic mass is zero for Z=%d at index %d "
+                    "for medium %d. Check atb table entry.\n", jz, i, mediaNum);
             return 9;
         }
 
@@ -480,24 +565,21 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     // Guard against sqrt of non-positive value in hom, and against zav==0
     // which would also make phil and cbar undefined.
     if (zav <= 0.0) {
-        cout << "\n***************\n";
-        cout << "Error! zav=" << zav << " is non-positive. Cannot compute hom.\n";
-        cout << "\n***************\n";
+        egsFatal("estar::estarCalculation: zav=%g is non-positive for medium %d. "
+                "Cannot compute hom.\n", zav, mediaNum);
         return 9;
     }
 
     double hom = 28.81593*sqrt(rho*zav); // this is equation 4 of Sternheimer 1984
     double phil = 2.0*log(fc.pot/hom);   // this is equation 7 of Sternheimer 1984 with a slight modification.
     // Please refer to the report (2.2) to understand the modification.
-    double cbar = phil + 1.0;
 
     for (int i = 0; i < mmax; i++) {
         // Guard against divide-by-zero: zav was already checked above so this
         // is just a safeguard in case something changed it unexpectedly.
         if (zav == 0.0) {
-            cout << "\n***************\n";
-            cout << "Error! zav is zero when normalising g[" << i << "].\n";
-            cout << "\n***************\n";
+            egsFatal("estar::estarCalculation: zav is zero when normalising g[%d] "
+                    "for medium %d.\n", i, mediaNum);
             return 9;
         }
         g[i] = g[i]/zav;
@@ -556,19 +638,17 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
         // Guard against nbas + nmax overflowing f[] and en[] (both sized 1000).
         if (nbas + nmax > 1000) {
-            cout << "\n***************\n";
-            cout << "Error! Total oscillator count nbas+nmax=" << (nbas+nmax)
-                 << " exceeds maximum array size of 1000 at element index " << m << ".\n";
-            cout << "\n***************\n";
+            egsFatal("estar::estarCalculation: Total oscillator count nbas+nmax=%d "
+                    "exceeds maximum of 1000 at element index %d for medium %d.\n",
+                    nbas+nmax, m, mediaNum);
             return 9;
         }
 
         // Guard against divide-by-zero in f[nn] calculation.
         if (sum == 0.0) {
-            cout << "\n***************\n";
-            cout << "Error! Electron sum is zero for element index " << m
-                 << " (Z=" << iz << "). Cannot compute oscillator strengths.\n";
-            cout << "\n***************\n";
+            egsFatal("estar::estarCalculation: Electron sum is zero for element index %d "
+                    "(Z=%d) in medium %d. Cannot compute oscillator strengths.\n",
+                    m, iz, mediaNum);
             return 9;
         }
 
@@ -632,7 +712,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     const int MAX_NEWTON_ITER = 1000;
     int newtonIter = 0;
 
-    while (abs(droot)-0.00001 > 0) {
+    while (std::abs(droot)-0.00001 > 0) {
         fun = -phil;
         der = 0.0;
         for (int n = 0; n < nmax; n++) {
@@ -640,10 +720,9 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
             // Guard against log of non-positive and divide-by-zero in der.
             if (trm <= 0.0) {
-                cout << "\n***************\n";
-                cout << "Error! Non-positive trm=" << trm << " at oscillator n=" << n
-                     << " during Newton's method. log and division are undefined.\n";
-                cout << "\n***************\n";
+                egsFatal("estar::estarCalculation: Non-positive trm=%g at oscillator n=%d "
+                        "during Newton's method for medium %d. log and division are undefined.\n",
+                        trm, n, mediaNum);
                 return 9;
             }
 
@@ -653,10 +732,9 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
         // Guard against zero derivative (would cause divide-by-zero in droot).
         if (der == 0.0) {
-            cout << "\n***************\n";
-            cout << "Error! Zero derivative in Newton's method at iteration "
-                 << newtonIter << " (root=" << root << "). Cannot continue.\n";
-            cout << "\n***************\n";
+            egsFatal("estar::estarCalculation: Zero derivative in Newton's method at "
+                    "iteration %d (root=%g) for medium %d. Cannot continue.\n",
+                    newtonIter, root, mediaNum);
             return 9;
         }
 
@@ -665,10 +743,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         root = root - droot;
 
         if (++newtonIter >= MAX_NEWTON_ITER) {
-            cout << "\n***************\n";
-            cout << "Error! Newton's method failed to converge after "
-                 << MAX_NEWTON_ITER << " iterations.\n";
-            cout << "\n***************\n";
+            egsFatal("estar::estarCalculation: Newton's method failed to converge after "
+                    "%d iterations for medium %d.\n", MAX_NEWTON_ITER, mediaNum);
             return 9;
         }
     };
@@ -677,14 +753,13 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     // Guard against sqrt of a negative root (Newton's method could converge
     // to a negative value if the initial guess is poor or input is bad).
     if (root < 0.0) {
-        cout << "\n***************\n";
-        cout << "Error! Newton's method converged to negative root=" << root
-             << ". Cannot compute adjustment factor.\n";
-        cout << "\n***************\n";
+        egsFatal("estar::estarCalculation: Newton's method converged to negative "
+                "root=%g for medium %d. Cannot compute adjustment factor.\n",
+                root, mediaNum);
         return 9;
     }
 
-    double factor = sqrt(root); //  this is the adjustment factor
+    //double factor = sqrt(root); //  this is the adjustment factor
 
 
     for (int n = 0; n < nmax; n++) {
@@ -713,9 +788,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
         // Guard against divide-by-zero when computing yq[n].
         if (sum == 0.0) {
-            cout << "\n***************\n";
-            cout << "Error! Zero sum when computing yq[" << n << "]. Cannot compute 1/sum.\n";
-            cout << "\n***************\n";
+            egsFatal("estar::estarCalculation: Zero sum when computing yq[%d] for "
+                    "medium %d. Cannot compute 1/sum.\n", n, mediaNum);
             return 9;
         }
 
@@ -728,10 +802,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
             // Guard against divide-by-zero inside the log argument.
             if (denom == 0.0) {
-                cout << "\n***************\n";
-                cout << "Error! Zero denominator in arg calculation at n=" << n
-                     << ", m=" << m << ".\n";
-                cout << "\n***************\n";
+                egsFatal("estar::estarCalculation: Zero denominator in arg calculation at "
+                        "n=%d, m=%d for medium %d.\n", n, m, mediaNum);
                 return 9;
             }
 
@@ -765,7 +837,6 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     // The following code is used to obtain
     // density corrections. Some details on what is happening here is givn in
     // section 2.1 of the notes.
-    double e;
     double tau;
     double y;
     double delta;
@@ -773,7 +844,6 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     double dlt[lkmax];
     double tol = 0.000000001; // for bisection method
     double xroot;
-    double nb_density_corr[lkmax];
     double nb_density; // density factor from bisection method
     /*
         solver = 1 := use approximation in estar
@@ -783,7 +853,6 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     bspol bp;
 
     for (int i = 0; i < lkmax; i++) {
-        e = er[i];
         tau = er[i]/rmass;
         y = tau*(tau+2.0);
         delta = 0.0;
@@ -806,10 +875,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
                         // Guard against divide-by-zero inside bisection solver arg.
                         if (denom == 0.0) {
-                            cout << "\n***************\n";
-                            cout << "Error! Zero denominator in bisection arg at energy index i="
-                                 << i << ", m=" << m << ".\n";
-                            cout << "\n***************\n";
+                            egsFatal("estar::estarCalculation: Zero denominator in bisection arg at "
+                                    "energy index %d, m=%d for medium %d.\n", i, m, mediaNum);
                             return 9;
                         }
 
@@ -820,10 +887,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
                     // Guard against divide-by-zero when inverting yqn.
                     if (yqn == 0.0) {
-                        cout << "\n***************\n";
-                        cout << "Error! yqn is zero at energy index i=" << i
-                             << ". Cannot compute 1/yqn.\n";
-                        cout << "\n***************\n";
+                        egsFatal("estar::estarCalculation: yqn is zero at energy index %d for "
+                                "medium %d. Cannot compute 1/yqn.\n", i, mediaNum);
                         return 9;
                     }
 
@@ -832,17 +897,15 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
                     delta =  nb_density;
                 }
                 else {
-                    cout << "\n***************\n";
-                    cout << "Solver option incorrect!\n";
-                    cout << "\n***************\n";
+                    egsFatal("estar::estarCalculation: Invalid solver option %d for medium %d. "
+                            "Must be 1 or 2.\n", solver, mediaNum);
                     return 9;
                 }
 
             }
             else {
-                cout << "\n***************\n";
-                cout << "energy is too high and out of range";
-                cout << "\n***************\n";
+                egsFatal("estar::estarCalculation: Energy er[%d]=%g is too high and out of "
+                        "range for medium %d.\n", i, er[i], mediaNum);
                 return 9;
             }
         }
@@ -856,8 +919,9 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         densityCorr[i] = dlt[i];
         enGrid[i] = er[i];
     }
-    cout << "\n";
-    cout << "Density correction factors have been calculated by ESTAR for medium " << mediaNum << ".\n";
+
+    egsInformation("\nestar::estarCalculation: Density correction factors have been "
+               "calculated by ESTAR for medium %d.\n", mediaNum);
 
     // output a density correction file
     outputDensityFile(mediaDensity, densityCorr, enGrid, meanIval, fc, outputFilename);
@@ -876,6 +940,11 @@ bspol fbspol(double s, double x[1000], double a[1000], double b[1000], double c[
     int mav;
     double k;
     double g;
+
+    if (n < 2) {
+        egsFatal("estar::fbspol: n=%d is too small, need at least 2 points.\n", n);
+    }
+
     if (x[0] <= x[n-1]) {
         idir =0;
         mlb =0;
@@ -896,7 +965,7 @@ bspol fbspol(double s, double x[1000], double a[1000], double b[1000], double c[
         ml = mlb;
         mu = mub;
         int binary_temp = 0; // we define binary_temp = 0 as the loop must run at least once
-        while (abs(mu-ml)>1 || binary_temp==0) {
+        while (std::abs(mu-ml)>1 || binary_temp==0) {
             mav = (ml+mu)/2;
             if (s<x[mav]) {
                 mu = mav;
@@ -928,6 +997,12 @@ bspol fbspol(double s, double x[1000], double a[1000], double b[1000], double c[
 
 scof fscof(int nmax, double x[1200], double f[1200]) {
     scof sf;
+
+    if (nmax < 2) {
+        egsFatal("estar::fscof: fscof requires at least 2 points, got nmax=%d\n", nmax);
+        return sf;
+    }
+
     int m1 = 2;
     int m2 = nmax-1;
     double s = 0.0;
@@ -947,6 +1022,11 @@ scof fscof(int nmax, double x[1200], double f[1200]) {
     for (int m = 1; m < m2; m++) {
         sf.c[m] = sf.c[m] + r*sf.c[m-1];
         sf.b[m] = (x[m-1] - x[m+1])*2 - r*s;
+        if (sf.b[m] == 0.0) {
+            egsFatal("estar::fscof: Zero pivot sf.b[%d] in spline solve. "
+                    "Knot data may be degenerate.\n", m);
+        }
+
         s = sf.d[m];
         r = s/sf.b[m];
     };
@@ -956,6 +1036,10 @@ scof fscof(int nmax, double x[1200], double f[1200]) {
         mr = mr - 1;
     };
     for (int m = 0; m < m2; m++) {
+        if (sf.d[m] == 0.0) {
+            egsFatal("estar::fscof: Zero interval at m=%d. "
+                    "Knot positions x[%d] and x[%d] may be identical.\n", m, m, m+1);
+        }
         s = sf.d[m];
         r = sf.c[m+1] - sf.c[m];
         sf.d[m] = r/s;
@@ -966,53 +1050,48 @@ scof fscof(int nmax, double x[1200], double f[1200]) {
     return sf;
 }
 
-double yl;
-double yql;
-double obj_func;
 double objective_function(double tau, double f[1000], double eps[1000], int nmax, double x) {
-    yl = log(tau*(tau+2.0));
-    yql = 0;
+    double yl = log(tau*(tau+2.0));
+    double yql = 0;
     for (int i = 0; i < nmax; i++) {
         yql = yql + f[i]/(eps[i]+x);
-    };
-    yql = log(1/yql);
-    obj_func = yl - yql;
-    return obj_func;
+    }
+    // Guard against divide-by-zero before log
+    if (yql == 0.0) {
+        egsFatal("estar::objective_function: yql is zero at x=%g. "
+                "Cannot compute log.\n", x);
+    }
+    return yl - log(1.0/yql);
 }
 
 // now we have to write the bisection algorithm
 
 double bisec(double lowerbound, double upperbound, double tolerance, double tau, double f[1000], double eps[1000], int nmax) {
-    // we know objective_function(lowebound) will be positive
-    double del = 1;
-    double x_mid;
-    if ((objective_function(tau, f, eps, nmax, lowerbound) > 0) && (objective_function(tau, f, eps, nmax, upperbound) < 0)) {
-        while (del > tolerance) {
-            x_mid = (lowerbound + upperbound)/2;
-            if (objective_function(tau, f, eps, nmax, x_mid) > 0) {
-                lowerbound = x_mid;
-            }
-            else {
-                upperbound = x_mid;
-            }
-            del = objective_function(tau, f, eps, nmax, x_mid) ;
-        }
+    if (tolerance <= 0) {
+        egsFatal("estar::bisec: bisection tolerance must be positive, got %g\n", tolerance);
     }
-    else if ((objective_function(tau, f, eps, nmax, lowerbound) < 0) && (objective_function(tau, f, eps, nmax, upperbound) > 0)) {
-        while (del > tolerance) {
-            x_mid = (lowerbound + upperbound)/2;
-            if (objective_function(tau, f, eps, nmax, x_mid) > 0) {
-                upperbound = x_mid;
-            }
-            else {
-                lowerbound = x_mid;
-            }
-            del = objective_function(tau, f, eps, nmax, x_mid);
-        }
+
+    double fLower = objective_function(tau, f, eps, nmax, lowerbound);
+    double fUpper = objective_function(tau, f, eps, nmax, upperbound);
+
+    if ((fLower > 0) == (fUpper > 0)) {
+        egsFatal("estar::bisec: Bounds [%g, %g] do not bracket a root for tau=%g.\n",
+                lowerbound, upperbound, tau);
+        return lowerbound; // signal failure; caller should check
     }
-    else {
-        cout << "The lower and upper bounds are wrong\n";
-        exit(1);
+
+    double x_mid = lowerbound;
+    double del = 1.0;
+    while (del > tolerance) {
+        x_mid = (lowerbound + upperbound) / 2.0;
+        double fMid = objective_function(tau, f, eps, nmax, x_mid);
+        if ((fMid > 0) == (fLower > 0)) {
+            lowerbound = x_mid;
+            fLower = fMid;
+        } else {
+            upperbound = x_mid;
+        }
+        del = std::abs(fMid);
     }
     return x_mid;
 }

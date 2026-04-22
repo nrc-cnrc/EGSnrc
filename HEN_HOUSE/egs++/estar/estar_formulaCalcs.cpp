@@ -1,16 +1,16 @@
 #include <iostream>
 #include <iomanip>
+#include <vector>
 #include <math.h>
-#include <assert.h>
 #include "estar_formulaCalcs.h"
 #include "estar_dataParser.h"
 #include "estar_dataTables.h"
-
-using namespace std;
+#include "egs_functions.h"
 
 // The objective of this module is to determine whether to call
 // fcalc() or mixtureCalculation()
 
+namespace {
 /*
     The class contains information on pre-processing compound formula
 */
@@ -41,14 +41,19 @@ public:
         while (j < perTableLength) {
             // initialize elemPresent and elemPresent to contain zeros
             elemPresent[j] = 0;
-            elemPresent[j] = 0.0;
             j = j + 1;
         }
         // Now get the corresponding atomic number array
-        int atomicNumArray[NEP];
+        vector<int> atomicNumArray(NEP);
         int i = 0;
         while (i < NEP) {
-            atomicNumArray[i] = per_table[inputElemArray[i]];
+            auto it = per_table.find(inputElemArray[i]);
+            if (it == per_table.end()) {
+                egsFatal("estar::compRes: Unrecognised element symbol '%s' at index %d.\n"
+                        "Check the formula input.\n", inputElemArray[i].c_str(), i);
+            }
+            atomicNumArray[i] = it->second;
+
             i = i + 1;
         }
         i = 0;
@@ -56,6 +61,13 @@ public:
         int numDiffAtoms = 0;
         while (i < NEP) {
             zIndex = atomicNumArray[i] - 1; // define this for simplicity
+
+            if (zIndex < 0 || zIndex >= perTableLength) {
+                egsFatal("estar::compRes: Atomic number index %d is out of bounds [0, %d).\n"
+                        "Element '%s' may not be in the periodic table.\n",
+                        zIndex, perTableLength, inputElemArray[i].c_str());
+            }
+
             if (elemPresent[zIndex] == 0) {
                 elemPresent[zIndex] = 1;
                 numAtomsArray[zIndex] = inputNumAtomArray[i];
@@ -86,9 +98,8 @@ public:
     // This function produces the chemical formula of a compound from the
     // elementrray and numofAtoms array
     string getCompFormula(string *elementArray, float *numOfAtoms, int NEP, int mediaNum) {
-        RestructureCompound compRestruct;
-        int numberOfAtoms[NEP];
-        string numberOfAtomsStr[NEP];
+        vector<int> numberOfAtoms(NEP);
+        vector<string> numberOfAtomsStr(NEP);
         int i = 0;
         string compoundFormula = "";
         while (i < NEP) {
@@ -107,6 +118,7 @@ public:
         return compoundFormula;
     }
 };
+}
 
 
 /*
@@ -120,8 +132,9 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
     if (knmat == 0) {
         formula = elementArray[0];
         fc = fcalc(knmat, rho, formula);
-        cout << "\n";
-        cout << "Medium " << mediaNum << " treated as element in ESTAR\n";
+
+        egsInformation("\nestar::getDataFromFormulae: Medium %d treated as element.\n", mediaNum);
+
         return fc;
     }
     else if (knmat == 1) {
@@ -129,12 +142,16 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
         compFormulaPreprocess::RestructureCompound rc = compObject.compRes(elementArray, numOfAtoms, NEP);
         string compFormula = compObject.getCompFormula(rc.finalElemArray, rc.finalNumAtoms, rc.finalNumOfElems, mediaNum);
         fc = fcalc(knmat, rho, compFormula);
+
+        egsInformation("\nestar::getDataFromFormulae: Medium %d treated as compound.\n", mediaNum);
+
         return fc;
     }
     else {
         fc = mixtureCalculation(rho, elementArray, massFraction, NEP);
-        cout << "\n";
-        cout << "Medium " << mediaNum << " treated as mixture in ESTAR\n";
+
+        egsInformation("\nestar::getDataFromFormulae: Medium %d treated as mixture.\n", mediaNum);
+
         return fc;
     }
 }
@@ -150,7 +167,13 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
 // the atomic number by using the per_table dictionary
 int atom_num(string elem_name) {
     int atomic_num;
+
     atomic_num = per_table[elem_name];
+    if (atomic_num <= 0) {
+        egsFatal("estar::atom_num: Unrecognized element '%s'."
+                "Element names must be symbols (e.g. 'C', 'Na'), not integers.\n",
+                elem_name.c_str());
+    }
     return atomic_num;
 }
 
@@ -171,6 +194,13 @@ formula_calc fcalc(int knmat, double rho, string elemName) {
     // for example if elemName == H2O, mmax will be 2.
     // if elemName == H2OMgClH, mmax will be 4.
     int mmax = pf.elem_types;
+
+    if (mmax > numElemsPerTable) {
+        egsFatal("estar::fcalc: Parsed element type count %d exceeds maximum of %d.\n"
+                "Formula '%s' may be malformed.\n",
+                mmax, numElemsPerTable, elemName.c_str());
+    }
+
     int atomic_number_element;
     fc.mmax = pf.elem_types;
     double nz[numElemsPerTable]; // initialize array with numElemsPerTable elements
@@ -178,13 +208,7 @@ formula_calc fcalc(int knmat, double rho, string elemName) {
     while (i < mmax) {
         fc.jz[i] = atom_num(pf.str_arr[i]); // for each element we get the atomic number
         atomic_number_element = fc.jz[i];
-        // if you mistype a formula, the atomic_number_element will be 0
-        if (atomic_number_element<=0) {
-            cout << "Incorrect formula" << "\n";
-            cout << "\n***************\n";
-            cout << "You have mistyped the element name or have an element whose atomic number is more than 100 \n***************\n";
-        }
-        assert(atomic_number_element > 0);
+
         /* below we have nz[i] = pf.num_arr[i]. Now pf.num_arr[i] produces
            the number of each atom present in the element/compound.
            *   For example: for H20, nz[0] will be 2 while nz[1] will be 1.
@@ -209,6 +233,11 @@ formula_calc fcalc(int knmat, double rho, string elemName) {
         m = m + 1;
     }
 
+    if (asum == 0.0) {
+        egsFatal("estar::fcalc: Total atomic mass sum is zero for formula '%s'.\n"
+                "Check that atom counts are non-zero.\n", elemName.c_str());
+    }
+
     /* After the while loop below runs, we get fc.wt.
        The final fc.wt we get (at end of while loop) is the:
        normalized sum of ATOMIC_MASS_OF_ELEMENT_i * NUMBER_OF_ATOMS_WITH_ATOMIC_NUMBER_i
@@ -226,18 +255,18 @@ formula_calc fcalc(int knmat, double rho, string elemName) {
 
     fc.zav = 0.0;
     double potl = 0.0;
-    double potm;
+    double potm = 0.0;
     double za;
-    double rhocut = 0.1;
+
+    // g/cm^3 threshold below which a material is treated as a gas for I-value selection
+    const double rhocut = 0.1;
+
     m = 0;
 
     while (m < mmax) {
         jm = fc.jz[m];
-        double jm_temp = fc.jz[m]; // we just define jm_temp as a double
-        // for better accuracy (but this might be unnecessary and we could have
-        // simply used jm)
 
-        za = jm_temp/atb[jm-1]; // ratio of atomic number to atomic mass
+        za = fc.jz[m]/atb[jm-1]; // ratio of atomic number to atomic mass
         fc.zav = fc.zav + fc.wt[m]*za; // This Z/A is the same as the Z/A in equation 4 (Sternheimer 1948)
         // You can simple replace fc.wt[m] and za with their definitions
         // to arrive at the formula:
@@ -272,63 +301,25 @@ formula_calc fcalc(int knmat, double rho, string elemName) {
         else {
             potm = poth[jm-1];
         }
+
+        if (potm <= 0.0) {
+            egsFatal("estar::fcalc: I-value potm=%g is non-positive for Z=%d.\n"
+                    "Cannot take log. Check poth/potgas/potcon tables.\n", potm, jm);
+        }
+
         potl = potl + fc.wt[m]*za*log(potm); // This equation represents equation 5.3 of ICRU 37.
         // fc.wt[m] is w[m] and za is Z[i]/A[i] of ICRU 37
         m = m + 1;
     }
     // fc.pot is the I-Value
+    if (fc.zav == 0.0) {
+        egsFatal("estar::fcalc: Mean Z/A (zav) is zero for formula '%s'.\n"
+                "Cannot compute I-value.\n", elemName.c_str());
+    }
     fc.pot = exp(potl/fc.zav); // we remove the log in equation 5.3 (ICRU 37) and divide by <Z/a> TO GET THE I-value
     // Note that fc.zav in the code is is <Z/a> of ICRU 37 equation 5.3
     return fc;
 };
-
-// This is a simple function where we output an object of mixtureData structure
-// where the object has the relevant data of the mixture
-// UPDATE: getData() is no longer called as we get the data from .egsinp files and not
-//         through command prompts anymore
-mixtureData getData() {
-    mixtureData md;
-    int ncomp;
-    cout << "how many components? ";
-    cin >> ncomp;
-    if (ncomp <= 0) {
-        cout << "\n***************\n";
-        cout << "Error! Number of components must be greater than 0 and an integer";
-        cout << "\n***************\n";
-        assert(ncomp >= 0);
-    };
-    cout << "num is " << ncomp << "\n";
-    md.ncomp = ncomp;
-    string formula;
-    double weight;
-    int i = 0;
-    double sumf = 0.0;
-    while (i < ncomp) {
-        cout << "give formula for component " << i+1 << ": ";
-        cin >> formula;
-        md.frm[i] = formula;
-
-        cout << "give fraction by weight for component " << i+1 << ": ";
-        cin >> weight;
-        if (weight <= 0) {
-            cout << "\n***************\n";
-            cout << "Error! weight must be greater than 0";
-            cout << "\n***************\n";
-            assert(weight >= 0);
-        };
-        md.frac[i] = weight;
-
-        sumf = sumf + md.frac[i];
-        i = i+1;
-    }
-    // normalize
-    i = 0;
-    while (i < ncomp) {
-        md.frac[i] = md.frac[i]/sumf;
-        i = i + 1;
-    }
-    return md;
-}
 
 // This processes the input data and puts them in a mixtureData structure object
 mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP) {
@@ -336,11 +327,8 @@ mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP)
     md.ncomp = NEP;
     int ncomp = NEP;
     if (ncomp <= 0) {
-        cout << "\n***************\n";
-        cout << "Error! Number of components must be greater than 0 and an integer";
-        cout << "\n***************\n";
-        assert(ncomp >= 0);
-    };
+        egsFatal("estar::getEgsMediaData: Number of components must be > 0, got %d.\n", ncomp);
+    }
     int i = 0;
     while (i < ncomp) {
         md.frm[i] = elementArray[i];
@@ -350,11 +338,9 @@ mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP)
     double sumf = 0;
     while (i < ncomp) {
         if (massFraction[i] <= 0) {
-            cout << "\n***************\n";
-            cout << "Error! mass fraction must be greater than 0";
-            cout << "\n***************\n";
-            assert(massFraction[i] > 0);
-        };
+            egsFatal("estar::getEgsMediaData: Mass fraction for component %d is %g.\n"
+                    "Mass fractions must be > 0.\n", i, massFraction[i]);
+        }
         md.frac[i] = massFraction[i];
         sumf = sumf + md.frac[i];
         i = i + 1;
@@ -378,8 +364,8 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
 
     mixtureData md = getEgsMediaData(elementArray, massFraction, NEP);
     int numComp = md.ncomp;
-    string formulaArray[numComp]; // array containing all the formula
-    double fractionArray[numComp]; // srray contaning all the weights
+    vector<string> formulaArray(numComp); // array containing all the formula
+    vector<double> fractionArray(numComp); // srray contaning all the weights
     for (int i = 0; i < numComp; i++) {
         formulaArray[i] = md.frm[i];
         fractionArray[i] = md.frac[i];
@@ -395,8 +381,8 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
         j = j + 1;
     }
     int atmoicNumIndex;
-    double zavArray[numComp]; // array containing Z/A of each component
-    double potArray[numComp]; // array containing I-Value of each component
+    vector<double> zavArray(numComp); // array containing Z/A of each component
+    vector<double> potArray(numComp); // array containing I-Value of each component
 
     for (int i = 0; i < numComp; i++) {
         formula_calc fc; // this object is redefined for every different formula used in the mixture
@@ -446,6 +432,10 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
     for (int i = 0; i < numComp; i++) {
         ffc.zav = ffc.zav + fractionArray[i]*zavArray[i];  // --------------------------(i)
         potl = potl+fractionArray[i]*zavArray[i]*log(potArray[i]); // -----------------(ii)
+    }
+    if (ffc.zav == 0.0) {
+        egsFatal("estar::mixtureCalculation: Mixture mean Z/A is zero.\n"
+                "Check that mass fractions and element Z/A values are non-zero.\n");
     }
     ffc.pot = exp(potl/ffc.zav); // --------------------------------------------------(iii)
     // equations i,ii and iii are used to find the I-value of the mixture from equation 5.3 of ICRU 37
