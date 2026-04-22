@@ -254,6 +254,7 @@ extern "C" int estar_(char *formulaStr,
 
 extern "C" int compoundstoelements_(char *formulaStr,
                                    double *massFraction,
+                                   float *mediaDensity,
                                    char *elementStr,
                                    double *rhoz,
                                    double *zelem,
@@ -267,6 +268,9 @@ extern "C" int compoundstoelements_(char *formulaStr,
     }
     if (!massFraction) {
         egsFatal("estar::compoundstoelements_: massFraction pointer is null.\n");
+    }
+    if (!mediaDensity) {
+        egsFatal("estar::compoundstoelements_: mediaDensity pointer is null.\n");
     }
     if (!elementStr) {
         egsFatal("estar::compoundstoelements_: elementStr pointer is null.\n");
@@ -288,6 +292,9 @@ extern "C" int compoundstoelements_(char *formulaStr,
     if (*ncomp <= 0 || *ncomp > 100) {
         egsFatal("estar::compoundstoelements_: ncomp=%d is out of valid range "
                 "[1, 100].\n", *ncomp);
+    }
+    if(*mediaDensity <= 0) {
+        egsFatal("estar::compoundstoelements_: mediaDensity=%f must be > 0.\n", *mediaDensity);
     }
 
     // In egsnrc.macros, the max number of elements per medium is $MXELE=50
@@ -314,7 +321,7 @@ extern "C" int compoundstoelements_(char *formulaStr,
         estarWeightArrayInput[i] = massFraction[i];
     }
 
-    double rho = 1; // Material density not actually needed, so use a dummy
+    float rho = *mediaDensity;
     formula_calc fc = mixtureCalculation(rho,
                                          estarFormulaArrayInput.data(),
                                          estarWeightArrayInput.data(),

@@ -795,6 +795,7 @@ extern __extc__ int estar_(char *formulaStr,
 
 extern __extc__ int compoundstoelements_(char *formulaStr,
                                    double *massFraction,
+                                   float *mediaDensity,
                                    char *elementStr,
                                    double *rhoz,
                                    double *zelem,

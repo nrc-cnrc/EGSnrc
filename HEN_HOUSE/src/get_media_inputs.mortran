@@ -1715,7 +1715,7 @@ DO i=1,NMED[
 
         "Get the atomic data from the compounds"
         CALL compoundstoelements(compoundList_tmp, compoundFractions_tmp,
-            asym_tmp, rhoz_tmp, z_tmp, ncomp(i), nne_tmp);
+            localDensity(i), asym_tmp, rhoz_tmp, z_tmp, ncomp(i), nne_tmp);
 
         "nne_tmp will now have been updated with actual number of elements"
         nne(i)=nne_tmp;
