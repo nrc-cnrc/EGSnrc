@@ -4,10 +4,16 @@ where [args] is one or more of the following arguments:
  -h or --help                 Print this message and exit.
 
  -i or --input ifile          Specifies that the input file is ifile.egsinp.
+                              Input lookup order is:
+                              * ./ifile.egsinp
+                              * $EGS_HOME/user_code/ifile.egsinp
 
  -o or --output ofile         Output data will be written to ofile.egslog,
                               ofile.egslst, etc., instead of ifile.egslog,
                               ifile.egslst, etc.
+
+ -d or --output-dir dir       Put output files and temporary egsrun_*
+                              directories in dir.
 
  -p or --pegs-file file_name  Use the pegs4 data file file_name.pegs4dat.
                               The system will look for it in the HEN_HOUSE

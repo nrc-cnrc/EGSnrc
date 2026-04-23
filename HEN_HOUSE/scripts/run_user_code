@@ -38,14 +38,15 @@ my_name=`echo "$0" |sed 's,.*[\\/],,'`
 if test $# -lt 3; then
     cat >&2 <<EOF
 
-Usage: $my_name user_code input_file pegs_file [noopt] [config=xxx]
+Usage: $my_name user_code input_file pegs_file [noopt] [config=xxx] [outdir=dir]
 
 $my_name runs the user code user_code, using input_file as input file
 (use two double quotes if there is no input file needed) and pegs_file
 as pegs4 data file. The optional argument noopt tells the script to
 use the executable compiled without optimizations, using config=xxx
 you can use a configuration different from the one specified by the
-environment variable EGS_CONFIG.
+environment variable EGS_CONFIG. Use outdir=dir to override
+the default output directory (current working directory).
 
 EOF
     exit 1
@@ -57,6 +58,7 @@ pegs_file=$3
 egs_home="$EGS_HOME"
 egs_configuration="$EGS_CONFIG"
 what=
+run_output_dir=`pwd`
 
 if test "x$egs_home" = x; then
 
@@ -97,6 +99,7 @@ EOF
                  exit 1
                   ;;
       config=*)  egs_configuration=`echo $1 | sed 's/config=//'` ;;
+      outdir=*)  run_output_dir=`echo $1 | sed 's/outdir=//'` ;;
              *)  ;; #ignore everything else
 
     esac
@@ -190,18 +193,6 @@ if test ! -d "$egs_home"; then
 
 fi
 
-if test ! -d "$egs_home/$user_code"; then
-
-    echo "The directory '$egs_home/$user_code' dose not exist. Creating it." >&2
-    if { mkdir "$egs_home/$user_code"; status=$?; (exit $status); }; then
-       :
-    else
-       echo "Failed." >&2
-       exit 1
-    fi
-
-fi
-
 executable="$egs_home/bin/$my_machine/$user_code$what"
 
 if test ! -x $executable; then
@@ -213,9 +204,9 @@ if test ! -x $executable; then
 fi
 
 if test $pegs_file = "pegsless"; then
-    command="$executable"
+    command="$executable -d $run_output_dir"
 else
-    command="$executable -p $pegs_file"
+    command="$executable -p $pegs_file -d $run_output_dir"
 fi
 
 if test "x$input_file" = x; then

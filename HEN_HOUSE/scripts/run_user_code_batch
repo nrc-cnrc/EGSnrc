@@ -59,7 +59,7 @@ my_name=`echo "$0" |sed 's,.*[\\/],,'`
 if test $# -lt 3; then
     cat >&2 <<EOF
 
-Usage: $my_name user_code input_file pegs_file [noopt] [config=xxx]
+Usage: $my_name user_code input_file pegs_file [noopt] [config=xxx] [outdir=dir]
                 [short|long|user1|user2|user3] [batch=batch_system] [p=N]
 
 $my_name runs the user code user_code, using input_file as input file
@@ -67,7 +67,8 @@ $my_name runs the user code user_code, using input_file as input file
 as pegs4 data file. The optional argument noopt tells the script to
 use the executable compiled without optimizations, using config=xxx
 you can use a configuration different from the one specified by the
-environment variable EGS_CONFIG.
+environment variable EGS_CONFIG. Use outdir=dir to override
+the default output directory (current working directory).
 
 One can also select the batch system by setting the batch variable
 on the command line and set the queue type (short,long,user1,user2,user3).
@@ -99,6 +100,7 @@ testing=no
 egs_batch_system=at
 fresh=yes
 rc_simple=
+run_output_dir=`pwd`
 if test "x$EGS_BATCH_SYSTEM" != x; then
     egs_batch_system="$EGS_BATCH_SYSTEM"
 fi
@@ -131,6 +133,7 @@ EOF
                  exit 1
                   ;;
       config=*)  egs_configuration=`echo $1 | sed 's/config=//'` ;;
+      outdir=*)  run_output_dir=`echo $1 | sed 's/outdir=//'` ;;
         simple)  rc_simple="-s" ;;
          short)  queue1=1 ;;
          user1)  queue1=2 ;;
@@ -267,18 +270,6 @@ if test ! -d "$egs_home"; then
 
 fi
 
-if test ! -d "$egs_home/$user_code"; then
-
-    echo "The directory '$egs_home/$user_code' dose not exist. Creating it." >&2
-    if { mkdir "$egs_home/$user_code"; status=$?; (exit $status); }; then
-       :
-    else
-       echo "Failed." >&2
-       exit 1
-    fi
-
-fi
-
 executable="$egs_home/bin/$my_machine/$user_code$what"
 
 if test ! -x $executable; then
@@ -299,7 +290,7 @@ if test "x$input_file" != x; then
     command="$command -i $input_file"
 fi
 
-command="$command -e $egs_home -H $hen_house $rc_simple"
+command="$command -e $egs_home -H $hen_house -d $run_output_dir $rc_simple"
 
 # export the important environent variables just in case.
 # note the -x option for nqs, which exports the environment of the
