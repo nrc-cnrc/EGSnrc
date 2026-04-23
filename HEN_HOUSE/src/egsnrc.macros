@@ -3617,6 +3617,7 @@ REPLACE {;COMIN/EGS-IO/;} WITH {;
                   pegs_file,  "The pegs file name with path and extension"
                   hen_house,  "The HEN_HOUSE directory"
                   egs_home,   "The EGS_HOME directory"
+                  output_dir, "The output directory for run artifacts"
                   work_dir,   "The working directory within the user code dir."
                   host_name,  "The name of the host"
                   n_parallel, "if >0, number of parallel jobs"
@@ -3638,7 +3639,8 @@ REPLACE {;COMIN/EGS-IO/;} WITH {;
                   is_pegsless;    "true if you are running without pegs file"
   character input_file*256, output_file*256, pegs_file*256,
             file_extensions*$max_extension_length,
-            hen_house*128, egs_home*128, work_dir*128, user_code*64,
+            hen_house*128, egs_home*128, output_dir*256,
+            work_dir*128, user_code*64,
             host_name*64;
   $INTEGER  n_parallel, i_parallel, first_parallel,n_max_parallel,
             n_chunk, file_units, n_files,i_input,i_log,i_incoh,

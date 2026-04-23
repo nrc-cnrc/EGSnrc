@@ -78,6 +78,10 @@ REPLACE {;COMIN/my_times/;} WITH {;
 "                                    ofile.egslog, ofile.egslst, etc., instead
 "                                    of ifile.egslog, etc.
 "
+"       -d or --output-dir dir       Put output files and egsrun_* temporary
+"                                    directories in dir instead of the default
+"                                    output location.
+"
 "       -H or --hen-house dir        Change the HEN_HOUSE to be dir instead
 "                                    of the directory specified in the
 "                                    machine.macros file.
@@ -144,8 +148,9 @@ REPLACE {;COMIN/my_times/;} WITH {;
 "     See note below on how $HEN_HOUSE and $EGS_HOME are determined
 "
 "  2. If a -i ifile option was given as argument, ifile.egsinp is
-"     opened as fortran unit 5.
-"     The input file MUST be in the user code directory on $EGS_HOME
+"     opened as fortran unit 5. The lookup order is:
+"       - ifile.egsinp in the current working directory
+"       - $EGS_HOME/user_code/ifile.egsinp
 "
 "  3. If the run is a batch run (the -b option was present on the command
 "     line), fortran unit 6 is connected to an output file with a .egslog
@@ -214,9 +219,11 @@ implicit none;
 integer   l, lnblnk1, l1, l2;
 integer   i;
 character arg*256,tmp_string*512, tmp1_string*512, ucode_dir*512,
+          tmp2_string*512, base_input*512,
           line*80,
           line1*80,dattim*24;
-$LOGICAL  have_input,egs_isdir,egs_strip_extension,ex,
+$LOGICAL  have_input,egs_isdir,egs_strip_extension,ex,has_path,
+          egs_is_absolute_path,
           on_egs_home,is_opened;
 $INTEGER  mypid;
 integer   getpid;
@@ -353,24 +360,86 @@ $open_data_file(tmp_string,tmp1_string,'photo_relax.data',$PHOTOUNIT);
 
 $set_string(ucode_dir,' ');
 ucode_dir = $cstring(egs_home) // $cstring(user_code) // $file_sep;
+IF( lnblnk1(output_dir) > 0 ) [
+    DO i=1,lnblnk1(output_dir) [
+        IF( output_dir(i:i) = '/' ) [
+            output_dir(i:i) = $file_sep;
+        ]
+    ]
+    l = lnblnk1(output_dir);
+    IF( output_dir(l:l) ~= $file_sep ) output_dir(l+1:l+1) = $file_sep;
+]
 
 have_input = .false.;
 i_input=5;
 IF( lnblnk1(input_file) > 0 ) [
     have_input = .true.;
-    l = lnblnk1(egs_home); l1 = lnblnk1(user_code)+1;
-    l2 = lnblnk1(input_file) + lnblnk1('.egsinp');
-    IF( l + l1 + l2 > 1024 ) [
-        $egs_fatal(*,'input file name (including path) is too long ',l+l1+l2);
+    $set_string(base_input,' ');
+    base_input = $cstring(input_file);
+    ex = egs_strip_extension(base_input,'.egsinp');
+    has_path = .false.;
+    DO i=1,lnblnk1(base_input) [
+        IF( base_input(i:i) = '/' | base_input(i:i) = $file_sep ) [
+            has_path = .true.;
+            EXIT;
+        ]
     ]
-    ex = egs_strip_extension(input_file,'.egsinp');
-    tmp_string = $cstring(ucode_dir) // $cstring(input_file) // '.egsinp';
+    l2 = lnblnk1(base_input) + lnblnk1('.egsinp');
+    IF( l2 > 1024 ) [
+        $egs_fatal(*,'input file name (including path) is too long ',l2);
+    ]
+    tmp_string = $cstring(base_input) // '.egsinp';
     inquire(file=tmp_string,exist=ex);
+    IF( ~ex ) [
+        IF( egs_is_absolute_path(base_input) | has_path ) [
+            $egs_fatal(*,'Input file ',$cstring(tmp_string),' does not exist.');
+        ]
+        l = lnblnk1(egs_home); l1 = lnblnk1(user_code)+1;
+        l2 = lnblnk1(base_input) + lnblnk1('.egsinp');
+        IF( l + l1 + l2 > 1024 ) [
+            l = l + l1 + l2;
+            $egs_fatal(*,'input file name (including path) is too long ',l);
+        ]
+        tmp_string = $cstring(ucode_dir) // $cstring(base_input) // '.egsinp';
+        inquire(file=tmp_string,exist=ex);
+    ]
     IF( ~ex ) [
         $egs_fatal(*,'Input file ',$cstring(tmp_string),' does not exist.');
     ]
+    $set_string(tmp2_string,' ');
+    tmp2_string = $cstring(tmp_string);
+    DO i=lnblnk1(tmp2_string),1,-1 [
+        IF( tmp2_string(i:i) = $file_sep | tmp2_string(i:i) = '/' ) [
+            IF( lnblnk1(output_dir) = 0 ) [
+                output_dir = tmp2_string(:i);
+            ]
+            EXIT;
+        ]
+    ]
+    call egs_strip_path(base_input);
+    input_file = $cstring(base_input);
     $AVAILABLE_UNIT(i_input,tmp_string);
     open(i_input,file=tmp_string,status='old',err=:open_input_error:);
+]
+
+IF( lnblnk1(output_file) = 0 ) [
+    IF( have_input ) [
+        output_file = $cstring(input_file);
+    ]
+    ELSE [
+        output_file = 'test';
+    ]
+]
+IF( lnblnk1(output_dir) = 0 ) output_dir = '.' // $file_sep;
+ex = egs_isdir(output_dir);
+IF( ~ex ) [
+    tmp1_string = 'mkdir -p ' // $cstring(output_dir);
+    l = lnblnk1(tmp1_string); tmp1_string(l+1:l+1) = char(0);
+    istat = egs_system(tmp1_string);
+    IF( istat ~= 0 ) [
+        $egs_fatal(*,'failed to create output directory ',
+                   $cstring(output_dir));
+    ]
 ]
 
 " Construct a temporary directory name to run from "
@@ -388,7 +457,7 @@ ELSE [
                $file_sep;
 ]
 $set_string(tmp_string,' ');
-tmp_string = $cstring(ucode_dir) // $cstring(work_dir);
+tmp_string = $cstring(output_dir) // $cstring(work_dir);
 DO i=1,lnblnk1(tmp_string) [
     IF( tmp_string(i:i) = '/' ) [
         tmp_string(i:i) = $file_sep;
@@ -654,13 +723,18 @@ IF( have_arg ) [
     ]
     output_file(:l) = $cstring(arg);
 ]
-ELSE [
-    IF( lnblnk1(input_file) > 0 ) [
-        output_file(:lnblnk1(input_file)) = $cstring(input_file);
+
+" Check for an output directory option "
+$check_get_argument('-d','--output-dir',arg);
+IF( have_arg ) [
+    l = lnblnk1(arg);
+    IF( l = 0 ) [
+        $egs_fatal('(a)',' empty argument after -d');
     ]
-    ELSE [
-        output_file = 'test';
+    IF( l > 254 ) [
+        $egs_fatal(*,'output directory argument is too long ',l);
     ]
+    output_dir(:l) = $cstring(arg);
 ]
 
 return; end;
@@ -688,10 +762,10 @@ $declare_write_buffer;
 $set_string(tmp_string,' '); $set_string(ucode_dir,' ');
 ucode_dir = $cstring(egs_home) // $cstring(user_code) // $file_sep;
 IF( flag ) [
-    tmp_string = $cstring(ucode_dir) // $cstring(work_dir);
+    tmp_string = $cstring(output_dir) // $cstring(work_dir);
 ]
 ELSE [
-    tmp_string = $cstring(ucode_dir);
+    tmp_string = $cstring(output_dir);
 ]
 
 tmp_string = $cstring(tmp_string) // $cstring(output_file);
@@ -811,7 +885,7 @@ $egs_info('(//a,t56,a,/,a)','End of run ',dattim,line);
 " Close all I/O units "
 n_open=0;
 $set_string(base,' ');
-base = $cstring(egs_home) // $cstring(user_code);
+base = $cstring(output_dir);
 DO i=1,$max_unit [
     IF( is_batch | i ~= i_log ) [
       inquire(i,opened=is_open);
@@ -832,8 +906,7 @@ IF( lnblnk1(work_dir) = 0 ) [ return; ]
 " Now generate a junk file in the working directory so that the move "
 " command does not fail in case there are no files "
 $set_string(base,' ');
-base = $cstring(egs_home) // $cstring(user_code) // $file_sep //
-        $cstring(work_dir);
+base = $cstring(output_dir) // $cstring(work_dir);
 DO i=1,lnblnk1(base) [
     IF( base(i:i) = '/' ) [
         base(i:i) = $file_sep;
@@ -856,9 +929,8 @@ IF( egs_isdir(base) ) [
 
     " Move all files from the working directory to the user code directory "
     $set_string(base1,' ');
-    base = $cstring(egs_home) // $cstring(user_code) // $file_sep //
-            $cstring(work_dir);
-    base1 = $cstring(egs_home) // $cstring(user_code);
+    base = $cstring(output_dir) // $cstring(work_dir);
+    base1 = $cstring(output_dir);
     $set_string(tmp_string,' ');
     tmp_string = $move_file // $cstring(base) // '*  ' // $cstring(base1);
     l = lnblnk1(tmp_string)+1;
@@ -887,7 +959,7 @@ IF( egs_isdir(base) ) [
 ]
 
 " Now set work_dir to blank so that all I/O stuff after egs_finish ends up"
-" in the user code directory "
+" in the output directory "
 $set_string(work_dir,' ');
 
 return; end;
@@ -994,6 +1066,7 @@ IF( $file_sep ~= fool_dec ) [
 IF( i > 0 & egs_home(i:i) ~= $file_sep ) egs_home(i+1:i+1) = $file_sep;
 $set_string(input_file,' ');
 $set_string(output_file,' ');
+$set_string(output_dir,' ');
 $set_string(work_dir,' ');
 $set_string(pegs_file,' ');
 $set_string(host_name,' ');
@@ -1026,16 +1099,16 @@ urcSleep          = $URC-SLEEP;    "Set to 1 s in egsnrc.macros"
 urcCheckIntervals = $URC-INTERVALS;"Set to 1 in egsnrc.macros"
 
 $set_string(base,' ');
-base = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+base = $cstring(output_dir) //
        $cstring(output_file) // '_w';
 
 "the following is to count the number of output files from"
 "a parallel run"
 $set_string(base1,' ');
-base1 = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+base1 = $cstring(output_dir) //
        $cstring(output_file) // '_w*' // $cstring(extension);
 $set_string(outfile,' ');
-outfile = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+outfile = $cstring(output_dir) //
        'parfiles_tmp';
 
 :check-output-files:;
@@ -1227,8 +1300,8 @@ IF( egs_is_absolute_path(extension) ) [
 ]
 
 $set_string(tmp_string,' ');
-tmp_string = $cstring(egs_home) // $cstring(user_code) // $file_sep //
-             $cstring(work_dir) // $cstring(output_file);
+tmp_string = $cstring(output_dir) // $cstring(work_dir);
+tmp_string = $cstring(tmp_string) // $cstring(output_file);
 IF( i_parallel > 0 ) [
     tmp_string = $cstring(tmp_string) // '_w';
     call egs_itostring(tmp_string,i_parallel,.false.);
@@ -1278,8 +1351,8 @@ integer  function egs_open_datfile(iunit,rl,action,extension);
 " The algorithm for searching for the file is as follows:
 "  1. If extension is an absolute file name (including path),
 "     try opening this file, else
-"  2. Try output_file.extension in the user code directory.
-"  3. Try input_file.extension in the user code directory (if input_file is
+"  2. Try output_file.extension in the output directory.
+"  3. Try input_file.extension in the output directory (if input_file is
 "     different from output_file).
 " If the file is found, open it using status='old' for
 "   a) formatted sequential access, if rl=0
@@ -1328,7 +1401,7 @@ IF( egs_is_absolute_path(extension) ) [
 ]
 
 $set_string(base,' '); $set_string(fn,' ');
-base = $cstring(egs_home) // $cstring(user_code) // $file_sep;
+base = $cstring(output_dir);
 "fn = $cstring(base) // $cstring(output_file) // $cstring(extension);"
 IF( i_parallel > 0 ) [
     fn = $cstring(base) // $cstring(output_file) // '_w';
