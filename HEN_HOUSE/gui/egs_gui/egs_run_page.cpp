@@ -65,6 +65,8 @@ EGS_RunPage::EGS_RunPage(EGS_ConfigReader *cr,
 
 void EGS_RunPage::make() {
 
+  input_dir = QDir::currentPath();
+
   QVBoxLayout *topl = new QVBoxLayout(this);
   topl->setSpacing(6); topl->setMargin(11);
 
@@ -294,7 +296,13 @@ bool EGS_RunPage::addCommandArguments(QStringList &s) {
     }
 
     if( !input_file->text().isEmpty() ) {
-      s << "-i" << input_file->text();
+      QString ifile = input_file->text();
+      QFileInfo fi(ifile);
+      if( !fi.isAbsolute() && !input_dir.isEmpty() ) {
+          ifile = QDir(input_dir).filePath(ifile);
+      }
+      s << "-i" << ifile;
+      s << "-d" << input_dir;
     }
     return true;
 }
@@ -314,7 +322,12 @@ void EGS_RunPage::startBatchExecution() {
     QString exb = henHouse() + "scripts/run_user_code_batch";
     //args << exb; //run_batch->addArgument(exb);
     args << user_code; //run_batch->addArgument(user_code);
-    args << input_file->text(); //run_batch->addArgument(input_file->text());
+    QString ifile = input_file->text();
+    QFileInfo fi(ifile);
+    if( !fi.isAbsolute() && !input_dir.isEmpty() ) {
+        ifile = QDir(input_dir).filePath(ifile);
+    }
+    args << ifile; //run_batch->addArgument(input_file->text());
     if (!pegsless->isChecked()){
        QString pfile; QString look_in = look_for_pegs->currentText();
        QChar ss = QDir::separator();
@@ -335,6 +348,8 @@ void EGS_RunPage::startBatchExecution() {
     args << queue->currentText();//run_batch->addArgument(queue->currentText());
     QString the_qs = "batch="; the_qs += queue_system->currentText();
     args << the_qs;//run_batch->addArgument(the_qs);
+    QString outdir = "outdir="; outdir += input_dir;
+    args << outdir;
     if( njob->value() > 1 ) {
         QString p = "p="; p += njob->text();
         args << p;//run_batch->addArgument(p);
@@ -360,6 +375,7 @@ void EGS_RunPage::startBatchExecution() {
             args << *it;//run_batch->addArgument(*it);
     }
 
+    run_batch->setWorkingDirectory(input_dir);
     run_batch->start(exb,args);
     //if( !run_batch->start() )
     if(run_batch->error()==QProcess::FailedToStart)
@@ -410,6 +426,7 @@ void EGS_RunPage::startExecution() {
   qWarning("Executing: <%s>",args.join(" ").toLatin1().data());
 
   //if( !run->start() )
+  run->setWorkingDirectory(input_dir);
   run->start(exe,args);
   if(run->error()==QProcess::FailedToStart)
     QMessageBox::critical(this,"Error","Failed to start user code",1,0);
@@ -588,14 +605,17 @@ void EGS_RunPage::selectInputFile() {
 #ifdef RP_DEBUG
   qDebug("In EGS_RunPage::selectInputFile()");
 #endif
-  QString start_dir = egsHome() + user_code;
+  QString start_dir = input_dir;
+  if( start_dir.isEmpty() ) start_dir = QDir::currentPath();
   QString s = QFileDialog::getOpenFileName(this,tr("Select input file"),
                                            start_dir, tr("EGS input files (*.egsinp)"));
 #ifdef RP_DEBUG
   qDebug("file: %s",s.toLatin1().data());
 #endif
   if( !s.isEmpty() ) {
-    QFileInfo fi(s); input_file->setText(fi.baseName());
+    QFileInfo fi(s);
+    input_file->setText(fi.baseName());
+    input_dir = fi.absolutePath();
   }
 }
 
