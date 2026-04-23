@@ -27,8 +27,8 @@ ElementOscillatorData parseData() {
 
         if (ds.nmax[i] < 0 || j + 2 + 2*ds.nmax[i] + ds.numLevelsStandard > arr_len) {
             egsFatal("estar::parseData: Data layout for element %d would read past end "
-                    "of elementData array (j=%d, nmax=%d, arr_len=%d).\n",
-                    i, j, ds.nmax[i], arr_len);
+                     "of elementData array (j=%d, nmax=%d, arr_len=%d).\n",
+                     i, j, ds.nmax[i], arr_len);
         }
 
         // The second element of each set is 113 (numLevelsStandard) and is skipped
@@ -41,7 +41,7 @@ ElementOscillatorData parseData() {
         for (int a = 0; a < ds.nmax[i]; a++) {
             if (a >= 26) {
                 egsFatal("estar::parseData: Oscillator index %d exceeds nc "
-                        "maximum of 25 for element index %d.\n", a, i);
+                         "maximum of 25 for element index %d.\n", a, i);
             }
             ds.nc[i][a] = static_cast<int>(elementData[k]);
             k++;
@@ -53,7 +53,7 @@ ElementOscillatorData parseData() {
         for (int a = 0; a < ds.nmax[i]; a++) {
             if (a >= 26) {
                 egsFatal("estar::parseData: Oscillator index %d exceeds bd "
-                        "maximum of 25 for element index %d.\n", a, i);
+                         "maximum of 25 for element index %d.\n", a, i);
             }
             ds.bd[i][a] = elementData[k];
             k++;
@@ -87,7 +87,7 @@ parseformula parse(string str) {
     while (i < str_len) {
         if (j >= 100) {
             egsFatal("estar::parse: Element type count exceeded maximum of 100"
-                    " while parsing formula '%s'.\n", str.c_str());
+                     " while parsing formula '%s'.\n", str.c_str());
         }
 
         if (isupper(static_cast<unsigned char>(str[i])) != 0) { // means str[i] is uppercase
@@ -102,8 +102,8 @@ parseformula parse(string str) {
         }
         else {
             egsFatal("estar::parse: Formula '%s' is malformed at character '%c' (index %d).\n"
-                    "Element symbols must begin with an uppercase letter.\n",
-                    str.c_str(), str[i], i);
+                     "Element symbols must begin with an uppercase letter.\n",
+                     str.c_str(), str[i], i);
         }
 
         if (i < str_len && isdigit(static_cast<unsigned char>(str[i])) != 0) {
@@ -116,7 +116,7 @@ parseformula parse(string str) {
             // Guard against absurdly large numbers that would overflow strtol
             if (digit_len > 9) {
                 egsFatal("estar::parse: Atom count in formula '%s' has %d digits which "
-                        "exceeds the maximum of 9.\n", str.c_str(), digit_len);
+                         "exceeds the maximum of 9.\n", str.c_str(), digit_len);
             }
 
             std::string digit_str = str.substr(digit_start, digit_len);
@@ -126,8 +126,8 @@ parseformula parse(string str) {
 
             if (errno != 0 || end == digit_str.c_str() || val <= 0 || val > 99) {
                 egsFatal("estar::parse: Invalid atom count '%s' in formula '%s'.\n"
-                        "Atom count must be a positive integer no greater than 99.\n",
-                        digit_str.c_str(), str.c_str());
+                         "Atom count must be a positive integer no greater than 99.\n",
+                         digit_str.c_str(), str.c_str());
             }
 
             pf.num_arr[j] = static_cast<int>(val);

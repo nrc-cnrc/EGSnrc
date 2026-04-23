@@ -76,12 +76,12 @@ ElementOscillatorData parseData();
  */
 struct parseformula {
     std::string str_arr[100]; // stores the chemical symbol of each element
-                              // present in the compound/element
+    // present in the compound/element
     int num_arr[100];         // stores the number of atoms of the corresponding
-                              // element in str_arr
-                              // * example: for H2O, num_arr = [2, 1]
+    // element in str_arr
+    // * example: for H2O, num_arr = [2, 1]
     int elem_types;           // number of different types of elements present
-                              // * example: for H2O, elem_types = 2
+    // * example: for H2O, elem_types = 2
 };
 
 /*! \brief Parses a chemical formula string into a parseformula object.

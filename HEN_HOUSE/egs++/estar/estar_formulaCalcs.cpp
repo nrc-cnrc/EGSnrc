@@ -50,7 +50,7 @@ public:
             auto it = atomic_number.find(inputElemArray[i]);
             if (it == atomic_number.end()) {
                 egsFatal("estar::compRes: Unrecognised element symbol '%s' at index %d.\n"
-                        "Check the formula input.\n", inputElemArray[i].c_str(), i);
+                         "Check the formula input.\n", inputElemArray[i].c_str(), i);
             }
             atomicNumArray[i] = it->second;
 
@@ -64,8 +64,8 @@ public:
 
             if (zIndex < 0 || zIndex >= perTableLength) {
                 egsFatal("estar::compRes: Atomic number index %d is out of bounds [0, %d).\n"
-                        "Element '%s' may not be in the periodic table.\n",
-                        zIndex, perTableLength, inputElemArray[i].c_str());
+                         "Element '%s' may not be in the periodic table.\n",
+                         zIndex, perTableLength, inputElemArray[i].c_str());
             }
 
             if (elemPresent[zIndex] == 0) {
@@ -189,8 +189,8 @@ formula_calc fcalc(int knmat, double rho, string elemName) {
 
     if (mmax > numElemsPerTable) {
         egsFatal("estar::fcalc: Parsed element type count %d exceeds maximum of %d.\n"
-                "Formula '%s' may be malformed.\n",
-                mmax, numElemsPerTable, elemName.c_str());
+                 "Formula '%s' may be malformed.\n",
+                 mmax, numElemsPerTable, elemName.c_str());
     }
 
     int atomic_number_element;
@@ -227,7 +227,7 @@ formula_calc fcalc(int knmat, double rho, string elemName) {
 
     if (asum == 0.0) {
         egsFatal("estar::fcalc: Total atomic mass sum is zero for formula '%s'.\n"
-                "Check that atom counts are non-zero.\n", elemName.c_str());
+                 "Check that atom counts are non-zero.\n", elemName.c_str());
     }
 
     /* After the while loop below runs, we get fc.wt.
@@ -296,7 +296,7 @@ formula_calc fcalc(int knmat, double rho, string elemName) {
 
         if (potm <= 0.0) {
             egsFatal("estar::fcalc: I-value potm=%g is non-positive for Z=%d.\n"
-                    "Cannot take log. Check poth/potgas/potcon tables.\n", potm, jm);
+                     "Cannot take log. Check poth/potgas/potcon tables.\n", potm, jm);
         }
 
         potl = potl + fc.wt[m]*za*log(potm); // This equation represents equation 5.3 of ICRU 37.
@@ -306,7 +306,7 @@ formula_calc fcalc(int knmat, double rho, string elemName) {
     // fc.pot is the I-Value
     if (fc.zav == 0.0) {
         egsFatal("estar::fcalc: Mean Z/A (zav) is zero for formula '%s'.\n"
-                "Cannot compute I-value.\n", elemName.c_str());
+                 "Cannot compute I-value.\n", elemName.c_str());
     }
     fc.pot = exp(potl/fc.zav); // we remove the log in equation 5.3 (ICRU 37) and divide by <Z/a> TO GET THE I-value
     // Note that fc.zav in the code is is <Z/a> of ICRU 37 equation 5.3
@@ -329,7 +329,7 @@ mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP)
     for (int i=0; i < ncomp; ++i) {
         if (massFraction[i] <= 0) {
             egsFatal("estar::getEgsMediaData: Mass fraction for component %d is %g.\n"
-                    "Mass fractions must be > 0.\n", i, massFraction[i]);
+                     "Mass fractions must be > 0.\n", i, massFraction[i]);
         }
         md.frac[i] = massFraction[i];
         sumf = sumf + md.frac[i];
@@ -420,7 +420,7 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
     }
     if (ffc.zav == 0.0) {
         egsFatal("estar::mixtureCalculation: Mixture mean Z/A is zero.\n"
-                "Check that mass fractions and element Z/A values are non-zero.\n");
+                 "Check that mass fractions and element Z/A values are non-zero.\n");
     }
     ffc.pot = exp(potl/ffc.zav); // --------------------------------------------------(iii)
     // equations i,ii and iii are used to find the I-value of the mixture from equation 5.3 of ICRU 37
