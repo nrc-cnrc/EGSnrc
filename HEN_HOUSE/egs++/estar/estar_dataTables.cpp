@@ -3,7 +3,7 @@
 #include "estar_dataTables.h"
 
 // fixed energy grid with 113 elements
-double er[] = {1.00e-03,1.25e-03,1.50e-03,1.75e-03,2.00e-03,2.50e-03,
+const double energy_grid[] = {1.00e-03,1.25e-03,1.50e-03,1.75e-03,2.00e-03,2.50e-03,
                3.00e-03,3.50e-03,4.00e-03,4.50e-03,5.00e-03,5.50e-03,
                6.00e-03,7.00e-03,8.00e-03,9.00e-03,1.00e-02,1.25e-02,
                1.50e-02,1.75e-02,2.00e-02,2.50e-02,3.00e-02,3.50e-02,
@@ -24,10 +24,10 @@ double er[] = {1.00e-03,1.25e-03,1.50e-03,1.75e-03,2.00e-03,2.50e-03,
                6.00e+03,7.00e+03,8.00e+03, 9.00e+03, 1.00e+04
               }; // 1.00e+04
 
-// atb[] contains the atomic mass of each of the elements in the per_table dictionary
+// atb[] contains the atomic mass of each of the elements in the atomic_number dictionary
 // and indexed by atomic number
 // for example atb[n-1] gives the atomic mass of the atom with atomic number n
-double atb[] = {1.007940,       4.0026020,      6.9410,         9.0121820,
+const double atb[] = {1.007940,       4.0026020,      6.9410,         9.0121820,
                 10.8110,        12.0110,        14.006740,      15.99940,
                 18.99840320,    20.17970,       22.9897680,     24.30500,
                 26.9815390,     28.08550,       30.9737620,     32.0660,
@@ -54,10 +54,10 @@ double atb[] = {1.007940,       4.0026020,      6.9410,         9.0121820,
                 247.07030,      251.07960,      252.0830,       257.09510
                };
 
-// The dictionary (per_table) contains the elements of the periodic table (atomic numbers 1 to 100).
+// The dictionary (atomic_number) contains the elements of the periodic table (atomic numbers 1 to 100).
 // In NIST ESTAR, elements with
 // atomic numbers 1 to 98 were included (source: https://physics.nist.gov/PhysRefData/Star/Text/method.html).
-std::map<std::string, int>per_table =     {{"H", 1}, {"He", 2}, {"Li",3}, {"Be",4},
+const std::map<std::string, int>atomic_number =     {{"H", 1}, {"He", 2}, {"Li",3}, {"Be",4},
     {"B",5}, {"C",6}, {"N",7}, {"O",8}, {"F",9}, {"Ne",10}, {"Na",11}, {"Mg",12},
     {"Al",13}, {"Si",14}, {"P",15}, {"S",16}, {"Cl",17}, {"Ar",18}, {"K",19}, {"Ca",20},
     {"Sc",21}, {"Ti",22}, {"V",23}, {"Cr",24}, {"Mn",25}, {"Fe",26}, {"Co",27}, {"Ni",28},
@@ -87,9 +87,9 @@ std::map<std::string, int>per_table =     {{"H", 1}, {"He", 2}, {"Li",3}, {"Be",
 // poth is an array of length 100 and is again indexed by atomic number
 // the table contais the I values of elements in the
 // condensed phase (ICRU 37 - table 4.3). For example (poth[99] is the I-value of Fermium)
-// * I-val of graphite in (ICRU 37 - table 4.3) is 78 eV. However in ESTAR 81 eV is used (poth[5]).
+// * I-val of graphite in (ICRU 37 - table 4.3) is 78 eV. However in ESTAR 81 eV is used (poth[5]), as in ICRU 90.
 // * I-val of chlorine in (ICRU 37 - table 4.3) is 174 eV. However in ESTAR 159.29 eV is used (poth[16]) (perhaps this was an improvement).
-double poth[] = {19.2,41.8,40.0,63.7,76.0,81.0,82.0,95.0,
+const double poth[] = {19.2,41.8,40.0,63.7,76.0,81.0,82.0,95.0,
                  115.,137.,149.,156.,166.,173.,173.,180.,159.29,
                  188.,190.,191.,216.,233.,245.,257.,272.,286.,
                  297.,311.,322.,330.,334.,350.,347.,348.,357.,
@@ -105,17 +105,28 @@ double poth[] = {19.2,41.8,40.0,63.7,76.0,81.0,82.0,95.0,
 
 // potgas represents the I-value of elements (atomic number 1-9)
 // when the elements (atomic number 1-9) are part of a compound in a gaseous state (ICRU 37 - table 5.1)
-double potgas[] = {19.2,41.8,34.0,38.6,49.0,70.0,82.0, 97.0, 115.0};
+const double potgas[] = {19.2,41.8,34.0,38.6,49.0,70.0,82.0, 97.0, 115.0};
 // potcon represents the I-value of elements (atomic number 1-9)
 // when the elements (atomic number 1-9) are part of a compound in a solid/liquid state (ICRU 37 - table 5.1)
-double potcon[] = {19.2,41.8,45.2,72.0,85.9,81.0,82.0, 106.0, 112.0};
+const double potcon[] = {19.2,41.8,45.2,72.0,85.9,81.0,82.0, 106.0, 112.0};
 
-// This table contains useful elemental data for the first
-// 100 elements of the periodic table.
-// Section 4 of the report and the data definition block of
-// parseDataFile.cpp can help to gain an insight on
-// the meaning of the values.
-double elementData[14532] = {
+// elementData[] encodes ESTAR density-effect correction data for elements with atomic numbers Z from 1 to 100.
+// The array is a flat sequence of per-element blocks with the following layout:
+//
+//   <nshells>, 113          — number of subshells; energy grid size (always 113)
+//   <Z>                     — atomic number
+//   <I>, [oscillator...]    — mean excitation energy in eV; for heavier elements
+//                             (roughly Z > 10), additional oscillator-strength
+//                             parameters follow
+//   [nj...], <-sentinel>    — subshell occupation counts, terminated by a negative
+//                             value sentinel (heavier elements only)
+//   [Ej...]                 — subshell binding energies in eV (heavier elements only)
+//   <delta[0..112]>         — 113 density-effect correction values on the fixed
+//                             energy grid defined in energy_grid[]
+//
+// See estar_dataParser.cpp for the exact parsing logic, and ICRU Report 37 for the
+// underlying physics.
+const double elementData[14532] = {
     1,113
     ,1
     ,1.36000E+01

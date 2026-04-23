@@ -50,6 +50,14 @@ void outputDensityFile(float mediaDensity, double *densityCorr, double *enGrid,
  *  factors are computed on the standard 113-point energy grid and stored in
  *  \p densityCorr. The corresponding energies are stored in \p enGrid.
  *
+ * The density-effect cutoff (the energy below which delta=0) was a feature of
+ * Sternheimer's parametric approximation (Sternheimer & Peierls, Phys. Rev. B3,
+ * 3681, 1971), introduced to reduce computational burden. Since EGSnrc uses
+ * the "exact" Sternheimer method (Sternheimer, Berger & Seltzer, Atom. Data Nucl.
+ * Data Tabl. 30, 261, 1984), in which delta emerges naturally from the oscillator-
+ * strength calculation and requires no imposed cutoff, this function is no longer
+ * needed.
+ *
  *  Internally this function:
  *    -# Calls getDataFromFormulae() to compute the mean excitation energy
  *       and mean Z/A for the medium.
@@ -126,8 +134,9 @@ struct bspol {
  *  \returns A bspol struct containing the interpolated density correction
  *           and the bracketing interval indices.
  */
-bspol fbspol(double s, double x[1000], double a[1000], double b[1000],
-             double c[1000], double d[1000], int n);
+bspol fbspol(double s, const std::vector<double> &x, const std::vector<double> &a,
+             const std::vector<double> &b, const std::vector<double> &c,
+             const std::vector<double> &d);
 
 
 /*! \brief Spline coefficient struct returned by fscof().
@@ -141,10 +150,12 @@ bspol fbspol(double s, double x[1000], double a[1000], double b[1000],
  *  where i is the index of the bracketing interval.
  */
 struct scof {
-    double a[1200]; /*!< Zeroth-order spline coefficients (function values). */
-    double b[1200]; /*!< First-order spline coefficients. */
-    double c[1200]; /*!< Second-order spline coefficients. */
-    double d[1200]; /*!< Third-order spline coefficients. */
+    std::vector<double> a; /*!< Zeroth-order spline coefficients (function values). */
+    std::vector<double> b; /*!< First-order spline coefficients. */
+    std::vector<double> c; /*!< Second-order spline coefficients. */
+    std::vector<double> d; /*!< Third-order spline coefficients. */
+
+    explicit scof(int n) : a(n), b(n), c(n), d(n) {}
 };
 
 
@@ -162,7 +173,7 @@ struct scof {
  *
  *  \returns A scof struct containing the four coefficient arrays a, b, c, d.
  */
-scof fscof(int nmax, double x[1200], double f[1200]);
+scof fscof(int nmax, const vector<double> &x, const vector<double> &f);
 
 
 /*! \brief Objective function for the bisection solver.
@@ -184,8 +195,8 @@ scof fscof(int nmax, double x[1200], double f[1200]);
  *  \returns The value of the objective function at \p x. A return value of
  *           zero indicates that \p x is the exact solution.
  */
-double objective_function(double tau, double f[1000], double eps[1000],
-                          int nmax, double x);
+double objective_function(double tau, const vector<double> &f,
+                          const vector<double> &eps, int nmax, double x);
 
 
 /*! \brief Find the root of objective_function() by bisection.
@@ -212,4 +223,5 @@ double objective_function(double tau, double f[1000], double eps[1000],
  *           \p lowerbound if the bounds do not bracket a root.
  */
 double bisec(double lowerbound, double upperbound, double tolerance,
-             double tau, double f[1000], double eps[1000], int nmax);
+             double tau, const std::vector<double> &f,
+             const std::vector<double> &eps, int nmax);

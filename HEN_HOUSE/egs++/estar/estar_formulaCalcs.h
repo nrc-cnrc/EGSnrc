@@ -12,6 +12,7 @@ using namespace std;
     *  1. jz[]: this is an array containing the atomic numbers of each of the elements
                 present in the mixture. The elements can be present in the mixture as part of
                 a compound or just as an element.
+                There are 100 elements in our table of elements.
     *  2. wt[]: this is an array containing the weight of each of the elements
                 present in the mixture. The elements can be present in the mixture as part of
                 a compound or just as an element. This means for the element with atomic
@@ -23,8 +24,8 @@ using namespace std;
     *
 */
 struct formula_calc {
-    double wt[200];
-    int jz[200];
+    double wt[100];
+    int jz[100];
     double zav;
     double pot;
     int mmax;
@@ -40,7 +41,7 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
 
 /*! \brief Returns the atomic number for a given element name.
  *
- *  Looks up the element name in the per_table periodic table dictionary
+ *  Looks up the element name in the atomic_number periodic table dictionary
  *  and returns the corresponding atomic number.
  */
 int atom_num(std::string elem_name);

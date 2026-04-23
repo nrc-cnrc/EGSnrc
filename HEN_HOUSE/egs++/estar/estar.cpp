@@ -335,7 +335,7 @@ extern "C" int compoundstoelements_(char *formulaStr,
 
         // For each Z value we have, look up the element string
         // They are already sorted by increasing Z
-        for (auto it = per_table.begin(); it != per_table.end(); ++it) {
+        for (auto it = atomic_number.begin(); it != atomic_number.end(); ++it) {
             if (it->second == fc.jz[i]) {
                 if (charPos >= MAX_ELEMENT_STR_SIZE) {
                     egsFatal("estar::compoundstoelements_: elementStr buffer overflow at "
@@ -406,8 +406,7 @@ void outputDensityFile(float mediaDensity, double *densityCorr, double *enGrid, 
     f << "113 " << *meanIval << " " << mediaDensity << " " << fc.mmax << endl;
 
     // Output the atomic numbers and mass fractions
-    unsigned int k = 0;
-    while (k < fc.mmax) {
+    for (int k=0; k < fc.mmax; ++k) {
         f << fc.jz[k] << " " << fc.wt[k];
 
         // Put a new line every 6 elements, or after the last element
@@ -417,8 +416,6 @@ void outputDensityFile(float mediaDensity, double *densityCorr, double *enGrid, 
         else {
             f << " ";
         }
-
-        k += 1;
     }
 
     // Set formatting for the density data
@@ -503,8 +500,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     long double qfac = exp(log(10)/50);
 
     double qbeg = 1e-04;
-    long double q[1200];
     int lmax = 1101;
+    vector<long double> q(lmax);
     q[0] = qbeg;
 
     /*
@@ -577,7 +574,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         return 9;
     }
 
-    double hom = 28.81593*sqrt(rho*zav); // this is equation 4 of Sternheimer 1984
+    const double plasmaFeqCoeff = 28.81593;
+    double hom = plasmaFeqCoeff*sqrt(rho*zav); // this is equation 4 of Sternheimer 1984
     double phil = 2.0*log(fc.pot/hom);   // this is equation 7 of Sternheimer 1984 with a slight modification.
     // Please refer to the report (2.2) to understand the modification.
 
@@ -598,8 +596,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     double sum;
 
     // f[] and en[] are sized 1000. nbas accumulates across elements; guard below.
-    double f[1000];
-    double en[1000];
+    vector<double> f(1000);
+    vector<double> en(1000);
 
     // parseData() reads/parses data from disk. Moved outside the loop so it is
     // only called once rather than once per element.
@@ -684,8 +682,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         The code in this snippet is used to construct some parameters of Sternheimer equation 8.
         They will also be used to construct some other equations.
     */
-    double alf[1000];
-    double eps[1000];
+    vector<double> alf(1000);
+    vector<double> eps(1000);
     for (int n = 0; n < nmax; n++) {
         alf[n] = 2.0/3.0;  // This is the 2/3 factor in equation 5 Sternheimer 1984
     };
@@ -782,15 +780,20 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         report. Furthermore, I have discussed about yql and yq in 2.1 of the report.
         The idea behind using d[n] is discussed at the end of 2.2.
     */
-    double yq[1200];
-    double yql[1200];
-    double d[1200];
+    vector<double> yq(lmax);
+    vector<double> yql(lmax);
+    vector<double> d(lmax);
     double arg;
 
     for (int n = 0; n < lmax; n++) {
         sum = 0.0;
         for (int m = 0; m < nmax; m++) {
-            sum = sum + f[m]/(eps[m] + q[n]);
+            double denom = eps[m] + q[n];
+            if (denom == 0.0) {
+                egsFatal("estar::estarCalculation: eps[%d] + q[%d] is zero for medium %d.\n"
+                        "Check oscillator energies and q grid.\n", m, n, mediaNum);
+            }
+            sum = sum + f[m]/denom;
         };
 
         // Guard against divide-by-zero when computing yq[n].
@@ -801,6 +804,11 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         }
 
         yq[n] = 1/sum;
+
+        if (yq[n] <= 0.0) {
+            egsFatal("estar::estarCalculation: yq[%d]=%g is non-positive for medium %d. "
+                    "Cannot compute log.\n", n, yq[n], mediaNum);
+        }
 
         yql[n] = log(yq[n]);
         sum = 0.0;
@@ -829,17 +837,6 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     // please see 2.1 of the report for more details.
     scof sf2 = fscof(lmax, yql, d);
 
-    double adel[1200];
-    double bdel[1200];
-    double cdel[1200];
-    double ddel[1200];
-    for (int i = 0; i < lmax; i++) {
-        adel[i] = sf2.a[i];
-        bdel[i] = sf2.b[i];
-        cdel[i] = sf2.c[i];
-        ddel[i] = sf2.d[i];
-    };
-
     //---------------------------------------------//
     // The following code is used to obtain
     // density corrections. Some details on what is happening here is givn in
@@ -848,8 +845,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     double y;
     double delta;
     double yl;
-    double dlt[lkmax];
-    double tol = 0.000000001; // for bisection method
+    vector<double> dlt(lkmax);
+    double tol = 0.000000001; // Newton's method convergence tolerance for bisection method
     double xroot;
     double nb_density; // density factor from bisection method
     /*
@@ -860,7 +857,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     bspol bp;
 
     for (int i = 0; i < lkmax; i++) {
-        tau = er[i]/rmass;
+        tau = energy_grid[i]/rmass;
         y = tau*(tau+2.0);
         delta = 0.0;
         nb_density = 0.0;
@@ -869,7 +866,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         if (y>=yq[0]) {
             if (y-yq[lmax-1] <= 0) {
                 yl = log(y);
-                bp = fbspol(yl, yql, adel, bdel, cdel, ddel, lmax);
+                bp = fbspol(yl, yql, sf2.a, sf2.b, sf2.c, sf2.d);
                 if (solver == 1) {
                     delta =  bp.density_corr;
                 }
@@ -911,8 +908,8 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
             }
             else {
-                egsFatal("estar::estarCalculation: Energy er[%d]=%g is too high and out of "
-                        "range for medium %d.\n", i, er[i], mediaNum);
+                egsFatal("estar::estarCalculation: Energy energy_grid[%d]=%g is too high and out of "
+                        "range for medium %d.\n", i, energy_grid[i], mediaNum);
                 return 9;
             }
         }
@@ -924,7 +921,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     for (int i = 0; i < lkmax; i++) {
 
         densityCorr[i] = dlt[i];
-        enGrid[i] = er[i];
+        enGrid[i] = energy_grid[i];
     }
 
     egsInformation("\nestar::estarCalculation: Density correction factors have been "
@@ -937,7 +934,11 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
 
 };
 
-bspol fbspol(double s, double x[1000], double a[1000], double b[1000], double c[1000],double d[1000], int n) {
+bspol fbspol(double s, const std::vector<double> &x, const std::vector<double> &a,
+             const std::vector<double> &b, const std::vector<double> &c,
+             const std::vector<double> &d) {
+    int n = static_cast<int>(x.size());
+
     bspol bp;
     int idir;
     int mlb;
@@ -962,26 +963,32 @@ bspol fbspol(double s, double x[1000], double a[1000], double b[1000], double c[
         mlb =n;
         mub = 0;
     }
-    if (s>=x[mub+idir-1]) {
+
+    if (s >= x[mub+idir-1]) {
+        egsWarning("estar::fbspol: s=%g is beyond the upper grid boundary %g. "
+                "Extrapolating using end spline segment — result may be unreliable.\n",
+                s, x[mub+idir-1]);
         mu = mub + 2*idir - 1;
     }
-    else if (s<=x[mlb+1-idir-1]) {
+    else if (s <= x[mlb+1-idir-1]) {
+        egsWarning("estar::fbspol: s=%g is below the lower grid boundary %g. "
+                "Extrapolating using end spline segment — result may be unreliable.\n",
+                s, x[mlb+1-idir-1]);
         mu = mlb - 2*idir + 1;
     }
     else {
+        // s is within the grid — standard binary search
         ml = mlb;
         mu = mub;
-        int binary_temp = 0; // we define binary_temp = 0 as the loop must run at least once
-        while (std::abs(mu-ml)>1 || binary_temp==0) {
-            mav = (ml+mu)/2;
-            if (s<x[mav]) {
+        do {
+            mav = (ml + mu) / 2;
+            if (s < x[mav]) {
                 mu = mav;
             }
             else {
                 ml = mav;
             }
-            binary_temp=1;
-        }
+        } while (std::abs(mu - ml) > 1);
         mu = mu + idir - 1;
     }
     mu = mu + 1;
@@ -1002,20 +1009,24 @@ bspol fbspol(double s, double x[1000], double a[1000], double b[1000], double c[
 
 }
 
-scof fscof(int nmax, double x[1200], double f[1200]) {
-    scof sf;
+scof fscof(int nmax, const vector<double> &x, const vector<double> &f) {
 
     if (nmax < 2) {
         egsFatal("estar::fscof: fscof requires at least 2 points, got nmax=%d\n", nmax);
-        return sf;
+        return scof(0);
     }
 
-    int m1 = 2;
+    scof sf(nmax);
+
     int m2 = nmax-1;
     double s = 0.0;
     double r;
     for (int m = 0; m < m2; m++) {
         sf.d[m] = x[m+1] - x[m];
+        if (sf.d[m] == 0.0) {
+            egsFatal("estar::fscof: Zero interval at m=%d. "
+                    "Knot positions x[%d] and x[%d] may be identical.\n", m, m, m+1);
+        }
         r = (f[m+1] - f[m])/sf.d[m];
         sf.c[m] = r - s;
         s = r;
@@ -1037,16 +1048,14 @@ scof fscof(int nmax, double x[1200], double f[1200]) {
         s = sf.d[m];
         r = s/sf.b[m];
     };
+
     int mr = m2 - 1;
     for (int m = 1; m < m2; m++) {
         sf.c[mr] = (sf.d[mr] * sf.c[mr+1] - sf.c[mr])/sf.b[mr];
         mr = mr - 1;
     };
+
     for (int m = 0; m < m2; m++) {
-        if (sf.d[m] == 0.0) {
-            egsFatal("estar::fscof: Zero interval at m=%d. "
-                    "Knot positions x[%d] and x[%d] may be identical.\n", m, m, m+1);
-        }
         s = sf.d[m];
         r = sf.c[m+1] - sf.c[m];
         sf.d[m] = r/s;
@@ -1054,28 +1063,47 @@ scof fscof(int nmax, double x[1200], double f[1200]) {
         sf.b[m] = (f[m+1]-f[m])/s - (sf.c[m]+r)*s;
         sf.a[m] = f[m];
     };
+
     return sf;
 }
 
-double objective_function(double tau, double f[1000], double eps[1000], int nmax, double x) {
-    double yl = log(tau*(tau+2.0));
+double objective_function(double tau, const vector<double> &f,
+                          const vector<double> &eps, int nmax, double x) {
+    double arg = tau * (tau + 2.0);
+    if (arg <= 0.0) {
+        egsFatal("estar::objective_function: tau*(tau+2)=%g is non-positive "
+                "for tau=%g. Cannot compute log.\n", arg, tau);
+    }
+    double yl = log(arg);
+
     double yql = 0;
     for (int i = 0; i < nmax; i++) {
-        yql = yql + f[i]/(eps[i]+x);
+        double denom = eps[i] + x;
+        if (denom == 0.0) {
+            egsFatal("estar::objective_function: eps[%d]=%g and x=%g sum to "
+                     "zero. Cannot divide. Check oscillator energies and "
+                     "bisection bounds.\n", i, eps[i], x);
+        }
+        yql = yql + f[i]/denom;
     }
+
     // Guard against divide-by-zero before log
-    if (yql == 0.0) {
-        egsFatal("estar::objective_function: yql is zero at x=%g. "
+    if (yql <= 0.0) {
+        egsFatal("estar::objective_function: yql is non-positive at x=%g. "
                 "Cannot compute log.\n", x);
     }
     return yl - log(1.0/yql);
 }
 
 // now we have to write the bisection algorithm
-
-double bisec(double lowerbound, double upperbound, double tolerance, double tau, double f[1000], double eps[1000], int nmax) {
+double bisec(double lowerbound, double upperbound, double tolerance,
+             double tau, const vector<double> &f, const vector<double> &eps,
+             int nmax) {
     if (tolerance <= 0) {
         egsFatal("estar::bisec: bisection tolerance must be positive, got %g\n", tolerance);
+    }
+    if (nmax > static_cast<int>(f.size()) || nmax > static_cast<int>(eps.size())) {
+        egsFatal("estar::bisec: nmax=%d exceeds vector size.\n", nmax);
     }
 
     double fLower = objective_function(tau, f, eps, nmax, lowerbound);

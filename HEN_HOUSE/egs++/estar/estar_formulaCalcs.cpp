@@ -39,7 +39,7 @@ public:
         // present in the compound
         string tempElemArray[perTableLength];
         while (j < perTableLength) {
-            // initialize elemPresent and elemPresent to contain zeros
+            // initialize elemPresent to contain zeros
             elemPresent[j] = 0;
             j = j + 1;
         }
@@ -47,8 +47,8 @@ public:
         vector<int> atomicNumArray(NEP);
         int i = 0;
         while (i < NEP) {
-            auto it = per_table.find(inputElemArray[i]);
-            if (it == per_table.end()) {
+            auto it = atomic_number.find(inputElemArray[i]);
+            if (it == atomic_number.end()) {
                 egsFatal("estar::compRes: Unrecognised element symbol '%s' at index %d.\n"
                         "Check the formula input.\n", inputElemArray[i].c_str(), i);
             }
@@ -81,16 +81,14 @@ public:
             i = i + 1;
         }
         int k = 0;
-        int m = 0;
         RestructureCompound compForm;
         compForm.finalNumOfElems = numDiffAtoms;
-        while (m < perTableLength) {
+        for (int m=0; m < perTableLength; ++m) {
             if (elemPresent[m] == 1) {
                 compForm.finalElemArray[k] = tempElemArray[m];
                 compForm.finalNumAtoms[k] = numAtomsArray[m];
                 k = k + 1;
             }
-            m = m + 1;
         }
         return compForm;
     }
@@ -100,18 +98,15 @@ public:
     string getCompFormula(string *elementArray, float *numOfAtoms, int NEP, int mediaNum) {
         vector<int> numberOfAtoms(NEP);
         vector<string> numberOfAtomsStr(NEP);
-        int i = 0;
         string compoundFormula = "";
-        while (i < NEP) {
+        for (int i=0; i < NEP; ++i) {
             numberOfAtoms[i] = static_cast<int>(numOfAtoms[i]); // convert float to int
             numberOfAtomsStr[i] = to_string(numberOfAtoms[i]); // convert int to string
-            i = i + 1;
         }
-        i = 0;
+
         // now we produce the final string
-        while (i < NEP) {
+        for (int i=0; i < NEP; ++i) {
             compoundFormula = compoundFormula + elementArray[i] + numberOfAtomsStr[i];
-            i = i + 1;
         }
         cout << "\n";
         cout << "The medium " << mediaNum << " is a compound of " << NEP << " elements with formula: " << compoundFormula << "\n";
@@ -129,7 +124,7 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
     formula_calc fc;
     string formula;
     string formulaCompound;
-    if (knmat == 0) {
+    if (knmat == 0) { // Element
         formula = elementArray[0];
         fc = fcalc(knmat, rho, formula);
 
@@ -137,7 +132,7 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
 
         return fc;
     }
-    else if (knmat == 1) {
+    else if (knmat == 1) { // Compound
         compFormulaPreprocess compObject; // Pre-processing needed only if material is a compound
         compFormulaPreprocess::RestructureCompound rc = compObject.compRes(elementArray, numOfAtoms, NEP);
         string compFormula = compObject.getCompFormula(rc.finalElemArray, rc.finalNumAtoms, rc.finalNumOfElems, mediaNum);
@@ -147,7 +142,7 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
 
         return fc;
     }
-    else {
+    else { // Mixture
         fc = mixtureCalculation(rho, elementArray, massFraction, NEP);
 
         egsInformation("\nestar::getDataFromFormulae: Medium %d treated as mixture.\n", mediaNum);
@@ -164,17 +159,14 @@ formula_calc getDataFromFormulae(int knmat, double rho, string *elementArray, do
 */
 
 // The function takes in the element name as a string and simply returns
-// the atomic number by using the per_table dictionary
+// the atomic number by using the atomic_number dictionary
 int atom_num(string elem_name) {
-    int atomic_num;
-
-    atomic_num = per_table[elem_name];
-    if (atomic_num <= 0) {
-        egsFatal("estar::atom_num: Unrecognized element '%s'."
-                "Element names must be symbols (e.g. 'C', 'Na'), not integers.\n",
-                elem_name.c_str());
+    auto it = atomic_number.find(elem_name);
+    if (it == atomic_number.end()) {
+        egsFatal("estar::atom_num: Unrecognised element symbol '%s'.\n"
+                 "Check the formula input, they must be characters not integers.\n", elem_name.c_str());
     }
-    return atomic_num;
+    return it->second;
 }
 
 // formula_calc is a structure we defined in the module formulaStruct.cpp.
@@ -329,27 +321,22 @@ mixtureData getEgsMediaData(string *elementArray, double *massFraction, int NEP)
     if (ncomp <= 0) {
         egsFatal("estar::getEgsMediaData: Number of components must be > 0, got %d.\n", ncomp);
     }
-    int i = 0;
-    while (i < ncomp) {
+    for (int i=0; i < ncomp; ++i) {
         md.frm[i] = elementArray[i];
-        i = i + 1;
     }
-    i = 0;
+
     double sumf = 0;
-    while (i < ncomp) {
+    for (int i=0; i < ncomp; ++i) {
         if (massFraction[i] <= 0) {
             egsFatal("estar::getEgsMediaData: Mass fraction for component %d is %g.\n"
                     "Mass fractions must be > 0.\n", i, massFraction[i]);
         }
         md.frac[i] = massFraction[i];
         sumf = sumf + md.frac[i];
-        i = i + 1;
     }
     // normalize
-    i = 0;
-    while (i < ncomp) {
+    for (int i=0; i < ncomp; ++i) {
         md.frac[i] = md.frac[i]/sumf;
-        i = i + 1;
     }
     return md;
 }
@@ -365,20 +352,18 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
     mixtureData md = getEgsMediaData(elementArray, massFraction, NEP);
     int numComp = md.ncomp;
     vector<string> formulaArray(numComp); // array containing all the formula
-    vector<double> fractionArray(numComp); // srray contaning all the weights
+    vector<double> fractionArray(numComp); // array contaning all the weights
     for (int i = 0; i < numComp; i++) {
         formulaArray[i] = md.frm[i];
         fractionArray[i] = md.frac[i];
     };
-    int j = 0;
     int num_elems = 100; // we work with elements from atomic number 1-100
-    double lh[num_elems];
+    bool lh[num_elems];
     double wate[num_elems];
-    while (j < num_elems) {
+    for (int j=0; j < num_elems; ++j) {
         // lh and wate to contain zeros
         lh[j] = 0;
         wate[j] = 0.0;
-        j = j + 1;
     }
     int atmoicNumIndex;
     vector<double> zavArray(numComp); // array containing Z/A of each component
@@ -410,7 +395,7 @@ formula_calc mixtureCalculation(double rho, string *elementArray, double *massFr
     formula_calc ffc; // this object contains the final data we want to return
     int index = 0;
     for (int k = 0; k < num_elems; k++) {
-        if (lh[k] == 1) {
+        if (lh[k]) {
             /*
                 if lh[k] == 1, this means the element with atomic number k+1 is
                 part of some compound of the mixture or is in elemental form in the mixture

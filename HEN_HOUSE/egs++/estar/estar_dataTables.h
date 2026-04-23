@@ -3,12 +3,12 @@
 #include <string>
 #include <map>
 
-extern double er[113];
-extern double atb[100];
-extern double poth[100];
-extern double potgas[9];
-extern double potcon[9];
-extern std::map<std::string, int> per_table;
+extern const double energy_grid[113];
+extern const double atb[100];
+extern const double poth[100];
+extern const double potgas[9];
+extern const double potcon[9];
+extern const std::map<std::string, int> atomic_number;
 
-extern double elementData[14532];
+extern const double elementData[14532];
 

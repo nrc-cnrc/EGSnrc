@@ -2,8 +2,6 @@
 
 #include <string>
 
-using namespace std;
-
 /*
     This module reads data from the elementData.h file and structures it
     for use in other modules. There are 100 sets of data in elementData.h
