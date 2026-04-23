@@ -1696,13 +1696,14 @@ IF(EPSTFLP=0)[
 
 "I-value is provided in MeV in the egsinp so we need to convert it"
 "to eV for estar"
-IF(IPOTVAL > 0.1) [
+IF(IPOTVAL > 1.0) [
 OUTPUT;(//' *****IN SPINIT*** WARNING: I-value seems too large.',
 ' Check that you provided in MeV, not eV!'//);
 ]
 IPOTVAL = IPOTVAL * 1000000;
 
 "Call estar through the egs++ interface"
+IEV = 0;
 IF (NCOMPOUNDS > 0) [
     CALL estar(COMP_NAMES,COMP_FRACS,PZP,LDENSITY,densityCorr,
     enGrid,NCOMPOUNDS,ISCOMP,IEV,IPOTVAL,MEDID,OUTDENSITY);
