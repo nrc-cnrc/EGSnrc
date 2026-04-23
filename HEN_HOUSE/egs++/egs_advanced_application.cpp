@@ -189,6 +189,7 @@ int EGS_AdvancedApplication::initEGSnrcBackEnd() {
     __egs_iovar(64,app_name.size(),app_name.c_str(),the_egsio->user_code);
     __egs_iovar(128,hen_house.size(),hen_house.c_str(),the_egsio->hen_house);
     __egs_iovar(128,egs_home.size(),egs_home.c_str(),the_egsio->egs_home);
+    __egs_iovar(256,output_dir.size(),output_dir.c_str(),the_egsio->output_dir);
     __egs_iovar(256,input_file.size(),input_file.c_str(),the_egsio->input_file);
     __egs_iovar(256,final_output_file.size(),final_output_file.c_str(),
                 the_egsio->output_file);
@@ -1254,7 +1255,7 @@ void EGS_AdvancedApplication::splitTopParticleIsotropically(const EGS_Float &fsp
     the_stack->wt[np] /= fsplit;
     double E = the_stack->E[np];
     EGS_Float x = the_stack->x[np], y = the_stack->y[np], z = the_stack->z[np],
-              wthin = the_stack->wt[np], dnear = the_stack->dnear[np];
+                                                          wthin = the_stack->wt[np], dnear = the_stack->dnear[np];
     EGS_Float u,v,w;
     /* If fsplit is a non-integer, sample between int(fsplit) and int(split)+1 */
     int nsplit = int(fsplit);
