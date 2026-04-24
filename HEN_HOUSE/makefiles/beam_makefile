@@ -94,8 +94,8 @@ EXE_DIR = $(EGS_HOME)bin$(DSEP)$(my_machine)
 $(EXE_FILE): $(FORTRAN_FILE).$(FEXT) $(EXE_DIR)
 	@echo $(empty)
 	@echo $(empty)
-	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '-cpp $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH)' and extra objects/libs '$(BEAM_EXTRA_OBJECTS) $(ESTAR_DIR)estarPreProcess.cpp -lstdc++ $(FLIBS)'"
-	@$(F77) -cpp $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(BEAM_EXTRA_OBJECTS) $(ESTAR_DIR)estarPreProcess.cpp -lstdc++ $(FLIBS)
+	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '-cpp $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH)' and extra objects/libs '$(BEAM_EXTRA_OBJECTS) $(FLIBS) -legspp'"
+	@$(F77) -cpp $(FCFLAGS) $(OPTLEVEL_F) $(COMPILE_TIME) $(GIT_HASH) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(BEAM_EXTRA_OBJECTS) $(FLIBS) -legspp
 
 #$(LIB_FILE): $(LIB_FORTRAN_FILE).$(FEXT)
 #	@$(F77) $(FCFLAGS) $(OPTLEVEL_F)
