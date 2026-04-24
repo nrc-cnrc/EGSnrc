@@ -214,6 +214,9 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
     int mem_rcnt[3] = {0,0,0};
     int ind_rcnt[3] = {0,0,0};
 
+    float min_timeIndex = 999;
+    float max_timeIndex = -1;
+
     // Compression routine!
     for (int i=0; i<tot_tracks; i++) {
         char *start;
@@ -291,6 +294,13 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
                 else if (type==2) {
                     timelist_po.push_back(timeindex);
                 }
+
+                if(timeindex < min_timeIndex) {
+                    min_timeIndex = timeindex;
+                }
+                if(timeindex > max_timeIndex) {
+                    max_timeIndex = timeindex;
+                }
             }
         }
     }
@@ -328,6 +338,12 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks,vecto
     egsInformation("%s: Tracks compressed: %d (%d %d %d)\n", func_name,
                    ind_rcnt[0]+ind_rcnt[1]+ind_rcnt[2],
                    ind_rcnt[0], ind_rcnt[1], ind_rcnt[2]);
+
+    if (incltime) {
+        egsInformation("%s: Minimum time index: %f\n", func_name, min_timeIndex);
+        egsInformation("%s: Maximum time index: %f\n", func_name, max_timeIndex);
+    }
+
     m_failed = false;
     data.close();
 

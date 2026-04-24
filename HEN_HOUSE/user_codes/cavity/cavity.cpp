@@ -771,7 +771,15 @@ public:
     int simulateSingleShower() {
         last_case = current_case;
         EGS_Vector x,u;
+
+        setTimeIndex(-1);
+
         current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
+
+        // For dynamic geometries, update positions according to the current
+        // time index, which may have been set by getNextParticle
+        geometry->getNextGeom(rndm);
+
         //egsInformation("particle: E=%g q=%d x=(%g,%g,%g)\n",p.E,p.q,x.x,x.y,x.z);
         int err = startNewShower(); if( err ) return err;
         EGS_BaseGeometry *save_geometry = geometry;

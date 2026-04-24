@@ -2227,8 +2227,16 @@ int EGS_ChamberApplication::simulateSingleShower() {
     last_case = current_case;
     EGS_Vector x,u;
     the_egsvr->nbr_split = csplit;
+
+    setTimeIndex(-1);
+
     current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
     //egsInformation("Got particle: q=%d E=%g wt=%g latch=%d x=(%g,%g,%g) u=(%g,%g,%g)\n",p.q,p.E,p.wt,p.latch,x.x,x.y,x.z,u.x,u.y,u.z);
+
+    // For dynamic geometries, update positions according to the current
+    // time index, which may have been set by getNextParticle
+    geometry->getNextGeom(rndm);
+
     the_extra_stack->nbr_splitting[0] = 0;
     int err = startNewShower(); if( err ) return err;
     //*HB_start************************
