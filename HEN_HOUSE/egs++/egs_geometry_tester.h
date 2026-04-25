@@ -100,7 +100,7 @@ public:
       \verbatim
       :start inside test:
           :start bounding shape:
-              type = box
+              library = egs_box_shape
               box size = 16
           :stop bounding shape:
           ntest = 10000

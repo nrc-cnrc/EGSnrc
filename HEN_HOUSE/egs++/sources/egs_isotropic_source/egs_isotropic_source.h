@@ -224,7 +224,7 @@ the geometry and source blocks are provided:
         region selection    = IncludeSelected
         selected regions    = 1 2
         :start shape:
-            type     = box
+            library  = egs_box_shape
             box size    = 1 2 3
             :start media input:
                 media = H2O521ICRU

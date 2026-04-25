@@ -136,7 +136,7 @@ A simple example:
         library = egs_collimated_source
         name = my_source
         :start source shape:
-            type = point
+            library = egs_point_shape
             position = 0 0 5
         :stop source shape:
         :start target shape:
