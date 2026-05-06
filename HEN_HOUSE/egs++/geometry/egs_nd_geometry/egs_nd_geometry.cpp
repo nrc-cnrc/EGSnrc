@@ -846,7 +846,7 @@ void EGS_XYZGeometry::finishInitialization() {
 #endif
 
     if (!tempf) {
-        egsWarning("%s: failed to open .egsphant file %s\n",func,dens_file);
+        egsWarning("%s: failed to open .egsphant file %s\n",func,dens_file.c_str());
         return;
     }
 
