@@ -257,7 +257,7 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
 
             EGS_Mesh *mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
             if(!mesh) {
-                egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
+                egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName().c_str());
             }
 
             for (int i = 0; i < mesh->num_elements(); i++) {
@@ -357,7 +357,7 @@ void EGS_DoseScoring::reportResults() {
         } else if(file_type == 1 || file_type == 2) {
             mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
             if(!mesh) {
-                egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
+                egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName().c_str());
             }
         }
     }
@@ -572,7 +572,7 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
     } else if(file_type==1) {
         EGS_Mesh *mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
         if(!mesh) {
-            egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
+            egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName().c_str());
         }
 
         // Open file
@@ -647,7 +647,7 @@ void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
     } else if(file_type==2) {
         EGS_Mesh *mesh = dynamic_cast<EGS_Mesh *>(dose_geom);
         if(!mesh) {
-            egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName());
+            egsFatal("\nEGS_DoseScoring:: Error: Could not cast %s to EGS_Mesh.\n", dose_geom->getName().c_str());
         }
 
         // Open file
