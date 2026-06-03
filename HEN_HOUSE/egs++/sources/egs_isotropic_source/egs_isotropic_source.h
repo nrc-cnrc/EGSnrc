@@ -295,6 +295,7 @@ public:
                               EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) {
         bool ok = true;
         bool ok2 = true;
+        int ntry = 0;
         do {
             x = shape->getRandomPoint(rndm);
             if (geom) {
@@ -355,6 +356,16 @@ public:
                 if (ok2 == false) {
                     ok = false;
                 }
+            }
+            ntry++;
+            if (ntry > 100000) {
+                egsFatal("\nEGS_IsotropicSource::getPositionDirection:\n"
+                         " For target shape %s, which is of type %s:\n"
+                         " Failed to create a particle from the source after 100 000 attempts\n"
+                         " Please ensure your .egsinp source definition -> source"
+                         " -> shape encompasses the source region.\n",
+                         shape->getObjectName().c_str(),
+                         shape->getObjectType().c_str());
             }
         }
         while (!ok);
