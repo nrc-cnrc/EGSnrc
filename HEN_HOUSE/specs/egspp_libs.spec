@@ -34,7 +34,7 @@ ifeq ($(MACOSX),yes)
 
 all: $(DSO2)$(libpre)$(library)$(libext) $(DSO2)$(libpre)$(library)$(libext_bundle)
 
-macos_dylib_id = -Wl,-install_name,@loader_path/$(libpre)$(library)$(libext)
+macos_dylib_id = -Wl,-install_name,@rpath/$(libpre)$(library)$(libext)
 
 $(DSO2)$(libpre)$(library)$(libext_bundle): $(lib_objects)
 	$(CXX) $(INC2) $(DEFS) $(opt) $(shared_bundle) $(lib_link1) $(lib_objects) $(extra) $(lib_link2)
