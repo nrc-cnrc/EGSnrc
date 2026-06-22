@@ -59,12 +59,14 @@ and variance reduction techniques vary between applications.
 
 <em>Tip 2: All distances are in units of cm, and energies in MeV.</em>
 
-\subsection common_includefile Include files
+\subsection common_includefile Include files and file paths
 Input blocks can pull in external files using the \c include file key. The path may be absolute, relative to the current working directory, or may begin with an environment variable using \c \$VAR or \c \%VAR\% syntax (only the first environment variable is expanded, and it must be followed by \c / or \c \\), consistent with other file paths in egs++ (e.g. spectrum files). For portable inputs, \c \$EGS_HOME/... or \c \$HEN_HOUSE/... is recommended.
 
 \verbatim
 include file = $EGS_HOME/egs_brachy/lib/geometry/my_geom.geom
 \endverbatim
+
+In pegsless mode, the \c material data file input in the \c media definition block also accepts a leading \c \$VAR/ path (Fortran \c replace_env), consistent with other Fortran user codes.
 
 \section common_geom Geometry
 For full description of the geometry input, see the \link Geometry geometry module \endlink.

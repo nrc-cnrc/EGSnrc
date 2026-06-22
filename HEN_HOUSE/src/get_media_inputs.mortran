@@ -779,6 +779,7 @@ Nmin = ival_medfile; Nmax = ival_medfile;
 CALL GET_INPUT;
 IF(error_flags(ival_medfile)=0)[
    material_file=char_value(ival_medfile,1);
+   call replace_env(material_file);
    medfile_specified=.true.;
    "try opening it"
    i_medfile=17;
@@ -1466,6 +1467,7 @@ DO i=1,NMED[
 
    "now, try to open the density correction file, if specified"
    IF(densityfile_specified)[
+     call replace_env(density_file);
      "if a file separator is specified in the name, assume the full path + name"
      "of the file is specified"
       write(*,*)' density_file ',density_file;
