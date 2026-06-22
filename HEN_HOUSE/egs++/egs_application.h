@@ -641,6 +641,11 @@ public:
         return app_dir;
     };
 
+    /*! \brief Returns the directory for run output and coordination files */
+    const string &getOutputDir() const {
+        return output_dir;
+    };
+
     /*! \brief Returns the name of the working directory */
     const string &getRunDir() const {
         return run_dir;
