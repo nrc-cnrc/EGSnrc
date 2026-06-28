@@ -28,16 +28,30 @@
 #
 ###############################################################################
 #
-#  Source this file from your .bashrc file if a Bourne shell flavor is your
-#  default shell. It must be sourced AFTER egsnrc_bashrc_additions. You may
-#  put additional definitions and aliases into this file but be aware that
-#  changes will be lost if you rerun the installation. It is therefore better
-#  to put additional system wide definitions in:
+#  Source via ~/.config/EGSnrc/EGSnrc.bash (one line in your shell RC file).
+#  See: https://github.com/nrc-cnrc/EGSnrc/issues/1211
 #
-#  $HEN_HOUSE/scripts/local_bashrc_additions
+#  Legacy: export EGS_CONFIG and EGS_HOME, then source this file directly.
 #
 ###############################################################################
 
+# If EGS_CONFIG is unset, try loading the active XDG profile.
+if test "x$EGS_CONFIG" = x; then
+    _xdg_cfg="${XDG_CONFIG_HOME:-$HOME/.config}/EGSnrc"
+    if test -n "$EGSNRC_CONFIG_HOME"; then
+        _xdg_cfg="$EGSNRC_CONFIG_HOME"
+    fi
+    if test -f "$_xdg_cfg/EGSnrc.bash"; then
+        . "$_xdg_cfg/EGSnrc.bash"
+        return $? 2>/dev/null || exit $?
+    fi
+fi
+
+if test "x$EGS_CONFIG" = x; then
+    echo "EGS_CONFIG is not set. Add to your shell RC:" >&2
+    echo '  [ -f "${XDG_CONFIG_HOME:-$HOME/.config}/EGSnrc/EGSnrc.bash" ] && . "${XDG_CONFIG_HOME:-$HOME/.config}/EGSnrc/EGSnrc.bash"' >&2
+    return 1 2>/dev/null || exit 1
+fi
 
 #  Environment variables
 #
@@ -110,6 +124,18 @@ alias test_distribution='$HEN_HOUSE/scripts/test_egsnrcmp_distribution'
 export dcpath=$HEN_HOUSE/pegs4/density_corrections
 
 export HEN_HOUSE PATH
+
+if test -x "$HEN_HOUSE/scripts/egsnrc"; then
+    unalias egsnrc 2>/dev/null || true
+    egsnrc() {
+        if test "$1" = use; then
+            shift
+            "$HEN_HOUSE/scripts/egsnrc" use "$@" --apply
+        else
+            "$HEN_HOUSE/scripts/egsnrc" "$@"
+        fi
+    }
+fi
 
 # Now check for local system wide sh additions
 #

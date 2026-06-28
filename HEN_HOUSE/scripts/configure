@@ -96,7 +96,8 @@ details or http://www.gnu.org/licenses/agpl.txt
 EGSnrc configuration script.
 
 This script configures EGSnrc for use on your system.  The configuration
-options will be saved in a configuration file inside the \$HEN_HOUSE/specs
+options will be saved in a configuration file under your XDG config directory
+(\$XDG_CONFIG_HOME/EGSnrc/profiles/<profile>/specs/, default ~/.config/EGSnrc/)
 directory. You can use this configuration by setting the environment variable
 \$EGS_CONFIG to the path of the configuration file.
 
@@ -1589,6 +1590,23 @@ if test "x$junk_test" != x; then
     HEN_HOUSE="$HEN_HOUSE"
 fi
 
+# XDG user configuration (https://github.com/nrc-cnrc/EGSnrc/issues/1211)
+. "$HEN_HOUSE/scripts/egsnrc_config_paths"
+if test "x$EGSNRC_PROFILE" = x; then
+    _default_profile=$(egsnrc_default_profile_name "$HEN_HOUSE")
+    printf $format "Choose an EGSnrc profile name: " >&2
+    printf "[%s] " "$_default_profile" >&2
+    read _profile_response
+    if test "x$_profile_response" = x; then
+        EGSNRC_PROFILE=$_default_profile
+    else
+        EGSNRC_PROFILE=$_profile_response
+    fi
+fi
+egsnrc_ensure_profile_layout "$EGSNRC_PROFILE" "$HEN_HOUSE"
+EGS_USER_SPECS=$(egsnrc_user_specs_dir "$EGSNRC_PROFILE")
+export EGSNRC_PROFILE EGS_USER_SPECS
+
 # set OMEGA_HOME
 OMEGA_HOME="$HEN_HOUSE/omega"
 
@@ -1596,7 +1614,7 @@ OMEGA_HOME="$HEN_HOUSE/omega"
 # Force configuration name to be the same as the configuration file base name
 #
 try_conf_file="$system_name.conf"
-if test -f "$HEN_HOUSE/specs/$try_conf_name"; then
+if test -f "$EGS_USER_SPECS/$try_conf_file"; then
     try_conf_file=
 fi
 try_conf_name="$system_name"
@@ -1624,13 +1642,13 @@ while true; do
         if test "x$response" = x$help; then
             cat >&2 << _ACEOF
 
-EGSnrc config files are stored in the 'specs' sub-directory in the
-EGSnrc 'HEN_HOUSE' directory. A config file specifies the compiler
-name, compiler option, etc., and is used by all Makefiles for compiling
-EGSnrc user codes. You may have as many different config files as
-you want.  A config file gets used by either specifying its file name
-on the command line when building EGSnrc user codes or by defining the
-environment variable \$EGS_CONFIG to point to its file.
+EGSnrc config files are stored under your XDG config directory
+(~/.config/EGSnrc/profiles/<profile>/specs/ by default). A config file
+specifies the compiler name, compiler options, etc., and is used by all
+Makefiles for compiling EGSnrc user codes. You may have as many different
+config files as you want. A config file gets used by either specifying its
+file name on the command line when building EGSnrc user codes or by defining
+the environment variable \$EGS_CONFIG to point to its file.
 
 _ACEOF
         continue
@@ -1638,7 +1656,7 @@ _ACEOF
     fi
 
     conf_name=$(echo $response | sed "s/\.conf$//")
-    if $as_file $HEN_HOUSE/specs/$response || $as_directory $HEN_HOUSE/bin/$conf_name || $as_directory $HEN_HOUSE/lib/$conf_name; then
+    if $as_file $EGS_USER_SPECS/$response || $as_directory $HEN_HOUSE/bin/$conf_name || $as_directory $HEN_HOUSE/lib/$conf_name; then
         echo >&2
         echo "The configuration $response or corresponding directories in bin/ or lib/ already exist!" >&2
         printf $format "Do you want to overwrite ? (yes/no) " >&2
@@ -1888,7 +1906,7 @@ fi
 current_date=$(date)
 FOUT="-o "
 COUT="-o "
-cat >$HEN_HOUSE/specs/$conf_file <<_ACEOF
+cat >$EGS_USER_SPECS/$conf_file <<_ACEOF
 ###############################################################################
 #
 # EGSnrc config file
@@ -1908,6 +1926,7 @@ make_prog = $make_prog
 
 HEN_HOUSE = $HEN_HOUSE/
 SPEC_DIR = \$(HEN_HOUSE)specs/
+USER_SPEC_DIR = $EGS_USER_SPECS/
 
 # Include the standard Unix spec file
 #
@@ -1932,7 +1951,7 @@ FOBJE = $test_objext
 
 _ACEOF
 if test "x$have_c_compiler" = xyes; then
-cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+cat >>$EGS_USER_SPECS/$conf_file <<_ACEOF
 
 # C compiler name and options
 #
@@ -1942,7 +1961,7 @@ COUT = $COUT
 _ACEOF
 fi
 
-cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+cat >>$EGS_USER_SPECS/$conf_file <<_ACEOF
 
 # The following is for creating a DSO
 # (dynamic shared object, also known as DLL in the Windows world)
@@ -1973,13 +1992,13 @@ SHLIB_LIBS = $SHLIB_LIBS
 # EGS_EXTRA_OBJECTS
 _ACEOF
 if test "x$c_compiler_works" = xyes; then
-cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+cat >>$EGS_USER_SPECS/$conf_file <<_ACEOF
 #
 CUTIL_OBJECTS = \$(HEN_HOUSE)lib/\$(my_machine)/egs_c_utils.$test_objext
 
 _ACEOF
 else
-cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+cat >>$EGS_USER_SPECS/$conf_file <<_ACEOF
 # You don't have a working C compiler.
 # If you ever manage to compile egs_c_utils.c, set the following variable
 # to \$(HEN_HOUSE)/lib/\$(my_machine)/egs_c_utils.$test_objext
@@ -1989,14 +2008,14 @@ CUTIL_OBJECTS =
 _ACEOF
 fi
 
-cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+cat >>$EGS_USER_SPECS/$conf_file <<_ACEOF
 # Use the following variable in EGSnrc user codes that
 # use a BEAMnrc user code compiled and linked as a DSO
 # (dynamic shared object, also known as DLLs) as a
 # particle source.
 _ACEOF
 if test "x$have_loadbeamlib" = xyes; then
-cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+cat >>$EGS_USER_SPECS/$conf_file <<_ACEOF
 #
 BEAMLIB_OBJECTS = \$(HEN_HOUSE)lib/\$(my_machine)/load_beamlib.$test_objext
 
@@ -2011,7 +2030,7 @@ BEAMLIB_EXTRA_LIBS = $dlopen_flags \$(IAEA_LIB)
 
 _ACEOF
 else
-cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+cat >>$EGS_USER_SPECS/$conf_file <<_ACEOF
 # If you ever manage to compile ${HEN_HOUSE}cutils/load_beamlib.c,
 # set the following variable to
 # \$(HEN_HOUSE)/lib/\$(my_machine)/load_beamlib.$test_objext
@@ -2029,7 +2048,7 @@ _ACEOF
 fi
 
 # ${HEN_HOUSE}cutils,
-cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+cat >>$EGS_USER_SPECS/$conf_file <<_ACEOF
 # FC_FLAGS gets used for compiling the EGSnrc fortran routines and for
 # linking for EGSnrc user codes written in C. We set FC_FLAGS by
 # default to be given by \$(FCFLAGS) \$(FOPT). This is OK for most
@@ -2087,7 +2106,7 @@ REPLACE {\$CANONICAL_SYSTEM} WITH
 REPLACE {\$CONFIGURATION_NAME} WITH
   {'$conf_name'};
 REPLACE {\$EGS_CONFIG} WITH
-  {'$HEN_HOUSE/specs/$conf_file'};
+  {'$EGS_USER_SPECS/$conf_file'};
 
 REPLACE {\$CONFIG_TIME} WITH
   {'$CONFIG_TIME'};
@@ -2450,13 +2469,13 @@ if cd $HEN_HOUSE/mortran3 2>&5; then
     else
       cat mortran3.f.orig | sed "s/call exit(.*\!//g" >mortran3.f
     fi
-    if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
+    if { $make_prog EGS_CONFIG=$EGS_USER_SPECS/$conf_file >&5 2>&5;
          test_status=$?; (exit $test_status); }; then
         echo "OK" >&2
     else
         echo "Failed" >&2
         echo "See configure.log for the output of make" >&2
-        echo "Failed program was '$make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file'" >&5
+        echo "Failed program was '$make_prog EGS_CONFIG=$EGS_USER_SPECS/$conf_file'" >&5
         exit 1
     fi
     mv -f mortran3.f.orig mortran3.f
@@ -2477,13 +2496,13 @@ printf $format "Compiling pegs4 ... " >&2
 if cd $HEN_HOUSE/pegs4 2>&5; then
     rm -f "pegs4_$conf_name.f"
     rm -f "$HEN_HOUSE/bin/$conf_name/pegs4.exe"
-    if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
+    if { $make_prog EGS_CONFIG=$EGS_USER_SPECS/$conf_file >&5 2>&5;
          test_status=$?; (exit $test_status); }; then
         echo "OK" >&2
     else
         echo "Failed" >&2
         echo "See configure.log for the output of make" >&2
-        echo "Failed program was $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file" >&5
+        echo "Failed program was $make_prog EGS_CONFIG=$EGS_USER_SPECS/$conf_file" >&5
         exit 1
     fi
 else
@@ -2504,12 +2523,12 @@ EOF
 
 printf $format "Compiling beam_build ... " >&2
 if cd $OMEGA_HOME/beamnrc/tools 2>&5; then
-    if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
+    if { $make_prog EGS_CONFIG=$EGS_USER_SPECS/$conf_file >&5 2>&5;
          test_status=$?; (exit $test_status); }; then
         echo "OK" >&2
     else
         echo "Failed" >&2
-        echo "Failed program was $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file" >&5
+        echo "Failed program was $make_prog EGS_CONFIG=$EGS_USER_SPECS/$conf_file" >&5
     fi
 else
     echo "Failed" >&2
@@ -2536,12 +2555,12 @@ for prog in beamdp ctcreate statdose readphsp dosxyz_show addphsp; do
     fi
 
     if cd "$OMEGA_HOME/progs/$prog" 2>&5; then
-    if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
+    if { $make_prog EGS_CONFIG=$EGS_USER_SPECS/$conf_file >&5 2>&5;
          test_status=$?; (exit $test_status); }; then
             echo "OK" >&2;
         else
             echo "Failed" >&2
-            echo "Failed program was $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file" >&5
+            echo "Failed program was $make_prog EGS_CONFIG=$EGS_USER_SPECS/$conf_file" >&5
         fi
     else
         echo "Failed to change directory to $OMEGA_HOME/progs/$prog" >&2
@@ -2644,15 +2663,15 @@ done
 cxx_ok=no
 if test ! "x$CXX" = x$none; then
     cd $HEN_HOUSE/scripts
-    if { ./configure_c++ CXX=$CXX config=$HEN_HOUSE/specs/$conf_file from_configure; test_status=$?; (exit $test_status); }; then
-        lib_link1=$(cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "lib_link1 =" | sed "s/lib_link1 = //g")
-        link2_prefix=$(cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "link2_prefix =" | sed "s/link2_prefix = //g")
-        link2_suffix=$(cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "link2_suffix =" | sed "s/link2_suffix = //g")
+    if { ./configure_c++ CXX=$CXX config=$EGS_USER_SPECS/$conf_file from_configure; test_status=$?; (exit $test_status); }; then
+        lib_link1=$(cat $EGS_USER_SPECS/egspp_${conf_name}.conf | grep "lib_link1 =" | sed "s/lib_link1 = //g")
+        link2_prefix=$(cat $EGS_USER_SPECS/egspp_${conf_name}.conf | grep "link2_prefix =" | sed "s/link2_prefix = //g")
+        link2_suffix=$(cat $EGS_USER_SPECS/egspp_${conf_name}.conf | grep "link2_suffix =" | sed "s/link2_suffix = //g")
         cxx_ok=yes
     fi
 fi
 printf $format "Adding C++ make variables to configuration ... " >&2
-cat >>$HEN_HOUSE/specs/$conf_file <<EOF
+cat >>$EGS_USER_SPECS/$conf_file <<EOF
 
 # The following variables are needed to define the IAEA phase space library
 # and the way EGSnrc user codes link against it.
@@ -2662,12 +2681,12 @@ abs_dso = \$(HEN_HOUSE)egs++\$(DSEP)\$(dso)
 ABS_DSO = \$(abs_dso)\$(DSEP)
 EOF
 if test $cxx_ok = yes; then
-cat >>$HEN_HOUSE/specs/$conf_file <<EOF
+cat >>$EGS_USER_SPECS/$conf_file <<EOF
 IAEA_LIB = $lib_link1 ${link2_prefix}iaea_phsp${link2_suffix}
 IAEA_PHSP_MACROS = \$(EGS_UTILS)iaea_phsp_macros.mortran
 EOF
 else
-cat >>$HEN_HOUSE/specs/$conf_file <<EOF
+cat >>$EGS_USER_SPECS/$conf_file <<EOF
 #
 # No C++ compiler configured => the following are left empty
 #
@@ -2696,7 +2715,16 @@ else
     echo " make_prog  = $make_prog" >&5
 fi
 
-egs_config="$HEN_HOUSE/specs/$egs_config"
+egs_config="$EGS_USER_SPECS/$egs_config"
+
+egsnrc_set_active_conf "$EGSNRC_PROFILE" "$conf_name"
+egsnrc_set_active_profile "$EGSNRC_PROFILE"
+egsnrc_install_xdg_shell_files "$HEN_HOUSE"
+echo >&2
+printf $format "EGSnrc profile:" >&2
+echo "$EGSNRC_PROFILE" >&2
+printf $format "Machine config saved in:" >&2
+echo "$egs_config" >&2
 
 # move configuration log to log directory
 if $as_file $my_dir/configure.log && $as_directory $HEN_HOUSE/log; then
