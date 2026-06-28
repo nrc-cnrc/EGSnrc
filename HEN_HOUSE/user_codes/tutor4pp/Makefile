@@ -11,7 +11,7 @@
 
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp1.spec
-include $(SPEC_DIR)egspp_$(my_machine).conf
+include $(USER_SPEC_DIR)egspp_$(my_machine).conf
 
 # Specify the name of the user code.
 # The name of the executable is determined from this variable.
