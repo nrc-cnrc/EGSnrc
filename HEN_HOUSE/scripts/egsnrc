@@ -1,0 +1,421 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc profile management CLI
+#
+###############################################################################
+
+_my_dir=$(cd "$(dirname "$0")" && pwd)
+. "$_my_dir/egsnrc_config_paths"
+
+_egsnrc_die() {
+    echo "egsnrc: $*" >&2
+    exit 1
+}
+
+_egsnrc_apply_shell() {
+    _profile="$1"
+    egsnrc_set_active_profile "$_profile"
+    egsnrc_load_profile_env "$_profile"
+    _hh=$(egsnrc_profile_hen_house_read "$_profile")
+    if test -z "$_hh" || ! test -f "$_hh/scripts/egsnrc_bashrc_additions"; then
+        _egsnrc_die "HEN_HOUSE not found for profile '$_profile'"
+    fi
+    . "$_hh/scripts/egsnrc_bashrc_additions"
+    _machine=$(grep 'my_machine =' "$EGS_CONFIG" | sed 's/my_machine = //')
+    echo "Active profile: $_profile"
+    echo "  EGS_CONFIG = $EGS_CONFIG"
+    echo "  EGS_HOME   = $EGS_HOME"
+    echo "  HEN_HOUSE  = $HEN_HOUSE"
+    echo "  my_machine = $_machine"
+}
+
+_egsnrc_cmd_use() {
+    _apply=no
+    _profile=""
+    while test $# -gt 0; do
+        case "$1" in
+            --apply) _apply=yes; shift ;;
+            -*) _egsnrc_die "unknown option: $1" ;;
+            *)
+                if test -z "$_profile"; then
+                    _profile="$1"
+                else
+                    _egsnrc_die "unexpected argument: $1"
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    if test -z "$_profile"; then
+        _profile=$(egsnrc_read_active_profile)
+        _dir="$(egsnrc_profile_dir "$_profile")"
+        if test -d "$_dir"; then
+            echo "Active profile: $_profile"
+            if test -f "$_dir/env"; then
+                grep -E '^export ' "$_dir/env" 2>/dev/null || cat "$_dir/env"
+            fi
+            _conf=$(egsnrc_read_active_conf "$_profile")
+            if test -n "$_conf"; then
+                echo "  active_conf = $_conf"
+                echo "  EGS_CONFIG  = $(egsnrc_resolve_egs_config "$_profile" "$_conf")"
+            fi
+            _hh=$(egsnrc_profile_hen_house_read "$_profile")
+            if test -n "$_hh"; then
+                echo "  HEN_HOUSE   = $_hh"
+            fi
+        else
+            _egsnrc_die "no active profile (missing $_dir)"
+        fi
+        return 0
+    fi
+
+    _dir="$(egsnrc_profile_dir "$_profile")"
+    if ! test -d "$_dir"; then
+        _egsnrc_die "profile '$_profile' not found (expected $_dir)"
+    fi
+
+    egsnrc_set_active_profile "$_profile"
+
+    if test "$_apply" = yes; then
+        _egsnrc_apply_shell "$_profile"
+        return 0
+    fi
+
+    echo "Switched active profile to '$_profile'."
+    echo "Open a new terminal, or run:  egsnrc use $_profile --apply"
+}
+
+_egsnrc_cmd_list() {
+    _cfg="$(egsnrc_config_home)"
+    _active=$(egsnrc_read_active_profile)
+    echo "EGSnrc profiles in $_cfg"
+    echo ""
+    if ! test -d "$_cfg/profiles"; then
+        echo "  (none)"
+        return 0
+    fi
+    for _dir in "$_cfg/profiles"/*; do
+        test -d "$_dir" || continue
+        _name=$(basename "$_dir")
+        _mark=" "
+        if test "$_name" = "$_active"; then
+            _mark="*"
+        fi
+        _hh=""
+        _eh=""
+        _conf=""
+        if test -f "$_dir/hen_house"; then
+            _hh=$(tr -d '[:space:]' < "$_dir/hen_house")
+        fi
+        if test -f "$_dir/env"; then
+            _eh=$(grep 'EGS_HOME=' "$_dir/env" | sed -E 's/^export EGS_HOME=//; s/^EGS_HOME=//; s/"//g')
+        fi
+        if test -f "$_dir/active_conf"; then
+            _conf=$(tr -d '[:space:]' < "$_dir/active_conf")
+        fi
+        printf "  %s %-20s conf=%-15s EGS_HOME=%s\n" "$_mark" "$_name" "${_conf:-?}" "${_eh:-?}"
+        if test -n "$_hh"; then
+            printf "      HEN_HOUSE=%s\n" "$_hh"
+        fi
+    done
+}
+
+_egsnrc_cmd_config() {
+    if test $# -lt 1; then
+        _egsnrc_die "usage: egsnrc config list|use <name>"
+    fi
+    _sub="$1"
+    shift
+    _profile=$(egsnrc_read_active_profile)
+    _specs="$(egsnrc_user_specs_dir "$_profile")"
+
+    case "$_sub" in
+        list)
+            echo "Machine configs in profile '$_profile' ($_specs):"
+            if ! test -d "$_specs"; then
+                echo "  (none)"
+                return 0
+            fi
+            _active=$(egsnrc_read_active_conf "$_profile")
+            for _f in "$_specs"/*.conf; do
+                test -f "$_f" || continue
+                case "$_f" in
+                    *egspp_*) continue ;;
+                esac
+                _base=$(basename "$_f" .conf)
+                _mark=" "
+                if test "$_base" = "$_active"; then
+                    _mark="*"
+                fi
+                printf "  %s %s\n" "$_mark" "$_base"
+            done
+            ;;
+        use)
+            if test $# -lt 1; then
+                _egsnrc_die "usage: egsnrc config use <name>"
+            fi
+            _name="$1"
+            _name=$(echo "$_name" | sed 's/\.conf$//')
+            _target="$_specs/${_name}.conf"
+            if ! test -f "$_target"; then
+                _egsnrc_die "config '$_name' not found ($_target)"
+            fi
+            _eh="$EGS_HOME"
+            if test -f "$(egsnrc_profile_env "$_profile")"; then
+                _eh=$(grep 'EGS_HOME=' "$(egsnrc_profile_env "$_profile")" | \
+                    sed -E 's/^export EGS_HOME=//; s/^EGS_HOME=//; s/"//g')
+            fi
+            egsnrc_write_profile_env "$_profile" "$_name" "$_eh"
+            echo "Active machine config set to '$_name' in profile '$_profile'."
+            echo "Run: egsnrc use $_profile --apply"
+            ;;
+        *)
+            _egsnrc_die "unknown config subcommand: $_sub"
+            ;;
+    esac
+}
+
+_egsnrc_cmd_profile() {
+    if test $# -lt 2; then
+        _egsnrc_die "usage: egsnrc profile create <name> [HEN_HOUSE]"
+    fi
+    _sub="$1"
+    shift
+    case "$_sub" in
+        create)
+            _name="$1"
+            _hh="$2"
+            if test -z "$_name"; then
+                _egsnrc_die "profile name required"
+            fi
+            egsnrc_ensure_profile_layout "$_name" "$_hh"
+            echo "Created profile '$_name' at $(egsnrc_profile_dir "$_name")"
+            ;;
+        *)
+            _egsnrc_die "unknown profile subcommand: $_sub"
+            ;;
+    esac
+}
+
+_egsnrc_profile_paths() {
+    _profile="$1"
+    if test -z "$_profile"; then
+        _profile=$(egsnrc_read_active_profile)
+    fi
+    _dir="$(egsnrc_profile_dir "$_profile")"
+    if ! test -d "$_dir"; then
+        _egsnrc_die "profile '$_profile' not found (expected $_dir)"
+    fi
+    egsnrc_load_profile_env "$_profile"
+    EGSNRC_HEN_HOUSE=$(egsnrc_profile_hen_house_read "$_profile")
+    if test -z "$EGSNRC_HEN_HOUSE"; then
+        _egsnrc_die "HEN_HOUSE not set for profile '$_profile'"
+    fi
+    EGSNRC_HEN_HOUSE="${EGSNRC_HEN_HOUSE%/}/"
+    if test -z "$EGS_HOME"; then
+        if test -f "$(egsnrc_profile_env "$_profile")"; then
+            EGS_HOME=$(grep 'EGS_HOME=' "$(egsnrc_profile_env "$_profile")" | \
+                sed -E 's/^export EGS_HOME=//; s/^EGS_HOME=//; s/"//g')
+        fi
+    fi
+    EGS_HOME="${EGS_HOME%/}/"
+    if test -z "$EGS_HOME" || ! test -d "$EGS_HOME"; then
+        _egsnrc_die "EGS_HOME not found for profile '$_profile'"
+    fi
+}
+
+_egsnrc_sync_makefiles() {
+    _dry_run="$1"
+    shift
+    _profile="$1"
+    shift
+    _uc_list="$*"
+
+    _egsnrc_profile_paths "$_profile"
+    _src_root="${EGSNRC_HEN_HOUSE}user_codes"
+    _dst_root="${EGS_HOME}"
+    _n=0
+
+    if test $# -gt 0; then
+        :
+    else
+        set -- $(ls "$_src_root" 2>/dev/null)
+    fi
+
+    for _uc in "$@"; do
+        case "$_uc" in
+            pegs4|bin|'') continue ;;
+        esac
+        _src="$_src_root/$_uc/Makefile"
+        _dst_dir="$_dst_root/$_uc"
+        _dst="$_dst_dir/Makefile"
+        if ! test -f "$_src"; then
+            echo "egsnrc sync: skip $_uc (no Makefile in HEN_HOUSE)" >&2
+            continue
+        fi
+        if ! test -d "$_dst_dir"; then
+            echo "egsnrc sync: skip $_uc (not installed under EGS_HOME)" >&2
+            continue
+        fi
+        if test "$_dry_run" = yes; then
+            echo "would copy $_src -> $_dst"
+        else
+            cp "$_src" "$_dst"
+            echo "synced Makefile: $_uc"
+        fi
+        _n=$((_n + 1))
+    done
+
+    if test "$_dry_run" = yes; then
+        echo "dry-run: $_n makefile(s)"
+    else
+        echo "synced $_n makefile(s) from ${EGSNRC_HEN_HOUSE}user_codes/ to $EGS_HOME"
+    fi
+}
+
+_egsnrc_sync_user_codes() {
+    _dry_run="$1"
+    shift
+    _profile="$1"
+    shift
+    _uc_list="$*"
+
+    _egsnrc_profile_paths "$_profile"
+    _src_root="${EGSNRC_HEN_HOUSE}user_codes"
+    _dst_root="${EGS_HOME}"
+    _n=0
+
+    if test $# -gt 0; then
+        :
+    else
+        set -- $(ls "$_src_root" 2>/dev/null)
+    fi
+
+    echo "egsnrc sync: copying full user-code trees (overwrites $EGS_HOME copies)" >&2
+    for _uc in "$@"; do
+        case "$_uc" in
+            pegs4|bin|'') continue ;;
+        esac
+        _src="$_src_root/$_uc"
+        _dst="$_dst_root/$_uc"
+        if ! test -d "$_src"; then
+            echo "egsnrc sync: skip $_uc (not in HEN_HOUSE)" >&2
+            continue
+        fi
+        if test "$_dry_run" = yes; then
+            echo "would copy -r $_src -> $_dst_root/"
+        else
+            cp -r "$_src" "$_dst"
+            echo "synced user code: $_uc"
+        fi
+        _n=$((_n + 1))
+    done
+
+    if test "$_dry_run" = yes; then
+        echo "dry-run: $_n user code(s)"
+    else
+        echo "synced $_n user code(s) to $EGS_HOME"
+    fi
+}
+
+_egsnrc_sync_shell() {
+    _dry_run="$1"
+    _profile="$2"
+    _egsnrc_profile_paths "$_profile"
+    if test "$_dry_run" = yes; then
+        echo "would install XDG shell files from ${EGSNRC_HEN_HOUSE}scripts/xdg/ to $(egsnrc_config_home)/"
+    else
+        egsnrc_install_xdg_shell_files "$EGSNRC_HEN_HOUSE"
+        echo "refreshed $(egsnrc_config_home)/EGSnrc.{bash,csh,fish}"
+    fi
+}
+
+_egsnrc_cmd_sync() {
+    _dry_run=no
+    _profile=""
+    _sub="makefiles"
+    _args=""
+
+    while test $# -gt 0; do
+        case "$1" in
+            --dry-run) _dry_run=yes; shift ;;
+            --profile)
+                _profile="$2"
+                shift 2
+                ;;
+            makefiles|user-codes|shell)
+                _sub="$1"
+                shift
+                ;;
+            -h|--help)
+                cat <<EOF
+egsnrc sync — refresh EGS_HOME from HEN_HOUSE (active profile)
+
+  egsnrc sync [makefiles] [uc ...]   copy Makefiles (default)
+  egsnrc sync user-codes [uc ...]    re-copy full user-code trees
+  egsnrc sync shell                  refresh ~/.config/EGSnrc/EGSnrc.*
+
+Options:
+  --profile NAME    profile to sync (default: active)
+  --dry-run         show what would be copied
+EOF
+                return 0
+                ;;
+            -*)
+                _egsnrc_die "unknown option: $1"
+                ;;
+            *)
+                _args="$_args $1"
+                shift
+                ;;
+        esac
+    done
+
+    if test -z "$_profile"; then
+        _profile=$(egsnrc_read_active_profile)
+    fi
+
+    # shellcheck disable=SC2086
+    case "$_sub" in
+        makefiles) _egsnrc_sync_makefiles "$_dry_run" "$_profile" $_args ;;
+        user-codes) _egsnrc_sync_user_codes "$_dry_run" "$_profile" $_args ;;
+        shell) _egsnrc_sync_shell "$_dry_run" "$_profile" ;;
+        *) _egsnrc_die "unknown sync target: $_sub" ;;
+    esac
+}
+
+_egsnrc_cmd_help() {
+    cat <<EOF
+egsnrc — manage EGSnrc XDG profiles
+
+  egsnrc use [<profile>] [--apply]   show or set active profile
+  egsnrc list                        list all profiles
+  egsnrc config list                 list machine configs (active profile)
+  egsnrc config use <name>           switch machine config
+  egsnrc sync [makefiles] [uc ...]   copy Makefiles HEN_HOUSE → EGS_HOME
+  egsnrc sync user-codes [uc ...]    re-copy user-code trees
+  egsnrc sync shell                  refresh XDG shell entry files
+  egsnrc profile create <name> [HH]  create profile scaffold
+
+Config directory: $(egsnrc_config_home)
+EOF
+}
+
+case "${1:-}" in
+    use) shift; _egsnrc_cmd_use "$@" ;;
+    list|profiles) _egsnrc_cmd_list ;;
+    config) shift; _egsnrc_cmd_config "$@" ;;
+    sync) shift; _egsnrc_cmd_sync "$@" ;;
+    profile) shift; _egsnrc_cmd_profile "$@" ;;
+    help|-h|--help|"") _egsnrc_cmd_help ;;
+    *)
+        _dir="$(egsnrc_profile_dir "$1" 2>/dev/null)"
+        if test -d "$_dir"; then
+            _egsnrc_cmd_use "$1" "$2"
+        else
+            _egsnrc_die "unknown command '$1' (try: egsnrc help)"
+        fi
+        ;;
+esac
