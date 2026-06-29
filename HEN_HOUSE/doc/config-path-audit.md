@@ -31,6 +31,7 @@ migrate user session config and user-generated `specs/*.conf` to
 | `HEN_HOUSE/scripts/egsnrc_bashrc_additions` | sources from XDG if `EGS_CONFIG` unset | updated |
 | `HEN_HOUSE/scripts/switch_config_bashrc` | legacy wrapper → `egsnrc use` | updated |
 | `HEN_HOUSE/gui/egs_configure/egs_install_env.cpp` | GUI XDG profile + shell one-liner | done |
+| `HEN_HOUSE/doc/.../egsnrc_system_considerations.tex` | user manual XDG section | done |
 | `HEN_HOUSE/scripts/compile_user_code` | uses `EGS_CONFIG` env | unchanged |
 | `HEN_HOUSE/specs/all_common.spec` | `USER_SPEC_DIR` default for egspp includes | updated |
 | 74 Makefiles | `$(USER_SPEC_DIR)egspp_<machine>.conf` only; `egspp_libs.spec` stays in `$(SPEC_DIR)` | updated |
