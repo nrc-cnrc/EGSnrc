@@ -41,6 +41,10 @@ expect "Input C compiler flags to use:"                 { send "\n" }
 # so they are handled together with exp_continue.
 
 expect {
+    "Choose an EGSnrc profile name:" {
+        send "\n"
+        exp_continue
+    }
     "Input path to EGSnrc HEN_HOUSE directory:" {
         send "\n"
         exp_continue
@@ -52,8 +56,8 @@ expect {
     "Do you want to overwrite ?" {
         puts "\nError: a configuration named '$confname' already exists."
         puts "Remove the following files and directories, and try again:"
-        puts "  HEN_HOUSE/specs/$confname.conf"
-        puts "  HEN_HOUSE/specs/egspp_$confname.conf"
+        puts "  ~/.config/EGSnrc/profiles/<profile>/specs/$confname.conf"
+        puts "  ~/.config/EGSnrc/profiles/<profile>/specs/egspp_$confname.conf"
         puts "  HEN_HOUSE/bin/$confname/"
         puts "  HEN_HOUSE/lib/$confname/"
         puts "  HEN_HOUSE/egs++/dso/$confname/"
@@ -66,8 +70,8 @@ expect {
     "Do you want to overwrite?" {
         puts "\nError: a configuration named '$confname' already exists."
         puts "Remove the following files and directories, and try again:"
-        puts "  HEN_HOUSE/specs/$confname.conf"
-        puts "  HEN_HOUSE/specs/egspp_$confname.conf"
+        puts "  ~/.config/EGSnrc/profiles/<profile>/specs/$confname.conf"
+        puts "  ~/.config/EGSnrc/profiles/<profile>/specs/egspp_$confname.conf"
         puts "  HEN_HOUSE/bin/$confname/"
         puts "  HEN_HOUSE/lib/$confname/"
         puts "  HEN_HOUSE/egs++/dso/$confname/"
