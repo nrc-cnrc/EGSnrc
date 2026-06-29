@@ -122,9 +122,13 @@ _egsnrc_cmd_list() {
     done
 }
 
+_egsnrc_sanitize_name() {
+    echo "$1" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd '[:alnum:]-_'
+}
+
 _egsnrc_cmd_config() {
     if test $# -lt 1; then
-        _egsnrc_die "usage: egsnrc config list|use <name>"
+        _egsnrc_die "usage: egsnrc config list|use <name> [--apply]"
     fi
     _sub="$1"
     shift
@@ -153,10 +157,25 @@ _egsnrc_cmd_config() {
             done
             ;;
         use)
-            if test $# -lt 1; then
-                _egsnrc_die "usage: egsnrc config use <name>"
+            _apply=no
+            _name=""
+            while test $# -gt 0; do
+                case "$1" in
+                    --apply) _apply=yes; shift ;;
+                    -*) _egsnrc_die "unknown option: $1" ;;
+                    *)
+                        if test -z "$_name"; then
+                            _name="$1"
+                        else
+                            _egsnrc_die "unexpected argument: $1"
+                        fi
+                        shift
+                        ;;
+                esac
+            done
+            if test -z "$_name"; then
+                _egsnrc_die "usage: egsnrc config use <name> [--apply]"
             fi
-            _name="$1"
             _name=$(echo "$_name" | sed 's/\.conf$//')
             _target="$_specs/${_name}.conf"
             if ! test -f "$_target"; then
@@ -168,8 +187,12 @@ _egsnrc_cmd_config() {
                     sed -E 's/^export EGS_HOME=//; s/^EGS_HOME=//; s/"//g')
             fi
             egsnrc_write_profile_env "$_profile" "$_name" "$_eh"
+            if test "$_apply" = yes; then
+                _egsnrc_apply_shell "$_profile"
+                return 0
+            fi
             echo "Active machine config set to '$_name' in profile '$_profile'."
-            echo "Run: egsnrc use $_profile --apply"
+            echo "Open a new terminal, or run:  egsnrc config use $_name --apply"
             ;;
         *)
             _egsnrc_die "unknown config subcommand: $_sub"
@@ -178,8 +201,8 @@ _egsnrc_cmd_config() {
 }
 
 _egsnrc_cmd_profile() {
-    if test $# -lt 2; then
-        _egsnrc_die "usage: egsnrc profile create <name> [HEN_HOUSE]"
+    if test $# -lt 1; then
+        _egsnrc_die "usage: egsnrc profile create|delete <name> [HEN_HOUSE]"
     fi
     _sub="$1"
     shift
@@ -190,8 +213,66 @@ _egsnrc_cmd_profile() {
             if test -z "$_name"; then
                 _egsnrc_die "profile name required"
             fi
+            _name=$(_egsnrc_sanitize_name "$_name")
+            if test -z "$_name"; then
+                _egsnrc_die "invalid profile name"
+            fi
             egsnrc_ensure_profile_layout "$_name" "$_hh"
             echo "Created profile '$_name' at $(egsnrc_profile_dir "$_name")"
+            ;;
+        delete)
+            _force=no
+            _name=""
+            while test $# -gt 0; do
+                case "$1" in
+                    --force|-f) _force=yes; shift ;;
+                    -*) _egsnrc_die "unknown option: $1" ;;
+                    *)
+                        if test -z "$_name"; then
+                            _name="$1"
+                        else
+                            _egsnrc_die "unexpected argument: $1"
+                        fi
+                        shift
+                        ;;
+                esac
+            done
+            if test -z "$_name"; then
+                _egsnrc_die "usage: egsnrc profile delete <name> [--force]"
+            fi
+            _name=$(_egsnrc_sanitize_name "$_name")
+            if test -z "$_name"; then
+                _egsnrc_die "invalid profile name"
+            fi
+            _dir="$(egsnrc_profile_dir "$_name")"
+            if ! test -d "$_dir"; then
+                _egsnrc_die "profile '$_name' not found ($_dir)"
+            fi
+            _active=$(egsnrc_read_active_profile)
+            if test "$_name" = "$_active" && test "$_force" != yes; then
+                _egsnrc_die "refusing to delete active profile '$_name' (use --force)"
+            fi
+            rm -rf "$_dir"
+            if test "$_name" = "$_active"; then
+                _cfg="$(egsnrc_config_home)"
+                _next=""
+                if test -d "$_cfg/profiles"; then
+                    for _p in "$_cfg/profiles"/*; do
+                        test -d "$_p" || continue
+                        _next=$(basename "$_p")
+                        break
+                    done
+                fi
+                if test -n "$_next"; then
+                    egsnrc_set_active_profile "$_next"
+                    echo "Deleted profile '$_name'; active profile is now '$_next'."
+                else
+                    rm -f "$_cfg/active_profile"
+                    echo "Deleted profile '$_name'; no profiles remain."
+                fi
+            else
+                echo "Deleted profile '$_name'."
+            fi
             ;;
         *)
             _egsnrc_die "unknown profile subcommand: $_sub"
@@ -393,11 +474,12 @@ egsnrc — manage EGSnrc XDG profiles
   egsnrc use [<profile>] [--apply]   show or set active profile
   egsnrc list                        list all profiles
   egsnrc config list                 list machine configs (active profile)
-  egsnrc config use <name>           switch machine config
+  egsnrc config use <name> [--apply]    switch machine config
   egsnrc sync [makefiles] [uc ...]   copy Makefiles HEN_HOUSE → EGS_HOME
   egsnrc sync user-codes [uc ...]    re-copy user-code trees
   egsnrc sync shell                  refresh XDG shell entry files
   egsnrc profile create <name> [HH]  create profile scaffold
+  egsnrc profile delete <name>       remove profile (--force if active)
 
 Config directory: $(egsnrc_config_home)
 EOF

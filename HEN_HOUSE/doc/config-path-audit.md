@@ -22,11 +22,11 @@ migrate user session config and user-generated `specs/*.conf` to
 
 | Component | Read / write | Migration |
 |-----------|--------------|-----------|
-| `HEN_HOUSE/scripts/configure` | writes user `.conf` to XDG | done |
+| `HEN_HOUSE/scripts/configure` | writes user `.conf` to XDG; writes profile `env` with default `EGS_HOME` | done |
 | `HEN_HOUSE/scripts/configure_c++` | writes `egspp_*.conf` next to main conf | done |
 | `HEN_HOUSE/scripts/finalize_egs_foruser` | writes profile `env`, prints one-liner | done |
 | `HEN_HOUSE/scripts/egsnrc_config_paths` | XDG path helpers | new |
-| `HEN_HOUSE/scripts/egsnrc` | profile CLI (`egsnrc use`, `egsnrc sync`) | new |
+| `HEN_HOUSE/scripts/egsnrc` | profile CLI (`egsnrc use`, `config use --apply`, `profile delete`, `sync`) | new |
 | `HEN_HOUSE/scripts/egsnrc_migrate_config` | legacy → XDG | new |
 | `HEN_HOUSE/scripts/egsnrc_bashrc_additions` | sources from XDG if `EGS_CONFIG` unset | updated |
 | `HEN_HOUSE/scripts/switch_config_bashrc` | legacy wrapper → `egsnrc use` | updated |
@@ -41,6 +41,8 @@ migrate user session config and user-generated `specs/*.conf` to
 egsnrc use clrp-dev      # switch parallel install
 egsnrc list              # list profiles
 egsnrc config use debug  # switch machine config within profile
+egsnrc config use debug --apply  # switch and reload current shell
+egsnrc profile delete oldname    # remove profile (--force if active)
 egsnrc sync              # refresh Makefiles from HEN_HOUSE → EGS_HOME
 egsnrc sync user-codes egs_app  # full re-copy of one user code
 ```

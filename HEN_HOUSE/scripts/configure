@@ -2719,6 +2719,8 @@ egs_config="$EGS_USER_SPECS/$egs_config"
 
 egsnrc_set_active_conf "$EGSNRC_PROFILE" "$conf_name"
 egsnrc_set_active_profile "$EGSNRC_PROFILE"
+_default_egs_home=$(dirname "${HEN_HOUSE%/}")/egs_home
+egsnrc_write_profile_env "$EGSNRC_PROFILE" "$conf_name" "$_default_egs_home"
 egsnrc_install_xdg_shell_files "$HEN_HOUSE"
 echo >&2
 printf $format "EGSnrc profile:" >&2
@@ -2780,6 +2782,15 @@ if this is to be the repository of the system, answer no.
 _ACEOF
         printf $format "Do you want to finalize for $USER? (yes/no): " >&2
     elif test "x$response" = xno; then
+        cat >&2 <<_ACEOF
+
+Profile '$EGSNRC_PROFILE' was saved under ~/.config/EGSnrc/ (EGS_HOME defaults to
+$_default_egs_home until you run finalize_egs_foruser).
+
+_ACEOF
+        _oneliner=$(egsnrc_shell_oneliner)
+        echo "Add this line to your shell startup file when ready:" >&2
+        echo "$_oneliner" >&2
         break
     elif test "x$response" = xyes; then
         echo >&2

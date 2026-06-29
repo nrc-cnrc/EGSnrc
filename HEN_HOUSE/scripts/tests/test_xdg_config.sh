@@ -20,6 +20,7 @@ _fake_hh="$_tmp/egsnrc/HEN_HOUSE"
 mkdir -p "$_fake_hh/scripts/xdg" "$_fake_hh/specs"
 cp "$_my_dir/../egsnrc_config_paths" "$_fake_hh/scripts/"
 cp "$_my_dir/../egsnrc" "$_fake_hh/scripts/"
+cp "$_my_dir/../egsnrc_bashrc_additions" "$_fake_hh/scripts/"
 chmod +x "$_fake_hh/scripts/egsnrc"
 cp "$_my_dir/../xdg/EGSnrc.bash" "$_fake_hh/scripts/xdg/"
 touch "$_fake_hh/specs/unix.spec"
@@ -65,6 +66,26 @@ egsnrc_write_profile_env "testprof" "test" "$_uc_sync"
 _out3=$(XDG_CONFIG_HOME="$_tmp/config" HOME="$_tmp" "$_fake_hh/scripts/egsnrc" sync --profile testprof makefiles egs_app 2>&1)
 echo "$_out3" | grep -q 'synced Makefile: egs_app' && _ok 'egsnrc sync makefiles' || _bad "egsnrc sync: $_out3"
 grep -q 'USER_SPEC_DIR' "$_uc_sync/egs_app/Makefile" && _ok 'sync updated Makefile content' || _bad 'sync makefile content wrong'
+
+# config use --apply updates active_conf and env
+egsnrc_set_active_profile "testprof"
+printf 'my_machine = test2\nHEN_HOUSE = %s/\n' "$_fake_hh" > "$_specs/test2.conf"
+_out4=$(XDG_CONFIG_HOME="$_tmp/config" HOME="$_tmp" "$_fake_hh/scripts/egsnrc" config use test2 --apply 2>&1)
+echo "$_out4" | grep -q 'EGS_CONFIG' && _ok 'config use --apply' || _bad "config use --apply: $_out4"
+_active_conf=$(tr -d '[:space:]' < "$_cfg/profiles/testprof/active_conf")
+test "$_active_conf" = test2 && _ok 'active_conf after config use' || _bad "active_conf is $_active_conf"
+
+# profile delete: remove non-active profile, refuse active without --force
+_out5=$(XDG_CONFIG_HOME="$_tmp/config" HOME="$_tmp" "$_fake_hh/scripts/egsnrc" profile delete other 2>&1)
+echo "$_out5" | grep -q 'Deleted profile' && _ok 'profile delete other' || _bad "profile delete: $_out5"
+if XDG_CONFIG_HOME="$_tmp/config" HOME="$_tmp" "$_fake_hh/scripts/egsnrc" profile delete testprof 2>&1 | grep -q 'refusing'; then
+    _ok 'profile delete refuses active'
+else
+    _bad 'profile delete should refuse active profile'
+fi
+_out6=$(XDG_CONFIG_HOME="$_tmp/config" HOME="$_tmp" "$_fake_hh/scripts/egsnrc" profile delete testprof --force 2>&1)
+echo "$_out6" | grep -q 'Deleted profile' && _ok 'profile delete --force' || _bad "profile delete --force: $_out6"
+test ! -d "$_cfg/profiles/testprof" && _ok 'profile dir removed' || _bad 'profile dir still exists'
 
 if test $_fail -eq 0; then
     echo ""
