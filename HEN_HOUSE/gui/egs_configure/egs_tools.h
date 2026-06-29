@@ -86,6 +86,8 @@ void delete_files( const QString& filter );
 void delete_files( const QString& dir_str, const QString& filter );
 bool  fileExists( const QString & fname );
 bool   is_x86_64();
+QString egsnrcDefaultProfileName(const QString &henHouse);
+QString egsnrcSanitizeProfileName(const QString &name);
 void chmod( const QString& attrib, const QString& file );
 bool replaceUserEnvironmentVariable(  const QString& var, const QString& value, QString* msg);
 bool prepend2UserEnvironmentVariable( const QString& var, const QString& value, QString* msg);

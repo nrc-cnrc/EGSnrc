@@ -31,6 +31,8 @@
 
 #include "egs_install.h"
 
+#include <QFileInfo>
+
 #define EGS_VIEW_DSO "linux-static"
 
 void QInstallPage::environmentSetUp()
@@ -146,6 +148,10 @@ void QInstallPage::SaveAppSetting()
      printProgress("\nUpdating environment variable OMEGA_HOME to " + omegahome + "\n");
      replaceUserEnvironmentVariable( "OMEGA_HOME", omegahome, &smsg);
      updateProgress();
+
+     printProgress("\nWriting EGSnrc profile to " + egsnrcConfigHome() + " ...");
+     if ( ! writeXdgProfile() )
+         printProgress("\n Warning: could not write EGSnrc profile files.\n");
 
 #else
   /* Setup EGSnrc environment in shell resource file */
@@ -496,7 +502,7 @@ void QInstallPage::createKDEShortcuts( const QString& where,
        //if ( make_dir(where) ) {
        if (QDir().mkpath(where) ){
          QString henhouse  = henHouse(),
-                 egsconfig = henhouse + tr("specs") + QDir::separator() + confFile();
+                 egsconfig = specFile;
          QStringList::Iterator itd = dir.begin();
          QStringList::Iterator iti = icons.begin();
          QStringList::Iterator its = scripts.begin();
@@ -613,81 +619,173 @@ void QInstallPage::set_guis_dso(){
 }
 
 /**************************************************************
+ * XDG / LOCALAPPDATA profile helpers (shared with shell configure)
+ **************************************************************/
+QString QInstallPage::egsnrcConfigHome(){
+#ifdef Q_OS_WIN
+    QString base = qgetenv("LOCALAPPDATA");
+    if ( base.isEmpty() ) {
+        QString prof = qgetenv("USERPROFILE");
+        if ( ! prof.isEmpty() )
+            base = prof + QDir::separator() + "AppData" + QDir::separator() + "Local";
+    }
+    if ( base.isEmpty() )
+        return QString();
+    return QDir::cleanPath( base + QDir::separator() + "EGSnrc" );
+#else
+    QString override = qgetenv("EGSNRC_CONFIG_HOME");
+    if ( ! override.isEmpty() )
+        return QDir::cleanPath( override );
+    QString base = qgetenv("XDG_CONFIG_HOME");
+    if ( base.isEmpty() ) {
+        QString home = qgetenv("HOME");
+        if ( home.isEmpty() )
+            home = getenv( "HOME" );
+        if ( home.isEmpty() )
+            return QString();
+        base = home + QString("/.config");
+    }
+    return QDir::cleanPath( base + QDir::separator() + "EGSnrc" );
+#endif
+}
+
+QString QInstallPage::egsnrcProfileName(){
+    QString name = field("egs_profile").toString().trimmed();
+    if ( name.isEmpty() )
+        name = egsnrcDefaultProfileName( henHouse() );
+    name = egsnrcSanitizeProfileName( name );
+    if ( name.isEmpty() )
+        name = QString("default");
+    return name;
+}
+
+QString QInstallPage::egsnrcProfileDir(){
+    return egsnrcConfigHome() + QDir::separator() + "profiles" +
+           QDir::separator() + egsnrcProfileName();
+}
+
+QString QInstallPage::egsnrcUserSpecsDir(){
+    return egsnrcProfileDir() + QDir::separator() + "specs" + QDir::separator();
+}
+
+bool QInstallPage::installXdgShellFiles(){
+    const QString cfgHome = egsnrcConfigHome();
+    if ( cfgHome.isEmpty() )
+        return false;
+    QDir().mkpath( cfgHome );
+    const QString srcDir = henHouse() + QString("scripts") + QDir::separator() +
+                           QString("xdg") + QDir::separator();
+    const QStringList files = QStringList()
+        << QString("EGSnrc.bash") << QString("EGSnrc.csh") << QString("EGSnrc.fish");
+    for ( QStringList::const_iterator it = files.begin(); it != files.end(); ++it ) {
+        const QString src = srcDir + *it;
+        const QString dst = cfgHome + QDir::separator() + *it;
+        if ( QFile::exists( src ) ) {
+            if ( QFile::exists( dst ) )
+                QFile::remove( dst );
+            QFile::copy( src, dst );
+        }
+    }
+    return true;
+}
+
+bool QInstallPage::writeXdgProfile(){
+    const QString cfgHome = egsnrcConfigHome();
+    if ( cfgHome.isEmpty() )
+        return false;
+    const QString profile = egsnrcProfileName();
+    const QString profDir = egsnrcProfileDir();
+    QDir().mkpath( egsnrcUserSpecsDir() );
+
+    if ( ! writeQString2File( profile + QString("\n"),
+                              cfgHome + QDir::separator() + "active_profile" ) )
+        return false;
+
+    QString hh = henHouse();
+    if ( ! hh.endsWith( QDir::separator() ) )
+        hh += QDir::separator();
+    if ( ! writeQString2File( hh, profDir + QDir::separator() + "hen_house" ) )
+        return false;
+
+    if ( ! writeQString2File( my_machine(),
+                              profDir + QDir::separator() + "active_conf" ) )
+        return false;
+
+    QString env = QString("# EGSnrc profile environment — profile: %1\n").arg( profile );
+    env += QString("export EGS_HOME=\"%1\"\n").arg( egsHome() );
+    env += QString("export EGS_CONFIG=\"%1\"\n").arg( specFile );
+    if ( ! writeQString2File( env, profDir + QDir::separator() + "env" ) )
+        return false;
+
+    return installXdgShellFiles();
+}
+
+bool QInstallPage::ensureUnixShellOneliner(){
+    QString home = qgetenv("HOME");
+    if ( home.isEmpty() )
+        home = getenv( "HOME" );
+    if ( home.isEmpty() )
+        return false;
+
+    QString shell = qgetenv("SHELL");
+    if ( shell.isEmpty() )
+        shell = getenv( "SHELL" );
+    shell = shell.mid( shell.lastIndexOf( QDir::separator() ) + 1 );
+
+    const QString cfgHome = egsnrcConfigHome();
+    if ( cfgHome.isEmpty() )
+        return false;
+
+    QString oneliner;
+    QString rcfile = home + QDir::separator();
+    if ( shell == QString("tcsh") || shell == QString("csh") ) {
+        oneliner = QString("if ( -f \"%1/EGSnrc.csh\" ) source \"%1/EGSnrc.csh\"\n")
+                       .arg( cfgHome );
+        rcfile += QString(".cshrc");
+    }
+    else if ( shell == QString("fish") ) {
+        oneliner = QString("if test -f \"%1/EGSnrc.fish\"; source \"%1/EGSnrc.fish\"; end\n")
+                       .arg( cfgHome );
+        rcfile = QDir::homePath() + QDir::separator() + QString(".config") +
+                 QDir::separator() + QString("fish") + QDir::separator() +
+                 QString("config.fish");
+    }
+    else {
+        oneliner = QString("[ -f \"%1/EGSnrc.bash\" ] && . \"%1/EGSnrc.bash\"\n")
+                       .arg( cfgHome );
+        if ( shell == QString("bash") || shell == QString("zsh") ||
+             shell == QString("ksh") || shell == QString("sh") )
+            rcfile += QString(".bashrc");
+        else
+            rcfile = home + QDir::separator() + QString(".profile");
+    }
+
+    if ( ! QFile::exists( rcfile ) )
+        return writeQString2File( oneliner, rcfile );
+
+    const QString content = readFile2QString( rcfile, QString() );
+    if ( content.contains( cfgHome + QString("/EGSnrc.bash") ) ||
+         content.contains( cfgHome + QString("/EGSnrc.csh") ) ||
+         content.contains( cfgHome + QString("/EGSnrc.fish") ) )
+        return true;
+
+    printProgress( tr("\n->Appending EGSnrc shell entry to ") + rcfile );
+    return appendQString2File( oneliner, rcfile );
+}
+
+/**************************************************************
  * Fixing LD_LIBRARY_PATH to point to egsnrc64 which provides
  * precompiled egspp and all dso files needed by egs_view.
  **************************************************************/
 void QInstallPage::update_unix_env(){
-    //QString dsoDirS = henHouse()  + "egs++" + QDir::separator() +
-    //                                "dso"   + QDir::separator() + QString(EGS_VIEW_DSO);
-    //QString dsoDirS = dsoDir;
-    QString home = getenv( "HOME");
-    /* Get SHELL environment variable */
-    QString shell = getenv("SHELL");
-    /* Strip path information  */
-    shell = shell.right(shell.length() - shell.lastIndexOf(QDir::separator()) - 1 );
-    /* Shell resource file name  */
-    QString rcfile = home + QDir::separator();
-    QString egsenv = QString("\n###############################")+
-                     QString("\n# EGSnrc environment settings #")+
-                     QString("\n###############################")+
-               QString("\nexport EGS_CONFIG=")+ specFile +
-               QString("\nexport EGS_HOME=")  + egsHome() +
-               //QString("\nexport LD_LIBRARY_PATH=")  + dsoDirS + QString(":$LD_LIBRARY_PATH") +
-               QString("\n. ") + henHouse() + QString("scripts")      +
-               QDir::separator() + QString("egsnrc_bashrc_additions");
-               //QString("\n. ") + henHouse() + QString("scripts")      +  //Fred moved most of this to
-               //QDir::separator() + QString("beamnrc_bashrc_additions");  //the egsnrc_bashrc_additions
-    if (shell == "bash"){
-      rcfile +=  QString(".bashrc");
-    }
-    else if (shell == "tcsh" || shell == "csh"){
-      rcfile +=  QString(".cshrc");
-      egsenv = QString("#\n# EGSnrc environment settings\n#")+
-               QString("\nsetenv EGS_CONFIG ")+ specFile +
-               QString("\nsetenv EGS_HOME ")  + egsHome() +
-               //QString("\nsetenv LD_LIBRARY_PATH ")  + dsoDirS + QString(":$LD_LIBRARY_PATH") +
-               QString("\nsource ") + henHouse() + QString("scripts") +
-               QDir::separator() + QString("egsnrc_cshrc_additions");
-               //QString("\nsource ") + henHouse() + QString("scripts") + //Fred moved most of this to
-               //QDir::separator() + QString("beamnrc_cshrc_additions");  //the egsnrc_cshrc_additions
-    }
-    else{
-      rcfile +=  QString(".profile");
-    }
-    if (!QFile(rcfile).exists()){
-      printProgress(tr("\n->Creating shell resource file ") + rcfile + tr(" with EGSnrc environment.\n") );
-      if ( ! writeQString2File(egsenv,rcfile) ) {
-          printProgress( tr("\n Could not create ") + tr("configuration file ") + rcfile );
-      }
-    }
-    else{
-      printProgress( tr("\n->Appending EGSnrc environment to shell resource file ") + rcfile );
-      append2file(egsenv.toLatin1(),rcfile.toLatin1());
-    }
+    printProgress( tr("\n->Writing XDG EGSnrc profile to ") +
+                   egsnrcConfigHome() + tr("\n") );
+    if ( ! writeXdgProfile() )
+        printProgress( tr("\n Warning: could not write XDG profile files.\n") );
 
-    /*
-     * Use a local resource file to add EGS_VIEW_DSO to LD_LIBRARY_PATH
-     *
-     * Needed now (Feb 2017) because $HEN_HOUSE/scripts/egsnrc_bashrc_additions
-     * is using $my_machine rather than EGS_VIEW_DSO for the geometry shared objects
-     * compiled with the same compiler version as the pre-compiled egs_view GUI.
-     * Once this is properly defined in $HEN_HOUSE/scripts/egsnrc_bashrc_additions
-     * this step can be removed.
-     */
-//      QString the_local_additions(egsnrc_bashrc_additions),
-//              the_additions_file = home + QDir::separator() + ".egsnrc_bashrc_additions";
-//      the_local_additions.replace( "static_machine",  QString(EGS_VIEW_DSO) );
-//
-//     if (!QFile(the_additions_file).exists()){
-//       printProgress(tr("\n->Creating local resource file ") + the_additions_file + tr(" for egs_view.\n") );
-//       if ( ! writeQString2File(the_local_additions,the_additions_file) ) {
-//           printProgress( tr("\n Could not create ") + tr("local resource file ") + the_additions_file );
-//       }
-//     }
-//     else{
-//       printProgress( tr("\n->Updating LD_LIBRARY_PATH in local resource file ") + the_additions_file );
-//       append2file(the_local_additions.toLatin1(),the_additions_file.toLatin1());
-//     }
+    printProgress( tr("\n->Ensuring shell RC sources the XDG EGSnrc entry\n") );
+    if ( ! ensureUnixShellOneliner() )
+        printProgress( tr("\n Warning: could not update shell resource file.\n") );
 }
 
 void QInstallPage::cleanUp()
