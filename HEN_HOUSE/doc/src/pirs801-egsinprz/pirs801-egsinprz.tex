@@ -344,6 +344,46 @@ the {\tt .basrc} resource file for Bash.
 right clicking on the {\tt My Computer} icon, selecting {\tt Properties} and clicking on the
 {\tt Environment Variables} button in the {\tt Advanced} tab.
 
+\subsubsection{Building Qt GUIs on macOS}
+\label{building_macos_qt}
+\index{macOS}
+\index{Apple Silicon}
+\index{QMAKESPEC}
+
+On macOS (including Apple Silicon), EGSnrc must be configured with the GNU
+compilers from Homebrew (for example {\tt gcc-14}, {\tt gfortran-14}, and
+{\tt g++-14} during {\tt configure} and {\tt configure\_c++}).
+The {\tt configure} script defaults to the highest-version complete Homebrew
+triplet {\tt gcc-N}, {\tt g++-N}, and {\tt gfortran-N} that it finds; press
+enter at each compiler prompt to accept the default, or type another name to
+override.
+The {\tt gcc} and {\tt g++} commands in {\tt /usr/bin} are Apple Clang, not GNU
+GCC, and must not be used for EGSnrc.
+
+Install Qt~5 from Homebrew ({\tt brew install qt@5}) and run {\tt configure\_c++}
+before building any Qt GUI. When {\tt egsnrc\_bashrc\_additions} is sourced on
+macOS, it sets {\tt QTDIR}, {\tt QMAKESPEC}, {\tt EGSNRC\_CXX}, and
+{\tt EGSNRC\_CC} automatically from your EGSnrc configuration files.
+The Qt GUIs are then built with the in-repo mkspec
+{\tt \$HEN\_HOUSE/mkspecs/macx-g++-egsnrc}, which selects GNU compilers
+matching the egspp library. Do {\bf not} edit mkspec files inside the Homebrew
+Qt installation.
+
+To build {\tt egs\_view} after configuring EGSnrc and egspp:
+
+\begin{verbatim}
+source $HEN_HOUSE/scripts/egsnrc_bashrc_additions
+cd $HEN_HOUSE/egs++/view && make
+\end{verbatim}
+
+The other Qt GUIs ({\tt egs\_gui}, {\tt egs\_inprz}, {\tt egs\_configure}) are
+built the same way from their directories under {\tt \$HEN\_HOUSE/gui/}.
+Build {\tt egspp} first if {\tt egs\_view} fails to link against {\tt libegspp}:
+
+\begin{verbatim}
+cd $HEN_HOUSE/egs++ && make glibs aobjects shapes
+\end{verbatim}
+
 \newpage
 \section{Using {\tt egs\_inprz}}
 \subsection{Running {\tt egs\_inprz}}
