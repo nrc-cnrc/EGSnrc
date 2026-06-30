@@ -55,7 +55,14 @@ endif
 
 # Set dynamic library path
 #
-setenv LD_LIBRARY_PATH "${HEN_HOUSE}egs++/dso/${my_machine}:$LD_LIBRARY_PATH"
+set canonical_system = `cat $EGS_CONFIG | grep "canonical_system =" | sed 's/canonical_system = //'`
+set is_darwin = `echo $canonical_system | grep -i darwin`
+if ( "$is_darwin" != "" ) then
+    source $HEN_HOUSE/scripts/setup_qt_env.csh
+    setenv DYLD_LIBRARY_PATH "${HEN_HOUSE}egs++/dso/${my_machine}:$DYLD_LIBRARY_PATH"
+else
+    setenv LD_LIBRARY_PATH "${HEN_HOUSE}egs++/dso/${my_machine}:$LD_LIBRARY_PATH"
+endif
 
 #  Aliases
 #

@@ -97,6 +97,7 @@ fi
 canonical_system=$( cat $EGS_CONFIG | grep "canonical_system =" | sed 's/canonical_system = //' )
 is_darwin=$(echo $canonical_system | grep -i darwin)
 if test ! "x$is_darwin" = x; then
+    . "$HEN_HOUSE/scripts/setup_qt_env.sh"
     export DYLD_LIBRARY_PATH="${HEN_HOUSE}egs++/dso/$my_machine:${DYLD_LIBRARY_PATH}"
     launchctl setenv EGS_HOME $EGS_HOME
     launchctl setenv EGS_CONFIG $EGS_CONFIG
