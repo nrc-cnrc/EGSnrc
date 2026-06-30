@@ -38,6 +38,7 @@
 
 
 include $(EGS_CONFIG)
+include $(SPEC_DIR)qt_qmake.spec
 
 #all: clean Makefile_$(my_machine)
 all: Makefile_$(my_machine)
@@ -47,10 +48,10 @@ static: Makefile_static_$(my_machine)
 	$(gui_make) -f Makefile_static_$(my_machine) my_machine=$(my_machine)
 
 Makefile_$(my_machine): egs_gui.pro
-	$(QTDIR)/bin/qmake my_machine=$(my_machine) my_build=shared MAKEFILE=Makefile_$(my_machine)
+	$(QMAKE) my_machine=$(my_machine) my_build=shared MAKEFILE=Makefile_$(my_machine)
 
 Makefile_static_$(my_machine): egs_gui.pro
-	$(QTDIR)/bin/qmake my_machine=$(my_machine) my_build=static MAKEFILE=Makefile_static_$(my_machine)
+	$(QMAKE) my_machine=$(my_machine) my_build=static MAKEFILE=Makefile_static_$(my_machine)
 
 clean: Makefile_$(my_machine)
 	$(gui_make) -f Makefile_$(my_machine) my_machine=$(my_machine) clean

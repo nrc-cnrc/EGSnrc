@@ -37,12 +37,13 @@
 
 
 include $(EGS_CONFIG)
+include $(SPEC_DIR)qt_qmake.spec
 
 all: Makefile_$(my_machine)
 	$(gui_make) -f Makefile_$(my_machine) my_machine=$(my_machine)
 
 Makefile_$(my_machine): egs_beam_install.pro
-	$(QTDIR)/bin/qmake my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine) the_dir=.
+	$(QMAKE) my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine) the_dir=.
 
 clean: Makefile_$(my_machine)
 	$(gui_make) -f Makefile_$(my_machine) my_machine=$(my_machine) clean

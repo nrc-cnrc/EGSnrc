@@ -29,6 +29,7 @@
 
 
 include $(EGS_CONFIG)
+include $(SPEC_DIR)qt_qmake.spec
 
 all: Makefile_$(my_machine)
 	$(gui_make) -f Makefile_$(my_machine) my_machine=$(my_machine) hhouse=$(HEN_HOUSE)
@@ -37,10 +38,10 @@ static: Makefile_static_$(my_machine)
 	$(gui_make) -f Makefile_static_$(my_machine) my_machine=$(my_machine)
 
 Makefile_$(my_machine): view.pro
-	$(QTDIR)/bin/qmake my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine) hhouse=$(HEN_HOUSE)
+	$(QMAKE) my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine) hhouse=$(HEN_HOUSE)
 
 Makefile_static_$(my_machine): view.pro
-	$(QTDIR)/bin/qmake my_machine=$(my_machine) my_build=static MAKEFILE=Makefile_static_$(my_machine)  hhouse=$(HEN_HOUSE)
+	$(QMAKE) my_machine=$(my_machine) my_build=static MAKEFILE=Makefile_static_$(my_machine)  hhouse=$(HEN_HOUSE)
 
 clean: Makefile_$(my_machine)
 	$(gui_make) -f Makefile_$(my_machine) my_machine=$(my_machine) clean hhouse=$(HEN_HOUSE)

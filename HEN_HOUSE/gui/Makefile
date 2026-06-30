@@ -37,12 +37,13 @@
 
 
 include $(EGS_CONFIG)
+include $(SPEC_DIR)qt_qmake.spec
 
 all: Makefile_$(my_machine)
 	$(MAKE) -f Makefile_$(my_machine)
 
 Makefile_$(my_machine): gui.pro
-	$(QTDIR)/bin/qmake my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine) QMAKE=$(QTDIR)/bin/qmake
+	$(QMAKE) my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine) QMAKE=$(QMAKE)
 
 .DEFAULT:
 	@$(MAKE) Makefile_$(my_machine)
