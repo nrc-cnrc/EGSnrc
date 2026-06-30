@@ -68,6 +68,12 @@ void QInstallPage::environmentSetUp()
     //**************************************************
     /* make symbolic link linux32[64] to actual dso dir */
     //set_guis_dso();
+#elif defined(Q_OS_MAC) || defined(Q_OS_DARWIN)
+    printProgress("\n ===> macOS Qt GUI note ...\n");
+    printProgress("To build egs_view and other Qt GUIs, install Qt 5 (e.g. brew install qt@5 gcc).\n");
+    printProgress("After installation, source egsnrc_bashrc_additions; it sets QTDIR,\n");
+    printProgress("QMAKESPEC, and GNU compiler names for Qt builds automatically.\n");
+    printProgress("Build GUIs from HEN_HOUSE/egs++/view or HEN_HOUSE/gui with make.\n");
 #endif
     if (envCheckBox->isChecked())
         SaveAppSetting();//updates path and puts gui icons&folders if requested

@@ -177,6 +177,67 @@ bool is_x86_64(){
 #endif
 }
 
+bool skipMediumMemoryModel(){
+#if defined(Q_OS_MAC) || defined(Q_OS_DARWIN)
+  return true;
+#else
+  QProcess uname;
+  uname.start("uname", QStringList() << "-m");
+  if (!uname.waitForStarted()) return false;
+  uname.closeWriteChannel();
+  if (!uname.waitForFinished()) return false;
+  return QString(uname.readAll()).trimmed() == "aarch64";
+#endif
+}
+
+QString gnuMemoryModelSuffix(){
+  return skipMediumMemoryModel() ? QString() : QString(" -mcmodel=medium");
+}
+
+bool isGnuCCompiler(const QString &name){
+  return name == "gcc" || name.startsWith("gcc-");
+}
+
+bool isGnuFortranCompiler(const QString &name){
+  return name.contains("gfortran") || name == "g77";
+}
+
+bool isGnuCppCompiler(const QString &name){
+  return name.contains("g++");
+}
+
+QString brewGnuCompilerVersion(){
+#if !defined(Q_OS_MAC) && !defined(Q_OS_DARWIN)
+  return QString();
+#else
+  QStringList versions;
+  const QStringList brew_bins = QStringList()
+      << "/opt/homebrew/bin" << "/usr/local/bin";
+  for (int b = 0; b < brew_bins.size(); ++b) {
+    QDir dir(brew_bins[b]);
+    if (!dir.exists()) continue;
+    QStringList entries = dir.entryList(QStringList() << "gcc-[0-9]*",
+                                        QDir::Files | QDir::Executable);
+    for (int i = 0; i < entries.size(); ++i) {
+      QString ver = entries[i].mid(4);
+      bool ok = false;
+      ver.toInt(&ok);
+      if (!ok) continue;
+      if (QFile::exists(brew_bins[b] + "/g++-" + ver) &&
+          QFile::exists(brew_bins[b] + "/gfortran-" + ver))
+        versions << ver;
+    }
+  }
+  versions.removeDuplicates();
+  if (versions.isEmpty()) return QString();
+  QString best = versions.first();
+  for (int i = 1; i < versions.size(); ++i) {
+    if (versions[i].toInt() > best.toInt()) best = versions[i];
+  }
+  return best;
+#endif
+}
+
 /*
     changes the attributes of a file (Unix/Linux)
  */
@@ -760,7 +821,7 @@ EGS_DSO::EGS_DSO(const QString &cpp_name){
    libext=".dylib"; libext_bundle=".so";
    defines="-DOSX"; lib_link1="-L$(abs_dso)";
    shared="-dynamiclib";
-   if ( cpp_name == "g++") shared_bundle="-bundle" ;
+   if ( cpp_name.contains("g++")) shared_bundle="-bundle" ;
    else                    shared_bundle="-qmkshrobj";
 #elif defined(Q_OS_SOLARIS)
    lib_link1="-L$(abs_dso) -Wl,-R,$(abs_dso)";
@@ -791,7 +852,7 @@ void MCompiler::init(){
     dso = 0;
     the_name = "gfortran"; vopt = "--version";
     opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
-    optimiz = "-O2 -mtune=native -mcmodel=medium";
+    optimiz = QString("-O2 -mtune=native") + gnuMemoryModelSuffix();
     deb = "-g";
     eext = QString();
     oflag = "-o ";
@@ -813,7 +874,7 @@ void MCompiler::setLanguage(Language l){
     switch(l){
       case F:
         the_name = "gfortran";
-        optimiz = "-O2 -mtune=native -mcmodel=medium -std=legacy";
+        optimiz = QString("-O2 -mtune=native") + gnuMemoryModelSuffix() + " -std=legacy";
         break;
       case C:
         the_name = "gcc";
@@ -828,9 +889,9 @@ void MCompiler::setLanguage(Language l){
         majorVersion = majorVersion.split("\n").takeFirst().split(".").takeFirst();
         vopt = "--version";
         if(majorVersion.toInt() >= 5) {
-          optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++14";
+          optimiz  = QString("-O2 -mtune=native") + gnuMemoryModelSuffix() + " -std=c++14";
         } else {
-          optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++11";
+          optimiz  = QString("-O2 -mtune=native") + gnuMemoryModelSuffix() + " -std=c++11";
         }
 
         dso = new EGS_DSO(name());// Creates dso, sets flibs to -lgfortran literally
@@ -937,7 +998,7 @@ void MCompiler::setUpCCompiler(){
     optimiz  = "-O2 -no-prec-div -fp-model fast=2";
   }
   else if ( the_name.contains("gcc") ){
-    optimiz  = "-O2 -mtune=native -mcmodel=medium";
+    optimiz  = QString("-O2 -mtune=native") + gnuMemoryModelSuffix();
   }
   else{
     optimiz  = "-O2";
@@ -977,9 +1038,9 @@ void MCompiler::setUpCPPCompiler(const QString& link_to_name){
     majorVersion = majorVersion.split("\n").takeFirst().split(".").takeFirst();
     vopt = "--version";
     if(majorVersion.toInt() >= 5) {
-      optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++14";
+      optimiz  = QString("-O2 -mtune=native") + gnuMemoryModelSuffix() + " -std=c++14";
     } else {
-      optimiz  = "-O2 -mtune=native -mcmodel=medium -std=c++11";
+      optimiz  = QString("-O2 -mtune=native") + gnuMemoryModelSuffix() + " -std=c++11";
     }
   }
   else if (the_name.toLower()== "icpc"){
@@ -1068,7 +1129,7 @@ void MCompiler::setUpFortranCompiler(){
          the_name.contains("g77")      ){
         vopt = "--version";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
-        optimiz = "-O2 -mtune=native -mcmodel=medium";
+        optimiz = QString("-O2 -mtune=native") + gnuMemoryModelSuffix();
     }
     else if (the_name == "ifl"){
         vopt = "-V";
@@ -1114,7 +1175,7 @@ void MCompiler::setUpFortranCompiler(){
     if ( the_name.contains("gfortran") || the_name == "g95" || the_name.contains("g77") ){ // GNU Fortran
         vopt = "-v --version";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
-        optimiz = "-O2 -mtune=native -mcmodel=medium";
+        optimiz = QString("-O2 -mtune=native") + gnuMemoryModelSuffix();
         deb = "-g";
     }
     _version = getVersion(); _version = _version.split("\n").takeFirst();
@@ -1135,7 +1196,7 @@ void MCompiler::setUpFortranCompiler(){
     _version = getVersion(); _version = _version.split("\n").takeFirst();
 #elif defined(Q_OS_LINUX) || defined(Q_OS_UNIX)
     if ( the_name.contains("gfortran") || the_name == "g95" || the_name.contains("g77")){ // GNU Fortran
-        vopt = "--version"; optimiz = "-O2 -mtune=native -mcmodel=medium"; deb = "-g";
+        vopt = "--version"; optimiz = QString("-O2 -mtune=native") + gnuMemoryModelSuffix(); deb = "-g";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
     }
     else if (the_name == "ifort"){

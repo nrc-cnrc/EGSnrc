@@ -571,6 +571,14 @@ private:
                 << "xlC_r"<< "xlC" << "gpp"<< "cl";
 
     const char* sep = ":";
+#if defined(Q_OS_MAC) || defined(Q_OS_DARWIN)
+    QString brewVer = brewGnuCompilerVersion();
+    if (!brewVer.isEmpty()) {
+      fcompiler.prepend(QString("gfortran-%1").arg(brewVer));
+      ccompiler.prepend(QString("gcc-%1").arg(brewVer));
+      cppcompiler.prepend(QString("g++-%1").arg(brewVer));
+    }
+#endif
 #endif
 
     makeprog = find_programs_in_system( makeprog , *sep );

@@ -599,15 +599,19 @@ void QInstallPage::createSystemFiles(){
                         SHLIB_LIBS
   */
   bool is_generic = true;
-  if( fc->name() == "g77" && cc->name() == "gcc" ) {
+  if( isGnuFortranCompiler(fc->name()) && isGnuCCompiler(cc->name()) ) {
       if( canonical().contains("darwin") ) {
           is_generic = false;
-          specfile.replace((QString)"$EGS_F77_LINK",(QString)"gcc");
+          specfile.replace((QString)"$EGS_F77_LINK",cc->name());
           specfile.replace((QString)"$EGS_SHLIB_FLAGS",(QString)"-bundle");
-          specfile.replace((QString)"$EGS_SHLIB_LIBS",(QString)"-lg2c");
+          if( fc->name() == "g77" )
+              specfile.replace((QString)"$EGS_SHLIB_LIBS",(QString)"-lg2c");
+          else
+              specfile.replace((QString)"$EGS_SHLIB_LIBS",(QString)"-lgfortran -lquadmath");
       }
-      else if( canonical().contains("linux") ||
-               canonical().contains("unix")) {
+      else if( fc->name() == "g77" && cc->name() == "gcc" &&
+               ( canonical().contains("linux") ||
+                 canonical().contains("unix")) ) {
           is_generic = false;
           QStringList plist;
           plist += "/lib64/";

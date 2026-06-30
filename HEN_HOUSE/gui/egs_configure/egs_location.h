@@ -92,6 +92,10 @@ public:
 
        config_reader = cr;
 
+#if defined(Q_OS_MAC) || defined(Q_OS_DARWIN)
+       tryDefaultBrewGnuCompilers();
+#endif
+
        // the page layout
        QVBoxLayout *topl = new QVBoxLayout(this);
        //topl->setSpacing(6); topl->setMargin(11);
@@ -250,6 +254,11 @@ public slots:
 
     }
 #else
+    else if ( MCompiler(F,"gfortran").exists() ){
+              MCompiler f(F,"gfortran");
+             *fc = f;
+              return true;
+    }
     else if ( MCompiler(F,"g77").exists() ){
               MCompiler f(F,"g77");
              *fc = f;
@@ -555,14 +564,31 @@ void setHenHouse(const QString &new_hh) {
   }
 }
 
-void setEgsHome(const QString &new_eh) {
-  QDir tmp(new_eh);
-  if( tmp.exists() ) {
+  void setEgsHome(const QString &new_eh) {
+    QDir tmp(new_eh);
+    if( tmp.exists() ) {
       if( !config_reader ) config_reader = new EGS_ConfigReader;
       config_reader->setVariable("EGS_HOME",new_eh);
       emit egsHomeChanged(new_eh);
+    }
   }
-}
+
+#if defined(Q_OS_MAC) || defined(Q_OS_DARWIN)
+  bool tryDefaultBrewGnuCompilers() {
+    QString ver = brewGnuCompilerVersion();
+    if (ver.isEmpty()) return false;
+    MCompiler f(F, QString("gfortran-%1").arg(ver));
+    MCompiler c(C, QString("gcc-%1").arg(ver));
+    MCompiler cp(CPP, QString("g++-%1").arg(ver));
+    if (f.exists() && c.exists() && cp.exists()) {
+      *fc = f;
+      *cc = c;
+      *cpp = cp;
+      return true;
+    }
+    return false;
+  }
+#endif
 
 signals:
 
