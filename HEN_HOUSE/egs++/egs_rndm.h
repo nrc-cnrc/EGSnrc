@@ -45,7 +45,7 @@
 class EGS_Input;
 
 inline void addRngDefinitionBlockImpl(EGS_BlockInput &rngBlock) {
-    rngBlock.addSingleInput("type", true, "Algorithm used for RNG. Defaults to ranmar", {"ranmar"});
+    rngBlock.addSingleInput("type", true, "Algorithm used for RNG. Defaults to ranmar", {"ranmar", "xoshiro256++"});
     rngBlock.addSingleInput("initial seeds", true, "Two integers that represent the inital seed. The same input file running on the same computer will give idential results for the same seeds, and statistically independent for different seeds. Parallel runs automatically vary the seeds for each job.");
     rngBlock.addSingleInput("high resolution", false, "Defaults to no. Microscale simulations may require high resolution RNG.", {"No", "Yes"});
 }
@@ -283,6 +283,18 @@ public:
      * This is handy for EGSnrc C++ applications.
      */
     virtual void describeRNG() const {};
+
+    /*! \brief Returns the next raw 64-bit integer from the RNG.
+     *
+     * The default implementation returns 0 (not supported). Overridden by
+     * generators that produce native 64-bit output (e.g. xoshiro256++).
+     * Use this for free-path sampling via -log((double)r) + 64*log(2.0)
+     * to exploit the full integer range and avoid the 53-bit double limit.
+     * Callers must cast the return value to uint64_t before use.
+     */
+    virtual EGS_I64 getUInt64() {
+        return 0;
+    };
 
 protected:
 
