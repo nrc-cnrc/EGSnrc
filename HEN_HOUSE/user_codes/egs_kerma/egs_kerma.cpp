@@ -1168,7 +1168,15 @@ public:
             /* Photon in or aimed at cavity */
             int errK = scoreInCV();
         }
-        dpmfp = -log(1 - rndm->getUniform());
+        EGS_I64 iraw = rndm->getUInt64();
+        if (iraw) {
+            /* 64-bit integer path: τ_max = 64·ln2 ≈ 44.4 mfp (xoshiro256++) */
+            dpmfp = -log((double)(unsigned long long)iraw) + 64.0*log(2.0);
+        }
+        else {
+            /* Fallback for ranmar (getUInt64 returns 0) or the 1/2^64 zero case */
+            dpmfp = -log(1 - rndm->getUniform());
+        }
         return;
 
     };
