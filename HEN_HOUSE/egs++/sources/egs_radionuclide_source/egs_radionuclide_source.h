@@ -774,7 +774,9 @@ private:
                                 Emax,
                                 spectrumWeight,
                                 totalGammaEnergy,
-                                edep;
+                                edep,
+                                currentLevelTime; // time offset (from disintegration) at which currentLevel was reached
+    vector<EGS_Float>           multiTransitionTimes; // arrival-time offsets, parallel to multiTransitions
     EGS_I64                     ishower;
     string                      relaxationType;
     bool                        scoreAlphasLocal;
@@ -1019,7 +1021,7 @@ public:
     };
 
     /*! \brief Returns the emission time of the most recent particle */
-    double getTime() const {
+    double getTime() const override {
         return time;
     };
 
