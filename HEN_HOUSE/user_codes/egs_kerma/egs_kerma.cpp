@@ -1678,10 +1678,40 @@ int EGS_KermaApplication::initScoring() {
                     }
                     else {
                         geometries.push_back(g);
-                        /* Parse per-region importances (default 1.0) */
+                        /* Parse per-region importances (default 1.0).
+                         *
+                         * Two input styles (mutually exclusive; ranges take priority):
+                         *
+                         *   importance region ranges = ir_start ir_end I  [ir_start ir_end I ...]
+                         *     Triplets applied in order; later triplets override earlier ones
+                         *     for overlapping ranges.  ir_start and ir_end are inclusive.
+                         *
+                         *   region importances = I_0 I_1 ... I_{nreg-1}
+                         *     Flat per-region list (legacy; truncated or padded with 1.0).
+                         */
                         vector<EGS_Float> imp_vec(nreg, 1.0);
                         vector<EGS_Float> imp_input;
-                        if (!aux->getInput("region importances", imp_input)) {
+                        if (!aux->getInput("importance region ranges", imp_input)) {
+                            if (imp_input.size() % 3 != 0) {
+                                egsFatal("initScoring: 'importance region ranges' must "
+                                         "contain triplets (ir_start ir_end I_value); "
+                                         "got %d values\n", (int)imp_input.size());
+                            }
+                            for (int t = 0; t < (int)imp_input.size(); t += 3) {
+                                int   ir_s = (int)imp_input[t];
+                                int   ir_e = (int)imp_input[t+1];
+                                EGS_Float Ival = imp_input[t+2];
+                                if (ir_s < 0 || ir_e >= nreg || ir_s > ir_e) {
+                                    egsFatal("initScoring: 'importance region ranges' "
+                                             "triplet %d has invalid range [%d,%d] "
+                                             "(geometry has %d regions)\n",
+                                             t/3+1, ir_s, ir_e, nreg);
+                                }
+                                for (int ir = ir_s; ir <= ir_e; ir++)
+                                    imp_vec[ir] = max(Ival, kermaEpsilon);
+                            }
+                        }
+                        else if (!aux->getInput("region importances", imp_input)) {
                             int n = min((int)imp_input.size(), nreg);
                             for (int i = 0; i < n; i++)
                                 imp_vec[i] = max(imp_input[i], kermaEpsilon);
