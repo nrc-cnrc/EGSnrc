@@ -316,9 +316,16 @@ public:
             EGS_Float ratio = I_new / I_old;
 
             if (ratio > 1.0 + 1e-10) {
-                /* Forward crossing (deeper): split */
+                /* Forward crossing (deeper): split.
+                 * Cap nsplit to available stack slots so an aggressive
+                 * importance table (e.g. exp(eta)) degrades gracefully
+                 * instead of aborting.  The result remains unbiased:
+                 * weight is divided by the actual nsplit used.
+                 */
                 int nsplit = (int)ratio;
                 if (rndm->getUniform() < (ratio - nsplit)) ++nsplit;
+                int avail = MXSTACK - the_stack->np;
+                if (nsplit > avail) nsplit = avail;
                 if (nsplit > 1) {
                     EGS_Float new_wt = the_stack->wt[np] / nsplit;
                     the_stack->wt[np] = new_wt;
@@ -329,8 +336,6 @@ public:
                     int ir_=the_stack->ir[np], latch_=the_stack->latch[np];
                     for (int k = 1; k < nsplit; ++k) {
                         int nn = the_stack->np;
-                        if (nn >= MXSTACK)
-                            egsFatal("importance splitting: stack overflow\n");
                         the_stack->x[nn]=x_;  the_stack->y[nn]=y_;
                         the_stack->z[nn]=z_;  the_stack->u[nn]=u_;
                         the_stack->v[nn]=v_;  the_stack->w[nn]=w_;
