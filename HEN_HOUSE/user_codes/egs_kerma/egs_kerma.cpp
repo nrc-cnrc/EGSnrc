@@ -260,7 +260,13 @@ public:
         last_case = current_case;
         EGS_Vector x,u;
 
+        setTimeIndex(-1);
+
         current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
+
+        // For dynamic geometries, update positions according to the current
+        // time index, which may have been set by getNextParticle
+        geometry->getNextGeom(rndm);
 
         if (p.q == 0) {
             Eph_ave += p.wt*p.E;

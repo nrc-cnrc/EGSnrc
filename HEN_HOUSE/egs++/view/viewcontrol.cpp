@@ -596,6 +596,10 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     EGS_Library *existingApp = nullptr;
     for (const auto &lib : binLibraries) {
+#ifdef VIEW_DEBUG
+        egsWarning("GeometryViewControl:: Checking if we can load %s/%s\n", dso_dir.c_str(), lib.toLatin1().data());
+#endif
+
         // Remove the extension
         QString libName = lib.left(lib.lastIndexOf("."));
 
@@ -605,13 +609,14 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
         // Check if the application has the getAppSpecificInputs, and only add it to the drop-down menu if it does
         EGS_Library* app_lib = new EGS_Library(libName.toLatin1().data(), lib_dir.c_str());
-        if(!existingApp) {
-            existingApp = app_lib;
-        }
         if (app_lib->load()) {
             getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib->resolve("getAppSpecificInputs");
 
             if (getAppInputs) {
+                if(!existingApp) {
+                    existingApp = app_lib;
+                }
+
                 // Adds the button to the menu
                 QAction *action = exampleMenu2->addAction(libName);
                 action->setData(libName);
@@ -628,6 +633,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // Application level inputs (but not app specific)
     if(existingApp) {
         getAppInputsFunction getAppInputs = (getAppInputsFunction) existingApp->resolve("getAppInputs");
+
         if(getAppInputs) {
 
             // before this was a BlockInput, now it is a InputStruct
