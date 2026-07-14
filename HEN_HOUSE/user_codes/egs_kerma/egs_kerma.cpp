@@ -117,7 +117,8 @@ public:
         EGS_AdvancedApplication(argc,argv), ngeom(0),
         kerma(0), kerma_r(0), kerma_p(0), scg(0),
         fd_geom(0), ncg(0), flug(0),flugT(0), verbose(false),
-        score_primaries(false), m_primary(0.0), m_tot(0.0) {
+        score_primaries(false), m_primary(0.0), m_tot(0.0),
+        prev_ir_imp(-1) {
         Eph_ave = 0.0;
         Nph = 0.0;
         Eph_sc  = 0.0;
@@ -301,6 +302,52 @@ public:
         // if (iq && !the_stack->latch[np]){
         //     egsWarning("-> Primary electron?\n");
         // }
+        }
+
+        /* Geometry importance: splitting and Russian roulette at region crossings */
+        if (iarg == AfterTransport && !iq && ir >= 0
+                && prev_ir_imp >= 0 && ir != prev_ir_imp
+                && ig < (int)region_importance.size()
+                && prev_ir_imp < (int)region_importance[ig].size()
+                && ir          < (int)region_importance[ig].size()) {
+
+            EGS_Float I_old = region_importance[ig][prev_ir_imp];
+            EGS_Float I_new = region_importance[ig][ir];
+            EGS_Float ratio = I_new / I_old;
+
+            if (ratio > 1.0 + 1e-10) {
+                /* Forward crossing (deeper): split */
+                int nsplit = (int)ratio;
+                if (rndm->getUniform() < (ratio - nsplit)) ++nsplit;
+                if (nsplit > 1) {
+                    EGS_Float new_wt = the_stack->wt[np] / nsplit;
+                    the_stack->wt[np] = new_wt;
+                    EGS_Float x_=the_stack->x[np], y_=the_stack->y[np],
+                              z_=the_stack->z[np], u_=the_stack->u[np],
+                              v_=the_stack->v[np], w_=the_stack->w[np],
+                              E_=the_stack->E[np], dn=the_stack->dnear[np];
+                    int ir_=the_stack->ir[np], latch_=the_stack->latch[np];
+                    for (int k = 1; k < nsplit; ++k) {
+                        int nn = the_stack->np;
+                        if (nn >= MXSTACK)
+                            egsFatal("importance splitting: stack overflow\n");
+                        the_stack->x[nn]=x_;  the_stack->y[nn]=y_;
+                        the_stack->z[nn]=z_;  the_stack->u[nn]=u_;
+                        the_stack->v[nn]=v_;  the_stack->w[nn]=w_;
+                        the_stack->E[nn]=E_;  the_stack->wt[nn]=new_wt;
+                        the_stack->iq[nn]=0;  the_stack->ir[nn]=ir_;
+                        the_stack->latch[nn]=latch_; the_stack->dnear[nn]=dn;
+                        the_stack->np++;
+                    }
+                }
+            }
+            else if (ratio < 1.0 - 1e-10) {
+                /* Backward crossing (outward): Russian roulette */
+                if (rndm->getUniform() > ratio)
+                    the_epcont->idisc = 1;       // kill
+                else
+                    the_stack->wt[np] /= ratio;  // survivor: weight × I_old/I_new
+            }
         }
 
         return 0;
@@ -1153,6 +1200,7 @@ public:
         EGS_Vector x(the_stack->x[np],the_stack->y[np],the_stack->z[np]);
         EGS_Vector u(the_stack->u[np],the_stack->v[np],the_stack->w[np]);
         int ireg   = the_stack->ir[np]-2, newmed = geometry->medium(ireg);
+        prev_ir_imp = ireg;  // snapshot for crossing detection in AfterTransport
         EGS_Float tstep = TSTEP_MAX;
         //******************************************************************
         // FD Track-length kerma estimation for photons entering or aimed
@@ -1300,6 +1348,10 @@ private:
     bool      score_primaries,
               verbose;
 
+    /* Geometry importance splitting / Russian roulette */
+    vector<vector<EGS_Float>> region_importance; // [ig][ir], default 1.0
+    int                       prev_ir_imp;        // region at start of current step
+
     static string revision;
 };
 
@@ -1361,6 +1413,7 @@ int EGS_KermaApplication::initScoring() {
         vector<int *>       excluded_regions;
         vector<int>         n_excluded_regions;
         vector<EGS_AffineTransform *> transformations;
+        vector<vector<EGS_Float>>     importance_list;
         EGS_Input *aux;
         EGS_BaseGeometry::setActiveGeometryList(app_index);
         while ((aux = options->takeInputItem("calculation geometry"))) {
@@ -1625,6 +1678,15 @@ int EGS_KermaApplication::initScoring() {
                     }
                     else {
                         geometries.push_back(g);
+                        /* Parse per-region importances (default 1.0) */
+                        vector<EGS_Float> imp_vec(nreg, 1.0);
+                        vector<EGS_Float> imp_input;
+                        if (!aux->getInput("region importances", imp_input)) {
+                            int n = min((int)imp_input.size(), nreg);
+                            for (int i = 0; i < n; i++)
+                                imp_vec[i] = max(imp_input[i], kermaEpsilon);
+                        }
+                        importance_list.push_back(imp_vec);
                         /*Add FD geometry name (can be empty)*/
                         fd_global_gs.push_back(cgname);
                         n_cavity_regions.push_back(ncav);
@@ -1666,6 +1728,7 @@ int EGS_KermaApplication::initScoring() {
             egsWarning("initScoring: no calculation geometries defined\n");
             return 1;
         }
+        region_importance = importance_list;
         geoms        = new EGS_BaseGeometry* [ngeom];
         fd_geoms     = new EGS_BaseGeometry* [ngeom];
         is_sensitive = new bool* [ngeom];
