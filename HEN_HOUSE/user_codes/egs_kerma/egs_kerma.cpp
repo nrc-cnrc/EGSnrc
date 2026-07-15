@@ -335,6 +335,12 @@ public:
                     if (nsplit > 1) {
                         EGS_Float new_wt = the_stack->wt[np] / nsplit;
                         the_stack->wt[np] = new_wt;
+                        /* Mark the original particle too: EGSnrc's LIFO stack
+                         * will re-enter :PNEWENERGY: for this particle after all
+                         * copies are processed, which would call scoreInCV() again
+                         * from the split boundary — double-counting the FD
+                         * contribution already scored from the MFP start. */
+                        the_stack->latch[np] |= IS_COPY_FLAG;
                         EGS_Float x_=the_stack->x[np], y_=the_stack->y[np],
                                   z_=the_stack->z[np], u_=the_stack->u[np],
                                   v_=the_stack->v[np], w_=the_stack->w[np],
@@ -1218,12 +1224,12 @@ public:
         int ireg   = the_stack->ir[np]-2, newmed = geometry->medium(ireg);
         prev_ir_imp = ireg;  // snapshot for crossing detection in AfterTransport
 
-        /* IS split copies carry IS_COPY_FLAG in latch to suppress the FD score
-         * on their first MFP restart.  The original photon already scored from
-         * its MFP start; letting the copy score again from the split point
-         * would double-count the FD contribution from there onward.  Clear the
-         * flag here so all subsequent MFPs (after physical interactions) score
-         * normally. */
+        /* IS_COPY_FLAG is set on both IS copies and the original particle when a
+         * split fires.  EGSnrc's LIFO stack re-enters :PNEWENERGY: for the
+         * original after processing the copies; the original already had
+         * scoreInCV() called from its MFP start, so this re-entry must be
+         * suppressed.  Copies likewise must not re-score from the split point.
+         * The flag is cleared here so post-interaction MFPs score normally. */
         bool is_copy = the_stack->latch[np] & IS_COPY_FLAG;
         if (is_copy) the_stack->latch[np] &= ~IS_COPY_FLAG;
 
@@ -1378,12 +1384,14 @@ private:
     vector<vector<EGS_Float>> region_importance; // [ig][ir], default 1.0
     int                       prev_ir_imp;        // region at start of current step
 
-    /* Bit flag set on IS split copies to suppress scoreInCV() on their first
-     * MFP restart.  The original photon already scored scoreInCV() from its
-     * MFP start; the copy's restart call would double-count the FD contribution
-     * from the split point onward.  The flag is cleared immediately in
-     * selectPhotonMFP() so all subsequent MFPs (after physical interactions)
-     * score normally.  Bit 30 is used to stay clear of physics latch bits. */
+    /* Flag set on both the original and all IS copies when a split occurs.
+     * EGSnrc's LIFO stack re-enters :PNEWENERGY: for the original particle
+     * after processing its copies, which would call scoreInCV() again from
+     * the split boundary — double-counting the FD contribution already scored
+     * from the MFP start.  Setting the flag on the original as well suppresses
+     * that re-entry call.  selectPhotonMFP() clears the flag so that
+     * post-interaction MFPs (genuinely new physics) score normally.
+     * Bit 30 is used to stay clear of physics latch bits. */
     static const int IS_COPY_FLAG = 1 << 30;
 
     static string revision;
