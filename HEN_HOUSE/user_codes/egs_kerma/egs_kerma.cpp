@@ -347,7 +347,7 @@ public:
                             the_stack->v[nn]=v_;  the_stack->w[nn]=w_;
                             the_stack->E[nn]=E_;  the_stack->wt[nn]=new_wt;
                             the_stack->iq[nn]=0;  the_stack->ir[nn]=ir_;
-                            the_stack->latch[nn]=latch; the_stack->dnear[nn]=dn;
+                            the_stack->latch[nn]=latch|IS_COPY_FLAG; the_stack->dnear[nn]=dn;
                             the_stack->np++;
                         }
                     }
@@ -1217,6 +1217,16 @@ public:
         EGS_Vector u(the_stack->u[np],the_stack->v[np],the_stack->w[np]);
         int ireg   = the_stack->ir[np]-2, newmed = geometry->medium(ireg);
         prev_ir_imp = ireg;  // snapshot for crossing detection in AfterTransport
+
+        /* IS split copies carry IS_COPY_FLAG in latch to suppress the FD score
+         * on their first MFP restart.  The original photon already scored from
+         * its MFP start; letting the copy score again from the split point
+         * would double-count the FD contribution from there onward.  Clear the
+         * flag here so all subsequent MFPs (after physical interactions) score
+         * normally. */
+        bool is_copy = the_stack->latch[np] & IS_COPY_FLAG;
+        if (is_copy) the_stack->latch[np] &= ~IS_COPY_FLAG;
+
         EGS_Float tstep = TSTEP_MAX;
         //******************************************************************
         // FD Track-length kerma estimation for photons entering or aimed
@@ -1225,7 +1235,7 @@ public:
         // killed, and hence not included. Photons inside this geometry or
         // any scoring region are also ray-traced.
         //******************************************************************
-        if (fd_geom &&  // TAKES ALL PHOTONS !!!
+        if (!is_copy && fd_geom &&  // TAKES ALL PHOTONS !!!
                 (is_sensitive[ig][ireg] ||
                  fd_geom->howfar(-1,x,u,tstep,&newmed)>= 0 ||
                  fd_geom->isInside(x))) {
@@ -1367,6 +1377,14 @@ private:
     /* Geometry importance splitting / Russian roulette */
     vector<vector<EGS_Float>> region_importance; // [ig][ir], default 1.0
     int                       prev_ir_imp;        // region at start of current step
+
+    /* Bit flag set on IS split copies to suppress scoreInCV() on their first
+     * MFP restart.  The original photon already scored scoreInCV() from its
+     * MFP start; the copy's restart call would double-count the FD contribution
+     * from the split point onward.  The flag is cleared immediately in
+     * selectPhotonMFP() so all subsequent MFPs (after physical interactions)
+     * score normally.  Bit 30 is used to stay clear of physics latch bits. */
+    static const int IS_COPY_FLAG = 1 << 30;
 
     static string revision;
 };
