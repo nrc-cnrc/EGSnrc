@@ -2111,26 +2111,8 @@ int EGS_KermaApplication::initScoring() {
             if (fabs(region_importance[j][ir] - 1.0) > 1e-10)
                 imp_active = true;
 
-    if (imp_active) {
+    if (imp_active)
         setAusgabCall(AfterTransport, true);
-        egsInformation("\nGeometry importance sampling: ON\n");
-        for (int j = 0; j < ngeom; j++) {
-            EGS_Float I_min = region_importance[j][0],
-                      I_max = region_importance[j][0];
-            for (int ir = 1; ir < (int)region_importance[j].size(); ir++) {
-                EGS_Float I = region_importance[j][ir];
-                if (I < I_min) I_min = I;
-                if (I > I_max) I_max = I;
-            }
-            egsInformation("  %-30s  %d regions, importances [%.4g, %.4g]\n",
-                           geoms[j]->getName().c_str(),
-                           (int)region_importance[j].size(),
-                           I_min, I_max);
-        }
-    }
-    else {
-        egsInformation("\nGeometry importance sampling: OFF\n");
-    }
 
     return 0;
 }
@@ -2260,6 +2242,37 @@ void EGS_KermaApplication::describeSimulation() {
         }
         egsInformation("\n\n");
     }
+
+    egsInformation("===========================================================\n"
+                   " Variance reduction\n"
+                   "===========================================================\n\n");
+
+    bool imp_active = false;
+    for (int j = 0; j < ngeom && !imp_active; j++)
+        for (int ir = 0; ir < (int)region_importance[j].size() && !imp_active; ir++)
+            if (fabs(region_importance[j][ir] - 1.0) > 1e-10)
+                imp_active = true;
+
+    if (imp_active) {
+        egsInformation(" Geometry importance sampling: ON\n");
+        for (int j = 0; j < ngeom; j++) {
+            EGS_Float I_min = region_importance[j][0],
+                      I_max = region_importance[j][0];
+            for (int ir = 1; ir < (int)region_importance[j].size(); ir++) {
+                EGS_Float I = region_importance[j][ir];
+                if (I < I_min) I_min = I;
+                if (I > I_max) I_max = I;
+            }
+            egsInformation("  %-30s  %d regions, importances [%.4g, %.4g]\n",
+                           geoms[j]->getName().c_str(),
+                           (int)region_importance[j].size(),
+                           I_min, I_max);
+        }
+    }
+    else {
+        egsInformation(" Geometry importance sampling: OFF\n");
+    }
+    egsInformation("\n");
 }
 
 #ifdef BUILD_APP_LIB
