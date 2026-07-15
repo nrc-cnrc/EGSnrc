@@ -304,55 +304,65 @@ public:
         // }
         }
 
-        /* Geometry importance: splitting and Russian roulette at region crossings */
-        if (iarg == AfterTransport && !iq && ir >= 0
-                && prev_ir_imp >= 0 && ir != prev_ir_imp
-                && ig < (int)region_importance.size()
-                && prev_ir_imp < (int)region_importance[ig].size()
-                && ir          < (int)region_importance[ig].size()) {
+        /* Geometry importance: splitting and Russian roulette at region crossings.
+         * prev_ir_imp is updated at every AfterTransport so that successive
+         * boundary crossings within a single photon MFP use the immediately
+         * preceding region, not the region from selectPhotonMFP().  Without
+         * this update, $SELECT-PHOTON-MFP is called only once per MFP (at
+         * :PNEWENERGY:), leaving prev_ir_imp stale for crossings 2, 3, ... */
+        if (iarg == AfterTransport && !iq && ir >= 0) {
+            if (prev_ir_imp >= 0 && ir != prev_ir_imp
+                    && ig < (int)region_importance.size()
+                    && prev_ir_imp < (int)region_importance[ig].size()
+                    && ir          < (int)region_importance[ig].size()) {
 
-            EGS_Float I_old = region_importance[ig][prev_ir_imp];
-            EGS_Float I_new = region_importance[ig][ir];
-            EGS_Float ratio = I_new / I_old;
+                EGS_Float I_old = region_importance[ig][prev_ir_imp];
+                EGS_Float I_new = region_importance[ig][ir];
+                EGS_Float ratio = I_new / I_old;
 
-            if (ratio > 1.0 + 1e-10) {
-                /* Forward crossing (deeper): split.
-                 * Cap nsplit to available stack slots so an aggressive
-                 * importance table (e.g. exp(eta)) degrades gracefully
-                 * instead of aborting.  The result remains unbiased:
-                 * weight is divided by the actual nsplit used.
-                 */
-                int nsplit = (int)ratio;
-                if (rndm->getUniform() < (ratio - nsplit)) ++nsplit;
-                int avail = MXSTACK - the_stack->np;
-                if (nsplit > avail) nsplit = avail;
-                if (nsplit > 1) {
-                    EGS_Float new_wt = the_stack->wt[np] / nsplit;
-                    the_stack->wt[np] = new_wt;
-                    EGS_Float x_=the_stack->x[np], y_=the_stack->y[np],
-                              z_=the_stack->z[np], u_=the_stack->u[np],
-                              v_=the_stack->v[np], w_=the_stack->w[np],
-                              E_=the_stack->E[np], dn=the_stack->dnear[np];
-                    int ir_=the_stack->ir[np], latch_=the_stack->latch[np];
-                    for (int k = 1; k < nsplit; ++k) {
-                        int nn = the_stack->np;
-                        the_stack->x[nn]=x_;  the_stack->y[nn]=y_;
-                        the_stack->z[nn]=z_;  the_stack->u[nn]=u_;
-                        the_stack->v[nn]=v_;  the_stack->w[nn]=w_;
-                        the_stack->E[nn]=E_;  the_stack->wt[nn]=new_wt;
-                        the_stack->iq[nn]=0;  the_stack->ir[nn]=ir_;
-                        the_stack->latch[nn]=latch_; the_stack->dnear[nn]=dn;
-                        the_stack->np++;
+                if (ratio > 1.0 + 1e-10) {
+                    /* Forward crossing (deeper): split.
+                     * Cap nsplit to available stack slots so an aggressive
+                     * importance table (e.g. exp(eta)) degrades gracefully
+                     * instead of aborting.  The result remains unbiased:
+                     * weight is divided by the actual nsplit used.
+                     */
+                    int nsplit = (int)ratio;
+                    if (rndm->getUniform() < (ratio - nsplit)) ++nsplit;
+                    int avail = MXSTACK - the_stack->np;
+                    if (nsplit > avail) nsplit = avail;
+                    if (nsplit > 1) {
+                        EGS_Float new_wt = the_stack->wt[np] / nsplit;
+                        the_stack->wt[np] = new_wt;
+                        EGS_Float x_=the_stack->x[np], y_=the_stack->y[np],
+                                  z_=the_stack->z[np], u_=the_stack->u[np],
+                                  v_=the_stack->v[np], w_=the_stack->w[np],
+                                  E_=the_stack->E[np], dn=the_stack->dnear[np];
+                        int ir_=the_stack->ir[np], latch_=the_stack->latch[np];
+                        for (int k = 1; k < nsplit; ++k) {
+                            int nn = the_stack->np;
+                            the_stack->x[nn]=x_;  the_stack->y[nn]=y_;
+                            the_stack->z[nn]=z_;  the_stack->u[nn]=u_;
+                            the_stack->v[nn]=v_;  the_stack->w[nn]=w_;
+                            the_stack->E[nn]=E_;  the_stack->wt[nn]=new_wt;
+                            the_stack->iq[nn]=0;  the_stack->ir[nn]=ir_;
+                            the_stack->latch[nn]=latch_; the_stack->dnear[nn]=dn;
+                            the_stack->np++;
+                        }
                     }
                 }
+                else if (ratio < 1.0 - 1e-10) {
+                    /* Backward crossing (outward): Russian roulette */
+                    if (rndm->getUniform() > ratio)
+                        the_epcont->idisc = 1;       // kill
+                    else
+                        the_stack->wt[np] /= ratio;  // survivor: weight × I_old/I_new
+                }
             }
-            else if (ratio < 1.0 - 1e-10) {
-                /* Backward crossing (outward): Russian roulette */
-                if (rndm->getUniform() > ratio)
-                    the_epcont->idisc = 1;       // kill
-                else
-                    the_stack->wt[np] /= ratio;  // survivor: weight × I_old/I_new
-            }
+            /* Track the last region crossed so the next AfterTransport call
+             * computes the ratio relative to the immediately previous region,
+             * not the region where the MFP was originally sampled. */
+            prev_ir_imp = ir;
         }
 
         return 0;
