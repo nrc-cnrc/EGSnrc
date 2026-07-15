@@ -339,7 +339,7 @@ public:
                                   z_=the_stack->z[np], u_=the_stack->u[np],
                                   v_=the_stack->v[np], w_=the_stack->w[np],
                                   E_=the_stack->E[np], dn=the_stack->dnear[np];
-                        int ir_=the_stack->ir[np], latch_=the_stack->latch[np];
+                        int ir_=the_stack->ir[np];
                         for (int k = 1; k < nsplit; ++k) {
                             int nn = the_stack->np;
                             the_stack->x[nn]=x_;  the_stack->y[nn]=y_;
@@ -347,7 +347,7 @@ public:
                             the_stack->v[nn]=v_;  the_stack->w[nn]=w_;
                             the_stack->E[nn]=E_;  the_stack->wt[nn]=new_wt;
                             the_stack->iq[nn]=0;  the_stack->ir[nn]=ir_;
-                            the_stack->latch[nn]=latch_; the_stack->dnear[nn]=dn;
+                            the_stack->latch[nn]=latch; the_stack->dnear[nn]=dn;
                             the_stack->np++;
                         }
                     }
