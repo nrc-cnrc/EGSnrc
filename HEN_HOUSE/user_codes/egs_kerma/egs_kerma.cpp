@@ -311,7 +311,8 @@ public:
          * this update, $SELECT-PHOTON-MFP is called only once per MFP (at
          * :PNEWENERGY:), leaving prev_ir_imp stale for crossings 2, 3, ... */
         if (iarg == AfterTransport && !iq && ir >= 0) {
-            if (prev_ir_imp >= 0 && ir != prev_ir_imp
+            int latch = the_stack->latch[np];
+            if (latch && prev_ir_imp >= 0 && ir != prev_ir_imp
                     && ig < (int)region_importance.size()
                     && prev_ir_imp < (int)region_importance[ig].size()
                     && ir          < (int)region_importance[ig].size()) {
