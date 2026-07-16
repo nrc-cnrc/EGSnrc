@@ -2273,6 +2273,27 @@ void EGS_KermaApplication::describeSimulation() {
                    " Variance reduction\n"
                    "===========================================================\n\n");
 
+    bool fd_active = false;
+    for (int j = 0; j < ngeom && !fd_active; j++)
+        if (fd_geoms[j]) fd_active = true;
+
+    if (fd_active) {
+        egsInformation(" Forced detection (FD):        ON\n");
+        for (int j = 0; j < ngeom; j++) {
+            if (fd_geoms[j])
+                egsInformation("   %-30s -> %s\n",
+                               geoms[j]->getName().c_str(),
+                               fd_geoms[j]->getName().c_str());
+            else
+                egsInformation("   %-30s -> (none, track-length only)\n",
+                               geoms[j]->getName().c_str());
+        }
+    }
+    else {
+        egsInformation(" Forced detection (FD):        OFF\n");
+    }
+    egsInformation("\n");
+
     bool imp_active = false;
     for (int j = 0; j < ngeom && !imp_active; j++)
         for (int ir = 0; ir < (int)region_importance[j].size() && !imp_active; ir++)
