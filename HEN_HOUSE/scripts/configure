@@ -2664,6 +2664,7 @@ EOF
 if test $cxx_ok = yes; then
 cat >>$HEN_HOUSE/specs/$conf_file <<EOF
 IAEA_LIB = $lib_link1 ${link2_prefix}iaea_phsp${link2_suffix}
+EGSPP_LIB = $lib_link1 ${link2_prefix}egspp${link2_suffix}
 IAEA_PHSP_MACROS = \$(EGS_UTILS)iaea_phsp_macros.mortran
 EOF
 else
@@ -2672,6 +2673,7 @@ cat >>$HEN_HOUSE/specs/$conf_file <<EOF
 # No C++ compiler configured => the following are left empty
 #
 IAEA_LIB =
+EGSPP_LIB =
 IAEA_PHSP_MACROS =
 EOF
 fi

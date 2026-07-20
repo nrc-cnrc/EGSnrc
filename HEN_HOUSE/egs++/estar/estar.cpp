@@ -89,15 +89,13 @@ public:
     //
     // Returns true on success, false if the component list is inconsistent
     // with NEP.
-    bool getElemArray(char *formulaStr, int NEP, GetElementsStruct &GElem) {
+    void getElemArray(char *formulaStr, int NEP, GetElementsStruct &GElem) {
         const char delim = ' ';
         std::vector<std::string> components;
         tokenize(string(formulaStr), delim, components);
 
         if (components.size() < (size_t)NEP) {
-            egsWarning("\nestar::getElemArray: Error: List of elements is inconsistent with the number expected. Expected %d elements but only found %d.\n", NEP, components.size());
-
-            return false;
+            egsFatal("\nestar::getElemArray: List of elements is inconsistent with the number expected. Expected %d elements but only found %d.\n", NEP, components.size());
         }
 
         int k = 0;
@@ -109,7 +107,6 @@ public:
             GElem.elemArrayStrut[k] = components[k];
             k = k + 1;
         }
-        return true;
     }
 };
 }
@@ -245,11 +242,7 @@ extern __extc__ int egsEstar(char *formulaStr,
     int isCompInt = *ISCOMP;
     int mediaNum = *mediaID; // this is the media id
 
-    // getElemArray now returns bool; propagate any parse failure back to the
-    // Fortran caller rather than crashing via assert.
-    if (!elemObject.getElemArray(formulaStr, nepInt, GeElems)) {
-        return 9;
-    }
+    elemObject.getElemArray(formulaStr, nepInt, GeElems);
 
     // Use std::vector instead of a VLA (variable-length arrays are a GCC
     // extension, not valid standard C++14).
@@ -344,11 +337,7 @@ extern __extc__ int egsCompoundsToElements(char *formulaStr,
     GetElements::GetElementsStruct GeElems;
     int numCompounds = *ncomp;
 
-    // getElemArray now returns bool; propagate any parse failure back to the
-    // Fortran
-    if (!elemObject.getElemArray(formulaStr, numCompounds, GeElems)) {
-        return 9;
-    }
+    elemObject.getElemArray(formulaStr, numCompounds, GeElems);
 
     // Use std::vector instead of VLAs (variable-length arrays are a GCC
     // extension, not valid standard C++14).
@@ -905,7 +894,7 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
         y = tau*(tau+2.0);
         delta = 0.0;
         nb_density = 0.0;
-        // y must be less than yq[lmax-1]
+        // y must not exceed yq[lmax-1]
         // section 2.3 of the report gives more detail about the range error.
         if (y>=yq[0]) {
             if (y-yq[lmax-1] <= 0) {
@@ -1008,13 +997,13 @@ bspol fbspol(double s, const std::vector<double> &x, const std::vector<double> &
         mub = 0;
     }
 
-    if (s >= x[mub+idir-1]) {
+    if (s > x[mub+idir-1]) {
         egsWarning("estar::fbspol: s=%g is beyond the upper grid boundary %g. "
                    "Extrapolating using end spline segment — result may be unreliable.\n",
                    s, x[mub+idir-1]);
         mu = mub + 2*idir - 1;
     }
-    else if (s <= x[mlb+1-idir-1]) {
+    else if (s < x[mlb+1-idir-1]) {
         egsWarning("estar::fbspol: s=%g is below the lower grid boundary %g. "
                    "Extrapolating using end spline segment — result may be unreliable.\n",
                    s, x[mlb+1-idir-1]);
@@ -1037,6 +1026,12 @@ bspol fbspol(double s, const std::vector<double> &x, const std::vector<double> &
         mu = mu + idir - 1;
     }
     mu = mu + 1;
+
+    // an exact hit on the top grid point lands past the last segment via
+    // either branch above; clamp so ub_index stays a valid index
+    if (mu > n - 1) {
+        mu = n - 1;
+    }
 
     // s lies between x[mu-1] and x[mu]
     k = s - x[mu-1];
