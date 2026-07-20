@@ -95,10 +95,8 @@ public:
         tokenize(string(formulaStr), delim, components);
 
         if (components.size() < (size_t)NEP) {
-            cout << "\n***************\n";
-            cout << "Error: List of elements is inconsistent with the number expected.\n";
-            cout << "Expected " << NEP << " elements but only found " << components.size() << ".\n";
-            cout << "\n***************\n";
+            egsWarning("\nestar::getElemArray: Error: List of elements is inconsistent with the number expected. Expected %d elements but only found %d.\n", NEP, components.size());
+
             return false;
         }
 
@@ -168,8 +166,9 @@ public:
 
 */
 
+#define egsEstar F77_OBJ_(egs_estar,EGS_ESTAR)
 
-extern "C" int estar_(char *formulaStr,
+extern __extc__ int egsEstar(char *formulaStr,
                       float *massFraction,
                       float *numOfAtoms,
                       float *mediaDensity,
@@ -185,54 +184,54 @@ extern "C" int estar_(char *formulaStr,
 
     // Validate all pointers before dereferencing
     if (!formulaStr) {
-        egsFatal("estar::estar_: formulaStr pointer is null for medium.\n");
+        egsFatal("estar::egsEstar: formulaStr pointer is null for medium.\n");
     }
     if (!massFraction) {
-        egsFatal("estar::estar_: massFraction pointer is null.\n");
+        egsFatal("estar::egsEstar: massFraction pointer is null.\n");
     }
     if (!numOfAtoms) {
-        egsFatal("estar::estar_: numOfAtoms pointer is null.\n");
+        egsFatal("estar::egsEstar: numOfAtoms pointer is null.\n");
     }
     if (!mediaDensity) {
-        egsFatal("estar::estar_: mediaDensity pointer is null.\n");
+        egsFatal("estar::egsEstar: mediaDensity pointer is null.\n");
     }
     if (!densityCorr) {
-        egsFatal("estar::estar_: densityCorr pointer is null.\n");
+        egsFatal("estar::egsEstar: densityCorr pointer is null.\n");
     }
     if (!enGrid) {
-        egsFatal("estar::estar_: enGrid pointer is null.\n");
+        egsFatal("estar::egsEstar: enGrid pointer is null.\n");
     }
     if (!NEP) {
-        egsFatal("estar::estar_: NEP pointer is null.\n");
+        egsFatal("estar::egsEstar: NEP pointer is null.\n");
     }
     if (!ISCOMP) {
-        egsFatal("estar::estar_: ISCOMP pointer is null.\n");
+        egsFatal("estar::egsEstar: ISCOMP pointer is null.\n");
     }
     if (!meanIval) {
-        egsFatal("estar::estar_: meanIval pointer is null.\n");
+        egsFatal("estar::egsEstar: meanIval pointer is null.\n");
     }
     if (!ipotval) {
-        egsFatal("estar::estar_: ipotval pointer is null.\n");
+        egsFatal("estar::egsEstar: ipotval pointer is null.\n");
     }
     if (!mediaID) {
-        egsFatal("estar::estar_: mediaID pointer is null.\n");
+        egsFatal("estar::egsEstar: mediaID pointer is null.\n");
     }
     if (!outputFilename) {
-        egsFatal("estar::estar_: outputFilename pointer is null.\n");
+        egsFatal("estar::egsEstar: outputFilename pointer is null.\n");
     }
 
     // Validate the values pointed to
     if (*NEP <= 0 || *NEP > 100) {
-        egsFatal("estar::estar_: NEP=%d is out of valid range [1, 100].\n", *NEP);
+        egsFatal("estar::egsEstar: NEP=%d is out of valid range [1, 100].\n", *NEP);
     }
     if (*mediaID <= 0) {
-        egsFatal("estar::estar_: mediaID=%d is invalid, must be > 0.\n", *mediaID);
+        egsFatal("estar::egsEstar: mediaID=%d is invalid, must be > 0.\n", *mediaID);
     }
     if (*ISCOMP != 0 && *ISCOMP != 1) {
-        egsFatal("estar::estar_: ISCOMP=%d is invalid, must be 0 or 1.\n", *ISCOMP);
+        egsFatal("estar::egsEstar: ISCOMP=%d is invalid, must be 0 or 1.\n", *ISCOMP);
     }
     if (*mediaDensity <= 0.0f) {
-        egsFatal("estar::estar_: mediaDensity=%g is invalid, must be > 0.\n",
+        egsFatal("estar::egsEstar: mediaDensity=%g is invalid, must be > 0.\n",
                  *mediaDensity);
     }
 
@@ -262,7 +261,7 @@ extern "C" int estar_(char *formulaStr,
         estarFormulaArrayInput[i] = GeElems.elemArrayStrut[i];
         estarWeightArrayInput[i] = massFraction[i];
 
-        egsInformation("estar::estar_: Formula is %s with fraction %g\n",
+        egsInformation("estar::egsEstar: Formula is %s with fraction %g\n",
                        estarFormulaArrayInput[i].c_str(), estarWeightArrayInput[i]);
 
         i = i + 1;
@@ -280,7 +279,7 @@ extern "C" int estar_(char *formulaStr,
                                   meanIval, ipotval, mediaNum,
                                   string(outputFilename));
     if (result != 0) {
-        egsFatal("estar::estar_: estarCalculation failed for medium %d with error code %d.\n",
+        egsFatal("estar::egsEstar: estarCalculation failed for medium %d with error code %d.\n",
                  mediaNum, result);
         return result;
     }
@@ -290,8 +289,9 @@ extern "C" int estar_(char *formulaStr,
     return 0;
 }
 
+#define egsCompoundsToElements F77_OBJ_(egs_compoundstoelements,EGS_COMPOUNDSTOELEMENTS)
 
-extern "C" int compoundstoelements_(char *formulaStr,
+extern __extc__ int egsCompoundsToElements(char *formulaStr,
                                     double *massFraction,
                                     float *mediaDensity,
                                     char *elementStr,
@@ -303,40 +303,40 @@ extern "C" int compoundstoelements_(char *formulaStr,
 
     // Validate all pointers before dereferencing
     if (!formulaStr) {
-        egsFatal("estar::compoundstoelements_: formulaStr pointer is null.\n");
+        egsFatal("estar::egsCompoundsToElements: formulaStr pointer is null.\n");
     }
     if (!massFraction) {
-        egsFatal("estar::compoundstoelements_: massFraction pointer is null.\n");
+        egsFatal("estar::egsCompoundsToElements: massFraction pointer is null.\n");
     }
     if (!mediaDensity) {
-        egsFatal("estar::compoundstoelements_: mediaDensity pointer is null.\n");
+        egsFatal("estar::egsCompoundsToElements: mediaDensity pointer is null.\n");
     }
     if (!elementStr) {
-        egsFatal("estar::compoundstoelements_: elementStr pointer is null.\n");
+        egsFatal("estar::egsCompoundsToElements: elementStr pointer is null.\n");
     }
     if (!rhoz) {
-        egsFatal("estar::compoundstoelements_: rhoz pointer is null.\n");
+        egsFatal("estar::egsCompoundsToElements: rhoz pointer is null.\n");
     }
     if (!zelem) {
-        egsFatal("estar::compoundstoelements_: zelem pointer is null.\n");
+        egsFatal("estar::egsCompoundsToElements: zelem pointer is null.\n");
     }
     if (!ncomp) {
-        egsFatal("estar::compoundstoelements_: ncomp pointer is null.\n");
+        egsFatal("estar::egsCompoundsToElements: ncomp pointer is null.\n");
     }
     if (!NEP) {
-        egsFatal("estar::compoundstoelements_: NEP pointer is null.\n");
+        egsFatal("estar::egsCompoundsToElements: NEP pointer is null.\n");
     }
 
     // Validate the values pointed to
     if (*ncomp <= 0 || *ncomp > 100) {
-        egsFatal("estar::compoundstoelements_: ncomp=%d is out of valid range "
+        egsFatal("estar::egsCompoundsToElements: ncomp=%d is out of valid range "
                  "[1, 100].\n", *ncomp);
     }
     if (*mediaDensity <= 0) {
-        egsFatal("estar::compoundstoelements_: mediaDensity=%f must be > 0.\n", *mediaDensity);
+        egsFatal("estar::egsCompoundsToElements: mediaDensity=%f must be > 0.\n", *mediaDensity);
     }
 
-    // In egsnrc.macros, the max number of elements per medium is $MXELE=50
+    // In egsnrc.macros, the max number of elements per medium is $MXEL=50
     // And these arrays are 50 characters long, so we can restrict to that size
     const size_t MAX_ELEMENT_STR_SIZE = 50 * 50; // 50 elements * 50 chars each
 
@@ -369,15 +369,21 @@ extern "C" int compoundstoelements_(char *formulaStr,
     // Set NEP to actually be the number of elements now, instead of the number of compounds
     NEP[0] = fc.mmax;
 
+    // Fortran-side arrays (RHOZ, ZELEM, ASYM) hold at most $MXEL = 50 elements
+    if (fc.mmax > 50) {
+        egsFatal("estar::egsCompoundsToElements: medium has %d distinct elements, "
+                "but EGSnrc supports at most 50 ($MXEL).\n", fc.mmax);
+    }
+
     size_t charPos = 0;
-    for (size_t i=0; i != fc.mmax; ++i) {
+    for (size_t i=0; i != (size_t)fc.mmax; ++i) {
 
         // For each Z value we have, look up the element string
         // They are already sorted by increasing Z
         for (auto it = atomic_number.begin(); it != atomic_number.end(); ++it) {
             if (it->second == fc.jz[i]) {
                 if (charPos >= MAX_ELEMENT_STR_SIZE) {
-                    egsFatal("estar::compoundstoelements_: elementStr buffer overflow at "
+                    egsFatal("estar::egsCompoundsToElements: elementStr buffer overflow at "
                              "charPos=%zu. Buffer may be too small.\n", charPos);
                 }
 
@@ -513,16 +519,15 @@ int estarCalculation(int isCompound, int NEP, float mediaDensity, string *elemen
     // Here we pass the processed data from the .egsinp file
     // in getDataFromFormulae which computes the ivalue and other relevant quantities
     fc = getDataFromFormulae(knmat, rho, elementArray, massFraction, numOfAtoms, NEP, mediaNum);
-    cout << "\n";
 
     if (*ipotval >= 0) {
         fc.pot = *ipotval;
 
-        egsInformation("estar::estarCalculation: For medium %d I-value (eV) given "
+        egsInformation("\nestar::estarCalculation: For medium %d I-value (eV) given "
                        "in egsinp file is %g.\n", mediaNum, fc.pot);
     }
     else {
-        egsInformation("estar::estarCalculation: For medium %d I-value (eV) not "
+        egsInformation("\nestar::estarCalculation: For medium %d I-value (eV) not "
                        "provided in egsinp file. I-value calculated by ESTAR is %g.\n",
                        mediaNum, fc.pot);
     }
@@ -1053,7 +1058,6 @@ scof fscof(int nmax, const vector<double> &x, const vector<double> &f) {
 
     if (nmax < 2) {
         egsFatal("estar::fscof: fscof requires at least 2 points, got nmax=%d\n", nmax);
-        return scof(0);
     }
 
     scof sf(nmax);

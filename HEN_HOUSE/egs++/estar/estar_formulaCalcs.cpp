@@ -145,8 +145,9 @@ public:
         for (int i=0; i < NEP; ++i) {
             compoundFormula = compoundFormula + elementArray[i] + numberOfAtomsStr[i];
         }
-        cout << "\n";
-        cout << "The medium " << mediaNum << " is a compound of " << NEP << " elements with formula: " << compoundFormula << "\n";
+
+        egsInformation("\nestar::getCompFormula: Medium %d is a compound of %d elements with formula: %s\n", mediaNum, NEP, compoundFormula.c_str());
+
         return compoundFormula;
     }
 };

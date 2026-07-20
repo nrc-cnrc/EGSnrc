@@ -126,9 +126,9 @@ struct parseformula {
  *  Accepts a single chemical formula string (e.g. "Na", "MgCl2", "H2O")
  *  and splits it into its constituent element symbols and atom counts.
  *
- *  Prints an error message and asserts if the formula is incorrectly
- *  formatted (e.g. "nA" instead of "Na" — element symbols must begin
- *  with an uppercase letter).
+ *  Prints an error message and aborts via egsFatal() if the formula is
+ *  incorrectly formatted (e.g. "nA" instead of "Na" — element symbols must
+ *  begin with an uppercase letter).
  *
  *  \param str  The chemical formula string to parse.
  *  \returns    A fully populated parseformula struct.

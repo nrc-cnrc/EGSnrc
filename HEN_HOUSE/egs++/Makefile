@@ -179,6 +179,11 @@ $(DSO1)egs_fortran_geometry.$(obje): egs_fortran_geometry.cpp egs_fortran_geomet
 $(egspp_objects):
 	$(obj_rule1)
 
+$(DSO1)estar.$(obje): $(ESTAR)estar.cpp $(ESTAR)estar.h $(ESTAR)estar_formulaCalcs.h $(ESTAR)estar_dataParser.h $(ESTAR)estar_dataTables.h $(config1h)
+$(DSO1)estar_dataTables.$(obje): $(ESTAR)estar_dataTables.cpp $(ESTAR)estar_dataTables.h
+$(DSO1)estar_dataParser.$(obje): $(ESTAR)estar_dataParser.cpp $(ESTAR)estar_dataParser.h $(ESTAR)estar_dataTables.h $(config1h)
+$(DSO1)estar_formulaCalcs.$(obje): $(ESTAR)estar_formulaCalcs.cpp $(ESTAR)estar_formulaCalcs.h $(ESTAR)estar_dataParser.h $(ESTAR)estar_dataTables.h $(config1h)
+
 $(estar_objects):
 	$(CXX) $(INC1) $(ESTAR_INC) $(DEFS) $(opt) -c $(COUT)$@ $(ESTAR)$(notdir $(basename $@)).cpp
 
