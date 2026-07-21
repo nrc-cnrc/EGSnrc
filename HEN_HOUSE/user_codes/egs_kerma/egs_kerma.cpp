@@ -334,16 +334,24 @@ public:
                      * particles when the weight divisor is capped instead. */
                     int nsplit = (int)ratio;
                     if (rndm->getUniform() < (ratio - nsplit)) ++nsplit;
-                    int avail   = MXSTACK - the_stack->np;
+                    int avail    = MXSTACK - the_stack->np;
                     int n_actual = (nsplit > avail) ? avail : nsplit;
+                    /* Weight is always divided by nsplit — unconditionally.
+                     * Every surviving particle, including the original when
+                     * the stack is too full for any copies, must carry the
+                     * correct IS-assigned weight w/nsplit.  Copies that do
+                     * not fit are simply dropped (downward bias only when
+                     * the stack is genuinely saturated). */
+                    EGS_Float new_wt = the_stack->wt[np] / nsplit;
+                    the_stack->wt[np] = new_wt;
                     if (n_actual > 1) {
-                        EGS_Float new_wt = the_stack->wt[np] / nsplit;
-                        the_stack->wt[np] = new_wt;
-                        /* Mark the original particle too: EGSnrc's LIFO stack
-                         * will re-enter :PNEWENERGY: for this particle after all
-                         * copies are processed, which would call scoreInCV() again
-                         * from the split boundary — double-counting the FD
-                         * contribution already scored from the MFP start. */
+                        /* IS_COPY_FLAG is only needed when copies exist:
+                         * it prevents the original from calling scoreInCV()
+                         * again when EGSnrc's LIFO stack re-enters
+                         * :PNEWENERGY: after the copies are processed.
+                         * With no copies there is no re-entry, so the flag
+                         * must not be set (it would suppress the next
+                         * legitimate scoreInCV call). */
                         the_stack->latch[np] |= IS_COPY_FLAG;
                         EGS_Float x_=the_stack->x[np], y_=the_stack->y[np],
                                   z_=the_stack->z[np], u_=the_stack->u[np],
