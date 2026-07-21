@@ -2309,13 +2309,6 @@ void EGS_KermaApplication::describeSimulation() {
         egsInformation("Calculation geometry: %s\n",
                        geoms[j]->getName().c_str());
         geoms[j]->printInfo();
-        if (fd_geoms[j])
-            egsInformation("---> Scoring using forced detection (FD)\n"
-                           "     for photons aimed at or inside geometry %s\n",
-                           fd_geoms[j]->getName().c_str());
-        else {
-            egsInformation("\n---> Scoring only when photon enters volume\n");
-        }
 
         //"     including those scattered inside the geometry.\n");
         //"     Fluence is equivalent to FLURZ total fluence!\n");
