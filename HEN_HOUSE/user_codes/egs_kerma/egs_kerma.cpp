@@ -118,7 +118,8 @@ public:
         kerma(0), kerma_r(0), kerma_p(0), scg(0),
         fd_geom(0), ncg(0), flug(0),flugT(0), verbose(false),
         score_primaries(false), m_primary(0.0), m_tot(0.0),
-        prev_ir_imp(-1) {
+        prev_ir_imp(-1),
+        n_split_events(0), n_cap_events(0), max_stack_needed(0) {
         Eph_ave = 0.0;
         Nph = 0.0;
         Eph_sc  = 0.0;
@@ -336,6 +337,12 @@ public:
                     if (rndm->getUniform() < (ratio - nsplit)) ++nsplit;
                     int avail    = MXSTACK - the_stack->np;
                     int n_actual = (nsplit > avail) ? avail : nsplit;
+                    ++n_split_events;
+                    if (n_actual < nsplit) {
+                        ++n_cap_events;
+                        int needed = the_stack->np + nsplit;
+                        if (needed > max_stack_needed) max_stack_needed = needed;
+                    }
                     /* Weight is always divided by nsplit — unconditionally.
                      * Every surviving particle, including the original when
                      * the stack is too full for any copies, must carry the
@@ -682,7 +689,9 @@ public:
         (*data_out) << Eph_ave << " " << Nph << " "
                     << Eel_ave << " " << Nel << " "
                     << Eph_sc  << " " << Nsc << " "
-                    << Eph_sc_p  << " " << Nsc_p << endl;
+                    << Eph_sc_p  << " " << Nsc_p << " "
+                    << n_split_events << " " << n_cap_events << " "
+                    << max_stack_needed << endl;
         if (!data_out->good()) {
             return 1031;
         }
@@ -729,7 +738,8 @@ public:
             }
         }
 
-        (*data_in) >> Eph_ave >> Nph >> Eel_ave >> Nel >> Eph_sc >> Nsc >> Eph_sc_p >> Nsc_p;
+        (*data_in) >> Eph_ave >> Nph >> Eel_ave >> Nel >> Eph_sc >> Nsc >> Eph_sc_p >> Nsc_p
+                   >> n_split_events >> n_cap_events >> max_stack_needed;
         if (!data_in->good()) {
             return 1031;
         }
@@ -769,6 +779,9 @@ public:
         Nph = 0;
         Eel_ave = 0;
         Nel = 0;
+        n_split_events  = 0;
+        n_cap_events    = 0;
+        max_stack_needed = 0;
 
     };
 
@@ -825,7 +838,10 @@ public:
         }
 
         EGS_Float aux_Eph_ave, aux_Nph, aux_Eel_ave, aux_Nel, aux_Eph_sc, aux_Nsc, aux_Eph_sc_p, aux_Nsc_p;
-        data >> aux_Eph_ave >> aux_Nph >> aux_Eel_ave >> aux_Nel >> aux_Eph_sc >> aux_Nsc >> aux_Eph_sc_p >> aux_Nsc_p;
+        long long aux_n_split, aux_n_cap;
+        int aux_max_needed;
+        data >> aux_Eph_ave >> aux_Nph >> aux_Eel_ave >> aux_Nel >> aux_Eph_sc >> aux_Nsc >> aux_Eph_sc_p >> aux_Nsc_p
+             >> aux_n_split >> aux_n_cap >> aux_max_needed;
         if (!data.good()) {
             return 1036;
         }
@@ -838,6 +854,9 @@ public:
         Nph     += aux_Nph;
         Eel_ave += aux_Eel_ave;
         Nel     += aux_Nel;
+        n_split_events  += aux_n_split;
+        n_cap_events    += aux_n_cap;
+        if (aux_max_needed > max_stack_needed) max_stack_needed = aux_max_needed;
 
         return 0;
     };
@@ -869,6 +888,18 @@ public:
         if (Eel_ave > kermaEpsilon && Nel > kermaEpsilon) {
             Eel_ave /= Nel;
             egsInformation(" Mean source electron energy <Ee> = %g MeV\n\n",Eel_ave);
+        }
+
+        if (n_split_events > 0) {
+            egsInformation(" IS splitting events: %lld total, %lld capped (%.4g%%)\n",
+                           n_split_events, n_cap_events,
+                           100.0 * n_cap_events / n_split_events);
+            if (n_cap_events > 0) {
+                egsInformation(" Stack cap: largest deficit = %d slots"
+                               "  =>  recommend MXSTACK >= %d  (current: %d)\n",
+                               max_stack_needed - MXSTACK, max_stack_needed, MXSTACK);
+            }
+            egsInformation("\n");
         }
 
         outputKermaResults(F);
@@ -1395,6 +1426,11 @@ private:
     /* Geometry importance splitting / Russian roulette */
     vector<vector<EGS_Float>> region_importance; // [ig][ir], default 1.0
     int                       prev_ir_imp;        // region at start of current step
+
+    /* IS stack-capping diagnostics */
+    long long n_split_events;   // total splitting events (nsplit > 1)
+    long long n_cap_events;     // events where n_actual < nsplit (stack too full)
+    int       max_stack_needed; // max(np + nsplit) over all capping events
 
     /* Flag set on both the original and all IS copies when a split occurs.
      * EGSnrc's LIFO stack re-enters :PNEWENERGY: for the original particle
