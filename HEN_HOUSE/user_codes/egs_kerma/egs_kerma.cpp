@@ -864,41 +864,63 @@ public:
     /*! Output the results of a simulation. */
     void outputResults() {
 
-        egsInformation("\n\n last case = %lld fluence = %g\n\n",
-                       current_case,source->getFluence());
+        EGS_Float F = current_case / getFluence();
 
-        EGS_Float F = current_case/getFluence();
+        /* Compute energy averages in-place before printing. */
+        const bool has_src_ph = Eph_ave  > kermaEpsilon && Nph   > kermaEpsilon;
+        const bool has_src_el = Eel_ave  > kermaEpsilon && Nel   > kermaEpsilon;
+        const bool has_sc     = Eph_sc   > kermaEpsilon && Nsc   > kermaEpsilon;
+        const bool has_sc_p   = Eph_sc_p > kermaEpsilon && Nsc_p > kermaEpsilon;
+        if (has_src_ph) Eph_ave  /= Nph;
+        if (has_src_el) Eel_ave  /= Nel;
+        if (has_sc)     Eph_sc   /= Nsc;
+        if (has_sc_p)   Eph_sc_p /= Nsc_p;
 
-        if (Eph_sc > kermaEpsilon && Nsc > kermaEpsilon) {
-            Eph_sc /= Nsc;
-            // egsInformation(" Mean scoring photon energy <Epsc> = %g MeV  Number of scoring photons = %.10g\n\n",Eph_sc, static_cast<double>(Nsc));
-            egsInformation(" Mean scoring photon energy <Epsc> = %g MeV  Number of scoring photons = %.10g\n\n",Eph_sc, Nsc);
+        egsInformation("===========================================================\n"
+                       " Simulation statistics\n"
+                       "===========================================================\n\n");
+
+        egsInformation(" %-24s %lld\n",
+                       "Histories simulated :", current_case);
+        egsInformation(" %-24s %.6g cm^-2\n\n",
+                       "Source fluence :", source->getFluence());
+
+        if (has_src_ph || has_src_el) {
+            egsInformation(" Source particles\n");
+            if (has_src_ph)
+                egsInformation("   %-22s %8.4f MeV   %.4e particles\n",
+                               "Photons :",   Eph_ave, Nph);
+            if (has_src_el)
+                egsInformation("   %-22s %8.4f MeV   %.4e particles\n",
+                               "Electrons :", Eel_ave, Nel);
+            egsInformation("\n");
         }
-        if (Eph_sc_p > kermaEpsilon && Nsc_p > kermaEpsilon) {
-            Eph_sc_p /= Nsc_p;
-            // egsInformation(" Mean scoring photon energy <Epsc> = %g MeV  Number of scoring photons = %.10g\n\n",Eph_sc, static_cast<double>(Nsc));
-            egsInformation(" Mean scoring primary photon energy <Epsc> = %g MeV  Number of scoring primary photons = %.10g\n\n",Eph_sc_p, Nsc_p);
-        }
 
-        if (Eph_ave > kermaEpsilon && Nph > kermaEpsilon) {
-            Eph_ave /= Nph;
-            egsInformation(" Mean source photon energy <Ep> = %g MeV\n\n",Eph_ave);
-        }
-
-        if (Eel_ave > kermaEpsilon && Nel > kermaEpsilon) {
-            Eel_ave /= Nel;
-            egsInformation(" Mean source electron energy <Ee> = %g MeV\n\n",Eel_ave);
+        if (has_sc || has_sc_p) {
+            egsInformation(" Scoring photons\n");
+            if (has_sc)
+                egsInformation("   %-22s %8.4f MeV   %.4e particles\n",
+                               "All :",       Eph_sc,   Nsc);
+            if (has_sc_p)
+                egsInformation("   %-22s %8.4f MeV   %.4e particles\n",
+                               "Primaries :", Eph_sc_p, Nsc_p);
+            egsInformation("\n");
         }
 
         if (n_split_events > 0) {
-            egsInformation(" IS splitting events: %lld total, %lld capped (%.4g%%)\n",
-                           n_split_events, n_cap_events,
+            egsInformation(" Importance sampling (IS)\n");
+            egsInformation("   %-22s %lld\n",
+                           "Splitting events :", n_split_events);
+            egsInformation("   %-22s %lld   (%.3g%%)\n",
+                           "Capped events :", n_cap_events,
                            100.0 * n_cap_events / n_split_events);
-            if (n_cap_events > 0) {
-                egsInformation(" Stack cap: largest deficit = %d slots"
-                               "  =>  recommend MXSTACK >= %d  (current: %d)\n",
+            if (n_cap_events > 0)
+                egsInformation("   %-22s %d slots  =>  recommend MXSTACK >= %d  (current: %d)\n",
+                               "Max stack deficit :",
                                max_stack_needed - MXSTACK, max_stack_needed, MXSTACK);
-            }
+            else
+                egsInformation("   %-22s none\n",
+                               "Max stack deficit :");
             egsInformation("\n");
         }
 
