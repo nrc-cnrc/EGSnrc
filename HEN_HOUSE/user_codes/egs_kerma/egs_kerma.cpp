@@ -880,10 +880,22 @@ public:
                        " Simulation statistics\n"
                        "===========================================================\n\n");
 
+        EGS_Float flu = source->getFluence();
+        /* Sources that return only a particle count (isotropic, beam, point,
+         * phase-space, ...) have getFluence() == current_case.  Only parallel
+         * and collimated sources divide by area or distance² and return a
+         * true fluence per cm².  Distinguish by exact equality with the case
+         * counter (both are doubles for count-mode sources). */
+        bool is_fluence = (flu != (EGS_Float)current_case);
+
         egsInformation(" %-24s %lld\n",
                        "Histories simulated :", current_case);
-        egsInformation(" %-24s %.6g cm^-2\n\n",
-                       "Source fluence :", source->getFluence());
+        if (is_fluence)
+            egsInformation(" %-24s %.6g cm^-2\n\n",
+                           "Source fluence :", flu);
+        else
+            egsInformation(" %-24s %.6g\n\n",
+                           "Source particles :", flu);
 
         if (has_src_ph || has_src_el) {
             egsInformation(" Source particles\n");
