@@ -343,14 +343,24 @@ public:
                         int needed = the_stack->np + nsplit;
                         if (needed > max_stack_needed) max_stack_needed = needed;
                     }
-                    /* Weight is always divided by nsplit — unconditionally.
-                     * Every surviving particle, including the original when
-                     * the stack is too full for any copies, must carry the
-                     * correct IS-assigned weight w/nsplit.  Copies that do
-                     * not fit are simply dropped (downward bias only when
-                     * the stack is genuinely saturated). */
                     EGS_Float new_wt = the_stack->wt[np] / nsplit;
-                    the_stack->wt[np] = new_wt;
+                    if (n_actual == 0) {
+                        /* Stack completely full — no copies can be created.
+                         * Dividing the weight by nsplit without copies leaves
+                         * near-zero-weight particles clogging the stack.
+                         * Instead: Russian roulette with survival prob 1/nsplit.
+                         * Survivors keep their weight intact and will be split
+                         * properly once the stack has room.  Expected weight is
+                         * (1/nsplit) × w = new_wt, so the estimator is unbiased. */
+                        if (rndm->getUniform() > 1.0 / nsplit)
+                            the_epcont->idisc = 1;  // kill — clears stack pressure
+                        // survivor: wt[np] unchanged, will split at next opportunity
+                    } else {
+                        /* Partial or full split: all surviving particles carry
+                         * w/nsplit.  Copies that don't fit are dropped
+                         * (small downward bias only when heavily capped). */
+                        the_stack->wt[np] = new_wt;
+                    }
                     if (n_actual > 1) {
                         /* IS_COPY_FLAG is only needed when copies exist:
                          * it prevents the original from calling scoreInCV()
