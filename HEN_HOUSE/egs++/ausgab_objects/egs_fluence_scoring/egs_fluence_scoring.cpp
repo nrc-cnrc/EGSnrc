@@ -36,6 +36,10 @@
 
 #include <string>
 #include <cstdlib>
+#include <limits>
+#include <algorithm>
+#include <numeric>
+#include <cmath>
 
 #include "egs_fluence_scoring.h"
 #include "egs_input.h"
@@ -54,7 +58,11 @@ EGS_FluenceScoring::EGS_FluenceScoring(const string &Name, EGS_ObjectFactory *f)
     flu_s(0), flu_nbin(128), flu_xmin(0.001), flu_xmax(1.0),
     norm_u(1.0), flu(0), fluT(0), flu_p(0), fluT_p(0), current_ncase(0),
     verbose(false), score_primaries(false), score_spe(false),
-    m_primary(0.0), m_tot(0.0) {
+    m_primary(0.0), m_tot(0.0),
+    m_scoring_method(score_crossing), m_i_gmfp(0), m_i_cohe(0),
+    m_rayleigh_on(false),
+    m_cos_min(cos(85.0 * M_PI / 180.0)), m_n_clipped(0),
+    m_tot_FD(0.0), m_primary_FD(0.0) {
     otype = "EGS_FluenceScoring";
     flu_a = flu_nbin;
     flu_a /= (flu_xmax - flu_xmin);
@@ -142,6 +150,17 @@ void EGS_FluenceScoring::initScoring(EGS_Input *inp) {
         norm_u = 1.0;
     }
 
+    vector<string> method_names;
+    method_names.push_back("crossing");
+    method_names.push_back("forced detection");
+    method_names.push_back("both");
+    int msel = inp->getInput("scoring method", method_names, 0);
+    switch (msel) {
+    case 1:  m_scoring_method = score_FD;       break;
+    case 2:  m_scoring_method = score_both;     break;
+    default: m_scoring_method = score_crossing; break;
+    }
+
     if (score_spe) {
         EGS_Float flu_Emin, flu_Emax;
         EGS_Input *eGrid = inp->takeInputItem("energy grid");
@@ -226,7 +245,7 @@ void EGS_FluenceScoring::getSensitiveRegions(EGS_Input *inp) {
 
     string listLabel, startLabel, stopLabel;
 
-    if (otype == "EGS_PlanarFluence") {
+    if (otype == "EGS_PlanarFluence" || otype == "EGS_SphericalFluence") {
         listLabel  = "contributing regions";
         startLabel = "start contributing region";
         stopLabel  = "stop contributing region";
@@ -403,6 +422,13 @@ void EGS_FluenceScoring::describeMe() {
             description += " on a linear scale \n";
         }
     }
+
+    if (norm_u != 1.0) {
+        description += "\n - Non-unity user-requested normalization = ";
+        sprintf(buf,"%g\n",norm_u);
+        description += buf;
+    }
+
 }
 /**********************************************
  * Class EGS_PlanarFluence Implementation *
@@ -410,7 +436,8 @@ void EGS_FluenceScoring::describeMe() {
 
 
 EGS_PlanarFluence::EGS_PlanarFluence(const string &Name, EGS_ObjectFactory *f) :
-    EGS_FluenceScoring(Name,f), hits_field(false), Nx(1), Ny(1) {
+    EGS_FluenceScoring(Name,f), hits_field(false), Nx(1), Ny(1),
+    fluT_FD(0), fluT_FD_p(0), flu_FD(0), flu_FD_p(0) {
     otype = "EGS_PlanarFluence";
     m_midpoint = EGS_Vector(0,0,5);
     m_R  =  5;
@@ -433,6 +460,20 @@ EGS_PlanarFluence::~EGS_PlanarFluence() {
         for (int j=0; j<Nx*Ny; j++) {
             delete flu_p[j];
         }
+    }
+    delete fluT_FD;
+    delete fluT_FD_p;
+    if (flu_FD) {
+        for (int j=0; j<Nx*Ny; j++) {
+            delete flu_FD[j];
+        }
+        delete [] flu_FD;
+    }
+    if (flu_FD_p) {
+        for (int j=0; j<Nx*Ny; j++) {
+            delete flu_FD_p[j];
+        }
+        delete [] flu_FD_p;
     }
 }
 
@@ -489,6 +530,43 @@ void EGS_PlanarFluence::setApplication(EGS_Application *App) {
             flu_p  = new EGS_ScoringArray* [Nx*Ny];
             for (int j = 0; j < Nx*Ny; j++) {
                 flu_p[j] = new EGS_ScoringArray(flu_nbin);
+            }
+        }
+    }
+
+    if (m_scoring_method != score_crossing) {
+        if (scoring_charge != photon) {
+            egsWarning("EGS_PlanarFluence: FD scoring is only valid for photons."
+                       " Falling back to crossing estimator.\n");
+            m_scoring_method = score_crossing;
+        }
+        else {
+            m_i_gmfp = app->getMFPInterpolators();
+            m_i_cohe = app->getCoheInterpolators();
+            m_rayleigh_on = app->isRayleighOn();
+            if (!m_i_gmfp) {
+                egsWarning("EGS_PlanarFluence: FD scoring requires EGS_AdvancedApplication."
+                           " Falling back to crossing estimator.\n");
+                m_scoring_method = score_crossing;
+            }
+        }
+    }
+
+    if (m_scoring_method == score_both) {
+        fluT_FD = new EGS_ScoringArray(Nx*Ny);
+        if (score_spe) {
+            flu_FD = new EGS_ScoringArray* [Nx*Ny];
+            for (int j = 0; j < Nx*Ny; j++) {
+                flu_FD[j] = new EGS_ScoringArray(flu_nbin);
+            }
+        }
+        if (score_primaries) {
+            fluT_FD_p = new EGS_ScoringArray(Nx*Ny);
+            if (score_spe) {
+                flu_FD_p = new EGS_ScoringArray* [Nx*Ny];
+                for (int j = 0; j < Nx*Ny; j++) {
+                    flu_FD_p[j] = new EGS_ScoringArray(flu_nbin);
+                }
             }
         }
     }
@@ -622,6 +700,15 @@ void EGS_PlanarFluence::initScoring(EGS_Input *inp) {
     }
 
     m_d = m_normal*m_midpoint;
+
+    EGS_Float cos_theta_min = cos(85.0 * M_PI / 180.0);
+    pScoringInput->getInput("cos theta min", cos_theta_min);
+    if (cos_theta_min <= 0.0 || cos_theta_min >= 1.0) {
+        m_cos_min = 0.0;
+    }
+    else {
+        m_cos_min = cos_theta_min;
+    }
 }
 
 void EGS_PlanarFluence::describeMe() {
@@ -652,6 +739,13 @@ void EGS_PlanarFluence::describeMe() {
     description += " - scoring field distance from origin = ";
     sprintf(buf,"%g cm\n",m_d);
     description += buf;
+
+    description += " - estimator                  = ";
+    switch (m_scoring_method) {
+    case score_FD:   description += "forced detection\n"; break;
+    case score_both: description += "crossing + forced detection (separate arrays)\n"; break;
+    default:         description += "boundary crossing\n"; break;
+    }
 
     description +=" - scoring from region(s): ";
 
@@ -700,6 +794,88 @@ void EGS_PlanarFluence::score(const EGS_Particle &p, const int &ivoxel) {
         aux->score(je,auxp);
         if (score_primaries && !p.latch) {
             flu_p[ivoxel]->score(je,auxp);
+        }
+    }
+}
+
+void EGS_PlanarFluence::scoreFD(const EGS_Particle &p, int ixy, EGS_Float dist) {
+    EGS_Vector x = p.x;
+    EGS_Vector u = p.u;
+    int ireg     = p.ir;
+    int newmed   = app->getMedium(ireg);
+    int imed     = -1;
+    EGS_Float gmfp, sigma = 0, cohfac = 1;
+    EGS_Float gle = log(p.E);
+    double Lambda = 0;
+    EGS_Float ttot = 0;
+
+    while (true) {
+        if (imed != newmed) {
+            imed = newmed;
+            if (imed >= 0 && m_i_gmfp) {
+                gmfp = m_i_gmfp[imed].interpolateFast(gle);
+                if (m_rayleigh_on && m_i_cohe) {
+                    cohfac = m_i_cohe[imed].interpolateFast(gle);
+                    gmfp  *= cohfac;
+                }
+                sigma = 1.0 / gmfp;
+            }
+            else {
+                sigma = 0;
+            }
+        }
+        EGS_Float tstep = 1e35;
+        int inew = app->howfar(ireg, x, u, tstep, &newmed);
+
+        if (ttot + tstep >= dist) {
+            Lambda += (dist - ttot) * sigma;
+            break;
+        }
+        Lambda += tstep * sigma;
+        ttot   += tstep;
+        x      += u * tstep;
+        if (inew < 0) {
+            return;  // exited geometry before reaching plane
+        }
+        ireg = inew;
+    }
+
+    if (Lambda >= 80) {
+        return;  // fully attenuated
+    }
+    EGS_Float aup = fabs(p.u * m_normal);
+    if (m_cos_min > 0.0 && aup < m_cos_min) {
+        aup = m_cos_min;
+        ++m_n_clipped;
+    }
+    EGS_Float contrib = p.wt * exp(-Lambda) / aup;
+
+    /* In score_both mode write to the separate FD arrays; otherwise to the main arrays. */
+    bool both = (m_scoring_method == score_both);
+    EGS_ScoringArray *fT   = both ? fluT_FD   : fluT;
+    EGS_ScoringArray *fTp  = both ? fluT_FD_p : fluT_p;
+    EGS_ScoringArray **fl  = both ? flu_FD    : flu;
+    EGS_ScoringArray **flp = both ? flu_FD_p  : flu_p;
+    EGS_Float &rtot = both ? m_tot_FD   : m_tot;
+    EGS_Float &rpri = both ? m_primary_FD : m_primary;
+
+    rtot += p.wt;
+    fT->score(ixy, contrib);
+    if (score_primaries && !p.latch) {
+        rpri += p.wt;
+        fTp->score(ixy, contrib);
+    }
+    if (score_spe) {
+        EGS_Float e = p.q ? p.E - app->getRM() : p.E;
+        if (flu_s) {
+            e = log(e);
+        }
+        if (e > flu_xmin && e <= flu_xmax) {
+            int je = min((int)(flu_a*e + flu_b), flu_nbin - 1);
+            fl[ixy]->score(je, contrib);
+            if (score_primaries && !p.latch) {
+                flp[ixy]->score(je, contrib);
+            }
         }
     }
 }
@@ -830,115 +1006,139 @@ void EGS_PlanarFluence::ouputResults() {
     egsInformation("\n\n            Integral fluence\n"
                    "            ================\n\n");
 
-    egsInformation("\n\n               Total %s fluence\n", particle_name.c_str());
-    ouputPlanarFluence(fluT, norm);
-
-    if (score_primaries) {
-        egsInformation("\n\n                   Primary fluence\n");
-        ouputPlanarFluence(fluT_p, norm);
+    if (m_scoring_method == score_both) {
+        egsInformation("\n\n  [crossing]  Total %s fluence\n", particle_name.c_str());
+        ouputPlanarFluence(fluT, norm);
+        if (score_primaries) {
+            egsInformation("\n\n  [crossing]  Primary fluence\n");
+            ouputPlanarFluence(fluT_p, norm);
+        }
+        egsInformation("\n\n  [FD]        Total %s fluence\n", particle_name.c_str());
+        ouputPlanarFluence(fluT_FD, norm);
+        if (score_primaries) {
+            egsInformation("\n\n  [FD]        Primary fluence\n");
+            ouputPlanarFluence(fluT_FD_p, norm);
+        }
+    }
+    else {
+        egsInformation("\n\n               Total %s fluence\n", particle_name.c_str());
+        ouputPlanarFluence(fluT, norm);
+        if (score_primaries) {
+            egsInformation("\n\n                   Primary fluence\n");
+            ouputPlanarFluence(fluT_p, norm);
+        }
     }
 
     if (score_spe) {
-        norm *= flu_a;//per unit bin width
-        string suffix = "_" + particle_name + ".agr";
-        string spe_name = app->constructIOFileName(suffix.c_str(),true);
-        ofstream spe_output(spe_name.c_str(),ios::out);
-        if (!spe_output) {
-            egsFatal("\n EGS_PlanarFluence: Error: Failed to open file %s\n",spe_name.c_str());
-            exit(1);
+        norm *= flu_a; // per unit bin width
+        if (m_scoring_method == score_both) {
+            outputSpectrum(flu,    flu_p,    norm, "_cross_" + particle_name + ".agr");
+            outputSpectrum(flu_FD, flu_FD_p, norm, "_FD_"    + particle_name + ".agr");
         }
-
-        spe_output << "# " << particle_name.c_str() << " fluence \n";
-        spe_output << "# \n";
-        spe_output << "@    legend 0.2, 0.8\n";
-        spe_output << "@    legend box linestyle 0\n";
-        spe_output << "@    legend font 4\n";
-        spe_output << "@    xaxis  label \"energy / MeV\"\n";
-        spe_output << "@    xaxis  label char size 1.560000\n";
-        spe_output << "@    xaxis  label font 4\n";
-        spe_output << "@    xaxis  ticklabel font 4\n";
-        spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
-        spe_output << "@    yaxis  label char size 1.560000\n";
-        spe_output << "@    yaxis  label font 4\n";
-        spe_output << "@    yaxis  ticklabel font 4\n";
-        spe_output << "@    title \""<< particle_name.c_str() << " fluence" <<"\"\n";
-        spe_output << "@    title font 4\n";
-        spe_output << "@    title size 1.500000\n";
-        spe_output << "@    subtitle \"for each scoring region\"\n";
-        spe_output << "@    subtitle font 4\n";
-        spe_output << "@    subtitle size 1.000000\n";
-
-        egsInformation("\n\n            Differential fluence\n"
-                       "            ====================\n\n");
-
-        int i_graph = 0;
-        double fe,dfe;
-        for (int j=0; j<Ny; j++) {
-            for (int i=0; i<Nx; i++) {
-                int k = i + j*Nx;
-                if (verbose) {
-                    egsInformation("\nPixel # %d :",k);
-                }
-                spe_output<<"@    s" << i_graph <<" errorbar linestyle 0\n";
-                spe_output<<"@    s" << i_graph <<" legend \""<<
-                          "Voxel # " << k <<"\"\n";
-                spe_output<<"@target G0.S"<< i_graph <<"\n";
-                spe_output<<"@type xydy\n";
-                if (verbose) {
-                    egsInformation("\n\n           Total \n\n");
-                    egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
-                                   "---------------------------------------------\n");
-                }
-                for (int l=0; l<flu_nbin; l++) {
-                    flu[k]->currentResult(l,fe,dfe);
-                    EGS_Float e = (l+0.5-flu_b)/flu_a;
-                    if (flu_s) {
-                        e = exp(e);
-                    }
-                    spe_output<<e<<" "<<fe *norm<<" "<<dfe *norm<< "\n";
-                    if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
-                                                    e,fe*norm,dfe*norm);
-                }
-                spe_output << "&\n";
-
-                if (score_primaries) {
-                    if (verbose) {
-                        egsInformation("\n\n           Primary\n\n");
-                        egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
-                                       "---------------------------------------------\n");
-                    }
-                    spe_output<<"@    s" << ++i_graph <<" errorbar linestyle 0\n";
-                    spe_output<<"@    s" << i_graph <<" legend \""<<
-                              "Voxel # " << k <<" (primary)\"\n";
-                    spe_output<<"@target G0.S"<< i_graph <<"\n";
-                    spe_output<<"@type xydy\n";
-                    for (int l=0; l<flu_nbin; l++) {
-                        flu_p[k]->currentResult(l,fe,dfe);
-                        EGS_Float e = (l+0.5-flu_b)/flu_a;
-                        if (flu_s) {
-                            e = exp(e);
-                        }
-                        spe_output<<e<<" "<<fe *norm<<" "<<dfe *norm<< "\n";
-                        if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n",
-                                                        e,fe*norm,dfe*norm);
-                    }
-                    spe_output << "&\n";
-                }
-                i_graph++;
-            }
+        else {
+            outputSpectrum(flu, flu_p, norm, "_" + particle_name + ".agr");
         }
-        spe_output.close();
     }
 
 }
 
+void EGS_PlanarFluence::outputSpectrum(EGS_ScoringArray **fl_set,
+                                       EGS_ScoringArray **flp_set,
+                                       double norm,
+                                       const string &suffix) const {
+    string spe_name = app->constructIOFileName(suffix.c_str(), true);
+    ofstream spe_output(spe_name.c_str(), ios::out);
+    if (!spe_output) {
+        egsFatal("\n EGS_PlanarFluence: Error: Failed to open file %s\n", spe_name.c_str());
+        exit(1);
+    }
+    spe_output << "# " << particle_name << " fluence\n";
+    spe_output << "# \n";
+    spe_output << "@    legend 0.2, 0.8\n";
+    spe_output << "@    legend box linestyle 0\n";
+    spe_output << "@    legend font 4\n";
+    spe_output << "@    xaxis  label \"energy / MeV\"\n";
+    spe_output << "@    xaxis  label char size 1.560000\n";
+    spe_output << "@    xaxis  label font 4\n";
+    spe_output << "@    xaxis  ticklabel font 4\n";
+    spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
+    spe_output << "@    yaxis  label char size 1.560000\n";
+    spe_output << "@    yaxis  label font 4\n";
+    spe_output << "@    yaxis  ticklabel font 4\n";
+    spe_output << "@    title \"" << particle_name << " fluence\"\n";
+    spe_output << "@    title font 4\n";
+    spe_output << "@    title size 1.500000\n";
+    spe_output << "@    subtitle \"for each scoring region\"\n";
+    spe_output << "@    subtitle font 4\n";
+    spe_output << "@    subtitle size 1.000000\n";
+
+    egsInformation("\n\n            Differential fluence\n"
+                   "            ====================\n\n");
+
+    int i_graph = 0;
+    double fe, dfe;
+    for (int j=0; j<Ny; j++) {
+        for (int i=0; i<Nx; i++) {
+            int k = i + j*Nx;
+            if (verbose) {
+                egsInformation("\nPixel # %d :", k);
+            }
+            spe_output << "@    s" << i_graph << " errorbar linestyle 0\n";
+            spe_output << "@    s" << i_graph << " legend \"Voxel # " << k << "\"\n";
+            spe_output << "@target G0.S" << i_graph << "\n";
+            spe_output << "@type xydy\n";
+            if (verbose) {
+                egsInformation("\n\n           Total \n\n");
+                egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
+                               "---------------------------------------------\n");
+            }
+            for (int l=0; l<flu_nbin; l++) {
+                fl_set[k]->currentResult(l, fe, dfe);
+                EGS_Float e = (l+0.5-flu_b)/flu_a;
+                if (flu_s) { e = exp(e); }
+                spe_output << e << " " << fe*norm << " " << dfe*norm << "\n";
+                if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n", e, fe*norm, dfe*norm);
+            }
+            spe_output << "&\n";
+
+            if (score_primaries) {
+                if (verbose) {
+                    egsInformation("\n\n           Primary\n\n");
+                    egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
+                                   "---------------------------------------------\n");
+                }
+                spe_output << "@    s" << ++i_graph << " errorbar linestyle 0\n";
+                spe_output << "@    s" << i_graph << " legend \"Voxel # " << k << " (primary)\"\n";
+                spe_output << "@target G0.S" << i_graph << "\n";
+                spe_output << "@type xydy\n";
+                for (int l=0; l<flu_nbin; l++) {
+                    flp_set[k]->currentResult(l, fe, dfe);
+                    EGS_Float e = (l+0.5-flu_b)/flu_a;
+                    if (flu_s) { e = exp(e); }
+                    spe_output << e << " " << fe*norm << " " << dfe*norm << "\n";
+                    if (verbose) egsInformation("%11.6f  %14.6e  %14.6e\n", e, fe*norm, dfe*norm);
+                }
+                spe_output << "&\n";
+            }
+            i_graph++;
+        }
+    }
+    spe_output.close();
+}
+
 void EGS_PlanarFluence::reportResults() {
     egsInformation("\nFluence Scoring (%s)\n",name.c_str());
-    //EGS_Float m_tot = m_fluor+ m_compt + m_ray + m_multiple; char per = '%';
     egsInformation("======================================================\n");
-    egsInformation("   Total %ss reaching field:       %g\n",particle_name.c_str(),m_tot);
-    egsInformation("   Primary %ss reaching field:     %g\n",particle_name.c_str(),m_primary);
-    //egsInformation("   Non-primary photons reaching field: %g\n",m_tot);
+    if (m_scoring_method == score_both) {
+        egsInformation("   [crossing] Total %ss reaching field:   %g\n",particle_name.c_str(),m_tot);
+        egsInformation("   [crossing] Primary %ss reaching field: %g\n",particle_name.c_str(),m_primary);
+        egsInformation("   [FD]       Total aimed at field:        %g\n",m_tot_FD);
+        egsInformation("   [FD]       Primary aimed at field:      %g\n",m_primary_FD);
+    }
+    else {
+        egsInformation("   Total %ss reaching field:       %g\n",particle_name.c_str(),m_tot);
+        egsInformation("   Primary %ss reaching field:     %g\n",particle_name.c_str(),m_primary);
+    }
     egsInformation("======================================================\n");
 
     ouputResults();
@@ -950,7 +1150,6 @@ bool EGS_PlanarFluence::storeState(ostream &data) const {
         return false;
     }
     data << endl;
-    //data << m_primary << " " << m_ray << " " << m_compt << " " << m_fluor << " " << m_multiple;
     data << m_tot << " " << m_primary;
     data << endl;
     if (!data.good()) {
@@ -982,6 +1181,35 @@ bool EGS_PlanarFluence::storeState(ostream &data) const {
         }
     }
 
+    if (m_scoring_method == score_both) {
+        data << m_tot_FD << " " << m_primary_FD << endl;
+        if (!data.good()) {
+            return false;
+        }
+        if (!fluT_FD->storeState(data)) {
+            return false;
+        }
+        if (score_spe) {
+            for (int j=0; j<Nx*Ny; j++) {
+                if (!flu_FD[j]->storeState(data)) {
+                    return false;
+                }
+            }
+        }
+        if (score_primaries) {
+            if (!fluT_FD_p->storeState(data)) {
+                return false;
+            }
+            if (score_spe) {
+                for (int j=0; j<Nx*Ny; j++) {
+                    if (!flu_FD_p[j]->storeState(data)) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
     return true;
 }
 
@@ -989,7 +1217,6 @@ bool  EGS_PlanarFluence::setState(istream &data) {
     if (!egsGetI64(data,current_ncase)) {
         return false;
     }
-    //data >> m_primary >> m_ray >> m_compt >> m_fluor >> m_multiple;
     data >> m_tot >> m_primary;
     if (!data.good()) {
         return false;
@@ -1022,6 +1249,36 @@ bool  EGS_PlanarFluence::setState(istream &data) {
         }
 
     }
+
+    if (m_scoring_method == score_both) {
+        data >> m_tot_FD >> m_primary_FD;
+        if (!data.good()) {
+            return false;
+        }
+        if (!fluT_FD->setState(data)) {
+            return false;
+        }
+        if (score_spe) {
+            for (int j=0; j<Nx*Ny; j++) {
+                if (!flu_FD[j]->setState(data)) {
+                    return false;
+                }
+            }
+        }
+        if (score_primaries) {
+            if (!fluT_FD_p->setState(data)) {
+                return false;
+            }
+            if (score_spe) {
+                for (int j=0; j<Nx*Ny; j++) {
+                    if (!flu_FD_p[j]->setState(data)) {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
     return true;
 }
 
@@ -1031,9 +1288,6 @@ bool  EGS_PlanarFluence::addState(istream &data) {
         return false;
     }
     current_ncase += tmp_case;
-    /* individual contributions */
-    //EGS_Float tmp_primary, tmp_fluor, tmp_compt, tmp_ray, tmp_multiple;
-    //data >> tmp_primary >> tmp_ray >> tmp_compt >> tmp_fluor >> tmp_multiple;
     EGS_Float tmp_tot, tmp_primary;
     data >> tmp_tot >> tmp_primary;
     if (!data.good()) {
@@ -1041,9 +1295,6 @@ bool  EGS_PlanarFluence::addState(istream &data) {
     }
     m_primary += tmp_primary;
     m_tot     += tmp_tot;
-    //m_primary += tmp_primary;m_ray += tmp_ray;m_compt += tmp_compt;
-    //m_fluor += tmp_fluor;m_multiple += tmp_multiple;
-    /* fluence objects */
 
     EGS_ScoringArray tgT(Nx*Ny);
     if (!tgT.setState(data)) {
@@ -1076,6 +1327,50 @@ bool  EGS_PlanarFluence::addState(istream &data) {
                     return false;
                 }
                 (*flu_p[j]) += tg_p;
+            }
+        }
+    }
+
+    if (m_scoring_method == score_both) {
+        EGS_Float tmp_tot_FD, tmp_primary_FD;
+        data >> tmp_tot_FD >> tmp_primary_FD;
+        if (!data.good()) {
+            return false;
+        }
+        m_tot_FD     += tmp_tot_FD;
+        m_primary_FD += tmp_primary_FD;
+
+        EGS_ScoringArray tgT_FD(Nx*Ny);
+        if (!tgT_FD.setState(data)) {
+            return false;
+        }
+        (*fluT_FD) += tgT_FD;
+
+        if (score_spe) {
+            EGS_ScoringArray tg_FD(flu_nbin);
+            for (int j=0; j<Nx*Ny; j++) {
+                if (!tg_FD.setState(data)) {
+                    return false;
+                }
+                (*flu_FD[j]) += tg_FD;
+            }
+        }
+
+        if (score_primaries) {
+            EGS_ScoringArray tgT_FD_p(Nx*Ny);
+            if (!tgT_FD_p.setState(data)) {
+                return false;
+            }
+            (*fluT_FD_p) += tgT_FD_p;
+
+            if (score_spe) {
+                EGS_ScoringArray tg_FD_p(flu_nbin);
+                for (int j=0; j<Nx*Ny; j++) {
+                    if (!tg_FD_p.setState(data)) {
+                        return false;
+                    }
+                    (*flu_FD_p[j]) += tg_FD_p;
+                }
             }
         }
     }
@@ -1402,11 +1697,11 @@ void EGS_VolumetricFluence::describeMe() {
         }
     }
 
-    if (norm_u != 1.0) {
-        description += "\n - Non-unity user-requested normalization = ";
-        sprintf(buf,"%g\n",norm_u);
-        description += buf;
-    }
+    // if (norm_u != 1.0) {
+    //     description += "\n - Non-unity user-requested normalization = ";
+    //     sprintf(buf,"%g\n",norm_u);
+    //     description += buf;
+    // }
 
 }
 
@@ -1826,6 +2121,882 @@ bool  EGS_VolumetricFluence::addState(istream &data) {
     return true;
 }
 
+/**********************************************
+ * Class EGS_SphericalFluence Implementation *
+***********************************************/
+
+EGS_SphericalFluence::EGS_SphericalFluence(const string &Name, EGS_ObjectFactory *f) :
+    EGS_FluenceScoring(Name, f),
+    n_sph(0), N_theta(1), N_phi(1), N_ang(1),
+    cos_theta_bins(true), dir_filter(sph_both),
+    m_has_crossings(false),
+    fluT_x_p(0), m_hist_dirty(false) {
+    otype    = "EGS_SphericalFluence";
+    m_center = EGS_Vector(0, 0, 0);
+    m_axis   = EGS_Vector(0, 0, 1);
+    m_perp1  = EGS_Vector(1, 0, 0);
+    m_perp2  = EGS_Vector(0, 1, 0);
+}
+
+EGS_SphericalFluence::~EGS_SphericalFluence() {
+    int n_total = n_sph * N_ang;
+    if (flu) {
+        for (int k = 0; k < n_total; k++) {
+            delete flu[k];
+        }
+    }
+    if (flu_p) {
+        for (int k = 0; k < n_total; k++) {
+            delete flu_p[k];
+        }
+    }
+    delete fluT_x_p;
+}
+
+void EGS_SphericalFluence::initScoring(EGS_Input *inp) {
+
+    if (!inp) {
+        egsFatal("AO type %s: null input?\n", otype.c_str());
+        return;
+    }
+
+    EGS_Input *sScoringInput = inp->takeInputItem("spherical scoring");
+    if (!sScoringInput) {
+        egsFatal("AO type %s: Missing 'spherical scoring' input block.\n", otype.c_str());
+        return;
+    }
+
+    EGS_FluenceScoring::initScoring(inp);  // common inputs (particle, energy grid, etc.)
+
+    score_in_all_regions = true;           // default: all regions contribute
+    EGS_FluenceScoring::getSensitiveRegions(sScoringInput);
+
+    /* Sphere center */
+    vector<EGS_Float> tmp_center;
+    int err_c = sScoringInput->getInput("scoring sphere center", tmp_center);
+    if (!err_c && tmp_center.size() == 3) {
+        m_center = EGS_Vector(tmp_center[0], tmp_center[1], tmp_center[2]);
+    }
+    else {
+        egsWarning("\n\n*** EGS_SphericalFluence: Wrong/missing 'scoring sphere center',"
+                   " defaulting to origin.\n\n");
+        m_center = EGS_Vector(0, 0, 0);
+    }
+
+    /* Sphere radii (required) */
+    vector<EGS_Float> tmp_radii;
+    if (sScoringInput->getInput("scoring sphere radii", tmp_radii) || tmp_radii.empty()) {
+        egsFatal("\n*** EGS_SphericalFluence: Missing 'scoring sphere radii'. Aborting!\n\n");
+    }
+    for (size_t i = 0; i < tmp_radii.size(); i++) {
+        if (tmp_radii[i] <= 0) {
+            egsFatal("\n*** EGS_SphericalFluence: radius %g <= 0. Aborting!\n\n",
+                     tmp_radii[i]);
+        }
+    }
+    sort(tmp_radii.begin(), tmp_radii.end());
+    tmp_radii.erase(unique(tmp_radii.begin(), tmp_radii.end()), tmp_radii.end());
+    n_sph = (int)tmp_radii.size();
+    m_R   = tmp_radii;
+    m_R2.resize(n_sph);
+    for (int i = 0; i < n_sph; i++) {
+        m_R2[i] = m_R[i] * m_R[i];
+    }
+
+    /* Direction filter */
+    vector<string> dir_names;
+    dir_names.push_back("both");
+    dir_names.push_back("inward");
+    dir_names.push_back("outward");
+    int dir_sel = sScoringInput->getInput("scoring direction", dir_names, 0);
+    switch (dir_sel) {
+    case 1:  dir_filter = sph_inward;  break;
+    case 2:  dir_filter = sph_outward; break;
+    default: dir_filter = sph_both;    break;
+    }
+
+    /* Polar axis for angular binning */
+    vector<EGS_Float> tmp_axis;
+    int err_ax = sScoringInput->getInput("polar axis", tmp_axis);
+    if (!err_ax && tmp_axis.size() == 3) {
+        m_axis = EGS_Vector(tmp_axis[0], tmp_axis[1], tmp_axis[2]);
+        m_axis.normalize();
+    }
+    else {
+        m_axis = EGS_Vector(0, 0, 1);
+    }
+
+    /* Build orthonormal frame (m_perp1, m_perp2) perpendicular to m_axis */
+    if (fabs(m_axis.x) < 0.9) {
+        m_perp1 = EGS_Vector(1, 0, 0);
+    }
+    else {
+        m_perp1 = EGS_Vector(0, 1, 0);
+    }
+    EGS_Float proj = m_perp1 * m_axis;
+    m_perp1.x -= m_axis.x * proj;
+    m_perp1.y -= m_axis.y * proj;
+    m_perp1.z -= m_axis.z * proj;
+    m_perp1.normalize();
+    /* m_perp2 = m_axis × m_perp1 */
+    m_perp2.x = m_axis.y*m_perp1.z - m_axis.z*m_perp1.y;
+    m_perp2.y = m_axis.z*m_perp1.x - m_axis.x*m_perp1.z;
+    m_perp2.z = m_axis.x*m_perp1.y - m_axis.y*m_perp1.x;
+
+    /* Angular bin counts */
+    if (sScoringInput->getInput("N theta bins", N_theta) || N_theta < 1) {
+        N_theta = 1;
+    }
+    if (sScoringInput->getInput("N phi bins", N_phi) || N_phi < 1) {
+        N_phi = 1;
+    }
+    N_ang = N_theta * N_phi;
+
+    /* Theta binning mode */
+    vector<string> bin_names;
+    bin_names.push_back("cos_theta");
+    bin_names.push_back("theta");
+    cos_theta_bins = (sScoringInput->getInput("theta binning", bin_names, 0) == 0);
+
+    /* Precompute bin areas divided by R² (multiply by R_k² for sphere k).
+       Equal cos_theta: ΔA/R² = 4π / N_ang  (identical for every bin).
+       Equal theta:     ΔA/R² = (2π/N_phi) × |cosθ_i − cosθ_{i+1}|  (varies with itheta). */
+    m_ang_area.resize(N_ang);
+    if (cos_theta_bins) {
+        EGS_Float area = 4.0*M_PI / N_ang;
+        for (int i = 0; i < N_ang; i++) {
+            m_ang_area[i] = area;
+        }
+    }
+    else {
+        EGS_Float dtheta = M_PI / N_theta;
+        for (int itheta = 0; itheta < N_theta; itheta++) {
+            EGS_Float area_strip = (2.0*M_PI / N_phi) *
+                                   fabs(cos(itheta*dtheta) - cos((itheta+1)*dtheta));
+            for (int iphi = 0; iphi < N_phi; iphi++) {
+                m_ang_area[itheta*N_phi + iphi] = area_strip;
+            }
+        }
+    }
+
+    m_crossings.reserve(2 * n_sph);
+
+    /* Grazing-angle cap.  The estimator scores w/|u·n̂| = w/|cos θ| at each
+       crossing.  When |cos θ| → 0 (particle nearly tangent to the sphere,
+       at θ ≈ 90° or 270° from the outward normal) a single crossing can
+       contribute an arbitrarily large score and dominate the batch mean,
+       making the result unreliable even when the stated uncertainty appears
+       small.  The threshold is therefore expressed directly as a minimum
+       |cos θ| value: crossings with |u·n̂| < cos_theta_min are clamped to
+       cos_theta_min in the denominator.
+       Default: cos(85°) ≈ 0.0872, matching EGS_PlanarFluence.
+       Set cos theta min = 0 to disable the cap (exact, unbiased estimator)
+       — only safe when grazing crossings cannot occur (e.g. a point source
+       at the sphere centre).  Clipped crossings are always counted and
+       reported so the user can assess the bias. */
+    EGS_Float cos_theta_min = cos(85.0 * M_PI / 180.0);
+    sScoringInput->getInput("cos theta min", cos_theta_min);
+    if (cos_theta_min <= 0.0 || cos_theta_min >= 1.0) {
+        m_cos_min = 0.0;   // no cap — exact estimator
+    }
+    else {
+        m_cos_min = cos_theta_min;
+    }
+}
+
+void EGS_SphericalFluence::setApplication(EGS_Application *App) {
+
+    EGS_AusgabObject::setApplication(App);
+
+    if (!app) {
+        return;
+    }
+
+    if (source_charge == unknown) {
+        source_charge = (ParticleType)app->sourceCharge();
+    }
+
+    nreg = app->getnRegions();
+
+    for (int j = 0; j < nreg; j++) {
+        is_sensitive.push_back(score_in_all_regions ? true : false);
+        is_source.push_back(false);
+    }
+
+    setUpRegionFlags();
+
+    int n_total = n_sph * N_ang;
+
+    fluT = new EGS_ScoringArray(n_total);
+    if (score_spe) {
+        flu = new EGS_ScoringArray* [n_total];
+        for (int k = 0; k < n_total; k++) {
+            flu[k] = new EGS_ScoringArray(flu_nbin);
+        }
+    }
+    if (score_primaries) {
+        fluT_p = new EGS_ScoringArray(n_total);
+        if (score_spe) {
+            flu_p = new EGS_ScoringArray* [n_total];
+            for (int k = 0; k < n_total; k++) {
+                flu_p[k] = new EGS_ScoringArray(flu_nbin);
+            }
+        }
+    }
+
+    if (m_scoring_method != score_crossing) {
+        egsWarning("EGS_SphericalFluence: FD scoring not yet supported."
+                   " Falling back to crossing estimator.\n");
+        m_scoring_method = score_crossing;
+    }
+
+    if (score_primaries) {
+        int n_total = n_sph * N_ang;
+        fluT_x_p = new EGS_ScoringArray(n_total);
+        m_hist_T.assign(n_total, 0.0);
+        m_hist_P.assign(n_total, 0.0);
+    }
+
+    describeMe();
+}
+
+void EGS_SphericalFluence::describeMe() {
+    char buf[256];
+    sprintf(buf, "\nSpherical %s fluence scoring\n", particle_name.c_str());
+    description  = buf;
+    description += "==================================\n";
+
+    sprintf(buf, " - sphere center      = (%g %g %g) cm\n",
+            m_center.x, m_center.y, m_center.z);
+    description += buf;
+
+    description += " - sphere radii      = ";
+    for (int i = 0; i < n_sph; i++) {
+        sprintf(buf, "%g", m_R[i]);
+        description += buf;
+        if (i < n_sph - 1) {
+            description += ", ";
+        }
+    }
+    description += " cm\n";
+
+    description += " - estimator         = boundary crossing\n";
+
+    description += " - scoring direction = ";
+    switch (dir_filter) {
+    case sph_inward:  description += "inward only\n";  break;
+    case sph_outward: description += "outward only\n"; break;
+    default:          description += "both\n";         break;
+    }
+
+    if (N_ang > 1) {
+        sprintf(buf, " - angular bins      = %d theta x %d phi (%s)\n",
+                N_theta, N_phi, cos_theta_bins ? "equal area" : "equal angle");
+        description += buf;
+        sprintf(buf, " - polar axis        = (%g %g %g)\n",
+                m_axis.x, m_axis.y, m_axis.z);
+        description += buf;
+    }
+    else {
+        description += " - angular bins      = total only\n";
+    }
+
+    if (m_cos_min > 0.0) {
+        sprintf(buf, " - grazing cap       = |cos θ| < %.6f (θ near 90°/270°) → biased\n",
+                m_cos_min);
+        description += buf;
+    }
+    else {
+        description += " - grazing cap       = none (exact estimator, |cos θ| unbounded)\n";
+    }
+
+    description += " - contributing from region(s): ";
+    EGS_FluenceScoring::describeMe();
+}
+
+void EGS_SphericalFluence::flushHistoryCrossTerms() const {
+    if (!m_hist_dirty) {
+        return;
+    }
+    if (fluT_x_p) {
+        int n_total = n_sph * N_ang;
+        for (int k = 0; k < n_total; k++) {
+            fluT_x_p->score(k, m_hist_T[k] * m_hist_P[k]);
+            m_hist_T[k] = 0.0;
+            m_hist_P[k] = 0.0;
+        }
+    }
+    m_hist_dirty = false;
+}
+
+void EGS_SphericalFluence::findCrossings(const EGS_Particle &p) {
+    m_crossings.clear();
+
+    /* Precompute shared quantities (same for all spheres) */
+    EGS_Float dx = p.x.x - m_center.x;
+    EGS_Float dy = p.x.y - m_center.y;
+    EGS_Float dz = p.x.z - m_center.z;
+    EGS_Float b  = 2.0*(dx*p.u.x + dy*p.u.y + dz*p.u.z);
+    EGS_Float d2 = dx*dx + dy*dy + dz*dz;
+
+    for (int isph = 0; isph < n_sph; isph++) {
+        EGS_Float c    = d2 - m_R2[isph];
+        EGS_Float disc = b*b - 4.0*c;
+        if (disc <= 0) {
+            continue;
+        }
+        EGS_Float sq = sqrt(disc);
+        EGS_Float t1 = 0.5*(-b - sq);
+        EGS_Float t2 = 0.5*(-b + sq);
+
+        for (int j = 0; j < 2; j++) {
+            EGS_Float t = (j == 0) ? t1 : t2;
+            /* Reject ghost crossings produced by floating-point error when the
+               particle sits at the sphere surface.  After a legitimate outward
+               crossing the particle's position satisfies |x|² = R²|u|²; if
+               |u|² < 1 in floating point the particle appears slightly inside,
+               giving t₂ ≈ R·|δ|/2 where δ = |u|²−1 ~ ε_machine.  The natural
+               threshold R·√ε scales correctly with radius and with EGS_Float
+               precision (float vs. double), while remaining far below any real
+               geometry step. */
+            if (t < m_R[isph] * std::sqrt(std::numeric_limits<EGS_Float>::epsilon())) {
+                continue;
+            }
+            /* Outward unit normal at crossing point */
+            EGS_Float invR = 1.0 / m_R[isph];
+            EGS_Vector n_hat((p.x.x + p.u.x*t - m_center.x)*invR,
+                             (p.x.y + p.u.y*t - m_center.y)*invR,
+                             (p.x.z + p.u.z*t - m_center.z)*invR);
+
+            EGS_Float udotn = p.u.x*n_hat.x + p.u.y*n_hat.y + p.u.z*n_hat.z;
+            bool is_outward = (udotn > 0);
+
+            if (dir_filter == sph_inward  &&  is_outward) {
+                continue;
+            }
+            if (dir_filter == sph_outward && !is_outward) {
+                continue;
+            }
+
+            CrossInfo ci;
+            ci.isph      = isph;
+            ci.t         = t;
+            ci.n_hat     = n_hat;
+            ci.is_outward = is_outward;
+            ci.iang      = getAngularBin(n_hat);
+            m_crossings.push_back(ci);
+        }
+    }
+    m_has_crossings = !m_crossings.empty();
+}
+
+int EGS_SphericalFluence::getAngularBin(const EGS_Vector &n_hat) const {
+    if (N_ang == 1) {
+        return 0;
+    }
+
+    EGS_Float cos_theta = n_hat.x*m_axis.x + n_hat.y*m_axis.y + n_hat.z*m_axis.z;
+    if (cos_theta >  1.0) { cos_theta =  1.0; }
+    if (cos_theta < -1.0) { cos_theta = -1.0; }
+
+    int itheta;
+    if (cos_theta_bins) {
+        itheta = (int)((1.0 - cos_theta) * 0.5 * N_theta);
+        if (itheta >= N_theta) { itheta = N_theta - 1; }
+    }
+    else {
+        EGS_Float theta = acos(cos_theta);
+        itheta = (int)(theta * N_theta / M_PI);
+        if (itheta >= N_theta) { itheta = N_theta - 1; }
+    }
+
+    if (N_phi == 1) {
+        return itheta;
+    }
+
+    EGS_Float cp  = n_hat.x*m_perp1.x + n_hat.y*m_perp1.y + n_hat.z*m_perp1.z;
+    EGS_Float sp  = n_hat.x*m_perp2.x + n_hat.y*m_perp2.y + n_hat.z*m_perp2.z;
+    EGS_Float phi = atan2(sp, cp);
+    if (phi < 0) { phi += 2.0*M_PI; }
+
+    int iphi = (int)(phi * N_phi / (2.0*M_PI));
+    if (iphi >= N_phi) { iphi = N_phi - 1; }
+
+    return itheta * N_phi + iphi;
+}
+
+void EGS_SphericalFluence::scoreAtCrossing(const CrossInfo &ci, const EGS_Particle &p) {
+    EGS_Float udotn = p.u.x*ci.n_hat.x + p.u.y*ci.n_hat.y + p.u.z*ci.n_hat.z;
+    EGS_Float aup   = fabs(udotn);
+    if (m_cos_min > 0.0 && aup < m_cos_min) {
+        aup = m_cos_min;
+        ++m_n_clipped;
+    }
+    EGS_Float auxp = p.wt / aup;
+    int k = ci.isph * N_ang + ci.iang;
+
+    m_tot += p.wt;
+    if (score_primaries && !p.latch) {
+        m_primary += p.wt;
+    }
+
+    fluT->score(k, auxp);
+    if (score_primaries && !p.latch) {
+        fluT_p->score(k, auxp);
+    }
+    if (fluT_x_p) {
+        m_hist_T[k] += auxp;
+        if (!p.latch) {
+            m_hist_P[k] += auxp;
+        }
+        m_hist_dirty = true;
+    }
+
+    if (score_spe) {
+        EGS_Float e = p.q ? p.E - app->getRM() : p.E;
+        if (flu_s) {
+            e = log(e);
+        }
+        if (e > flu_xmin && e <= flu_xmax) {
+            int je = min((int)(flu_a*e + flu_b), flu_nbin - 1);
+            flu[k]->score(je, auxp);
+            if (score_primaries && !p.latch) {
+                flu_p[k]->score(je, auxp);
+            }
+        }
+    }
+}
+
+int EGS_SphericalFluence::processEvent(EGS_Application::AusgabCall iarg) {
+
+    int q  = app->top_p.q;
+    int ir = app->top_p.ir;
+
+    if (iarg == EGS_Application::BeforeTransport) {
+        m_has_crossings = false;
+        if (q == scoring_charge && ir >= 0 && is_sensitive[ir]) {
+            findCrossings(app->top_p);
+            m_x0 = app->top_p.x;
+        }
+    }
+    else if (iarg == EGS_Application::AfterTransport && m_has_crossings) {
+        EGS_Vector xstep = app->top_p.x - m_x0;
+        EGS_Float  step  = xstep.length();
+        for (size_t i = 0; i < m_crossings.size(); i++) {
+            if (m_crossings[i].t <= step + 1e-8) {
+                scoreAtCrossing(m_crossings[i], app->top_p);
+            }
+        }
+    }
+
+    if (score_primaries && ir >= 0 && !is_source[ir]) {
+        flagSecondaries(iarg, q);
+    }
+
+    return 0;
+}
+
+void EGS_SphericalFluence::ouputSphericalFluence(EGS_ScoringArray *fT,
+        const double &norma, int isph) {
+    double fe, dfe;
+    egsInformation("\n  Sphere R = %g cm\n", m_R[isph]);
+    egsInformation("  ----------------------\n");
+    for (int iang = 0; iang < N_ang; iang++) {
+        int k = isph*N_ang + iang;
+        fT->currentResult(k, fe, dfe);
+        if (dfe < 0) dfe = 0.0;
+        double dfer = (fe > 0) ? 100*dfe/fe : 100;
+        double norm_k = norma / (m_ang_area[iang] * m_R2[isph]);
+        int itheta = iang / N_phi;
+        int iphi   = iang % N_phi;
+        egsInformation("   [theta=%d phi=%d]: %12.5e +/- %-7.3f%%\n",
+                       itheta, iphi, fe*norm_k, dfer);
+    }
+}
+
+void EGS_SphericalFluence::ouputResults() {
+
+    EGS_Float src_norm = 1.0, Fsrc = app->getFluence();
+    egsInformation("\n\n last case = %lld source particles or fluence = %g\n\n",
+                   current_ncase, Fsrc);
+    if (Fsrc) {
+        src_norm = Fsrc / current_ncase;
+    }
+
+    string src_type = app->sourceType();
+    if (src_type == "EGS_BeamSource") {
+        egsInformation("\n %s normalization = %g (primary histories per particle)\n",
+                       src_type.c_str(), src_norm);
+    }
+    else if (src_type == "EGS_CollimatedSource" ||
+             (src_type == "EGS_ParallelBeam" && src_norm != 1)) {
+        egsInformation("\n %s normalization = %g (fluence per particle)\n",
+                       src_type.c_str(), src_norm);
+    }
+    else {
+        egsInformation("\n %s normalization = %g (histories per particle)\n",
+                       src_type.c_str(), src_norm);
+    }
+
+    double norm = norm_u / src_norm;
+
+    flushHistoryCrossTerms();
+
+    // Helper: extract scaled value and percentage uncertainty from a scoring bin.
+    // Guards against negative variance from floating-point cancellation.
+    auto getR = [](EGS_ScoringArray *arr, int k, double nk,
+                   double &val, double &unc_pct) {
+        double r, dr;
+        arr->currentResult(k, r, dr);
+        if (dr < 0) dr = 0.0;
+        val = r * nk;
+        unc_pct = (r > 0) ? 100.0 * dr / r : 100.0;
+    };
+
+    // Correlated ratio B = T/P uncertainty using cross-term array.
+    // cov(T̄, P̄) = (E[T·P] - T̄·P̄) / N, then
+    // var(B̂)     = (dT² - 2B·cov + B²·dP²) / P̄²
+    auto corrRatio = [this](EGS_ScoringArray *fT, EGS_ScoringArray *fP,
+                            EGS_ScoringArray *fX, int k,
+                            double &B, double &Bpct) {
+        double T_r, dT, P_r, dP, TP_r, dummy;
+        fT->currentResult(k, T_r, dT);
+        fP->currentResult(k, P_r, dP);
+        if (dT < 0) dT = 0.0;
+        if (dP < 0) dP = 0.0;
+        B = (P_r > 0) ? T_r / P_r : 0.0;
+        if (B <= 0 || current_ncase <= 0) {
+            Bpct = 100.0;
+            return;
+        }
+        double TP_r_mean = 0.0;
+        if (fX) {
+            fX->currentResult(k, TP_r_mean, dummy);
+        }
+        double cov = (TP_r_mean - T_r * P_r) / current_ncase;
+        double var_B = (dT*dT - 2.0*B*cov + B*B*dP*dP) / (P_r * P_r);
+        Bpct = (var_B > 0) ? 100.0 * sqrt(var_B) / B : 0.0;
+    };
+
+    // Format strings for one data cell and one ratio cell
+    const char *dcol = "  %12.5e +/- %-7.3f%%";
+    const char *bcol = "  %7.4f +/- %-7.3f%%";
+
+    if (N_ang == 1) {
+        // ------------------------------------------------------------------
+        // Compact table: one row per sphere
+        // ------------------------------------------------------------------
+        egsInformation("\n\n==> Spherical %s fluence [cm^-2 per source particle]\n",
+                       particle_name.c_str());
+
+        // ---- Table: total fluence ----
+        if (score_primaries) {
+            egsInformation("\n  %-14s  %-30s  %-30s  %-22s\n",
+                           "R [cm]", "Phi_total", "Phi_primary", "tot/pri");
+            egsInformation("  %s\n", string(100, '-').c_str());
+        }
+        else {
+            egsInformation("\n  %-14s  %-30s\n", "R [cm]", "Phi_total");
+            egsInformation("  %s\n", string(46, '-').c_str());
+        }
+
+        for (int isph = 0; isph < n_sph; isph++) {
+            double nk = norm / (m_ang_area[0] * m_R2[isph]);
+            double Tv, Tu;
+            getR(fluT, isph, nk, Tv, Tu);
+            egsInformation("  %-14.6g", m_R[isph]);
+            egsInformation(dcol, Tv, Tu);
+
+            if (score_primaries) {
+                double Pv, Pu;
+                getR(fluT_p, isph, nk, Pv, Pu);
+                double B, Bunc;
+                corrRatio(fluT, fluT_p, fluT_x_p, isph, B, Bunc);
+                egsInformation(dcol, Pv, Pu);
+                egsInformation(bcol, B, Bunc);
+            }
+            egsInformation("\n");
+        }
+
+        int w = score_primaries ? 100 : 46;
+        egsInformation("  %s\n", string(w, '-').c_str());
+    }
+    else {
+        // ------------------------------------------------------------------
+        // Block output for angular maps (N_ang > 1)
+        // ------------------------------------------------------------------
+        egsInformation("\n\n            Integral fluence [cm^-2 per source particle]\n"
+                       "            ================================================\n\n");
+
+        egsInformation("\n\n               Total %s fluence\n", particle_name.c_str());
+        for (int isph = 0; isph < n_sph; isph++) {
+            ouputSphericalFluence(fluT, norm, isph);
+        }
+        if (score_primaries) {
+            egsInformation("\n\n                   Primary %s fluence\n", particle_name.c_str());
+            for (int isph = 0; isph < n_sph; isph++) {
+                ouputSphericalFluence(fluT_p, norm, isph);
+            }
+        }
+    }
+
+    if (score_spe) {
+        double norm_spe = norm * flu_a;
+        outputSphericalSpectrum(flu, flu_p, norm_spe, "_");
+    }
+}
+
+void EGS_SphericalFluence::outputSphericalSpectrum(EGS_ScoringArray **fl_set,
+                                                   EGS_ScoringArray **flp_set,
+                                                   double norm_spe,
+                                                   const string &infix) const {
+    for (int isph = 0; isph < n_sph; isph++) {
+        char suffix_buf[128];
+        sprintf(suffix_buf, "_sphere%d%s%s.agr", isph, infix.c_str(), particle_name.c_str());
+        string spe_name = app->constructIOFileName(suffix_buf, true);
+        ofstream spe_output(spe_name.c_str(), ios::out);
+        if (!spe_output) {
+            egsFatal("\n EGS_SphericalFluence: Error: Failed to open file %s\n",
+                     spe_name.c_str());
+            exit(1);
+        }
+
+        spe_output << "# Spherical " << particle_name << " fluence at R="
+                   << m_R[isph] << " cm\n";
+        spe_output << "# \n";
+        spe_output << "@    legend 0.2, 0.8\n";
+        spe_output << "@    legend box linestyle 0\n";
+        spe_output << "@    legend font 4\n";
+        spe_output << "@    xaxis  label \"energy / MeV\"\n";
+        spe_output << "@    xaxis  label char size 1.560000\n";
+        spe_output << "@    xaxis  label font 4\n";
+        spe_output << "@    xaxis  ticklabel font 4\n";
+        spe_output << "@    yaxis  label \"fluence / MeV\\S-1\\Ncm\\S-2\"\n";
+        spe_output << "@    yaxis  label char size 1.560000\n";
+        spe_output << "@    yaxis  label font 4\n";
+        spe_output << "@    yaxis  ticklabel font 4\n";
+        spe_output << "@    title \"" << particle_name << " fluence at R="
+                   << m_R[isph] << " cm\"\n";
+        spe_output << "@    title font 4\n";
+        spe_output << "@    title size 1.500000\n";
+        spe_output << "@    subtitle \"angular bins\"\n";
+        spe_output << "@    subtitle font 4\n";
+        spe_output << "@    subtitle size 1.000000\n";
+
+        int i_graph = 0;
+        double fe, dfe;
+
+        for (int iang = 0; iang < N_ang; iang++) {
+            int k = isph*N_ang + iang;
+            double norm_k = norm_spe / (m_ang_area[iang] * m_R2[isph]);
+            int itheta = iang / N_phi;
+            int iphi   = iang % N_phi;
+            char legend[64];
+            if (N_ang == 1) {
+                sprintf(legend, "total");
+            }
+            else {
+                sprintf(legend, "theta-bin %d, phi-bin %d", itheta, iphi);
+            }
+
+            spe_output << "@    s" << i_graph << " errorbar linestyle 0\n";
+            spe_output << "@    s" << i_graph << " legend \"" << legend << "\"\n";
+            spe_output << "@target G0.S" << i_graph << "\n";
+            spe_output << "@type xydy\n";
+            for (int l = 0; l < flu_nbin; l++) {
+                fl_set[k]->currentResult(l, fe, dfe);
+                EGS_Float e = (l + 0.5 - flu_b) / flu_a;
+                if (flu_s) { e = exp(e); }
+                spe_output << e << " " << fe*norm_k << " " << dfe*norm_k << "\n";
+            }
+            spe_output << "&\n";
+
+            if (score_primaries) {
+                char legend_p[64];
+                if (N_ang == 1) {
+                    sprintf(legend_p, "primary");
+                }
+                else {
+                    sprintf(legend_p, "theta-bin %d, phi-bin %d (primary)", itheta, iphi);
+                }
+                spe_output << "@    s" << ++i_graph << " errorbar linestyle 0\n";
+                spe_output << "@    s" << i_graph << " legend \"" << legend_p << "\"\n";
+                spe_output << "@target G0.S" << i_graph << "\n";
+                spe_output << "@type xydy\n";
+                for (int l = 0; l < flu_nbin; l++) {
+                    flp_set[k]->currentResult(l, fe, dfe);
+                    EGS_Float e = (l + 0.5 - flu_b) / flu_a;
+                    if (flu_s) { e = exp(e); }
+                    spe_output << e << " " << fe*norm_k << " " << dfe*norm_k << "\n";
+                }
+                spe_output << "&\n";
+            }
+            i_graph++;
+        }
+        spe_output.close();
+    }
+}
+
+void EGS_SphericalFluence::reportResults() {
+    egsInformation("\nFluence Scoring (%s)\n", name.c_str());
+    egsInformation("======================================================\n");
+    egsInformation("   Total %ss crossing sphere(s): %g\n",
+                   particle_name.c_str(), m_tot);
+    if (score_primaries) {
+        egsInformation("   Primary %ss:                 %g\n",
+                       particle_name.c_str(), m_primary);
+    }
+    if (m_cos_min > 0.0) {
+        egsInformation("   Crossings with |cos θ| < %.6f: %lld", m_cos_min, m_n_clipped);
+        if (m_tot > 0) {
+            egsInformation(" (%.4g%%)", 100.0 * m_n_clipped / m_tot);
+        }
+        egsInformation("\n");
+        if (m_n_clipped > 0) {
+            egsInformation("   *** Results are biased for clipped crossings ***\n");
+        }
+    }
+    egsInformation("======================================================\n");
+    ouputResults();
+}
+
+bool EGS_SphericalFluence::storeState(ostream &data) const {
+    flushHistoryCrossTerms();
+    if (!egsStoreI64(data, current_ncase)) {
+        return false;
+    }
+    data << endl;
+    data << m_tot << " " << m_primary << " " << m_n_clipped << endl;
+    if (!data.good()) {
+        return false;
+    }
+    int n_total = n_sph * N_ang;
+    if (!fluT->storeState(data)) {
+        return false;
+    }
+    if (score_spe) {
+        for (int k = 0; k < n_total; k++) {
+            if (!flu[k]->storeState(data)) {
+                return false;
+            }
+        }
+    }
+    if (score_primaries) {
+        if (!fluT_p->storeState(data)) {
+            return false;
+        }
+        if (score_spe) {
+            for (int k = 0; k < n_total; k++) {
+                if (!flu_p[k]->storeState(data)) {
+                    return false;
+                }
+            }
+        }
+        if (!fluT_x_p->storeState(data)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool EGS_SphericalFluence::setState(istream &data) {
+    if (!egsGetI64(data, current_ncase)) {
+        return false;
+    }
+    data >> m_tot >> m_primary >> m_n_clipped;
+    if (!data.good()) {
+        return false;
+    }
+    int n_total = n_sph * N_ang;
+    if (!fluT->setState(data)) {
+        return false;
+    }
+    if (score_spe) {
+        for (int k = 0; k < n_total; k++) {
+            if (!flu[k]->setState(data)) {
+                return false;
+            }
+        }
+    }
+    if (score_primaries) {
+        if (!fluT_p->setState(data)) {
+            return false;
+        }
+        if (score_spe) {
+            for (int k = 0; k < n_total; k++) {
+                if (!flu_p[k]->setState(data)) {
+                    return false;
+                }
+            }
+        }
+        if (!fluT_x_p->setState(data)) {
+            return false;
+        }
+    }
+    fill(m_hist_T.begin(), m_hist_T.end(), 0.0);
+    fill(m_hist_P.begin(), m_hist_P.end(), 0.0);
+    m_hist_dirty = false;
+    return true;
+}
+
+bool EGS_SphericalFluence::addState(istream &data) {
+    EGS_I64 tmp_case;
+    if (!egsGetI64(data, tmp_case)) {
+        return false;
+    }
+    current_ncase += tmp_case;
+    EGS_Float tmp_tot, tmp_primary;
+    EGS_I64   tmp_clipped;
+    data >> tmp_tot >> tmp_primary >> tmp_clipped;
+    if (!data.good()) {
+        return false;
+    }
+    m_tot       += tmp_tot;
+    m_primary   += tmp_primary;
+    m_n_clipped += tmp_clipped;
+
+    int n_total = n_sph * N_ang;
+
+    EGS_ScoringArray tgT(n_total);
+    if (!tgT.setState(data)) {
+        return false;
+    }
+    (*fluT) += tgT;
+
+    if (score_spe) {
+        EGS_ScoringArray tg(flu_nbin);
+        for (int k = 0; k < n_total; k++) {
+            if (!tg.setState(data)) {
+                return false;
+            }
+            (*flu[k]) += tg;
+        }
+    }
+    if (score_primaries) {
+        EGS_ScoringArray tgT_p(n_total);
+        if (!tgT_p.setState(data)) {
+            return false;
+        }
+        (*fluT_p) += tgT_p;
+        if (score_spe) {
+            EGS_ScoringArray tg_p(flu_nbin);
+            for (int k = 0; k < n_total; k++) {
+                if (!tg_p.setState(data)) {
+                    return false;
+                }
+                (*flu_p[k]) += tg_p;
+            }
+        }
+        EGS_ScoringArray tgT_x_p(n_total);
+        if (!tgT_x_p.setState(data)) {
+            return false;
+        }
+        (*fluT_x_p) += tgT_x_p;
+    }
+
+    return true;
+}
+
 extern "C" {
 
     static void setInputs() {
@@ -1836,7 +3007,7 @@ extern "C" {
         ausBlockInput->getSingleInput("library")->setValues({"EGS_Fluence_Scoring"});
 
         // Format: name, isRequired, description, vector string of allowed values
-        auto typePtr = ausBlockInput->addSingleInput("type", true, "Whether to score volumetric or planar fluence", {"planar", "volumetric"});
+        auto typePtr = ausBlockInput->addSingleInput("type", true, "Whether to score volumetric, planar or spherical fluence", {"planar", "volumetric", "spherical"});
         ausBlockInput->addSingleInput("scoring particle", true, "Which type of particle we are scoring the fluence for", {"photon", "electron", "positron"});
         ausBlockInput->addSingleInput("source particle", false, "Optional, only required to score primary fluence. Defaults to source particles if all the same, or if mixed, defaults to scoring particle.", {"photon", "electron", "positron"});
         ausBlockInput->addSingleInput("score primaries", false, "Whether to score primary fluence as well as differential fluence. Defaults to no.", {"no", "yes"});
@@ -1883,6 +3054,25 @@ extern "C" {
         rectPtr->addDependency(circlePtr, "", true);
 
         addTransformationBlock(blockPtr);
+
+        blockPtr = ausBlockInput->addBlockInput("spherical scoring");
+        blockPtr->addDependency(typePtr, "spherical");
+        regionPtr = blockPtr->addSingleInput("contributing regions", false, "A list of regions to score fluence in");
+        startPtr = blockPtr->addSingleInput("start contributing region", false, "For a series of region ranges, list the 'starting region' for each range here (inclusive)");
+        stopPtr = blockPtr->addSingleInput("stop contributing region", false, "For a series of region ranges, list the 'ending region' for each range here (inclusive)");
+        blockPtr->addSingleInput("scoring sphere center", false, "The center of the scoring sphere(s): x y z. Default is origin.");
+        blockPtr->addSingleInput("scoring sphere radii", true, "A list of sphere radii (cm) sharing a common center. Radii are sorted and deduplicated.");
+        blockPtr->addSingleInput("scoring direction", false, "Which crossings to score: both (default), inward, or outward.", {"both", "inward", "outward"});
+        blockPtr->addSingleInput("N theta bins", false, "Number of polar angle bins. Default 1 (no angular resolution).");
+        blockPtr->addSingleInput("N phi bins", false, "Number of azimuthal angle bins. Default 1 (no phi resolution).");
+        blockPtr->addSingleInput("polar axis", false, "Polar axis for angular binning as a unit vector: ax ay az. Default 0 0 1 (z-axis).");
+        blockPtr->addSingleInput("theta binning", false, "Bin uniformly in cos_theta (equal-area, default) or theta (equal-angle).", {"cos_theta", "theta"});
+        blockPtr->addSingleInput("cos theta min", false, "Minimum |cos θ| = |u·n̂| allowed in the denominator of the fluence estimator w/|cos θ|. When |cos θ| → 0 (particle nearly tangent to the sphere, θ ≈ 90° or 270° from the outward normal) a single crossing can dominate the batch mean. Crossings with |u·n̂| below this threshold use the threshold value instead. Default: cos(85°) ≈ 0.0872. Set to 0 to disable the cap (exact estimator — only safe when grazing crossings cannot occur).");
+
+        regionPtr->addDependency(startPtr, "", true);
+        regionPtr->addDependency(stopPtr, "", true);
+        startPtr->addDependency(regionPtr, "", true);
+        stopPtr->addDependency(regionPtr, "", true);
     }
 
     EGS_FLUENCE_SCORING_EXPORT string getExample() {
@@ -2033,6 +3223,12 @@ extern "C" {
         }
         else if (!error && input->compare("volumetric",type)) {
             EGS_VolumetricFluence *result = new EGS_VolumetricFluence("", f);
+            result->setName(input);
+            result->initScoring(input);
+            return result;
+        }
+        else if (!error && input->compare("spherical",type)) {
+            EGS_SphericalFluence *result = new EGS_SphericalFluence("", f);
             result->setName(input);
             result->initScoring(input);
             return result;
