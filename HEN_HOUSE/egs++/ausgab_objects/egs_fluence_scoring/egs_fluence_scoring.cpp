@@ -1387,7 +1387,7 @@ bool  EGS_PlanarFluence::addState(istream &data) {
 EGS_VolumetricFluence::EGS_VolumetricFluence(const string &Name, EGS_ObjectFactory *f) :
     EGS_FluenceScoring(Name,f), flu_stpwr(stpwr),
     fd_geom(0), fluT_FD(0), flu_FD(0), fluT_FD_p(0), flu_FD_p(0),
-    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false)
+    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false), m_new_free_path(false)
 #ifdef DEBUG
     ,one_bin(0), multi_bin(0), max_step(-100.0), n_step_bins(10000)
 #endif

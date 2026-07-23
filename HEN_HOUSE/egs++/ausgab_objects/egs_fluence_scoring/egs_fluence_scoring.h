@@ -638,6 +638,14 @@ public:
                   iarg == EGS_Application::AfterAnnihRest)) {
             return true;
         }
+        else if (!scoring_charge && m_scoring_method != score_crossing &&
+                 (iarg == EGS_Application::AfterCompton     ||
+                  iarg == EGS_Application::AfterRayleigh    ||
+                  iarg == EGS_Application::AfterBrems       ||
+                  iarg == EGS_Application::AfterAnnihFlight ||
+                  iarg == EGS_Application::AfterAnnihRest)) {
+            return true;
+        }
         else {
             return false;
         }
@@ -661,10 +669,21 @@ public:
                ir = app->top_p.ir,
                latch = app->top_p.latch;
 
-        /* FD photon scoring: not gated by is_sensitive; scoreInCV handles gating */
+        /* FD photon scoring: once per new free path (m_new_free_path flag) */
         if (!scoring_charge && !q && iarg == EGS_Application::BeforeTransport
-                && m_scoring_method != score_crossing) {
+                && m_scoring_method != score_crossing && m_new_free_path) {
             scoreInCV();
+            m_new_free_path = false;
+        }
+        /* After a photon interaction that produces a continuing photon, arm FD for next step */
+        if (!scoring_charge && m_scoring_method != score_crossing) {
+            if (iarg == EGS_Application::AfterCompton     ||
+                    iarg == EGS_Application::AfterRayleigh    ||
+                    iarg == EGS_Application::AfterBrems       ||
+                    iarg == EGS_Application::AfterAnnihFlight ||
+                    iarg == EGS_Application::AfterAnnihRest) {
+                m_new_free_path = true;
+            }
         }
 
         if (q == scoring_charge && ir >= 0 && is_sensitive[ir]) {
@@ -677,8 +696,10 @@ public:
                     EGS_Float wtstep  = app->top_p.wt*app->getTVSTEP();
                     /* Score total fluence */
                     fluT->score(ir,wtstep);
+                    m_tot += app->top_p.wt;
                     if (score_primaries && !latch) {
                         fluT_p->score(ir,wtstep);
+                        m_primary += app->top_p.wt;
                     }
                     if (fluT_x_p) {
                         m_hist_T[ir] += wtstep;
@@ -1093,6 +1114,9 @@ public:
         if (ncase != current_ncase) {
             flushHistoryCrossTerms();
             current_ncase = ncase;
+            if (m_scoring_method != score_crossing) {
+                m_new_free_path = true;
+            }
             fluT->setHistory(ncase);
             if (score_primaries) {
                 fluT_p->setHistory(ncase);
@@ -1195,6 +1219,7 @@ public:
             fill(m_hist_FDP.begin(), m_hist_FDP.end(), 0.0);
         }
         m_hist_dirty = false;
+        m_new_free_path = false;
 #ifdef DEBUG
         binDist->reset();
         if (scoring_charge) {
@@ -1249,6 +1274,7 @@ private:
     mutable vector<double> m_hist_FDT; // per-history FD total per region
     mutable vector<double> m_hist_FDP; // per-history FD primary per region
     mutable bool           m_hist_dirty;
+    bool                   m_new_free_path; // true at history start and after each photon interaction; false after scoreInCV fires
     void flushHistoryCrossTerms() const; // flush accumulators → cross-term arrays
 
     vector<EGS_Float> volume;    // volume of each scoring region
