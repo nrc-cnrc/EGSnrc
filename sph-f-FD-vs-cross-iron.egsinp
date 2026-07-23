@@ -1,0 +1,129 @@
+##############################################################################
+#
+# Validation: FD vs crossing estimator in iron, 1 MeV photons
+#
+# Point source at centre of a solid iron sphere (R = 25 cm ~ 12 mfp).
+# No importance sampling.  Scoring spheres at 1, 2, 3, 5, 7 mfp.
+#
+# Fe at 1 MeV: total mu/rho = 5.9904e-2 cm^2/g, rho = 7.874 g/cm^3
+#   GMFP = 1 / (mu/rho * rho) = 2.12007 cm
+#
+# Expected behaviour
+# ------------------
+# Primary fluence:
+#   Both estimators must agree on the mean.  For straight primary tracks
+#   the analytic value is exp(-eta) / (4 pi R^2) where eta = R/GMFP.
+#   Check: Phi_pri(R) * 4pi * R^2 = exp(-eta), i.e.:
+#     R=1 mfp -> 0.3679    R=2 mfp -> 0.1353
+#     R=3 mfp -> 0.0498    R=5 mfp -> 0.0067    R=7 mfp -> 0.0009
+#
+# Uncertainty at depth WITHOUT importance sampling:
+#   Crossing estimator: primary contribution drops as exp(-eta), so
+#   uncertainty scales as exp(+eta/2).  At 5 mfp with 1e7 histories,
+#   expect ~5-10% uncertainty on primary.
+#   FD estimator: all histories contribute at every step, so uncertainty
+#   stays roughly flat.  Expect <1% at 5 mfp with the same 1e7 histories.
+#   This is the key demonstration: FD wins at depth.
+#
+# Total vs primary:
+#   Total > primary due to photon build-up from Compton scatter.  The ratio
+#   total/primary * exp(-eta) is the photon-fluence buildup factor.
+#
+##############################################################################
+
+##############################################################################
+### Run control
+##############################################################################
+:start run control:
+    ncase = 1e7
+:stop run control:
+
+##############################################################################
+### Geometry
+##############################################################################
+# Region 0: iron sphere, r < 25 cm  (~12 mfp)
+# Region 1: vacuum termination envelope, 25 < r < 30 cm
+:start geometry definition:
+    :start geometry:
+        name     = iron_sphere
+        library  = egs_spheres
+        midpoint = 0 0 0
+        radii    = 25 30
+        :start media input:
+            media = iron VACUUM
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = iron_sphere
+
+:stop geometry definition:
+
+##############################################################################
+### Media
+##############################################################################
+:start media definition:
+    ae = 0.521
+    ap = 0.010
+    ue = 2.511
+    up = 2.0
+
+    :start iron:
+        density correction file = iron
+    :stop iron:
+
+:stop media definition:
+
+##############################################################################
+### Source
+##############################################################################
+:start source definition:
+    :start source:
+        name    = pt_iso
+        library = egs_isotropic_source
+        charge  = 0
+        :start shape:
+            type     = point
+            position = 0 0 0
+        :stop shape:
+        :start spectrum:
+            type   = monoenergetic
+            energy = 1
+        :stop spectrum:
+    :stop source:
+    simulation source = pt_iso
+:stop source definition:
+
+##############################################################################
+### Ausgab objects
+##############################################################################
+:start ausgab object definition:
+
+    :start ausgab object:
+        name             = sph_flu_both_iron
+        library          = egs_fluence_scoring
+        type             = spherical
+        scoring particle = photon
+        source particle  = photon
+        score primaries  = yes
+        scoring method   = both
+        # Normalize by 4pi so that result = Phi * 4pi R^2.
+        # Primary result should equal exp(-R/GMFP) for an uncollided beam.
+        normalization    = 12.56637061435917
+
+        :start spherical scoring:
+            scoring sphere center = 0 0 0
+            # Radii at 1, 2, 3, 5, 7 mfp (GMFP = 2.12007 cm)
+            scoring sphere radii  = 2.12007 4.24014 6.36021 10.60035 14.84049
+            scoring direction     = both
+            cos theta min         = 0.0872   # 85 deg grazing cap (default)
+        :stop spherical scoring:
+    :stop ausgab object:
+
+:stop ausgab object definition:
+
+##############################################################################
+### MC transport parameters
+##############################################################################
+:start MC transport parameter:
+    Rayleigh scattering = On
+:stop MC transport parameter:

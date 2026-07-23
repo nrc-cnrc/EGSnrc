@@ -1287,6 +1287,25 @@ public:
                     fluT_x_p->setHistory(ncase);
                 }
             }
+            if (m_scoring_method == score_both && fluT_FD) {
+                fluT_FD->setHistory(ncase);
+                if (score_spe) {
+                    for (int k = 0; k < n_total; k++) {
+                        flu_FD[k]->setHistory(ncase);
+                    }
+                }
+                if (score_primaries) {
+                    fluT_FD_p->setHistory(ncase);
+                    if (score_spe) {
+                        for (int k = 0; k < n_total; k++) {
+                            flu_FD_p[k]->setHistory(ncase);
+                        }
+                    }
+                    if (fluT_FD_x_p) {
+                        fluT_FD_x_p->setHistory(ncase);
+                    }
+                }
+            }
         }
     };
 
@@ -1310,8 +1329,29 @@ public:
                 fluT_x_p->reset();
             }
         }
-        fill(m_hist_T.begin(), m_hist_T.end(), 0.0);
-        fill(m_hist_P.begin(), m_hist_P.end(), 0.0);
+        if (m_scoring_method == score_both && fluT_FD) {
+            fluT_FD->reset();
+            if (flu_FD) {
+                for (int k = 0; k < n_total; k++) {
+                    flu_FD[k]->reset();
+                }
+            }
+            if (score_primaries) {
+                fluT_FD_p->reset();
+                if (score_spe) {
+                    for (int k = 0; k < n_total; k++) {
+                        flu_FD_p[k]->reset();
+                    }
+                }
+                if (fluT_FD_x_p) {
+                    fluT_FD_x_p->reset();
+                }
+            }
+        }
+        fill(m_hist_T.begin(),   m_hist_T.end(),   0.0);
+        fill(m_hist_P.begin(),   m_hist_P.end(),   0.0);
+        fill(m_hist_FDT.begin(), m_hist_FDT.end(), 0.0);
+        fill(m_hist_FDP.begin(), m_hist_FDP.end(), 0.0);
         m_hist_dirty = false;
     };
 
@@ -1354,14 +1394,23 @@ private:
     void findCrossings(const EGS_Particle &p);
     int  getAngularBin(const EGS_Vector &n_hat) const;
     void scoreAtCrossing(const CrossInfo &ci, const EGS_Particle &p);
+    void scoreFD(const EGS_Particle &p);
     void outputSphericalSpectrum(EGS_ScoringArray **fl_set, EGS_ScoringArray **flp_set,
                                  double norm_spe, const string &infix) const;
     void flushHistoryCrossTerms() const;
 
-    EGS_ScoringArray  *fluT_x_p;        // cross-term Σ_i T_i·P_i per bin (correlated tot/pri)
+    EGS_ScoringArray  *fluT_FD;      // FD total fluence (score_both only)
+    EGS_ScoringArray  *fluT_FD_p;    // FD primary total fluence (score_both only)
+    EGS_ScoringArray **flu_FD;       // FD differential fluence (score_both only)
+    EGS_ScoringArray **flu_FD_p;     // FD primary differential fluence (score_both only)
+
+    EGS_ScoringArray  *fluT_x_p;    // crossing cross-term Σ_i T_i·P_i per bin
+    EGS_ScoringArray  *fluT_FD_x_p; // FD cross-term (score_both + score_primaries only)
 
     mutable vector<double>  m_hist_T;    // per-history crossing total per bin
     mutable vector<double>  m_hist_P;    // per-history crossing primary per bin
+    mutable vector<double>  m_hist_FDT;  // per-history FD total per bin
+    mutable vector<double>  m_hist_FDP;  // per-history FD primary per bin
     mutable bool            m_hist_dirty;
 };
 

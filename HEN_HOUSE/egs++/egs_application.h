@@ -1306,6 +1306,16 @@ public:
         return 0;
     };
 
+    virtual EGS_Interpolator *getMFPInterpolators() const {
+        return 0;
+    };
+    virtual EGS_Interpolator *getCoheInterpolators() const {
+        return 0;
+    };
+    virtual bool isRayleighOn() const {
+        return false;
+    };
+
     string sourceType() {
         return source->getObjectType();
     }
