@@ -48,6 +48,7 @@
 #include "egs_ausgab_object.h"
 #include "egs_transformations.h"
 #include "egs_interpolator.h"
+#include "egs_base_geometry.h"
 #include <egs_scoring.h>
 
 #include <fstream>
@@ -660,11 +661,18 @@ public:
                ir = app->top_p.ir,
                latch = app->top_p.latch;
 
+        /* FD photon scoring: not gated by is_sensitive; scoreInCV handles gating */
+        if (!scoring_charge && !q && iarg == EGS_Application::BeforeTransport
+                && m_scoring_method != score_crossing) {
+            scoreInCV();
+        }
+
         if (q == scoring_charge && ir >= 0 && is_sensitive[ir]) {
 
             if (!q) { // It's a photon
                 /* Score photon fluence */
-                if (iarg == EGS_Application::BeforeTransport) {
+                if (iarg == EGS_Application::BeforeTransport
+                        && m_scoring_method != score_FD) {
                     /* Linear track-Length scoring */
                     EGS_Float wtstep  = app->top_p.wt*app->getTVSTEP();
                     /* Score total fluence */
@@ -1097,6 +1105,26 @@ public:
                     }
                 }
             }
+            if (m_scoring_method != score_crossing && fluT_FD) {
+                fluT_FD->setHistory(ncase);
+                if (score_primaries && fluT_FD_p) {
+                    fluT_FD_p->setHistory(ncase);
+                }
+                if (score_spe && flu_FD) {
+                    for (int j = 0; j < nreg; j++) {
+                        if (is_sensitive[j]) {
+                            flu_FD[j]->setHistory(ncase);
+                        }
+                    }
+                    if (score_primaries && flu_FD_p) {
+                        for (int j = 0; j < nreg; j++) {
+                            if (is_sensitive[j]) {
+                                flu_FD_p[j]->setHistory(ncase);
+                            }
+                        }
+                    }
+                }
+            }
         }
 #ifdef DEBUG
         binDist->setHistory(ncase);
@@ -1124,6 +1152,26 @@ public:
                 for (int j = 0; j < nreg; j++) {
                     if (is_sensitive[j]) {
                         flu_p[j]->reset();
+                    }
+                }
+            }
+        }
+        if (m_scoring_method != score_crossing && fluT_FD) {
+            fluT_FD->reset();
+            if (score_primaries && fluT_FD_p) {
+                fluT_FD_p->reset();
+            }
+            if (score_spe && flu_FD) {
+                for (int j = 0; j < nreg; j++) {
+                    if (is_sensitive[j]) {
+                        flu_FD[j]->reset();
+                    }
+                }
+                if (score_primaries && flu_FD_p) {
+                    for (int j = 0; j < nreg; j++) {
+                        if (is_sensitive[j]) {
+                            flu_FD_p[j]->reset();
+                        }
                     }
                 }
             }
@@ -1164,6 +1212,15 @@ private:
     /*****************************************************************/
 
     EGS_I64 eCases;
+
+    /* Forced-detection members (photons only, scoring_charge == 0) */
+    EGS_BaseGeometry *fd_geom;   // optional gate geometry (like egs_kerma fd_geom)
+    EGS_ScoringArray  *fluT_FD;  // FD total fluence
+    EGS_ScoringArray **flu_FD;   // FD differential fluence per sensitive region
+    EGS_ScoringArray  *fluT_FD_p;// FD primary total fluence
+    EGS_ScoringArray **flu_FD_p; // FD primary differential fluence per sensitive region
+
+    void scoreInCV(); // FD ray-tracing scorer (defined in cpp)
 
     vector<EGS_Float> volume;    // volume of each scoring region
     /* Energy grid inputs */
