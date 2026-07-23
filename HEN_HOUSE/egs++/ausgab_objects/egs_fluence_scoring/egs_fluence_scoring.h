@@ -680,6 +680,11 @@ public:
                     if (score_primaries && !latch) {
                         fluT_p->score(ir,wtstep);
                     }
+                    if (fluT_x_p) {
+                        m_hist_T[ir] += wtstep;
+                        if (!latch) m_hist_P[ir] += wtstep;
+                        m_hist_dirty = true;
+                    }
                     /* Score differential fluence */
                     if (score_spe) {
                         EGS_Float e = app->top_p.E;
@@ -1086,10 +1091,12 @@ public:
 
     void setCurrentCase(EGS_I64 ncase) {
         if (ncase != current_ncase) {
+            flushHistoryCrossTerms();
             current_ncase = ncase;
             fluT->setHistory(ncase);
             if (score_primaries) {
                 fluT_p->setHistory(ncase);
+                if (fluT_x_p) fluT_x_p->setHistory(ncase);
             }
             if (score_spe) {
                 for (int j = 0; j < nreg; j++) {
@@ -1109,6 +1116,7 @@ public:
                 fluT_FD->setHistory(ncase);
                 if (score_primaries && fluT_FD_p) {
                     fluT_FD_p->setHistory(ncase);
+                    if (fluT_FD_x_p) fluT_FD_x_p->setHistory(ncase);
                 }
                 if (score_spe && flu_FD) {
                     for (int j = 0; j < nreg; j++) {
@@ -1176,6 +1184,17 @@ public:
                 }
             }
         }
+        if (fluT_x_p) {
+            fluT_x_p->reset();
+            fill(m_hist_T.begin(),  m_hist_T.end(),  0.0);
+            fill(m_hist_P.begin(),  m_hist_P.end(),  0.0);
+        }
+        if (fluT_FD_x_p) {
+            fluT_FD_x_p->reset();
+            fill(m_hist_FDT.begin(), m_hist_FDT.end(), 0.0);
+            fill(m_hist_FDP.begin(), m_hist_FDP.end(), 0.0);
+        }
+        m_hist_dirty = false;
 #ifdef DEBUG
         binDist->reset();
         if (scoring_charge) {
@@ -1221,6 +1240,16 @@ private:
     EGS_ScoringArray **flu_FD_p; // FD primary differential fluence per sensitive region
 
     void scoreInCV(); // FD ray-tracing scorer (defined in cpp)
+
+    /* Correlated tot/pri ratio: cross-term arrays and per-history accumulators */
+    EGS_ScoringArray  *fluT_x_p;    // TL cross-term Σ T_i·P_i per region
+    EGS_ScoringArray  *fluT_FD_x_p; // FD cross-term
+    mutable vector<double> m_hist_T;   // per-history TL total per region
+    mutable vector<double> m_hist_P;   // per-history TL primary per region
+    mutable vector<double> m_hist_FDT; // per-history FD total per region
+    mutable vector<double> m_hist_FDP; // per-history FD primary per region
+    mutable bool           m_hist_dirty;
+    void flushHistoryCrossTerms() const; // flush accumulators → cross-term arrays
 
     vector<EGS_Float> volume;    // volume of each scoring region
     /* Energy grid inputs */

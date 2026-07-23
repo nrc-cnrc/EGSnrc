@@ -1386,7 +1386,8 @@ bool  EGS_PlanarFluence::addState(istream &data) {
 
 EGS_VolumetricFluence::EGS_VolumetricFluence(const string &Name, EGS_ObjectFactory *f) :
     EGS_FluenceScoring(Name,f), flu_stpwr(stpwr),
-    fd_geom(0), fluT_FD(0), flu_FD(0), fluT_FD_p(0), flu_FD_p(0)
+    fd_geom(0), fluT_FD(0), flu_FD(0), fluT_FD_p(0), flu_FD_p(0),
+    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false)
 #ifdef DEBUG
     ,one_bin(0), multi_bin(0), max_step(-100.0), n_step_bins(10000)
 #endif
@@ -1421,6 +1422,8 @@ EGS_VolumetricFluence::~EGS_VolumetricFluence() {
         }
         delete [] flu_FD_p;
     }
+    delete fluT_x_p;
+    delete fluT_FD_x_p;
 
 #ifdef DEBUG
     if (binDist) {
@@ -1492,6 +1495,9 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
                 }
             }
         }
+        fluT_x_p = new EGS_ScoringArray(nreg);
+        m_hist_T.assign(nreg, 0.0);
+        m_hist_P.assign(nreg, 0.0);
     }
 #ifdef DEBUG
     binDist = new EGS_ScoringArray(flu_nbin);
@@ -1646,6 +1652,9 @@ void EGS_VolumetricFluence::setApplication(EGS_Application *App) {
                         }
                     }
                 }
+                fluT_FD_x_p = new EGS_ScoringArray(nreg);
+                m_hist_FDT.assign(nreg, 0.0);
+                m_hist_FDP.assign(nreg, 0.0);
             }
         }
     }
@@ -1885,6 +1894,11 @@ void EGS_VolumetricFluence::scoreInCV() {
                 if (score_primaries && !latch) {
                     fluT_FD_p->score(irsc, score);
                 }
+                if (fluT_FD_x_p) {
+                    m_hist_FDT[irsc] += score;
+                    if (!latch) m_hist_FDP[irsc] += score;
+                    m_hist_dirty = true;
+                }
                 if (score_spe) {
                     EGS_Float e = flu_s ? gle : app->top_p.E;
                     if (e > flu_xmin && e <= flu_xmax) {
@@ -1917,6 +1931,33 @@ void EGS_VolumetricFluence::scoreInCV() {
             navigating = false;
         }
     }
+}
+
+void EGS_VolumetricFluence::flushHistoryCrossTerms() const {
+    if (!m_hist_dirty) {
+        return;
+    }
+    if (fluT_x_p) {
+        for (int j = 0; j < nreg; j++) {
+            if (!is_sensitive[j]) {
+                continue;
+            }
+            fluT_x_p->score(j, m_hist_T[j] * m_hist_P[j]);
+            m_hist_T[j] = 0.0;
+            m_hist_P[j] = 0.0;
+        }
+    }
+    if (fluT_FD_x_p) {
+        for (int j = 0; j < nreg; j++) {
+            if (!is_sensitive[j]) {
+                continue;
+            }
+            fluT_FD_x_p->score(j, m_hist_FDT[j] * m_hist_FDP[j]);
+            m_hist_FDT[j] = 0.0;
+            m_hist_FDP[j] = 0.0;
+        }
+    }
+    m_hist_dirty = false;
 }
 
 void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const double &norma) {
@@ -2034,24 +2075,80 @@ void EGS_VolumetricFluence::ouputResults() {
     EGS_Float norm  = 1.0/src_norm;              // per particle or fluence
     norm *= norm_u;                    // user-requested normalization
 
+    flushHistoryCrossTerms();
+
+    // Helpers matching the spherical fluence output pattern
+    auto getR = [](EGS_ScoringArray *arr, int k, double nk,
+                   double &val, double &unc_pct) {
+        double r, dr;
+        arr->currentResult(k, r, dr);
+        if (dr < 0) dr = 0.0;
+        val = r * nk;
+        unc_pct = (r > 0) ? 100.0 * dr / r : 100.0;
+    };
+
+    auto corrRatio = [this](EGS_ScoringArray *fT, EGS_ScoringArray *fP,
+                            EGS_ScoringArray *fX, int k,
+                            double &B, double &Bpct) {
+        double T_r, dT, P_r, dP, TP_r_mean, dummy;
+        fT->currentResult(k, T_r, dT);
+        fP->currentResult(k, P_r, dP);
+        if (dT < 0) dT = 0.0;
+        if (dP < 0) dP = 0.0;
+        B = (P_r > 0) ? T_r / P_r : 0.0;
+        if (B <= 0 || current_ncase <= 0) { Bpct = 100.0; return; }
+        TP_r_mean = 0.0;
+        if (fX) fX->currentResult(k, TP_r_mean, dummy);
+        double cov   = (TP_r_mean - T_r * P_r) / current_ncase;
+        double var_B = (dT*dT - 2.0*B*cov + B*B*dP*dP) / (P_r * P_r);
+        Bpct = (var_B > 0) ? 100.0 * sqrt(var_B) / B : 0.0;
+    };
+
+    int ir_digits = getDigits(nreg);
+
+    auto ouputBlock = [&](const char *label,
+                          EGS_ScoringArray *fT, EGS_ScoringArray *fP,
+                          EGS_ScoringArray *fX) {
+        bool with_ratio = (fP != nullptr);
+        if (with_ratio) {
+            egsInformation("\n\n  %s\n", label);
+            egsInformation("  %*s  %-28s  %-28s  %s\n",
+                           ir_digits, "reg#", "total", "primary", "tot/pri");
+            egsInformation("  %s\n", string(ir_digits + 2 + 28 + 2 + 28 + 2 + 20, '-').c_str());
+            for (int k = 0; k < nreg; k++) {
+                if (!is_sensitive[k]) continue;
+                double nk = norm / volume[k];
+                double Tv, Tu, Pv, Pu, B, Bu;
+                getR(fT, k, nk, Tv, Tu);
+                getR(fP, k, nk, Pv, Pu);
+                corrRatio(fT, fP, fX, k, B, Bu);
+                egsInformation("  %*d  %12.5e +/- %-7.3f%%  %12.5e +/- %-7.3f%%  %7.4f +/- %-7.3f%%\n",
+                               ir_digits, k, Tv, Tu, Pv, Pu, B, Bu);
+            }
+            egsInformation("  %s\n", string(ir_digits + 2 + 28 + 2 + 28 + 2 + 20, '-').c_str());
+        }
+        else {
+            egsInformation("\n\n  %s\n", label);
+            ouputVolumetricFluence(fT, norm);
+        }
+    };
+
     egsInformation("\n\n                 Integral fluence output\n"
                    "                 =======================\n\n");
 
     if (m_scoring_method != score_FD) {
-        egsInformation("\n\n  [track-length]   Total %s fluence\n", particle_name.c_str());
-        ouputVolumetricFluence(fluT, norm);
-        if (score_primaries) {
-            egsInformation("\n\n  [track-length]   Primary fluence\n");
-            ouputVolumetricFluence(fluT_p, norm);
-        }
+        ouputBlock(score_primaries ? "[track-length]   Total + primary + tot/pri" :
+                   "[track-length]   Total",
+                   fluT,
+                   score_primaries ? fluT_p    : nullptr,
+                   score_primaries ? fluT_x_p  : nullptr);
     }
     if (m_scoring_method != score_crossing && fluT_FD) {
-        egsInformation("\n\n  [FD]             Total %s fluence\n", particle_name.c_str());
-        ouputVolumetricFluence(fluT_FD, norm);
-        if (score_primaries && fluT_FD_p) {
-            egsInformation("\n\n  [FD]             Primary fluence\n");
-            ouputVolumetricFluence(fluT_FD_p, norm);
-        }
+        ouputBlock(score_primaries ? "[FD]             Total + primary + tot/pri" :
+                   "[FD]             Total",
+                   fluT_FD,
+                   score_primaries ? fluT_FD_p   : nullptr,
+                   score_primaries ? fluT_FD_x_p : nullptr);
     }
 
     if (verbose) {
@@ -2192,6 +2289,7 @@ void EGS_VolumetricFluence::reportResults() {
 }
 
 bool EGS_VolumetricFluence::storeState(ostream &data) const {
+    flushHistoryCrossTerms();
     if (!egsStoreI64(data,current_ncase)) {
         return false;
     }
@@ -2238,6 +2336,9 @@ bool EGS_VolumetricFluence::storeState(ostream &data) const {
                 }
             }
         }
+        if (!fluT_x_p->storeState(data)) {
+            return false;
+        }
     }
 
     if (m_scoring_method != score_crossing && fluT_FD) {
@@ -2269,6 +2370,9 @@ bool EGS_VolumetricFluence::storeState(ostream &data) const {
                         }
                     }
                 }
+            }
+            if (!fluT_FD_x_p->storeState(data)) {
+                return false;
             }
         }
     }
@@ -2323,6 +2427,12 @@ bool  EGS_VolumetricFluence::setState(istream &data) {
                 }
             }
         }
+        if (!fluT_x_p->setState(data)) {
+            return false;
+        }
+        fill(m_hist_T.begin(), m_hist_T.end(), 0.0);
+        fill(m_hist_P.begin(), m_hist_P.end(), 0.0);
+        m_hist_dirty = false;
     }
 
     if (m_scoring_method != score_crossing && fluT_FD) {
@@ -2355,6 +2465,11 @@ bool  EGS_VolumetricFluence::setState(istream &data) {
                     }
                 }
             }
+            if (!fluT_FD_x_p->setState(data)) {
+                return false;
+            }
+            fill(m_hist_FDT.begin(), m_hist_FDT.end(), 0.0);
+            fill(m_hist_FDP.begin(), m_hist_FDP.end(), 0.0);
         }
     }
 
@@ -2418,6 +2533,11 @@ bool  EGS_VolumetricFluence::addState(istream &data) {
                 }
             }
         }
+        EGS_ScoringArray tgT_x_p(nreg);
+        if (!tgT_x_p.setState(data)) {
+            return false;
+        }
+        (*fluT_x_p) += tgT_x_p;
     }
 
     if (m_scoring_method != score_crossing && fluT_FD) {
@@ -2463,6 +2583,11 @@ bool  EGS_VolumetricFluence::addState(istream &data) {
                     }
                 }
             }
+            EGS_ScoringArray tgT_FD_x_p(nreg);
+            if (!tgT_FD_x_p.setState(data)) {
+                return false;
+            }
+            (*fluT_FD_x_p) += tgT_FD_x_p;
         }
     }
 
