@@ -165,6 +165,7 @@ public slots:
 
 private slots:
     void loadRegions();
+    void ensureEditorLoaded();
 
 private:
 
@@ -227,7 +228,8 @@ private:
     bool isPlaying;
     vector<bool> show_regions;
     bool    allowRegionSelection,
-            energyScaling;
+            energyScaling,
+            editorLoaded;
     vector<vector<EGS_Float>> scoreArrays;
     vector<string> geometryNames;
     vector<string> inputExamples;

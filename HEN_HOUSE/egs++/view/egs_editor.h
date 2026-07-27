@@ -38,6 +38,7 @@
 #include <QtWidgets>
 
 #include "egs_input_struct.h"
+#include "egs_highlighter.h"
 
 class QPaintEvent;
 class QResizeEvent;
@@ -56,8 +57,9 @@ public:
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
     void setInputStruct(shared_ptr<EGS_InputStruct> inp);
-    void validateEntireInput();
+    void validateVisibleLines();
     void setDarkMode(bool isDarkMode);
+    void setHighlighter(EGS_Highlighter *h) { syntaxHighlighter = h; }
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -80,7 +82,7 @@ private:
     shared_ptr<EGS_BlockInput> getBlockInput(QString &blockTitle, QTextCursor cursor = QTextCursor());
     QString getBlockTitle(QTextCursor cursor = QTextCursor());
     QString getParentBlockTitle(QTextCursor cursor = QTextCursor());
-    QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream = false);
+    QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream = false, int depth = 0);
     QTextBlock getBlockEnd(QTextBlock currentBlock);
     template <typename T>
     bool inputHasDependency(const shared_ptr<T>& inp);
@@ -92,11 +94,13 @@ private:
 
     QWidget *lineNumberArea;
     shared_ptr<EGS_InputStruct> inputStruct;
+    EGS_Highlighter *syntaxHighlighter = nullptr;
     QListView *popup;
     QStringListModel *model;
     bool popupGrabbing;
     bool isDarkMode = false;
     static constexpr int indentWidth = 4;
+    QTimer *validationDebounceTimer = nullptr;
 
     QDialog           *findDialog = nullptr;
     QLineEdit         *findEdit   = nullptr;

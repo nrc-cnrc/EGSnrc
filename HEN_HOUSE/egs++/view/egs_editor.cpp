@@ -1,4 +1,3 @@
-
 /*
 ###############################################################################
 #
@@ -103,6 +102,29 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(autoComplete()));
     connect(popup, SIGNAL(clicked(QModelIndex)), this, SLOT(insertCompletion(QModelIndex)));
     connect(popup, SIGNAL(activated(QModelIndex)), this, SLOT(insertCompletion(QModelIndex)));
+
+    // Debounce timer for viewport-only validation.
+    // Fires 150 ms after the last scroll or block-count change.
+    validationDebounceTimer = new QTimer(this);
+    validationDebounceTimer->setSingleShot(true);
+    validationDebounceTimer->setInterval(150);
+    connect(validationDebounceTimer, &QTimer::timeout,
+            this, &EGS_Editor::validateVisibleLines);
+
+    // Re-validate visible lines after scrolling.
+    connect(this, &QPlainTextEdit::updateRequest,
+            this, [this](const QRect &, int dy) {
+        if (dy != 0) {
+            validationDebounceTimer->start();
+        }
+    });
+
+    // Re-validate after lines are added or removed (e.g. typing a :start/:stop
+    // line changes the block-context for all lines below).
+    connect(this, &QPlainTextEdit::blockCountChanged,
+            this, [this](int) {
+        validationDebounceTimer->start();
+    });
 //
 //         QObject::connect(popup->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
 //                         this, SLOT(_q_completionSelected(QItemSelection)));
@@ -207,18 +229,24 @@ int EGS_Editor::countStartingWhitespace(const QString &s) {
     return i;
 }
 
-void EGS_Editor::validateEntireInput() {
-    // This actually validates from the current cursor position,
-    // but we only call this upon loading the file so the cursor is already at the top
-    QTextCursor cursor = textCursor();
-    for (QTextBlock it = cursor.document()->begin(); it != cursor.document()->end(); it = it.next()) {
-        cursor.movePosition(QTextCursor::NextBlock);
-        validateLine(cursor);
-    }
+void EGS_Editor::validateVisibleLines() {
+    // Iterate over only the blocks currently visible in the viewport, mirroring
+    // the approach used by lineNumberAreaPaintEvent.
+    QTextBlock block = firstVisibleBlock();
+    const int viewportBottom = viewport()->height();
 
-#ifdef EDITOR_DEBUG
-    egsInformation("EGS_Editor::validateEntireInput: Done validating input file.\n");
-#endif
+    while (block.isValid()) {
+        const int top = static_cast<int>(
+            blockBoundingGeometry(block).translated(contentOffset()).top());
+        if (top >= viewportBottom) {
+            break;
+        }
+        if (block.isVisible()) {
+            QTextCursor cursor(block);
+            validateLine(cursor);
+        }
+        block = block.next();
+    }
 }
 
 void EGS_Editor::setDarkMode(bool isDark) {
@@ -228,15 +256,16 @@ void EGS_Editor::setDarkMode(bool isDark) {
 void EGS_Editor::validateLine(QTextCursor cursor) {
     QString selectedText = cursor.block().text().simplified();
 
+    // Early-out for blank and comment lines before the expensive context lookup.
+    if (selectedText.isEmpty() || selectedText.startsWith("#")) {
+        return;
+    }
+
     QString blockTitle;
     shared_ptr<EGS_BlockInput> inputBlockTemplate = getBlockInput(blockTitle, cursor);
 
     // If we aren't inside an input block, ignore this line
     if (blockTitle.size() < 1) {
-        return;
-    }
-
-    if (selectedText.startsWith("#")) {
         return;
     }
 
@@ -253,49 +282,41 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
 #endif
 
         // If we found a template for this type of input block,
-        // check that the input tag  (LHS) is valid
+        // check that the input tag (LHS) is valid
         if (inputBlockTemplate) {
 
-            QList<QTextEdit::ExtraSelection> extraSelections = this->extraSelections();
-            QTextEdit::ExtraSelection selection;
-            selection.cursor = cursor;
-            selection.cursor.joinPreviousEditBlock();
+            // Use a scratch cursor for all character-format writes so we don't
+            // disturb the caller's cursor position.
+            QTextCursor fmtCursor = cursor;
+            fmtCursor.joinPreviousEditBlock();
 
-            // Select the whole line
-            selection.cursor.movePosition(QTextCursor::StartOfBlock);
-            selection.cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-
-            // Reset the format to have no red underline
+            // Select the whole line and clear any previous underline / tooltip.
+            fmtCursor.movePosition(QTextCursor::StartOfBlock);
+            fmtCursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
             QTextCharFormat format;
             format.setUnderlineStyle(QTextCharFormat::NoUnderline);
             format.setToolTip("");
-            selection.cursor.setCharFormat(format);
+            fmtCursor.setCharFormat(format);
 
-            // Check that the input block template contains this type of input
-            // If the input isn't defined, it will return nullptr
+            // Check that the input block template contains this type of input.
+            // If the input isn't defined, it will return nullptr.
             shared_ptr<EGS_SingleInput> inputPtr = inputBlockTemplate->getSingleInput(inputTag.toStdString(), blockTitle.toStdString());
             if (!inputPtr) {
-                // Red underline the input tag
-                // Select the input tag
+                // Red-underline only the input tag (left of "=").
+                fmtCursor.movePosition(QTextCursor::StartOfBlock);
 
-                selection.cursor.movePosition(QTextCursor::StartOfBlock);
-
-                // If whitespace was trimmed from the start of the line,
-                // we account for it so only the input tag is underlined
+                // Account for leading whitespace so only the tag is underlined.
                 int originalEqualsPos = cursor.block().text().indexOf("=");
                 int numWhitespace = countStartingWhitespace(cursor.block().text());
                 if (numWhitespace > 0) {
-                    selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, numWhitespace);
+                    fmtCursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, numWhitespace);
                 }
+                fmtCursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, originalEqualsPos - numWhitespace);
 
-                selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, originalEqualsPos - numWhitespace);
-
-                // Set the format to have a red underline
                 format.setUnderlineColor(QColor("red"));
                 format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
             }
             else {
-
                 // Get the description for this input
                 string desc = inputPtr->getDescription();
 
@@ -326,21 +347,16 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
                     }
 
                     if (inputDependencySatisfied(inputPtr, cursor) == false) {
-                        // Red underline the input tag
-                        // Select the input tag
-                        selection.cursor.movePosition(QTextCursor::StartOfBlock);
+                        // Red-underline only the input tag.
+                        fmtCursor.movePosition(QTextCursor::StartOfBlock);
 
-                        // If whitespace was trimmed from the start of the line,
-                        // we account for it so only the input tag is underlined
                         int originalEqualsPos = cursor.block().text().indexOf("=");
                         int numWhitespace = countStartingWhitespace(cursor.block().text());
                         if (numWhitespace > 0) {
-                            selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, numWhitespace);
+                            fmtCursor.movePosition(QTextCursor::NextCharacter, QTextCursor::MoveAnchor, numWhitespace);
                         }
+                        fmtCursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, originalEqualsPos - numWhitespace);
 
-                        selection.cursor.movePosition(QTextCursor::NextCharacter, QTextCursor::KeepAnchor, originalEqualsPos - numWhitespace);
-
-                        // Set the format to have a red underline
                         format.setUnderlineColor(QColor("red"));
                         format.setUnderlineStyle(QTextCharFormat::SpellCheckUnderline);
                     }
@@ -350,32 +366,21 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
                 format.setToolTip(QString::fromStdString(desc));
             }
 
-            selection.cursor.setCharFormat(format);
-
-            selection.cursor.endEditBlock();
-            extraSelections.append(selection);
-            setExtraSelections(extraSelections);
+            fmtCursor.setCharFormat(format);
+            fmtCursor.endEditBlock();
         }
         cursor.endEditBlock();
     } else {
+        // Non-assignment line inside a known block: clear any stale underline/tooltip.
         cursor.beginEditBlock();
-        QList<QTextEdit::ExtraSelection> extraSelections = this->extraSelections();
-        QTextEdit::ExtraSelection selection;
-        selection.cursor = cursor;
-        selection.cursor.joinPreviousEditBlock();
-
-        // Select the whole line
-        selection.cursor.movePosition(QTextCursor::StartOfBlock);
-        selection.cursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
-
-        // Reset the format to have no red underline
+        QTextCursor fmtCursor = cursor;
+        fmtCursor.joinPreviousEditBlock();
+        fmtCursor.movePosition(QTextCursor::StartOfBlock);
+        fmtCursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
         QTextCharFormat format;
-        //format.setUnderlineStyle(QTextCharFormat::NoUnderline);
         format.setToolTip("");
-        selection.cursor.setCharFormat(format);
-        selection.cursor.endEditBlock();
-        extraSelections.append(selection);
-        setExtraSelections(extraSelections);
+        fmtCursor.setCharFormat(format);
+        fmtCursor.endEditBlock();
         cursor.endEditBlock();
     }
 }
@@ -757,7 +762,7 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
         // so that we're actually starting within the block
         QTextBlock blockEnd;
         blockEnd = cursor.block();
-        int loopGuard = 100000;
+        int loopGuard = document()->blockCount();
         int i = 0;
         while (blockEnd.text().contains(":start ")) {
             blockEnd = getBlockEnd(blockEnd.next());
@@ -947,7 +952,9 @@ QString EGS_Editor::getParentBlockTitle(QTextCursor cursor) {
     return blockTitle;
 }
 
-QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream) {
+QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream, int depth) {
+    static constexpr int maxUpstreamDepth = 20;
+
     QString value;
     vector<QString> innerList;
     bool withinOtherBlock = false;
@@ -1022,9 +1029,9 @@ QString EGS_Editor::getInputValue(QString inp, QTextBlock currentBlock, bool &fo
         }
     }
 
-    if(!foundTag && searchUpstream) {
+    if (!foundTag && searchUpstream && depth < maxUpstreamDepth) {
         QTextBlock upstreamBlock = blockEnd.next().next(); // This might be a :stop of the upstream block
-        value = getInputValue(inp, upstreamBlock, foundTag, searchUpstream);
+        value = getInputValue(inp, upstreamBlock, foundTag, searchUpstream, depth + 1);
     }
 
     return value;
