@@ -395,13 +395,10 @@ public:
                     x0 = app->top_p.x;
                     hits_field = true;
                     /* FD: fire only on first step of this photon's free path */
-                    if (!scoring_charge && m_scoring_method != score_crossing &&
-                            !m_fd_pending_slots.empty()) {
+                    if (!scoring_charge && m_scoring_method != score_crossing) {
                         int np = app->getNp();
-                        auto it = std::find(m_fd_pending_slots.begin(),
-                                            m_fd_pending_slots.end(), np);
-                        if (it != m_fd_pending_slots.end()) {
-                            m_fd_pending_slots.erase(it);
+                        if (np < (int)m_fd_slot_gen.size() && m_fd_slot_gen[np] == m_fd_gen) {
+                            m_fd_slot_gen[np] = 0; // consume
                             scoreFD(app->top_p, ixy, distance);
                         }
                     }
@@ -425,12 +422,10 @@ public:
 
         /* Clean up pending slot for photons discarded before their first step */
         if (!scoring_charge && m_scoring_method != score_crossing
-                && !m_fd_pending_slots.empty()
                 && iarg == EGS_Application::UserDiscard) {
             int np = app->getNp();
-            auto it = std::find(m_fd_pending_slots.begin(),
-                                m_fd_pending_slots.end(), np);
-            if (it != m_fd_pending_slots.end()) m_fd_pending_slots.erase(it);
+            if (np < (int)m_fd_slot_gen.size() && m_fd_slot_gen[np] == m_fd_gen)
+                m_fd_slot_gen[np] = 0;
         }
 
         /********************************************************************
@@ -446,7 +441,7 @@ public:
             flagSecondaries(iarg, q);
         }
 
-        /* Push interaction products for first-step FD (after flagSecondaries so latch is set) */
+        /* Mark interaction products for first-step FD (after flagSecondaries so latch is set) */
         if (!scoring_charge && m_scoring_method != score_crossing &&
                 (iarg == EGS_Application::AfterCompton     ||
                  iarg == EGS_Application::AfterPhoto       ||
@@ -456,9 +451,10 @@ public:
                  iarg == EGS_Application::AfterAnnihRest)) {
             int npold_i = app->getNpOld();
             int np_i    = app->getNp();
-            for (int ip = npold_i; ip <= np_i; ip++) {
-                m_fd_pending_slots.push_back(ip);
-            }
+            if (np_i >= (int)m_fd_slot_gen.size())
+                m_fd_slot_gen.resize(2*np_i + 1, 0);
+            for (int ip = npold_i; ip <= np_i; ip++)
+                m_fd_slot_gen[ip] = m_fd_gen;
         }
 
         return 0;
@@ -468,10 +464,8 @@ public:
     void setCurrentCase(EGS_I64 ncase) {
         if (ncase != current_ncase) {
             current_ncase = ncase;
-            if (m_scoring_method != score_crossing) {
-                m_fd_pending_slots.clear();
-                m_fd_pending_slots.push_back(0); // primary always at C++ slot 0
-            }
+            if (m_scoring_method != score_crossing)
+                m_fd_slot_gen[0] = ++m_fd_gen; // primary always at C++ slot 0
             fluT->setHistory(ncase);
             if (score_spe) {
                 for (int j = 0; j < Nx*Ny; j++) {
@@ -566,7 +560,8 @@ private:
     void outputSpectrum(EGS_ScoringArray **fl_set, EGS_ScoringArray **flp_set,
                         double norm, const string &suffix) const;
 
-    vector<int> m_fd_pending_slots; // stack slots awaiting first-step FD scoring
+    EGS_I64         m_fd_gen;      // incremented each history; slot_gen[np]==m_fd_gen ↔ pending
+    vector<EGS_I64> m_fd_slot_gen; // indexed by stack slot; value = m_fd_gen when pending
 
     EGS_ScoringArray  *fluT_FD;    // FD total fluence (score_both only)
     EGS_ScoringArray  *fluT_FD_p;  // FD primary total fluence (score_both only)
@@ -720,20 +715,17 @@ public:
                latch = app->top_p.latch;
 
         /* FD photon scoring: fires once per photon's first free path.
-         * Primary photon: pushed at slot 0 in setCurrentCase (primary is always
+         * Primary photon: marked at slot 0 in setCurrentCase (primary is always
          * at Fortran NP=1 = C++ slot 0 when shower() starts).
-         * Scatter-produced photons: their slots are pushed to m_fd_pending_slots
-         * at the interaction event so each photon fires FD exactly once,
-         * regardless of how many geometry boundaries it crosses in one free path. */
+         * Scatter-produced photons: their slots are marked in m_fd_slot_gen at the
+         * interaction event so each photon fires FD exactly once, regardless of how
+         * many geometry boundaries it crosses in one free path. O(1) lookup. */
         if (!scoring_charge && m_scoring_method != score_crossing &&
-                !m_fd_pending_slots.empty() &&
                 (iarg == EGS_Application::BeforeTransport ||
                  iarg == EGS_Application::UserDiscard)) {
             int np = app->getNp();
-            auto it = std::find(m_fd_pending_slots.begin(),
-                                m_fd_pending_slots.end(), np);
-            bool in_pending = (it != m_fd_pending_slots.end());
-            if (in_pending) m_fd_pending_slots.erase(it);
+            bool in_pending = (np < (int)m_fd_slot_gen.size() && m_fd_slot_gen[np] == m_fd_gen);
+            if (in_pending) m_fd_slot_gen[np] = 0; // consume
             if (!q && iarg == EGS_Application::BeforeTransport && in_pending) {
                 scoreInCV();
             }
@@ -1106,9 +1098,10 @@ public:
                  iarg == EGS_Application::AfterAnnihRest)) {
             int npold_i = app->getNpOld();
             int np_i    = app->getNp();
-            for (int ip = npold_i; ip <= np_i; ip++) {
-                m_fd_pending_slots.push_back(ip);
-            }
+            if (np_i >= (int)m_fd_slot_gen.size())
+                m_fd_slot_gen.resize(2*np_i + 1, 0);
+            for (int ip = npold_i; ip <= np_i; ip++)
+                m_fd_slot_gen[ip] = m_fd_gen;
         }
 
         return 0;
@@ -1187,10 +1180,8 @@ public:
         if (ncase != current_ncase) {
             flushHistoryCrossTerms();
             current_ncase = ncase;
-            if (m_scoring_method != score_crossing) {
-                m_fd_pending_slots.clear();
-                m_fd_pending_slots.push_back(0); // primary always at C++ slot 0
-            }
+            if (m_scoring_method != score_crossing)
+                m_fd_slot_gen[0] = ++m_fd_gen; // primary always at C++ slot 0
             fluT->setHistory(ncase);
             if (score_primaries) {
                 fluT_p->setHistory(ncase);
@@ -1347,7 +1338,8 @@ private:
     mutable vector<double> m_hist_FDT; // per-history FD total per region
     mutable vector<double> m_hist_FDP; // per-history FD primary per region
     mutable bool           m_hist_dirty;
-    vector<int>            m_fd_pending_slots;    // stack slots awaiting first-step FD scoring
+    EGS_I64         m_fd_gen;      // incremented each history; slot_gen[np]==m_fd_gen ↔ pending
+    vector<EGS_I64> m_fd_slot_gen; // indexed by stack slot; value = m_fd_gen when pending
     void flushHistoryCrossTerms() const;
 
     vector<EGS_Float> volume;    // volume of each scoring region
@@ -1464,10 +1456,8 @@ public:
         if (ncase != current_ncase) {
             flushHistoryCrossTerms();
             current_ncase = ncase;
-            if (m_scoring_method != score_crossing) {
-                m_fd_pending_slots.clear();
-                m_fd_pending_slots.push_back(0); // primary always at C++ slot 0
-            }
+            if (m_scoring_method != score_crossing)
+                m_fd_slot_gen[0] = ++m_fd_gen; // primary always at C++ slot 0
             int n_total = n_sph * N_ang;
             fluT->setHistory(ncase);
             if (score_spe) {
@@ -1611,7 +1601,8 @@ private:
     mutable vector<double>  m_hist_FDT;  // per-history FD total per bin
     mutable vector<double>  m_hist_FDP;  // per-history FD primary per bin
     mutable bool            m_hist_dirty;
-    vector<int>             m_fd_pending_slots; // stack slots awaiting first-step FD scoring
+    EGS_I64         m_fd_gen;      // incremented each history; slot_gen[np]==m_fd_gen ↔ pending
+    vector<EGS_I64> m_fd_slot_gen; // indexed by stack slot; value = m_fd_gen when pending
 };
 
 #endif

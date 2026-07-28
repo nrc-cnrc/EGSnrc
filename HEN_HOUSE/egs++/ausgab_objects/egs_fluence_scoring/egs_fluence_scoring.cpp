@@ -437,7 +437,8 @@ void EGS_FluenceScoring::describeMe() {
 
 EGS_PlanarFluence::EGS_PlanarFluence(const string &Name, EGS_ObjectFactory *f) :
     EGS_FluenceScoring(Name,f), hits_field(false), Nx(1), Ny(1),
-    fluT_FD(0), fluT_FD_p(0), flu_FD(0), flu_FD_p(0) {
+    fluT_FD(0), fluT_FD_p(0), flu_FD(0), flu_FD_p(0),
+    m_fd_gen(0), m_fd_slot_gen(1024, EGS_I64(0)) {
     otype = "EGS_PlanarFluence";
     m_midpoint = EGS_Vector(0,0,5);
     m_R  =  5;
@@ -1387,7 +1388,8 @@ bool  EGS_PlanarFluence::addState(istream &data) {
 EGS_VolumetricFluence::EGS_VolumetricFluence(const string &Name, EGS_ObjectFactory *f) :
     EGS_FluenceScoring(Name,f), flu_stpwr(stpwr),
     fd_geom(0), fluT_FD(0), flu_FD(0), fluT_FD_p(0), flu_FD_p(0),
-    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false)
+    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false),
+    m_fd_gen(0), m_fd_slot_gen(1024, EGS_I64(0))
 #ifdef DEBUG
     ,one_bin(0), multi_bin(0), max_step(-100.0), n_step_bins(10000)
 #endif
@@ -2604,7 +2606,8 @@ EGS_SphericalFluence::EGS_SphericalFluence(const string &Name, EGS_ObjectFactory
     cos_theta_bins(true), dir_filter(sph_both),
     m_has_crossings(false),
     fluT_FD(0), fluT_FD_p(0), flu_FD(0), flu_FD_p(0),
-    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false) {
+    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false),
+    m_fd_gen(0), m_fd_slot_gen(1024, EGS_I64(0)) {
     otype    = "EGS_SphericalFluence";
     m_center = EGS_Vector(0, 0, 0);
     m_axis   = EGS_Vector(0, 0, 1);
@@ -3226,13 +3229,10 @@ int EGS_SphericalFluence::processEvent(EGS_Application::AusgabCall iarg) {
             findCrossings(app->top_p);
             m_x0 = app->top_p.x;
             /* FD: fire only on first step of this photon's free path */
-            if (m_has_crossings && !scoring_charge && m_scoring_method != score_crossing &&
-                    !m_fd_pending_slots.empty()) {
+            if (m_has_crossings && !scoring_charge && m_scoring_method != score_crossing) {
                 int np = app->getNp();
-                auto it = std::find(m_fd_pending_slots.begin(),
-                                    m_fd_pending_slots.end(), np);
-                if (it != m_fd_pending_slots.end()) {
-                    m_fd_pending_slots.erase(it);
+                if (np < (int)m_fd_slot_gen.size() && m_fd_slot_gen[np] == m_fd_gen) {
+                    m_fd_slot_gen[np] = 0; // consume
                     scoreFD(app->top_p);
                 }
             }
@@ -3250,18 +3250,17 @@ int EGS_SphericalFluence::processEvent(EGS_Application::AusgabCall iarg) {
     }
     /* Clean up pending slot for photons discarded before their first step */
     else if (!scoring_charge && m_scoring_method != score_crossing
-             && !m_fd_pending_slots.empty()
              && iarg == EGS_Application::UserDiscard) {
         int np = app->getNp();
-        auto it = std::find(m_fd_pending_slots.begin(), m_fd_pending_slots.end(), np);
-        if (it != m_fd_pending_slots.end()) m_fd_pending_slots.erase(it);
+        if (np < (int)m_fd_slot_gen.size() && m_fd_slot_gen[np] == m_fd_gen)
+            m_fd_slot_gen[np] = 0;
     }
 
     if (score_primaries && ir >= 0 && !is_source[ir]) {
         flagSecondaries(iarg, q);
     }
 
-    /* Push interaction products for first-step FD (after flagSecondaries so latch is set) */
+    /* Mark interaction products for first-step FD (after flagSecondaries so latch is set) */
     if (!scoring_charge && m_scoring_method != score_crossing &&
             (iarg == EGS_Application::AfterCompton     ||
              iarg == EGS_Application::AfterPhoto       ||
@@ -3271,9 +3270,10 @@ int EGS_SphericalFluence::processEvent(EGS_Application::AusgabCall iarg) {
              iarg == EGS_Application::AfterAnnihRest)) {
         int npold_i = app->getNpOld();
         int np_i    = app->getNp();
-        for (int ip = npold_i; ip <= np_i; ip++) {
-            m_fd_pending_slots.push_back(ip);
-        }
+        if (np_i >= (int)m_fd_slot_gen.size())
+            m_fd_slot_gen.resize(2*np_i + 1, 0);
+        for (int ip = npold_i; ip <= np_i; ip++)
+            m_fd_slot_gen[ip] = m_fd_gen;
     }
 
     return 0;
