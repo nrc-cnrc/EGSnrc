@@ -1387,7 +1387,7 @@ bool  EGS_PlanarFluence::addState(istream &data) {
 EGS_VolumetricFluence::EGS_VolumetricFluence(const string &Name, EGS_ObjectFactory *f) :
     EGS_FluenceScoring(Name,f), flu_stpwr(stpwr),
     fd_geom(0), fluT_FD(0), flu_FD(0), fluT_FD_p(0), flu_FD_p(0),
-    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false), m_new_free_path(false)
+    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false)
 #ifdef DEBUG
     ,one_bin(0), multi_bin(0), max_step(-100.0), n_step_bins(10000)
 #endif
@@ -3225,8 +3225,16 @@ int EGS_SphericalFluence::processEvent(EGS_Application::AusgabCall iarg) {
         if (q == scoring_charge && ir >= 0 && is_sensitive[ir]) {
             findCrossings(app->top_p);
             m_x0 = app->top_p.x;
-            if (m_has_crossings && m_scoring_method != score_crossing) {
-                scoreFD(app->top_p);
+            /* FD: fire only on first step of this photon's free path */
+            if (m_has_crossings && !scoring_charge && m_scoring_method != score_crossing &&
+                    !m_fd_pending_slots.empty()) {
+                int np = app->getNp();
+                auto it = std::find(m_fd_pending_slots.begin(),
+                                    m_fd_pending_slots.end(), np);
+                if (it != m_fd_pending_slots.end()) {
+                    m_fd_pending_slots.erase(it);
+                    scoreFD(app->top_p);
+                }
             }
         }
     }
@@ -3240,9 +3248,32 @@ int EGS_SphericalFluence::processEvent(EGS_Application::AusgabCall iarg) {
             }
         }
     }
+    /* Clean up pending slot for photons discarded before their first step */
+    else if (!scoring_charge && m_scoring_method != score_crossing
+             && !m_fd_pending_slots.empty()
+             && iarg == EGS_Application::UserDiscard) {
+        int np = app->getNp();
+        auto it = std::find(m_fd_pending_slots.begin(), m_fd_pending_slots.end(), np);
+        if (it != m_fd_pending_slots.end()) m_fd_pending_slots.erase(it);
+    }
 
     if (score_primaries && ir >= 0 && !is_source[ir]) {
         flagSecondaries(iarg, q);
+    }
+
+    /* Push interaction products for first-step FD (after flagSecondaries so latch is set) */
+    if (!scoring_charge && m_scoring_method != score_crossing &&
+            (iarg == EGS_Application::AfterCompton     ||
+             iarg == EGS_Application::AfterPhoto       ||
+             iarg == EGS_Application::AfterRayleigh    ||
+             iarg == EGS_Application::AfterBrems       ||
+             iarg == EGS_Application::AfterAnnihFlight ||
+             iarg == EGS_Application::AfterAnnihRest)) {
+        int npold_i = app->getNpOld();
+        int np_i    = app->getNp();
+        for (int ip = npold_i; ip <= np_i; ip++) {
+            m_fd_pending_slots.push_back(ip);
+        }
     }
 
     return 0;
