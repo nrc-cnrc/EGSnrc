@@ -585,7 +585,7 @@ public:
                 for (int i = 0; i < n_ir_sc; i++) {
                     //edepCV     = emuen_rho*rho_cv[ig];
                     exp_CV     = exp(-mu_cv*t_sc[i]);
-                    exp_Att    = sigma ? exp_Lambda*(1-exp_CV)/mu_cv : 1.0 ;//Attenuation in scoring region
+                    exp_Att    = sigma ? exp_Lambda*(1-exp_CV)/mu_cv : exp_Lambda*t_sc[i];
                     edepCV     = emuen*exp_Att;
                     weightedEdepCV = wt*edepCV;
                     weightedExpAtt = wt*exp_Att;
@@ -633,7 +633,7 @@ public:
                 //--------------------------------------------
                 //edepCV     = emuen_rho*rho_cv[ig];// Data base contains E_muen/rho values
                 exp_CV     = exp(-mu_cv*t_sc_tot);
-                exp_Att    = sigma ? exp_Lambda_to_CV*(1-exp_CV)/mu_cv : 1.0;
+                exp_Att    = sigma ? exp_Lambda_to_CV*(1-exp_CV)/mu_cv : exp_Lambda_to_CV*t_sc_tot;
                 edepCV     = emuen*exp_Att;
                 kerma->score(ig,wt*edepCV);
                 // Ray-tracing continues
