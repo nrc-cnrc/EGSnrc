@@ -806,6 +806,10 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     return 0;
 }
 
+bool EGS_AdvancedApplication::isRayleighOn() const {
+    return the_xoptions->iraylr != 0;
+}
+
 /**********************************************************************
    Set media and corresponding ff file names for custom Rayleigh data
 

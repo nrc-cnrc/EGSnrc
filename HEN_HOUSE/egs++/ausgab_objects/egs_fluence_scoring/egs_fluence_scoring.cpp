@@ -2130,7 +2130,8 @@ EGS_SphericalFluence::EGS_SphericalFluence(const string &Name, EGS_ObjectFactory
     n_sph(0), N_theta(1), N_phi(1), N_ang(1),
     cos_theta_bins(true), dir_filter(sph_both),
     m_has_crossings(false),
-    fluT_x_p(0), m_hist_dirty(false) {
+    fluT_FD(0), fluT_FD_p(0), flu_FD(0), flu_FD_p(0),
+    fluT_x_p(0), fluT_FD_x_p(0), m_hist_dirty(false) {
     otype    = "EGS_SphericalFluence";
     m_center = EGS_Vector(0, 0, 0);
     m_axis   = EGS_Vector(0, 0, 1);
@@ -2150,7 +2151,22 @@ EGS_SphericalFluence::~EGS_SphericalFluence() {
             delete flu_p[k];
         }
     }
+    delete fluT_FD;
+    delete fluT_FD_p;
     delete fluT_x_p;
+    delete fluT_FD_x_p;
+    if (flu_FD) {
+        for (int k = 0; k < n_total; k++) {
+            delete flu_FD[k];
+        }
+        delete [] flu_FD;
+    }
+    if (flu_FD_p) {
+        for (int k = 0; k < n_total; k++) {
+            delete flu_FD_p[k];
+        }
+        delete [] flu_FD_p;
+    }
 }
 
 void EGS_SphericalFluence::initScoring(EGS_Input *inp) {
@@ -2345,9 +2361,42 @@ void EGS_SphericalFluence::setApplication(EGS_Application *App) {
     }
 
     if (m_scoring_method != score_crossing) {
-        egsWarning("EGS_SphericalFluence: FD scoring not yet supported."
-                   " Falling back to crossing estimator.\n");
-        m_scoring_method = score_crossing;
+        if (scoring_charge != photon) {
+            egsWarning("EGS_SphericalFluence: FD scoring is only valid for photons."
+                       " Falling back to crossing estimator.\n");
+            m_scoring_method = score_crossing;
+        }
+        else {
+            m_i_gmfp = app->getMFPInterpolators();
+            m_i_cohe = app->getCoheInterpolators();
+            m_rayleigh_on = app->isRayleighOn();
+            if (!m_i_gmfp) {
+                egsWarning("EGS_SphericalFluence: FD scoring requires EGS_AdvancedApplication."
+                           " Falling back to crossing estimator.\n");
+                m_scoring_method = score_crossing;
+            }
+        }
+    }
+
+    if (m_scoring_method == score_both) {
+        int n_total = n_sph * N_ang;
+        fluT_FD = new EGS_ScoringArray(n_total);
+        if (score_spe) {
+            flu_FD = new EGS_ScoringArray* [n_total];
+            for (int k = 0; k < n_total; k++) {
+                flu_FD[k] = new EGS_ScoringArray(flu_nbin);
+            }
+        }
+        if (score_primaries) {
+            fluT_FD_p   = new EGS_ScoringArray(n_total);
+            fluT_FD_x_p = new EGS_ScoringArray(n_total);
+            if (score_spe) {
+                flu_FD_p = new EGS_ScoringArray* [n_total];
+                for (int k = 0; k < n_total; k++) {
+                    flu_FD_p[k] = new EGS_ScoringArray(flu_nbin);
+                }
+            }
+        }
     }
 
     if (score_primaries) {
@@ -2355,6 +2404,10 @@ void EGS_SphericalFluence::setApplication(EGS_Application *App) {
         fluT_x_p = new EGS_ScoringArray(n_total);
         m_hist_T.assign(n_total, 0.0);
         m_hist_P.assign(n_total, 0.0);
+        if (m_scoring_method == score_both) {
+            m_hist_FDT.assign(n_total, 0.0);
+            m_hist_FDP.assign(n_total, 0.0);
+        }
     }
 
     describeMe();
@@ -2380,7 +2433,12 @@ void EGS_SphericalFluence::describeMe() {
     }
     description += " cm\n";
 
-    description += " - estimator         = boundary crossing\n";
+    description += " - estimator         = ";
+    switch (m_scoring_method) {
+    case score_FD:   description += "forced detection\n"; break;
+    case score_both: description += "crossing + forced detection (separate arrays)\n"; break;
+    default:         description += "boundary crossing\n"; break;
+    }
 
     description += " - scoring direction = ";
     switch (dir_filter) {
@@ -2424,6 +2482,14 @@ void EGS_SphericalFluence::flushHistoryCrossTerms() const {
             fluT_x_p->score(k, m_hist_T[k] * m_hist_P[k]);
             m_hist_T[k] = 0.0;
             m_hist_P[k] = 0.0;
+        }
+    }
+    if (fluT_FD_x_p) {
+        int n_total = n_sph * N_ang;
+        for (int k = 0; k < n_total; k++) {
+            fluT_FD_x_p->score(k, m_hist_FDT[k] * m_hist_FDP[k]);
+            m_hist_FDT[k] = 0.0;
+            m_hist_FDP[k] = 0.0;
         }
     }
     m_hist_dirty = false;
@@ -2567,6 +2633,115 @@ void EGS_SphericalFluence::scoreAtCrossing(const CrossInfo &ci, const EGS_Partic
     }
 }
 
+void EGS_SphericalFluence::scoreFD(const EGS_Particle &p) {
+    /* Sort crossings by distance so we process them in order */
+    vector<size_t> order(m_crossings.size());
+    std::iota(order.begin(), order.end(), 0);
+    std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
+        return m_crossings[a].t < m_crossings[b].t;
+    });
+
+    EGS_Vector x = p.x;
+    EGS_Vector u = p.u;
+    int ireg   = p.ir;
+    int newmed = app->getMedium(ireg);
+    int imed   = -1;
+    EGS_Float gmfp, sigma = 0, cohfac = 1;
+    EGS_Float gle = log(p.E);
+    double Lambda = 0;
+    EGS_Float ttot = 0;
+    size_t next_ci = 0;
+
+    while (next_ci < order.size()) {
+        if (imed != newmed) {
+            imed = newmed;
+            if (imed >= 0 && m_i_gmfp) {
+                gmfp = m_i_gmfp[imed].interpolateFast(gle);
+                if (m_rayleigh_on && m_i_cohe) {
+                    cohfac = m_i_cohe[imed].interpolateFast(gle);
+                    gmfp  *= cohfac;
+                }
+                sigma = 1.0 / gmfp;
+            }
+            else {
+                sigma = 0;
+            }
+        }
+        EGS_Float tstep = 1e35;
+        int inew = app->howfar(ireg, x, u, tstep, &newmed);
+
+        /* Score all crossings within this geometry step */
+        while (next_ci < order.size()) {
+            const CrossInfo &ci = m_crossings[order[next_ci]];
+            EGS_Float t_rel = ci.t - ttot;
+            if (t_rel > tstep) {
+                break;
+            }
+            double Lambda_c = Lambda + t_rel * sigma;
+            if (Lambda_c < 80) {
+                EGS_Float udotn = p.u.x*ci.n_hat.x + p.u.y*ci.n_hat.y + p.u.z*ci.n_hat.z;
+                EGS_Float aup = fabs(udotn);
+                if (m_cos_min > 0.0 && aup < m_cos_min) {
+                    aup = m_cos_min;
+                    ++m_n_clipped;
+                }
+                EGS_Float contrib = p.wt * exp(-Lambda_c) / aup;
+                int k = ci.isph * N_ang + ci.iang;
+
+                /* In score_both mode write to the separate FD arrays. */
+                bool both = (m_scoring_method == score_both);
+                EGS_ScoringArray *fT   = both ? fluT_FD   : fluT;
+                EGS_ScoringArray *fTp  = both ? fluT_FD_p : fluT_p;
+                EGS_ScoringArray **fl  = both ? flu_FD    : flu;
+                EGS_ScoringArray **flp = both ? flu_FD_p  : flu_p;
+                EGS_Float &rtot = both ? m_tot_FD   : m_tot;
+                EGS_Float &rpri = both ? m_primary_FD : m_primary;
+
+                rtot += p.wt;
+                fT->score(k, contrib);
+                if (both && fluT_FD_x_p) {
+                    m_hist_FDT[k] += contrib;
+                    m_hist_dirty = true;
+                }
+                else if (!both && fluT_x_p) {
+                    m_hist_T[k] += contrib;
+                    m_hist_dirty = true;
+                }
+                if (score_primaries && !p.latch) {
+                    rpri += p.wt;
+                    fTp->score(k, contrib);
+                    if (both && fluT_FD_x_p) {
+                        m_hist_FDP[k] += contrib;
+                    }
+                    else if (!both && fluT_x_p) {
+                        m_hist_P[k] += contrib;
+                    }
+                }
+                if (score_spe) {
+                    EGS_Float e = p.q ? p.E - app->getRM() : p.E;
+                    if (flu_s) { e = log(e); }
+                    if (e > flu_xmin && e <= flu_xmax) {
+                        int je = min((int)(flu_a*e + flu_b), flu_nbin - 1);
+                        fl[k]->score(je, contrib);
+                        if (score_primaries && !p.latch) {
+                            flp[k]->score(je, contrib);
+                        }
+                    }
+                }
+            }
+            ++next_ci;
+        }
+
+        if (inew < 0) {
+            break;  // exited geometry
+        }
+        Lambda += tstep * sigma;
+        ttot   += tstep;
+        x      += u * tstep;
+        ireg    = inew;
+    }
+}
+
 int EGS_SphericalFluence::processEvent(EGS_Application::AusgabCall iarg) {
 
     int q  = app->top_p.q;
@@ -2577,9 +2752,13 @@ int EGS_SphericalFluence::processEvent(EGS_Application::AusgabCall iarg) {
         if (q == scoring_charge && ir >= 0 && is_sensitive[ir]) {
             findCrossings(app->top_p);
             m_x0 = app->top_p.x;
+            if (m_has_crossings && m_scoring_method != score_crossing) {
+                scoreFD(app->top_p);
+            }
         }
     }
-    else if (iarg == EGS_Application::AfterTransport && m_has_crossings) {
+    else if (iarg == EGS_Application::AfterTransport && m_has_crossings
+             && m_scoring_method != score_FD) {
         EGS_Vector xstep = app->top_p.x - m_x0;
         EGS_Float  step  = xstep.length();
         for (size_t i = 0; i < m_crossings.size(); i++) {
@@ -2639,6 +2818,7 @@ void EGS_SphericalFluence::ouputResults() {
     }
 
     double norm = norm_u / src_norm;
+    bool both = (m_scoring_method == score_both);
 
     flushHistoryCrossTerms();
 
@@ -2689,8 +2869,13 @@ void EGS_SphericalFluence::ouputResults() {
         egsInformation("\n\n==> Spherical %s fluence [cm^-2 per source particle]\n",
                        particle_name.c_str());
 
-        // ---- Table: total fluence ----
-        if (score_primaries) {
+        // ---- Table 1: total fluence ----
+        if (both) {
+            egsInformation("\n  %-14s  %-30s  %-30s\n",
+                           "R [cm]", "Phi_total (crossing)", "Phi_total (FD)");
+            egsInformation("  %s\n", string(76, '-').c_str());
+        }
+        else if (score_primaries) {
             egsInformation("\n  %-14s  %-30s  %-30s  %-22s\n",
                            "R [cm]", "Phi_total", "Phi_primary", "tot/pri");
             egsInformation("  %s\n", string(100, '-').c_str());
@@ -2707,7 +2892,12 @@ void EGS_SphericalFluence::ouputResults() {
             egsInformation("  %-14.6g", m_R[isph]);
             egsInformation(dcol, Tv, Tu);
 
-            if (score_primaries) {
+            if (both) {
+                double Fv, Fu;
+                getR(fluT_FD, isph, nk, Fv, Fu);
+                egsInformation(dcol, Fv, Fu);
+            }
+            else if (score_primaries) {
                 double Pv, Pu;
                 getR(fluT_p, isph, nk, Pv, Pu);
                 double B, Bunc;
@@ -2718,8 +2908,40 @@ void EGS_SphericalFluence::ouputResults() {
             egsInformation("\n");
         }
 
-        int w = score_primaries ? 100 : 46;
-        egsInformation("  %s\n", string(w, '-').c_str());
+        if (both) {
+            egsInformation("  %s\n", string(76, '-').c_str());
+        }
+        else {
+            int w = score_primaries ? 100 : 46;
+            egsInformation("  %s\n", string(w, '-').c_str());
+        }
+
+        // ---- Table 2 (score_both only): primary fluence + buildup ----
+        if (both && score_primaries) {
+            egsInformation("\n  %-14s  %-30s  %-30s  %-22s  %-22s\n",
+                           "R [cm]",
+                           "Phi_primary (crossing)", "Phi_primary (FD)",
+                           "tot/pri (crossing)", "tot/pri (FD)");
+            egsInformation("  %s\n", string(122, '-').c_str());
+
+            for (int isph = 0; isph < n_sph; isph++) {
+                double nk = norm / (m_ang_area[0] * m_R2[isph]);
+                double Pv, Pu, FPv, FPu;
+                getR(fluT_p,    isph, nk, Pv,  Pu);
+                getR(fluT_FD_p, isph, nk, FPv, FPu);
+                double Bc, Bcunc, Bfd, Bfunc;
+                corrRatio(fluT,    fluT_p,    fluT_x_p,    isph, Bc,  Bcunc);
+                corrRatio(fluT_FD, fluT_FD_p, fluT_FD_x_p, isph, Bfd, Bfunc);
+
+                egsInformation("  %-14.6g", m_R[isph]);
+                egsInformation(dcol, Pv,  Pu);
+                egsInformation(dcol, FPv, FPu);
+                egsInformation(bcol, Bc,  Bcunc);
+                egsInformation(bcol, Bfd, Bfunc);
+                egsInformation("\n");
+            }
+            egsInformation("  %s\n", string(122, '-').c_str());
+        }
     }
     else {
         // ------------------------------------------------------------------
@@ -2728,21 +2950,51 @@ void EGS_SphericalFluence::ouputResults() {
         egsInformation("\n\n            Integral fluence [cm^-2 per source particle]\n"
                        "            ================================================\n\n");
 
-        egsInformation("\n\n               Total %s fluence\n", particle_name.c_str());
-        for (int isph = 0; isph < n_sph; isph++) {
-            ouputSphericalFluence(fluT, norm, isph);
-        }
-        if (score_primaries) {
-            egsInformation("\n\n                   Primary %s fluence\n", particle_name.c_str());
+        if (both) {
+            egsInformation("\n\n  [crossing]  Total %s fluence\n", particle_name.c_str());
             for (int isph = 0; isph < n_sph; isph++) {
-                ouputSphericalFluence(fluT_p, norm, isph);
+                ouputSphericalFluence(fluT, norm, isph);
+            }
+            if (score_primaries) {
+                egsInformation("\n\n  [crossing]  Primary %s fluence\n", particle_name.c_str());
+                for (int isph = 0; isph < n_sph; isph++) {
+                    ouputSphericalFluence(fluT_p, norm, isph);
+                }
+            }
+            egsInformation("\n\n  [FD]        Total %s fluence\n", particle_name.c_str());
+            for (int isph = 0; isph < n_sph; isph++) {
+                ouputSphericalFluence(fluT_FD, norm, isph);
+            }
+            if (score_primaries) {
+                egsInformation("\n\n  [FD]        Primary %s fluence\n", particle_name.c_str());
+                for (int isph = 0; isph < n_sph; isph++) {
+                    ouputSphericalFluence(fluT_FD_p, norm, isph);
+                }
+            }
+        }
+        else {
+            egsInformation("\n\n               Total %s fluence\n", particle_name.c_str());
+            for (int isph = 0; isph < n_sph; isph++) {
+                ouputSphericalFluence(fluT, norm, isph);
+            }
+            if (score_primaries) {
+                egsInformation("\n\n                   Primary %s fluence\n", particle_name.c_str());
+                for (int isph = 0; isph < n_sph; isph++) {
+                    ouputSphericalFluence(fluT_p, norm, isph);
+                }
             }
         }
     }
 
     if (score_spe) {
         double norm_spe = norm * flu_a;
-        outputSphericalSpectrum(flu, flu_p, norm_spe, "_");
+        if (both) {
+            outputSphericalSpectrum(flu,    flu_p,    norm_spe, "_cross_");
+            outputSphericalSpectrum(flu_FD, flu_FD_p, norm_spe, "_FD_");
+        }
+        else {
+            outputSphericalSpectrum(flu, flu_p, norm_spe, "_");
+        }
     }
 }
 
@@ -2840,11 +3092,25 @@ void EGS_SphericalFluence::outputSphericalSpectrum(EGS_ScoringArray **fl_set,
 void EGS_SphericalFluence::reportResults() {
     egsInformation("\nFluence Scoring (%s)\n", name.c_str());
     egsInformation("======================================================\n");
-    egsInformation("   Total %ss crossing sphere(s): %g\n",
-                   particle_name.c_str(), m_tot);
-    if (score_primaries) {
-        egsInformation("   Primary %ss:                 %g\n",
-                       particle_name.c_str(), m_primary);
+    if (m_scoring_method == score_both) {
+        egsInformation("   [crossing] Total %ss crossing sphere(s): %g\n",
+                       particle_name.c_str(), m_tot);
+        if (score_primaries) {
+            egsInformation("   [crossing] Primary %ss:                 %g\n",
+                           particle_name.c_str(), m_primary);
+        }
+        egsInformation("   [FD]       Total aimed at sphere(s):      %g\n", m_tot_FD);
+        if (score_primaries) {
+            egsInformation("   [FD]       Primary aimed at sphere(s):  %g\n", m_primary_FD);
+        }
+    }
+    else {
+        egsInformation("   Total %ss crossing sphere(s): %g\n",
+                       particle_name.c_str(), m_tot);
+        if (score_primaries) {
+            egsInformation("   Primary %ss:                 %g\n",
+                           particle_name.c_str(), m_primary);
+        }
     }
     if (m_cos_min > 0.0) {
         egsInformation("   Crossings with |cos θ| < %.6f: %lld", m_cos_min, m_n_clipped);
@@ -2896,6 +3162,37 @@ bool EGS_SphericalFluence::storeState(ostream &data) const {
             return false;
         }
     }
+    if (m_scoring_method == score_both) {
+        data << m_tot_FD << " " << m_primary_FD << endl;
+        if (!data.good()) {
+            return false;
+        }
+        if (!fluT_FD->storeState(data)) {
+            return false;
+        }
+        if (score_spe) {
+            for (int k = 0; k < n_total; k++) {
+                if (!flu_FD[k]->storeState(data)) {
+                    return false;
+                }
+            }
+        }
+        if (score_primaries) {
+            if (!fluT_FD_p->storeState(data)) {
+                return false;
+            }
+            if (score_spe) {
+                for (int k = 0; k < n_total; k++) {
+                    if (!flu_FD_p[k]->storeState(data)) {
+                        return false;
+                    }
+                }
+            }
+            if (!fluT_FD_x_p->storeState(data)) {
+                return false;
+            }
+        }
+    }
     return true;
 }
 
@@ -2936,6 +3233,39 @@ bool EGS_SphericalFluence::setState(istream &data) {
     fill(m_hist_T.begin(), m_hist_T.end(), 0.0);
     fill(m_hist_P.begin(), m_hist_P.end(), 0.0);
     m_hist_dirty = false;
+    if (m_scoring_method == score_both) {
+        data >> m_tot_FD >> m_primary_FD;
+        if (!data.good()) {
+            return false;
+        }
+        if (!fluT_FD->setState(data)) {
+            return false;
+        }
+        if (score_spe) {
+            for (int k = 0; k < n_total; k++) {
+                if (!flu_FD[k]->setState(data)) {
+                    return false;
+                }
+            }
+        }
+        if (score_primaries) {
+            if (!fluT_FD_p->setState(data)) {
+                return false;
+            }
+            if (score_spe) {
+                for (int k = 0; k < n_total; k++) {
+                    if (!flu_FD_p[k]->setState(data)) {
+                        return false;
+                    }
+                }
+            }
+            if (!fluT_FD_x_p->setState(data)) {
+                return false;
+            }
+        }
+        fill(m_hist_FDT.begin(), m_hist_FDT.end(), 0.0);
+        fill(m_hist_FDP.begin(), m_hist_FDP.end(), 0.0);
+    }
     return true;
 }
 
@@ -2954,6 +3284,7 @@ bool EGS_SphericalFluence::addState(istream &data) {
     m_tot       += tmp_tot;
     m_primary   += tmp_primary;
     m_n_clipped += tmp_clipped;
+    /* The FD accumulation is appended after the crossing arrays below. */
 
     int n_total = n_sph * N_ang;
 
@@ -2992,6 +3323,55 @@ bool EGS_SphericalFluence::addState(istream &data) {
             return false;
         }
         (*fluT_x_p) += tgT_x_p;
+    }
+
+    if (m_scoring_method == score_both) {
+        EGS_Float tmp_tot_FD, tmp_primary_FD;
+        data >> tmp_tot_FD >> tmp_primary_FD;
+        if (!data.good()) {
+            return false;
+        }
+        m_tot_FD     += tmp_tot_FD;
+        m_primary_FD += tmp_primary_FD;
+
+        EGS_ScoringArray tgT_FD(n_total);
+        if (!tgT_FD.setState(data)) {
+            return false;
+        }
+        (*fluT_FD) += tgT_FD;
+
+        if (score_spe) {
+            EGS_ScoringArray tg_FD(flu_nbin);
+            for (int k = 0; k < n_total; k++) {
+                if (!tg_FD.setState(data)) {
+                    return false;
+                }
+                (*flu_FD[k]) += tg_FD;
+            }
+        }
+
+        if (score_primaries) {
+            EGS_ScoringArray tgT_FD_p(n_total);
+            if (!tgT_FD_p.setState(data)) {
+                return false;
+            }
+            (*fluT_FD_p) += tgT_FD_p;
+
+            if (score_spe) {
+                EGS_ScoringArray tg_FD_p(flu_nbin);
+                for (int k = 0; k < n_total; k++) {
+                    if (!tg_FD_p.setState(data)) {
+                        return false;
+                    }
+                    (*flu_FD_p[k]) += tg_FD_p;
+                }
+            }
+            EGS_ScoringArray tgT_FD_x_p(n_total);
+            if (!tgT_FD_x_p.setState(data)) {
+                return false;
+            }
+            (*fluT_FD_x_p) += tgT_FD_x_p;
+        }
     }
 
     return true;

@@ -241,6 +241,10 @@ public:
     void setRussianRoulette(const EGS_Float &iSwitchRR);
     void splitTopParticleIsotropically(const EGS_Float &fsplit);
 
+    EGS_Interpolator *getMFPInterpolators()  const { return i_gmfp; }
+    EGS_Interpolator *getCoheInterpolators() const { return i_cohe; }
+    bool isRayleighOn() const;
+
 protected:
 
     int              nmed;      //!< number of media

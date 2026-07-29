@@ -1,0 +1,99 @@
+##############################################################################
+#
+# Validation: FD vs crossing estimator in vacuum
+#
+# Point source at the center of a pure-vacuum sphere.  In vacuum,
+# exp(-integral(mu ds)) = 1 for every ray, so every FD score equals the
+# corresponding crossing score.  Expected result:
+#
+#   crossing = FD = 1/R^2  [when normalized by 4π]
+#
+# Both estimators must agree to many significant figures.  Statistical
+# uncertainty should be ~0% because every photon from the centre crosses
+# each sphere exactly once with weight 1 and cos(theta) = 1 (straight-line
+# paths, no scattering).
+#
+##############################################################################
+
+##############################################################################
+### Run control
+##############################################################################
+:start run control:
+    ncase = 1e6
+:stop run control:
+
+##############################################################################
+### Geometry
+##############################################################################
+# Region 0: r < 8 cm  (vacuum, contains all scoring spheres)
+# Region 1: 8 < r < 12 cm  (vacuum, terminates histories)
+:start geometry definition:
+    :start geometry:
+        name     = world
+        library  = egs_spheres
+        midpoint = 0 0 0
+        radii    = 8 12
+        :start media input:
+            media = VACUUM
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = world
+
+:stop geometry definition:
+
+##############################################################################
+### Media
+##############################################################################
+:start media definition:
+    ae = 0.512
+    ap = 0.001
+    ue = 10.511
+    up = 10
+:stop media definition:
+
+##############################################################################
+### Source
+##############################################################################
+:start source definition:
+    :start source:
+        name    = pt_iso
+        library = egs_isotropic_source
+        charge  = 0
+        :start shape:
+            type     = point
+            position = 0 0 0
+        :stop shape:
+        :start spectrum:
+            type   = monoenergetic
+            energy = 1
+        :stop spectrum:
+    :stop source:
+    simulation source = pt_iso
+:stop source definition:
+
+##############################################################################
+### Ausgab objects
+##############################################################################
+:start ausgab object definition:
+
+    :start ausgab object:
+        name             = sph_flu_both_vacuum
+        library          = egs_fluence_scoring
+        type             = spherical
+        scoring particle = photon
+        source particle  = photon
+        score primaries  = yes
+        scoring method   = both
+        # Normalize by 4pi so that result at radius R (cm) = 1/R^2 (cm^-2).
+        # Crossing and FD columns must agree to all printed digits.
+        normalization    = 12.56637061435917
+
+        :start spherical scoring:
+            scoring sphere center = 0 0 0
+            scoring sphere radii  = 1 2 3 4 5 6 7
+            scoring direction     = outward
+        :stop spherical scoring:
+    :stop ausgab object:
+
+:stop ausgab object definition:
