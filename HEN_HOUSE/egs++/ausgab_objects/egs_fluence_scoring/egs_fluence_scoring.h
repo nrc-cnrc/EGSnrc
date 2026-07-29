@@ -48,6 +48,7 @@
 #include "egs_ausgab_object.h"
 #include "egs_transformations.h"
 #include "egs_interpolator.h"
+#include "egs_base_geometry.h"
 #include <egs_scoring.h>
 
 #include <fstream>
@@ -357,6 +358,16 @@ public:
                   iarg == EGS_Application::AfterAnnihRest)) {
             return true;
         }
+        else if (!scoring_charge && m_scoring_method != score_crossing &&
+                 (iarg == EGS_Application::UserDiscard      ||
+                  iarg == EGS_Application::AfterCompton     ||
+                  iarg == EGS_Application::AfterPhoto       ||
+                  iarg == EGS_Application::AfterRayleigh    ||
+                  iarg == EGS_Application::AfterBrems       ||
+                  iarg == EGS_Application::AfterAnnihFlight ||
+                  iarg == EGS_Application::AfterAnnihRest)) {
+            return true;
+        }
         else {
             return false;
         }
@@ -383,8 +394,13 @@ public:
                 if (ixy >= 0) {
                     x0 = app->top_p.x;
                     hits_field = true;
-                    if (m_scoring_method != score_crossing) {
-                        scoreFD(app->top_p, ixy, distance);
+                    /* FD: fire only on first step of this photon's free path */
+                    if (!scoring_charge && m_scoring_method != score_crossing) {
+                        int np = app->getNp();
+                        if (np < (int)m_fd_slot_gen.size() && m_fd_slot_gen[np] == m_fd_gen) {
+                            m_fd_slot_gen[np] = 0; // consume
+                            scoreFD(app->top_p, ixy, distance);
+                        }
                     }
                 }
                 else {
@@ -404,6 +420,14 @@ public:
             }
         }
 
+        /* Clean up pending slot for photons discarded before their first step */
+        if (!scoring_charge && m_scoring_method != score_crossing
+                && iarg == EGS_Application::UserDiscard) {
+            int np = app->getNp();
+            if (np < (int)m_fd_slot_gen.size() && m_fd_slot_gen[np] == m_fd_gen)
+                m_fd_slot_gen[np] = 0;
+        }
+
         /********************************************************************
          * Flag secondaries after interactions. Definition of secondaries
          * matches FLURZnrc. One could fine tune it by using the is_source
@@ -417,6 +441,22 @@ public:
             flagSecondaries(iarg, q);
         }
 
+        /* Mark interaction products for first-step FD (after flagSecondaries so latch is set) */
+        if (!scoring_charge && m_scoring_method != score_crossing &&
+                (iarg == EGS_Application::AfterCompton     ||
+                 iarg == EGS_Application::AfterPhoto       ||
+                 iarg == EGS_Application::AfterRayleigh    ||
+                 iarg == EGS_Application::AfterBrems       ||
+                 iarg == EGS_Application::AfterAnnihFlight ||
+                 iarg == EGS_Application::AfterAnnihRest)) {
+            int npold_i = app->getNpOld();
+            int np_i    = app->getNp();
+            if (np_i >= (int)m_fd_slot_gen.size())
+                m_fd_slot_gen.resize(2*np_i + 1, 0);
+            for (int ip = npold_i; ip <= np_i; ip++)
+                m_fd_slot_gen[ip] = m_fd_gen;
+        }
+
         return 0;
 
     };
@@ -424,6 +464,8 @@ public:
     void setCurrentCase(EGS_I64 ncase) {
         if (ncase != current_ncase) {
             current_ncase = ncase;
+            if (m_scoring_method != score_crossing)
+                m_fd_slot_gen[0] = ++m_fd_gen; // primary always at C++ slot 0
             fluT->setHistory(ncase);
             if (score_spe) {
                 for (int j = 0; j < Nx*Ny; j++) {
@@ -517,6 +559,9 @@ private:
     void scoreFD(const EGS_Particle &p, int ixy, EGS_Float dist);
     void outputSpectrum(EGS_ScoringArray **fl_set, EGS_ScoringArray **flp_set,
                         double norm, const string &suffix) const;
+
+    EGS_I64         m_fd_gen;      // incremented each history; slot_gen[np]==m_fd_gen ↔ pending
+    vector<EGS_I64> m_fd_slot_gen; // indexed by stack slot; value = m_fd_gen when pending
 
     EGS_ScoringArray  *fluT_FD;    // FD total fluence (score_both only)
     EGS_ScoringArray  *fluT_FD_p;  // FD primary total fluence (score_both only)
@@ -637,6 +682,15 @@ public:
                   iarg == EGS_Application::AfterAnnihRest)) {
             return true;
         }
+        else if (!scoring_charge && m_scoring_method != score_crossing &&
+                 (iarg == EGS_Application::AfterCompton     ||
+                  iarg == EGS_Application::AfterPhoto       ||
+                  iarg == EGS_Application::AfterRayleigh    ||
+                  iarg == EGS_Application::AfterBrems       ||
+                  iarg == EGS_Application::AfterAnnihFlight ||
+                  iarg == EGS_Application::AfterAnnihRest)) {
+            return true;
+        }
         else {
             return false;
         }
@@ -660,17 +714,42 @@ public:
                ir = app->top_p.ir,
                latch = app->top_p.latch;
 
+        /* FD photon scoring: fires once per photon's first free path.
+         * Primary photon: marked at slot 0 in setCurrentCase (primary is always
+         * at Fortran NP=1 = C++ slot 0 when shower() starts).
+         * Scatter-produced photons: their slots are marked in m_fd_slot_gen at the
+         * interaction event so each photon fires FD exactly once, regardless of how
+         * many geometry boundaries it crosses in one free path. O(1) lookup. */
+        if (!scoring_charge && m_scoring_method != score_crossing &&
+                (iarg == EGS_Application::BeforeTransport ||
+                 iarg == EGS_Application::UserDiscard)) {
+            int np = app->getNp();
+            bool in_pending = (np < (int)m_fd_slot_gen.size() && m_fd_slot_gen[np] == m_fd_gen);
+            if (in_pending) m_fd_slot_gen[np] = 0; // consume
+            if (!q && iarg == EGS_Application::BeforeTransport && in_pending) {
+                scoreInCV();
+            }
+        }
+
         if (q == scoring_charge && ir >= 0 && is_sensitive[ir]) {
 
             if (!q) { // It's a photon
                 /* Score photon fluence */
-                if (iarg == EGS_Application::BeforeTransport) {
+                if (iarg == EGS_Application::BeforeTransport
+                        && m_scoring_method != score_FD) {
                     /* Linear track-Length scoring */
                     EGS_Float wtstep  = app->top_p.wt*app->getTVSTEP();
                     /* Score total fluence */
                     fluT->score(ir,wtstep);
+                    m_tot += app->top_p.wt;
                     if (score_primaries && !latch) {
                         fluT_p->score(ir,wtstep);
+                        m_primary += app->top_p.wt;
+                    }
+                    if (fluT_x_p) {
+                        m_hist_T[ir] += wtstep;
+                        if (!latch) m_hist_P[ir] += wtstep;
+                        m_hist_dirty = true;
                     }
                     /* Score differential fluence */
                     if (score_spe) {
@@ -1004,6 +1083,27 @@ public:
             flagSecondaries(iarg, q);
         }
 
+        /* Register all particles produced at this interaction for first-step FD scoring.
+         * Loop covers [npold, np] so fluorescence photons pushed by atomic relaxation
+         * (Compton, photoelectric, EII, etc.) at arbitrary positions in that range
+         * are all captured. Charged particles land in the set too but are filtered
+         * by the !q guard at BeforeTransport and cleaned up there or at UserDiscard.
+         * Placed after flagSecondaries() so latch is correct when BeforeTransport fires. */
+        if (!scoring_charge && m_scoring_method != score_crossing &&
+                (iarg == EGS_Application::AfterCompton     ||
+                 iarg == EGS_Application::AfterPhoto       ||
+                 iarg == EGS_Application::AfterRayleigh    ||
+                 iarg == EGS_Application::AfterBrems       ||
+                 iarg == EGS_Application::AfterAnnihFlight ||
+                 iarg == EGS_Application::AfterAnnihRest)) {
+            int npold_i = app->getNpOld();
+            int np_i    = app->getNp();
+            if (np_i >= (int)m_fd_slot_gen.size())
+                m_fd_slot_gen.resize(2*np_i + 1, 0);
+            for (int ip = npold_i; ip <= np_i; ip++)
+                m_fd_slot_gen[ip] = m_fd_gen;
+        }
+
         return 0;
 
     };
@@ -1078,10 +1178,14 @@ public:
 
     void setCurrentCase(EGS_I64 ncase) {
         if (ncase != current_ncase) {
+            flushHistoryCrossTerms();
             current_ncase = ncase;
+            if (m_scoring_method != score_crossing)
+                m_fd_slot_gen[0] = ++m_fd_gen; // primary always at C++ slot 0
             fluT->setHistory(ncase);
             if (score_primaries) {
                 fluT_p->setHistory(ncase);
+                if (fluT_x_p) fluT_x_p->setHistory(ncase);
             }
             if (score_spe) {
                 for (int j = 0; j < nreg; j++) {
@@ -1093,6 +1197,27 @@ public:
                     for (int j = 0; j < nreg; j++) {
                         if (is_sensitive[j]) {
                             flu_p[j]->setHistory(ncase);
+                        }
+                    }
+                }
+            }
+            if (m_scoring_method != score_crossing && fluT_FD) {
+                fluT_FD->setHistory(ncase);
+                if (score_primaries && fluT_FD_p) {
+                    fluT_FD_p->setHistory(ncase);
+                    if (fluT_FD_x_p) fluT_FD_x_p->setHistory(ncase);
+                }
+                if (score_spe && flu_FD) {
+                    for (int j = 0; j < nreg; j++) {
+                        if (is_sensitive[j]) {
+                            flu_FD[j]->setHistory(ncase);
+                        }
+                    }
+                    if (score_primaries && flu_FD_p) {
+                        for (int j = 0; j < nreg; j++) {
+                            if (is_sensitive[j]) {
+                                flu_FD_p[j]->setHistory(ncase);
+                            }
                         }
                     }
                 }
@@ -1128,6 +1253,37 @@ public:
                 }
             }
         }
+        if (m_scoring_method != score_crossing && fluT_FD) {
+            fluT_FD->reset();
+            if (score_primaries && fluT_FD_p) {
+                fluT_FD_p->reset();
+            }
+            if (score_spe && flu_FD) {
+                for (int j = 0; j < nreg; j++) {
+                    if (is_sensitive[j]) {
+                        flu_FD[j]->reset();
+                    }
+                }
+                if (score_primaries && flu_FD_p) {
+                    for (int j = 0; j < nreg; j++) {
+                        if (is_sensitive[j]) {
+                            flu_FD_p[j]->reset();
+                        }
+                    }
+                }
+            }
+        }
+        if (fluT_x_p) {
+            fluT_x_p->reset();
+            fill(m_hist_T.begin(),  m_hist_T.end(),  0.0);
+            fill(m_hist_P.begin(),  m_hist_P.end(),  0.0);
+        }
+        if (fluT_FD_x_p) {
+            fluT_FD_x_p->reset();
+            fill(m_hist_FDT.begin(), m_hist_FDT.end(), 0.0);
+            fill(m_hist_FDP.begin(), m_hist_FDP.end(), 0.0);
+        }
+        m_hist_dirty = false;
 #ifdef DEBUG
         binDist->reset();
         if (scoring_charge) {
@@ -1164,6 +1320,27 @@ private:
     /*****************************************************************/
 
     EGS_I64 eCases;
+
+    /* Forced-detection members (photons only, scoring_charge == 0) */
+    EGS_BaseGeometry *fd_geom;   // optional gate geometry (like egs_kerma fd_geom)
+    EGS_ScoringArray  *fluT_FD;  // FD total fluence
+    EGS_ScoringArray **flu_FD;   // FD differential fluence per sensitive region
+    EGS_ScoringArray  *fluT_FD_p;// FD primary total fluence
+    EGS_ScoringArray **flu_FD_p; // FD primary differential fluence per sensitive region
+
+    void scoreInCV(); // FD ray-tracing scorer (defined in cpp)
+
+    /* Correlated tot/pri ratio: cross-term arrays and per-history accumulators */
+    EGS_ScoringArray  *fluT_x_p;    // TL cross-term Σ T_i·P_i per region
+    EGS_ScoringArray  *fluT_FD_x_p; // FD cross-term
+    mutable vector<double> m_hist_T;   // per-history TL total per region
+    mutable vector<double> m_hist_P;   // per-history TL primary per region
+    mutable vector<double> m_hist_FDT; // per-history FD total per region
+    mutable vector<double> m_hist_FDP; // per-history FD primary per region
+    mutable bool           m_hist_dirty;
+    EGS_I64         m_fd_gen;      // incremented each history; slot_gen[np]==m_fd_gen ↔ pending
+    vector<EGS_I64> m_fd_slot_gen; // indexed by stack slot; value = m_fd_gen when pending
+    void flushHistoryCrossTerms() const;
 
     vector<EGS_Float> volume;    // volume of each scoring region
     /* Energy grid inputs */
@@ -1253,6 +1430,16 @@ public:
                   iarg == EGS_Application::AfterAnnihRest)) {
             return true;
         }
+        else if (!scoring_charge && m_scoring_method != score_crossing &&
+                 (iarg == EGS_Application::UserDiscard      ||
+                  iarg == EGS_Application::AfterCompton     ||
+                  iarg == EGS_Application::AfterPhoto       ||
+                  iarg == EGS_Application::AfterRayleigh    ||
+                  iarg == EGS_Application::AfterBrems       ||
+                  iarg == EGS_Application::AfterAnnihFlight ||
+                  iarg == EGS_Application::AfterAnnihRest)) {
+            return true;
+        }
         return false;
     };
 
@@ -1269,6 +1456,8 @@ public:
         if (ncase != current_ncase) {
             flushHistoryCrossTerms();
             current_ncase = ncase;
+            if (m_scoring_method != score_crossing)
+                m_fd_slot_gen[0] = ++m_fd_gen; // primary always at C++ slot 0
             int n_total = n_sph * N_ang;
             fluT->setHistory(ncase);
             if (score_spe) {
@@ -1412,6 +1601,8 @@ private:
     mutable vector<double>  m_hist_FDT;  // per-history FD total per bin
     mutable vector<double>  m_hist_FDP;  // per-history FD primary per bin
     mutable bool            m_hist_dirty;
+    EGS_I64         m_fd_gen;      // incremented each history; slot_gen[np]==m_fd_gen ↔ pending
+    vector<EGS_I64> m_fd_slot_gen; // indexed by stack slot; value = m_fd_gen when pending
 };
 
 #endif

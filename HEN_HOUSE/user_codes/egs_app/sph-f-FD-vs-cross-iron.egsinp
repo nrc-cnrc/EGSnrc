@@ -51,6 +51,7 @@
         radii    = 25 30
         :start media input:
             media = iron VACUUM
+            set medium = 1 1
         :stop media input:
     :stop geometry:
 
