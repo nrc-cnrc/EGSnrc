@@ -117,7 +117,9 @@ public:
         EGS_AdvancedApplication(argc,argv), ngeom(0),
         kerma(0), kerma_r(0), kerma_p(0), scg(0),
         fd_geom(0), ncg(0), flug(0),flugT(0), verbose(false),
-        score_primaries(false), m_primary(0.0), m_tot(0.0),
+        score_primaries(false),
+        imp_active(false),
+        m_primary(0.0), m_tot(0.0),
         prev_ir_imp(-1),
         n_split_events(0), n_cap_events(0), max_stack_needed(0) {
         Eph_ave = 0.0;
@@ -278,31 +280,21 @@ public:
         }
 
         /********************************************************************
-         * BEWARE: Flagging secondaries by incrementing their latch.
-         *         Other applications might use latch for other purposes!
+         * Flag scattered photons and all interaction products by
+         * incrementing their latch, so that latch=0 always identifies an
+         * unscattered primary.  Required by both IS (latch!=0 guard) and
+         * score_primaries (Kpri/Kscat identification).  Done whenever
+         * either feature is active so the two are fully independent.
          *********************************************************************/
-        // if (score_primaries && !iq) {
-        if (score_primaries) {
-            /***************************************************************
-             FLURZnrc IPRIMARY = 3
-                Flag scattered photons, secondaries, and relaxation
-                particles as secondaries
-            ****************************************************************/
-            if (iarg == EGS_Application::AfterPair    ||
-                iarg == EGS_Application::AfterCompton ||
-                iarg == EGS_Application::AfterPhoto   ||
-                iarg == EGS_Application::AfterRayleigh){
+        if ((score_primaries || imp_active) &&
+            (iarg == EGS_Application::AfterPair    ||
+             iarg == EGS_Application::AfterCompton ||
+             iarg == EGS_Application::AfterPhoto   ||
+             iarg == EGS_Application::AfterRayleigh)) {
 
-                int npold = the_stack->npold-1;
-
-                for (int ip = npold; ip <= np; ip++) {
-                    ++the_stack->latch[ip];
-                }
-
-            }
-        // if (iq && !the_stack->latch[np]){
-        //     egsWarning("-> Primary electron?\n");
-        // }
+            int npold = the_stack->npold-1;
+            for (int ip = npold; ip <= np; ip++)
+                ++the_stack->latch[ip];
         }
 
         /* Geometry importance: splitting and Russian roulette at region crossings.
@@ -1470,6 +1462,7 @@ private:
     /* Geometry importance splitting / Russian roulette */
     vector<vector<EGS_Float>> region_importance; // [ig][ir], default 1.0
     int                       prev_ir_imp;        // region at start of current step
+    bool                      imp_active;         // true when any region importance != 1
 
     /* IS stack-capping diagnostics */
     long long n_split_events;   // total splitting events (nsplit > 1)
@@ -2223,7 +2216,7 @@ int EGS_KermaApplication::initScoring() {
     setAusgabCall(AfterPair, true);
 
     /* Enable AfterTransport only when importance VRT is active */
-    bool imp_active = false;
+    imp_active = false;
     for (int j = 0; j < ngeom && !imp_active; j++)
         for (int ir = 0; ir < (int)region_importance[j].size() && !imp_active; ir++)
             if (fabs(region_importance[j][ir] - 1.0) > 1e-10)
