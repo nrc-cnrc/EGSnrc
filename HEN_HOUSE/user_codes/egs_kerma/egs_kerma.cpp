@@ -1091,6 +1091,8 @@ public:
                             }
                             /* Correlated K/Kpri */
                             if (r > 0 && r_p > 0) {
+                                /* rc = cov(K,q)/(K*q) — relative covariance, NOT Pearson r;
+                                   unbounded, do not clamp to [-1,1] */
                                 double rc = 0;
                                 if (scg_kp && scg_kp[j] && current_case > 1)
                                     rc = (scg_kp[j][ir]/(r*r_p*current_case) - 1.0)
@@ -1183,6 +1185,8 @@ public:
                 kerma->currentResult(gind1[j],r1,dr1);
                 kerma->currentResult(gind2[j],r2,dr2);
                 if (r1 > 0 && r2 > 0) {
+                    /* rc = cov(K1,K2)/(K1*K2) — relative covariance, NOT Pearson r;
+                       unbounded, do not clamp to [-1,1] */
                     double rc=(scg[j]/(r1*r2*current_case)-1)/(current_case-1);
                     dr1 /= r1;
                     dr2 /= r2;
