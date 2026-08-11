@@ -170,7 +170,7 @@ public:
             }
             delete [] geoms;
             delete [] fd_geoms;
-            delete [] mass;
+            delete [] volume;
             delete [] active_med;
             int j;
             for (j=0; j<ngeom; j++) if (transforms[j]) {
@@ -229,7 +229,7 @@ public:
                 if (!fd_geom) {
                     int       latch  = the_stack->latch[np];
                     EGS_Float E      = the_stack->E[np], gle = log(E),
-                              emuen  = E_Muen_Rho->interpolateFast(gle)*rho_cv[ig],
+                              emuen  = E_Muen_Rho->interpolateFast(gle),
                               wtstep = the_stack->wt[np]*the_epcont->tvstep,
                               weightedEmuen = wtstep*emuen;
                     kerma->score(ig,weightedEmuen);
@@ -579,11 +579,10 @@ public:
                 EGS_Float exp_Lambda_to_CV = exp(-Lambda_to_CV),
                           exp_Lambda = exp_Lambda_to_CV,
                           exp_CV     = 1.0,
-                          emuen = emuen_rho*rho_cv[ig],// Data base contains E_muen/rho values
+                          emuen = emuen_rho,
                           exp_Att, weightedExpAtt,
                           edepCV, weightedEdepCV;
                 for (int i = 0; i < n_ir_sc; i++) {
-                    //edepCV     = emuen_rho*rho_cv[ig];
                     exp_CV     = exp(-mu_cv*t_sc[i]);
                     exp_Att    = sigma ? exp_Lambda*(1-exp_CV)/mu_cv : exp_Lambda*t_sc[i];
                     edepCV     = emuen*exp_Att;
@@ -970,8 +969,7 @@ public:
         string line;
         string med_name;
         double r, dr, r_p, dr_p, fe, dfe;
-        EGS_Float rho = -1.0, m = -1.0;
-        int imed = -1, nreg = 0;
+        int nreg = 0;
 
         egsInformation("\n                         =========================\n"
                          "                           Kerma scoring summary\n"
@@ -992,22 +990,22 @@ public:
                 if (flugT && flugT[j]) {
                     if (kerma_p[j])
                       egsInformation(
-                          "  %*s        m/g          Edep/[MeV]                   K/[Gy]            "
+                          "  %*s        V/cm3                       K/[Gy]            "
                           "      Kpri/[Gy]           (muen/rho)=Kpri/Flu/Eave[cm^2/g]   %n\n",
                           irmax_digits,"ir",&count);
                     else
                       egsInformation(
-                          "  %*s        m/g          Edep/[MeV]                   K/[Gy]            %n\n",
+                          "  %*s        V/cm3                       K/[Gy]            %n\n",
                           irmax_digits,"ir",&count);
                 }
                 else {
                    if (kerma_p[j])
                       egsInformation(
-                           "  %*s        m/g          Edep/[MeV]                   K/[Gy]               Kpri/[Gy]           K/Kpri             %n\n",
+                           "  %*s        V/cm3                       K/[Gy]               Kpri/[Gy]           K/Kpri             %n\n",
                            irmax_digits,"ir",&count);
                     else
                       egsInformation(
-                           "  %*s        m/g          Edep/[MeV]                   K/[Gy]         %n\n",
+                           "  %*s        V/cm3                       K/[Gy]         %n\n",
                            irmax_digits,"ir",&count);
                 }
             }
@@ -1027,13 +1025,9 @@ public:
             /****************************************************/
             if (kerma_r[j] || kerma_p[j]) {
                 nreg = geoms[j]->regions();
-                rho  = rho_cv[j];// Matches muen medium and scoring regions mass
                 for (int ir = 0; ir < nreg; ir++) {
                     if (is_sensitive[j][ir]) {
-                        //imed     = geoms[j]->medium(ir);
-                        //rho      = getMediumRho(imed);
-                        //med_name = getMediumName(imed);
-                        m = mass[j][ir];
+                        EGS_Float v = volume[j][ir];
                         /* If total kerma in region */
                         if (kerma_r[j]){
                            kerma_r[j]->currentResult(ir,r,dr);
@@ -1080,29 +1074,29 @@ public:
                         if (verbose){
                             if (flugT && flugT[j]) {
                                if (kerma_p[j])
-                                  egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
-                                               irmax_digits, ir, m, r*F, dr, r*normD/m, dr, r_p*normD/m, dr_p,
-                                               r_p/(fe*rho)/Eph_sc, sqrt(dr_p*dr_p+dfe*dfe));
+                                  egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
+                                               irmax_digits, ir, v, r*normD/v, dr, r_p*normD/v, dr_p,
+                                               r_p/(fe*Eph_sc), sqrt(dr_p*dr_p+dfe*dfe));
                                else
-                                  egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
-                                               irmax_digits, ir, m, r*F, dr, r*normD/m, dr);
+                                  egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%%\n",
+                                               irmax_digits, ir, v, r*normD/v, dr);
                             }
                             else {
                                if (kerma_p[j])
-                                  egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %-11.8lg [%-10.6lf%%]\n",
-                                               irmax_digits, ir, m, r*F, dr, r*normD/m, dr, r_p*normD/m, dr_p, r/r_p, sqrt(dr*dr+dr_p*dr_p));
+                                  egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %-11.8lg [%-10.6lf%%]\n",
+                                               irmax_digits, ir, v, r*normD/v, dr, r_p*normD/v, dr_p, r/r_p, sqrt(dr*dr+dr_p*dr_p));
                                else
-                                  egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
-                                               irmax_digits, ir, m, r*F, dr, r*normD/m, dr);
+                                  egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%%\n",
+                                               irmax_digits, ir, v, r*normD/v, dr);
                             }
                         }
                         else{
                            if (kerma_p[j]){
                              egsInformation("  %*d  %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %-11.8lg [%-10.6lf%%]\n", irmax_digits, ir,
-                                               r*normD/m, dr, r_p*normD/m, dr_p, r/r_p, sqrt(dr*dr+dr_p*dr_p));
+                                               r*normD/v, dr, r_p*normD/v, dr_p, r/r_p, sqrt(dr*dr+dr_p*dr_p));
                              }
                            else{
-                             egsInformation("  %*d  %12.6e +/- %-8.4f%%\n", irmax_digits, ir, r*normD/m, dr);
+                             egsInformation("  %*d  %12.6e +/- %-8.4f%%\n", irmax_digits, ir, r*normD/v, dr);
                            }
                         }
                     }
@@ -1124,11 +1118,11 @@ public:
             }
 
             if (verbose)
-               egsInformation("  Total: %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
-                              mass_cv[j],r*F,dr*100.,r*normD/mass_cv[j],dr*100.);
+               egsInformation("  Total: %12.6e %12.6e +/- %-8.4f%%\n",
+                              volume_cv[j],r*normD/volume_cv[j],dr*100.);
             else
                egsInformation("  Total: %12.6e +/- %-8.4f%%\n",
-                              r*normD/mass_cv[j],dr*100.);
+                              r*normD/volume_cv[j],dr*100.);
 
             egsInformation("  %s\n",line.c_str());
             count = 0;
@@ -1154,7 +1148,7 @@ public:
                     if (dr > 0) {
                         dr = sqrt(dr);
                     }
-                    double r = r1*mass_cv[gind2[j]]/(r2*mass_cv[gind1[j]]);
+                    double r = r1*volume_cv[gind2[j]]/(r2*volume_cv[gind1[j]]);
                     egsInformation("%-20s %-20s     %-11.8lg +/- %-10.8lg [%-10.6lf%%]\n",
                                    geoms[gind1[j]]->getName().c_str(),
                                    geoms[gind2[j]]->getName().c_str(),r,r*dr,100.*dr);
@@ -1206,17 +1200,14 @@ public:
                 int nreg = geoms[j]->regions();
                 int irmax_digits = getDigits(max_sc_reg);
                 egsInformation(
-                    "  %*s      m/g            Flu/[cm-2]         %n\n",
+                    "  %*s      V/cm3          Flu/[cm-2]         %n\n",
                     irmax_digits,"ir",&count);
                 string line;
                 line.append(count,'-');
                 egsInformation("  %s\n",line.c_str());
                 for (int ir = 0; ir < nreg; ir++) {
                     if (is_sensitive[j][ir]) {
-                        int imed = geoms[j]->medium(ir);
-                        /* Per volume */
-                        EGS_Float m = mass[j][ir];
-                        EGS_Float normT = F*rho_cv[j]/m;// rho_cv matches muen medium and scoring regions mass
+                        EGS_Float normT = F/volume[j][ir];
                         flugT[j]->currentResult(ir,fe,dfe);
                         if (fe > 0) {
                             dfe = 100*dfe/fe;
@@ -1225,14 +1216,14 @@ public:
                             dfe = 100;
                         }
                         egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%%\n",
-                                       irmax_digits, ir, m,fe*normT, dfe);
+                                       irmax_digits, ir, volume[j][ir], fe*normT, dfe);
                     }
                 }
             }
 
             if (flug) {
                 /* Diff. fluence currently in whole scoring volume */
-                EGS_Float normV = F/(mass_cv[j]/rho_cv[j]);//per unit volume
+                EGS_Float normV = F/volume_cv[j];
                 EGS_Float norm, expbw, DE;
                 if (flu_s) {
                     expbw = exp(1.0/flu_a);// exp{log(Emax/Emin)/Nbin}
@@ -1293,8 +1284,8 @@ public:
                           double &count) {
         count = current_case;
         double flu = source->getFluence(),
-               mCV = kerma_r[0] ? mass[0][active_reg]:mass_cv[0];
-        norm = flu > 0 ? 1.602e-10*count/(flu*mCV) : 0;
+               vCV = kerma_r[0] ? volume[0][active_reg]:volume_cv[0];
+        norm = flu > 0 ? 1.602e-10*count/(flu*vCV) : 0;
         if (kerma_r[0]) {
             kerma_r[0]->currentScore(active_reg,sum,sum2);
         }
@@ -1425,9 +1416,8 @@ private:
                     flu_xmax;
     int             flu_s,
                     flu_nbin;
-    EGS_Float      *rho_cv;       // mass density of scoring volume
-    EGS_Float      *mass_cv;      // mass of scoring volume material
-    EGS_Float       **mass;       // masses of the CV regions.
+    EGS_Float      *volume_cv;    // total volume of scoring volume [cm3]
+    EGS_Float       **volume;     // volumes of the CV regions [cm3]
     int            *n_scoring_r; // Number of scoring regions in geometry.
     int             max_sc_reg;  // Largest scoring region in all geometries
     int             active_reg;  // Scoring region in first geometry shown in progress
@@ -1513,27 +1503,13 @@ int EGS_KermaApplication::initScoring() {
         verbose         = options->getInput("verbose",        choice,0);
 
 
-        /*******************************************************************
-         *
-         *   User-provided scoring medium density value
-         *
-         *   Definition of a scoring medium density, allowing scoring medium
-         *   to be different from the transport medium. Use this option when
-         *   mass-energy absorption or transfer coefficients used for a
-         *   medium that is different from the region transport medium. Mass
-         *   of scoring region ir should correspond to scoring medium and
-         *   region volume.
-         *
-         *   mass = V[ir]*rho_cv_user
-         *
-         *   Examples are calculations of air-kerma calculation in water or
-         *   water kerma in tissue. Another possible scenario could be using
-         *   a vacuum scoring volume to estimate kerma without attenuation
-         *   and scatter in the scoring volume.
-         *
-         ***********************************************************************/
-        EGS_Float rho_cv_user = -1.0;
-        int errUserScMedDens = options->getInput("scoring medium density",rho_cv_user);
+        /* Fatal error if deprecated key is present */
+        {
+            EGS_Float deprecated;
+            if (!options->getInput("scoring medium density", deprecated))
+                egsFatal("\ninitScoring: 'scoring medium density' is no longer supported.\n"
+                         "             Provide 'scoring region volumes' (in cm3) instead.\n");
+        }
 
         //
         // *********** calculation geometries
@@ -1543,8 +1519,8 @@ int EGS_KermaApplication::initScoring() {
         vector<int *>       cavity_regions;
         vector<int>         n_cavity_regions;
         vector<int>         n_region_groups;
-        vector<EGS_Float *> cavity_masses;
-        vector<int>         n_cavity_masses;
+        vector<EGS_Float *> cavity_volumes;
+        vector<int>         n_cavity_volumes;
         vector<int *>       excluded_regions;
         vector<int>         n_excluded_regions;
         vector<EGS_AffineTransform *> transformations;
@@ -1566,7 +1542,7 @@ int EGS_KermaApplication::initScoring() {
                                          "use 'scoring regions' instead!!!\n\n");
             dummy_err = aux->getInput("cavity mass",dummy_mass);
             if (!dummy_err) egsFatal("initScoring: Using deprecated input key 'cavity mass' \n"
-                                         "use 'scoring region masses' or 'scoring volume mass' instead!!!\n\n");
+                                         "use 'scoring region volumes' or 'scoring volume' instead!!!\n\n");
 
             /* Process inputs */
 
@@ -1576,7 +1552,7 @@ int EGS_KermaApplication::initScoring() {
             vector<int> apert;
             int err4 = aux->getInput("excluded regions",apert);
             vector<EGS_Float> cmass;
-            int err2 = aux->getInput("scoring region masses",cmass);
+            int err2 = aux->getInput("scoring region volumes",cmass);
 
             if (err) egsWarning("initScoring: missing/wrong 'geometry name' "
                                     "input\n");
@@ -1742,39 +1718,36 @@ int EGS_KermaApplication::initScoring() {
                 err1 = 1;
             }
 
-            if (err2) {// Error reading scoring region masses
-                err2 = 0;
-                err2 = aux->getInput("scoring volume mass",cmass);
+            bool total_volume_only = false;
+            if (err2) {// Error reading scoring region volumes
+                /* Check for renamed key */
+                vector<EGS_Float> old_key_check;
+                if (!aux->getInput("scoring region masses", old_key_check))
+                    egsFatal("\ninitScoring: 'scoring region masses' is no longer supported.\n"
+                             "             Use 'scoring region volumes' (in cm3) instead.\n");
+                err2 = aux->getInput("scoring volume",cmass);
                 if (err2 || cmass.size() != 1) {
-                    egsFatal("initScoring: missing/wrong 'scoring region masses'\n"
-                             "             or 'scoring volume mass' input\n");
+                    egsFatal("initScoring: missing/wrong 'scoring region volumes'\n"
+                             "             or 'scoring volume' input\n");
                 }
+                total_volume_only = true;
             }
-            else { // Warn user. Not needed above.
+            else { // per-region volumes provided
                 if (cav.size() != cmass.size()) {
                     if (cmass.size() == 1) {
-                        if (cmass[0] < 0) {
-                            egsWarning("\ninitScoring: Only one mass defined. Assuming it is the total mass!\n\n");
-                            cmass[0] *= -1;
-                        }
-                        else {
-                            egsWarning("\ninitScoring: Only one mass defined. Assuming same mass for all regions!\n\n");
-                            for (int j=1; j<cav.size(); j++) {
-                                cmass.push_back(cmass[0]);
-                            }
+                        egsWarning("\ninitScoring: Only one volume defined. Assuming same volume for all regions!\n\n");
+                        for (int j=1; j<(int)cav.size(); j++) {
+                            cmass.push_back(cmass[0]);
                         }
                     }
                     else
                         egsFatal(
                             "\n**************************************************************\n"
-                            "initScoring: Aborting due to error in mass input\n"
-                            "             Number of mass entries using 'scoring region masses' must match: \n"
-                            "             - Number of scoring regions using \n"
-                            "             - Number of scoring region groups \n"
-                            "             - Unique mass value for all scoring regions\n"
-                            "             - Total volume mass (unique negative value)\n\n"
-                            " Alternatively, kerma scoring in whole scoring volume triggered"
-                            " by entering total volume mass using 'scoring volume mass'\n"
+                            "initScoring: Aborting due to error in volume input\n"
+                            "             Number of volume entries using 'scoring region volumes' must match:\n"
+                            "             - Number of scoring regions, OR\n"
+                            "             - A single value (same volume for all regions)\n\n"
+                            " For total-CV-only scoring use 'scoring volume = V_total'\n"
                             "**************************************************************\n\n");
                 }
             }
@@ -1856,8 +1829,8 @@ int EGS_KermaApplication::initScoring() {
                         fd_global_gs.push_back(cgname);
                         n_cavity_regions.push_back(ncav);
                         cavity_regions.push_back(regs);
-                        cavity_masses.push_back(m_g);
-                        n_cavity_masses.push_back(cmass.size());
+                        cavity_volumes.push_back(m_g);
+                        n_cavity_volumes.push_back(total_volume_only ? 0 : (int)cmass.size());
                         transformations.push_back(
                             EGS_AffineTransform::getTransformation(aux));
                         /* excluded regions */
@@ -1898,11 +1871,10 @@ int EGS_KermaApplication::initScoring() {
         fd_geoms     = new EGS_BaseGeometry* [ngeom];
         is_sensitive = new bool* [ngeom];
         is_excluded  = new bool* [ngeom];
-        rho_cv       = new EGS_Float[ngeom];
-        mass_cv      = new EGS_Float[ngeom];
+        volume_cv    = new EGS_Float[ngeom];
         n_scoring_r  = new int[ngeom];
         active_med   = new int[ngeom];
-        mass       = new EGS_Float* [ngeom];
+        volume       = new EGS_Float* [ngeom];
         kerma      = new EGS_ScoringArray(ngeom);
         kerma_r    = new EGS_ScoringArray* [ngeom];
         kerma_p    = new EGS_ScoringArray* [ngeom];
@@ -1911,7 +1883,6 @@ int EGS_KermaApplication::initScoring() {
         max_sc_reg = -1, active_reg = INT_MAX;
 
         for (int j=0; j<ngeom; j++) {
-            rho_cv[j] = -1;
             geoms[j] = geometries[j]; //geoms[j]->ref();
             if (!fd_global_gs[j].empty()) {
                 EGS_BaseGeometry::setActiveGeometryList(app_index);
@@ -1925,24 +1896,24 @@ int EGS_KermaApplication::initScoring() {
             is_sensitive[j] = new bool [nreg];
             is_excluded[j]  = new bool [nreg];
             int i;
-            /* Initialize masses */
-            if (n_cavity_masses[j] > 0) {
-                mass[j]    = new EGS_Float [nreg];
+            /* Initialize volumes */
+            if (n_cavity_volumes[j] > 0) {
+                volume[j]  = new EGS_Float [nreg];
                 kerma_r[j] = new EGS_ScoringArray(nreg);
                 if (score_primaries)
                    kerma_p[j] = new EGS_ScoringArray(nreg);
                 else
                    kerma_p[j] = 0;
                 for (i=0; i<nreg; i++) {
-                    mass[j][i] = -1.0;
+                    volume[j][i] = -1.0;
                 }
-                mass_cv[j] = 0;
+                volume_cv[j] = 0;
             }
             else {
-                mass_cv[j] = cavity_masses[j][0];
-                mass[j]    = 0;
-                kerma_r[j] = 0;
-                kerma_p[j] = 0;
+                volume_cv[j] = cavity_volumes[j][0];
+                volume[j]    = 0;
+                kerma_r[j]   = 0;
+                kerma_p[j]   = 0;
             }
             /* Initialize sensitive and exclude regions */
             for (i=0; i<nreg; i++) {
@@ -1965,10 +1936,9 @@ int EGS_KermaApplication::initScoring() {
                             "region %d. Hope you know what you are doing\n",
                             imed1,ireg,imed,cavity_regions[j][0]);
                 }
-                //if (n_cavity_masses[j] > 1){
-                if (mass[j]) {
-                    mass[j][ireg] = cavity_masses[j][i];
-                    mass_cv[j]   += cavity_masses[j][i];
+                if (volume[j]) {
+                    volume[j][ireg]  = cavity_volumes[j][i];
+                    volume_cv[j]    += cavity_volumes[j][i];
                 }
                 //Find largest scoring region in all geometries
                 if (ireg > max_sc_reg) {
@@ -1979,42 +1949,10 @@ int EGS_KermaApplication::initScoring() {
                 }
             }
             active_med[j] = imed;
-            if (active_med[j] == -1 && errUserScMedDens)
-               egsFatal("\n\ninitScoring: \n"
-                        "Active medium cannot be vacuum.\n"
-                        "Either provide a scoring medium density using\n"
-                        "                                      \n"
-                        " scoring medium density = rho_cv_user \n"
-                        "                                      \n"
-                        "in your :scoring options: input block, or\n"
-                        "use quasi-vacuum or a negligible small volume instead!\n"
-                        "This is a fatal error!\n\n");
 
             n_scoring_r[j] = n_cavity_regions[j];
             delete [] cavity_regions[j];
-            delete [] cavity_masses[j];
-            /* Get cavity mass density */
-            if (errUserScMedDens){
-               if (rho_cv[j] < 0) {
-                   rho_cv[j] = the_media->rho[imed];
-               }
-               else {
-                   EGS_Float rho_cv_new = the_media->rho[imed];
-                   if (rho_cv[j] != rho_cv_new)
-                       egsWarning(
-                           "initScoring:\n"
-                           "density of scoring medium in geometry %s is %g g/cm3\n"
-                           "which differs from initial scoring medium density %g g/cm3\n",
-                           geoms[j]->getName().c_str(), rho_cv_new, rho_cv[j]);
-               }
-            }
-            else{
-               rho_cv[j] = rho_cv_user > 0 ? rho_cv_user : 1.0;
-               egsWarning(
-                   "initScoring:\n"
-                   "Density of scoring medium in geometry %s is %g g/cm3\n"
-                   "which is either user-provided, or unity in case of an input error\n\n",
-                   geoms[j]->getName().c_str(), rho_cv[j]);            }
+            delete [] cavity_volumes[j];
 
             if (!n_excluded_regions.empty()) {
                 vector<int> ir_sensitive_excluded;

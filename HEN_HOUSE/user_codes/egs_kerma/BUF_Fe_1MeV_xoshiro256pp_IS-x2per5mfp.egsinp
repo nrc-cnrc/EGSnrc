@@ -1,17 +1,21 @@
 ##############################################################################
 #
 # Exposure BuildUp calculation for 1 MeV gammas in Fe
+# Geometry importance splitting: factor-2 split at every 5-mfp boundary
 # ----------------------------------------------------
 #
-# Geometry is a homogeneous Fe sphere with 0.000048 GMFP thick (1 micron) scoring
-# spherical shells placed at increasing distances from the phantom center.
+# Same geometry as BUF_Fe_1MeV_xcom_PCUT-10keV-air-det-eTLE_xoshiro256pp.egsinp
+# but with region importances I = 2^floor(eta/5): doubles at each 5-mfp boundary.
 #
-# Exposure buildup factors are computed using air mass-energy absorption
-# coefficients, obtained with the EGSnrc g application, as the ratio K/Kpri
-# where K is total air-kerma, and Kpri primary air-kerma. The latter is estimated
-# by flagging all particles resulting from photon interactions as secondaries.
+# Specified via 'importance region ranges' triplets (ir_start ir_end I_value).
+# At 100 mfp importance = 2^20 = 1048576; regions beyond are rouletted to I=1.
 #
-# EMH, Jul 6, 2026
+# Region layout (78 regions 0..77 for 77 radii):
+#   0-39  : fine section, 0.5-mfp steps, 0..10 mfp
+#   40-75 : coarse section, 5-mfp steps, 10..100 mfp
+#   76-77 : beyond scoring shell, I=1 (aggressive roulette outward)
+#
+# EMH, Jul 2026
 #
 ##############################################################################
 
@@ -20,12 +24,11 @@
 ### Run control
 ##############################################################################
 :start run control:
-    ncase = 600e6 #4e9
-    rco type = uniform          # Or simple, balanced
-    check jobs completed = yes  # Defaults to 'yes'
-    interval wait time = 6000   #  1 s in ms
-    number of intervals = 60     # 1 min
-    #calculation = combine #analyze
+    ncase = 100e6
+    rco type = uniform
+    check jobs completed = yes
+    interval wait time = 6000
+    number of intervals = 60
 :stop run control:
 
 ##############################################################################
@@ -104,7 +107,7 @@
         library  = egs_spheres
         radii = 212.007050
         :start media input:
-            media = air   # By default homogeneous geometry
+            media = air
         :stop media input:
     :stop geometry:
 
@@ -119,28 +122,23 @@
 ##############################################################################
 :start media definition:
 
-    ### particle production thresholds
-    ae =  0.521                                 
-    ue = 2.511                                 
+    ae =  0.521
+    ue = 2.511
 
-    ap = 0.010                                  
-    up = 2.0                                    
+    ap = 0.010
+    up = 2.0
 
     :start iron:
-        density correction file = iron   # Ensure fe.pegs4dat exists in PEGS4 dir <- NOT REALLY! (EMH)
+        density correction file = iron
     :stop iron:
 
     :start ironX:
-        density correction file = iron   # Ensure fe.pegs4dat exists in PEGS4 dir <- NOT REALLY! (EMH)
+        density correction file = iron
     :stop ironX:
 
-    ### air
     :start air:
         density correction file = air_dry_nearsealevel
     :stop air:
-
-    ### See $HEN_HOUSE/pegs4/density_corrections/ for more materials, or create
-    ### you own: https://github.com/nrc-cnrc/EGSnrc/wiki/Generating-density-correction-files
 
 :stop media definition:
 
@@ -150,22 +148,20 @@
 ##############################################################################
 :start source definition:
 
-    ### pencil beam
     :start source:
         name      = point_source_at_origin
         library   = egs_isotropic_source
         charge    = 0
         :start spectrum:
             type = monoenergetic
-            energy = 1                         
+            energy = 1
         :stop spectrum:
         :start shape:
             type     = point
-            position = 0 0 0                   
+            position = 0 0 0
         :stop shape:
     :stop source:
 
-    ### use this source for the simulation
     simulation source = point_source_at_origin
 
 :stop source definition:
@@ -196,14 +192,52 @@
                                  1.708597E+01 2.033383E+01 2.386391E+01 2.767619E+01 3.177151E+01 3.614821E+01 4.080794E+01 \
                                  4.575071E+01 5.097486E+01 5.648204E+01
 
+        #
+        # Region importances: I = 2^floor(eta/5), doubles at 5-mfp boundaries.
+        # Triplet syntax: ir_start  ir_end  I_value  (applied in order).
+        #
+        # Fine section (regions 0-39, 0.5 mfp/pair):
+        #   Thin shell at 5 mfp  = region 19  -> I doubles to 2
+        #   Thin shell at 10 mfp = region 39  -> I doubles to 4
+        #
+        # Coarse section (regions 40-75, 5 mfp/pair):
+        #   Bulk (10-15 mfp)     = region 40  -> I stays at 4
+        #   Thin shell (15 mfp)  = region 41  -> I doubles to 8
+        #   Bulk (15-20 mfp)     = region 42  -> I stays at 8
+        #   Thin shell (20 mfp)  = region 43  -> I doubles to 16
+        #   ... and so on to 100 mfp
+        #
+        # Regions 76-77 (outside 100 mfp): I=1 — aggressive roulette outward.
+        #
+        importance region ranges = \
+             0  18      1  \
+            19  38      2  \
+            39  40      4  \
+            41  42      8  \
+            43  44     16  \
+            45  46     32  \
+            47  48     64  \
+            49  50    128  \
+            51  52    256  \
+            53  54    512  \
+            55  56   1024  \
+            57  58   2048  \
+            59  60   4096  \
+            61  62   8192  \
+            63  64  16384  \
+            65  66  32768  \
+            67  68  65536  \
+            69  70  131072 \
+            71  72  262144 \
+            73  74  524288 \
+            75  75  1048576 \
+            76  76      1
+
     :stop calculation geometry:
 
-   ### E*muen file (could also be E*mutr): absolute or relative file path
-   ### Use absolute path when submitting parallel jobs!!!
     emuen file = $EGS_HOME/data/emuen_rho_air_xcom_ik_1keV-1.5MeV.data
 
-    ### geometry for forced-detection (if omitted, score ONLY when reaching scoring region)
-     Default FD geometry = fd_sphere
+    Default FD geometry = fd_sphere
 
 :stop scoring options:
 

@@ -195,15 +195,15 @@
         geometry name         = sphere_in_room_no_wall
         scoring regions       = 2
         excluded regions      = 0     # exclude contribution from these regions
-        scoring region masses = 0.631 # mass in g for each scoring region
-        #scoring volume mass  = 0.631 # alternatively: mass for whole scoring volume
+        # Air sphere volume [cm3] = (4/3)*pi*r^3 = (4/3)*pi*5^3 = 523.6 cm3
+        # (Equivalently: 0.631 g / 1.20479E-03 g/cm3 = 523.7 cm3)
+        scoring region volumes = 523.7427
     :stop calculation geometry:
 
     :start calculation geometry:
         geometry name         = sphere_in_room_all
         scoring regions       = 2
-        scoring region masses = 0.631 # mass in g for each region
-        #scoring volume mass  = 0.631 # mass in g for whole scoring volume
+        scoring region volumes = 523.7427
     :stop calculation geometry:
 
     ### ratio estimates wall contribution to air sphere
