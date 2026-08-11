@@ -115,9 +115,9 @@ public:
     /*! Constructor */
     EGS_KermaApplication(int argc, char **argv) :
         EGS_AdvancedApplication(argc,argv), ngeom(0),
-        kerma(0), kerma_r(0), kerma_p(0), scg(0),
+        kerma(0), kerma_r(0), kerma_p(0), scg(0), scg_kp(0),
         fd_geom(0), ncg(0), flug(0),flugT(0), verbose(false),
-        score_primaries(false),
+        score_primaries(false), is_scatter_correction(true),
         imp_active(false),
         m_primary(0.0), m_tot(0.0),
         prev_ir_imp(-1),
@@ -193,6 +193,10 @@ public:
             delete [] gind2;
             delete [] scg;
         }
+        if (scg_kp) {
+            for (int j=0; j<ngeom; j++) delete [] scg_kp[j];
+            delete [] scg_kp;
+        }
     };
 
     /*! Describe the application.  */
@@ -236,11 +240,12 @@ public:
                     if (kerma_r[ig]) {
                         kerma_r[ig]->score(ir,weightedEmuen);
                     }
-                    if (kerma_p[ig] && !latch) {
+                    if (kerma_p[ig] && (is_scatter_correction ? !latch : (latch != 0))) {
                         kerma_p[ig]->score(ir,weightedEmuen);
-                        // Track energy of scoring primary photons
-                        Eph_sc_p += the_stack->wt[np]*E;
-                        Nsc_p    += the_stack->wt[np];
+                        if (is_scatter_correction) {
+                            Eph_sc_p += the_stack->wt[np]*E;
+                            Nsc_p    += the_stack->wt[np];
+                        }
                     }
                     // Track energy of scoring photons
                     Eph_sc += the_stack->wt[np]*E;
@@ -594,10 +599,8 @@ public:
                     if (kerma_r[ig]) {
                         kerma_r[ig]->score(ir_sc[i],weightedEdepCV);
                     }
-                    if (kerma_p[ig] && !latch ) {
+                    if (kerma_p[ig] && (is_scatter_correction ? !latch : (latch != 0))) {
                         kerma_p[ig]->score(ir_sc[i],weightedEdepCV);
-                        // Eph_sc_p += the_stack->E[np]*wt*exp_Att;
-                        // Nsc_p    += wt*exp_Att;
                     }
                     //--------------------------------------------
                     // score photon fluence
@@ -684,6 +687,19 @@ public:
                 return 104;
             }
         }
+        if (scg_kp) {
+            for (int j=0; j<ngeom; j++) {
+                if (!scg_kp[j] || !kerma_r[j] || !kerma_p[j]) continue;
+                int nr = geoms[j]->regions();
+                for (int ir=0; ir<nr; ir++) {
+                    double aux = kerma_r[j]->thisHistoryScore(ir)
+                               * kerma_p[j]->thisHistoryScore(ir);
+                    (*data_out) << scg_kp[j][ir]+aux << "  ";
+                }
+                (*data_out) << endl;
+            }
+            if (!data_out->good()) return 105;
+        }
         if (flug) {
             for (int j=0; j<ngeom; j++) {
                 if (!flug[j]->storeState(*data_out)) {
@@ -736,6 +752,14 @@ public:
                 return 104;
             }
         }
+        if (scg_kp) {
+            for (int j=0; j<ngeom; j++) {
+                if (!scg_kp[j] || !kerma_r[j] || !kerma_p[j]) continue;
+                int nr = geoms[j]->regions();
+                for (int ir=0; ir<nr; ir++) (*data_in) >> scg_kp[j][ir];
+                if (!data_in->good()) return 105;
+            }
+        }
         if (flug) {
             for (int j=0; j<ngeom; j++) {
                 if (!flug[j]->setState(*data_in)) {
@@ -771,6 +795,13 @@ public:
         if (ncg > 0) {
             for (int j=0; j<ncg; j++) {
                 scg[j] = 0;
+            }
+        }
+        if (scg_kp) {
+            for (int j=0; j<ngeom; j++) {
+                if (!scg_kp[j]) continue;
+                int nr = geoms[j]->regions();
+                for (int ir=0; ir<nr; ir++) scg_kp[j][ir] = 0;
             }
         }
         if (flug) {
@@ -829,6 +860,17 @@ public:
                     return 104;
                 }
                 scg[j] += tmp;
+            }
+        }
+        if (scg_kp) {
+            for (int j=0; j<ngeom; j++) {
+                if (!scg_kp[j] || !kerma_r[j] || !kerma_p[j]) continue;
+                int nr = geoms[j]->regions();
+                for (int ir=0; ir<nr; ir++) {
+                    double tmp; data >> tmp;
+                    if (!data.good()) return 105;
+                    scg_kp[j][ir] += tmp;
+                }
             }
         }
         if (flug) {
@@ -969,6 +1011,9 @@ public:
         string line;
         string med_name;
         double r, dr, r_p, dr_p, fe, dfe;
+        double dr_frac, drp_frac;   // fractional (not percent) relative uncertainties
+        double BUF, dBUF;           // buildup factor and its percent relative uncertainty
+        const char *second_col = is_scatter_correction ? "Kpri" : "Kscat";
         int nreg = 0;
 
         egsInformation("\n                         =========================\n"
@@ -991,8 +1036,8 @@ public:
                     if (kerma_p[j])
                       egsInformation(
                           "  %*s        V/cm3                       K/[Gy]            "
-                          "      Kpri/[Gy]           (muen/rho)=Kpri/Flu/Eave[cm^2/g]   %n\n",
-                          irmax_digits,"ir",&count);
+                          "      %s/[Gy]           (muen/rho)=%s/Flu/Eave[cm^2/g]   %n\n",
+                          irmax_digits,"ir",second_col,second_col,&count);
                     else
                       egsInformation(
                           "  %*s        V/cm3                       K/[Gy]            %n\n",
@@ -1001,8 +1046,8 @@ public:
                 else {
                    if (kerma_p[j])
                       egsInformation(
-                           "  %*s        V/cm3                       K/[Gy]               Kpri/[Gy]           K/Kpri             %n\n",
-                           irmax_digits,"ir",&count);
+                           "  %*s        V/cm3                       K/[Gy]               %s/[Gy]             K/Kpri               %n\n",
+                           irmax_digits,"ir",second_col,&count);
                     else
                       egsInformation(
                            "  %*s        V/cm3                       K/[Gy]         %n\n",
@@ -1011,7 +1056,7 @@ public:
             }
             else{
                if (kerma_p[j]){
-                 egsInformation("  %*s        K/[Gy]                        Kpri/[Gy]           K/Kpri             %n\n", irmax_digits,"ir",&count);
+                 egsInformation("  %*s        K/[Gy]                        %s/[Gy]             K/Kpri               %n\n", irmax_digits,"ir",second_col,&count);
                }
                else{
                  egsInformation("  %*s        K/[Gy]         %n\n", irmax_digits,"ir",&count);
@@ -1028,50 +1073,61 @@ public:
                 for (int ir = 0; ir < nreg; ir++) {
                     if (is_sensitive[j][ir]) {
                         EGS_Float v = volume[j][ir];
-                        /* If total kerma in region */
-                        if (kerma_r[j]){
-                           kerma_r[j]->currentResult(ir,r,dr);
-                           if (r > 0) {
-                               dr = 100.*dr/r;
-                               if (dr < 100.*kermaEpsilon) {
-                                   dr = 100.0;
-                               }
-                           }
-                           else {
-                               dr=100.0;
-                           }
+                        /* Total kerma */
+                        if (kerma_r[j]) {
+                            kerma_r[j]->currentResult(ir, r, dr);
+                            if (r > 0) {
+                                dr_frac = dr/r;
+                                dr = 100.*dr_frac;
+                                if (dr < 100.*kermaEpsilon) dr = 100.0;
+                            } else {
+                                r = 0.0; dr = 100.0; dr_frac = 1.0;
+                            }
+                        } else {
+                            r = 0.0; dr = 100.0; dr_frac = 1.0;
                         }
-                        else{
-                            r = 0.0; dr=100.0;
-                        }
-                        /* If primary kerma in region */
-                        if (kerma_p[j]){
-                           kerma_p[j]->currentResult(ir,r_p,dr_p);
-                           if (r_p > 0) {
-                               dr_p = 100.*dr_p/r_p;
-                               if (dr_p < 100.*kermaEpsilon) {
-                                   dr_p = 0.0;
-                               }
-                           }
-                           else {
-                               r_p = 0.0; dr_p = 100.0;
-                           }
-                        }
-                        else{
-                            r_p = 0.0; dr_p = 100.0;
+                        /* Second score: Kpri (primary mode) or Kscat (scatter mode) */
+                        BUF = 0.0; dBUF = 0.0;
+                        if (kerma_p[j]) {
+                            kerma_p[j]->currentResult(ir, r_p, dr_p);
+                            if (r_p > 0) {
+                                drp_frac = dr_p/r_p;
+                                dr_p = 100.*drp_frac;
+                                if (dr_p < 100.*kermaEpsilon) { dr_p = 0.0; drp_frac = 0.0; }
+                            } else {
+                                r_p = 0.0; dr_p = 100.0; drp_frac = 1.0;
+                            }
+                            /* Correlated K/Kpri */
+                            if (r > 0 && r_p > 0) {
+                                /* rc = cov(K,q)/(K*q) — relative covariance, NOT Pearson r;
+                                   unbounded, do not clamp to [-1,1] */
+                                double rc = 0;
+                                if (scg_kp && scg_kp[j] && current_case > 1)
+                                    rc = (scg_kp[j][ir]/(r*r_p*current_case) - 1.0)
+                                         / (current_case - 1.0);
+                                double d2 = dr_frac*dr_frac + drp_frac*drp_frac - 2.0*rc;
+                                if (is_scatter_correction) {
+                                    BUF  = r / r_p;
+                                    dBUF = (d2 > 0) ? 100.0*sqrt(d2) : 0.0;
+                                } else {
+                                    double r_pri = r - r_p;
+                                    if (r_pri > 0) {
+                                        BUF  = r / r_pri;
+                                        dBUF = (d2 > 0) ? 100.0*fabs(BUF-1.0)*sqrt(d2) : 0.0;
+                                    }
+                                }
+                            }
+                        } else {
+                            r_p = 0.0; dr_p = 100.0; drp_frac = 1.0;
                         }
                         /* Fluence statistics */
-                        if (flugT && flugT[j]){
-                            flugT[j]->currentResult(ir,fe,dfe);
-                            if (fe > 0) {
-                                dfe = 100*dfe/fe;
-                            }
-                            else {
-                                dfe = 100;
-                            }
+                        if (flugT && flugT[j]) {
+                            flugT[j]->currentResult(ir, fe, dfe);
+                            if (fe > 0) { dfe = 100*dfe/fe; }
+                            else        { dfe = 100; }
                         }
                         /* Output */
-                        if (verbose){
+                        if (verbose) {
                             if (flugT && flugT[j]) {
                                if (kerma_p[j])
                                   egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
@@ -1080,24 +1136,20 @@ public:
                                else
                                   egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%%\n",
                                                irmax_digits, ir, v, r*normD/v, dr);
-                            }
-                            else {
+                            } else {
                                if (kerma_p[j])
                                   egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %-11.8lg [%-10.6lf%%]\n",
-                                               irmax_digits, ir, v, r*normD/v, dr, r_p*normD/v, dr_p, r/r_p, sqrt(dr*dr+dr_p*dr_p));
+                                               irmax_digits, ir, v, r*normD/v, dr, r_p*normD/v, dr_p, BUF, dBUF);
                                else
                                   egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%%\n",
                                                irmax_digits, ir, v, r*normD/v, dr);
                             }
-                        }
-                        else{
-                           if (kerma_p[j]){
-                             egsInformation("  %*d  %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %-11.8lg [%-10.6lf%%]\n", irmax_digits, ir,
-                                               r*normD/v, dr, r_p*normD/v, dr_p, r/r_p, sqrt(dr*dr+dr_p*dr_p));
-                             }
-                           else{
-                             egsInformation("  %*d  %12.6e +/- %-8.4f%%\n", irmax_digits, ir, r*normD/v, dr);
-                           }
+                        } else {
+                            if (kerma_p[j])
+                                egsInformation("  %*d  %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%% %-11.8lg [%-10.6lf%%]\n",
+                                               irmax_digits, ir, r*normD/v, dr, r_p*normD/v, dr_p, BUF, dBUF);
+                            else
+                                egsInformation("  %*d  %12.6e +/- %-8.4f%%\n", irmax_digits, ir, r*normD/v, dr);
                         }
                     }
                 }
@@ -1141,6 +1193,8 @@ public:
                 kerma->currentResult(gind1[j],r1,dr1);
                 kerma->currentResult(gind2[j],r2,dr2);
                 if (r1 > 0 && r2 > 0) {
+                    /* rc = cov(K1,K2)/(K1*K2) — relative covariance, NOT Pearson r;
+                       unbounded, do not clamp to [-1,1] */
                     double rc=(scg[j]/(r1*r2*current_case)-1)/(current_case-1);
                     dr1 /= r1;
                     dr2 /= r2;
@@ -1353,6 +1407,15 @@ protected:
                     scg[j] += kerma->thisHistoryScore(gind1[j])*
                               kerma->thisHistoryScore(gind2[j]);
             }
+            if (scg_kp) {
+                for (int j=0; j<ngeom; j++) {
+                    if (!scg_kp[j] || !kerma_r[j] || !kerma_p[j]) continue;
+                    int nr = geoms[j]->regions();
+                    for (int ir=0; ir<nr; ir++)
+                        scg_kp[j][ir] += kerma_r[j]->thisHistoryScore(ir)
+                                       * kerma_p[j]->thisHistoryScore(ir);
+                }
+            }
             kerma->setHistory(current_case);
             for (int j=0; j<ngeom; j++) {
                 if (kerma_r[j]) {
@@ -1402,7 +1465,8 @@ private:
 
     EGS_ScoringArray *kerma;    // total kerma per geometry
     EGS_ScoringArray **kerma_r; // total kerma per region
-    EGS_ScoringArray **kerma_p; // primary kerma per region
+    EGS_ScoringArray **kerma_p; // second score: Kpri (correction mode) or Kscat (scatter mode)
+    double           **scg_kp;  // cross-term Sum(k_i*q_i) per geometry/region for correlated K/Kpri
 
     EGS_Interpolator *E_Muen_Rho;
 
@@ -1455,6 +1519,7 @@ private:
 
     /* Auxiliary input variables*/
     bool      score_primaries,
+              is_scatter_correction, // true (default): score Kpri; false: score Kscat
               verbose;
 
     /* Geometry importance splitting / Russian roulette */
@@ -1499,8 +1564,9 @@ int EGS_KermaApplication::initScoring() {
         vector<string> choice;
         choice.push_back("no");
         choice.push_back("yes");
-        score_primaries = options->getInput("score primaries",choice,0);
-        verbose         = options->getInput("verbose",        choice,0);
+        score_primaries      = options->getInput("score primaries",    choice,0);
+        verbose              = options->getInput("verbose",            choice,0);
+        is_scatter_correction = options->getInput("scatter correction", choice,1);
 
 
         /* Fatal error if deprecated key is present */
@@ -1878,6 +1944,7 @@ int EGS_KermaApplication::initScoring() {
         kerma      = new EGS_ScoringArray(ngeom);
         kerma_r    = new EGS_ScoringArray* [ngeom];
         kerma_p    = new EGS_ScoringArray* [ngeom];
+        scg_kp     = new double* [ngeom];
         transforms = new EGS_AffineTransform* [ngeom];
 
         max_sc_reg = -1, active_reg = INT_MAX;
@@ -1900,10 +1967,14 @@ int EGS_KermaApplication::initScoring() {
             if (n_cavity_volumes[j] > 0) {
                 volume[j]  = new EGS_Float [nreg];
                 kerma_r[j] = new EGS_ScoringArray(nreg);
-                if (score_primaries)
-                   kerma_p[j] = new EGS_ScoringArray(nreg);
-                else
+                if (score_primaries) {
+                   kerma_p[j]  = new EGS_ScoringArray(nreg);
+                   scg_kp[j]   = new double[nreg]();
+                }
+                else {
                    kerma_p[j] = 0;
+                   scg_kp[j]  = 0;
+                }
                 for (i=0; i<nreg; i++) {
                     volume[j][i] = -1.0;
                 }
@@ -1914,6 +1985,7 @@ int EGS_KermaApplication::initScoring() {
                 volume[j]    = 0;
                 kerma_r[j]   = 0;
                 kerma_p[j]   = 0;
+                scg_kp[j]    = 0;
             }
             /* Initialize sensitive and exclude regions */
             for (i=0; i<nreg; i++) {
@@ -2276,7 +2348,10 @@ void EGS_KermaApplication::describeSimulation() {
         }
 
         if (kerma_p[j]) {
-            egsInformation("     Scoring primary kerma in %d regions\n",n_scoring_r[j]);
+            if (is_scatter_correction)
+                egsInformation("     Scoring primary kerma in %d regions\n", n_scoring_r[j]);
+            else
+                egsInformation("     Scoring scatter kerma in %d regions\n", n_scoring_r[j]);
         }
 
         egsInformation("     Exclude contributions from photons entering regions : ");
@@ -2342,6 +2417,20 @@ void EGS_KermaApplication::describeSimulation() {
     }
     else {
         egsInformation(" Geometry importance sampling: OFF\n");
+    }
+    egsInformation("\n");
+
+    if (score_primaries) {
+        egsInformation(" Correlated K/Kpri scoring:    ON\n");
+        if (is_scatter_correction)
+            egsInformation("   Scatter correction mode: score Kpri (latch=0), K/Kpri = K/Kpri\n"
+                           "   Sum(K*Kpri) tracked per region for correlated variance\n");
+        else
+            egsInformation("   Scatter dominant mode:   score Kscat (latch!=0), K/Kpri = K/(K-Kscat)\n"
+                           "   Sum(K*Kscat) tracked per region for correlated variance\n");
+    }
+    else {
+        egsInformation(" Correlated K/Kpri scoring:    OFF\n");
     }
     egsInformation("\n");
 }
