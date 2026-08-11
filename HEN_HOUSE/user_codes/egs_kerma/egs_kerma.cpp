@@ -117,7 +117,11 @@ public:
         EGS_AdvancedApplication(argc,argv), ngeom(0),
         kerma(0), kerma_r(0), kerma_p(0), scg(0),
         fd_geom(0), ncg(0), flug(0),flugT(0), verbose(false),
-        score_primaries(false), m_primary(0.0), m_tot(0.0) {
+        score_primaries(false),
+        imp_active(false),
+        m_primary(0.0), m_tot(0.0),
+        prev_ir_imp(-1),
+        n_split_events(0), n_cap_events(0), max_stack_needed(0) {
         Eph_ave = 0.0;
         Nph = 0.0;
         Eph_sc  = 0.0;
@@ -276,31 +280,125 @@ public:
         }
 
         /********************************************************************
-         * BEWARE: Flagging secondaries by incrementing their latch.
-         *         Other applications might use latch for other purposes!
+         * Flag scattered photons and all interaction products by
+         * incrementing their latch, so that latch=0 always identifies an
+         * unscattered primary.  Required by both IS (latch!=0 guard) and
+         * score_primaries (Kpri/Kscat identification).  Done whenever
+         * either feature is active so the two are fully independent.
          *********************************************************************/
-        // if (score_primaries && !iq) {
-        if (score_primaries) {
-            /***************************************************************
-             FLURZnrc IPRIMARY = 3
-                Flag scattered photons, secondaries, and relaxation
-                particles as secondaries
-            ****************************************************************/
-            if (iarg == EGS_Application::AfterPair    ||
-                iarg == EGS_Application::AfterCompton ||
-                iarg == EGS_Application::AfterPhoto   ||
-                iarg == EGS_Application::AfterRayleigh){
+        if ((score_primaries || imp_active) &&
+            (iarg == EGS_Application::AfterPair    ||
+             iarg == EGS_Application::AfterCompton ||
+             iarg == EGS_Application::AfterPhoto   ||
+             iarg == EGS_Application::AfterRayleigh)) {
 
-                int npold = the_stack->npold-1;
+            int npold = the_stack->npold-1;
+            for (int ip = npold; ip <= np; ip++)
+                ++the_stack->latch[ip];
+        }
 
-                for (int ip = npold; ip <= np; ip++) {
-                    ++the_stack->latch[ip];
+        /* Geometry importance: splitting and Russian roulette at region crossings.
+         * prev_ir_imp is updated at every AfterTransport so that successive
+         * boundary crossings within a single photon MFP use the immediately
+         * preceding region, not the region from selectPhotonMFP().  Without
+         * this update, $SELECT-PHOTON-MFP is called only once per MFP (at
+         * :PNEWENERGY:), leaving prev_ir_imp stale for crossings 2, 3, ... */
+        if (iarg == AfterTransport && !iq && ir >= 0) {
+            int latch = the_stack->latch[np];
+            if (latch && prev_ir_imp >= 0 && ir != prev_ir_imp
+                    && ig < (int)region_importance.size()
+                    && prev_ir_imp < (int)region_importance[ig].size()
+                    && ir          < (int)region_importance[ig].size()) {
+
+                EGS_Float I_old = region_importance[ig][prev_ir_imp];
+                EGS_Float I_new = region_importance[ig][ir];
+                EGS_Float ratio = I_new / I_old;
+
+                if (ratio > 1.0 + 1e-10) {
+                    /* Forward crossing (deeper): split.
+                     * nsplit is the intended split factor (from the importance
+                     * ratio); it sets the weight of every particle.  n_actual
+                     * is capped to the available stack space so the simulation
+                     * never aborts.  Crucially, the weight is always divided
+                     * by nsplit (not n_actual): particles that don't fit are
+                     * simply dropped, introducing a small downward bias only
+                     * when the stack is genuinely full, rather than the large
+                     * upward variance spikes that arise from over-weighted
+                     * particles when the weight divisor is capped instead. */
+                    int nsplit = (int)ratio;
+                    if (rndm->getUniform() < (ratio - nsplit)) ++nsplit;
+                    int avail    = MXSTACK - the_stack->np;
+                    int n_actual = (nsplit > avail) ? avail : nsplit;
+                    ++n_split_events;
+                    if (n_actual < nsplit) {
+                        ++n_cap_events;
+                        int needed = the_stack->np + nsplit;
+                        if (needed > max_stack_needed) max_stack_needed = needed;
+                    }
+                    EGS_Float new_wt = the_stack->wt[np] / nsplit;
+                    if (n_actual == 0) {
+                        /* Stack completely full — no copies can be created.
+                         * Dividing the weight by nsplit without copies leaves
+                         * near-zero-weight particles clogging the stack.
+                         * Instead: Russian roulette with survival prob 1/nsplit.
+                         * Survivors keep their weight intact and will be split
+                         * properly once the stack has room.  Expected weight is
+                         * (1/nsplit) × w = new_wt, so the estimator is unbiased. */
+                        if (rndm->getUniform() > 1.0 / nsplit)
+                            the_epcont->idisc = 1;  // kill — clears stack pressure
+                        // survivor: wt[np] unchanged, will split at next opportunity
+                    } else {
+                        /* Partial or full split: all surviving particles carry
+                         * w/nsplit.  Copies that don't fit are dropped
+                         * (small downward bias only when heavily capped). */
+                        the_stack->wt[np] = new_wt;
+                    }
+                    if (n_actual > 1) {
+                        /* IS_COPY_FLAG is only needed when copies exist:
+                         * it prevents the original from calling scoreInCV()
+                         * again when EGSnrc's LIFO stack re-enters
+                         * :PNEWENERGY: after the copies are processed.
+                         * With no copies there is no re-entry, so the flag
+                         * must not be set (it would suppress the next
+                         * legitimate scoreInCV call). */
+                        the_stack->latch[np] |= IS_COPY_FLAG;
+                        EGS_Float x_=the_stack->x[np], y_=the_stack->y[np],
+                                  z_=the_stack->z[np], u_=the_stack->u[np],
+                                  v_=the_stack->v[np], w_=the_stack->w[np],
+                                  E_=the_stack->E[np], dn=the_stack->dnear[np];
+                        int ir_=the_stack->ir[np];
+                        for (int k = 1; k < n_actual; ++k) {
+                            int nn = the_stack->np;
+                            the_stack->x[nn]=x_;  the_stack->y[nn]=y_;
+                            the_stack->z[nn]=z_;  the_stack->u[nn]=u_;
+                            the_stack->v[nn]=v_;  the_stack->w[nn]=w_;
+                            the_stack->E[nn]=E_;  the_stack->wt[nn]=new_wt;
+                            the_stack->iq[nn]=0;  the_stack->ir[nn]=ir_;
+                            the_stack->latch[nn]=latch|IS_COPY_FLAG; the_stack->dnear[nn]=dn;
+                            the_stack->np++;
+                        }
+                        /* BUG FIX (2026-08-11): the LAST copy pushed is now the
+                         * top of stack, i.e. Fortran's np, and PHOTON continues
+                         * transport with it WITHOUT re-entering :PNEWENERGY:.
+                         * It therefore never calls selectPhotonMFP() here and
+                         * never consumes its flag, which would later suppress a
+                         * legitimate scoreInCV().  The original at np keeps its
+                         * flag -- it is popped fresh at :PNEWENERGY:. */
+                        the_stack->latch[the_stack->np - 1] &= ~IS_COPY_FLAG;
+                    }
                 }
-
+                else if (ratio < 1.0 - 1e-10) {
+                    /* Backward crossing (outward): Russian roulette */
+                    if (rndm->getUniform() > ratio)
+                        the_epcont->idisc = 1;       // kill
+                    else
+                        the_stack->wt[np] /= ratio;  // survivor: weight × I_old/I_new
+                }
             }
-        // if (iq && !the_stack->latch[np]){
-        //     egsWarning("-> Primary electron?\n");
-        // }
+            /* Track the last region crossed so the next AfterTransport call
+             * computes the ratio relative to the immediately previous region,
+             * not the region where the MFP was originally sampled. */
+            prev_ir_imp = ir;
         }
 
         return 0;
@@ -487,7 +585,7 @@ public:
                 for (int i = 0; i < n_ir_sc; i++) {
                     //edepCV     = emuen_rho*rho_cv[ig];
                     exp_CV     = exp(-mu_cv*t_sc[i]);
-                    exp_Att    = sigma ? exp_Lambda*(1-exp_CV)/mu_cv : 1.0 ;//Attenuation in scoring region
+                    exp_Att    = sigma ? exp_Lambda*(1-exp_CV)/mu_cv : exp_Lambda*t_sc[i];
                     edepCV     = emuen*exp_Att;
                     weightedEdepCV = wt*edepCV;
                     weightedExpAtt = wt*exp_Att;
@@ -535,7 +633,7 @@ public:
                 //--------------------------------------------
                 //edepCV     = emuen_rho*rho_cv[ig];// Data base contains E_muen/rho values
                 exp_CV     = exp(-mu_cv*t_sc_tot);
-                exp_Att    = sigma ? exp_Lambda_to_CV*(1-exp_CV)/mu_cv : 1.0;
+                exp_Att    = sigma ? exp_Lambda_to_CV*(1-exp_CV)/mu_cv : exp_Lambda_to_CV*t_sc_tot;
                 edepCV     = emuen*exp_Att;
                 kerma->score(ig,wt*edepCV);
                 // Ray-tracing continues
@@ -601,7 +699,9 @@ public:
         (*data_out) << Eph_ave << " " << Nph << " "
                     << Eel_ave << " " << Nel << " "
                     << Eph_sc  << " " << Nsc << " "
-                    << Eph_sc_p  << " " << Nsc_p << endl;
+                    << Eph_sc_p  << " " << Nsc_p << " "
+                    << n_split_events << " " << n_cap_events << " "
+                    << max_stack_needed << endl;
         if (!data_out->good()) {
             return 1031;
         }
@@ -648,7 +748,8 @@ public:
             }
         }
 
-        (*data_in) >> Eph_ave >> Nph >> Eel_ave >> Nel >> Eph_sc >> Nsc >> Eph_sc_p >> Nsc_p;
+        (*data_in) >> Eph_ave >> Nph >> Eel_ave >> Nel >> Eph_sc >> Nsc >> Eph_sc_p >> Nsc_p
+                   >> n_split_events >> n_cap_events >> max_stack_needed;
         if (!data_in->good()) {
             return 1031;
         }
@@ -688,6 +789,9 @@ public:
         Nph = 0;
         Eel_ave = 0;
         Nel = 0;
+        n_split_events  = 0;
+        n_cap_events    = 0;
+        max_stack_needed = 0;
 
     };
 
@@ -744,7 +848,10 @@ public:
         }
 
         EGS_Float aux_Eph_ave, aux_Nph, aux_Eel_ave, aux_Nel, aux_Eph_sc, aux_Nsc, aux_Eph_sc_p, aux_Nsc_p;
-        data >> aux_Eph_ave >> aux_Nph >> aux_Eel_ave >> aux_Nel >> aux_Eph_sc >> aux_Nsc >> aux_Eph_sc_p >> aux_Nsc_p;
+        long long aux_n_split, aux_n_cap;
+        int aux_max_needed;
+        data >> aux_Eph_ave >> aux_Nph >> aux_Eel_ave >> aux_Nel >> aux_Eph_sc >> aux_Nsc >> aux_Eph_sc_p >> aux_Nsc_p
+             >> aux_n_split >> aux_n_cap >> aux_max_needed;
         if (!data.good()) {
             return 1036;
         }
@@ -757,6 +864,9 @@ public:
         Nph     += aux_Nph;
         Eel_ave += aux_Eel_ave;
         Nel     += aux_Nel;
+        n_split_events  += aux_n_split;
+        n_cap_events    += aux_n_cap;
+        if (aux_max_needed > max_stack_needed) max_stack_needed = aux_max_needed;
 
         return 0;
     };
@@ -764,30 +874,76 @@ public:
     /*! Output the results of a simulation. */
     void outputResults() {
 
-        egsInformation("\n\n last case = %lld fluence = %g\n\n",
-                       current_case,source->getFluence());
+        EGS_Float F = current_case / getFluence();
 
-        EGS_Float F = current_case/getFluence();
+        /* Compute energy averages in-place before printing. */
+        const bool has_src_ph = Eph_ave  > kermaEpsilon && Nph   > kermaEpsilon;
+        const bool has_src_el = Eel_ave  > kermaEpsilon && Nel   > kermaEpsilon;
+        const bool has_sc     = Eph_sc   > kermaEpsilon && Nsc   > kermaEpsilon;
+        const bool has_sc_p   = Eph_sc_p > kermaEpsilon && Nsc_p > kermaEpsilon;
+        if (has_src_ph) Eph_ave  /= Nph;
+        if (has_src_el) Eel_ave  /= Nel;
+        if (has_sc)     Eph_sc   /= Nsc;
+        if (has_sc_p)   Eph_sc_p /= Nsc_p;
 
-        if (Eph_sc > kermaEpsilon && Nsc > kermaEpsilon) {
-            Eph_sc /= Nsc;
-            // egsInformation(" Mean scoring photon energy <Epsc> = %g MeV  Number of scoring photons = %.10g\n\n",Eph_sc, static_cast<double>(Nsc));
-            egsInformation(" Mean scoring photon energy <Epsc> = %g MeV  Number of scoring photons = %.10g\n\n",Eph_sc, Nsc);
+        egsInformation("===========================================================\n"
+                       " Simulation statistics\n"
+                       "===========================================================\n\n");
+
+        EGS_Float flu = source->getFluence();
+        /* Sources that return only a particle count (isotropic, beam, point,
+         * phase-space, ...) have getFluence() == current_case.  Only parallel
+         * and collimated sources divide by area or distance² and return a
+         * true fluence per cm².  Distinguish by exact equality with the case
+         * counter (both are doubles for count-mode sources). */
+        bool is_fluence = (flu != (EGS_Float)current_case);
+
+        egsInformation(" %-24s %lld\n",
+                       "Histories simulated :", current_case);
+        if (is_fluence)
+            egsInformation(" %-24s %.6g cm^-2\n\n",
+                           "Source fluence :", flu);
+        else
+            egsInformation(" %-24s %.6g\n\n",
+                           "Source particles :", flu);
+
+        if (has_src_ph || has_src_el) {
+            egsInformation(" Source particles\n");
+            if (has_src_ph)
+                egsInformation("   %-22s %8.4f MeV   %.4e particles\n",
+                               "Photons :",   Eph_ave, Nph);
+            if (has_src_el)
+                egsInformation("   %-22s %8.4f MeV   %.4e particles\n",
+                               "Electrons :", Eel_ave, Nel);
+            egsInformation("\n");
         }
-        if (Eph_sc_p > kermaEpsilon && Nsc_p > kermaEpsilon) {
-            Eph_sc_p /= Nsc_p;
-            // egsInformation(" Mean scoring photon energy <Epsc> = %g MeV  Number of scoring photons = %.10g\n\n",Eph_sc, static_cast<double>(Nsc));
-            egsInformation(" Mean scoring primary photon energy <Epsc> = %g MeV  Number of scoring primary photons = %.10g\n\n",Eph_sc_p, Nsc_p);
+
+        if (has_sc || has_sc_p) {
+            egsInformation(" Scoring photons\n");
+            if (has_sc)
+                egsInformation("   %-22s %8.4f MeV   %.4e particles\n",
+                               "All :",       Eph_sc,   Nsc);
+            if (has_sc_p)
+                egsInformation("   %-22s %8.4f MeV   %.4e particles\n",
+                               "Primaries :", Eph_sc_p, Nsc_p);
+            egsInformation("\n");
         }
 
-        if (Eph_ave > kermaEpsilon && Nph > kermaEpsilon) {
-            Eph_ave /= Nph;
-            egsInformation(" Mean source photon energy <Ep> = %g MeV\n\n",Eph_ave);
-        }
-
-        if (Eel_ave > kermaEpsilon && Nel > kermaEpsilon) {
-            Eel_ave /= Nel;
-            egsInformation(" Mean source electron energy <Ee> = %g MeV\n\n",Eel_ave);
+        if (n_split_events > 0) {
+            egsInformation(" Importance sampling (IS)\n");
+            egsInformation("   %-22s %lld\n",
+                           "Splitting events :", n_split_events);
+            egsInformation("   %-22s %lld   (%.3g%%)\n",
+                           "Capped events :", n_cap_events,
+                           100.0 * n_cap_events / n_split_events);
+            if (n_cap_events > 0)
+                egsInformation("   %-22s %d slots  =>  recommend MXSTACK >= %d  (current: %d)\n",
+                               "Max stack deficit :",
+                               max_stack_needed - MXSTACK, max_stack_needed, MXSTACK);
+            else
+                egsInformation("   %-22s none\n",
+                               "Max stack deficit :");
+            egsInformation("\n");
         }
 
         outputKermaResults(F);
@@ -1153,6 +1309,17 @@ public:
         EGS_Vector x(the_stack->x[np],the_stack->y[np],the_stack->z[np]);
         EGS_Vector u(the_stack->u[np],the_stack->v[np],the_stack->w[np]);
         int ireg   = the_stack->ir[np]-2, newmed = geometry->medium(ireg);
+        prev_ir_imp = ireg;  // snapshot for crossing detection in AfterTransport
+
+        /* IS_COPY_FLAG is set on both IS copies and the original particle when a
+         * split fires.  EGSnrc's LIFO stack re-enters :PNEWENERGY: for the
+         * original after processing the copies; the original already had
+         * scoreInCV() called from its MFP start, so this re-entry must be
+         * suppressed.  Copies likewise must not re-score from the split point.
+         * The flag is cleared here so post-interaction MFPs score normally. */
+        bool is_copy = the_stack->latch[np] & IS_COPY_FLAG;
+        if (is_copy) the_stack->latch[np] &= ~IS_COPY_FLAG;
+
         EGS_Float tstep = TSTEP_MAX;
         //******************************************************************
         // FD Track-length kerma estimation for photons entering or aimed
@@ -1161,7 +1328,7 @@ public:
         // killed, and hence not included. Photons inside this geometry or
         // any scoring region are also ray-traced.
         //******************************************************************
-        if (fd_geom &&  // TAKES ALL PHOTONS !!!
+        if (!is_copy && fd_geom &&  // TAKES ALL PHOTONS !!!
                 (is_sensitive[ig][ireg] ||
                  fd_geom->howfar(-1,x,u,tstep,&newmed)>= 0 ||
                  fd_geom->isInside(x))) {
@@ -1300,6 +1467,26 @@ private:
     bool      score_primaries,
               verbose;
 
+    /* Geometry importance splitting / Russian roulette */
+    vector<vector<EGS_Float>> region_importance; // [ig][ir], default 1.0
+    int                       prev_ir_imp;        // region at start of current step
+    bool                      imp_active;         // true when any region importance != 1
+
+    /* IS stack-capping diagnostics */
+    long long n_split_events;   // total splitting events (nsplit > 1)
+    long long n_cap_events;     // events where n_actual < nsplit (stack too full)
+    int       max_stack_needed; // max(np + nsplit) over all capping events
+
+    /* Flag set on both the original and all IS copies when a split occurs.
+     * EGSnrc's LIFO stack re-enters :PNEWENERGY: for the original particle
+     * after processing its copies, which would call scoreInCV() again from
+     * the split boundary — double-counting the FD contribution already scored
+     * from the MFP start.  Setting the flag on the original as well suppresses
+     * that re-entry call.  selectPhotonMFP() clears the flag so that
+     * post-interaction MFPs (genuinely new physics) score normally.
+     * Bit 30 is used to stay clear of physics latch bits. */
+    static const int IS_COPY_FLAG = 1 << 30;
+
     static string revision;
 };
 
@@ -1361,6 +1548,7 @@ int EGS_KermaApplication::initScoring() {
         vector<int *>       excluded_regions;
         vector<int>         n_excluded_regions;
         vector<EGS_AffineTransform *> transformations;
+        vector<vector<EGS_Float>>     importance_list;
         EGS_Input *aux;
         EGS_BaseGeometry::setActiveGeometryList(app_index);
         while ((aux = options->takeInputItem("calculation geometry"))) {
@@ -1625,6 +1813,45 @@ int EGS_KermaApplication::initScoring() {
                     }
                     else {
                         geometries.push_back(g);
+                        /* Parse per-region importances (default 1.0).
+                         *
+                         * Two input styles (mutually exclusive; ranges take priority):
+                         *
+                         *   importance region ranges = ir_start ir_end I  [ir_start ir_end I ...]
+                         *     Triplets applied in order; later triplets override earlier ones
+                         *     for overlapping ranges.  ir_start and ir_end are inclusive.
+                         *
+                         *   region importances = I_0 I_1 ... I_{nreg-1}
+                         *     Flat per-region list (legacy; truncated or padded with 1.0).
+                         */
+                        vector<EGS_Float> imp_vec(nreg, 1.0);
+                        vector<EGS_Float> imp_input;
+                        if (!aux->getInput("importance region ranges", imp_input)) {
+                            if (imp_input.size() % 3 != 0) {
+                                egsFatal("initScoring: 'importance region ranges' must "
+                                         "contain triplets (ir_start ir_end I_value); "
+                                         "got %d values\n", (int)imp_input.size());
+                            }
+                            for (int t = 0; t < (int)imp_input.size(); t += 3) {
+                                int   ir_s = (int)imp_input[t];
+                                int   ir_e = (int)imp_input[t+1];
+                                EGS_Float Ival = imp_input[t+2];
+                                if (ir_s < 0 || ir_e >= nreg || ir_s > ir_e) {
+                                    egsFatal("initScoring: 'importance region ranges' "
+                                             "triplet %d has invalid range [%d,%d] "
+                                             "(geometry has %d regions)\n",
+                                             t/3+1, ir_s, ir_e, nreg);
+                                }
+                                for (int ir = ir_s; ir <= ir_e; ir++)
+                                    imp_vec[ir] = max(Ival, kermaEpsilon);
+                            }
+                        }
+                        else if (!aux->getInput("region importances", imp_input)) {
+                            int n = min((int)imp_input.size(), nreg);
+                            for (int i = 0; i < n; i++)
+                                imp_vec[i] = max(imp_input[i], kermaEpsilon);
+                        }
+                        importance_list.push_back(imp_vec);
                         /*Add FD geometry name (can be empty)*/
                         fd_global_gs.push_back(cgname);
                         n_cavity_regions.push_back(ncav);
@@ -1666,6 +1893,7 @@ int EGS_KermaApplication::initScoring() {
             egsWarning("initScoring: no calculation geometries defined\n");
             return 1;
         }
+        region_importance = importance_list;
         geoms        = new EGS_BaseGeometry* [ngeom];
         fd_geoms     = new EGS_BaseGeometry* [ngeom];
         is_sensitive = new bool* [ngeom];
@@ -1995,6 +2223,16 @@ int EGS_KermaApplication::initScoring() {
     setAusgabCall(AfterCompton, true);
     setAusgabCall(AfterPair, true);
 
+    /* Enable AfterTransport only when importance VRT is active */
+    imp_active = false;
+    for (int j = 0; j < ngeom && !imp_active; j++)
+        for (int ir = 0; ir < (int)region_importance[j].size() && !imp_active; ir++)
+            if (fabs(region_importance[j][ir] - 1.0) > 1e-10)
+                imp_active = true;
+
+    if (imp_active)
+        setAusgabCall(AfterTransport, true);
+
     return 0;
 }
 
@@ -2082,13 +2320,6 @@ void EGS_KermaApplication::describeSimulation() {
         egsInformation("Calculation geometry: %s\n",
                        geoms[j]->getName().c_str());
         geoms[j]->printInfo();
-        if (fd_geoms[j])
-            egsInformation("---> Scoring using forced detection (FD)\n"
-                           "     for photons aimed at or inside geometry %s\n",
-                           fd_geoms[j]->getName().c_str());
-        else {
-            egsInformation("\n---> Scoring only when photon enters volume\n");
-        }
 
         //"     including those scattered inside the geometry.\n");
         //"     Fluence is equivalent to FLURZ total fluence!\n");
@@ -2123,6 +2354,58 @@ void EGS_KermaApplication::describeSimulation() {
         }
         egsInformation("\n\n");
     }
+
+    egsInformation("===========================================================\n"
+                   " Variance reduction\n"
+                   "===========================================================\n\n");
+
+    bool fd_active = false;
+    for (int j = 0; j < ngeom && !fd_active; j++)
+        if (fd_geoms[j]) fd_active = true;
+
+    if (fd_active) {
+        egsInformation(" Forced detection (FD):        ON\n");
+        for (int j = 0; j < ngeom; j++) {
+            if (fd_geoms[j])
+                egsInformation("   %-30s -> %s\n",
+                               geoms[j]->getName().c_str(),
+                               fd_geoms[j]->getName().c_str());
+            else
+                egsInformation("   %-30s -> (none, track-length only)\n",
+                               geoms[j]->getName().c_str());
+        }
+    }
+    else {
+        egsInformation(" Forced detection (FD):        OFF\n");
+    }
+    egsInformation("\n");
+
+    bool imp_active = false;
+    for (int j = 0; j < ngeom && !imp_active; j++)
+        for (int ir = 0; ir < (int)region_importance[j].size() && !imp_active; ir++)
+            if (fabs(region_importance[j][ir] - 1.0) > 1e-10)
+                imp_active = true;
+
+    if (imp_active) {
+        egsInformation(" Geometry importance sampling: ON\n");
+        for (int j = 0; j < ngeom; j++) {
+            EGS_Float I_min = region_importance[j][0],
+                      I_max = region_importance[j][0];
+            for (int ir = 1; ir < (int)region_importance[j].size(); ir++) {
+                EGS_Float I = region_importance[j][ir];
+                if (I < I_min) I_min = I;
+                if (I > I_max) I_max = I;
+            }
+            egsInformation("  %-30s  %d regions, importances [%.4g, %.4g]\n",
+                           geoms[j]->getName().c_str(),
+                           (int)region_importance[j].size(),
+                           I_min, I_max);
+        }
+    }
+    else {
+        egsInformation(" Geometry importance sampling: OFF\n");
+    }
+    egsInformation("\n");
 }
 
 #ifdef BUILD_APP_LIB
