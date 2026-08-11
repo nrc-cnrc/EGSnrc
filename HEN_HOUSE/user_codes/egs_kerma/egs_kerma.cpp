@@ -377,6 +377,14 @@ public:
                             the_stack->latch[nn]=latch|IS_COPY_FLAG; the_stack->dnear[nn]=dn;
                             the_stack->np++;
                         }
+                        /* BUG FIX (2026-08-11): the LAST copy pushed is now the
+                         * top of stack, i.e. Fortran's np, and PHOTON continues
+                         * transport with it WITHOUT re-entering :PNEWENERGY:.
+                         * It therefore never calls selectPhotonMFP() here and
+                         * never consumes its flag, which would later suppress a
+                         * legitimate scoreInCV().  The original at np keeps its
+                         * flag -- it is popped fresh at :PNEWENERGY:. */
+                        the_stack->latch[the_stack->np - 1] &= ~IS_COPY_FLAG;
                     }
                 }
                 else if (ratio < 1.0 - 1e-10) {
