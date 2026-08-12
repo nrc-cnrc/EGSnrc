@@ -79,7 +79,7 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Dynamic_Geometry"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_dynamic_geometry"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry");

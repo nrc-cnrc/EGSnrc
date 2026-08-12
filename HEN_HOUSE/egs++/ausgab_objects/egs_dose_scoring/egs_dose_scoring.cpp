@@ -820,7 +820,7 @@ extern "C" {
 
         setBaseAusgabObjectInputs();
 
-        ausBlockInput->getSingleInput("library")->setValues({"EGS_Dose_Scoring"});
+        ausBlockInput->getSingleInput("library")->setValues({"egs_dose_scoring"});
 
         // Format: name, isRequired, description, vector string of allowed values
         ausBlockInput->addSingleInput("medium dose", false, "Requests the dose deposited in each medium to be scored, default is no", {"yes", "no"});

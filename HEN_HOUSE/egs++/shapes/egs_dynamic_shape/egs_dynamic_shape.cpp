@@ -39,7 +39,53 @@
 #include "egs_functions.h"
 #include <sstream>
 
+static bool EGS_DYNAMIC_SHAPE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_DYNAMIC_SHAPE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_conical_shell"});
+
+        auto shapePtr = shapeBlockInput->addBlockInput("shape");
+        setShapeInputs(shapePtr);
+
+        shared_ptr<EGS_BlockInput> motionBlock = shapeBlockInput->addBlockInput("motion", true);
+        motionBlock->addSingleInput("control point", true, "Parameters to define motion: timeIndex xtrans ytrans ztrans xrot yrot zrot");
+    }
+
+    EGS_DYNAMIC_SHAPE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_dynamic_shape
+    #:start shape:
+        library = egs_dynamic_shape
+        :start shape:
+            definition of the shape to be 'dynamic'
+        :stop shape:
+        :start motion: # units of cm and degrees
+            control point = timeIndex(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
+            control point = timeIndex(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
+            .
+            .
+            .
+            control point = timeIndex(N) xtrans(N) ytrans(N) ztrans(N) xrot(N) yrot(N) zrot(N)
+        :stop motion:
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_DYNAMIC_SHAPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_DYNAMIC_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {

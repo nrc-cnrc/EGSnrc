@@ -129,7 +129,7 @@ extern "C" {
 
         setBaseAusgabObjectInputs();
 
-        ausBlockInput->getSingleInput("library")->setValues({"EGS_Track_Scoring"});
+        ausBlockInput->getSingleInput("library")->setValues({"egs_track_scoring"});
 
         // Format: name, isRequired, description, vector string of allowed values
         ausBlockInput->addSingleInput("score photons", false, "Score photons? Default is yes.", {"yes", "no"});

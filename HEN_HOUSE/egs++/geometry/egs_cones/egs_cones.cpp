@@ -255,7 +255,7 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Cones"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_cones"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of cone.", {"EGS_ConeStack", "EGS_SimpleCone", "EGS_ParallelCones", "EGS_ConeSet"});

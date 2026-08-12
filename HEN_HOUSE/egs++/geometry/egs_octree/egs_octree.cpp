@@ -223,7 +223,7 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Octree"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_octree"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("child geometry", true, "The name of child geometry");

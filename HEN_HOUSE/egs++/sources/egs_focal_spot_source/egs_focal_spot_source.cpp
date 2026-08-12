@@ -38,6 +38,8 @@
 #include "egs_focal_spot_source.h"
 #include "egs_input.h"
 
+static bool EGS_FOCAL_SPOT_LOCAL inputSet = false;
+
 EGS_FocalSpot::EGS_FocalSpot(EGS_Input *input, EGS_ObjectFactory *f) :
     EGS_BaseSimpleSource(input,f), valid(true) {
     // read required inputs
@@ -192,6 +194,64 @@ void EGS_FocalSpot::setUp() {
 
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs();
+
+        srcBlockInput->getSingleInput("library")->setValues({"egs_focal_spot_source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("z position", true, "The z position of the source");
+        srcBlockInput->addSingleInput("spatial spread x", true, "The standard deviation of the source along x");
+        srcBlockInput->addSingleInput("spatial spread y", true, "The standard deviation of the source along y");
+        srcBlockInput->addSingleInput("spatial cutoff x", false, "Particles will not be generated outside [x0-cutoff, x0+cutoff]");
+        srcBlockInput->addSingleInput("spatial cutoff y", false, "Particles will not be generated outside [y0-cutoff, y0+cutoff]");
+        srcBlockInput->addSingleInput("angular spread x", false, "The standard deviation in degrees from the z-axis toward x");
+        srcBlockInput->addSingleInput("angular spread y", false, "The standard deviation in degrees from the z-axis toward y");
+        srcBlockInput->addSingleInput("x translation", false, "An offset from the origin along x");
+        srcBlockInput->addSingleInput("y translation", false, "An offset from the origin along y");
+        srcBlockInput->addSingleInput("z translation", false, "An offset from the origin along z");
+        srcBlockInput->addSingleInput("x rotation", false, "A rotation clockwise when viewed from the +x axis, in degrees");
+        srcBlockInput->addSingleInput("y rotation", false, "A rotation clockwise when viewed from the +y axis, in degrees");
+    }
+
+    EGS_FOCAL_SPOT_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_focal_spot_source
+    #:start source:
+        library              = egs_focal_spot_source
+        name                 = focal_spot_test
+        z position           = 1        # cm
+        spatial spread x     = 0.2      # cm standard deviation always never FWHM
+        spatial spread y     = 0.2      # cm standard deviation always never FWHM
+        spatial cutoff x     = 0.3      # cm particles will not be generated outside [x0-cutoff, x0+cutoff] (optional)
+        spatial cutoff y     = 0.3      # cm particles will not be generated outside [y0-cutoff, y0+cutoff] (optional)
+        angular spread x     = 1.5      # degrees (optional) (standard deviation from z-axis)
+        angular spread y     = 0.9      # degrees (optional) (standard deviation from z-axis)
+        x translation        = 0        # cm (optional)
+        y translation        = 0        # cm (optional)
+        z of rotation        = 0        # cm (optional)
+        x rotation           = 1        # degrees, clockwise when viewed from +x axis
+        y rotation           = 0        # degrees, clockwise when viewed from +y axis
+        :start spectrum:
+            definition of the spectrum
+        :stop spectrum:
+        charge = -1 or 0 or 1 for electrons or photons or positrons
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_FOCAL_SPOT_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_FOCAL_SPOT_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

@@ -57,7 +57,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Prism"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_prism"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of prism", {"EGS_PrismX", "EGS_PrismY", "EGS_PrismZ", "EGS_Prism"});

@@ -377,7 +377,7 @@ extern "C" {
         inputSet = true;
 
         setShapeInputs(shapeBlockInput);
-        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Voxelized_Shape"});
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_voxelized_shape"});
 
         shapeBlockInput->addSingleInput("file name", true, "The filename for a binary file that contains sampling probabilities for an XYZ voxel grid. See the documentation for file format details.");
     }

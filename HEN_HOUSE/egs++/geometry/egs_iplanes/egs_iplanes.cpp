@@ -266,7 +266,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_IPlanes"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_iplanes"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", false, "The type of iplane", {"EGS_RadialRepeater"});

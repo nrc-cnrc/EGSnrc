@@ -176,7 +176,7 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_gunion"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_gunion"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("geometries", true, "A list of names of previously defined geometries");

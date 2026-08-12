@@ -139,11 +139,11 @@ The following file formats are supported:
     :start geometry:
         name        = my_surface_mesh
         library     = egs_triangle_mesh
-        file        = model.stl # your surface mesh here
-        :start media input:
+        file        = model.stl # Full filepath, including extension
+        :start media input: # Only one medium supported
             media = water
         :stop media input:
-        # scale = 0.1 # optional scaling factor. Mesh files are assumed to be in `cm`.
+        # scale = 0.1 # optional scaling factor. Mesh files are assumed to be in `cm` for scale=1.
     :stop geometry:
 
     simulation geometry = my_surface_mesh

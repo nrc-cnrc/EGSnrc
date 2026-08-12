@@ -104,7 +104,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Pyramid"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_pyramid"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of pyramid", {"EGS_PyramidX", "EGS_PyramidY", "EGS_PyramidZ", "EGS_Pyramid"});

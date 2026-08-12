@@ -70,7 +70,7 @@ extern "C" {
         inputSet = true;
 
         setShapeInputs(shapeBlockInput);
-        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Line_Shape"});
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_line_shape"});
 
         shapeBlockInput->addSingleInput("points", true, "A list of 2D positions, at least 2 required. By default these are in the x-y plane at z=0; use a transformation to adjust.");
     }

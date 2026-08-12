@@ -47,6 +47,8 @@
 
 using namespace std;
 
+static bool EGS_LATTICE_LOCAL inputSet = false;
+
 void EGS_Lattice::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_Lattice::setMedia: don't use this method. Use the\n"
                " setMedia() methods of the geometry objects that make up this geometry\n");
@@ -163,6 +165,44 @@ void EGS_Hexagonal_Lattice::printInfo() const {
     egsInformation("=======================================================\n");
 }
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_lattice"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry, into which the lattice will be enveloped.");
+        geomBlockInput->addSingleInput("subgeometry", true, "The name of a geometry to place at each lattice position.");
+        geomBlockInput->addSingleInput("subgeometry index", true, "The region or list of regions that contain the lattice.");
+        geomBlockInput->addSingleInput("spacing", true, "The spacing as defined for Bravais (x, y, z), Cubic (x), or Hexagonal modes (s, close-packed distance). ");
+    }
+
+    EGS_LATTICE_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Example Bravais lattice with spacings 1, 2 and 3
+    #:start geometry:
+        library           = egs_lattice
+        name              = phantom_w_microcavity
+        base geometry     = phantom
+        subgeometry       = microcavity
+        subgeometry index = 0
+        spacing           = 1 2 3
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_LATTICE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_LATTICE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         int err = 0;

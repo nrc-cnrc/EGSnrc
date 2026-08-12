@@ -77,7 +77,7 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_GTransformed"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_gtransformed"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("my geometry", true, "The name of a previously defined geometry");

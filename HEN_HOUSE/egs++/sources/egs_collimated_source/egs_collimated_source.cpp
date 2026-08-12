@@ -129,7 +129,7 @@ extern "C" {
 
         setBaseSourceInputs();
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Collimated_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_collimated_source"});
 
         // Format: name,  isRequired, description, vector string of allowed values
         auto source_shapePtr = srcBlockInput->addBlockInput("source shape");

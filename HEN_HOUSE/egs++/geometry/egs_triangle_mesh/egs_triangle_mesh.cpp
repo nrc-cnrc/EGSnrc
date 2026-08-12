@@ -40,6 +40,9 @@
 #include <limits>
 
 namespace { // anonymous namespace for low-level geometry routines
+
+static bool EGS_TRIANGLE_MESH_LOCAL inputSet = false;
+
 const EGS_Float eps = 1e-8;
 
 inline EGS_Float dot(const EGS_Vector &x, const EGS_Vector &y) {
@@ -1128,6 +1131,41 @@ int EGS_TriangleMesh::howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
 const std::string EGS_TriangleMesh::type = "EGS_TriangleMesh";
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_triangle_mesh"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("file", true, "The full filepath to the .msh, .node or .ele file, including the extension.");
+    }
+
+    EGS_TRIANGLE_MESH_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    #:start geometry:
+        name        = my_surface_mesh
+        library     = egs_triangle_mesh
+        file        = model.stl # Full filepath, including extension
+        :start media input: # Only one medium supported
+            media = water
+        :stop media input:
+        # scale = 0.1 # optional scaling factor. Mesh files are assumed to be in `cm` for scale=1.
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_TRIANGLE_MESH_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_TRIANGLE_MESH_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {

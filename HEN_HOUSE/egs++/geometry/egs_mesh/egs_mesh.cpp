@@ -78,6 +78,8 @@ EGS_Mesh::~EGS_Mesh() = default;
 EGS_Mesh::EGS_Mesh(EGS_Mesh &&) = default;
 EGS_Mesh &EGS_Mesh::operator=(EGS_Mesh &&) = default;
 
+static bool EGS_MESH_LOCAL inputSet = false;
+
 void EGS_MeshSpec::checkValid() const {
     std::size_t n_max = std::numeric_limits<int>::max();
     if (this->elements.size() >= n_max) {
@@ -1566,6 +1568,42 @@ static EGS_MeshSpec parse_mesh_file(const std::string &mesh_file) {
 }
 
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_mesh"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("file", true, "The full filepath to the .msh, .node or .ele file, including the extension.");
+    }
+
+    EGS_MESH_EXPORT string getExample(string type) {
+        string example;
+        example = {
+            R"(
+    # Use Gmsh to convert CAD formats to .msh
+    # Define materials by naming "physical volumes" with the medium name
+    #:start geometry:
+        name        = my_mesh
+        library     = egs_mesh
+        # Using the msh4.1 format:
+        file        = model.msh
+        # or, using the TetGen format:
+        # file       = model.node # or model.ele
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_MESH_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
+
     EGS_MESH_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
             egsWarning("createGeometry(EGS_Mesh): null input\n");

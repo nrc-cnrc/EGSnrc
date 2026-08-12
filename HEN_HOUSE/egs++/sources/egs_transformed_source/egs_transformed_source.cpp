@@ -83,7 +83,7 @@ extern "C" {
 
         setBaseSourceInputs(false, false);
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Transformed_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_transformed_source"});
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("source name", true, "The name of a previously defined source.");
