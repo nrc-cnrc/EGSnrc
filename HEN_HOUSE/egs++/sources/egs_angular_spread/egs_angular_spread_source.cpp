@@ -112,7 +112,7 @@ extern "C" {
 
         setBaseSourceInputs(false, false);
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Angular_Spread_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_angular_spread_source"});
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("source name", true, "The name of a previously defined source.");

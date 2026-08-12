@@ -233,7 +233,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_RZ"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_rz"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto  radPtr = geomBlockInput->addSingleInput("radii", false, "A list of radii, must be in increasing order");

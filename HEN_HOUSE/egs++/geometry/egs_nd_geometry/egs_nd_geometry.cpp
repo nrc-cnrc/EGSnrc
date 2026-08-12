@@ -1267,7 +1267,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_NDGeometry"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_ndgeometry"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", false, "Alternative types of nd_geometry. Neglect this input to use a standard egs_nd_geometry.", {"EGS_XYZGeometry", "EGS_XYZRepeater"});

@@ -47,7 +47,7 @@ extern "C" {
         inputSet = true;
 
         setShapeInputs(shapeBlockInput);
-        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Ellipse"});
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_ellipse"});
 
         shapeBlockInput->addSingleInput("halfaxis", true, "The two half axis of the ellipse.");
         shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the ellipse, (x, y). Defaults to '0 0'.");

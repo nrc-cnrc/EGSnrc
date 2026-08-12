@@ -118,7 +118,7 @@ extern "C" {
 
         setBaseAusgabObjectInputs();
 
-        ausBlockInput->getSingleInput("library")->setValues({"EGS_Radiative_Splitting"});
+        ausBlockInput->getSingleInput("library")->setValues({"egs_radiative_splitting"});
 
         // Format: name, isRequired, description, vector string of allowed values
         ausBlockInput->addSingleInput("splitting", false, "The number of times to split every radiative event");

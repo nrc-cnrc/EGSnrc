@@ -136,7 +136,7 @@ extern "C" {
         inputSet = true;
 
         setShapeInputs(shapeBlockInput);
-        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Spherical_Shell"});
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_spherical_shell"});
 
         shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the shape, (x y z). Defaults to '0 0 0'.");
         shapeBlockInput->addSingleInput("inner radius", true, "The inner radius");

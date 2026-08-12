@@ -688,7 +688,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Spheres"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_spheres"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("radii", true, "A list of sphere radii, in increasing order.");

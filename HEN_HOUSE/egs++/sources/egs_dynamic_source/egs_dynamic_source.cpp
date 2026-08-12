@@ -215,7 +215,7 @@ extern "C" {
 
         setBaseSourceInputs(false, false);
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Dynamic_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_dynamic_source"});
 
         // Format:name, isRequired, description, vector string of allowed
         srcBlockInput->addSingleInput("base source", true, "The name of a previously defined source");

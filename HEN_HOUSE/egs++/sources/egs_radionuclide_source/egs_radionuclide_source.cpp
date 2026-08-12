@@ -535,7 +535,7 @@ extern "C" {
 
         setBaseSourceInputs();
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Radionuclide_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_radionuclide_source"});
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("activity", false, "The total activity of mixture, assumed constant.");

@@ -522,7 +522,7 @@ extern "C" {
 
         setBaseSourceInputs(false, false);
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Phsp_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_phsp_source"});
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("phase space file", true, "The name of the phase-space file.");

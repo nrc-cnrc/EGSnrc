@@ -117,7 +117,7 @@ extern "C" {
 
         setBaseSourceInputs();
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Parallel_Beam"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_parallel_beam"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto shapePtr = srcBlockInput->addBlockInput("shape");

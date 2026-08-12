@@ -263,7 +263,7 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_SmartEnvelope"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_smart_envelope"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry, that other geometries will be placed strictly inside.");
