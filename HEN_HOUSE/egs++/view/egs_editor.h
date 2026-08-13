@@ -59,7 +59,9 @@ public:
     void setInputStruct(shared_ptr<EGS_InputStruct> inp);
     void validateVisibleLines();
     void setDarkMode(bool isDarkMode);
-    void setHighlighter(EGS_Highlighter *h) { syntaxHighlighter = h; }
+    void setHighlighter(EGS_Highlighter *h) {
+        syntaxHighlighter = h;
+    }
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -85,9 +87,9 @@ private:
     QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream = false, int depth = 0);
     QTextBlock getBlockEnd(QTextBlock currentBlock);
     template <typename T>
-    bool inputHasDependency(const shared_ptr<T>& inp);
+    bool inputHasDependency(const shared_ptr<T> &inp);
     template <typename T>
-    bool inputDependencySatisfied(const shared_ptr<T>& inp, QTextCursor cursor = QTextCursor());
+    bool inputDependencySatisfied(const shared_ptr<T> &inp, QTextCursor cursor = QTextCursor());
     QTextBlock findSiblingBlock(QString title, QTextBlock currentBlock);
     int countStartingWhitespace(const QString &s);
     void indentSelection(bool unindent);
