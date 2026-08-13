@@ -166,18 +166,18 @@ public:
 #define egsEstar F77_OBJ_(egs_estar,EGS_ESTAR)
 
 extern __extc__ int egsEstar(char *formulaStr,
-                      float *massFraction,
-                      float *numOfAtoms,
-                      float *mediaDensity,
-                      double *densityCorr,
-                      double *enGrid,
-                      int *NEP,
-                      int *ISCOMP,
-                      float *meanIval,
-                      float *ipotval,
-                      int *mediaID,
-                      char *outputFilename
-                     ) {
+                             float *massFraction,
+                             float *numOfAtoms,
+                             float *mediaDensity,
+                             double *densityCorr,
+                             double *enGrid,
+                             int *NEP,
+                             int *ISCOMP,
+                             float *meanIval,
+                             float *ipotval,
+                             int *mediaID,
+                             char *outputFilename
+                            ) {
 
     // Validate all pointers before dereferencing
     if (!formulaStr) {
@@ -285,14 +285,14 @@ extern __extc__ int egsEstar(char *formulaStr,
 #define egsCompoundsToElements F77_OBJ_(egs_compoundstoelements,EGS_COMPOUNDSTOELEMENTS)
 
 extern __extc__ int egsCompoundsToElements(char *formulaStr,
-                                    double *massFraction,
-                                    float *mediaDensity,
-                                    char *elementStr,
-                                    double *rhoz,
-                                    double *zelem,
-                                    int *ncomp,
-                                    int *NEP
-                                   ) {
+        double *massFraction,
+        float *mediaDensity,
+        char *elementStr,
+        double *rhoz,
+        double *zelem,
+        int *ncomp,
+        int *NEP
+                                          ) {
 
     // Validate all pointers before dereferencing
     if (!formulaStr) {
@@ -361,7 +361,7 @@ extern __extc__ int egsCompoundsToElements(char *formulaStr,
     // Fortran-side arrays (RHOZ, ZELEM, ASYM) hold at most $MXEL = 50 elements
     if (fc.mmax > 50) {
         egsFatal("estar::egsCompoundsToElements: medium has %d distinct elements, "
-                "but EGSnrc supports at most 50 ($MXEL).\n", fc.mmax);
+                 "but EGSnrc supports at most 50 ($MXEL).\n", fc.mmax);
     }
 
     size_t charPos = 0;
