@@ -113,7 +113,7 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
 
     // Re-validate visible lines after scrolling.
     connect(this, &QPlainTextEdit::updateRequest,
-            this, [this](const QRect &, int dy) {
+    this, [this](const QRect &, int dy) {
         if (dy != 0) {
             validationDebounceTimer->start();
         }
@@ -122,7 +122,7 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
     // Re-validate after lines are added or removed (e.g. typing a :start/:stop
     // line changes the block-context for all lines below).
     connect(this, &QPlainTextEdit::blockCountChanged,
-            this, [this](int) {
+    this, [this](int) {
         validationDebounceTimer->start();
     });
 //
@@ -134,7 +134,7 @@ EGS_Editor::EGS_Editor(QWidget *parent) : QPlainTextEdit(parent) {
 
     // Add shortcuts for find next and previous
     QShortcut *findNextShortcut =
-    new QShortcut(QKeySequence(Qt::Key_F3), this);
+        new QShortcut(QKeySequence(Qt::Key_F3), this);
     connect(findNextShortcut, &QShortcut::activated, this, &EGS_Editor::findNext);
     QShortcut *findPrevShortcut =
         new QShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F3), this);
@@ -210,8 +210,8 @@ void EGS_Editor::highlightCurrentLine() {
         QTextEdit::ExtraSelection selection;
 
         QColor lineColor = isDarkMode
-            ? QColor("#3a3d41")   // subtle dark gray highlight
-            : QColor(Qt::lightGray).lighter(120);
+                           ? QColor("#3a3d41")   // subtle dark gray highlight
+                           : QColor(Qt::lightGray).lighter(120);
 
         selection.format.setBackground(lineColor);
         selection.format.setProperty(QTextFormat::FullWidthSelection, true);
@@ -237,7 +237,7 @@ void EGS_Editor::validateVisibleLines() {
 
     while (block.isValid()) {
         const int top = static_cast<int>(
-            blockBoundingGeometry(block).translated(contentOffset()).top());
+                            blockBoundingGeometry(block).translated(contentOffset()).top());
         if (top >= viewportBottom) {
             break;
         }
@@ -370,7 +370,8 @@ void EGS_Editor::validateLine(QTextCursor cursor) {
             fmtCursor.endEditBlock();
         }
         cursor.endEditBlock();
-    } else {
+    }
+    else {
         // Non-assignment line inside a known block: clear any stale underline/tooltip.
         cursor.beginEditBlock();
         QTextCursor fmtCursor = cursor;
@@ -673,7 +674,7 @@ void EGS_Editor::autoComplete() {
         // add 'library =' as an option in the popup
     }
     else if (selectedText.size() == 0 && (egsEquivStr(blockTitle.toStdString(), "geometry") || egsEquivStr(blockTitle.toStdString(), "source")
-    || egsEquivStr(blockTitle.toStdString(), "ausgab object"))) {
+                                          || egsEquivStr(blockTitle.toStdString(), "ausgab object"))) {
 
         // Populate the popup list
         QStringList itemList;
@@ -738,7 +739,7 @@ shared_ptr<EGS_BlockInput> EGS_Editor::getBlockInput(QString &blockTitle, QTextC
     // If the parent block is media definition, then just return pegsless
     if (parentTitle.toStdString() == "media definition") {
         shared_ptr<EGS_BlockInput> medDefBlock = inputStruct->getBlockInput("media definition");
-        if(medDefBlock) {
+        if (medDefBlock) {
             shared_ptr<EGS_BlockInput> inputBlock = medDefBlock->getBlockInput("myMediumName");
             return inputBlock;
         }
@@ -1081,7 +1082,7 @@ QTextBlock EGS_Editor::getBlockEnd(QTextBlock currentBlock) {
 }
 
 template <typename T>
-bool EGS_Editor::inputHasDependency(const shared_ptr<T>& inp) {
+bool EGS_Editor::inputHasDependency(const shared_ptr<T> &inp) {
     static_assert(
         std::is_same<T, EGS_SingleInput>::value ||
         std::is_same<T, EGS_BlockInput>::value,
@@ -1089,11 +1090,11 @@ bool EGS_Editor::inputHasDependency(const shared_ptr<T>& inp) {
     );
 
     return !inp->getDependencyInp().empty()
-        || inp->getDependencyBlock() != nullptr;
+           || inp->getDependencyBlock() != nullptr;
 }
 
 template <typename T>
-bool EGS_Editor::inputDependencySatisfied(const shared_ptr<T>& inp, QTextCursor cursor) {
+bool EGS_Editor::inputDependencySatisfied(const shared_ptr<T> &inp, QTextCursor cursor) {
     static_assert(
         std::is_same<T, EGS_SingleInput>::value ||
         std::is_same<T, EGS_BlockInput>::value,
@@ -1306,8 +1307,7 @@ void EGS_Editor::lineNumberAreaPaintEvent(QPaintEvent *event) {
     }
 }
 
-void EGS_Editor::indentSelection(bool unindent)
-{
+void EGS_Editor::indentSelection(bool unindent) {
     QTextCursor cursor = textCursor();
 
     // No selection means it's a single line to indent
@@ -1319,18 +1319,21 @@ void EGS_Editor::indentSelection(bool unindent)
             QTextCursor lineCursor = cursor;
 
             lineCursor.movePosition(QTextCursor::NextCharacter,
-                                     QTextCursor::KeepAnchor,
-                                     indentWidth);
+                                    QTextCursor::KeepAnchor,
+                                    indentWidth);
             if (lineCursor.selectedText() == QString(indentWidth, ' ')) {
                 lineCursor.removeSelectedText();
-            } else {
+            }
+            else {
                 lineCursor = cursor;
                 lineCursor.movePosition(QTextCursor::NextCharacter,
-                                         QTextCursor::KeepAnchor, 1);
-                if (lineCursor.selectedText() == "\t")
+                                        QTextCursor::KeepAnchor, 1);
+                if (lineCursor.selectedText() == "\t") {
                     lineCursor.removeSelectedText();
+                }
             }
-        } else {
+        }
+        else {
             cursor.insertText(QString(indentWidth, ' '));
         }
         return;
@@ -1349,8 +1352,9 @@ void EGS_Editor::indentSelection(bool unindent)
 
     for (int block = startBlock; block <= endBlock; ++block) {
         QTextBlock textBlock = document()->findBlockByNumber(block);
-        if (!textBlock.isValid())
+        if (!textBlock.isValid()) {
             continue;
+        }
 
         QTextCursor lineCursor(textBlock);
 
@@ -1363,14 +1367,17 @@ void EGS_Editor::indentSelection(bool unindent)
                                       indentWidth);
             if (removeCursor.selectedText() == QString(indentWidth, ' ')) {
                 removeCursor.removeSelectedText();
-            } else {
+            }
+            else {
                 removeCursor = lineCursor;
                 removeCursor.movePosition(QTextCursor::NextCharacter,
                                           QTextCursor::KeepAnchor, 1);
-                if (removeCursor.selectedText() == "\t")
+                if (removeCursor.selectedText() == "\t") {
                     removeCursor.removeSelectedText();
+                }
             }
-        } else {
+        }
+        else {
             lineCursor.insertText(QString(indentWidth, ' '));
         }
     }
@@ -1378,8 +1385,7 @@ void EGS_Editor::indentSelection(bool unindent)
     cursor.endEditBlock();
 }
 
-void EGS_Editor::showFindDialog(bool withReplace)
-{
+void EGS_Editor::showFindDialog(bool withReplace) {
     if (!findDialog) {
         findDialog = new QDialog(this);
         findDialog->setWindowTitle("Find / Replace");
@@ -1460,14 +1466,15 @@ void EGS_Editor::showFindDialog(bool withReplace)
 }
 
 
-void EGS_Editor::findNext()
-{
-    if (!findEdit || findEdit->text().isEmpty())
+void EGS_Editor::findNext() {
+    if (!findEdit || findEdit->text().isEmpty()) {
         return;
+    }
 
     QTextDocument::FindFlags flags;
-    if (caseCheck->isChecked())
+    if (caseCheck->isChecked()) {
         flags |= QTextDocument::FindCaseSensitively;
+    }
 
     bool found = find(findEdit->text(), flags);
 
@@ -1482,8 +1489,9 @@ void EGS_Editor::findNext()
 
 void EGS_Editor::findPrevious() {
     const QString text = findEdit->text();
-    if (text.isEmpty())
+    if (text.isEmpty()) {
         return;
+    }
 
     QTextDocument::FindFlags flags = QTextDocument::FindBackward;
     bool found = find(text, flags);
@@ -1604,12 +1612,14 @@ bool EGS_Editor::eventFilter(QObject *obj, QEvent *event) {
                 popup->QWidget::grabKeyboard();
                 return true;
             }
-        } else if (keyEvent->key() == Qt::Key_F &&
-            (keyEvent->modifiers() & Qt::ControlModifier)) {
+        }
+        else if (keyEvent->key() == Qt::Key_F &&
+                 (keyEvent->modifiers() & Qt::ControlModifier)) {
             showFindDialog(false);
             return true;
-        } else if (keyEvent->key() == Qt::Key_H &&
-            (keyEvent->modifiers() & Qt::ControlModifier)) {
+        }
+        else if (keyEvent->key() == Qt::Key_H &&
+                 (keyEvent->modifiers() & Qt::ControlModifier)) {
             showFindDialog(true);
             return true;
         }
