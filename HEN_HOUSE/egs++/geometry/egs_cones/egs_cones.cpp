@@ -508,13 +508,32 @@ extern "C" {
             bool is_radian = false;
             if (err) {
                 angles.clear();
-                err = input->getInput("opening angles in radian",angles);
                 if (err) {
-                    egsWarning("createGeometry(cones): no 'opening angles' or "
-                               "'opening angles in radian' input\n");
-                    return 0;
+                   angles.clear();
+                   err = input->getInput("angular range",angles);
+                   if (err) {
+                      egsWarning("createGeometry(cones): no 'opening angles', "
+                                 "'opening angles in radian' or 'angular range' input\n");
+                      return 0;
+                   }
+                   else if (angles.size() == 3 && angles[0] < angles[1]){
+                      EGS_Float amin = angles[0], amax=angles[1], da = angles[2], afloat = amin;
+                      int n_ang = (amax-amin)/da;
+                      if (amin > 0) n_ang++;
+                      angles.clear();
+                      while(angles.size() < n_ang){
+                          angles.push_back(afloat);
+                          afloat += da;
+                      }
+                    }
+                    else{
+                       egsWarning("createGeometry(cones): wrong 'angular range' input\n");
+                       return 0;
+                    }
                 }
-                is_radian = true;
+                else{
+                    is_radian = true;
+                }
             }
             int flag = 0;
             err = input->getInput("flag",flag);

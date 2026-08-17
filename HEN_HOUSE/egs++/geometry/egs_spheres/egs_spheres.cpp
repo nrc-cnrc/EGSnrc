@@ -740,8 +740,57 @@ extern "C" {
         vector<EGS_Float> radii;
         err = input->getInput("radii",radii);
         if (err) {
-            egsWarning("createGeometry(spheres): wrong/missing 'radii' input\n");
-            return 0;
+            EGS_Input *ij;
+            vector<EGS_Float> radial_range;
+            int shell_group_count = 0, nsh_tot = 0;
+            while ((ij = input->takeInputItem("radial range")) != 0) {
+               ij->getInput("radial range",radial_range);
+               if (radial_range.size() >= 3){
+                   egsInformation("=> Got radial range: %g to %g \n",radial_range[0],radial_range[1]);
+                   // Radial range with one or more consecutive increments
+                   EGS_Float rmin = radial_range[0], // interval lower bound
+                             rmax=radial_range[1],   // interval upper bound
+                             rfloat = rmin;          // running value
+                   int dr_size = radial_range.size()-2;// first 2 are interval limits
+                   vector<EGS_Float> deltar; EGS_Float deltaTot = 0;
+                   for (int j=2; j<radial_range.size(); j++){
+                       deltar.push_back(radial_range[j]);
+                       deltaTot += deltar[j-2];
+                       egsInformation("   shell %d of %g thickness \n",j-2,deltar[j-2]);
+                   }
+                   int nsh = round((rmax-rmin)/deltaTot*dr_size); 
+                   egsInformation("   nsh : %g %d %f \n",(rmax-rmin)/deltaTot,dr_size,(rmax-rmin)/deltaTot*dr_size);
+                   if ( (rmin > 0) && (shell_group_count == 0) ) {
+                       shell_group_count++;
+                       nsh++;   // finite initial sphere
+                       radii.push_back(rfloat);
+                   }
+                   egsInformation("   nsh = %d \n", nsh);
+                   nsh_tot += nsh;
+                   while(radii.size() < nsh_tot){
+                       egsInformation("   Added radii: ");
+                       for (int l=0; l < dr_size; l++){
+                           rfloat += deltar[l];
+                           //if (rfloat <= rmax ){ 
+                               radii.push_back(rfloat);
+                               egsInformation(" %g ", rfloat);
+                           //}
+                       }
+                       egsInformation("\n");
+                   }
+                   egsInformation("   Created %d spherical shells out of %d needed\n",radii.size(),nsh_tot);
+                   egsInformation("   rmax = %g rfloat = %g\n",rmax, rfloat);
+               }
+               else{
+                  egsWarning("createGeometry(spheres): wrong 'radial range' input\n");
+                  return 0;
+               }
+               radial_range.clear();
+            }
+            if (radii.size() == 0){
+               egsWarning("createGeometry(spheres): wrong/missing 'radii' or 'radial range' inputs\n");                
+              return 0;
+            }
         }
         else if ((type == "shell") && (radii.size() < 2)) {
             egsWarning("createGeometry(spheres): You must specify at least two radii for a spherical shell\n");
