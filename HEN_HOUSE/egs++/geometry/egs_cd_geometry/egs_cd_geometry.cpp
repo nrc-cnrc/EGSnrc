@@ -310,7 +310,7 @@ extern "C" {
                     }
                 }
             }
-            delete [] G[j];
+            delete [] G;
             return 0;
         }
         if (!ng)
