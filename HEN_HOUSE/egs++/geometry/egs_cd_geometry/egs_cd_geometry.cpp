@@ -191,7 +191,7 @@ extern "C" {
         while ((ij = input->takeInputItem("set geometry")) != 0) {
             vector<string> aux;
             ij->getInput("set geometry",aux);
-            int istart, iend;
+            int istart, iend, idelta = 1;
             string name;
             bool is_ok = true;
             if (aux.size() == 2) {
@@ -241,6 +241,35 @@ extern "C" {
                     }
                 }
             }
+            else if (aux.size() == 4) {
+                string auxx = aux[0];
+                auxx += ' ';
+                auxx += aux[1];
+                auxx += ' ';
+                auxx += aux[2];
+                auxx += ' ';
+                auxx += aux[3];
+                auxx += ' ';
+                S_STREAM in(auxx.c_str());
+                in >> istart >> iend >> idelta >> name;
+                if (in.fail() || !in.good()) {
+                    egsWarning("createGeometry(CD_Geometry): parse error in\n"
+                               "  set geometry = %s\n",auxx.c_str());
+                    err++;
+                    is_ok = false;
+                }
+                else {
+                    if (istart < 0) {
+                        istart = 0;
+                    }
+                    if (iend > nreg) {
+                        iend = nreg;
+                    }
+                    if (idelta <= 0){
+                        idelta = 1;
+                    }
+                }
+            }
             else {
                 err++;
                 is_ok = false;
@@ -253,7 +282,8 @@ extern "C" {
                     err++;
                 }
                 else {
-                    for (int j=istart; j<iend; j++) {
+                    //for (int j=istart; j<iend; j++) {
+                    for (int j = istart; j < iend; j = j + idelta) {
                         if (G[j]  && G[j] != gj) {
                             G[j]->deref();
                         }
@@ -280,7 +310,7 @@ extern "C" {
                     }
                 }
             }
-            delete [] G[j];
+            delete [] G;
             return 0;
         }
         if (!ng)
