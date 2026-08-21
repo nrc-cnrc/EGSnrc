@@ -38,7 +38,6 @@
 #include <QtWidgets>
 
 #include "egs_input_struct.h"
-#include "egs_highlighter.h"
 
 class QPaintEvent;
 class QResizeEvent;
@@ -59,9 +58,6 @@ public:
     void setInputStruct(shared_ptr<EGS_InputStruct> inp);
     void validateVisibleLines();
     void setDarkMode(bool isDarkMode);
-    void setHighlighter(EGS_Highlighter *h) {
-        syntaxHighlighter = h;
-    }
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -96,7 +92,6 @@ private:
 
     QWidget *lineNumberArea;
     shared_ptr<EGS_InputStruct> inputStruct;
-    EGS_Highlighter *syntaxHighlighter = nullptr;
     QListView *popup;
     QStringListModel *model;
     bool popupGrabbing;

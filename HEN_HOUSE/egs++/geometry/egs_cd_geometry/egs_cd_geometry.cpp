@@ -48,7 +48,7 @@
     #define S_STREAM std::istringstream
 #endif
 
-static string EGS_CDGEOMETRY_LOCAL typeStr("EGS_CDGeometry");
+static string EGS_CDGEOMETRY_LOCAL typeStr("egs_cdgeometry");
 string EGS_CDGeometry::type(typeStr);
 
 static bool EGS_CDGEOMETRY_LOCAL inputSet = false;

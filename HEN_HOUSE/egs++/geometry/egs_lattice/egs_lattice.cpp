@@ -178,6 +178,7 @@ extern "C" {
         geomBlockInput->addSingleInput("subgeometry", true, "The name of a geometry to place at each lattice position.");
         geomBlockInput->addSingleInput("subgeometry index", true, "The region or list of regions that contain the lattice.");
         geomBlockInput->addSingleInput("spacing", true, "The spacing as defined for Bravais (x, y, z), Cubic (x), or Hexagonal modes (s, close-packed distance). ");
+        geomBlockInput->addSingleInput("type", false, "The type of lattice. Currently just used for hexagonal lattices.", {"hexagonal"});
     }
 
     EGS_LATTICE_EXPORT string getExample(string type) {

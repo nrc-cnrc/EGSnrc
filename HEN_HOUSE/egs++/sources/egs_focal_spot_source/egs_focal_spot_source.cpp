@@ -212,7 +212,7 @@ extern "C" {
         srcBlockInput->addSingleInput("angular spread y", false, "The standard deviation in degrees from the z-axis toward y");
         srcBlockInput->addSingleInput("x translation", false, "An offset from the origin along x");
         srcBlockInput->addSingleInput("y translation", false, "An offset from the origin along y");
-        srcBlockInput->addSingleInput("z translation", false, "An offset from the origin along z");
+        srcBlockInput->addSingleInput("z of rotation", false, "The z position for the point of rotation");
         srcBlockInput->addSingleInput("x rotation", false, "A rotation clockwise when viewed from the +x axis, in degrees");
         srcBlockInput->addSingleInput("y rotation", false, "A rotation clockwise when viewed from the +y axis, in degrees");
     }
