@@ -1135,12 +1135,13 @@ extern "C" {
     static void setInputs() {
         inputSet = true;
 
-        setBaseGeometryInputs(false);
+        setBaseGeometryInputs(true);
 
         geomBlockInput->getSingleInput("library")->setValues({"egs_triangle_mesh"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("file", true, "The full filepath to the .msh, .node or .ele file, including the extension.");
+        geomBlockInput->addSingleInput("scale", false, "Apply a multiplative scaling factor to positions. E.g. if your model is in mm, scale to cm using scale=0.1.");
     }
 
     EGS_TRIANGLE_MESH_EXPORT string getExample(string type) {

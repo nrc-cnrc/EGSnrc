@@ -689,7 +689,7 @@ extern "C" {
         // For bone spongiosa
         geomBlockInput->addSingleInput("BSC thickness", false, "The thickness of the bone surface cells layer, in cm.");
         geomBlockInput->addSingleInput("TB medium", false, "The trabecular bone medium name.");
-        geomBlockInput->addSingleInput("TB medium", false, "The bone marrow medium name.");
+        geomBlockInput->addSingleInput("BM medium", false, "The bone marrow medium name.");
         geomBlockInput->addSingleInput("micro matrix", false, "The binary micro matrix filename followed by organ indices (defined in the media data file).");
     }
 

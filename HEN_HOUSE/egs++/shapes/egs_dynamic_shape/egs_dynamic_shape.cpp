@@ -48,7 +48,7 @@ extern "C" {
         inputSet = true;
 
         setShapeInputs(shapeBlockInput);
-        shapeBlockInput->getSingleInput("library")->setValues({"egs_conical_shell"});
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_dynamic_shape"});
 
         auto shapePtr = shapeBlockInput->addBlockInput("shape");
         setShapeInputs(shapePtr);

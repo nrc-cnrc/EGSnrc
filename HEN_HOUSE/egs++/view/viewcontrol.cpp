@@ -535,7 +535,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     egsinpEdit = new EGS_Editor();
     editorLayout->addWidget(egsinpEdit);
     highlighter = new EGS_Highlighter(egsinpEdit->document());
-    egsinpEdit->setHighlighter(highlighter);
     egsinpEdit->setDarkMode(highlighter->isDarkMode());
 
 #ifdef Q_OS_WIN
@@ -1194,6 +1193,11 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     // Defer loading the egsinp file into the editor until the user first opens the editor tab
     editorLoaded = false;
     egsinpEdit->clear();
+
+    // If already on the editor tab, repopulate immediately since currentChanged won't fire
+    if (tabWidget->currentWidget() == tab) {
+        QTimer::singleShot(0, this, &GeometryViewControl::ensureEditorLoaded);
+    }
 
     updateMainWindowTitle("egs_view ("+fileBasename+")");
 

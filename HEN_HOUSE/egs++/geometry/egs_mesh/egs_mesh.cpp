@@ -1577,6 +1577,7 @@ extern "C" {
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("file", true, "The full filepath to the .msh, .node or .ele file, including the extension.");
+        geomBlockInput->addSingleInput("scale", false, "Apply a multiplicative scaling factor to positions. E.g. if your model is in mm, scale to cm using scale=0.1.");
     }
 
     EGS_MESH_EXPORT string getExample(string type) {
@@ -1592,6 +1593,7 @@ extern "C" {
         file        = model.msh
         # or, using the TetGen format:
         # file       = model.node # or model.ele
+        scale = 0.1 # scale from mm to cm
     :stop geometry:
 )"};
         return example;
