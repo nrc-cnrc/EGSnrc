@@ -126,7 +126,7 @@ extern "C" {
         posPtr->addDependency(numPtr, "", true);
     }
 
-    EGS_PLANES_EXPORT string getExample(string type) {
+    EGS_PLANES_EXPORT string getExample() {
         string example;
         example = {
             R"(

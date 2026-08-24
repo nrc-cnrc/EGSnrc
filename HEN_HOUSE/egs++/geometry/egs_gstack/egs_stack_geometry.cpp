@@ -138,7 +138,7 @@ extern "C" {
         geomBlockInput->addSingleInput("tolerance", false, "A small floating number boundaryTolerance");
     }
 
-    EGS_STACKG_EXPORT string getExample(string type) {
+    EGS_STACKG_EXPORT string getExample() {
         string example;
         example = {
             R"(

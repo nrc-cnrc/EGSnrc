@@ -66,7 +66,7 @@ extern "C" {
         geomBlockInput->addSingleInput("points", true, "A list of 2D or 3D (for type=EGS_Prism) positions. For 3D points, they must reside on a plane. These create a polygon that define the base of the prism.");
     }
 
-    EGS_PRISM_EXPORT string getExample(string type) {
+    EGS_PRISM_EXPORT string getExample() {
         string example;
         example = {
             R"(

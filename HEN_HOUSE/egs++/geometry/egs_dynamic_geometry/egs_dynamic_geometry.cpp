@@ -87,7 +87,7 @@ extern "C" {
         motionBlock->addSingleInput("control point", true, "Parameters to define motion: timeIndex xtrans ytrans ztrans xrot yrot zrot");
     }
 
-    EGS_DYNAMIC_GEOMETRY_EXPORT string getExample(string type) {
+    EGS_DYNAMIC_GEOMETRY_EXPORT string getExample() {
         string example;
         example = {
             R"(

@@ -269,7 +269,7 @@ extern "C" {
         slabPtr->addDependency(planePtr, "", true);
     }
 
-    EGS_RZ_EXPORT string getExample(string type) {
+    EGS_RZ_EXPORT string getExample() {
         string example;
         example = {
             R"(

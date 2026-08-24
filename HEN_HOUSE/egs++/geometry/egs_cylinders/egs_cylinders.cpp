@@ -62,7 +62,7 @@ extern "C" {
         inpPtr->addDependency(typePtr, "EGS_Cylinders");
     }
 
-    EGS_CYLINDERS_EXPORT string getExample(string type) {
+    EGS_CYLINDERS_EXPORT string getExample() {
         string example;
         example = {
             R"(

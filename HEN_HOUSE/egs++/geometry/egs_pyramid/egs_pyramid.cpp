@@ -114,7 +114,7 @@ extern "C" {
         geomBlockInput->addSingleInput("closed", false, "0 (open) or 1 (closed). When missing or set to 0, the pyramid is open, otherwise it is closed by the plane in which the pyramid base is defined.", {"0", "1"});
     }
 
-    EGS_PYRAMID_EXPORT string getExample(string type) {
+    EGS_PYRAMID_EXPORT string getExample() {
         string example;
         example = {
             R"(

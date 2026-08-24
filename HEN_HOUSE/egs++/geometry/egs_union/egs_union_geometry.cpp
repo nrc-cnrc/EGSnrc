@@ -183,7 +183,7 @@ extern "C" {
         geomBlockInput->addSingleInput("priorities", false, "A list of integers defining the geometry priorities. If neglected, the priority decreases when moving from the first to the last of the geometry list.");
     }
 
-    EGS_UNIONG_EXPORT string getExample(string type) {
+    EGS_UNIONG_EXPORT string getExample() {
         string example;
         example = {
             R"(

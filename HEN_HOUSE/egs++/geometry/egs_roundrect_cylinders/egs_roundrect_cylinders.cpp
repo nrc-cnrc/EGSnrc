@@ -66,7 +66,7 @@ extern "C" {
         yinpPtr->addDependency(typePtr, "EGS_RoundRectCylinders");
     }
 
-    EGS_ROUNDRECT_CYLINDERS_EXPORT string getExample(string type) {
+    EGS_ROUNDRECT_CYLINDERS_EXPORT string getExample() {
         string example;
         example = {
             R"(
