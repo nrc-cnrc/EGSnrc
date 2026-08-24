@@ -1580,7 +1580,7 @@ extern "C" {
         geomBlockInput->addSingleInput("scale", false, "Apply a multiplicative scaling factor to positions. E.g. if your model is in mm, scale to cm using scale=0.1.");
     }
 
-    EGS_MESH_EXPORT string getExample(string type) {
+    EGS_MESH_EXPORT string getExample() {
         string example;
         example = {
             R"(

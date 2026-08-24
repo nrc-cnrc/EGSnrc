@@ -66,7 +66,7 @@ extern "C" {
         geomBlockInput->addSingleInput("include file", true, "The path to some geometry.");
     }
 
-    EGS_GLIB_EXPORT string getExample(string type) {
+    EGS_GLIB_EXPORT string getExample() {
         string example;
         example = {
             R"(

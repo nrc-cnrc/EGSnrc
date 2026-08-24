@@ -299,7 +299,7 @@ extern "C" {
         firstanglePtr->addDependency(firstangleRadPtr, "", true);
     }
 
-    EGS_IPLANES_EXPORT string getExample(string type) {
+    EGS_IPLANES_EXPORT string getExample() {
         string example;
         example = {
             R"(

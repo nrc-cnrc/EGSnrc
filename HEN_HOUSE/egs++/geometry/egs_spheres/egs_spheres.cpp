@@ -695,7 +695,7 @@ extern "C" {
         geomBlockInput->addSingleInput("midpoint", false, "The position of the middle of the spheres (x, y, z)");
     }
 
-    EGS_SPHERES_EXPORT string getExample(string type) {
+    EGS_SPHERES_EXPORT string getExample() {
         string example;
         example = {
             R"(

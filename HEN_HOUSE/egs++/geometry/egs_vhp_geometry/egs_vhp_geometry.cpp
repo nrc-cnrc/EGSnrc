@@ -693,7 +693,7 @@ extern "C" {
         geomBlockInput->addSingleInput("micro matrix", false, "The binary micro matrix filename followed by organ indices (defined in the media data file).");
     }
 
-    EGS_VHP_EXPORT string getExample(string type) {
+    EGS_VHP_EXPORT string getExample() {
         string example;
         example = {
             R"(

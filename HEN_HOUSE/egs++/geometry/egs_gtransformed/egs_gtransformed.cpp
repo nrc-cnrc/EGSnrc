@@ -85,7 +85,7 @@ extern "C" {
         addTransformationBlock(geomBlockInput);
     }
 
-    EGS_GTRANSFORMED_EXPORT string getExample(string type) {
+    EGS_GTRANSFORMED_EXPORT string getExample() {
         string example;
         example = {
             R"(

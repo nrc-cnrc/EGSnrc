@@ -307,7 +307,7 @@ extern "C" {
         apexPtr->addDependency(typePtr, "EGS_ParallelCones");
     }
 
-    EGS_CONES_EXPORT string getExample(string type) {
+    EGS_CONES_EXPORT string getExample() {
         string example;
         example = {
             R"(

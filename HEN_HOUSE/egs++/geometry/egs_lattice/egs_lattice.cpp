@@ -181,7 +181,7 @@ extern "C" {
         geomBlockInput->addSingleInput("type", false, "The type of lattice. Currently just used for hexagonal lattices.", {"hexagonal"});
     }
 
-    EGS_LATTICE_EXPORT string getExample(string type) {
+    EGS_LATTICE_EXPORT string getExample() {
         string example;
         example = {
             R"(
