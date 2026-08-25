@@ -49,6 +49,16 @@
 #include "estar_dataTables.h"
 #include "egs_functions.h"
 
+#if defined(WIN32) || defined(_WIN32)
+#  ifdef BUILD_DLL
+#    define ESTAR_EXPORT __declspec(dllexport)
+#  else
+#    define ESTAR_EXPORT __declspec(dllimport)
+#  endif
+#else
+#  define ESTAR_EXPORT
+#endif
+
 /*
     The purpose of this module is to process the arrays and data received from
     pegs4_routine.mortran and then to call the main function (estarCalculation)
@@ -165,7 +175,7 @@ public:
 
 #define egsEstar F77_OBJ_(egs_estar,EGS_ESTAR)
 
-extern __extc__ int egsEstar(char *formulaStr,
+extern __extc__ ESTAR_EXPORT int egsEstar(char *formulaStr,
                              float *massFraction,
                              float *numOfAtoms,
                              float *mediaDensity,
@@ -284,7 +294,7 @@ extern __extc__ int egsEstar(char *formulaStr,
 
 #define egsCompoundsToElements F77_OBJ_(egs_compoundstoelements,EGS_COMPOUNDSTOELEMENTS)
 
-extern __extc__ int egsCompoundsToElements(char *formulaStr,
+extern __extc__ ESTAR_EXPORT int egsCompoundsToElements(char *formulaStr,
         double *massFraction,
         float *mediaDensity,
         char *elementStr,
