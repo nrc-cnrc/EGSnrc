@@ -500,7 +500,29 @@ public:
         return sub->getBScaling(ireg - base->regions()); // then check sub regions
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        bool hasRS = sub->hasRhoScaling();
+        if (hasRS) {
+            has_rho_scaling = hasRS;
+            return has_rho_scaling;
+        }
+        else {
+            hasRS = base->hasRhoScaling();
+            has_rho_scaling = hasRS;
+            return has_rho_scaling;
+        }
+    };
+
+    void finishInitialization() override {
+        sub->finishInitialization();
+        base->finishInitialization();
+    };
+
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
     void setMedia(EGS_Input *inp,int,const int *);
@@ -936,7 +958,7 @@ public:
         return sub->getBScaling(ireg - base->regions()); // then check sub regions
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
     void setMedia(EGS_Input *inp,int,const int *);

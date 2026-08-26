@@ -152,7 +152,7 @@ EQUIVALENCE (SPCNAM,FILSPC);
 "         for the IPARALLEL parallel jobs (ISOURC=21,22)
 "CYCLNUM  keeps track of how many times a particle has been recycled
 "         (ISOURC=21,22)
-"OUTCNT   keeps track of how many times a phsp source has been restarted
+"OUTCNT   keeps track of how many times a phsp source has been rewinded
 "         (ISOURC=21,22)
 "XINOLD   holds XIN for recycled particles (ISOURC=21,22)
 "YINOLD   holds YIN for recycled particles (ISOURC=21,22)
@@ -178,5 +178,3 @@ EQUIVALENCE (SPCNAM,FILSPC);
 "i_unit_in Unit no. for phsp source (IAEA format only)
 
 "Last line in srcrz.macros "
-
-

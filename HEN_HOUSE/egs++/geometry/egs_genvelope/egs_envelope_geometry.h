@@ -417,6 +417,7 @@ public:
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
+
         if (ireg >= 0) {
             // inside.
             if (ireg < nbase) {
@@ -444,8 +445,7 @@ public:
                 // inscribed geometries => return the base geometry index.
                 // ij>=0 implies that we entered inscribed geometry
                 // jg in its local region ij.
-                return new_indexing ? local_start[jg] + ij :
-                       nbase + jg*nmax + ij;
+                return new_indexing ? local_start[jg] + ij : nbase + jg*nmax + ij;
             }
             // if here, we are in an inscribed geometry.
             // calculate its index (jg) and its local region (ilocal).
@@ -460,8 +460,9 @@ public:
             }
             // and then check if we will hit a boundary in this geometry.
             int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
-            if (inew >= 0) return new_indexing ? local_start[jg] + inew :
-                                      nbase + jg*nmax + inew;
+            if (inew >= 0) {
+                return new_indexing ? local_start[jg] + inew : nbase + jg*nmax + inew;
+            }
             // inew >= 0 implies that we either stay in the same
             // region (inew=ilocal) or we entered a new region
             // (inew!=ilocal), which is still inside the inscribed geometry
@@ -486,8 +487,7 @@ public:
                     if (newmed) {
                         *newmed = geometries[j]->medium(i);
                     }
-                    return new_indexing ? local_start[j] + i :
-                           nbase + nmax*j + i;
+                    return new_indexing ? local_start[j] + i : nbase + nmax*j + i;
                 }
             }
         }
@@ -529,34 +529,63 @@ public:
         // calls getNextGeom on its component geometries to update dynamic
         // geometries in the simulation
         for (int j=0; j<n_in; j++) {
-            geometries[j]->getNextGeom(rndm);
+            if (geometries[j]) {
+                geometries[j]->getNextGeom(rndm);
+            }
         }
-        g->getNextGeom(rndm);
+        if (g) {
+            g->getNextGeom(rndm);
+        }
     };
 
     void updatePosition(EGS_Float time) {
         // calls updatePosition on its component geometries to update dynamic
         // geometries in the simulation
         for (int j=0; j<n_in; j++) {
-            geometries[j]->updatePosition(time);
+            if (geometries[j]) {
+                geometries[j]->updatePosition(time);
+            }
         }
-        g->updatePosition(time);
+        if (g) {
+            g->updatePosition(time);
+        }
     };
 
     void containsDynamic(bool &hasdynamic) {
         // calls containsDynamic on its component geometries (only calls if
         // hasDynamic is false, as if it is true we already found one)
         for (int j=0; j<n_in; j++) {
-            if (!hasdynamic) {
+            if (!hasdynamic && geometries[j]) {
                 geometries[j]->containsDynamic(hasdynamic);
             }
         }
-        if (!hasdynamic) {
+        if (!hasdynamic && g) {
             g->containsDynamic(hasdynamic);
         }
     };
 
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
 
+        for (int j=0; j<n_in; j++) {
+            bool hasRS = geometries[j]->hasRhoScaling();
+            if (hasRS) {
+                has_rho_scaling = hasRS;
+                return has_rho_scaling;
+            }
+        }
+
+        return g->hasRhoScaling();
+    };
+
+    void finishInitialization() {
+        for (int j=0; j<n_in; j++) {
+            geometries[j]->finishInitialization();
+        }
+        g->finishInitialization();
+    };
 
     int getMaxStep() const {
         int nstep = g->getMaxStep();
@@ -627,7 +656,8 @@ public:
         return geometries[jg]->getBScaling(ireg - nbase - jg*nmax);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual int getGlobalRegionOffset(const string geomName);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 
@@ -749,6 +779,29 @@ public:
         if (!hasdynamic) {
             g->containsDynamic(hasdynamic);
         }
+    };
+
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        for (int j=0; j<n_in; j++) {
+            bool hasRS = geometries[j]->hasRhoScaling();
+            if (hasRS) {
+                has_rho_scaling = hasRS;
+                return has_rho_scaling;
+            }
+        }
+
+        return g->hasRhoScaling();
+    };
+
+    void finishInitialization() override {
+        for (int j=0; j<n_in; j++) {
+            geometries[j]->finishInitialization();
+        }
+        g->finishInitialization();
     };
 
 
@@ -1061,7 +1114,8 @@ public:
         return geometries[jg]->getBScaling(ireg - nbase - jg*nmax);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual int getGlobalRegionOffset(const string geomName);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 

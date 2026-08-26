@@ -80,6 +80,8 @@
 // Interpolators
 #include "egs_interpolator.h"
 #include "egs_run_control.h"
+// Autocomplete and examples
+#include "egs_input_struct.h"
 
 #include "egs_rndm.h"
 #define getRNGPointers F77_OBJ_(egs_get_rng_pointers,EGS_GET_RNG_POINTERS)
@@ -2225,8 +2227,16 @@ int EGS_ChamberApplication::simulateSingleShower() {
     last_case = current_case;
     EGS_Vector x,u;
     the_egsvr->nbr_split = csplit;
+
+    setTimeIndex(-1);
+
     current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
     //egsInformation("Got particle: q=%d E=%g wt=%g latch=%d x=(%g,%g,%g) u=(%g,%g,%g)\n",p.q,p.E,p.wt,p.latch,x.x,x.y,x.z,u.x,u.y,u.z);
+
+    // For dynamic geometries, update positions according to the current
+    // time index, which may have been set by getNextParticle
+    geometry->getNextGeom(rndm);
+
     the_extra_stack->nbr_splitting[0] = 0;
     int err = startNewShower(); if( err ) return err;
     //*HB_start************************
@@ -3026,6 +3036,163 @@ int EGS_ChamberApplication::startNewShower() {
   }
   return 0;
 };
+
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
+
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_chamber");
+
+        shared_ptr<EGS_BlockInput> calcBlock = scoreBlock->addBlockInput("calculation geometry");
+        calcBlock->addSingleInput("geometry name", false, "The name of the geometry to use as the simulation geometry.");
+        calcBlock->addSingleInput("cavity geometry", false, "The name of the geometry containing the cavity regions. This will be used for range rejection.");
+        calcBlock->addSingleInput("cavity regions", false, "A list of region numbers (or labels) that define the cavity.");
+        calcBlock->addSingleInput("cavity mass", false, "The total mass of the cavity, in g. Used only to convert from energy to dose deposited.");
+        calcBlock->addSingleInput("enhance regions", false, "If using the CS enhancement VRT (XCSE), a list of region numbers to perform XCSE in.");
+        calcBlock->addSingleInput("enhancement", false, "If using XCSE, the enhancement factor.");
+        calcBlock->addSingleInput("ECUT regions", false, "A list of regions to adjust the ECUT in.");
+        calcBlock->addSingleInput("ECUT", false, "A list of ECUT values, one for each of the ECUT regions.");
+        calcBlock->addSingleInput("subgeometries", false, "A list of geometry names where only the materials are different, for calculating perturbation factors. The first calculation geometry can't use subgeometries.");
+        calcBlock->addSingleInput("subgeom regions", false, "A list of the regions for subgeometries where the materials change.");
+
+        addTransformationBlock(calcBlock);
+
+        // should also have a section for sub-geometries but I dont know how it should be implemented/formatted
+
+        scoreBlock->addSingleInput("silent", false, "Set to 0 for verbose output, or 1 for compact output.");
+        scoreBlock->addSingleInput("onegeom", false, "Set to 1 when cavity geometries are identical, and only the region numbers are different.");
+        scoreBlock->addSingleInput("scale xcc", false, "Scale elastic photon scattering by this factor.");
+        scoreBlock->addSingleInput("correlated geometries", false, "Two geometry names where the ratios between the dose values should be calculated (provides better uncertainty estimate). May repeat this input multiple times.");
+
+        shared_ptr<EGS_BlockInput> varBlock = appInput->addBlockInput("variance reduction");
+        varBlock->setAppName("egs_chamber");
+        varBlock->addSingleInput("TmpPhsp", false, "Set to 1 to score a phase-space upon entry to the cavity geometry of the first calculation geometry. It is then re-used for subsequent calculation geometries.");
+        varBlock->addSingleInput("cs enhancement", false, "Set to 1 to turn on photon cross section enhancement (XCSE).");
+        varBlock->addSingleInput("photon splitting", false, "The splitting number, turns on generic photon splitting (not compatible with cs enhancement).");
+        varBlock->addSingleInput("radiative splitting", false, "The radiative splitting number. Turns on uniform brems splitting.");
+
+        shared_ptr<EGS_BlockInput> rrBlock = varBlock->addBlockInput("range rejection");
+        rrBlock->addSingleInput("rejection", false, "The rejection factor for Russian Roulette. Must be equal to or larger than, and a multiple of the cs enhancement factor.");
+        rrBlock->addSingleInput("Esave", false, "Particles below this energy (MeV) and unable to reach the nearest boundary are terminated.");
+        rrBlock->addSingleInput("cavity geometry", false, "A cavity geometry. Just used to initialize materials for range rejection.");
+        rrBlock->addSingleInput("rejection range medium", false, "The medium in the cavity geometry with the highest cross section.");
+
+        shared_ptr<EGS_BlockInput> scaleBlock = scoreBlock->addBlockInput("scale photon x-sections");
+        scaleBlock->addSingleInput("factor", false, "The scaling factor to apply to the cross sections.");
+        scaleBlock->addSingleInput("medium", false, "The medium name to adjust the cross sections for. To apply to all media, use 'all'.");
+        scaleBlock->addSingleInput("cross section", false, "Which cross sections to scale.", {"all", "Rayleigh", "Compton", "Pair", "Photo"});
+
+        shared_ptr<EGS_BlockInput> isoBlock = scoreBlock->addBlockInput("isocenter positioning uncertainty");
+        isoBlock->addSingleInput("ncase per position", false, "The number of histories per position. Defaults to 2.");
+        isoBlock->addSingleInput("positions per sample", false, "The number of positions to use per scoring sample.");
+        shared_ptr<EGS_BlockInput> transBlock = isoBlock->addBlockInput("translation");
+        transBlock->addSingleInput("distribution", false, "The sampling distribution for translations. Defaults to Gaussian.", {"Gaussian", "Uniform"});
+        transBlock->addSingleInput("max shift", false, "The x, y and z maximum shifts for translations in each direction.");
+        transBlock->addSingleInput("sigma", false, "The x, y and z sigma for Gaussian distributions.");
+        shared_ptr<EGS_BlockInput> rotBlock = isoBlock->addBlockInput("rotation");
+        rotBlock->addSingleInput("distribution", false, "The sampling distribution for rotations. Defaults to Gaussian.", {"Gaussian", "Uniform"});
+        rotBlock->addSingleInput("max shift", false, "The x, y and z maximum rotations about each axis, in radians.");
+        rotBlock->addSingleInput("sigma", false, "The x, y and z sigma for Gaussian distributions, in radians.");
+
+        shared_ptr<EGS_BlockInput> cavBlock = scoreBlock->addBlockInput("cavity positioning uncertainty");
+        cavBlock->addSingleInput("ncase per position", false, "The number of histories per position. Defaults to 2.");
+        cavBlock->addSingleInput("positions per sample", false, "The number of positions to use per scoring sample.");
+        shared_ptr<EGS_BlockInput> transBlock2 = cavBlock->addBlockInput("translation");
+        transBlock2->addSingleInput("distribution", false, "The sampling distribution for translations. Defaults to Gaussian.", {"Gaussian", "Uniform"});
+        transBlock2->addSingleInput("max shift", false, "The x, y and z maximum shifts for translations in each direction.");
+        transBlock2->addSingleInput("sigma", false, "The x, y and z sigma for Gaussian distributions.");
+
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+# egs_chamber example input
+:start variance reduction:
+    TmpPhsp = 1                                         # i.e., score phase space during the first calculation geometry and use it in subsequent calculation geometries
+    cs enhancement = 1                                  # 0 (XCSE off), >0 (XCSE on)
+    #photon splitting = 10
+    #radiative splitting = 10
+
+    :start range rejection:
+        rejection = 256                                 # The rejection factor to use for Russian Roulette. Must be equal to or larger than, and a multiple of the cs enhancement factor.
+        Esave     = 0.7                              # Particles below this energy (MeV) and unable to reach the nearest boundary are terminated.
+        cavity geometry = cavity                        # since each geometry can have its own
+                                                        # cavity geometry this is just a dummy
+        rejection range medium = H2O521ICRU # Should be the material with the highest cross section in the cavity geometry
+    :stop range rejection:
+:stop variance reduction:
+
+:start scoring options:
+    silent = 0;
+    #:start scale photon x-sections:
+        factor = 1.0
+        medium = 1
+        cross section = all
+    :stop scale photon x-sections:                       # all, Rayleigh, Compton, Pair, or Photo
+    #onegeom = 0
+    #scale xcc = 2
+
+    #
+    # The simulation starts in the first calculation geometry
+    # If phase space scoring is set, which it is in our case,
+    # (see the variance reduction section below),
+    # then all particles entering the region specified as cavity are
+    # stored and then they are further transported in the additional
+    # calculation geometries specified
+    #
+    :start calculation geometry:
+        geometry name = phsp_scoring_geometry
+        cavity regions = 1 5
+        ECUT regions = cavity
+        ECUT = 0.7
+        cavity geometry = air_chamber_tube
+        enhance regions = 0 1 4 5
+        enhancement = 128 128 128 128
+        cavity mass = 1
+    :stop calculation geometry:
+
+    # correlated geometries = geometry_i geometry_l       # can be repeated
+
+    #:start isocenter positioning uncertainty:
+        ncase per position = 1000
+        positions per sample = 10
+        :start translation:
+            distribution = gaussian                     # gaussian or uniform
+            max shift = 0.1, 0.1, 0.1                   # 3 values
+            sigma = 0.05, 0.05, 0.05                    # 3 values
+        :stop translation:
+        :start rotation:
+            distribution = uniform                      # gaussian or uniform
+            max shift = 0, 0.1, 0
+            sigma = 0.05, 0.05, 0.05
+        :stop rotation:
+    :stop isocenter positioning uncertainty:
+
+    #:start cavity positioning uncertainty:
+        ncase per position = 1000
+        positions per sample = 10
+
+        :start translation:
+            distribution = gaussian                     # gaussian or uniform
+            max shift = 0.1, 0.1, 0.1
+            sigma = 0.05, 0.05, 0.05
+        :stop translation:
+
+        :start rotation:
+            distribution = uniform                      # gaussian or uniform
+            max shift = 0.1, 0.1, 0.1
+            sigma = 0.05, 0.05, 0.05
+        :stop rotation:
+    :stop cavity positioning uncertainty:
+:stop scoring options:
+)"};
+        return example;
+    }
+}
 
 #ifdef BUILD_APP_LIB
 APP_LIB(EGS_ChamberApplication);

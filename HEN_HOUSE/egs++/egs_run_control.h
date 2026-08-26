@@ -42,12 +42,40 @@
 
 #include "egs_libconfig.h"
 #include "egs_timer.h"
+#include "egs_input_struct.h"
 
 #include <iostream>
 using namespace std;
 
 class EGS_Application;
 class EGS_Input;
+
+inline void addRunControlBlock(shared_ptr<EGS_InputStruct> blockPtr) {
+    shared_ptr<EGS_BlockInput> runBlock = blockPtr->addBlockInput("run control");
+    runBlock->addSingleInput("ncase", true, "The number of histories to simulate.");
+    runBlock->addSingleInput("nbatch", false, "The number of batches to divide the simulation into. After each batch, a checkpoint is created to allow resuming the simulation. For simulations with very large intermediate data (like a high resolution dose grid), reducing nbatch to 1 can speed up the simulation. Defaults to 10.");
+    runBlock->addSingleInput("nchunk", false, "For parallel runs, each job splits its portion of the simulation into nchunk serial chunks, and each of those chunks is divided into nbatch batches. After each chunk, the parallel job grabs a new portion of the simulation to work on. Defaults to 10.");
+    runBlock->addSingleInput("max cpu hours allowed", false, "The number hours after which the simulation will be haulted. Defaults to -1, which is no limit.");
+    runBlock->addSingleInput("statistical accuracy sought", false, "The statistical uncertainty for a particular quantity of interest, below which the simulation will be haulted. Note that the quantity must be defined by the application (e.g. the cavity dose in egs_chamber), and in general is undefined (e.g. this input does nothing for egs_app).");
+    runBlock->addSingleInput("geometry error limit", false, "The number of geometry errors that will be allowed to occur, before haulting the simulation. Defaults to 0.");
+    runBlock->addSingleInput("calculation", false, "The calculation type: first (default, runs a new simulation), resume (continue a crashed simulation), analyze (prints results), combine (combines results from a parallel run). Defaults to 'first'.", {"first", "resume", "analyze", "combine"});
+}
+
+inline string addRunControlExample() {
+    string example = {
+        R"(
+:start run control:
+    ncase                       = 1e4
+    nbatch                      = 10    #[optional]
+    nchunk                      = 10    #[optional]
+    statistical accuracy sought = 5     #[optional]
+    max cpu hours allowed       = 0.5   #[optional]
+    calculation                 = first #[optional]
+    geometry error limit        = 2     #[optional]
+:stop run control:
+)"};
+    return example;
+}
 
 /*! \brief A simple run control object for advanced EGSnrc C++ applications.
 
@@ -80,7 +108,7 @@ class EGS_Input;
      for single job control. This RCO provides the ability to run simulations
      with a user specified number of particles and up to a user specified
      statistical uncertainty. It also provides the ability to restrict
-     the simulation to a user specified maximum CPU time, to perform restarted
+     the simulation to a user specified maximum CPU time, to resume
      simulations or to simply analyze the results of a previous run or to
      combine the results of previously performed parallel runs.
    - A \link EGS_JCFControl 'job control file' (JCF) RCO \endlink.
@@ -243,8 +271,8 @@ protected:
     EGS_Float       maxt;   // maximum time to run in hours.
     EGS_Float       accu;   // statistical uncertainty sought.
     int             nbatch; // number of batches.
-    int             restart;// =0 => fresh calculation
-    // =1 => restart calculation
+    int             resume;// =0 => fresh calculation
+    // =1 => resume calculation
     // =2 => analyze results
     // =3 => combine parallel run
     int             nchunk; // number of simulation "chunks"

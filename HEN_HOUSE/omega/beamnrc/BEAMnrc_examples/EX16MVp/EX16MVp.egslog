@@ -44,13 +44,13 @@ output file(s)..............................................ex
  MEDIUM of nominal AIR (exactly as in pegs4dat) (left justify):  AIR700ICRU
 
 
- IWATCH(-N-4), ISTOR(0,+-1), IRESTART(0-3), IO_OPT(0-3),
+ IWATCH(-N-4), ISTOR(0,+-1), IRESUME(0-3), IO_OPT(0-3),
  IDAT(0-1), LATCH_OPTION (1-3), IZLAST(0-2) :            0           0         0         0         1           3           1
 
  Do not track(0) or track(>0) every interaction or track Nth
  history only(-N):                                                    0
  Store random # for a batch(0),a history(1) or read random #(-1):     0
- First run(0),restarted(1),make(2),analyze(3):                        0
+ First run(0),resumed(1),make(2),analyze(3):                        0
  Output to PH-SP(0),not(1),BEAM-MODEL(2),PH-SP&MODEL(3):              0
  Store data(0) or not(1):                                             1
  LATCH OPTION,do not inherit(1),inherit+record origin(2,3):           3

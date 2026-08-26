@@ -81,8 +81,8 @@ IAEA format: iq,E,[x],[y],[z],u,v,wt,latch,[time]
 
 Note that in IAEA format, the user has the option of specifying a fixed x, y, and/or z coordinate
 of the scoring plane/line/point, in which case the fixed coordinates shall not be scored for each
-particle but will be specified in the header (.IAEAheader) file.  Also, in this format, the
-user has the option of scoring the time index synchronization parameter, time, passed from the source.
+particle but will be specified in the header (.IAEAheader) file. Even for constant x/y/z, the scoring plane must rest on the boundary between regions. Also, in IAEA format, the
+user has the option of scoring the particle time index for dynamic simulations.
 
 Can be used in any C++ user code by entering the proper input block in
 the ausgab object definition block.
@@ -261,6 +261,12 @@ public:
             EGS_Vector x = app->top_p.x;
             int ir = app->top_p.ir;
             int latch = app->top_p.latch;
+
+            // Skip this particle if it's outside the overall geometry and we're scoring on entry only
+            if (scoredir == 1 && ir < 0) {
+                return 0;
+            }
+
             //only score if: 1) it has not been scored before or
             //2) we are scoring multiple crossers (EGSnrc format only)
             if (!(latch & bsmc()) || (oformat==0 && score_mc)) {
@@ -308,6 +314,11 @@ public:
     };
 
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
+        // Skip this particle if it's outside the overall geometry and we're scoring on entry only
+        if (scoredir == 1 && ir < 0) {
+            return 0;
+        }
+
         //same as above, we don't need the region no.
         if (ocharge==0 || 1+abs(app->top_p.q)==ocharge) {
             EGS_Vector x = app->top_p.x;
@@ -519,8 +530,8 @@ protected:
     float emax; //max. k.e. of particles in phsp file
     mutable bool first_flush; //first time writing to file in this run -- mutable so we can change it in storeState
 
-    bool is_restart; //true if this is a restart
-    EGS_I64 countprev; //no. of particles written to file before restart
+    bool is_resume; //true if this is a resumed simulation
+    EGS_I64 countprev; //no. of particles written to file before resume
 
     EGS_I64    last_case;   //last primary history scored
     EGS_I64    current_case; //current primary history

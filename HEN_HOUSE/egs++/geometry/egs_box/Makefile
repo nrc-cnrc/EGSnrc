@@ -36,7 +36,7 @@ DEFS = $(DEF1) -DBUILD_BOX_DLL
 
 library = egs_box
 lib_files = egs_box
-my_deps = egs_transformations.h
+my_deps = egs_transformations.h egs_input_struct.h
 extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
 include $(SPEC_DIR)egspp_libs.spec

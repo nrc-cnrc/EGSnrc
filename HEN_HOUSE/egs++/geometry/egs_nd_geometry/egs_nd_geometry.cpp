@@ -31,6 +31,7 @@
 #                   Manuel Stoeckl
 #                   Marc Chamberland
 #                   Martin Martinov
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -197,6 +198,15 @@ void EGS_XYZGeometry::printInfo() const {
         "=======================================================\n");
 }
 
+int EGS_XYZGeometry::medIndex(char medium) {
+    std::string medIdx = "123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    size_t pos = medIdx.find(medium);
+    if (pos == std::string::npos) {
+        pos = -1; // Assume vacuum if not found
+    }
+    return static_cast<int>(pos);
+}
+
 void EGS_XYZGeometry::setMedia(EGS_Input *input, int nmed, const int *mind) {
     EGS_Input *i;
     med = mind[0];
@@ -303,11 +313,13 @@ void EGS_XYZGeometry::setMedia(EGS_Input *input, int nmed, const int *mind) {
 EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         const char *ramp_file, int dens_or_egsphant_or_interfile) {
     const static char *func = "EGS_XYZGeometry::constructGeometry";
-    if (!dens_file || !ramp_file) {
+    // A ramp file is only needed for density matrix or interfile
+    if (!dens_file || (dens_or_egsphant_or_interfile != 1 && !ramp_file)) {
         return 0;
     }
+
     ifstream ramp(ramp_file);
-    if (!ramp) {
+    if (dens_or_egsphant_or_interfile != 1 && !ramp) {
         egsWarning("%s: failed to open CT ramp file %s\n",func,ramp_file);
         return 0;
     }
@@ -333,8 +345,14 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             rho_max.push_back(rmax+1);
             rho_def.push_back(rdef);
         }
+        if (med_names.size() < 1) {
+            egsWarning("%s: no media defined in the CT ramp "
+                       "file %s!\n",func,ramp_file);
+            return 0;
+        }
     }
-    else {
+    else if (dens_or_egsphant_or_interfile == 0) {
+        // Density matrix format uses a ramp
         for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
             if (loopCount == loopMax) {
                 egsFatal("EGS_XYZGeometry::constructGeometry: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
@@ -354,12 +372,13 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             rho_max.push_back(rmax);
             rho_def.push_back(rdef);
         }
+        if (med_names.size() < 1) {
+            egsWarning("%s: no media defined in the CT ramp "
+                       "file %s!\n",func,ramp_file);
+            return 0;
+        }
     }
-    if (med_names.size() < 1) {
-        egsWarning("%s: no media defined in the CT ramp "
-                   "file %s!\n",func,ramp_file);
-        return 0;
-    }
+
     int Nx, Ny, Nz;
     EGS_Float *xx, *yy, *zz;
     float *rho;
@@ -639,10 +658,15 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         (*data).getline(buf,1023);
         for (imed=0; imed<nmed; ++imed) {
             (*data).getline(buf,1023);
+
             if ((*data).fail()) {
                 egsWarning("%s: failed reading medium name for %d'th medium\n",func,imed+1);
             }
-            //egsInformation("Got line <%s>\n",buf);
+
+            med_names.push_back(string(buf));
+            addMedium(med_names.back());
+            egsInformation("Using medium %s as mednum %d\n",
+                           med_names.back().c_str(),med_names.size());
         }
         // ignore estepe
         EGS_Float dum;
@@ -689,39 +713,74 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             return 0;
         }
         int nr = Nx*Ny*Nz;
+
+        EGS_PlanesX *xp = new EGS_PlanesX(Nx+1,xx,"",EGS_XProjector("x-planes"));
+        EGS_PlanesY *yp = new EGS_PlanesY(Ny+1,yy,"",EGS_YProjector("y-planes"));
+        EGS_PlanesZ *zp = new EGS_PlanesZ(Nz+1,zz,"",EGS_ZProjector("z-planes"));
+        EGS_XYZGeometry *result = new EGS_XYZGeometry(xp,yp,zp);
+
+        for (int i=0; i<Nz; ++i) {
+            for (j=0; j<Ny; ++j) {
+                string medLine;
+                //(*data).getline(buf,1023);
+                (*data) >> medLine;
+
+                if (medLine.size() < Nx) {
+                    egsWarning("%s: Number of media per line in correct.\n",func);
+                    delete [] xx;
+                    delete [] yy;
+                    delete [] zz;
+                    delete result;
+                    return 0;
+                }
+                for (int k=0; k<Nx; ++k) {
+                    int index = i * (Ny * Nx) + j * Nx + k;
+
+                    string medName;
+                    int medIndex = result->medIndex(medLine[k]);
+                    if (medIndex > -1) {
+                        medName = med_names[medIndex];
+                    }
+                    else {
+                        medName = "vacuum";
+                    }
+
+                    result->setMedium(index,index,medName);
+                    //egsInformation("%d",result->medIndex(medLine[k]));
+                }
+                //egsInformation("\n");
+            }
+            //egsInformation("\n");
+            (*data).getline(buf,1023); // Skip a blank line
+        }
+
         //int med;
         //for(j=0; j<nr; ++j) data >> med;
-        (*data).getline(buf,1023);
+        /*(*data).getline(buf,1023);
         for (int iz=0; iz<Nz; ++iz) {
             for (int iy=0; iy<Ny; ++iy) {
                 (*data).getline(buf,1023);
             }
             (*data).getline(buf,1023);
-        }
+        }*/
         if ((*data).fail()) {
             egsWarning("%s: failed reading media indeces matrix\n",func);
             delete [] xx;
             delete [] yy;
             delete [] zz;
+            delete result;
             return 0;
         }
-        rho = new float [nr];
-        for (j=0; j<nr; ++j) {
-            (*data) >> rho[j];
-        }
-        if ((*data).fail()) {
-            egsWarning("%s: failed reading mass density matrix\n",func);
-            delete [] xx;
-            delete [] yy;
-            delete [] zz;
-            delete [] rho;
-            return 0;
-        }
+
+        return result;
     }
+
+    // Only get here for density matrix or interfile
     EGS_PlanesX *xp = new EGS_PlanesX(Nx+1,xx,"",EGS_XProjector("x-planes"));
     EGS_PlanesY *yp = new EGS_PlanesY(Ny+1,yy,"",EGS_YProjector("y-planes"));
     EGS_PlanesZ *zp = new EGS_PlanesZ(Nz+1,zz,"",EGS_ZProjector("z-planes"));
     EGS_XYZGeometry *result = new EGS_XYZGeometry(xp,yp,zp);
+
     EGS_Float rhomin=1e30,rhomax=0;
     int j;
     for (j=0; j<Nx*Ny*Nz; j++) {
@@ -769,6 +828,124 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
     delete [] rho;
     delete [] imed;
     return result;
+}
+
+void EGS_XYZGeometry::finishInitialization() {
+
+    // Return if this isn't egsphant input
+    if (dens_or_egsphant_or_interfile != 1 || useEgsphantDensities == false) {
+        return;
+    }
+    const static char *func = "EGS_XYZGeometry::finishInitialization";
+
+    ifstream tempf(dens_file, ios::binary);
+    istream *data;
+    ifstream textf;
+#ifdef HAS_GZSTREAM
+    igzstream binf;
+#endif
+
+    if (!tempf) {
+        egsWarning("%s: failed to open .egsphant file %s\n",func,dens_file.c_str());
+        return;
+    }
+
+    bool is_gzip = (tempf.get() == 0x1f && tempf.get() == 0x8b);
+    tempf.close();
+
+    if (is_gzip) {
+#ifdef HAS_GZSTREAM
+        binf.open(dens_file);
+        data = &binf;
+#else
+        egsWarning("Tried to read gzipped egsphant but egs_ndgeometry was not compiled with gzip support\n");
+        return;
+#endif
+    }
+    else {
+        textf.open(dens_file);
+        data = &textf;
+    }
+
+    int nmed;
+    (*data) >> nmed;
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading number of media\n",func);
+        return;
+    }
+
+    char buf [1024];
+    int imed;
+    (*data).getline(buf,1023);
+    for (imed=0; imed<nmed; ++imed) {
+        (*data).getline(buf,1023);
+
+        if ((*data).fail()) {
+            egsWarning("%s: failed reading medium name for %d'th medium\n",func,imed+1);
+        }
+    }
+
+    // ignore estepe
+    EGS_Float dum;
+    for (imed=0; imed<nmed; ++imed) {
+        (*data) >> dum;
+    }
+    int Nx, Ny, Nz;
+    (*data) >> Nx >> Ny >> Nz;
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading number of voxels\n",func);
+        return;
+    }
+
+    int j;
+    for (j=0; j<=Nx; ++j) {
+        (*data) >> dum;
+    }
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading x-planes\n",func);
+        return;
+    }
+    for (j=0; j<=Ny; ++j) {
+        (*data) >> dum;
+    }
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading y-planes\n",func);
+        return;
+    }
+    for (j=0; j<=Nz; ++j) {
+        (*data) >> dum;
+    }
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading z-planes\n",func);
+        return;
+    }
+    int nr = Nx*Ny*Nz;
+
+    for (int i=0; i<Nz; ++i) {
+        for (j=0; j<Ny; ++j) {
+            //string medLine;
+            (*data).getline(buf,1023);
+            //(*data) >> medLine;
+        }
+        //egsInformation("\n");
+        (*data).getline(buf,1023); // Skip a blank line
+    }
+
+    for (j=0; j<nr; ++j) {
+        float rho;
+        (*data) >> rho;
+
+        EGS_Float rrho = rho / getMediumRho(medium(j));
+        if (fabs(rrho-1) > epsilon) {
+            setRelativeRho(j,j,rrho);
+        }
+    }
+    if ((*data).fail()) {
+        egsWarning("%s: failed reading mass density matrix\n",func);
+        return;
+    }
+
+    return;
 }
 
 string EGS_DeformedXYZ::def_type = "EGS_DeformedXYZ";
@@ -1079,9 +1256,150 @@ const char *err_msg1 = "createGeometry(EGS_XYZRepeater)";
 
 #endif
 
-string EGS_NDGeometry::type = "EGS_NDGeometry";
+static string EGS_NDG_LOCAL typeStr("EGS_NDGeometry");
+string EGS_NDGeometry::type(typeStr);
+
+static bool EGS_NDG_LOCAL inputSet = false;
 
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs();
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_ndgeometry"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", false, "Alternative types of nd_geometry. Neglect this input to use a standard egs_nd_geometry.", {"EGS_XYZGeometry", "EGS_XYZRepeater"});
+
+        auto dimPtr = geomBlockInput->addSingleInput("dimensions", true, "A list of previously defined geometries.");
+        dimPtr->addDependency(typePtr, "", true);
+        auto hownPtr = geomBlockInput->addSingleInput("hownear method", false, "0(for orthogonal constituent geometries) or 1");
+        hownPtr->addDependency(typePtr, "", true);
+
+        // EGS_XYZGeometry
+        // First method
+        auto xPtr = geomBlockInput->addSingleInput("x-planes", false, "A list of the x-plane positions");
+        xPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto yPtr = geomBlockInput->addSingleInput("y-planes", false, "A list of the y-plane positions");
+        yPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto zPtr = geomBlockInput->addSingleInput("z-planes", false, "A list of the z-plane positions");
+        zPtr->addDependency(typePtr, "EGS_XYZGeometry");
+
+        // Second method
+        auto densityPtr = geomBlockInput->addSingleInput("density matrix", false, "A binary file containing the density for every region. See the documentation for format details.");
+        densityPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto ctPtr = geomBlockInput->addSingleInput("ct ramp", false, "A ramp file for converting density to medium.");
+        ctPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto phantPtr = geomBlockInput->addSingleInput("egsphant file", false, "An egsphant file, as defined in the DOSXYZnrc documentation.");
+        phantPtr->addDependency(typePtr, "EGS_XYZGeometry");
+
+        // For second method, must either use "density matrix" or "egsphant file"
+        densityPtr->addDependency(phantPtr, "", true);
+        phantPtr->addDependency(densityPtr, "", true);
+        ctPtr->addDependency(densityPtr);
+
+        // Third method
+        auto xslabPtr = geomBlockInput->addSingleInput("x-slabs", false, "Xo Dx Nx");
+        xslabPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto yslabPtr = geomBlockInput->addSingleInput("y-slabs", false, "Yo Dy Ny");
+        yslabPtr->addDependency(typePtr, "EGS_XYZGeometry");
+        auto zslabPtr = geomBlockInput->addSingleInput("z-slabs", false, "Zo Dz Nz");
+        zslabPtr->addDependency(typePtr, "EGS_XYZGeometry");
+
+        // Can only use one method
+        xPtr->addDependency(densityPtr, "", true);
+        yPtr->addDependency(densityPtr, "", true);
+        zPtr->addDependency(densityPtr, "", true);
+        xPtr->addDependency(ctPtr, "", true);
+        yPtr->addDependency(ctPtr, "", true);
+        zPtr->addDependency(ctPtr, "", true);
+        xPtr->addDependency(phantPtr, "", true);
+        yPtr->addDependency(phantPtr, "", true);
+        zPtr->addDependency(phantPtr, "", true);
+        xPtr->addDependency(xslabPtr, "", true);
+        yPtr->addDependency(xslabPtr, "", true);
+        zPtr->addDependency(xslabPtr, "", true);
+        xPtr->addDependency(yslabPtr, "", true);
+        yPtr->addDependency(yslabPtr, "", true);
+        zPtr->addDependency(yslabPtr, "", true);
+        xPtr->addDependency(zslabPtr, "", true);
+        yPtr->addDependency(zslabPtr, "", true);
+        zPtr->addDependency(zslabPtr, "", true);
+        densityPtr->addDependency(xPtr, "", true);
+        ctPtr->addDependency(xPtr, "", true);
+        phantPtr->addDependency(xPtr, "", true);
+        densityPtr->addDependency(yPtr, "", true);
+        ctPtr->addDependency(yPtr, "", true);
+        phantPtr->addDependency(yPtr, "", true);
+        densityPtr->addDependency(zPtr, "", true);
+        ctPtr->addDependency(zPtr, "", true);
+        phantPtr->addDependency(zPtr, "", true);
+        densityPtr->addDependency(xslabPtr, "", true);
+        ctPtr->addDependency(xslabPtr, "", true);
+        phantPtr->addDependency(xslabPtr, "", true);
+        densityPtr->addDependency(yslabPtr, "", true);
+        ctPtr->addDependency(yslabPtr, "", true);
+        phantPtr->addDependency(yslabPtr, "", true);
+        densityPtr->addDependency(zslabPtr, "", true);
+        ctPtr->addDependency(zslabPtr, "", true);
+        phantPtr->addDependency(zslabPtr, "", true);
+        xslabPtr->addDependency(xPtr, "", true);
+        xslabPtr->addDependency(yPtr, "", true);
+        xslabPtr->addDependency(zPtr, "", true);
+        xslabPtr->addDependency(densityPtr, "", true);
+        xslabPtr->addDependency(ctPtr, "", true);
+        xslabPtr->addDependency(phantPtr, "", true);
+        yslabPtr->addDependency(xPtr, "", true);
+        yslabPtr->addDependency(yPtr, "", true);
+        yslabPtr->addDependency(zPtr, "", true);
+        yslabPtr->addDependency(densityPtr, "", true);
+        yslabPtr->addDependency(ctPtr, "", true);
+        yslabPtr->addDependency(phantPtr, "", true);
+        zslabPtr->addDependency(xPtr, "", true);
+        zslabPtr->addDependency(yPtr, "", true);
+        zslabPtr->addDependency(zPtr, "", true);
+        zslabPtr->addDependency(densityPtr, "", true);
+        zslabPtr->addDependency(ctPtr, "", true);
+        zslabPtr->addDependency(phantPtr, "", true);
+
+
+        // EGS_XYZRepeater
+        auto regeomPtr = geomBlockInput->addSingleInput("repeated geometry", true, "The name of a previously defined geometry");
+        regeomPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto medPtr = geomBlockInput->addSingleInput("medium", false, "The medium the space between  xmin..xmax, ymin..ymax, and zmin..zmax is filled with");
+        medPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto rexPtr = geomBlockInput->addSingleInput("repeat x", true, "xmin xmax Nx");
+        rexPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto reyPtr = geomBlockInput->addSingleInput("repeat y", true, "ymin ymax Ny");
+        reyPtr->addDependency(typePtr, "EGS_XYZRepeater");
+        auto rezPtr = geomBlockInput->addSingleInput("repeat z", true, "zmin zmax Nz");
+        rezPtr->addDependency(typePtr, "EGS_XYZRepeater");
+    }
+
+    EGS_NDG_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_ndgeometry
+    #:start geometry:
+        library = EGS_NDGeometry
+        name = my_ndgeometry
+        dimensions = geom1 geom2
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_NDG_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_NDG_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 #ifdef EXPLICIT_XYZ
@@ -1182,7 +1500,7 @@ extern "C" {
                     egsWarning("%s: no 'density matrix', 'egsphant file' or 'interfile header' input\n",func);
                     return 0;
                 }
-                if (ierr2) {
+                if (dens_or_egsphant_or_interfile != 1 && ierr2) {
                     egsWarning("%s: no 'ct ramp' input\n",func);
                     return 0;
                 }
@@ -1190,9 +1508,19 @@ extern "C" {
                     EGS_XYZGeometry::constructGeometry(dens_file.c_str(),ramp_file.c_str(),dens_or_egsphant_or_interfile);
 
                 if (result) {
+                    result->dens_file = dens_file;
+                    result->dens_or_egsphant_or_interfile = dens_or_egsphant_or_interfile;
                     result->setName(input);
                     result->setBoundaryTolerance(input);
                     result->setBScaling(input);
+
+                    if (dens_or_egsphant_or_interfile == 1) {
+                        vector<string> options;
+                        options.push_back("no");
+                        options.push_back("yes");
+                        bool useEgsphantDensities = input->getInput("use egsphant densities",options,1);
+                        result->useEgsphantDensities = useEgsphantDensities;
+                    }
                 }
 
                 return result;
@@ -1440,14 +1768,14 @@ extern "C" {
     }
 
 
-    void EGS_NDGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_NDGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         // label defined in the sub-geometries
         vector<int> local_regs;
         for (int i=0; i<N; i++) {
             local_regs.clear();
             if (g[i]) {
-                g[i]->getLabelRegions(str, local_regs);
+                g[i]->getLabelRegions(str, local_regs, sanitize);
             }
             if (local_regs.size() == 0) {
                 continue;
@@ -1460,18 +1788,18 @@ extern "C" {
         }
 
         // label defined in self (nd input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 
 
-    void EGS_XYZGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_XYZGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         vector<int> local_regs;
 
         // x plane labels
         local_regs.clear();
-        xp->getLabelRegions(str, local_regs);
+        xp->getLabelRegions(str, local_regs, sanitize);
         for (int i=0; i<local_regs.size(); i++) {
             for (int j=0; j<ny; j++) {
                 for (int k=0; k<nz; k++) {
@@ -1482,7 +1810,7 @@ extern "C" {
 
         // y plane labels
         local_regs.clear();
-        yp->getLabelRegions(str, local_regs);
+        yp->getLabelRegions(str, local_regs, sanitize);
         for (int j=0; j<local_regs.size(); j++) {
             for (int i=0; i<nx; i++) {
                 for (int k=0; k<nz; k++) {
@@ -1493,7 +1821,7 @@ extern "C" {
 
         // z plane labels
         local_regs.clear();
-        zp->getLabelRegions(str, local_regs);
+        zp->getLabelRegions(str, local_regs, sanitize);
         for (int k=0; k<local_regs.size(); k++) {
             for (int i=0; i<nx; i++) {
                 for (int j=0; j<ny; j++) {
@@ -1503,18 +1831,18 @@ extern "C" {
         }
 
         // label defined in self (xyz input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 
 
-    void EGS_XYZRepeater::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_XYZRepeater::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         vector<int> local_regs;
 
         // label in repeated geometry
         local_regs.clear();
-        g->getLabelRegions(str, local_regs);
+        g->getLabelRegions(str, local_regs, sanitize);
         for (int i=0; i<nx; i++) {
             for (int j=0; j<ny; j++) {
                 for (int k=0; k<nz; k++) {
@@ -1527,7 +1855,7 @@ extern "C" {
 
         // x plane labels
         local_regs.clear();
-        xyz->getXLabelRegions(str, local_regs);
+        xyz->getXLabelRegions(str, local_regs, sanitize);
         for (int i=0; i<local_regs.size(); i++) {
             for (int j=0; j<ny; j++) {
                 for (int k=0; k<nz; k++) {
@@ -1540,7 +1868,7 @@ extern "C" {
 
         // y plane labels
         local_regs.clear();
-        xyz->getYLabelRegions(str, local_regs);
+        xyz->getYLabelRegions(str, local_regs, sanitize);
         for (int j=0; j<local_regs.size(); j++) {
             for (int i=0; i<nx; i++) {
                 for (int k=0; k<nz; k++) {
@@ -1553,7 +1881,7 @@ extern "C" {
 
         // z plane labels
         local_regs.clear();
-        xyz->getZLabelRegions(str, local_regs);
+        xyz->getZLabelRegions(str, local_regs, sanitize);
         for (int k=0; k<local_regs.size(); k++) {
             for (int i=0; i<nx; i++) {
                 for (int j=0; j<ny; j++) {
@@ -1565,7 +1893,7 @@ extern "C" {
         }
 
         // label defined in self (repeater input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

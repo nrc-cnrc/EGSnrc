@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -41,6 +42,9 @@
 
 #include <fstream>
 using namespace std;
+
+static bool EGS_VOXELIZED_SHAPE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_VOXELIZED_SHAPE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 void EGS_VoxelizedShape::EGS_VoxelizedShapeFormat0(const char *fname,
         const string &Name,EGS_ObjectFactory *f) {
@@ -369,8 +373,38 @@ EGS_VoxelizedShape::~EGS_VoxelizedShape() {
 
 extern "C" {
 
+    static void setInputs() {
+        inputSet = true;
+
+        setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_voxelized_shape"});
+
+        shapeBlockInput->addSingleInput("file name", true, "The filename for a binary file that contains sampling probabilities for an XYZ voxel grid. See the documentation for file format details.");
+    }
+
+    EGS_VOXELIZED_SHAPE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_voxelized_shape
+    #:start shape:
+        library = egs_voxelized_shape
+        file name = some_file
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_VOXELIZED_SHAPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
+
     EGS_VOXELIZED_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {
+
         static const char *func = "createShape(voxelized shape)";
         if (!input) {
             egsWarning("%s: null input?\n",func);
@@ -386,7 +420,7 @@ extern "C" {
         }
         if (err2) {
             egsInformation("%s: 'file format' input missing. Using default 'binary'"
-                           "file format \n",func);
+            "file format \n",func);
             file_format = 0;
         }
         EGS_VoxelizedShape *shape = new EGS_VoxelizedShape(file_format, fname.c_str());
@@ -398,5 +432,4 @@ extern "C" {
         shape->setTransformation(input);
         return shape;
     }
-
 }

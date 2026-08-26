@@ -32,6 +32,7 @@
 #                   Randle Taylor
 #                   Martin Martinov
 #                   Max Orok
+#                   Reid Townson
 #                   Alexandre Demelo
 #
 ###############################################################################
@@ -43,13 +44,19 @@ include $(SPEC_DIR)egspp_$(my_machine).conf
 
 DEFS = $(DEF1) -DBUILD_DLL
 
+ESTAR = estar$(DSEP)
+ESTAR_INC = -I$(ESTAR) -I.
+
 egspp_files = egs_input egs_base_geometry egs_library egs_transformations \
              egs_rndm egs_shapes egs_geometry_tester egs_timer egs_polygon \
              egs_projectors egs_alias_table egs_object_factory egs_spectra \
              egs_base_source egs_functions egs_application egs_run_control \
              egs_scoring egs_interpolator egs_atomic_relaxations \
              egs_ausgab_object egs_particle_track egs_fortran_geometry \
-             egs_ensdf
+             egs_ensdf egs_input_struct
+
+estar_files = estar estar_dataTables estar_dataParser estar_formulaCalcs
+estar_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(estar_files)))
 
 egspp_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(egspp_files)))
 config1h = $(IEGS1)$(DSEP)egs_config1.h egs_libconfig.h egs_functions.h
@@ -60,13 +67,13 @@ geometry_libs = egs_planes egs_cd_geometry egs_gtransformed egs_nd_geometry \
                egs_space egs_elliptic_cylinders egs_smart_envelope \
                egs_vhp_geometry egs_octree egs_roundrect_cylinders \
                egs_rz egs_autoenvelope egs_lattice egs_glib egs_mesh \
-               egs_dynamic_geometry
+               egs_dynamic_geometry egs_triangle_mesh
 
 source_libs = egs_collimated_source egs_isotropic_source egs_parallel_beam \
               egs_point_source egs_source_collection egs_transformed_source \
               egs_beam_source egs_phsp_source egs_angular_spread \
               iaea_phsp_source egs_radionuclide_source egs_dynamic_source \
-              egs_fano_source
+              egs_fano_source egs_focal_spot_source
 
 shape_libs = egs_circle egs_ellipse egs_extended_shape egs_gaussian_shape \
              egs_line_shape egs_polygon_shape egs_rectangle egs_shape_collection \
@@ -86,8 +93,8 @@ all: $(EGS_BINDIR)egspp$(EXE) $(ABS_DSO)$(libpre)egspp$(libext) glibs slibs shap
 $(EGS_BINDIR)egspp$(EXE): $(dso) $(DSO1)egspp.$(obje) $(ABS_DSO)$(libpre)egspp$(libext)
 	$(CXX) $(INC1) $(DEF1) $(opt) $(EOUT)$@ $(DSO1)egspp.$(obje) $(lib_link1) $(link2_prefix)egspp$(link2_suffix)
 
-$(ABS_DSO)$(libpre)egspp$(libext): $(dso) $(egspp_objects)
-	$(CXX) $(INC1) $(DEFS) $(opt) $(shared) $(egspp_objects) $(extra)
+$(ABS_DSO)$(libpre)egspp$(libext): $(dso) $(egspp_objects) $(estar_objects)
+	$(CXX) $(INC1) $(DEFS) $(opt) $(shared) $(egspp_objects) $(estar_objects) $(extra)
 
 $(DSO1)egspp.$(obje): egspp.cpp egs_application.h egs_base_geometry.h egs_vector.h \
 	               egs_math.h egs_library.h $(config1h)
@@ -137,7 +144,10 @@ $(DSO1)egs_base_source.$(obje): egs_base_source.cpp egs_base_source.h \
     egs_vector.h $(config1h) egs_object_factory.h egs_input.h
 
 $(DSO1)egs_ensdf.$(obje): egs_ensdf.cpp egs_ensdf.h \
-    $(config1h) egs_functions.h egs_math.h egs_alias_table.h egs_atomic_relaxations.h
+    $(config1h) egs_math.h egs_alias_table.h egs_atomic_relaxations.h
+
+$(DSO1)egs_input_struct.$(obje): egs_input_struct.cpp egs_input_struct.h \
+    $(config1h)
 
 $(DSO1)egs_geometry_tester.$(obje): egs_geometry_tester.cpp \
     egs_geometry_tester.h egs_input.h egs_vector.h egs_base_geometry.h \
@@ -168,6 +178,14 @@ $(DSO1)egs_fortran_geometry.$(obje): egs_fortran_geometry.cpp egs_fortran_geomet
 
 $(egspp_objects):
 	$(obj_rule1)
+
+$(DSO1)estar.$(obje): $(ESTAR)estar.cpp $(ESTAR)estar.h $(ESTAR)estar_formulaCalcs.h $(ESTAR)estar_dataParser.h $(ESTAR)estar_dataTables.h $(config1h)
+$(DSO1)estar_dataTables.$(obje): $(ESTAR)estar_dataTables.cpp $(ESTAR)estar_dataTables.h
+$(DSO1)estar_dataParser.$(obje): $(ESTAR)estar_dataParser.cpp $(ESTAR)estar_dataParser.h $(ESTAR)estar_dataTables.h $(config1h)
+$(DSO1)estar_formulaCalcs.$(obje): $(ESTAR)estar_formulaCalcs.cpp $(ESTAR)estar_formulaCalcs.h $(ESTAR)estar_dataParser.h $(ESTAR)estar_dataTables.h $(config1h)
+
+$(estar_objects):
+	$(CXX) $(INC1) $(ESTAR_INC) $(DEFS) $(opt) -c $(COUT)$@ $(ESTAR)$(notdir $(basename $@)).cpp
 
 $(dso): dso
 	@$(CHECK_DIR) $(MKDIR)
@@ -214,10 +232,11 @@ check:
 	@echo "obj_rule2: $(obj_rule2)"
 
 clean:
-	$(REMOVE) $(egspp_objects) $(DSO1)test.exe
+	$(REMOVE) $(egspp_objects) $(estar_objects) $(DSO1)test.exe
 
 realclean:
-	$(REMOVE) $(egspp_objects) $(lib_objects) $(DSO1)egspp.$(obje) $(DSO1)test.exe
+	$(REMOVE) $(egspp_objects) $(lib_objects) $(DSO1)egspp.$(obje) \
+			  $(estar_objects) $(DSO1)test.exe
 	$(REMOVE) $(DSO1)egs_envelope_geometry.$(obje) $(DSO1)egs_stack_geometry.$(obje) $(DSO1)egs_union_geometry.$(obje) $(DSO1)egs_angular_spread_source.$(obje)
 
 .PHONY: libs $(all_libs) clean realclean

@@ -69,7 +69,7 @@ public slots:
     void saveView(EGS_BaseGeometry *geo, int nx, int ny, QString name, QString ext);
 
     void stopWorker();
-    void restartWorker();
+    void relaunchWorker();
 
     void startTransformation();
     void endTransformation();
@@ -121,6 +121,7 @@ private:
     QTimer  *navigationTimer;
     bool    navigating;
     bool rerenderRequested;
+    double m_wheel_accum = 0.0; // accumulates fractional wheel steps
 
     // regionPicking synchronized with image on screen
     EGS_GeometryVisualizer *vis;

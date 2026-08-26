@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -38,7 +38,41 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
+static bool EGS_ELLIPSE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_ELLIPSE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
+
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_ellipse"});
+
+        shapeBlockInput->addSingleInput("halfaxis", true, "The two half axis of the ellipse.");
+        shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the ellipse, (x, y). Defaults to '0 0'.");
+    }
+
+    EGS_ELLIPSE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example fo egs_ellipse
+    #:start shape:
+        library = egs_ellipse
+        halfway = the two half axis of the ellipse
+        midpoint = Ox, Oy (optional)
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_ELLIPSE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+       if(!inputSet) {
+           setInputs();
+       }
+       return shapeBlockInput;
+    }
 
     EGS_ELLIPSE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {

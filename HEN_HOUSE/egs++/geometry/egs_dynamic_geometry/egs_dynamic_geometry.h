@@ -78,7 +78,7 @@ A dynamic geometry is defined using
 :start geometry:
     name        = ...
     library     = egs_dynamic_geometry
-    my geometry = name of a predefined geometry that we want to add motion to :start motion: # units of cm and degrees
+    base geometry = name of a predefined geometry that we want to add motion to :start motion: # units of cm and degrees
         control point = timeIndex(1) xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
         control point = timeIndex(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
         .
@@ -364,12 +364,19 @@ public:
     void setBScaling(EGS_Input *);
 
     /*!
+     * \brief Pass along getGlobalRegionOffset calls to the original geometry
+     *
+     * \param geomName The name of the geometry being queried.
+     */
+    int getGlobalRegionOffset(const string geomName);
+
+    /*!
      * \brief Retrieves regions labeled with a given string.
      *
      * \param str Label to search for.
      * \param regs Output: List of region indices with the specified label.
      */
-    void getLabelRegions(const string &str, vector<int> &regs);
+    void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
     /*!
      * \brief Updates the next particle state for geometries. It is tasked with determining the next state of the dynamic geometry.
@@ -391,6 +398,10 @@ public:
      * \param hasdynamic Output: True if the simulation contains a dynamic geometry, false otherwise.
      */
     void containsDynamic(bool &hasdynamic);
+
+    bool hasRhoScaling() override;
+
+    void finishInitialization() override;
 
 protected:
     EGS_BaseGeometry *g;   //!< The geometry undergoing dynamic motion

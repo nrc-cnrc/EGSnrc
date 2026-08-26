@@ -47,6 +47,8 @@
 
 using namespace std;
 
+static bool EGS_LATTICE_LOCAL inputSet = false;
+
 void EGS_Lattice::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_Lattice::setMedia: don't use this method. Use the\n"
                " setMedia() methods of the geometry objects that make up this geometry\n");
@@ -163,6 +165,45 @@ void EGS_Hexagonal_Lattice::printInfo() const {
     egsInformation("=======================================================\n");
 }
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_lattice"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry, into which the lattice will be enveloped.");
+        geomBlockInput->addSingleInput("subgeometry", true, "The name of a geometry to place at each lattice position.");
+        geomBlockInput->addSingleInput("subgeometry index", true, "The region or list of regions that contain the lattice.");
+        geomBlockInput->addSingleInput("spacing", true, "The spacing as defined for Bravais (x, y, z), Cubic (x), or Hexagonal modes (s, close-packed distance). ");
+        geomBlockInput->addSingleInput("type", false, "The type of lattice. Currently just used for hexagonal lattices.", {"hexagonal"});
+    }
+
+    EGS_LATTICE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example Bravais lattice with spacings 1, 2 and 3
+    #:start geometry:
+        library           = egs_lattice
+        name              = phantom_w_microcavity
+        base geometry     = phantom
+        subgeometry       = microcavity
+        subgeometry index = 0
+        spacing           = 1 2 3
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_LATTICE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_LATTICE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         int err = 0;
@@ -295,25 +336,25 @@ extern "C" {
         return result;
     }
 
-    void EGS_Lattice::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_Lattice::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
         // labels defined in base geometry (matching indices)
-        base->getLabelRegions(str, regs);
+        base->getLabelRegions(str, regs, sanitize);
         int index = regs.size();
 
         // labels defined in sub geometries (shifting by base nreg)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
         for (; index<regs.size(); index++) {
             regs[index] += base->regions();
         }
     }
 
-    void EGS_Hexagonal_Lattice::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_Hexagonal_Lattice::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
         // labels defined in base geometry (matching indices)
-        base->getLabelRegions(str, regs);
+        base->getLabelRegions(str, regs, sanitize);
         int index = regs.size();
 
         // labels defined in sub geometries (shifting by base nreg)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
         for (; index<regs.size(); index++) {
             regs[index] += base->regions();
         }

@@ -38,6 +38,8 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
+static bool EGS_DYNAMIC_GEOMETRY_LOCAL inputSet = false;
+
 // ----------------------------------------------------------------------------
 // Implementation of EGS_DynamicGeometry methods
 
@@ -72,6 +74,48 @@ void EGS_DynamicGeometry::setBScaling(EGS_Input *) {
 // External C function to create EGS_DynamicGeometry
 extern "C" {
 
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_dynamic_geometry"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry");
+        shared_ptr<EGS_BlockInput> motionBlock = geomBlockInput->addBlockInput("motion", true);
+        motionBlock->addSingleInput("control point", true, "Parameters to define motion: timeIndex xtrans ytrans ztrans xrot yrot zrot");
+    }
+
+    EGS_DYNAMIC_GEOMETRY_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_dynamic_geometry
+    #:start geometry:
+        name = my_dynamic
+        library = egs_dynamic_geometry
+        base geometry = geom
+        # geometry geom must be defined before this one
+        # units of cm and degrees
+        :start motion:
+            control point = 0.0 xtrans(1) ytrans(1) ztrans(1) xrot(1) yrot(1) zrot(1)
+            control point = timeIndex(2) xtrans(2) ytrans(2) ztrans(2) xrot(2) yrot(2) zrot(2)
+            ... etc...
+            control point = 1.0 xtrans(N) ytrans(N) ztrans(N) xrot(N) yrot(N) zrot(N)
+        :stop motion:
+    #:stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_DYNAMIC_GEOMETRY_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
+
     EGS_DYNAMIC_GEOMETRY_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         EGS_BaseGeometry *g = 0;
         EGS_Input *ij = input->takeInputItem("geometry", false);
@@ -85,10 +129,13 @@ extern "C" {
         }
         if (!g) {
             string gname;
-            int err = input->getInput("my geometry", gname);
+            int err = input->getInput("base geometry", gname);
             if (err) {
-                egsWarning("createGeometry(EGS_DynamicGeometry): my geometry must be defined\n either inline or using 'my geometry = some_name'\n");
-                return 0;
+                err = input->getInput("my geometry", gname);
+                if (err) {
+                    egsWarning("createGeometry(EGS_DynamicGeometry):base geometry must be defined\n either inline or using 'base geometry = some_name'\n");
+                    return 0;
+                }
             }
             g = EGS_BaseGeometry::getGeometry(gname);
             if (!g) {
@@ -106,6 +153,7 @@ extern "C" {
             result->setName(input);
             result->setBoundaryTolerance(input);
             result->setLabels(input);
+            delete dyninp;
             return result;
         }
         else {
@@ -114,12 +162,16 @@ extern "C" {
         }
     }
 
-    void EGS_DynamicGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    int EGS_DynamicGeometry::getGlobalRegionOffset(const string geomName) {
+        return g->getGlobalRegionOffset(geomName);
+    }
+
+    void EGS_DynamicGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
         // label defined in the geometry being transformed
-        g->getLabelRegions(str, regs);
+        g->getLabelRegions(str, regs, sanitize);
 
         // label defined in self (transformation input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
     }
 
     void EGS_DynamicGeometry::buildDynamicGeometry(EGS_BaseGeometry *g, EGS_Input *dyninp) {
@@ -419,6 +471,7 @@ extern "C" {
         // `EGS_AffineTransform` is used
         EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
         setTransformation(*tDG);
+        delete tDG;
 
         // Call `getNextGeom` on base geometry in case there are lower-level
         // dynamic geometries
@@ -437,6 +490,7 @@ extern "C" {
         // Create and set the geometry transform with the updated coordinates
         EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
         setTransformation(*tDG);
+        delete tDG;
 
         // Call `updatePosition` on the base to allow lower-level geometries to
         // update as needed
@@ -449,5 +503,17 @@ extern "C" {
         // boolean flag is set to true
         hasdynamic = true;
     }
+
+    bool EGS_DynamicGeometry::hasRhoScaling() {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        return g->hasRhoScaling();
+    };
+
+    void EGS_DynamicGeometry::finishInitialization() {
+        g->finishInitialization();
+    };
 
 }

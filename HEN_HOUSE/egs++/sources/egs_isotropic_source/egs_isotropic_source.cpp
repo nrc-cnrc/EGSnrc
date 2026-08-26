@@ -43,6 +43,9 @@
 #include "egs_input.h"
 #include "egs_math.h"
 
+static string EGS_ISOTROPIC_SOURCE_LOCAL typeStr("egs_isotropic_source");
+static bool EGS_ISOTROPIC_SOURCE_LOCAL inputSet = false;
+
 EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSimpleSource(input,f), shape(0), geom(0),
     regions(0), min_theta(0), max_theta(M_PI), min_phi(0), max_phi(2*M_PI),
@@ -113,25 +116,33 @@ EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
             }
         }
     }
-    EGS_Float tmp_theta;
-    err = input->getInput("min theta", tmp_theta);
+    EGS_Float tmp_angle;
+    err = input->getInput("min theta", tmp_angle);
     if (!err) {
-        min_theta = tmp_theta/180.0*M_PI;
+        min_theta = tmp_angle/180.0*M_PI;
     }
 
-    err = input->getInput("max theta", tmp_theta);
+    err = input->getInput("max theta", tmp_angle);
     if (!err) {
-        max_theta = tmp_theta/180.0*M_PI;
+        max_theta = tmp_angle/180.0*M_PI;
     }
 
-    err = input->getInput("min phi", tmp_theta);
-    if (!err) {
-        min_phi = tmp_theta/180.0*M_PI;
+    if (min_theta > max_theta) {
+        egsFatal("EGS_IsotropicSource: max theta must be greater than min theta (theta ranges from 0 to 180 degrees).\n");
     }
 
-    err = input->getInput("max phi", tmp_theta);
+    err = input->getInput("min phi", tmp_angle);
     if (!err) {
-        max_phi = tmp_theta/180.0*M_PI;
+        min_phi = tmp_angle/180.0*M_PI;
+    }
+
+    err = input->getInput("max phi", tmp_angle);
+    if (!err) {
+        max_phi = tmp_angle/180.0*M_PI;
+    }
+
+    if (min_phi > max_phi) {
+        egsFatal("EGS_IsotropicSource: max phi must be greater than min phi. To collimate across the 0/360 degree boundary (e.g. from 300 degrees to 60 degrees), set max phi greater than 360 (e.g. min phi = 300, max phi = 420).\n");
     }
 
     buf_1 = cos(min_theta);
@@ -188,6 +199,67 @@ void EGS_IsotropicSource::setUp() {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs();
+
+        srcBlockInput->getSingleInput("library")->setValues(vector<string>(1, typeStr));
+
+        auto shapePtr = srcBlockInput->addBlockInput("shape");
+        /* Commented out because I don't think this input is used
+        Also at this point dependency of a block on an input hasn't been implemented
+        auto shapeNamePtr = srcBlockInput->addSingleInput("shape name", false, "...");
+        shapeNamePtr->addDependency(shapePtr, true);
+        shapePtr->addDependency(shapeNamePtr, true);*/
+
+        setShapeInputs(shapePtr);
+
+        auto geomPtr = srcBlockInput->addSingleInput("geometry", false, "The name of a geometry, used for complex source shapes. Only particles generated inside the geometry or some of its regions are used.");
+        auto regPtr = srcBlockInput->addSingleInput("region selection", false, "Include or exclude regions from the named geometry, to define a volume for source particle generation.", {"IncludeAll", "ExcludeAll","IncludeSelected","ExcludeSelected"});
+        regPtr->addDependency(geomPtr);
+        auto selPtr = srcBlockInput->addSingleInput("selected regions", false, "If region selection = IncludeSelected or ExcludeSelected, then this is a list of the regions in the named geometry to include or exclude.");
+        selPtr->addDependency(regPtr, "IncludeSelected");
+        selPtr->addDependency(regPtr, "ExcludeSelected");
+        srcBlockInput->addSingleInput("min theta", false, "The minimum theta angle in degrees, to restrict the directions of source particles. Defaults to 0.");
+        srcBlockInput->addSingleInput("max theta", false, "The maximum theta angle in degrees, to restrict the directions of source particles. Defaults to 180.");
+        srcBlockInput->addSingleInput("min phi", false, "The minimum phi angle in degrees, to restrict the directions of source particles. Defaults to 0.");
+        srcBlockInput->addSingleInput("max phi", false, "The maximum phi angle in degrees, to restrict the directions of source particles. Defaults to 360.");
+    }
+
+    EGS_ISOTROPIC_SOURCE_EXPORT string getExample() {
+        string example {
+            R"(
+    :start source:
+        name                = my_source
+        library             = egs_isotropic_source
+        charge              = 0
+        geometry            = my_envelope
+        region selection    = IncludeSelected
+        selected regions    = 1 2
+        :start shape:
+            type     = box
+            box size    = 1 2 3
+            :start media input:
+                media = H2O521ICRU
+            :stop media input:
+        :stop shape:
+        :start spectrum:
+            type = monoenergetic
+            energy = 1
+        :stop spectrum:
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_ISOTROPIC_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_ISOTROPIC_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {

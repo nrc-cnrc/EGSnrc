@@ -358,26 +358,29 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             egsInformation("EGS_Ensdf::parseEnsdf: %s\n", line.c_str());
         }
 
-        if (line[6]==' ' && line[7]==' ' && line[8]==' ') {
+        if (line.size() > 8 && line[6]==' ' && line[7]==' ' && line[8]==' ') {
             // Identification
 
         }
-        else if (line[6]==' ' && line[7]=='H' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='H' && line[8]==' ') {
             // History
 
         }
-        else if (line[6]== ' ' && line[7]=='Q' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]== ' ' && line[7]=='Q' && line[8]==' ') {
             // Q-value
 
         }
-        else if (line[6]==' ' && line[7]=='X') {
+        else if (line.size() > 7 && line[6]==' ' && line[7]=='X') {
             // Cross-Reference
 
         }
-        else if ((line[6]=='C' || line[6]=='D' || line[6]=='T' ||
+        else if (line.size() > 4 && line[3]=='N' && line[4]=='N') {
+            // Neutron nuclei we skip
+        }
+        else if (line.size() > 6 && (line[6]=='C' || line[6]=='D' || line[6]=='T' ||
                   line[6]=='c' || line[6]=='d' || line[6]=='t')) {
 
-            if (line[7]=='G') {
+            if (line.size() > 7 && line[7]=='G') {
                 // If this is related to a gamma record, keep it
                 recordStack[12].push_back(line);
             }
@@ -387,7 +390,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             }
 
         }
-        else if (line[6]==' ' && line[7]=='P') {
+        else if (line.size() > 7 && line[6]==' ' && line[7]=='P') {
             //Parent
             if (line[5]==' ') {
                 buildRecords();
@@ -395,7 +398,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[5].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='N') {
+        else if (line.size() > 7 && line[6]==' ' && line[7]=='N') {
             // Normalization
             if (line[5]==' ') {
                 buildRecords();
@@ -403,7 +406,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[6].push_back(line);
 
         }
-        if (line[6]==' ' && line[7]=='L' && line[8]== ' ') {
+        if (line.size() > 8 && line[6]==' ' && line[7]=='L' && line[8]== ' ') {
             // Level
             if (line[5]==' ') {
                 buildRecords();
@@ -411,7 +414,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[7].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='B' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='B' && line[8]==' ') {
             // Beta-
             if (line[5]==' ') {
                 buildRecords();
@@ -419,7 +422,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[8].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='E' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='E' && line[8]==' ') {
             // Beta+ and Electron Capture
             if (line[5]==' ') {
                 buildRecords();
@@ -427,7 +430,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[9].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='A' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='A' && line[8]==' ') {
             // Alpha
             if (line[5]==' ') {
                 buildRecords();
@@ -435,7 +438,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[10].push_back(line);
 
         }
-        else if (line[6]==' ' && (line[7]=='D' || line[7]==' ') &&
+        else if (line.size() > 8 && line[6]==' ' && (line[7]=='D' || line[7]==' ') &&
                  (line[8]=='N' || line[8]=='P' || line[8]=='A')) {
             // Delayed Particle
             if (line[5]==' ') {
@@ -444,7 +447,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             recordStack[11].push_back(line);
 
         }
-        else if (line[6]==' ' && line[7]=='G' && line[8]==' ') {
+        else if (line.size() > 8 && line[6]==' ' && line[7]=='G' && line[8]==' ') {
             // Gamma
             if (line[5]==' ') {
                 buildRecords();
@@ -560,6 +563,65 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
         myBetaRecords.push_back(*it);
     }
+
+    // Check for isomeric transitions with low probability
+    // This was specifically implemented to handle Th-234 in the LNHB library. I haven't found any other radionuclide with a ENSDF file formatted like this.
+    for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
+            it!=myLevelRecords.end(); it++) {
+
+        if (it != myLevelRecords.begin()) {
+            auto itprev = std::prev(it);
+
+            if ((*it)->getEnergy() > 0 && (*it)->getEnergy() == (*itprev)->getEnergy()) {
+                // Levels have equal energy
+                // Check if this is an isomer (T1/2 > 0.1s as defined by ensdf format)
+                // If the spin is larger this isomeric transition is probably unlikely
+                // We don't have a way to extract the probability, so we'll just neglect the lower probability level
+                if ((*itprev)->getHalfLife() > isomerCutoff && (*itprev)->getSpin() < (*it)->getSpin()) {
+
+                    egsWarning("\nEGS_Ensdf::parseEnsdf: Warning: Levels with identical energy, long half-life and different spin have been detected. Assuming a low probability isomeric transition - the lower probability level will be removed. Removing level with energy = %f, spin = %d. Decays toward and transitions away from this level will also be removed. Double check the decay scheme and report any issues!\n\n", (*it)->getEnergy(), (*it)->getSpin());
+
+                    // Go through all the records to remove any that originate from this level that we're removing
+                    for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin(); gamma != myGammaRecords.end(); gamma++) {
+                        if ((*gamma)->getLevelRecord() == (*it)) {
+                            gamma = myGammaRecords.erase(gamma);
+                            gamma--;
+                        }
+                    }
+                    for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin(); beta != myBetaRecords.end(); beta++) {
+                        if ((*beta)->getLevelRecord() == (*it)) {
+                            beta = myBetaRecords.erase(beta);
+                            beta--;
+                        }
+                    }
+                    for (vector<BetaMinusRecord *>::iterator beta = myBetaMinusRecords.begin(); beta != myBetaMinusRecords.end(); beta++) {
+                        if ((*beta)->getLevelRecord() == (*it)) {
+                            beta = myBetaMinusRecords.erase(beta);
+                            beta--;
+                        }
+                    }
+                    for (vector<BetaPlusRecord *>::iterator beta = myBetaPlusRecords.begin(); beta != myBetaPlusRecords.end(); beta++) {
+                        if ((*beta)->getLevelRecord() == (*it)) {
+                            beta = myBetaPlusRecords.erase(beta);
+                            beta--;
+                        }
+                    }
+                    for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin(); alpha != myAlphaRecords.end(); alpha++) {
+                        if ((*alpha)->getLevelRecord() == (*it)) {
+                            alpha = myAlphaRecords.erase(alpha);
+                            alpha--;
+                        }
+                    }
+
+
+                    // Remove the level
+                    it = myLevelRecords.erase(it);
+                    it--;
+                }
+            }
+        }
+    }
+
 
     // Print out a summary of the decays
     egsInformation("\nEGS_Ensdf::parseEnsdf: Summary of %s emissions:\n", radionuclide.c_str());
@@ -1702,7 +1764,7 @@ vector<string> Record::getRecords() const {
 // converted to a double
 double Record::recordToDouble(int startPos, int endPos) {
     if (!lines.empty()) {
-        if (lines.front().length() < startPos) {
+        if (lines.front().length() < endPos) {
             egsWarning("Record::recordToDouble: Warning: Record too short to "
                        "contain desired quantity\n");
             return 0;
@@ -1721,7 +1783,7 @@ double Record::recordToDouble(int startPos, int endPos) {
 // lines array
 string Record::recordToString(int startPos, int endPos) {
     if (!lines.empty()) {
-        if (lines.front().length() < startPos) {
+        if (lines.front().length() < endPos) {
             egsWarning("Record::recordToString: Warning: Record too short to "
                        "contain desired quantity\n");
             return "";
@@ -1869,7 +1931,7 @@ double Record::parseHalfLife(int startPos, int endPos) {
         egsWarning("Record::parseHalfLife: Error: Record is empty\n");
         return -5;
     }
-    if (lines.front().length() < startPos) {
+    if (lines.front().length() < endPos) {
         egsWarning("Record::parseHalfLife: Warning: Record too short to "
                    "contain desired quantity\n");
         return -5;
@@ -1968,6 +2030,79 @@ double Record::parseHalfLife(int startPos, int endPos) {
 
     return hl;
 }
+
+// Parse the spin out of the spin parity text
+unsigned short Record::parseSpin(int startPos, int endPos) {
+    if (lines.empty()) {
+        egsWarning("Record::parseSpin: Error: Record is empty\n");
+        return -5;
+    }
+    if (lines.front().length() < endPos) {
+        egsWarning("Record::parseSpin: Warning: Record too short to "
+                   "contain desired quantity\n");
+        return -5;
+    }
+
+    string spinParityStr = egsTrimString(lines.front().substr(startPos-1,
+                                         endPos-startPos+1));
+
+    size_t digitIndex;
+    bool foundDigit = false;
+    for (auto i = 0; i < spinParityStr.length(); i++) {
+        if (isdigit(spinParityStr[i])) {
+            digitIndex = i;
+            foundDigit = true;
+            break;
+        }
+    }
+
+    if (!foundDigit) {
+        egsWarning("Record::parseSpin: Warning: Spin didn't contain a number\n");
+        return -5;
+    }
+
+    unsigned short spin = spinParityStr[digitIndex] - '0';
+
+    return spin;
+}
+
+// Parse the parity out of the spin parity text
+// 0 (false) is negative, 1 (true) is positive
+bool Record::parseParity(int startPos, int endPos) {
+    if (lines.empty()) {
+        egsWarning("Record::parseParity: Error: Record is empty\n");
+        return -5;
+    }
+    if (lines.front().length() < startPos) {
+        egsWarning("Record::parseParity: Warning: Record too short to "
+                   "contain desired quantity\n");
+        return -5;
+    }
+
+    string spinParityStr = egsTrimString(lines.front().substr(startPos-1,
+                                         endPos-startPos+1));
+
+    size_t signIndex;
+    bool foundSign = false;
+    for (auto i = 0; i < spinParityStr.length(); i++) {
+        if (spinParityStr[i] == '-' || spinParityStr[i] == '+') {
+            signIndex = i;
+            foundSign = true;
+            break;
+        }
+    }
+
+    bool parity;
+    if (foundSign == false || spinParityStr[signIndex] == '+') {
+        parity = true;
+    }
+    else {
+        parity = false;
+    }
+
+    return parity;
+}
+
 
 // Comment Record
 CommentRecord::CommentRecord(vector<string> ensdf):Record(ensdf) {
@@ -2138,6 +2273,8 @@ LevelRecord::LevelRecord(vector<string> ensdf):
 void LevelRecord::processEnsdf() {
     energy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     halfLife = parseHalfLife(40, 49);
+    spin = parseSpin(22, 39);
+    parity = parseParity(22, 39);
 }
 
 void LevelRecord::setLevelCanDecay(bool canDecayTmp) {
@@ -2167,6 +2304,15 @@ double LevelRecord::getEnergy() const {
 double LevelRecord::getHalfLife() const {
     return halfLife;
 }
+
+unsigned short LevelRecord::getSpin() const {
+    return spin;
+}
+
+bool LevelRecord::getParity() const {
+    return parity;
+}
+
 
 LevelRecord *LevelRecordLeaf::getLevelRecord() const {
     return getBranch();

@@ -29,6 +29,7 @@
 #                   Randle Taylor
 #                   Marc Chamberland
 #                   Martin Martinov
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -47,6 +48,8 @@
 using std::vector;
 
 string EGS_cSpheres::type = "EGS_cSpheres";
+
+static bool EGS_SPHERES_LOCAL inputSet = false;
 
 // generate the concentric spheres
 EGS_cSpheres::EGS_cSpheres(int ns, const EGS_Float *radius,
@@ -314,7 +317,6 @@ EGS_Float EGS_cSpheres::hownear(int ireg, const EGS_Vector &x) {
     else {
         d=r-R[nreg-1];
     }
-
     return d;
 }
 
@@ -680,6 +682,45 @@ void EGS_cSphericalShell::printInfo() const {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs();
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_spheres"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("radii", true, "A list of sphere radii, in increasing order.");
+        geomBlockInput->addSingleInput("midpoint", false, "The position of the middle of the spheres (x, y, z)");
+    }
+
+    EGS_SPHERES_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_spheres
+    #:start geometry:
+        name = my_spheres
+        library = egs_spheres
+        midpoint = 0 0 0
+        radii = 1 2 3
+        :start media input:
+            media = air water air
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry input:
+)"};
+        return example;
+    }
+
+    EGS_SPHERES_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_SPHERES_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {

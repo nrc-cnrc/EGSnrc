@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hannah Gallop
 #
 ###############################################################################
 */
@@ -37,6 +37,9 @@
 #include "egs_rectangle.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_RECTANGLE_LOCAL inputSet = false;
+static shared_ptr<EGS_BlockInput> EGS_RECTANGLE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
 EGS_RectangularRing::EGS_RectangularRing(EGS_Float xmin, EGS_Float xmax,
         EGS_Float ymin, EGS_Float ymax, EGS_Float xmin_i, EGS_Float xmax_i,
@@ -96,6 +99,37 @@ EGS_RectangularRing::~EGS_RectangularRing() {
 
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setShapeInputs(shapeBlockInput);
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_rectangle"});
+
+        shapeBlockInput->addSingleInput("rectangle", true, "Two 2D coordinates to define a rectangle: x1 y1 x2 y2. By default these are in the x-y plane at z=0; use a transformation to adjust.");
+        shapeBlockInput->addSingleInput("inner rectangle", false, "Two 2D coordinates to define an inner rectangle, and create a 'rectangular ring': xp1 yp1 xp2 yp2");
+    }
+
+    EGS_RECTANGLE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_rectangle
+    #:start shape:
+        library = egs_rectangle
+        rectangle = x1 y1 x2 y2
+        inner rectangle = xp1 yp1 xp2 yp2 (optional)
+    :stop shape:
+)"};
+        return example;
+    }
+
+    EGS_RECTANGLE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return shapeBlockInput;
+    }
 
     EGS_RECTANGLE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
             EGS_ObjectFactory *f) {

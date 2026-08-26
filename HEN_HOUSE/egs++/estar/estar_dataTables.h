@@ -1,8 +1,8 @@
 /*
 ###############################################################################
 #
-#  EGSnrc mevegs application array sizes headers
-#  Copyright (C) 2022 National Research Council Canada
+#  EGSnrc estar
+#  Copyright (C) 2026 National Research Council Canada
 #
 #  This file is part of EGSnrc.
 #
@@ -21,15 +21,31 @@
 #
 ###############################################################################
 #
-#  Author:          Iwan Kawrakow, 2005
+#  Author:          Sehmimul Hoque, 2022
 #
-#  Contributors:    Max Orok
+#  Contributors:    Martin J. Berger
+#                   Johnathan S. Coursey
+#                   Reid Townson
+#                   Ernesto Mainegra-Hing
+#
+#  Based on the original ESTAR code by Martin J. Berger,
+#  National Institute of Standards and Technology (NIST). Including
+#  modifications by Johnathan S. Coursey.
 #
 ###############################################################################
 */
 
-#ifndef ARRAY_SIZES_
-#define ARRAY_SIZES_
-#define MXMED 200
-#define MXSTACK 50
-#endif
+#pragma once
+
+#include <string>
+#include <map>
+
+extern const double energy_grid[113];
+extern const double atb[100];
+extern const double poth[100];
+extern const double potgas[9];
+extern const double potcon[9];
+extern const std::map<std::string, int> atomic_number;
+
+extern const double elementData[14532];
+

@@ -23,7 +23,7 @@
 #
 #  Author:          Reid Townson, 2020
 #
-#  Contributors:
+#  Contributors:    Patrick Saull
 #
 ###############################################################################
 */
@@ -140,15 +140,42 @@ public:
 
         // Get a point on the circle target surface
         EGS_Vector x = getPoint(rndm);
-        u = x - xo;
+
+        // Vector from source to origin (where target circle lies in x-y plane)
+        u=-1*xo;
+
+        // Unit vector
         EGS_Float d2i = 1/u.length2(), di = sqrt(d2i);
         u *= di;
 
-        // Calculate the angle between the normal to the circle surface and the u vector between points
-        EGS_Vector perpToCircle = EGS_Vector(0, 0, 1);
-        EGS_Float angleBetween = std::acos(u * perpToCircle / (perpToCircle.length() * u.length()));
+        // Assume  wt = A*fabs(u.z)*d2i is the correct expression
+        // (see egs_shapes.h), where u is the unit-vector from source to point
+        // x in target disk lying in x-y plane at origin, and d2i is the inverse
+        // squared distance between source and target point. Rotating the target
+        // disk to point towards the pt source is equivalent to leaving it
+        // unrotated in x-y plane and instead placing the point source along
+        // the +z axis at distance |xo|. A sampled point x in the disk then
+        // yields unormalized U = ( (x.X(), x.Y(), 0) - (0, 0, |xo|) )
+        // which we divide by U.length() to get unit-vector u. This means that
+        // fabs(u.z) is just fabs(U.z)/U.length() =  |xo|/U.length() .
+        // |xo| has just been calculated above - it is 1/di, which we save here:
 
-        // We will rotate about a vector perpendicular to u and the target surface normal
+        EGS_Float mag_xo=1/di;
+
+        // U.length() is the same as u.length() calculated further down after
+        // rotating point x, so let's not recalculate it here.
+        // Finally, d2i is just 1/u.length2(). So we have:
+        //  wt = A*fabs(u.z)*d2i  = A*mag_xo/U.length()**3
+
+        // Calculate the angle between the normal to the circle surface
+        // and the u vector
+        EGS_Vector perpToCircle = EGS_Vector(0, 0, 1);
+        // This will do, since both u and perpToCircle are unit vectors:
+        // (could even just use u.z())
+        EGS_Float angleBetween = std::acos(u * perpToCircle);
+
+        // We will rotate about a vector perpendicular to u and the target
+        // surface normal
         EGS_Vector rotateAbout;
         if (fabs(fabs(u.z) - perpToCircle.z) < epsilon) {
             rotateAbout = perpToCircle;
@@ -167,9 +194,12 @@ public:
         }
         delete transform;
 
-        d2i = 1/u.length2(), di = sqrt(d2i);
+
+        d2i = 1/u.length2();
+        di = sqrt(d2i);
         u *= di;
-        wt = A*u.length()*d2i;
+        wt = A*mag_xo*di*d2i; // See explanation above.
+
         if (T) {
             T->rotate(u);
         }

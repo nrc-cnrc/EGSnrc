@@ -35,13 +35,16 @@
 #ifndef GEOMETRYVIEWCONTROL_H
 #define GEOMETRYVIEWCONTROL_H
 
-#include "ui_viewcontrol.h"
-
 #include <vector>
 #include "egs_user_color.h"
 #include "egs_vector.h"
+#include "egs_highlighter.h"
+#include "egs_editor.h"
+#include "egs_advanced_application.h"
 
 #include <QMainWindow>
+
+#include "ui_viewcontrol.h"
 
 class EGS_BaseGeometry;
 class EGS_GeometryVisualizer;
@@ -51,15 +54,16 @@ class QImage;
 class SaveImage;
 class ClippingPlanesWidget;
 
-
-class GeometryViewControl : public QMainWindow, public Ui::GeometryViewControl {
+class GeometryViewControl : public QMainWindow, private Ui::GeometryViewControl {
     Q_OBJECT
 
 public:
 
-    GeometryViewControl(QWidget *parent = 0, const char *name = 0);
+    explicit GeometryViewControl(QWidget *parent = nullptr, const char *name = nullptr);
+
     virtual ~GeometryViewControl();
 
+    virtual void updateMainWindowTitle(const QString &title);
     virtual void setFilename(QString str);
     virtual void setTracksFilename(QString str);
     virtual void setTracksExtension(QString str);
@@ -89,6 +93,7 @@ public slots:
     virtual void loadDose();
     virtual void loadConfig();
     virtual void saveConfig();
+    virtual void saveEgsinp();
     virtual void updateSimulationGeometry(int ind);
     virtual void checkboxAxes(bool toggle);
     virtual void checkboxAxesLabels(bool toggle);
@@ -110,6 +115,7 @@ public slots:
     virtual void phiRotation(int Phi);
     virtual void changeAmbientLight(int alight);
     virtual void changeTransparency(int t);
+    virtual void changeGlobalTransparency(int t);
     virtual void moveLightChanged(int toggle);
     virtual void setLightPosition();
     virtual void setLookAt();
@@ -154,6 +160,12 @@ public slots:
     virtual void updateNumTimeSteps();
     virtual void particleSlider(EGS_Float slidertime);
     virtual void updateTracks(vector<size_t> ntracks, vector<EGS_Float> timeindexlist_p, vector<EGS_Float> timeindexlist_e, vector<EGS_Float> timeindexlist_po);
+    virtual void insertInputExample();
+    virtual void setApplication();
+
+private slots:
+    void loadRegions();
+    void ensureEditorLoaded();
 
 private:
 
@@ -211,15 +223,26 @@ private:
     bool showElectronTracks;
     bool showPositronTracks;
     bool hasDynamic; //boolean to track whether or not to make time objects visible or hidden
-    char head_inctime[20] = "include time index="; // must match the same in egs_particle_track.h
+    char head_inctime[20] = {'i','n','c','l','u','d','e',' ','t','i','m','e',' ','i','n','d','e','x','='}; // must match the same in egs_particle_track.h
     bool hasTrackTimeIndex;
     bool isPlaying;
     vector<bool> show_regions;
     bool    allowRegionSelection,
-            energyScaling;
+            energyScaling,
+            editorLoaded;
     vector<vector<EGS_Float>> scoreArrays;
     vector<string> geometryNames;
+    vector<string> inputExamples;
     EGS_BaseGeometry *origSimGeom;
+    EGS_Editor *egsinpEdit;
+    EGS_Highlighter *highlighter;
+    EGS_AdvancedApplication *egsApp;
+    shared_ptr<EGS_InputStruct> inputStruct;
+    QMenu *exampleMenu;
+    string selectedApplication;
+    string lib_dir;
+    QMenu *appMenu;
+    QString fileBasename;
 
 protected slots:
 

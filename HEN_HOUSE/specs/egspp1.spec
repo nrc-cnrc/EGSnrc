@@ -122,7 +122,6 @@ dep_advanced_application = $(ABS_EGSPP)egs_advanced_application.cpp \
         $(ABS_EGSPP)egs_object_factory.h $(ABS_EGSPP)egs_timer.h \
         $(ABS_EGSPP)egs_application.h $(ABS_EGSPP)egs_run_control.h
 
-
 dep_user_code = $(USER_CODE).cpp array_sizes.h $(common_h_files1) \
         $(ABS_EGSPP)$(EGS_BASE_APPLICATION).h \
         $(common_h_files2) $(other_dep_user_code)

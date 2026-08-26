@@ -1,3 +1,4 @@
+
 /*
 ###############################################################################
 #
@@ -23,7 +24,7 @@
 #
 #  Author:        Ernesto Mainegra-Hing, 2016
 #
-#  Contributors:
+#  Contributors:  Reid Townson
 #
 ###############################################################################
 #
@@ -85,6 +86,8 @@
 #include "egs_transformations.h"
 // Interpolators
 #include "egs_interpolator.h"
+// Get examples for autocomplete
+#include <egs_input_struct.h>
 
 #include <fstream>
 #include <iostream>
@@ -112,7 +115,7 @@ public:
     EGS_KermaApplication(int argc, char **argv) :
         EGS_AdvancedApplication(argc,argv), ngeom(0),
         kerma(0), kerma_r(0), scg(0), fd_geom(0),
-        ncg(0), flug(0),flugT(0) {
+        ncg(0), flug(0),flugT(0), score_int_flu(false) {
         Eph_ave = 0.0;
         Nph = 0.0;
         Eph_sc  = 0.0;
@@ -134,6 +137,7 @@ public:
                     delete kerma;
                 }
             }
+
             if (flug) {
                 for (int j=0; j<ngeom; j++) if (flug[j]) {
                         delete flug[j];
@@ -141,10 +145,12 @@ public:
                 if (flug) {
                     delete [] flug;
                 }
-                if (flugT) {
-                    delete [] flugT;
-                }
             }
+
+            if (flugT) {
+                delete [] flugT;
+            }
+
             delete [] geoms;
             delete [] fd_geoms;
             delete [] mass;
@@ -254,7 +260,13 @@ public:
         last_case = current_case;
         EGS_Vector x,u;
 
+        setTimeIndex(-1);
+
         current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
+
+        // For dynamic geometries, update positions according to the current
+        // time index, which may have been set by getNextParticle
+        geometry->getNextGeom(rndm);
 
         if (p.q == 0) {
             Eph_ave += p.wt*p.E;
@@ -419,7 +431,7 @@ public:
                     edepCV     = emuen_rho*rho_cv[ig];// Data base contains E_muen/rho values
                     exp_CV     = exp(-mu_cv*t_sc[i]);
                     exp_Att    = sigma ? exp_Lambda*(1-exp_CV)/mu_cv : 1.0 ;//Attenuation in scoring region
-                    edepCV    *= exp_Att;
+                    edepCV     *= exp_Att;// per density, needs division by volume only
                     //--------------------------------------------
                     // score kerma in scoring region
                     //--------------------------------------------
@@ -430,7 +442,9 @@ public:
                     // score photon fluence
                     //--------------------------------------------
                     if (flug) {
-                        flugT[ig]->score(ir_sc[i],wt*exp_Att);
+                        if (flugT) {
+                            flugT[ig]->score(ir_sc[i],wt*exp_Att);
+                        }
                         EGS_Float e = the_stack->E[np];
                         if (flu_s) {
                             e = log(e);
@@ -513,12 +527,15 @@ public:
                 if (!flug[j]->storeState(*data_out)) {
                     return 108+2*(ngeom+j);
                 }
+            }
+        }
+        if (flugT) {
+            for (int j=0; j<ngeom; j++) {
                 if (!flugT[j]->storeState(*data_out)) {
                     return 109+4*(ngeom+j);
                 }
             }
         }
-
         (*data_out) << Eph_ave << " " << Nph << " "
                     << Eel_ave << " " << Nel << " "
                     << Eph_sc  << " " << Nsc << endl;
@@ -559,6 +576,10 @@ public:
                 if (!flug[j]->setState(*data_in)) {
                     return 108+2*(ngeom+j);
                 }
+            }
+        }
+        if (flugT) {
+            for (int j=0; j<ngeom; j++) {
                 if (!flugT[j]->setState(*data_in)) {
                     return 109+4*(ngeom+j);
                 }
@@ -590,6 +611,10 @@ public:
         if (flug) {
             for (int j=0; j<ngeom; j++) {
                 flug[j]->reset();
+            }
+        }
+        if (flugT) {
+            for (int j=0; j<ngeom; j++) {
                 flugT[j]->reset();
             }
         }
@@ -641,6 +666,11 @@ public:
                     return 108+2*(ngeom+j);
                 }
                 (*flug[j]) += tg;
+            }
+        }
+        if (flugT) {
+            EGS_ScoringArray tgT(ngeom);
+            for (int j=0; j<ngeom; j++) {
                 if (!tgT.setState(data)) {
                     return 109+4*(ngeom+j);
                 }
@@ -717,7 +747,7 @@ public:
             if (F == 1) {
                 egsInformation("\n\n==> Calculation summary (per particle) in geometry: %s\n\n",
                                geoms[j]->getName().c_str());
-                if (flug) {
+                if (flugT) {
                     egsInformation(
                         "  %*s        m/g          Edep/[MeV]                   K/[Gy]            "
                         "      Flu/[cm-2]           (muen/rho)=K/Flu/Eave[cm^2/g]      %n\n",
@@ -732,7 +762,7 @@ public:
             else {
                 egsInformation("\n==> Calculation summary (per fluence) in geometry: %s\n\n",
                                geoms[j]->getName().c_str());
-                if (flug) {
+                if (flugT) {
                     egsInformation(
                         "  %*s        m/g        Edep/[MeV*cm2]                 K/[Gy*cm2]       "
                         "        Flu/[cm-2]           (muen/rho)=K/Flu/Eave[cm^2/g]      %n\n",
@@ -752,7 +782,7 @@ public:
                 nreg = geoms[j]->regions();
                 for (int ir = 0; ir < nreg; ir++) {
                     if (is_sensitive[j][ir]) {
-                        imed     = getMedium(ir);
+                        imed     = geoms[j]->medium(ir);
                         rho      = getMediumRho(imed);
                         med_name = getMediumName(imed);
                         m = mass[j][ir];
@@ -766,7 +796,7 @@ public:
                         else {
                             dr=100.0;
                         }
-                        if (flug) {
+                        if (flugT) {
                             flugT[j]->currentResult(ir,fe,dfe);
                             if (fe > 0) {
                                 dfe = 100*dfe/fe;
@@ -787,19 +817,21 @@ public:
                 }
                 egsInformation("  %s\n",line.c_str());
             }
-            kerma->currentResult(j,r,dr);
-            if (r > 0) {
-                dr = dr/r;
-                if (dr < kermaEpsilon) {
-                    dr = 1.0;
-                }
-            }
             else {
-                dr=1.0;
+                kerma->currentResult(j,r,dr);
+                if (r > 0) {
+                    dr = dr/r;
+                    if (dr < kermaEpsilon) {
+                        dr = 1.0;
+                    }
+                }
+                else {
+                    dr=1.0;
+                }
+                egsInformation("  Total: %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
+                               mass_cv[j],r*F,dr*100.,r*normD/mass_cv[j],dr*100.);
+                egsInformation("  %s\n",line.c_str());
             }
-            egsInformation("  Total: %12.6e %12.6e +/- %-8.4f%% %12.6e +/- %-8.4f%%\n",
-                           mass_cv[j],r*F,dr*100.,r*normD/mass_cv[j],dr*100.);
-            egsInformation("  %s\n",line.c_str());
             count = 0;
             line.clear();// reset line
         }
@@ -862,40 +894,11 @@ public:
             spe_output << "@    subtitle font 4\n";
             spe_output << "@    subtitle size 1.000000\n";
         }
-        egsInformation("\n\nPhoton fluence summary\n"
-                       "======================\n");
+        egsInformation("\n\nDifferential Photon fluence\n"
+                       "===========================\n");
         double fe,dfe,fp,dfp;
         for (int j=0; j<ngeom; j++) {
-            egsInformation("\nGeometry: %s \n\n",geoms[j]->getName().c_str());
-            if (flugT) {
-                int count = 0;
-                int nreg = geoms[j]->regions();
-                int irmax_digits = getDigits(max_sc_reg);
-                egsInformation(
-                    "  %*s      m/g            Flu/[cm-2]         %n\n",
-                    irmax_digits,"ir",&count);
-                string line;
-                line.append(count,'-');
-                egsInformation("  %s\n",line.c_str());
-
-                for (int ir = 0; ir < nreg; ir++) {
-                    if (is_sensitive[j][ir]) {
-                        int imed = getMedium(ir);
-                        /* Per volume */
-                        EGS_Float m = mass[j][ir];
-                        EGS_Float normT = F*getMediumRho(imed)/m;
-                        flugT[j]->currentResult(ir,fe,dfe);
-                        if (fe > 0) {
-                            dfe = 100*dfe/fe;
-                        }
-                        else {
-                            dfe = 100;
-                        }
-                        egsInformation("  %*d  %12.6e %12.6e +/- %-8.4f%%\n",
-                                       irmax_digits, ir, m,fe*normT, dfe);
-                    }
-                }
-            }
+            egsInformation("\n   Geometry: %s \n",geoms[j]->getName().c_str());
 
             if (flug) {
                 /* Diff. fluence currently in whole scoring volume */
@@ -912,7 +915,7 @@ public:
                           geoms[j]->getName().c_str()<<"\"\n";
                 spe_output<<"@target G0.S"<<j<<"\n";
                 spe_output<<"@type xydy\n";
-                egsInformation("\n\n"
+                egsInformation("\n"
                                "   Emid/MeV    dFlu/dE/[MeV-1/cm2]   DFlu/[MeV-1/cm2]\n"
                                "   --------------------------------------------------\n");
                 for (int i=0; i<flu_nbin; i++) {
@@ -1018,6 +1021,10 @@ protected:
             if (flug) {
                 for (int j=0; j<ngeom; j++) {
                     flug[j]->setHistory(current_case);
+                }
+            }
+            if (flugT) {
+                for (int j=0; j<ngeom; j++) {
                     flugT[j]->setHistory(current_case);
                 }
             }
@@ -1060,21 +1067,22 @@ private:
 
     /****************************************************************/
 
-    EGS_ScoringArray **flug;    // Differential fluence in ALL scoring regions
-    EGS_ScoringArray **flugT;   // Integral fluence in EACH scoring region
+    EGS_ScoringArray **flug;    // Differential fluence for ALL scoring regions
+    EGS_ScoringArray **flugT;   // Integral     fluence in EACH scoring region
     EGS_Float       flu_a,
                     flu_b,
                     flu_xmin,
                     flu_xmax;
     int             flu_s,
                     flu_nbin;
-    EGS_Float      *rho_cv;       // mass density of scoring volume
-    EGS_Float      *mass_cv;      // mass of scoring volume material
-    EGS_Float       **mass;       // masses of the CV regions.
+    EGS_Float      *rho_cv;      // mass density of scoring volume
+    EGS_Float      *mass_cv;     // mass of scoring volume material
+    EGS_Float     **mass;        // masses of the CV regions.
     int            *n_scoring_r; // Number of scoring regions in geometry.
     int             max_sc_reg;  // Largest scoring region in all geometries
     int             active_reg;  // Scoring region in first geometry shown in progress
     int            *active_med;  // Scoring medium in each geometry
+    bool         score_int_flu;  // Integral fluence scoring switch.
 
     /*! Force-Detection geometry.
       If no FD geometry defined, kerma scoring only done when photons
@@ -1154,11 +1162,11 @@ int EGS_KermaApplication::initScoring() {
 
             /* Process inputs */
 
-            string gname, cgname;
+            string gname, cgname, apertString;
             int err  = aux->getInput("geometry name",gname);
             int errc = aux->getInput("FD geometry",cgname);
-            vector<int> apert;
-            int err4 = aux->getInput("excluded regions",apert);
+            vector<int> apert; // Excluded regions
+            int err4 = aux->getInput("excluded regions",apertString);
             vector<EGS_Float> cmass;
             int err2 = aux->getInput("scoring region masses",cmass);
 
@@ -1181,8 +1189,9 @@ int EGS_KermaApplication::initScoring() {
                                           "incremental scoring regions"
                                          };
 
+            string cavString;
             for (int ir_choice = 0; ir_choice < 4; ir_choice++) {
-                if (!aux->getInput(reg_inp_key[ir_choice], dummy_regs)) {
+                if (!aux->getInput(reg_inp_key[ir_choice], cavString)) {
                     k = Kind(ir_choice);
                     break;
                 }
@@ -1192,138 +1201,163 @@ int EGS_KermaApplication::initScoring() {
 
             bool mass_per_group = false;
 
-            switch (k) {
-            case individual: {
-                // Read entries for individual regions
-                cav = dummy_regs;
-                break;
-            }
-            case ranges: {
-                // Read pairs of contiguous range of regions
-                vector<int> pairs;
-                err1 = aux->getInput("scoring region ranges",pairs);
-                if (!err1 && pairs.size() % 2 == 0) {
-                    vector<EGS_Float> le_mass;
-                    //User provided one mass value for each group
-                    if (pairs.size()/2 == cmass.size()) {
-                        le_mass = cmass;
-                        cmass.clear();
-                        mass_per_group = true;
-                    }
-                    unsigned int j = 0, valid_pair = 0;
-                    while (j < pairs.size()) {
-                        int ireg = pairs[j], ereg = pairs[++j];
-                        if (ereg > ireg) {
-                            for (unsigned i = ireg; i <= ereg; i++) {
-                                cav.push_back(i);
-                                if (mass_per_group) {
-                                    cmass.push_back(le_mass[valid_pair]);
-                                }
-                            }
-                            j++;
-                            valid_pair++;
-                        }
-                        else {
-                            egsFatal("initScoring: wrong scoring region range'\n"
-                                     " on %d-th pair: %d %d\n",
-                                     valid_pair+1,ireg,ereg);
-                        }
-                    }
-                    n_region_groups.push_back(pairs.size());
+            // Load the geometry
+            EGS_BaseGeometry::setActiveGeometryList(app_index);
+            EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gname);
+            if (!g) {
+                egsWarning("initScoring: no geometry named %s -->"
+                                    " input ignored\n",gname.c_str());
+            } else {
+                g->getNumberRegions(apertString, apert);
+                g->getLabelRegions(apertString, apert);
+
+                switch (k) {
+                case individual: {
+                    // Read entries for individual regions
+                    g->getNumberRegions(cavString, cav);
+                    g->getLabelRegions(cavString, cav);
+                    break;
                 }
-                else {
-                    egsFatal("initScoring: Error in 'scoring region ranges' input\n");
-                }
-                break;
-            }
-            case groups: {
-                vector <int> d_start, d_stop;
-                int err1g = aux->getInput("scoring start region",d_start);
-                int err2g = aux->getInput("scoring stop region",d_stop);
-                if (!err1g && !err2g) {
-                    err1 = 0;
-                    if (d_start.size() == d_stop.size()) { // groups of regions
+                case ranges: {
+                    // Read pairs of contiguous range of regions
+                    vector<int> pairs;
+                    g->getNumberRegions(cavString, pairs);
+                    g->getLabelRegions(cavString, pairs);
+
+                    if (pairs.size() % 2 == 0) {
                         vector<EGS_Float> le_mass;
                         //User provided one mass value for each group
-                        if (d_start.size() == cmass.size()) {
+                        if (pairs.size()/2 == cmass.size()) {
                             le_mass = cmass;
                             cmass.clear();
                             mass_per_group = true;
                         }
-                        int valid_pair = 0;
-                        for (int i=0; i<d_start.size(); i++) {
-                            int ir = d_start[i], fr = d_stop[i];
-                            if (fr > ir) {
-                                for (int ireg=ir; ireg<=fr; ireg++) {
-                                    cav.push_back(ireg);
+                        unsigned int j = 0, valid_pair = 0;
+                        while (j < pairs.size()) {
+                            int ireg = pairs[j], ereg = pairs[++j];
+                            if (ereg > ireg) {
+                                for (unsigned i = ireg; i <= ereg; i++) {
+                                    cav.push_back(i);
                                     if (mass_per_group) {
                                         cmass.push_back(le_mass[valid_pair]);
                                     }
                                 }
+                                j++;
                                 valid_pair++;
                             }
                             else {
-                                egsFatal("initScoring: wrong 'start/stop scoring regions'\n"
-                                         " on %d-th triplet: %d %d\n",
-                                         valid_pair+1,ir,fr);
+                                egsFatal("initScoring: wrong scoring region range'\n"
+                                        " on %d-th pair: %d %d\n",
+                                        valid_pair+1,ireg,ereg);
                             }
                         }
-                        n_region_groups.push_back(d_start.size());
+                        n_region_groups.push_back(pairs.size());
                     }
                     else {
-                        egsFatal("initScoring: Mismatch in start and stop"
-                                 " scoring region groups !!!\n");
+                        egsFatal("initScoring: Error in 'scoring region ranges' input\n");
                     }
+                    break;
                 }
-                break;
-            }
-            case incremental: {
-                // Check if groups of equally spaced regions desired
-                vector<int> triplets;
-                err1 = aux->getInput("incremental scoring regions",triplets);
-                if (!err1 && triplets.size() % 3 == 0) {
-                    vector<EGS_Float> le_mass;
-                    //User provided one mass value for each group
-                    if (triplets.size()/3 == cmass.size()) {
-                        le_mass = cmass;
-                        cmass.clear();
-                        mass_per_group = true;
-                    }
-                    unsigned int j = 0, valid_triplet = 0;
-                    while (j < triplets.size()) {
-                        int ireg = triplets[j],
-                            ereg = triplets[++j],
-                            dreg = triplets[++j];
-                        if (ereg > ireg) {
-                            for (unsigned i = ireg; i <= ereg; i = i + dreg) {
-                                cav.push_back(i);
-                                if (mass_per_group) {
-                                    cmass.push_back(le_mass[valid_triplet]);
+                case groups: {
+                    vector <int> d_start, d_stop;
+
+                    g->getNumberRegions(cavString, d_start);
+                    g->getLabelRegions(cavString, d_start);
+
+                    int err2g = aux->getInput("scoring stop region",cavString);
+
+                    if (!err2g) {
+                        g->getNumberRegions(cavString, d_stop);
+                        g->getLabelRegions(cavString, d_stop);
+
+                        err1 = 0;
+                        if (d_start.size() == d_stop.size()) { // groups of regions
+                            vector<EGS_Float> le_mass;
+                            //User provided one mass value for each group
+                            if (d_start.size() == cmass.size()) {
+                                le_mass = cmass;
+                                cmass.clear();
+                                mass_per_group = true;
+                            }
+                            int valid_pair = 0;
+                            for (int i=0; i<d_start.size(); i++) {
+                                int ir = d_start[i], fr = d_stop[i];
+                                if (fr > ir) {
+                                    for (int ireg=ir; ireg<=fr; ireg++) {
+                                        cav.push_back(ireg);
+                                        if (mass_per_group) {
+                                            cmass.push_back(le_mass[valid_pair]);
+                                        }
+                                    }
+                                    valid_pair++;
+                                }
+                                else {
+                                    egsFatal("initScoring: wrong 'start/stop scoring regions'\n"
+                                            " on %d-th triplet: %d %d\n",
+                                            valid_pair+1,ir,fr);
                                 }
                             }
-                            j++;
-                            valid_triplet++;
+                            n_region_groups.push_back(d_start.size());
                         }
                         else {
-                            egsFatal("initScoring: wrong 'incremental scoring regions'\n"
-                                     " on %d-th triplet: %d %d %d\n",
-                                     valid_triplet+1,ireg,ereg,dreg);
+                            egsFatal("initScoring: Mismatch in start and stop"
+                                    " scoring region groups !!!\n");
                         }
                     }
-                    n_region_groups.push_back(triplets.size());
-                    //egsInformation("---> Scoring from region %d to %d in %d regions increments\n",
-                    //         triplets[0], triplets[1], triplets[2]);
+                    break;
                 }
-                else {
-                    egsFatal("initScoring: missing/wrong "
-                             "'incremental scoring regions' input\n"
-                             "Expected triplets: ir_min ir_max ir_delta ...\n");
+                case incremental: {
+                    // Check if groups of equally spaced regions desired
+                    vector<int> triplets;
+
+                    g->getNumberRegions(cavString, triplets);
+                    // Turn off sorting of the region list since it's not just regions
+                    g->getLabelRegions(cavString, triplets, false);
+
+                    if (triplets.size() % 3 == 0) {
+                        vector<EGS_Float> le_mass;
+                        //User provided one mass value for each group
+                        if (triplets.size()/3 == cmass.size()) {
+                            le_mass = cmass;
+                            cmass.clear();
+                            mass_per_group = true;
+                        }
+                        unsigned int j = 0, valid_triplet = 0;
+                        while (j < triplets.size()) {
+                            int ireg = triplets[j],
+                                ereg = triplets[++j],
+                                dreg = triplets[++j];
+                            if (ereg > ireg) {
+                                for (unsigned i = ireg; i <= ereg; i = i + dreg) {
+                                    cav.push_back(i);
+                                    if (mass_per_group) {
+                                        cmass.push_back(le_mass[valid_triplet]);
+                                    }
+                                }
+                                j++;
+                                valid_triplet++;
+                            }
+                            else {
+                                egsFatal("initScoring: wrong 'incremental scoring regions'\n"
+                                        " on %d-th triplet: %d %d %d\n",
+                                        valid_triplet+1,ireg,ereg,dreg);
+                            }
+                        }
+                        n_region_groups.push_back(triplets.size());
+                        //egsInformation("---> Scoring from region %d to %d in %d regions increments\n",
+                        //         triplets[0], triplets[1], triplets[2]);
+                    }
+                    else {
+                        egsFatal("initScoring: missing/wrong "
+                                "'incremental scoring regions' input\n"
+                                "Expected triplets: ir_min ir_max ir_delta ...\n");
+                        err1 = 1;
+                    }
+                    break;
+                }
+                default:
                     err1 = 1;
                 }
-                break;
-            }
-            default:
-                err1 = 1;
             }
 
             if (err2) {// Error reading scoring region masses
@@ -1366,68 +1400,63 @@ int EGS_KermaApplication::initScoring() {
             if (err || err1) {
                 egsWarning("  --> input ignored\n");
             }
-            else {
-                EGS_BaseGeometry::setActiveGeometryList(app_index);
-                EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gname);
-                if (!g) egsWarning("initScoring: no geometry named %s -->"
-                                       " input ignored\n",gname.c_str());
+            else if(g) {
+
+                int nreg = g->regions();
+                int *regs = new int [cav.size()];
+                EGS_Float *m_g  = new EGS_Float [cmass.size()];
+                int ncav = 0;
+                for (int j=0; j<cav.size(); j++) {
+                    if (cav[j] < 0 || cav[j] >= nreg)
+                        egsWarning("initScoring: region %d is not within"
+                                    " the allowed range of 0...%d -> input"
+                                    " ignored\n",cav[j],nreg-1);
+                    else {
+                        regs[ncav++] = cav[j];
+                    }
+                }
+                //Transfer Vector<EGS_Float> to EGS_Float*
+                for (int j=0; j<cmass.size(); j++) {
+                    m_g[j] = cmass[j];
+                }
+                if (!ncav) {
+                    egsWarning("initScoring: no sensitive regions "
+                                "specified for geometry %s --> input ignored\n",
+                                gname.c_str());
+                    delete [] regs;
+                }
                 else {
-                    int nreg = g->regions();
-                    int *regs = new int [cav.size()];
-                    EGS_Float *m_g  = new EGS_Float [cmass.size()];
-                    int ncav = 0;
-                    for (int j=0; j<cav.size(); j++) {
-                        if (cav[j] < 0 || cav[j] >= nreg)
-                            egsWarning("initScoring: region %d is not within"
-                                       " the allowed range of 0...%d -> input"
-                                       " ignored\n",cav[j],nreg-1);
-                        else {
-                            regs[ncav++] = cav[j];
+                    geometries.push_back(g);
+                    /*Add FD geometry name (can be empty)*/
+                    fd_global_gs.push_back(cgname);
+                    n_cavity_regions.push_back(ncav);
+                    cavity_regions.push_back(regs);
+                    cavity_masses.push_back(m_g);
+                    n_cavity_masses.push_back(cmass.size());
+                    transformations.push_back(
+                                        EGS_AffineTransform::getTransformation(aux));
+                    /* excluded regions */
+                    if (!err4 && apert.size() > 0) {
+                        int *ap = new int [apert.size()];
+                        int nap=0;
+                        for (int j=0; j<apert.size(); j++) {
+                            if (apert[j] >= 0 && apert[j] < nreg) {
+                                ap[nap++] = apert[j];
+                            }
+                            else {
+                                egsFatal("\n\n*** Excluded region %d is\n"
+                                            " outside the allowed range of  \n"
+                                            " 0...%d  \n"
+                                            " This is a fatal error\n\n",
+                                            apert[j],nreg-1);
+                            }
                         }
-                    }
-                    //Transfer Vector<EGS_Float> to EGS_Float*
-                    for (int j=0; j<cmass.size(); j++) {
-                        m_g[j] = cmass[j];
-                    }
-                    if (!ncav) {
-                        egsWarning("initScoring: no sensitive regions "
-                                   "specified for geometry %s --> input ignored\n",
-                                   gname.c_str());
-                        delete [] regs;
+                        n_excluded_regions.push_back(nap);
+                        excluded_regions.push_back(ap);
                     }
                     else {
-                        geometries.push_back(g);
-                        /*Add FD geometry name (can be empty)*/
-                        fd_global_gs.push_back(cgname);
-                        n_cavity_regions.push_back(ncav);
-                        cavity_regions.push_back(regs);
-                        cavity_masses.push_back(m_g);
-                        n_cavity_masses.push_back(cmass.size());
-                        transformations.push_back(
-                            EGS_AffineTransform::getTransformation(aux));
-                        /* excluded regions */
-                        if (!err4 && apert.size() > 0) {
-                            int *ap = new int [apert.size()];
-                            int nap=0;
-                            for (int j=0; j<apert.size(); j++) {
-                                if (apert[j] >= 0 && apert[j] < nreg) {
-                                    ap[nap++] = apert[j];
-                                }
-                                else {
-                                    egsFatal("\n\n*** Excluded region %d is\n"
-                                             " outside the allowed range of  \n"
-                                             " 0...%d  \n"
-                                             " This is a fatal error\n\n",
-                                             apert[j],nreg-1);
-                                }
-                            }
-                            n_excluded_regions.push_back(nap);
-                            excluded_regions.push_back(ap);
-                        }
-                        else {
-                            excluded_regions.push_back(0);
-                            n_excluded_regions.push_back(0);
-                        }
+                        excluded_regions.push_back(0);
+                        n_excluded_regions.push_back(0);
                     }
                 }
             }
@@ -1608,7 +1637,34 @@ int EGS_KermaApplication::initScoring() {
             }
         }
 
-        aux = options->takeInputItem("fluence scoring");
+        /*********************************************
+         Request integral fluence scoring explicitely
+        **********************************************/
+        vector<string> choice;
+        choice.push_back("no");
+        choice.push_back("yes");
+        score_int_flu  = options->getInput("score integral fluence", choice,0);
+
+        if (score_int_flu) {
+            // Integral fluence array
+            flugT = new EGS_ScoringArray* [ngeom];
+            for (int j=0; j<ngeom; j++) {
+                flugT[j] = new EGS_ScoringArray(geoms[j]->regions());
+            }
+        }
+
+        vector<string> diff_f_key = {"fluence scoring",
+                                     "differential fluence scoring"
+                                    };
+        for (size_t i = 0; i < diff_f_key.size(); i++) {
+            aux = options->takeInputItem(diff_f_key[i]);
+            if (aux) {
+                break;
+            }
+        }
+        /***************************************************
+         If input block found, score differential fluence.
+         ***************************************************/
         if (aux) {
             EGS_Float flu_Emin, flu_Emax;
             int er1 = aux->getInput("minimum energy",flu_Emin);
@@ -1643,14 +1699,17 @@ int EGS_KermaApplication::initScoring() {
                 flu_b = -flu_xmin*flu_a;
             }
             else {
-                egsInformation("\n\n******* Missing differential fluence inputs"
-                               " errors: %d %d %d\n",er1,er2,er3);
-                egsInformation("            => Integral fluence scoring ONLY\n\n");
-            }
-            // Integral fluence array
-            flugT = new EGS_ScoringArray* [ngeom];
-            for (int j=0; j<ngeom; j++) {
-                flugT[j] = new EGS_ScoringArray(geoms[j]->regions());
+                egsWarning("\n\n******* Errors in differential fluence input block\n");
+                if (er1) {
+                    egsWarning("        minimum energy entry (err=%d)\n",er1);
+                }
+                if (er2) {
+                    egsWarning("        maximum energy entry (err=%d)\n",er2);
+                }
+                if (er3) {
+                    egsWarning("        number of bins entry (err=%d)\n",er3);
+                }
+                egsFatal("Fix errors or remove differential fluence scoring block!!!\n\n");
             }
 
             delete aux;
@@ -1845,22 +1904,137 @@ void EGS_KermaApplication::describeSimulation() {
         if (!nexcl) {
             egsInformation(" NONE");
         }
+
         egsInformation("\n\n");
+    }
+
+
+    egsInformation("\nFluence scoring inputs\n"
+                   "======================\n");
+    vector<string> scale;
+    scale.push_back("linear");
+    scale.push_back("logarithmic");
+
+    if (flugT && flug) {
+        egsInformation("---> Scoring differential (%s) and integral fluence\n", scale[flu_s].c_str());
+    }
+    else if (flugT) {
+        egsInformation("---> Scoring integral fluence\n");
+    }
+    else if (flug) {
+        egsInformation("---> Scoring differential (%s) fluence\n", scale[flu_s].c_str());
+    }
+    else {
+        egsInformation("---> No fluence scoring requested\n");
+    }
+
+    egsInformation("\n");
+}
+
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
+
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_kerma");
+        shared_ptr<EGS_BlockInput> calcBlock = scoreBlock->addBlockInput("calculation geometry");
+        calcBlock->addSingleInput("geometry name", true, "The name of the geometry to use as the simulation geometry.");
+
+        auto regPtr = calcBlock->addSingleInput("scoring regions", false, "A list of the regions to score in.");
+        auto regRangePtr = calcBlock->addSingleInput("scoring region ranges", false, "A list of pairs of regions, defining inclusive ranges to score in.");
+        auto regStartPtr = calcBlock->addSingleInput("scoring start region", false, "A list of regions to start scoring in, paired with corresponding 'scoring stop region' inputs to create ranges.");
+        auto regStopPtr = calcBlock->addSingleInput("scoring stop region", false, "A list of regions to stop scoring in, paired with corresponding 'scoring start region' inputs to create ranges.");
+        auto regIncrPtr = calcBlock->addSingleInput("incremental scoring regions", false, "A list of triplets: the start region, the stop region, and the region step size (i.e. ir_min ir_max ir_delta). This creates ranges of regions with steps between each included region.");
+        regPtr->addDependency(regRangePtr, "", true);
+        regPtr->addDependency(regStartPtr, "", true);
+        regPtr->addDependency(regStopPtr, "", true);
+        regPtr->addDependency(regIncrPtr, "", true);
+        regRangePtr->addDependency(regPtr, "", true);
+        regRangePtr->addDependency(regStartPtr, "", true);
+        regRangePtr->addDependency(regStopPtr, "", true);
+        regRangePtr->addDependency(regIncrPtr, "", true);
+        regStartPtr->addDependency(regPtr, "", true);
+        regStartPtr->addDependency(regRangePtr, "", true);
+        regStartPtr->addDependency(regStopPtr, "", false);
+        regStartPtr->addDependency(regIncrPtr, "", true);
+        regStopPtr->addDependency(regPtr, "", true);
+        regStopPtr->addDependency(regRangePtr, "", true);
+        regStopPtr->addDependency(regStartPtr, "", false);
+        regStopPtr->addDependency(regIncrPtr, "", true);
+        regIncrPtr->addDependency(regPtr, "", true);
+        regIncrPtr->addDependency(regRangePtr, "", true);
+        regIncrPtr->addDependency(regStartPtr, "", true);
+        regIncrPtr->addDependency(regStopPtr, "", true);
+
+        auto regMassPtr = calcBlock->addSingleInput("scoring region masses", false, "A list of the masses for each scoring region.");
+        auto volMassPtr = calcBlock->addSingleInput("scoring volume mass", false, "The total mass of the scoring volume.");
+        regMassPtr->addDependency(volMassPtr, "", true);
+        volMassPtr->addDependency(regMassPtr, "", true);
+        calcBlock->addSingleInput("excluded regions", false, "Exclude histories that have interacted in these regions.");
+        calcBlock->addSingleInput("FD geometry", false, "The name of a geometry to be used for forced detection.");
+
+        scoreBlock->addSingleInput("correlated geometries", false, "Two geometry names where the ratios between the output values should be calculated (provides better uncertainty estimate). May repeat this input multiple times.");
+
+        shared_ptr<EGS_BlockInput> fluBlock = scoreBlock->addBlockInput("fluence scoring");
+        fluBlock->addSingleInput("minimum energy", false, "");
+        fluBlock->addSingleInput("maximum energy", false, "");
+        fluBlock->addSingleInput("number of bins", false, "");
+        fluBlock->addSingleInput("scale", false, "linear or logarithmic", {"linear", "logarithmic"});
+
+        scoreBlock->addSingleInput("muen file", false, "");
+        scoreBlock->addSingleInput("Default FD geometry", false, "");
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+
+    ### use the same geometry under two different names, for easier bookeeping
+    :start calculation geometry:
+        geometry name         = sphere_in_room_no_wall
+        scoring regions       = 2
+        excluded regions      = 0     # exclude contribution from these regions
+        scoring region masses = 0.631 # mass in g for each scoring region
+        #scoring volume mass  = 0.631 # alternatively: mass for whole scoring volume
+    :stop calculation geometry:
+
+    :start calculation geometry:
+        geometry name         = sphere_in_room_all
+        scoring regions       = 2
+        scoring region masses = 0.631 # mass in g for each region
+        #scoring volume mass  = 0.631 # mass in g for whole scoring volume
+    :stop calculation geometry:
+
+    ### ratio estimates wall contribution to air sphere
+    correlated geometries = sphere_in_room_all  sphere_in_room_no_wall
+
+    ### fluence scoring requested (common to all calculation geometries)
+    :start fluence scoring:
+        minimum energy = 0.001
+        maximum energy = 0.040
+        number of bins = 40
+        scale          = linear
+    :stop fluence scoring:
+
+    ### E*muen file (could also be E*mutr): absolute or relative file path
+    ### Use absolute path when submitting parallel jobs!!!
+    emuen file = $EGS_HOME/egs_kerma/emuen_icru90_1.5MeV.data
+
+    ### geometry for forced-detection (if omitted, score ONLY when reaching scoring region)
+    Default FD geometry = sphere
+
+:stop scoring options:
+)"};
+        return example;
     }
 }
 
 #ifdef BUILD_APP_LIB
-APP_LIB(EGS_KermaApplication);
+    APP_LIB(EGS_KermaApplication);
 #else
-APP_MAIN(EGS_KermaApplication);
+    APP_MAIN(EGS_KermaApplication);
 #endif
-// int main(int argc, char **argv) {
-//
-//     EGS_KermaApplication app(argc,argv);
-//     int err = app.initSimulation();
-//     if( err ) return err;
-//     err = app.runSimulation();
-//     if( err < 0 ) return err;
-//     return app.finishSimulation();
-//
-// }
+

@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Marc Chamberland
+#                   Hannah Gallop
 #
 ###############################################################################
 #
@@ -65,6 +66,8 @@
 using namespace std;
 
 string EGS_SMART_ENVELOPE_LOCAL EGS_SmartEnvelope::type = "EGS_SmartEnvelope";
+
+static bool EGS_SMART_ENVELOPE_LOCAL inputSet = false;
 
 void EGS_SmartEnvelope::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_SmartEnvelope::setMedia: don't use this method. Use the\n"
@@ -255,6 +258,25 @@ static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword2[] = "geometry";
 
 extern "C" {
 
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_smart_envelope"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry, that other geometries will be placed strictly inside.");
+        geomBlockInput->addSingleInput("inscribed geometries", true, "A list of previously defined geometries to place inside the base geometry. They must not intersect each other or extend beyond the base geometry.");
+    }
+
+    EGS_SMART_ENVELOPE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if (!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
+
     EGS_SMART_ENVELOPE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
             egsWarning(eeg_message1,eeg_message2);
@@ -336,10 +358,31 @@ extern "C" {
 
     }
 
-    void EGS_SmartEnvelope::getLabelRegions(const string &str, vector<int> &regs) {
+    int EGS_SmartEnvelope::getGlobalRegionOffset(const string geomName) {
+        // Look for the named geometry in the inscribed geometries
+        for (int i=0; i<n_in; i++) {
+            if (geometries[i] && geometries[i]->getName() == geomName) {
+                return local_start[i];
+            }
+        }
+
+        // If it's not found above, search through the inscribed geometries in case they are composite geometries
+        for (int i=0; i<n_in; i++) {
+            int shift = geometries[i]->getGlobalRegionOffset(geomName);
+            if (shift >= 0) {
+                shift += local_start[i];
+                return shift;
+            }
+        }
+
+        // Return -1 for not found
+        return -1;
+    }
+
+    void EGS_SmartEnvelope::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         // label defined in the envelope geometry
-        g->getLabelRegions(str, regs);
+        g->getLabelRegions(str, regs, sanitize);
 
         // label defined in the inscribed geometries
         vector<int> gregs;
@@ -348,7 +391,7 @@ extern "C" {
             // add regions from set geometries
             gregs.clear();
             if (geometries[i]) {
-                geometries[i]->getLabelRegions(str, gregs);
+                geometries[i]->getLabelRegions(str, gregs, sanitize);
             }
 
             // shift region numbers according to indexing style
@@ -362,7 +405,7 @@ extern "C" {
         }
 
         // label defined in self (envelope geometry input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

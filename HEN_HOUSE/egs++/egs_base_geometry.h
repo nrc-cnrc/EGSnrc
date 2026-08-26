@@ -46,10 +46,12 @@
 
 #include "egs_vector.h"
 #include "egs_rndm.h"
+#include "egs_input_struct.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 using std::string;
 using std::vector;
@@ -68,11 +70,24 @@ struct EGS_GeometryIntersections;
     typedef unsigned char EGS_BPType;
 #endif
 
-class label {
+class EGS_Label {
 public:
     string      name;
     vector<int> regions;
 };
+
+static shared_ptr<EGS_BlockInput> geomBlockInput = make_shared<EGS_BlockInput>("geometry");
+inline void setBaseGeometryInputs(bool includeMediaBlock = true) {
+    geomBlockInput->addSingleInput("library", true, "The type of geometry, loaded by shared library in egs++/dso.");
+    geomBlockInput->addSingleInput("name", true, "The user-declared unique name of this geometry. This is the name you may refer to elsewhere in the input file");
+    geomBlockInput->addSingleInput("set label", false, "A name for the label, followed by a list of local region numbers (found by viewing only this geometry). Then use the label name elsewhere in the input file to refer to those regions. E.g. 'set label = myLabel 0 1'");
+
+    if (includeMediaBlock) {
+        shared_ptr<EGS_BlockInput> mediaBlock = geomBlockInput->addBlockInput("media input");
+        mediaBlock->addSingleInput("media", true, "A list of media that are used in this geometry");
+        mediaBlock->addSingleInput("set medium", false, "2, 3 or 4 integers defining the medium for a region or range of regions.\nFor 2: region #, medium index from the media list for this geometry (starts at 0). For 3: start region, stop region, medium index. For 4: Same as 3, plus a step size for the region range.\nNeglect this input for a homogeneous geometry of the first medium in the media list. Repeat this input to specify each medium.");
+    }
+}
 
 /*! \brief Base geometry class. Every geometry class must be derived from
   EGS_BaseGeometry.
@@ -165,7 +180,9 @@ public:
      *
      * 2) it is reimplemented in the dynamic geometry class. This is where the
      *    code will find the current (non static) state of the geometry. */
-    virtual void getNextGeom(EGS_RandomGenerator *rndm) {};
+    virtual void getNextGeom(EGS_RandomGenerator *rndm) {
+        (void)rndm;
+    };
 
     /*! \brief Find the bin to which \a xp belongs, given \a np bin edges \a p
 
@@ -255,6 +272,7 @@ public:
       EGS_cSphericalShell, EGS_AEnvelope, and EGS_RZGeometry
     */
     virtual EGS_Float getVolume(int ireg) {
+        (void)ireg;
         return 1.0;
     }
 
@@ -264,6 +282,8 @@ public:
       idir=1--> Y-boundaries, idir=2--> Z-boundaries
     */
     virtual EGS_Float getBound(int idir, int ind) {
+        (void)idir;
+        (void)ind;
         return 0.0;
     }
 
@@ -273,6 +293,7 @@ public:
       idir=1--> Y-boundaries, idir=2--> Z-boundaries
     */
     virtual int getNRegDir(int idir) {
+        (void)idir;
         return 0;
     }
 
@@ -416,7 +437,7 @@ public:
     /*! \brief Does this geometry object have a mass density scaling feature?
 
      */
-    inline bool hasRhoScaling() const {
+    virtual bool hasRhoScaling() {
         return has_rho_scaling;
     };
 
@@ -727,11 +748,14 @@ public:
         return boundaryTolerance;
     };
 
+    /*! \brief Get the global region number for the first region in the geometry */
+    virtual int getGlobalRegionOffset(const string geomName);
+
     /*! \brief Get a list of all the regions labeled with a number */
     virtual void getNumberRegions(const string &str, vector<int> &regs);
 
     /*! \brief Get the list of all regions labeled with \a str */
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
     /*! \brief Get the name of the i-th explicit label in the geometry */
     virtual const string &getLabelName(const int i) {
@@ -749,7 +773,37 @@ public:
     /*! \brief Set the labels from an input string */
     int setLabels(const string &inp);
 
-    virtual void updatePosition(EGS_Float time) { };
+    virtual void updatePosition(EGS_Float time) {
+        (void)time;
+    };
+
+    /*!
+    * \brief Validate that all region numbers are within valid bounds
+    *
+    * Checks that each region number in the provided vector is within the
+    * valid range [0, nreg) for this geometry. Validation stops at the
+    * first invalid region encountered.
+    *
+    * \param regions Vector of region numbers to validate
+    * \return true if all regions are valid, false if any region is out of bounds
+    *
+    * \note Validation stops immediately upon encountering the first invalid region
+    * \note Valid region range is [0, nreg) where nreg is the total number of regions
+    * \note Invalid regions trigger a warning message with geometry name and region number
+    *
+    * Example:
+    * \code
+    * vector<int> regions = {0, 5, 10, 15};
+    * if (geometry.validateRegions(regions)) {
+    *     // All regions are valid, proceed with operation
+    * } else {
+    *     // At least one region is invalid, handle error
+    * }
+    * \endcode
+    */
+    bool validateRegions(const std::vector<int> &regions);
+
+    virtual void finishInitialization() { };
 
     /* This method is essentially used to determine whether the simulation
      * geometry contains a dynamic geometry. Like getNextGeom(), the only
@@ -759,7 +813,9 @@ public:
      * call on its base geometry. This function was conceived to be used in the
      * view/viewcontrol (to determine whether time index objects are visible or
      * hidden), and track scoring */
-    virtual void containsDynamic(bool &hasdynamic) { };
+    virtual void containsDynamic(bool &hasdynamic) {
+        (void)hasdynamic;
+    };
 
 protected:
 
@@ -792,6 +848,7 @@ protected:
         the same medium.
      */
     int med;
+
 
     /*! \brief Does this geometry have relative mass density scvaling?
 
@@ -884,7 +941,7 @@ protected:
         determine region numbers in complicated geometrical constructs. They
         are also useful to track region numbers upon modyfying the geometry.
      */
-    vector<label> labels;
+    vector<EGS_Label> labels;
 
     /*! \brief The application this object belongs to */
     EGS_Application *app;
@@ -1145,6 +1202,7 @@ struct EGS_GeometryIntersections {
     \until make_depend
     That's all.
 
+
     Here is the complete source code of the EGS_Box class.<br>
     The header file:
     \include geometry/egs_box/egs_box.h
@@ -1152,6 +1210,7 @@ struct EGS_GeometryIntersections {
     \include geometry/egs_box/egs_box.cpp
     The Makefile:
     \include geometry/egs_box/Makefile
+
 */
 
 /* \example geometry/example1/geometry_example1.cpp

@@ -284,7 +284,9 @@ public:
         // calls getNextGeom on its component geometries to update dynamic
         // geometries in the simulation
         for (int j=0; j<ng; j++) {
-            g[j]->getNextGeom(rndm);
+            if (g[j]) {
+                g[j]->getNextGeom(rndm);
+            }
         }
     };
 
@@ -292,7 +294,9 @@ public:
         // calls updatePosition on its component geometries to update dynamic
         // geometries in the simulation
         for (int j=0; j<ng; j++) {
-            g[j]->updatePosition(time);
+            if (g[j]) {
+                g[j]->updatePosition(time);
+            }
         }
     };
 
@@ -300,9 +304,34 @@ public:
         // calls containsDynamic on its component geometries (only calls if
         // hasDynamic is false, as if it is true we already found one)
         for (int j=0; j<ng; j++) {
-            if (!hasdynamic) {
+            if (!hasdynamic && g[j]) {
                 g[j]->containsDynamic(hasdynamic);
             }
+        }
+    };
+
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        for (int j=0; j<ng; j++) {
+            if (!g[j]) {
+                continue;
+            }
+            bool hasRS = g[j]->hasRhoScaling();
+            if (hasRS) {
+                has_rho_scaling = hasRS;
+                return has_rho_scaling;
+            }
+        }
+
+        return false;
+    };
+
+    void finishInitialization() override {
+        for (int j=0; j<ng; j++) {
+            g[j]->finishInitialization();
         }
     };
 
@@ -340,7 +369,8 @@ public:
         return g[jg]->getBScaling(ireg-jg*nmax);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual int getGlobalRegionOffset(const string geomName);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize);
 
 protected:
 

@@ -185,22 +185,45 @@ that needs to be applied to the source through the use of either the
 \c x-rotation , \c y-rotation or \c z-rotation input key. Its value is
 the projection angle in degrees.
 
-The \c orbit and \c step inputs define how many projections are going to be generated.
-\c step is the angular interval at which projections will be acquired. The sign of
-\c step defines whether the rotation is clock- or counterclockwise.
-The projection number is obtained from the ratio of the angular rotation
-to the module of the value of \c step. Here is an example of this input block:
+The <code>minimum angle</code> and <code>maximum angle</code> inputs define the rotation of the source and scoring plane about the geometry (both angles must be positive and <code>maximum angle</code> must be larger than <code>minimum angle</code>). The number of projections generated are determined by the difference between those two inputs, and the angular step size defined by \c step (in degrees). The sign of \c step determines whether the rotation is clock- or counterclockwise (negative for counterclockwise).
+
+The number of projections is obtained from the ratio of the angular rotation
+to the value of \c step.
+
+Which projection to calculate is determined by the \c projection input, which is an index denoting the projection number, starting from zero. The angle of the beam would be <code>angle = minimumAngle + projection*step</code>. The first projection is calculated by setting \c projection to 0.
+
+Here is an example of this input block:
 
 \verbatim
 :start cbct setup:
-        orbit = 360.0
-        step  = -2
-        z-rotation = 0 # x-rotation, y-rotation or z-rotation
+        minimum angle = the starting angle
+        maximum angle = the ending angle
+        step  = the step size, in degrees. For counterclickwise rotation, set negative.
+        rotation axis = the axis to rotate about: x, y or z
+        translation = a translation to apply to the source and scoring plane: 'x y z'
+        swap = yes or no. Whether or not to swap the x and y coordinates in the scoring plane. Defaults to no.
+
+        projection = the integer index for the current projection to simulate. Update this number and run multiple simulations to calculate all projections, starting from 0.
+
+        or:
+
+        angle = the angle of the projection, used to calculate the projection index. Only provide one of 'angle' or 'projection'.
+
 :stop cbct setup:
 \endverbatim
 
-This example defines a \f$360^o\f$ orbit with 180 projections every \f$2^o\f$ rotating
-counterclockwise.
+The following example defines a \f$360^o\f$ orbit with 180 projections every \f$2^o\f$ rotating
+counterclockwise about the z-axis. The current simulation will use the first projection.
+
+\verbatim
+:start cbct setup:
+        minimum angle = 0
+        maximum angle = 360.0
+        step  = -2
+        rotation axis = z
+        projection = 0
+:stop cbct setup:
+\endverbatim
 
 \section egs_cbct_options Scoring options input block
 
@@ -232,19 +255,36 @@ This input block defines detector details and the name
 of a file containing \f$E\cdot\left(\frac{\mu_{en}}{\rho}\right)\f$ values for air.
 The scoring plane defaults to plane at origin with normal along the positive
 z-axis to mimic the default used by sources and shapes. Users must define a proper
-transformation to make sure source particles don't miss the scoring plane.
+transformation to make sure source particles don't miss the scoring plane. When calculating different projections, the change in angle of the scoring plane is handled automatically as the source is rotated about an axis.
 
 \verbatim
 :start planar scoring:
-   minimum Kscat fraction = 0.5
-   surrounding medium = VACUUM #AIRICRU512
-   screen resolution = 64 64
-   voxel size = 1.25
-   :start transformation:
-      translation = 55 0 0
-      rotation = 0 1.570796326794896619 0
-   :stop transformation:
-    muen file = absolute_file_name_for_E_muen_air
+    screen resolution = The number of x and y pixels in the scoring plane, 'nx ny'.
+    pixel size = The number of pixels in x and y of the scoring plane: 'nx ny'.
+    muen file = The path to a file containing E*muen/rho values for the surrounding medium. These can be computed using 'g'. Find one provided for air as $HEN_HOUSE/user_codes/egs_fac/examples/muen_air.data.
+    surrounding medium = The name of the medium that is surrounding the phantom (which may be between the geometry and the source). Defaults to vacuum.
+    uncertainty estimation = Turns on error estimation of the various signals, and efficiency calculations.Optionally restricts the error estimation to just part of the scoring plane, from pixels xmin to xmax, ymin to ymax. The first number is always 1 to turn on, optionally followed by the windowing: '1 xmin xmax ymin ymax'.
+    RMSE cutoff = The cut-off for RMSE calculations, either as a fraction of the maximum attenuation or of the scatter. For example, RMSE is computed only for 'A/T > cutoff*Amax'. Defaults to 0.5.
+
+    :start transformation:
+        # See \link EGS_AffineTransform \endlink documentation
+    :stop transformation:
+
+:stop planar scoring:
+\endverbatim
+
+\verbatim
+:start planar scoring:
+    screen resolution = 64 64
+    pixel size = 1.25
+    muen file = $HEN_HOUSE/user_codes/egs_fac/examples/muen_air.data
+    surrounding medium = VACUUM #AIRICRU512
+
+    :start transformation:
+        translation = 55 0 0
+        rotation = 0 1.570796326794896619 0
+    :stop transformation:
+
 :stop planar scoring:
 \endverbatim
 
@@ -253,10 +293,10 @@ plane or detector, which is initially at the origin. It rotates the plane
 \f$90^o\f$ around the y-axis to face the transformed source defined in
 section \ref egs_cbct_sources and placed on the x-axis at 55 cm from the origin.
 
-\c minimum \c Kscat \c fraction is the fraction of the maximum scatter above which
+\c RMSE \c cutoff is the fraction of the maximum scatter above which
 regions are included in the efficiency estimate based on their scatter signal
 uncertainty. Efficiency is computed using the relative root mean squared
-error abd the CPU time.
+error and the CPU time.
 
 \section egs_cbct_output Output options block: all scans
 This input block controls the type of scan files generated during the simulation.
@@ -280,11 +320,11 @@ of a signal map (\em *.egsmap) file containing \f$Katt\f$, \f$Kscat\f$ and \f$Kt
 The \c store \c data \c arrays input key defines whether the user wants to create
 \em *.egsdat files containing a snapshot of the simulation which gets updated after
 every batch.
-This is necessary to be able to restart a calculation, for instance
+This is necessary to be able to resume a calculation, for instance
 when computing a real scan. However, if you are running very fast simulations
 (eg. computing scatter for many projections) in a cluster environment, generation of such
 files could slow down the network significantly. The \c verbose option outputs several
-files providing inside into the different VRTs splitting techniques, such as an
+files providing insight into the different VRTs splitting techniques, such as an
 importance map, a correction histogram, and an error distribution. It is disabled by
 default.
 
@@ -539,6 +579,16 @@ by Iwan Kawrakow and described in the paper
 # Savitzky-Golay filter.
 #############################################
 #
+:start smoothing options:
+  nmax    = The maximum 1D smoothing half-window size, in pixels.
+  nmax2d  = The maximum 2D smoothing half-window size, in pixels.
+  chi2max = A chi2 tolerance parameter, set close to 1 for strict (window shrinks aggressively), or larger for stronger smoothing.
+:stop  smoothing options:
+\endverbatim
+
+For example:
+
+\verbatim
 :start smoothing options:
   nmax    = 10
   nmax2d  = 6

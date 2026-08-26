@@ -27,6 +27,7 @@
 #                   Marc Chamberland
 #                   Ernesto Mainegra-Hing
 #                   Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -43,6 +44,8 @@
 #include "egs_functions.h"
 
 string EGS_StackGeometry::type = "EGS_StackGeometry";
+
+static bool EGS_STACKG_LOCAL inputSet = false;
 
 EGS_StackGeometry::EGS_StackGeometry(const vector<EGS_BaseGeometry *> &geoms,
                                      const string &Name) : EGS_BaseGeometry(Name) {
@@ -123,6 +126,41 @@ void EGS_StackGeometry::setBScaling(EGS_Input *) {
 
 extern "C" {
 
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_gstack"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("geometries", true, "A list of names of previously defined geometries");
+        geomBlockInput->addSingleInput("tolerance", false, "A small floating number boundaryTolerance");
+    }
+
+    EGS_STACKG_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_gstack
+    :start geometry:
+        name = my_gstack
+        library = egs_gstack
+        geometries = geom1 geom2
+        # create geometries called geom1 geom2
+        tolerance = 1e-4
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_STACKG_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
+
     EGS_STACKG_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
             egsWarning("createGeometry(stack): null input?\n");
@@ -159,22 +197,42 @@ extern "C" {
         return result;
     }
 
+    int EGS_StackGeometry::getGlobalRegionOffset(const string geomName) {
+        // Look for the named geometry in the inscribed geometries
+        for (int i=0; i<ng; i++) {
+            if (g[i] && g[i]->getName() == geomName) {
+                return i*nmax;
+            }
+        }
 
-    void EGS_StackGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+        // If it's not found above, search through the inscribed geometries in case they are composite geometries
+        for (int i=0; i<ng; i++) {
+            int shift = g[i]->getGlobalRegionOffset(geomName);
+            if (shift >= 0) {
+                shift += i*nmax;
+                return shift;
+            }
+        }
+
+        // Return -1 for not found
+        return -1;
+    }
+
+    void EGS_StackGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         vector<int> local_regs;
 
         // label defined in the stacked geometries
         for (int i=0; i<ng; i++) {
             local_regs.clear();
-            g[i]->getLabelRegions(str, local_regs);
+            g[i]->getLabelRegions(str, local_regs, sanitize);
             for (int j=0; j<local_regs.size(); j++) {
                 regs.push_back(i*nmax + local_regs[j]);
             }
         }
 
         // label defined in self (stack input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

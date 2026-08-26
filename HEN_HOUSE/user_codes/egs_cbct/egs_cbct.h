@@ -427,8 +427,6 @@ private:
 
     EGS_Float cut_off; // average stat. errors for kerma values
                        // larger than cut_off*Kmax, defaults to 0.5
-    EGS_Float epsilon; // target statistical uncertainty in percent
-                       // defaults to 1%
 
     /*** cone beam rotation defined as follows:
          - equidistant angles ranging from 0o to orbit (360o or 180o)

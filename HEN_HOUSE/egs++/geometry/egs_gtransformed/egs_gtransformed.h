@@ -221,22 +221,37 @@ public:
     void getNextGeom(EGS_RandomGenerator *rndm) {
         // calls getNextGeom on its component geometries to update dynamic
         // geometries in the simulation
-        g->getNextGeom(rndm);
-
+        if (g) {
+            g->getNextGeom(rndm);
+        }
     };
 
     void updatePosition(EGS_Float time) {
         // calls updatePosition on its component geometries to update dynamic
         // geometries in the simulation
-        g->updatePosition(time);
+        if (g) {
+            g->updatePosition(time);
+        }
     };
 
     void containsDynamic(bool &hasdynamic) {
         // calls containsDynamic on its component geometries (only calls if
         // hasDynamic is false, as if it is true we already found one)
-        if (!hasdynamic) {
+        if (!hasdynamic && g) {
             g->containsDynamic(hasdynamic);
         }
+    };
+
+    bool hasRhoScaling() {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
+        }
+
+        return g->hasRhoScaling();
+    };
+
+    void finishInitialization() {
+        g->finishInitialization();
     };
 
     int getMaxStep() const {
@@ -283,7 +298,8 @@ public:
 
     void setBScaling(EGS_Input *);
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual int getGlobalRegionOffset(const string geomName);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 

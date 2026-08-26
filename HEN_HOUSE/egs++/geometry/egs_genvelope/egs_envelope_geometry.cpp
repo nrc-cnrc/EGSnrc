@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Marc Chamberland
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -46,6 +47,8 @@ using namespace std;
 
 string EGS_ENVELOPEG_LOCAL EGS_EnvelopeGeometry::type = "EGS_EnvelopeGeometry";
 string EGS_ENVELOPEG_LOCAL EGS_FastEnvelope::type = "EGS_FastEnvelope";
+
+static bool EGS_ENVELOPEG_LOCAL inputSet = false;
 
 void EGS_EnvelopeGeometry::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_EnvelopeGeometry::setMedia: don't use this method. Use the\n"
@@ -359,6 +362,41 @@ static char EGS_ENVELOPEG_LOCAL eeg_keyword2[] = "geometry";
 static char EGS_ENVELOPEG_LOCAL eeg_keyword3[] = "inscribed geometries";
 
 extern "C" {
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_genvelope"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto typePtr = geomBlockInput->addSingleInput("type", false, "The type of envelope", {"EGS_FastEnvelope"});
+        geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry");
+        geomBlockInput->addSingleInput("inscribed geometries", true, "A list of names of previously defined geometries, must be stictly inside the envelope");
+    }
+
+    EGS_ENVELOPEG_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_genvelope
+    #:start geometry:
+        name = my_envelope
+        library = egs_genvelope
+        base geometry = my_box
+        inscribed geometries = geom1 geom2
+        # geometries geom1 and geom2 must be defined before this one
+    #:stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_ENVELOPEG_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_ENVELOPEG_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         if (!input) {
@@ -495,11 +533,77 @@ extern "C" {
 
     }
 
+    int EGS_EnvelopeGeometry::getGlobalRegionOffset(const string geomName) {
+        // Look for the named geometry in the inscribed geometries
+        for (int i=0; i<n_in; i++) {
+            if (geometries[i] && geometries[i]->getName() == geomName) {
+                int shift = 0;
+                if (new_indexing) {
+                    shift = local_start[i];
+                }
+                else {
+                    shift = nbase+i*nmax;
+                }
+                return shift;
+            }
+        }
 
-    void EGS_EnvelopeGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+        // If it's not found above, search through the inscribed geometries in case they are composite geometries
+        for (int i=0; i<n_in; i++) {
+            int shift = geometries[i]->getGlobalRegionOffset(geomName);
+            if (shift >= 0) {
+                if (new_indexing) {
+                    shift += local_start[i];
+                }
+                else {
+                    shift += nbase+i*nmax;
+                }
+                return shift;
+            }
+        }
+
+        // Return -1 for not found
+        return -1;
+    }
+
+    int EGS_FastEnvelope::getGlobalRegionOffset(const string geomName) {
+        // Look for the named geometry in the inscribed geometries
+        for (int i=0; i<n_in; i++) {
+            if (geometries[i] && geometries[i]->getName() == geomName) {
+                int shift = 0;
+                if (new_indexing) {
+                    shift = local_start[i];
+                }
+                else {
+                    shift = nbase+i*nmax;
+                }
+
+                return shift;
+            }
+        }
+
+        // If it's not found above, search through the inscribed geometries in case they are composite geometries
+        for (int i=0; i<n_in; i++) {
+            int shift = geometries[i]->getGlobalRegionOffset(geomName);
+            if (shift >= 0) {
+                if (new_indexing) {
+                    shift += local_start[i];
+                }
+                else {
+                    shift += nbase+i*nmax;
+                }
+                return shift;
+            }
+        }
+
+        // Return -1 for not found
+        return -1;
+    }
+
+    void EGS_EnvelopeGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         // label defined in the envelope geometry
-        g->getLabelRegions(str, regs);
+        g->getLabelRegions(str, regs, sanitize);
 
         // label defined in the inscribed geometries
         vector<int> gregs;
@@ -509,7 +613,7 @@ extern "C" {
             // add regions from set geometries
             gregs.clear();
             if (geometries[i]) {
-                geometries[i]->getLabelRegions(str, gregs);
+                geometries[i]->getLabelRegions(str, gregs, sanitize);
             }
 
             // shift region numbers according to indexing style
@@ -529,14 +633,14 @@ extern "C" {
         }
 
         // label defined in self (envelope geometry input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 
-    void EGS_FastEnvelope::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_FastEnvelope::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         // label defined in the envelope geometry
-        g->getLabelRegions(str, regs);
+        g->getLabelRegions(str, regs, sanitize);
 
         // label defined in the inscribed geometries
         vector<int> gregs;
@@ -546,7 +650,7 @@ extern "C" {
             // add regions from set geometries
             gregs.clear();
             if (geometries[i]) {
-                geometries[i]->getLabelRegions(str, gregs);
+                geometries[i]->getLabelRegions(str, gregs, sanitize);
             }
 
             // shift region numbers according to indexing style
@@ -554,7 +658,7 @@ extern "C" {
                 shift = local_start[i];
             }
             else {
-                shift = nmax;
+                shift = nbase+i*nmax;
             }
             for (int j=0; j<gregs.size(); j++) {
                 gregs[j] += shift;
@@ -566,7 +670,7 @@ extern "C" {
         }
 
         // label defined in self (envelope geometry input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

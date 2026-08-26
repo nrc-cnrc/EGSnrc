@@ -823,27 +823,61 @@ do_checks:
 
     void getNextGeom(EGS_RandomGenerator *rndm) { //calls getNextGeom on its component geometries to update dynamic geometries in the simulation
         for (int j=0; j<bg->regions(); ++j) {
-            g[j]->getNextGeom(rndm);
+            if (g[j]) {
+                g[j]->getNextGeom(rndm);
+            }
         }
-        bg->getNextGeom(rndm);
+        if (bg) {
+            bg->getNextGeom(rndm);
+        }
     };
 
     void updatePosition(EGS_Float time) {//calls updatePosition on its component geometries to update dynamic geometries in the simulation
-        for (int j=0; j<bg->regions(); j++) {
-            g[j]->updatePosition(time);
+        if (bg) {
+            for (int j=0; j<bg->regions(); j++) {
+                if (g[j]) {
+                    g[j]->updatePosition(time);
+                }
+            }
+
+            bg->updatePosition(time);
         }
-        bg->updatePosition(time);
     };
 
     void containsDynamic(bool &hasdynamic) {//calls containsDynamic on its component geometries (only calls if hasDynamic is false, as if it is true we already found one)
-        for (int j=0; j<bg->regions(); j++) {
+        if (bg) {
+            for (int j=0; j<bg->regions(); j++) {
+                if (!hasdynamic && g[j]) {
+                    g[j]->containsDynamic(hasdynamic);
+                }
+            }
             if (!hasdynamic) {
-                g[j]->containsDynamic(hasdynamic);
+                bg->containsDynamic(hasdynamic);
             }
         }
-        if (!hasdynamic) {
-            bg->containsDynamic(hasdynamic);
+    };
+
+    bool hasRhoScaling() override {
+        if (has_rho_scaling) {
+            return has_rho_scaling;
         }
+
+        for (int j=0; j<bg->regions(); j++) {
+            bool hasRS = g[j]->hasRhoScaling();
+            if (hasRS) {
+                has_rho_scaling = hasRS;
+                return has_rho_scaling;
+            }
+        }
+
+        return bg->hasRhoScaling();
+    };
+
+    void finishInitialization() override {
+        for (int j=0; j<bg->regions(); j++) {
+            g[j]->finishInitialization();
+        }
+        bg->finishInitialization();
     };
 
 
@@ -895,7 +929,8 @@ do_checks:
                bg->getBScaling(ibase);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    virtual int getGlobalRegionOffset(const string geomName);
+    virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
 

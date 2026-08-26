@@ -165,6 +165,8 @@ protected:
     string recordToString(int startPos, int endPos);
     double getTag(string searchString, string notAfter);
     double parseHalfLife(int startPos, int endPos);
+    unsigned short parseSpin(int startPos, int endPos);
+    bool parseParity(int startPos, int endPos);
     double parseStdUncertainty(string value, string stdUncertainty);
     string getStringAfter(string searchString, size_t len);
 
@@ -251,11 +253,15 @@ public:
     bool levelCanDecay() const;
     double getEnergy() const;
     double getHalfLife() const;
+    unsigned short getSpin() const;
+    bool getParity() const;
 
 protected:
     double disintegrationIntensity;
     double energy;
     double halfLife;
+    unsigned short spin;
+    bool parity;
     bool canDecay;
 
 private:
@@ -286,7 +292,14 @@ public:
     virtual void relax(int shell,
                        EGS_Float ecut, EGS_Float pcut,
                        EGS_RandomGenerator *rndm, double &edep,
-                       EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {};
+                       EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
+        (void)shell;
+        (void)ecut;
+        (void)pcut;
+        (void)rndm;
+        (void)edep;
+        (void)particles;
+    };
     virtual void setBetaIntensity(double newIntensity)  = 0;
     int getCharge() const;
     void incrNumSampled();
@@ -557,6 +570,9 @@ private:
            augerEnergies,
            augerIntensities;
     ParentRecord *previousParent;
+
+    // The ENSDF format defines an isomeric transition as having a half-life of greater than 0.1 seconds
+    float isomerCutoff = 0.1;
 };
 
 

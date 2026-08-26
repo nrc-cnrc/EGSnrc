@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Hubert Ho
 #                   Marc Chamberland
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -41,6 +42,8 @@
 #include "egs_gtransformed.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+
+static bool EGS_GTRANSFORMED_LOCAL inputSet = false;
 
 void EGS_TransformedGeometry::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_TransformedGeometry::setMedia: don't use this method. Use the\n"
@@ -68,6 +71,45 @@ void EGS_TransformedGeometry::setBScaling(EGS_Input *) {
 }
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_gtransformed"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("my geometry", true, "The name of a previously defined geometry");
+
+        addTransformationBlock(geomBlockInput);
+    }
+
+    EGS_GTRANSFORMED_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_gtransformed
+    #:start geometry:
+        name = my_gtransform
+        library = egs_gtransformed
+        my geometry = geom
+        # geometry geom must be defined before this one
+        :start transformation:
+            translation = 0 0.5 0
+            rotation = 0.05 0 -1
+        :stop transformation:
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_GTRANSFORMED_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_GTRANSFORMED_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         EGS_BaseGeometry *g = 0;
@@ -118,14 +160,17 @@ extern "C" {
 
     }
 
+    int EGS_TransformedGeometry::getGlobalRegionOffset(const string geomName) {
+        return g->getGlobalRegionOffset(geomName);
+    }
 
-    void EGS_TransformedGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    void EGS_TransformedGeometry::getLabelRegions(const string &str, vector<int> &regs, bool sanitize) {
 
         // label defined in the geometry being transformed
-        g->getLabelRegions(str, regs);
+        g->getLabelRegions(str, regs, sanitize);
 
         // label defined in self (transformation input block)
-        EGS_BaseGeometry::getLabelRegions(str, regs);
+        EGS_BaseGeometry::getLabelRegions(str, regs, sanitize);
 
     }
 

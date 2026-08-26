@@ -67,6 +67,8 @@
 
 using namespace std;
 
+static bool EGS_VHP_LOCAL inputSet = false;
+
 #ifndef SKIP_DOXYGEN
 EGS_VoxelInfo *EGS_VoxelGeometry::v = 0;
 int            EGS_VoxelGeometry::nv = 0;
@@ -671,6 +673,48 @@ const static EGS_VHP_LOCAL char *vhp_error_msg1 =
     "createGeometry(VHP): wrong/missing %s input for micro_test geometry\n";
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseGeometryInputs(false);
+
+        geomBlockInput->getSingleInput("library")->setValues({"egs_vhp_geometry"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        geomBlockInput->addSingleInput("phantom data", true, "The full filepath to the phantom data file, including the extension.");
+        geomBlockInput->addSingleInput("media data", true, "The full filepath to the media data file, including the extension.");
+        geomBlockInput->addSingleInput("slice range", false, "Two numbers, slice indices (indexed from 0). The first number must be smaller. Used to select a given slice range instead of using the entire phantom.");
+
+        // For bone spongiosa
+        geomBlockInput->addSingleInput("BSC thickness", false, "The thickness of the bone surface cells layer, in cm.");
+        geomBlockInput->addSingleInput("TB medium", false, "The trabecular bone medium name.");
+        geomBlockInput->addSingleInput("BM medium", false, "The bone marrow medium name.");
+        geomBlockInput->addSingleInput("micro matrix", false, "The binary micro matrix filename followed by organ indices (defined in the media data file).");
+    }
+
+    EGS_VHP_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # For file format definitions and more inputs, see the documentation.
+    #:start geometry:
+        library      = egs_vhp_geometry
+        name         = some_name
+        phantom data = phantom_data_file
+        media data   = media_data_file
+        slice range  = min_slice max_slice
+    :stop geometry:
+)"};
+        return example;
+    }
+
+    EGS_VHP_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return geomBlockInput;
+    }
 
     EGS_VHP_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         string type;

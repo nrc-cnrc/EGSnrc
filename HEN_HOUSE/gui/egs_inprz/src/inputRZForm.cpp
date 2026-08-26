@@ -790,9 +790,9 @@ void inputRZImpl::update_IOControl( const MIOInputs* EGSio )
 
         //delete[] rb;
 
-	// IRESTART
-	error = QString(WARNING_IRESTART);
-	validate_combo( EGSio->irestart.toLatin1().data() , error, irestartComboBox );
+	// IRESUME
+	error = QString(WARNING_IRESUME);
+	validate_combo( EGSio->iresume.toLatin1().data() , error, iresumeComboBox );
 
   	// STORE DATA ARRAYS
 	if ( EGSio->strdat.toLower() == "yes" ){

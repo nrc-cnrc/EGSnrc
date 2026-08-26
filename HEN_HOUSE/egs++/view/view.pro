@@ -41,18 +41,22 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
                  clippingplanes.h viewcontrol.h geometryview.ui.h \
                  saveimage.h egs_user_color.h egs_track_view.h \
-                 renderworker.h
+                 renderworker.h \
+    egs_highlighter.h \
+    egs_editor.h
 
 SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp \
                  saveimage.cpp clippingplanes.cpp viewcontrol.cpp \
-                 renderworker.cpp image_window.cpp
+                 renderworker.cpp image_window.cpp \
+    egs_highlighter.cpp \
+    egs_editor.cpp
 
 FORMS           = saveimage.ui clippingplanes.ui viewcontrol.ui
 
 win32 {
     CONFIG	+= qt warn_off release windows exceptions_off thread
     DEFINES += WIN32
-    DEFINES += VDEBUG
+    #DEFINES += VDEBUG # Writes output to a file view_debug
     RC_FILE = egs_view.rc
     LIBS	+= ../dso/$$my_machine/egspp.lib
     DESTDIR = ../dso/$$my_machine
@@ -76,7 +80,7 @@ unix {
             message( "Static build ..." )
             DESTDIR = ../../pieces/linux
             #LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp # Fixes path to library
-            LIBS += -L$$hhouse/egs++/dso/$$my_machine -legspp                                 # Relies on LD_LIBRARY_PATH
+            LIBS += -L../dso/$$my_machine -legspp # Relies on LD_LIBRARY_PATH
             UNAME = $$system(getconf LONG_BIT)
             contains( UNAME, 64 ){
                message( "-> 64 bit ($$SNAME)" )
@@ -92,16 +96,16 @@ unix {
 }
 
 # Debug options
-#DEFINES += VIEW_DEBUG
+#DEFINES += VIEW_DEBUG EDITOR_DEBUG
 #QMAKE_CXXFLAGS+="-fsanitize=address -fno-omit-frame-pointer"
 #QMAKE_CXXFLAGS+="-ggdb3"
 #QMAKE_LFLAGS+="-fsanitize=address"
 
 # Use c++14 for gcc 5 or higher
 greaterThan(QMAKE_GCC_MAJOR_VERSION, 4) {
-    QMAKE_CXXFLAGS+=-std=c++14
+    QMAKE_CXXFLAGS+=-std=c++14 -Wno-deprecated-copy
 } else {
-    QMAKE_CXXFLAGS+=-std=c++11
+    QMAKE_CXXFLAGS+=-std=c++11 -Wno-deprecated-copy
 }
 
 UI_DIR = .ui/$$my_machine

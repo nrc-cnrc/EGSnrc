@@ -51,6 +51,9 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <vector>
+#include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -1176,6 +1179,71 @@ void EGS_Input::print(int nind,ostream &out) {
         p->print(nind,out);
     }
 }
+
+// egsTokenize (free function)
+vector<string> egsTokenize(const string &str) {
+
+    // handle empty string
+    if (str.empty()) {
+        return {};
+    }
+
+    // replace commas with spaces
+    string copy = str;
+    replace(copy.begin(), copy.end(), ',', ' ');
+    istringstream iss(copy);
+
+    // tokenize string
+    vector<string> tokens;
+    string token;
+    while (iss >> token) {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
+
+// egsParseIntegerRanges (free function)
+vector<int> egsParseIntegerRanges(vector<string>::const_iterator begin,
+                                  vector<string>::const_iterator end) {
+
+    vector<int> integers;
+
+    // loop over tokens
+    for (auto it = begin; it != end; ++it) {
+
+        string token = *it;
+
+        // try single number first (most common case)
+        {
+            istringstream iss(token);
+            int number;
+            if ((iss >> number) && iss.eof()) {
+                integers.push_back(number);
+                continue;
+            }
+        }
+
+        // try range format (e.g., "14-27")
+        {
+            istringstream iss(token);
+            int start, stop;
+            char dash;
+            if ((iss >> start >> dash >> stop) && dash == '-' && iss.eof()) {
+                for (int i = min(start, stop); i <= max(start, stop); i++) {
+                    integers.push_back(i);
+                }
+            }
+        }
+    }
+
+    // sort and unique
+    sort(integers.begin(), integers.end());
+    integers.erase(unique(integers.begin(), integers.end()), integers.end());
+
+    return integers;
+}
+
 
 #ifdef TEST
 

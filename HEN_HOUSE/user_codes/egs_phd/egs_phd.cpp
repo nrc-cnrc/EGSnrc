@@ -52,6 +52,7 @@
 
 
 #include "egs_phd.h"
+#include "egs_input_struct.h"
 
 // describeUserCode
 void phd_app::describeUserCode() const {
@@ -146,38 +147,11 @@ int phd_app::ausgab(int iarg) {
     // score energy deposited in each region before particle is discarded
     if (iarg <= 4) {
         if (ir >= 0) {
-            score->score(ir, the_epcont->edep);    // don't include weight here; see simulateSingleShower()
+            score->score(ir, the_epcont->edep);    // don't include weight here; see startNewShower()
         }
     }
 
     return 0;
-}
-
-
-// simulate one shower
-int phd_app::simulateSingleShower() {
-
-    // call base class function
-    int err = EGS_AdvancedApplication::simulateSingleShower();
-
-    // sum all energy deposited in the spectrum regions for the current shower
-    EGS_Float myEnergy = 0.0;
-    for (int k=0; k<spectrum_regions.size(); k++) {
-        myEnergy += score->thisHistoryScore(spectrum_regions[k]);
-    }
-
-    // calculate spectrum bin number and score count
-    if (myEnergy > 1e-9) {
-        int mybin = (int)((myEnergy-Emin)/Ebin);
-        if (mybin == nbin) {
-            mybin--;
-        }
-        if (mybin >= 0 && mybin < nbin) {
-            spectrum->score(mybin, initial_weight);          // apply incident particle weight here to the bin count
-        }
-    }
-
-    return err;
 }
 
 
@@ -331,7 +305,29 @@ int phd_app::startNewShower() {
         return res;
     }
 
+    // Whenever we are about to start a new history, first score
+    // the results for the previous history into the PHD spectrum
+    // Caution: This means that the very last history will not be scored
+    // into the PHD spectrum
     if (current_case != last_case) {
+        // sum all energy deposited in the spectrum regions for the current shower
+        EGS_Float myEnergy = 0.0;
+        for (int k=0; k<spectrum_regions.size(); k++) {
+            myEnergy += score->thisHistoryScore(spectrum_regions[k]);
+        }
+
+        // calculate spectrum bin number and score count
+        if (myEnergy > 1e-9) {
+            int mybin = (int)((myEnergy-Emin)/Ebin);
+            if (mybin == nbin) {
+                mybin--;
+            }
+            if (mybin >= 0 && mybin < nbin) {
+                spectrum->score(mybin, initial_weight);          // apply incident particle weight here to the bin count
+            }
+        }
+
+        // Reset the scoring arrays for the new history that's about to start
         score->setHistory(current_case);
         spectrum->setHistory(current_case);
         last_case = current_case;
@@ -340,6 +336,43 @@ int phd_app::startNewShower() {
     return 0;
 }
 
+extern "C" {
+    APP_EXPORT shared_ptr<EGS_InputStruct> getAppSpecificInputs() {
+        shared_ptr<EGS_InputStruct> appInput = make_shared<EGS_InputStruct>();
 
-// main application macro
-APP_MAIN(phd_app);
+        shared_ptr<EGS_BlockInput> scoreBlock = appInput->addBlockInput("scoring options");
+        scoreBlock->setAppName("egs_phd");
+
+        shared_ptr<EGS_BlockInput> specBlock = scoreBlock->addBlockInput("spectrum");
+        specBlock->addSingleInput("label", false, "The name of a region label that refers to the scoring regions. This label must be defined in the geometry using the 'set label' input.");
+        specBlock->addSingleInput("Emin", false, "The minimum energy for the energy bins.");
+        specBlock->addSingleInput("Emax", false, "The maximum energy for the energy bins.");
+        specBlock->addSingleInput("bins", false, "The number of energy bins.");
+        specBlock->addSingleInput("spectrum file", false, "The filepath for an output file that will contain the deposited energy spectrum.");
+
+        return appInput;
+    }
+
+    APP_EXPORT string getAppSpecificExample() {
+        string example;
+        example = {
+        R"(
+:start scoring options:
+    :start spectrum:
+        label = detector
+        Emin  = 0.0
+        Emax  = 1.0
+        bins  = 100
+        spectrum file = spectrum.dat
+    :stop spectrum:
+:stop scoring options:
+)"};
+        return example;
+    }
+}
+
+#ifdef BUILD_APP_LIB
+    APP_LIB(phd_app);
+#else
+    APP_MAIN(phd_app);
+#endif

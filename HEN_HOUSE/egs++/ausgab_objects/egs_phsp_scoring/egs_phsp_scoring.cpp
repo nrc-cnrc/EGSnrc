@@ -24,6 +24,7 @@
 #  Author:          Blake Walters, 2018
 #
 #  Contributors:    Reid Townson
+#                   Hannah Gallop
 #
 ###############################################################################
 */
@@ -44,10 +45,12 @@
 #include "egs_functions.h"
 #include "iaea_phsp.h"
 
+static bool EGS_PHSP_SCORING_LOCAL inputSet = false;
+
 EGS_PhspScoring::EGS_PhspScoring(const string &Name,
                                  EGS_ObjectFactory *f) :
     EGS_AusgabObject(Name,f), phsp_index(0), store_max(1000), phsp_file(),
-    count(0), countg(0), emin(1.e30), emax(-1.e30), first_flush(true), is_restart(false) {
+    count(0), countg(0), emin(1.e30), emax(-1.e30), first_flush(true), is_resume(false) {
     otype = "EGS_PhspScoring";
 }
 
@@ -302,7 +305,7 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
 void EGS_PhspScoring::openPhspFile() const {
 //the file has already been named at this point
     if (oformat==0) { //EGSnrc format
-        if (is_restart) {
+        if (is_resume) {
             phsp_file.open(phsp_fname.c_str(),ios::binary|ios::out|ios::in);
             if (!(phsp_file))
                 egsFatal("\nEGS_PhspScoring: Failed to open phase space file %s for appending.\n",
@@ -335,7 +338,7 @@ void EGS_PhspScoring::openPhspFile() const {
         int iaea_iostat;
         iaea_id = 1; //numerical index indicating this is the 1st file associated with this object scored
         //hard coded to 1
-        if (is_restart) {
+        if (is_resume) {
             int rwmode = 3;
             iaea_new_source(&iaea_id,phsp_fname_char,&rwmode,&iaea_iostat,len);
             if (iaea_iostat < 0) {
@@ -395,7 +398,7 @@ int EGS_PhspScoring::flushBuffer() const {
     if (first_flush) {
         openPhspFile();    //here's where we open the phase space file
     }
-    //awkward logic because we do not know if this is a restart
+    //awkward logic because we do not know if this is a resumed simulation
     //until after initialization
     first_flush = false;
 
@@ -496,7 +499,7 @@ bool  EGS_PhspScoring::setState(istream &data) {
         return false;
     }
     countprev = count;
-    is_restart = true;
+    is_resume = true;
     return true;
 }
 
@@ -519,6 +522,86 @@ bool  EGS_PhspScoring::addState(istream &data) {
 // Process input for this ausgab object
 //**********************************************************************
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseAusgabObjectInputs();
+
+        ausBlockInput->getSingleInput("library")->setValues({"egs_phsp_scoring"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        auto formatPtr = ausBlockInput->addSingleInput("output format", false, "The phase-space format to output. Defaults to EGSnrc", {"EGSnrc", "IAEA"});
+
+        auto xPtr = ausBlockInput->addSingleInput("constant X", false, "X values(cm) at which all particles are scored.");
+        xPtr->addDependency(formatPtr, "IAEA");
+        auto yPtr = ausBlockInput->addSingleInput("constant Y", false, "Y values(cm) at which all particles are scored.");
+        yPtr->addDependency(formatPtr, "IAEA");
+        auto zPtr = ausBlockInput->addSingleInput("constant Z", false, "Z values(cm) at which all particles are scored.");
+        zPtr->addDependency(formatPtr, "IAEA");
+        auto muPtr = ausBlockInput->addSingleInput("score time index", false, "Whether to score the time index for each particle. Only valid for IAEA phase-spaces. Default is no.", {"yes", "no"});
+        muPtr->addDependency(formatPtr, "IAEA");
+
+        auto multiPtr = ausBlockInput->addSingleInput("score multiple crossers", false, "Whether to score the same particle multiple times, if it happens to cross the phase-space surface more than once. Default is no.", {"yes", "no"});
+        multiPtr->addDependency(formatPtr, "EGSnrc");
+
+        ausBlockInput->addSingleInput("particle type", true, "The type of particle to score", {"all", "photons", "charged"});
+        ausBlockInput->addSingleInput("output directory", true, "The name of the output directory");
+
+        // Method 1: Score particles on entry to/exit from a predefined geometry
+        auto spacePtr = ausBlockInput->addSingleInput("phase space geometry", true, "The name of a previously defined geometry");
+        auto scorePtr = ausBlockInput->addSingleInput("score particles on", false, "Which situation to score particles as they cross the geometry boundary. On entry, exit, or entry and exit. Default is entry and exit.", {"entry", "exit", "entry and exit"});
+
+        // Method 2: Score particles on exiting one region and entering another
+        auto fromPtr = ausBlockInput->addSingleInput("from regions", true, "A list of exit region numbers");
+        auto toPtr = ausBlockInput->addSingleInput("to regions", true, "A list of entry region numbers");
+
+        // Can only use one method
+        spacePtr->addDependency(fromPtr, "", true);
+        spacePtr->addDependency(toPtr, "", true);
+        scorePtr->addDependency(fromPtr, "", true);
+        scorePtr->addDependency(toPtr, "", true);
+        fromPtr->addDependency(spacePtr, "", true);
+        fromPtr->addDependency(scorePtr, "", true);
+        toPtr->addDependency(spacePtr, "", true);
+        toPtr->addDependency(scorePtr, "", true);
+    }
+
+    EGS_PHSP_SCORING_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_phsp_scoring
+    #:start ausgab object:
+        library = egs_phsp_scoring
+        name = test
+        from regions = 0 2
+        to regions = 3 5
+        output format = IAEA
+        constant Z = 10.0
+        particle type = all
+        score time index = no
+    :stop ausgab object:
+
+    #:start ausgab object:
+        library = egs_phsp_scoring
+        name = test2
+        phase space geometry = scoreplane
+        output format = EGSnrc
+        particle type = all
+        score particles on = entry
+        score multiple crossers = yes
+    :stop ausgab object:
+)"};
+        return example;
+    }
+
+    EGS_PHSP_SCORING_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return ausBlockInput;
+    }
 
     EGS_PHSP_SCORING_EXPORT EGS_AusgabObject *createAusgabObject(EGS_Input *input,
             EGS_ObjectFactory *f) {
