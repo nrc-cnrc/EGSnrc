@@ -1,0 +1,21 @@
+var NAVTREEINDEX0 =
+{
+"index.html":[],
+"index.html#accu_balance":[6,0],
+"index.html#cvs_log":[7],
+"index.html#g_calc_types":[2],
+"index.html#g_charged":[1,0],
+"index.html#g_databases":[6],
+"index.html#g_e_scoring":[1,0,0],
+"index.html#g_example":[5],
+"index.html#g_intro":[0],
+"index.html#g_method":[1],
+"index.html#g_photons":[1,1],
+"index.html#g_scoring":[1,1,2],
+"index.html#g_spec":[3],
+"index.html#g_usage":[4],
+"index.html#mono":[1,1,0],
+"index.html#poly":[1,1,1],
+"index.html#usage_options":[4,0],
+"pages.html":[]
+};
