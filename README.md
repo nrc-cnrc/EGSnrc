@@ -44,7 +44,7 @@ if you wish to licence EGSnrc under different terms.
 
 ## Copyright
 
-© 2000–2025 National Research Council of Canada — Conseil national de recherches du Canada
+© 2000–2026 National Research Council of Canada — Conseil national de recherches du Canada
 
 Unless otherwise noted, EGSnrc is copyright National Research Council of Canada. Where external contributors have retained copyright on their contributions, this is clearly indicated at the top of the files in question.
 
