@@ -212,7 +212,7 @@ case $canonical_system in
     *-*-darwin*)
         is_osx=yes;
         libext=".dylib"; libext_bundle=".so"; defines="-DOSX";
-        lib_link1="-L\$(abs_dso)"; shared="-dynamiclib";
+        lib_link1="-L\$(abs_dso) -Wl,-rpath,\$(abs_dso)"; shared="-dynamiclib";
         case $CXX in
             g++*) shared_bundle="-bundle" ;;
             *)   shared_bundle="-qmkshrobj" ;; # assume xlC

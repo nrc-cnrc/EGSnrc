@@ -641,6 +641,11 @@ public:
         return app_dir;
     };
 
+    /*! \brief Returns the directory for run output and coordination files */
+    const string &getOutputDir() const {
+        return output_dir;
+    };
+
     /*! \brief Returns the name of the working directory */
     const string &getRunDir() const {
         return run_dir;
@@ -1189,6 +1194,7 @@ protected:
     string  egs_home;           //!< The EGS_HOME directory
     string  hen_house;          //!< The HEN_HOUSE directory
     string  app_dir;            //!< The user code directory
+    string  output_dir;         //!< Directory for output and run artifacts
     string  run_dir;            //!< The working directory during the run
     string  egs_config;         //!< The EGSnrc config
     string  input_file;         //!< The input file name

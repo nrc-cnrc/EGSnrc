@@ -147,6 +147,7 @@ EGS_SimpleApplication::EGS_SimpleApplication(int argc, char **argv) {
     _null_terminate(the_egsio->input_file,256);
     _null_terminate(the_egsio->output_file,256);
     _null_terminate(the_egsio->egs_home,128);
+    _null_terminate(the_egsio->output_dir,256);
     _null_terminate(the_egsio->hen_house,128);
     _null_terminate(the_egsio->pegs_file,256);
     _null_terminate(the_egsio->work_dir,128);
@@ -154,9 +155,10 @@ EGS_SimpleApplication::EGS_SimpleApplication(int argc, char **argv) {
     //
     // ********** Get the content of the input file.
     //
-    string ifile(the_egsio->egs_home);
-    ifile += the_egsio->user_code;
-    ifile += fs;
+    string ifile(the_egsio->output_dir);
+    if (ifile.size() && ifile[ifile.size()-1] != fs) {
+        ifile += fs;
+    }
     ifile += the_egsio->input_file;
     ifile += ".egsinp";
     input = new EGS_Input;
