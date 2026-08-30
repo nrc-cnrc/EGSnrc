@@ -44,6 +44,7 @@
 
 #include <iostream>
 #include <string>
+#include <cstdint>
 using namespace std;
 
 void EGS_RandomGenerator::allocate(int n) {
@@ -406,6 +407,174 @@ void EGS_Ranmar::fillArray(int n, EGS_Float *array) {
 }
 
 
+static inline uint64_t xo_rotl(const uint64_t x, int k) {
+    return (x << k) | (x >> (64 - k));
+}
+
+static uint64_t splitmix64(uint64_t *state) {
+    uint64_t z = (*state += UINT64_C(0x9e3779b97f4a7c15));
+    z = (z ^ (z >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    z = (z ^ (z >> 27)) * UINT64_C(0x94d049bb133111eb);
+    return z ^ (z >> 31);
+}
+
+/*! \brief An xoshiro256++ RNG class.
+ *
+ * Implements the Blackman & Vigna xoshiro256++ generator (2019).
+ * Period: 2^256 - 1. Parallel streams are separated by 2^128 states via
+ * jump(). Produces 53-bit doubles (tau_max = 53*ln2 ~ 36.7 mfp).
+ * getUInt64() exposes the raw 64-bit output for direct log computation,
+ * extending the effective range to tau_max = 64*ln2 ~ 44.4 mfp.
+ */
+class EGS_LOCAL EGS_Xoshiro256pp : public EGS_RandomGenerator {
+
+public:
+
+    EGS_Xoshiro256pp(int ixx=1802, int jxx=9373, int sequence=0, int n=128) :
+        EGS_RandomGenerator(n), iseed1(ixx), iseed2(jxx), the_copy(0) {
+        initState(ixx, jxx);
+        for (int k = 0; k < sequence; k++) {
+            jump();
+        }
+    };
+
+    EGS_Xoshiro256pp(const EGS_Xoshiro256pp &r) :
+        EGS_RandomGenerator(r),
+        iseed1(r.iseed1), iseed2(r.iseed2), the_copy(0) {
+        s[0]=r.s[0]; s[1]=r.s[1]; s[2]=r.s[2]; s[3]=r.s[3];
+    };
+
+    ~EGS_Xoshiro256pp() {
+        delete the_copy;
+    };
+
+    void fillArray(int n, EGS_Float *array) {
+        for (int ii = 0; ii < n; ii++) {
+            array[ii] = (EGS_Float)((double)(next() >> 11) * TWO53_INV);
+        }
+        count += n;
+    };
+
+    EGS_I64 getUInt64() {
+        count++;
+        return (EGS_I64)next();
+    };
+
+    void describeRNG() const {
+        egsInformation("Random number generator:\n"
+                       "============================================\n");
+        egsInformation("  type                = xoshiro256++\n");
+        egsInformation("  initial seeds       = %d %d\n", iseed1, iseed2);
+        egsInformation("  numbers used so far = %lld\n", count);
+    };
+
+    EGS_RandomGenerator *getCopy() {
+        return new EGS_Xoshiro256pp(*this);
+    };
+
+    void setState(EGS_RandomGenerator *r) {
+        copyBaseState(*r);
+        EGS_Xoshiro256pp *r1 = dynamic_cast<EGS_Xoshiro256pp *>(r);
+        if (!r1) {
+            egsFatal("EGS_Xoshiro256pp::setState: attempt to set state "
+                     "from non-EGS_Xoshiro256pp RNG\n");
+        }
+        s[0]=r1->s[0]; s[1]=r1->s[1]; s[2]=r1->s[2]; s[3]=r1->s[3];
+        iseed1 = r1->iseed1;
+        iseed2 = r1->iseed2;
+    };
+
+    void saveState() {
+        if (the_copy) {
+            the_copy->set(*this);
+        }
+        else {
+            the_copy = new EGS_Xoshiro256pp(*this);
+            the_copy->the_copy = 0;
+        }
+    };
+
+    void resetState() {
+        if (the_copy) {
+            EGS_Xoshiro256pp *tmp = the_copy;
+            set(*the_copy);
+            the_copy = tmp;
+        }
+    };
+
+    int rngSize() const {
+        return baseSize() + 2*sizeof(int) + 4*sizeof(uint64_t);
+    };
+
+protected:
+
+    bool storePrivateState(ostream &data) {
+        data << iseed1 << " " << iseed2 << "\n";
+        data << s[0] << " " << s[1] << " " << s[2] << " " << s[3] << "\n";
+        return data.good();
+    };
+
+    bool setPrivateState(istream &data) {
+        data >> iseed1 >> iseed2 >> s[0] >> s[1] >> s[2] >> s[3];
+        return data.good();
+    };
+
+private:
+
+    void initState(int ixx, int jxx) {
+        uint64_t seed = ((uint64_t)(uint32_t)ixx << 32) | (uint64_t)(uint32_t)jxx;
+        s[0] = splitmix64(&seed);
+        s[1] = splitmix64(&seed);
+        s[2] = splitmix64(&seed);
+        s[3] = splitmix64(&seed);
+    };
+
+    inline uint64_t next() {
+        const uint64_t result = xo_rotl(s[0] + s[3], 23) + s[0];
+        const uint64_t t = s[1] << 17;
+        s[2] ^= s[0];
+        s[3] ^= s[1];
+        s[1] ^= s[2];
+        s[0] ^= s[3];
+        s[2] ^= t;
+        s[3] = xo_rotl(s[3], 45);
+        return result;
+    };
+
+    void jump() {
+        static const uint64_t JUMP[4] = {
+            UINT64_C(0x180ec6d33cfd0aba), UINT64_C(0xd5a61266f0c9392c),
+            UINT64_C(0xa9582618e03fc9aa), UINT64_C(0x39abdc4529b1661c)
+        };
+        uint64_t s0=0, s1=0, s2=0, s3=0;
+        for (int i = 0; i < 4; i++) {
+            for (int b = 0; b < 64; b++) {
+                if (JUMP[i] & (UINT64_C(1) << b)) {
+                    s0 ^= s[0]; s1 ^= s[1]; s2 ^= s[2]; s3 ^= s[3];
+                }
+                next();
+            }
+        }
+        s[0]=s0; s[1]=s1; s[2]=s2; s[3]=s3;
+    };
+
+    void set(const EGS_Xoshiro256pp &r) {
+        copyBaseState(r);
+        s[0]=r.s[0]; s[1]=r.s[1]; s[2]=r.s[2]; s[3]=r.s[3];
+        iseed1 = r.iseed1;
+        iseed2 = r.iseed2;
+    };
+
+    uint64_t           s[4];
+    int                iseed1, iseed2;
+    EGS_Xoshiro256pp  *the_copy;
+
+    static const double TWO53_INV;
+};
+
+const double EGS_Xoshiro256pp::TWO53_INV = 1.0 / 9007199254740992.0;
+
+
 EGS_RandomGenerator *EGS_RandomGenerator::createRNG(EGS_Input *input,
         int sequence) {
     if (!input) {
@@ -450,6 +619,16 @@ EGS_RandomGenerator *EGS_RandomGenerator::createRNG(EGS_Input *input,
         bool hr = i->getInput("high resolution",hr_options,0);
         res->setHighResolution(hr);
         result = res;
+    }
+    else if (i->compare(type,"xoshiro256++")) {
+        vector<int> seeds;
+        err = i->getInput("initial seeds",seeds);
+        if (!err && seeds.size() >= 2) {
+            result = new EGS_Xoshiro256pp(seeds[0], seeds[1], sequence);
+        }
+        else {
+            result = new EGS_Xoshiro256pp(1802, 9373, sequence);
+        }
     }
     else {
         egsWarning("EGS_RandomGenerator::createRNG: unknown RNG type %s\n",
