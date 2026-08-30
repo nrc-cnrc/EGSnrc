@@ -1,0 +1,58 @@
+##############################################################################
+# Positive test: region labels with egs_glib + alias lookup
+##############################################################################
+
+:start run control:
+    ncase = 1e4
+:stop run control:
+
+:start geometry definition:
+    :start geometry:
+        library = egs_glib
+        name = my-glib-label
+        include file = glib_alias_labels_include.geom
+    :stop geometry:
+    simulation geometry = my-glib-label
+:stop geometry definition:
+
+:start media definition:
+    ae = 0.521
+    ap = 0.010
+    ue = 50.511
+    up = 50
+    :start water:
+        density correction file = water_liquid
+    :stop water:
+:stop media definition:
+
+:start source definition:
+    :start source:
+        name = pencil_beam
+        library = egs_parallel_beam
+        charge = -1
+        direction = 0 0 1
+        :start spectrum:
+            type = monoenergetic
+            energy = 1
+        :stop spectrum:
+        :start shape:
+            type = point
+            position = -6.75 -6.5 0
+        :stop shape:
+    :stop source:
+    simulation source = pencil_beam
+:stop source definition:
+
+:start ausgab object definition:
+    :start ausgab object:
+        name = dose_label_left
+        library = egs_dose_scoring
+        medium dose = no
+        region dose = yes
+        dose regions = left_voxel
+        :start output dose file:
+            geometry name = myxyz_labeled
+            file type = 3ddose
+        :stop output dose file:
+    :stop ausgab object:
+:stop ausgab object definition:

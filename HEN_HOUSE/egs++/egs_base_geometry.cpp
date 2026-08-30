@@ -49,6 +49,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <map>
 #include <cstdio>
 #include <cstdarg>
 #include <cstdlib>
@@ -68,6 +69,7 @@ public:
 
     int nnow, ntot;
     EGS_BaseGeometry **geoms;
+    map<string, EGS_BaseGeometry *> aliases;
     vector<string> media;
     vector<EGS_Library *> glibs;
     static string geom_delimeter;
@@ -127,6 +129,7 @@ public:
 
     void clearGeometries() {
         media.clear();
+        aliases.clear();
         if (!ntot) {
             return;
         }
@@ -188,6 +191,14 @@ public:
     };
 
     void removeGeometry(EGS_BaseGeometry *g) {
+        for (map<string, EGS_BaseGeometry *>::iterator it = aliases.begin(); it != aliases.end(); ) {
+            if (it->second == g) {
+                aliases.erase(it++);
+            }
+            else {
+                ++it;
+            }
+        }
         ntot--;
         EGS_BaseGeometry **tmp = new EGS_BaseGeometry* [ntot];
         int i=0;
@@ -208,7 +219,35 @@ public:
             if (geoms[j]->getName() == name) {
                 return geoms[j];
             }
+        map<string, EGS_BaseGeometry *>::const_iterator alias = aliases.find(name);
+        if (alias != aliases.end()) {
+            return alias->second;
+        }
         return 0;
+    };
+
+    bool addGeometryAlias(const string &alias, EGS_BaseGeometry *geom) {
+        if (!geom || alias.empty()) {
+            return false;
+        }
+        for (int j=0; j<nnow; ++j) {
+            if (geoms[j]->getName() == alias && geoms[j] != geom) {
+                egsWarning("EGS_GeometryPrivate::addGeometryAlias: alias '%s' conflicts with geometry name '%s'\n",
+                           alias.c_str(), geoms[j]->getName().c_str());
+                return false;
+            }
+        }
+        map<string, EGS_BaseGeometry *>::iterator it = aliases.find(alias);
+        if (it != aliases.end()) {
+            if (it->second == geom) {
+                return true;
+            }
+            egsWarning("EGS_GeometryPrivate::addGeometryAlias: alias '%s' already refers to geometry '%s'\n",
+                       alias.c_str(), it->second->getName().c_str());
+            return false;
+        }
+        aliases[alias] = geom;
+        return true;
     };
 
     int addMedium(const string &Name) {
@@ -471,6 +510,10 @@ void EGS_BaseGeometry::clearGeometries() {
 
 EGS_BaseGeometry *EGS_BaseGeometry::getGeometry(const string &Name) {
     return egs_geometries[active_glist].getGeometry(Name);
+}
+
+bool EGS_BaseGeometry::addGeometryAlias(const string &alias, EGS_BaseGeometry *geom) {
+    return egs_geometries[active_glist].addGeometryAlias(alias,geom);
 }
 
 EGS_BaseGeometry **EGS_BaseGeometry::getGeometries() {
