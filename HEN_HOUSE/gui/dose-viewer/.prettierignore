@@ -1,0 +1,3 @@
+# Ignore Javascript files (they are formatted with JS Standard)
+*.js
+*.mjs
