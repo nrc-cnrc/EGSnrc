@@ -395,12 +395,8 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
     }
     else {
         disintegrationOccurred = false;
-        // The time returned from the spectrum is just the time
-        // since the last disintegration event, so this is only
-        // non-zero for internal transitions. This is why the
-        // times are added here - each transition occurs only after
-        // the delay of the previous.
-        time += decays[i]->getTime();
+        // getTime() returns the absolute offset of this emission from the disintegration, so anchor it to the disintegration time.
+        time = lastDisintTime + decays[i]->getTime();
     }
 
     q = decays[i]->getCharge();
@@ -624,6 +620,7 @@ EGS_RadionuclideSpectrum::EGS_RadionuclideSpectrum(const string nuclide, const s
     currentLevel = 0;
     Emax = 0;
     currentTime = 0;
+    currentLevelTime = 0;
     ishower = -1; // Start with ishower -1 so first shower has index 0
     totalGammaEnergy = 0;
     relaxationType = relaxType;
@@ -790,6 +787,9 @@ EGS_Float EGS_RadionuclideSpectrum::sample(EGS_RandomGenerator *rndm) {
         E = p.E;
         currentQ = p.q;
 
+        // prompt: same time as the vacancy-creating event
+        currentTime = currentLevelTime;
+
         emissionType = 1;
 
         return E;
@@ -816,22 +816,36 @@ EGS_Float EGS_RadionuclideSpectrum::sample(EGS_RandomGenerator *rndm) {
                         u2 = rndm->getUniform();
                     }
 
+                    // Delay of THIS transition, from the current level's half-life
+                    EGS_Float delay = 0;
+
                     // Sample how long
                     // it took for this transition to occur
                     // time = -halflife / ln(2) * log(1-u)
-                    double hl = currentLevel->getHalfLife();
+                    EGS_Float hl = currentLevel->getHalfLife();
                     if (hl > 0) {
-                        currentTime = -hl * log(1.-rndm->getUniform()) /
+                        delay = -hl * log(1.-rndm->getUniform()) /
                                       0.693147180559945309417232121458176568075500134360255254120680009493393;
                     }
 
-                    // Determine whether multiple gamma transitions occur
+                    // Absolute offset from the disintegration = time the level was
+                    // reached + this transition's delay. A path sum, so sibling
+                    // branches never inherit each other's delays.
+                    EGS_Float levelArrival = currentLevelTime;
+                    currentTime = levelArrival + delay;
+
+                    // If this level de-excites more than once, revisit it later
+                    // starting from the time it was reached
                     if (rndm->getUniform() < (*gamma)->getMultiTransitionProb()) {
                         multiTransitions.push_back(currentLevel);
+                        multiTransitionTimes.push_back(levelArrival);
                     }
 
                     // Update the level of the daughter
                     currentLevel = (*gamma)->getFinalLevel();
+
+                    // The final level is reached at this emission's time
+                    currentLevelTime = currentTime;
 
                     // If a gamma emission occurs
                     if (u2 < (*gamma)->getGammaIntensity()) {
@@ -912,6 +926,8 @@ EGS_Float EGS_RadionuclideSpectrum::sample(EGS_RandomGenerator *rndm) {
     if (multiTransitions.size() > 0) {
         currentLevel = multiTransitions.back();
         multiTransitions.pop_back();
+        currentLevelTime = multiTransitionTimes.back();
+        multiTransitionTimes.pop_back();
         return 0;
     }
 
@@ -919,6 +935,7 @@ EGS_Float EGS_RadionuclideSpectrum::sample(EGS_RandomGenerator *rndm) {
     // Sample which decay occurs
     // ============================
     currentTime = 0;
+    currentLevelTime = 0;
 
     // Beta-, beta+ and electron capture
     for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();

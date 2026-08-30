@@ -8,13 +8,13 @@
 //TODO: Fit a Gaussian to expected peaks, and a line across for background subtraction
 
 #include "egs_advanced_application.h"
-#include "sources/egs_radionuclide_source/egs_radionuclide_source.h"
 #include "egs_scoring.h"
 #include "egs_interface2.h"
 #include "egs_input.h"
 
 #include <fstream>
 #include <iomanip>
+#include <map>
 
 using namespace std;
 
@@ -26,7 +26,8 @@ public:
     EGS_GammaSpecApplication(int argc, char **argv) :
         EGS_AdvancedApplication(argc,argv), spectrum(0), spectrum_perf(0),
         score(0), score_perf(0), nbins(100),
-        nreg(0), Etot(0), current_weight(1) {}
+        nreg(0), Etot(0), current_weight(1),
+        timeResolution(1e-5), decayStartTime(0), currentEmissionTime(0) {}
 
 
     // destructor
@@ -106,6 +107,34 @@ private:
 
     EGS_Application *app;
     vector<EGS_Float> gammaEnergies, peakEfficiency, peakEfficiencyUnc, peakEfficiency_perf, peakEfficiencyUnc_perf;
+
+    // Detector coincidence-resolving time [s]. Emissions from one disintegration
+    // separated by more than this (e.g. a delayed isomeric transition) are
+    // recorded as separate counts in the non-perfect detector spectrum.
+    EGS_Float timeResolution;
+
+    // Emission time of the current decay's first particle [s], used as the
+    // reference for computing time-bucket offsets within the decay.
+    // Stays at 0 for sources that do not report emission times.
+    double decayStartTime;
+
+    // Emission time of the current source particle [s], as reported by the
+    // source via getTime(). Negative for sources that do not support
+    // emission-time tracking (non-radionuclide sources).
+    double currentEmissionTime;
+
+    // Per-decay map from time-bucket index to summed detector energy [MeV].
+    // Each bucket represents one detection event (one count in the non-perfect
+    // spectrum). Emissions within timeResolution of the decay start share
+    // bucket 0; delayed emissions land in later buckets. Cleared at the start
+    // of each new decay by flushEvents().
+    std::map<EGS_I64, EGS_Float> eventEnergy;
+
+    // Bin all time-resolved detection events accumulated for the current decay
+    // into the non-perfect spectrum, then clear the map. Called at the
+    // beginning of each new decay, so events are attributed to the closing
+    // decay's history index before the scoring array is advanced.
+    void flushEvents();
 
     void calculateEfficiencies(vector<double> &spectr, vector<double> &spectrUnc, vector<double> &peakEff, vector<double> &peakEffUnc, bool isPerfect);
 };
@@ -189,6 +218,18 @@ int EGS_GammaSpecApplication::initScoring() {
     // set energy bin size
     binWidth = (Emax-Emin)/(double)nbins;
     egsInformation("Bin width = %f MeV\n", binWidth);
+
+    // Detector coincidence-resolving time. Emissions from one disintegration
+    // separated by more than this (e.g. delayed isomeric transitions) are
+    // recorded as separate counts. Defaults to 1e-5 s.
+    EGS_Float myTime;
+    if (!options->getInput("time resolution", myTime)) {
+        timeResolution = myTime;
+    }
+    else {
+        timeResolution = 1e-5;
+    }
+    egsInformation("Detector time resolution = %g s\n", timeResolution);
 
     // Get the gamma energies that will be used to calculate efficiency
     // These ones are manually input by user
@@ -296,8 +337,53 @@ int EGS_GammaSpecApplication::simulateSingleShower() {
     }
     // =======================
 
+    // =======================
+    // For non-perfect detectors
+    // Add this shower's energy deposit to the appropriate time bucket within
+    // the current decay. Emissions within timeResolution of the decay start
+    // share bucket 0 and will be summed (coincidence summing). A delayed
+    // emission (e.g. an isomeric transition) lands in a later bucket and
+    // becomes its own independent count when the decay is flushed. Because
+    // the source reports absolute path-sum times rather than sequential times,
+    // prompt sibling emissions always land in bucket 0 regardless of the order
+    // they happen to be returned by the source.
+    // For sources that do not report emission times (currentEmissionTime < 0),
+    // all deposits go into bucket 0, giving the original per-decay behaviour.
+    if (myEnergy > 0) {
+        EGS_I64 bucket = 0;
+        if (currentEmissionTime >= 0 && currentEmissionTime > decayStartTime) {
+            bucket = (EGS_I64)((currentEmissionTime - decayStartTime) / timeResolution);
+        }
+        eventEnergy[bucket] += myEnergy;
+    }
+    // =======================
+
     return err;
 }
+
+
+// flushEvents
+// Bin all time-resolved detection events accumulated for the current decay
+// into the non-perfect spectrum, then clear the map. This must be called
+// while the spectrum scoring array's history index still corresponds to the
+// closing decay (i.e. before setHistory() is advanced to the next decay).
+void EGS_GammaSpecApplication::flushEvents() {
+    for (std::map<EGS_I64,EGS_Float>::iterator it = eventEnergy.begin();
+            it != eventEnergy.end(); ++it) {
+        EGS_Float e = it->second;
+        if (e > minDetectorEnergy) {
+            int mybin = (int)(e / binWidth);
+            if (mybin == nbins) {
+                mybin--;
+            }
+            if (mybin >= 0 && mybin < nbins) {
+                spectrum->score(mybin, current_weight);
+            }
+        }
+    }
+    eventEnergy.clear();
+}
+
 
 // outputData
 int EGS_GammaSpecApplication::outputData() {
@@ -355,6 +441,9 @@ void EGS_GammaSpecApplication::resetCounter() {
     spectrum_perf->reset();
     Etot = 0;
     currentSourceParticle = 0;
+    eventEnergy.clear();
+    decayStartTime = 0;
+    currentEmissionTime = 0;
 }
 
 // addState
@@ -427,6 +516,9 @@ void EGS_GammaSpecApplication::outputResponse() {
 
     // =======================
     // For non-perfect detectors
+    // The spectrum scoring array is keyed on current_case (one history per
+    // decay), so currentResult already normalizes per decay. No additional
+    // rescaling is needed.
     spec_f << scientific;
     spec_f << setprecision(6);
     double totalE = 0.0;
@@ -591,29 +683,29 @@ void EGS_GammaSpecApplication::getCurrentResult(double &sum, double &sum2, doubl
 // startNewShower
 int EGS_GammaSpecApplication::startNewShower() {
 
+    // Capture the emission time of the current source particle. This is set
+    // by the source during getNextParticle(), which runs before startNewShower()
+    // in the base class simulateSingleShower(). Returns a negative value for
+    // sources that do not support emission-time tracking.
+    currentEmissionTime = source->getTime();
+
+    bool newDecay = (current_case != last_case);
+
     // =======================
     // For non-perfect detectors
 
-    // Do some scoring for the previous shower, if this particle is part
-    // of a new decay and it's not a perfect detector
-    if (current_case != last_case) {
-        // Sum all energy deposited in the detector for the previous shower
-        EGS_Float myEnergy = 0.0;
-        int size = scoringRegions.size();
-        for (int k=0; k<size; k++) {
-            myEnergy += score->thisHistoryScore(scoringRegions[k]);
-        }
+    if (newDecay) {
+        // Flush the time-bucketed energy deposits from the previous decay into
+        // the non-perfect spectrum. This must happen before setHistory() below
+        // advances the spectrum's history index to the new decay.
+        flushEvents();
 
-        // Calculate spectrum bin number
-        if (myEnergy > minDetectorEnergy) {
-            int mybin = (int)(myEnergy/binWidth);
-            if (mybin == nbins) {
-                mybin--;
-            }
-            if (mybin >= 0 && mybin < nbins) {
-                // Apply particle weight here to the bin count
-                spectrum->score(mybin,current_weight);
-            }
+        // The start time of this new decay is the emission time of its first
+        // particle. All subsequent emissions of this decay are bucketed relative
+        // to this reference. For sources without time tracking, decayStartTime
+        // stays at 0 and all deposits go into bucket 0 (original behaviour).
+        if (currentEmissionTime >= 0) {
+            decayStartTime = currentEmissionTime;
         }
     }
     // =======================
@@ -630,7 +722,7 @@ int EGS_GammaSpecApplication::startNewShower() {
     score_perf->setHistory(currentSourceParticle);
     spectrum_perf->setHistory(currentSourceParticle);
 
-    if (current_case != last_case) {
+    if (newDecay) {
 
         score->setHistory(current_case);
         spectrum->setHistory(current_case);
@@ -657,6 +749,7 @@ extern "C" {
         specBlock->addSingleInput("automatic analysis energies", false, "Get the analysis energies automatically, using all of the gamma energies from the radionuclide decay scheme. They will be combined with the manually entered 'gamma analysis energies', so make sure they don't overlap. Only works for egs_radionuclide_source. Defaults to yes.", {"Yes", "No"});
         specBlock->addSingleInput("gamma analysis energies", false, "The energies to use for analysis. I.e. coincidence summing corrections will be calculated for each of these.");
         specBlock->addSingleInput("minimum detectable energy", false, "The minimum energy from a single shower that can be detected in the sensitive regions. If the total energy deposited by the shower is less than this value, it is not added to the recorded spectrum. Defaults to 1e-6.");
+        specBlock->addSingleInput("time resolution", false, "Detector coincidence-resolving time in seconds. Emissions from a single disintegration separated by more than this (e.g. delayed isomeric transitions) are recorded as separate counts in the non-perfect detector spectrum. Defaults to 1e-5.");
 
         return appInput;
     }
@@ -683,6 +776,10 @@ extern "C" {
 
         # Optional, MeV, default=1e-6, the minimum energy from a single shower that can be detected in the sensitive regions. If the total energy deposited by the shower is less than this value, it is not added to the recorded spectrum.
         minimum detectable energy = 1e-6
+
+        # Optional, seconds, default=1e-5, detector coincidence-resolving time. Emissions from a single disintegration
+        # separated by more than this (e.g. delayed isomeric transitions) are recorded as separate counts.
+        time resolution = 1e-5
     :stop output spectrum:
 
 :stop scoring options:

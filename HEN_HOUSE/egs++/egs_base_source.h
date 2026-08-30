@@ -274,6 +274,16 @@ public:
         return vector<EGS_Ensdf *>();
     };
 
+    /*! \brief Returns the emission time of the most recent particle.
+    *
+    * Returns a negative value if the source does not support emission
+    * time tracking (e.g. non-radionuclide sources). Override in derived
+    * classes that assign physical emission times to particles.
+    */
+    virtual EGS_Float getTime() const {
+        return -1.0;
+    };
+
     /*!  \brief Store the source state into the stream \a data_out.
      *
      * Every source should reimplement this method to store
