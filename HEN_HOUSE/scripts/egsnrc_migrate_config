@@ -1,0 +1,111 @@
+#!/bin/sh
+###############################################################################
+#
+#  Migrate legacy EGSnrc shell / specs configuration to XDG profiles
+#
+#  Usage:
+#    egsnrc_migrate_config [--profile NAME] [--hen-house PATH] [--strip-legacy]
+#
+###############################################################################
+
+_my_dir=$(cd "$(dirname "$0")" && pwd)
+. "$_my_dir/egsnrc_config_paths"
+
+_profile=""
+_hen_house=""
+_strip=no
+
+while test $# -gt 0; do
+    case "$1" in
+        --profile) _profile="$2"; shift 2 ;;
+        --hen-house) _hen_house="$2"; shift 2 ;;
+        --strip-legacy) _strip=yes; shift ;;
+        -h|--help)
+            echo "Usage: egsnrc_migrate_config [--profile NAME] [--hen-house PATH] [--strip-legacy]"
+            exit 0
+            ;;
+        *) echo "Unknown option: $1" >&2; exit 1 ;;
+    esac
+done
+
+if test -z "$_hen_house"; then
+    if test -n "$HEN_HOUSE"; then
+        _hen_house="$HEN_HOUSE"
+    elif test -n "$EGS_CONFIG" && test -f "$EGS_CONFIG"; then
+        _hen_house=$(grep 'HEN_HOUSE =' "$EGS_CONFIG" | sed 's/HEN_HOUSE = //')
+    fi
+fi
+
+if test -z "$_hen_house" || ! test -f "$_hen_house/specs/unix.spec"; then
+    echo "egsnrc_migrate_config: could not determine HEN_HOUSE (use --hen-house)" >&2
+    exit 1
+fi
+
+_hh="${_hen_house%/}/"
+if test -z "$_profile"; then
+    _profile=$(egsnrc_default_profile_name "$_hh")
+fi
+
+egsnrc_ensure_profile_layout "$_profile" "$_hh"
+_specs="$(egsnrc_user_specs_dir "$_profile")"
+mkdir -p "$_specs"
+
+_migrated=0
+for _f in "$_hh/specs"/*.conf; do
+    test -f "$_f" || continue
+    case "$_f" in
+        *_example.conf) continue ;;
+    esac
+    if grep -q 'Created by' "$_f" 2>/dev/null || grep -q 'my_machine =' "$_f"; then
+        _base=$(basename "$_f")
+        if test ! -f "$_specs/$_base"; then
+            cp "$_f" "$_specs/$_base"
+            _migrated=$((_migrated + 1))
+            echo "Copied $_base -> $_specs/"
+        fi
+    fi
+done
+
+_active=""
+if test -n "$EGS_CONFIG" && test -f "$EGS_CONFIG"; then
+    _active=$(basename "$EGS_CONFIG" .conf)
+elif test -f "$_specs/${_profile}.conf"; then
+    _active="$_profile"
+else
+    for _f in "$_specs"/*.conf; do
+        test -f "$_f" || continue
+        case "$_f" in *egspp_*) continue ;; esac
+        _active=$(basename "$_f" .conf)
+        break
+    done
+fi
+
+_egs_home="${EGS_HOME:-$HOME/egs_home}"
+if test -f "$HOME/.egsnrcrc"; then
+    _from_rc=$(grep 'EGS_HOME' "$HOME/.egsnrcrc" | head -1 | sed -E 's/.*EGS_HOME[^=]*=[[:space:]]*//; s/[[:space:]]*$//')
+    if test -n "$_from_rc"; then
+        _egs_home="$_from_rc"
+    fi
+fi
+
+if test -z "$_active"; then
+    echo "No machine config found to activate in $_specs" >&2
+    exit 1
+fi
+
+egsnrc_write_profile_env "$_profile" "$_active" "$_egs_home"
+egsnrc_set_active_profile "$_profile"
+egsnrc_install_xdg_shell_files "$_hh"
+
+echo ""
+echo "Migration complete: profile '$_profile' ($_migrated config file(s) copied)"
+echo ""
+echo "Add this line to your shell startup file:"
+egsnrc_shell_oneliner
+echo ""
+echo "Then run:  egsnrc use $_profile --apply"
+echo "Or open a new terminal."
+
+if test "$_strip" = yes; then
+    echo "(--strip-legacy not yet implemented; remove old EGSnrc blocks from shell RC manually)"
+fi

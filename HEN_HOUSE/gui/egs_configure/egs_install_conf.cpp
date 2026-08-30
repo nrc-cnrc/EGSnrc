@@ -481,7 +481,8 @@ void QInstallPage::createSystemFiles(){
   MTestID id = ft->getIDs();          // map relating test name to task number
 
   printProgress( "\n===> Creating configuration file ...\n\n");
-  specFile = henHouse() + tr("specs") + QDir::separator() + confFile();
+  QDir().mkpath( egsnrcUserSpecsDir() );
+  specFile = egsnrcUserSpecsDir() + confFile();
   QDate date = QDate::currentDate();
   QString today = date.toString ( Qt::TextDate );
   QDateTime dateTime = QDateTime::currentDateTimeUtc();
@@ -568,11 +569,17 @@ void QInstallPage::createSystemFiles(){
 
   QString the_extra_flag = QString();
   QString the_hen = henHouse();
+  QString the_user_specs = egsnrcUserSpecsDir();
 #ifdef WIN32
   if ( the_hen.endsWith( QDir::separator() ) )
     the_hen.chop(1);
   the_hen.append("$(DSEP)");
   the_hen.replace( 0, 1, QString(the_hen[0]).toUpper());
+
+  if ( the_user_specs.endsWith( QDir::separator() ) )
+    the_user_specs.chop(1);
+  the_user_specs.append("$(DSEP)");
+  the_user_specs.replace( 0, 1, QString(the_user_specs[0]).toUpper());
 
   //QString the_sep = (QString)" := $(shell echo \\)";
   QString the_sep = QString(" := $(subst /,\\,/)");
@@ -584,6 +591,7 @@ void QInstallPage::createSystemFiles(){
 #endif
   specfile.replace(QString("$DSEP"),  the_sep ) ;
   specfile.replace(QString("$HEN_HOUSE"), the_hen );
+  specfile.replace(QString("$USER_SPEC_DIR"), the_user_specs );
   specfile.replace(QString("$conf_name"),  my_machine() );
   specfile.replace(QString("$canonical_system"),  canonical() );
   specfile.replace(QString("$current_date"),  today );
@@ -1113,7 +1121,7 @@ void QInstallPage::create_egspp_config(){
 
   printProgress( "\n===> Creating C++ configuration file ...\n\n");
 
-  specFileCPP = henHouse() + tr("specs") + QDir::separator() + QString("egspp_") + confFile();
+  specFileCPP = egsnrcUserSpecsDir() + QString("egspp_") + confFile();
 
   QString egsppspecfile(egspp_spec_file);
   egsppspecfile.replace(QString("$my_name"),  the_name );

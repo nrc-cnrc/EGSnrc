@@ -1,0 +1,184 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc XDG configuration path helpers
+#  Copyright (C) 2026 National Research Council Canada
+#
+#  Source from configure, finalize, egsnrc CLI, and shell entry scripts.
+#
+###############################################################################
+
+egsnrc_config_home() {
+    if test -n "$EGSNRC_CONFIG_HOME"; then
+        printf '%s\n' "$EGSNRC_CONFIG_HOME"
+    elif test -n "$XDG_CONFIG_HOME"; then
+        printf '%s/EGSnrc\n' "$XDG_CONFIG_HOME"
+    else
+        printf '%s/.config/EGSnrc\n' "$HOME"
+    fi
+}
+
+egsnrc_read_active_profile() {
+    _ecf="$(egsnrc_config_home)/active_profile"
+    if test -f "$_ecf"; then
+        tr -d '[:space:]' < "$_ecf"
+    else
+        printf 'default\n'
+    fi
+}
+
+egsnrc_profile_dir() {
+    _profile="$1"
+    if test -z "$_profile"; then
+        _profile=$(egsnrc_read_active_profile)
+    fi
+    printf '%s/profiles/%s\n' "$(egsnrc_config_home)" "$_profile"
+}
+
+egsnrc_user_specs_dir() {
+    _profile="$1"
+    printf '%s/specs\n' "$(egsnrc_profile_dir "$_profile")"
+}
+
+egsnrc_profile_env() {
+    _profile="$1"
+    printf '%s/env\n' "$(egsnrc_profile_dir "$_profile")"
+}
+
+egsnrc_profile_hen_house() {
+    _profile="$1"
+    printf '%s/hen_house\n' "$(egsnrc_profile_dir "$_profile")"
+}
+
+egsnrc_read_active_conf() {
+    _profile="$1"
+    _acf="$(egsnrc_profile_dir "$_profile")/active_conf"
+    if test -f "$_acf"; then
+        tr -d '[:space:]' < "$_acf"
+        return 0
+    fi
+    _specs="$(egsnrc_user_specs_dir "$_profile")"
+    if test -d "$_specs"; then
+        for _f in "$_specs"/*.conf; do
+            case "$_f" in
+                *egspp_*|"$_specs/*.conf") continue ;;
+            esac
+            if test -f "$_f"; then
+                basename "$_f" .conf
+                return 0
+            fi
+        done
+    fi
+    printf '\n'
+}
+
+egsnrc_resolve_egs_config() {
+    _profile="$1"
+    _conf="$2"
+    if test -z "$_conf"; then
+        _conf=$(egsnrc_read_active_conf "$_profile")
+    fi
+    printf '%s/%s.conf\n' "$(egsnrc_user_specs_dir "$_profile")" "$_conf"
+}
+
+egsnrc_set_active_profile() {
+    _profile="$1"
+    _home="$(egsnrc_config_home)"
+    mkdir -p "$_home"
+    printf '%s\n' "$_profile" > "$_home/active_profile"
+}
+
+egsnrc_set_active_conf() {
+    _profile="$1"
+    _conf="$2"
+    _dir="$(egsnrc_profile_dir "$_profile")"
+    mkdir -p "$_dir/specs"
+    printf '%s\n' "$_conf" > "$_dir/active_conf"
+}
+
+egsnrc_ensure_profile_layout() {
+    _profile="$1"
+    _hen_house="$2"
+    _dir="$(egsnrc_profile_dir "$_profile")"
+    mkdir -p "$_dir/specs"
+    if test -n "$_hen_house"; then
+        _hh="${_hen_house%/}/"
+        printf '%s\n' "$_hh" > "$_dir/hen_house"
+    fi
+}
+
+egsnrc_write_profile_env() {
+    _profile="$1"
+    _conf_basename="$2"
+    _egs_home="$3"
+    _eh="${_egs_home%/}/"
+    mkdir -p "$(egsnrc_profile_dir "$_profile")/specs"
+    egsnrc_set_active_conf "$_profile" "$_conf_basename"
+    cat > "$(egsnrc_profile_env "$_profile")" <<EOF
+# EGSnrc profile environment — profile: $_profile
+export EGS_HOME="$_eh"
+export EGS_CONFIG="$(egsnrc_resolve_egs_config "$_profile" "$_conf_basename")"
+EOF
+}
+
+egsnrc_shell_oneliner() {
+    _cfg="$(egsnrc_config_home)"
+    printf '[ -f "%s/EGSnrc.bash" ] && . "%s/EGSnrc.bash"\n' "$_cfg" "$_cfg"
+}
+
+egsnrc_install_xdg_shell_files() {
+    _hen_house="$1"
+    _hh="${_hen_house%/}/"
+    _cfg="$(egsnrc_config_home)"
+    _srcdir="$_hh/scripts/xdg"
+    mkdir -p "$_cfg"
+    if test -d "$_srcdir"; then
+        for _f in EGSnrc.bash EGSnrc.csh EGSnrc.fish; do
+            if test -f "$_srcdir/$_f"; then
+                cp "$_srcdir/$_f" "$_cfg/$_f"
+                chmod +x "$_cfg/$_f" 2>/dev/null || true
+            fi
+        done
+    fi
+}
+
+egsnrc_profile_hen_house_read() {
+    _profile="$1"
+    _hf="$(egsnrc_profile_hen_house "$_profile")"
+    if test -f "$_hf"; then
+        tr -d '[:space:]' < "$_hf"
+        return 0
+    fi
+    _conf=$(egsnrc_read_active_conf "$_profile")
+    if test -n "$_conf"; then
+        _ec="$(egsnrc_resolve_egs_config "$_profile" "$_conf")"
+        if test -f "$_ec"; then
+            grep 'HEN_HOUSE =' "$_ec" | sed 's/HEN_HOUSE = //' | tr -d '[:space:]'
+            return 0
+        fi
+    fi
+    printf '\n'
+}
+
+egsnrc_load_profile_env() {
+    _profile="$1"
+    _env="$(egsnrc_profile_env "$_profile")"
+    if test -f "$_env"; then
+        . "$_env"
+    fi
+    _conf="$(egsnrc_read_active_conf "$_profile")"
+    if test -n "$_conf"; then
+        EGS_CONFIG="$(egsnrc_resolve_egs_config "$_profile" "$_conf")"
+        export EGS_CONFIG
+    fi
+}
+
+egsnrc_default_profile_name() {
+    _hen_house="$1"
+    _parent=$(dirname "${_hen_house%/}")
+    _base=$(basename "$_parent")
+    if test -z "$_base" || test "$_base" = "."; then
+        _base=$(basename "${_hen_house%/}")
+    fi
+    printf '%s\n' "$_base" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd '[:alnum:]-_'
+}

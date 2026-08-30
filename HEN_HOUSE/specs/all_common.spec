@@ -35,6 +35,10 @@
 ###############################################################################
 
 
+# User-specific machine configs (XDG); defaults to install-tree specs/
+#
+USER_SPEC_DIR ?= $(SPEC_DIR)
+
 # The standard Makefile
 #
 EGS_MAKEFILE = $(HEN_HOUSE)makefiles$(DSEP)standard_makefile
