@@ -235,7 +235,7 @@ There is an example geometry included in the examples/seeds_in_xyz_aenv.geom fil
             # bounding shape definition. Note only volumetric shapes make sense here!
             :start shape:
 
-                type = cylinder
+                library = egs_cylinder_shape
                 radius = 0.04
                 height = 0.45
 

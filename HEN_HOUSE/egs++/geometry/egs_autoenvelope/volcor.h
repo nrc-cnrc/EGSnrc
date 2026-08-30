@@ -225,7 +225,7 @@ EGS_Float getShapeVolume(EGS_Input *shape_inp) {
     density of random points (cm^-3) = 1E6 # Defaults to 1E8
 
     :start shape:
-        type = cylinder
+        library = egs_cylinder_shape
         radius = 0.04
         height = 0.45
         # volume = 123456 # use volume key for shapes other than cylinder, sphere, or box

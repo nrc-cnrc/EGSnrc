@@ -102,7 +102,7 @@ A simple example:
         library = egs_parallel_beam
         name = my_source
         :start shape:
-            type = cylinder
+            library = egs_cylinder_shape
             radius   = 1
             height   = 2
             axis     = 0 0 1

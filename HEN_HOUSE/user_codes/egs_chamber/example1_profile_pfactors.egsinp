@@ -424,7 +424,7 @@
         library = egs_collimated_source
         charge  = 0
         :start source shape:
-            type = point
+            library = egs_point_shape
             position = 0 0 -100.000
         :stop source shape:
         :start target shape:

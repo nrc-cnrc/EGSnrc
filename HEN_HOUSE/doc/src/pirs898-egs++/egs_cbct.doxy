@@ -142,7 +142,7 @@ Here is an example for a collimated point source of 60 keV photons:
     name = the_zero_collimated_source
     distance = 80
     :start source shape:
-        type = point
+        library = egs_point_shape
         position = 0, 0, -100
     :stop source shape:
     :start target shape:
@@ -704,7 +704,7 @@ see PIRS-877 for more details on running EGSnrc applications.
     name = the_zero_collimated_source
     distance = 80
     :start source shape:
-      type = point
+      library = egs_point_shape
       position = 0, 0, -100
     :stop source shape:
     :start target shape:

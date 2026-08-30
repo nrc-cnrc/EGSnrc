@@ -59,7 +59,7 @@
         library = egs_parallel_beam
         name = the_source
         :start shape:
-            type = point
+            library = egs_point_shape
             position = 0 0 1e-7
         :stop shape:
         direction = 0 0 1

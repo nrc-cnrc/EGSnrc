@@ -81,7 +81,7 @@
             energy = 20                         # MeV
         :stop spectrum:
         :start shape:
-            type     = point
+            library  = egs_point_shape
             position = 0 0 -8                   # cm
         :stop shape:
     :stop source:
