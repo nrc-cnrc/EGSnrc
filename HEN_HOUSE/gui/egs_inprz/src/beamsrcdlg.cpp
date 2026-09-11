@@ -70,7 +70,7 @@ BeamSourceDlg::BeamSourceDlg(QWidget * parent, const char * name,
         //qt3to4 -- BW
         //Q3VBoxLayout* topl = new Q3VBoxLayout(this);
          QVBoxLayout* topl = new QVBoxLayout(this);
-        topl->setSpacing(6); topl->setMargin(11);
+        topl->setSpacing(6); topl->setContentsMargins(11, 11, 11, 11);
 
 // BEAM user code
         //qt3to4 -- BW
@@ -87,7 +87,7 @@ BeamSourceDlg::BeamSourceDlg(QWidget * parent, const char * name,
 
         //Q3HBoxLayout* l1 = new Q3HBoxLayout;
         QHBoxLayout* l1 = new QHBoxLayout;
-        l1->setSpacing(6); l1->setMargin(0);
+        l1->setSpacing(6); l1->setContentsMargins(0, 0, 0, 0);
         beam = new QComboBox(beamGroupBox);
         beam->setSizePolicy( QSizePolicy( (QSizePolicy::Policy)1,
                                     (QSizePolicy::Policy)0));
@@ -113,7 +113,7 @@ BeamSourceDlg::BeamSourceDlg(QWidget * parent, const char * name,
         inpGroupBoxLayout->setAlignment( Qt::AlignVCenter );
 
         QHBoxLayout* l2 = new QHBoxLayout;
-        l2->setSpacing(6); l2->setMargin(0);
+        l2->setSpacing(6); l2->setContentsMargins(0, 0, 0, 0);
         inp = new QComboBox(inpGroupBox);
         inp->setSizePolicy( QSizePolicy( (QSizePolicy::Policy)1,
                                     (QSizePolicy::Policy)0));
@@ -136,7 +136,7 @@ BeamSourceDlg::BeamSourceDlg(QWidget * parent, const char * name,
         pegsGroupBoxLayout->setAlignment( Qt::AlignVCenter );
 
         QHBoxLayout* l3 = new QHBoxLayout;
-        l3->setSpacing(6); l3->setMargin(0);
+        l3->setSpacing(6); l3->setContentsMargins(0, 0, 0, 0);
         pegs = new QComboBox(pegsGroupBox);
         pegs->setSizePolicy( QSizePolicy( (QSizePolicy::Policy)1,
                                     (QSizePolicy::Policy)0));
@@ -159,7 +159,7 @@ BeamSourceDlg::BeamSourceDlg(QWidget * parent, const char * name,
                                   weightGroupBox );
         weightGroupBoxLayout->setAlignment( Qt::AlignVCenter );
         QHBoxLayout* l4 = new QHBoxLayout;
-        l4->setSpacing(6); l4->setMargin(0);
+        l4->setSpacing(6); l4->setContentsMargins(0, 0, 0, 0);
 
         minWeight = new QLineEdit("-1E30",weightGroupBox);
         maxWeight = new QLineEdit("1E30",weightGroupBox);
@@ -186,7 +186,7 @@ BeamSourceDlg::BeamSourceDlg(QWidget * parent, const char * name,
         QVBoxLayout* optionsGroupBoxLayout = new QVBoxLayout(
                                   optionsGroupBox );
         QHBoxLayout* l5 = new QHBoxLayout;
-        l5->setSpacing(6); l5->setMargin(0);
+        l5->setSpacing(6); l5->setContentsMargins(0, 0, 0, 0);
         dist = new QLineEdit("0",optionsGroupBox);
         dist->setAlignment( Qt::AlignRight);
         dist->setValidator( new QDoubleValidator(dist) );
@@ -206,7 +206,7 @@ BeamSourceDlg::BeamSourceDlg(QWidget * parent, const char * name,
         l5->addWidget(zL);l5->addWidget(zoffset);
 
         QHBoxLayout* l6 = new QHBoxLayout;
-        l6->setSpacing(6); l6->setMargin(0);
+        l6->setSpacing(6); l6->setContentsMargins(0, 0, 0, 0);
         xoffset = new QLineEdit("0",optionsGroupBox);
         xoffset->setAlignment( Qt::AlignRight);
         xoffset->setValidator( new QDoubleValidator(xoffset) );
@@ -228,7 +228,7 @@ BeamSourceDlg::BeamSourceDlg(QWidget * parent, const char * name,
 //        topl->addItem(vSpacer);
 
         QHBoxLayout* bl = new QHBoxLayout;
-        bl->setSpacing(6); bl->setMargin(11);
+        bl->setSpacing(6); bl->setContentsMargins(11, 11, 11, 11);
         QSpacerItem *hSpacer = new QSpacerItem(20,20,QSizePolicy::Expanding,
                                           QSizePolicy::Minimum);
         bl->addItem(hSpacer);
@@ -243,8 +243,13 @@ BeamSourceDlg::BeamSourceDlg(QWidget * parent, const char * name,
 
         connect( okButton, SIGNAL(clicked()), this, SLOT(close()) );
         connect( cancelButton, SIGNAL(clicked()), this, SLOT(cancel()) );
-        connect( beam, SIGNAL( activated(const QString&) ),
-                 this, SLOT( beamUserCodeChanged(const QString&) ) );
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        connect( beam, &QComboBox::textActivated,
+                 this, &BeamSourceDlg::beamUserCodeChanged );
+#else
+        connect( beam, QOverload<const QString &>::of(&QComboBox::activated),
+                 this, &BeamSourceDlg::beamUserCodeChanged );
+#endif
 
 }
 

@@ -46,6 +46,9 @@
 #include <qapplication.h>
 #include <qmutex.h>
 #include <qregexp.h>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QRegularExpression>
+#endif
 
 #define the_marker "THE_END-DAS_ENDE-FIN"
 
@@ -394,8 +397,12 @@ int PrivateArchive::listFiles(const char *archive) const {
 
 bool PrivateArchive::checkDir(const char *file_nam) const {
   QString fn(file_nam);
-  fn = fn.replace((QRegExp)"\\","/");
+  fn = fn.replace('\\', '/');
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+  fn.replace(QRegularExpression("/+"), "/");
+#else
   fn = fn.replace((QRegExp)"//","/");
+#endif
   QFileInfo fi(fn);
   QString dir = fi.absolutePath();
   QDir dd = fi.absoluteDir();

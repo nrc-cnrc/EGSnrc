@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><ui version="4.0"><comment>
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0"><comment>
 ###############################################################################
 #
 #  EGSnrc user interface for egs_inprz execution dialog
@@ -59,7 +60,7 @@
    <string>Execution Setup</string>
   </property>
   <property name="toolTip">
-   <string/>
+   <string />
   </property>
   <property name="whatsThis">
    <string>Define parameters for user code execution</string>
@@ -407,56 +408,6 @@
    </item>
   </layout>
  </widget>
- <layoutdefault spacing="6" margin="11"/>
- <resources/>
- <connections>
-  <connection>
-   <sender>buttonCancel</sender>
-   <signal>clicked()</signal>
-   <receiver>MExecutionDialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>batchRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>MExecutionDialog</receiver>
-   <slot>update_batch()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonOk</sender>
-   <signal>clicked()</signal>
-   <receiver>MExecutionDialog</receiver>
-   <slot>run()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
-</ui>
+ <layoutdefault spacing="6" margin="11" />
+ <resources />
+ <connections /></ui>

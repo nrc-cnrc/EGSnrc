@@ -194,7 +194,7 @@ QString inputRZImpl::get_initial_usercode_area( QString* name )
 {
     QString pwd = QDir::currentPath ();
     *name = find_usercode_name( pwd );
-    QString tmpEGSdir = QString::null;
+    QString tmpEGSdir = QString();
     if ( ( pwd.contains( EGS_HOME ) > 0 && pwd.contains( *name ) > 0) ||
         ( pwd.contains( HEN_HOUSE ) > 0 && pwd.contains( *name ) > 0) ){
 	tmpEGSdir = pwd + QDir::separator();

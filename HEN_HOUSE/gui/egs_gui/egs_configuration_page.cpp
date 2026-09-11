@@ -57,7 +57,7 @@ EGS_ConfigurationPage::EGS_ConfigurationPage(EGS_ConfigReader *cr,
 void EGS_ConfigurationPage::make() {
   // the page layout
   QVBoxLayout *topl = new QVBoxLayout(this);
-  topl->setSpacing(6); topl->setMargin(11);
+  topl->setSpacing(6); topl->setContentsMargins(11, 11, 11, 11);
 
   QLabel *rocket_egss = new QLabel(this);
   rocket_egss->setPixmap(QPixmap(":/images/rocket_egg_tr_f1_300.png"));
@@ -70,7 +70,7 @@ void EGS_ConfigurationPage::make() {
 
   // configuration
   QGroupBox *gb = new QGroupBox("configuration group box",this);
-  QHBoxLayout *gbl = new QHBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
+  QHBoxLayout *gbl = new QHBoxLayout(gb);gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
   gb->setTitle( tr("Configuration file") );
   le_configuration = new QLineEdit("configuration line edit",gb);
   le_configuration->setText(egsConfiguration());
@@ -84,7 +84,7 @@ void EGS_ConfigurationPage::make() {
   topl->addWidget(gb);
 
   gb = new QGroupBox("HEN_HOUSE group box",this);
-  gbl = new QHBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
+  gbl = new QHBoxLayout(gb);gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
   gb->setTitle( tr("HEN_HOUSE directory") );
   le_henhouse = new QLineEdit("HEN_HOUSE line edit",gb);
   le_henhouse->setText(henHouse());
@@ -98,7 +98,7 @@ void EGS_ConfigurationPage::make() {
   topl->addWidget(gb);
 
   gb = new QGroupBox("EGS_HOME group box",this);
-  gbl = new QHBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
+  gbl = new QHBoxLayout(gb);gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
   gb->setTitle( tr("EGS_HOME directory") );
   le_egshome = new QLineEdit("EGS_HOME line edit",gb);
   le_egshome->setReadOnly(true);

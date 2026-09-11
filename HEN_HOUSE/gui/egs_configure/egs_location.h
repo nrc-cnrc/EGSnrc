@@ -94,13 +94,13 @@ public:
 
        // the page layout
        QVBoxLayout *topl = new QVBoxLayout(this);
-       //topl->setSpacing(6); topl->setMargin(11);
+       //topl->setSpacing(6); topl->setContentsMargins(11, 11, 11, 11);
 
        QString arch = getArch(); canonical = QString(CANONICAL) + arch;
 
        // configuration file: if exists, defines config and HEN_HOUSE
        QGroupBox *gb = new QGroupBox("configuration group box",this);
-       QHBoxLayout *gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setMargin(11);
+       QHBoxLayout *gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setContentsMargins(11, 11, 11, 11);
        gb->setTitle( tr("Configuration name") );
        confLineEdit = new QLineEdit(gb); QString conf_temp = egsConfiguration();
        if (!conf_temp.isEmpty()){// configuration defines canonical
@@ -124,7 +124,7 @@ public:
 
        // System location (HEN_HOUSE):
        gb = new QGroupBox("HEN_HOUSE group box",this);
-       gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setMargin(11);
+       gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setContentsMargins(11, 11, 11, 11);
        gb->setTitle( tr("System location (a.k.a. HEN_HOUSE)") );
        henLineEdit = new QLineEdit("HEN_HOUSE line edit",gb); QString hen_temp = henHouse();
        henLineEdit->setReadOnly(true);
@@ -143,7 +143,7 @@ public:
 
        // Work Area (EGS_HOME) taken from environment or defaults to $HOME/egs_home
        gb = new QGroupBox("EGS_HOME group box",this);
-       gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setMargin(11);
+       gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setContentsMargins(11, 11, 11, 11);
        gb->setTitle( tr("Working area (a.k.a. EGS_HOME)") );
        homeLineEdit = new QLineEdit("EGS_HOME line edit",gb);
 /*       QString home_root = henLineEdit->text();
@@ -165,7 +165,7 @@ public:
 
        // Define installation type: typical or custom
        //gb = new QGroupBox("Installation type group box",this);
-       gbl = new QHBoxLayout();//gbl->setSpacing(6); gbl->setMargin(11);
+       gbl = new QHBoxLayout();//gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
        //gb->setTitle( tr("Installation type") );
        typical = new QRadioButton("&Typical"); custom = new QRadioButton("&Custom");
        gbl->addWidget(typical); gbl->addWidget(custom);
@@ -357,7 +357,7 @@ public slots:
     if ( !QDir(dir).exists() ){
        if ( create ){ // directory can be created
           QMessageBox msgBox(QMessageBox::Warning, tr("Warning!"),
-                       dir + tr(" does not exist! Do you want to create it?"), 0, this);
+                       dir + tr(" does not exist! Do you want to create it?"), QMessageBox::NoButton, this);
                    msgBox.addButton(tr("&OK"), QMessageBox::AcceptRole);
                    msgBox.addButton(tr("&Cancel"), QMessageBox::RejectRole);
            if (msgBox.exec() == QMessageBox::AcceptRole){
@@ -385,7 +385,7 @@ public slots:
           QMessageBox msgBox(QMessageBox::Warning, tr("Warning!"),
                        tr("Working area ") + dir + tr(" exists!\n") +
                        tr(" Do you want to overwrite it?\n") +
-                       tr("Choose No to configure an existing system!"), 0, this);
+                       tr("Choose No to configure an existing system!"), QMessageBox::NoButton, this);
                    msgBox.addButton(tr("&Yes"), QMessageBox::AcceptRole);
                    QPushButton *noButton = msgBox.addButton(tr("&No"), QMessageBox::RejectRole);
                    msgBox.setDefaultButton(noButton);
@@ -509,8 +509,7 @@ void changeConfiguration(const QString &new_config) {
       bool use_it = ( res == 0 );
       if ( res ) {
           if( res == 1 ) QMessageBox::warning(this,"Error",
-            QString("Failed to open %1 for reading").arg(new_config),
-              QMessageBox::Ok,0,0);
+            QString("Failed to open %1 for reading").arg(new_config));
           else if( res == 2 ) {
             int answer = QMessageBox::warning(this,"Error",
 #ifdef WIN32
@@ -520,13 +519,12 @@ void changeConfiguration(const QString &new_config) {
               "This appears to be a Windows config file\n"
               "Do you still want to use it ?",
 #endif
-              QMessageBox::Ok,QMessageBox::Cancel,0);
+              QMessageBox::Ok, QMessageBox::Cancel);
              if( answer == QMessageBox::Ok ) use_it = true;
           }
           else
               QMessageBox::warning(this,"Error",
-                QString("Unknown error while reading %1").arg(new_config),
-                QMessageBox::Ok,0,0);
+                QString("Unknown error while reading %1").arg(new_config));
       }
       if( use_it) config_reader->setConfig(new_config);
   }

@@ -38,6 +38,10 @@
 #include <QItemSelectionModel>
 #include <QMessageBox>
 #include <QTextStream>
+#include <QRegExp>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QRegularExpression>
+#endif
 #include <QtGlobal>
 #if QT_VERSION >= 0x050000
     #include <QtWidgets>
@@ -189,6 +193,17 @@ void EGS_PegsPage::init()
   connect(go_button,SIGNAL(clicked()),this,SLOT(startPegs()));
   connect(cancel_button,SIGNAL(clicked()),this,SLOT(stopPegs()));
 
+  connect(dc_icru_check,SIGNAL(toggled(bool)),this,SLOT(densityIcruChanged(bool)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+  connect(medtype_cbox,&QComboBox::textActivated,this,&EGS_PegsPage::medtypeChanged);
+#else
+  connect(medtype_cbox,QOverload<const QString &>::of(&QComboBox::activated),
+          this,&EGS_PegsPage::medtypeChanged);
+#endif
+  connect(dc_button,SIGNAL(clicked()),this,SLOT(getDensityFile()));
+  connect(details_b,SIGNAL(clicked()),this,SLOT(showHideDetails()));
+  connect(is_gas,SIGNAL(toggled(bool)),this,SLOT(enable_gaspEdit()));
+
   new_data_file->setChecked(true); cancel_button->setEnabled(false);
   frt_err=false;
   gasp_err=false;
@@ -241,7 +256,7 @@ void EGS_PegsPage::densityIcruChanged( bool is_on) {
      QFileInfo dfi(dc_file->text());
      if( !dfi.exists() ) {
       QMessageBox::critical(this,"Warning",
-              QString("Density correction file %1 does not exist ?").arg(dc_file->text()),QMessageBox::Ok,0);
+              QString("Density correction file %1 does not exist ?").arg(dc_file->text()));
       return;
      }
      else{
@@ -390,12 +405,12 @@ void EGS_PegsPage::startPegs() {
   QFileInfo fi(executable);
   if( !fi.exists() ) {
       QMessageBox::critical(this,"Error",
-              QString("%1 does not exist ?").arg(executable),QMessageBox::Ok,0);
+              QString("%1 does not exist ?").arg(executable));
       return;
   }
   if( !fi.isExecutable() ) {
     QMessageBox::critical(this,"Error",
-     QString("%1 is not executable ?").arg(executable),QMessageBox::Ok,0);
+     QString("%1 is not executable ?").arg(executable));
     return;
   }
 
@@ -416,7 +431,7 @@ void EGS_PegsPage::startPegs() {
     QFileInfo dfi(dc_file->text());
     if( !dfi.exists() ) {
       QMessageBox::critical(this,"Error",
-              QString("Density correction file %1 does not exist ?").arg(dc_file->text()),QMessageBox::Ok,0);
+              QString("Density correction file %1 does not exist ?").arg(dc_file->text()));
       return;
     }
     args << "-d";//pegs_process->addArgument("-d");
@@ -449,7 +464,7 @@ void EGS_PegsPage::startPegs() {
       double w = composition_table->item(j,1)->text().toDouble(&is_ok);
       if( !is_ok ) {
         QString err = QString("Wrong input in row %1, column 1").arg(j);
-        QMessageBox::critical(this,"Error",err,QMessageBox::Ok,0);
+        QMessageBox::critical(this,"Error",err);
         return;
       }
       ts << w << ",";
@@ -459,7 +474,7 @@ void EGS_PegsPage::startPegs() {
   double rho = rho_le->text().toDouble(&is_ok);
   if( !is_ok ) {
     QString err = QString("Wrong mass density input");
-    QMessageBox::critical(this,"Error",err,QMessageBox::Ok,0);
+    QMessageBox::critical(this,"Error",err);
     return;
   }
   if( comboBox2->currentText() == "kg/m**3" ) rho *= 0.001;//convert to g/cm**3
@@ -485,8 +500,7 @@ void EGS_PegsPage::startPegs() {
   pegs_process->start(executable,args);
   if (!pegs_process->waitForStarted()){
     QMessageBox::critical(this,"Error",
-     QString("PEGS failed, exit status was %1").arg(pegs_process->exitStatus()),
-      QMessageBox::Ok,0);
+     QString("PEGS failed, exit status was %1").arg(pegs_process->exitStatus()));
     go_button->setEnabled(true);
     cancel_button->setEnabled(false);
     return;
@@ -530,19 +544,16 @@ void EGS_PegsPage::pegsFinished() {
 #endif
   if(frt_err)
     QMessageBox::critical(this,"Error",
-     QString("PEGS failed with runtime error."),
-      QMessageBox::Ok,0);
+     QString("PEGS failed with runtime error."));
   else if(gasp_err)
     QMessageBox::critical(this,"Error",
-     QString("PEGS failed: Define medium as gas."),
-      QMessageBox::Ok,0);
+     QString("PEGS failed: Define medium as gas."));
   else if( pegs_process->exitStatus() == 0 ) // QProcess::NormalExit = 0
     QMessageBox::information(this,"PEGS finished","PEGS finished successfuly",
        QMessageBox::Ok);
   else                                  // QProcess::CrashExit = 1
     QMessageBox::critical(this,"Error",
-     QString("PEGS failed, exit status was %1").arg(pegs_process->exitStatus()),
-      QMessageBox::Ok,0);
+     QString("PEGS failed, exit status was %1").arg(pegs_process->exitStatus()));
   go_button->setEnabled(true);
   cancel_button->setEnabled(false);
 }
@@ -551,20 +562,20 @@ bool EGS_PegsPage::checkFields() {
   bool res = true; if( !config_reader ) config_reader = new EGS_ConfigReader;
   if( medname_le->text().isEmpty() ) {
     QMessageBox::critical(this,"Error",
-      "You must give the medium a name",QMessageBox::Ok,0);
+      "You must give the medium a name");
     res = false;
   }
   if( dc_icru_check->isChecked() ) {
     if( dc_file->text().isEmpty() ) {
       QMessageBox::critical(this,"Error",
-        "You must define the density correction file",QMessageBox::Ok,0);
+        "You must define the density correction file");
       res = false;
     }
   }
   else {
     if( rho_le->text().isEmpty() ) {
       QMessageBox::critical(this,"Error",
-        "You must define the mass density",QMessageBox::Ok,0);
+        "You must define the mass density");
       res = false;
     }
     nelem=0;
@@ -580,7 +591,7 @@ bool EGS_PegsPage::checkFields() {
 #endif
     if( !nelem ) {
       QMessageBox::critical(this,"Error",
-        "You must define the medium composition",QMessageBox::Ok,0);
+        "You must define the medium composition");
       res = false;
     }
     if( nelem == 1 && medtype_cbox->currentText() != "Element" ) {
@@ -588,7 +599,7 @@ bool EGS_PegsPage::checkFields() {
            medtype_cbox->currentText());
       msg += "\nbut there is only a single element specified in the";
       msg += "\nmedium composition table. ";
-      QMessageBox::critical(this,"Error",msg,QMessageBox::Ok,0);
+      QMessageBox::critical(this,"Error",msg);
       res = false;
     }
   }
@@ -597,7 +608,7 @@ bool EGS_PegsPage::checkFields() {
     QString err="You must define the energy range for the data";
     err += "\n  electrons:  AE...UE";
     err += "\n    photons:  AP...UP";
-    QMessageBox::critical(this,"Error",err,QMessageBox::Ok,0);
+    QMessageBox::critical(this,"Error",err);
     res = false;
   }
   else {
@@ -612,14 +623,14 @@ bool EGS_PegsPage::checkFields() {
       if( !ok_ap ) err += ", AP";
       if( !ok_ue ) err += ", UE";
       if( !ok_up ) err += ", UP";
-      QMessageBox::critical(this,"Error",err,QMessageBox::Ok,0);
+      QMessageBox::critical(this,"Error",err);
       res = false;
     }
     else {
       if( ae_units->currentText() == "keV" ) ae *= 0.001;
       if( ae < rm ) {
         QMessageBox::critical(this,"Error",
-         "AE can not be less than the electron rest energy!",QMessageBox::Ok,0);
+         "AE can not be less than the electron rest energy!");
         res = false;
       }
       if( ap_units->currentText() == "keV" ) ap *= 0.001;
@@ -631,25 +642,30 @@ bool EGS_PegsPage::checkFields() {
         QString err;
         if( ae >= ue ) err += "AE >= UE ?  ";
         if( ap >= up ) err += "AP >= UP ?  ";
-        QMessageBox::critical(this,"Error",err,QMessageBox::Ok,0);
+        QMessageBox::critical(this,"Error",err);
         res = false;
       }
     }
   }
   if( ofile_le->text().isEmpty() ) {
-    QMessageBox::critical(this,"Error","You must specify the output file name",
-       QMessageBox::Ok,0);
+    QMessageBox::critical(this,"Error","You must specify the output file name");
     res = false;
   }
   else {
     QString fn = config_reader->getVariable("EGS_HOME",true);
     fn += "pegs4"; fn += QDir::separator(); fn += "data";
-    fn += QDir::separator(); fn += ofile_le->text().replace(QRegExp("\\.pegs4dat$"), ""); fn += ".pegs4dat";
+    QString base = ofile_le->text();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    base.replace(QRegularExpression("\\.pegs4dat$"), "");
+#else
+    base.replace(QRegExp("\\.pegs4dat$"), "");
+#endif
+    fn += QDir::separator(); fn += base; fn += ".pegs4dat";
     QFileInfo fi(fn);
     if( new_data_file->isChecked() && fi.exists() ) {
       QString err="You have specified to create a new PEGS data file";
       err+=QString("\nbut a file named %1 alread exists").arg(fn);
-      QMessageBox::critical(this,"Error",err,QMessageBox::Ok,0);
+      QMessageBox::critical(this,"Error",err);
       res = false;
     }
     else if( append_to_datafile->isChecked() && !fi.exists() ) {
@@ -657,7 +673,7 @@ bool EGS_PegsPage::checkFields() {
       err+="\nan existing PEGS file, but a file named\n  ";
       err+=fn;
       err+="\ndoes not exist";
-      QMessageBox::critical(this,"Error",err,QMessageBox::Ok,0);
+      QMessageBox::critical(this,"Error",err);
       res = false;
     }
   }

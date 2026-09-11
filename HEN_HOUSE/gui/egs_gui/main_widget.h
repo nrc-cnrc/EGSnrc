@@ -57,7 +57,7 @@ class EGS_MainWidget : public QWidget
 
 public:
 
-  EGS_MainWidget(QWidget * parent = 0, Qt::WindowFlags f = 0);
+  EGS_MainWidget(QWidget * parent = 0, Qt::WindowFlags f = {});
   ~EGS_MainWidget(){}
 public slots:
 

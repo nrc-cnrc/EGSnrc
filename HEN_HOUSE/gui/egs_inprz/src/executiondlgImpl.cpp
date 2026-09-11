@@ -110,6 +110,9 @@ void ExecutiondlgImpl::init()
 {
   QStringList tmpExecStr = the_command.split(" ");
    the_hen_house = tmpExecStr[0];
+  connect(buttonCancel, SIGNAL(clicked()), this, SLOT(reject()));
+  connect(batchRadioButton, SIGNAL(toggled(bool)), this, SLOT(update_batch()));
+  connect(buttonOk, SIGNAL(clicked()), this, SLOT(run()));
 }
 //qt3to4 -- BW
 void ExecutiondlgImpl::update_batch()

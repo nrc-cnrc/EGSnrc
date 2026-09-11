@@ -70,6 +70,7 @@ void PEGS_RunOutput::setOutputFile( const QString &s )
 
 void PEGS_RunOutput::init()
 {
+    connect(pushButton8,SIGNAL(clicked()),this,SLOT(hideWindow()));
     //view_errors = new PEGS_ViewErrors(0);
 }
 

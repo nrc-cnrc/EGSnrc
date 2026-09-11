@@ -123,12 +123,12 @@ std::ifstream & operator >> ( std::ifstream & in, MSRCInputs*  rSRC )
                                          rSRC->errors, p );
 	}
         else if ( rSRC->isource == "23" ) {
-                  rSRC->beam_code = getIt( codes[14] , QString::null,
+                  rSRC->beam_code = getIt( codes[14] , QString(),
                                            rSRC->errors, p );
                   // no extension allowed in the input and pegs file names
-                  rSRC->pegs_file = (getIt( codes[15] , QString::null,
+                  rSRC->pegs_file = (getIt( codes[15] , QString(),
                            rSRC->errors, p )).remove(".pegs4dat");
-                  rSRC->inp_file = (getIt( codes[16] , QString::null,
+                  rSRC->inp_file = (getIt( codes[16] , QString(),
                              rSRC->errors, p )).remove(".egsinp");
 	          rSRC->weight_win = getThem( codes[17], -1.0e30f, 1.0e30f,
                                    rSRC->weight_win, rSRC->errors, p ) ;

@@ -51,6 +51,7 @@ HEADERS += main_widget.h \
         egs_config_reader.h
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
 MOC_DIR =       .moc/$$my_machine
 OBJECTS_DIR =   .obj/$$my_machine

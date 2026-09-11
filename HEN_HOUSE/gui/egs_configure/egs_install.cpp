@@ -33,6 +33,13 @@
 #include <fstream>
 #include <QPushButton>
 
+/* Qt::endl arrived in Qt 5.14, and Qt 6 dropped the global endl. */
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+inline QTextStream &EGS_endl(QTextStream &s) { return Qt::endl(s); }
+#else
+inline QTextStream &EGS_endl(QTextStream &s) { return ::endl(s); }
+#endif
+
 #if defined(Q_OS_LINUX) || defined(Q_OS_UNIX)
 #define SET_ENV "Appends environment variables to shell resource files (.bashrc, .cshrc, etc)"
 #elif defined(Q_OS_WIN32) || defined(WIN32)
@@ -258,7 +265,7 @@ void QInstallPage::printProgress( const QString& message, bool new_line )
 {
   if ( config_file->isOpen() ){
     if (new_line)
-       config_log << message << endl;
+       config_log << message << EGS_endl;
     else
        config_log << message;
     config_file->flush();
@@ -342,7 +349,7 @@ QString QInstallPage::readFile2QString( const QString& fname,
     QFile* the_file = new QFile( fname  );
     if ( ! the_file->open( QIODevice::ReadOnly  ) ){
         printProgress( err );
-        return QString::null;
+        return QString();
     }
     QTextStream the_stream;
     the_stream.setDevice( the_file );
@@ -373,7 +380,7 @@ bool QInstallPage::appendQString2File( const QString& the_string, const QString&
        return false;
     QTextStream the_stream;
     the_stream.setDevice( the_file );
-    the_stream << the_string << endl;
+    the_stream << the_string << EGS_endl;
     the_file->close();
     return true;
 }

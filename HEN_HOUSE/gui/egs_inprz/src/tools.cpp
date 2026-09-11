@@ -38,6 +38,13 @@
 
 using namespace std;
 
+/* Qt::SkipEmptyParts arrived in Qt 5.14, and Qt 6 dropped the QString one. */
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+static const Qt::SplitBehavior EGS_SkipEmptyParts = Qt::SkipEmptyParts;
+#else
+static const QString::SplitBehavior EGS_SkipEmptyParts = QString::SkipEmptyParts;
+#endif
+
 //---------------------------------------------------------------------------------
 //Tools for cleaning names from multiplicities and bad separators.
 //They guarantee that the proper separator is used in a specific OS
@@ -85,7 +92,7 @@ qDebug("Read: %s",the_name.toLatin1().data());
  return the_name;
 }*/
 QString simplifySeparators( const QString& str ){
- QString the_name = (str.split(QDir::separator(),QString::SkipEmptyParts)).join(QDir::separator());
+ QString the_name = (str.split(QDir::separator(), EGS_SkipEmptyParts)).join(QDir::separator());
  if (str.startsWith(QDir::separator())) the_name.prepend(QDir::separator());
  if (str.endsWith(QDir::separator())) the_name.append(QDir::separator());
 //qDebug("Read: %s",the_name.toLatin1().data());

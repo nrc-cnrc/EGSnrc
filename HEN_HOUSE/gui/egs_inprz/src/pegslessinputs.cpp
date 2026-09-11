@@ -279,7 +279,7 @@ std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
 
   }
 
-  rPEGSLESS->errors = QString::null;
+  rPEGSLESS->errors = QString();
   delete p;
 
   return in;

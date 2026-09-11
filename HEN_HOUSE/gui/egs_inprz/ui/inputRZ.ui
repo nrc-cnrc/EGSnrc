@@ -68,7 +68,7 @@
    <string>inpuRZ</string>
   </property>
   <property name="toolTip">
-   <string/>
+   <string />
   </property>
   <property name="whatsThis">
    <string>Nothing defined !</string>
@@ -95,7 +95,7 @@
       </size>
      </property>
      <property name="toolTip">
-      <string/>
+      <string />
      </property>
      <property name="frameShape">
       <enum>QFrame::Box</enum>
@@ -128,7 +128,7 @@
         </sizepolicy>
        </property>
        <property name="title">
-        <string/>
+        <string />
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
@@ -251,7 +251,7 @@
      <item>
       <widget class="QGroupBox" name="ConfirmButtonGroup">
        <property name="title">
-        <string/>
+        <string />
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_31">
         <item>
@@ -356,7 +356,6 @@
      <property name="font">
       <font>
        <pointsize>13</pointsize>
-       <weight>50</weight>
        <italic>false</italic>
        <bold>false</bold>
       </font>
@@ -408,7 +407,7 @@
              <item>
               <widget class="QGroupBox" name="UserCodeButtonGroup">
                <property name="toolTip">
-                <string/>
+                <string />
                </property>
                <property name="title">
                 <string>EGSnrc user code</string>
@@ -723,9 +722,6 @@
                   <property name="insertPolicy">
                    <enum>QComboBox::InsertAtTop</enum>
                   </property>
-                  <property name="autoCompletion">
-                   <bool>true</bool>
-                  </property>
                   <property name="duplicatesEnabled">
                    <bool>false</bool>
                   </property>
@@ -801,9 +797,6 @@
                   <property name="insertPolicy">
                    <enum>QComboBox::InsertAtTop</enum>
                   </property>
-                  <property name="autoCompletion">
-                   <bool>true</bool>
-                  </property>
                  </widget>
                 </item>
                 <item>
@@ -863,9 +856,6 @@
                   </property>
                   <property name="insertPolicy">
                    <enum>QComboBox::InsertAtTop</enum>
-                  </property>
-                  <property name="autoCompletion">
-                   <bool>true</bool>
                   </property>
                   <property name="duplicatesEnabled">
                    <bool>false</bool>
@@ -1453,10 +1443,10 @@
                   <item>
                    <widget class="QLabel" name="iwatchTextLabel">
                     <property name="toolTip">
-                     <string>debug output with increasing detail, if not &quot;off&quot; use very few histories</string>
+                     <string>debug output with increasing detail, if not "off" use very few histories</string>
                     </property>
                     <property name="whatsThis">
-                     <string>debug output with increasing detail, if not &quot;off&quot; use very few histories</string>
+                     <string>debug output with increasing detail, if not "off" use very few histories</string>
                     </property>
                     <property name="text">
                      <string>iwatch :</string>
@@ -1485,10 +1475,10 @@
                   <item>
                    <widget class="QComboBox" name="iwatchComboBox">
                     <property name="toolTip">
-                     <string>Debug output with increasing detail, if not &quot;off&quot; use very few histories</string>
+                     <string>Debug output with increasing detail, if not "off" use very few histories</string>
                     </property>
                     <property name="whatsThis">
-                     <string>Debug output with increasing detail, if not &quot;off&quot; use very few histories</string>
+                     <string>Debug output with increasing detail, if not "off" use very few histories</string>
                     </property>
                     <item>
                      <property name="text">
@@ -3547,7 +3537,7 @@
         </rect>
        </property>
        <property name="title">
-        <string/>
+        <string />
        </property>
        <widget class="QCheckBox" name="kermaCheckBox">
         <property name="geometry">
@@ -3698,7 +3688,7 @@
         </rect>
        </property>
        <property name="title">
-        <string/>
+        <string />
        </property>
        <layout class="QHBoxLayout">
         <item>
@@ -3888,7 +3878,7 @@
                </spacer>
               </item>
               <item>
-               <widget class="QLineEdit" name="DELTAEEdit"/>
+               <widget class="QLineEdit" name="DELTAEEdit" />
               </item>
              </layout>
             </item>
@@ -5515,9 +5505,6 @@
                      <property name="insertPolicy">
                       <enum>QComboBox::InsertAtTop</enum>
                      </property>
-                     <property name="autoCompletion">
-                      <bool>true</bool>
-                     </property>
                     </widget>
                    </item>
                   </layout>
@@ -5548,9 +5535,6 @@
                      <property name="insertPolicy">
                       <enum>QComboBox::InsertAtTop</enum>
                      </property>
-                     <property name="autoCompletion">
-                      <bool>true</bool>
-                     </property>
                     </widget>
                    </item>
                   </layout>
@@ -5580,7 +5564,7 @@
         <item>
          <widget class="QGroupBox" name="gr_indGroupBox">
           <property name="toolTip">
-           <string/>
+           <string />
           </property>
           <property name="title">
            <string>Group or individual input</string>
@@ -5999,7 +5983,7 @@
               <item>
                <layout class="QHBoxLayout">
                 <item>
-                 <widget class="QLineEdit" name="MDFEdit"/>
+                 <widget class="QLineEdit" name="MDFEdit" />
                 </item>
                 <item>
                  <widget class="QPushButton" name="MDFileButton">
@@ -6336,7 +6320,7 @@ For compounds, composition is specified by stoichiometric index of each element.
                         </sizepolicy>
                        </property>
                        <property name="toolTip">
-                        <string/>
+                        <string />
                        </property>
                        <property name="editable">
                         <bool>true</bool>
@@ -6777,7 +6761,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 <bool>false</bool>
                </property>
                <property name="title">
-                <string/>
+                <string />
                </property>
                <layout class="QFormLayout" name="formLayout">
                 <item row="0" column="0">
@@ -6908,7 +6892,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
              <item>
               <widget class="QGroupBox" name="sourceoptionsGroupBox">
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="title">
                 <string>Source options</string>
@@ -7065,7 +7049,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                    </layout>
                   </item>
                   <item>
-                   <widget class="QComboBox" name="imodeComboBox"/>
+                   <widget class="QComboBox" name="imodeComboBox" />
                   </item>
                   <item>
                    <layout class="QHBoxLayout">
@@ -7096,7 +7080,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                      </spacer>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="temp5Edit"/>
+                     <widget class="QLineEdit" name="temp5Edit" />
                     </item>
                    </layout>
                   </item>
@@ -7129,7 +7113,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                      </spacer>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="temp6Edit"/>
+                     <widget class="QLineEdit" name="temp6Edit" />
                     </item>
                    </layout>
                   </item>
@@ -7162,7 +7146,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                      </spacer>
                     </item>
                     <item>
-                     <widget class="QLineEdit" name="temp7Edit"/>
+                     <widget class="QLineEdit" name="temp7Edit" />
                     </item>
                    </layout>
                   </item>
@@ -7652,7 +7636,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                  <bool>false</bool>
                 </property>
                 <property name="title">
-                 <string/>
+                 <string />
                 </property>
                 <layout class="QHBoxLayout">
                  <item>
@@ -7697,7 +7681,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </sizepolicy>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="toolTip">
                 <string>If off, pairs set in motion at angle m/E. If Simple, leading term of angular dist. turned on. If KM, turns on 2BS from Koch and Motz</string>
@@ -7737,7 +7721,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </sizepolicy>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="toolTip">
                 <string>If KM, complete modified Koch-Motz 2BS used. If Simple, only leading term of Koch-Motz distribution used.</string>
@@ -7772,7 +7756,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </sizepolicy>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="toolTip">
                 <string>If BH,  Bethe-Heitler brems. cross sections used. If NIST, NIST brems cross section used (basis for ICRU radiative stopping powers).</string>
@@ -7811,7 +7795,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </sizepolicy>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="toolTip">
                 <string>Algorithm used to take into account lateral and longitudinal correlations in a condensed history step.</string>
@@ -7846,7 +7830,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </sizepolicy>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="title">
                 <string>Electron impact ionization</string>
@@ -7896,7 +7880,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </sizepolicy>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="toolTip">
                 <string>Two selections possible: EXACT, means crossing boundaries in a single scattering mode and PRESTA-I, boundaries crossed a la PRESTA, i.e. lateral correlations turned off and MS forced at boundaries. </string>
@@ -7937,7 +7921,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
               </sizepolicy>
              </property>
              <property name="font">
-              <font/>
+              <font />
              </property>
              <property name="toolTip">
               <string>Global electron transport cut off energy (in MeV, includes electron rest energy).</string>
@@ -7971,7 +7955,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
               </size>
              </property>
              <property name="font">
-              <font/>
+              <font />
              </property>
              <property name="toolTip">
               <string>Global photon transport cut off energy (in MeV).</string>
@@ -8011,7 +7995,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
               </sizepolicy>
              </property>
              <property name="font">
-              <font/>
+              <font />
              </property>
              <property name="toolTip">
               <string>Global maximum step-size restriction for electron transport (in cm). If using default EGSnrc electron-step algorithm, no SMAX-restriction necessary.</string>
@@ -8021,7 +8005,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
              </property>
              <layout class="QGridLayout" name="gridLayout_14">
               <item row="0" column="0">
-               <widget class="QLineEdit" name="GSMAXEdit"/>
+               <widget class="QLineEdit" name="GSMAXEdit" />
               </item>
              </layout>
             </widget>
@@ -8047,7 +8031,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </size>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="title">
                 <string>Rayleigh scattering</string>
@@ -8100,7 +8084,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </size>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="title">
                 <string>PE angular sampling</string>
@@ -8142,7 +8126,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </sizepolicy>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="title">
                 <string>Bound Compton</string>
@@ -8200,7 +8184,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </size>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="title">
                 <string>Atomic relaxations</string>
@@ -8250,7 +8234,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
              <item>
               <widget class="QCheckBox" name="ECUTCheckBox">
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="text">
                 <string>ECUT by regions</string>
@@ -8260,7 +8244,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
              <item>
               <widget class="QCheckBox" name="PCUTCheckBox">
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="text">
                 <string>PCUT by regions</string>
@@ -8270,7 +8254,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
              <item>
               <widget class="QCheckBox" name="SMAXCheckBox">
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="text">
                 <string>SMAX by regions</string>
@@ -8290,7 +8274,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </sizepolicy>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="title">
                 <string>Photon cross section library</string>
@@ -8299,7 +8283,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 <item>
                  <widget class="QComboBox" name="photonXSectioncomboBox">
                   <property name="font">
-                   <font/>
+                   <font />
                   </property>
                   <property name="editable">
                    <bool>false</bool>
@@ -8333,7 +8317,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                 </sizepolicy>
                </property>
                <property name="font">
-                <font/>
+                <font />
                </property>
                <property name="toolTip">
                 <string>If On, then a file $EGS_HOME/user_code/inputfile.xsections is output containing photon cross-section data used.</string>
@@ -8672,7 +8656,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                       </sizepolicy>
                      </property>
                      <property name="font">
-                      <font/>
+                      <font />
                      </property>
                      <property name="toolTip">
                       <string>Maximum fractional energy loss per step. Default is 0.25 (25%).</string>
@@ -8700,7 +8684,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                       </size>
                      </property>
                      <property name="font">
-                      <font/>
+                      <font />
                      </property>
                      <property name="toolTip">
                       <string>Maximum fractional energy loss per step. Default is 0.25 (25%).</string>
@@ -8717,7 +8701,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                    <item>
                     <widget class="QLabel" name="XImaxLabel">
                      <property name="font">
-                      <font/>
+                      <font />
                      </property>
                      <property name="toolTip">
                       <string>Maximum first elastic scattering moment per step. NEVER use value greater than 1 as this is beyond the range of MS data available.</string>
@@ -8745,7 +8729,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                       </size>
                      </property>
                      <property name="font">
-                      <font/>
+                      <font />
                      </property>
                      <property name="toolTip">
                       <string>Maximum first elastic scattering moment per step. NEVER use value greater than 1 as this is beyond the range of MS data available.</string>
@@ -8762,7 +8746,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                    <item>
                     <widget class="QLabel" name="SkinDepthLabel">
                      <property name="font">
-                      <font/>
+                      <font />
                      </property>
                      <property name="toolTip">
                       <string>distance from a boundary at which the algorithm will go into single scattering mode (in elastic MFP)</string>
@@ -8790,7 +8774,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                       </size>
                      </property>
                      <property name="font">
-                      <font/>
+                      <font />
                      </property>
                      <property name="toolTip">
                       <string>distance from a boundary at which the algorithm will go into single scattering mode (in elastic MFP)</string>
@@ -8813,7 +8797,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                   </sizepolicy>
                  </property>
                  <property name="font">
-                  <font/>
+                  <font />
                  </property>
                  <property name="toolTip">
                   <string>Turns off/on spin effects for electron elastic scattering. ABSOLUTELY necessary for good backscattering calculations.</string>
@@ -8868,7 +8852,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
           <item>
            <widget class="QGroupBox" name="PhotonForcingGroupBox">
             <property name="title">
-             <string/>
+             <string />
             </property>
             <layout class="QVBoxLayout">
              <item>
@@ -9453,7 +9437,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
             <item>
              <widget class="QGroupBox" name="ESAVEINGroupBox">
               <property name="title">
-               <string/>
+               <string />
               </property>
               <layout class="QVBoxLayout">
                <item>
@@ -9513,7 +9497,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
             <item>
              <widget class="QGroupBox" name="BremsSplitGroupBox">
               <property name="title">
-               <string/>
+               <string />
               </property>
               <layout class="QVBoxLayout">
                <item>
@@ -10014,7 +9998,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
           <item>
            <widget class="QGroupBox" name="BoundComptonGroupBox">
             <property name="toolTip">
-             <string/>
+             <string />
             </property>
             <property name="title">
              <string>Bound Compton scattering</string>
@@ -10152,7 +10136,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
           <item>
            <widget class="QGroupBox" name="RelaxationsGroupBox">
             <property name="toolTip">
-             <string/>
+             <string />
             </property>
             <property name="title">
              <string>Atomic Relaxations</string>
@@ -10290,7 +10274,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
           <item>
            <widget class="QGroupBox" name="PEAngSamGroupBox">
             <property name="toolTip">
-             <string/>
+             <string />
             </property>
             <property name="title">
              <string>PE ang. sampling</string>
@@ -10428,7 +10412,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
           <item>
            <widget class="QGroupBox" name="RayleighGroupBox">
             <property name="toolTip">
-             <string/>
+             <string />
             </property>
             <property name="title">
              <string>Rayleigh scattering</string>
@@ -10585,7 +10569,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
          <item>
           <widget class="QGroupBox" name="PlotGroupBox">
            <property name="title">
-            <string/>
+            <string />
            </property>
            <layout class="QFormLayout" name="formLayout_2">
             <item row="0" column="0">
@@ -11352,7 +11336,7 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
    </item>
   </layout>
  </widget>
- <layoutdefault spacing="6" margin="11"/>
+ <layoutdefault spacing="6" margin="11" />
  <tabstops>
   <tabstop>TitleEdit</tabstop>
   <tabstop>cavrzRadioButton</tabstop>
@@ -11484,1303 +11468,5 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
   <tabstop>temp6Edit</tabstop>
   <tabstop>temp7Edit</tabstop>
  </tabstops>
- <resources/>
- <connections>
-  <connection>
-   <sender>CancelButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>close()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sproutComboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_SprOutTableHeaders()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sproutComboBox</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_SprOutTableHeaders()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>parallelplateRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_electr()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>localRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_local_external()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>externalRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_local_external()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>monoenergeticRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_mono_spectrum()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spectrumRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_mono_spectrum()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>specfnameButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>GetSPECfile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>phasespacePushButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>GetPHSPfile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>raddistfnameButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>GetRDISTfile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>PCUTCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ECUTCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>SMAXCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>PrintFluSpeComboBox</sender>
-   <signal>highlighted(int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>activate_fluence_table()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>PrintFluSpeComboBox</sender>
-   <signal>activated(int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>activate_fluence_table()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BremsSplitCheckBox</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>Enable_BremsSplit()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>plotCheckBox</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>enable_plot()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>HOMERadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_working_area()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>HEN_HOUSERadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_working_area()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>OtherAreaRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_working_area()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>logfileButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>show_errors()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>HOMEPegsRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_data_area()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>HEN_HOUSEPegsRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_data_area()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>OtherPegsAreaRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_data_area()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>OpenFileButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>OpenEGSInpFile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>Pegs4FileButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>GetPEGSfile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ApplyButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>UpDateInputRZFile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>individualRadioButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_individual()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>groupRadioButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_group()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cavityRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_cav_regions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cavityRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_cavity()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>HelpButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>show_help()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>eRangeRejCheckBox</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_range_rejection()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>PhotonForcingCheckBox</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_photon_forcing()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ifullComboBox</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>activate_PulseHDistInputs()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ifullComboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>activate_PulseHDistInputs()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>InputFileComboBox</sender>
-   <signal>activated(int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>change_input_file()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>cavrzRadioButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_usercode_open()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sprrzRadioButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_usercode_open()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>dosrzRadioButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_usercode_open()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>flurzRadioButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_usercode_open()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>CleanradioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>cleanChecked(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>OptradioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>cleanChecked(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>NoOptradioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>cleanChecked(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>DebugradioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>cleanChecked(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>SPECButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>getCONFFile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ConfigurationButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>configure()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>CONFcomboBox</sender>
-   <signal>activated(int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>change_config_file()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>AboutButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>show_about()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BoundComptoncomboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>PEcomboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>RayleighcomboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>RelaxationcomboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>RayleighcomboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>activate_ff_table()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>RayleighcomboBox</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>activate_ff_table()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>RayleighcomboBox</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>RelaxationcomboBox</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>PEcomboBox</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>BoundComptoncomboBox</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>EnableTransportParamByRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>PEGSlessRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_data_area()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>MDFileButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>GetMDfile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>DFBrowse</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>GetDFfile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>mediaComboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_MediaInput()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>sourceComboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>update_source_type()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>mediaTable</sender>
-   <signal>cellDoubleClicked(int,int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>mediaTable_clicked(int,int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>mediaTable</sender>
-   <signal>cellClicked(int,int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>mediaTable_singleclicked(int,int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>customFFTable</sender>
-   <signal>cellDoubleClicked(int,int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>customFFTable_clicked(int,int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>customFFTable</sender>
-   <signal>cellClicked(int,int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>customFFTable_singleclicked(int,int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>compileButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>compile_userCode()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ExecuteButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>run_userCode()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>PreviewRZButton</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>run_previewRZ()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ExtPlotOutCheckBox</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>enable_external_plot()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>isGasCheckBox</sender>
-   <signal>clicked()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>enable_gaspEdit()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>500</x>
-     <y>559</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>389</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pz_or_rhozTable</sender>
-   <signal>cellDoubleClicked(int,int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>pz_or_rhozTable_clicked(int,int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>235</x>
-     <y>563</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>389</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pz_or_rhozTable</sender>
-   <signal>cellClicked(int,int)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>pz_or_rhozTable_singleclicked(int,int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>235</x>
-     <y>563</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>389</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>inpmediumComboBox</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>inpmediumSave(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>inpmediumComboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>inpmediumChanged(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>DCcheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>enableDCfileInput(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>641</x>
-     <y>514</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>389</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>medTypeComboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>medTypeChanged(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>470</x>
-     <y>441</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>389</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>DFEdit</sender>
-   <signal>returnPressed()</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>GetDFfileReturn()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>527</x>
-     <y>647</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>511</x>
-     <y>389</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
-</ui>
+ <resources />
+ <connections /></ui>

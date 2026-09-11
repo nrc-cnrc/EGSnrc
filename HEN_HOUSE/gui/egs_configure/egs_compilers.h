@@ -222,7 +222,7 @@ public:
        // C compiler:
        gb = new QGroupBox("C group box",this);
        gbvl = new QVBoxLayout(gb);
-       gbl = new QHBoxLayout;//gbl->setSpacing(6); gbl->setMargin(11);
+       gbl = new QHBoxLayout;//gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
        gb->setTitle( tr("C compiler") );
        ccCB = new QComboBox(gb); ccCB->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Preferred);
        gbl->addWidget(ccCB);
@@ -269,13 +269,13 @@ public:
 
        setUpCompilerBoxes();
 
-       connect(makeCB,SIGNAL(currentIndexChanged(const QString &)),
+       connect(makeCB,SIGNAL(currentTextChanged(const QString &)),
                this,SLOT(switchMake(const QString &)));
-       connect(fcCB,  SIGNAL(currentIndexChanged(const QString &)),
+       connect(fcCB,  SIGNAL(currentTextChanged(const QString &)),
                this,SLOT(switchFC(const QString &)));
-       connect(ccCB,  SIGNAL(currentIndexChanged(const QString &)),
+       connect(ccCB,  SIGNAL(currentTextChanged(const QString &)),
                this,SLOT(switchCC(const QString &)));
-       connect(cppCB, SIGNAL(currentIndexChanged(const QString &)),
+       connect(cppCB, SIGNAL(currentTextChanged(const QString &)),
                this,SLOT(switchCPP(const QString &)));
   }
   ~QCompilerPage(){}

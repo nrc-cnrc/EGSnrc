@@ -62,6 +62,13 @@ EGS_Wizard::EGS_Wizard(QWidget *parent, Qt::WindowFlags f)
    setMinimumWidth(690); //setMaximumWidth(3000); setFixedHeight(420); //setMinimumHeight(420); setMaximumHeight(450);
    setPixmap(QWizard::LogoPixmap,
              QPixmap(":/images/nrc-badge.png").scaled(QSize(150,75),Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
+#if defined(Q_OS_MAC) && QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+   /* Qt 6 looks up the default background from com.apple.KeyboardSetupAssistant,
+      which no longer exists on current macOS; the nil bundle URL it then passes
+      to NSBundle aborts the program. Providing a pixmap skips the lookup. */
+   QPixmap wizard_background(1,1); wizard_background.fill(Qt::transparent);
+   setPixmap(QWizard::BackgroundPixmap, wizard_background);
+#endif
 
    config_reader = new EGS_ConfigReader;
 
@@ -108,10 +115,10 @@ QWizardPage * EGS_Wizard::createWelcomePage(){
    guyLabel->setPixmap( QPixmap(":/images/the_guy_measures_flipped.png").scaled(QSize(200,200),
                         Qt::IgnoreAspectRatio,Qt::SmoothTransformation)
    );
-   QHBoxLayout *hl = new QHBoxLayout(welcomePage); hl->setSpacing(30); hl->setMargin(11);
+   QHBoxLayout *hl = new QHBoxLayout(welcomePage); hl->setSpacing(30); hl->setContentsMargins(11, 11, 11, 11);
    QLabel *textLabel = new QLabel(welcomePage);
-   textLabel->setFrameStyle(QFrame::StyledPanel || QFrame::Sunken);
-   textLabel->setMargin(10); textLabel->setAutoFillBackground(true);
+   textLabel->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
+   textLabel->setContentsMargins(10, 10, 10, 10); textLabel->setAutoFillBackground(true);
    QPalette palette; palette.setColor(QPalette::Window, Qt::white);
    textLabel->setPalette(palette);
    textLabel->setText("EGSnrc is an Open Source  Monte Carlo simulation toolkit for modelling the transport of "
