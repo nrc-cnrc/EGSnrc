@@ -239,4 +239,12 @@ realclean:
 			  $(estar_objects) $(DSO1)test.exe
 	$(REMOVE) $(DSO1)egs_envelope_geometry.$(obje) $(DSO1)egs_stack_geometry.$(obje) $(DSO1)egs_union_geometry.$(obje) $(DSO1)egs_angular_spread_source.$(obje)
 
+# Inter-library ordering constraints for parallel builds (make -j)
+egs_nd_geometry: egs_planes
+egs_autoenvelope: egs_gtransformed
+egs_lattice: egs_gtransformed
+egs_glib: egs_nd_geometry egs_planes
+egs_rz: egs_planes egs_cylinders egs_nd_geometry
+egs_dose_scoring: egs_mesh
+
 .PHONY: libs $(all_libs) clean realclean
