@@ -29,7 +29,7 @@
 
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
-include $(SPEC_DIR)egspp_$(my_machine).conf
+include $(USER_SPEC_DIR)egspp_$(my_machine).conf
 
 # For extra debugging messages invoke: make MYDEFS=-DDEBUG
 DEFS = $(DEF1) -DBUILD_FLUENCE_SCORING_DLL $(MYDEFS)

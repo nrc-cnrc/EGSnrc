@@ -177,6 +177,30 @@ bool is_x86_64(){
 #endif
 }
 
+/* Match HEN_HOUSE/scripts/egsnrc_config_paths egsnrc_default_profile_name */
+QString egsnrcSanitizeProfileName(const QString &name){
+    QString sanitized;
+    for ( int i = 0; i < name.length(); ++i ) {
+        const QChar c = name[i];
+        if ( c.isLetterOrNumber() || c == QLatin1Char('-') || c == QLatin1Char('_') )
+            sanitized += c;
+    }
+    return sanitized;
+}
+
+QString egsnrcDefaultProfileName(const QString &henHouse){
+    QString hh = henHouse;
+    while ( hh.endsWith( QDir::separator() ) )
+        hh.chop( 1 );
+    if ( hh.isEmpty() )
+        return QString("default");
+    QString parent = QFileInfo( hh ).absolutePath();
+    QString base = QFileInfo( parent ).fileName().toLower();
+    if ( base.isEmpty() || base == QString(".") )
+        base = QFileInfo( hh ).fileName().toLower();
+    return egsnrcSanitizeProfileName( base );
+}
+
 /*
     changes the attributes of a file (Unix/Linux)
  */

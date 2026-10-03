@@ -124,6 +124,13 @@ public slots:
   void setup_static_guis();
   void set_guis_dso();
   void update_unix_env();
+  QString egsnrcConfigHome();
+  QString egsnrcProfileName();
+  QString egsnrcProfileDir();
+  QString egsnrcUserSpecsDir();
+  bool writeXdgProfile();
+  bool installXdgShellFiles();
+  bool ensureUnixShellOneliner();
   void createWinShortcuts( const QString& where,
                            const QString& from,
                                QStringList& link,
@@ -319,42 +326,37 @@ void createDir( QString dir){ createDir( dir, false, QString() );}
 ";\n"
 
 #define UNIX_EGS_INSTALLED "\n\nCongratulations! You successfully configured the EGSnrc build system\n"\
-"for Unix/Linux. You can use this configuration for compiling EGSnrc user codes\n"\
-"by the following 4 methods:\n"\
+"for Unix/Linux. Your machine configuration was written to the XDG profile tree:\n"\
 "\n"\
-"  1. Set the environment variable EGS_CONFIG to point to the file\n"\
-"     $HEN_HOUSEspecs/$conf_file, e.g.\n"\
+"     $conf_file\n"\
 "\n"\
-"     for the Bourne (again) shell or the Korn shell use \n"\
-"       export EGS_CONFIG=$HEN_HOUSEspecs/$conf_file\n"\
-"     for the C-shell or tcsh use\n"\
-"       setenv EGS_CONFIG $HEN_HOUSEspecs/$conf_file\n"\
+"  1. Open a new shell (your shell RC should source ~/.config/EGSnrc/EGSnrc.bash),\n"\
+"     or run  egsnrc use <profile>  to activate this installation.\n"\
 "\n"\
-"     and then use either the compilation script compile_user_code (aliased to mf)\n"\
-"     or just go to a user code directory and type 'make'.\n"\
+"     Then use either the compilation script compile_user_code (aliased to mf)\n"\
+"     or go to a user code directory and type 'make'.\n"\
 "\n"\
 "  2. By running the compile script with an argument specifying to use this \n"\
 "     configuration, e.g.\n"\
 "       $HEN_HOUSEscripts/compile_user_code tutor1 config=$conf_file\n"\
 "\n"\
-"  3. By invoking make with an argument specifying to use this configuration,e.g\n"\
+"  3. By invoking make with an argument specifying to use this configuration, e.g.\n"\
 "       make EGS_CONFIG=$conf_file\n"\
 "\n"\
 "  4. By using one of the GUI's egs_gui or egs_inprz (RZ codes only)\n\n"
 
 #define WIN_EGS_INSTALLED "\n\nCongratulations! You successfully configured the EGSnrc build system\n"\
-"for Windows. You can use this configuration for compiling EGSnrc user codes\n"\
-"by the following 3 methods:\n"\
+"for Windows. Your machine configuration was written to:\n"\
 "\n"\
-"  1. Set the environment variable EGS_CONFIG to point to the file\n"\
-"     $HEN_HOUSEspecs/$conf_file by typing on your command prompt\n"\
-"           set EGS_CONFIG=$HEN_HOUSEspecs/$conf_file\n"\
-"     for a temporary setting or by adding/updating EGS_CONFIG permanently\n"\
-"     on your system properties:\n"\
+"     $conf_file\n"\
 "\n"\
-"     Start->[Settings]->Control panel->System->Advanced->Environment Variables\n"\
+"  1. Open a new command prompt (registry variables were updated by the installer),\n"\
+"     or set EGS_CONFIG temporarily:\n"\
+"           set EGS_CONFIG=$conf_file\n"\
 "\n"\
-"     and then just go to a user code directory and type 'make'.\n"\
+"     A copy of this profile is also stored under %%LOCALAPPDATA%%\\EGSnrc\\.\n"\
+"\n"\
+"     Then go to a user code directory and type 'make'.\n"\
 "\n"\
 "\n  Note: EGS_CONFIG might have been already set by the installation program\n"\
 "\n"\
@@ -370,21 +372,13 @@ void createDir( QString dir){ createDir( dir, false, QString() );}
 #define UPDATE_UNIX_ENVIRONMENT "\n\n***************************\n"\
 " IMPORTANT NOTE : \n"\
 "***************************\n"\
-"To start using the EGSnrc system, activate your current configuration\n"\
-"by adding the following lines to your favorite shell resource file: \n"\
+"To start using the EGSnrc system, open a new shell. The installer should have\n"\
+"added one line to your shell RC file that sources:\n"\
 "\n"\
-"if your default shell is a C-shell or derivative:\n"\
+"  ~/.config/EGSnrc/EGSnrc.bash   (bash/zsh)\n"\
+"  ~/.config/EGSnrc/EGSnrc.csh    (csh/tcsh)\n"\
 "\n"\
-"setenv EGS_HOME $EGS_HOME\n"\
-"setenv EGS_CONFIG $EGS_CONFIG\n"\
-"source $HEN_HOUSEscripts/egsnrc_cshrc_additions\n"\
-"\n"\
-"if your default shell is a Bourne shell or derivative:\n"\
-"\n"\
-"EGS_HOME=$EGS_HOME\n"\
-"EGS_CONFIG=$EGS_CONFIG\n"\
-"export EGS_HOME EGS_CONFIG\n"\
-". $HEN_HOUSEscripts/egsnrc_bashrc_additions\n"
+"Or run:  egsnrc use <profile>\n"
 
 #define LNBLNK "C*****************************************************************************\n"\
 "C\n"\
@@ -429,6 +423,7 @@ static const char spec_file[]={
 "\n"\
 "HEN_HOUSE = $HEN_HOUSE\n"\
 "SPEC_DIR = $(HEN_HOUSE)specs$(DSEP)\n"\
+"USER_SPEC_DIR = $USER_SPEC_DIR\n"\
 "\n"\
 "# Include the standard $OS spec file\n"\
 "#\n"\

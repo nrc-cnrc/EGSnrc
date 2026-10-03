@@ -169,6 +169,78 @@ compiler dependencies and create the files {\tt
 {my\_config}} is the name of your particular configuration (eg, g77,
 gfortran, Mac).
 
+\subsubsection{User configuration (XDG profiles)}
+\label{xdg_config}
+\index{XDG configuration}
+\index{egsnrc CLI}
+\index{EGS\_CONFIG}
+\index{profiles}
+
+Per-user session settings and machine-specific
+compiler configuration files ({\tt *.conf}) are stored under the XDG base
+directory\\
+\verb+$XDG_CONFIG_HOME/EGSnrc/+ (default \verb+~/.config/EGSnrc/+).
+Shared makefile fragments ({\tt unix.spec}, {\tt egspp\_libs.spec}, \etc)
+remain in \verb+$HEN_HOUSE/specs/+ and are not copied into the user config tree.
+
+\paragraph{Layout.}
+Each {\em profile} names one EGSnrc install tree (one \verb+HEN_HOUSE+ and
+one \verb+EGS_HOME+). Within a profile you may define several {\em machine
+configs} (compiler sets), each stored as\\
+\verb+profiles/<profile>/specs/<name>.conf+ with a matching
+\verb+egspp_<name>.conf+ in the same directory.
+\begin{verbatim}
+~/.config/EGSnrc/
+  active_profile              # currently selected profile name
+  EGSnrc.bash                 # Bourne-shell entry (also .csh, .fish)
+  profiles/<profile>/
+    hen_house                 # path to this install's HEN_HOUSE
+    active_conf               # basename of active machine config
+    env                       # exports EGS_HOME and EGS_CONFIG
+    specs/*.conf              # user machine configs from configure
+\end{verbatim}
+
+\paragraph{Installation.}
+Run \verb+$HEN_HOUSE/scripts/configure+ (or the \verb+egs_configuration+ GUI)
+to build the system libraries and write your first machine config into the
+profile tree. When prompted for a profile name, accept the default
+(parent directory of \verb+HEN_HOUSE+) or choose another
+(\eg~\verb+nrc+, \verb+work+).
+Then run \verb+$HEN_HOUSE/scripts/finalize_egs_foruser+ to choose
+\verb+EGS_HOME+, copy tutorial user codes, and print the shell setup line.
+
+\paragraph{Shell startup.}
+Add a {\em single} line to your shell resource file
+(\verb+~/.bashrc+, \verb+~/.zshrc+, \verb+~/.profile+, or \verb+~/.cshrc+):
+\begin{verbatim}
+[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/EGSnrc/EGSnrc.bash" ] && \
+  . "${XDG_CONFIG_HOME:-$HOME/.config}/EGSnrc/EGSnrc.bash"
+\end{verbatim}
+For {\tt csh}/{\tt tcsh}, source \verb+~/.config/EGSnrc/EGSnrc.csh+ instead;
+for {\tt fish}, source \verb+~/.config/EGSnrc/EGSnrc.fish+ from your
+\verb+config.fish+.
+Opening a new terminal then sets \verb+HEN_HOUSE+, \verb+EGS_HOME+,
+\verb+EGS_CONFIG+, and the usual EGSnrc aliases.
+
+\paragraph{Switching installs and machine configs.}
+The \verb+egsnrc+ command (in \verb+$HEN_HOUSE/scripts/+) manages profiles:
+\begin{verbatim}
+egsnrc list                      # list profiles (* = active)
+egsnrc use <profile>             # switch profile (new shell)
+egsnrc use <profile> --apply     # switch and reload this shell
+egsnrc config list               # machine configs in active profile
+egsnrc config use <name>         # switch machine config
+egsnrc config use <name> --apply # switch config in this shell
+egsnrc sync [user_code ...]      # refresh Makefiles HEN_HOUSE -> EGS_HOME
+egsnrc profile delete <name>     # remove a profile (--force if active)
+\end{verbatim}
+
+\paragraph{Migrating an existing installation.}
+If your machine configs still live in \verb+$HEN_HOUSE/specs/+ or your
+\verb+~/.bashrc+ contains multi-line EGSnrc blocks, run\\
+\verb+$HEN_HOUSE/scripts/egsnrc_migrate_config+ once to copy configs into
+the XDG tree and replace legacy shell blocks with the one-liner above.
+
 \subsubsection{System aliases and environment variables}
 \index{aliases} \index{environment variables}
 \index{Cshrc\_additions\_for\_egsnrc}
@@ -182,10 +254,15 @@ To define the
 aliases and other variables needed by the system, there are files called
 {\tt egsnrc\_cshrc\_additions} and {\tt egsnrc\_bashrc\_additions} available on
 {\tt \$HEN\_HOUSE/scripts}.
-However, one first needs to set the environment variable {\tt HEN\_HOUSE}
-to point at the location of the {\tt HEN\_HOUSE}. This is most conveniently
-done with a declaration in your {\tt .login} file or {\tt .cshrc} file or
-{\tt .bashrc} file depending on which shell is your default.
+On new installations these are loaded automatically when you source
+\verb+~/.config/EGSnrc/EGSnrc.bash+ (see the previous section); you should
+{\bfseries not} add per-install \verb+HEN_HOUSE+ or \verb+EGS_CONFIG+ lines
+to your shell resource file.
+
+\paragraph{Legacy manual setup.}
+Older installations may still set \verb+HEN_HOUSE+ directly in
+{\tt .login}, {\tt .cshrc}, or {\tt .bashrc} and source the additions
+files by absolute path:
 \begin{verbatim}
       setenv HEN_HOUSE location_of_HEN_HOUSE (e.g. $HOME/HEN_HOUSE)
 \end{verbatim}
@@ -193,9 +270,7 @@ or for {\tt .bashrc}
 \begin{verbatim}
       HEN_HOUSE=/absolute_location_of_your_HEN_HOUSE/ (e.g. $HOME/HEN_HOUSE)
 \end{verbatim}
-Then it is {\bfseries essential} that in your {\tt .cshrc} or {\tt .bashrc}
-file you source the
-{\tt  egsnrc\_cshrc\_additions} or {\tt egsnrc\_bashrc\_additions} file, i.e. add the statement:
+Then source the additions file:
 \begin{verbatim}
      source $HEN_HOUSE/scripts/egsnrc_cshrc_additions}
 \end{verbatim}
@@ -205,8 +280,11 @@ or, for those using {\tt bash}:
 or
      source /absolute_location_of_your_HEN_HOUSE/scripts/egsnrc_bashrc_additions}
 \end{verbatim}
+If \verb+EGS_CONFIG+ is not set, \verb+egsnrc_bashrc_additions+ will try the
+XDG profile tree before falling back to this legacy layout.
+Migrating to XDG is recommended (see \verb+egsnrc_migrate_config+ above).
 
-These additions file set up many aliases and other variables for you. These
+These additions files set up many aliases and other variables for you. These
 are most easily seen by executing the commands {\tt alias}, {\tt set} and
 {\tt setenv} although this will show you all of the systems definitions as
 well.  We will explain the use of many of these definitions in the
@@ -670,38 +748,37 @@ them up, but only once they have been analysed.
 \index{distribution}
 \index{installation}
 \index{Cshrc\_additions\_for\_egsnrc}
-\index{INSTALL\_EGS}
+\index{configure}
+\index{finalize\_egs\_foruser}
+\index{egsnrc\_migrate\_config}
 
 
 \index{.cshrc}
 \index{HEN\_HOUSE}
-This installation script requires that the environment variables
-\verb+HEN_HOUSE+ not be defined when the script is called and not be
-defined in the user's {\tt .cshrc} or {\tt .bashrc} file. The installation will create
-the entire \verb+$HEN_HOUSE+ structure shown in
-fig~\ref{fig_hen_house_2} (page~\pageref{fig_hen_house_2})
-and compile a variety of codes for the machine
-the user is doing the installation from (\viz\ Mortran3,
-PEGS4, DOSRZnrc).  It also partially sets up the user's area
-\verb+$EGS_HOME+.
+Modern installations use \verb+$HEN_HOUSE/scripts/configure+ (interactive) or
+the \verb+egs_configuration+ GUI. These scripts compile Mortran3, PEGS4,
+and related tools, write your machine config to
+\verb+~/.config/EGSnrc/profiles/<profile>/specs/+, and optionally launch
+\verb+finalize_egs_foruser+ to set up \verb+$EGS_HOME+.
+Do not define \verb+HEN_HOUSE+ or \verb+EGS_CONFIG+ in your shell resource
+file before running \verb+configure+.
 
-Once the \verb+INSTALL_EGS+ script has been successfully executed, one
-must ensure that the environment variables {\tt HEN\_HOUSE} and {\tt
-EGS\_HOME} are defined to
-point at wherever you have placed the EGSnrc system and your EGSnrc user
-area.
+After \verb+configure+ completes, add the single XDG shell line shown in
+section~\ref{xdg_config} (User configuration) to your \verb+~/.bashrc+,
+\verb+~/.zshrc+, or \verb+~/.cshrc+, then open a new terminal (or run
+\verb+egsnrc use <profile> --apply+).
 
-Most importantly, the installation leaves behind a file called
-\verb+egsnrc_cshrc_additions+ or \verb+egsnrc_bashrc_additions+
-which MUST be sourced from the user's
-{\tt .cshrc} script or {\tt .bashrc} script depending on which default
-shell is used. Once the installation is complete,
-add the following to your {\tt .cshrc} file:\\
-\verb+source /explicit_path_to_your_HEN_HOUSE/egsnrc_cshrc_additions+. \\
-or the following to your {\tt .bashrc} file:\\
-\verb+source /explicit_path_to_your_HEN_HOUSE/egsnrc_bashrc_additions+. \\
-\index{egsnrc\_bashrc\_additions}
-\index{egsnrc\_cshrc\_additions}
+\index{INSTALL\_EGS}
+Older documentation refers to an \verb+INSTALL_EGS+ procedure; current
+distributions use \verb+configure+ and \verb+finalize_egs_foruser+ instead.
+The installation compiles Mortran3, PEGS4, and related tools for the machine
+you configure from, and creates per-config object libraries under
+\verb+$HEN_HOUSE/lib/<config>/+.
+
+Users upgrading from releases that stored \verb+*.conf+ files in
+\verb+$HEN_HOUSE/specs/+ should run
+\verb+$HEN_HOUSE/scripts/egsnrc_migrate_config+ and replace any multi-line
+EGSnrc blocks in \verb+~/.bashrc+ with the XDG one-liner.
 
 The user should try to run the {\tt tutor} codes to ensure the system is working.
 

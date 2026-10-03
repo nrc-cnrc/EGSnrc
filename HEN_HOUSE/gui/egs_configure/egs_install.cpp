@@ -34,9 +34,9 @@
 #include <QPushButton>
 
 #if defined(Q_OS_LINUX) || defined(Q_OS_UNIX)
-#define SET_ENV "Appends environment variables to shell resource files (.bashrc, .cshrc, etc)"
+#define SET_ENV "Writes XDG profile and adds a one-line shell RC entry (~/.config/EGSnrc/EGSnrc.bash)"
 #elif defined(Q_OS_WIN32) || defined(WIN32)
-#define SET_ENV "Updates user environment variables in the registry"
+#define SET_ENV "Updates registry variables and writes profile under %LOCALAPPDATA%\\EGSnrc"
 #else
 #define SET_ENV
 #endif

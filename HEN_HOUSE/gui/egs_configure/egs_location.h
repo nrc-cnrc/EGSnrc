@@ -88,9 +88,11 @@ public:
   {
        //fc = a_f; cc = a_c; cpp = a_cpp; make = a_m;
        setTitle("Configuration Page");
-       setSubTitle("System location and configuration name");
+       setSubTitle("System location, EGSnrc profile, and machine configuration name");
 
        config_reader = cr;
+       profileManuallyEdited = false;
+       updatingProfile = false;
 
        // the page layout
        QVBoxLayout *topl = new QVBoxLayout(this);
@@ -141,6 +143,22 @@ public:
 
        topl->addWidget(gb);
 
+       // EGSnrc profile name (XDG profiles/<name>/; default from HEN_HOUSE parent dir)
+       gb = new QGroupBox("profile group box",this);
+       gbl = new QHBoxLayout(gb);gbl->setSpacing(6);
+       gb->setTitle( tr("EGSnrc profile name") );
+       profileLineEdit = new QLineEdit(gb);
+       profileLineEdit->setToolTip(
+           tr("Names the XDG profile directory (~/.config/EGSnrc/profiles/<name>/).\n"
+              "Leave as suggested or choose another name (e.g. nrc, work, home)."));
+       gbl->addWidget(profileLineEdit);
+       topl->addWidget(gb);
+
+       connect(profileLineEdit, SIGNAL(textEdited(const QString &)),
+               this, SLOT(onProfileTextEdited()));
+       connect(this, SIGNAL(henHouseChanged(const QString &)),
+               this, SLOT(updateProfileSuggestion(const QString &)));
+
        // Work Area (EGS_HOME) taken from environment or defaults to $HOME/egs_home
        gb = new QGroupBox("EGS_HOME group box",this);
        gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setMargin(11);
@@ -176,6 +194,7 @@ public:
        topl->addLayout(gbl);
 
        registerField("hen_house",henLineEdit);
+       registerField("egs_profile", profileLineEdit);
        registerField("egs_conf", confLineEdit);
        registerField("egs_home", homeLineEdit);
        registerField("conf_name", this, "confName");
@@ -185,6 +204,8 @@ public:
        if (!defaultMakeExists() || !defaultFortranExists() ||
            !defaultCExists()    || !defaultCPPExists()     )
            all_defaults_exist = false;
+
+       updateProfileSuggestion(henLineEdit->text());
 
   }
   ~QLocationPage(){}
@@ -214,6 +235,33 @@ public slots:
       if (!all_defaults_exist){
           custom->setChecked(true); custom->hide(); typical->hide();
       }
+      if ( ! profileManuallyEdited )
+          updateProfileSuggestion( henLineEdit->text() );
+  }
+
+  void onProfileTextEdited()
+  {
+      if ( ! updatingProfile )
+          profileManuallyEdited = true;
+  }
+
+  void updateProfileSuggestion( const QString &hh )
+  {
+      if ( profileManuallyEdited )
+          return;
+      updatingProfile = true;
+      const QString suggestion = egsnrcDefaultProfileName( hh );
+      profileLineEdit->setText( suggestion );
+      profileLineEdit->setPlaceholderText( suggestion );
+      updatingProfile = false;
+  }
+
+  QString resolvedProfileName() const
+  {
+      QString name = profileLineEdit->text().trimmed();
+      if ( name.isEmpty() )
+          name = egsnrcDefaultProfileName( henLineEdit->text() );
+      return egsnrcSanitizeProfileName( name );
   }
 
   bool defaultMakeExists() {
@@ -349,6 +397,16 @@ public slots:
                               tr("directories and copy user codes!"));
         return false;
     }
+
+    const QString profile = resolvedProfileName();
+    if ( profile.isEmpty() ) {
+        QMessageBox::critical(this, tr("Profile name error!"),
+                              tr("Please enter a profile name using letters, digits, '-' or '_'."));
+        return false;
+    }
+    updatingProfile = true;
+    profileLineEdit->setText( profile );
+    updatingProfile = false;
 
     return dirOK(henLineEdit->text(),false) && dirOK(homeLineEdit->text(),true);
   }
@@ -574,10 +632,12 @@ private:
   MCompiler        *fc, *cc, *cpp, *make; // Compilers + make utility
   QLineEdit        *henLineEdit,
                    *homeLineEdit,
-                   *confLineEdit;
+                   *confLineEdit,
+                   *profileLineEdit;
   QRadioButton     *typical, *custom;
   QString           canonical, conf_name;
-  bool              copyUCs, all_defaults_exist;
+  bool              copyUCs, all_defaults_exist,
+                    profileManuallyEdited, updatingProfile;
 };
 
 #endif

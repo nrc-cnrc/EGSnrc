@@ -150,7 +150,7 @@ else
 EOF
 fi
 
-ofile=${hen_house}specs/egspp_${my_machine}.conf
+ofile=$(dirname "$egs_config")/egspp_${my_machine}.conf
 
 while true; do
 
@@ -168,7 +168,7 @@ fi
 if test $create_config=yes; then
 
 memory_model="-mcmodel=medium"
-system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
+system_name=$(uname -s | sed 's/:/:_:/g' | tr '[:upper:]' '[:lower:]')
 if test "x$system_name" = xdarwin; then
     memory_model=""
 fi

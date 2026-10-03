@@ -188,10 +188,10 @@ if test "x$need_configuration" = xyes; then
     if test "x$response" = x || test "x$response" = x$help; then
       cat >&2 <<_ACEOF
 
-The EGSnrc config file is found in the 'specs' subdirectory of the HEN_HOUSE,
-inside your EGSnrc installation directory. It is automatically created during
-the EGSnrc installation process and contains definitions such as HEN_HOUSE,
-compiler name and options, etc.
+The EGSnrc config file is created during configure. It is stored under your
+XDG configuration directory (default ~/.config/EGSnrc/profiles/<profile>/specs/)
+or may still be in HEN_HOUSE/specs on older installations. It contains
+definitions such as HEN_HOUSE, compiler name and options, etc.
 
 _ACEOF
     else
@@ -216,7 +216,7 @@ fi
 HEN_HOUSE=$( cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //' )
 my_machine=$( cat $EGS_CONFIG | grep "my_machine =" | sed 's/my_machine = //' )
 have_egspp_config=no
-egspp_conf=$HEN_HOUSE/specs/egspp_${my_machine}.conf
+egspp_conf=$(dirname "$EGS_CONFIG")/egspp_${my_machine}.conf
 if test -f $egspp_conf; then
     libext=$( cat $egspp_conf | grep "libext =" | sed 's/libext = //' )
     if test -f $HEN_HOUSE/egs++/dso/$my_machine/libegspp$libext; then
@@ -396,65 +396,42 @@ EOF
 canonical_system=$( cat $EGS_CONFIG | grep "canonical_system =" | sed 's/canonical_system = //' )
 is_darwin=$(echo $canonical_system | grep -i darwin)
 
-# prescribe lines to add to shell resource file
+# Write XDG profile and print shell one-liner
+. "${HEN_HOUSE}scripts/egsnrc_config_paths"
+if test "x$EGSNRC_PROFILE" = x; then
+    case "$EGS_CONFIG" in
+        */profiles/*/specs/*)
+            EGSNRC_PROFILE=$(echo "$EGS_CONFIG" | sed 's|.*/profiles/\([^/]*\)/specs/.*|\1|')
+            ;;
+        *)
+            EGSNRC_PROFILE=$(egsnrc_default_profile_name "$HEN_HOUSE")
+            ;;
+    esac
+fi
+_conf_base=$(basename "$EGS_CONFIG" .conf)
+egsnrc_ensure_profile_layout "$EGSNRC_PROFILE" "$HEN_HOUSE"
+egsnrc_write_profile_env "$EGSNRC_PROFILE" "$_conf_base" "$EGS_HOME"
+egsnrc_set_active_profile "$EGSNRC_PROFILE"
+egsnrc_install_xdg_shell_files "$HEN_HOUSE"
+
 echo "Your default shell is $SHELL" >&2
 test_shell=$( echo $SHELL | sed 's,.*[\\/],,' )
-if test "x$test_shell" = xtcsh || test "x$test_shell" = xcsh; then
-  echo "Add the following statements to your .cshrc file: " >&2
+_oneliner=$(egsnrc_shell_oneliner)
+if test "x$test_shell" = xfish; then
+  _cfg=$(egsnrc_config_home)
+  echo "Add the following line to your .config/fish/config file:" >&2
   echo >&2
-  echo "setenv EGS_HOME $EGS_HOME" >&2
-  echo "setenv EGS_CONFIG $EGS_CONFIG" >&2
-  echo "source ${HEN_HOUSE}scripts/egsnrc_cshrc_additions" >&2
-elif test "x$test_shell" = xksh || test "x$test_shell" = xsh; then
-  echo "Add the following statements to your .profile file: " >&2
-  echo >&2
-  echo "EGS_HOME=$EGS_HOME" >&2
-  echo "EGS_CONFIG=$EGS_CONFIG" >&2
-  echo "export EGS_HOME EGS_CONFIG" >&2
-  echo "source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
-elif test ! "x$is_darwin" = x; then
-  echo "Add the following statements to your .profile file: " >&2
-  echo >&2
-  echo "export EGS_HOME=$EGS_HOME" >&2
-  echo "export EGS_CONFIG=$EGS_CONFIG" >&2
-  echo "source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
-elif test "x$test_shell" = xbash; then
-  echo "Add the following statements to your .bashrc file: " >&2
-  echo >&2
-  echo "export EGS_HOME=$EGS_HOME" >&2
-  echo "export EGS_CONFIG=$EGS_CONFIG" >&2
-  echo "source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
-elif test "x$test_shell" = xfish; then
-  echo "Add the following statements to your .config/fish/config file: " >&2
-  echo >&2
-  echo "set -x EGS_HOME $EGS_HOME" >&2
-  echo "set -x EGS_CONFIG $EGS_CONFIG" >&2
-  echo "source ${HEN_HOUSE}scripts/egsnrc_fishrc_additions" >&2
+  echo "source $_cfg/EGSnrc.fish" >&2
 else
-  cat >&2 <<EOF
-Could not determine your default shell type. To make use of the EGSnrc
-system it is advantageous to define environment variables and aliases in
-the file that is run each time you open a new shell. Depending on your
-shell type, this file may be .cshrc, .bashrc, .profile, .login, etc.,
-in your home directory. Please ask your system administrator which
-resource file appropriate. Add the following lines at the end of this
-shell resource file:
-
-If your default shell is a C shell or derivative, add:
-
-setenv EGS_HOME $EGS_HOME
-setenv EGS_CONFIG $EGS_CONFIG
-source ${HEN_HOUSE}scripts/egsnrc_cshrc_additions
-
-if your default shell is a Bourne shell or derivative, add:
-
-EGS_HOME=$EGS_HOME
-EGS_CONFIG=$EGS_CONFIG
-export EGS_HOME EGS_CONFIG
-source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions
-
-EOF
+  echo "Add the following single line to your shell startup file" >&2
+  echo "(.bashrc, .zshrc, .profile, or .cshrc as appropriate):" >&2
+  echo >&2
+  echo "$_oneliner" >&2
 fi
+echo >&2
+echo "Switch profiles anytime with:  egsnrc use <profile>" >&2
+echo "List profiles:                 egsnrc list" >&2
+echo "Active profile:                  $EGSNRC_PROFILE" >&2
 
 cat >&2 <<EOF
 
