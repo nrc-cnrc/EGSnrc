@@ -11,7 +11,7 @@ $(MORTRAN_EXE): $(BUILD_DIR)/mortran3_inc.o $(BUILD_DIR)/machine.o
 	mkdir -p "$(dir $@)"
 	$(FC) $(FFLAGS) -o "$@" $^
 
-$(BUILD_DIR)/mortran3_inc.o: mortran3.f
+$(BUILD_DIR)/mortran3_inc.o: mortran3.f95 mortran3_indices.f95
 	mkdir -p "$(dir $@)"
 	$(FC) $(FFLAGS) -ffree-form -c -o "$@" "$<"
 
