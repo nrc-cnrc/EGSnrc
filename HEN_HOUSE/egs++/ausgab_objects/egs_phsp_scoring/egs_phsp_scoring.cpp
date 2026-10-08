@@ -115,7 +115,7 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
 
     //construct name of phase space file -- opening to occur later
     if (phspoutdir == "") {
-        phspoutdir = app->getAppDir();
+        phspoutdir = app->getOutputDir();
     }
     if (oformat==0) {
         description += "\n Data will be output in EGSnrc format.\n";

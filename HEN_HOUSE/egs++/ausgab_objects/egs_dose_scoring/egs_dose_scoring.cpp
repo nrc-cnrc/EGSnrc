@@ -319,7 +319,7 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         description += " " + ext;
         description += "\n File name: ";
         df_name=getObjectName() + "." + ext;
-        df_name=egsJoinPath(app->getAppDir(),df_name);
+        df_name=egsJoinPath(app->getOutputDir(),df_name);
         description += df_name;
     }
     description += "\n*******************************************\n\n";

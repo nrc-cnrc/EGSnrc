@@ -113,6 +113,7 @@ private:
 
   QString      user_code;
   QString      target;
+  QString      input_dir;
 
   QString      batch_command;
   QString      generic_bo;
