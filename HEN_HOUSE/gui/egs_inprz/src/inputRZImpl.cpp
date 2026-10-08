@@ -72,6 +72,99 @@ inputRZImpl::inputRZImpl( QWidget* parent, const char* name,
 {
 
     setupUi(this);
+    connect(CancelButton, SIGNAL(clicked()), this, SLOT(close()));
+    connect(sproutComboBox, SIGNAL(activated(int)), this, SLOT(update_SprOutTableHeaders()));
+    connect(sproutComboBox, SIGNAL(highlighted(int)), this, SLOT(update_SprOutTableHeaders()));
+    connect(parallelplateRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_electr()));
+    connect(localRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_local_external()));
+    connect(externalRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_local_external()));
+    connect(monoenergeticRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_mono_spectrum()));
+    connect(spectrumRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_mono_spectrum()));
+    connect(specfnameButton, SIGNAL(clicked()), this, SLOT(GetSPECfile()));
+    connect(phasespacePushButton, SIGNAL(clicked()), this, SLOT(GetPHSPfile()));
+    connect(raddistfnameButton, SIGNAL(clicked()), this, SLOT(GetRDISTfile()));
+    connect(PCUTCheckBox, SIGNAL(toggled(bool)), this, SLOT(EnableTransportParamByRegions()));
+    connect(ECUTCheckBox, SIGNAL(toggled(bool)), this, SLOT(EnableTransportParamByRegions()));
+    connect(SMAXCheckBox, SIGNAL(toggled(bool)), this, SLOT(EnableTransportParamByRegions()));
+    connect(PrintFluSpeComboBox, SIGNAL(highlighted(int)), this, SLOT(activate_fluence_table()));
+    connect(PrintFluSpeComboBox, SIGNAL(activated(int)), this, SLOT(activate_fluence_table()));
+    connect(BremsSplitCheckBox, SIGNAL(clicked()), this, SLOT(Enable_BremsSplit()));
+    connect(plotCheckBox, SIGNAL(clicked()), this, SLOT(enable_plot()));
+    connect(HOMERadioButton, SIGNAL(toggled(bool)), this, SLOT(set_working_area()));
+    connect(HEN_HOUSERadioButton, SIGNAL(toggled(bool)), this, SLOT(set_working_area()));
+    connect(OtherAreaRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_working_area()));
+    connect(logfileButton, SIGNAL(clicked()), this, SLOT(show_errors()));
+    connect(HOMEPegsRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_data_area()));
+    connect(HEN_HOUSEPegsRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_data_area()));
+    connect(OtherPegsAreaRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_data_area()));
+    connect(OpenFileButton, SIGNAL(clicked()), this, SLOT(OpenEGSInpFile()));
+    connect(Pegs4FileButton, SIGNAL(clicked()), this, SLOT(GetPEGSfile()));
+    connect(ApplyButton, SIGNAL(clicked()), this, SLOT(UpDateInputRZFile()));
+    connect(individualRadioButton, SIGNAL(clicked()), this, SLOT(set_individual()));
+    connect(groupRadioButton, SIGNAL(clicked()), this, SLOT(set_group()));
+    connect(cavityRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_cav_regions()));
+    connect(cavityRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_cavity()));
+    connect(HelpButton, SIGNAL(clicked()), this, SLOT(show_help()));
+    connect(eRangeRejCheckBox, SIGNAL(clicked()), this, SLOT(update_range_rejection()));
+    connect(PhotonForcingCheckBox, SIGNAL(clicked()), this, SLOT(update_photon_forcing()));
+    connect(ifullComboBox, SIGNAL(highlighted(int)), this, SLOT(activate_PulseHDistInputs()));
+    connect(ifullComboBox, SIGNAL(activated(int)), this, SLOT(activate_PulseHDistInputs()));
+    connect(InputFileComboBox, SIGNAL(activated(int)), this, SLOT(change_input_file()));
+    connect(cavrzRadioButton, SIGNAL(clicked()), this, SLOT(update_usercode_open()));
+    connect(sprrzRadioButton, SIGNAL(clicked()), this, SLOT(update_usercode_open()));
+    connect(dosrzRadioButton, SIGNAL(clicked()), this, SLOT(update_usercode_open()));
+    connect(flurzRadioButton, SIGNAL(clicked()), this, SLOT(update_usercode_open()));
+    connect(CleanradioButton, SIGNAL(toggled(bool)), this, SLOT(cleanChecked(bool)));
+    connect(OptradioButton, SIGNAL(toggled(bool)), this, SLOT(cleanChecked(bool)));
+    connect(NoOptradioButton, SIGNAL(toggled(bool)), this, SLOT(cleanChecked(bool)));
+    connect(DebugradioButton, SIGNAL(toggled(bool)), this, SLOT(cleanChecked(bool)));
+    connect(SPECButton, SIGNAL(clicked()), this, SLOT(getCONFFile()));
+    connect(ConfigurationButton, SIGNAL(clicked()), this, SLOT(configure()));
+    connect(CONFcomboBox, SIGNAL(activated(int)), this, SLOT(change_config_file()));
+    connect(AboutButton, SIGNAL(clicked()), this, SLOT(show_about()));
+    connect(BoundComptoncomboBox, SIGNAL(activated(int)), this, SLOT(EnableTransportParamByRegions()));
+    connect(PEcomboBox, SIGNAL(activated(int)), this, SLOT(EnableTransportParamByRegions()));
+    connect(RayleighcomboBox, SIGNAL(activated(int)), this, SLOT(EnableTransportParamByRegions()));
+    connect(RelaxationcomboBox, SIGNAL(activated(int)), this, SLOT(EnableTransportParamByRegions()));
+    connect(RayleighcomboBox, SIGNAL(activated(int)), this, SLOT(activate_ff_table()));
+    connect(RayleighcomboBox, SIGNAL(highlighted(int)), this, SLOT(activate_ff_table()));
+    connect(RayleighcomboBox, SIGNAL(highlighted(int)), this, SLOT(EnableTransportParamByRegions()));
+    connect(RelaxationcomboBox, SIGNAL(highlighted(int)), this, SLOT(EnableTransportParamByRegions()));
+    connect(PEcomboBox, SIGNAL(highlighted(int)), this, SLOT(EnableTransportParamByRegions()));
+    connect(BoundComptoncomboBox, SIGNAL(highlighted(int)), this, SLOT(EnableTransportParamByRegions()));
+    connect(PEGSlessRadioButton, SIGNAL(toggled(bool)), this, SLOT(set_data_area()));
+    connect(MDFileButton, SIGNAL(clicked()), this, SLOT(GetMDfile()));
+    connect(DFBrowse, SIGNAL(clicked()), this, SLOT(GetDFfile()));
+    connect(mediaComboBox, SIGNAL(activated(int)), this, SLOT(update_MediaInput()));
+    connect(sourceComboBox, SIGNAL(activated(int)), this, SLOT(update_source_type()));
+    connect(mediaTable, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(mediaTable_clicked(int,int)));
+    connect(mediaTable, SIGNAL(cellClicked(int,int)), this, SLOT(mediaTable_singleclicked(int,int)));
+    connect(customFFTable, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(customFFTable_clicked(int,int)));
+    connect(customFFTable, SIGNAL(cellClicked(int,int)), this, SLOT(customFFTable_singleclicked(int,int)));
+    connect(compileButton, SIGNAL(clicked()), this, SLOT(compile_userCode()));
+    connect(ExecuteButton, SIGNAL(clicked()), this, SLOT(run_userCode()));
+    connect(PreviewRZButton, SIGNAL(clicked()), this, SLOT(run_previewRZ()));
+    connect(ExtPlotOutCheckBox, SIGNAL(clicked()), this, SLOT(enable_external_plot()));
+    connect(isGasCheckBox, SIGNAL(clicked()), this, SLOT(enable_gaspEdit()));
+    connect(pz_or_rhozTable, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(pz_or_rhozTable_clicked(int,int)));
+    connect(pz_or_rhozTable, SIGNAL(cellClicked(int,int)), this, SLOT(pz_or_rhozTable_singleclicked(int,int)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    connect(inpmediumComboBox, &QComboBox::textHighlighted, this, &inputRZImpl::inpmediumSave);
+    connect(inpmediumComboBox, &QComboBox::textActivated, this, &inputRZImpl::inpmediumChanged);
+#else
+    connect(inpmediumComboBox, QOverload<const QString &>::of(&QComboBox::highlighted),
+            this, &inputRZImpl::inpmediumSave);
+    connect(inpmediumComboBox, QOverload<const QString &>::of(&QComboBox::activated),
+            this, &inputRZImpl::inpmediumChanged);
+#endif
+    connect(DCcheckBox, SIGNAL(toggled(bool)), this, SLOT(enableDCfileInput(bool)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    connect(medTypeComboBox, &QComboBox::textActivated, this, &inputRZImpl::medTypeChanged);
+#else
+    connect(medTypeComboBox, QOverload<const QString &>::of(&QComboBox::activated),
+            this, &inputRZImpl::medTypeChanged);
+#endif
+    connect(DFEdit, SIGNAL(returnPressed()), this, SLOT(GetDFfileReturn()));
     Initialize();
     SetValidator( );
     connect( PrintButton, SIGNAL(clicked()), this, SLOT(print()) );
@@ -196,7 +289,7 @@ void inputRZImpl::run_userCode()
 			inpf                      + " " +
 			datf;
      ExecutiondlgImpl* executionDialog = new ExecutiondlgImpl( this, exec_str.toLatin1(),
-                                                               false, 0);
+                                                               false, {});
      executionDialog->inputFileLabel->setText(EGSfileName);
 #ifdef WIN32
       executionDialog->batchRadioButton->setEnabled(false);
@@ -232,7 +325,7 @@ bool inputRZImpl::configLibExists(){
     QStringList lst = dir.entryList( "*.*" );
     for ( QStringList::Iterator it = lst.begin(); it != lst.end(); ++it ) {
 	if ( ( *it ).contains( "egsconfig" ) ){
-                confErrors = QString::null;
+                confErrors = QString();
                 return true;
 	}
     }
@@ -1029,7 +1122,7 @@ void inputRZImpl::getCONFFile()
 void inputRZImpl::GetSPECfile()
 {
     //qt3to4 -- BW
-    //Q3FileDialog* fd = new Q3FileDialog(SPECdir, QString::null, this);
+    //Q3FileDialog* fd = new Q3FileDialog(SPECdir, QString(), this);
     QFileDialog* fd = new QFileDialog(this,"",SPECdir, QString());
     QStringList filters;
     filters << "*.spectrum" << "*.ensrc";
@@ -1082,7 +1175,7 @@ void inputRZImpl::GetPHSPfile()
     PHSPdir  = PHSPdir.isEmpty()? GetCurrentDir( "", EGS_HOME, HEN_HOUSE ):PHSPdir;
     QString f = QFileDialog::getOpenFileName( this,"",PHSPdir,
                              "Phase-space files (*.egsphsp1 *.IAEAphsp);;Any files (*)");
-    //QString f = QFileDialog::getOpenFileName( PHSPdir, QString::null, this );
+    //QString f = QFileDialog::getOpenFileName( PHSPdir, QString(), this );
     if ( !f.isEmpty() ) {
        QString phsp_file = f;
        QFileInfo fi( phsp_file );

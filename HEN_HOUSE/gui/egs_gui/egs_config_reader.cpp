@@ -35,6 +35,9 @@
 #include <qfile.h>
 #include <qstringlist.h>
 #include <qregexp.h>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QRegularExpression>
+#endif
 #include <qdir.h>
 #include <qmessagebox.h>
 
@@ -44,6 +47,13 @@
 #include <QTextStream>
 
 using namespace std;
+
+/* Qt::SkipEmptyParts arrived in Qt 5.14, and Qt 6 dropped the QString one. */
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+static const Qt::SplitBehavior EGS_SkipEmptyParts = Qt::SkipEmptyParts;
+#else
+static const QString::SplitBehavior EGS_SkipEmptyParts = QString::SkipEmptyParts;
+#endif
 
 //#define CR_DEBUG
 
@@ -86,8 +96,12 @@ EGS_PrivateConfigReader::EGS_PrivateConfigReader(const QString &file) {
 
 QString EGS_PrivateConfigReader::ironIt(const QString &v) {
     QString aux = "/+|"; aux += "\\\\"; aux += "+";
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QStringList list = v.split(QRegularExpression(aux), EGS_SkipEmptyParts);
+#else
     QRegExp re(aux);
-    QStringList list = v.split(re,QString::SkipEmptyParts);
+    QStringList list = v.split(re, EGS_SkipEmptyParts);
+#endif
 #ifdef CR_DEBUG
     cr_debug << "ironIt gets " << list.count() << " elements :" << list.join(",").toLatin1().data() << endl;
 #endif
@@ -105,6 +119,18 @@ QString EGS_PrivateConfigReader::ironIt(const QString &v) {
 
 QString EGS_PrivateConfigReader::simplify(const QString &value,bool ironit) {
     QString junk = "\\$\\((\\w+)\\)";
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QRegularExpression re(junk);
+    QString res; int pos = 0;
+    while(1) {
+        QRegularExpressionMatch match = re.match(value, pos);
+        if( !match.hasMatch() ) { res += value.mid(pos); break; }
+        int pos1 = match.capturedStart(0);
+        res += value.mid(pos,pos1-pos);
+        res += getVariable(match.captured(1),ironit);
+        pos = pos1 + match.capturedLength(0);
+    }
+#else
     QRegExp re(junk);
     QString res; int pos = 0;
     while(1) {
@@ -114,6 +140,7 @@ QString EGS_PrivateConfigReader::simplify(const QString &value,bool ironit) {
         res += getVariable(re.cap(1),ironit);
         pos = pos1 + re.matchedLength();
     }
+#endif
     if( ironit ) return ironIt(res);
     return res;
 }

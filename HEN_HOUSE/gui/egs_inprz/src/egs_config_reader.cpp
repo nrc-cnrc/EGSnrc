@@ -35,6 +35,9 @@
 #include <qfile.h>
 #include <qstringlist.h>
 #include <qregexp.h>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QRegularExpression>
+#endif
 #include <qdir.h>
 #include <qmessagebox.h>
 //Added by qt3to4:
@@ -45,6 +48,13 @@
 #include <string>
 
 using namespace std;
+
+/* Qt::SkipEmptyParts arrived in Qt 5.14, and Qt 6 dropped the QString one. */
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+static const Qt::SplitBehavior EGS_SkipEmptyParts = Qt::SkipEmptyParts;
+#else
+static const QString::SplitBehavior EGS_SkipEmptyParts = QString::SkipEmptyParts;
+#endif
 
 #ifdef CR_DEBUG
 #include <fstream>
@@ -76,9 +86,12 @@ QString EGS_ConfigReader::getConfig() const {
 QString EGS_PrivateConfigReader::ironIt(const QString &v) {
     //cout << "ironIt: " << v.latin1() << endl;
     QString aux = "/+|"; aux += "\\\\"; aux += "+";
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QStringList list = v.split(QRegularExpression(aux), EGS_SkipEmptyParts);
+#else
     QRegExp re(aux);
-    //QStringList list = QStringList::split(re,v);
-    QStringList list = v.split(re,QString::SkipEmptyParts);
+    QStringList list = v.split(re, EGS_SkipEmptyParts);
+#endif
     QString res; if( v.startsWith("/") ) res = "/";
     for(QStringList::iterator it=list.begin(); it != list.end(); it++) {
         //cout << "next: " << (*it).latin1() << endl;
@@ -100,6 +113,18 @@ EGS_PrivateConfigReader::EGS_PrivateConfigReader(const QString &file) {
 
 QString EGS_PrivateConfigReader::simplify(const QString &value,bool ironit) {
     QString junk = "\\$\\((\\w+)\\)";
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QRegularExpression re(junk);
+    QString res; int pos = 0;
+    while(1) {
+        QRegularExpressionMatch match = re.match(value, pos);
+        if( !match.hasMatch() ) { res += value.mid(pos); break; }
+        int pos1 = match.capturedStart(0);
+        res += value.mid(pos,pos1-pos);
+        res += getVariable(match.captured(1),ironit);
+        pos = pos1 + match.capturedLength(0);
+    }
+#else
     QRegExp re(junk);
     QString res; int pos = 0;
     while(1) {
@@ -109,6 +134,7 @@ QString EGS_PrivateConfigReader::simplify(const QString &value,bool ironit) {
         res += getVariable(re.cap(1),ironit);
         pos = pos1 + re.matchedLength();
     }
+#endif
     if( ironit ) return ironIt(res);
     return res;
 }

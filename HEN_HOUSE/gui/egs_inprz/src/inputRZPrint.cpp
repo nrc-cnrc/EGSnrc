@@ -52,6 +52,9 @@
 #include <QTextStream>
 #include <QProgressDialog>
 #include <QPrintDialog>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QPageSize>
+#endif
 
 //**********************************************
 // *********      PRINTING STUFF      ***********
@@ -80,7 +83,11 @@ void inputRZImpl::print()
 {
     QString fname = EGSdir + EGSfileName;
     QPrinter* printer = new QPrinter;
-    printer->setPageSize( QPrinter::Letter );
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    printer->setPageSize(QPageSize(QPageSize::Letter));
+#else
+    printer->setPageSize(QPrinter::Letter);
+#endif
     const int Margin = 20;
     const int MarginY = 30;
     int pageNo = 1;

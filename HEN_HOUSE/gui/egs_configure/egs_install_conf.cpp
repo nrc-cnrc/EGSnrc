@@ -31,7 +31,11 @@
 
 #include "egs_install.h"
 #include <QCoreApplication>
-#include<QAbstractButton>
+#include <QAbstractButton>
+#include <QRegExp>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QRegularExpression>
+#endif
 #define MY_VERSION "1.0"
 
 #ifdef WIN32
@@ -225,7 +229,7 @@ void QInstallPage::create_egs_c_utils(){
      for (int itask=0; itask < task_f.size(); itask++){
          task[itask].setFName(egsLibDir + task_f[itask]);
          task[itask].setDeleteFlag( false );
-         task[itask].setProgram( QString::null );
+         task[itask].setProgram( QString() );
          task[itask].setTaskName( task_q[itask] );
          task[itask].setLanguage( "C" );
 #ifdef WIN32
@@ -334,7 +338,7 @@ void QInstallPage::test_c_utils(){
              this, SLOT( get_test_c_utils_result()));
 
     ct->setTitle( (QString)"\n\nTesting the C utilities object file ... " );
-    ct->setEndStr( QString::null );
+    ct->setEndStr( QString() );
     ct->setCompilers( fc,  cc );
     ct->reset();
     Tasks* task = new Tasks();
@@ -434,7 +438,7 @@ void QInstallPage::test_load_beamlib(){
     /**********************************************************************/
 
      ct->setTitle( (QString)"\n\nGuessing library needed for dlopen ... " );
-     ct->setEndStr( QString::null );
+     ct->setEndStr( QString() );
      ct->setCompilers( fc,  cc );
      ct->reset();
      ct->setTasks( task );
@@ -1066,7 +1070,7 @@ void QInstallPage::append_vculib_dosxyz_spec(bool load_vculib_ok){
   printProgress( "\n===> Appending VCU library to dosxyznrc_" +
                  my_machine() + ".spec ...", false);
   if (load_vculib_ok){
-     QString vcuobject = QString::null;
+     QString vcuobject = QString();
      if ( fileExists( egsLibDir + QDir::separator() + tr("load_vculib.o")) ){
         vcuobject = tr("$(EGS_LIBDIR)")+tr("load_vculib.o");
      }
@@ -1502,10 +1506,17 @@ QString QInstallPage::replaceExit4Stop( const QString& code, const QString& stop
         found = rx.cap( 0 );
         found = found.simplified();
         pos  += rx.matchedLength();
-        found.remove( QRegExp("call\\s+exit\\s*\\(\\s*") );
-        found.remove( QRegExp("\\s*\\)") );
-        //cout << "Found " << rx.cap(0) << " got " << found << endl;
-        tmp.replace( QRegExp("call(\\s+)exit(\\s*)\\((\\s*" + found + "\\s*)\\)" ), stopFun + (QString)" " + found );
+        QRegExp exit_prefix("call\\s+exit\\s*\\(\\s*");
+        int idx = exit_prefix.indexIn(found);
+        if (idx >= 0) found.remove(idx, exit_prefix.matchedLength());
+        QRegExp exit_suffix("\\s*\\)");
+        idx = exit_suffix.indexIn(found);
+        if (idx >= 0) found.remove(idx, exit_suffix.matchedLength());
+        QRegExp full_rx("call(\\s+)exit(\\s*)\\((\\s*" + found + "\\s*)\\)");
+        idx = full_rx.indexIn(tmp);
+        if (idx >= 0) {
+            tmp.replace(idx, full_rx.matchedLength(), stopFun + (QString)" " + found);
+        }
         pos = 0;
     }
   }
@@ -1568,7 +1579,7 @@ int QInstallPage::howManyFilesInDir(const QString &dirPath){
     int count = 0;
     QDir d(dirPath);
     QStringList qsl = d.entryList(QDir::NoDotAndDotDot | QDir::Dirs | QDir::Files);
-    foreach (QString file, qsl) {
+    for (const QString &file : qsl) {
         QFileInfo finfo(dirPath + QDir::separator() + file);
         if (finfo.isDir()) count += howManyFilesInDir(finfo.filePath());
         else               count++;
@@ -1588,7 +1599,7 @@ bool QInstallPage::copyRecursively(const QString &srcFilePath, const QString &tg
           return false;
         }
         QStringList fileNames = sourceDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
-        foreach (const QString &fileName, fileNames) {
+        for (const QString &fileName : fileNames) {
             const QString newSrcFilePath
                     = srcFilePath + QDir::separator() + fileName;
             const QString newTgtFilePath
@@ -1623,7 +1634,7 @@ bool QInstallPage::copyFilesRecursively(const QString &srcFilePath,
            return false;
         }
         QStringList fileNames = sourceDir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);// | QDir::System );
-        foreach (const QString &fileName, fileNames) {
+        for (const QString &fileName : fileNames) {
             const QString newSrcFilePath
                     = srcFilePath + QDir::separator() + fileName;
             if (!copyFilesRecursively(newSrcFilePath, tgtFilePath, nameFilter))

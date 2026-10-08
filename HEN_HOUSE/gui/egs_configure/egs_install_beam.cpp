@@ -187,7 +187,7 @@ void QInstallPage::copy_example_modules(){
                     egsHome() + tr("beamnrc/spec_modules\n") );
    }
 
-   foreach (const QString &dirName, QDir(egsHome()).entryList( QDir::Dirs | QDir::NoDotAndDotDot)) {
+   for (const QString &dirName : QDir(egsHome()).entryList( QDir::Dirs | QDir::NoDotAndDotDot)) {
            if (dirName.startsWith("EX"))
               QDir(egsHome() + dirName).rename(egsHome()+dirName, egsHome()+"BEAM_" + dirName);
    }

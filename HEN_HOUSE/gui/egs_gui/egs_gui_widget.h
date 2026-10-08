@@ -45,9 +45,9 @@ class EGS_GUI_Widget : public QWidget {
 
 public:
 
-  EGS_GUI_Widget(QWidget *parent=0, const char *name=0, Qt::WindowFlags f=0);
+  EGS_GUI_Widget(QWidget *parent=0, const char *name=0, Qt::WindowFlags f={});
   EGS_GUI_Widget(EGS_ConfigReader *, QWidget *parent=0,
-          const char *name=0, Qt::WindowFlags f=0);
+          const char *name=0, Qt::WindowFlags f={});
 
   virtual ~EGS_GUI_Widget(){}
 

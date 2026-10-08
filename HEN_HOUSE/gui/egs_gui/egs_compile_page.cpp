@@ -64,11 +64,11 @@ void EGS_CompilePage::make() {
 
    // The layout of the compile widget
    QVBoxLayout *topl = new QVBoxLayout(this);
-   topl->setSpacing(6); topl->setMargin(11);
+   topl->setSpacing(6); topl->setContentsMargins(11, 11, 11, 11);
 
    bg_coption = new QButtonGroup(this);
    c_option = new QGroupBox("coption box",this);
-   QVBoxLayout *bgl = new QVBoxLayout(c_option);bgl->setSpacing(6); bgl->setMargin(11);
+   QVBoxLayout *bgl = new QVBoxLayout(c_option);bgl->setSpacing(6); bgl->setContentsMargins(11, 11, 11, 11);
    c_option->setTitle( tr("Target") );
 
    QRadioButton *rb = new QRadioButton("opt",c_option);
@@ -84,7 +84,7 @@ void EGS_CompilePage::make() {
    QVBoxLayout *vl1 = new QVBoxLayout;
 
    // Fortran options
-   QVBoxLayout *gbl = new QVBoxLayout();gbl->setSpacing(6); gbl->setMargin(11);
+   QVBoxLayout *gbl = new QVBoxLayout();gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
    QGroupBox *gb = new QGroupBox(this); gb->setTitle( tr("Extra Fortran options") );
    QHBoxLayout *hbl = new QHBoxLayout(gb);hbl->setAlignment( Qt::AlignCenter );
    extra_f_options = new QLineEdit(gb);
@@ -139,7 +139,7 @@ bool EGS_CompilePage::checkExeDir() {
   QDir dexe(exe_dir);
   if( !dexe.exists() ) {
 #ifdef IK_DEBUG
-    qDebug("Creating directory %s",exe_dir.latin1());
+    qDebug("Creating directory %s",exe_dir.toLatin1().constData());
 #endif
     if( !dexe.mkdir(exe_dir) ) return false;
   }
@@ -147,7 +147,7 @@ bool EGS_CompilePage::checkExeDir() {
   dexe.setPath(exe_dir);
   if( !dexe.exists() ) {
 #ifdef IK_DEBUG
-    qDebug("Creating directory %s",exe_dir.latin1());
+    qDebug("Creating directory %s",exe_dir.toLatin1().constData());
 #endif
     if( !dexe.mkdir(exe_dir) ) return false;
   }
@@ -251,7 +251,7 @@ void EGS_CompilePage::readProcessErr() {
 
 void EGS_CompilePage::setUserCode(const QString &new_user_code) {
 #ifdef IK_DEBUG
-  qDebug("In EGS_CompilePage::setUserCode: %s",new_user_code.latin1());
+  qDebug("In EGS_CompilePage::setUserCode: %s",new_user_code.toLatin1().constData());
 #endif
   the_user_code = new_user_code;
 }

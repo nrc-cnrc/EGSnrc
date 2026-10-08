@@ -68,8 +68,7 @@ void EGS_GUI_Widget::changeConfiguration(const QString &new_config) {
       bool use_it = ( res == 0 );
       if ( res ) {
           if( res == 1 ) QMessageBox::warning(this,"Error",
-            QString("Failed to open %1 for reading").arg(new_config),
-              QMessageBox::Ok,0,0);
+            QString("Failed to open %1 for reading").arg(new_config));
           else if( res == 2 ) {
             int answer = QMessageBox::warning(this,"Error",
 #ifdef WIN32
@@ -79,13 +78,12 @@ void EGS_GUI_Widget::changeConfiguration(const QString &new_config) {
               "This appears to be a Windows config file\n"
               "Do you still want to use it ?",
 #endif
-              QMessageBox::Ok,QMessageBox::Cancel,0);
+              QMessageBox::Ok, QMessageBox::Cancel);
              if( answer == QMessageBox::Ok ) use_it = true;
           }
           else
               QMessageBox::warning(this,"Error",
-                QString("Unknown error while reading %1").arg(new_config),
-                QMessageBox::Ok,0,0);
+                QString("Unknown error while reading %1").arg(new_config));
       }
       if( use_it) config_reader->setConfig(new_config);
   }

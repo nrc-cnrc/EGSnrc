@@ -46,6 +46,7 @@
 //#include <q3filedialog.h>
 #include <qlabel.h>
 #include <qmessagebox.h>
+#include <QWhatsThis>
 #include <qcombobox.h>
 #include <qradiobutton.h>
 #include <qspinbox.h>
@@ -87,6 +88,14 @@ void inputRZImpl::Initialize()
  the_year = (QDate::currentDate()).toString("yyyy");
 
  this->setStyleSheet("QToolTip { color: black; background-color: #feffcd }");
+
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+ InputFileComboBox->setAutoCompletion(true);
+ pegs4ComboBox->setAutoCompletion(true);
+ CONFcomboBox->setAutoCompletion(true);
+ outoptComboBox->setAutoCompletion(true);
+ electrmatComboBox->setAutoCompletion(true);
+#endif
 
 //  usercode     = cavrznrc;
   usercode     = dosrznrc;
@@ -1838,13 +1847,13 @@ void inputRZImpl::update_source_type()
    */
 
    /*
-   Q3WhatsThis::add(  temp1Edit, tr( "" ) );
-   Q3WhatsThis::add(  temp2Edit, tr( "" ) );
-   Q3WhatsThis::add(  temp3Edit, tr( "" ) );
-   Q3WhatsThis::add(  temp4Edit, tr( "" ) );
-   Q3WhatsThis::add(  temp5Edit, tr( "" ) );
-   Q3WhatsThis::add(  temp6Edit, tr( "" ) );
-   Q3WhatsThis::add(  temp7Edit, tr( "" ) );
+   QWhatsThis::add(  temp1Edit, tr( "" ) );
+   QWhatsThis::add(  temp2Edit, tr( "" ) );
+   QWhatsThis::add(  temp3Edit, tr( "" ) );
+   QWhatsThis::add(  temp4Edit, tr( "" ) );
+   QWhatsThis::add(  temp5Edit, tr( "" ) );
+   QWhatsThis::add(  temp6Edit, tr( "" ) );
+   QWhatsThis::add(  temp7Edit, tr( "" ) );
    */
 
    temp1Edit->setWhatsThis(tr( "" ) );
@@ -1897,11 +1906,11 @@ void inputRZImpl::update_source_type()
         QToolTip::add(  temp4Edit, tr( "incident z-axis direction cosine" ) );
         */
         /*
-        Q3WhatsThis::add(temp1Edit, tr( "radius of parallel beam in cm"
+        QWhatsThis::add(temp1Edit, tr( "radius of parallel beam in cm"
                           "\n(defaults to maximum geometry radius)" ) );
-        Q3WhatsThis::add(  temp2Edit, tr( "incident x-axis direction cosine" ) );
-        Q3WhatsThis::add(  temp3Edit, tr( "incident y-axis direction cosine" ) );
-        Q3WhatsThis::add(  temp4Edit, tr( "incident z-axis direction cosine" ) );
+        QWhatsThis::add(  temp2Edit, tr( "incident x-axis direction cosine" ) );
+        QWhatsThis::add(  temp3Edit, tr( "incident y-axis direction cosine" ) );
+        QWhatsThis::add(  temp4Edit, tr( "incident z-axis direction cosine" ) );
         */
         temp1Edit->setWhatsThis(tr( "radius of parallel beam in cm"
                           "\n(defaults to maximum geometry radius)" ) );
@@ -1924,9 +1933,9 @@ void inputRZImpl::update_source_type()
        sourceoptionsGroupBox->setTitle(
                "POINT SOURCE ON AXIS INCIDENT FROM FRONT" );
        /*
-       Q3WhatsThis::add(  temp1Edit,
+       QWhatsThis::add(  temp1Edit,
        tr( "distance from front of target in cm.\n(defaults to 100 cm)" ) );
-       Q3WhatsThis::add(  temp2Edit,
+       QWhatsThis::add(  temp2Edit,
        tr("beam radius at front of target in cm.\n(defaults to MAX radius)"));
        */
        temp1Edit->setWhatsThis(tr( "distance from front of target in cm.\n(defaults to 100 cm)" ) );
@@ -1948,10 +1957,10 @@ void inputRZImpl::update_source_type()
         sourceoptionsGroupBox->setTitle(
                 "ISOTROPICALLY RADIATING DISK OF FINITE SIZE" );
         /*
-        Q3WhatsThis::add(  temp1Edit, tr( "inner radius of source region" ) );
-        Q3WhatsThis::add(  temp2Edit, tr( "outer radius of source region" ) );
-        Q3WhatsThis::add(  temp3Edit, tr( "min z value for source" ) );
-        Q3WhatsThis::add(  temp4Edit, tr( "max z value for source" ) );
+        QWhatsThis::add(  temp1Edit, tr( "inner radius of source region" ) );
+        QWhatsThis::add(  temp2Edit, tr( "outer radius of source region" ) );
+        QWhatsThis::add(  temp3Edit, tr( "min z value for source" ) );
+        QWhatsThis::add(  temp4Edit, tr( "max z value for source" ) );
         */
         temp1Edit->setWhatsThis(tr( "inner radius of source region" ) );
         temp2Edit->setWhatsThis(tr( "outer radius of source region" ) );
@@ -1968,7 +1977,7 @@ void inputRZImpl::update_source_type()
         temp1Label->setEnabled( true );
         temp1Label->setText("RCAXIS");
         sourceoptionsGroupBox->setTitle("CENTRAL AXIS FLUENCE VS BEAM RADIUS");
-        //Q3WhatsThis::add(  temp1Edit,
+        //QWhatsThis::add(  temp1Edit,
           //      tr( "radius of central axis scoring zone (cm)" ) );
         temp1Edit->setWhatsThis(tr( "radius of central axis scoring zone (cm)" ) );
         temp1Edit->setToolTip(tr( "radius of central axis scoring zone (cm)" ) );
@@ -1983,9 +1992,9 @@ void inputRZImpl::update_source_type()
         sourceoptionsGroupBox->setTitle(
                 "PARALLEL BEAM INCIDENT FROM THE SIDE" );
         /*
-        Q3WhatsThis::add(  temp1Edit,
+        QWhatsThis::add(  temp1Edit,
                 tr( "half-width of the rectangular beam in cm" ) );
-        Q3WhatsThis::add(  temp2Edit,
+        QWhatsThis::add(  temp2Edit,
                 tr( "half-height of the rectangular beam in cm" ) );
         */
         temp1Edit->setWhatsThis(tr( "half-width of the rectangular beam in cm" ) );
@@ -2006,11 +2015,11 @@ void inputRZImpl::update_source_type()
         temp3Label->setText("ZBEAM");
         sourceoptionsGroupBox->setTitle("POINT SOURCE INCIDENT FROM THE SIDE");
         /*
-        Q3WhatsThis::add(  temp1Edit,
+        QWhatsThis::add(  temp1Edit,
                 tr( "source distance from middle of target in cm" ) );
-        Q3WhatsThis::add(  temp2Edit,
+        QWhatsThis::add(  temp2Edit,
                 tr( "beam half-width at center of target in cm" ) );
-        Q3WhatsThis::add(  temp3Edit,
+        QWhatsThis::add(  temp3Edit,
                 tr( "beam half-height at center of target in cm" ) );
         */
         temp1Edit->setWhatsThis( tr( "source distance from middle of target in cm" ) );
@@ -2030,8 +2039,8 @@ void inputRZImpl::update_source_type()
         temp2Label->setText("DISTZ");
         sourceoptionsGroupBox->setTitle( "POINT SOURCE OFF AXIS" );
         /*
-        Q3WhatsThis::add(temp1Edit, tr("point source distance off the Z-axis"));
-        Q3WhatsThis::add(temp2Edit, tr( "perpendicular point source distance"
+        QWhatsThis::add(temp1Edit, tr("point source distance off the Z-axis"));
+        QWhatsThis::add(temp2Edit, tr( "perpendicular point source distance"
                                        " away from front face" ) );
         */
         temp1Edit->setWhatsThis(tr("point source distance off the Z-axis"));
@@ -2054,9 +2063,9 @@ void inputRZImpl::update_source_type()
         temp3Label->setText("WINC");
         sourceoptionsGroupBox->setTitle( "PARALLEL BEAM FROM ANY ANGLE" );
         /*
-      	Q3WhatsThis::add(  temp1Edit, tr( "incident x-axis direction cosine" ) );
-      	Q3WhatsThis::add(  temp2Edit, tr( "incident y-axis direction cosine" ) );
-      	Q3WhatsThis::add(  temp3Edit, tr( "incident z-axis direction cosine" ) );
+      	QWhatsThis::add(  temp1Edit, tr( "incident x-axis direction cosine" ) );
+      	QWhatsThis::add(  temp2Edit, tr( "incident y-axis direction cosine" ) );
+      	QWhatsThis::add(  temp3Edit, tr( "incident z-axis direction cosine" ) );
         */
         temp1Edit->setWhatsThis(tr( "incident x-axis direction cosine" ) );
         temp2Edit->setWhatsThis(tr( "incident y-axis direction cosine" ) );
@@ -2080,11 +2089,11 @@ void inputRZImpl::update_source_type()
         "POINT SOURCE ON AXIS INCIDENT FROM FRONT"
         );
         /*
-        Q3WhatsThis::add(  temp1Edit,
+        QWhatsThis::add(  temp1Edit,
         tr( "point source distance from front of target in cm" ) );
-        Q3WhatsThis::add(  temp2Edit,
+        QWhatsThis::add(  temp2Edit,
         tr( "beam radius at front of target in cm" ) );
-        Q3WhatsThis::add(  temp3Edit,
+        QWhatsThis::add(  temp3Edit,
         tr( "all histories terminated below this radius \n"
             "by source routines giving them zero weight" ) );
         */
@@ -2107,9 +2116,9 @@ void inputRZImpl::update_source_type()
         temp2Label->setText("ANGLE");
         sourceoptionsGroupBox->setTitle( "POINT SOURCE OFF AXIS" );
         /*
-        Q3WhatsThis::add(  temp1Edit,
+        QWhatsThis::add(  temp1Edit,
         tr( "distance of geometry  centre to source in cm" ) );
-        Q3WhatsThis::add(temp2Edit,tr("angle of rotation around the x-axis" ) );
+        QWhatsThis::add(temp2Edit,tr("angle of rotation around the x-axis" ) );
         */
         temp1Edit->setWhatsThis(tr( "distance of geometry  centre to source in cm" ) );
         temp2Edit->setWhatsThis(tr("angle of rotation around the x-axis" ) );
@@ -2127,12 +2136,12 @@ void inputRZImpl::update_source_type()
         "EXTENDED (CIRC. OR RECT.) SOURCE OFF AXIS"
         );
         /*
-        Q3WhatsThis::add(  temp1Edit,
+        QWhatsThis::add(  temp1Edit,
         tr( "distance of geometry  centre to source in cm" ) );
-        Q3WhatsThis::add(  temp2Edit,
+        QWhatsThis::add(  temp2Edit,
         tr( "angle of rotation around the x-axis" ) );
-        Q3WhatsThis::add(  temp3Edit, tr( SOURCE16_TEMP3 ) );
-        Q3WhatsThis::add(  temp4Edit, tr( SOURCE16_TEMP4 ) );
+        QWhatsThis::add(  temp3Edit, tr( SOURCE16_TEMP3 ) );
+        QWhatsThis::add(  temp4Edit, tr( SOURCE16_TEMP4 ) );
         */
         temp1Edit->setWhatsThis(tr( "distance of geometry  centre to source in cm" ) );
         temp2Edit->setWhatsThis(tr( "angle of rotation around the x-axis" ) );
@@ -2159,14 +2168,14 @@ void inputRZImpl::update_source_type()
                 "PHASE-SPACE DATA, INCIDENT ON FRONT FACE"
         );
         /*
-        Q3WhatsThis::add(  imodeComboBox, tr( "variables/record" ) );
-        Q3WhatsThis::add(  temp2Edit,
+        QWhatsThis::add(  imodeComboBox, tr( "variables/record" ) );
+        QWhatsThis::add(  temp2Edit,
         tr( "Number of times to recycle each particle in a phase\n"
             "space source." ) );
-        Q3WhatsThis::add(  temp3Edit,
+        QWhatsThis::add(  temp3Edit,
         tr( "Number of times to partition a phase space file.\n"
             "(only meaningful in single job runs)" ) );
-        Q3WhatsThis::add(  temp4Edit,
+        QWhatsThis::add(  temp4Edit,
         tr( "Phase space file partition to use (<= IPARALLEL)\n"
             "(only meaningful in single job runs)" ) );
         */
@@ -2211,18 +2220,18 @@ void inputRZImpl::update_source_type()
                 "PHASE-SPACE DATA, INCIDENT FROM ANY ANGLE"
         );
         /*
-        Q3WhatsThis::add(  imodeComboBox, tr( "variables/record" ) );
-        Q3WhatsThis::add(  temp2Edit,
+        QWhatsThis::add(  imodeComboBox, tr( "variables/record" ) );
+        QWhatsThis::add(  temp2Edit,
         tr( "phase-space plane distance to point of rotation in cm" ) );
-        Q3WhatsThis::add(  temp3Edit, tr( "Angle of rotation in degrees" ) );
-        Q3WhatsThis::add(  temp4Edit, tr( "Point of rotation" ) );
-        Q3WhatsThis::add(  temp5Edit,
+        QWhatsThis::add(  temp3Edit, tr( "Angle of rotation in degrees" ) );
+        QWhatsThis::add(  temp4Edit, tr( "Point of rotation" ) );
+        QWhatsThis::add(  temp5Edit,
         tr( "Number of times to recycle each particle in a phase\n"
             "space source." ) );
-        Q3WhatsThis::add(  temp6Edit,
+        QWhatsThis::add(  temp6Edit,
         tr( "Number of times to partition a phase space file.\n"
             "(only meaningful in single job runs)" ) );
-        Q3WhatsThis::add(  temp7Edit,
+        QWhatsThis::add(  temp7Edit,
         tr( "Phase space file partition to use\n"
             "(only meaningful in single job runs)" ) );
         */
@@ -2560,7 +2569,7 @@ void inputRZImpl::update_usercode()
        photonSplitGroupBox->setEnabled( true );
        BremsSplitGroupBox->setEnabled( false );
 
-       //Q3WhatsThis::add( CSEnhancementGroupBox, CS_ENHANCEMENT_CAVRZNRC  );
+       //QWhatsThis::add( CSEnhancementGroupBox, CS_ENHANCEMENT_CAVRZNRC  );
        CSEnhancementGroupBox->setWhatsThis(CS_ENHANCEMENT_CAVRZNRC  );
        CSEnhancementGroupBox->setToolTip(CS_ENHANCEMENT_CAVRZNRC  );
 
@@ -2610,7 +2619,7 @@ void inputRZImpl::update_usercode()
        outoptComboBox->addItem( tr( "material and dose summary" ) );
        outoptComboBox->addItem( tr( "long" ) );
 
-       //Q3WhatsThis::add( CSEnhancementGroupBox, CS_ENHANCEMENT_DOSRZNRC  );
+       //QWhatsThis::add( CSEnhancementGroupBox, CS_ENHANCEMENT_DOSRZNRC  );
        CSEnhancementGroupBox->setWhatsThis(CS_ENHANCEMENT_DOSRZNRC  );
        CSEnhancementGroupBox->setToolTip(CS_ENHANCEMENT_DOSRZNRC  );
 
@@ -3272,7 +3281,7 @@ void inputRZImpl::run_previewRZ()
 //       QStringList env;
 //                   env.append((QString)"PATH="    + the_path);
 //                   env.append((QString)"PATHEXT=" + the_pathext);
-//       if ( !proc_view->launch( QString::null, &env) ) {
+//       if ( !proc_view->launch( QString(), &env) ) {
 //#else
        QString the_error = p;
        //qt3to4 -- BW
@@ -3308,7 +3317,7 @@ QString inputRZImpl::getExecutable()
 {
     if ( CONFcomboBox->count() == 0            ||
          CONFcomboBox->currentText().isEmpty() ){
-	return QString::null;
+	return QString();
     }
 
     QString machine = readVarFromConf("my_machine");
@@ -3323,7 +3332,7 @@ QString inputRZImpl::getExecutable()
    else if ( NoOptradioButton->isChecked() )
         executable += "_noopt";
    else if ( CleanradioButton->isChecked() )
-       return QString::null;
+       return QString();
 #ifdef WIN32
     executable += ".exe";
 #endif
@@ -3333,7 +3342,7 @@ QString inputRZImpl::getExecutable()
     if ( fexe.exists() )
        return executable;
     else
-       return QString::null;
+       return QString();
 }
 
 void inputRZImpl::set_electr()

@@ -262,7 +262,7 @@ std::ifstream & operator >> ( std::ifstream & in, MMCPInputs*  rMCP )
                    rMCP->errors + "<br>";
   }
   */
-  rMCP->errors = QString::null;
+  rMCP->errors = QString();
   delete p;
 
   return in;

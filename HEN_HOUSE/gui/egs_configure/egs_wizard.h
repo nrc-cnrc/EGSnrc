@@ -62,7 +62,7 @@ public:
   enum { Page_Intro, Page_Location, Page_Compiler,
          Page_Licence, Page_Install, Page_Conclusion };
 
-  EGS_Wizard(QWidget * parent = 0, Qt::WindowFlags f = 0);
+  EGS_Wizard(QWidget * parent = 0, Qt::WindowFlags f = {});
   ~EGS_Wizard(){}
 
 public slots:

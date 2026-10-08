@@ -66,13 +66,13 @@ EGS_RunPage::EGS_RunPage(EGS_ConfigReader *cr,
 void EGS_RunPage::make() {
 
   QVBoxLayout *topl = new QVBoxLayout(this);
-  topl->setSpacing(6); topl->setMargin(11);
+  topl->setSpacing(6); topl->setContentsMargins(11, 11, 11, 11);
 
   QVBoxLayout *vl1 = new QVBoxLayout;
 
   QGroupBox *gb = new QGroupBox(this);
   gb->setObjectName(QString::fromUtf8("pegs_file_group"));
-  QVBoxLayout *gbl = new QVBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
+  QVBoxLayout *gbl = new QVBoxLayout(gb);gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
   gb->setTitle( tr("PEGS file") );
 
   QHBoxLayout *hbl = new QHBoxLayout();
@@ -92,8 +92,13 @@ void EGS_RunPage::make() {
   look_for_pegs->addItem("User pegs area");
   look_for_pegs->addItem("HEN_HOUSE pegs area");
   look_for_pegs->addItem("HOME");
-  connect(look_for_pegs,SIGNAL(activated(const QString &)),this,
-            SLOT(pegsAreaChanged(const QString &)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+  connect(look_for_pegs,&QComboBox::textActivated,this,
+            &EGS_RunPage::pegsAreaChanged);
+#else
+  connect(look_for_pegs,QOverload<const QString &>::of(&QComboBox::activated),this,
+            &EGS_RunPage::pegsAreaChanged);
+#endif
   hbl->addWidget(look_for_pegs);
   QSpacerItem *spacer = new QSpacerItem(20,20,QSizePolicy::Expanding,
                                           QSizePolicy::Minimum);
@@ -121,7 +126,7 @@ void EGS_RunPage::make() {
 
   gb = new QGroupBox(this);
   gb->setObjectName(QString::fromUtf8("extra_options_group"));
-  hbl = new QHBoxLayout(gb); hbl->setSpacing(6); hbl->setMargin(11);
+  hbl = new QHBoxLayout(gb); hbl->setSpacing(6); hbl->setContentsMargins(11, 11, 11, 11);
   gb->setTitle( tr("Extra arguments") );
 
   QGroupBox *gb1 = new QGroupBox(gb); gb1->setTitle( tr("User code") );
@@ -147,14 +152,14 @@ void EGS_RunPage::make() {
   vl1->addWidget(gb);
 
   QHBoxLayout *hl1 = new QHBoxLayout;
-  hl1->setSpacing(6); hl1->setMargin(11);
+  hl1->setSpacing(6); hl1->setContentsMargins(11, 11, 11, 11);
   hl1->addLayout(vl1);
 
   vl1 = new QVBoxLayout;
 
   bg_run_options = new QButtonGroup(this);
   run_options    = new QGroupBox("run options group",this);run_options->setTitle( tr("Run options") );
-  QVBoxLayout *bgl = new QVBoxLayout(run_options);bgl->setSpacing(6); bgl->setMargin(11);
+  QVBoxLayout *bgl = new QVBoxLayout(run_options);bgl->setSpacing(6); bgl->setContentsMargins(11, 11, 11, 11);
   QRadioButton *rb = new QRadioButton("Interactive",run_options);
   rb->setChecked(true); i_button = rb;       bgl->addWidget(rb);bg_run_options->addButton(rb,0);
   rb = new QRadioButton("Batch",run_options); b_button = rb;
@@ -163,20 +168,25 @@ void EGS_RunPage::make() {
 #ifdef WIN32
   b_button->setEnabled(false);
 #endif
-  connect(bg_run_options,SIGNAL(buttonClicked(int)),
-                         SLOT(checkRunOptions(int)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+  connect(bg_run_options,&QButtonGroup::idClicked,
+                         this,&EGS_RunPage::checkRunOptions);
+#else
+  connect(bg_run_options,QOverload<int>::of(&QButtonGroup::buttonClicked),
+                         this,&EGS_RunPage::checkRunOptions);
+#endif
 
   vl1->addWidget(run_options);
 
   gb   = new QGroupBox("n_parallel",this);gb->setTitle( tr("Number of jobs") );
-  gbl  = new QVBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
+  gbl  = new QVBoxLayout(gb);gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
   njob = new QSpinBox(gb);njob->setRange(1,10000);njob->setValue(1);
   njob->setEnabled(false);
   gbl->addWidget(njob);
   vl1->addWidget(gb);
 
   gb = new QGroupBox("queue_type",this);gb->setTitle( tr("Queueing system") );
-  gbl = new QVBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
+  gbl = new QVBoxLayout(gb);gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
 
   queue_system = new QComboBox(gb);
   queue_system->setEnabled(false);
@@ -186,7 +196,7 @@ void EGS_RunPage::make() {
   vl1->addWidget(gb);
 
   gb = new QGroupBox("queue",this); gb->setTitle( tr("Queue") );
-  gbl = new QVBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
+  gbl = new QVBoxLayout(gb);gbl->setSpacing(6); gbl->setContentsMargins(11, 11, 11, 11);
   queue = new QComboBox(gb);
   queue->addItem("short"); queue->addItem("medium"); queue->addItem("long");
   queue->setCurrentIndex(2);

@@ -101,8 +101,10 @@ unix {
 #QMAKE_CXXFLAGS+="-ggdb3"
 #QMAKE_LFLAGS+="-fsanitize=address"
 
-# Use c++14 for gcc 5 or higher
-greaterThan(QMAKE_GCC_MAJOR_VERSION, 4) {
+# Use c++17 for gcc 6 or higher
+greaterThan(QMAKE_GCC_MAJOR_VERSION, 5) {
+    QMAKE_CXXFLAGS+=-std=c++17 -Wno-deprecated-copy
+} else:greaterThan(QMAKE_GCC_MAJOR_VERSION, 4) {
     QMAKE_CXXFLAGS+=-std=c++14 -Wno-deprecated-copy
 } else {
     QMAKE_CXXFLAGS+=-std=c++11 -Wno-deprecated-copy

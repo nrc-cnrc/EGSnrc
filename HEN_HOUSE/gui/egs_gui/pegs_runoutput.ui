@@ -77,22 +77,4 @@
  <customwidgets>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>pushButton8</sender>
-   <signal>clicked()</signal>
-   <receiver>PEGS_RunOutput</receiver>
-   <slot>hideWindow()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
 </ui>

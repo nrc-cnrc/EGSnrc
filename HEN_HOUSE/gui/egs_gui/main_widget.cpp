@@ -73,16 +73,16 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WindowFlags f)
 
     // topl is the layout of the entire widget
     QVBoxLayout *topl = new QVBoxLayout(this);
-    topl->setSpacing(6); topl->setMargin(11);
+    topl->setSpacing(6); topl->setContentsMargins(11, 11, 11, 11);
 
     // wl is the layout responsible for the area occupied by the
     // control area and work area
     QHBoxLayout *wl = new QHBoxLayout;
-    wl->setSpacing(6); wl->setMargin(11);
+    wl->setSpacing(6); wl->setContentsMargins(11, 11, 11, 11);
 
     // wbl is the layout for the control area and the user code combo box
     QVBoxLayout *wbl = new QVBoxLayout;
-    wbl->setSpacing(6); wbl->setMargin(11);
+    wbl->setSpacing(6); wbl->setContentsMargins(11, 11, 11, 11);
 
     // The control area is a list with clickable items that change the
     // page in the widget stack below
@@ -137,7 +137,7 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WindowFlags f)
     topl->addLayout(wl);
 
     QHBoxLayout *bl = new QHBoxLayout;
-    bl->setSpacing(6); topl->setMargin(11);
+    bl->setSpacing(6); topl->setContentsMargins(11, 11, 11, 11);
     QAbstractButton *b = new QPushButton("&Help",this);
     connect(b,SIGNAL(clicked()),this,SLOT(getHelp()));
     bl->addWidget(b);
@@ -173,8 +173,13 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WindowFlags f)
              SLOT(changeEgsHome(const QString &)));
     connect(conf_page,SIGNAL(henHouseChanged(const QString &)),this,
              SLOT(changeHenHouse(const QString &)));
-    connect(user_code,SIGNAL(activated(const QString &)),this,
-             SLOT(changeUserCode(const QString &)));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    connect(user_code,&QComboBox::textActivated,this,
+             &EGS_MainWidget::changeUserCode);
+#else
+    connect(user_code,QOverload<const QString &>::of(&QComboBox::activated),this,
+             &EGS_MainWidget::changeUserCode);
+#endif
     connect(this,SIGNAL(userCodeChanged(const QString &)),compile_page,
              SLOT(setUserCode(const QString &)));
     connect(this,SIGNAL(userCodeChanged(const QString &)),run_page,
