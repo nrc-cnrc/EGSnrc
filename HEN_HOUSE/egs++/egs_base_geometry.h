@@ -607,6 +607,7 @@ public:
      geometries, or \c null if no such geometry exists.
      */
     static EGS_BaseGeometry *getGeometry(const string &Name);
+    static bool addGeometryAlias(const string &alias, EGS_BaseGeometry *geom);
 
     static EGS_BaseGeometry **getGeometries();
 

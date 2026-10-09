@@ -1,0 +1,35 @@
+# Regression input for egs_glib name aliasing.
+# This demonstrates that both the internal included simulation geometry name
+# and the wrapper egs_glib geometry name can be resolved by geometry lookups.
+
+:start geometry definition:
+    :start geometry:
+        library = egs_glib
+        name = my-glib
+        include file = glib_alias_include.geom
+    :stop geometry:
+
+    simulation geometry = my-glib
+:stop geometry definition:
+
+:start ausgab object:
+    name = dose_internal_name
+    library = egs_dose_scoring
+    medium dose = no
+    region dose = no
+    :start output dose file:
+        geometry name = myxyz_tiny2
+        file type = 3ddose
+    :stop output dose file:
+:stop ausgab object:
+
+:start ausgab object:
+    name = dose_wrapper_name
+    library = egs_dose_scoring
+    medium dose = no
+    region dose = no
+    :start output dose file:
+        geometry name = my-glib
+        file type = 3ddose
+    :stop output dose file:
+:stop ausgab object:

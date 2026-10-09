@@ -111,7 +111,15 @@ extern "C" {
             return 0;
         }
 
+        string included_name = final->getName();
         final->setName(input);
+        string wrapper_name = final->getName();
+        if (included_name != wrapper_name) {
+            if (!EGS_BaseGeometry::addGeometryAlias(included_name, final)) {
+                egsWarning("createGeometry(egs_glib): failed to register alias '%s' for geometry '%s'\n",
+                           included_name.c_str(), wrapper_name.c_str());
+            }
+        }
 
         return final;
 
