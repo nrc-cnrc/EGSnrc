@@ -446,7 +446,7 @@ for all materials in the scoring volume. Alternatively, one could compute mass-e
 
         ### source shape
         :start shape:
-            type = point
+            library = egs_point_shape
             position = 0, 0, 0
         :stop shape:
 
@@ -595,7 +595,7 @@ for all materials in the scoring volume. Alternatively, one could compute mass-e
 
         ### source shape
         :start shape:
-            type = point
+            library = egs_point_shape
             position = 0, 0, 0
         :stop shape:
 
@@ -818,7 +818,7 @@ for all materials in the scoring volume. Alternatively, one could compute mass-e
 
         ### source shape
         :start shape:
-            type = point
+            library = egs_point_shape
             position = 0, 0, -100
         :stop shape:
 

@@ -83,6 +83,13 @@ void EGS_BaseShape::setTransformation(EGS_Input *input) {
 /**********************  Point  *******************************/
 
 EGS_Object *EGS_PointShape::createObject(EGS_Input *input) {
+    static bool warned = false;
+    if (!warned) {
+        egsWarning("EGS_PointShape::createShape: deprecated 'type = point' "
+                   "support is still available for backward compatibility; "
+                   "please migrate to 'library = egs_point_shape'\n");
+        warned = true;
+    }
     vector<EGS_Float> pos;
     int err = input->getInput("position",pos);
     if (err) {
@@ -102,6 +109,13 @@ EGS_Object *EGS_PointShape::createObject(EGS_Input *input) {
 /**********************  Box **********************************/
 
 EGS_Object *EGS_BoxShape::createObject(EGS_Input *input) {
+    static bool warned = false;
+    if (!warned) {
+        egsWarning("EGS_BoxShape::createShape: deprecated 'type = box' "
+                   "support is still available for backward compatibility; "
+                   "please migrate to 'library = egs_box_shape'\n");
+        warned = true;
+    }
     vector<EGS_Float> s;
     int err = input->getInput("box size",s);
     if (err) {
@@ -130,6 +144,13 @@ EGS_Object *EGS_BoxShape::createObject(EGS_Input *input) {
 /**********************  Sphere **********************************/
 
 EGS_Object *EGS_SphereShape::createObject(EGS_Input *input) {
+    static bool warned = false;
+    if (!warned) {
+        egsWarning("EGS_SphereShape::createShape: deprecated 'type = sphere' "
+                   "support is still available for backward compatibility; "
+                   "please migrate to 'library = egs_sphere_shape'\n");
+        warned = true;
+    }
     EGS_Float r;
     int err = input->getInput("radius",r);
     if (err) {
@@ -153,6 +174,13 @@ EGS_Object *EGS_SphereShape::createObject(EGS_Input *input) {
 /**********************  Cylinder **********************************/
 
 EGS_Object *EGS_CylinderShape::createObject(EGS_Input *input) {
+    static bool warned = false;
+    if (!warned) {
+        egsWarning("EGS_CylinderShape::getShape: deprecated 'type = cylinder' "
+                   "support is still available for backward compatibility; "
+                   "please migrate to 'library = egs_cylinder_shape'\n");
+        warned = true;
+    }
     EGS_Float r, H;
     int err = input->getInput("radius",r);
     if (err) {

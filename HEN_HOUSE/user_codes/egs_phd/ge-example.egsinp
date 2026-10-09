@@ -230,7 +230,7 @@
         distance = 0.282094791774  ### 1/sqrt(4*pi), to normalized result per particle emitted in 4*pi
 
         :start source shape:
-            type = point
+            library = egs_point_shape
             position = 0 0 40
        :stop source shape:
 

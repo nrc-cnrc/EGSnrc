@@ -1488,7 +1488,7 @@ dose uncertainty:
         library = egs_collimated_source
         name = the_source
         :start source shape:
-                type = point
+                library = egs_point_shape
                 position = 0, 0, -100
         :stop source shape:
         :start target shape:

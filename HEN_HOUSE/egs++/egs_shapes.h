@@ -113,9 +113,9 @@ inline void setShapeInputs(shared_ptr<EGS_BlockInput> shapePtr) {
   Most shapes are implemented as small DSOs, which are loaded dynamically
   as needed. Such shapes require the \c library key to be
   present in their definition in the input file.
-  A few of the most frequently used shapes are compiled
-  into egspp and therefore require a \c type key instead of
-  a \c library key.
+  A few of the most frequently used shapes can still be selected with
+  a \c type key for backward compatibility. This usage is deprecated and
+  new inputs should use the \c library key instead.
 
 */
 
@@ -360,7 +360,7 @@ protected:
 A Point shape is specified in the input file via
 \verbatim
 :start shape:
-    type = point
+    library = egs_point_shape
     position = px, py, pz
 :stop shape:
 \endverbatim
@@ -401,7 +401,7 @@ protected:
  * on the box surface. Specified in the input file via
 \verbatim
 :start shape:
-    type = box
+    library = egs_box_shape
     box size = 1 or 3 inputs defining the box size
 :stop shape:
 \endverbatim
@@ -533,7 +533,7 @@ Samples random points within a sphere or on the spherical surfcace.
 Specified in the input file via
 \verbatim
 :start shape:
-    type = sphere
+    library = egs_sphere_shape
     midpoint = Ox, Oy, Oz
     radius = the sphere radius
 :stop shape:
@@ -635,7 +635,7 @@ Samples random points within a cylinder or on the cylinder surfcace.
 Specified in the input file via
 \verbatim
 :start shape:
-    type = cylinder
+    library = egs_cylinder_shape
     radius = the cylinder radius
     height = the cylinder height
     midpoint = Ox, Oy, Oz (optional)

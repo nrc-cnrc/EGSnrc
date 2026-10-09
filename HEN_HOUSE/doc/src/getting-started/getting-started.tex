@@ -619,7 +619,7 @@ Create a new file named \,\Verb|slab.egsinp|\, in the application directory,
             energy = 20 # in MeV
         :stop spectrum:
         :start shape:
-            type     = point
+            library  = egs_point_shape
             position = 0 0 -10 # in cm
         :stop shape:
     :stop source:
@@ -1279,7 +1279,7 @@ definition input to the source definition block
     name     = my_collimated_source
     distance = 100
     :start source shape:
-         type     = point
+         library  = egs_point_shape
          position = 0 0 -100
     :stop source shape:
     :start target shape:
@@ -2139,7 +2139,7 @@ you will need to replace this with a \href{http://nrc-cnrc.github.io/EGSnrc/doc/
         library = egs_collimated_source
         charge  = 0
         :start source shape:
-            type = point
+            library = egs_point_shape
             position = 0 0 -100
         :stop source shape:
         :start target shape:

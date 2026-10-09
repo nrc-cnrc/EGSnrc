@@ -961,7 +961,7 @@ results for non-disintegration emissions.
         region selection    = IncludeSelected
         selected regions    = 1 2
         :start shape:
-            type        = box
+            library     = egs_box_shape
             box size    = 1 2 3
         :stop shape:
         :start spectrum: # This will not actually be used, but is required

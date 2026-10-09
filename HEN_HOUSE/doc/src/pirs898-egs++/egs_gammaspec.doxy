@@ -518,7 +518,7 @@ The output files are automatically named \c ${basename}-spec.txt and \c ${baseme
         charge              = 0
         geometry            = water_source_geom
         :start shape:
-            type     = cylinder
+            library  = egs_cylinder_shape
             radius   = 4.5
             height   = 4
             axis     = 0 0 1
@@ -548,7 +548,7 @@ The output files are automatically named \c ${basename}-spec.txt and \c ${baseme
         charge              = 0
         geometry            = soil_source_geom
         :start shape:
-            type     = cylinder
+            library  = egs_cylinder_shape
             radius   = 3
             height   = 2
             axis     = 0 0 1
@@ -578,7 +578,7 @@ The output files are automatically named \c ${basename}-spec.txt and \c ${baseme
         charge              = 0
         geometry            = filter_source_geom
         :start shape:
-            type     = cylinder
+            library  = egs_cylinder_shape
             radius   = 4
             height   = 0.3
             axis     = 0 0 1
