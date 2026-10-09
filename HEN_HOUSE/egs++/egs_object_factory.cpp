@@ -161,6 +161,7 @@ EGS_Object *EGS_ObjectFactory::createObjects(EGS_Input *i,
         return 0;
     }
     EGS_Input *input = i;
+    bool delete_it = false;
     if (!i->isA(section_delimeter)) {
         input = i->takeInputItem(section_delimeter);
         if (!input) {
@@ -169,6 +170,7 @@ EGS_Object *EGS_ObjectFactory::createObjects(EGS_Input *i,
                        section_delimeter.c_str());
             return 0;
         }
+        delete_it = true;
     }
     EGS_Input *ij;
     int errors = 0;
@@ -192,7 +194,9 @@ EGS_Object *EGS_ObjectFactory::createObjects(EGS_Input *i,
         if (!o) egsWarning("EGS_ObjectFactory::createObjects(): an object "
                                "with the name %s does not exist\n",sought_object.c_str());
     }
-    delete input;
+    if (delete_it) {
+        delete input;
+    }
     return o;
 }
 
