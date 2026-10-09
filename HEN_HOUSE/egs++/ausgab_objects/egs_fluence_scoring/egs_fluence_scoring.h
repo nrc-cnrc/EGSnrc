@@ -351,8 +351,8 @@ public:
     void describeMe();//!< Sets fluence scoring object \c description
     void initScoring(EGS_Input *inp);
     void setApplication(EGS_Application *App);
-    void ouputPlanarFluence(EGS_ScoringArray *fT, const double &norma);
-    void ouputResults();
+    void outputPlanarFluence(EGS_ScoringArray *fT, const double &norma);
+    void outputResults();
     void reportResults();
     int processEvent(EGS_Application::AusgabCall iarg) {
 
@@ -591,9 +591,9 @@ public:
 
     void setApplication(EGS_Application *App);
 
-    void ouputVolumetricFluence(EGS_ScoringArray *fT, const double &norma);
+    void outputVolumetricFluence(EGS_ScoringArray *fT, const double &norma);
 
-    void ouputResults();
+    void outputResults();
 
     void reportResults();
 

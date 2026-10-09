@@ -35,7 +35,11 @@
 
 
 #include <string>
+#include <cstring>
 #include <cstdlib>
+#ifdef WIN32
+  #include <windows.h>
+#endif
 
 #include "egs_fluence_scoring.h"
 #include "egs_input.h"
@@ -45,6 +49,41 @@ static bool EGS_FLUENCE_SCORING_LOCAL inputSet = false;
 
 #define REGIONS_ENTRIES 100
 #define REGIONS_PER_LINE 25
+
+/*! \brief Detects whether the terminal supports UTF-8 encoded output.
+ *
+ * On Linux/macOS, checks the environment variables LC_ALL, LC_CTYPE, and LANG
+ * in order of decreasing precedence, returning true if any contains "UTF-8"
+ * or "utf-8". On Windows, queries the console output code page, returning
+ * true only if it is set to 65001 (UTF-8).
+ *
+ * Used to select between Unicode symbols (e.g. φ, Δ, cm²) and plain ASCII
+ * fallbacks (e.g. phi, D, cm2) in fluence scoring output headers.
+ *
+ * \return true if UTF-8 output is supported, false otherwise.
+ */
+static bool supportsUTF8() {
+#ifdef _WIN32
+    return GetConsoleOutputCP() == 65001;
+#else
+    const char *lcall   = std::getenv("LC_ALL");
+    const char *lcctype = std::getenv("LC_CTYPE");
+    const char *lang    = std::getenv("LANG");
+    for (const char *s : {lcall, lcctype, lang}) {
+        if (s && (std::strstr(s, "UTF-8") || std::strstr(s, "utf-8")))
+            return true;
+    }
+    return false;
+#endif
+}
+
+
+
+// stripPath("/home/ernesto/data/results.txt") → "results.txt"
+std::string stripPath(const std::string& fullpath) {
+    size_t pos = fullpath.find_last_of("/\\");
+    return (pos == std::string::npos) ? fullpath : fullpath.substr(pos + 1);
+}
 
 EGS_FluenceScoring::EGS_FluenceScoring(const string &Name, EGS_ObjectFactory *f) :
     EGS_AusgabObject(Name,f), particle_name("photon"),
@@ -745,22 +784,31 @@ int EGS_PlanarFluence::hitsField(const EGS_Particle &p, EGS_Float *dist) {
     }
 }
 
-void EGS_PlanarFluence::ouputPlanarFluence(EGS_ScoringArray *fT, const double &norma) {
+void EGS_PlanarFluence::outputPlanarFluence(EGS_ScoringArray *fT, const double &norma) {
     double fe,dfe,dfer;
     int count = 0;
     int ix_digits = getDigits(Nx);
     int iy_digits = getDigits(Ny);
     int xy_digits = getDigits(Nx*Ny);
 
+    bool utf8 = supportsUTF8();
+    const char *phi   = utf8 ? "\u03C6" : "phi";
+    const char *delta = utf8 ? "\u0394"  : "D";
+    const char *cm2   = utf8 ? "cm\u00B2" : "cm2";
+
     if (field_type == circle) {
-        egsInformation("\n  pixel#    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
-                       "-----------------------------------------------------\n");
+        egsInformation("\n  pixel#      %s/%s        %s%s/%s\n"
+                       "-----------------------------------------------------\n",
+                       phi, cm2, delta, phi, cm2);
     }
     else {
-        egsInformation("\n  %*s %*s pixel#    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
+        egsInformation("\n  %*s %*s pixel#    %s/%s        %s%s/%s\n"
                        "-----------------------------------------------------\n",
-                       iy_digits,"iy",ix_digits,"ix",&count);
+                       iy_digits, "iy", ix_digits, "ix",
+                       phi, cm2, delta, phi, cm2);
     }
+
+
     if (field_type == circle) {
         int k = 0;
         egsInformation("   %*d      ",xy_digits,k);
@@ -791,12 +839,12 @@ void EGS_PlanarFluence::ouputPlanarFluence(EGS_ScoringArray *fT, const double &n
     }
 }
 
-void EGS_PlanarFluence::ouputResults() {
+void EGS_PlanarFluence::outputResults() {
 
     EGS_Float src_norm = 1.0,          // default to number of histories in this run
               Fsrc = app->getFluence();// Fluence or number of primary histories
-    egsInformation("\n\n last case = %lld source particles or fluence = %g\n\n",
-                   current_ncase, Fsrc);
+    egsInformation(" last case                   = %lld\n", current_ncase);
+    egsInformation(" source particles or fluence = %g\n", Fsrc);
 
     if (Fsrc) {
         src_norm = Fsrc/current_ncase;    // fluence or primary histories per histories run
@@ -806,16 +854,16 @@ void EGS_PlanarFluence::ouputResults() {
     string src_type = app->sourceType();
     if (src_type == "EGS_BeamSource") {
         normLabel = "primary history";
-        egsInformation("\n\n %s normalization = %g (primary histories per particle)\n\n",
+        egsInformation("\n %s normalization = %g (primary histories per particle)\n",
                        src_type.c_str(), src_norm);
     }
     else if (src_type == "EGS_CollimatedSource" ||
              (src_type == "EGS_ParallelBeam" && src_norm != 1)) {
-        egsInformation("\n\n %s normalization = %g (fluence per particle)\n\n",
+        egsInformation("\n %s normalization = %g (fluence per particle)\n",
                        src_type.c_str(), src_norm);
     }
     else {
-        egsInformation("\n\n %s normalization = %g (histories per particle)\n\n",
+        egsInformation("\n %s normalization = %g (histories per particle)\n",
                        src_type.c_str(), src_norm);
 
     }
@@ -827,15 +875,15 @@ void EGS_PlanarFluence::ouputResults() {
 
     //egsInformation("  Normalization = %g\n",norm);
 
-    egsInformation("\n\n            Integral fluence\n"
-                   "            ================\n\n");
+    egsInformation("\n            Integral fluence\n"
+                   "            ================\n");
 
-    egsInformation("\n\n               Total %s fluence\n", particle_name.c_str());
-    ouputPlanarFluence(fluT, norm);
+    egsInformation("\n\n=> Total %s fluence\n", particle_name.c_str());
+    outputPlanarFluence(fluT, norm);
 
     if (score_primaries) {
-        egsInformation("\n\n                   Primary fluence\n");
-        ouputPlanarFluence(fluT_p, norm);
+        egsInformation("\n\n=> Primary fluence\n");
+        outputPlanarFluence(fluT_p, norm);
     }
 
     if (score_spe) {
@@ -847,6 +895,12 @@ void EGS_PlanarFluence::ouputResults() {
             egsFatal("\n EGS_PlanarFluence: Error: Failed to open file %s\n",spe_name.c_str());
             exit(1);
         }
+
+        bool utf8 = supportsUTF8();
+        const char *phi   = utf8 ? "\u03C6" : "phi";
+        const char *delta = utf8 ? "\u0394"  : "Dphi";
+        const char *units_diff = utf8 ? "MeV\u207B\u00B9cm\u207B\u00B2" : "MeV-1 cm-2";
+
 
         spe_output << "# " << particle_name.c_str() << " fluence \n";
         spe_output << "# \n";
@@ -871,6 +925,11 @@ void EGS_PlanarFluence::ouputResults() {
         egsInformation("\n\n            Differential fluence\n"
                        "            ====================\n\n");
 
+        if (!verbose) {
+                egsInformation(" See Grace plot file %s\n", stripPath(spe_name.c_str()).c_str());
+        }
+
+
         int i_graph = 0;
         double fe,dfe;
         for (int j=0; j<Ny; j++) {
@@ -886,8 +945,11 @@ void EGS_PlanarFluence::ouputResults() {
                 spe_output<<"@type xydy\n";
                 if (verbose) {
                     egsInformation("\n\n           Total \n\n");
-                    egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
-                                   "---------------------------------------------\n");
+                    // egsInformation("\n   Emid/MeV    Flu/(MeV*cm^2)  DFlu/(MeV*cm^2)\n"
+                    //                "---------------------------------------------\n");
+                    egsInformation("\n   Emid/MeV    %s(E)/(%s)   %s%s(E)/(%s)\n"
+                                            "---------------------------------------------------\n",
+                                        phi, units_diff, delta, phi, units_diff);
                 }
                 for (int l=0; l<flu_nbin; l++) {
                     flu[k]->currentResult(l,fe,dfe);
@@ -904,8 +966,11 @@ void EGS_PlanarFluence::ouputResults() {
                 if (score_primaries) {
                     if (verbose) {
                         egsInformation("\n\n           Primary\n\n");
-                        egsInformation("\n   Emid/MeV    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
-                                       "---------------------------------------------\n");
+                        // egsInformation("\n   Emid/MeV    Flu/(MeV*cm^2)  DFlu/(MeV*cm^2)\n"
+                        //                "---------------------------------------------\n");
+                        egsInformation("\n   Emid/MeV    %s(E)/(%s)   %s%s(E)/(%s%s)\n"
+                                       "---------------------------------------------------\n",
+                                        phi, units_diff, delta, phi, units_diff);
                     }
                     spe_output<<"@    s" << ++i_graph <<" errorbar linestyle 0\n";
                     spe_output<<"@    s" << i_graph <<" legend \""<<
@@ -933,15 +998,19 @@ void EGS_PlanarFluence::ouputResults() {
 }
 
 void EGS_PlanarFluence::reportResults() {
-    egsInformation("\nFluence Scoring (%s)\n",name.c_str());
+    egsInformation("\n======================================================\n");
+    egsInformation("Planar Fluence Scoring (%s)\n",name.c_str());
+    egsInformation("======================================================\n\n");
     //EGS_Float m_tot = m_fluor+ m_compt + m_ray + m_multiple; char per = '%';
-    egsInformation("======================================================\n");
-    egsInformation("   Total %ss reaching field:       %g\n",particle_name.c_str(),m_tot);
-    egsInformation("   Primary %ss reaching field:     %g\n",particle_name.c_str(),m_primary);
-    //egsInformation("   Non-primary photons reaching field: %g\n",m_tot);
-    egsInformation("======================================================\n");
 
-    ouputResults();
+    // egsInformation("======================================================\n");
+    egsInformation(" Total %ss reaching field:       %g\n",particle_name.c_str(),m_tot);
+    if (score_primaries) {
+       egsInformation(" Primary %ss reaching field:     %g\n",particle_name.c_str(),m_primary);
+    }
+    // egsInformation("======================================================\n");
+
+    outputResults();
 
 }
 
@@ -1410,15 +1479,23 @@ void EGS_VolumetricFluence::describeMe() {
 
 }
 
-void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const double &norma) {
+void EGS_VolumetricFluence::outputVolumetricFluence(EGS_ScoringArray *fT, const double &norma) {
     double fe,dfe,dfer;
     int count = 0;
     int ir_digits = getDigits(nreg);
 
     //egsInformation("-> norma = %10.4le\n", norma);
 
-    egsInformation("\n  region#    Flu/(MeV*cm2)   DFlu/(MeV*cm2)\n"
-                   "-----------------------------------------------------\n");
+    bool utf8 = supportsUTF8();
+    const char *phi   = utf8 ? "\u03C6" : "phi";
+    const char *delta = utf8 ? "\u0394"  : "D";
+    const char *cm2   = utf8 ? "cm\u00B2" : "cm2";
+
+    egsInformation("\n  region#    %s/%s        %s%s/%s\n"
+                   "-----------------------------------------------------\n",
+                   phi, cm2, delta, phi, cm2);
+
+
     for (int k=0; k<nreg; k++) {
         if (!is_sensitive[k]) {
             continue;
@@ -1437,13 +1514,13 @@ void EGS_VolumetricFluence::ouputVolumetricFluence(EGS_ScoringArray *fT, const d
     }
 }
 
-void EGS_VolumetricFluence::ouputResults() {
+void EGS_VolumetricFluence::outputResults() {
 
 
     EGS_Float src_norm = 1.0,          // default to number of histories in this run
               Fsrc = app->getFluence();// Fluence or number of primary histories
-    egsInformation("\n\n last case = %lld source particles or fluence = %g\n\n",
-                   current_ncase, Fsrc);
+    egsInformation(" last case                   = %lld\n", current_ncase);
+    egsInformation(" source particles or fluence = %g\n", Fsrc);
 
     if (Fsrc) {
         src_norm = Fsrc/current_ncase;    // fluence or primary histories per histories run
@@ -1453,16 +1530,16 @@ void EGS_VolumetricFluence::ouputResults() {
     string src_type = app->sourceType();
     if (src_type == "EGS_BeamSource") {
         normLabel = "primary history";
-        egsInformation("\n\n %s normalization = %g (primary histories per particle)\n\n",
+        egsInformation("\n %s normalization = %g (primary histories per particle)\n",
                        src_type.c_str(), src_norm);
     }
     else if (src_type == "EGS_CollimatedSource" ||
              (src_type == "EGS_ParallelBeam" && src_norm != 1)) {
-        egsInformation("\n\n %s normalization = %g (fluence per particle)\n\n",
+        egsInformation("\n %s normalization = %g (fluence per particle)\n",
                        src_type.c_str(), src_norm);
     }
     else {
-        egsInformation("\n\n %s normalization = %g (histories per particle)\n\n",
+        egsInformation("\n %s normalization = %g (histories per particle)\n",
                        src_type.c_str(), src_norm);
 
     }
@@ -1525,19 +1602,22 @@ void EGS_VolumetricFluence::ouputResults() {
     EGS_Float norm  = 1.0/src_norm;              // per particle or fluence
     norm *= norm_u;                    // user-requested normalization
 
-    egsInformation("\n\n                 Integral fluence output\n"
-                   "                 =======================\n\n");
+    egsInformation("\n                 Integral fluence output\n"
+                   "                 =======================\n");
 
-    egsInformation("\n\n                 Total %s fluence\n", particle_name.c_str());
-    ouputVolumetricFluence(fluT, norm);
+    egsInformation("\n\n=> Total %s fluence\n", particle_name.c_str());
+    outputVolumetricFluence(fluT, norm);
 
     if (score_primaries) {
-        egsInformation("\n\n                   Primary fluence\n");
-        ouputVolumetricFluence(fluT_p, norm);
+        egsInformation("\n\n=> Primary fluence\n");
+        outputVolumetricFluence(fluT_p, norm);
     }
 
+    bool utf8 = supportsUTF8();
+    const char *delta = utf8 ? "\u0394"  : "D";
+
     if (verbose) {
-        egsInformation("\nbw = %g nbins = %d\n", flu_a_i, flu_nbin);
+        egsInformation("\n%sE = %g nbins = %d\n", delta, flu_a_i, flu_nbin);
     }
 
     if (score_spe) {
@@ -1574,9 +1654,16 @@ void EGS_VolumetricFluence::ouputResults() {
         spe_output << "@    subtitle font 4\n";
         spe_output << "@    subtitle size 1.000000\n";
 
-        if (verbose)
-            egsInformation("\n\n                 Differential fluence output\n"
-                           "                 =============================\n\n");
+        egsInformation("\n                 Differential fluence output\n"
+                       "                 =============================\n\n");
+
+        const char *phi   = utf8 ? "\u03C6" : "phi";
+        const char *units_diff = utf8 ? "MeV\u207B\u00B9cm\u207B\u00B2" : "MeV-1 cm-2";
+
+        if (!verbose) {
+            egsInformation(" See Grace plot file %s\n", stripPath(spe_name.c_str()).c_str());
+        }
+
         int i_graph = 0;
         double fe, dfe;
         norm *= scoring_charge ? 1 : flu_a;//per bin width <- implicit for charged particles!
@@ -1589,14 +1676,11 @@ void EGS_VolumetricFluence::ouputResults() {
 
             double norma = norm/volume[j];                 //per volume
 
-            egsInformation("region # %d : ",j);
 
             if (verbose) {
+                egsInformation("region # %d : ",j);
                 egsInformation("Volume[%d] = %g", j, volume[j]);
-                egsInformation(" Normalization = Ncase/Fsrc/V = %g\n",norma);
-            }
-            else {
-                egsInformation(" See Grace plot file %s\n", spe_name.c_str());
+                egsInformation(" Normalization = Ncase/Fsrc/V/%sE = %g\n",delta,norma);
             }
 
             if (verbose) {
@@ -1606,8 +1690,10 @@ void EGS_VolumetricFluence::ouputResults() {
             spe_output<<"@    s"<< i_graph <<" legend \""<< "total (ir # " << j <<")\"\n";
             spe_output<<"@target G0.S"<< i_graph <<"\n";
             spe_output<<"@type xydy\n";
-            if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV-1*cm-2)   DFlu/(MeV-1*cm-2)\n"
-                                            "---------------------------------------------------\n");
+            // if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV-1*cm-2)   DFlu/(MeV-1*cm-2)\n"
+            if (verbose) egsInformation("\n   Emid/MeV    %s(E)/(%s)   %s%s(E)/(%s)\n"
+                                            "---------------------------------------------------\n",
+                                        phi, units_diff, delta, phi, units_diff);
             for (int i=0; i<flu_nbin; i++) {
                 flu[j]->currentResult(i,fe,dfe);
                 EGS_Float e = (i+0.5-flu_b)/flu_a;
@@ -1628,8 +1714,11 @@ void EGS_VolumetricFluence::ouputResults() {
                 spe_output<<"@    s"<< i_graph <<" legend \""<< "primary (ir # " << j <<")\"\n";
                 spe_output<<"@target G0.S"<< i_graph <<"\n";
                 spe_output<<"@type xydy\n";
-                if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV-1*cm-2)   DFlu/(MeV-1*cm-2)\n"
-                                                "---------------------------------------------------\n");
+                // if (verbose) egsInformation("\n   Emid/MeV    Flu/(MeV-1*cm-2)   DFlu/(MeV-1*cm-2)\n"
+                //                                 "---------------------------------------------------\n");
+                if (verbose) egsInformation("\n   Emid/MeV    %s(E)/(%s)   %s%s(E)/(%s)\n"
+                                            "---------------------------------------------------\n",
+                                            phi, units_diff, delta, phi, units_diff);
                 for (int i=0; i<flu_nbin; i++) {
                     flu_p[j]->currentResult(i,fe,dfe);
                     EGS_Float e = (i+0.5-flu_b)/flu_a;
@@ -1653,10 +1742,11 @@ void EGS_VolumetricFluence::ouputResults() {
 
 void EGS_VolumetricFluence::reportResults() {
 
-    egsInformation("\nFluence Scoring (%s)\n",name.c_str());
+    egsInformation("\n======================================================\n");
+    egsInformation("Volumetric Fluence Scoring (%s)\n",name.c_str());
     egsInformation("======================================================\n");
 
-    ouputResults();
+    outputResults();
 
 }
 
