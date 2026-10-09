@@ -502,7 +502,8 @@ int EGS_InputPrivate::addContentFromFile(const char *fname) {
     while (isspace(*s) && (*s)) {
         ++s;
     }
-    ifstream in(s);
+    string path = egsExpandPath(string(s));
+    ifstream in(path.c_str());
     if (!in) {
         return -1;
     }
@@ -898,10 +899,11 @@ int EGS_InputPrivate::addContent(istream &in) {
                 while (isspace(*s) && (*s)) {
                     ++s;
                 }
-                ifstream in2(s);
+                string path = egsExpandPath(string(s));
+                ifstream in2(path.c_str());
                 if (!in2) {
                     egsFatal("EGS_Input: failed to add content from "
-                             "include file %s\n",value.c_str());
+                             "include file %s\n",path.c_str());
                 }
 
                 string input2 = getCleanInputString(in2);
