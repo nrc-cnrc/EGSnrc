@@ -109,6 +109,7 @@ public:
     string getCleanInputString(istream &input);
 
     void processInputLoop(EGS_InputPrivate *p);
+    void expandIncludeFiles();
 
     void addItem(EGS_InputPrivate *p) {
         p->nref++;
@@ -502,7 +503,8 @@ int EGS_InputPrivate::addContentFromFile(const char *fname) {
     while (isspace(*s) && (*s)) {
         ++s;
     }
-    ifstream in(s);
+    string path = egsExpandPath(string(s));
+    ifstream in(path.c_str());
     if (!in) {
         return -1;
     }
@@ -561,6 +563,18 @@ bool EGS_InputPrivate::compareKeys(const string &s1, const string &s2) {
         }
     return (t1 == t2);
 
+}
+
+static bool hasLoopVariable(const string &s) {
+    return s.find("$(") != string::npos;
+}
+
+static string trimInputValue(const string &value) {
+    const char *s = value.c_str();
+    while (isspace(*s) && (*s)) {
+        ++s;
+    }
+    return string(s);
 }
 
 #ifdef INPUT_DEBUG
@@ -867,12 +881,81 @@ void EGS_InputPrivate::processInputLoop(EGS_InputPrivate *p) {
                 pnew->replace(ivars[ivar]->getVarNameReplacement(),
                               ivars[ivar]->getVarReplacement());
             }
-            children.push_back(pnew);
+            pnew->expandIncludeFiles();
+            if (pnew->key.empty() && !pnew->children.empty()) {
+                for (unsigned int k = 0; k < pnew->children.size(); k++) {
+                    children.push_back(pnew->children[k]);
+                }
+                pnew->children.clear();
+                delete pnew;
+            }
+            else {
+                children.push_back(pnew);
+            }
         }
     }
 
     for (j=0; j<ivars.size(); j++) {
         delete ivars[j];
+    }
+}
+
+static void inlineIncludeFileNode(EGS_InputPrivate *node) {
+    string path = egsExpandPath(trimInputValue(node->value));
+    ifstream in(path.c_str());
+    if (!in) {
+        egsFatal("EGS_Input: failed to add content from "
+                 "include file %s\n", path.c_str());
+    }
+    EGS_InputPrivate holder;
+    holder.addContent(in);
+    if (holder.children.size() == 1 && !holder.children[0]->key.empty()) {
+        EGS_InputPrivate *block = holder.children[0];
+        node->key = block->key;
+        node->value = block->value;
+        for (unsigned int k = 0; k < block->children.size(); k++) {
+            node->children.push_back(block->children[k]);
+        }
+        block->children.clear();
+        delete block;
+        holder.children.clear();
+        return;
+    }
+    node->key.clear();
+    node->value.clear();
+    for (unsigned int k = 0; k < holder.children.size(); k++) {
+        node->children.push_back(holder.children[k]);
+    }
+    holder.children.clear();
+}
+
+void EGS_InputPrivate::expandIncludeFiles() {
+    if (compareKeys(key, "include file")) {
+        if (!hasLoopVariable(value)) {
+            inlineIncludeFileNode(this);
+        }
+        return;
+    }
+    for (int j = children.size() - 1; j >= 0; j--) {
+        if (!compareKeys(children[j]->key, "include file")) {
+            children[j]->expandIncludeFiles();
+            continue;
+        }
+        if (hasLoopVariable(children[j]->value)) {
+            continue;
+        }
+        inlineIncludeFileNode(children[j]);
+        if (children[j]->children.size()) {
+            EGS_InputPrivate *old = children[j];
+            children.erase(children.begin() + j);
+            for (unsigned int k = 0; k < old->children.size(); k++) {
+                children.insert(children.begin() + j + k, old->children[k]);
+            }
+            old->children.clear();
+            delete old;
+        }
+        expandIncludeFiles();
+        return;
     }
 }
 
@@ -893,15 +976,16 @@ int EGS_InputPrivate::addContent(istream &in) {
                 string value;
                 value.assign(input,p2+1,p1-p2-1);
 
-
-                const char *s = value.c_str();
-                while (isspace(*s) && (*s)) {
-                    ++s;
+                if (hasLoopVariable(value)) {
+                    p = p1+1;
+                    continue;
                 }
-                ifstream in2(s);
+
+                string path = egsExpandPath(trimInputValue(value));
+                ifstream in2(path.c_str());
                 if (!in2) {
                     egsFatal("EGS_Input: failed to add content from "
-                             "include file %s\n",value.c_str());
+                             "include file %s\n",path.c_str());
                 }
 
                 string input2 = getCleanInputString(in2);

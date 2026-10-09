@@ -1,0 +1,108 @@
+##############################################################################
+#
+# egs_app test for include file paths with input-loop variables (issue #1351)
+#
+# Pegsless run (no -p). Media are inline because Fortran HATCH reads the raw
+# .egsinp on unit 5 and does not expand C++ include loops. The include loop
+# below is in ausgab object definition, which is parsed by egs++ only.
+#
+# Before the fix, parsing fails with:
+#   EGS_Input: failed to add content from include file .../$(obj).inc
+#
+#   cd $EGS_HOME/egs_app
+#   ./egs_app -i slab_include_loop
+#
+# Include fragments live in include_loop_test/
+#
+##############################################################################
+
+
+##############################################################################
+### Run control
+##############################################################################
+:start run control:
+    ncase = 1000
+:stop run control:
+
+
+##############################################################################
+### Geometry (same slab as slab.egsinp)
+##############################################################################
+:start geometry definition:
+
+    :start geometry:
+        name     = plate
+        library  = egs_ndgeometry
+        type     = EGS_XYZGeometry
+        x-planes = -5, 5
+        y-planes = -5, 5
+        z-planes = -10, 0, 1, 10
+        :start media input:
+            media = air water
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = plate
+
+:stop geometry definition:
+
+
+##############################################################################
+### Media (inline — required for pegsless; see header comment)
+##############################################################################
+:start media definition:
+
+    ae = 0.521
+    ap = 0.010
+    ue = 50.511
+    up = 50
+
+    :start air:
+        density correction file = air_dry_nearsealevel
+    :stop air:
+
+    :start water:
+        density correction file = water_liquid
+    :stop water:
+
+:stop media definition:
+
+
+##############################################################################
+### Source (same as slab.egsinp)
+##############################################################################
+:start source definition:
+
+    :start source:
+        name      = pencil_beam
+        library   = egs_parallel_beam
+        charge    = -1
+        direction = 0 0 1
+        :start spectrum:
+            type = monoenergetic
+            energy = 20
+        :stop spectrum:
+        :start shape:
+            type     = point
+            position = 0 0 -8
+        :stop shape:
+    :stop source:
+
+    simulation source = pencil_beam
+
+:stop source definition:
+
+
+##############################################################################
+### Ausgab — input loop + include files (tests #1351)
+##############################################################################
+:start ausgab object definition:
+
+    :start input loop:
+        loop count = 2
+        loop variable = 2 obj dose tracks
+        include file = include_loop_test/$(obj)_ausgab.inc
+    :stop input loop:
+
+:stop ausgab object definition:
