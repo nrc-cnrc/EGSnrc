@@ -242,7 +242,7 @@ extern "C" {
                     // is 3) In each case vector order is determined by format
                     // of EGS_rotationMatrix constructor (EGS_Float arguments)
                     if (point.size() == 6) {
-                        R_vect.push_back(point[6]); // Rotation about z
+                        R_vect.push_back(point[5]); // Rotation about z
                         R_vect.push_back(point[4]); // Rotation about x
                     } // 2 number case
                     if (point.size() == 7) {
@@ -487,10 +487,20 @@ extern "C" {
         // index
         errg = getCoordGeom(time, gipt);
 
+        // If no control point interval was found (e.g. a time at or beyond
+        // the last control point), gipt is empty and getTransformation()
+        // would return a null pointer. Keep the current transformation instead.
+        if (errg) {
+            g->updatePosition(time);
+            return;
+        }
+
         // Create and set the geometry transform with the updated coordinates
         EGS_AffineTransform *tDG = EGS_AffineTransform::getTransformation(gipt.trnsl, gipt.rot);
-        setTransformation(*tDG);
-        delete tDG;
+        if (tDG) {
+            setTransformation(*tDG);
+            delete tDG;
+        }
 
         // Call `updatePosition` on the base to allow lower-level geometries to
         // update as needed

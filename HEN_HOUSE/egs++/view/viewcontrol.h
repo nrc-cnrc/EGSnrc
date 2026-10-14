@@ -51,6 +51,7 @@ class EGS_GeometryVisualizer;
 class ImageWindow;
 class QLabel;
 class QImage;
+class QTimer;
 class SaveImage;
 class ClippingPlanesWidget;
 
@@ -166,16 +167,19 @@ public slots:
 private slots:
     void loadRegions();
     void ensureEditorLoaded();
+    void advanceTime(); // one playback step, driven by playTimer
 
 private:
 
     ClippingPlanesWidget *cplanes;
     ImageWindow *gview;
     SaveImage *save_image;
+    QTimer *playTimer; // drives time playback without blocking the GUI thread
 
     vector<EGS_Float> timelist_p;  //list of time indices of compressed particle tracks for photons
     vector<EGS_Float> timelist_e;  //list of time indices of compressed particle tracks for electrons
     vector<EGS_Float> timelist_po; //list of time indices of compressed particle tracks for positrons
+    vector<size_t> timeTrackRange; // exact track ranges for the renderer in time mode (0-based, [first,last) per particle type)
 
     QString filename;
     QString filename_tracks;

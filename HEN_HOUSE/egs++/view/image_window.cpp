@@ -33,6 +33,7 @@
 */
 
 #include "image_window.h"
+#include "egs_base_geometry.h"
 
 #include <QResizeEvent>
 #include <QWheelEvent>
@@ -195,6 +196,15 @@ void ImageWindow::rerender(EGS_BaseGeometry *geo) {
     egsWarning(" nx=%d ny=%d nnx=%d nny=%d nxr=%d nyr=%d\n",
                nx,ny,nnx,nny,nxr,nyr);
 #endif
+
+    // Move dynamic geometries to the requested time index. This runs on the
+    // GUI thread and only when the render worker is idle (we returned above
+    // if it was busy), so the geometry transform can never change while a
+    // render is tracing the geometry. If several time steps arrive while the
+    // worker is busy, only the latest one is applied when it becomes free.
+    if (pars.timeIndex >= 0) {
+        lastRequestGeo->updatePosition(pars.timeIndex);
+    }
 
     renderState = WorkerCalculating;
     pars.requestType = ForScreen;
