@@ -638,7 +638,8 @@ struct EGS_IO {
  */
 struct EGS_emfInputs {
     /*! Input values for static electric and magnetic fields */
-    EGS_Float ExIN, EyIN, EzIN, EMLMTIN,
+    EGS_Float EMLMTIN,
+    ExIN, EyIN, EzIN, Ex, Ey, Ez, Ex_new, Ey_new, Ez_new,
     BxIN, ByIN, BzIN, Bx, By, Bz, Bx_new, By_new, Bz_new;
     bool emfield_on;
 };

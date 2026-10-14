@@ -665,7 +665,7 @@ $LOGICAL  iunrst_specified,stern_specified,iaprim_specified,
           spec_by_pz,spec_by_rhoz,df_if_elem_mismatch($MXMED),
           ipot_specified, bulkdensity_specified, localdensity_specified,
           df_if_rho_mismatch($MXMED);
-$LOGICAL  ex;
+$LOGICAL  ext;
 
 $INTEGER CURSOR,Kconvert;
 
@@ -1471,8 +1471,8 @@ DO i=1,NMED[
       write(*,*)' density_file ',density_file;
       IF(index(density_file,$file_sep)>0) [
        tmp_string=$cstring(density_file);
-       inquire(file=tmp_string,exist=ex);
-       IF(~ex)[
+       inquire(file=tmp_string,exist=ext);
+       IF(~ext)[
               $WRITE_MEDERR(' Error: Density correction file ',tmp_string);
               $WRITE_MEDERR(' cannot be found.');
        ]
@@ -1482,34 +1482,34 @@ DO i=1,NMED[
        "first look in $EGS_HOME/pegs4/density_corrections"
        tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
                   'density_corrections' // $file_sep // density_file;
-       inquire(file=tmp_string,exist=ex);
-       IF(ex) goto :density_file_found:;
+       inquire(file=tmp_string,exist=ext);
+       IF(ext) goto :density_file_found:;
        tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
                   'density_corrections' // $file_sep // 'elements' //
                     $file_sep // density_file;
-       inquire(file=tmp_string,exist=ex);
-       IF(ex) goto :density_file_found:;
+       inquire(file=tmp_string,exist=ext);
+       IF(ext) goto :density_file_found:;
        tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
                   'density_corrections' // $file_sep // 'compounds' //
                     $file_sep // density_file;
-       inquire(file=tmp_string,exist=ex);
-       IF(ex) goto :density_file_found:;
+       inquire(file=tmp_string,exist=ext);
+       IF(ext) goto :density_file_found:;
        "now look in $EGS_HOME/pegs4/density in case directory still there"
        tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
                   'density' // $file_sep // density_file;
-       inquire(file=tmp_string,exist=ex);
-       IF(ex) goto :density_file_found:;
+       inquire(file=tmp_string,exist=ext);
+       IF(ext) goto :density_file_found:;
        "now look through $HEN_HOUSE/pegs4/density_corrections"
        tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
                     'density_corrections' // $file_sep // 'elements' //
                     $file_sep // density_file;
-       inquire(file=tmp_string,exist=ex);
-       IF(ex) goto :density_file_found:;
+       inquire(file=tmp_string,exist=ext);
+       IF(ext) goto :density_file_found:;
        tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
                     'density_corrections' // $file_sep // 'compounds' //
                     $file_sep // density_file;
-       inquire(file=tmp_string,exist=ex);
-       IF(ex) goto :density_file_found:;
+       inquire(file=tmp_string,exist=ext);
+       IF(ext) goto :density_file_found:;
        $WRITE_MEDERR(' Error: Density correction file',
                         density_file);
        $WRITE_MEDERR(' does not exist in');
@@ -1832,8 +1832,8 @@ DO i=1,nmed[
 
  "output stopping powers to file for plotting if requested"
   IF(outfile_specified(i) & (n_parallel=0 | i_parallel=first_parallel)) [
-    inquire(file=spoutput_file(i),exist=ex);
-    IF(ex) [
+    inquire(file=spoutput_file(i),exist=ext);
+    IF(ext) [
       $egs_warning('(a)','Warning: stopping power output file ',
             spoutput_file(i),'already exists.  Will overwrite.');
     ]
