@@ -2,10 +2,13 @@ FC = gfortran
 FFLAGS = -std=legacy
 MACHINE_SOURCE ?= ../lib/linux/machine.f
 BUILD_DIR ?= build
-MORTRAN_EXE ?= $(BUILD_DIR)/mortran3_inc.exe
+MORTRAN_EXE ?= ../bin/linux/mortran3_inc.exe
 
-.PHONY: all
+.PHONY: all format
 all: $(MORTRAN_EXE)
+
+format:
+	fprettify --indent 4 --strict-indent --disable-whitespace mortran3.f95
 
 $(MORTRAN_EXE): $(BUILD_DIR)/mortran3_inc.o $(BUILD_DIR)/machine.o
 	mkdir -p "$(dir $@)"
