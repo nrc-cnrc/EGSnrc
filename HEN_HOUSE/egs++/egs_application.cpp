@@ -278,9 +278,7 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     //
     // *** create the name of the working directory
     //
-    char buf[512];
-    sprintf(buf,"egsrun_%d_",egsGetPid());
-    run_dir = buf;
+    run_dir = "egsrun_" + std::to_string(egsGetPid()) + "_";
     if (input_file.size() > 0) {
 
         // Remove the .egsinp extension if it was included
@@ -439,9 +437,7 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     final_output_file = output_file;
     if (i_parallel > 0 && n_parallel > 0) {
         batch_run = true;
-        char buf[1024];
-        sprintf(buf,"%s_w%d",output_file.c_str(),i_parallel);
-        output_file = buf;
+        output_file += "_w" + std::to_string(i_parallel);
     }
 
     //
@@ -596,12 +592,12 @@ bool fileExists(const string &name) {
 
 int EGS_Application::howManyJobsDone() {
 
-    char buf[512];
     int  n_of_egsdat = 0;
 
     for (int i = first_parallel; i < first_parallel + n_parallel; i++) {
-        sprintf(buf,"%s_w%d.egsdat",final_output_file.c_str(),i);
-        string dfile = egsJoinPath(app_dir,buf);
+        string data_file = final_output_file + "_w" + std::to_string(i) +
+                           ".egsdat";
+        string dfile = egsJoinPath(app_dir,data_file);
         if (fileExists(dfile)) {
             n_of_egsdat++;
         }
@@ -626,7 +622,6 @@ int EGS_Application::combineResults() {
     egsInformation(
         "\n                      Suming the following .egsdat files:\n"
         "=======================================================================\n");
-    char buf[512];
     resetCounter();
     EGS_Float last_cpu = 0;
     EGS_I64 last_ncase = 0;
@@ -641,8 +636,9 @@ int EGS_Application::combineResults() {
         n_parallel = MAXIMUM_JOB_NUMBER;
     }
     for (int j=first_parallel; j < first_parallel + n_parallel; j++) {
-        sprintf(buf,"%s_w%d.egsdat",final_output_file.c_str(),j);
-        string dfile = egsJoinPath(app_dir,buf);
+        string data_file = final_output_file + "_w" + std::to_string(j) +
+                           ".egsdat";
+        string dfile = egsJoinPath(app_dir,data_file);
         ifstream data(dfile.c_str());
         if (data) {
             int err = addState(data);
@@ -651,13 +647,14 @@ int EGS_Application::combineResults() {
                 EGS_I64 ncase = run->getNdone();
                 EGS_Float cpu = run->getCPUTime();
                 egsInformation("%2d %-30s ncase=%-14lld cpu=%-11.2f\n",
-                               ndat,buf,ncase-last_ncase,cpu-last_cpu);
+                               ndat,data_file.c_str(),ncase-last_ncase,
+                               cpu-last_cpu);
                 last_ncase = ncase;
                 last_cpu = cpu;
             }
             else {
                 ok = false;
-                egsWarning("%2d %-30s error %d\n",ndat,buf,err);
+                egsWarning("%2d %-30s error %d\n",ndat,data_file.c_str(),err);
             }
         }
     }

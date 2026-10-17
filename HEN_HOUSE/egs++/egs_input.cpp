@@ -50,7 +50,10 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstddef>
+#include <cstdio>
 #include <fstream>
+#include <stdexcept>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -617,7 +620,8 @@ with <em>v3_1, v3_2 ... v3_N</em>. The index <em>i</em> runs from <em>0</em> to 
 
 For real input variable (type 1), one can add a c style printf format string at the end of the
 loop variable input line to specify the format to use when replacing the variable with
-its values. By default, the format is "%lg". For example:
+its values. The format must contain exactly one floating-point conversion and no
+conversions requiring additional arguments. By default, the format is "%lg". For example:
 \verbatim
 :start input loop:
     loop count = 3
@@ -668,12 +672,89 @@ in the input tree after the input loops have been processed.
 This can be used to do 2D and even 3D array replicas.
 
 */
+static bool isValidFloatLoopFormat(const string &format) {
+    size_t conversions = 0;
+    for (size_t i = 0; i < format.length(); ++i) {
+        if (format[i] != '%') {
+            continue;
+        }
+        if (++i == format.length()) {
+            return false;
+        }
+        if (format[i] == '%') {
+            continue;
+        }
+        if (++conversions > 1) {
+            return false;
+        }
+        while (i < format.length() &&
+                string("-+ #0'").find(format[i]) != string::npos) {
+            ++i;
+        }
+        if (i < format.length() && format[i] == '*') {
+            return false;
+        }
+        while (i < format.length() && format[i] >= '0' && format[i] <= '9') {
+            ++i;
+        }
+        if (i < format.length() && format[i] == '.') {
+            ++i;
+            if (i < format.length() && format[i] == '*') {
+                return false;
+            }
+            while (i < format.length() && format[i] >= '0' && format[i] <= '9') {
+                ++i;
+            }
+        }
+        if (i < format.length() && format[i] == 'l') {
+            ++i;
+        }
+        if (i == format.length() ||
+                string("aAeEfFgG").find(format[i]) == string::npos) {
+            return false;
+        }
+    }
+    return conversions == 1;
+}
+
+static void failFloatLoopFormat(const string &format, const char *reason) {
+    egsFatal("Invalid input-loop floating-point format '%s': %s\n",
+             format.c_str(), reason);
+    throw std::runtime_error("Invalid input-loop floating-point format");
+}
+
+static void formatFloatLoopValue(string &result, const string &format,
+                                 double value) {
+    if (result.capacity() == 0) {
+        result.resize(128);
+    }
+    while (true) {
+        if (result.size() < result.capacity()) {
+            result.resize(result.capacity());
+        }
+        int written = std::snprintf(&result[0], result.size(),
+                                   format.c_str(), value);
+        if (written < 0) {
+            failFloatLoopFormat(format, "formatting failed");
+        }
+        std::size_t length = static_cast<std::size_t>(written);
+        if (length < result.size()) {
+            result.resize(length);
+            return;
+        }
+        if (length >= result.max_size()) {
+            failFloatLoopFormat(format, "formatted output is too large");
+        }
+        result.resize(length + 1);
+    }
+}
+
 class EGS_LOCAL EGS_InputLoopVariable {
 public:
     bool is_list;//!< True if input loop type is 2, else it is set to false.
     string vname,//!< Loop variable name.
-           vr;   //!< Loop variable replacement string.
-    char buf[128];
+           vr,   //!< Variable name replacement string.
+           replacement;
     EGS_InputLoopVariable(const string &var) : is_list(false), vname(var) {
         vr = "$(";
         vr += vname;
@@ -684,7 +765,7 @@ public:
         return vr.c_str();
     };
     const char *getVarReplacement() const {
-        return buf;
+        return replacement.c_str();
     };
     virtual void setVarReplacement(int) = 0;
     static EGS_InputLoopVariable *getInputLoopVariable(const char *input);
@@ -701,7 +782,7 @@ public:
         EGS_InputLoopVariable(var), vmin(Vmin), vdelta(Vdelta) {};
     void setVarReplacement(int i) {
         int v = vmin + vdelta*i;
-        sprintf(buf,"%d",v);
+        replacement = std::to_string(v);
     };
 };
 
@@ -714,10 +795,15 @@ public:
     double vmin, vdelta;
     string format;
     EGS_FloatInputLoopVariable(double Vmin, double Vdel, const string &var, const string &Format) :
-        EGS_InputLoopVariable(var), vmin(Vmin), vdelta(Vdel), format(Format) {};
+        EGS_InputLoopVariable(var), vmin(Vmin), vdelta(Vdel), format(Format) {
+        if (!isValidFloatLoopFormat(format)) {
+            failFloatLoopFormat(format,
+                                "expected one floating-point conversion");
+        }
+    };
     void setVarReplacement(int i) {
         double v = vmin + vdelta*i;
-        sprintf(buf,format.c_str(),v);
+        formatFloatLoopValue(replacement, format, v);
     };
 };
 class EGS_LOCAL EGS_ListInputLoopVariable : public EGS_InputLoopVariable {
@@ -728,8 +814,7 @@ public:
         is_list = true;
     };
     void setVarReplacement(int i) {
-        string str = list[i];
-        sprintf(buf,"%s",str.c_str());
+        replacement = list[i];
     };
     int list_size() {
         return list.size();

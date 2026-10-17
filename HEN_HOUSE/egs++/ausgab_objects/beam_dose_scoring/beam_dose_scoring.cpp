@@ -41,6 +41,8 @@
  *  \BW
  */
 
+#include <cstddef>
+#include <cstdio>
 #include <fstream>
 #include <string>
 
@@ -104,13 +106,12 @@ void BEAM_DoseScoring::setApplication(EGS_Application *App) {
         }
     }
     // determine maximum medium name length
-    char buf[32];
-    int count = 0;
+    char buf[512];
     int imed=0;
     for (imed=0; imed < nmedia; imed++) {
-        sprintf(buf,"%s%n",app->getMediumName(imed),&count);
-        if (count > max_medl) {
-            max_medl = count;
+        string medium_name(app->getMediumName(imed));
+        if (medium_name.length() > static_cast<std::size_t>(max_medl)) {
+            max_medl = static_cast<int>(medium_name.length());
         }
     }
     // Flag dose scoring regions in geometry
@@ -155,13 +156,21 @@ void BEAM_DoseScoring::setApplication(EGS_Application *App) {
     description += "*******************************************\n";
     description +="\n Dose will be calculated in CM no.'s (start region - end region):\n";
     for (int i=0; i<d_cms.size(); i++) {
+        int cm_start;
         if (d_cms[i]==0) {
-            sprintf(buf,"%d (0 - %d)\n",d_cms[i],bapp->CM_reg_end(d_cms[i]));
+            cm_start = 0;
         }
         else {
-            sprintf(buf,"%d (%d - %d)\n",d_cms[i],bapp->CM_reg_end(d_cms[i]-1)+1,bapp->CM_reg_end(d_cms[i]));
+            cm_start = bapp->CM_reg_end(d_cms[i]-1)+1;
         }
-        description += buf;
+        int n = std::snprintf(buf, sizeof(buf), "%d (%d - %d)\n",
+                              d_cms[i], cm_start,
+                              bapp->CM_reg_end(d_cms[i]));
+        if (n < 0 || static_cast<std::size_t>(n) >= sizeof(buf)) {
+            egsFatal("BEAM_DoseScoring: Failed to format CM range.\n");
+            return;
+        }
+        description.append(buf, static_cast<std::size_t>(n));
     }
     description += "\n";
     if (dose) {
@@ -171,15 +180,35 @@ void BEAM_DoseScoring::setApplication(EGS_Application *App) {
         description += " - Medium dose will be calculated\n";
     }
     description += "\n--------------------------------------\n";
-    sprintf(buf,"%*s %*s rho/[g/cm**3]\n",max_medl/2,"medium",max_medl/2," ");
-    description += buf;
+    int medium_heading_width = max_medl/2;
+    string medium_heading = "medium";
+    if (medium_heading_width > static_cast<int>(medium_heading.length())) {
+        description.append(
+            static_cast<std::size_t>(medium_heading_width - medium_heading.length()),
+            ' ');
+    }
+    description += medium_heading;
+    description += ' ';
+    if (medium_heading_width > 1) {
+        description.append(static_cast<size_t>(medium_heading_width - 1), ' ');
+    }
+    description += " rho/[g/cm**3]\n";
     description += "--------------------------------------\n";
     for (imed=0; imed < nmedia; imed++) {
-        sprintf(buf,"%-*s",max_medl,app->getMediumName(imed));
-        description += buf;
+        string medium_name(app->getMediumName(imed));
+        description += medium_name;
+        if (medium_name.length() < static_cast<std::size_t>(max_medl)) {
+            description.append(static_cast<std::size_t>(max_medl) -
+                               medium_name.length(), ' ');
+        }
         description += " ";
-        sprintf(buf,"%5.2f",app->getMediumRho(imed));
-        description += buf;
+        int n = std::snprintf(buf, sizeof(buf), "%5.2f",
+                              app->getMediumRho(imed));
+        if (n < 0 || static_cast<std::size_t>(n) >= sizeof(buf)) {
+            egsFatal("BEAM_DoseScoring: Failed to format medium density.\n");
+            return;
+        }
+        description.append(buf, static_cast<std::size_t>(n));
         description += "\n";
     }
     description += "\n*******************************************\n\n";
@@ -453,4 +482,3 @@ extern "C" {
     }
 
 }
-

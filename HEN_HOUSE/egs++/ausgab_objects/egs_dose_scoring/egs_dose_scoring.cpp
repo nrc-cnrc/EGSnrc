@@ -95,6 +95,8 @@
  *  \EM
  */
 
+#include <cstddef>
+#include <cstdio>
 #include <fstream>
 #include <string>
 #include <cstdlib>
@@ -142,14 +144,13 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     // Get the number of media in the input file
     nmedia = app->getnMedia();
     // determine maximum medium name length
-    char buf[64];
-    int count = 0;
+    char buf[512];
     int imed=0;
     max_medl = 6;  // length of the string "medium" is the minimum
     for (imed=0; imed < nmedia; imed++) {
-        sprintf(buf,"%s%n",app->getMediumName(imed),&count);
-        if (count > max_medl) {
-            max_medl = count;
+        string medium_name(app->getMediumName(imed));
+        if (medium_name.length() > static_cast<std::size_t>(max_medl)) {
+            max_medl = static_cast<int>(medium_name.length());
         }
     }
     if (d_region.size()>nreg)
@@ -275,29 +276,57 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     description += "*******************************************\n";
     if (dose) {
         description +="\n - Regions in dose calculator :";
-        sprintf(buf,"%d\n\n",dose->regions());
-        description += buf;
+        int n = std::snprintf(buf, sizeof(buf), "%d\n\n", dose->regions());
+        if (n < 0 || static_cast<std::size_t>(n) >= sizeof(buf)) {
+            egsFatal("EGS_DoseScoring: Failed to format region count.\n");
+            return;
+        }
+        description.append(buf, static_cast<std::size_t>(n));
     }
     if (doseM) {
         description += " - Medium dose will be calculated\n";
     }
     description += "\n--------------------------------------\n";
-    sprintf(buf,"%*s %*s rho/(g/cm^3)\n",max_medl/2,"medium",max_medl/2," ");
-    description += buf;
+    int medium_heading_width = max_medl/2;
+    string medium_heading = "medium";
+    if (medium_heading_width > static_cast<int>(medium_heading.length())) {
+        description.append(
+            static_cast<std::size_t>(medium_heading_width - medium_heading.length()),
+            ' ');
+    }
+    description += medium_heading;
+    description += ' ';
+    if (medium_heading_width > 1) {
+        description.append(static_cast<std::size_t>(medium_heading_width - 1), ' ');
+    }
+    description += " rho/(g/cm^3)\n";
     description += "--------------------------------------\n";
     for (imed=0; imed < nmedia; imed++) {
-        sprintf(buf,"%-*s",max_medl,app->getMediumName(imed));
-        description += buf;
+        string medium_name(app->getMediumName(imed));
+        description += medium_name;
+        if (medium_name.length() < static_cast<std::size_t>(max_medl)) {
+            description.append(static_cast<std::size_t>(max_medl) -
+                               medium_name.length(), ' ');
+        }
         description += "  ";
-        sprintf(buf,"%11.8f",app->getMediumRho(imed));
-        description += buf;
+        int n = std::snprintf(buf, sizeof(buf), "%11.8f",
+                              app->getMediumRho(imed));
+        if (n < 0 || static_cast<std::size_t>(n) >= sizeof(buf)) {
+            egsFatal("EGS_DoseScoring: Failed to format medium density.\n");
+            return;
+        }
+        description.append(buf, static_cast<std::size_t>(n));
         description += "\n";
     }
     description += "--------------------------------------\n";
     if (norm_u != 1.0) {
         description += " Non-unity user-requested normalization = ";
-        sprintf(buf,"%g\n",norm_u);
-        description += buf;
+        int n = std::snprintf(buf, sizeof(buf), "%g\n", norm_u);
+        if (n < 0 || static_cast<std::size_t>(n) >= sizeof(buf)) {
+            egsFatal("EGS_DoseScoring: Failed to format normalization.\n");
+            return;
+        }
+        description.append(buf, static_cast<std::size_t>(n));
     }
 
     vol_list.clear();
