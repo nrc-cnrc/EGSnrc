@@ -1,0 +1,249 @@
+/*
+###############################################################################
+#
+#  EGSnrc online voxel and dose visualization tool
+#  Copyright (C) 2020 Magdalena Bazalova-Carter and Elise Badun
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Elise Badun, 2020
+#
+#  Contributors:
+#
+###############################################################################
+*/
+
+/* Primary layout */
+body {
+  margin: 25px 50px 25px 50px;
+  font-family: helvetica;
+  font-size: 16px;
+}
+
+.container {
+  display: inline-block;
+}
+
+/* Header layout */
+div.header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.header img {
+  width: 100px;
+  height: 75px;
+}
+
+.header h1 {
+  font-size: 30px;
+  flex-grow: 1;
+  border-bottom: 3px solid black;
+}
+
+text, text.tick, .label {
+  font-size: 12px;
+}
+
+/* Text related */
+p.description {
+  color: grey;
+}
+
+/* Main viewer plot style settings */
+#dose-viewer-container {
+  width: 100%;
+}
+
+.parent {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.parent div {
+  grid-row-start: 1;
+  grid-column-start: 1;
+}
+
+svg.axis-svg {
+  overflow: visible;
+}
+
+g.dose-contour {
+  opacity: 0.6
+}
+
+/* Styling the grid and labels for all plots */
+g.grid,
+g.x-axis,
+g.y-axis {
+  color: lightgrey;
+}
+
+g.grid text,
+g.x-axis text,
+g.y-axis text {
+  color: grey;
+}
+
+
+/* Styling the div to hold the panels, legends, and dose profiles */
+div.volume-holder {
+  border: 2px solid #ccc;
+  border-radius: 20px;
+  margin-top: 10px;
+  width: 100%;
+  overflow: auto;
+  white-space: nowrap;
+  padding: 10px 5px 20px 5px;
+}
+
+div.file-selector {
+  margin: 5px 0px 5px 10px;
+}
+
+div.slider-container {
+  margin: 5px 0px 5px 10px;
+}
+
+div.option-holder {
+  display: flex;
+  flex-direction: row;
+}
+
+div.option {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px;
+}
+
+div.checkbox, button.button-text {
+  margin: 5px 0px;
+}
+
+/* Dose profile settings */
+span.dose-profile-holder {
+  display: inline-grid;
+  vertical-align: bottom;
+}
+
+text.dose-profile-axis-label {
+  color: grey;
+}
+
+span.dose-norm {
+  padding-left: 15px;
+}
+
+path.dose-profile-error {
+  fill: grey
+}
+
+path.dose-profile-dose {
+  fill: none;
+  stroke: black
+}
+
+path.dose-profile-density {
+  fill: none;
+  stroke: red
+}
+
+/* Styling the voxel information */
+div.voxel-info {
+  font-size: 13px;
+  margin: 10px 0px 10px 10px;
+}
+
+.voxel-info-output {
+  color: grey;
+}
+
+/* Styling the marker and crosshairs */
+.crosshair {
+  fill: none;
+  stroke-width: 1px;
+  stroke: rgba(255, 32, 32, 0.3);
+  vector-effect: non-scaling-stroke;
+}
+
+.lines {
+  vector-effect: non-scaling-stroke;
+}
+
+.active {
+  stroke: rgba(255, 32, 32, 0.7);
+}
+
+/* Styling the dose and density legends */
+.legend-holder {
+  vertical-align: top;
+  margin-top: 60px;
+  display: inline-flex;
+}
+
+span.roi-legend-holder {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.legend {
+  display: block;
+}
+
+
+/* Styling the file upload drag and drop area */
+#drop-area {
+  border: 2px dashed #ccc;
+  border-radius: 20px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+#drop-area.highlight {
+  border-color: blue;
+}
+
+/* Make a button look like a hyperlink  */
+button.link-appearance {
+  background: none !important;
+  border: none;
+  padding: 0 !important;
+  font-family: helvetica;
+  color: #069;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Styling the progress bar */
+progress {
+  width: 300px;
+}
+
+/* Defining the hidden class */
+progress.hidden,
+.contour-path.hidden,
+.roi-outline.hidden {
+  opacity: 0;
+}
+
+.cell.hidden,
+div.hidden {
+  opacity: 0.2 !important;
+}

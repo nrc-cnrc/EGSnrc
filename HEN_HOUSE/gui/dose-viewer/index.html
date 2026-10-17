@@ -1,0 +1,103 @@
+<!--
+###############################################################################
+#
+#  EGSnrc online voxel and dose visualization tool
+#  Copyright (C) 2020 Magdalena Bazalova-Carter and Elise Badun
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Elise Badun, 2020
+#
+#  Contributors:
+#
+###############################################################################
+-->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+    <title>UVic Dose Dig</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.js"></script>
+    <script async src="http://cdn.jsdelivr.net/g/filesaver.js"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/dicom-parser@1.8.7/dist/dicomParser.min.js"></script>
+  </head>
+  <body>
+    <div class="header">
+      <h1>UVic Dose Dig</h1>
+      <img src="./images/logo.jpg" alt="XCITE Lab logo" />
+    </div>
+    <p class="description">Upload your own .egsphant, .3ddose, or .dcm files.</p>
+    <div id="drop-area">
+      <p>
+        Drop or select one or more .egsphant, .3ddose, or .dcm files or use existing
+        <button id="test-files" class="link-appearance">test files</button>.
+      </p>
+      <input type="file" id="file-input" multiple accept=".egsphant, .3ddose, .dcm, .DCM" />
+      <br />
+      <progress id="progress-bar" max="100" value="0" class="hidden"></progress>
+    </div>
+    <div id="dose-viewer-container" class="container">
+      <span class="container">
+        <input
+          type="checkbox"
+          id="density-profile-checkbox"
+          name="density-profile-checkbox"
+          value="PlotDensity"
+          style="display: none"
+          disabled
+        />
+        <label for="density-profile-checkbox" style="display: none">
+          Plot density?
+        </label>
+        <br />
+      </span>
+      <div id="image-to-print"></div>
+      <button id="add-volume-viewer">
+        Add new volume viewer
+      </button>
+    </div>
+    <script type="text/javascript" src="./cache-worker.mjs"></script>
+    <script type="text/javascript" src="./index.js"></script>
+    <script type="text/javascript" src="./sliders/slider.js"></script>
+    <script type="text/javascript" src="./sliders/min-max-density-slider.js"></script>
+    <script type="text/javascript" src="./sliders/max-dose-slider.js"></script>
+    <script type="text/javascript" src="./sliders/dose-comp-normalization-slider.js"></script>
+    <script type="text/javascript" src="./read-data.js"></script>
+    <script type="text/javascript" src="./export.mjs"></script>
+    <script type="text/javascript" src="./volumes/volume.js"></script>
+    <script type="text/javascript" src="./volumes/density-volume.js"></script>
+    <script type="text/javascript" src="./volumes/dose-comparison-volume.js"></script>
+    <script type="text/javascript" src="./volumes/dose-volume.js"></script>
+    <script type="text/javascript" src="./volumes/structure-set-volume.js"></script>
+    <script type="text/javascript" src="./zoom.js"></script>
+    <script type="text/javascript" src="./dose-profile.js"></script>
+    <script type="text/javascript" src="./dose-volume-histogram.js"></script>
+    <script type="text/javascript" src="./voxel-coordinates.js"></script>
+    <script type="text/javascript" src="./sliders/slice-slider.js"></script>
+    <script type="text/javascript" src="./panel.js"></script>
+    <script type="text/javascript" src="./volume-viewer.js"></script>
+    <script type="text/javascript" src="./checkbox-button-helper.js"></script>
+    <script type="text/javascript" src="./dicom.js"></script>
+    <script type="text/javascript" src="./file-upload.js"></script>
+  </body>
+</html>
