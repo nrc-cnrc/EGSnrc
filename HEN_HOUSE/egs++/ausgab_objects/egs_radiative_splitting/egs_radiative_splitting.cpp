@@ -67,8 +67,6 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
         return;
     }
 
-    char buf[32];
-
     // Set EGSnrc internal UBS + RR
     if (i_play_RR) {
         app->setRussianRoulette(nsplit);
@@ -87,16 +85,13 @@ void EGS_RadiativeSplitting::setApplication(EGS_Application *App) {
     description += "===========================================\n";
     if (i_play_RR) {
         description +="\n - Splitting radiative events in ";
-        sprintf(buf,"%d",nsplit);
-        description += buf;
+        description += std::to_string(nsplit);
         description +="\n - Play RR with higher order e-/e+ with probability 1/";
-        sprintf(buf,"%d\n\n",nsplit);
-        description += buf;
+        description += std::to_string(nsplit) + "\n\n";
     }
     else if (nsplit > 1) {
         description +="\n - Splitting radiative events in ";
-        sprintf(buf,"%d\n\n",nsplit);
-        description += buf;
+        description += std::to_string(nsplit) + "\n\n";
     }
     else if (nsplit == 1) {
         description +="\n - NO radiative splitting";
