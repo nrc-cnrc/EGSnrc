@@ -337,9 +337,9 @@ int EGS_UniformRunControl::startSimulation() {
        existing files from previous runs.
      */
     if (check_egsdat) {
-        char buf[512];
-        sprintf(buf,"%s_w%d.egsdat",app->getFinalOutputFile().c_str(), ipar);
-        string datFile = egsJoinPath(app->getAppDir(),buf);
+         string data_name = app->getFinalOutputFile() + "_w" +
+                            std::to_string(ipar) + ".egsdat";
+         string datFile = egsJoinPath(app->getAppDir(),data_name);
         if (remove(datFile.c_str()) == 0) {
             egsWarning("EGS_UniformRunControl: %s deleted\n",
                        datFile.c_str());
@@ -595,7 +595,10 @@ bool EGS_JCFControl::createControlFile() {
     if (p->fd < 0) {
         return false;
     }
-    writeControlString();
+    if (!writeControlString()) {
+        p->unlockControlFile();
+        return false;
+    }
     int nwant = strlen(buf)+1;
     int nwrite = WRITE_FILE(p->fd,buf,nwant);
     if (nwrite != nwant) {
@@ -661,8 +664,20 @@ bool EGS_JCFControl::writeControlString() {
     else {
         df = 100;
     }
-    sprintf(buf,"%lld %lld %d %lg %lg %lg %lg %lg %ld ",ntot,nleft,njob,tsum,
-            tsum2,tcount,f,df,start_time);
+    if (nbuf <= 0) {
+        egsWarning("EGS_JCFControl::writeControlString: invalid buffer size %d\n",
+                   nbuf);
+        return false;
+    }
+    int written = std::snprintf(buf, static_cast<size_t>(nbuf),
+                                "%lld %lld %d %lg %lg %lg %lg %lg %ld ",
+                                ntot,nleft,njob,tsum,tsum2,tcount,f,df,
+                                start_time);
+    if (written < 0 || written >= nbuf) {
+        egsWarning("EGS_JCFControl::writeControlString: control string does not "
+                   "fit in the %d-byte buffer\n", nbuf);
+        return false;
+    }
     return true;
 }
 
