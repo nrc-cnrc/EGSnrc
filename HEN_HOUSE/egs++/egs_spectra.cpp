@@ -53,9 +53,21 @@
     #define S_STREAM std::istrstream
 #endif
 #include <limits>
+#include <stdexcept>
 
 
 using namespace std;
+
+template <typename... Args>
+static string formatSpectrumDescription(const char *format, Args... args) {
+    char buf[128];
+    int n = std::snprintf(buf, sizeof(buf), format, args...);
+    if (n < 0 || static_cast<size_t>(n) >= sizeof(buf)) {
+        egsFatal("Failed to format spectrum description.\n");
+        throw std::runtime_error("Failed to format spectrum description");
+    }
+    return string(buf, static_cast<size_t>(n));
+}
 
 
 
@@ -77,9 +89,7 @@ public:
 
     /*! \brief Construct a monoenergetic spectrum with energy \a energy. */
     EGS_MonoEnergy(EGS_Float energy) : EGS_BaseSpectrum(), E(energy) {
-        char buf[1024];
-        sprintf(buf,"monoenergetic %g MeV",E);
-        type = buf;
+        type = formatSpectrumDescription("monoenergetic %g MeV", E);
     };
     ~EGS_MonoEnergy() {};
     EGS_Float expectedAverage() const {
@@ -148,9 +158,8 @@ public:
             sigma = -sigma*0.4246609;    // i.e. assume
         }
         // the user has specified FWHM
-        char buf[1024];
-        sprintf(buf,"Gaussian spectrum with Eo = %g and sigma = %g",Eo,sigma);
-        type = buf;
+        type = formatSpectrumDescription(
+            "Gaussian spectrum with Eo = %g and sigma = %g", Eo, sigma);
         if (Eo - 5*sigma > 0) {
             Emax = Eo + 5*sigma;
         }
@@ -230,10 +239,9 @@ public:
         if (Eo - 4*sleft < 0) egsWarning("EGS_DoubleGaussianSpectrum: "
                                              "for Eo=%g, sigma=%g there will be negative energy sampled\n");
         p = sleft/(sleft + sright);
-        char buf[1024];
-        sprintf(buf,"Double Gaussian spectrum with Eo = %g sig(left) = %g"
-                " and sig(right) = %g",Eo,sleft,sright);
-        type = buf;
+        type = formatSpectrumDescription(
+            "Double Gaussian spectrum with Eo = %g sig(left) = %g"
+            " and sig(right) = %g", Eo, sleft, sright);
     };
     ~EGS_DoubleGaussianSpectrum() {};
     EGS_Float maxEnergy() const {
@@ -296,9 +304,8 @@ public:
     /*! \brief Construct a uniform spectrum between \a emin and \a emax. */
     EGS_UniformSpectrum(EGS_Float emin, EGS_Float emax) : EGS_BaseSpectrum(),
         Emin(emin), Emax(emax), de(emax - emin) {
-        char buf[1024];
-        sprintf(buf,"Uniform spectrum with Emin = %g Emax = %g",Emin,Emax);
-        type = buf;
+        type = formatSpectrumDescription(
+            "Uniform spectrum with Emin = %g Emax = %g", Emin, Emax);
     };
     ~EGS_UniformSpectrum() {};
     EGS_Float maxEnergy() const {
