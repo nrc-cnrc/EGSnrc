@@ -27,12 +27,25 @@
 #
 ###############################################################################
 #
+#  Build usage:
+#  HEN_HOUSE/gui/egs_configure and HEN_HOUSE/cutils/Makefile use this
+#  implementation.
+#
+###############################################################################
+#
 #  Various C functions needed for the implementation of parallel processing
 #  in EGSnrc.
 #
 ###############################################################################
 */
 
+#if !defined(EGS_LOCK_WAIT_BLOCKING) && !defined(EGS_LOCK_WAIT_UNBLOCKING)
+#define EGS_LOCK_WAIT_BLOCKING
+#endif
+
+#if defined(EGS_LOCK_WAIT_UNBLOCKING) && !defined(WIN32) && !defined(_POSIX_C_SOURCE)
+#define _POSIX_C_SOURCE 200809L
+#endif
 
 #include "egs_c_utils.h"
 #include <stdlib.h>
@@ -52,6 +65,9 @@
     #include <errno.h>
     #include <string.h>
     #include <stdio.h>
+#ifdef EGS_LOCK_WAIT_UNBLOCKING
+    #include <time.h>
+#endif
 #endif
 
 static int __my_fd = -1;
@@ -232,6 +248,37 @@ void egsRemoveFile(const char *fname, int *status, int len) {
 static int __is_initialized = 0;
 struct flock fl_write, fl_unlock;
 
+#ifdef EGS_LOCK_WAIT_UNBLOCKING
+#define EGS_LOCK_WAIT_MAX_MS 50
+#define EGS_LOCK_WAIT_TIMEOUT_MS 60000
+
+static unsigned int lock_wait_random(unsigned int upper_bound) {
+    static pid_t seed_pid = (pid_t)-1;
+    static unsigned int state;
+    pid_t current_pid = getpid();
+
+    if (seed_pid != current_pid) {
+        struct timespec now;
+        if (clock_gettime(CLOCK_REALTIME, &now) == 0) {
+            state = (unsigned int)now.tv_sec ^ (unsigned int)now.tv_nsec ^
+                    (unsigned int)current_pid;
+        }
+        else {
+            state = (unsigned int)time(NULL) ^ (unsigned int)current_pid;
+        }
+        if (state == 0) {
+            state = 1;
+        }
+        seed_pid = current_pid;
+    }
+
+    state ^= state << 13;
+    state ^= state >> 17;
+    state ^= state << 5;
+    return state % upper_bound;
+}
+#endif
+
 /*! Init the lock/unlock structures */
 void __init_locking() {
 #ifdef DEBUG
@@ -309,7 +356,6 @@ void egsCloseControlFile(int *status) {
 }
 
 void egsLockControlFile(int *status) {
-    int i1,i2;
 #ifdef DEBUG
     fprintf(stderr,"lock_control_file: fd = %d is_locked = %d\n",__my_fd,
             __is_locked);
@@ -322,58 +368,68 @@ void egsLockControlFile(int *status) {
         *status = -1;
         return;
     }
-
-    /**
-    *   Randomized lock attempt delay introduced to prevent failures caused by
-    *   a race condition on the lock file, when a large number of thread attempt
-    *   to access the lock file concurrently.
-    */
-
-    int elapsedTime = 0;
-    int cycleTime = 0;
-
-    while (elapsedTime < 1200) {
-        /* for the first tries < 120 seconds a randomizer is used to protect
-        *  against multiple threads continuing to collide. Following the first
-        *  2 minutes of this, 30 second intervals are used; this should only
-        *  be triggered if the storage system is very slow.
-        */
-        if (elapsedTime < 120) {
-            cycleTime = 2 + (rand() % 20);
+#ifdef EGS_LOCK_WAIT_UNBLOCKING
+    unsigned int backoff_ms = 1;
+    struct timespec wait_start, now, delay;
+    if (clock_gettime(CLOCK_MONOTONIC, &wait_start) == -1) {
+        *status = errno;
+        return;
+    }
+    while (1) {
+        if (clock_gettime(CLOCK_MONOTONIC, &now) == -1) {
+            *status = errno;
+            return;
         }
-        else {
-            cycleTime = 30;
+        long long elapsed_ns = (long long)(now.tv_sec - wait_start.tv_sec) * 1000000000LL +
+                               (now.tv_nsec - wait_start.tv_nsec);
+        long long remaining_ns = (long long)EGS_LOCK_WAIT_TIMEOUT_MS * 1000000LL - elapsed_ns;
+        if (remaining_ns <= 0) {
+            break;
         }
+
         *status = fcntl(__my_fd,F_SETLK,&fl_write);
         if (*status == 0) {
             __is_locked = 1;
             return;
         }
-        elapsedTime += cycleTime;
-        sleep(cycleTime);
-    }
-    printf("egsLockControlFile: failed to lock file for 1200 seconds...\n");
 
-    /*
-      for(i1=0; i1<5; i1++) {
-          for(i2=0; i2<12; i2++) {
-              *status = fcntl(__my_fd,F_SETLK,&fl_write);
-              if( *status == 0 ) { __is_locked = 1; return; }
-              sleep(1);
-          }
-          printf("egsLockControlFile: failed to lock file for 12 seconds...\n");
-      }
-      */
-    /*
-     *status = fcntl(__my_fd,F_SETLKW,&fl_write);
-    if( *status == 0 ) __is_locked = 1;
-    */
+        unsigned int delay_ms = 1 + lock_wait_random(backoff_ms);
+        long long delay_ns = (long long)delay_ms * 1000000LL;
+        if (delay_ns > remaining_ns) {
+            delay_ns = remaining_ns;
+        }
+        delay.tv_sec = delay_ns / 1000000000LL;
+        delay.tv_nsec = delay_ns % 1000000000LL;
+        if (nanosleep(&delay, NULL) == -1 && errno != EINTR) {
+            *status = errno;
+            return;
+        }
+        if (backoff_ms < EGS_LOCK_WAIT_MAX_MS) {
+            backoff_ms *= 2;
+            if (backoff_ms > EGS_LOCK_WAIT_MAX_MS) {
+                backoff_ms = EGS_LOCK_WAIT_MAX_MS;
+            }
+        }
+    }
+#else
+    do {
+        *status = fcntl(__my_fd,F_SETLKW,&fl_write);
+    } while (*status != 0 && errno == EINTR);
+    if (*status == 0) {
+        __is_locked = 1;
+        return;
+    }
+#endif
 #ifdef DEBUG
     if (*status != 0) {
         perror("error was");
     }
 #endif
-    printf("egsLockControlFile: failed to lock file after 1 minute wait!\n");
+#ifdef EGS_LOCK_WAIT_UNBLOCKING
+    printf("egsLockControlFile: failed to lock file after 60 second wait!\n");
+#else
+    printf("egsLockControlFile: blocking lock failed!\n");
+#endif
 }
 
 void egsUnlockControlFile(int *status) {
