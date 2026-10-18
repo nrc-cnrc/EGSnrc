@@ -42,10 +42,8 @@
 #define EGS_LOCK_WAIT_BLOCKING
 #endif
 
-#ifdef EGS_LOCK_WAIT_UNBLOCKING
 #ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
-#endif
 #endif
 
 #include "egs_c_utils.h"
@@ -157,22 +155,106 @@ void __init_locking() {
   __is_initialized = 1;
 }
 
+static char *__pending_control_temp = NULL;
+static char *__pending_control_final = NULL;
+
+static void discard_pending_control_file(void) {
+  int saved_errno = errno;
+  if (__pending_control_temp) {
+    unlink(__pending_control_temp);
+  }
+  free(__pending_control_temp);
+  free(__pending_control_final);
+  __pending_control_temp = NULL;
+  __pending_control_final = NULL;
+  errno = saved_errno;
+}
+
+static int create_control_file_temp(const char *fname) {
+  static const char suffix[] = ".tmp.XXXXXX";
+  size_t fname_len = strlen(fname);
+  char *temp_name;
+  char *final_name;
+  int saved_errno;
+  int lock_status;
+
+  if (fname_len > (size_t)-1 - sizeof(suffix)) {
+    errno = ENAMETOOLONG;
+    return -1;
+  }
+  temp_name = (char *)malloc(fname_len + sizeof(suffix));
+  final_name = (char *)malloc(fname_len + 1);
+  if (!temp_name || !final_name) {
+    free(temp_name);
+    free(final_name);
+    errno = ENOMEM;
+    return -1;
+  }
+  memcpy(temp_name, fname, fname_len);
+  memcpy(temp_name + fname_len, suffix, sizeof(suffix));
+  memcpy(final_name, fname, fname_len + 1);
+
+  __my_fd = mkstemp(temp_name);
+  if (__my_fd < 0) {
+    saved_errno = errno;
+    free(temp_name);
+    free(final_name);
+    errno = saved_errno;
+    return -1;
+  }
+
+  egsLockControlFile(&lock_status);
+  if (lock_status != 0) {
+    int lock_errno = lock_status > 0 ? lock_status : errno;
+    close(__my_fd);
+    __my_fd = -1;
+    unlink(temp_name);
+    free(temp_name);
+    free(final_name);
+    __is_locked = 0;
+    errno = lock_errno;
+    return -1;
+  }
+
+  __pending_control_temp = temp_name;
+  __pending_control_final = final_name;
+  return 0;
+}
+
+static int publish_control_file_temp(void) {
+  if (!__pending_control_temp) {
+    return 0;
+  }
+  if (link(__pending_control_temp, __pending_control_final) != 0) {
+    return errno;
+  }
+  if (unlink(__pending_control_temp) != 0) {
+    fprintf(stderr, "egsCreateControlFile: could not remove temporary file '%s': %s\n",
+            __pending_control_temp, strerror(errno));
+  }
+  free(__pending_control_temp);
+  free(__pending_control_final);
+  __pending_control_temp = NULL;
+  __pending_control_final = NULL;
+  return 0;
+}
+
 void egsCreateControlFile(const char *fname, int *status, int len) {
 #ifdef DEBUG
   fprintf( stderr,"create_control_file: file name = %s\n",fname);
 #endif
   if( !__is_initialized ) __init_locking();
   *status = 0;
+  discard_pending_control_file();
   if( __my_fd > 0 ) { close(__my_fd); __my_fd = -1; }
-  __my_fd = open(fname,O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-  if( __my_fd < 0 ) {
+  __is_locked = 0;
+  if (create_control_file_temp(fname) != 0) {
 #ifdef DEBUG
     fprintf( stderr,"create_control_file: failed to open file %d\n",errno);
     perror("error is");
 #endif
-    *status = errno; return;
+    *status = errno;
   }
-  egsLockControlFile(status);
 }
 
 void egsOpenControlFile(const char *fname, int *status, int len) {
@@ -213,7 +295,14 @@ void egsOpenControlFile(const char *fname, int *status, int len) {
 }
 
 void egsCloseControlFile(int *status) {
-  if( __my_fd > 0 ) *status = close(__my_fd); else *status = 0;
+  if( __my_fd > 0 ) {
+    int fd = __my_fd;
+    discard_pending_control_file();
+    __my_fd = -1;
+    *status = close(fd);
+  }
+  else *status = 0;
+  __is_locked = 0;
 }
 
 void egsLockControlFile(int *status) {
@@ -288,6 +377,16 @@ void egsUnlockControlFile(int *status) {
 #endif
   if( __is_locked == 0 ) { *status = 0; return; }
   if( __my_fd < 0 ) { *status = -1; return; }
+  *status = publish_control_file_temp();
+  if( *status != 0 ) {
+    int publish_errno = *status;
+    discard_pending_control_file();
+    close(__my_fd);
+    __my_fd = -1;
+    __is_locked = 0;
+    errno = publish_errno;
+    return;
+  }
   *status = fcntl(__my_fd,F_SETLKW,&fl_unlock);
 #ifdef DEBUG
   if ( *status != 0 ) perror("error was");
