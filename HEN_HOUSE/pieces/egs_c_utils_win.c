@@ -32,12 +32,13 @@
 #include "egs_c_locking.c"
 
 #include <io.h>
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 void egsSleep(const int *secs) {
   unsigned int msecs = *secs * 1000;
-  _sleep(msecs);
+  Sleep(msecs);
 }
 
 #ifdef MAKE_WIN_DISTRIBUTION

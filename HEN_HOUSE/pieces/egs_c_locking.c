@@ -22,6 +22,7 @@
 #include <windows.h>
 #include <io.h>
 #include <fcntl.h>
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #else
@@ -40,6 +41,141 @@ static int __is_locked = 0;
 #ifdef WIN32
 
 #define EGS_CONTROL_FILE_LOCK_LENGTH 1000000
+
+static volatile LONG __control_file_temp_sequence = 0;
+static char *__pending_control_temp = NULL;
+static char *__pending_control_final = NULL;
+
+static int win32_error_to_errno(DWORD error) {
+    switch (error) {
+        case ERROR_FILE_EXISTS:
+        case ERROR_ALREADY_EXISTS:
+            return EEXIST;
+        case ERROR_FILE_NOT_FOUND:
+        case ERROR_PATH_NOT_FOUND:
+            return ENOENT;
+        case ERROR_ACCESS_DENIED:
+        case ERROR_SHARING_VIOLATION:
+        case ERROR_LOCK_VIOLATION:
+            return EACCES;
+        case ERROR_NOT_ENOUGH_MEMORY:
+        case ERROR_OUTOFMEMORY:
+            return ENOMEM;
+        case ERROR_FILENAME_EXCED_RANGE:
+            return ENAMETOOLONG;
+        default:
+            return EIO;
+    }
+}
+
+static void discard_pending_control_file(void) {
+    int saved_errno = errno;
+    if (__pending_control_temp) {
+        DeleteFileA(__pending_control_temp);
+    }
+    free(__pending_control_temp);
+    free(__pending_control_final);
+    __pending_control_temp = NULL;
+    __pending_control_final = NULL;
+    errno = saved_errno;
+}
+
+static int create_control_file_temp(const char *fname) {
+    size_t fname_len = strlen(fname);
+    size_t temp_capacity;
+    char *temp_name;
+    char *final_name;
+    HANDLE file_handle = INVALID_HANDLE_VALUE;
+    int lock_status;
+    int attempt;
+
+    if (fname_len > (size_t)-1 - 64) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+    temp_capacity = fname_len + 64;
+    temp_name = (char *)malloc(temp_capacity);
+    final_name = (char *)malloc(fname_len + 1);
+    if (!temp_name || !final_name) {
+        free(temp_name);
+        free(final_name);
+        errno = ENOMEM;
+        return -1;
+    }
+    memcpy(final_name, fname, fname_len + 1);
+
+    for (attempt = 0; attempt < 128; ++attempt) {
+        LONG sequence = InterlockedIncrement(&__control_file_temp_sequence);
+        int path_len = snprintf(temp_name, temp_capacity, "%s.tmp.%lu.%ld",
+                                fname, (unsigned long)GetCurrentProcessId(),
+                                (long)sequence);
+        if (path_len < 0 || (size_t)path_len >= temp_capacity) {
+            errno = ENAMETOOLONG;
+            goto fail;
+        }
+        file_handle = CreateFileA(temp_name, GENERIC_READ | GENERIC_WRITE | DELETE,
+                                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                  NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file_handle != INVALID_HANDLE_VALUE) {
+            break;
+        }
+        DWORD error = GetLastError();
+        if (error != ERROR_FILE_EXISTS && error != ERROR_ALREADY_EXISTS) {
+            errno = win32_error_to_errno(error);
+            goto fail;
+        }
+    }
+    if (file_handle == INVALID_HANDLE_VALUE) {
+        errno = EEXIST;
+        goto fail;
+    }
+
+    __my_fd = _open_osfhandle((intptr_t)file_handle, _O_RDWR);
+    if (__my_fd < 0) {
+        int saved_errno = errno;
+        CloseHandle(file_handle);
+        DeleteFileA(temp_name);
+        errno = saved_errno;
+        goto fail;
+    }
+    egsLockControlFile(&lock_status);
+    if (lock_status != 0) {
+        int lock_errno = lock_status > 0 ? lock_status : errno;
+        _close(__my_fd);
+        __my_fd = -1;
+        DeleteFileA(temp_name);
+        __is_locked = 0;
+        errno = lock_errno;
+        goto fail;
+    }
+
+    __pending_control_temp = temp_name;
+    __pending_control_final = final_name;
+    return 0;
+
+fail:
+    {
+        int saved_errno = errno;
+        free(temp_name);
+        free(final_name);
+        errno = saved_errno;
+    }
+    return -1;
+}
+
+static int publish_control_file_temp(void) {
+    if (!__pending_control_temp) {
+        return 0;
+    }
+    if (!MoveFileExA(__pending_control_temp, __pending_control_final, 0)) {
+        return win32_error_to_errno(GetLastError());
+    }
+    free(__pending_control_temp);
+    free(__pending_control_final);
+    __pending_control_temp = NULL;
+    __pending_control_final = NULL;
+    return 0;
+}
 
 static int lock_control_file(int unlock) {
     HANDLE file_handle = (HANDLE)_get_osfhandle(__my_fd);
@@ -79,35 +215,33 @@ static int lock_control_file(int unlock) {
 
 void egsCreateControlFile(const char *fname, int *status, int len) {
     (void)len;
-    if (__my_fd > 0) {
+    discard_pending_control_file();
+    if (__my_fd >= 0) {
         _close(__my_fd);
         __my_fd = -1;
     }
     __is_locked = 0;
-    __my_fd = _open(fname, _O_CREAT | _O_EXCL | _O_RDWR,
-                    _S_IREAD | _S_IWRITE);
-    if (__my_fd < 0) {
-        *status = __my_fd;
-        perror("egs_create_control_file: _open failed ");
+    if (create_control_file_temp(fname) != 0) {
+        *status = errno;
+        perror("egs_create_control_file: temporary file creation failed ");
+        return;
     }
-    else {
-        *status = 0;
-        egsLockControlFile(status);
-    }
+    *status = 0;
 }
 
 void egsOpenControlFile(const char *fname, int *status, int len) {
     int attempt;
     (void)len;
     *status = 0;
-    if (__my_fd > 0) {
+    discard_pending_control_file();
+    if (__my_fd >= 0) {
         _close(__my_fd);
         __my_fd = -1;
     }
     __is_locked = 0;
     for (attempt = 0; attempt < 15; ++attempt) {
         __my_fd = _open(fname, _O_RDWR, _S_IREAD | _S_IWRITE);
-        if (__my_fd > 0) {
+        if (__my_fd >= 0) {
             break;
         }
         Sleep(1000);
@@ -122,7 +256,8 @@ void egsOpenControlFile(const char *fname, int *status, int len) {
 }
 
 void egsCloseControlFile(int *status) {
-    if (__my_fd > 0) {
+    discard_pending_control_file();
+    if (__my_fd >= 0) {
         int fd = __my_fd;
         __my_fd = -1;
         *status = _close(fd);
@@ -161,6 +296,7 @@ void egsLockControlFile(int *status) {
 
 void egsUnlockControlFile(int *status) {
     long position;
+    int publish_status;
     if (!__is_locked) {
         *status = 0;
         return;
@@ -173,6 +309,16 @@ void egsUnlockControlFile(int *status) {
     if (position != 0) {
         *status = -1;
         perror("egs_unlock_control_file: failed to rewind file ");
+        return;
+    }
+    publish_status = publish_control_file_temp();
+    if (publish_status != 0) {
+        discard_pending_control_file();
+        _close(__my_fd);
+        __my_fd = -1;
+        __is_locked = 0;
+        *status = publish_status;
+        errno = publish_status;
         return;
     }
     *status = lock_control_file(1);
