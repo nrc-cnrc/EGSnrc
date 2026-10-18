@@ -33,6 +33,8 @@
 #  On Unix, EGS_CONTROL_FILE_OPEN_TIMEOUT sets the control-file startup wait
 #  in seconds (default 15; 0 waits indefinitely).
 #  Waits longer than 60 seconds are reported once per minute.
+#  EGS_LOCK_WAIT_BACKOFF_MAX_MS sets the unblocking backoff cap (10-1000 ms,
+#  default 50).
 #
 ###############################################################################
 #
@@ -252,7 +254,9 @@ static int __is_initialized = 0;
 struct flock fl_write, fl_unlock;
 
 #ifdef EGS_LOCK_WAIT_UNBLOCKING
-#define EGS_LOCK_WAIT_MAX_MS 50
+#define EGS_LOCK_WAIT_BACKOFF_DEFAULT_MS 50
+#define EGS_LOCK_WAIT_BACKOFF_MIN_MS 10
+#define EGS_LOCK_WAIT_BACKOFF_LIMIT_MS 1000
 #define EGS_LOCK_WAIT_TIMEOUT_MS 60000
 
 static unsigned int lock_wait_random(unsigned int upper_bound) {
@@ -279,6 +283,27 @@ static unsigned int lock_wait_random(unsigned int upper_bound) {
     state ^= state >> 17;
     state ^= state << 5;
     return state % upper_bound;
+}
+
+static int get_lock_wait_backoff_max_ms(unsigned int *max_backoff_ms) {
+    const char *value = getenv("EGS_LOCK_WAIT_BACKOFF_MAX_MS");
+    char *end;
+    long parsed;
+
+    if (!value) {
+        *max_backoff_ms = EGS_LOCK_WAIT_BACKOFF_DEFAULT_MS;
+        return 0;
+    }
+
+    errno = 0;
+    parsed = strtol(value, &end, 10);
+    if (errno == ERANGE || end == value || *end != '\0' ||
+        parsed < EGS_LOCK_WAIT_BACKOFF_MIN_MS ||
+        parsed > EGS_LOCK_WAIT_BACKOFF_LIMIT_MS) {
+        return EINVAL;
+    }
+    *max_backoff_ms = (unsigned int)parsed;
+    return 0;
 }
 #endif
 
@@ -413,7 +438,13 @@ void egsLockControlFile(int *status) {
     }
 #ifdef EGS_LOCK_WAIT_UNBLOCKING
     unsigned int backoff_ms = 1;
+    unsigned int max_backoff_ms;
     struct timespec wait_start, now, delay;
+    *status = get_lock_wait_backoff_max_ms(&max_backoff_ms);
+    if (*status != 0) {
+        fprintf(stderr, "Invalid EGS_LOCK_WAIT_BACKOFF_MAX_MS: expected 10-1000 milliseconds.\n");
+        return;
+    }
     if (clock_gettime(CLOCK_MONOTONIC, &wait_start) == -1) {
         *status = errno;
         return;
@@ -447,10 +478,10 @@ void egsLockControlFile(int *status) {
             *status = errno;
             return;
         }
-        if (backoff_ms < EGS_LOCK_WAIT_MAX_MS) {
+        if (backoff_ms < max_backoff_ms) {
             backoff_ms *= 2;
-            if (backoff_ms > EGS_LOCK_WAIT_MAX_MS) {
-                backoff_ms = EGS_LOCK_WAIT_MAX_MS;
+            if (backoff_ms > max_backoff_ms) {
+                backoff_ms = max_backoff_ms;
             }
         }
     }
