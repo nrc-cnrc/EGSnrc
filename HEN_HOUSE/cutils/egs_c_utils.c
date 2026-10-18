@@ -125,6 +125,7 @@ void  egsCreateControlFile(const char *fname, int *status, int len) {
         _close(__my_fd);
         __my_fd = -1;
     }
+    __is_locked = 0;
     __my_fd = _open(fname,_O_CREAT | _O_EXCL | _O_RDWR, _S_IREAD | _S_IWRITE);
     if (__my_fd < 0) {
         *status = __my_fd;
@@ -132,6 +133,7 @@ void  egsCreateControlFile(const char *fname, int *status, int len) {
     }
     else {
         *status = 0;
+        egsLockControlFile(status);
     }
 }
 
@@ -142,6 +144,7 @@ void  egsOpenControlFile(const char *fname, int *status, int len) {
         _close(__my_fd);
         __my_fd = -1;
     }
+    __is_locked = 0;
     for (t=0; t<15; t++) {
         __my_fd = _open(fname,_O_RDWR,_S_IREAD | _S_IWRITE);
         if (__my_fd > 0) {
@@ -160,6 +163,7 @@ void  egsOpenControlFile(const char *fname, int *status, int len) {
     else {
         *status = 0;
     }
+    __is_locked = 0;
 }
 
 void  egsCloseControlFile(int *status) {
@@ -171,6 +175,7 @@ void  egsCloseControlFile(int *status) {
     else {
         *status = 0;
     }
+    __is_locked = 0;
 }
 
 void  egsLockControlFile(int *status) {

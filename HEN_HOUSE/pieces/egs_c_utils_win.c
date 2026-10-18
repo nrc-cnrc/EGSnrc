@@ -81,11 +81,15 @@ static int lock_control_file(int unlock) {
 
 void  egsCreateControlFile(const char *fname, int *status, int len) {
   if( __my_fd > 0 ) { _close(__my_fd); __my_fd = -1; }
+  __is_locked = 0;
   __my_fd = _open(fname,_O_CREAT | _O_EXCL | _O_RDWR, _S_IREAD | _S_IWRITE);
   if( __my_fd < 0 ) {
     *status = __my_fd;
     perror("egs_create_control_file: _open failed ");
-  } else *status = 0;
+  } else {
+    *status = 0;
+    egsLockControlFile(status);
+  }
 }
 
 #ifdef MAKE_WIN_DISTRIBUTION
@@ -109,6 +113,7 @@ void C_CONVENTION EGS_CREATE_CONTROL_FILE__(const char *fname, int *status, int 
 void  egsOpenControlFile(const char *fname, int *status, int len) {
   int t; *status = 0;
   if( __my_fd > 0 ) { _close(__my_fd); __my_fd = -1; }
+  __is_locked = 0;
   for(t=0; t<15; t++) {
     __my_fd = _open(fname,_O_RDWR,_S_IREAD | _S_IWRITE);
     if( __my_fd > 0 ) break;
@@ -143,6 +148,7 @@ void  egsCloseControlFile(int *status) {
     __my_fd = -1;
     *status = _close(fd);
   } else *status = 0;
+  __is_locked = 0;
 }
 #ifdef MAKE_WIN_DISTRIBUTION
 void C_CONVENTION egs_close_control_file_(int *status) {
