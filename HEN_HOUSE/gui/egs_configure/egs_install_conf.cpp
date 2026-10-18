@@ -205,6 +205,8 @@ void QInstallPage::create_egs_c_utils(){
                 egsLibDir + (QString)"egs_c_utils.h")           ||
          !copy( henHouse() + (QString)"cutils/egs_c_utils.c",
                 egsLibDir + (QString)"egs_c_utils.c")           ||
+         !copy( henHouse() + (QString)"pieces/egs_c_locking.c",
+                egsLibDir + (QString)"egs_c_locking.c")         ||
          !copy( henHouse() + (QString)"cutils/load_beamlib.c",
                 egsLibDir + (QString)"load_beamlib.c")          ||
          !copy( henHouse() + (QString)"cutils/load_vculib.c",

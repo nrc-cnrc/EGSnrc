@@ -28,16 +28,6 @@
 ###############################################################################
 */
 
-
-/* Build usage:
- * HEN_HOUSE/scripts/configure copies this file to the machine build directory
- * as egs_c_utils.c. HEN_HOUSE/gui/egs_configure and HEN_HOUSE/cutils/Makefile
- * use the separate HEN_HOUSE/cutils/egs_c_utils.c implementation.
- */
-/* Select with -DEGS_LOCK_WAIT_BLOCKING or -DEGS_LOCK_WAIT_UNBLOCKING; blocking is the default. */
-/* EGS_CONTROL_FILE_OPEN_TIMEOUT is in seconds (default 15; 0 waits indefinitely).
-  Waits longer than 60 seconds are reported once per minute. */
-/* EGS_LOCK_WAIT_BACKOFF_MAX_MS: unblocking backoff cap, 10-1000 ms (default 50). */
 #if !defined(EGS_LOCK_WAIT_BLOCKING) && !defined(EGS_LOCK_WAIT_UNBLOCKING)
 #define EGS_LOCK_WAIT_BLOCKING
 #endif
@@ -47,397 +37,39 @@
 #endif
 
 #include "egs_c_utils.h"
+#include "egs_c_locking.c"
 
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
-#ifdef EGS_LOCK_WAIT_UNBLOCKING
-#include <time.h>
-#endif
+#include <stdlib.h>
+#include <unistd.h>
 
-static int __my_fd = -1;
-static int __is_locked = 0;
-static int __is_initialized = 0;
-struct flock fl_write, fl_unlock;
-
-#define EGS_CONTROL_FILE_OPEN_TIMEOUT_DEFAULT 15
-
-static int get_control_file_open_timeout(long *timeout) {
-  const char *value = getenv("EGS_CONTROL_FILE_OPEN_TIMEOUT");
-  char *end;
-  long parsed;
-
-  if (!value) {
-    *timeout = EGS_CONTROL_FILE_OPEN_TIMEOUT_DEFAULT;
-    return 0;
-  }
-
-  errno = 0;
-  parsed = strtol(value, &end, 10);
-  if (errno == ERANGE || end == value || *end != '\0' || parsed < 0) {
-    return EINVAL;
-  }
-  *timeout = parsed;
-  return 0;
+void egsSleep(const int *secs) {
+  sleep(*secs);
 }
 
-#ifdef EGS_LOCK_WAIT_UNBLOCKING
-#define EGS_LOCK_WAIT_BACKOFF_DEFAULT_MS 50
-#define EGS_LOCK_WAIT_BACKOFF_MIN_MS 10
-#define EGS_LOCK_WAIT_BACKOFF_LIMIT_MS 1000
-#define EGS_LOCK_WAIT_TIMEOUT_MS 60000
-
-static unsigned int lock_wait_random(unsigned int upper_bound) {
-  static pid_t seed_pid = (pid_t)-1;
-  static unsigned int state;
-  pid_t current_pid = getpid();
-
-  if (seed_pid != current_pid) {
-    struct timespec now;
-    if (clock_gettime(CLOCK_REALTIME, &now) == 0) {
-      state = (unsigned int)now.tv_sec ^ (unsigned int)now.tv_nsec ^
-              (unsigned int)current_pid;
-    }
-    else {
-      state = (unsigned int)time(NULL) ^ (unsigned int)current_pid;
-    }
-    if (state == 0) state = 1;
-    seed_pid = current_pid;
+void egsFtoString(const int *size, int *n, char *str, void *a, int len) {
+  (void)len;
+  if (*size == 4) {
+    float *tmp = (float *)a;
+    /* Well, it seems snprintf is not supported on all Unix compilers.
+       Keep using sprintf for compatibility with older toolchains. */
+    *n = sprintf(str, "%g", *tmp);
   }
-
-  state ^= state << 13;
-  state ^= state >> 17;
-  state ^= state << 5;
-  return state % upper_bound;
-}
-
-static int get_lock_wait_backoff_max_ms(unsigned int *max_backoff_ms) {
-  const char *value = getenv("EGS_LOCK_WAIT_BACKOFF_MAX_MS");
-  char *end;
-  long parsed;
-
-  if (!value) {
-    *max_backoff_ms = EGS_LOCK_WAIT_BACKOFF_DEFAULT_MS;
-    return 0;
+  else if (*size == 8) {
+    double *tmp = (double *)a;
+    *n = sprintf(str, "%lg", *tmp);
   }
-
-  errno = 0;
-  parsed = strtol(value, &end, 10);
-  if (errno == ERANGE || end == value || *end != '\0' ||
-      parsed < EGS_LOCK_WAIT_BACKOFF_MIN_MS ||
-      parsed > EGS_LOCK_WAIT_BACKOFF_LIMIT_MS) {
-    return EINVAL;
-  }
-  *max_backoff_ms = (unsigned int)parsed;
-  return 0;
-}
-
-#endif
-
-/*! Init the lock/unlock structures */
-void __init_locking() {
-#ifdef DEBUG
-  fprintf( stderr,"__init_locking()\n");
-#endif
-  fl_write.l_type = F_WRLCK;
-  fl_write.l_whence = SEEK_SET;
-  fl_write.l_start = 0;
-  fl_write.l_len = 0;
-  fl_unlock.l_type = F_UNLCK;
-  fl_unlock.l_whence = SEEK_SET;
-  fl_unlock.l_start = 0;
-  fl_unlock.l_len = 0;
-  __is_initialized = 1;
-}
-
-static char *__pending_control_temp = NULL;
-static char *__pending_control_final = NULL;
-
-static void discard_pending_control_file(void) {
-  int saved_errno = errno;
-  if (__pending_control_temp) {
-    unlink(__pending_control_temp);
-  }
-  free(__pending_control_temp);
-  free(__pending_control_final);
-  __pending_control_temp = NULL;
-  __pending_control_final = NULL;
-  errno = saved_errno;
-}
-
-static int create_control_file_temp(const char *fname) {
-  static const char suffix[] = ".tmp.XXXXXX";
-  size_t fname_len = strlen(fname);
-  char *temp_name;
-  char *final_name;
-  int saved_errno;
-  int lock_status;
-
-  if (fname_len > (size_t)-1 - sizeof(suffix)) {
-    errno = ENAMETOOLONG;
-    return -1;
-  }
-  temp_name = (char *)malloc(fname_len + sizeof(suffix));
-  final_name = (char *)malloc(fname_len + 1);
-  if (!temp_name || !final_name) {
-    free(temp_name);
-    free(final_name);
-    errno = ENOMEM;
-    return -1;
-  }
-  memcpy(temp_name, fname, fname_len);
-  memcpy(temp_name + fname_len, suffix, sizeof(suffix));
-  memcpy(final_name, fname, fname_len + 1);
-
-  __my_fd = mkstemp(temp_name);
-  if (__my_fd < 0) {
-    saved_errno = errno;
-    free(temp_name);
-    free(final_name);
-    errno = saved_errno;
-    return -1;
-  }
-
-  egsLockControlFile(&lock_status);
-  if (lock_status != 0) {
-    int lock_errno = lock_status > 0 ? lock_status : errno;
-    close(__my_fd);
-    __my_fd = -1;
-    unlink(temp_name);
-    free(temp_name);
-    free(final_name);
-    __is_locked = 0;
-    errno = lock_errno;
-    return -1;
-  }
-
-  __pending_control_temp = temp_name;
-  __pending_control_final = final_name;
-  return 0;
-}
-
-static int publish_control_file_temp(void) {
-  if (!__pending_control_temp) {
-    return 0;
-  }
-  if (link(__pending_control_temp, __pending_control_final) != 0) {
-    return errno;
-  }
-  if (unlink(__pending_control_temp) != 0) {
-    fprintf(stderr, "egsCreateControlFile: could not remove temporary file '%s': %s\n",
-            __pending_control_temp, strerror(errno));
-  }
-  free(__pending_control_temp);
-  free(__pending_control_final);
-  __pending_control_temp = NULL;
-  __pending_control_final = NULL;
-  return 0;
-}
-
-void egsCreateControlFile(const char *fname, int *status, int len) {
-#ifdef DEBUG
-  fprintf( stderr,"create_control_file: file name = %s\n",fname);
-#endif
-  if( !__is_initialized ) __init_locking();
-  *status = 0;
-  discard_pending_control_file();
-  if( __my_fd > 0 ) { close(__my_fd); __my_fd = -1; }
-  __is_locked = 0;
-  if (create_control_file_temp(fname) != 0) {
-#ifdef DEBUG
-    fprintf( stderr,"create_control_file: failed to open file %d\n",errno);
-    perror("error is");
-#endif
-    *status = errno;
+  else {
+    *n = 0;
   }
 }
 
-void egsOpenControlFile(const char *fname, int *status, int len) {
-  int open_error, sleep_remaining;
-  long timeout, waited = 0;
-  *status = get_control_file_open_timeout(&timeout);
-  if (*status != 0) {
-    fprintf(stderr, "Invalid EGS_CONTROL_FILE_OPEN_TIMEOUT: expected seconds >= 0.\n");
-    return;
-  }
-  if( !__is_initialized ) __init_locking();
-  if( __my_fd > 0 ) { close(__my_fd); __my_fd = -1; }
-  /* This function is called from jobs > 1. Job 1 creates the control file.
-     But if for some reasons it took job 1 longer than subsequent job,
-     the control file may not be there yet => we try several times and
-     sleep in between.
-  */
-  for(;;) {
-    __my_fd = open(fname,O_RDWR);
-    if( __my_fd > 0 ) break;
-    open_error = errno;
-    if (open_error != ENOENT && open_error != EINTR) {
-      *status = open_error;
-      return;
-    }
-    if (timeout != 0 && waited >= timeout) {
-      *status = open_error;
-      return;
-    }
-    if (waited >= 60 && waited % 60 == 0) {
-      fprintf(stderr, "egsOpenControlFile: still waiting for control file '%s' after %ld seconds.\n",
-              fname, waited);
-    }
-    sleep_remaining = 1;
-    while (sleep_remaining > 0) sleep_remaining = sleep(sleep_remaining);
-    ++waited;
-  }
+void egsPerror(const char *str, int len) {
+  (void)len;
+  perror(str);
 }
-
-void egsCloseControlFile(int *status) {
-  if( __my_fd > 0 ) {
-    int fd = __my_fd;
-    discard_pending_control_file();
-    __my_fd = -1;
-    *status = close(fd);
-  }
-  else *status = 0;
-  __is_locked = 0;
-}
-
-void egsLockControlFile(int *status) {
-#ifdef DEBUG
-  fprintf(stderr,"lock_control_file: fd = %d is_locked = %d\n",__my_fd,
-       __is_locked);
-#endif
-  if( __is_locked == 1 ) { *status = 0; return; }
-  if( __my_fd < 0 ) { *status = -1; return; }
-#ifdef EGS_LOCK_WAIT_UNBLOCKING
-  unsigned int backoff_ms = 1;
-  unsigned int max_backoff_ms;
-  struct timespec wait_start, now, delay;
-  *status = get_lock_wait_backoff_max_ms(&max_backoff_ms);
-  if (*status != 0) {
-    fprintf(stderr, "Invalid EGS_LOCK_WAIT_BACKOFF_MAX_MS: expected 10-1000 milliseconds.\n");
-    return;
-  }
-  if (clock_gettime(CLOCK_MONOTONIC, &wait_start) == -1) {
-    *status = errno;
-    return;
-  }
-  while (1) {
-    if (clock_gettime(CLOCK_MONOTONIC, &now) == -1) {
-      *status = errno;
-      return;
-    }
-    long long elapsed_ns = (long long)(now.tv_sec - wait_start.tv_sec) * 1000000000LL +
-                           (now.tv_nsec - wait_start.tv_nsec);
-    long long remaining_ns = (long long)EGS_LOCK_WAIT_TIMEOUT_MS * 1000000LL - elapsed_ns;
-    if (remaining_ns <= 0) break;
-
-    *status = fcntl(__my_fd,F_SETLK,&fl_write);
-    if (*status == 0) { __is_locked = 1; return; }
-
-    unsigned int delay_ms = 1 + lock_wait_random(backoff_ms);
-    long long delay_ns = (long long)delay_ms * 1000000LL;
-    if (delay_ns > remaining_ns) delay_ns = remaining_ns;
-    delay.tv_sec = delay_ns / 1000000000LL;
-    delay.tv_nsec = delay_ns % 1000000000LL;
-    if (nanosleep(&delay, NULL) == -1 && errno != EINTR) {
-      *status = errno;
-      return;
-    }
-    if (backoff_ms < max_backoff_ms) {
-      backoff_ms *= 2;
-      if (backoff_ms > max_backoff_ms) {
-        backoff_ms = max_backoff_ms;
-      }
-    }
-  }
-#else
-  do {
-    *status = fcntl(__my_fd,F_SETLKW,&fl_write);
-  } while( *status != 0 && errno == EINTR );
-  if( *status == 0 ) { __is_locked = 1; return; }
-#endif
-#ifdef DEBUG
-  if ( *status != 0 ) perror("error was");
-#endif
-#ifdef EGS_LOCK_WAIT_UNBLOCKING
-  printf("egsLockControlFile: failed to lock file after 60 second wait!\n");
-#else
-  printf("egsLockControlFile: blocking lock failed!\n");
-#endif
-}
-
-void egsUnlockControlFile(int *status) {
-#ifdef DEBUG
-  fprintf(stderr,"unlock_control_file: fd = %d is_locked = %d\n",__my_fd,
-       __is_locked);
-#endif
-  if( __is_locked == 0 ) { *status = 0; return; }
-  if( __my_fd < 0 ) { *status = -1; return; }
-  *status = publish_control_file_temp();
-  if( *status != 0 ) {
-    int publish_errno = *status;
-    discard_pending_control_file();
-    close(__my_fd);
-    __my_fd = -1;
-    __is_locked = 0;
-    errno = publish_errno;
-    return;
-  }
-  *status = fcntl(__my_fd,F_SETLKW,&fl_unlock);
-#ifdef DEBUG
-  if ( *status != 0 ) perror("error was");
-#endif
-  if( *status == 0 ) __is_locked = 0;
-}
-
-void egsRewindControlFile(int *status) {
-  if( __my_fd < 0 ) { *status = -1; return; }
-  *status=0;
-  if( __is_locked == 0 ) egsLockControlFile(status);
-  if( *status != 0 ) return;
-  *status = lseek(__my_fd,0,SEEK_SET);
-}
-
-void egsWriteControlFile(const char *buf, const int *n, int *status, int len) {
-  if( __my_fd < 0 ) { *status = 0; return; }
-  *status = write(__my_fd,buf,*n);
-}
-
-void egsReadControlFile(char *buf, const int *n, int *status, int len) {
-  if( __my_fd < 0 ) { *status = 0; return; }
-  *status = read(__my_fd,buf,*n);
-}
-
-void egsSleep(const int *secs) { sleep(*secs); }
-
-void egsFtoString(const int *size, int *n, char *str,void *a, int len) {
-  size_t x = *n;
-  if( *size == 4 ) {
-    float *tmp = (float *) a;
-    /* Well, it seems snprintf is not supported by all Unixes (e.g. DEC).
-       I'm too lazy to make yet another test during the installation =>
-       just use sprintf instead.
-    if( x > 0 ) *n = snprintf(str,x,"%g",*tmp);
-    else *n = sprintf(str,"%g",*tmp); */
-    *n = sprintf(str,"%g",*tmp);
-  }
-  else if( *size == 8 ) {
-    double *tmp = (double *) a;
-    /*
-    if( x > 0 ) *n = snprintf(str,x,"%lg",*tmp);
-    else *n = sprintf(str,"%lg",*tmp);
-    */
-    *n = sprintf(str,"%lg",*tmp);
-  }
-  else *n = 0;
-}
-
-void egsPerror(const char *str, int len) { perror(str); }
 
 void egsRemoveFile(const char *fname, int *status, int len) {
-   *status = unlink(fname);
+  (void)len;
+  *status = unlink(fname);
 }
