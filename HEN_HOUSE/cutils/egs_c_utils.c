@@ -36,7 +36,6 @@
 #  EGS_LOCK_WAIT_BACKOFF_MAX_MS sets the unblocking backoff cap (10-1000 ms,
 #  default 50).
 #
-###############################################################################
 #
 #  Various C functions needed for the implementation of parallel processing
 #  in EGSnrc.
@@ -56,12 +55,13 @@
 #include <stdlib.h>
 
 #ifdef WIN32
+    #include <windows.h>
     #include <io.h>
     #include <stdio.h>
+    #include <errno.h>
     #include <fcntl.h>
     #include <sys/types.h>
     #include <sys/stat.h>
-    #include <sys/locking.h>
 #else
     #include <unistd.h>
     #include <fcntl.h>
@@ -79,6 +79,46 @@ static int __my_fd = -1;
 static int __is_locked = 0;
 
 #ifdef WIN32
+
+#define EGS_CONTROL_FILE_LOCK_LENGTH 1000000
+
+static int lock_control_file(int unlock) {
+    HANDLE file_handle = (HANDLE)_get_osfhandle(__my_fd);
+    OVERLAPPED overlapped = {0};
+    BOOL result;
+
+    if (file_handle == INVALID_HANDLE_VALUE) {
+        errno = EBADF;
+        return errno;
+    }
+
+    if (unlock) {
+        result = UnlockFileEx(file_handle, 0, EGS_CONTROL_FILE_LOCK_LENGTH, 0,
+                              &overlapped);
+    }
+    else {
+        result = LockFileEx(file_handle, LOCKFILE_EXCLUSIVE_LOCK, 0,
+                            EGS_CONTROL_FILE_LOCK_LENGTH, 0, &overlapped);
+    }
+
+    if (result) {
+        return 0;
+    }
+
+    switch (GetLastError()) {
+        case ERROR_ACCESS_DENIED:
+        case ERROR_LOCK_VIOLATION:
+            errno = EACCES;
+            break;
+        case ERROR_INVALID_HANDLE:
+            errno = EBADF;
+            break;
+        default:
+            errno = EIO;
+            break;
+    }
+    return errno;
+}
 
 void  egsCreateControlFile(const char *fname, int *status, int len) {
     if (__my_fd > 0) {
@@ -124,7 +164,9 @@ void  egsOpenControlFile(const char *fname, int *status, int len) {
 
 void  egsCloseControlFile(int *status) {
     if (__my_fd > 0) {
-        *status = _close(__my_fd);
+        int fd = __my_fd;
+        __my_fd = -1;
+        *status = _close(fd);
     }
     else {
         *status = 0;
@@ -149,12 +191,12 @@ void  egsLockControlFile(int *status) {
         perror("perror: ");
         return;
     }
-    *status = _locking(__my_fd,_LK_LOCK,1000000L);
-    if (*status = 0) {
+    *status = lock_control_file(0);
+    if (*status == 0) {
         __is_locked = 1;
     }
     else {
-        fprintf(stderr,"_locking returned %d\n",*status);
+        fprintf(stderr,"LockFileEx failed with status %d\n",*status);
         perror("perror: ");
     }
 }
@@ -175,12 +217,12 @@ void  egsUnlockControlFile(int *status) {
         perror("egs_unlock_control_file: failed to rewind file ");
         return;
     }
-    *status = _locking(__my_fd,_LK_UNLCK,1000000L);
+    *status = lock_control_file(1);
     if (*status == 0) {
         __is_locked = 0;
     }
     else {
-        fprintf(stderr,"egs_unlock: _locking returned %d\n",*status);
+        fprintf(stderr,"egs_unlock: UnlockFileEx returned %d\n",*status);
         perror("perror: ");
     }
 }
@@ -200,12 +242,12 @@ void egsRewindControlFile(int *status) {
         return;
     }
     if (__is_locked == 0) {
-        *status = _locking(__my_fd,_LK_LOCK,1000000L);
+        *status = lock_control_file(0);
         if (*status == 0) {
             __is_locked = 1;
         }
         else {
-            perror("_locking failed: ");
+            perror("LockFileEx failed: ");
         }
     }
     else {
