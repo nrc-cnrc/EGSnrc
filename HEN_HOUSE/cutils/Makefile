@@ -38,7 +38,7 @@ all: $(DEST_DIR)load_beamlib.o $(DEST_DIR)egs_c_utils.o $(DEST_DIR)load_vculib.o
 $(DEST_DIR)load_beamlib.o: load_beamlib.c $(DEST_DIR)egs_config1.h
 	$(CC) -c -I$(INC_DIR) $(C_DEFINES) $(C_FLAGS) $(COUT)$@ load_beamlib.c
 
-$(DEST_DIR)egs_c_utils.o: egs_c_utils.c egs_c_utils.h $(DEST_DIR)egs_config1.h
+$(DEST_DIR)egs_c_utils.o: egs_c_utils.c egs_c_utils.h $(DEST_DIR)egs_config1.h $(DEST_DIR)egs_c_locking.c
 	$(CC) -c -I$(INC_DIR) $(C_FLAGS) $(C_DEFINES) $(COUT)$@ egs_c_utils.c
 
 $(DEST_DIR)load_vculib.o: load_vculib.c $(DEST_DIR)egs_config1.h

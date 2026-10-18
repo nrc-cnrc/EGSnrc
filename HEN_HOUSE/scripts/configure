@@ -1700,11 +1700,12 @@ if test "x$have_c_compiler" = xyes; then
     printf $format "Creating egs_c_utils.h and egs_c_utils.c ... " >&2
     cp -f $HEN_HOUSE/pieces/egs_c_utils.h egs_c_utils.h
     cp -f $HEN_HOUSE/pieces/egs_c_utils_unix.c egs_c_utils.c
+    cp -f $HEN_HOUSE/pieces/egs_c_locking.c egs_c_locking.c
     echo "OK" >&2
 
     printf $format "Compiling egs_c_utils.c ... " >&2
     echo " ******************** compile egs_c_utils.c **************" >&5
-    testc_compile='$CC $C_FLAGS -c -o egs_c_utils.$test_objext egs_c_utils.c >&5'
+    testc_compile='$CC $C_FLAGS -c -I. -o egs_c_utils.$test_objext egs_c_utils.c >&5'
     if { (eval $testc_compile) 2>&5; test_status=$?; (exit $test_status); }; then
       echo "OK" >&2
       c_compiler_works=yes
