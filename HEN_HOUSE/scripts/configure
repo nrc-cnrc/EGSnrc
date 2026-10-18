@@ -1705,7 +1705,7 @@ if test "x$have_c_compiler" = xyes; then
 
     printf $format "Compiling egs_c_utils.c ... " >&2
     echo " ******************** compile egs_c_utils.c **************" >&5
-    testc_compile='$CC $C_FLAGS -c -o egs_c_utils.$test_objext egs_c_utils.c >&5'
+    testc_compile='$CC $C_FLAGS -c -I. -o egs_c_utils.$test_objext egs_c_utils.c >&5'
     if { (eval $testc_compile) 2>&5; test_status=$?; (exit $test_status); }; then
       echo "OK" >&2
       c_compiler_works=yes
