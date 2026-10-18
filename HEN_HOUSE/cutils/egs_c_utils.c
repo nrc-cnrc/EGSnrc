@@ -30,6 +30,9 @@
 #  Build usage:
 #  HEN_HOUSE/gui/egs_configure and HEN_HOUSE/cutils/Makefile use this
 #  implementation.
+#  On Unix, EGS_CONTROL_FILE_OPEN_TIMEOUT sets the control-file startup wait
+#  in seconds (default 15; 0 waits indefinitely).
+#  Waits longer than 60 seconds are reported once per minute.
 #
 ###############################################################################
 #
@@ -279,6 +282,27 @@ static unsigned int lock_wait_random(unsigned int upper_bound) {
 }
 #endif
 
+#define EGS_CONTROL_FILE_OPEN_TIMEOUT_DEFAULT 15
+
+static int get_control_file_open_timeout(long *timeout) {
+    const char *value = getenv("EGS_CONTROL_FILE_OPEN_TIMEOUT");
+    char *end;
+    long parsed;
+
+    if (!value) {
+        *timeout = EGS_CONTROL_FILE_OPEN_TIMEOUT_DEFAULT;
+        return 0;
+    }
+
+    errno = 0;
+    parsed = strtol(value, &end, 10);
+    if (errno == ERANGE || end == value || *end != '\0' || parsed < 0) {
+        return EINVAL;
+    }
+    *timeout = parsed;
+    return 0;
+}
+
 /*! Init the lock/unlock structures */
 void __init_locking() {
 #ifdef DEBUG
@@ -320,8 +344,13 @@ void egsCreateControlFile(const char *fname, int *status, int len) {
 }
 
 void egsOpenControlFile(const char *fname, int *status, int len) {
-    int t;
-    *status = 0;
+    int open_error, sleep_remaining;
+    long timeout, waited = 0;
+    *status = get_control_file_open_timeout(&timeout);
+    if (*status != 0) {
+        fprintf(stderr, "Invalid EGS_CONTROL_FILE_OPEN_TIMEOUT: expected seconds >= 0.\n");
+        return;
+    }
     if (!__is_initialized) {
         __init_locking();
     }
@@ -334,15 +363,29 @@ void egsOpenControlFile(const char *fname, int *status, int len) {
        the control file may not be there yet => we try several times and
        sleep in between.
     */
-    for (t=0; t<15; t++) {
+    for (;;) {
         __my_fd = open(fname,O_RDWR);
         if (__my_fd > 0) {
             break;
         }
-        sleep(1);
-    }
-    if (__my_fd < 0) {
-        *status = errno;
+        open_error = errno;
+        if (open_error != ENOENT && open_error != EINTR) {
+            *status = open_error;
+            return;
+        }
+        if (timeout != 0 && waited >= timeout) {
+            *status = open_error;
+            return;
+        }
+        if (waited >= 60 && waited % 60 == 0) {
+            fprintf(stderr, "egsOpenControlFile: still waiting for control file '%s' after %ld seconds.\n",
+                    fname, waited);
+        }
+        sleep_remaining = 1;
+        while (sleep_remaining > 0) {
+            sleep_remaining = sleep(sleep_remaining);
+        }
+        ++waited;
     }
 }
 

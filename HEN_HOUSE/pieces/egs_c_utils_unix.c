@@ -35,6 +35,8 @@
  * use the separate HEN_HOUSE/cutils/egs_c_utils.c implementation.
  */
 /* Select with -DEGS_LOCK_WAIT_BLOCKING or -DEGS_LOCK_WAIT_UNBLOCKING; blocking is the default. */
+/* EGS_CONTROL_FILE_OPEN_TIMEOUT is in seconds (default 15; 0 waits indefinitely).
+  Waits longer than 60 seconds are reported once per minute. */
 #if !defined(EGS_LOCK_WAIT_BLOCKING) && !defined(EGS_LOCK_WAIT_UNBLOCKING)
 #define EGS_LOCK_WAIT_BLOCKING
 #endif
@@ -52,6 +54,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #ifdef EGS_LOCK_WAIT_UNBLOCKING
@@ -62,6 +65,27 @@ static int __my_fd = -1;
 static int __is_locked = 0;
 static int __is_initialized = 0;
 struct flock fl_write, fl_unlock;
+
+#define EGS_CONTROL_FILE_OPEN_TIMEOUT_DEFAULT 15
+
+static int get_control_file_open_timeout(long *timeout) {
+  const char *value = getenv("EGS_CONTROL_FILE_OPEN_TIMEOUT");
+  char *end;
+  long parsed;
+
+  if (!value) {
+    *timeout = EGS_CONTROL_FILE_OPEN_TIMEOUT_DEFAULT;
+    return 0;
+  }
+
+  errno = 0;
+  parsed = strtol(value, &end, 10);
+  if (errno == ERANGE || end == value || *end != '\0' || parsed < 0) {
+    return EINVAL;
+  }
+  *timeout = parsed;
+  return 0;
+}
 
 #ifdef EGS_LOCK_WAIT_UNBLOCKING
 #define EGS_LOCK_WAIT_MAX_MS 50
@@ -128,7 +152,13 @@ void egsCreateControlFile(const char *fname, int *status, int len) {
 }
 
 void egsOpenControlFile(const char *fname, int *status, int len) {
-  int t; *status = 0;
+  int open_error, sleep_remaining;
+  long timeout, waited = 0;
+  *status = get_control_file_open_timeout(&timeout);
+  if (*status != 0) {
+    fprintf(stderr, "Invalid EGS_CONTROL_FILE_OPEN_TIMEOUT: expected seconds >= 0.\n");
+    return;
+  }
   if( !__is_initialized ) __init_locking();
   if( __my_fd > 0 ) { close(__my_fd); __my_fd = -1; }
   /* This function is called from jobs > 1. Job 1 creates the control file.
@@ -136,11 +166,26 @@ void egsOpenControlFile(const char *fname, int *status, int len) {
      the control file may not be there yet => we try several times and
      sleep in between.
   */
-  for(t=0; t<15; t++) {
-    __my_fd = open(fname,O_RDWR); if( __my_fd > 0 ) break;
-    sleep(1);
+  for(;;) {
+    __my_fd = open(fname,O_RDWR);
+    if( __my_fd > 0 ) break;
+    open_error = errno;
+    if (open_error != ENOENT && open_error != EINTR) {
+      *status = open_error;
+      return;
+    }
+    if (timeout != 0 && waited >= timeout) {
+      *status = open_error;
+      return;
+    }
+    if (waited >= 60 && waited % 60 == 0) {
+      fprintf(stderr, "egsOpenControlFile: still waiting for control file '%s' after %ld seconds.\n",
+              fname, waited);
+    }
+    sleep_remaining = 1;
+    while (sleep_remaining > 0) sleep_remaining = sleep(sleep_remaining);
+    ++waited;
   }
-  if( __my_fd < 0 ) *status = errno;
 }
 
 void egsCloseControlFile(int *status) {
