@@ -11,7 +11,7 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 
-#include "egs_c_utils.h"
+#include <egs_c_utils.h>
 
 #include <errno.h>
 #include <stdio.h>

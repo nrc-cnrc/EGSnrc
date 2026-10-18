@@ -44,10 +44,18 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 #include "egs_library.h"
+#include <egs_c_utils.h>
 
 #include <vector>
 #include <ctime>
 #include <cstdio>
+#include <cstring>
+
+#ifdef WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 using namespace std;
 
@@ -295,7 +303,7 @@ EGS_UniformRunControl::EGS_UniformRunControl(EGS_Application *a) :
         vector<int> w_jobs;
         err = input->getInput("watcher jobs", w_jobs);
         if (!err) {
-            for (int i = 0; i < w_jobs.size(); i++) {
+            for (vector<int>::size_type i = 0; i < w_jobs.size(); ++i) {
                 if (ipar == w_jobs[i]) {
                     watcher_job = true;
                     break;
@@ -368,44 +376,6 @@ void EGS_UniformRunControl::describeRCO() {
 
 }
 
-#ifdef WIN32
-
-    #include <io.h>
-    #include <stdio.h>
-    #include <fcntl.h>
-    #include <sys/types.h>
-    #include <sys/stat.h>
-    #include <sys/locking.h>
-    #include <windows.h>
-
-    #define OPEN_FILE _open
-    #define CLOSE_FILE _close
-    #define CREATE_FLAGS _O_CREAT | _O_EXCL | _O_RDWR, _S_IREAD | _S_IWRITE
-    #define OPEN_FLAGS _O_RDWR,_S_IREAD | _S_IWRITE
-    #define WAIT_FOR_FILE Sleep(1000)
-    #define WRITE_FILE _write
-    #define READ_FILE _read
-
-#else
-
-    #include <unistd.h>
-    #include <fcntl.h>
-    #include <sys/types.h>
-    #include <sys/stat.h>
-    #include <errno.h>
-    #include <string.h>
-    #include <stdio.h>
-
-    #define OPEN_FILE open
-    #define CLOSE_FILE close
-    #define CREATE_FLAGS O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR
-    #define OPEN_FLAGS O_RDWR
-    #define WAIT_FOR_FILE sleep(1)
-    #define WRITE_FILE write
-    #define READ_FILE read
-
-#endif
-
 #ifndef SKIP_DOXYGEN
 
 /*!  \brief Class implementing file locking
@@ -414,138 +384,95 @@ void EGS_UniformRunControl::describeRCO() {
 */
 class EGS_LOCAL EGS_FileLocking {
 public:
-    int  fd;
+    bool is_open;
     bool is_locked;
-    int  ntry;
-#ifndef WIN32
-    struct flock fl_write, fl_unlock;
-#endif
-    EGS_FileLocking() : fd(-1), is_locked(false), ntry(15) {
-#ifndef WIN32
-        fl_write.l_type = F_WRLCK;
-        fl_write.l_whence = SEEK_SET;
-        fl_write.l_start = 0;
-        fl_write.l_len = 0;
-        fl_unlock.l_type = F_UNLCK;
-        fl_unlock.l_whence = SEEK_SET;
-        fl_unlock.l_start = 0;
-        fl_unlock.l_len = 0;
-#endif
-    };
+
+    EGS_FileLocking() : is_open(false), is_locked(false) {};
+
     ~EGS_FileLocking() {
-        if (fd > 0) {
-            CLOSE_FILE(fd);
-        }
+        closeControlFile();
     };
+
     bool createControlFile(const char *fname) {
-        is_locked = false;
-        if (fd > 0) {
-            CLOSE_FILE(fd);
-        }
-        fd = OPEN_FILE(fname,CREATE_FLAGS);
-        egsWarning("createControlFile: file=%s fd=%d\n",fname,fd);
-        if (fd < 0) {
-            egsWarning("createControlFile(): open failed! (fd=%d)\n",fd);
-#ifndef WIN32
-            perror("System error was");
-#endif
-        }
-        return lockControlFile();
+        int status = 0;
+        closeControlFile();
+        egsCreateControlFile(fname, &status, 0);
+        is_open = status == 0;
+        is_locked = is_open;
+        return is_open;
     };
+
     bool openControlFile(const char *fname) {
+        int status = 0;
+        closeControlFile();
+        egsOpenControlFile(fname, &status, 0);
+        is_open = status == 0;
         is_locked = false;
-        if (fd > 0) {
-            CLOSE_FILE(fd);
-        }
-        for (int t=0; t<ntry; t++) {
-            fd = OPEN_FILE(fname,OPEN_FLAGS);
-            if (fd > 0) {
-                break;
-            }
-            WAIT_FOR_FILE;
-        }
-        return (fd > 0);
+        return is_open;
     };
+
     bool closeControlFile() {
-        if (fd > 0) {
-            int res = CLOSE_FILE(fd);
-            fd = -1;
-            return !res;
+        int status = 0;
+        if (is_open) {
+            egsCloseControlFile(&status);
         }
-        return true;
+        is_open = false;
+        is_locked = false;
+        return status == 0;
     };
+
     bool lockControlFile() {
+        int status = 0;
+        if (!is_open) {
+            return false;
+        }
         if (is_locked) {
             return true;
         }
-        if (fd < 0) {
-            return false;
-        }
-#ifdef WIN32
-        long np = _lseek(fd,0L,SEEK_SET);
-        if (np) {
-            egsWarning("lockControlFile: _lseek returned %d?\n",np);
-            return false;
-        }
-        int res = _locking(fd,_LK_LOCK,1000000L);
-        if (!res) {
-            is_locked = true;
-            return true;
-        }
-        return false;
-#else
-        for (int i1=0; i1<5; i1++) {
-            for (int i2=0; i2<12; i2++) {
-                int res = fcntl(fd,F_SETLK,&fl_write);
-                if (!res) {
-                    is_locked = true;
-                    return true;
-                }
-                WAIT_FOR_FILE ;
-            }
-            egsWarning("lockControlFile: failed to lock file for "
-                       "12 seconds...\n");
-        }
-        return false;
-#endif
+        egsLockControlFile(&status);
+        is_locked = status == 0;
+        return status == 0;
     };
+
     bool unlockControlFile() {
-        if (!is_locked) {
-            return true;
-        }
-        if (fd < 0) {
+        int status = 0;
+        if (!is_open) {
             return false;
         }
-#ifdef WIN32
-        int np = _lseek(fd,0L,SEEK_SET);
-        if (np) {
-            egsWarning("unlockControlFile: _lseek returned %d?\n",np);
-            return false;
-        }
-        int res = _locking(fd,_LK_UNLCK,1000000L);
-#else
-        int res = fcntl(fd,F_SETLKW,&fl_unlock);
-#endif
-        if (!res) {
+        egsUnlockControlFile(&status);
+        if (status != 0) {
+            int close_status = 0;
             is_locked = false;
-            return true;
-        }
-        return false;
-    };
-    bool rewindControlFile() {
-        if (fd < 0) {
+            if (is_open) {
+                egsCloseControlFile(&close_status);
+            }
+            is_open = false;
             return false;
         }
-        if (!is_locked) {
-            if (!lockControlFile()) {
-                return false;
-            }
+        is_locked = false;
+        return true;
+    };
+
+    bool rewindControlFile() {
+        int status = 0;
+        if (!is_open) {
+            return false;
         }
-#ifdef WIN32
-        return !_lseek(fd,0,SEEK_SET);
-#else
-        return !lseek(fd,0,SEEK_SET);
-#endif
+        egsRewindControlFile(&status);
+        is_locked = status == 0;
+        return status == 0;
+    };
+
+    int writeControlFile(const char *buf, int n) {
+        int status = 0;
+        egsWriteControlFile(buf, &n, &status, 0);
+        return status;
+    };
+
+    int readControlFile(char *buf, int n) {
+        int status = 0;
+        egsReadControlFile(buf, &n, &status, 0);
+        return status;
     };
 };
 
@@ -592,12 +519,12 @@ bool EGS_JCFControl::createControlFile() {
                    " job control file %s\n\n",cfile.c_str());
         return false;
     }
-    if (p->fd < 0) {
+    if (!p->is_open) {
         return false;
     }
     writeControlString();
     int nwant = strlen(buf)+1;
-    int nwrite = WRITE_FILE(p->fd,buf,nwant);
+    int nwrite = p->writeControlFile(buf,nwant);
     if (nwrite != nwant) {
         return false;
     }
@@ -720,7 +647,7 @@ bool EGS_JCFControl::readControlFile() {
         egsWarning("EGS_JCFControl: failed to rewind the job control file\n");
         return false;
     }
-    int res = READ_FILE(p->fd,buf,nbuf-1);
+    int res = p->readControlFile(buf,nbuf-1);
     if (res <= 0) {
         p->unlockControlFile();
         egsWarning("EGS_JCFControl: failed to read the job control file\n");
@@ -747,7 +674,7 @@ bool EGS_JCFControl::writeControlFile() {
         return false;
     }
     int nwant = strlen(buf)+1;
-    int nwrite = WRITE_FILE(p->fd,buf,nwant);
+    int nwrite = p->writeControlFile(buf,nwant);
     if (!p->unlockControlFile()) {
         egsWarning("EGS_JCFControl::writeControlFile: failed to unlock the "
                    "control file\n");

@@ -61,6 +61,8 @@ estar_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(estar_files)))
 egspp_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(egspp_files)))
 config1h = $(IEGS1)$(DSEP)egs_config1.h egs_libconfig.h egs_functions.h
 
+egspp_locking_objects = $(DSO1)egs_c_locking.$(obje)
+
 geometry_libs = egs_planes egs_cd_geometry egs_gtransformed egs_nd_geometry \
                egs_box egs_genvelope egs_spheres egs_cylinders egs_iplanes \
                egs_cones egs_gstack egs_prism egs_union egs_pyramid egs_conez\
@@ -93,8 +95,8 @@ all: $(EGS_BINDIR)egspp$(EXE) $(ABS_DSO)$(libpre)egspp$(libext) glibs slibs shap
 $(EGS_BINDIR)egspp$(EXE): $(dso) $(DSO1)egspp.$(obje) $(ABS_DSO)$(libpre)egspp$(libext)
 	$(CXX) $(INC1) $(DEF1) $(opt) $(EOUT)$@ $(DSO1)egspp.$(obje) $(lib_link1) $(link2_prefix)egspp$(link2_suffix)
 
-$(ABS_DSO)$(libpre)egspp$(libext): $(dso) $(egspp_objects) $(estar_objects)
-	$(CXX) $(INC1) $(DEFS) $(opt) $(shared) $(egspp_objects) $(estar_objects) $(extra)
+$(ABS_DSO)$(libpre)egspp$(libext): $(dso) $(egspp_objects) $(estar_objects) $(egspp_locking_objects)
+	$(CXX) $(INC1) $(DEFS) $(opt) $(shared) $(egspp_objects) $(estar_objects) $(egspp_locking_objects) $(extra)
 
 $(DSO1)egspp.$(obje): egspp.cpp egs_application.h egs_base_geometry.h egs_vector.h \
 	               egs_math.h egs_library.h $(config1h)
@@ -158,7 +160,10 @@ $(DSO1)egs_functions.$(obje): egs_functions.cpp $(config1h)
 
 $(DSO1)egs_application.$(obje): egs_application.cpp egs_application.h
 
-$(DSO1)egs_run_control.$(obje): egs_run_control.cpp egs_run_control.h
+$(DSO1)egs_run_control.$(obje): egs_run_control.cpp egs_run_control.h $(IEGS1)$(DSEP)egs_c_utils.h
+
+$(DSO1)egs_c_locking.$(obje): ../pieces/egs_c_locking.c ../pieces/egs_c_utils.h $(config1h)
+	$(CC) $(INC1) $(DEF1) $(C_FLAGS) -c $(COUT)$@ $<
 
 $(DSO1)egs_atomic_relaxations.$(obje): egs_atomic_relaxations.cpp egs_atomic_relaxations.h \
     $(config1h) egs_simple_container.h egs_rndm.h egs_math.h egs_application.h \
@@ -232,7 +237,7 @@ check:
 	@echo "obj_rule2: $(obj_rule2)"
 
 clean:
-	$(REMOVE) $(egspp_objects) $(estar_objects) $(DSO1)test.exe
+	$(REMOVE) $(egspp_objects) $(estar_objects) $(egspp_locking_objects) $(DSO1)test.exe
 
 realclean:
 	$(REMOVE) $(egspp_objects) $(lib_objects) $(DSO1)egspp.$(obje) \
