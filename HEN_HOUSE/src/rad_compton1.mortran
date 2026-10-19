@@ -159,7 +159,7 @@ subroutine radc_init;
 implicit none;
 $declare_max_medium;
 $COMIN-RADC-INIT;
-character     radc_file*256;
+character     radc_file*$max_path_length;
 integer*4     lnblnk1,egs_get_unit;
 $INTEGER      radc_unit, want_radc_unit;
 $INTEGER      nskip,i,j,ne,nu,ny1,ny2,nw,jh,jl;

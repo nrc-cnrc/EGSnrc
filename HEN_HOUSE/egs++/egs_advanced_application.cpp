@@ -186,13 +186,19 @@ extern __extc__  void F77_OBJ_(egs_set_defaults,EGS_SET_DEFAULTS)();
 extern __extc__  void F77_OBJ_(egs_init1,EGS_INIT1)();
 int EGS_AdvancedApplication::initEGSnrcBackEnd() {
     F77_OBJ_(egs_set_defaults,EGS_SET_DEFAULTS)();
-    __egs_iovar(64,app_name.size(),app_name.c_str(),the_egsio->user_code);
-    __egs_iovar(128,hen_house.size(),hen_house.c_str(),the_egsio->hen_house);
-    __egs_iovar(128,egs_home.size(),egs_home.c_str(),the_egsio->egs_home);
-    __egs_iovar(256,input_file.size(),input_file.c_str(),the_egsio->input_file);
-    __egs_iovar(256,final_output_file.size(),final_output_file.c_str(),
+    __egs_iovar(sizeof(the_egsio->user_code),app_name.size(),app_name.c_str(),
+                the_egsio->user_code);
+    __egs_iovar(sizeof(the_egsio->hen_house),hen_house.size(),hen_house.c_str(),
+                the_egsio->hen_house);
+    __egs_iovar(sizeof(the_egsio->egs_home),egs_home.size(),egs_home.c_str(),
+                the_egsio->egs_home);
+    __egs_iovar(sizeof(the_egsio->input_file),input_file.size(),input_file.c_str(),
+                the_egsio->input_file);
+    __egs_iovar(sizeof(the_egsio->output_file),final_output_file.size(),
+                final_output_file.c_str(),
                 the_egsio->output_file);
-    __egs_iovar(256,pegs_file.size(),pegs_file.c_str(),the_egsio->pegs_file);
+    __egs_iovar(sizeof(the_egsio->pegs_file),pegs_file.size(),pegs_file.c_str(),
+                the_egsio->pegs_file);
     the_egsio->i_parallel = i_parallel;
     the_egsio->n_parallel = n_parallel;
     the_egsio->is_pegsless = is_pegsless;

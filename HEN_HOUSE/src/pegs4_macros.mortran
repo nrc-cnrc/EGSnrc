@@ -197,7 +197,7 @@ REPLACE {;COMIN/MEDINP/;} WITH
      iscompound($MXMED),ipot($MXMED),localDensity($MXMED),
      outdensity_file($MXMED),ncomp($MXMED),
      compoundList($MXMED,$MXEL),compoundFractions($MXMED,$MXEL);
-     character*256 inpdensity_file,outdensity_file;
+   character*$max_path_length inpdensity_file,outdensity_file;
      character*50 inpasym,compoundList;
      $TYPE inpstrn;
      $REAL4 pz4,rhoz4,wa4,inpgasp,compoundFractions;

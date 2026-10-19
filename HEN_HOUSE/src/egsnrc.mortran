@@ -3339,7 +3339,7 @@ integer*2     i2_array(512),ii2;
 $INTEGER      iq,i,j,k,i_ele,iii,iZ,iiZ,n_ener,n_q,n_point,je,neke,
               ndata,leil,length,ii4,irec;
 
-character     spin_file*256;
+character     spin_file*$max_path_length;
 character*6   string;
 integer*4     lnblnk1; "used to be lnblnk but changed for compilers that
                        "do not have lnblnk, we supply lnblnk1 in this file
@@ -3738,7 +3738,7 @@ $REAL         eta_array(0:1,$0-MAXE_SPI1),
 $INTEGER      iq,i,j,k,i_ele,iii,iZ,iiZ,n_ener,n_q,n_point,je,neke,
               ndata,leil,length,want_spin_unit,spin_unit,egs_get_unit;
 
-character     spin_file*256;
+character     spin_file*$max_path_length;
 character*6   string;
 integer*4     lnblnk1; "used to be lnblnk but changed for compilers that
                        "do not have lnblnk, we supply lnblnk1 in this file
@@ -5328,7 +5328,7 @@ $REAL      rest_xs($MXNE,$MXELEMENT);
 $REAL      tmp_e($MXNE,$MXPESHELL), tmp_xs($MXNE,$MXPESHELL);
 $REAL      new_e($MXNE),deltaEb,slope;
 $INTEGER   zread($MXELEMENT),ib($MXPESHELL),ibsearch;
-character  data_dir*128,pe_sw_file*144;
+character  data_dir*$max_path_length,pe_sw_file*$max_path_length;
 
 $INTEGER  medio,iZ,iZpos,egs_read_int,pos,curr_rec;
 real*4    egs_read_real,e_r, e_old,sigma_r;
@@ -5841,7 +5841,7 @@ $COMIN-RELAX-INIT;
 $INTEGER   lnblnk1,egs_get_unit,relax_unit,ounit,egs_open_file;
 $INTEGER   sorted($MXELEMENT),i,j,k,k1,k2,m;
 $REAL      z_sorted($MXELEMENT),pz_sorted($MXELEMENT);
-character  data_dir*128,relax_file*144;
+character  data_dir*$max_path_length,relax_file*$max_path_length;
 
 $INTEGER  ish,medio,iZ,ntran;
 $REAL     Ec, Pc, tmp, min_be, sumw,Ex;
@@ -7258,7 +7258,7 @@ $declare_max_medium;
 ;COMIN/MEDIA,BREMPR,ELECIN,NRC-PAIR-DATA,THRESH,USEFUL,EGS-IO/;
 $declare_write_buffer;
 
-character     nrcp_file*256, endianess*4;
+character     nrcp_file*$max_path_length, endianess*4;
 integer       egs_get_unit;
 $INTEGER      nrcp_unit, want_nrcp_unit, rec_length;
 $INTEGER      i, lnblnk1;
@@ -7449,7 +7449,7 @@ $REAL    sigma,sigma_old,wbrem_old,sig_j,de;
 $INTEGER lloge;
 $LOGICAL check_it,is_monotone,getd;
 $REAL    sigma_max;
-character eii_file*128;
+character eii_file*$max_path_length;
 character*512 toUpper;
 $INTEGER occn_numbers(4);
 $declare_write_buffer;
@@ -8002,10 +8002,13 @@ $INTEGER   bc_ne;
 $LOGICAL   input_compton_data,
 "Ali:photonuc, 1 line"
            input_photonuc_data;
-character  data_dir*128,photo_file*140,pair_file*140,rayleigh_file*144,
-           triplet_file*142,tmp_string*144,compton_file*144,
+character  data_dir*$max_path_length,
+           photo_file*$max_path_length,pair_file*$max_path_length,
+           rayleigh_file*$max_path_length,
+           triplet_file*$max_path_length,tmp_string*$max_path_length,
+           compton_file*$max_path_length,
 "Ali:photonuc, 1 line"
-           photonuc_file*144;
+           photonuc_file*$max_path_length;
 
 $egs_info('(/a,$)','(Re)-initializing photon cross sections');
 $egs_info('(a,a/)',' with files from the series: ',
@@ -8303,7 +8306,8 @@ $REAL totRayleigh2,pzmin;
 $REAL emin, emax;
 $INTEGER i,j,k,ff_unit, egs_get_unit, ne;
 $INTEGER lnblnk1, EOF, nff, medium, ncustom;
-character dummy*24, afac_file*128, ff_file*128;
+character dummy*24, afac_file*$max_path_length,
+          ff_file*$max_path_length;
 
 IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
 
@@ -8463,7 +8467,8 @@ $REAL totRayleigh2,pzmin;
 $REAL emin, emax;
 $INTEGER i,j,k,ff_unit, egs_get_unit, ne;
 $INTEGER lnblnk1, EOF, nff, medium, ncustom;
-character dummy*24, afac_file*128, ff_file*128;
+character dummy*24, afac_file*$max_path_length,
+          ff_file*$max_path_length;
 
 IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
 

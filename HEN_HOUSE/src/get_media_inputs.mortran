@@ -685,8 +685,8 @@ DATA ETAB/1.,1.25,1.5,1.75,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9./;
 
 
 character*24 medium_name,med_tmp,sterncid_tmp;
-character*256 density_file,material_file,tmp_string,
-              spoutput_file($MXMED), density_outputfile;
+character*$max_path_length density_file,material_file,tmp_string,
+          spoutput_file($MXMED),density_outputfile;
 character*80 text_string, text_save, title;
 character*80 delim_start,delim_end;
 character*1 blank;

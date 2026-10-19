@@ -213,7 +213,8 @@ implicit none;
 ;COMIN/EGS-IO,MISC,my_times/;
 integer   l, lnblnk1, l1, l2;
 integer   i;
-character arg*256,tmp_string*512, tmp1_string*512, ucode_dir*512,
+character arg*$max_path_length,tmp_string*$max_path_length,
+          tmp1_string*$max_path_length, ucode_dir*$max_path_length,
           line*80,
           line1*80,dattim*24;
 $LOGICAL  have_input,egs_isdir,egs_strip_extension,ex,
@@ -270,7 +271,7 @@ arg = $cstring(pegs_file);
 ex = egs_strip_extension(arg,'.pegs4dat');
 l = lnblnk1(egs_home); l1 = lnblnk1('pegs4data') + 2*lnblnk1($file_sep);
 l2 = lnblnk1(arg) + lnblnk1('.pegs4dat');
-IF( l + l1 + l2 > 256 ) [
+IF( l + l1 + l2 >= $max_path_length ) [
     $egs_warning(*,'pegs4 data file name (including absolute path)');
     $warning('(a,i4,a)','is too long (',l+l1+l2,') characters');
 ]
@@ -291,7 +292,7 @@ ELSE [
     ]
 ]
 l = lnblnk1(hen_house);
-IF( l + l1 + l2 > 256 ) [
+IF( l + l1 + l2 >= $max_path_length ) [
     $egs_warning(*,'pegs4 data file name (including absolute path)');
     $warning('(a,i4,a)','is too long (',l+l1+l2,') characters');
 ]
@@ -360,7 +361,7 @@ IF( lnblnk1(input_file) > 0 ) [
     have_input = .true.;
     l = lnblnk1(egs_home); l1 = lnblnk1(user_code)+1;
     l2 = lnblnk1(input_file) + lnblnk1('.egsinp');
-    IF( l + l1 + l2 > 1024 ) [
+    IF( l + l1 + l2 >= $max_path_length ) [
         $egs_fatal(*,'input file name (including path) is too long ',l+l1+l2);
     ]
     ex = egs_strip_extension(input_file,'.egsinp');
@@ -639,7 +640,7 @@ $check_get_argument('-i','--input',arg);
 IF( have_arg ) [
     ex = egs_strip_extension(arg,'.egsinp');
     l2 = lnblnk1(arg) + lnblnk1('.egsinp');
-    IF( l2 > 256 ) [
+    IF( l2 >= $max_path_length ) [
         $egs_fatal(*,'input file name is too long ',l2);
     ]
     input_file = $cstring(arg);
@@ -649,7 +650,7 @@ IF( have_arg ) [
 $check_get_argument('-o','--output',arg);
 IF( have_arg ) [
     l = lnblnk1(arg);
-    IF( l > 256 ) [
+    IF( l >= $max_path_length ) [
         $egs_fatal(*,'output file name is too long ',l);
     ]
     output_file(:l) = $cstring(arg);
@@ -679,7 +680,9 @@ $LOGICAL flag;
 
 ;COMIN/EGS-IO/;
 
-character tmp_string*1024, tmp1_string*1024, tmp2_string*1024, ucode_dir*1024,
+character tmp_string*$max_path_length,
+          tmp1_string*$max_path_length, tmp2_string*$max_path_length,
+          ucode_dir*$max_path_length,
           input_line*100, arg*20;
 integer   i,lnblnk1,u,l,istart,egs_get_unit,i_iofile;
 $LOGICAL  ex,is_open;
@@ -785,7 +788,9 @@ subroutine egs_finish;
 "******************************************************************************
 implicit none;
 ;COMIN/EGS-IO,my_times/;
-character line*80,base*512,base1*512,tmp_string*512,junk_file*128,fname*512;
+character line*80,base*$max_path_length,base1*$max_path_length,
+          tmp_string*$max_path_length,junk_file*$max_path_length,
+          fname*$max_path_length;
 character dattim*24;
 integer  i,l,lnblnk1,istat,egs_system,n_open,unlink,i_junk,egs_get_unit;
 $LOGICAL is_open,egs_isdir;
@@ -1013,8 +1018,8 @@ implicit none;
 external combine_routine;
 character*(*) extension;
 ;COMIN/EGS-IO/;
-character*1024 tmp_string,base,command,outfile,parfile_name,base1,
-           text_string;
+character*$max_path_length tmp_string,base,command,outfile,
+          parfile_name,base1,text_string;
 integer  lnblnk1,istat,ipar,egs_system,egs_open_file;
 $INTEGER i,k,j,numparfiles,textindex;
 integer urcSleep, urcCheckIntervals;
@@ -1189,7 +1194,7 @@ character*(*) extension;
 $LOGICAL egs_is_absolute_path,is_open;
 integer  egs_get_unit;
 integer  i,lnblnk1;
-character*1024 tmp_string,error_string;
+character*$max_path_length tmp_string,error_string;
 $INTEGER the_unit;
 $declare_write_buffer;
 
@@ -1456,7 +1461,7 @@ subroutine replace_env(fname);
 ;COMIN/EGS-IO/;
 
 character*(*) fname;
-character*256 dirname;
+character*$max_path_length dirname;
 integer indsep,ind1,ind2;
 
 indsep = index(fname,$file_sep);
@@ -1501,7 +1506,7 @@ subroutine egs_get_usercode(ucode);
 implicit none;
 COMIN/EGS-IO/;
 character*(*) ucode;
-character*512 arg;
+character*$max_path_length arg;
 integer  l,l1,lnblnk1,i;
 $declare_write_buffer;
 

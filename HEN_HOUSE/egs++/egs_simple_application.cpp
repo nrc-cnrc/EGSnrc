@@ -143,13 +143,13 @@ EGS_SimpleApplication::EGS_SimpleApplication(int argc, char **argv) {
     //
     // *** null terminate directory and file names just in case
     //
-    _null_terminate(the_egsio->user_code,64);
-    _null_terminate(the_egsio->input_file,256);
-    _null_terminate(the_egsio->output_file,256);
-    _null_terminate(the_egsio->egs_home,128);
-    _null_terminate(the_egsio->hen_house,128);
-    _null_terminate(the_egsio->pegs_file,256);
-    _null_terminate(the_egsio->work_dir,128);
+    _null_terminate(the_egsio->user_code,sizeof(the_egsio->user_code));
+    _null_terminate(the_egsio->input_file,sizeof(the_egsio->input_file));
+    _null_terminate(the_egsio->output_file,sizeof(the_egsio->output_file));
+    _null_terminate(the_egsio->egs_home,sizeof(the_egsio->egs_home));
+    _null_terminate(the_egsio->hen_house,sizeof(the_egsio->hen_house));
+    _null_terminate(the_egsio->pegs_file,sizeof(the_egsio->pegs_file));
+    _null_terminate(the_egsio->work_dir,sizeof(the_egsio->work_dir));
 
     //
     // ********** Get the content of the input file.

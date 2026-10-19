@@ -673,7 +673,7 @@ implicit none;
 $REAL4 Z,E;
 $INTEGER  napre,naprz,ie,iz,aprim_unit,egs_get_unit,lnblnk1;
 $REAL4     EM,AINTP;
-character  aprim_file*256;
+character  aprim_file*$max_path_length;
 REPLACE {$NAPRE} WITH {115} " Maximum number of energies ( > 18 )      "
 REPLACE {$NAPRZ} WITH {14}  " Maximum number of elements ( > 5 )       "
 

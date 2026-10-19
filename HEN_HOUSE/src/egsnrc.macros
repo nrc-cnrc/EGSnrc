@@ -3607,6 +3607,7 @@ REPLACE {$egs_track0(#,#);} WITH {
 
 " Common block containing various directories, file names, etc. "
 REPLACE {$mx_units} WITH {20};
+REPLACE {$max_path_length} WITH {4096};
 REPLACE {$max_extension_length} WITH {10};
 REPLACE {;COMIN/EGS-IO/;} WITH {;
   common /egs_io/ file_extensions($mx_units),
@@ -3636,10 +3637,12 @@ REPLACE {;COMIN/EGS-IO/;} WITH {;
                   is_batch,       "True for batch mode"
                   is_uniform_run, "True for uniform parallel run control"
                   is_pegsless;    "true if you are running without pegs file"
-  character input_file*256, output_file*256, pegs_file*256,
+  character input_file*$max_path_length,
+            output_file*$max_path_length, pegs_file*$max_path_length,
             file_extensions*$max_extension_length,
-            hen_house*128, egs_home*128, work_dir*128, user_code*64,
-            host_name*64;
+            hen_house*$max_path_length,
+            egs_home*$max_path_length, work_dir*$max_path_length,
+            user_code*256, host_name*256;
   $INTEGER  n_parallel, i_parallel, first_parallel,n_max_parallel,
             n_chunk, file_units, n_files,i_input,i_log,i_incoh,
             i_nist_data,i_mscat,i_photo_cs,i_photo_relax, xsec_out;

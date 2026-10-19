@@ -598,14 +598,14 @@ struct EGS_VarianceReduction {
 struct EGS_IO {
     char file_extensions[20][10];
     EGS_I32 file_units[20];
-    char user_code[64];
-    char input_file[256];
-    char output_file[256];
-    char pegs_file[256];
-    char hen_house[128];
-    char egs_home[128];
-    char work_dir[128];
-    char host_name[64];
+    char user_code[256];
+    char input_file[4096];
+    char output_file[4096];
+    char pegs_file[4096];
+    char hen_house[4096];
+    char egs_home[4096];
+    char work_dir[4096];
+    char host_name[256];
     EGS_I32 n_parallel, i_parallel, first_parallel, n_max_parallel,
             n_chunk, n_files, i_input, i_log, i_incoh, i_nist_data,
             i_mscat, i_photo_cs, i_photo_relax, xsec_out, is_batch,
