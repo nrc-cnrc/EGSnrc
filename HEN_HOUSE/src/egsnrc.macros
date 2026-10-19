@@ -633,7 +633,9 @@ REPLACE {$COMIN-EII-INIT;} WITH {
 };
 
 REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
-    common/emf_inputs/ExIN,EyIN,EzIN, "E field"
+    common/emf_inputs/ExIN,EyIN,EzIN,        "E field: initial region"
+                     Ex, Ey, Ez,             "E field: current region"
+                     Ex_new, Ey_new, Ez_new, "E field: in new region"
                      EMLMTIN,         "Ekin, u, E fractional maximum change"
                      BxIN, ByIN, BzIN,       "B field: initial region"
                      Bx, By, Bz,             "B field: current region"
@@ -641,6 +643,8 @@ REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
                      emfield_on;             "true if EM fields not null"
 
    $REAL    ExIN,EyIN,EzIN,
+            Ex,Ey,Ez,
+            Ex_new,Ey_new,Ez_new,
             EMLMTIN,
             BxIN,ByIN,BzIN,
             Bx,By,Bz,

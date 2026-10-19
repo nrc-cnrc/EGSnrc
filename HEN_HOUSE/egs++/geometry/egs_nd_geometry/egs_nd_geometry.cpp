@@ -1624,6 +1624,7 @@ extern "C" {
                 EGS_BaseGeometry *g = result;
                 result->setName(input);
                 result->setBoundaryTolerance(input);
+                result->setBScaling(input);
                 g->setMedia(input);
                 result->voxelizeGeometry(input);
 

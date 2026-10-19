@@ -137,7 +137,7 @@ REPLACE {$CALL-HOWNEAR_EM(#,#);} WITH {
 REPLACE{;COMIN/EM/;}WITH{;COMMON/EM/
 	" Variables for the definition of the magnetic field: "
 	B_amp, "Bx, By, Bz,"
-	E_amp, Ex, Ey, Ez,
+	E_amp, "Ex, Ey, Ez,"
 	beta_em,	" Relativistic beta "
 	beta_em2,	" square of beta "
 	beta2_em2,
@@ -191,7 +191,7 @@ REPLACE{;COMIN/EM/;}WITH{;COMMON/EM/
 
 
 	$REAL B_amp, "Bx, By, Bz,"
-	E_amp, Ex, Ey, Ez,
+	E_amp, "Ex, Ey, Ez,"
 	beta_em,	" Relativistic beta "
 	beta_em2,	" square of beta "
 	beta2_em2,
