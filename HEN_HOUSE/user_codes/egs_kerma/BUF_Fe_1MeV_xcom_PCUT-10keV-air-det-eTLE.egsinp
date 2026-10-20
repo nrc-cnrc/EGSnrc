@@ -1,0 +1,222 @@
+##############################################################################
+#
+# Exposure BuildUp calculation for 1 MeV gammas in Fe
+# ----------------------------------------------------
+#
+# Geometry is a homogeneous Fe sphere with 0.000048 GMFP thick (1 micron) scoring
+# spherical shells placed at increasing distances from the phantom center.
+#
+# Exposure buildup factors are computed using air mass-energy absorption
+# coefficients, obtained with the EGSnrc g application, as the ratio K/Kpri
+# where K is total air-kerma, and Kpri primary air-kerma. The latter is estimated
+# by flagging all particles resulting from photon interactions as secondaries.
+#
+# EMH, Jul 6, 2026
+#
+##############################################################################
+
+
+##############################################################################
+### Run control
+##############################################################################
+:start run control:
+    ncase = 600e6 #4e9
+    rco type = uniform          # Or simple, balanced
+    check jobs completed = yes  # Defaults to 'yes'
+    interval wait time = 6000   #  1 s in ms
+    number of intervals = 60     # 1 min
+    #calculation = combine #analyze
+:stop run control:
+
+##############################################################################
+### Geometry
+##############################################################################
+:start geometry definition:
+
+    ### Gamma Mean Free Path Data
+    #
+    # EGSnrc
+    # ------
+    # Total XSection = 5.990370E-02 cm**2/g (NIST XCOM)
+    #
+    # Density = 7.874 g/cm**3
+    # Fe GMFP = 2.12007 cm
+    #
+    #
+    :start geometry:
+        name     = iron_sphere
+        library  = egs_spheres
+        radii = 1.059985 1.060085 2.120020 2.120120 3.180055 3.180155 4.240090 4.240190 5.300125 5.300225 \
+                6.360160 6.360260 7.420195 7.420295 8.480230 8.480330 9.540265 9.540365 10.60030 10.60040 \
+                11.660335	11.660435 12.720370	12.720470 13.780405 13.780505 14.840440 14.840540 15.900475 15.900575 \
+                16.960510 16.960610 18.020545 18.020645 19.080580 19.080680 20.140615 20.140715 21.200650 21.200750 \
+                31.801000 31.801100 42.401350 42.401450 53.001700 53.001800 63.602050 63.602150 74.202400 74.202500 \
+                84.802750 84.802850 95.403100 95.403200 106.003450 106.003550 116.603800 116.603900 127.204150 127.204250 \
+                137.804500 137.804600 148.404850 148.404950 159.005200 159.005300 169.605550 169.605650 \
+                180.205900 180.206000 190.806250 190.806350 201.406600 201.406700 212.006950 212.007050 \
+                233.2077
+
+        :start media input:
+            media = iron air
+            set medium = 1	1
+            set medium = 3	1
+            set medium = 5	1
+            set medium = 7	1
+            set medium = 9	1
+            set medium = 11	1
+            set medium = 13	1
+            set medium = 15	1
+            set medium = 17	1
+            set medium = 19	1
+            set medium = 21	1
+            set medium = 23	1
+            set medium = 25	1
+            set medium = 27	1
+            set medium = 29	1
+            set medium = 31	1
+            set medium = 33	1
+            set medium = 35	1
+            set medium = 37	1
+            set medium = 39	1
+            set medium = 41	1
+            set medium = 43	1
+            set medium = 45	1
+            set medium = 47	1
+            set medium = 49	1
+            set medium = 51	1
+            set medium = 53	1
+            set medium = 55	1
+            set medium = 57	1
+            set medium = 59	1
+            set medium = 61	1
+            set medium = 63	1
+            set medium = 65	1
+            set medium = 67	1
+            set medium = 69	1
+            set medium = 71	1
+            set medium = 73	1
+            set medium = 75	1
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name     = fd_sphere
+        library  = egs_spheres
+        radii = 212.007050
+        :start media input:
+            media = air   # By default homogeneous geometry
+        :stop media input:
+    :stop geometry:
+
+
+    ### Simulation geometry
+    simulation geometry = iron_sphere
+
+:stop geometry definition:
+
+##############################################################################
+### Media
+##############################################################################
+:start media definition:
+
+    ### particle production thresholds
+    ae =  0.521                                 
+    ue = 2.511                                 
+
+    ap = 0.010                                  
+    up = 2.0                                    
+
+    :start iron:
+        density correction file = iron   # Ensure fe.pegs4dat exists in PEGS4 dir <- NOT REALLY! (EMH)
+    :stop iron:
+
+    :start ironX:
+        density correction file = iron   # Ensure fe.pegs4dat exists in PEGS4 dir <- NOT REALLY! (EMH)
+    :stop ironX:
+
+    ### air
+    :start air:
+        density correction file = air_dry_nearsealevel
+    :stop air:
+
+    ### See $HEN_HOUSE/pegs4/density_corrections/ for more materials, or create
+    ### you own: https://github.com/nrc-cnrc/EGSnrc/wiki/Generating-density-correction-files
+
+:stop media definition:
+
+
+##############################################################################
+### Source
+##############################################################################
+:start source definition:
+
+    ### pencil beam
+    :start source:
+        name      = point_source_at_origin
+        library   = egs_isotropic_source
+        charge    = 0
+        :start spectrum:
+            type = monoenergetic
+            energy = 1                         
+        :stop spectrum:
+        :start shape:
+            type     = point
+            position = 0 0 0                   
+        :stop shape:
+    :stop source:
+
+    ### use this source for the simulation
+    simulation source = point_source_at_origin
+
+:stop source definition:
+
+:start rng definition:
+    type = ranmar
+    initial seeds = 7 12
+    high resolution = yes
+:stop rng definition:
+
+###############################################################################
+### Scoring options
+###############################################################################
+:start scoring options:
+
+    score primaries = yes
+    verbose = yes
+    scoring medium density = 1.20479E-03
+
+    :start calculation geometry:
+        geometry name         = iron_sphere
+        scoring regions       = 1 3 5 7	9 11 13	15 17 19 21	23 25 27 29	31 33 35 \
+                                37 39 41 43 45	47 49 51 53	55 57 59 61	63 65 67 69	71 73 75
+
+        scoring region masses = 1.7012E-06 6.8049E-06 1.5311E-05 2.7220E-05 4.2531E-05 6.1244E-05 8.3360E-05 \
+                                1.0888E-04 1.3780E-04 1.7012E-04 2.0585E-04 2.4498E-04 2.8751E-04 3.3344E-04 \
+                                3.8278E-04 4.3551E-04 4.9165E-04 5.5120E-04 6.1414E-04 6.8049E-04 1.5311E-03 \
+                                2.7220E-03 4.2531E-03 6.1244E-03 8.3360E-03 1.0888E-02 1.3780E-02 1.7012E-02 \
+                                2.0585E-02 2.4498E-02 2.8751E-02 3.3344E-02 3.8278E-02 4.3551E-02 4.9165E-02 \
+                                5.5120E-02 6.1414E-02 6.8049E-02
+
+    :stop calculation geometry:
+
+   ### E*muen file (could also be E*mutr): absolute or relative file path
+   ### Use absolute path when submitting parallel jobs!!!
+    emuen file = $EGS_HOME/data/emuen_rho_air_xcom_ik_1keV-1.5MeV.data
+
+    ### geometry for forced-detection (if omitted, score ONLY when reaching scoring region)
+     Default FD geometry = fd_sphere
+
+:stop scoring options:
+
+
+:start MC transport parameter:
+  #Photonuclear attenuation = ON
+:stop MC transport parameter:
+
+
+##############################################################################
+### Viewer control
+##############################################################################
+:start view control:
+    set color = iron  200 100 100 150
+:stop view control:
