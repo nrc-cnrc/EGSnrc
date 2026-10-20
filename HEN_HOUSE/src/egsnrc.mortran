@@ -6914,7 +6914,7 @@ $REAL    sigee,sigep,sige,si_esig,si1_esig,si_ebr1,si1_ebr1,ededx,
 $INTEGER iz;
 $REAL    ple,qle,x,f,error,max_error,x_max_error,f_max_error;
 $INTEGER ndat,k_max_error;
-character tmp_string*512, tmp1_string*512;
+character tmp_string*$max_path_length, tmp1_string*$max_path_length;
 integer  itmp;
 
 $declare_write_buffer;
