@@ -1212,7 +1212,7 @@ character*(*) extension;
 ;COMIN/EGS-IO/;
 $LOGICAL egs_is_absolute_path,is_open;
 integer  egs_get_unit;
-integer  i,lnblnk1;
+integer  i,l,lnblnk1;
 character*$max_path_length tmp_string,error_string;
 $INTEGER the_unit;
 $declare_write_buffer;
@@ -1250,6 +1250,14 @@ IF( egs_is_absolute_path(extension) ) [
     egs_open_file = the_unit; return;
 ]
 
+l = lnblnk1(egs_home) + lnblnk1(user_code) + 1;
+l = l + lnblnk1(work_dir);
+l = l + lnblnk1(output_file) + lnblnk1(extension);
+IF(i_parallel > 0) [ l = l + 12; ]
+IF(l >= $max_path_length) [
+    IF(action = 0) [ egs_open_file = -2; return; ]
+    $egs_fatal(*,'EGSnrc output file path exceeds maximum length');
+]
 $set_string(tmp_string,' ');
 tmp_string = $cstring(egs_home) // $cstring(user_code) // $file_sep //
              $cstring(work_dir) // $cstring(output_file);
@@ -1322,7 +1330,7 @@ character*(*) extension;
 
 ;COMIN/EGS-IO/;
 
-integer  i,the_unit,lnblnk1,egs_get_unit;
+integer  i,l,the_unit,lnblnk1,egs_get_unit;
 $LOGICAL egs_is_absolute_path;
 character base*$max_path_length, fn*$max_path_length;
 $declare_write_buffer;
@@ -1351,6 +1359,13 @@ IF( egs_is_absolute_path(extension) ) [
     $egs_fatal(*,'Failed to open file ',$cstring(extension));
 ]
 
+l = lnblnk1(egs_home) + lnblnk1(user_code) + 1;
+l = l + lnblnk1(output_file) + lnblnk1(extension);
+IF(i_parallel > 0) [ l = l + 12; ]
+IF(l >= $max_path_length) [
+    IF(action = 0) [ egs_open_datfile = -3; return; ]
+    $egs_fatal(*,'EGSnrc output data-file path exceeds maximum length');
+]
 $set_string(base,' '); $set_string(fn,' ');
 base = $cstring(egs_home) // $cstring(user_code) // $file_sep;
 "fn = $cstring(base) // $cstring(output_file) // $cstring(extension);"
@@ -1374,6 +1389,13 @@ egs_open_datfile = the_unit; return;
 :no_datfile_1:;
 $egs_warning('(a,a)','Failed to open ',$cstring(fn));
 $set_string(fn,' ');
+l = lnblnk1(egs_home) + lnblnk1(user_code) + 1;
+l = l + lnblnk1(input_file) + lnblnk1(extension);
+IF(i_parallel > 0) [ l = l + 12; ]
+IF(l >= $max_path_length) [
+    IF(action = 0) [ egs_open_datfile = -3; return; ]
+    $egs_fatal(*,'EGSnrc input data-file path exceeds maximum length');
+]
 "fn = $cstring(base) // $cstring(input_file) // $cstring(extension);"
 IF( i_parallel > 0 ) [
     fn = $cstring(base) // $cstring(input_file) // '_w';
