@@ -180,6 +180,8 @@ REPLACE {PARAMETER #=#;} WITH
    { REPLACE {{P1}} WITH {{P2}}}
 
 PARAMETER $MXMED=10;      "MAX. NO. OF DIFFERENT MEDIA (EXCL. VAC.)"
+" Keep synchronized with EGS_MAX_XSECTION_PREFIX_LENGTH in egs_path_length.h. "
+REPLACE {$max_xsection_prefix_length} WITH {64};
 PARAMETER $MXREG=2000;    "MAXIMUM NO. OF REGIONS ALLOCATED"
 PARAMETER $MXSTACK=40;    "STACK SIZE"
 PARAMETER $MXVRT1=1000;   "NO. OF REPRESENTATIVE ANGLES IN VERT1"
@@ -963,7 +965,7 @@ REPLACE {;COMIN/MEDIA/;} WITH
             IPHOTONUCM,"photonuclear switch for a given medium"
             IPHOTONUC,"set to 1 if any IPHOTONUCM is set to 1"
             NMED;  "number of media"
-   character*16 eii_xfile;
+    character*$max_xsection_prefix_length eii_xfile;
             "Defaults to eii_ik.data if On or Off options selected"
             "which is the EII implemented by Iwan for EGSnrc"
             "else, following options available: "
@@ -971,7 +973,7 @@ REPLACE {;COMIN/MEDIA/;} WITH
             "  eii_'kolbenstvedt'.data "
             "  eii_'gryzinski'.data"
             "these must be in $HEN_HOUSE/data"
-   character*16 photon_xsections;
+    character*$max_xsection_prefix_length photon_xsections;
             "If photon_xsections is not empty, photon cross sections will be"
             "re-initialized using data files  "
             "  'photon_xsection'_photo.data   "
@@ -979,13 +981,13 @@ REPLACE {;COMIN/MEDIA/;} WITH
             "  'photon_xsection'_triplet.data "
             "  'photon_xsection'_rayleigh.data"
             "that must be placed in $HEN_HOUSE/data"
-   character*16 comp_xsections;
+    character*$max_xsection_prefix_length comp_xsections;
             "If comp_xsections is not empty or not set to 'default' and"
             "bound Compton scattering is On, then total Compton cross sections"
             "will be taken from 'comp_xsections'_compton.data"
             "instead of being computed from the theoretical expressions"
 "Ali:photonuc, 5 lines"
-   character*16 photonuc_xsections;
+    character*$max_xsection_prefix_length photonuc_xsections;
             "If photonuc_xsections is not empty or not set to 'default',"
             "the photonuclear cross sections will be taken from"
             "'photonuc_xsections'_photonuc.data instead of using the data"

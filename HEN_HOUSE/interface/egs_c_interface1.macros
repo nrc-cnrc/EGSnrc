@@ -150,9 +150,9 @@ REPLACE {;COMIN/MEDIA/;} WITH {
                    nmed;
    $REAL           rho;
    $INTEGER        nmed;
-   character*16    photon_xsections;
-   character*16    eii_xfile;
-   character*16    comp_xsections;
+    character*$max_xsection_prefix_length photon_xsections;
+    character*$max_xsection_prefix_length eii_xfile;
+    character*$max_xsection_prefix_length comp_xsections;
 };
 
 " IRAYLR gets removed and goes into the x-section options.             "

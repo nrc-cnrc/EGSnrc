@@ -322,13 +322,13 @@ struct EGS_Media {
     /*! Default mass densities */
     EGS_Float rho[MXMED];
     /*! Prefix for photon cross section data files */
-    char      pxsec[16];
+    char      pxsec[EGS_MAX_XSECTION_PREFIX_LENGTH];
     /*! Prefix for eii cross section data files */
-    char      eiixsec[16];
+    char      eiixsec[EGS_MAX_XSECTION_PREFIX_LENGTH];
     /*! Prefix for Compton cross section data files */
-    char      compxsec[16];
+    char      compxsec[EGS_MAX_XSECTION_PREFIX_LENGTH];
     /*! Prefix for photonuclear cross section data files */
-    char      photonucxsec[16];
+    char      photonucxsec[EGS_MAX_XSECTION_PREFIX_LENGTH];
     /*! Number of media in the geometry */
     EGS_I32   nmed;
 };
