@@ -1673,7 +1673,7 @@ $INTEGER i_mederr, elemIndex,zIndex,wtIndex,dfIndex;
 REAL*8 densityCorr(113),enGrid(113);
 $REAL4    VPLASM,ALIADG,EDENL,ALGASP,EPSTRH,
          TLRNCE,EPSTWT,NORM;
-CHARACTER*256 density_file;
+CHARACTER*$max_path_length density_file;
 
 TOLN10=2.0*LOG(10.0);IM=-100;
 

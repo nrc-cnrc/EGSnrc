@@ -6224,7 +6224,7 @@ $REAL  energies($N_TRIPLET_DATA), sig_pair($N_ELEMENT,$N_TRIPLET_DATA),
        sigp($N_TRIPLET_DATA), sigt($N_TRIPLET_DATA),
        as($N_TRIPLET_DATA), bs($N_TRIPLET_DATA), cs($N_TRIPLET_DATA),
        ds($N_TRIPLET_DATA);
-character*128  triplet_data_file;
+character*$max_path_length triplet_data_file;
 $INTEGER want_triplet_unit, triplet_unit, triplet_out;
 $INTEGER i, iel, imed, lnblnk1, egs_get_unit, ntrip, iz1, izi, ifirst;
 $REAL    logE, f_new, f_old, spline;

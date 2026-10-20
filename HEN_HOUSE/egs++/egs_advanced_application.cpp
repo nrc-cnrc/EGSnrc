@@ -520,7 +520,9 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     rayl.addOption("On");
     rayl.addOption("custom");
     EGS_TransportProperty ff_med("ff media names",24,MXMED,&ff_media);
-    EGS_TransportProperty ff_files("ff file names",128,MXMED, &ff_names);
+    EGS_TransportProperty ff_files("ff file names",
+                                  sizeof(the_rayleigh->ff_file[0]),
+                                  MXMED, &ff_names);
 
     EGS_TransportProperty relax("Atomic relaxations",&the_xoptions->iedgfl);
     relax.addOption("Off");

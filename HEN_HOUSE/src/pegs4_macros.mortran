@@ -177,7 +177,7 @@ REPLACE {;COMIN/MIXDAT/;} WITH
      $INTEGER ISCOMP;
      $REAL4 IPOTVAL, LDENSITY;
      $INTEGER MEDID;
-     character*256 OUTDENSITY;
+   character*$max_path_length OUTDENSITY;
    }
 
 REPLACE {;COMIN/DBRPR/;} WITH

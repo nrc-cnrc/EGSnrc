@@ -337,7 +337,7 @@ struct EGS_Rayleigh {
     /*! Media names for which to read in custom FF */
     char  ff_media[MXMED][24];
     /*! Custom FF file names */
-    char ff_file[MXMED][128];
+    char ff_file[MXMED][4096];
 };
 
 /*! \brief A structure corresponding to the \c USEFUL common block.

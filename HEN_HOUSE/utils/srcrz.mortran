@@ -358,7 +358,7 @@ $REAL    TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,TEMP6,TEMP7,TEMP8,TEMP9,FNORM;
 "radial distribution, I declare here FILNAM (which was partially used"
 "but not declared as a character) to be the file name for rad. distr."
 
-character*80 filnam;
+character*$max_path_length filnam;
 
 "entry srcini declarations"
 $INTEGER ICORRL;
@@ -396,7 +396,7 @@ real*8   tf,xtmp,ytmp,phbb,pha,phb,phd,radp;
 
 $INTEGER N_RUN_CHUNK; "stores current chunk of parallel run"
 
-character*80 the_beam_code, the_pegs_file, the_input_file;
+character*$max_path_length the_beam_code, the_pegs_file, the_input_file;
 $INTEGER     lnblnk1;
 
 $LONG_INT tmp_mod;
@@ -1276,7 +1276,8 @@ IF (ISOURC=20) [
 ]
 
 IF ((ISOURC = 21) | (ISOURC = 22)) [
-   READ (CHAR_VALUE(NUM_FILSPC,1),FMT='(256A1)') FILSPC;
+    $set_string(SPCNAM,' ');
+    READ (CHAR_VALUE(NUM_FILSPC,1),FMT='(A)') SPCNAM;
 ]
 
 OUTPUT IQIN,ISOURC,TEMP1,TEMP2,TEMP3,TEMP4;(T10,'SRCRZ read:', 2I5,4F12.5);

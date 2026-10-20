@@ -1561,7 +1561,7 @@ REPLACE {COMIN/rayleigh_inputs/;} WITH
 {
 ;COMMON/rayleigh_inputs/iray_ff_media($MXMED),iray_ff_file($MXMED);
 ;character*24 iray_ff_media;
-;character*128 iray_ff_file;
+;character*$max_path_length iray_ff_file;
 }
 
 REPLACE {COMIN/rayleigh_sampling/;} WITH
