@@ -540,11 +540,14 @@ REPLACE {;COMIN/THRESH/;} WITH
 "------------------------------------------------------------------"
 "*** FileNames                                                     "
 "------------------------------------------------------------------"
+" Keep this value synchronized with EGS_MAX_PATH_LENGTH in "
+" HEN_HOUSE/interface/egs_path_length.h. "
+REPLACE {$max_path_length} WITH {4096};
 REPLACE {;COMIN/FileNames/;} WITH
 {;common/file_names/input_file,output_file,density_file,
                     xsection_file,formf_file,egs_home,lenfn,
                     using_sym_links;
-    character*256 input_file,output_file,density_file,egs_home,
+    character*$max_path_length input_file,output_file,density_file,egs_home,
                   xsection_file,formf_file;
     $INTEGER      lenfn;
     logical       using_sym_links;
@@ -1818,7 +1821,7 @@ $INTEGER lnblnk1;
 COMIN/BREMPR,MIXDAT,RAYLEI,RSLTS,THRESH,MOLVAR,EPSTAR,FileNames/;
 "          NRC MOD DEC 2,1988                  ======"
 
-character fn*512,line*80;
+character fn*$max_path_length,line*80;
 logical   is_there;
 ;
 :INT:FORMAT(1X,14I5);
@@ -5485,7 +5488,8 @@ implicit none;
 integer narg, iargc;
 integer i,lnblnk1,l,l1;
 logical have_arg,is_there;
-character arg*256,arg1*256,inp_file*256,fn*512,hen_house*128;
+character arg*$max_path_length,arg1*256,inp_file*$max_path_length,
+          fn*$max_path_length,hen_house*$max_path_length;
 logical egs_isdir,append;
 
 narg = iargc();
@@ -5592,7 +5596,7 @@ DO i=1,narg-1 [
            inp_file(:l1-9) = arg(:l1-9);
        ]
        ELSE [
-           IF( l1 > 248 ) [
+           IF( l1 > $max_path_length-9 ) [
                write(6,*) ' Input file name is too long! ';
                $CALL_EXIT(1);
            ]
