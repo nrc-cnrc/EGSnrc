@@ -242,9 +242,9 @@ ELSE[
     IVAL = IVAL +1;
     NUM_SPFIL = IVAL;
     VALUES_SOUGHT(IVAL)='SPEC FILENAME';
-    TYPE(IVAL)=2;
+    TYPE(IVAL)=4;
     $GET_INPUT(NUM_SPFIL);
-    READ (CHAR_VALUE(NUM_SPFIL,1),FMT='(A)') filnam;
+    filnam=LONG_PATH_VALUE(NUM_SPFIL);
 
     OUTPUT filnam;(/'   READ INPUT ENERGY SPECTRUM FROM: ',A);
     call replace_env(filnam);

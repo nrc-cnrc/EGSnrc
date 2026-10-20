@@ -1213,6 +1213,7 @@ $LOGICAL  ecut_inregions,pcut_inregions,smax_inregions,
           pe_inregions,aux_inregions,photonuc_inregions;"Ali:photonuc"
 
 character*15 output_strings(14);"Ali:photonuc, increased by 1"
+character*$max_path_length ff_file_list;
 save         output_strings,line;
 save         ecut_inregions,pcut_inregions,smax_inregions,
              incoh_inregions,coh_inregions,relax_inregions,
@@ -1679,7 +1680,7 @@ IF( error_flags(num_coh) = 0 ) [
    ival                = ival + 1;
    num_ffiles          = ival;
    values_sought(ival) = 'ff file names';
-   type(ival)          = 2;  "i.e.  character input"
+    type(ival)          = 4;
    nvalue(ival)        = 0;
    Nmin = num_ffmed; Nmax = num_ffiles;
    CALL GET_INPUT;
@@ -1691,6 +1692,17 @@ IF( error_flags(num_coh) = 0 ) [
     $egs_fatal('(a/,a,I3)','Error reading ff file names! Terminating ...',
                ' error_flag = ', error_flags(num_ffiles));
    ]
+    ff_file_list = long_path_value(num_ffiles);
+    nvalue(num_ffiles) = 1;
+    DO j=1,lnblnk1(ff_file_list) [
+     IF(ff_file_list(j:j)=',') [
+      nvalue(num_ffiles) = nvalue(num_ffiles) + 1;
+     ]
+    ]
+    IF(nvalue(num_ffiles) ~= nvalue(num_ffmed)) [
+     $egs_fatal(*,'Number of custom form factor files does not match ',
+                    'number of media names.');
+    ]
    IF (nvalue(num_ffmed)>$MXMED)[
       $egs_fatal('(a,a,i3,a)',
               '***** Number of media with custom ff larger ',
@@ -1699,7 +1711,17 @@ IF( error_flags(num_coh) = 0 ) [
    ]
    DO i=1,nvalue(num_ffmed) [
     iray_ff_media(i) = char_value(num_ffmed,i);
-    iray_ff_file(i)  = char_value(num_ffiles,i);
+    j = index(ff_file_list,',');
+    IF(i < nvalue(num_ffmed)) [
+     iray_ff_file(i) = ff_file_list(:j-1);
+     ff_file_list = ff_file_list(j+1:);
+    WHILE(index(ff_file_list,' ')=1 & lnblnk1(ff_file_list)>0) [
+      ff_file_list=ff_file_list(2:);
+     ]
+    ]
+    ELSE [
+     iray_ff_file(i) = ff_file_list;
+    ]
    ]
    value(num_coh,1) = 1; "reset to 1 since custom info in iray_ff_files"
   ]
