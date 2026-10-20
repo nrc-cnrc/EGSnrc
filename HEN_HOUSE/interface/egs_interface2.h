@@ -88,6 +88,7 @@
 #define EGS_INTERFACE1_
 
 #include "egs_config1.h"
+#include "egs_path_length.h"
 
 /* Note: The C-preprocessor macros MXMED and MXSTACK must be defined in the
    file array_sizes.h. */
@@ -340,7 +341,7 @@ struct EGS_Rayleigh {
     /*! Media names for which to read in custom FF */
     char  ff_media[MXMED][24];
     /*! Custom FF file names */
-    char ff_file[MXMED][4096];
+    char ff_file[MXMED][EGS_MAX_PATH_LENGTH];
 };
 
 /*! \brief A structure corresponding to the \c USEFUL common block.
@@ -618,12 +619,12 @@ struct EGS_IO {
     char file_extensions[20][10];
     EGS_I32 file_units[20];
     char user_code[256];
-    char input_file[4096];
-    char output_file[4096];
-    char pegs_file[4096];
-    char hen_house[4096];
-    char egs_home[4096];
-    char work_dir[4096];
+    char input_file[EGS_MAX_PATH_LENGTH];
+    char output_file[EGS_MAX_PATH_LENGTH];
+    char pegs_file[EGS_MAX_PATH_LENGTH];
+    char hen_house[EGS_MAX_PATH_LENGTH];
+    char egs_home[EGS_MAX_PATH_LENGTH];
+    char work_dir[EGS_MAX_PATH_LENGTH];
     char host_name[256];
     EGS_I32 n_parallel, i_parallel, first_parallel, n_max_parallel,
             n_chunk, n_files, i_input, i_log, i_incoh, i_nist_data,

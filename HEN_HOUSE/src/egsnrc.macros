@@ -3607,6 +3607,7 @@ REPLACE {$egs_track0(#,#);} WITH {
 
 " Common block containing various directories, file names, etc. "
 REPLACE {$mx_units} WITH {20};
+" Keep synchronized with EGS_MAX_PATH_LENGTH in HEN_HOUSE/interface/egs_path_length.h. "
 REPLACE {$max_path_length} WITH {4096};
 REPLACE {$max_extension_length} WITH {10};
 REPLACE {;COMIN/EGS-IO/;} WITH {;
