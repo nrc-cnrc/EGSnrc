@@ -482,7 +482,7 @@ implicit none;
 
 ;COMIN/EGS-IO/;
 
-character arg*256,tmp_string*512, line1*80;
+character arg*$max_path_length,tmp_string*$max_path_length, line1*80;
 $LOGICAL  have_arg,egs_isdir,egs_strip_extension,ex,
           on_egs_home;
 integer   narg, iargc, i, lnblnk1, l, l2,i_help,egs_get_unit;
@@ -496,11 +496,16 @@ $check_get_argument('-H','--hen-house',arg);
 IF( have_arg ) [
     l = lnblnk1(arg); $set_string(hen_house,' ');
     IF( l > 0 ) [
-        IF( l > 254 ) [
+        IF( l >= $max_path_length ) [
             $egs_fatal('(a,i5)',' HEN_HOUSE argument is too long',l);
         ]
         hen_house(:l) = $cstring(arg);
-        IF( hen_house(l:l) ~= $file_sep ) hen_house(l+1:l+1) = $file_sep;
+        IF( hen_house(l:l) ~= $file_sep ) [
+            IF( l+1 >= $max_path_length ) [
+                $egs_fatal('(a,i5)',' HEN_HOUSE argument is too long',l+1);
+            ]
+            hen_house(l+1:l+1) = $file_sep;
+        ]
     ]
     ELSE [
         $egs_fatal('(a)',' empty argument after -H');
@@ -521,6 +526,11 @@ $check_argument('-h','--help',arg);
 IF( have_arg ) [
   call getarg(0,arg); call egs_strip_path(arg);
   $egs_info('(//,a,a,a,//)','Usage: ',$cstring(arg),' [args] ');
+    l = lnblnk1(hen_house);
+    l2 = lnblnk1('pieces/help_message');
+    IF( l+l2 >= $max_path_length ) [
+            $egs_fatal(*,'HEN_HOUSE help file path is too long');
+    ]
   tmp_string = $cstring(hen_house) // 'pieces/help_message';
   i_help=98;
   i_help=egs_get_unit(i_help);
@@ -603,11 +613,16 @@ IF( have_arg ) [
     IF( l = 0 ) [
         $egs_fatal('(a)',' empty argument after -e');
     ]
-    IF( l > 254 ) [
+    IF( l >= $max_path_length ) [
         $egs_fatal('(a,i5)',' EGS_HOME argument is too long ',l);
     ]
     egs_home(:l) = $cstring(arg);
-    IF( egs_home(l:l) ~= $file_sep ) egs_home(l+1:l+1) = $file_sep;
+    IF( egs_home(l:l) ~= $file_sep ) [
+        IF( l+1 >= $max_path_length ) [
+            $egs_fatal('(a,i5)',' EGS_HOME argument is too long ',l+1);
+        ]
+        egs_home(l+1:l+1) = $file_sep;
+    ]
     DO i=1,lnblnk1(egs_home) [
         IF( egs_home(i:i) = '/' ) [
             egs_home(i:i) = $file_sep;
@@ -629,6 +644,10 @@ IF( ~have_arg ) [
     is_pegsless=.true.;
 ]
 ELSE[
+    l = lnblnk1(arg);
+    IF( l >= $max_path_length ) [
+        $egs_fatal('(a,i5)','PEGS file name is too long ',l);
+    ]
     pegs_file = $cstring(arg);
 ]
 
@@ -1305,7 +1324,7 @@ character*(*) extension;
 
 integer  i,the_unit,lnblnk1,egs_get_unit;
 $LOGICAL egs_is_absolute_path;
-character base*1024, fn*1024;
+character base*$max_path_length, fn*$max_path_length;
 $declare_write_buffer;
 
 egs_open_datfile = -1; "so that the DEC compiler does not complain that"
