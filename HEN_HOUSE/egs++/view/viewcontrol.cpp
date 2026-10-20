@@ -3792,8 +3792,10 @@ void GeometryViewControl::slideTime() {
     particleSlider(slidertime);
 
     // Treat slider motion (dragging or playback) as a transformation, so the
-    // renderer uses reduced resolution to keep up. A full resolution frame is
-    // rendered automatically 500 ms after the motion stops.
+    // renderer uses reduced resolution to keep up, but never below half
+    // resolution. A full resolution frame is rendered automatically 500 ms
+    // after the motion stops (which also clears the cap).
+    gview->maxDownscale = 2;
     updateView(true);
 }
 

@@ -59,6 +59,10 @@ public:
 
     struct RenderParameters pars;
 
+    // Largest allowed downscaling factor while navigating (0 = no limit).
+    // Set during time playback/slider motion; reset by endTransformation().
+    int maxDownscale = 0;
+
     ImageWindow(QWidget *parent=0, const char *name=0);
     ~ImageWindow();
 

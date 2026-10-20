@@ -154,7 +154,11 @@ void ImageWindow::rerender(EGS_BaseGeometry *geo) {
     else {
         // Dynamic scaling. Ignore the fixed costs of rendering, and tune
         // the pixel-dependent costs to take a specific amount of time.
-        EGS_Float target = 30.0; // msecs per frame
+        // Target msecs per frame. Time playback and slider motion (when
+        // maxDownscale is set) use a larger budget, so they stay at full
+        // resolution unless a full frame takes longer than ~100 ms (10 fps).
+        // Frames that can't keep up are skipped, so this doesn't cause lag.
+        EGS_Float target = (maxDownscale > 0) ? 100.0 : 30.0;
         EGS_Float timePerPixel = lastResult.timePerPixel;
         EGS_Float scale = nx*ny * timePerPixel / target;
         if (scale > 1) {
@@ -179,6 +183,17 @@ void ImageWindow::rerender(EGS_BaseGeometry *geo) {
             // Fast enough that preemption isn't necessary
         }
     }
+    // Optional cap on the downscaling factor (used during time playback and
+    // time slider motion, so the view never drops below e.g. half resolution)
+    if (navigating && maxDownscale > 0) {
+        if (nxr > maxDownscale) {
+            nxr = maxDownscale;
+        }
+        if (nyr > maxDownscale) {
+            nyr = maxDownscale;
+        }
+    }
+
     // Determine # of pixels needed
     int nnx = nx/nxr;
     int nny = ny/nyr;
@@ -221,18 +236,26 @@ void ImageWindow::saveView(EGS_BaseGeometry *geo, int nx, int ny, QString name, 
 
     saveName = name;
     saveExtension = ext;
-    // Temporarily change parameters to render at new resolution
+    // Temporarily change parameters to render at new resolution. Saved images
+    // are always rendered at full scale (no pixel scaling or smoothing), even
+    // if the last on-screen frame was a reduced-resolution motion frame.
     int oldnx = pars.nx;
     int oldny = pars.ny;
+    int oldnxr = pars.nxr;
+    int oldnyr = pars.nyr;
     RenderRequestType oldrq = pars.requestType;
     pars.nx = nx;
     pars.ny = ny;
+    pars.nxr = 1;
+    pars.nyr = 1;
     pars.requestType = SavedImage;
     // Queue directly to maintain correct state
     emit requestRender(lastRequestGeo, pars);
 
     pars.nx = oldnx;
     pars.ny = oldny;
+    pars.nxr = oldnxr;
+    pars.nyr = oldnyr;
     pars.requestType = oldrq;
 
     isSaving = true;
@@ -281,6 +304,7 @@ void ImageWindow::startTransformation() {
 void ImageWindow::endTransformation() {
     navigationTimer->stop();
     navigating = false;
+    maxDownscale = 0;
     if (lastRequestGeo) {
         render(lastRequestGeo, false);
     }
