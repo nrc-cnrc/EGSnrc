@@ -1359,15 +1359,16 @@ IF( egs_is_absolute_path(extension) ) [
     $egs_fatal(*,'Failed to open file ',$cstring(extension));
 ]
 
+$set_string(base,' '); $set_string(fn,' ');
+base = $cstring(egs_home) // $cstring(user_code) // $file_sep;
 l = lnblnk1(egs_home) + lnblnk1(user_code) + 1;
 l = l + lnblnk1(output_file) + lnblnk1(extension);
 IF(i_parallel > 0) [ l = l + 12; ]
 IF(l >= $max_path_length) [
-    IF(action = 0) [ egs_open_datfile = -3; return; ]
-    $egs_fatal(*,'EGSnrc output data-file path exceeds maximum length');
+    $egs_warning('(a)',
+        'EGSnrc output data-file path exceeds maximum length');
+    GOTO :try_input_datfile:;
 ]
-$set_string(base,' '); $set_string(fn,' ');
-base = $cstring(egs_home) // $cstring(user_code) // $file_sep;
 "fn = $cstring(base) // $cstring(output_file) // $cstring(extension);"
 IF( i_parallel > 0 ) [
     fn = $cstring(base) // $cstring(output_file) // '_w';
@@ -1388,6 +1389,7 @@ egs_open_datfile = the_unit; return;
 
 :no_datfile_1:;
 $egs_warning('(a,a)','Failed to open ',$cstring(fn));
+:try_input_datfile:;
 $set_string(fn,' ');
 l = lnblnk1(egs_home) + lnblnk1(user_code) + 1;
 l = l + lnblnk1(input_file) + lnblnk1(extension);

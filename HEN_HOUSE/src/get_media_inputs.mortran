@@ -1452,12 +1452,12 @@ DO i=1,NMED[
          ival=ival+1;
          ival_densityfile=ival;
          values_sought(ival)='density correction file';
-         type(ival)          = 2;
+         type(ival)          = 4;
          nvalue(ival)=1;
          nmin=ival_densityfile;nmax=ival_densityfile;
          CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
          IF(error_flags(ival_densityfile)=0)[
-            density_file=char_value(ival_densityfile,1);
+            density_file=long_path_value(ival_densityfile);
             densityfile_specified=.true.;
             "may get changed to false later if it cannot be opened"
             $WRITE_MEDERR(
