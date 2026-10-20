@@ -515,7 +515,7 @@
 "I>
 "I>  If MODE_$SYNCHDMLC=1 or 2 (dynamic delivery or step-and-shoot delivery):
 "I>
-"I>  14b  mlc_file (A256)
+"I>  14b  mlc_file (A4096)
 "I>
 "I>         mlc_file:  The full name of the file containing leaf opening
 "I>                    data.  The format of the file contents is as follows:
@@ -1173,7 +1173,7 @@ INTEGER I,J,K,L,        "T>DO loop indices
        NUM_FULL,    "no. of FULL leaves"
        NUM_HLF,     "no. of HALF leaves"
        NUM_QTR;     "no. of QUARTER leaves"
-character*256 mlc_file;
+character*$max_path_length mlc_file;
 CHARACTER*80 MLC_TITLE; "T> title line in mlc_file
 $REAL INDEXTMP; "T>temporary input variable for field indices in dynamic and
                 "  step-and-shoot simulations
@@ -2656,7 +2656,7 @@ DO I=1, TOT_LEAF_$SYNCHDMLC
 ]
 IF(MODE_$SYNCHDMLC=1|MODE_$SYNCHDMLC=2)["dynamic or step-and-shoot leaf inputs"
   OUTPUT;(/' Input full name of file containing leaf opening data:'/);
-  READ(i_input,'(A256)')mlc_file;
+  READ(i_input,'(A)')mlc_file;
   OUTPUT mlc_file;(A/);
   call replace_env(mlc_file);
   mlc_unit=egs_get_unit(mlc_unit);
