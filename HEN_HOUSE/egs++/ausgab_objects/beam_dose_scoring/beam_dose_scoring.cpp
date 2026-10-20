@@ -44,6 +44,7 @@
 #include <fstream>
 #include <string>
 
+#include "egs_path_length.h"
 #include "beam_dose_scoring.h"
 #include "egs_input.h"
 #include "egs_functions.h"
@@ -104,13 +105,13 @@ void BEAM_DoseScoring::setApplication(EGS_Application *App) {
         }
     }
     // determine maximum medium name length
-    char buf[32];
-    int count = 0;
+        char buf[EGS_MAX_MEDIUM_NAME_LENGTH + 32];
     int imed=0;
     for (imed=0; imed < nmedia; imed++) {
-        sprintf(buf,"%s%n",app->getMediumName(imed),&count);
-        if (count > max_medl) {
-            max_medl = count;
+            const int medium_name_length = static_cast<int>(
+                string(app->getMediumName(imed)).length());
+            if (medium_name_length > max_medl) {
+                max_medl = medium_name_length;
         }
     }
     // Flag dose scoring regions in geometry

@@ -683,12 +683,13 @@ $REAL EKE,ELKE,TMXSO,DEDXE,DEDXP,EFRACT,SIGE,SIGP,BREME,BREMP,ETAB(16),
       EIE,PLOTE($MAXPOINTS),PLOTEM($MAXPOINTS),PLOTEEN($MAXPOINTS),
       PLOTEMP($MAXPOINTS), PLOTEMS($MAXPOINTS);
 $INTEGER IPLOTE,IFLAG1,IFLAG2,LELKE;
-CHARACTER*60 GRAPHTITLE,XAXIS,YAXISPcom,YAXISPmfp,YAXISE,YAXISEmfp,
-              SUBTITLE,SERIES;
+CHARACTER*64 GRAPHTITLE;
+CHARACTER*60 XAXIS,YAXISPcom,YAXISPmfp,YAXISE,YAXISEmfp,SUBTITLE,SERIES;
 DATA ETAB/1.,1.25,1.5,1.75,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9./;
 
 
-character*24 medium_name,med_tmp,sterncid_tmp;
+character*$max_medium_name_length medium_name,med_tmp;
+character*24 sterncid_tmp;
 character*$max_path_length density_file,material_file,tmp_string,
           spoutput_file($MXMED),density_outputfile;
 character*80 text_string, text_save, title;
@@ -886,7 +887,7 @@ DO i=1,NMED[
 
    "convert medium name to string for ease of"
    "implementation"
-   DO j=1,24[medium_name(j:j)=media(j,i);]
+  DO j=1,$max_medium_name_length[medium_name(j:j)=media(j,i);]
 
    "set up defaults"
    elements_specified=.false.;
@@ -1791,7 +1792,8 @@ write(ounit,*);
 
 DO i=1,nmed[
 
-  write(ounit,'(a,24a1)')'   Medium: ',(media(j,i),j=1,24);
+    write(ounit,'(a,64a1)')'   Medium: ',
+      (media(j,i),j=1,$max_medium_name_length);
   write(ounit,'(a,24a1)')' Sterncid: ',(inpstrn(j,i),j=1,24);
   write(ounit,'(a,1p,e14.5,a)')' rho (bulk density): ',rho(i),' g/cm^3';
   IF(epstfl(i)~=1)[
@@ -1859,7 +1861,8 @@ DO i=1,nmed[
     YAXISE = 'dE/drhoX MeV/g/cm\S2\N';
     YAXISEmfp = 'mean free path / cm';
     YAXISPmfp = 'mean free path / cm';
-    write(GRAPHTITLE,'(24a1)')(media(j,i),j=1,24);
+        write(GRAPHTITLE,'(64a1)')
+          (media(j,i),j=1,$max_medium_name_length);
     SUBTITLE = 'Electron data';
     DO j=1,8[
      DO k=1,16[

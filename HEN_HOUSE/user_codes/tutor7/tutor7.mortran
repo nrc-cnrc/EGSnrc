@@ -420,9 +420,12 @@ $GET_INPUT(IVAL);
 IF( error_flag > 0 ) stop;
 nmed = nvalue(ival);
 DO i=1,nmed [
-  DO j=1,24 [ media(j,i) = ' '; ]
-  read(char_value(ival,i),'(24a1)')
-     (media(j,i),j=1,lnblnk1(char_value(ival,i)));
+  IF (lnblnk1(char_value(ival,i)) > $max_medium_name_length) [
+    write(6,*) ' Medium name exceeds maximum length of 64 characters';
+    stop;
+  ]
+  read(char_value(ival,i),'(64a1)')
+     (media(j,i),j=1,$max_medium_name_length);
 ]
 
 "Set medium 1 everywhere"
@@ -730,8 +733,8 @@ write(ounit,'(a//)')
 write(ounit,'(25x,a/)') 'Vacuum';
 DO i=2,nzb [
   m = med(i);
-  write(ounit,'(f9.4,51a1//,25x,24a1/)') zbound(i-1),
-    ('-',j=1,51),(media(j,m),j=1,24);
+  write(ounit,'(f9.4,51a1//,25x,64a1/)') zbound(i-1),
+    ('-',j=1,51),(media(j,m),j=1,$max_medium_name_length);
 ]
 write(ounit,'(f9.4,51a1//,25x,a/)') zbound(nzb),('-',j=1,51),'Vacuum';
 

@@ -1555,7 +1555,8 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
     OUTPUT61;(/' media:');
     DO n=1,NMED[
        read($CTUnitNumber,'(24a1)') (media(j,n),j=1,24);
-       OUTPUT61 (media(j,n),j=1,24);(' ',24a1);
+      DO j=25,$max_medium_name_length [media(j,n)=' ';]
+      OUTPUT61 (media(j,n),j=1,$max_medium_name_length);(' ',64a1);
     ]
     "estepe and SMAX"
     read($CTUnitNumber,*) (ESTEPM(i),i=1,NMED);
@@ -1654,8 +1655,8 @@ ELSE [ " Read in geometric data as defined by user as opposed to CT data"
 
    DO n=1,NMED [
        OUTPUT61 n;(' Medium',i3,':  ',$);
-       INPUT (media(j,n),j=1,24);(24a1);
-       OUTPUT61 (media(j,n),j=1,24);(' ',t20,24a1);
+      INPUT (media(j,n),j=1,$max_medium_name_length);(64a1);
+      OUTPUT61 (media(j,n),j=1,$max_medium_name_length);(' ',t20,64a1);
    ]
    med(1)=0;
    DO n=2,$MXREG [med(n)=1;] "ie Everything the first medium"
@@ -2402,8 +2403,9 @@ call srcout;
 
 IF(howfarless) call modify_tmxs(MIN(mindelX,mindelY,mindelZ));
 
-OUTPUT61;(/' Medium',t24,'AE',t34,'AP');
-DO n=1,NMED[OUTPUT61 (media(j,n),j=1,15),ae(n),ap(n);(1x,15a1,2f10.3);]
+OUTPUT61;(/' Medium',t68,'AE',t78,'AP');
+DO n=1,NMED[OUTPUT61 (media(j,n),j=1,$max_medium_name_length),ae(n),ap(n);
+  (1x,64a1,2f10.3);]
 
 "RESUME FEATURES"
 "================"

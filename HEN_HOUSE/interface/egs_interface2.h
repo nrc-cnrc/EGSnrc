@@ -339,7 +339,7 @@ struct EGS_Media {
   */
 struct EGS_Rayleigh {
     /*! Media names for which to read in custom FF */
-    char  ff_media[MXMED][24];
+    char  ff_media[MXMED][EGS_MAX_MEDIUM_NAME_LENGTH];
     /*! Custom FF file names */
     char ff_file[MXMED][EGS_MAX_PATH_LENGTH];
 };

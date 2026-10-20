@@ -182,6 +182,8 @@ REPLACE {PARAMETER #=#;} WITH
 PARAMETER $MXMED=10;      "MAX. NO. OF DIFFERENT MEDIA (EXCL. VAC.)"
 " Keep synchronized with EGS_MAX_XSECTION_PREFIX_LENGTH in egs_path_length.h. "
 REPLACE {$max_xsection_prefix_length} WITH {64};
+" Keep synchronized with EGS_MAX_MEDIUM_NAME_LENGTH in egs_path_length.h. "
+REPLACE {$max_medium_name_length} WITH {64};
 PARAMETER $MXREG=2000;    "MAXIMUM NO. OF REGIONS ALLOCATED"
 PARAMETER $MXSTACK=40;    "STACK SIZE"
 PARAMETER $MXVRT1=1000;   "NO. OF REPRESENTATIVE ANGLES IN VERT1"
@@ -946,8 +948,8 @@ REPLACE {;COMIN/MEDIA/;} WITH
 "Ali:photonuc, 4 lines (order matters because of padding issues)"
        $LGN(RLC,RLDU,RHO,MSGE,MGE,MSEKE,MEKE,MLEKE,MCMFP,MRANGE,
             IRAYLM,IPHOTONUCM($MXMED)),
-            MEDIA(24,$MXMED), photon_xsections, comp_xsections,
-            photonuc_xsections,eii_xfile,IPHOTONUC,NMED;
+            MEDIA($max_medium_name_length,$MXMED), photon_xsections,
+            comp_xsections,photonuc_xsections,eii_xfile,IPHOTONUC,NMED;
    $TYPE    MEDIA;"media names"
    $REAL    RLC,  "radiation length in centimeters for a given medium"
             RLDU, "radiation length after user scaling over-ride"
@@ -2888,6 +2890,7 @@ $INTEGER
     LCTHET, "$SET INTERVAL index for cos(theta) from look-up table"
     LMDL  , "character width of medium header ' MEDIUM='"
     LMDN  , "character width of medium description"
+    MEDLEN, "length of a requested medium name"
     LTHETA, "$SET INTERVAL index for sin(theta) from look-up table"
     MD    , "temporary storage for the medium number"
     MXSINC, "number of intervals approximating the sine function"

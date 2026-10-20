@@ -366,7 +366,8 @@ write(*,'(//)');
 write(*,*) '************************************';
 write(*,*) '* Start g calculation: Version '//$VERSION//' *';
 write(*,*) '************************************';
-OUTPUT (media(j,1),j=1,24);(/'          MEDIUM is: ',24A1/);
+OUTPUT (media(j,1),j=1,$max_medium_name_length);
+(/'          MEDIUM is: ',64A1/);
 ;OUTPUT AE(1)-PRM, AP(1);
 (' knock-on electrons can be created and any electron followed down to'
 /T40,F8.3,' MeV kinetic energy'/
@@ -1140,8 +1141,12 @@ IF( nmed > $MXMED ) [
     stop;
 ]
 DO i=1,nmed [
-  DO j=1,24 [ media(j,i) = ' '; ]
-  read(char_value(ival,i),'(24a1)') (media(j,i),j=1,lnblnk(char_value(ival,i)));
+  IF (lnblnk(char_value(ival,i)) > $max_medium_name_length) [
+    write(6,*) ' Medium name exceeds maximum length of 64 characters';
+    stop;
+  ]
+  read(char_value(ival,i),'(64a1)')
+    (media(j,i),j=1,$max_medium_name_length);
 ]
 
 "Set medium 1 everywhere"

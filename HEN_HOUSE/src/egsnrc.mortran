@@ -1870,7 +1870,7 @@ character*256 tmp_string;
 $INTEGER      lnblnk1;" in house lnblnk function becuase not all compilers"
                       " support this"
 
-DATA MDLABL/$S' MEDIUM='/,LMDL/8/,LMDN/24/,DUNITO/1./;
+DATA MDLABL/$S' MEDIUM='/,LMDL/8/,LMDN/$max_medium_name_length/,DUNITO/1./;
 DATA I1ST/1/,NSINSS/37/,MXSINC/$MXSINC/,ISTEST/0/,NRNA/1000/;
 
 $INIT-PEGS4-VARIABLES;
@@ -2021,8 +2021,20 @@ LOOP["MEDIUM HEADER SEARCH LOOP"
   "   HEADER MATCHES. NOW SEE IF IT IS ONE OF REQUESTED MEDIA"
   :MDNAME:
   DO IM=1,NMED [
-    DO IB=1,LMDN [IL=LMDL+IB; IF (MBUF(IL).NE.MEDIA(IB,IM))NEXT:MDNAME:;
-    IF (IB.EQ.LMDN)EXIT:MDLOOK:; ]
+        MEDLEN=0;
+        DO IB=$max_medium_name_length,1,-1 [
+            IF (MEDIA(IB,IM) ~= ' ') [ MEDLEN=IB; EXIT; ]
+        ]
+        IF (MEDLEN=0) NEXT:MDNAME:;
+        DO IB=1,MEDLEN [
+            IL=LMDL+IB;
+            IF (MBUF(IL).NE.MEDIA(IB,IM))NEXT:MDNAME:;
+        ]
+        IF (MEDLEN < $max_medium_name_length) [
+            IL=LMDL+MEDLEN+1;
+            IF (MBUF(IL) ~= ' ' & MBUF(IL) ~= ',')NEXT:MDNAME:;
+        ]
+        EXIT:MDLOOK:;
   ] "END :MDNAME: DO"
   "   NOT IN NAME TABLE, SO IGNORE IT"
 ]REPEAT "MDLOOK"
@@ -2312,7 +2324,7 @@ $egs_info('(a,i2//,a/,a/)', ' END OF FILE ON UNIT ',KMPI,
   ' FOLLOWING NAMES WERE NOT RECOGNIZED:');
 DO IM=1,NMED [
    IF(LOK(IM).NE.1) [
-      $egs_info('(40x,a,24a1,a)','''',(MEDIA(I,IM),I=1,LMDN),'''');
+    $egs_info('(40x,a,64a1,a)','''',(MEDIA(I,IM),I=1,LMDN),'''');
    ]
 ]
 STOP;
@@ -8129,8 +8141,8 @@ DO medium = 1,nmed [
 
     $egs_info('(a,i3,a,$)',' Working on medium ',medium,' ... ');
     IF( out = 1 ) [
-        write(ounit,'(/,2x,a,i3,a,24a1/)') 'Medium ',medium,': ',
-          (media(k,medium),k=1,24);
+                write(ounit,'(/,2x,a,i3,a,64a1/)') 'Medium ',medium,': ',
+                    (media(k,medium),k=1,$max_medium_name_length);
     ]
     /sumZ,sumA/ = 0;
     DO i=1,nne(medium) [
@@ -8306,7 +8318,7 @@ $REAL totRayleigh2,pzmin;
 $REAL emin, emax;
 $INTEGER i,j,k,ff_unit, egs_get_unit, ne;
 $INTEGER lnblnk1, EOF, nff, medium, ncustom;
-character dummy*24, afac_file*$max_path_length,
+character dummy*$max_medium_name_length, afac_file*$max_path_length,
           ff_file*$max_path_length;
 
 IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
@@ -8319,7 +8331,8 @@ IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
    read in the information and it is not ensured that the media
    information will be read before getting the transport parameters.
 ****************************************************************/
-ncustom=0;write(dummy,'(24a1)')(media(j,medium),j=1,24);ff_file=' ';
+ncustom=0;write(dummy,'(64a1)')(media(j,medium),j=1,$max_medium_name_length);
+ff_file=' ';
 DO i=1,$MXMED[IF(lnblnk1(iray_ff_file(i))~=0)[ncustom = ncustom + 1;]]
 DO i=1,ncustom[IF (dummy(:lnblnk1(dummy)) = iray_ff_media(i))[
    ff_file = iray_ff_file(i);

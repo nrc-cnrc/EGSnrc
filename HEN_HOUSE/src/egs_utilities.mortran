@@ -1607,14 +1607,20 @@ character c;
 $LOGICAL  same;
 $declare_write_buffer;
 
-l = min(len(medname),24); medname_len = l;
+l = len(medname);
 DO i=1,l [
     c = medname(i:i);
-    IF( ichar(c) = 0 ) [ medname_len = i-1; EXIT; ]
+    IF( ichar(c) = 0 ) [ l = i-1; EXIT; ]
 ]
+IF (l > $max_medium_name_length) [
+    $egs_fatal('(a,i3,a)',
+      'In egs_add_medium: medium name exceeds maximum length of ',
+      $max_medium_name_length,' characters');
+]
+medname_len = l;
 DO imed=1,nmed [
-    l = 24;
-    DO i=1,24 [
+    l = $max_medium_name_length;
+    DO i=1,$max_medium_name_length [
         IF( media(i,imed)(1:1) = ' ' ) [ l = i-1; EXIT; ]
     ]
     IF( l = medname_len ) [
@@ -1634,15 +1640,15 @@ IF( nmed > $MXMED ) [
     'In egs_add_medium: maximum number of media exceeded ',
     'Increase the macro $MXMED (currently ',$MXMED,') and retry');
 ]
-l = min(len(medname),24);
+l = medname_len;
 DO i=1,l [
     c = medname(i:i);
     IF( ichar(c) = 0 ) [ l = i-1; EXIT; ]
     media(i,nmed) = ' ';
     media(i,nmed)(1:1) = c;
 ]
-IF( l < 24 ) [
-    DO i=l+1,24 [ media(i,nmed) = ' '; ]
+IF( l < $max_medium_name_length ) [
+    DO i=l+1,$max_medium_name_length [ media(i,nmed) = ' '; ]
 ]
 egs_add_medium = nmed;
 return; end;
@@ -1655,8 +1661,8 @@ $declare_max_medium;
 $INTEGER i,l,imed;
 DO i=1,len(medname) [ medname(i:i) = ' '; ]
 IF( imed < 1 | imed > nmed ) [ return; ]
-l = 24;
-DO l=24,1,-1 [
+l = $max_medium_name_length;
+DO l=$max_medium_name_length,1,-1 [
     IF( media(l,imed)(1:1) ~= ' ' ) EXIT;
 ]
 l = min(l,len(medname));

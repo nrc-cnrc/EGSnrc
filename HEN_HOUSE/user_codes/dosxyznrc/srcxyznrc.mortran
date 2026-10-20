@@ -1776,14 +1776,15 @@ IF(enflag>1)[
   ELSE[
     med($IR(imax,jmax,kmax)+1)=medsur;
     IF(dflag=0)[
-       OUTPUT61(media(j,medsur),j=1,24),dsurround(1);
-    (/' The material in the region outside the phantom is:',24a1/
+       OUTPUT61(media(j,medsur),j=1,$max_medium_name_length),dsurround(1);
+    (/' The material in the region outside the phantom is:',64a1/
      ' The thickness of this region (in x, y & z direction) is:',F8.3,' cm'/);
     ]
     ELSE[
-       OUTPUT61(media(j,medsur),j=1,24),dsurround(1),dsurround(2),
+             OUTPUT61(media(j,medsur),j=1,$max_medium_name_length),
+                dsurround(1),dsurround(2),
                dsurround(3),dsurround(4);
-    (/' The material in the region outside the phantom is:',24a1/
+   (/' The material in the region outside the phantom is:',64a1/
       ' The thickness of this region in the x direction is:',F8.3,' cm'/
      ' The thickness in the y direction is:',F8.3,' cm'/
      ' The thickness in the +z direction is:',F8.3,' cm'/

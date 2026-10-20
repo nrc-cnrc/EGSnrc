@@ -268,8 +268,8 @@ DO IM=1,NMED[
  TEP=AEP-RMP; THMOLLP=AEP+TEP ; "equation in pegs4.mortran"
 
  IF (UEP.LE.AEP)[
-    write(i_log,'(a,24a1)')'  Error: Material not defined: ',
-                              (media(j,IM),j=1,24);
+   write(i_log,'(a,64a1)')'  Error: Material not defined: ',
+                       (media(j,IM),j=1,$max_medium_name_length);
     $egs_fatal(*,'Material used in the geometry was not defined in the'
                 ,' material data.');
  ]

@@ -1962,7 +1962,7 @@ $INTEGER ounit;
 $declare_max_medium;
 ;COMIN/GetInput,ELECIN,MEDIA,EGS-IO/;
 $INTEGER imed,ival,lnblnk1,nchanged;
-character*24 medname;
+character*$max_medium_name_length medname;
 
 ounit = i_log;
 ounit = i_log;

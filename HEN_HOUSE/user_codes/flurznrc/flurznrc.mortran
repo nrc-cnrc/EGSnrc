@@ -407,7 +407,7 @@ REPLACE {$VERSION} WITH {
 "                                **************
 "*******************************************************************************
 "
-"  MEDIA                  (M)   TYPE OF MATERIAL (FMT='24A1')
+"  MEDIA                  (M)   TYPE OF MATERIAL (FMT='64A1')
 "
 "  Define which media in which regions, numbering in order given above.
 "

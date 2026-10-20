@@ -142,7 +142,7 @@ REPLACE {;COMIN/ET-Control/;} WITH {
 REPLACE {;COMIN/MEDIA/;} WITH {
   ;COMMON/MEDIA_p/ $LGN(RLC,RLDU,MSGE,MGE,MSEKE,
                    MEKE,MLEKE,MCMFP,MRANGE,IRAYLM($MXMED)),
-                   MEDIA(24,$MXMED);
+                   MEDIA($max_medium_name_length,$MXMED);
    $TYPE    MEDIA;
    $REAL    RLC,RLDU;
    $INTEGER MSGE,MGE,MSEKE,MEKE,MLEKE,MCMFP,MRANGE,IRAYLM;

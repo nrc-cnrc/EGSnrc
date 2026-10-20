@@ -525,9 +525,14 @@ $GET_INPUT(IVAL); "get the number of media"
 NMED=NVALUE(IVAL);
 DO I=1,NMED [
    SLENGHT=LNBLNK(CHAR_VALUE(NUM_MEDIA,I));
-   READ (CHAR_VALUE(NUM_MEDIA,I),FMT='(24A1)') (MEDIA(J,I),J=1,SLENGHT);
-   IF (SLENGHT<24) [DO J=SLENGHT+1, 24 [MEDIA(J,I)=' ';]]
-   OUTPUT I,(MEDIA(J,I),J=1,24);(' MEDIUM #',I1,':',T55,24A1);
+   IF (SLENGHT > $max_medium_name_length) [
+      ERROR_FLAG=1;
+      OUTPUT;(' Medium name exceeds maximum length of 64 characters');
+   ]
+   READ (CHAR_VALUE(NUM_MEDIA,I),FMT='(64A1)')
+      (MEDIA(J,I),J=1,$max_medium_name_length);
+   OUTPUT I,(MEDIA(J,I),J=1,$max_medium_name_length);
+      (' MEDIUM #',I1,':',T55,64A1);
 ]
 
 IF((NMED.LT.1).OR.(NMED.GT.$MXMED)) [

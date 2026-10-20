@@ -99,6 +99,7 @@
 #include <string>
 #include <cstdlib>
 
+#include "../../../interface/egs_path_length.h"
 #include "egs_dose_scoring.h"
 #include "egs_input.h"
 #include "egs_functions.h"
@@ -142,14 +143,14 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     // Get the number of media in the input file
     nmedia = app->getnMedia();
     // determine maximum medium name length
-    char buf[64];
-    int count = 0;
+    char buf[EGS_MAX_MEDIUM_NAME_LENGTH + 32];
     int imed=0;
     max_medl = 6;  // length of the string "medium" is the minimum
     for (imed=0; imed < nmedia; imed++) {
-        sprintf(buf,"%s%n",app->getMediumName(imed),&count);
-        if (count > max_medl) {
-            max_medl = count;
+        const int medium_name_length = static_cast<int>(
+            string(app->getMediumName(imed)).length());
+        if (medium_name_length > max_medl) {
+            max_medl = medium_name_length;
         }
     }
     if (d_region.size()>nreg)

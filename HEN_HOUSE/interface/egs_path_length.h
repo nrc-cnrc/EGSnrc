@@ -7,4 +7,7 @@
 /* Keep synchronized with $max_xsection_prefix_length in egsnrc.macros. */
 #define EGS_MAX_XSECTION_PREFIX_LENGTH 64
 
+/* Keep synchronized with $max_medium_name_length in egsnrc.macros. */
+#define EGS_MAX_MEDIUM_NAME_LENGTH 64
+
 #endif

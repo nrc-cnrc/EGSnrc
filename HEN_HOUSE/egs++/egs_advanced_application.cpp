@@ -335,7 +335,8 @@ public:
                 }
                 for (int i=0; i<number; i++) {
                     if (str[i].size()>len) {
-                        str[i] = str[i].substr(0,len);
+                        egsFatal("Property %s entry %d exceeds maximum length of %d characters\n",
+                                 name.c_str(), i+1, len);
                     }
                 }
                 *str_v = str;
@@ -520,7 +521,8 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     rayl.addOption("Off");
     rayl.addOption("On");
     rayl.addOption("custom");
-    EGS_TransportProperty ff_med("ff media names",24,MXMED,&ff_media);
+    EGS_TransportProperty ff_med("ff media names",
+                                  EGS_MAX_MEDIUM_NAME_LENGTH,MXMED,&ff_media);
     EGS_TransportProperty ff_files("ff file names",
                                   sizeof(the_rayleigh->ff_file[0]),
                                   MXMED, &ff_names);
