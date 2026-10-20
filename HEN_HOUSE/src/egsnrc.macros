@@ -3385,6 +3385,7 @@ REPLACE {COMIN/GetInput/;} WITH
                                    "array index(0:4) for a value sought"
         VALUES_SOUGHT($NMAX),      "Name of each input                 "
         CHAR_VALUE($NMAX,$NVALUE), "For returning character inputs     "
+          LONG_PATH_VALUE($NMAX),    "For returning long path inputs     "
         VALUE($NMAX,$NVALUE),      "For returning int. or real inputs  "
         DEFAULT($NMAX),            "Default value, only for type 0 & 1 "
         VALUE_MIN($NMAX),          "Min and max value defining         "
@@ -3403,7 +3404,8 @@ REPLACE {COMIN/GetInput/;} WITH
         ERROR_FLAG,                "0 for no errors, 1 for errors      "
         DELIMETER;                 "Name of the delimeter              "
    character ALLOWED_INPUTS*$STRING32,VALUES_SOUGHT*$STRING32,
-             CHAR_VALUE*$STRING256,DELIMETER*$STRING32;
+             CHAR_VALUE*$STRING256,DELIMETER*$STRING32,
+             LONG_PATH_VALUE*$max_path_length;
    $REAL     VALUE,DEFAULT,VALUE_MIN,VALUE_MAX;
    $INTEGER  NVALUE,TYPE,NMIN,NMAX,ERROR_FLAG,ERROR_FLAGS,i_errors;
 }

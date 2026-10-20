@@ -252,7 +252,7 @@
 "---------------if NMED = 0  input for a CT phantom ---------------------------
 "----------------------------------------------------------------------------
 
-"   Record 3  PhantFileName (A256)  : The full name of the file containing
+"   Record 3  PhantFileName (A4096) : The full name of the file containing
 "                                     the CT phantom as output by ctcreate
 "                                     (should be a .egsphant file).
 "
@@ -1362,7 +1362,7 @@ real      amass,tcpuold,ECUTIN,PCUTIN,ESTEPM($MXMED),width,
           ainflu, "total number of incident particles"
           minrhor, "min density of CT phantom"
           maxrhor; "max density of CT phantom"
-character*256 PhantFileName, "name of file holding CT phantom data"
+character*$max_path_length PhantFileName,
               parname, "name of .pardose file"
               phsp_out_fn;  "phsp file output name"
 REAL XMIN_YMIN_ZMIN,YMIN_XMIN_ZMIN,ZMIN_XMIN_YMIN,
@@ -1532,7 +1532,7 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
     (' Input the full name of the file containing the CT phantom created '/
      ' using ctcreate '/
      ' : ',$);
-    read(5,'(A256)') PhantFileName;
+    read(5,'(A)') PhantFileName;
     OUTPUT61 PhantFileName(:lnblnk1(PhantFileName));(A);
 
     call replace_env(PhantFileName);

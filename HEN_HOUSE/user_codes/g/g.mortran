@@ -1488,7 +1488,7 @@ $INTEGER itimes;
 save     mono,nensrc,mode,ensrcd,srcpdf,srcpdf_at,srcbin_at,eave,sum,
          esum,esum2,ecount,ei,iqi,ui,vi,wi,eik;
 
-character*256 spec_file;
+character*$max_path_length spec_file;
 
 ival = 0;
 
@@ -1617,10 +1617,10 @@ ELSE [
 
     ival                   = ival + 1;
     values_sought(ival)    = 'SPECTRUM FILE';
-    type(ival)             = 2;
+    type(ival)             = 4;
     nvalue(ival)           = 1;
     $GET_INPUT(ival);
-    read(char_value(ival,1),'(a)') spec_file;
+    spec_file=long_path_value(ival);
     call replace_env(spec_file);
     open(9,file=spec_file,status='old');
     read(9,*); "i.e. ignore the title"

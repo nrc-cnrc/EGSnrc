@@ -781,7 +781,7 @@ REPLACE {$NTEMP} WITH {12} "Dimension of temporary input buffer
 $REAL temp,fnorm,binsok,gridsz,ak;
 $INTEGER i,k,j,ib,ieof;
 dimension temp($NTEMP);
-CHARACTER*256 FILNAM;
+CHARACTER*($max_path_length*3+2) FILNAM;
 CHARACTER*80 SPEC_TITLE;
 CHARACTER*5  MODE;
 $INTEGER lnblnk1,ilen;
@@ -1807,9 +1807,9 @@ IF(enflag = 0)[ "monoenergetic source"
 ELSEIF(enflag = 1)["input an energy spectrum"
 "----------------------------------------------------------------"
     OUTPUT;(' Energy spectrum:');
-    OUTPUT;(' Input name of file with spectrum data (A256): ',$);
+   OUTPUT;(' Input name of file with spectrum data: ',$);
     READ(5,101,ERR=:ERR_SOURCE1:) FILNAM;
-    101 FORMAT(A256);
+   101 FORMAT(A);
     OUTPUT61 FILNAM;(/'   Read input energy spectrum from: ',/A);
     call replace_env(FILNAM);
     OPEN(UNIT=99,STATUS='OLD',file=FILNAM);
@@ -1911,7 +1911,7 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
 "----------------------------------------------------------------"
   IF(isource=2 | isource=8)[
     OLDSRC=0;"flag for old phase space files"
-    OUTPUT;(' Input name of phase space file (A256)'/'  : ',$);
+   OUTPUT;(' Input name of phase space file'/'  : ',$);
     READ(5,101,ERR=:ERR_SOURCE2:) FILNAM;
     OUTPUT61 FILNAM;(/' Particles will be read from file: ',/A);
 
@@ -1984,7 +1984,7 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     "read in name of simulation, input file, pegs4 file"
     OUTPUT;
    (' Input name of beam code (BEAM_accelname), input file (no ext.), '/
-    ' pegs data (no ext.) (A256)'/'  : ',$);
+   ' pegs data (no ext.)'/'  : ',$);
     READ(5,'(A)',ERR=:ERR_SOURCE9:) FILNAM;
     OUTPUT $cstring(FILNAM);(A);
     "now parse FILNAM for the inputs"
@@ -2045,7 +2045,7 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     OUTPUT;
    (' Name of BEAM/MLC code (e.g. particelDmlc)--leave blank if no geometry, '/
     ' phase space file above shared library, '/
-    ' input file for BEAM/MLC code (A256), '/'  : ',$);
+   ' input file for BEAM/MLC code, '/'  : ',$);
     READ(5,'(A)',ERR=:ERR_SOURCE20:) FILNAM;
     OUTPUT $cstring(FILNAM);(A);
     "now parse FILNAM for the input"
@@ -2200,7 +2200,7 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     OUTPUT;
    (' Input name of beam code (BEAM_accelname), BEAM input file (no ext.), '/
     ' BEAM pegs data (no ext.), name of MLC code (e.g. particelDmlc), '/
-    ' MLC code input file (A256)'/'  : ',$);
+   ' MLC code input file'/'  : ',$);
     READ(5,'(A)',ERR=:ERR_SOURCE21:) FILNAM;
     OUTPUT $cstring(FILNAM);(A);
     "now parse FILNAM for the inputs"

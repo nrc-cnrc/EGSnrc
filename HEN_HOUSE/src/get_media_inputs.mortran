@@ -45,10 +45,7 @@ COMIN/GetInput,EGS-IO/;
 "***************************************************************************"
 "*                   Variables used by the subroutine                      *"
 "***************************************************************************"
-CHARACTER*$STRING256 TEXT;      "Used to read in each line of the input file   "
-CHARACTER*$STRING256 KEEPTEXT;  "Used to keep an old line of TEXT              "
-CHARACTER*$STRING256 ORIGTEXT;  "The text without conversion to upper case     "
-CHARACTER*$STRING256 TEXTPIECE; "Used to read a piece of TEXT                  "
+CHARACTER*$max_path_length TEXT,KEEPTEXT,ORIGTEXT,TEXTPIECE;
 CHARACTER*$STRING80  DELIM_START;"Start of the delimeter                       "
 CHARACTER*$STRING80  DELIM_END;  "End of the delimeter                         "
 CHARACTER*$STRING80  ENDSTRING;  "string at which to terminate search          "
@@ -185,12 +182,13 @@ DO I = NMIN, NMAX  [ "for each value_sought"
        CONTINUE;
        LINE=LINE+1;
        IF( start_found ) [
-         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A256)') TEXT;
+         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A)') TEXT;
        ]
        ELSE [
-         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;
+         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;
+        "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;"
        ]
-       "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;"
+      "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;"
        $SKIP LEADING BLANKS IN text;
        $REMOVE EVERYTHING AFTER '#' IN text;
        $REMOVE EVERYTHING AFTER ';' IN text;
@@ -275,7 +273,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    iindex = index(text,'DEFAULT');
    IF( iindex ~= 0 )
    [                  "User requested a default value"
-       IF( type(i) ~= 2 )
+       IF( type(i) ~= 2 & type(i) ~= 4 )
        [
            IF( type(i) ~= 3 ) [ VALUE(I,1)=DEFAULT(I); ]
            ELSE               [ VALUE(I,1)=0;          ]
@@ -361,7 +359,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
                      write(i_log,*) ' Empty text -> reading next line! ';
                    ]
                    LINE=LINE+1;
-                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A256)') TEXT;
+                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A)') TEXT;
                    $SKIP LEADING BLANKS IN text;
                    $REMOVE EVERYTHING AFTER '#' IN text;
                    $REMOVE EVERYTHING AFTER ';' IN text;
@@ -422,6 +420,12 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    ] "end IF TYPE"
 
 "============================read the char_value(i)========================="
+       IF(TYPE(I)=4)[
+         LONG_PATH_VALUE(I)=origtext;
+         $SKIP LEADING BLANKS IN LONG_PATH_VALUE(I);
+         NVALUE(I)=1;
+         GOTO :END-NMIN-NMAX-LOOP:;
+       ]
 
    IF ((TYPE(I) = 2) | (TYPE(I) = 3))
    [                                   "Read the string"
@@ -504,7 +508,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
                WHILE (lnblnk1(TEXT)=0)
                [
                    LINE=LINE+1;
-                   READ (UNITNUM,ERR=:GI1008:,FMT='(A256)') TEXT;
+                   READ (UNITNUM,ERR=:GI1008:,FMT='(A)') TEXT;
                    $SKIP LEADING BLANKS IN text;
                    $REMOVE EVERYTHING AFTER '#' IN text;
                    $REMOVE EVERYTHING AFTER ';' IN text;
@@ -774,11 +778,11 @@ ival                = ival + 1;
 ival_medfile         = ival;
 values_sought(ival) = 'material data file';    "The code word"
 nvalue(ival)        = 1;                        "1 input"
-type(ival)          = 2;
+type(ival)          = 4;
 Nmin = ival_medfile; Nmax = ival_medfile;
 CALL GET_INPUT;
 IF(error_flags(ival_medfile)=0)[
-   material_file=char_value(ival_medfile,1);
+  material_file=long_path_value(ival_medfile);
    medfile_specified=.true.;
    "try opening it"
    i_medfile=17;
@@ -1117,12 +1121,12 @@ DO i=1,NMED[
    ival=ival+1;
    ival_densityoutputfile=ival;
    values_sought(ival)='output density file';
-   type(ival)          = 2;
+  type(ival)          = 4;
    nvalue(ival)=1;
    nmin=ival_densityoutputfile;nmax=ival_densityoutputfile;
    CALL GET_INPUT;
    IF(error_flags(ival_densityoutputfile)=0)[
-       density_outputfile=char_value(ival_densityoutputfile,1);
+      density_outputfile=long_path_value(ival_densityoutputfile);
        densityoutputfile_specified(i)=.true.;
        $WRITE_MEDERR(' Density correction file will be output.');
    ]
@@ -1213,12 +1217,12 @@ DO i=1,NMED[
    ival=ival+1;
    ival_densityfile=ival;
    values_sought(ival)='density correction file';
-   type(ival)          = 2;
+  type(ival)          = 4;
    nvalue(ival)=1;
    nmin=ival_densityfile;nmax=ival_densityfile;
    CALL GET_INPUT;
    IF(error_flags(ival_densityfile)=0)[
-       density_file=char_value(ival_densityfile,1);
+      density_file=long_path_value(ival_densityfile);
        densityfile_specified=.true.;
        "may get changed to false later if it cannot be opened"
        $WRITE_MEDERR(' Density correction file specified in .egsinp file.');
@@ -1229,12 +1233,12 @@ DO i=1,NMED[
    ival = ival+1;
    ival_outfile = ival;
    values_sought(ival) = 'e- stopping power output file';
-   type(ival) = 2;
+  type(ival) = 4;
    nvalue(ival) =1;
    nmin=ival_outfile;nmax=ival_outfile;
    CALL GET_INPUT;
    IF(error_flags(ival_outfile)=0)[
-       spoutput_file(i)=char_value(ival_outfile,1);
+      spoutput_file(i)=long_path_value(ival_outfile);
        outfile_specified(i)=.true.;
        $WRITE_MEDERR(' e- stopping powers will be output to ',
          spoutput_file(i));

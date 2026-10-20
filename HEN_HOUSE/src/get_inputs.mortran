@@ -170,7 +170,7 @@ SUBROUTINE GET_INPUT;
 "  NUM_DRMIN=I;                        <--named pointer to the index num.   "
 "  VALUES_SOUGHT(I)='DOSE RBOUND MIN'; <--name of variable                  "
 "  NVALUE(I)=1;                        <--# of inputs(left out if not known)"
-"  TYPE(I)=0;                          <--Type (0-3)                        "
+"  TYPE(I)=0;                          <--Type (0-4)                        "
 "  VALUE_MIN(I)=0;                     <--Minimum value                     "
 "  VALUE_MAX(I)=$MAXRADII-1;           <--Maximum value                     "
 "  DEFAULT(I)=0;                       <--Default value                     "
@@ -184,6 +184,7 @@ SUBROUTINE GET_INPUT;
 "  NVALUE(I)=1;                        <--left out if not known
 "
 "    ALLOWED INPTUS (TYPE 3)
+"    ALLOWED INPTUS (TYPE 3)
 "
 "  I=I+1;
 "  NUM_IWATCH=I;
@@ -195,6 +196,10 @@ SUBROUTINE GET_INPUT;
 "  ALLOWED_INPUTS(I,2)='STEPS';
 "  ALLOWED_INPUTS(I,3)='DEPOSITED';
 "  ALLOWED_INPUTS(I,4)='GRAPH';
+"                                                                           "
+"                      **** STATE THE DELIMETER ****                        "
+"    LONG PATH INPUTS (TYPE 4, ONE PATH PER INPUT KEY)                     "
+"  TYPE(I)=4; LONG_PATH_VALUE(I) receives the full path.                   "
 "                                                                           "
 "                      **** STATE THE DELIMETER ****                        "
 "                                                                           "
@@ -217,10 +222,10 @@ COMIN/GetInput,EGS-IO/;
 "***************************************************************************"
 "*                   Variables used by the subroutine                      *"
 "***************************************************************************"
-CHARACTER*$STRING256 TEXT;      "Used to read in each line of the input file   "
-CHARACTER*$STRING256 KEEPTEXT;  "Used to keep an old line of TEXT              "
-CHARACTER*$STRING256 ORIGTEXT;  "The text without conversion to upper case     "
-CHARACTER*$STRING256 TEXTPIECE;  "Used to read a piece of TEXT                 "
+CHARACTER*$max_path_length TEXT;
+CHARACTER*$max_path_length KEEPTEXT;
+CHARACTER*$max_path_length ORIGTEXT;
+CHARACTER*$max_path_length TEXTPIECE;
 CHARACTER*$STRING80  DELIM_START;"Start of the delimeter                       "
 CHARACTER*$STRING80  DELIM_END;  "End of the delimeter                         "
 CHARACTER*$STRING32  VNAME;      "The name of the variable being extracted.    "
@@ -323,6 +328,8 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    " Set to default for the case the input is not found "
    IF(TYPE(I) = 0 | TYPE(I) = 1) [ VALUE(I,1) = DEFAULT(I); ]
    IF(TYPE(I) = 3) [ VALUE(I,1) = 0; ]
+    IF(TYPE(I) = 3) [ VALUE(I,1) = 0; ]
+    IF(TYPE(I) = 4) [ LONG_PATH_VALUE(I) = ' '; ]
    VNAME=VALUES_SOUGHT(I);
    iVNAME=lnblnk1(VNAME);
    IF( ivname < 1 )
@@ -347,10 +354,11 @@ DO I = NMIN, NMAX  [ "for each value_sought"
        CONTINUE;
        LINE=LINE+1;
        IF( start_found ) [
-         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A256)') TEXT;
+         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A)') TEXT;
        ]
        ELSE [
-         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;
+         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;
+        "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;"
        ]
        "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;"
        $SKIP LEADING BLANKS IN text;
@@ -423,7 +431,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    [
         IF (vname(:ivname)='TITLE')
         [
-           READ (UNITNUM,FMT='(A256)') TEXTPIECE;
+           READ (UNITNUM,FMT='(A)') TEXTPIECE;
            IF (lnblnk1(TEXTPIECE)~=0) [
               TEXT=TEXTPIECE(:lnblnk1(TEXTPIECE));
               $SKIP LEADING BLANKS IN text;
@@ -449,7 +457,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    iindex = index(text,'DEFAULT');
    IF( iindex ~= 0 )
    [                  "User requested a default value"
-       IF( type(i) ~= 2 )
+       IF( type(i) ~= 2 & type(i) ~= 4 )
        [
            IF( type(i) ~= 3 ) [ VALUE(I,1)=DEFAULT(I); ]
            ELSE               [ VALUE(I,1)=0;          ]
@@ -535,7 +543,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
                      write(i_log,*) ' Empty text -> reading next line! ';
                    ]
                    LINE=LINE+1;
-                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A256)') TEXT;
+                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A)') TEXT;
                    $SKIP LEADING BLANKS IN text;
                    $REMOVE EVERYTHING AFTER '#' IN text;
                    $REMOVE EVERYTHING AFTER ';' IN text;
@@ -596,6 +604,14 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    ] "end IF TYPE"
 
 "============================read the char_value(i)========================="
+   IF(TYPE(I)=4)[
+       LONG_PATH_VALUE(I)=origtext;
+       $SKIP LEADING BLANKS IN LONG_PATH_VALUE(I);
+       NVALUE(I)=1;
+       GOTO :END-NMIN-NMAX-LOOP:;
+   ]
+
+                   READ (UNITNUM,ERR=:GI1008:,FMT='(A)') TEXT;
 
    IF ((TYPE(I) = 2) | (TYPE(I) = 3))
    [                                   "Read the string"
@@ -683,7 +699,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
                WHILE (lnblnk1(TEXT)=0)
                [
                    LINE=LINE+1;
-                   READ (UNITNUM,ERR=:GI1008:,FMT='(A256)') TEXT;
+                   READ (UNITNUM,ERR=:GI1008:,FMT='(A)') TEXT;
                    $SKIP LEADING BLANKS IN text;
                    $REMOVE EVERYTHING AFTER '#' IN text;
                    $REMOVE EVERYTHING AFTER ';' IN text;
