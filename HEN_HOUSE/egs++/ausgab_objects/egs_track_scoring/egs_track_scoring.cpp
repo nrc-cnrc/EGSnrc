@@ -98,15 +98,11 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
     description += " - Include time index          = ";
     description += m_include_time ? "YES\n" : "NO\n";
     description += " - First event to score        = ";
-    char buf[32];
-    sprintf(buf,"%lld\n",m_start);
-    description += buf;
+    description += std::to_string(m_start) + "\n";
     description += " - Last event to score         = ";
-    sprintf(buf,"%lld\n",m_stop);
-    description += buf;
+    description += std::to_string(m_stop) + "\n";
     description += " - Track buffer size           = ";
-    sprintf(buf,"%d\n",m_bufSize);
-    description += buf;
+    description += std::to_string(m_bufSize) + "\n";
     description += " - Output file name            = ";
     description += fname;
     description += "\n\n";

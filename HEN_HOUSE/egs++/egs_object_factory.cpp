@@ -81,15 +81,10 @@ void EGS_Object::setFactory(EGS_ObjectFactory *f) {
 }
 
 string EGS_Object::getUniqueName(const EGS_Object *o) {
-    char buf[256];
     if (o) {
-        sprintf(buf,"%s_%d",o->getObjectType().c_str(),object_count);
+        return o->getObjectType() + "_" + std::to_string(object_count);
     }
-    else {
-        sprintf(buf,"object_%d",object_count);
-    }
-    string result(buf);
-    return result;
+    return "object_" + std::to_string(object_count);
 }
 
 void EGS_Object::setName(EGS_Input *input) {

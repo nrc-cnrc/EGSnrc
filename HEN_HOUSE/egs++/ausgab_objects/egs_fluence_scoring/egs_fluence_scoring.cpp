@@ -35,7 +35,9 @@
 
 
 #include <string>
+#include <cstdio>
 #include <cstdlib>
+#include <stdexcept>
 
 #include "egs_fluence_scoring.h"
 #include "egs_input.h"
@@ -45,6 +47,17 @@ static bool EGS_FLUENCE_SCORING_LOCAL inputSet = false;
 
 #define REGIONS_ENTRIES 100
 #define REGIONS_PER_LINE 25
+
+template <typename... Args>
+static string formatFluenceDescription(const char *format, Args... args) {
+    char buf[128];
+    int n = std::snprintf(buf, sizeof(buf), format, args...);
+    if (n < 0 || n >= static_cast<int>(sizeof(buf))) {
+        egsFatal("EGS_FluenceScoring: Failed to format description.\n");
+        throw std::runtime_error("Failed to format fluence description");
+    }
+    return string(buf, static_cast<size_t>(n));
+}
 
 EGS_FluenceScoring::EGS_FluenceScoring(const string &Name, EGS_ObjectFactory *f) :
     EGS_AusgabObject(Name,f), particle_name("photon"),
@@ -334,8 +347,6 @@ void EGS_FluenceScoring::setUpRegionFlags() {
 
 void EGS_FluenceScoring::describeMe() {
 
-    char buf[128];
-
     // Report scoring regions in the geometry.
     if (n_scoring_regions == nreg) {
         description += "ALL\n";
@@ -353,21 +364,24 @@ void EGS_FluenceScoring::describeMe() {
                     k++;
                 }
                 stop = k-1;
+                string region_description;
                 if (start < stop) {
-                    sprintf(buf,"%d-%d",start,stop);
+                    region_description = std::to_string(start) + "-" +
+                                         std::to_string(stop);
                 }
                 else if (k % REGIONS_PER_LINE) {
-                    sprintf(buf," %d",start);
+                    region_description = " " + std::to_string(start);
                 }
                 else {
-                    sprintf(buf," %d\n",start);
+                    region_description = " " + std::to_string(start) + "\n";
                     line_ended = true;
                 }
                 if (entries == REGIONS_ENTRIES) {
-                    sprintf(buf,"... %d\n",max_reg);
+                    region_description = "... " + std::to_string(max_reg) +
+                                         "\n";
                     line_ended = true;
                 }
-                description += buf;
+                description += region_description;
             }
             k++;
         }
@@ -386,16 +400,15 @@ void EGS_FluenceScoring::describeMe() {
         else {
             description += " - source charge: ";
         }
-        sprintf(buf,"%d\n",source_charge);
-        description += buf;
+        description += std::to_string(source_charge) + "\n";
     }
 
     if (score_spe) {
         description += " - scoring in the ";
         EGS_Float Emin = flu_s ? exp(flu_xmin):flu_xmin,
                   Emax = flu_s ? exp(flu_xmax):flu_xmax;
-        sprintf(buf,"%g MeV and %g MeV energy range",Emin,Emax);
-        description += buf;
+        description += formatFluenceDescription(
+            "%g MeV and %g MeV energy range", Emin, Emax);
         if (flu_s) {
             description += " on a logarithmic scale \n";
         }
@@ -625,33 +638,27 @@ void EGS_PlanarFluence::initScoring(EGS_Input *inp) {
 }
 
 void EGS_PlanarFluence::describeMe() {
-    char buf[128];
-    sprintf(buf,"\nPlanar %s fluence scoring\n",particle_name.c_str());
-    description =  buf;
+    description = "\nPlanar " + particle_name + " fluence scoring\n";
     description += "================================\n";
 
     description += " - scoring field normal      = ";
-    sprintf(buf,"(%g %g %g)\n",m_normal.x,m_normal.y,m_normal.z);
-    description += buf;
+    description += formatFluenceDescription(
+        "(%g %g %g)\n",m_normal.x,m_normal.y,m_normal.z);
     description += " - scoring field center      = ";
-    sprintf(buf,"(%g %g %g)\n",m_midpoint.x,m_midpoint.y,m_midpoint.z);
-    description += buf;
+    description += formatFluenceDescription(
+        "(%g %g %g)\n",m_midpoint.x,m_midpoint.y,m_midpoint.z);
     if (field_type == circle) {
         description += " - scoring field radius      = ";
-        sprintf(buf,"%g cm\n",m_R);
-        description += buf;
+        description += formatFluenceDescription("%g cm\n",m_R);
     }
     else if (field_type == rectangle) {
         description += " - scoring field             = ";
-        sprintf(buf,"%g cm X %g cm\n",ax,ay);
-        description += buf;
+        description += formatFluenceDescription("%g cm X %g cm\n",ax,ay);
         description += " - scoring field resolution  = ";
-        sprintf(buf,"%d X %d\n",Nx,Ny);
-        description += buf;
+        description += std::to_string(Nx) + " X " + std::to_string(Ny) + "\n";
     }
     description += " - scoring field distance from origin = ";
-    sprintf(buf,"%g cm\n",m_d);
-    description += buf;
+    description += formatFluenceDescription("%g cm\n",m_d);
 
     description +=" - scoring from region(s): ";
 
@@ -1377,9 +1384,7 @@ void EGS_VolumetricFluence::initScoring(EGS_Input *inp) {
 }
 
 void EGS_VolumetricFluence::describeMe() {
-    char buf[128];
-    sprintf(buf,"\nVolumetric %s fluence scoring\n",particle_name.c_str());
-    description =  buf;
+    description = "\nVolumetric " + particle_name + " fluence scoring\n";
     description += "===================================\n";
 
     description +=" - scoring in region(s): ";
@@ -1404,8 +1409,7 @@ void EGS_VolumetricFluence::describeMe() {
 
     if (norm_u != 1.0) {
         description += "\n - Non-unity user-requested normalization = ";
-        sprintf(buf,"%g\n",norm_u);
-        description += buf;
+        description += formatFluenceDescription("%g\n",norm_u);
     }
 
 }

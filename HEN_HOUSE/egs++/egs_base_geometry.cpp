@@ -317,8 +317,6 @@ string EGS_GeometryPrivate::create_key = "createGeometry";
 
 int EGS_BaseGeometry::active_glist = 0;
 
-static char buf_unique[32];
-
 int EGS_BaseGeometry::error_flag = 0;
 
 #ifndef SKIP_DOXYGEN
@@ -605,9 +603,7 @@ EGS_BaseGeometry *EGS_BaseGeometry::createGeometry(EGS_Input *input) {
 }
 
 string EGS_BaseGeometry::getUniqueName() {
-    sprintf(buf_unique,"geometry%d",egs_geometries[active_glist].nnow);
-    string result(buf_unique);
-    return result;
+    return "geometry" + std::to_string(egs_geometries[active_glist].nnow);
 }
 
 void EGS_BaseGeometry::setName(EGS_Input *i) {
@@ -683,26 +679,36 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
         }
         if (do_it) {
             ++irep;
-            char buf[1024];
+            char buf[128];
             for (int icopy=1; icopy<=ncopy; icopy++) {
                 //string content(":start geometry:\n");
                 string content;
                 content += "    library = egs_gtransformed\n";
-                sprintf(buf,"    name = %s_rep%d_%d\n",name.c_str(),irep,icopy);
-                content += buf;
-                sprintf(buf,"    my geometry = %s\n",name.c_str());
-                content += buf;
+                content += "    name = " + name + "_rep" +
+                           std::to_string(irep) + "_" +
+                           std::to_string(icopy) + "\n";
+                content += "    my geometry = " + name + "\n";
                 content += "    :start transformation:\n";
-                if (ttype == 0)
-                    sprintf(buf,"        translation = %g %g %g\n",
-                            trans_o[0]+trans[0]*icopy,
-                            trans_o[1]+trans[1]*icopy,
-                            trans_o[2]+trans[2]*icopy);
-                else
-                    sprintf(buf,"        rotation = %g %g %g  %g\n",
-                            rot_axis[0],rot_axis[1],rot_axis[2],
-                            rot_angle_o+rot_angle*icopy);
-                content += buf;
+                int n;
+                if (ttype == 0) {
+                    n = std::snprintf(buf, sizeof(buf),
+                                      "        translation = %g %g %g\n",
+                                      trans_o[0]+trans[0]*icopy,
+                                      trans_o[1]+trans[1]*icopy,
+                                      trans_o[2]+trans[2]*icopy);
+                }
+                else {
+                    n = std::snprintf(buf, sizeof(buf),
+                                      "        rotation = %g %g %g  %g\n",
+                                      rot_axis[0],rot_axis[1],rot_axis[2],
+                                      rot_angle_o+rot_angle*icopy);
+                }
+                if (n < 0 || n >= static_cast<int>(sizeof(buf))) {
+                    egsFatal("EGS_BaseGeometry: Failed to format geometry "
+                             "replication transform.\n");
+                    return;
+                }
+                content.append(buf, static_cast<size_t>(n));
                 content += "    :stop transformation:\n";
                 //content += ":stop geometry:\n";
                 EGS_Input aux;

@@ -63,7 +63,6 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
         return;
     }
 
-    char buf[512];//useful character buffer
     //set up the stack of particles to output to the phase space file
     //1000 particles at a time
     p_stack = new Particle[store_max];
@@ -91,13 +90,11 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
         description += "\n Will output phase space for the following exit/entry region pairs:\n";
         description += " Exit regions:\n";
         for (int i=0; i<fromreg.size(); i++) {
-            sprintf(buf,"%d ",fromreg[i]);
-            description += buf;
+            description += std::to_string(fromreg[i]) + " ";
         }
         description += "\n Entry regions:\n";
         for (int i=0; i<fromreg.size(); i++) {
-            sprintf(buf,"%d ",toreg[i]);
-            description += buf;
+            description += std::to_string(toreg[i]) + " ";
         }
         description += "\n";
         //now, for every region, set up a (possibly empty) array of entry regions
@@ -117,27 +114,21 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
     if (phspoutdir == "") {
         phspoutdir = app->getAppDir();
     }
+    string phsp_filename = getObjectName();
+    if (app->getNparallel() > 0) {
+        phsp_filename += "_w" + std::to_string(app->getIparallel());
+    }
     if (oformat==0) {
         description += "\n Data will be output in EGSnrc format.\n";
-        if (app->getNparallel()>0) {
-            sprintf(buf,"%s_w%d.egsphsp1",getObjectName().c_str(),app->getIparallel());
-        }
-        else {
-            sprintf(buf,"%s.egsphsp1",getObjectName().c_str());
-        }
-        phsp_fname=egsJoinPath(phspoutdir,buf);
+        phsp_filename += ".egsphsp1";
+        phsp_fname=egsJoinPath(phspoutdir,phsp_filename);
         description += "\n Phase space file name:\n";
         description += phsp_fname;
     }
     else if (oformat==1) {
         description += "\n Data will be output in IAEA format.\n";
-        if (app->getNparallel()>0) {
-            sprintf(buf,"%s_w%d.1",getObjectName().c_str(),app->getIparallel());
-        }
-        else {
-            sprintf(buf,"%s.1",getObjectName().c_str());
-        }
-        phsp_fname=egsJoinPath(phspoutdir,buf);
+        phsp_filename += ".1";
+        phsp_fname=egsJoinPath(phspoutdir,phsp_filename);
 
         //need to add a null terminator
         len = phsp_fname.length();
