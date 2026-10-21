@@ -112,6 +112,8 @@ signals:
     void leftMouseClick(int x, int y);
     void leftDoubleClick(EGS_Vector hitCoord);
     void saveComplete();
+    // Emitted after each rendered frame has been displayed on screen
+    void frameRendered();
     void tracksLoaded(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>);
 
     // for render thread

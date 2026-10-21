@@ -168,6 +168,7 @@ private slots:
     void loadRegions();
     void ensureEditorLoaded();
     void advanceTime(); // one playback step, driven by playTimer
+    void frameRendered(); // a rendered frame has been displayed
 
 private:
 
@@ -175,6 +176,8 @@ private:
     ImageWindow *gview;
     SaveImage *save_image;
     QTimer *playTimer; // drives time playback without blocking the GUI thread
+    QCheckBox *checkbox_forceHighRes; // "Force high resolution playback" in the Time control group
+    bool frameReady; // the frame for the current playback time step has been displayed
 
     vector<EGS_Float> timelist_p;  //list of time indices of compressed particle tracks for photons
     vector<EGS_Float> timelist_e;  //list of time indices of compressed particle tracks for electrons

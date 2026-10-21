@@ -750,6 +750,10 @@ void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
     applyParameters(vis, lastRequest);
 
     repaint();
+
+    // Let listeners (e.g. forced high resolution playback) know a frame has
+    // been displayed
+    emit frameRendered();
 }
 
 void ImageWindow::trackResults(vector<size_t> ntracks, vector<EGS_Float> timelist_p, vector<EGS_Float> timelist_e, vector<EGS_Float> timelist_po) {

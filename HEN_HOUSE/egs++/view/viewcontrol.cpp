@@ -944,6 +944,24 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     playTimer = new QTimer(this);
     playTimer->setInterval(10); // same nominal step rate as the old loop
     connect(playTimer, &QTimer::timeout, this, &GeometryViewControl::advanceTime);
+
+    // "Force high resolution playback" option, added to the bottom of the
+    // Time control group (which positions its widgets at fixed coordinates).
+    // When checked, playback renders every time step at full resolution and
+    // waits for each frame before advancing, so it may be slow.
+    checkbox_forceHighRes = new QCheckBox("Force high resolution playback", groupBox_time);
+    checkbox_forceHighRes->setGeometry(10, 145, 231, 22);
+    checkbox_forceHighRes->setToolTip("Render every time step at full resolution during playback. "
+                                      "Playback waits for each frame, so it may be slow for complex geometries.");
+    checkbox_forceHighRes->setChecked(false);
+    groupBox_time->setMinimumHeight(groupBox_time->minimumHeight() + 26);
+
+    // The window was already shown earlier in this constructor (splitter->show()),
+    // and Qt doesn't automatically show children added to a visible widget
+    checkbox_forceHighRes->show();
+
+    frameReady = true;
+    connect(gview, &ImageWindow::frameRendered, this, &GeometryViewControl::frameRendered);
 }
 
 GeometryViewControl::~GeometryViewControl() {
@@ -3699,14 +3717,22 @@ void GeometryViewControl::playTime() {
         return;
     }
 
-    // Restart from the beginning if we're already at the end
+    isPlaying = true;
+    button_timeplay->setText("Pause");
+    frameReady = true;
+
+    // Restart from the beginning if we're already at the end. In forced high
+    // resolution mode, the first step then waits for this frame.
     if (slider_timeindex->value() >= slider_timeindex->maximum()) {
+        frameReady = false;
         slider_timeindex->setValue(0);
     }
 
-    isPlaying = true;
-    button_timeplay->setText("Pause");
     playTimer->start();
+}
+
+void GeometryViewControl::frameRendered() {
+    frameReady = true;
 }
 
 void GeometryViewControl::advanceTime() {
@@ -3714,6 +3740,13 @@ void GeometryViewControl::advanceTime() {
     // renderer can't keep up, ImageWindow only renders the most recent time
     // once it is free, so playback keeps a steady speed and drops frames
     // rather than falling behind.
+    // In forced high resolution mode, don't move on until the frame for the
+    // current time step has been displayed, so no time steps are skipped.
+    // Playback is still never faster than the normal timer rate.
+    if (checkbox_forceHighRes->isChecked() && !frameReady) {
+        return;
+    }
+
     int next = slider_timeindex->value() + 1;
     if (next > slider_timeindex->maximum()) {
         playTimer->stop();
@@ -3721,6 +3754,8 @@ void GeometryViewControl::advanceTime() {
         button_timeplay->setText("Play");
         return;
     }
+
+    frameReady = false;
 
     // Emits valueChanged -> slideTime(), which syncs the time spinbox,
     // updates the track window and requests a render
@@ -3791,12 +3826,19 @@ void GeometryViewControl::slideTime() {
     // to update the particle track indices
     particleSlider(slidertime);
 
-    // Treat slider motion (dragging or playback) as a transformation, so the
-    // renderer uses reduced resolution to keep up, but never below half
-    // resolution. A full resolution frame is rendered automatically 500 ms
-    // after the motion stops (which also clears the cap).
-    gview->maxDownscale = 2;
-    updateView(true);
+    if (isPlaying && checkbox_forceHighRes->isChecked()) {
+        // Forced high resolution playback: render this time step at full
+        // resolution (not as a transformation). advanceTime() waits for it.
+        updateView(false);
+    }
+    else {
+        // Treat slider motion (dragging or playback) as a transformation, so
+        // the renderer uses reduced resolution to keep up, but never below
+        // half resolution. A full resolution frame is rendered automatically
+        // 500 ms after the motion stops (which also clears the cap).
+        gview->maxDownscale = 2;
+        updateView(true);
+    }
 }
 
 void GeometryViewControl::updateNumTimeSteps() {
