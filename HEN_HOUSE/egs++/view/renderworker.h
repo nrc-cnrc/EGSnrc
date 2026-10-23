@@ -103,6 +103,12 @@ struct RenderParameters {
     // 5 - positrons
     vector<EGS_Vector> displayColors;
     bool energyScaling;
+
+    // Time index for dynamic geometries. The geometry is moved to this time
+    // by ImageWindow::rerender() only while the render worker is idle, so the
+    // geometry transform never changes during a render. Negative means "leave
+    // the geometry position alone" (static geometries, or no time requested).
+    EGS_Float timeIndex = -1;
 };
 
 struct RenderResults {

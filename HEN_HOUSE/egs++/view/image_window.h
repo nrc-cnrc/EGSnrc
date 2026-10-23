@@ -59,6 +59,10 @@ public:
 
     struct RenderParameters pars;
 
+    // Largest allowed downscaling factor while navigating (0 = no limit).
+    // Set during time playback/slider motion; reset by endTransformation().
+    int maxDownscale = 0;
+
     ImageWindow(QWidget *parent=0, const char *name=0);
     ~ImageWindow();
 
@@ -108,6 +112,8 @@ signals:
     void leftMouseClick(int x, int y);
     void leftDoubleClick(EGS_Vector hitCoord);
     void saveComplete();
+    // Emitted after each rendered frame has been displayed on screen
+    void frameRendered();
     void tracksLoaded(vector<size_t>, vector<EGS_Float>, vector<EGS_Float>, vector<EGS_Float>);
 
     // for render thread

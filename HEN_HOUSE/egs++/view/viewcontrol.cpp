@@ -66,6 +66,7 @@
 #include <QMenuBar>
 #include <QSplitter>
 #include <QDebug>
+#include <QTimer>
 
 #include <cmath>
 #include <cstdlib>
@@ -933,6 +934,34 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // Set the play button active boolean to false
     isPlaying=false;
+
+    // No time-indexed tracks until a ptracks file with time indices is loaded
+    hasTrackTimeIndex=false;
+
+    // Playback is driven by a timer rather than a blocking loop, so the GUI
+    // thread stays free to display rendered frames as soon as they arrive.
+    // Each tick advances the time slider by one step.
+    playTimer = new QTimer(this);
+    playTimer->setInterval(10); // same nominal step rate as the old loop
+    connect(playTimer, &QTimer::timeout, this, &GeometryViewControl::advanceTime);
+
+    // "Force high resolution playback" option, added to the bottom of the
+    // Time control group (which positions its widgets at fixed coordinates).
+    // When checked, playback renders every time step at full resolution and
+    // waits for each frame before advancing, so it may be slow.
+    checkbox_forceHighRes = new QCheckBox("Force high resolution playback", groupBox_time);
+    checkbox_forceHighRes->setGeometry(10, 145, 231, 22);
+    checkbox_forceHighRes->setToolTip("Render every time step at full resolution during playback. "
+                                      "Playback waits for each frame, so it may be slow for complex geometries.");
+    checkbox_forceHighRes->setChecked(false);
+    groupBox_time->setMinimumHeight(groupBox_time->minimumHeight() + 26);
+
+    // The window was already shown earlier in this constructor (splitter->show()),
+    // and Qt doesn't automatically show children added to a visible widget
+    checkbox_forceHighRes->show();
+
+    frameReady = true;
+    connect(gview, &ImageWindow::frameRendered, this, &GeometryViewControl::frameRendered);
 }
 
 GeometryViewControl::~GeometryViewControl() {
@@ -2800,6 +2829,9 @@ void GeometryViewControl::loadTracksDialog() {
     // related objects depending on input file and tracks file
     timeObjectVisibility();
 
+    // Don't apply the previous file's time ranges to the new tracks
+    timeTrackRange.clear();
+
     gview->loadTracks(filename_tracks);
 }
 
@@ -3413,41 +3445,19 @@ void GeometryViewControl::updateView(bool transform) {
     rp.allowRegionSelection = allowRegionSelection;
     rp.doseTransparency = doseTransparency;
 
-    if (spin_tminp->value() > 0) {
+    if (hasTrackTimeIndex && timeTrackRange.size() == 6) {
+        // Time mode: exact ranges computed by particleSlider()
+        rp.trackIndices = timeTrackRange;
+    }
+    else {
+        // The spinboxes are 1-based and inclusive; the renderer draws [min-1, max)
+        rp.trackIndices.resize(6);
         rp.trackIndices[0] = spin_tminp->value()-1;
-    }
-    else {
-        rp.trackIndices[0] = 1;
-    }
-    if (spin_tmaxp->value() > 0) {
-        rp.trackIndices[1] = spin_tmaxp->value()-1;
-    }
-    else {
-        rp.trackIndices[1] = 1;
-    }
-    if (spin_tmine->value() > 0) {
+        rp.trackIndices[1] = spin_tmaxp->value();
         rp.trackIndices[2] = spin_tmine->value()-1;
-    }
-    else {
-        rp.trackIndices[2] = 1;
-    }
-    if (spin_tmaxe->value() > 0) {
-        rp.trackIndices[3] = spin_tmaxe->value()-1;
-    }
-    else {
-        rp.trackIndices[3] = 1;
-    }
-    if (spin_tminpo->value() > 0) {
+        rp.trackIndices[3] = spin_tmaxe->value();
         rp.trackIndices[4] = spin_tminpo->value()-1;
-    }
-    else {
-        rp.trackIndices[4] = 1;
-    }
-    if (spin_tmaxpo->value() > 0) {
-        rp.trackIndices[5] = spin_tmaxpo->value()-1;
-    }
-    else {
-        rp.trackIndices[5] = 1;
+        rp.trackIndices[5] = spin_tmaxpo->value();
     }
 
     gview->render(g, transform);
@@ -3697,53 +3707,59 @@ void GeometryViewControl::endTransformation() {
 
 // Time index visual elements methods
 void GeometryViewControl::playTime() {
+    // This function controls the play button. Playback is driven by playTimer
+    // (see advanceTime), so the GUI thread is never blocked and rendered
+    // frames are displayed as soon as they are ready.
     if (isPlaying) {
+        playTimer->stop();
+        isPlaying = false;
         button_timeplay->setText("Play");
-        isPlaying=false;
+        return;
     }
-    else {
-        button_timeplay->setText("Pause");
-        isPlaying=true;
+
+    isPlaying = true;
+    button_timeplay->setText("Pause");
+    frameReady = true;
+
+    // Restart from the beginning if we're already at the end. In forced high
+    // resolution mode, the first step then waits for this frame.
+    if (slider_timeindex->value() >= slider_timeindex->maximum()) {
+        frameReady = false;
+        slider_timeindex->setValue(0);
     }
-    int sliderpos=slider_timeindex->sliderPosition();
 
-    if (sliderpos==spin_numTimeSteps->value()-1) {
-        sliderpos=0;
+    playTimer->start();
+}
+
+void GeometryViewControl::frameRendered() {
+    frameReady = true;
+}
+
+void GeometryViewControl::advanceTime() {
+    // One playback step: move the time slider forward by one position. If the
+    // renderer can't keep up, ImageWindow only renders the most recent time
+    // once it is free, so playback keeps a steady speed and drops frames
+    // rather than falling behind.
+    // In forced high resolution mode, don't move on until the frame for the
+    // current time step has been displayed, so no time steps are skipped.
+    // Playback is still never faster than the normal timer rate.
+    if (checkbox_forceHighRes->isChecked() && !frameReady) {
+        return;
     }
-    // this function controls the play button, and allows for the simulation to
-    // be automatically played out sequentially in time.
-    for (int i= sliderpos; i<spin_numTimeSteps->value();) {
-        // the simulation plays through 1000 discrete time points (equivalent to
-        // possible slider steps) from 0.000 to 0.999 in 0.0001 increments
-        if (!isPlaying) {
-            break;
-        }
-        EGS_Float currtime = i/(float)spin_numTimeSteps->value();
 
-        // update time index display/input box. The signals are blocked as it
-        // would lead to an infinite loop between the slider and the time index
-        // spin box
-        spin_timeindex->blockSignals(true);
-        spin_timeindex->setValue(currtime);
-        spin_timeindex->blockSignals(false);
-
-        // the time index slider's value is updated (as is its position since
-        // tracking is enabled). Changing the slider value emits a
-        // 'valuechanged' signal which automatically invokes the slidertime
-        // function
-        slider_timeindex->setValue(i);
-
-        // update the Qt display between discrete steps
-        qApp->processEvents();
-
-        i+=1;
-
-        // wait 10 milliseconds before making the next step, otherwise the
-        // motion would be difficult to follow
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    int next = slider_timeindex->value() + 1;
+    if (next > slider_timeindex->maximum()) {
+        playTimer->stop();
+        isPlaying = false;
+        button_timeplay->setText("Play");
+        return;
     }
-    button_timeplay->setText("Play");
-    isPlaying=false;
+
+    frameReady = false;
+
+    // Emits valueChanged -> slideTime(), which syncs the time spinbox,
+    // updates the track window and requests a render
+    slider_timeindex->setValue(next);
 }
 
 void GeometryViewControl::resetTime() {
@@ -3765,10 +3781,10 @@ void GeometryViewControl::spinTime() {
     slider_timeindex->setValue(sliderpos);
     slider_timeindex->blockSignals(false);
 
-    // updatePosition is called on our geometry using the new time index, this
-    // simply sets the geometry transformation as specified by the control
-    // points
-    g->updatePosition(slidertime);
+    // Pass the new time index to the renderer. The geometry is moved to this
+    // time by ImageWindow::rerender() only while the render worker is idle,
+    // so the geometry transform never changes in the middle of a render
+    gview->pars.timeIndex = slidertime;
 
     // finally, the particleslider function is called using the new time index
     // to update the particle track indices
@@ -3801,15 +3817,28 @@ void GeometryViewControl::slideTime() {
     spin_timeindex->setValue(slidertime);
     spin_timeindex->blockSignals(false);
 
-    // updatePosition is called on our geometry using the new time index, this
-    // simply sets the geometry transformation as specified by the control
-    // points
-    g->updatePosition(slidertime);
+    // Pass the new time index to the renderer. The geometry is moved to this
+    // time by ImageWindow::rerender() only while the render worker is idle,
+    // so the geometry transform never changes in the middle of a render
+    gview->pars.timeIndex = slidertime;
 
     // finally, the particleslider function is called using the new time index
     // to update the particle track indices
     particleSlider(slidertime);
-    updateView();
+
+    if (isPlaying && checkbox_forceHighRes->isChecked()) {
+        // Forced high resolution playback: render this time step at full
+        // resolution (not as a transformation). advanceTime() waits for it.
+        updateView(false);
+    }
+    else {
+        // Treat slider motion (dragging or playback) as a transformation, so
+        // the renderer uses reduced resolution to keep up, but never below
+        // half resolution. A full resolution frame is rendered automatically
+        // 500 ms after the motion stops (which also clears the cap).
+        gview->maxDownscale = 2;
+        updateView(true);
+    }
 }
 
 void GeometryViewControl::updateNumTimeSteps() {
@@ -3820,149 +3849,54 @@ void GeometryViewControl::updateNumTimeSteps() {
     spinTime();
 }
 
+// Tracks whose time index lies in [lo, hi), returned as the 0-based half-open
+// range [first, last) that renderTracks draws. The time lists are sorted
+// because ptracks files with time indices are written in time order.
+static void timeWindowRange(const vector<EGS_Float> &list, EGS_Float lo, EGS_Float hi,
+                            size_t &first, size_t &last) {
+    first = std::lower_bound(list.begin(), list.end(), lo) - list.begin();
+    last  = std::lower_bound(list.begin() + first, list.end(), hi) - list.begin();
+}
+
 void GeometryViewControl::particleSlider(EGS_Float slidertime) {
     /* this function is called by the time index slider, the time window box,
-     * and the time index box, as the final step in updating the display. It is
-     * responsible for determining which particle tracks are within the range to
-     * be displayed at a given time index. It considers a range of +/- half the
-     * provided time window on either side of the slider position and checks the
-     * sorted list of time indices corresponding to the compressed particle
-     * tracks list, and determines the start and end index of each particle type
-     * boxes to be imposed on their min and max spin boxes */
+     * and the time index box, as the final step in updating the display. It
+     * determines which particle tracks have a time index inside the time
+     * window centred on the current time, [t - w/2, t + w/2). The resulting
+     * ranges are passed directly to the renderer (see updateView), and shown
+     * in the (read-only) min/max spinboxes as 1-based inclusive values */
 
-    /* first, all of these operations can only be performed given a ptracks
-     * file is being used with time indices to compare to */
-    if (hasTrackTimeIndex) {
-
-        // obtain size of the time window
-        EGS_Float t_window = spin_timewindow->value();
-
-        // a boolean variable hasstart is defined as initially set to false.
-        // This will track whether a starting index has been assigned
-        bool hasstart=false;
-
-        // start and end index integers defined
-        int startindex=1,endindex=1;
-
-        // loop through the photons time index list one at a time
-        for (size_t j=0; j<timelist_p.size(); j++) {
-
-            // check whether the jth photon time index is within the +/- half
-            // time window range centered at the current time index
-            if (timelist_p[j]<(slidertime+(t_window/2)) && timelist_p[j]>(slidertime-(t_window/2))) {
-
-                // if it is, we check whether a starting index has been assigned
-                if (!hasstart) {
-                    // if the starting index has not been assigned, assign both
-                    // the start and the end index to the current loop index,
-                    // and make hasstart true; the end index is also set here as
-                    // it is possible only one particle is in the range, and the
-                    // end cannot be smaller than the start
-                    startindex=j+1;
-                    endindex=j+2;
-                    hasstart=true;
-                    // since hasstart is now true, the starting index will not
-                    // be updated at any later loop iteration
-                }
-                else {
-                    // if the starting index has been assigned, only set the end
-                    // index
-                    endindex=j+2;
-                }
-            }
-        }
-        // once the loop is over the max and min spin boxes are set (both are 1
-        // if no particle in range) (note max must be set first as it sets the
-        // maximum value of the min spinbox)
-        spin_tmaxp->blockSignals(true);
-        spin_tmaxp->setValue(endindex);
-        spin_tmaxp->blockSignals(false);
-        spin_tminp->blockSignals(true);
-        spin_tminp->setValue(startindex);
-        spin_tminp->blockSignals(false);
-
-        // hasstart bool and indices are reset to initial states
-        hasstart=false;
-        startindex=1;
-        endindex=1;
-
-        // loop through the electrons time index list one at a time
-        for (size_t j=0; j<timelist_e.size(); j++) {
-
-            // check whether the jth electron time index is within the +/- half
-            // time window range centered at the current time index
-            if (timelist_e[j]<(slidertime+(t_window/2)) && timelist_e[j]>(slidertime-(t_window/2))) {
-                // if it is, we check whether a starting index has been assigned
-                if (!hasstart) {
-                    // if the starting index has not been assigned, assign both
-                    // the start and the end index to the current loop index,
-                    // and make hasstart true; the end index is also set here as
-                    // it is possible only one particle is in the range, and the
-                    // end cannot be smaller than the start
-                    startindex=j+1;
-                    endindex=j+2;
-                    hasstart=true;
-                    // since hasstart is now true, the starting index will not
-                    // be updated at any later loop iteration
-                }
-                else {
-                    // if the starting index has been assigned, only set the end
-                    // index
-                    endindex=j+1;
-                }
-            }
-        }
-        // once the loop is over the max and min spin boxes are set (both are 1
-        // if no particle in range) (note max must be set first as it sets the
-        // maximum value of the min spinbox)
-        spin_tmaxe->blockSignals(true);
-        spin_tmaxe->setValue(endindex);
-        spin_tmaxe->blockSignals(false);
-        spin_tmine->blockSignals(true);
-        spin_tmine->setValue(startindex);
-        spin_tmine->blockSignals(false);
-
-        // hasstart bool and indices are reset to initial states
-        hasstart=false;
-        startindex=1;
-        endindex=1;
-        // loop through the positron time index list one at a time
-        for (size_t j=0; j<timelist_po.size(); j++) {
-            // check whether the jth positron time index is within the +/- half
-            // time window range centered at the current time index
-            if (timelist_po[j]<(slidertime+(t_window/2)) && timelist_po[j]>(slidertime-(t_window/2))) {
-                // if it is, we check whether a starting index has been assigned
-                if (!hasstart) {
-                    // if the starting index has not been assigned, assign both
-                    // the start and the end index to the current loop index,
-                    // and make hasstart true; the end index is also set here as
-                    // it is possible only one particle is in the range, and the
-                    // end cannot be smaller than the start
-                    startindex=j+1;
-                    endindex=j+2;
-                    hasstart=true;
-                    // since hasstart is now true, the starting index will not
-                    // be updated at any later loop iteration
-                }
-                else {
-                    // if the starting index has been assigned, only set the end
-                    // index
-                    endindex=j+1;
-                }
-            }
-        }
-        // once the loop is over the max and min spin boxes are set (both are 1
-        // if no particle in range) (note max must be set first as it sets the
-        // maximum value of the min spinbox)
-        spin_tmaxpo->blockSignals(true);
-        spin_tmaxpo->setValue(endindex);
-        spin_tmaxpo->blockSignals(false);
-        spin_tminpo->blockSignals(true);
-        spin_tminpo->setValue(startindex);
-        spin_tminpo->blockSignals(false);
+    /* these operations can only be performed given a ptracks file is being
+     * used with time indices to compare to; otherwise the particle tracks are
+     * unchanged */
+    if (!hasTrackTimeIndex) {
+        return;
     }
-    // if the file doesn't contain time indices then nothing at all occurs in this function
-    // and the particle tracks are unchanged
+
+    EGS_Float t_window = spin_timewindow->value();
+    EGS_Float t_lo = slidertime-(t_window/2);
+    EGS_Float t_hi = slidertime+(t_window/2);
+
+    const vector<EGS_Float> *lists[3] = {&timelist_p, &timelist_e, &timelist_po};
+    QSpinBox *spinMin[3] = {spin_tminp, spin_tmine, spin_tminpo};
+    QSpinBox *spinMax[3] = {spin_tmaxp, spin_tmaxe, spin_tmaxpo};
+
+    timeTrackRange.assign(6, 0);
+    for (int k=0; k<3; k++) {
+        size_t first, last;
+        timeWindowRange(*lists[k], t_lo, t_hi, first, last);
+        timeTrackRange[2*k]   = first;
+        timeTrackRange[2*k+1] = last;
+
+        // Display only. Max is set first since it sets the maximum of the min
+        // spinbox. With no tracks in range, min shows one past max.
+        spinMax[k]->blockSignals(true);
+        spinMax[k]->setValue(int(last));
+        spinMax[k]->blockSignals(false);
+        spinMin[k]->blockSignals(true);
+        spinMin[k]->setValue(int(first)+1);
+        spinMin[k]->blockSignals(false);
+    }
 }
 // end of time index methods//
 

@@ -288,9 +288,11 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
     QTime time_r2 = QTime::currentTime();
 
     // RGB32 saves 1+ image traversals over other formats w/ Qt4.7-8 & X11
-    QImage img(p.nx*p.nxr, p.ny*p.nyr, QImage::Format_RGB32);
+    QImage img;
     if (p.nxr == 1 && p.nyr == 1) {
-        // special case, straight to image
+        // Full resolution (static views and saved images): straight to image,
+        // no scaling or filtering
+        img = QImage(p.nx, p.ny, QImage::Format_RGB32);
         for (int j=0; j<p.ny; j++) {
             QRgb *sl = (QRgb *) img.scanLine(j);
             for (int i=0; i<p.nx; i++) {
@@ -301,35 +303,20 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
         }
     }
     else {
-        // Copy image into buffer
+        // Reduced resolution, which only happens during motion (camera
+        // navigation, slider dragging or time playback). Build the small
+        // image, flipping it vertically, then upscale it to full size with
+        // bilinear filtering so it looks smooth rather than blocky.
+        QImage small(p.nx, p.ny, QImage::Format_RGB32);
         for (int j=0; j<p.ny; j++) {
-            // flip the image vertically in this phase (it shouldn't matter where)
-            int topd = (p.ny-j-1)*p.nx;
-            int botu = j*p.nx;
+            QRgb *sl = (QRgb *) small.scanLine(j);
             for (int i=0; i<p.nx; i++) {
-                EGS_Vector v = image[i+topd];
+                EGS_Vector v = image[i+(p.ny-j-1)*p.nx];
                 quint8 r = (quint8)(v.x*255), g = (quint8)(v.y*255), b = (quint8)(v.z*255);
-                buffer[botu+i] = qRgb(r,g,b);
+                sl[i] = qRgb(r,g,b);
             }
         }
-        // Fast image scaling routine.
-        int line_len = sizeof(QRgb)*p.nx*p.nxr;
-        for (int j=0; j<p.ny; j++) {
-            int start_row = j*p.nyr;
-            QRgb *base = (QRgb *) img.scanLine(start_row);
-            QRgb *al = buffer + j*p.nx;
-            // Create a single image line
-            for (int i=0,ib=0,mx=p.nxr; i<p.nx; i++,mx+=p.nxr) {
-                QRgb v = al[i];
-                for (; ib<mx; ib++) {
-                    base[ib] = v;
-                }
-            }
-            // Duplicate that line (p.nyr-1) times
-            for (int i=1; i<p.nyr; i++) {
-                memcpy(img.scanLine(start_row+i),base,line_len);
-            }
-        }
+        img = small.scaled(p.nx*p.nxr, p.ny*p.nyr, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
     }
     // Since we already have the image at full scale, draw the axes labels on it.
     {
@@ -350,4 +337,3 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
 
     return r;
 }
-

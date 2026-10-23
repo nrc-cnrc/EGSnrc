@@ -38,6 +38,35 @@
 #include "egs_functions.h"
 #include "egs_track_view.h"
 #include <stdlib.h>
+#include <thread>
+#include <atomic>
+#include <vector>
+
+// Number of threads used to render the geometry image. Defaults to the number
+// of hardware threads; set the environment variable EGS_VIEW_THREADS to
+// override it (e.g. EGS_VIEW_THREADS=1 for the original single-threaded
+// rendering). Computed once; initialization of a function-local static is
+// thread-safe in C++11.
+static int computeRenderThreadCount() {
+    int n = 0;
+    const char *env = getenv("EGS_VIEW_THREADS");
+    if (env) {
+        n = atoi(env);
+    }
+    if (n <= 0) {
+        n = (int)std::thread::hardware_concurrency();
+    }
+    if (n <= 0) {
+        n = 1;
+    }
+    egsInformation("egs_view: rendering with %d thread(s)\n", n);
+    return n;
+}
+
+static int renderThreadCount() {
+    static const int n = computeRenderThreadCount();
+    return n;
+}
 
 class EGS_PrivateVisualizer {
 public:
@@ -569,6 +598,9 @@ void EGS_PrivateVisualizer::getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g
 //=============================================================================
 // EGS_PrivateVisualizer::getColor
 //=============================================================================
+// Note: this is called concurrently from several render threads, so it must
+// only read shared state. In particular, scoreColor is read with at() rather
+// than operator[], which is not guaranteed safe for concurrent use.
 EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         EGS_BaseGeometry *g,
         const EGS_Float track_distance,
@@ -669,9 +701,9 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                         a = a*(1-a1);
 
                         if (scoreColor.count(ireg) && doseTransparency) {
-                            c1 = global_ambient_light.getScaled(scoreColor[ireg]);
+                            c1 = global_ambient_light.getScaled(scoreColor.at(ireg));
                             for (int j=0; j<nlight; j++) {
-                                c1 += lights[j]->getColor(xs,n,scoreColor[ireg]);
+                                c1 += lights[j]->getColor(xs,n,scoreColor.at(ireg));
                             }
                             a1 = doseTransparency;
                             c += c1*a1*a;
@@ -736,9 +768,9 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                 a = a*(1-a1);
 
                 if (scoreColor.count(inew) && doseTransparency) {
-                    c1 = global_ambient_light.getScaled(scoreColor[inew]);
+                    c1 = global_ambient_light.getScaled(scoreColor.at(inew));
                     for (int j=0; j<nlight; j++) {
-                        c1 += lights[j]->getColor(xs,n,scoreColor[inew]);
+                        c1 += lights[j]->getColor(xs,n,scoreColor.at(inew));
                     }
                     a1 = doseTransparency;
                     c += c1*a1*a;
@@ -799,7 +831,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
 
         // new region is not outside, new material is not vacuum, and either:
         // (1) there is a change in material, or (2) the region is hidden, or (3) there is a scored value in the region
-        if (inew >= 0 && imed_new >= 0 && (imed_new != imed || (allowRegionSelection && !showReg[ireg]) || (scoreColor.count(inew) && doseTransparency && (scoreColor[inew].x > 0 || scoreColor[inew].y > 0 || scoreColor[inew].z > 0)))) {
+        if (inew >= 0 && imed_new >= 0 && (imed_new != imed || (allowRegionSelection && !showReg[ireg]) || (scoreColor.count(inew) && doseTransparency && (scoreColor.at(inew).x > 0 || scoreColor.at(inew).y > 0 || scoreColor.at(inew).z > 0)))) {
             if (!allowRegionSelection || showReg[inew]) {
                 a1 = mat[imed_new].alpha;
             }
@@ -814,9 +846,9 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
             a = a*(1-a1);
 
             if (scoreColor.count(inew) && doseTransparency) {
-                c1 = global_ambient_light.getScaled(scoreColor[inew]);
+                c1 = global_ambient_light.getScaled(scoreColor.at(inew));
                 for (int j=0; j<nlight; j++) {
-                    c1 += lights[j]->getColor(xs,n,scoreColor[inew]);
+                    c1 += lights[j]->getColor(xs,n,scoreColor.at(inew));
                 }
                 a1 = doseTransparency;
                 c += c1*a1*a;
@@ -855,79 +887,135 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
 bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int *abort_location) {
 
     EGS_Float dx = sx/nx, dy = sy/ny;
-    EGS_Float rmax=1, gmax=1, bmax=1;
-    EGS_Float ttrack=0, track_alpha = 1;
 
     bool debug = image ? false : true;
     if (debug) {
         egsWarning("\n*** renderImage(%d,%d)\n",nx,ny);
     }
 
-    // render geometry in image buffer
-    for (int j=0; j<ny; j++) {
-        EGS_Float yy = -sy/2 + dy*(j+0.5);
-        EGS_Vector xy(x_screen + v2_screen*yy);
-        // Stop if abort condition is true
-        if (abort_location && *abort_location) {
-            return false;
-        }
-        for (int i=0; i<nx; i++) {
-            EGS_Float xx = -sx/2 + dx*(i+0.5);
-            EGS_Vector xp(xy + v1_screen*xx);
+    // Rows are rendered in parallel. Each pixel's ray is traced independently,
+    // and all shared state (camera, lights, materials, clipping planes, the
+    // geometry) is only read here. Threads take the next unrendered row from a
+    // shared counter, which balances the load when some rows are much more
+    // expensive than others. Debug output is kept single-threaded.
+    int nthreads = debug ? 1 : renderThreadCount();
+    if (nthreads > ny) {
+        nthreads = ny;
+    }
+    if (nthreads < 1) {
+        nthreads = 1;
+    }
 
-            EGS_Vector bCol = displayColors[2];
+    std::atomic<int> nextRow(0);
+    std::atomic<bool> aborted(false);
+    // Per-thread maximum color components, combined after rendering
+    std::vector<EGS_Vector> maxColor(nthreads, EGS_Vector(1,1,1));
 
-            ttrack = -1;
-            if (image) {
-                int idx = i+j*nx;
+    auto renderRows = [&](int tid) {
+        EGS_Float rmax=1, gmax=1, bmax=1;
+        EGS_Float ttrack=0, track_alpha = 1;
+        int j;
+        while ((j = nextRow.fetch_add(1)) < ny) {
+            // Stop if abort condition is true
+            if (aborted.load() || (abort_location && *abort_location)) {
+                aborted = true;
+                break;
+            }
+            EGS_Float yy = -sy/2 + dy*(j+0.5);
+            EGS_Vector xy(x_screen + v2_screen*yy);
+            for (int i=0; i<nx; i++) {
+                EGS_Float xx = -sx/2 + dx*(i+0.5);
+                EGS_Vector xp(xy + v1_screen*xx);
 
-                // negative z means we have a track, at a distance ttrack = -z
-                if (image[idx].z<0) {
-                    ttrack = -image[idx].z;
-                    if (((image[idx].x > 0) || (image[idx].y > 0)) && m_tracks) {
+                EGS_Vector bCol = displayColors[2];
 
-                        // Set the transparency based on the energy of the particle
-                        if (energyScaling) {
-                            track_alpha = 0.2+0.8*image[idx].y;
-                        }
+                ttrack = -1;
+                if (image) {
+                    int idx = i+j*nx;
 
-                        // Photons
-                        if (image[idx].x == 1.0) {
-                            bCol = displayColors[3];
+                    // negative z means we have a track, at a distance ttrack = -z
+                    if (image[idx].z<0) {
+                        ttrack = -image[idx].z;
+                        if (((image[idx].x > 0) || (image[idx].y > 0)) && m_tracks) {
+
+                            // Set the transparency based on the energy of the particle
+                            if (energyScaling) {
+                                track_alpha = 0.2+0.8*image[idx].y;
+                            }
+
+                            // Photons
+                            if (image[idx].x == 1.0) {
+                                bCol = displayColors[3];
+                            }
+                            // Electrons
+                            if (image[idx].x == 2.0) {
+                                bCol = displayColors[4];
+                            }
+                            // Positrons
+                            if (image[idx].x == 3.0) {
+                                bCol = displayColors[5];
+                            }
+                            // Axis
+                            if (image[idx].x == 100.0) {
+                                bCol = displayColors[2];
+                            }
                         }
-                        // Electrons
-                        if (image[idx].x == 2.0) {
-                            bCol = displayColors[4];
-                        }
-                        // Positrons
-                        if (image[idx].x == 3.0) {
-                            bCol = displayColors[5];
-                        }
-                        // Axis
-                        if (image[idx].x == 100.0) {
-                            bCol = displayColors[2];
-                        }
+                        image[idx] = EGS_Vector(0,0,0);
                     }
-                    image[idx] = EGS_Vector(0,0,0);
+                }
+
+                EGS_Vector v = getColor(xp,g,ttrack,track_alpha,debug,bCol);
+                if (debug) {
+                    egsWarning("ix=%d iy=%d v=(%g,%g,%g)\n",i,j,v.x,v.y,v.z);
+                }
+                if (v.x > rmax) {
+                    rmax = v.x;
+                }
+                if (v.y > gmax) {
+                    gmax = v.y;
+                }
+                if (v.z > bmax) {
+                    bmax = v.z;
+                }
+                if (image) {
+                    image[i+j*nx] = v;
                 }
             }
+        }
+        maxColor[tid] = EGS_Vector(rmax,gmax,bmax);
+    };
 
-            EGS_Vector v = getColor(xp,g,ttrack,track_alpha,debug,bCol);
-            if (debug) {
-                egsWarning("ix=%d iy=%d v=(%g,%g,%g)\n",i,j,v.x,v.y,v.z);
-            }
-            if (v.x > rmax) {
-                rmax = v.x;
-            }
-            if (v.y > gmax) {
-                gmax = v.y;
-            }
-            if (v.z > bmax) {
-                bmax = v.z;
-            }
-            if (image) {
-                image[i+j*nx] = v;
-            }
+    if (nthreads == 1) {
+        renderRows(0);
+    }
+    else {
+        std::vector<std::thread> threads;
+        threads.reserve(nthreads-1);
+        for (int t=1; t<nthreads; t++) {
+            threads.emplace_back(renderRows, t);
+        }
+        // This thread renders rows too
+        renderRows(0);
+        for (auto &th : threads) {
+            th.join();
+        }
+    }
+
+    if (aborted) {
+        return false;
+    }
+
+    // Combine the per-thread maxima
+    EGS_Float rmax=1, gmax=1, bmax=1;
+    for (int t=0; t<nthreads; t++) {
+        if (maxColor[t].x > rmax) {
+            rmax = maxColor[t].x;
+        }
+        if (maxColor[t].y > gmax) {
+            gmax = maxColor[t].y;
+        }
+        if (maxColor[t].z > bmax) {
+            bmax = maxColor[t].z;
         }
     }
 
