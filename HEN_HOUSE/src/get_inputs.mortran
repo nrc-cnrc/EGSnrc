@@ -615,6 +615,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
 
    IF ((TYPE(I) = 2) | (TYPE(I) = 3))
    [                                   "Read the string"
+       TEXT=origtext;
        IVAL=1;     "nvalue counter"
        IF( idebug ) [write(i_log,*) ' Trying to read a string! ';]
        LOOP
