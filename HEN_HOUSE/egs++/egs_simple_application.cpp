@@ -201,7 +201,6 @@ EGS_SimpleApplication::EGS_SimpleApplication(int argc, char **argv) {
     if (!source) {
         egsFatal("Failed to construct the particle source\n");
     }
-    delete source_input;
 
     //
     // ********* Construct a random number generator from the input
