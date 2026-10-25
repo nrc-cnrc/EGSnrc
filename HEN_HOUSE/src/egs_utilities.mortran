@@ -924,11 +924,13 @@ implicit none;
 $COMIN-SET-DEFAULTS;
 
 integer  i,j,lnblnk1;
-$TYPE MEDIA1(24); EQUIVALENCE(MEDIA1(1),MEDIA(1,1));
+$TYPE MEDIA1($max_medium_name_length); EQUIVALENCE(MEDIA1(1),MEDIA(1,1));
 character fool_dec;
-data MEDIA1/$S'NAI                     '/;
+data MEDIA1(1)/'N'/, MEDIA1(2)/'A'/, MEDIA1(3)/'I'/;
 data fool_dec/'/'/;
 data fool_intel_optimizer/.false./;
+
+DO j=4,$max_medium_name_length [ MEDIA1(j)=' '; ]
 
 vacdst = 1e8;
 $set-region-by-region-defaults;

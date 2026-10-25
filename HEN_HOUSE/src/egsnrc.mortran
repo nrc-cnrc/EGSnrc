@@ -8336,6 +8336,7 @@ IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
 dummy=' ';
 DO j=1,$max_medium_name_length [ dummy(j:j)=media(j,medium); ]
 ff_file=' ';
+ncustom=0;
 DO i=1,$MXMED[IF(lnblnk1(iray_ff_file(i))~=0)[ncustom = ncustom + 1;]]
 DO i=1,ncustom[IF (dummy(:lnblnk1(dummy)) = iray_ff_media(i))[
    ff_file = iray_ff_file(i);
@@ -8483,7 +8484,7 @@ $REAL totRayleigh2,pzmin;
 $REAL emin, emax;
 $INTEGER i,j,k,ff_unit, egs_get_unit, ne;
 $INTEGER lnblnk1, EOF, nff, medium, ncustom;
-character dummy*24, afac_file*$max_path_length,
+character dummy*$max_medium_name_length, afac_file*$max_path_length,
           ff_file*$max_path_length;
 
 IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
