@@ -46,8 +46,8 @@ COMIN/GetInput,EGS-IO/;
 "*                   Variables used by the subroutine                      *"
 "***************************************************************************"
 CHARACTER*$max_path_length TEXT,KEEPTEXT,ORIGTEXT,TEXTPIECE;
-CHARACTER*$STRING80  DELIM_START;"Start of the delimeter                       "
-CHARACTER*$STRING80  DELIM_END;  "End of the delimeter                         "
+CHARACTER*$max_path_length DELIM_START;"Start media block"
+CHARACTER*$max_path_length DELIM_END;  "End media block"
 CHARACTER*$STRING80  ENDSTRING;  "string at which to terminate search          "
 CHARACTER*$STRING32  VNAME;      "The name of the variable being extracted.    "
 CHARACTER*$STRING32  VNAME1;     "The name of the variable being extracted.    "
@@ -449,6 +449,11 @@ DO I = NMIN, NMAX  [ "for each value_sought"
            ELSE               [ TEXTPIECE=origtext;            ]
                       "The above is to avoid conversion to upper case"
                       "for e.g. media names                          "
+           IF(VALUES_SOUGHT(I)='sterncid')[
+             $SKIP LEADING BLANKS IN TEXTPIECE;
+             iindex=INDEX(TEXTPIECE,blank);
+             IF(iindex~=0)[TEXTPIECE=TEXTPIECE(:iindex-1);]
+           ]
            CONTINUE;
            READ(TEXTPIECE,ERR=:GI1008:,FMT='(A256)') CHAR_VALUE(I,IVAL);
            $SKIP LEADING BLANKS IN CHAR_VALUE(I,IVAL);
@@ -658,7 +663,7 @@ $INTEGER  ival,ival_media,ival_medfile,i,j,k,ival_ae,ival_ue,ival_ap,ival_up,
           ival_pz,ival_sterncid,ival_ipot,ival_localdensity,
           ival_densityfile,medfile_error,ival_outfile,ival_densityoutputfile,
           egs_open_file,lnblnk1,i_medfile,egs_get_unit,i_mederr,mindex,eindex,
-          i_density,i01,length,i_outfile;
+          i_density,i01,length,i_outfile,field_end,field_length;
 $REAL ecut_min, pcut_min;
 
 $LOGICAL  medfile_specified,densityfile_specified,elements_specified,
@@ -692,8 +697,9 @@ character*$max_medium_name_length medium_name,med_tmp;
 character*24 sterncid_tmp;
 character*$max_path_length density_file,material_file,tmp_string,
           spoutput_file($MXMED),density_outputfile;
-character*80 text_string, text_save, title;
-character*80 delim_start,delim_end;
+character*$max_path_length text_string, text_save;
+character*80 title;
+character*$max_path_length delim_start,delim_end;
 character*1 blank;
 character*512 toUpper;
 
@@ -1269,13 +1275,24 @@ DO i=1,NMED[
          text_string=text_save(eindex+1:);
          text_string=$cstring(text_string);
          $SKIP LEADING BLANKS IN text_string;
-         IF(text_string=medium_name)[
-            delim_start=text_save;
-            start_delim_found=.true.;
+         field_length=lnblnk1(text_string);
+         field_end=field_length+1;
+         DO j=1,field_length[
+           IF(text_string(j:j)=blank | text_string(j:j)=',')[
+             field_end=j;
+             EXIT;
+           ]
          ]
-         ELSEIF(start_delim_found)[
-            delim_end=text_save;
-            end_delim_found=.true.;
+         field_length=field_end-1;
+         IF(field_length>0)[
+           IF(text_string(1:field_length)=medium_name)[
+             delim_start=text_save;
+             start_delim_found=.true.;
+           ]
+           ELSEIF(start_delim_found)[
+             delim_end=text_save;
+             end_delim_found=.true.;
+           ]
          ]
 
         ]
