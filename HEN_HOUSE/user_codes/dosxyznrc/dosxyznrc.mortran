@@ -1365,6 +1365,7 @@ real      amass,tcpuold,ECUTIN,PCUTIN,ESTEPM($MXMED),width,
 character*$max_path_length PhantFileName,
               parname, "name of .pardose file"
               phsp_out_fn;  "phsp file output name"
+character*$max_medium_name_length phantom_medium_name;
 REAL XMIN_YMIN_ZMIN,YMIN_XMIN_ZMIN,ZMIN_XMIN_YMIN,
      XMIN_YMAX_ZMIN,YMAX_XMIN_ZMIN,ZMIN_XMIN_YMAX,
      XMAX_YMAX_ZMIN,YMAX_XMAX_ZMIN,ZMIN_XMAX_YMAX,
@@ -1554,8 +1555,10 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
     "media names"
     OUTPUT61;(/' media:');
     DO n=1,NMED[
-       read($CTUnitNumber,'(24a1)') (media(j,n),j=1,24);
-      DO j=25,$max_medium_name_length [media(j,n)=' ';]
+       read($CTUnitNumber,'(A)') phantom_medium_name;
+       DO j=1,$max_medium_name_length[
+         media(j,n)=phantom_medium_name(j:j);
+       ]
       OUTPUT61 (media(j,n),j=1,$max_medium_name_length);(' ',64a1);
     ]
     "estepe and SMAX"
@@ -4666,7 +4669,7 @@ subroutine write_phantom(iunit,nmed,media,estepe,
 "It is a slightly modified form of write_phantom found in ctcreate.mortran"
 "******************************************************************************
 ;IMPLICIT NONE;
-Character*4  media(24,$MXMED);     "Media names"
+Character*4  media($max_medium_name_length,$MXMED); "Media names"
 INTEGER iunit,                     "fort.iunit = .egsphant file"
         nmed,                      "number of media"
         iimax,                     "max number of x cells"
@@ -4690,7 +4693,8 @@ iunit=egs_open_file(iunit,0,1,'.egsphant');
 
 WRITE(iunit,'(i2)') nmed;
 DO ii=1,nmed [
-   Write(iunit,'(24a1)') (media(jj,ii),jj=1,24);
+     Write(iunit,'(64a1)')
+      (media(jj,ii),jj=1,$max_medium_name_length);
 ]
 WRITE(iunit,*) (estepe(ii),ii=1,nmed);
 WRITE(iunit,'(3i5)') iimax,jjmax,kkmax;

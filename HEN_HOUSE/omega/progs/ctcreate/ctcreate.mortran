@@ -187,7 +187,7 @@
 "
 "  Repeat 6.a and 6.b for i=1 to num_material (only used if num_material > 0).
 "
-"  CT Record 6.a        material_name (24A1)
+"  CT Record 6.a        material_name (up to 64 characters, one line)
 "                       The PEGS4 name of material i.
 "
 "  CT Record 6.b        material_ct_upper_bound(i),
@@ -225,13 +225,14 @@ REPLACE {OUTPUT61#;#;} WITH {
 " Keep this value synchronized with EGS_MAX_PATH_LENGTH in "
 " HEN_HOUSE/interface/egs_path_length.h. "
 REPLACE {$max_path_length} WITH {4096};
+REPLACE {$max_medium_name_length} WITH {64};
 Character*60 ctformat;                 "format of CT data"
 Character*40 machine;                  "type of machine being run on"
 
 Character*$max_path_length CTFileName;  "main CT file name"
 
 Integer      nmed;                  "Number of media"
-Character*4  media(24,$MXMED);      "Media names"
+Character*4  media($max_medium_name_length,$MXMED); "Media names"
 Real    rhor($MXREG);               "Density distribution"
 Integer med($MXREG);                "Media distribution"
 Real    xbound($IMAX+1);            "Voxel X bounds for dosxyznrc"
@@ -1745,7 +1746,9 @@ INTEGER   new_x_dim,                      "resized number of x voxels       "
 REAL      density_region($MXREG),         "matrix of material densities     "
           material_density_lower_bound($MXMED), "lower bounds of ramps      "
           material_density_upper_bound($MXMED); "upper bounds of ramps      "
-CHARACTER*4 material_name(24,$MXMED);     "names of the media               "
+CHARACTER*4 material_name($max_medium_name_length,$MXMED);
+                                          "names of the media               "
+CHARACTER*$max_medium_name_length material_name_record;
 "---------------------------------------------------------------------------"
 REPLACE {$IRCTM(#,#,#)} WITH {(1 + {P1} + ({P2}-1)*new_x_dim +
                            ({P3}-1)*new_x_dim*new_y_dim)};
@@ -1780,7 +1783,7 @@ ELSEIF(num_material=0)["use the hard-wired ramp"
                 ' Note: This is optimized for display and example '/
                 ' calculations.  It is recommended that you enter '/
                 ' the CT conversion ramp for your own imager.'/);
-    DO i=1,4 [ DO j=1,24 [ material_name(j,i)=' '; ]; ];
+    DO i=1,4 [ DO j=1,$max_medium_name_length [ material_name(j,i)=' '; ]; ];
     num_material=4;
     material_ct_lower_bound=-1024;
 
@@ -1834,8 +1837,9 @@ ELSEIF(num_material=0)["use the hard-wired ramp"
     OUTPUT61 material_ct_lower_bound;
     (' CT no. lower bound of ramp = ',I5);
     DO i_material=1,num_material[
-       OUTPUT61 i_material,(material_name(j,i_material),j=1,24);
-              (/' Medium ',I4,' : ',24a1);
+      OUTPUT61 i_material,
+        (material_name(j,i_material),j=1,$max_medium_name_length);
+        (/' Medium ',I4,' : ',$max_medium_name_length A1);
        OUTPUT61 material_ct_upper_bound(i_material),
               material_density_lower_bound(i_material),
               material_density_upper_bound(i_material);
@@ -1847,8 +1851,12 @@ ELSEIF(num_material=0)["use the hard-wired ramp"
 ELSE["user enters ramp"
     DO i_material=1,num_material[
        OUTPUT61 i_material;(/' Medium ',I4,' : ',$);
-       INPUT (material_name(j,i_material),j=1,24);(24a1);
-       OUTPUT61 (material_name(j,i_material),j=1,24);(24a1);
+      INPUT material_name_record;(A);
+      DO j=1,$max_medium_name_length[
+        material_name(j,i_material)=material_name_record(j:j);
+      ]
+      OUTPUT61 (material_name(j,i_material),j=1,$max_medium_name_length);
+        ($max_medium_name_length A1);
        OUTPUT61;
        (' CT no. upper bound, density lower bound (g/cm^3),'/
         ' density upper bound (g/cm^3)--all on one line'/
@@ -2028,7 +2036,7 @@ subroutine write_phantom(fname,nmed,media,
 ;IMPLICIT NONE;
 CHARACTER*$max_path_length fname; "file name containing CT data"
 CHARACTER*80 phantname;           "output file"
-Character*4  media(24,$MXMED);     "Media names"
+Character*4  media($max_medium_name_length,$MXMED); "Media names"
 Character*60 CTformat;             "format of original binary CT data"
 INTEGER nmed,                      "number of media"
         iimax,                     "max number of x cells"
@@ -2071,7 +2079,8 @@ DO ii=1,nmed [ estepe(ii)=1.0;]
 Open (15,file=phantname,Status='new',ERR=:egsphantOPENERROR:);
 WRITE(15,'(i2)') nmed;
 DO ii=1,nmed [
-   Write(15,'(24a1)') (media(jj,ii),jj=1,24);
+     Write(15,1398)
+       (media(jj,ii),jj=1,$max_medium_name_length);
 ]
 WRITE(15,*) (estepe(ii),ii=1,nmed);
 WRITE(15,'(3i5)') iimax,jjmax,kkmax;
@@ -2085,6 +2094,7 @@ DO kk=1,kkmax[
     ]
     WRITE(15,*);
 ]
+1398 FORMAT($max_medium_name_length A1);
 1399 FORMAT($IMAXa1);
 DO kk=1,kkmax[
     DO jj=1,jjmax[
