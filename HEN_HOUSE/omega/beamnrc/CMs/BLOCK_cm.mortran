@@ -240,7 +240,7 @@
 "I>     IREGION_TO_BIT:   mapping of region comprising openings and region
 "I>                       beyond block edges to bit for LATCH
 "I>
-"I>   8   MED_IN (24A1):  Medium in openings and beyond block edges,
+"I>   8   MED_IN:  Medium in openings and beyond block edges,
 "I>                       used to set MED_INDEX.
 "I>
 "I>   9   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5) in block material
@@ -252,7 +252,7 @@
 "I>     IREGION_TO_BIT:   mapping of region surrounding openings
 "I>                       to bit for LATCH
 "I>
-"I>   10  MED_IN (24A1):  Medium of block,
+"I>   10  MED_IN:  Medium of block,
 "I>                       used to set MED_INDEX.
 ;
 "I>   Example
@@ -1224,7 +1224,7 @@ IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
 IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
 OUTPUT;(' Medium of openings and beyond block edges: ',$);
 $MED_INPUT($BLOCK); " inputs character array MED_IN from unit 5, loops
-   "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
    "If so, sets MED_INDEX to index of previous medium.  If not,
    "increments NMED and sets MED_INDEX to NMED. "
 MED(IRA) = MED_INDEX; " medium of the block
@@ -1242,7 +1242,7 @@ IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
    " and determine material number for these region
    OUTPUT;(' Medium of block: ',$);
 $MED_INPUT($BLOCK); " inputs character array MED_IN from unit 5, loops
-   "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
    "If so, sets MED_INDEX to index of previous medium.  If not,
    "increments NMED and sets MED_INDEX to NMED. "
 MED(IRA) = MED_INDEX; " medium of the block

@@ -194,7 +194,7 @@
 "I>                      deposited in it
 "I>         IREGION_TO_BIT:   Bit setting number for the region
 "I>
-"I>   6  MED_IN (24A1):  Medium of local region 3
+"I>   6  MED_IN:  Medium of local region 3
 "I>                      used to set MED_INDEX.
 "I>
 "I>   Repeat 7-10 for each conical layer
@@ -206,7 +206,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
 "I>         IREGION_TO_BIT:   Bit setting number for the region
 "I>
-"I>   8  MED_IN (24A1):  Medium of local region 1 (inside cone),
+"I>   8  MED_IN:  Medium of local region 1 (inside cone),
 "I>                      used to set MED_INDEX
 "I>
 "I>   9  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 2 (outside cone):
@@ -216,7 +216,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
 "I>         IREGION_TO_BIT:   Bit setting number for the region
 "I>
-"I>   10  MED_IN (24A1):  Medium of local region 2 (outside of cone),
+"I>   10  MED_IN:  Medium of local region 2 (outside of cone),
 "I>                       used to set MED_INDEX
 "I>   Example
 "I>   *******
@@ -1058,7 +1058,7 @@ DO IR_$CONESTAK = 1,N_$CONESTAK["loop through regions to get information"
       OUTPUT ;(' Material of outer wall ',$);
      ;$MED_INPUT($CONESTAK);
             "inputs character array MED_IN from unit 5, loops
-     "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
      "If so, sets MED_INDEX to index of previous medium.  If not,
      "increments NMED and sets MED_INDEX to NMED.
       MED(IRA+2) = MED_INDEX; " medium of the planar slab
@@ -1092,7 +1092,7 @@ DO IR_$CONESTAK = 1,N_$CONESTAK["loop through regions to get information"
              IREGION_TO_BIT(IRA);(F10.5,F10.3,I12,I20);
       OUTPUT IR_$CONESTAK;(' Material of region ',I3,' ',$);
      ;$MED_INPUT($CONESTAK); " inputs character array MED_IN from unit 5, loops
-     "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
      "If so, sets MED_INDEX to index of previous medium.  If not,
      "increments NMED and sets MED_INDEX to NMED.
       MED(IRA) = MED_INDEX; " medium of the planar slab

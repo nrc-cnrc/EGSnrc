@@ -65,7 +65,7 @@
       IREGION_TO_BIT:   mapping of central region and outer region to bit
                         for LATCH
 
-    6  MED_IN (24A1):   Medium of central region and outer region in layer I,
+    6  MED_IN:   Medium of central region and outer region in layer I,
                         used to set MED_INDEX.
 
     7   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5):
@@ -74,7 +74,7 @@
            DOSE_ZONE:   Dose scoring zone of surrounding region.
       IREGION_TO_BIT:   mapping of surrounding region to bit for LATCH
 
-    8  MED_IN (24A1):   Medium of surrounding region in layer I,
+    8  MED_IN:   Medium of surrounding region in layer I,
                         used to set MED_INDEX.
 
     Example

@@ -1792,8 +1792,8 @@ write(ounit,*);
 
 DO i=1,nmed[
 
-    write(ounit,'(a,64a1)')'   Medium: ',
-      (media(j,i),j=1,$max_medium_name_length);
+  DO j=1,$max_medium_name_length [ medium_name(j:j)=media(j,i); ]
+  write(ounit,'(a,a)')'   Medium: ',medium_name;
   write(ounit,'(a,24a1)')' Sterncid: ',(inpstrn(j,i),j=1,24);
   write(ounit,'(a,1p,e14.5,a)')' rho (bulk density): ',rho(i),' g/cm^3';
   IF(epstfl(i)~=1)[

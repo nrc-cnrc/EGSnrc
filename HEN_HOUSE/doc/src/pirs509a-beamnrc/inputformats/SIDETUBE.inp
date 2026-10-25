@@ -39,7 +39,7 @@
             DOSE_ZONE:  Dose scoring flag
        IREGION_TO_BIT:  Bit setting for the region
 
-    9  MED_IN (24A1):  Medium of region
+    9  MED_IN:  Medium of region
                        used to set MED_INDEX.
     Example
     *******

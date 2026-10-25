@@ -274,7 +274,7 @@
 "I>          DOSE_ZONE:      Dose scoring zone for jaw I.
 "I>          IREGION_TO_BIT: Both bars of jaw I associated with this bit.
 "I>
-"I>   7   MED_IN (24A1):  Medium of jaw I, used to set MED_INDEX.
+"I>   7   MED_IN:  Medium of jaw I, used to set MED_INDEX.
 "I>
 "I>   Example
 "I>   *******
@@ -1213,7 +1213,7 @@ DO IR_$DYNJAWS = 2, N_$DYNJAWS-1, 3[
    "get material for each bar and determine material number for these regions
    OUTPUT;(' Medium in this region',$);
    $MED_INPUT($DYNJAWS); " inputs character array MED_IN from unit 5, loops
-      "through array MEDIA(24,I) to check if medium was previously input.
+      "through MEDIA($max_medium_name_length,I) to check if already input.
       "If so, sets MED_INDEX to index of previous medium.  If not,
       "increments NMED and sets MED_INDEX to NMED.
       "error transfers to :ERROR_$DYNJAWS:

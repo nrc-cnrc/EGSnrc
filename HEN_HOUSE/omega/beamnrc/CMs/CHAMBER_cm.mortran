@@ -255,12 +255,12 @@
 "I>         DOSE_ZONE:  Dose scoring region for this region, 0=>no dose scored.
 "I>         IREGION_TO_BIT :  Bit # in LATCH designated to this region
 "I>
-"I>     c) MED_IN (24A1):  Medium of inner cylinder (used for MED_INDEX)
+"I>     c) MED_IN:  Medium of inner cylinder (used for MED_INDEX)
 "I>
 "I>     d) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for outer annuli
 "I>                                           (2F15.0,2I5,1-line):
 "I>
-"I>     e) MED_IN (24A1):  Medium for outer annuli (used for MED_INDEX)
+"I>     e) MED_IN:  Medium for outer annuli (used for MED_INDEX)
 "I>
 ;
 "I>   =========================================================================
@@ -309,7 +309,7 @@
 "I>                       Dose scoring region for this region,0=>no dose scored.
 "I>           IREGION_TO_BIT :  Bit # in LATCH designated to this region
 "I>
-"I>     c) MED_IN (24A1):  Medium of chamber layers (used to set MED_INDEX)
+"I>     c) MED_IN:  Medium of chamber layers (used to set MED_INDEX)
 "I>
 "I>
 "I>     5.3) Inputs for the chamber wall:
@@ -320,14 +320,14 @@
 "I>           DOSE_ZONE:  Dose scoring region for this region,0=>no dose scored.
 "I>           IREGION_TO_BIT:  Bit # in LATCH designated to this region
 "I>
-"I>     b) MED_IN (24A1):  Medium of chamber wall (used to set MED_INDEX)
+"I>     b) MED_IN:  Medium of chamber wall (used to set MED_INDEX)
 "I>
 "I>     5.4) Inputs for the gap between chamber wall and container wall:
 "I>     ----------------------------------------------------------------
 "I>
 "I>     a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
 "I>
-"I>     b) MED_IN (24A1):  Medium of gap (used to set MED_INDEX)
+"I>     b) MED_IN:  Medium of gap (used to set MED_INDEX)
 "I>
 "I>
 "I>     5.5) Inputs for the container wall:
@@ -335,7 +335,7 @@
 "I>
 "I>     a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
 "I>
-"I>     b) MED_IN (24A1):  Medium of container wall (used to set MED_INDEX)
+"I>     b) MED_IN:  Medium of container wall (used to set MED_INDEX)
 ;
 "I>   =====================================================================
 "I>   6  Inputs for the bottom part (If N_BOT_$CHAMBER >0):
@@ -356,11 +356,11 @@
 "I>          DOSE_ZONE:   Dose scoring flag, 0=>do not score dose.
 "I>          IREGION_TO_BIT :  Bit # in LATCH designated to this region
 "I>
-"I>     c) MED_IN (24A1):  Medium of inner cylinders (used for MED_INDEX)
+"I>     c) MED_IN:  Medium of inner cylinders (used for MED_INDEX)
 "I>
 "I>     d) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for outer annuli
 "I>                                            (2F15.0,2I5,1-line):
-"I>     e) MED_IN (24A1):  Medium of outer annuli (used for MED_INDEX)
+"I>     e) MED_IN:  Medium of outer annuli (used for MED_INDEX)
 "I>
 "I>   ====================================================================
 "I>   7  Inputs for range rejection options:
@@ -1859,7 +1859,7 @@ IF(N_TOP_$CHAMBER~=0)[
      OUTPUT;(/' For inner regions:',$);
      ;$MED_INPUT($CHAMBER); " inputs character array MED_IN from unit 5,
                             " loops
-     "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
      "If so, sets MED_INDEX to index of previous medium.  If not,
      "increments NMED and sets MED_INDEX to NMED.
      MEDTEMP(IRM) = MED_INDEX; " medium of the slab
@@ -1932,7 +1932,7 @@ IF(N_TOP_$CHAMBER~=0)[
      OUTPUT;(/' For inner region:',$);
      ;$MED_INPUT($CHAMBER);
      "inputs character array MED_IN from unit 5, loops
-     "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
      "If so, sets MED_INDEX to index of previous medium.  If not,
      "increments NMED and sets MED_INDEX to NMED.
      MEDTEMP(IRM) = MED_INDEX; " medium of the planar slab

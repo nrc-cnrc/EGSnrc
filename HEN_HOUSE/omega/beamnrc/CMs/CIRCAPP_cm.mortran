@@ -227,7 +227,7 @@
 "I>
 "I>   Repeat 7 for I=1,N_$CIRCAPP.
 "I>
-"I>   7   MED_IN (24A1):  Medium of the bar of scraper I, used to
+"I>   7   MED_IN:  Medium of the bar of scraper I, used to
 "I>                       set MED_INDEX.
 "I>
 "I>   Example
@@ -1195,7 +1195,7 @@ DO K = 1,N_$CIRCAPP[
    OUTPUT K;(/' SCRAPER ',I4,$);
    IRA = IRA + 1;
    ;$MED_INPUT($CIRCAPP); " inputs character array MED_IN from unit 5, loops
-   "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
    "If so, sets MED_INDEX to index of previous medium.  If not,
    "increments NMED and sets MED_INDEX to NMED.
    MED(IRA) = MED_INDEX; " medium of each scraper

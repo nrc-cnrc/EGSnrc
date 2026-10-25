@@ -38,7 +38,7 @@
                        deposited in it
           IREGION_TO_BIT:   Bit setting number for the region
 
-    6  MED_IN (24A1):  Medium of local region 3
+    6  MED_IN:  Medium of local region 3
                        used to set MED_INDEX.
 
     Repeat 7-10 for each conical layer
@@ -50,7 +50,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
           IREGION_TO_BIT:   Bit setting number for the region
 
-    8  MED_IN (24A1):  Medium of local region 1 (inside cone),
+    8  MED_IN:  Medium of local region 1 (inside cone),
                        used to set MED_INDEX
 
     9  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 2 (outside cone):
@@ -60,7 +60,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
           IREGION_TO_BIT:   Bit setting number for the region
 
-    10  MED_IN (24A1):  Medium of local region 2 (outside of cone),
+    10  MED_IN:  Medium of local region 2 (outside of cone),
                         used to set MED_INDEX
     Example
     *******

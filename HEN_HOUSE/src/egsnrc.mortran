@@ -2023,7 +2023,9 @@ LOOP["MEDIUM HEADER SEARCH LOOP"
   DO IM=1,NMED [
         MEDLEN=0;
         DO IB=$max_medium_name_length,1,-1 [
-            IF (MEDIA(IB,IM) ~= ' ') [ MEDLEN=IB; EXIT; ]
+            IF (MEDIA(IB,IM) ~= ' ' & ICHAR(MEDIA(IB,IM)(1:1)) ~= 0) [
+                MEDLEN=IB; EXIT;
+            ]
         ]
         IF (MEDLEN=0) NEXT:MDNAME:;
         DO IB=1,MEDLEN [
@@ -8331,7 +8333,8 @@ IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
    read in the information and it is not ensured that the media
    information will be read before getting the transport parameters.
 ****************************************************************/
-ncustom=0;write(dummy,'(64a1)')(media(j,medium),j=1,$max_medium_name_length);
+dummy=' ';
+DO j=1,$max_medium_name_length [ dummy(j:j)=media(j,medium); ]
 ff_file=' ';
 DO i=1,$MXMED[IF(lnblnk1(iray_ff_file(i))~=0)[ncustom = ncustom + 1;]]
 DO i=1,ncustom[IF (dummy(:lnblnk1(dummy)) = iray_ff_media(i))[

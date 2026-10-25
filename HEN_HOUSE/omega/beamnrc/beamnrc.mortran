@@ -2297,31 +2297,33 @@ REPLACE {;CALL ISUMRY__CMLIST(#,#);} WITH {
 " medium in character array MEDIA is repeated.  If not, NMED, the number of
 " different media in the simulation, is incremented by 1 and MED_INDEX is set
 " to NMED.  If so, MED_INDEX is set to the index of the matching medium in
-" MEDIA.  NMED and MEDIA are in /MEDIA/, and MED_IN, the character array for the
+" MEDIA.  NMED and MEDIA are in /MEDIA/, and MED_IN, the input medium name for
 " current medium, is in /CMs/.  Medium 0 is vacuum, medium 1 is ``AIR'',
 " additional media start at medium 2.  Vacuum is chosen in input parameter
 " file with VACUUM.  There is no default.
 "
 REPLACE {;$MED_INPUT(#);} WITH {
     ;OUTPUT ; (' MEDIUM (left justify): ',$);
-    READ(i_input,'(24A1)',END=:EOF_{P1}:,ERR=:ERROR_{P1}:) (MED_IN(J),J=1,24);
-    OUTPUT (MED_IN(J),J=1,24); (' ',24A1);
-    IF(MED_IN(1) = 'V' & MED_IN(2)='A' & MED_IN(3)='C' &
-       MED_IN(4) = 'U' & MED_IN(5)='U' & MED_IN(6)='M') [
+   READ(i_input,'(A)',END=:EOF_{P1}:,ERR=:ERROR_{P1}:) MED_IN;
+   OUTPUT MED_IN; (' ',A);
+   IF(MED_IN(1:1) = 'V' & MED_IN(2:2)='A' & MED_IN(3:3)='C' &
+      MED_IN(4:4) = 'U' & MED_IN(5:5)='U' & MED_IN(6:6)='M') [
        MED_INDEX=0; "Medium is vacuum"
     ]
     ELSE ["Medium is not vacuum"
        IF(NMED ~= 0)["if nominal air is vacuum, nmed might be zero"
           DO I = 1,NMED[
              MED_FLAG = 0;
-             DO J = 1,24[
-                IF(MEDIA(J,I) ~= MED_IN(J))[MED_FLAG = 1;EXIT;]
+             DO J = 1,$max_medium_name_length[
+                IF(MEDIA(J,I) ~= MED_IN(J:J))[MED_FLAG = 1;EXIT;]
              ]
              IF(MED_FLAG =  0)[MED_INDEX = I;EXIT;]
              IF(I =  NMED)[
                 NMED = NMED+1;
                 MED_INDEX = NMED;
-                DO J = 1,24[MEDIA(J,NMED) = MED_IN(J);]
+                DO J = 1,$max_medium_name_length[
+                   MEDIA(J,NMED) = MED_IN(J:J);
+                ]
                 EXIT;
              ]
           ] "end of loop over I"
@@ -2329,7 +2331,9 @@ REPLACE {;$MED_INPUT(#);} WITH {
        ELSE ["NMED = 0 CASE"
           NMED = 1;
           MED_INDEX = NMED;
-          DO J = 1,24[MEDIA(J,NMED) = MED_IN(J);]
+          DO J = 1,$max_medium_name_length[
+             MEDIA(J,NMED) = MED_IN(J:J);
+          ]
        ]
     ]
 }
@@ -2351,7 +2355,7 @@ REPLACE {;$MED_INPUT(#);} WITH {
 "V>     the scoring region. For use in range rejection.  Set in MAIN because
 "V>     needs info from all CMs past the current one.
 "V>MAX_CMs = number of CMs.
-"V>MED_IN = 24-character name of last medium input in INPUT_$CMNAME.
+"V>MED_IN = medium name of last medium input in INPUT_$CMNAME.
 "V>ICM = CM index, incremented before call to INPUT_$CMNAME, set in SRCHST and
 "V>     HOWFAR during particle transport.
 "V>ICMNEW = Next CM, set in WHERE_AM_I, different than ICM (only?) if particle
@@ -2414,7 +2418,7 @@ INTEGER ICM,ICMNEW,ICM_to_SCORE($MAX_CMs),IERR_GEOM($MAX_CMs),
    IR_start_CM($MAX_CMsP1),MAX_CMs,IR_to_CM($MXREG),RMAX_CM_FLAG($MAX_CMs),
    MED_min_thick($MAX_CMs,5),
    ITDOSE_ON,ICM_CONTAM, IQ_CONTAM,XTUBE_EXISTS,AIR_INDEX,IDIRG;
-CHARACTER*4 MED_IN(24);
+CHARACTER*$max_medium_name_length MED_IN;
 CHARACTER*8 CMTYPE($MAX_CMs), CMLIST($MAX_CMs);
 }   "end of definition of /CMs/
 
@@ -3963,9 +3967,9 @@ NCASET=NCASE+NCASEO;
 "                                 **********
 "
 DUNIT=1; "Set length units to cm"
-OUTPUT NMED, (I,(MEDIA(J,I),J=1,24), I=1,NMED);
+OUTPUT NMED, (I,(MEDIA(J,I),J=1,$max_medium_name_length), I=1,NMED);
      (/' There are', I3,' different media:'/
-     (10x,' Medium(',I3,') is: ',24A1));
+   (10x,' Medium(',I3,') is: ',$max_medium_name_length A1));
 
 CALL DATETIME(1);  OUTPUT TIMEN;(/' CALL TO HATCH AT  ',$TIMEN_FORMAT);
 
@@ -4103,13 +4107,14 @@ ELSE[ "doing range rejection
                  IF (rho(j)<aux)[aux=rho(j);MED_min_thick(ICM,1)=j;]
               ]
               j = MED_min_thick(ICM,1);
-              $egs_warning('(a,i3/,3(a/),a,i3,a,e10.5,a,24a1)',
+              CALL egs_get_medium_name(j,MED_IN);
+              $egs_warning('(a,i3/,3(a/),a,i3,a,e10.5,a,a)',
               'Range rejection initialization CM # ',ICM,
               '========================================',
               'Surrounding medium set to VACUUM but AIR-like medium 1',
               'is 100 times more dense than AIR. Resetting MED_min_thick',
               'to least dense medium #',j,' with RHO = ',
-              rho(j),' g/cm3 named ',(media(k,j),k=1,24));
+              rho(j),' g/cm3 named ',MED_IN);
            ]
            /*****************************************************************/
          ]
@@ -4132,8 +4137,9 @@ ELSE[ "doing range rejection
              ]
              "constrain EKE to UE at most, and warn user"
              IF (EKE > UE(MEDIUM)) [
+              CALL egs_get_medium_name(medium,MED_IN);
               $egs_warning('(a,i3/,a/,a/,a,f7.2,a,f7.2,a/,2a/,'//
-                           '2a,f7.2,a/,/a/,a,f7.2,a,24a1/)',
+                           '2a,f7.2,a/,/a/,a,f7.2,a,a/)',
               'Setting up range rejection (rr) with varying ECUTRR in CM # ',
                ICM,
                '============================================================',
@@ -4146,7 +4152,7 @@ ELSE[ "doing range rejection
               ' ECUTIN = ', ECUTIN,' MeV.',
               'Are you using a high density surrounding medium?',
               'Nominal "AIR" (MEDIUM 1) with RHO = ',rho(medium),'g/cm3 is ',
-              (media(J,medium),J=1,24));
+              MED_IN);
 
                 EKE = E_min_out(ICM);
              ]
@@ -7667,24 +7673,27 @@ NMED = 1;                  "Number of media so far
 AIR_INDEX = 1;             "first medium is the air, unless set to 0 for vacuum
 ;OUTPUT;
    (/' MEDIUM of nominal AIR (exactly as in pegs4dat) (left justify): ',$);
-READ(i_input,'(24A1)') (MED_IN(J),J=1,24);
-;OUTPUT (MED_IN(J),J=1,24); (' ',24A1/);
-IF(MED_IN(1) =  'V' & "Check if medium is vacuum"
-    MED_IN(2)='A' & MED_IN(3)='C' & MED_IN(4)='U' & MED_IN(5)='U' &
-    MED_IN(6)='M') [
+READ(i_input,'(A)') MED_IN;
+;OUTPUT MED_IN; (' ',A/);
+IF(MED_IN(1:1) =  'V' & "Check if medium is vacuum"
+   MED_IN(2:2)='A' & MED_IN(3:3)='C' & MED_IN(4:4)='U' & MED_IN(5:5)='U' &
+   MED_IN(6:6)='M') [
     OUTPUT;(/' AIR  is called VACUUM '/);
     AIR_INDEX = 0;
     NMED = 0;
 ]
-ELSEIF (MED_IN(1) =  ' ' & MED_IN(2)=' ' & MED_IN(3)=' ' & MED_IN(4)=' ')[
+ELSEIF (MED_IN(1:1) =  ' ' & MED_IN(2:2)=' ' &
+      MED_IN(3:3)=' ' & MED_IN(4:4)=' ')[
     "Nothing input, assume vacuum"
-    MED_IN(1)='V'; MED_IN(2)='A';MED_IN(3)='C';MED_IN(4)='U';MED_IN(5)='U';
-    MED_IN(6)='M';
+   MED_IN(1:1)='V'; MED_IN(2:2)='A';MED_IN(3:3)='C';MED_IN(4:4)='U';
+   MED_IN(5:5)='U'; MED_IN(6:6)='M';
     OUTPUT;(' Defaults to vacuum');
     AIR_INDEX = 0;
     NMED = 0;
 ]
-DO J=1,24[MEDIA(J,1)=MED_IN(J);]              "medium 1 is nominal AIR
+DO J=1,$max_medium_name_length[
+   MEDIA(J,1)=MED_IN(J:J);
+]              "medium 1 is nominal AIR
 ;
 
 "next record
@@ -8553,7 +8562,8 @@ IF(USE_BCSE) [
    T20,' The following ',I2,' media will be enhanced:');
    DO i=1,$MXMED [
        IF( is_bcse_medium(i) ) [
-          WRITE(IOUTLIST,'(T20,24a1)') (media(kk,i),kk=1,24);
+          CALL egs_get_medium_name(i,MED_IN);
+          WRITE(IOUTLIST,'(T20,A)') MED_IN;
        ]
    ]
    IF( BCSE_POWER_N > 0 ) [
@@ -13867,6 +13877,7 @@ $REAL    EIL,
          SIG_BREM_NEW,SIG_BHABHA,
          SIGE_I,SIGE_II,SIGP_I,SIGP_II,EDEDX,PDEDX;
 $LOGICAL is_ok;
+character*$max_medium_name_length medium_name;
 
 $INTEGER I,k,MEDIUM,egs_add_medium,nmed_i,lnblnk1,nlen;
 
@@ -13956,7 +13967,10 @@ IF(IBRSPL=2) [I_PLAY_RR=0;] "RR must be off for DBS; it has its own"
 OUTPUT; (//' *** Brem. cross section enhancement WILL be used ***');
 OUTPUT nmed_enhance; (' *** The following ',I2,' media will be enhanced:');
 DO i=1,$MXMED [
-    IF( is_bcse_medium(i) ) write(i_log,'(9x,24a1)') (media(k,i),k=1,24);
+    IF( is_bcse_medium(i) ) [
+              CALL egs_get_medium_name(i,medium_name);
+              write(i_log,'(9x,A)') medium_name;
+    ]
 ]
 IF( BCSE_POWER_N > 0 ) [
     OUTPUT BCSE_FACTOR_C,BCSE_POWER_N;

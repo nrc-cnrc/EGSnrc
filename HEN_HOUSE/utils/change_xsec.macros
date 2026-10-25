@@ -101,13 +101,15 @@ REPLACE {$CHANGE-PHOTON-CROSS-SECTION;} WITH {
     DO I=1,NMED [
       READ(5,'(F12.1)') DXSECT;
       IF ( DXSECT > 0.0 )[
-        OUTPUT (MEDIA(J,I),J=1,24);
-        (' Increase total photon cross section for medium ',24A1,' by ',$ );
+        OUTPUT (MEDIA(J,I),J=1,$max_medium_name_length);
+        (' Increase total photon cross section for medium ',
+         $max_medium_name_length A1,' by ',$ );
         OUTPUT ABS(DXSECT);(F5.1,' %');
       ]
       ELSE IF ( DXSECT < 0.0 )[
-        OUTPUT (MEDIA(J,I),J=1,24);
-        (' Decrease total photon cross section for medium ',24A1,' by ',$ );
+        OUTPUT (MEDIA(J,I),J=1,$max_medium_name_length);
+        (' Decrease total photon cross section for medium ',
+         $max_medium_name_length A1,' by ',$ );
         OUTPUT ABS(DXSECT);(F5.1,' %');
       ]
       DO J=1,$MXGE [

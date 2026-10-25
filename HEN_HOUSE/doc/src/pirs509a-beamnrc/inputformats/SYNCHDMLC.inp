@@ -333,7 +333,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to not score dose
      IREGION_TO_BIT:   Bit number associated with this region
 
-   16  MED_IN (24A1):  Medium in opening(s) and air gaps
+   16  MED_IN:  Medium in opening(s) and air gaps
                        used to set MED_INDEX.
 
    17  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves, IGNOREGAPS_$SYNCHDMLC
@@ -359,7 +359,7 @@
                        that you not use this option (ie run with the default
                        setting of 0).
 
-   18  MED_IN (24A1):  Medium of leaves,
+   18  MED_IN:  Medium of leaves,
                        used to set MED_INDEX.
 
    19  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in driving screw holes
@@ -369,7 +369,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to note score dose
      IREGION_TO_BIT:   Bit number associated with this region
 
-   20  MED_IN (24A1):  Medium in driving screw holes,
+   20  MED_IN:  Medium in driving screw holes,
                        used to set MED_INDEX.
 
     Example

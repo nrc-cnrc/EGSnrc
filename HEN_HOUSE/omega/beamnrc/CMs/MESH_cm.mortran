@@ -206,7 +206,7 @@
 "I>          DOSE_ZONE:   Dose scoring flag, 0 to not score dose
 "I>     IREGION_TO_BIT:   Bit number associated with this region
 "I>
-"I>   7  MED_IN (24A1):   medium of local region 2 (wire), used to set
+"I>   7  MED_IN:   medium of local region 2 (wire), used to set
 "I>                       MED_INDEX
 "I>
 "I>   Example

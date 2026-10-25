@@ -150,7 +150,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to not score dose
      IREGION_TO_BIT:   Bit number associated with this region
 
-   14  MED_IN (24A1):  Medium in opening(s) and air gaps
+   14  MED_IN:  Medium in opening(s) and air gaps
                        used to set MED_INDEX.
 
    15  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves (2F15.0,I5):
@@ -159,7 +159,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to note score dose
      IREGION_TO_BIT:   Bit number associated with this region
 
-   16  MED_IN (24A1):  Medium of leaves,
+   16  MED_IN:  Medium of leaves,
                        used to set MED_INDEX.
 
     Example
