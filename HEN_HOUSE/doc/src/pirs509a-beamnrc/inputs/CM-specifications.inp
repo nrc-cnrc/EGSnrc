@@ -572,7 +572,8 @@ E_min_out(ICM)    minimum energy of electron leaving a CM ICM which can
                   rejection.  Set in MAIN because needs info from all CMs
                   past the current one.
 MAX_CMs           number of CMs.
-MED_IN            24-character name of last medium input in INPUT_$CMNAME.
+MED_IN            Medium name up to the configured maximum length, used for the
+                  last medium input in INPUT_$CMNAME.
 ICM               CM index, incremented before call to INPUT_$CMNAME, set in
                   SRCHST and in HOWFAR during particle transport.
 ICMNEW            Next CM, set in WHERE_AM_I, different than ICM (only?) if

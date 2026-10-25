@@ -113,7 +113,8 @@
 "
 "  MEDIA              (M)   material name which must match that in the
 "                           pegs4 data set EXACTLY, including case.
-"                           24 characters max per medium, ended by , or ;
+"                           Configured maximum characters per medium name,
+"                           ended by , or ;
 "
 "  Define which media in which regions, numbering in order given above.
 "

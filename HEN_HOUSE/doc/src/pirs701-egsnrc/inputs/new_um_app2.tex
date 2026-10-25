@@ -1130,12 +1130,15 @@ the shower generation (default=1).
 
 
 \item[MEDIA] This array contains the names of the media required and
-is dimensioned\\{\tt MEDIA(24,\$MXMED)}, where {\tt \$MXMED} is an EGS
+is dimensioned\\
+{\tt MEDIA(\$max\_medium\_name\_length,\$MXMED)}, where {\tt \$MXMED}
+is an EGS
 macro that is currently defined to be 10 (default), and whose value is
 the maximum number of media for which array space has been allocated
 (see section~\ref{step_1} above).  The media names are stored in MEDIA in
 alphameric field specification A1 to ensure portability.  Each medium name
-is 24 characters long.  For the convenience of users compiling with EGS'
+can use the configured maximum medium-name length.  For the convenience
+of users compiling with EGS'
 macros, there is a macro to generate A1 strings.  For example, \cen{{\tt
 \$S'STRING'} expands to {\tt 'S','T','R','I','N','G'.}}
 \index{MEDIA} \index{\$S}
@@ -1248,7 +1251,8 @@ be set to 1.
 
 \index{iray\_ff\_media}
 \index{Rayleigh scattering!custom form factors}
-\item[iray\_ff\_media] A character array ({\tt character*24}) with
+\item[iray\_ff\_media] A character array sized to the configured maximum
+medium-name length, with
 dimension {\tt \$MXMED} (the maximum number of media) defined in
 {\tt COMMON/RAYLEIGH\_SAMPLING}.  Prior
 to calling {\tt HATCH}, this array must be filled with the
