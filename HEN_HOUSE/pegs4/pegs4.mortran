@@ -426,14 +426,15 @@ REPLACE {;COMIN/MIXDAT/;} WITH
       $INTEGER NE,LMED;
       $REAL    PZ,Z,WA,RHOZ,GASP,TPZ,EZ;
     COMMON/MXDATC/MTYP(4),ASYM($MXEL),
-              MEDIUM($max_medium_name_length),IDSTRN(24);
+              MEDIUM($max_medium_name_length),
+              IDSTRN($max_medium_name_length);
       $TYPE MTYP,ASYM,MEDIUM,IDSTRN;
    ]
    [ELSE] [
       ;COMMON/MIXDAT/MTYP(4),NE,PZ($MXEL),Z($MXEL),WA($MXEL),
                      ASYM($MXEL),RHOZ($MXEL),
                      MEDIUM($max_medium_name_length),LMED,
-                     IDSTRN(24),GASP,TPZ,EZ;
+                     IDSTRN($max_medium_name_length),GASP,TPZ,EZ;
        $INTEGER MTYP,NE,MEDIUM,LMED,IDSTRN;
        $REAL    PZ,Z,WA,RHOZ,GASP,TPZ,EZ;
        $TYPE ASYM;
@@ -685,7 +686,7 @@ LOGICAL MEDSET,ENGSET;
 $TYPE OPTION(4,$MXOPT),OPT(4),BLKW,NAME(6);
 $TYPE NAMESB(12),IDFNAM(6);
 $INTEGER NH(200);
-character*120 MEDLINE;
+character*$max_path_length MEDLINE;
 "*************************"
 "Fix errors for gcc > 10.0"
 "*************************"
@@ -893,23 +894,29 @@ IMIXT=0;
 READ(5,'(A)') MEDLINE;
 MEDLEN=0;
 DO I=25,30 [IF (MEDLINE(I:I) ~= ' ') MEDLEN=1;]
-DO I=55,94 [IF (MEDLINE(I:I) ~= ' ') MEDLEN=1;]
+DO I=55,70+$max_medium_name_length [IF (MEDLINE(I:I) ~= ' ') MEDLEN=1;]
 DO I=65,70 [IF (MEDLINE(I:I) ~= ' ') MEDLEN=2;]
 IF (MEDLEN=2) [
     write(6,'(a)') ' Medium name exceeds maximum length of 64 characters';
     $CALL_EXIT(1);
 ]
 IF (MEDLEN=1) [
-    READ(MEDLINE,'(64A1,6X,24A1)') MEDIUM,IDSTRN;
+    READ(MEDLINE,'(64A1,6X,64A1)') MEDIUM,IDSTRN;
 ]
 ELSE [
-    DO I=25,$max_medium_name_length [MEDIUM(I)=' ';]
-    READ(MEDLINE,'(24A1,6X,24A1)') (MEDIUM(I),I=1,24),IDSTRN;
+    DO I=25,$max_medium_name_length [
+      MEDIUM(I)=' ';
+      IDSTRN(I)=BLKW;
+    ]
+        READ(MEDLINE,'(24A1,6X,24A1)')
+            (MEDIUM(I),I=1,24),(IDSTRN(I),I=1,24);
 ]
 INPUT (ASYM(I),I=1,NE); (24(A2,1X));
-IF (IDSTRN(1).EQ.BLKW) [DO I=1,LMED [IDSTRN(I)=MEDIUM(I);]  ]
+IF (IDSTRN(1).EQ.BLKW) [
+  DO I=1,$max_medium_name_length [IDSTRN(I)=MEDIUM(I);]
+]
 OUTPUT MEDIUM,IDSTRN,(ASYM(I),I=1,NE);
-(1X,60('-')/' MEDIUM=',64A1,',STERNHEIMER ID=',24A1,/1X,60('-')//
+(1X,60('-')/' MEDIUM=',64A1,',STERNHEIMER ID=',64A1,/1X,60('-')//
 ,' ATOMIC SYMBOLS ARE: ',(1X,24(A2,1X) ) );
 IF(IUNRST.EQ.1)[OUTPUT;(/T10,'***CALCULATES UNRESTRICTED COLLISION',
 ' STOPPING POWER***  IUNRST=1'//);]
@@ -1850,7 +1857,7 @@ logical   is_there;
 IP=7;IUECHO=6;
 "   PUT OUT HEADING, AND COMPOSITION CARDS"
 $ECHOWRITE(IP,:FMT1:) MEDIUM,IDSTRN;
-:FMT1: FORMAT(' MEDIUM=',64A1,',STERNCID=',24A1);
+:FMT1: FORMAT(' MEDIUM=',64A1,',STERNCID=',64A1);
 IF(GASP.NE.0.0) [$ECHOWRITE(IP,:FMT2:) MTYP,RHO,NE,GASP,
 IUNRST,EPSTFL,IAPRIM; "  NRC MODS DEC 2 1988"
 :FMT2: FORMAT(1X,4A1,',RHO=',1P,E11.4,',NE=',I2,',GASP=',
@@ -2747,6 +2754,8 @@ $CALL_EXIT(21);
 "STERNHEIMER-SELTZER-BERGER (SSB) LOOKUP TABLE SECTION:"
 :TRY: DO IM=1,NMED [DO J=1,LMED
 [IF (IDSTRN(J).NE.MEDTBL(J,IM)) NEXT :TRY:;]
+DO J=LMED+1,$max_medium_name_length
+[IF (IDSTRN(J).NE.' ') NEXT :TRY:;]
 "CALCULATION FOLLOWS IF A MATCH IS FOUND"
 AFACT=STDATA(1,IM); SK=STDATA(2,IM); X0=STDATA(3,IM);
 X1=STDATA(4,IM); IEV=STDATA(5,IM); CBAR=STDATA(6,IM);

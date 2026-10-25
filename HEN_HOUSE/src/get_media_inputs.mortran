@@ -694,7 +694,7 @@ DATA ETAB/1.,1.25,1.5,1.75,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9./;
 
 
 character*$max_medium_name_length medium_name,med_tmp;
-character*24 sterncid_tmp;
+character*$max_medium_name_length sterncid_tmp;
 character*$max_path_length density_file,material_file,tmp_string,
           spoutput_file($MXMED),density_outputfile;
 character*$max_path_length text_string, text_save;
@@ -1669,7 +1669,7 @@ DO i=1,NMED[
        ap(i)=ap_tmp;
        up(i)=up_tmp;
 
-       DO j=1,24[
+       DO j=1,$max_medium_name_length[
          inpstrn(j,i) = sterncid_tmp(j:j);
        ]
 
@@ -1810,8 +1810,9 @@ write(ounit,*);
 DO i=1,nmed[
 
   DO j=1,$max_medium_name_length [ medium_name(j:j)=media(j,i); ]
+  DO j=1,$max_medium_name_length [ sterncid_tmp(j:j)=inpstrn(j,i); ]
   write(ounit,'(a,a)')'   Medium: ',medium_name;
-  write(ounit,'(a,24a1)')' Sterncid: ',(inpstrn(j,i),j=1,24);
+  write(ounit,'(a,a)')' Sterncid: ',sterncid_tmp;
   write(ounit,'(a,1p,e14.5,a)')' rho (bulk density): ',rho(i),' g/cm^3';
   IF(epstfl(i)~=1)[
  write(ounit,'(a,1p,e14.5,a)')'      local density: ',localDensity(i),' g/cm^3';

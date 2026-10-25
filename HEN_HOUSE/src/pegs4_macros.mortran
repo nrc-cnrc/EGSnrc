@@ -168,7 +168,8 @@ REPLACE {;COMIN/ELEMTB/;} WITH
 "1 means the medium is a compound."
 REPLACE {;COMIN/MIXDAT/;} WITH
    {;COMMON/MIXDAT/NEP,LMED,PZP($MXEL),ZELEMP($MXEL),WAP($MXEL),RHOZP($MXEL),
-     GASPP,EZ,TPZ,IDSTRN(24),ELEM_NAMES($MXEL),ISCOMP,IPOTVAL,LDENSITY,MEDID,
+       GASPP,EZ,TPZ,IDSTRN($max_medium_name_length),ELEM_NAMES($MXEL),
+       ISCOMP,IPOTVAL,LDENSITY,MEDID,
      OUTDENSITY,COMP_NAMES($MXEL),COMP_FRACS($MXEL),NCOMPOUNDS;
      $INTEGER NEP,LMED,NCOMPOUNDS;
      $REAL4 PZP,ZELEMP,WAP,RHOZP,GASPP,EZ,TPZ,COMP_FRACS;
@@ -192,7 +193,7 @@ REPLACE {;COMIN/DBRPR/;} WITH
 "with cross-sections calculated by pegs4.mortran"
 REPLACE {;COMIN/MEDINP/;} WITH
    {;COMMON/MEDINP/inpdensity_file($MXMED),inpasym($MXMED,$MXEL),
-     inpstrn(24,$MXMED),pz4($MXMED,$MXEL),
+     inpstrn($max_medium_name_length,$MXMED),pz4($MXMED,$MXEL),
      rhoz4($MXMED,$MXEL),wa4($MXMED,$MXEL),inpgasp($MXMED),
      iscompound($MXMED),ipot($MXMED),localDensity($MXMED),
      outdensity_file($MXMED),ncomp($MXMED),
