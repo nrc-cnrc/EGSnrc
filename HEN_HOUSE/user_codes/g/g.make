@@ -80,4 +80,5 @@ SOURCES = \
        $(MACHINE_MORTRAN) \
        $(EGS_SOURCEDIR)egs_utilities.mortran \
        $(EGS_SOURCEDIR)pegs4_routines.mortran \
+       $(EGS_SOURCEDIR)EEMF_macros.mortran \
        $(EGS_SOURCEDIR)egsnrc.mortran

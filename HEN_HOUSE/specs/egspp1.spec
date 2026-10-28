@@ -71,6 +71,7 @@ C_ADVANCED_SOURCES = $(EGS_SOURCEDIR)egsnrc.macros $(MACHINE_MACROS) \
             $(EGS_SOURCEDIR)get_inputs.mortran\
             $(EGS_SOURCEDIR)get_media_inputs.mortran \
             $(EGS_SOURCEDIR)pegs4_routines.mortran \
+            $(EGS_SOURCEDIR)EEMF_macros.mortran \
             $(EGS_SOURCEDIR)egsnrc.mortran
 
 # The base class from which the application is derived

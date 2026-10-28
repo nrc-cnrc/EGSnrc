@@ -57,7 +57,7 @@ SOURCES = $(EGS_SOURCEDIR)egsnrc.macros \
 	   $(RANDOM).macros\
 	   $(RANDOM).correlations\
 	   $(EGS_SOURCEDIR)transportp.macros\
-           $(EGS_SOURCEDIR)pegs4_macros.mortran\
+	   $(EGS_SOURCEDIR)pegs4_macros.mortran\
 	   $(EGS_UTILS)phsp_macros.mortran $(IAEA_PHSP_MACROS)\
 	   $(EGS_UTILS)srcrz.macros\
 	   $(USER_CODE).mortran \
@@ -66,11 +66,12 @@ SOURCES = $(EGS_SOURCEDIR)egsnrc.macros \
 	   $(EGS_UTILS)ensrc.mortran\
 	   $(EGS_UTILS)geomrz.mortran\
 	   $(EGS_SOURCEDIR)get_inputs.mortran\
-           $(EGS_SOURCEDIR)get_media_inputs.mortran\
+	   $(EGS_SOURCEDIR)get_media_inputs.mortran\
 	   $(EGS_UTILS)grids.mortran\
 	   $(EGS_UTILS)nrcaux.mortran \
 	   $(MACHINE_MORTRAN) \
 	   $(EGS_SOURCEDIR)egs_utilities.mortran \
 	   $(EGS_SOURCEDIR)egs_parallel.mortran \
-           $(EGS_SOURCEDIR)pegs4_routines.mortran\
+	   $(EGS_SOURCEDIR)pegs4_routines.mortran\
+	   $(EGS_SOURCEDIR)EEMF_macros.mortran \
 	   $(EGS_SOURCEDIR)egsnrc.mortran
