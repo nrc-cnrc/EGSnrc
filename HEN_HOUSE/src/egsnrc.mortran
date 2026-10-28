@@ -6873,7 +6873,7 @@ $egs_fatal('(a,2i6)',' STOPPED IN UPHI WITH IENTRY,LVL=',IENTRY,LVL);
 " energies are created. These alias sampling tables are then used
 " during the simulation in subroutine BREMS.
 " Be aware that there is a slight inconsistency when using this option
-" as resttricted radiative stopping powers used are the ones coming
+" as restricted radiative stopping powers used are the ones coming
 " from PEGS and so, they are calculated using Bethe-Heitler.
 " This will not matter at all if
 "   - AP is much smaller than the electron energy
@@ -6922,7 +6922,7 @@ $declare_write_buffer;
 $REAL amu;
 parameter (amu = 1660.5655);  "converts the cross sections from mB/per atom"
                               "to cm^2/g"
-$LOGICAL ex,is_opened;
+$LOGICAL ext,is_opened;
 $declare_max_medium;
 $COMIN-INIT-NIST-BREMS;
 

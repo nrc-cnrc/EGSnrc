@@ -216,7 +216,7 @@ integer   i;
 character arg*256,tmp_string*512, tmp1_string*512, ucode_dir*512,
           line*80,
           line1*80,dattim*24;
-$LOGICAL  have_input,egs_isdir,egs_strip_extension,ex,
+$LOGICAL  have_input,egs_isdir,egs_strip_extension,ext,
           on_egs_home,is_opened;
 $INTEGER  mypid;
 integer   getpid;
@@ -256,8 +256,8 @@ REPLACE {$check_argument(#,#,#);} WITH {
 IF(~is_pegsless)[
 " Get the pegs4 data file "
 on_egs_home = .false.;
-inquire(file=pegs_file,exist=ex);
-IF( ex ) [
+inquire(file=pegs_file,exist=ext);
+IF( ext ) [
     kmpi=egs_get_unit(kmpi);
     IF(kmpi<0)[
       $egs_fatal(*,'failed to get a free Fortran I/O unit for pegs file');
@@ -267,7 +267,7 @@ IF( ex ) [
     goto :found_pegs_file:;
 ]
 arg = $cstring(pegs_file);
-ex = egs_strip_extension(arg,'.pegs4dat');
+ext = egs_strip_extension(arg,'.pegs4dat');
 l = lnblnk1(egs_home); l1 = lnblnk1('pegs4data') + 2*lnblnk1($file_sep);
 l2 = lnblnk1(arg) + lnblnk1('.pegs4dat');
 IF( l + l1 + l2 > 256 ) [
@@ -278,8 +278,8 @@ ELSE [
     pegs_file = $cstring(egs_home) // 'pegs4' // $file_sep // 'data' //
       $file_sep // $cstring(arg) // '.pegs4dat';
     $egs_debug('(a,a)','checking for pegs file ',$cstring(pegs_file));
-    inquire(file=pegs_file,exist=ex);
-    IF( ex ) [
+    inquire(file=pegs_file,exist=ext);
+    IF( ext ) [
         kmpi=egs_get_unit(kmpi);
         IF(kmpi<0)[
           $egs_fatal(*,'failed to get a free Fortran I/O unit for pegs file');
@@ -299,8 +299,8 @@ ELSE [
     pegs_file = $cstring(hen_house) // 'pegs4' // $file_sep // 'data' //
        $file_sep // $cstring(arg) // '.pegs4dat';
     $egs_debug('(a,a)','checking for pegs file ',$cstring(pegs_file));
-    inquire(file=pegs_file,exist=ex);
-    IF( ex ) [
+    inquire(file=pegs_file,exist=ext);
+    IF( ext ) [
         kmpi=egs_get_unit(kmpi);
         IF(kmpi<0)[
           $egs_fatal(*,'failed to get a free Fortran I/O unit for pegs file');
@@ -331,8 +331,8 @@ i_mscat=11;
 REPLACE {$open_data_file(#,#,#,#);} WITH {;
     $set_string({P2},' ');
     {P2} = $cstring({P1}) // {P3};
-    inquire(file={P2},exist=ex,opened=is_opened,number=itmp);
-    IF( ~ex ) [
+    inquire(file={P2},exist=ext,opened=is_opened,number=itmp);
+    IF( ~ext ) [
         $egs_fatal(*,'EGSnrc data file ',{P3},' does not exist');
     ]
     IF( ~is_opened ) [
@@ -363,10 +363,10 @@ IF( lnblnk1(input_file) > 0 ) [
     IF( l + l1 + l2 > 1024 ) [
         $egs_fatal(*,'input file name (including path) is too long ',l+l1+l2);
     ]
-    ex = egs_strip_extension(input_file,'.egsinp');
+    ext = egs_strip_extension(input_file,'.egsinp');
     tmp_string = $cstring(ucode_dir) // $cstring(input_file) // '.egsinp';
-    inquire(file=tmp_string,exist=ex);
-    IF( ~ex ) [
+    inquire(file=tmp_string,exist=ext);
+    IF( ~ext ) [
         $egs_fatal(*,'Input file ',$cstring(tmp_string),' does not exist.');
     ]
     $AVAILABLE_UNIT(i_input,tmp_string);
@@ -394,8 +394,8 @@ DO i=1,lnblnk1(tmp_string) [
         tmp_string(i:i) = $file_sep;
     ]
 ]
-ex = egs_isdir(tmp_string);
-IF( ex ) [
+ext = egs_isdir(tmp_string);
+IF( ext ) [
  $egs_fatal(*,'a directory named ',$cstring(tmp_string),' already exists?');
 ]
 tmp1_string = 'mkdir ' // $cstring(tmp_string);
@@ -423,7 +423,7 @@ pos2 = 80 - lnblnk1($CONFIGURATION_NAME);
 pos2 = min(pos2,80-lnblnk1(user_code));
 $set_string(tmp_string,' '); tmp_string = pegs_file;
 call egs_strip_path(tmp_string);
-ex = egs_strip_extension(tmp_string,'.pegs4dat');
+ext = egs_strip_extension(tmp_string,'.pegs4dat');
 IF( on_egs_home ) [ tmp_string = $cstring(tmp_string) // ' on EGS_HOME'; ]
 ELSE [ tmp_string = $cstring(tmp_string) // ' on HEN_HOUSE'; ]
 IF( lnblnk1(tmp_string) > lnblnk1(pegs_file) ) [
@@ -482,7 +482,7 @@ implicit none;
 ;COMIN/EGS-IO/;
 
 character arg*256,tmp_string*512, line1*80;
-$LOGICAL  have_arg,egs_isdir,egs_strip_extension,ex,
+$LOGICAL  have_arg,egs_isdir,egs_strip_extension,ext,
           on_egs_home;
 integer   narg, iargc, i, lnblnk1, l, l2,i_help,egs_get_unit;
 $declare_write_buffer;
@@ -637,7 +637,7 @@ call egs_get_usercode(user_code);
 " Check for an input file "
 $check_get_argument('-i','--input',arg);
 IF( have_arg ) [
-    ex = egs_strip_extension(arg,'.egsinp');
+    ext = egs_strip_extension(arg,'.egsinp');
     l2 = lnblnk1(arg) + lnblnk1('.egsinp');
     IF( l2 > 256 ) [
         $egs_fatal(*,'input file name is too long ',l2);
@@ -682,7 +682,7 @@ $LOGICAL flag;
 character tmp_string*1024, tmp1_string*1024, tmp2_string*1024, ucode_dir*1024,
           input_line*100, arg*20;
 integer   i,lnblnk1,u,l,istart,egs_get_unit,i_iofile;
-$LOGICAL  ex,is_open;
+$LOGICAL  ext,is_open;
 $declare_write_buffer;
 
 $set_string(tmp_string,' '); $set_string(ucode_dir,' ');
@@ -708,9 +708,9 @@ IF( is_batch ) [
 ]
 $set_string(tmp2_string,' ');
 tmp2_string = $cstring(ucode_dir) // $cstring(user_code) // '.io';
-inquire(file=tmp2_string,exist=ex);
+inquire(file=tmp2_string,exist=ext);
 n_files = 0;
-IF( ex ) [
+IF( ext ) [
     i_iofile=99;
     i_iofile=egs_get_unit(i_iofile);
     IF (i_iofile<1)[
@@ -924,12 +924,15 @@ mcdf_pe_xsections = $MCDF-PE-DEFAULT;
 photonuc_xsections = $PHOTONUC-XDATA-DEFAULT;
 "EMH:emf"
 ExIN=$ExDEF;EyIN=$EyDEF;EzIN=$EzDEF;
+Ex=ExIN;    Ey=EyIN;    Ez=EzIN;
+Ex_new=Ex;  Ey_new=Ey;  Ez_new=Ez;
 " Initially set to input values, could change with regions"
 " by converting it to an array over all regions. This is  "
 " currently implemented ONLY for the C++ applications     "
 BxIN=$BxDEF;ByIN=$ByDEF;BzIN=$BzDEF; EMLMTIN=$EMLMTDEF;
 Bx=BxIN;    By=ByIN;    Bz=BzIN;
 Bx_new=Bx;  By_new=By;  Bz_new=Bz;
+emf_scale=1; emf_scale_new=1; "no region scaling of E or B by default"
 emfield_on=.false.;
 IF( ExIN**2+EyIN**2+EzIN**2 + BxIN**2+ByIN**2+BzIN**2 > 0 ) [
     emfield_on=.true.
@@ -1018,7 +1021,7 @@ character*1024 tmp_string,base,command,outfile,parfile_name,base1,
 integer  lnblnk1,istat,ipar,egs_system,egs_open_file;
 $INTEGER i,k,j,numparfiles,textindex;
 integer urcSleep, urcCheckIntervals;
-$LOGICAL ex,iwin;
+$LOGICAL ext,iwin;
 
 iwin=.false.; "start off assuming a non-Windows system"
 
@@ -1101,8 +1104,8 @@ WHILE(j<=numparfiles) [
      tmp_string = $cstring(base);
      call egs_itostring(tmp_string,k,.false.);
      tmp_string = $cstring(tmp_string) // $cstring(extension);
-     inquire(file=tmp_string,exist=ex);
-     IF( ex ) [
+     inquire(file=tmp_string,exist=ext);
+     IF( ext ) [
         call combine_routine(tmp_string);
         j=j+1;
      ]

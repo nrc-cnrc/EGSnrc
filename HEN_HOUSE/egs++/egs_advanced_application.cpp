@@ -792,7 +792,7 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     }
     if (efield.size()==3 || bfield.size()==3) {
         estepem.info(nc);
-        if (bfield_v[0]*bfield_v[0]+bfield_v[1]*bfield_v[1]+bfield_v[2]*bfield_v[2] > 0) {
+        if (bfield.size()==3 && bfield_v[0]*bfield_v[0]+bfield_v[1]*bfield_v[1]+bfield_v[2]*bfield_v[2] > 0) {
             the_emf->emfield_on = true;
         }
     }
@@ -1126,6 +1126,14 @@ void EGS_AdvancedApplication::startNewParticle() {
         the_emf->Bx_new = the_emf->Bx;
         the_emf->By_new = the_emf->By;
         the_emf->Bz_new = the_emf->Bz;
+        the_emf->Ex = bf*the_emf->ExIN;
+        the_emf->Ey = bf*the_emf->EyIN;
+        the_emf->Ez = bf*the_emf->EzIN;
+        the_emf->Ex_new = the_emf->Ex;
+        the_emf->Ey_new = the_emf->Ey;
+        the_emf->Ez_new = the_emf->Ez;
+        the_emf->emf_scale = bf;
+        the_emf->emf_scale_new = bf;
     }
     else {
         the_emf->Bx = the_emf->BxIN;
@@ -1134,6 +1142,14 @@ void EGS_AdvancedApplication::startNewParticle() {
         the_emf->Bx_new = the_emf->Bx;
         the_emf->By_new = the_emf->By;
         the_emf->Bz_new = the_emf->Bz;
+        the_emf->Ex = the_emf->ExIN;
+        the_emf->Ey = the_emf->EyIN;
+        the_emf->Ez = the_emf->EzIN;
+        the_emf->Ex_new = the_emf->Ex;
+        the_emf->Ey_new = the_emf->Ey;
+        the_emf->Ez_new = the_emf->Ez;
+        the_emf->emf_scale = 1;
+        the_emf->emf_scale_new = 1;
     }
 }
 
@@ -1155,12 +1171,20 @@ void EGS_AdvancedApplication::enterNewRegion() {
             the_emf->Bx_new = bf*the_emf->BxIN;
             the_emf->By_new = bf*the_emf->ByIN;
             the_emf->Bz_new = bf*the_emf->BzIN;
+            the_emf->Ex_new = bf*the_emf->ExIN;
+            the_emf->Ey_new = bf*the_emf->EyIN;
+            the_emf->Ez_new = bf*the_emf->EzIN;
+            the_emf->emf_scale_new = bf;
         }
     }
     else {
         the_emf->Bx_new = the_emf->BxIN;
         the_emf->By_new = the_emf->ByIN;
         the_emf->Bz_new = the_emf->BzIN;
+        the_emf->Ex_new = the_emf->ExIN;
+        the_emf->Ey_new = the_emf->EyIN;
+        the_emf->Ez_new = the_emf->EzIN;
+        the_emf->emf_scale_new = 1;
     }
 }
 

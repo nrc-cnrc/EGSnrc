@@ -637,9 +637,13 @@ struct EGS_IO {
   electric and magnetic fields.
  */
 struct EGS_emfInputs {
-    /*! Input values for static electric and magnetic fields */
-    EGS_Float ExIN, EyIN, EzIN, EMLMTIN,
-    BxIN, ByIN, BzIN, Bx, By, Bz, Bx_new, By_new, Bz_new;
+    /*! Input values for static electric and magnetic fields.
+        The order must match common/emf_inputs/ in egsnrc.macros */
+    EGS_Float ExIN, EyIN, EzIN, Ex, Ey, Ez, Ex_new, Ey_new, Ez_new,
+    EMLMTIN,
+    BxIN, ByIN, BzIN, Bx, By, Bz, Bx_new, By_new, Bz_new,
+    /*! Region field scaling factor (current region, new region) */
+    emf_scale, emf_scale_new;
     bool emfield_on;
 };
 

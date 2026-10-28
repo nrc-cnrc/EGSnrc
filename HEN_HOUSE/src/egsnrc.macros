@@ -633,18 +633,25 @@ REPLACE {$COMIN-EII-INIT;} WITH {
 };
 
 REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
-    common/emf_inputs/ExIN,EyIN,EzIN, "E field"
+    common/emf_inputs/ExIN,EyIN,EzIN,        "E field: initial region"
+                     Ex, Ey, Ez,             "E field: current region"
+                     Ex_new, Ey_new, Ez_new, "E field: in new region"
                      EMLMTIN,         "Ekin, u, E fractional maximum change"
                      BxIN, ByIN, BzIN,       "B field: initial region"
                      Bx, By, Bz,             "B field: current region"
                      Bx_new, By_new, Bz_new, "B field: in new region"
+                     emf_scale,              "E,B scaling: current region"
+                     emf_scale_new,          "E,B scaling: in new region"
                      emfield_on;             "true if EM fields not null"
 
    $REAL    ExIN,EyIN,EzIN,
+            Ex,Ey,Ez,
+            Ex_new,Ey_new,Ez_new,
             EMLMTIN,
             BxIN,ByIN,BzIN,
             Bx,By,Bz,
-            Bx_new,By_new,Bz_new;
+            Bx_new,By_new,Bz_new,
+            emf_scale,emf_scale_new;
    $LOGICAL emfield_on;
 };
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"

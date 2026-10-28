@@ -1624,6 +1624,8 @@ IF( error_flags(num_efield) = 0 ) [
     ExIN = value(num_efield,1);
     EyIN = value(num_efield,2);
     EzIN = value(num_efield,3);
+    Ex=ExIN;Ey=EyIN;Ez=EzIN;
+    Ex_new=ExIN;Ey_new=EyIN;Ez_new=EzIN;
     IF( error_flags(num_emlmt) = 0 )[
        EMLMTIN=value(num_emlmt,1);
     ]
