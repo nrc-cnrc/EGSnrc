@@ -1908,7 +1908,7 @@ int EGS_ChamberApplication::ausgab(int iarg) {
 
     // jwu: check if we are above ECUT
     if( do_rECUT[ig] && (the_stack->iq[np] == -1 || the_stack->iq[np] == 1) )
-        if( is_rECUT[ig][ir] ){
+        if( ir >= 0 && is_rECUT[ig][ir] ){
             if( the_stack->E[np] < rECUT[ig] ){
             // before discarding the particle
             // deposit all of its energy locally
@@ -1929,14 +1929,14 @@ int EGS_ChamberApplication::ausgab(int iarg) {
     //  **** temporarily scoring phase-space
     //
     // saving the phase-space at the 'base' geometry
-    if( do_TmpPhsp && ig == 0 && iarg == AfterTransport && is_cavity[ig][ir] ){
+    if( do_TmpPhsp && ig == 0 && iarg == AfterTransport && ir >= 0 && is_cavity[ig][ir] ){
         container->set();
         the_stack->wt[np] = 0;
         basereg = ir;
         return 0;
     }
     // saving the phase-space at the defined region of geometries with subgeometries
-    if( check_for_subreg && iarg == AfterTransport && is_subgeomreg[ig][ir] ){
+    if( check_for_subreg && iarg == AfterTransport && ir >= 0 && is_subgeomreg[ig][ir] ){
         container2->set();
         the_stack->wt[np] = 0;
         return 0;
@@ -1946,7 +1946,7 @@ int EGS_ChamberApplication::ausgab(int iarg) {
     //
     // (mainly adopted from dosrznrc.mortran)
     // if inside an cs_enhance_region
-    if( cs_enhance[ig][ir] > 1  ){
+    if( ir >= 0 && cs_enhance[ig][ir] > 1  ){
         // devide photon in interacting and non-interacting portions
         if( iarg == BeforePair  || iarg == BeforeCompton ||
             iarg == BeforePhoto || iarg == BeforeRayleigh || iarg == BeforePhotoNuc) {
