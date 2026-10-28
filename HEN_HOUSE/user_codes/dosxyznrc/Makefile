@@ -70,6 +70,7 @@ SOURCES = $(EGS_SOURCEDIR)egsnrc.macros \
           $(EGS_SOURCEDIR)egs_utilities.mortran \
           $(EGS_SOURCEDIR)egs_parallel.mortran \
           $(EGS_SOURCEDIR)pegs4_routines.mortran \
+          $(EGS_SOURCEDIR)EEMF_macros.mortran \
           $(EGS_SOURCEDIR)egsnrc.mortran
 
 include $(EGS_MAKEFILE)

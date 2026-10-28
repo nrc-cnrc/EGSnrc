@@ -94,6 +94,7 @@ SOURCES = $(EGS_SOURCEDIR)egsnrc.macros \
           $(MACHINE_MORTRAN) \
           $(EGS_SOURCEDIR)egs_parallel.mortran \
           $(EGS_SOURCEDIR)pegs4_routines.mortran \
+          $(EGS_SOURCEDIR)EEMF_macros_beamnrc.mortran \
           $(EGS_SOURCEDIR)egsnrc.mortran
 
 LIB_SOURCES = $(BEAM_HOME)beam_lib.macros \
@@ -116,6 +117,7 @@ LIB_SOURCES = $(BEAM_HOME)beam_lib.macros \
           $(MACHINE_MORTRAN) \
           $(EGS_SOURCEDIR)egs_parallel.mortran \
           $(EGS_SOURCEDIR)pegs4_routines.mortran \
+          $(EGS_SOURCEDIR)EEMF_macros_beamnrc.mortran \
           $(EGS_SOURCEDIR)egsnrc.mortran
 
 # The git hash and branch

@@ -78,4 +78,5 @@ SOURCES = \
        $(EGS_UTILS)nrcaux.mortran \
        $(MACHINE_MORTRAN) \
        $(EGS_SOURCEDIR)egs_utilities.mortran \
+       $(EGS_SOURCEDIR)EEMF_macros.mortran \
        $(EGS_SOURCEDIR)egsnrc.mortran
