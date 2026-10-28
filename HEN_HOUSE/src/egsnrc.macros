@@ -640,6 +640,8 @@ REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
                      BxIN, ByIN, BzIN,       "B field: initial region"
                      Bx, By, Bz,             "B field: current region"
                      Bx_new, By_new, Bz_new, "B field: in new region"
+                     emf_scale,              "E,B scaling: current region"
+                     emf_scale_new,          "E,B scaling: in new region"
                      emfield_on;             "true if EM fields not null"
 
    $REAL    ExIN,EyIN,EzIN,
@@ -648,7 +650,8 @@ REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
             EMLMTIN,
             BxIN,ByIN,BzIN,
             Bx,By,Bz,
-            Bx_new,By_new,Bz_new;
+            Bx_new,By_new,Bz_new,
+            emf_scale,emf_scale_new;
    $LOGICAL emfield_on;
 };
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"

@@ -932,6 +932,7 @@ Ex_new=Ex;  Ey_new=Ey;  Ez_new=Ez;
 BxIN=$BxDEF;ByIN=$ByDEF;BzIN=$BzDEF; EMLMTIN=$EMLMTDEF;
 Bx=BxIN;    By=ByIN;    Bz=BzIN;
 Bx_new=Bx;  By_new=By;  Bz_new=Bz;
+emf_scale=1; emf_scale_new=1; "no region scaling of E or B by default"
 emfield_on=.false.;
 IF( ExIN**2+EyIN**2+EzIN**2 + BxIN**2+ByIN**2+BzIN**2 > 0 ) [
     emfield_on=.true.

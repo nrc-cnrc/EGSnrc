@@ -389,6 +389,7 @@ REPLACE {$electron_region_change;} WITH {
   medium = medium_new; ecut = ecut_new; smaxir = smax_new;
   Bx=Bx_new;By=By_new;Bz=Bz_new;
   Ex=Ex_new;Ey=Ey_new;Ez=Ez_new;
+  emf_scale=emf_scale_new;
 };
 
 REPLACE {$photon_region_change;} WITH {

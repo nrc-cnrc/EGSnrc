@@ -226,10 +226,13 @@ REPLACE{$GET_EM_FIELD(#, #, #);}WITH{;
 "If this is missing the user's installation, the BxIN etc. variables should be"
 "replaced or a new field should be defined"
 
+  "emf_scale is the region-dependent field scaling factor (set B scaling)"
+  "It is kept separate from Bx,By,Bz and Ex,Ey,Ez because these are"
+  "overwritten and normalized to unit vectors on every step"
   "Magnetic field:"
-  Bx = BxIN;By = ByIN;Bz = BzIN;
+  Bx = emf_scale*BxIN;By = emf_scale*ByIN;Bz = emf_scale*BzIN;
   "Electric field:"
-  Ex = ExIN;Ey = EyIN;Ez = EzIN;
+  Ex = emf_scale*ExIN;Ey = emf_scale*EyIN;Ez = emf_scale*EzIN;
 
   "delta_u definition from the user"
   delta_u = EMLMTIN;
@@ -371,7 +374,6 @@ REPLACE{$EMFIELD_INITIATE_SET_TUSTEP;}WITH{;
 	"Output if the scaling for the step size is turned on for the B field"
 	IF($duAdaptive)[;
 	    IF ($EMInternalOutput) [;OUTPUT;('Scaling du by 5th root: on');]
-		IF(BFieldTransport)[;duAdaptivEMFactor = (1.5/B_amp)**(1./5.);]
 	];
 	IF ($EMInternalOutput) [;
 	 OUTPUT;('          ~~~                      ~~~         ');
@@ -379,6 +381,12 @@ REPLACE{$EMFIELD_INITIATE_SET_TUSTEP;}WITH{;
 	];
 ];
 "~~~~~~~~~~~~~~~"
+
+"Scale the step size for the local B field. This is evaluated on every step"
+"because B_amp can change between regions (set B scaling)"
+IF($duAdaptive & BFieldTransport)[;
+  duAdaptivEMFactor = (1.5/B_amp)**(1./5.);
+];
 
 "Step size restrictions in a E or B field for CH mode"
  IF(BFieldTransport)[;
