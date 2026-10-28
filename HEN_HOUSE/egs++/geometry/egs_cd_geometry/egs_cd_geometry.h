@@ -863,9 +863,8 @@ do_checks:
         }
 
         for (int j=0; j<bg->regions(); j++) {
-            bool hasRS = g[j]->hasRhoScaling();
-            if (hasRS) {
-                has_rho_scaling = hasRS;
+            if (g[j] && g[j]->hasRhoScaling()) {
+                has_rho_scaling = true;
                 return has_rho_scaling;
             }
         }
@@ -875,7 +874,9 @@ do_checks:
 
     void finishInitialization() override {
         for (int j=0; j<bg->regions(); j++) {
-            g[j]->finishInitialization();
+            if (g[j]) {
+                g[j]->finishInitialization();
+            }
         }
         bg->finishInitialization();
     };
