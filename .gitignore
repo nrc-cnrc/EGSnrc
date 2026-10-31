@@ -1,5 +1,5 @@
 ### ignore EGSnrc configuration generated files
-egs_home/
+egs_home*/
 egsnrc_mp/
 mortjob.mortran
 *.mortlst
@@ -43,6 +43,30 @@ html
 .moc/
 .ui/
 .qmake.stash
+
+### ignore common local build and test artifacts
+/build/
+/dist/
+/log/
+/logs/
+/tests/
+
+### ignore Python environments and generated artifacts
+/.venv/
+/venv/
+/env/
+/ENV/
+/.tox/
+/.nox/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+*.egg-info/
+.Python
 
 ### ignore OS generated files
 *~
