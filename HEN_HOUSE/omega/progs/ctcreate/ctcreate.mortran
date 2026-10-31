@@ -122,7 +122,7 @@
 "                         the $OMEGA_HOME/progs/ctcreate/CT/AAPM/aapm2pinnacle
 "                         code.
 "
-"  CT Record 2          CTFilename (up to 256 characters)
+"  CT Record 2          CTFilename (up to 4096 characters)
 "                         For Pinnacle format:
 "                          CTFilename is the full name of the .header file.
 "                          Assumes that the binary CT data is stored in a file
@@ -187,7 +187,7 @@
 "
 "  Repeat 6.a and 6.b for i=1 to num_material (only used if num_material > 0).
 "
-"  CT Record 6.a        material_name (24A1)
+"  CT Record 6.a        material_name (up to 64 characters, one line)
 "                       The PEGS4 name of material i.
 "
 "  CT Record 6.b        material_ct_upper_bound(i),
@@ -222,13 +222,17 @@ REPLACE {OUTPUT61#;#;} WITH {
 
 ;IMPLICIT NONE;
 
+" Keep this value synchronized with EGS_MAX_PATH_LENGTH in "
+" HEN_HOUSE/interface/egs_path_length.h. "
+REPLACE {$max_path_length} WITH {4096};
+REPLACE {$max_medium_name_length} WITH {64};
 Character*60 ctformat;                 "format of CT data"
 Character*40 machine;                  "type of machine being run on"
 
-Character*256 CTFileName;              "main CT file name"
+Character*$max_path_length CTFileName;  "main CT file name"
 
 Integer      nmed;                  "Number of media"
-Character*4  media(24,$MXMED);      "Media names"
+Character*4  media($max_medium_name_length,$MXMED); "Media names"
 Real    rhor($MXREG);               "Density distribution"
 Integer med($MXREG);                "Media distribution"
 Real    xbound($IMAX+1);            "Voxel X bounds for dosxyznrc"
@@ -245,7 +249,7 @@ Integer CTErrorCode;                   "Error code for CT"
 Integer imax,jmax,kmax;                "Max indices for resized CT data"
 Integer lnblnk1,l;                     "have to declare this for implicit none"
 integer iargc,narg;
-character input_file*256;
+character input_file*$max_path_length;
 logical unknown_format,file_exists;
 
 $HAVE_C_COMPILER(#);
@@ -337,7 +341,7 @@ ELSEIF(ctformat='DICOM')[
     OUTPUT61; (//' Input the full name of the file of DICOM file names'/
            ' : ',$);
 ]
-read(5,'(A256)') CTFilename;
+read(5,'(A)') CTFilename;
 l = lnblnk1(CTFilename);
 OUTPUT61 CTFilename(:l); (A);
 " Call ReadCT to get original ct volume.              "
@@ -465,10 +469,10 @@ Subroutine ReadCT_Pinnacle(fname,asize,ctdata,offset,vsize,error);
 "    z=offset(3)+(k-1)*vsize(3) and upper bounds x=offset(1)+i*vsize(1),
 "    y=offset(2)+j*vsize(2),z=offset(3)+k*vsize(3).
 ;IMPLICIT NONE;
-Character*256 fname;      "The name of CT header file.                "
+Character*$max_path_length fname; "The name of the CT header file."
 Character*256 vname;      "The name of the variable to search for in  "
                           " the header file.                          "
-Character*256 ctname;     "Name of the CT data file.                  "
+Character*$max_path_length ctname; "Name of the CT data file."
 Character*40  machine;    "Name of the machine being run on           "
 Integer       asize(3);   "The size of the array for                  "
                           " CT data set.                              "
@@ -640,7 +644,7 @@ Function ReadReal(filename,vname);
 " variable name.                                                            "
 "---------------------------------------------------------------------------"
 ;IMPLICIT NONE;
-      Character*256 filename;    "The name of the header file.              "
+      Character*$max_path_length filename;
       Character*256 vname;       "The name of the variable being extracted. "
       Character*256 dummy;       "Used to read in each line of the header   "
                                  " file.                                    "
@@ -710,7 +714,7 @@ Function ReadInt(filename,vname);
 " variable name.                                                            "
 "---------------------------------------------------------------------------"
 ;IMPLICIT NONE;
-      Character*256 filename;
+      Character*$max_path_length filename;
       Character*256 vname;
       Character*256 dummy;
       Real          readint;
@@ -773,7 +777,7 @@ Subroutine ReadChar(filename,vname,result);
 " variable  name.                                                           "
 "---------------------------------------------------------------------------"
 ;IMPLICIT NONE;
-      Character*256 filename;
+      Character*$max_path_length filename;
       Character*256 vname;
       Character*256 dummy;
       Character*256 result;
@@ -851,7 +855,7 @@ subroutine read_ct_data(ctdata,imax,jmax,kmax,ctname);
       Integer   jmax;
       Integer   kmax;
       Integer   i,j,k,irl;
-      Character*256 ctname;
+      Character*$max_path_length ctname;
       integer*2 i2_array(imax);
       integer   rec_length;
 "---------------------------------------------------------------------------"
@@ -913,8 +917,8 @@ Subroutine ReadCT_CADPLAN(fname,asize,ctdata,offset,vsize,error);
 
 
 ;IMPLICIT NONE;
-      Character*256 fname;      "The name of CT header file.                "
-      Character*80 Filename1;   "Name of individual slice files             "
+      Character*$max_path_length fname;
+      Character*$max_path_length Filename1;
 
       Integer       asize(3);   "The size of the array for                  "
                                 " CT data set.                              "
@@ -953,7 +957,7 @@ Subroutine ReadCT_CADPLAN(fname,asize,ctdata,offset,vsize,error);
           IT=0; J=0; I=0; K=0;
           Bytes=140; Snummer=1;
 
-          READ($CTUnitNumber,END=:NOMOREFILES:,FMT='(A80)') Filename1;
+          READ($CTUnitNumber,END=:NOMOREFILES:,FMT='(A)') Filename1;
           OUTPUT61 Filename1; (/' Working on file '/
                                 ' : ',A80);
 
@@ -1177,7 +1181,7 @@ Subroutine ReadCT_CADPLAN(fname,asize,ctdata,offset,vsize,error);
       :NOMOREFILES:
 
       OUTPUT61 fname; (/' Finished reading all files from '/
-                        ' : ',A80);
+                                ' : ',A);
 
       CLOSE($CTUnitNumber);
 
@@ -1742,7 +1746,9 @@ INTEGER   new_x_dim,                      "resized number of x voxels       "
 REAL      density_region($MXREG),         "matrix of material densities     "
           material_density_lower_bound($MXMED), "lower bounds of ramps      "
           material_density_upper_bound($MXMED); "upper bounds of ramps      "
-CHARACTER*4 material_name(24,$MXMED);     "names of the media               "
+CHARACTER*4 material_name($max_medium_name_length,$MXMED);
+                                          "names of the media               "
+CHARACTER*$max_medium_name_length material_name_record;
 "---------------------------------------------------------------------------"
 REPLACE {$IRCTM(#,#,#)} WITH {(1 + {P1} + ({P2}-1)*new_x_dim +
                            ({P3}-1)*new_x_dim*new_y_dim)};
@@ -1777,7 +1783,7 @@ ELSEIF(num_material=0)["use the hard-wired ramp"
                 ' Note: This is optimized for display and example '/
                 ' calculations.  It is recommended that you enter '/
                 ' the CT conversion ramp for your own imager.'/);
-    DO i=1,4 [ DO j=1,24 [ material_name(j,i)=' '; ]; ];
+    DO i=1,4 [ DO j=1,$max_medium_name_length [ material_name(j,i)=' '; ]; ];
     num_material=4;
     material_ct_lower_bound=-1024;
 
@@ -1831,8 +1837,9 @@ ELSEIF(num_material=0)["use the hard-wired ramp"
     OUTPUT61 material_ct_lower_bound;
     (' CT no. lower bound of ramp = ',I5);
     DO i_material=1,num_material[
-       OUTPUT61 i_material,(material_name(j,i_material),j=1,24);
-              (/' Medium ',I4,' : ',24a1);
+      OUTPUT61 i_material,
+        (material_name(j,i_material),j=1,$max_medium_name_length);
+        (/' Medium ',I4,' : ',$max_medium_name_length A1);
        OUTPUT61 material_ct_upper_bound(i_material),
               material_density_lower_bound(i_material),
               material_density_upper_bound(i_material);
@@ -1844,8 +1851,12 @@ ELSEIF(num_material=0)["use the hard-wired ramp"
 ELSE["user enters ramp"
     DO i_material=1,num_material[
        OUTPUT61 i_material;(/' Medium ',I4,' : ',$);
-       INPUT (material_name(j,i_material),j=1,24);(24a1);
-       OUTPUT61 (material_name(j,i_material),j=1,24);(24a1);
+      INPUT material_name_record;(A);
+      DO j=1,$max_medium_name_length[
+        material_name(j,i_material)=material_name_record(j:j);
+      ]
+      OUTPUT61 (material_name(j,i_material),j=1,$max_medium_name_length);
+        ($max_medium_name_length A1);
        OUTPUT61;
        (' CT no. upper bound, density lower bound (g/cm^3),'/
         ' density upper bound (g/cm^3)--all on one line'/
@@ -1966,7 +1977,7 @@ subroutine write_material(fname,iimax,jjmax,kkmax,xbnd,ybnd,zbnd,
 "This writes a file in .3ddose format with arrays of density, medium number "
 "and CT number for eventual display using PAW."
 ;IMPLICIT NONE;
-Character*256 fname;               "name of header file for CT data"
+Character*$max_path_length fname; "name of header file for CT data"
 Character*80 ddataname;            "name of output file"
 Character*60 CTformat;             "format of original binary CT data"
 INTEGER iimax,                     "max number of x cells"
@@ -2023,9 +2034,9 @@ subroutine write_phantom(fname,nmed,media,
 "This subroutine writes out CT phantom data for reading by dosxyznrc"
 "******************************************************************************
 ;IMPLICIT NONE;
-CHARACTER*256 fname;               "file name containing CT data"
+CHARACTER*$max_path_length fname; "file name containing CT data"
 CHARACTER*80 phantname;           "output file"
-Character*4  media(24,$MXMED);     "Media names"
+Character*4  media($max_medium_name_length,$MXMED); "Media names"
 Character*60 CTformat;             "format of original binary CT data"
 INTEGER nmed,                      "number of media"
         iimax,                     "max number of x cells"
@@ -2068,7 +2079,8 @@ DO ii=1,nmed [ estepe(ii)=1.0;]
 Open (15,file=phantname,Status='new',ERR=:egsphantOPENERROR:);
 WRITE(15,'(i2)') nmed;
 DO ii=1,nmed [
-   Write(15,'(24a1)') (media(jj,ii),jj=1,24);
+     Write(15,1398)
+       (media(jj,ii),jj=1,$max_medium_name_length);
 ]
 WRITE(15,*) (estepe(ii),ii=1,nmed);
 WRITE(15,'(3i5)') iimax,jjmax,kkmax;
@@ -2082,6 +2094,7 @@ DO kk=1,kkmax[
     ]
     WRITE(15,*);
 ]
+1398 FORMAT($max_medium_name_length A1);
 1399 FORMAT($IMAXa1);
 DO kk=1,kkmax[
     DO jj=1,jjmax[

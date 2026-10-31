@@ -35,7 +35,7 @@
                        here, range rejection is turned off in this region
                        If left blank or zero, the global value is used.
 
-    7  MED_IN (24A1):  Medium of region
+    7  MED_IN:  Medium of region
                        used to set MED_INDEX.
 
 

@@ -207,7 +207,7 @@
 "I>              ESAVEIN:         Value of ESAVE for this region if range
 "I>                               rejection on. Default is ESAVE_GLOBAL.
 "I>
-"I>      4b   MED_IN (24A1):  Medium of the planar slab, used to set MED_INDEX.
+"I>      4b   MED_IN:  Medium of the planar slab, used to set MED_INDEX.
 "I>
 "I>   Example
 "I>   *******
@@ -393,7 +393,7 @@ DO IR_$SLABS=1,N_$SLABS [
 
    OUTPUT;(' SLAB ',$);
    ;$MED_INPUT($SLABS); " inputs character array MED_IN from unit 5, loops
-      "through array MEDIA(24,I) to check if medium was previously input.
+      "through MEDIA($max_medium_name_length,I) to check if already input.
       "If so, sets MED_INDEX to index of previous medium.  If not,
       "increments NMED and sets MED_INDEX to NMED.
    MED(IRA) = MED_INDEX; " medium of the planar slab

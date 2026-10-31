@@ -180,6 +180,10 @@ REPLACE {PARAMETER #=#;} WITH
    { REPLACE {{P1}} WITH {{P2}}}
 
 PARAMETER $MXMED=10;      "MAX. NO. OF DIFFERENT MEDIA (EXCL. VAC.)"
+" Keep synchronized with EGS_MAX_XSECTION_PREFIX_LENGTH in egs_path_length.h. "
+REPLACE {$max_xsection_prefix_length} WITH {64};
+" Keep synchronized with EGS_MAX_MEDIUM_NAME_LENGTH in egs_path_length.h. "
+REPLACE {$max_medium_name_length} WITH {64};
 PARAMETER $MXREG=2000;    "MAXIMUM NO. OF REGIONS ALLOCATED"
 PARAMETER $MXSTACK=40;    "STACK SIZE"
 PARAMETER $MXVRT1=1000;   "NO. OF REPRESENTATIVE ANGLES IN VERT1"
@@ -944,8 +948,8 @@ REPLACE {;COMIN/MEDIA/;} WITH
 "Ali:photonuc, 4 lines (order matters because of padding issues)"
        $LGN(RLC,RLDU,RHO,MSGE,MGE,MSEKE,MEKE,MLEKE,MCMFP,MRANGE,
             IRAYLM,IPHOTONUCM($MXMED)),
-            MEDIA(24,$MXMED), photon_xsections, comp_xsections,
-            photonuc_xsections,eii_xfile,IPHOTONUC,NMED;
+            MEDIA($max_medium_name_length,$MXMED), photon_xsections,
+            comp_xsections,photonuc_xsections,eii_xfile,IPHOTONUC,NMED;
    $TYPE    MEDIA;"media names"
    $REAL    RLC,  "radiation length in centimeters for a given medium"
             RLDU, "radiation length after user scaling over-ride"
@@ -963,7 +967,7 @@ REPLACE {;COMIN/MEDIA/;} WITH
             IPHOTONUCM,"photonuclear switch for a given medium"
             IPHOTONUC,"set to 1 if any IPHOTONUCM is set to 1"
             NMED;  "number of media"
-   character*16 eii_xfile;
+    character*$max_xsection_prefix_length eii_xfile;
             "Defaults to eii_ik.data if On or Off options selected"
             "which is the EII implemented by Iwan for EGSnrc"
             "else, following options available: "
@@ -971,7 +975,7 @@ REPLACE {;COMIN/MEDIA/;} WITH
             "  eii_'kolbenstvedt'.data "
             "  eii_'gryzinski'.data"
             "these must be in $HEN_HOUSE/data"
-   character*16 photon_xsections;
+    character*$max_xsection_prefix_length photon_xsections;
             "If photon_xsections is not empty, photon cross sections will be"
             "re-initialized using data files  "
             "  'photon_xsection'_photo.data   "
@@ -979,13 +983,13 @@ REPLACE {;COMIN/MEDIA/;} WITH
             "  'photon_xsection'_triplet.data "
             "  'photon_xsection'_rayleigh.data"
             "that must be placed in $HEN_HOUSE/data"
-   character*16 comp_xsections;
+    character*$max_xsection_prefix_length comp_xsections;
             "If comp_xsections is not empty or not set to 'default' and"
             "bound Compton scattering is On, then total Compton cross sections"
             "will be taken from 'comp_xsections'_compton.data"
             "instead of being computed from the theoretical expressions"
 "Ali:photonuc, 5 lines"
-   character*16 photonuc_xsections;
+    character*$max_xsection_prefix_length photonuc_xsections;
             "If photonuc_xsections is not empty or not set to 'default',"
             "the photonuclear cross sections will be taken from"
             "'photonuc_xsections'_photonuc.data instead of using the data"
@@ -1560,8 +1564,8 @@ REPLACE {COMIN/rayleigh_inputs/;} WITH
 "        ================"
 {
 ;COMMON/rayleigh_inputs/iray_ff_media($MXMED),iray_ff_file($MXMED);
-;character*24 iray_ff_media;
-;character*128 iray_ff_file;
+;character*$max_medium_name_length iray_ff_media;
+;character*$max_path_length iray_ff_file;
 }
 
 REPLACE {COMIN/rayleigh_sampling/;} WITH
@@ -2886,6 +2890,7 @@ $INTEGER
     LCTHET, "$SET INTERVAL index for cos(theta) from look-up table"
     LMDL  , "character width of medium header ' MEDIUM='"
     LMDN  , "character width of medium description"
+    MEDLEN, "length of a requested medium name"
     LTHETA, "$SET INTERVAL index for sin(theta) from look-up table"
     MD    , "temporary storage for the medium number"
     MXSINC, "number of intervals approximating the sine function"
@@ -3385,6 +3390,7 @@ REPLACE {COMIN/GetInput/;} WITH
                                    "array index(0:4) for a value sought"
         VALUES_SOUGHT($NMAX),      "Name of each input                 "
         CHAR_VALUE($NMAX,$NVALUE), "For returning character inputs     "
+          LONG_PATH_VALUE($NMAX),    "For returning long path inputs     "
         VALUE($NMAX,$NVALUE),      "For returning int. or real inputs  "
         DEFAULT($NMAX),            "Default value, only for type 0 & 1 "
         VALUE_MIN($NMAX),          "Min and max value defining         "
@@ -3403,7 +3409,8 @@ REPLACE {COMIN/GetInput/;} WITH
         ERROR_FLAG,                "0 for no errors, 1 for errors      "
         DELIMETER;                 "Name of the delimeter              "
    character ALLOWED_INPUTS*$STRING32,VALUES_SOUGHT*$STRING32,
-             CHAR_VALUE*$STRING256,DELIMETER*$STRING32;
+             CHAR_VALUE*$STRING256,DELIMETER*$STRING32,
+             LONG_PATH_VALUE*$max_path_length;
    $REAL     VALUE,DEFAULT,VALUE_MIN,VALUE_MAX;
    $INTEGER  NVALUE,TYPE,NMIN,NMAX,ERROR_FLAG,ERROR_FLAGS,i_errors;
 }
@@ -3607,6 +3614,9 @@ REPLACE {$egs_track0(#,#);} WITH {
 
 " Common block containing various directories, file names, etc. "
 REPLACE {$mx_units} WITH {20};
+" Keep this value synchronized with EGS_MAX_PATH_LENGTH in "
+" HEN_HOUSE/interface/egs_path_length.h. "
+REPLACE {$max_path_length} WITH {4096};
 REPLACE {$max_extension_length} WITH {10};
 REPLACE {;COMIN/EGS-IO/;} WITH {;
   common /egs_io/ file_extensions($mx_units),
@@ -3636,10 +3646,12 @@ REPLACE {;COMIN/EGS-IO/;} WITH {;
                   is_batch,       "True for batch mode"
                   is_uniform_run, "True for uniform parallel run control"
                   is_pegsless;    "true if you are running without pegs file"
-  character input_file*256, output_file*256, pegs_file*256,
+  character input_file*$max_path_length,
+            output_file*$max_path_length, pegs_file*$max_path_length,
             file_extensions*$max_extension_length,
-            hen_house*128, egs_home*128, work_dir*128, user_code*64,
-            host_name*64;
+            hen_house*$max_path_length,
+            egs_home*$max_path_length, work_dir*$max_path_length,
+            user_code*256, host_name*256;
   $INTEGER  n_parallel, i_parallel, first_parallel,n_max_parallel,
             n_chunk, file_units, n_files,i_input,i_log,i_incoh,
             i_nist_data,i_mscat,i_photo_cs,i_photo_relax, xsec_out;

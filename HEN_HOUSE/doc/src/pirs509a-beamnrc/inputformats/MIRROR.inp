@@ -40,7 +40,7 @@
            DOSE_ZONE:   Dose scoring flag in layer I.
       IREGION_TO_BIT:   bit to associate local region of layer I with
 
-    7  MED_IN (24A1):  Medium of layer I, used to set MED_INDEX.
+    7  MED_IN:  Medium of layer I, used to set MED_INDEX.
 
     8  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in region behind mirror
                                                         (2F15.0,2I5):
@@ -49,7 +49,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
      IREGION_TO_BIT:   bit to associate local region with
 
-    9  MED_IN (24A1):  Medium of local region behind the mirror,
+    9  MED_IN:  Medium of local region behind the mirror,
                        used to set MED_INDEX.
 
     10  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in region in front of
@@ -59,7 +59,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
      IREGION_TO_BIT:   bit to associate local region with
 
-    11  MED_IN (24A1): Medium of region in front of mirror,
+    11  MED_IN: Medium of region in front of mirror,
                        used to set MED_INDEX.
 
 

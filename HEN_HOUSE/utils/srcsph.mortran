@@ -171,7 +171,7 @@ INTEGER NUM_IPART,
 "*                   Variables used to declare inputs                      *"
 "***************************************************************************"
 INTEGER MODEIN;
-CHARACTER*80 SPCFIL;
+CHARACTER*$max_path_length SPCFIL;
 
 "COMMIN BLOCK DECLARATIONS
 "*************************
@@ -422,9 +422,9 @@ IF((ISOURC.EQ.10).OR.(ISOURC.EQ.11))[ "INCLUDE RADIAL DISTRIBUTION"
         NUM_RDFIL = IVAL;
         VALUES_SOUGHT(IVAL)='RDIST FILENAME';
         NVALUE(IVAL)=1;
-        TYPE(IVAL)=2;
+        TYPE(IVAL)=4;
         $GET_INPUT(NUM_RDFIL);
-        READ (CHAR_VALUE(NUM_RDFIL,1),FMT='(A)') SPCFIL;
+        SPCFIL=LONG_PATH_VALUE(NUM_RDFIL);
     ]
     NUM_RDIOUTSP = IVAL;
     VALUES_SOUGHT(IVAL)='DISTRIBUTION DATA';

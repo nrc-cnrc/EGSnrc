@@ -87,6 +87,7 @@
 #define EGS_INTERFACE1_
 
 #include "egs_config1.h"
+#include "egs_path_length.h"
 
 /* Note: The C-preprocessor macros MXMED and MXSTACK must be defined in the
    file array_sizes.h. */
@@ -320,11 +321,11 @@ struct EGS_Media {
     /*! Default mass densities */
     EGS_Float rho[MXMED];
     /*! Prefix for photon cross section data files */
-    char      pxsec[16];
+    char      pxsec[EGS_MAX_XSECTION_PREFIX_LENGTH];
     /*! Prefix for eii cross section data files */
-    char      eiixsec[16];
+    char      eiixsec[EGS_MAX_XSECTION_PREFIX_LENGTH];
     /*! Prefix for compton cross section data files */
-    char      compxsec[16];
+    char      compxsec[EGS_MAX_XSECTION_PREFIX_LENGTH];
     /*! Number of media in the geometry */
     EGS_I32   nmed;
 };
@@ -335,9 +336,9 @@ struct EGS_Media {
   */
 struct EGS_Rayleigh {
     /*! Media names for which to read in custom FF */
-    char  ff_media[MXMED][24];
+    char  ff_media[MXMED][EGS_MAX_MEDIUM_NAME_LENGTH];
     /*! Custom FF file names */
-    char ff_file[MXMED][128];
+    char ff_file[MXMED][EGS_MAX_PATH_LENGTH];
 };
 
 /*! \brief A structure corresponding to the \c USEFUL common block.
@@ -598,14 +599,14 @@ struct EGS_VarianceReduction {
 struct EGS_IO {
     char file_extensions[20][10];
     EGS_I32 file_units[20];
-    char user_code[64];
-    char input_file[256];
-    char output_file[256];
-    char pegs_file[256];
-    char hen_house[128];
-    char egs_home[128];
-    char work_dir[128];
-    char host_name[64];
+    char user_code[256];
+    char input_file[EGS_MAX_PATH_LENGTH];
+    char output_file[EGS_MAX_PATH_LENGTH];
+    char pegs_file[EGS_MAX_PATH_LENGTH];
+    char hen_house[EGS_MAX_PATH_LENGTH];
+    char egs_home[EGS_MAX_PATH_LENGTH];
+    char work_dir[EGS_MAX_PATH_LENGTH];
+    char host_name[256];
     EGS_I32 n_parallel, i_parallel, first_parallel, n_max_parallel,
             n_chunk, n_files, i_input, i_log, i_incoh, i_nist_data,
             i_mscat, i_photo_cs, i_photo_relax, xsec_out, is_batch,

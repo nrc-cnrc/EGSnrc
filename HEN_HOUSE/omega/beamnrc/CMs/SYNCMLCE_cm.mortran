@@ -305,7 +305,7 @@
 "I>
 "I>   If MODE_$SYNCMLCE=1 (dynamic delivery) or 2 (step-and-shoot delivery)
 "I>
-"I>  12b  mlc_file (A256): The full name of the file containing leaf opening
+"I>  12b  mlc_file (A4096): The full name of the file containing leaf opening
 "I>                       data.  The format of the file contents is as follows:
 "I>
 "I>      MLC_TITLE (A80)
@@ -358,7 +358,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to not score dose
 "I>    IREGION_TO_BIT:   Bit number associated with this region
 "I>
-"I>  14  MED_IN (24A1):  Medium in opening(s) and air gaps
+"I>  14  MED_IN:  Medium in opening(s) and air gaps
 "I>                      used to set MED_INDEX.
 "I>
 "I>  15  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves (2F15.0,I5):
@@ -367,7 +367,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to note score dose
 "I>    IREGION_TO_BIT:   Bit number associated with this region
 "I>
-"I>  16  MED_IN (24A1):  Medium of leaves,
+"I>  16  MED_IN:  Medium of leaves,
 "I>                      used to set MED_INDEX.
 "I>
 "I>   Example
@@ -879,7 +879,7 @@ INTEGER I,J,K,N,IJ,        "T>DO loop indices
 	egs_get_unit, "T>egs function used to assign unit to mlc_file
 	mlc_unit,    "T>unit no. to assign mlc_file
         NUM_$SYNCMLCE; "T>number of adjacent leaves same opening coordinates
-character*256 mlc_file;
+character*$max_path_length mlc_file;
 CHARACTER*80 MLC_TITLE; "T> title line in mlc_file
 CHARACTER*1 BEAM_NR(60);
 
@@ -1331,7 +1331,7 @@ DO I=1, NUM_LEAF_$SYNCMLCE
 IF(MODE_$SYNCMLCE=1|MODE_$SYNCMLCE=2)["dynamic or step-and-shoot leaf inputs"
  "Added by Julio Lobo and Tony Popescu taken from code from SYNCVMLC"
   OUTPUT;(/' Input full name of file containing leaf opening data:'/);
-  READ(i_input,'(A256)')mlc_file;
+  READ(i_input,'(A)')mlc_file;
   OUTPUT mlc_file;(A/);
   call replace_env(mlc_file);
   mlc_unit=egs_get_unit(mlc_unit);
@@ -1481,7 +1481,7 @@ DO IR_$SYNCMLCE = 1,N_$SYNCMLCE
       (2F15.5,2I5);
       OUTPUT IR_$SYNCMLCE;(' material of region ',I3,' ',$);
    ;$MED_INPUT($SYNCMLCE); " inputs character array MED_IN from unit 5, loops
-  "through array MEDIA(24,I) to check if medium was previously input.
+  "through MEDIA($max_medium_name_length,I) to check if already input.
   "If so, sets MED_INDEX to index of previous medium.  If not,
   "increments NMED and sets MED_INDEX to NMED.
    med(IRA) = MED_INDEX; " medium of the planar slab

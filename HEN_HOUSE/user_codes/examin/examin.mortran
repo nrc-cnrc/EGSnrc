@@ -172,7 +172,7 @@
               SUBTITLE,SERIES,CURVE_LABELS($MAXCURVE);
  CHARACTER*256 FILENAME;
  CHARACTER*256 the_title;
- CHARACTER*24 material;
+ CHARACTER*$max_medium_name_length material;
  CHARACTER*2  CURVE_SPECS($MAXCURVE);
  CHARACTER*100 SCRIPT(3);   "for running interactively"
  CHARACTER*50 examin_pxsections;
@@ -232,8 +232,8 @@
 
 
  OUTPUT;(' Material identifier: ',$);
- INPUT (MEDIA(J,1),J=1,24);(24A1);
- DO J=1,24[material(J:J)=MEDIA(J,1);]
+ INPUT (MEDIA(J,1),J=1,$max_medium_name_length);(64A1);
+ DO J=1,$max_medium_name_length[material(J:J)=MEDIA(J,1);]
 
  FILENAME(1:20)=material(1:20);
  OUTPUT FILENAME(1:20);(///' Title after  ', A20, $);

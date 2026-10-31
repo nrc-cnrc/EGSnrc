@@ -224,7 +224,7 @@
 "I>                      here, range rejection is turned off in this region
 "I>                      If left blank or zero, the global value is used.
 "I>
-"I>   7  MED_IN (24A1):  Medium of region
+"I>   7  MED_IN:  Medium of region
 "I>                      used to set MED_INDEX.
 "I>
 "I>
@@ -1033,7 +1033,7 @@ DO IR_$CONS3R = 1,N_$CONS3R["loop through regions to get information"
             IREGION_TO_BIT(IRA),IREJCTIN; (2F15.5,3I10);
      OUTPUT IR_$CONS3R;(' material of region ',I3,' ',$);
      ;$MED_INPUT($CONS3R); "input character array MED_IN from unit 5,loops
-     "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
      "If so, sets MED_INDEX to index of previous medium.  If not,
      "increments NMED and sets MED_INDEX to NMED.
      MED(IRA) = MED_INDEX; " medium of the planar slab

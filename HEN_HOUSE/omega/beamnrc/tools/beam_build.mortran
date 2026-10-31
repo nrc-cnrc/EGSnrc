@@ -113,13 +113,14 @@ subroutine build_accel(spec_module);
 "Subroutine which actually does the work.  Note that this subroutine
 "assumes a very specific format for the spec_module.module file.
 
-character*120 spec_module,omega_home,cm_home,spec_home,accel_home,
-              accel_name,file_name,egs_home,beam_home,spec_file;
+character*120 spec_module;
+character*$max_path_length accel_name,omega_home,cm_home,spec_home,accel_home,
+              file_name,egs_home,beam_home,spec_file;
 character*10 cmtype($MAX_CMs),cmid($MAX_CMs);
 character*30 the_file;
  "$MAX_CMs is defined in beamnrc_user_macros.mortran"
 character*20 vname; "the variable name in the spec_module.module file"
-character*300 text; "used to store each line of the input file"
+character*($max_path_length*2) text; "used to store each line of the input file"
 character*1 blank;
 $INTEGER iindex,length,num_cms,num_ids,i,istat,egs_system,line,j;
 $INTEGER lnblnk1;
@@ -285,14 +286,14 @@ ELSE [
     open(27,file=spec_file,status='old',err=:no_beam_specs:);
     iindex = 1;
     LOOP [
-        read(27,'(a256)',err=:spec_error:,end=:spec_error:) text;
+      read(27,'(A)',err=:spec_error:,end=:spec_error:) text;
         i = index(text,'SOURCES =');
         IF( i = 1 ) [
             LOOP [
                 l = lnblnk1(text);
                 write(15,'(a)') text(:l);
                 IF( text(l:l) ~= char(92) ) goto :sources_ok:;
-                read(27,'(a256)',err=:spec_error:,end=:spec_error:) text;
+                read(27,'(A)',err=:spec_error:,end=:spec_error:) text;
             ]
         ]
     ]
@@ -300,14 +301,14 @@ ELSE [
     rewind(27);
     write(15,*); iindex = 2;
     LOOP [
-        read(27,'(a256)',err=:spec_error:,end=:spec_error:) text;
+      read(27,'(A)',err=:spec_error:,end=:spec_error:) text;
         i = index(text,'LIB_SOURCES =');
         IF( i = 1 ) [
             LOOP [
                 l = lnblnk1(text);
                 write(15,'(a)') text(:l);
                 IF( text(l:l) ~= char(92) ) goto :lib_sources_ok:;
-                read(27,'(a256)',err=:spec_error:,end=:spec_error:) text;
+                read(27,'(A)',err=:spec_error:,end=:spec_error:) text;
             ]
         ]
     ]

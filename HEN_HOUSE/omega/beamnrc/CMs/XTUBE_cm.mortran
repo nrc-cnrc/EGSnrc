@@ -198,7 +198,7 @@
 "I>          DOSE_ZONE:       Dose scoring flag of layer I.
 "I>          IREGION_TO_BIT:  Bit setting of region # corresponding to layer I.
 "I>
-"I>   7  MED_IN (24A1):  Medium of layer I
+"I>   7  MED_IN:  Medium of layer I
 "I>
 "I>   Note that inputs 8-10 below are only required if I_XTRA_$XTUBE=1
 "I>   (i.e. the outermost target layer has an extra central region)
@@ -217,7 +217,7 @@
 "I>          DOSE_ZONE:       Dose scoring flag of extra central region.
 "I>          IREGION_TO_BIT:  Bit setting of extra central region.
 "I>
-"I>  10  MED_IN (24A1):  Medium of extra central region.
+"I>  10  MED_IN:  Medium of extra central region.
 "I>
 "I>  11  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for region in
 "I>                                                     front of target
@@ -227,7 +227,7 @@
 "I>          DOSE_ZONE:      Dose scoring flag for this region.
 "I>          IREGION_TO_BIT: Bit setting of region # corresponding to this one.
 "I>
-"I>  12  MED_IN (24A1):  Medium in front of target
+"I>  12  MED_IN:  Medium in front of target
 "I>
 "I>  13  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for target holder.
 "I>
@@ -236,7 +236,7 @@
 "I>          DOSE_ZONE:       Dose scoring flag for target holder.
 "I>          IREGION_TO_BIT:  Bit setting of region for target holder.
 "I>
-"I>  14  MED_IN (24A1):  Medium of target holder
+"I>  14  MED_IN:  Medium of target holder
 "I>
 "I>   Example
 "I>   *******
@@ -1102,7 +1102,7 @@ DO IR_$XTUBE = N_$XTUBE,1,-1["loop through each slab"
    (2F15.5,2I5);
    OUTPUT N_$XTUBE-IR_$XTUBE+1;(/' Material of slab ', I3,':', $);
    ;$MED_INPUT($XTUBE); " inputs character array MED_IN from unit 5, loops
-  "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
   "If so, sets MED_INDEX to index of previous medium.  If not,
   "increments NMED and sets MED_INDEX to NMED.
    MED(IRA) = MED_INDEX; " medium of the planar slab
@@ -1164,7 +1164,7 @@ IF(I_XTRA_$XTUBE=1)[
    (2F15.5,2I5);
    OUTPUT;(/' Medium :', $);
    ;$MED_INPUT($XTUBE); " inputs character array MED_IN from unit 5, loops
-  "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
   "If so, sets MED_INDEX to index of previous medium.  If not,
   "increments NMED and sets MED_INDEX to NMED.
    MED(IRA) = MED_INDEX; " medium of the planar slab

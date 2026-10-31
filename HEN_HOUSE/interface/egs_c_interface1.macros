@@ -142,7 +142,7 @@ REPLACE {;COMIN/ET-Control/;} WITH {
 REPLACE {;COMIN/MEDIA/;} WITH {
   ;COMMON/MEDIA_p/ $LGN(RLC,RLDU,MSGE,MGE,MSEKE,
                    MEKE,MLEKE,MCMFP,MRANGE,IRAYLM($MXMED)),
-                   MEDIA(24,$MXMED);
+                   MEDIA($max_medium_name_length,$MXMED);
    $TYPE    MEDIA;
    $REAL    RLC,RLDU;
    $INTEGER MSGE,MGE,MSEKE,MEKE,MLEKE,MCMFP,MRANGE,IRAYLM;
@@ -150,9 +150,9 @@ REPLACE {;COMIN/MEDIA/;} WITH {
                    nmed;
    $REAL           rho;
    $INTEGER        nmed;
-   character*16    photon_xsections;
-   character*16    eii_xfile;
-   character*16    comp_xsections;
+    character*$max_xsection_prefix_length photon_xsections;
+    character*$max_xsection_prefix_length eii_xfile;
+    character*$max_xsection_prefix_length comp_xsections;
 };
 
 " IRAYLR gets removed and goes into the x-section options.             "

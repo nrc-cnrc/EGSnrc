@@ -112,7 +112,7 @@ MEDIA= H2O521ICRU;              #Media in the problem:
                                 #These must match exactly, including case, one
                                 #of the media names in the pegs4 data set being
                                 #used in the problem.
-                                #The maximum length of name is 24 characters
+                                #The maximum medium-name length is configured.
                                 #They are automatically left justified on input.
 
 MEDNUM= 1                       # define what medium goes where

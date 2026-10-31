@@ -368,7 +368,8 @@ each \verb+CM+. It is either the radius or 1/2 the side for a square boundary.
 \item \verb+NMED+: The number of media {\em already} asked for in any given
 simulation.
 \index{MEDIA}
-\item \verb+MEDIA(24,I),I=1,NMED+: names of media already asked for.
+\item \verb+MEDIA($max_medium_name_length,I),I=1,NMED+: names of media
+already asked for.
 \end{itemize}
 
 
@@ -437,7 +438,8 @@ for the medium in each region.
 \index{MED}
 \item \verb+MED(IRA)+ the medium index for every region must be set
 \index{MEDIA}
-\item \verb+MEDIA(24,I)+ must be loaded for new \verb+MEDIA+ that are asked
+\item \verb+MEDIA($max_medium_name_length,I)+ must be loaded for new
+\verb+MEDIA+ that are requested.
 for.  Note the macro \verb+$MED_INPUT($CMNAME)+ handles this
 automatically. This macro requires \verb+NMED+ to contain the current number of
 different media that have already been read in and stored in \verb+MEDIA+.
@@ -570,7 +572,8 @@ E_min_out(ICM)    minimum energy of electron leaving a CM ICM which can
                   rejection.  Set in MAIN because needs info from all CMs
                   past the current one.
 MAX_CMs           number of CMs.
-MED_IN            24-character name of last medium input in INPUT_$CMNAME.
+MED_IN            Medium name up to the configured maximum length, used for the
+                  last medium input in INPUT_$CMNAME.
 ICM               CM index, incremented before call to INPUT_$CMNAME, set in
                   SRCHST and in HOWFAR during particle transport.
 ICMNEW            Next CM, set in WHERE_AM_I, different than ICM (only?) if

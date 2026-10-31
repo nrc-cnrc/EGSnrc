@@ -1870,7 +1870,7 @@ character*256 tmp_string;
 $INTEGER      lnblnk1;" in house lnblnk function becuase not all compilers"
                       " support this"
 
-DATA MDLABL/$S' MEDIUM='/,LMDL/8/,LMDN/24/,DUNITO/1./;
+DATA MDLABL/$S' MEDIUM='/,LMDL/8/,LMDN/$max_medium_name_length/,DUNITO/1./;
 DATA I1ST/1/,NSINSS/37/,MXSINC/$MXSINC/,ISTEST/0/,NRNA/1000/;
 
 $INIT-PEGS4-VARIABLES;
@@ -2021,8 +2021,22 @@ LOOP["MEDIUM HEADER SEARCH LOOP"
   "   HEADER MATCHES. NOW SEE IF IT IS ONE OF REQUESTED MEDIA"
   :MDNAME:
   DO IM=1,NMED [
-    DO IB=1,LMDN [IL=LMDL+IB; IF (MBUF(IL).NE.MEDIA(IB,IM))NEXT:MDNAME:;
-    IF (IB.EQ.LMDN)EXIT:MDLOOK:; ]
+        MEDLEN=0;
+        DO IB=$max_medium_name_length,1,-1 [
+            IF (MEDIA(IB,IM) ~= ' ' & ICHAR(MEDIA(IB,IM)(1:1)) ~= 0) [
+                MEDLEN=IB; EXIT;
+            ]
+        ]
+        IF (MEDLEN=0) NEXT:MDNAME:;
+        DO IB=1,MEDLEN [
+            IL=LMDL+IB;
+            IF (MBUF(IL).NE.MEDIA(IB,IM))NEXT:MDNAME:;
+        ]
+        IF (MEDLEN < $max_medium_name_length) [
+            IL=LMDL+MEDLEN+1;
+            IF (MBUF(IL) ~= ' ' & MBUF(IL) ~= ',')NEXT:MDNAME:;
+        ]
+        EXIT:MDLOOK:;
   ] "END :MDNAME: DO"
   "   NOT IN NAME TABLE, SO IGNORE IT"
 ]REPEAT "MDLOOK"
@@ -2312,7 +2326,7 @@ $egs_info('(a,i2//,a/,a/)', ' END OF FILE ON UNIT ',KMPI,
   ' FOLLOWING NAMES WERE NOT RECOGNIZED:');
 DO IM=1,NMED [
    IF(LOK(IM).NE.1) [
-      $egs_info('(40x,a,24a1,a)','''',(MEDIA(I,IM),I=1,LMDN),'''');
+    $egs_info('(40x,a,64a1,a)','''',(MEDIA(I,IM),I=1,LMDN),'''');
    ]
 ]
 STOP;
@@ -3339,7 +3353,7 @@ integer*2     i2_array(512),ii2;
 $INTEGER      iq,i,j,k,i_ele,iii,iZ,iiZ,n_ener,n_q,n_point,je,neke,
               ndata,leil,length,ii4,irec;
 
-character     spin_file*256;
+character     spin_file*$max_path_length;
 character*6   string;
 integer*4     lnblnk1; "used to be lnblnk but changed for compilers that
                        "do not have lnblnk, we supply lnblnk1 in this file
@@ -3738,7 +3752,7 @@ $REAL         eta_array(0:1,$0-MAXE_SPI1),
 $INTEGER      iq,i,j,k,i_ele,iii,iZ,iiZ,n_ener,n_q,n_point,je,neke,
               ndata,leil,length,want_spin_unit,spin_unit,egs_get_unit;
 
-character     spin_file*256;
+character     spin_file*$max_path_length;
 character*6   string;
 integer*4     lnblnk1; "used to be lnblnk but changed for compilers that
                        "do not have lnblnk, we supply lnblnk1 in this file
@@ -5328,7 +5342,7 @@ $REAL      rest_xs($MXNE,$MXELEMENT);
 $REAL      tmp_e($MXNE,$MXPESHELL), tmp_xs($MXNE,$MXPESHELL);
 $REAL      new_e($MXNE),deltaEb,slope;
 $INTEGER   zread($MXELEMENT),ib($MXPESHELL),ibsearch;
-character  data_dir*128,pe_sw_file*144;
+character  data_dir*$max_path_length,pe_sw_file*$max_path_length;
 
 $INTEGER  medio,iZ,iZpos,egs_read_int,pos,curr_rec;
 real*4    egs_read_real,e_r, e_old,sigma_r;
@@ -5841,7 +5855,7 @@ $COMIN-RELAX-INIT;
 $INTEGER   lnblnk1,egs_get_unit,relax_unit,ounit,egs_open_file;
 $INTEGER   sorted($MXELEMENT),i,j,k,k1,k2,m;
 $REAL      z_sorted($MXELEMENT),pz_sorted($MXELEMENT);
-character  data_dir*128,relax_file*144;
+character  data_dir*$max_path_length,relax_file*$max_path_length;
 
 $INTEGER  ish,medio,iZ,ntran;
 $REAL     Ec, Pc, tmp, min_be, sumw,Ex;
@@ -6224,7 +6238,7 @@ $REAL  energies($N_TRIPLET_DATA), sig_pair($N_ELEMENT,$N_TRIPLET_DATA),
        sigp($N_TRIPLET_DATA), sigt($N_TRIPLET_DATA),
        as($N_TRIPLET_DATA), bs($N_TRIPLET_DATA), cs($N_TRIPLET_DATA),
        ds($N_TRIPLET_DATA);
-character*128  triplet_data_file;
+character*$max_path_length triplet_data_file;
 $INTEGER want_triplet_unit, triplet_unit, triplet_out;
 $INTEGER i, iel, imed, lnblnk1, egs_get_unit, ntrip, iz1, izi, ifirst;
 $REAL    logE, f_new, f_old, spline;
@@ -6914,7 +6928,7 @@ $REAL    sigee,sigep,sige,si_esig,si1_esig,si_ebr1,si1_ebr1,ededx,
 $INTEGER iz;
 $REAL    ple,qle,x,f,error,max_error,x_max_error,f_max_error;
 $INTEGER ndat,k_max_error;
-character tmp_string*512, tmp1_string*512;
+character tmp_string*$max_path_length, tmp1_string*$max_path_length;
 integer  itmp;
 
 $declare_write_buffer;
@@ -7258,7 +7272,7 @@ $declare_max_medium;
 ;COMIN/MEDIA,BREMPR,ELECIN,NRC-PAIR-DATA,THRESH,USEFUL,EGS-IO/;
 $declare_write_buffer;
 
-character     nrcp_file*256, endianess*4;
+character     nrcp_file*$max_path_length, endianess*4;
 integer       egs_get_unit;
 $INTEGER      nrcp_unit, want_nrcp_unit, rec_length;
 $INTEGER      i, lnblnk1;
@@ -7449,7 +7463,7 @@ $REAL    sigma,sigma_old,wbrem_old,sig_j,de;
 $INTEGER lloge;
 $LOGICAL check_it,is_monotone,getd;
 $REAL    sigma_max;
-character eii_file*128;
+character eii_file*$max_path_length;
 character*512 toUpper;
 $INTEGER occn_numbers(4);
 $declare_write_buffer;
@@ -8002,10 +8016,13 @@ $INTEGER   bc_ne;
 $LOGICAL   input_compton_data,
 "Ali:photonuc, 1 line"
            input_photonuc_data;
-character  data_dir*128,photo_file*140,pair_file*140,rayleigh_file*144,
-           triplet_file*142,tmp_string*144,compton_file*144,
+character  data_dir*$max_path_length,
+           photo_file*$max_path_length,pair_file*$max_path_length,
+           rayleigh_file*$max_path_length,
+           triplet_file*$max_path_length,tmp_string*$max_path_length,
+           compton_file*$max_path_length,
 "Ali:photonuc, 1 line"
-           photonuc_file*144;
+           photonuc_file*$max_path_length;
 
 $egs_info('(/a,$)','(Re)-initializing photon cross sections');
 $egs_info('(a,a/)',' with files from the series: ',
@@ -8126,8 +8143,8 @@ DO medium = 1,nmed [
 
     $egs_info('(a,i3,a,$)',' Working on medium ',medium,' ... ');
     IF( out = 1 ) [
-        write(ounit,'(/,2x,a,i3,a,24a1/)') 'Medium ',medium,': ',
-          (media(k,medium),k=1,24);
+                write(ounit,'(/,2x,a,i3,a,64a1/)') 'Medium ',medium,': ',
+                    (media(k,medium),k=1,$max_medium_name_length);
     ]
     /sumZ,sumA/ = 0;
     DO i=1,nne(medium) [
@@ -8303,7 +8320,8 @@ $REAL totRayleigh2,pzmin;
 $REAL emin, emax;
 $INTEGER i,j,k,ff_unit, egs_get_unit, ne;
 $INTEGER lnblnk1, EOF, nff, medium, ncustom;
-character dummy*24, afac_file*128, ff_file*128;
+character dummy*$max_medium_name_length, afac_file*$max_path_length,
+          ff_file*$max_path_length;
 
 IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
 
@@ -8315,7 +8333,10 @@ IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
    read in the information and it is not ensured that the media
    information will be read before getting the transport parameters.
 ****************************************************************/
-ncustom=0;write(dummy,'(24a1)')(media(j,medium),j=1,24);ff_file=' ';
+dummy=' ';
+DO j=1,$max_medium_name_length [ dummy(j:j)=media(j,medium); ]
+ff_file=' ';
+ncustom=0;
 DO i=1,$MXMED[IF(lnblnk1(iray_ff_file(i))~=0)[ncustom = ncustom + 1;]]
 DO i=1,ncustom[IF (dummy(:lnblnk1(dummy)) = iray_ff_media(i))[
    ff_file = iray_ff_file(i);
@@ -8463,7 +8484,8 @@ $REAL totRayleigh2,pzmin;
 $REAL emin, emax;
 $INTEGER i,j,k,ff_unit, egs_get_unit, ne;
 $INTEGER lnblnk1, EOF, nff, medium, ncustom;
-character dummy*24, afac_file*128, ff_file*128;
+character dummy*$max_medium_name_length, afac_file*$max_path_length,
+          ff_file*$max_path_length;
 
 IF (iraylm(medium)=0)[return;]"Rayleigh option not requested"
 

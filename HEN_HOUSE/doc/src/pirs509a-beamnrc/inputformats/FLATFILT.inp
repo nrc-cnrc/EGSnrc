@@ -47,7 +47,7 @@
            DOSE_ZONE:   Dose scoring flag for cone J.
         IREGION_TO_BIT: Bit setting for region defined by cone J.
 
-    8  MED_IN (24A1):  Medium of cone J
+    8  MED_IN:  Medium of cone J
                        used to set MED_INDEX.
 
     Example

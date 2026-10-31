@@ -168,7 +168,8 @@ REPLACE {;COMIN/ELEMTB/;} WITH
 "1 means the medium is a compound."
 REPLACE {;COMIN/MIXDAT/;} WITH
    {;COMMON/MIXDAT/NEP,LMED,PZP($MXEL),ZELEMP($MXEL),WAP($MXEL),RHOZP($MXEL),
-     GASPP,EZ,TPZ,IDSTRN(24),ELEM_NAMES($MXEL),ISCOMP,IPOTVAL,LDENSITY,MEDID,
+       GASPP,EZ,TPZ,IDSTRN($max_medium_name_length),ELEM_NAMES($MXEL),
+       ISCOMP,IPOTVAL,LDENSITY,MEDID,
      OUTDENSITY,COMP_NAMES($MXEL),COMP_FRACS($MXEL),NCOMPOUNDS;
      $INTEGER NEP,LMED,NCOMPOUNDS;
      $REAL4 PZP,ZELEMP,WAP,RHOZP,GASPP,EZ,TPZ,COMP_FRACS;
@@ -177,7 +178,7 @@ REPLACE {;COMIN/MIXDAT/;} WITH
      $INTEGER ISCOMP;
      $REAL4 IPOTVAL, LDENSITY;
      $INTEGER MEDID;
-     character*256 OUTDENSITY;
+   character*$max_path_length OUTDENSITY;
    }
 
 REPLACE {;COMIN/DBRPR/;} WITH
@@ -192,12 +193,12 @@ REPLACE {;COMIN/DBRPR/;} WITH
 "with cross-sections calculated by pegs4.mortran"
 REPLACE {;COMIN/MEDINP/;} WITH
    {;COMMON/MEDINP/inpdensity_file($MXMED),inpasym($MXMED,$MXEL),
-     inpstrn(24,$MXMED),pz4($MXMED,$MXEL),
+     inpstrn($max_medium_name_length,$MXMED),pz4($MXMED,$MXEL),
      rhoz4($MXMED,$MXEL),wa4($MXMED,$MXEL),inpgasp($MXMED),
      iscompound($MXMED),ipot($MXMED),localDensity($MXMED),
      outdensity_file($MXMED),ncomp($MXMED),
      compoundList($MXMED,$MXEL),compoundFractions($MXMED,$MXEL);
-     character*256 inpdensity_file,outdensity_file;
+   character*$max_path_length inpdensity_file,outdensity_file;
      character*50 inpasym,compoundList;
      $TYPE inpstrn;
      $REAL4 pz4,rhoz4,wa4,inpgasp,compoundFractions;
@@ -268,8 +269,8 @@ DO IM=1,NMED[
  TEP=AEP-RMP; THMOLLP=AEP+TEP ; "equation in pegs4.mortran"
 
  IF (UEP.LE.AEP)[
-    write(i_log,'(a,24a1)')'  Error: Material not defined: ',
-                              (media(j,IM),j=1,24);
+   write(i_log,'(a,64a1)')'  Error: Material not defined: ',
+                       (media(j,IM),j=1,$max_medium_name_length);
     $egs_fatal(*,'Material used in the geometry was not defined in the'
                 ,' material data.');
  ]

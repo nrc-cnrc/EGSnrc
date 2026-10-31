@@ -194,7 +194,7 @@
 "I>           DOSE_ZONE:  Dose scoring flag
 "I>      IREGION_TO_BIT:  Bit setting for the region
 "I>
-"I>   9  MED_IN (24A1):  Medium of region
+"I>   9  MED_IN:  Medium of region
 "I>                      used to set MED_INDEX.
 ;
 "I>   Example
@@ -786,7 +786,7 @@ DO II = 1, N_$SIDETUBE+1[
       (2F15.5,2I5);
    OUTPUT;(' material ',$);
    ;$MED_INPUT($SIDETUBE); " inputs character array MED_IN from unit 5, loops
-  "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
   "If so, sets MED_INDEX to index of previous medium.  If not,
   "increments NMED and sets MED_INDEX to NMED.
    MED(IRA) = MED_INDEX; " medium of the planar slab

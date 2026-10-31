@@ -224,7 +224,7 @@
 "I>                       following ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT and
 "I>                       MED_IN to all septa.
 "I>
-"I>  14  MED_IN (24A1):  Medium of region
+"I>  14  MED_IN:  Medium of region
 "I>                      used to set MED_INDEX.
 "I>
 "I>   Example
@@ -2157,7 +2157,7 @@ DO II = 1, NUMREG_$ARCCHM
          (2F15.5,3I5);
       OUTPUT;(' material ',$);
       ;$MED_INPUT($ARCCHM); " inputs character array MED_IN from unit 5, loops
-      "through array MEDIA(24,I) to check if medium was previously input.
+      "through MEDIA($max_medium_name_length,I) to check if already input.
       "If so, sets MED_INDEX to index of previous medium.  If not,
       "increments NMED and sets MED_INDEX to NMED.
        MED(IRA) = MED_INDEX; " medium of the region
@@ -2174,7 +2174,7 @@ DO II = 1, NUMREG_$ARCCHM
       (2F15.5,2I5);
      OUTPUT;(' material ',$);
      ;$MED_INPUT($ARCCHM); " inputs character array MED_IN from unit 5, loops
-      "through array MEDIA(24,I) to check if medium was previously input.
+      "through MEDIA($max_medium_name_length,I) to check if already input.
       "If so, sets MED_INDEX to index of previous medium.  If not,
       "increments NMED and sets MED_INDEX to NMED.
        MED(IRA) = MED_INDEX; " medium of the region

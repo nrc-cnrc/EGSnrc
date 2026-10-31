@@ -1537,15 +1537,14 @@ NAMELIST/INP/.
                                    eters (see text below).
                         GASP       Optional. See MIXT or COMP
 
-  ELEM3 (24A1,       MEDIUM(1:24)  Identifier assigned to data
-         6X,24A1)                  set to be produced.
+  ELEM3 (64A1,       MEDIUM(1:64)  Identifier assigned to data
+         6X,64A1)                  set to be produced.
 
-                     IDSTRN(1:24)  Optional.  Identifer of
+                     IDSTRN(1:64)  Optional.  Identifer of
                                    medium name under which
                                    desired Sternheimer-Seltzer-
                                    Berger coeffcients are given
-                                   in PEGS.  If not specified,
-                                   identifier in MEDIUM(1:24) is used.
+                                   in PEGS.
 
   ELEM4 (24(A2,1X))    ASYM(1)     Atomic symbol for element.
  -----------------------------------------------------------------------
@@ -1584,8 +1583,8 @@ NAMELIST/INP/.
 
                         ISSB       Same as for ELEM2.
 
-  COMP3 (24A1,     MEDIUM,IDSTRN   Same as for ELEM3.
-         6X,24A1)
+  COMP3 (64A1,     MEDIUM,IDSTRN   Same as for ELEM3.
+         6X,64A1)
   COMP4 (24(A2,  (ASYM(I),I=1,NE)  Atomic symbols for the atoms
           1X))                     in the compound.  Duplicates
                                    are allowed if several iso-
@@ -1629,8 +1628,8 @@ NAMELIST/INP/.
 
                         ISSB       Same as for ELEM2.
 
-  MIXT3 (24A1,     MEDIUM,IDSTRN   Same as for ELEM3.
-         6X,24A1)
+  MIXT3 (64A1,     MEDIUM,IDSTRN   Same as for ELEM3.
+         6X,64A1)
 
   MIXT4 (24(A2,  (ASYM(I),I=1,NE)  Same as for COMP4.
           1X))
@@ -1889,7 +1888,7 @@ NAMELIST/INP/.
  where the denominator is the "molecular weight".
 
       In addition to physically specifying the material being
- used, a name for it must be supplied (MEDIUM(1:24)) for ident-
+ used, a name for it must be supplied (MEDIUM(1:64)) for ident-
  ification purposes.  This name is included in the output deck
  when the DECK option is selected.  The name can be different
  for any two data sets that are created, even though the same
@@ -1902,7 +1901,7 @@ NAMELIST/INP/.
 \end{verbatim}
 \newpage \label{issb} \index{density effect}
  \index{PEGS4!inputs} \begin{verbatim}
-      The quantity IDSTRN(1:24) is used to identify the
+     The quantity IDSTRN(1:64) is used to identify the
  Sternheimer-Seltzer-Berger density effect parameters that are
  tabulated in BLOCK DATA (see Table 2.13.2 of SLAC-265 for com-
  plete list of identifer names).  If IDSTRN(1) is blank, then
@@ -1963,7 +1962,7 @@ NAMELIST/INP/.
  -----------------------------------------------------------------
 
    C. Material - Compound is sodium iodide with
-                 IDSTRN(1:24) defaulting to MEDIUM(1:24).
+                 IDSTRN(1:64) defaulting to MEDIUM(1:64).
  -----------------------------------------------------------------
                                 Column
  Card    123456789112345678921234567893123456789412345678..etc.

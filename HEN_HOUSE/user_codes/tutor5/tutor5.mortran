@@ -73,14 +73,15 @@ REPLACE {$CALL-HOWNEAR(#);} WITH {
 "---------------------------------------------------------------------"
 "STEP 2 PRE-HATCH-CALL-INITIALIZATION                                 "
 "---------------------------------------------------------------------"
-CHARACTER*4 MEDARR(24);
-DATA  MEDARR /$S'H2O',21*' '/; "place medium name in an array"
 
 " Initialize the EGSnrc system "
 call egs_init;
 
-DO I=1,24[MEDIA(I,1)=MEDARR(I);]"this is to avoid a data statement for"
-"                                a variable in COMMON"
+"Initialize the full medium-name field in COMMON"
+DO I=1,$max_medium_name_length[MEDIA(I,1)=' ';]
+MEDIA(1,1)='H';
+MEDIA(2,1)='2';
+MEDIA(3,1)='O';
 "NMED and DUNIT default to 1, i.e. one medium and we work in cm"
 
 /MED(1),MED(3)/=0;MED(2)=1; "regions 1 and 3 are vacuum, region 2, H2O"

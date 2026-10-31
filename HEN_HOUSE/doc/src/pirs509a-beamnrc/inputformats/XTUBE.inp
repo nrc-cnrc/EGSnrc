@@ -39,7 +39,7 @@
            DOSE_ZONE:       Dose scoring flag of layer I.
            IREGION_TO_BIT:  Bit setting of region # corresponding to layer I.
 
-    7  MED_IN (24A1):  Medium of layer I
+    7  MED_IN:  Medium of layer I
 
     Note that inputs 8-10 below are only required if I_XTRA_$XTUBE=1
     (i.e. the outermost target layer has an extra central region)
@@ -58,7 +58,7 @@
            DOSE_ZONE:       Dose scoring flag of extra central region.
            IREGION_TO_BIT:  Bit setting of extra central region.
 
-   10  MED_IN (24A1):  Medium of extra central region.
+   10  MED_IN:  Medium of extra central region.
 
    11  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for region in
                                                       front of target
@@ -68,7 +68,7 @@
            DOSE_ZONE:      Dose scoring flag for this region.
            IREGION_TO_BIT: Bit setting of region # corresponding to this one.
 
-   12  MED_IN (24A1):  Medium in front of target
+   12  MED_IN:  Medium in front of target
 
    13  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for target holder.
 
@@ -77,7 +77,7 @@
            DOSE_ZONE:       Dose scoring flag for target holder.
            IREGION_TO_BIT:  Bit setting of region for target holder.
 
-   14  MED_IN (24A1):  Medium of target holder
+   14  MED_IN:  Medium of target holder
 
     Example
     *******

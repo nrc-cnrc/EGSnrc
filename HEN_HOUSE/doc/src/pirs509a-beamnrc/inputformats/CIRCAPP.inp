@@ -52,7 +52,7 @@
 
     Repeat 7 for I=1,N_$CIRCAPP.
 
-    7   MED_IN (24A1):  Medium of the bar of scraper I, used to
+    7   MED_IN:  Medium of the bar of scraper I, used to
                         set MED_INDEX.
 
     Example

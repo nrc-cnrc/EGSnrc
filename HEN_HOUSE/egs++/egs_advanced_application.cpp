@@ -53,6 +53,7 @@
 #include "egs_rndm.h"
 #include "egs_math.h"
 #include "egs_ausgab_object.h"
+#include "egs_xsection_prefix.h"
 
 #include <string>
 #include <cstdio>
@@ -72,6 +73,13 @@ using namespace std;
 #endif
 
 string EGS_AdvancedApplication::base_revision = " ";
+
+static bool egsXsectionPrefixEquals(const char *prefix, const char *value) {
+    string expected(value);
+    expected.resize(EGS_MAX_XSECTION_PREFIX_LENGTH, ' ');
+    return egsEquivStr(expected,
+                       string(prefix, EGS_MAX_XSECTION_PREFIX_LENGTH));
+}
 
 /*
 extern __extc__ struct EGS_Stack F77_OBJ(stack,STACK);
@@ -186,13 +194,19 @@ extern __extc__  void F77_OBJ_(egs_set_defaults,EGS_SET_DEFAULTS)();
 extern __extc__  void F77_OBJ_(egs_init1,EGS_INIT1)();
 int EGS_AdvancedApplication::initEGSnrcBackEnd() {
     F77_OBJ_(egs_set_defaults,EGS_SET_DEFAULTS)();
-    __egs_iovar(64,app_name.size(),app_name.c_str(),the_egsio->user_code);
-    __egs_iovar(128,hen_house.size(),hen_house.c_str(),the_egsio->hen_house);
-    __egs_iovar(128,egs_home.size(),egs_home.c_str(),the_egsio->egs_home);
-    __egs_iovar(256,input_file.size(),input_file.c_str(),the_egsio->input_file);
-    __egs_iovar(256,final_output_file.size(),final_output_file.c_str(),
+    __egs_iovar(sizeof(the_egsio->user_code),app_name.size(),app_name.c_str(),
+                the_egsio->user_code);
+    __egs_iovar(sizeof(the_egsio->hen_house),hen_house.size(),hen_house.c_str(),
+                the_egsio->hen_house);
+    __egs_iovar(sizeof(the_egsio->egs_home),egs_home.size(),egs_home.c_str(),
+                the_egsio->egs_home);
+    __egs_iovar(sizeof(the_egsio->input_file),input_file.size(),input_file.c_str(),
+                the_egsio->input_file);
+    __egs_iovar(sizeof(the_egsio->output_file),final_output_file.size(),
+                final_output_file.c_str(),
                 the_egsio->output_file);
-    __egs_iovar(256,pegs_file.size(),pegs_file.c_str(),the_egsio->pegs_file);
+    __egs_iovar(sizeof(the_egsio->pegs_file),pegs_file.size(),pegs_file.c_str(),
+                the_egsio->pegs_file);
     the_egsio->i_parallel = i_parallel;
     the_egsio->n_parallel = n_parallel;
     the_egsio->is_pegsless = is_pegsless;
@@ -300,20 +314,13 @@ public:
         else if (type == 3) {
             int err = input->getInput(name,charinp);
             if (!err) {
-                int l = charinp.size();
-                if (l > len) {
-                    l = len;
-                }
-                int j;
-                for (j=0; j<l; j++) {
-                    char_input[j] = charinp[j];
-                }
-                for (j=l; j<len; j++) {
-                    char_input[j] = ' ';
+                if (!egsCopyXsectionPrefix(charinp, char_input)) {
+                    egsFatal("Cross-section prefix for %s exceeds maximum length of %d characters\n",
+                             name.c_str(), EGS_MAX_XSECTION_PREFIX_LENGTH);
                 }
             }
             else {
-                charinp = string(char_input).substr(0,len);
+                charinp = string(char_input, len);
             }
         }
         else if (type == 4) {
@@ -328,7 +335,8 @@ public:
                 }
                 for (int i=0; i<number; i++) {
                     if (str[i].size()>len) {
-                        str[i] = str[i].substr(0,len);
+                        egsFatal("Property %s entry %d exceeds maximum length of %d characters\n",
+                                 name.c_str(), i+1, len);
                     }
                 }
                 *str_v = str;
@@ -368,7 +376,7 @@ public:
             egsInformation("%g\n",*float_input);
         }
         else if (type == 3) {
-            egsInformation("%s\n",(string(char_input).substr(0,len)).c_str());
+            egsInformation("%s\n",string(char_input,len).c_str());
         }
         else if (type == 5) {
             for (vector<EGS_Float>::iterator it = f_v->begin() ; it != f_v->end(); ++it) {
@@ -489,11 +497,11 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     EGS_TransportProperty ximax("Ximax",&the_etcontrol->ximax);
     EGS_TransportProperty skind("Skin depth for BCA",
                                 &the_etcontrol->skindepth_for_bca);
-    EGS_TransportProperty pxsec("Photon cross sections",16,the_media->pxsec);
+    EGS_TransportProperty pxsec("Photon cross sections",EGS_MAX_XSECTION_PREFIX_LENGTH,the_media->pxsec);
     EGS_TransportProperty pxsec_out("Photon cross-sections output",&the_egsio->xsec_out);
     pxsec_out.addOption("Off");
     pxsec_out.addOption("On");
-    EGS_TransportProperty cxsec("Compton cross sections",16,the_media->compxsec);
+    EGS_TransportProperty cxsec("Compton cross sections",EGS_MAX_XSECTION_PREFIX_LENGTH,the_media->compxsec);
     EGS_TransportProperty bc("Bound Compton scattering",&the_xoptions->ibcmp);
     bc.addOption("Off");
     bc.addOption("On");
@@ -504,7 +512,7 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     radc.addOption("Off");
     radc.addOption("On");
     /* Photonuclear input parameters */
-    EGS_TransportProperty photonucxsec("Photonuclear cross sections",16,the_media->photonucxsec);
+    EGS_TransportProperty photonucxsec("Photonuclear cross sections",EGS_MAX_XSECTION_PREFIX_LENGTH,the_media->photonucxsec);
     EGS_TransportProperty photonuc("Photonuclear attenuation",&the_xoptions->iphotonuc);
     photonuc.addOption("Off");
     photonuc.addOption("On");
@@ -513,8 +521,11 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     rayl.addOption("Off");
     rayl.addOption("On");
     rayl.addOption("custom");
-    EGS_TransportProperty ff_med("ff media names",24,MXMED,&ff_media);
-    EGS_TransportProperty ff_files("ff file names",128,MXMED, &ff_names);
+    EGS_TransportProperty ff_med("ff media names",
+                                  EGS_MAX_MEDIUM_NAME_LENGTH,MXMED,&ff_media);
+    EGS_TransportProperty ff_files("ff file names",
+                                  sizeof(the_rayleigh->ff_file[0]),
+                                  MXMED, &ff_names);
 
     EGS_TransportProperty relax("Atomic relaxations",&the_xoptions->iedgfl);
     relax.addOption("Off");
@@ -532,7 +543,7 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     EGS_TransportProperty trip("Triplet production",&the_xoptions->itriplet);
     trip.addOption("Off");
     trip.addOption("On");
-    EGS_TransportProperty eii("Electron Impact Ionization",16,the_media->eiixsec);
+    EGS_TransportProperty eii("Electron Impact Ionization",EGS_MAX_XSECTION_PREFIX_LENGTH,the_media->eiixsec);
     EGS_TransportProperty brem("Brems cross sections",&the_xoptions->ibr_nist);
     brem.addOption("BH");
     brem.addOption("NIST");
@@ -610,15 +621,13 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
         }
         bca.getInput(transportp);
 
-        if (egsEquivStr(string("mcdf-xcom       "),
-                        string(the_media->pxsec).substr(0,pxsec.size()))) {
+        if (egsXsectionPrefixEquals(the_media->pxsec, "mcdf-xcom")) {
             the_xoptions->mcdf_pe_xsections = 1;
-            string("xcom            ").copy(the_media->pxsec,16,0);
+            egsCopyXsectionPrefix("xcom", the_media->pxsec);
         }
-        else if (egsEquivStr(string("mcdf-epdl       "),
-                             string(the_media->pxsec).substr(0,pxsec.size()))) {
+        else if (egsXsectionPrefixEquals(the_media->pxsec, "mcdf-epdl")) {
             the_xoptions->mcdf_pe_xsections = 1;
-            string("epdl            ").copy(the_media->pxsec,16,0);
+            egsCopyXsectionPrefix("epdl", the_media->pxsec);
         }
         else {
             the_xoptions->mcdf_pe_xsections = 0;
@@ -732,14 +741,12 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     // Recover initial input string to reflect what's actually being used
     // the_media->pxsec was already used in egsHatch() to read photon data
     if (the_xoptions->mcdf_pe_xsections &&
-            egsEquivStr(string("xcom            "),
-                        string(the_media->pxsec).substr(0,pxsec.size()))) {
-        string("mcdf-xcom       ").copy(the_media->pxsec,16,0);
+            egsXsectionPrefixEquals(the_media->pxsec, "xcom")) {
+        egsCopyXsectionPrefix("mcdf-xcom", the_media->pxsec);
     }
     else if (the_xoptions->mcdf_pe_xsections &&
-             egsEquivStr(string("epdl            "),
-                         string(the_media->pxsec).substr(0,pxsec.size()))) {
-        string("mcdf-epdl       ").copy(the_media->pxsec,16,0);
+               egsXsectionPrefixEquals(the_media->pxsec, "epdl")) {
+           egsCopyXsectionPrefix("mcdf-epdl", the_media->pxsec);
     }
 
     if (!isspace(the_media->pxsec[0])) {
@@ -860,7 +867,7 @@ void EGS_AdvancedApplication::setEIIData(EGS_I32 len) {
         the_xoptions->eii_flag = 0;
     }
     else if (str_eii == on) {
-        ik.copy(the_media->eiixsec,16,0);
+        egsCopyXsectionPrefix(ik, the_media->eiixsec);
     }
 }
 

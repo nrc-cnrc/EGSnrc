@@ -76,8 +76,9 @@
 
   Repeat 6.a and 6.b for i=1 to num_material (only used if num_material > 0).
 
-  CT Record 6.a        material_name (24A1)
+   CT Record 6.a        material_name (up to 64 characters, one line)
                        The PEGS4 name of material i.
+                                  Legacy 24-character records are also accepted.
 
   CT Record 6.b        material_ct_upper_bound(i),
                        material_density_lower_bound(i),

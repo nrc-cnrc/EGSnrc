@@ -40,12 +40,12 @@
           DOSE_ZONE:  Dose scoring region for this region, 0=>no dose scored.
           IREGION_TO_BIT :  Bit # in LATCH designated to this region
 
-      c) MED_IN (24A1):  Medium of inner cylinder (used for MED_INDEX)
+      c) MED_IN:  Medium of inner cylinder (used for MED_INDEX)
 
       d) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for outer annuli
                                             (2F15.0,2I5,1-line):
 
-      e) MED_IN (24A1):  Medium for outer annuli (used for MED_INDEX)
+      e) MED_IN:  Medium for outer annuli (used for MED_INDEX)
 
     =========================================================================
     5  Inputs for the chamber/phantom part:
@@ -93,7 +93,7 @@
                         Dose scoring region for this region,0=>no dose scored.
             IREGION_TO_BIT :  Bit # in LATCH designated to this region
 
-      c) MED_IN (24A1):  Medium of chamber layers (used to set MED_INDEX)
+      c) MED_IN:  Medium of chamber layers (used to set MED_INDEX)
 
 
       5.3) Inputs for the chamber wall:
@@ -104,14 +104,14 @@
             DOSE_ZONE:  Dose scoring region for this region,0=>no dose scored.
             IREGION_TO_BIT:  Bit # in LATCH designated to this region
 
-      b) MED_IN (24A1):  Medium of chamber wall (used to set MED_INDEX)
+      b) MED_IN:  Medium of chamber wall (used to set MED_INDEX)
 
       5.4) Inputs for the gap between chamber wall and container wall:
       ----------------------------------------------------------------
 
       a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
 
-      b) MED_IN (24A1):  Medium of gap (used to set MED_INDEX)
+      b) MED_IN:  Medium of gap (used to set MED_INDEX)
 
 
       5.5) Inputs for the container wall:
@@ -119,7 +119,7 @@
 
       a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
 
-      b) MED_IN (24A1):  Medium of container wall (used to set MED_INDEX)
+      b) MED_IN:  Medium of container wall (used to set MED_INDEX)
     =====================================================================
     6  Inputs for the bottom part (If N_BOT_$CHAMBER >0):
     =====================================================================
@@ -138,11 +138,11 @@
            DOSE_ZONE:   Dose scoring flag, 0=>do not score dose.
            IREGION_TO_BIT :  Bit # in LATCH designated to this region
 
-      c) MED_IN (24A1):  Medium of inner cylinders (used for MED_INDEX)
+      c) MED_IN:  Medium of inner cylinders (used for MED_INDEX)
 
       d) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for outer annuli
                                              (2F15.0,2I5,1-line):
-      e) MED_IN (24A1):  Medium of outer annuli (used for MED_INDEX)
+      e) MED_IN:  Medium of outer annuli (used for MED_INDEX)
 
     ====================================================================
     7  Inputs for range rejection options:

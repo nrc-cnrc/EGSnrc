@@ -45,12 +45,9 @@ COMIN/GetInput,EGS-IO/;
 "***************************************************************************"
 "*                   Variables used by the subroutine                      *"
 "***************************************************************************"
-CHARACTER*$STRING256 TEXT;      "Used to read in each line of the input file   "
-CHARACTER*$STRING256 KEEPTEXT;  "Used to keep an old line of TEXT              "
-CHARACTER*$STRING256 ORIGTEXT;  "The text without conversion to upper case     "
-CHARACTER*$STRING256 TEXTPIECE; "Used to read a piece of TEXT                  "
-CHARACTER*$STRING80  DELIM_START;"Start of the delimeter                       "
-CHARACTER*$STRING80  DELIM_END;  "End of the delimeter                         "
+CHARACTER*$max_path_length TEXT,KEEPTEXT,ORIGTEXT,TEXTPIECE;
+CHARACTER*$max_path_length DELIM_START;"Start media block"
+CHARACTER*$max_path_length DELIM_END;  "End media block"
 CHARACTER*$STRING80  ENDSTRING;  "string at which to terminate search          "
 CHARACTER*$STRING32  VNAME;      "The name of the variable being extracted.    "
 CHARACTER*$STRING32  VNAME1;     "The name of the variable being extracted.    "
@@ -185,12 +182,13 @@ DO I = NMIN, NMAX  [ "for each value_sought"
        CONTINUE;
        LINE=LINE+1;
        IF( start_found ) [
-         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A256)') TEXT;
+         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A)') TEXT;
        ]
        ELSE [
-         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;
+         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;
+        "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;"
        ]
-       "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;"
+      "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;"
        $SKIP LEADING BLANKS IN text;
        $REMOVE EVERYTHING AFTER '#' IN text;
        $REMOVE EVERYTHING AFTER ';' IN text;
@@ -275,7 +273,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    iindex = index(text,'DEFAULT');
    IF( iindex ~= 0 )
    [                  "User requested a default value"
-       IF( type(i) ~= 2 )
+       IF( type(i) ~= 2 & type(i) ~= 4 )
        [
            IF( type(i) ~= 3 ) [ VALUE(I,1)=DEFAULT(I); ]
            ELSE               [ VALUE(I,1)=0;          ]
@@ -361,7 +359,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
                      write(i_log,*) ' Empty text -> reading next line! ';
                    ]
                    LINE=LINE+1;
-                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A256)') TEXT;
+                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A)') TEXT;
                    $SKIP LEADING BLANKS IN text;
                    $REMOVE EVERYTHING AFTER '#' IN text;
                    $REMOVE EVERYTHING AFTER ';' IN text;
@@ -422,6 +420,12 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    ] "end IF TYPE"
 
 "============================read the char_value(i)========================="
+       IF(TYPE(I)=4)[
+         LONG_PATH_VALUE(I)=origtext;
+         $SKIP LEADING BLANKS IN LONG_PATH_VALUE(I);
+         NVALUE(I)=1;
+         GOTO :END-NMIN-NMAX-LOOP:;
+       ]
 
    IF ((TYPE(I) = 2) | (TYPE(I) = 3))
    [                                   "Read the string"
@@ -445,6 +449,11 @@ DO I = NMIN, NMAX  [ "for each value_sought"
            ELSE               [ TEXTPIECE=origtext;            ]
                       "The above is to avoid conversion to upper case"
                       "for e.g. media names                          "
+           IF(VALUES_SOUGHT(I)='sterncid')[
+             $SKIP LEADING BLANKS IN TEXTPIECE;
+             iindex=INDEX(TEXTPIECE,blank);
+             IF(iindex~=0)[TEXTPIECE=TEXTPIECE(:iindex-1);]
+           ]
            CONTINUE;
            READ(TEXTPIECE,ERR=:GI1008:,FMT='(A256)') CHAR_VALUE(I,IVAL);
            $SKIP LEADING BLANKS IN CHAR_VALUE(I,IVAL);
@@ -504,7 +513,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
                WHILE (lnblnk1(TEXT)=0)
                [
                    LINE=LINE+1;
-                   READ (UNITNUM,ERR=:GI1008:,FMT='(A256)') TEXT;
+                   READ (UNITNUM,ERR=:GI1008:,FMT='(A)') TEXT;
                    $SKIP LEADING BLANKS IN text;
                    $REMOVE EVERYTHING AFTER '#' IN text;
                    $REMOVE EVERYTHING AFTER ';' IN text;
@@ -654,7 +663,7 @@ $INTEGER  ival,ival_media,ival_medfile,i,j,k,ival_ae,ival_ue,ival_ap,ival_up,
           ival_pz,ival_sterncid,ival_ipot,ival_localdensity,
           ival_densityfile,medfile_error,ival_outfile,ival_densityoutputfile,
           egs_open_file,lnblnk1,i_medfile,egs_get_unit,i_mederr,mindex,eindex,
-          i_density,i01,length,i_outfile;
+          i_density,i01,length,i_outfile,field_end,field_length;
 $REAL ecut_min, pcut_min;
 
 $LOGICAL  medfile_specified,densityfile_specified,elements_specified,
@@ -679,16 +688,18 @@ $REAL EKE,ELKE,TMXSO,DEDXE,DEDXP,EFRACT,SIGE,SIGP,BREME,BREMP,ETAB(16),
       EIE,PLOTE($MAXPOINTS),PLOTEM($MAXPOINTS),PLOTEEN($MAXPOINTS),
       PLOTEMP($MAXPOINTS), PLOTEMS($MAXPOINTS);
 $INTEGER IPLOTE,IFLAG1,IFLAG2,LELKE;
-CHARACTER*60 GRAPHTITLE,XAXIS,YAXISPcom,YAXISPmfp,YAXISE,YAXISEmfp,
-              SUBTITLE,SERIES;
+CHARACTER*64 GRAPHTITLE;
+CHARACTER*60 XAXIS,YAXISPcom,YAXISPmfp,YAXISE,YAXISEmfp,SUBTITLE,SERIES;
 DATA ETAB/1.,1.25,1.5,1.75,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9./;
 
 
-character*24 medium_name,med_tmp,sterncid_tmp;
-character*256 density_file,material_file,tmp_string,
-              spoutput_file($MXMED), density_outputfile;
-character*80 text_string, text_save, title;
-character*80 delim_start,delim_end;
+character*$max_medium_name_length medium_name,med_tmp;
+character*$max_medium_name_length sterncid_tmp;
+character*$max_path_length density_file,material_file,tmp_string,
+          spoutput_file($MXMED),density_outputfile;
+character*$max_path_length text_string, text_save;
+character*80 title;
+character*$max_path_length delim_start,delim_end;
 character*1 blank;
 character*512 toUpper;
 
@@ -774,11 +785,11 @@ ival                = ival + 1;
 ival_medfile         = ival;
 values_sought(ival) = 'material data file';    "The code word"
 nvalue(ival)        = 1;                        "1 input"
-type(ival)          = 2;
+type(ival)          = 4;
 Nmin = ival_medfile; Nmax = ival_medfile;
 CALL GET_INPUT;
 IF(error_flags(ival_medfile)=0)[
-   material_file=char_value(ival_medfile,1);
+  material_file=long_path_value(ival_medfile);
    medfile_specified=.true.;
    "try opening it"
    i_medfile=17;
@@ -882,7 +893,7 @@ DO i=1,NMED[
 
    "convert medium name to string for ease of"
    "implementation"
-   DO j=1,24[medium_name(j:j)=media(j,i);]
+  DO j=1,$max_medium_name_length[medium_name(j:j)=media(j,i);]
 
    "set up defaults"
    elements_specified=.false.;
@@ -1117,12 +1128,12 @@ DO i=1,NMED[
    ival=ival+1;
    ival_densityoutputfile=ival;
    values_sought(ival)='output density file';
-   type(ival)          = 2;
+  type(ival)          = 4;
    nvalue(ival)=1;
    nmin=ival_densityoutputfile;nmax=ival_densityoutputfile;
    CALL GET_INPUT;
    IF(error_flags(ival_densityoutputfile)=0)[
-       density_outputfile=char_value(ival_densityoutputfile,1);
+      density_outputfile=long_path_value(ival_densityoutputfile);
        densityoutputfile_specified(i)=.true.;
        $WRITE_MEDERR(' Density correction file will be output.');
    ]
@@ -1213,12 +1224,12 @@ DO i=1,NMED[
    ival=ival+1;
    ival_densityfile=ival;
    values_sought(ival)='density correction file';
-   type(ival)          = 2;
+  type(ival)          = 4;
    nvalue(ival)=1;
    nmin=ival_densityfile;nmax=ival_densityfile;
    CALL GET_INPUT;
    IF(error_flags(ival_densityfile)=0)[
-       density_file=char_value(ival_densityfile,1);
+      density_file=long_path_value(ival_densityfile);
        densityfile_specified=.true.;
        "may get changed to false later if it cannot be opened"
        $WRITE_MEDERR(' Density correction file specified in .egsinp file.');
@@ -1229,12 +1240,12 @@ DO i=1,NMED[
    ival = ival+1;
    ival_outfile = ival;
    values_sought(ival) = 'e- stopping power output file';
-   type(ival) = 2;
+  type(ival) = 4;
    nvalue(ival) =1;
    nmin=ival_outfile;nmax=ival_outfile;
    CALL GET_INPUT;
    IF(error_flags(ival_outfile)=0)[
-       spoutput_file(i)=char_value(ival_outfile,1);
+      spoutput_file(i)=long_path_value(ival_outfile);
        outfile_specified(i)=.true.;
        $WRITE_MEDERR(' e- stopping powers will be output to ',
          spoutput_file(i));
@@ -1264,13 +1275,24 @@ DO i=1,NMED[
          text_string=text_save(eindex+1:);
          text_string=$cstring(text_string);
          $SKIP LEADING BLANKS IN text_string;
-         IF(text_string=medium_name)[
-            delim_start=text_save;
-            start_delim_found=.true.;
+         field_length=lnblnk1(text_string);
+         field_end=field_length+1;
+         DO j=1,field_length[
+           IF(text_string(j:j)=blank | text_string(j:j)=',')[
+             field_end=j;
+             EXIT;
+           ]
          ]
-         ELSEIF(start_delim_found)[
-            delim_end=text_save;
-            end_delim_found=.true.;
+         field_length=field_end-1;
+         IF(field_length>0)[
+           IF(text_string(1:field_length)=medium_name)[
+             delim_start=text_save;
+             start_delim_found=.true.;
+           ]
+           ELSEIF(start_delim_found)[
+             delim_end=text_save;
+             end_delim_found=.true.;
+           ]
          ]
 
         ]
@@ -1448,12 +1470,12 @@ DO i=1,NMED[
          ival=ival+1;
          ival_densityfile=ival;
          values_sought(ival)='density correction file';
-         type(ival)          = 2;
+         type(ival)          = 4;
          nvalue(ival)=1;
          nmin=ival_densityfile;nmax=ival_densityfile;
          CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
          IF(error_flags(ival_densityfile)=0)[
-            density_file=char_value(ival_densityfile,1);
+            density_file=long_path_value(ival_densityfile);
             densityfile_specified=.true.;
             "may get changed to false later if it cannot be opened"
             $WRITE_MEDERR(
@@ -1647,7 +1669,7 @@ DO i=1,NMED[
        ap(i)=ap_tmp;
        up(i)=up_tmp;
 
-       DO j=1,24[
+       DO j=1,$max_medium_name_length[
          inpstrn(j,i) = sterncid_tmp(j:j);
        ]
 
@@ -1787,8 +1809,10 @@ write(ounit,*);
 
 DO i=1,nmed[
 
-  write(ounit,'(a,24a1)')'   Medium: ',(media(j,i),j=1,24);
-  write(ounit,'(a,24a1)')' Sterncid: ',(inpstrn(j,i),j=1,24);
+  DO j=1,$max_medium_name_length [ medium_name(j:j)=media(j,i); ]
+  DO j=1,$max_medium_name_length [ sterncid_tmp(j:j)=inpstrn(j,i); ]
+  write(ounit,'(a,a)')'   Medium: ',medium_name;
+  write(ounit,'(a,a)')' Sterncid: ',sterncid_tmp;
   write(ounit,'(a,1p,e14.5,a)')' rho (bulk density): ',rho(i),' g/cm^3';
   IF(epstfl(i)~=1)[
  write(ounit,'(a,1p,e14.5,a)')'      local density: ',localDensity(i),' g/cm^3';
@@ -1855,7 +1879,8 @@ DO i=1,nmed[
     YAXISE = 'dE/drhoX MeV/g/cm\S2\N';
     YAXISEmfp = 'mean free path / cm';
     YAXISPmfp = 'mean free path / cm';
-    write(GRAPHTITLE,'(24a1)')(media(j,i),j=1,24);
+        write(GRAPHTITLE,'(64a1)')
+          (media(j,i),j=1,$max_medium_name_length);
     SUBTITLE = 'Electron data';
     DO j=1,8[
      DO k=1,16[

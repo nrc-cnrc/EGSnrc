@@ -170,7 +170,7 @@ SUBROUTINE GET_INPUT;
 "  NUM_DRMIN=I;                        <--named pointer to the index num.   "
 "  VALUES_SOUGHT(I)='DOSE RBOUND MIN'; <--name of variable                  "
 "  NVALUE(I)=1;                        <--# of inputs(left out if not known)"
-"  TYPE(I)=0;                          <--Type (0-3)                        "
+"  TYPE(I)=0;                          <--Type (0-4)                        "
 "  VALUE_MIN(I)=0;                     <--Minimum value                     "
 "  VALUE_MAX(I)=$MAXRADII-1;           <--Maximum value                     "
 "  DEFAULT(I)=0;                       <--Default value                     "
@@ -184,6 +184,7 @@ SUBROUTINE GET_INPUT;
 "  NVALUE(I)=1;                        <--left out if not known
 "
 "    ALLOWED INPTUS (TYPE 3)
+"    ALLOWED INPTUS (TYPE 3)
 "
 "  I=I+1;
 "  NUM_IWATCH=I;
@@ -195,6 +196,10 @@ SUBROUTINE GET_INPUT;
 "  ALLOWED_INPUTS(I,2)='STEPS';
 "  ALLOWED_INPUTS(I,3)='DEPOSITED';
 "  ALLOWED_INPUTS(I,4)='GRAPH';
+"                                                                           "
+"                      **** STATE THE DELIMETER ****                        "
+"    LONG PATH INPUTS (TYPE 4, ONE PATH PER INPUT KEY)                     "
+"  TYPE(I)=4; LONG_PATH_VALUE(I) receives the full path.                   "
 "                                                                           "
 "                      **** STATE THE DELIMETER ****                        "
 "                                                                           "
@@ -217,10 +222,10 @@ COMIN/GetInput,EGS-IO/;
 "***************************************************************************"
 "*                   Variables used by the subroutine                      *"
 "***************************************************************************"
-CHARACTER*$STRING256 TEXT;      "Used to read in each line of the input file   "
-CHARACTER*$STRING256 KEEPTEXT;  "Used to keep an old line of TEXT              "
-CHARACTER*$STRING256 ORIGTEXT;  "The text without conversion to upper case     "
-CHARACTER*$STRING256 TEXTPIECE;  "Used to read a piece of TEXT                 "
+CHARACTER*$max_path_length TEXT;
+CHARACTER*$max_path_length KEEPTEXT;
+CHARACTER*$max_path_length ORIGTEXT;
+CHARACTER*$max_path_length TEXTPIECE;
 CHARACTER*$STRING80  DELIM_START;"Start of the delimeter                       "
 CHARACTER*$STRING80  DELIM_END;  "End of the delimeter                         "
 CHARACTER*$STRING32  VNAME;      "The name of the variable being extracted.    "
@@ -323,6 +328,8 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    " Set to default for the case the input is not found "
    IF(TYPE(I) = 0 | TYPE(I) = 1) [ VALUE(I,1) = DEFAULT(I); ]
    IF(TYPE(I) = 3) [ VALUE(I,1) = 0; ]
+    IF(TYPE(I) = 3) [ VALUE(I,1) = 0; ]
+    IF(TYPE(I) = 4) [ LONG_PATH_VALUE(I) = ' '; ]
    VNAME=VALUES_SOUGHT(I);
    iVNAME=lnblnk1(VNAME);
    IF( ivname < 1 )
@@ -347,10 +354,11 @@ DO I = NMIN, NMAX  [ "for each value_sought"
        CONTINUE;
        LINE=LINE+1;
        IF( start_found ) [
-         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A256)') TEXT;
+         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A)') TEXT;
        ]
        ELSE [
-         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;
+         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;
+        "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A)') TEXT;"
        ]
        "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;"
        $SKIP LEADING BLANKS IN text;
@@ -423,7 +431,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    [
         IF (vname(:ivname)='TITLE')
         [
-           READ (UNITNUM,FMT='(A256)') TEXTPIECE;
+           READ (UNITNUM,FMT='(A)') TEXTPIECE;
            IF (lnblnk1(TEXTPIECE)~=0) [
               TEXT=TEXTPIECE(:lnblnk1(TEXTPIECE));
               $SKIP LEADING BLANKS IN text;
@@ -449,7 +457,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    iindex = index(text,'DEFAULT');
    IF( iindex ~= 0 )
    [                  "User requested a default value"
-       IF( type(i) ~= 2 )
+       IF( type(i) ~= 2 & type(i) ~= 4 )
        [
            IF( type(i) ~= 3 ) [ VALUE(I,1)=DEFAULT(I); ]
            ELSE               [ VALUE(I,1)=0;          ]
@@ -535,7 +543,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
                      write(i_log,*) ' Empty text -> reading next line! ';
                    ]
                    LINE=LINE+1;
-                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A256)') TEXT;
+                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A)') TEXT;
                    $SKIP LEADING BLANKS IN text;
                    $REMOVE EVERYTHING AFTER '#' IN text;
                    $REMOVE EVERYTHING AFTER ';' IN text;
@@ -596,9 +604,18 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    ] "end IF TYPE"
 
 "============================read the char_value(i)========================="
+   IF(TYPE(I)=4)[
+       LONG_PATH_VALUE(I)=origtext;
+       $SKIP LEADING BLANKS IN LONG_PATH_VALUE(I);
+       NVALUE(I)=1;
+       GOTO :END-NMIN-NMAX-LOOP:;
+   ]
+
+                   READ (UNITNUM,ERR=:GI1008:,FMT='(A)') TEXT;
 
    IF ((TYPE(I) = 2) | (TYPE(I) = 3))
    [                                   "Read the string"
+       TEXT=origtext;
        IVAL=1;     "nvalue counter"
        IF( idebug ) [write(i_log,*) ' Trying to read a string! ';]
        LOOP
@@ -683,7 +700,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
                WHILE (lnblnk1(TEXT)=0)
                [
                    LINE=LINE+1;
-                   READ (UNITNUM,ERR=:GI1008:,FMT='(A256)') TEXT;
+                   READ (UNITNUM,ERR=:GI1008:,FMT='(A)') TEXT;
                    $SKIP LEADING BLANKS IN text;
                    $REMOVE EVERYTHING AFTER '#' IN text;
                    $REMOVE EVERYTHING AFTER ';' IN text;
@@ -1197,6 +1214,7 @@ $LOGICAL  ecut_inregions,pcut_inregions,smax_inregions,
           pe_inregions,aux_inregions,photonuc_inregions;"Ali:photonuc"
 
 character*15 output_strings(14);"Ali:photonuc, increased by 1"
+character*$max_path_length ff_file_list;
 save         output_strings,line;
 save         ecut_inregions,pcut_inregions,smax_inregions,
              incoh_inregions,coh_inregions,relax_inregions,
@@ -1576,6 +1594,11 @@ IF( error_flags(num_spin) = 0 ) [
    compilation files of the form eii_prefix.data.
  ******************************************************/
 IF( error_flags(num_eii) = 0 ) [
+    IF( lnblnk1(char_value(num_eii,1)) >
+         $max_xsection_prefix_length ) [
+        $egs_fatal(*,'EII prefix exceeds maximum length of ',
+                      $max_xsection_prefix_length,' characters');
+    ]
    eii_xfile = char_value(num_eii,1);eii_flag=1;
    IF (toUpper($cstring(eii_xfile)).eq.'ON' |
        toUpper($cstring(eii_xfile)).eq.'IK' )[
@@ -1597,6 +1620,11 @@ IF( error_flags(num_eii) = 0 ) [
    for pair production.
  ******************************************************/
 IF( error_flags(num_pxsec) = 0 ) [
+    IF( lnblnk1(char_value(num_pxsec,1)) >
+        $max_xsection_prefix_length ) [
+        $egs_fatal(*,'Photon prefix exceeds maximum length of ',
+                   $max_xsection_prefix_length,' characters');
+    ]
     photon_xsections = char_value(num_pxsec,1);
     IF ( toUpper( $cstring(photon_xsections) ) = 'MCDF-XCOM' )[
         mcdf_pe_xsections = .true.; photon_xsections = 'xcom';
@@ -1613,10 +1641,20 @@ IF( error_flags(num_pxsec_out) = 0 ) [
     xsec_out = value(num_pxsec_out,1);
 ]
 IF( error_flags(num_cxsec) = 0 ) [
+    IF( lnblnk1(char_value(num_cxsec,1)) >
+        $max_xsection_prefix_length ) [
+        $egs_fatal(*,'Compton prefix exceeds maximum length of ',
+                   $max_xsection_prefix_length,' characters');
+    ]
     comp_xsections = char_value(num_cxsec,1);
 ]
 "Ali:photonuc, 3 lines"
 IF( error_flags(num_photonuc_xsec) = 0 ) [
+    IF( lnblnk1(char_value(num_photonuc_xsec,1)) >
+        $max_xsection_prefix_length ) [
+        $egs_fatal(*,'Photonuclear prefix exceeds maximum length of ',
+                   $max_xsection_prefix_length,' characters');
+    ]
     photonuc_xsections = char_value(num_photonuc_xsec,1);
 ]
 
@@ -1663,7 +1701,7 @@ IF( error_flags(num_coh) = 0 ) [
    ival                = ival + 1;
    num_ffiles          = ival;
    values_sought(ival) = 'ff file names';
-   type(ival)          = 2;  "i.e.  character input"
+    type(ival)          = 4;
    nvalue(ival)        = 0;
    Nmin = num_ffmed; Nmax = num_ffiles;
    CALL GET_INPUT;
@@ -1675,6 +1713,17 @@ IF( error_flags(num_coh) = 0 ) [
     $egs_fatal('(a/,a,I3)','Error reading ff file names! Terminating ...',
                ' error_flag = ', error_flags(num_ffiles));
    ]
+    ff_file_list = long_path_value(num_ffiles);
+    nvalue(num_ffiles) = 1;
+    DO j=1,lnblnk1(ff_file_list) [
+     IF(ff_file_list(j:j)=',') [
+      nvalue(num_ffiles) = nvalue(num_ffiles) + 1;
+     ]
+    ]
+    IF(nvalue(num_ffiles) ~= nvalue(num_ffmed)) [
+     $egs_fatal(*,'Number of custom form factor files does not match ',
+                    'number of media names.');
+    ]
    IF (nvalue(num_ffmed)>$MXMED)[
       $egs_fatal('(a,a,i3,a)',
               '***** Number of media with custom ff larger ',
@@ -1683,7 +1732,17 @@ IF( error_flags(num_coh) = 0 ) [
    ]
    DO i=1,nvalue(num_ffmed) [
     iray_ff_media(i) = char_value(num_ffmed,i);
-    iray_ff_file(i)  = char_value(num_ffiles,i);
+    j = index(ff_file_list,',');
+    IF(i < nvalue(num_ffmed)) [
+     iray_ff_file(i) = ff_file_list(:j-1);
+     ff_file_list = ff_file_list(j+1:);
+    WHILE(index(ff_file_list,' ')=1 & lnblnk1(ff_file_list)>0) [
+      ff_file_list=ff_file_list(2:);
+     ]
+    ]
+    ELSE [
+     iray_ff_file(i) = ff_file_list;
+    ]
    ]
    value(num_coh,1) = 1; "reset to 1 since custom info in iray_ff_files"
   ]
@@ -1904,7 +1963,7 @@ $INTEGER ounit;
 $declare_max_medium;
 ;COMIN/GetInput,ELECIN,MEDIA,EGS-IO/;
 $INTEGER imed,ival,lnblnk1,nchanged;
-character*24 medname;
+character*$max_medium_name_length medname;
 
 ounit = i_log;
 ounit = i_log;

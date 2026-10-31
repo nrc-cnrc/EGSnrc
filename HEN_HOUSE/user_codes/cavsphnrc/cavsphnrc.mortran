@@ -278,7 +278,7 @@ REPLACE {$MXMDSH} WITH {200};
 "
 "CARD M1
 "
-"  MEDIA                  (M)   TYPE OF MATERIAL (FMT='24A1')
+"  MEDIA                  (M)   TYPE OF MATERIAL (FMT='64A1')
 "                               BY CONVENTION THE PRIMARY WALL
 "                               MATERIAL IS FIRST, THE CAVITY MATERIAL
 "                               IS SECOND AND THE REST FOLLOWS

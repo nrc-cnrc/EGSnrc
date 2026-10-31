@@ -30,6 +30,13 @@
 #  An example input file for tutor7, for a depth-dose curve calculation of a
 #  10 MeV electron beam incident on a tantalum plate (divided into 30 depth
 #  regions).
+#  Changes from the original input:
+#  Added:
+#    Radiative Compton corrections=Off
+#    Electron Impact Ionization=Off
+#  Changed:
+#    Brems angular sampling: On -> KM
+#    Pair angular sampling: On -> Simple
 #
 ###############################################################################
 
@@ -48,8 +55,11 @@
                                       # Off in regions
  Photoelectron angular sampling= On   # Can be Off, On in Regions,
                                       # Off in regions
- Brems angular sampling=         On   # Can be Off
- Pair angular sampling=          On   # Can be Off or KM
+ Radiative Compton corrections= Off # Can be On or Off (default)
+ Electron Impact Ionization=    Off # Can be Off (default), On/IK, casnati,
+                                      # kolbenstvedt, gryzinski, penelope, or custom prefix
+ Brems angular sampling=         KM # Can be Simple or KM (default KM)
+ Pair angular sampling=          Simple # Can be Off, Simple (default), or KM
  ESTEPE=                         0.25
  XIMAX=                          0.5
  Skin depth for BCA=             3
@@ -92,3 +102,9 @@
 
  :Stop Source Input:
  -------------------
+
+ :start SCORING OPTIONS:
+
+ PULSE HEIGHT DISTRIBUTION= no
+
+ :stop scoring options:

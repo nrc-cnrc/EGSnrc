@@ -49,7 +49,7 @@ $INTEGER function egs_create_lockfile(flag);
 "*****************************************************************************
 $INTEGER flag;
 ;COMIN/EGS-IO/;
-character*512 fname;
+character*($max_path_length+1) fname;
 $INTEGER i,lnblnk1,l,istat;
 
 $set_string(fname,' ');
@@ -72,7 +72,7 @@ $INTEGER function egs_open_lockfile(flag);
 "*****************************************************************************
 $INTEGER flag;
 ;COMIN/EGS-IO/;
-character*512 fname;
+character*($max_path_length+1) fname;
 $INTEGER i,lnblnk1,l,istat;
 $set_string(fname,' ');
 fname = $cstring(egs_home) // $cstring(user_code) // $file_sep //
@@ -91,7 +91,7 @@ subroutine egs_remove_lockfile(istat);
 "*****************************************************************************
 $INTEGER istat;
 ;COMIN/EGS-IO/;
-character*512 fname;
+character*($max_path_length+1) fname;
 $INTEGER i,lnblnk1,l;
 $set_string(fname,' ');
 fname = $cstring(egs_home) // $cstring(user_code) // $file_sep //

@@ -217,7 +217,7 @@
 "
 "CARD M1
 "
-"  MEDIA                  (M)   TYPE OF MATERIAL (FMT='24A1')
+"  MEDIA                  (M)   TYPE OF MATERIAL (FMT='64A1')
 "                               BY CONVENTION THE PRIMARY WALL
 "                               MATERIAL IS FIRST, THE CAVITY MATERIAL
 "                               IS SECOND AND THE REST FOLLOWS
@@ -1574,7 +1574,7 @@ IF(IQIN=0 & MONOEN=0 & (IFULL=$EDK | IFULL=$DOSE-EDK))["PSF calculation"
    Mgle=LOG(ein);"Mgle IS GAMMA LOG ENERGY"
    OUTPUT61;
    ('TERMA PER FLUENCE FOR MONOENERGETIC PHOTONS ON MATERIAL ',$);
-   OUTPUT61 (MEDIA(I,MEDIUM),I=1,24);(24A1);
+  OUTPUT61 (MEDIA(I,MEDIUM),I=1,$max_medium_name_length);(64A1);
    OUTPUT61;
    ('--------------------------------------------------------'/);
    $SET INTERVAL Mgle,GE;"SET PWLF INTERVAL"
@@ -2130,7 +2130,7 @@ IF( n_parallel > 0 & ~is_finished ) [
           ('--------------------------------------------------------'/);
           OUTPUT61;
           ('TERMA PER FLUENCE FOR MONOENERGETIC PHOTONS ON MATERIAL ',$);
-          OUTPUT61 (MEDIA(I,MEDIUM),I=1,24);(24A1);
+          OUTPUT61 (MEDIA(I,MEDIUM),I=1,$max_medium_name_length);(64A1);
           OUTPUT61;
           ('--------------------------------------------------------'/);
           IF (IRAYLR(2) = 1)[

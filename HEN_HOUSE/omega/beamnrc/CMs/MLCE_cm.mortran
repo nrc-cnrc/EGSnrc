@@ -315,7 +315,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to not score dose
 "I>    IREGION_TO_BIT:   Bit number associated with this region
 "I>
-"I>  14  MED_IN (24A1):  Medium in opening(s) and air gaps
+"I>  14  MED_IN:  Medium in opening(s) and air gaps
 "I>                      used to set MED_INDEX.
 "I>
 "I>  15  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves (2F15.0,I5):
@@ -324,7 +324,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to note score dose
 "I>    IREGION_TO_BIT:   Bit number associated with this region
 "I>
-"I>  16  MED_IN (24A1):  Medium of leaves,
+"I>  16  MED_IN:  Medium of leaves,
 "I>                      used to set MED_INDEX.
 "I>
 "I>   Example
@@ -1383,7 +1383,7 @@ DO IR_$MLCE = 1,N_$MLCE
       (2F15.5,2I5);
       OUTPUT IR_$MLCE;(' material of region ',I3,' ',$);
    ;$MED_INPUT($MLCE); " inputs character array MED_IN from unit 5, loops
-  "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
   "If so, sets MED_INDEX to index of previous medium.  If not,
   "increments NMED and sets MED_INDEX to NMED.
    med(IRA) = MED_INDEX; " medium of the planar slab

@@ -515,7 +515,7 @@
 "I>
 "I>  If MODE_$SYNCHDMLC=1 or 2 (dynamic delivery or step-and-shoot delivery):
 "I>
-"I>  14b  mlc_file (A256)
+"I>  14b  mlc_file (A4096)
 "I>
 "I>         mlc_file:  The full name of the file containing leaf opening
 "I>                    data.  The format of the file contents is as follows:
@@ -568,7 +568,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to not score dose
 "I>    IREGION_TO_BIT:   Bit number associated with this region
 "I>
-"I>  16  MED_IN (24A1):  Medium in opening(s) and air gaps
+"I>  16  MED_IN:  Medium in opening(s) and air gaps
 "I>                      used to set MED_INDEX.
 "I>
 "I>  17  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves, IGNOREGAPS_$SYNCHDMLC
@@ -594,7 +594,7 @@
 "I>                      that you not use this option (ie run with the default
 "I>                      setting of 0).
 "I>
-"I>  18  MED_IN (24A1):  Medium of leaves,
+"I>  18  MED_IN:  Medium of leaves,
 "I>                      used to set MED_INDEX.
 "I>
 "I>  19  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in driving screw holes
@@ -604,7 +604,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to note score dose
 "I>    IREGION_TO_BIT:   Bit number associated with this region
 "I>
-"I>  20  MED_IN (24A1):  Medium in driving screw holes,
+"I>  20  MED_IN:  Medium in driving screw holes,
 "I>                      used to set MED_INDEX.
 "I>
 "I>   Example
@@ -1173,7 +1173,7 @@ INTEGER I,J,K,L,        "T>DO loop indices
        NUM_FULL,    "no. of FULL leaves"
        NUM_HLF,     "no. of HALF leaves"
        NUM_QTR;     "no. of QUARTER leaves"
-character*256 mlc_file;
+character*$max_path_length mlc_file;
 CHARACTER*80 MLC_TITLE; "T> title line in mlc_file
 $REAL INDEXTMP; "T>temporary input variable for field indices in dynamic and
                 "  step-and-shoot simulations
@@ -2656,7 +2656,7 @@ DO I=1, TOT_LEAF_$SYNCHDMLC
 ]
 IF(MODE_$SYNCHDMLC=1|MODE_$SYNCHDMLC=2)["dynamic or step-and-shoot leaf inputs"
   OUTPUT;(/' Input full name of file containing leaf opening data:'/);
-  READ(i_input,'(A256)')mlc_file;
+  READ(i_input,'(A)')mlc_file;
   OUTPUT mlc_file;(A/);
   call replace_env(mlc_file);
   mlc_unit=egs_get_unit(mlc_unit);
@@ -2844,7 +2844,7 @@ DO IR_$SYNCHDMLC = 1,N_$SYNCHDMLC ["loop through regions to get information"
    IF(PCUT(IRA) < PCUTIN) [PCUT(IRA)=PCUTIN;];
    OUTPUT IR_$SYNCHDMLC; (' material of region ',I3,' ',$);
    $MED_INPUT($SYNCHDMLC); " inputs character array MED_IN from unit 5, loops"
-  "through array MEDIA(24,I) to check if medium was previously input."
+  "through MEDIA($max_medium_name_length,I) to check if already input."
   "If so, sets MED_INDEX to index of previous medium.  If not,"
   "increments NMED and sets MED_INDEX to NMED."
    MED(IRA) = MED_INDEX; " medium of the planar slab"

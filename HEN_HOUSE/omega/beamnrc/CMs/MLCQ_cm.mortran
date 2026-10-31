@@ -283,7 +283,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to not score dose
 "I>    IREGION_TO_BIT:   Bit number associated with this region
 "I>
-"I>   10  MED_IN (24A1):  Medium of in local region 1 (inside collimator)
+"I>   10  MED_IN:  Medium of in local region 1 (inside collimator)
 "I>                      used to set MED_INDEX.
 "I>
 "I>   11  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 2
@@ -293,7 +293,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to note score dose
 "I>    IREGION_TO_BIT:   Bit number associated with this region
 "I>
-"I>   12  MED_IN (24A1):  Medium of local region 2 (collimator leaves),
+"I>   12  MED_IN:  Medium of local region 2 (collimator leaves),
 "I>                      used to set MED_INDEX.
 "I>
 "I>   Example
@@ -1759,7 +1759,7 @@ DO IR_$MLCQ = 1,N_$MLCQ
       (2F15.5,2I5);
       OUTPUT IR_$MLCQ;(' material of region ',I3,' ',$);
    ;$MED_INPUT($MLCQ); " inputs character array MED_IN from unit 5, loops
-  "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
   "If so, sets MED_INDEX to index of previous medium.  If not,
   "increments NMED and sets MED_INDEX to NMED.
    MED(IRA) = MED_INDEX; " medium of the planar slab

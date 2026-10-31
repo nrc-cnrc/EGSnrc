@@ -218,7 +218,7 @@
 "I>     IREGION_TO_BIT:   mapping of central region and outer region to bit
 "I>                       for LATCH
 "I>
-"I>   6  MED_IN (24A1):   Medium of central region and outer region in layer I,
+"I>   6  MED_IN:   Medium of central region and outer region in layer I,
 "I>                       used to set MED_INDEX.
 "I>
 "I>   7   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5):
@@ -227,7 +227,7 @@
 "I>          DOSE_ZONE:   Dose scoring zone of surrounding region.
 "I>     IREGION_TO_BIT:   mapping of surrounding region to bit for LATCH
 "I>
-"I>   8  MED_IN (24A1):   Medium of surrounding region in layer I,
+"I>   8  MED_IN:   Medium of surrounding region in layer I,
 "I>                       used to set MED_INDEX.
 "I>
 "I>   Example
@@ -1145,7 +1145,7 @@ DO IR_$PYRAMIDS = 3, N_$PYRAMIDS, 3[
    " and determine material number for these regions
    OUTPUT;(' medium in surrounding region: ',$);
    $MED_INPUT($PYRAMIDS); " inputs character array MED_IN from unit 5, loops
-   "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
    "If so, sets MED_INDEX to index of previous medium.  If not,
    "increments NMED and sets MED_INDEX to NMED.
    MED(IRA) = MED_INDEX; " medium of the pyramid

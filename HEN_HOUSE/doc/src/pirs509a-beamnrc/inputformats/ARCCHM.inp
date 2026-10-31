@@ -68,7 +68,7 @@
                         following ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT and
                         MED_IN to all septa.
 
-   14  MED_IN (24A1):  Medium of region
+   14  MED_IN:  Medium of region
                        used to set MED_INDEX.
 
     Example

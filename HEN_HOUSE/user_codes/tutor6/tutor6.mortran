@@ -250,7 +250,7 @@ EGS-VARIANCE-REDUCTION, "to get access to i_do"
        SOURCE,
        USER
       /;
-character*60 medium_name;
+character*$max_medium_name_length medium_name;
 $INTEGER i,j,ispin,irejct,luxury_level,iseed;
 $REAL esave;
 "---------------------------------------------------------------------"
@@ -263,7 +263,7 @@ dunit = 1;  "i.e. we work in cm"
 DO i=1,nmed [
   OUTPUT i; (/' Input name of medium ',I3,':',$);
   INPUT medium_name; (A);
-  DO j=1,24 [ media(j,1) = medium_name(j:j); ]
+  DO j=1,$max_medium_name_length [ media(j,1) = medium_name(j:j); ]
 ]
 "Set medium 1 everywhere"
 DO i=1,$MXREG [ med(i) = 1; ]

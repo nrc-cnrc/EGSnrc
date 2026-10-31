@@ -63,7 +63,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to not score dose
      IREGION_TO_BIT:   Bit number associated with this region
 
-    10  MED_IN (24A1):  Medium of in local region 1 (inside collimator)
+    10  MED_IN:  Medium of in local region 1 (inside collimator)
                        used to set MED_INDEX.
 
     11  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 2
@@ -73,7 +73,7 @@
           DOSE_ZONE:   Dose scoring flag, 0 to note score dose
      IREGION_TO_BIT:   Bit number associated with this region
 
-    12  MED_IN (24A1):  Medium of local region 2 (collimator leaves),
+    12  MED_IN:  Medium of local region 2 (collimator leaves),
                        used to set MED_INDEX.
 
     Example

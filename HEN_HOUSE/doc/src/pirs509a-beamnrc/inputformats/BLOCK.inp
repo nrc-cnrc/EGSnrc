@@ -65,7 +65,7 @@
       IREGION_TO_BIT:   mapping of region comprising openings and region
                         beyond block edges to bit for LATCH
 
-    8   MED_IN (24A1):  Medium in openings and beyond block edges,
+    8   MED_IN:  Medium in openings and beyond block edges,
                         used to set MED_INDEX.
 
     9   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5) in block material
@@ -77,7 +77,7 @@
       IREGION_TO_BIT:   mapping of region surrounding openings
                         to bit for LATCH
 
-    10  MED_IN (24A1):  Medium of block,
+    10  MED_IN:  Medium of block,
                         used to set MED_INDEX.
     Example
     *******

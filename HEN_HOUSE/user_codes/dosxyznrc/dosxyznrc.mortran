@@ -252,7 +252,7 @@
 "---------------if NMED = 0  input for a CT phantom ---------------------------
 "----------------------------------------------------------------------------
 
-"   Record 3  PhantFileName (A256)  : The full name of the file containing
+"   Record 3  PhantFileName (A4096) : The full name of the file containing
 "                                     the CT phantom as output by ctcreate
 "                                     (should be a .egsphant file).
 "
@@ -1362,9 +1362,10 @@ real      amass,tcpuold,ECUTIN,PCUTIN,ESTEPM($MXMED),width,
           ainflu, "total number of incident particles"
           minrhor, "min density of CT phantom"
           maxrhor; "max density of CT phantom"
-character*256 PhantFileName, "name of file holding CT phantom data"
+character*$max_path_length PhantFileName,
               parname, "name of .pardose file"
               phsp_out_fn;  "phsp file output name"
+character*$max_medium_name_length phantom_medium_name;
 REAL XMIN_YMIN_ZMIN,YMIN_XMIN_ZMIN,ZMIN_XMIN_YMIN,
      XMIN_YMAX_ZMIN,YMAX_XMIN_ZMIN,ZMIN_XMIN_YMAX,
      XMAX_YMAX_ZMIN,YMAX_XMAX_ZMIN,ZMIN_XMAX_YMAX,
@@ -1532,7 +1533,7 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
     (' Input the full name of the file containing the CT phantom created '/
      ' using ctcreate '/
      ' : ',$);
-    read(5,'(A256)') PhantFileName;
+    read(5,'(A)') PhantFileName;
     OUTPUT61 PhantFileName(:lnblnk1(PhantFileName));(A);
 
     call replace_env(PhantFileName);
@@ -1554,8 +1555,11 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
     "media names"
     OUTPUT61;(/' media:');
     DO n=1,NMED[
-       read($CTUnitNumber,'(24a1)') (media(j,n),j=1,24);
-       OUTPUT61 (media(j,n),j=1,24);(' ',24a1);
+       read($CTUnitNumber,'(A)') phantom_medium_name;
+       DO j=1,$max_medium_name_length[
+         media(j,n)=phantom_medium_name(j:j);
+       ]
+      OUTPUT61 (media(j,n),j=1,$max_medium_name_length);(' ',64a1);
     ]
     "estepe and SMAX"
     read($CTUnitNumber,*) (ESTEPM(i),i=1,NMED);
@@ -1654,8 +1658,8 @@ ELSE [ " Read in geometric data as defined by user as opposed to CT data"
 
    DO n=1,NMED [
        OUTPUT61 n;(' Medium',i3,':  ',$);
-       INPUT (media(j,n),j=1,24);(24a1);
-       OUTPUT61 (media(j,n),j=1,24);(' ',t20,24a1);
+      INPUT (media(j,n),j=1,$max_medium_name_length);(64a1);
+      OUTPUT61 (media(j,n),j=1,$max_medium_name_length);(' ',t20,64a1);
    ]
    med(1)=0;
    DO n=2,$MXREG [med(n)=1;] "ie Everything the first medium"
@@ -2402,8 +2406,9 @@ call srcout;
 
 IF(howfarless) call modify_tmxs(MIN(mindelX,mindelY,mindelZ));
 
-OUTPUT61;(/' Medium',t24,'AE',t34,'AP');
-DO n=1,NMED[OUTPUT61 (media(j,n),j=1,15),ae(n),ap(n);(1x,15a1,2f10.3);]
+OUTPUT61;(/' Medium',t68,'AE',t78,'AP');
+DO n=1,NMED[OUTPUT61 (media(j,n),j=1,$max_medium_name_length),ae(n),ap(n);
+  (1x,64a1,2f10.3);]
 
 "RESUME FEATURES"
 "================"
@@ -4664,7 +4669,7 @@ subroutine write_phantom(iunit,nmed,media,estepe,
 "It is a slightly modified form of write_phantom found in ctcreate.mortran"
 "******************************************************************************
 ;IMPLICIT NONE;
-Character*4  media(24,$MXMED);     "Media names"
+Character*4  media($max_medium_name_length,$MXMED); "Media names"
 INTEGER iunit,                     "fort.iunit = .egsphant file"
         nmed,                      "number of media"
         iimax,                     "max number of x cells"
@@ -4688,7 +4693,8 @@ iunit=egs_open_file(iunit,0,1,'.egsphant');
 
 WRITE(iunit,'(i2)') nmed;
 DO ii=1,nmed [
-   Write(iunit,'(24a1)') (media(jj,ii),jj=1,24);
+     Write(iunit,'(64a1)')
+      (media(jj,ii),jj=1,$max_medium_name_length);
 ]
 WRITE(iunit,*) (estepe(ii),ii=1,nmed);
 WRITE(iunit,'(3i5)') iimax,jjmax,kkmax;

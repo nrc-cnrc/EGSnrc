@@ -253,9 +253,9 @@ REPLACE {;COMIN/SOURCE/;} WITH {
     ndbsrjct,i_dbs,iphatsrc,e_split,i_iaea_in,i_mu_phsp,izscore,i_unit_in,
     num_field,more_in_cont,nset,k_field;
     $SHORT_INT nhist_last;
-    character*80 the_beam_code, the_vcu_code, the_input_file,the_pegs_file,
-		 the_shared_lib,the_vcu_input_file;
-    character*256 the_phsp_file;
+    character*80 the_beam_code, the_vcu_code, the_shared_lib;
+    character*$max_path_length the_input_file,the_pegs_file,
+		 the_vcu_input_file,the_phsp_file;
 }
 ;
 "    macros related to energy spectra input"

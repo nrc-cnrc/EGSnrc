@@ -425,13 +425,16 @@ REPLACE {;COMIN/MIXDAT/;} WITH
                     LMED,GASP,TPZ,EZ;
       $INTEGER NE,LMED;
       $REAL    PZ,Z,WA,RHOZ,GASP,TPZ,EZ;
-      COMMON/MXDATC/MTYP(4),ASYM($MXEL),MEDIUM(24),IDSTRN(24);
+    COMMON/MXDATC/MTYP(4),ASYM($MXEL),
+              MEDIUM($max_medium_name_length),
+              IDSTRN($max_medium_name_length);
       $TYPE MTYP,ASYM,MEDIUM,IDSTRN;
    ]
    [ELSE] [
       ;COMMON/MIXDAT/MTYP(4),NE,PZ($MXEL),Z($MXEL),WA($MXEL),
-                     ASYM($MXEL),RHOZ($MXEL),MEDIUM(24),LMED,
-                     IDSTRN(24),GASP,TPZ,EZ;
+                     ASYM($MXEL),RHOZ($MXEL),
+                     MEDIUM($max_medium_name_length),LMED,
+                     IDSTRN($max_medium_name_length),GASP,TPZ,EZ;
        $INTEGER MTYP,NE,MEDIUM,LMED,IDSTRN;
        $REAL    PZ,Z,WA,RHOZ,GASP,TPZ,EZ;
        $TYPE ASYM;
@@ -540,11 +543,16 @@ REPLACE {;COMIN/THRESH/;} WITH
 "------------------------------------------------------------------"
 "*** FileNames                                                     "
 "------------------------------------------------------------------"
+" Keep this value synchronized with EGS_MAX_PATH_LENGTH in "
+" HEN_HOUSE/interface/egs_path_length.h. "
+REPLACE {$max_path_length} WITH {4096};
+" Keep this value synchronized with EGS_MAX_MEDIUM_NAME_LENGTH. "
+REPLACE {$max_medium_name_length} WITH {64};
 REPLACE {;COMIN/FileNames/;} WITH
 {;common/file_names/input_file,output_file,density_file,
                     xsection_file,formf_file,egs_home,lenfn,
                     using_sym_links;
-    character*256 input_file,output_file,density_file,egs_home,
+    character*$max_path_length input_file,output_file,density_file,egs_home,
                   xsection_file,formf_file;
     $INTEGER      lenfn;
     logical       using_sym_links;
@@ -678,6 +686,7 @@ LOGICAL MEDSET,ENGSET;
 $TYPE OPTION(4,$MXOPT),OPT(4),BLKW,NAME(6);
 $TYPE NAMESB(12),IDFNAM(6);
 $INTEGER NH(200);
+character*$max_path_length MEDLINE;
 "*************************"
 "Fix errors for gcc > 10.0"
 "*************************"
@@ -687,6 +696,7 @@ EXTERNAL ALKE,ALKEI,EFUNS,GFUNS,RFUNS,ALIN,ALINI,AFFACT;
 $EXTERNAL ALOG,EXP;
 
 $INTEGER NOPT,NPTS,IDF,EPSTFL_old,IUNRST_old,IAPRIM_old;
+$INTEGER MEDLEN;
 
 " IK: Variable declarations for implicit none"
 $INTEGER IFUN,IV,ISUB,I,in,iz,ICH,IOPT,IMIXT,I01,IZZ,NA,ID,
@@ -881,11 +891,32 @@ IMIXT=0;
 :ELEM/MIXT/COMP:
 "     HERE IS WHERE OPTIONS ELEM, MIXT, AND COMP MEET"
 
-INPUT MEDIUM,IDSTRN; (24A1,6X,24A1);
+READ(5,'(A)') MEDLINE;
+MEDLEN=0;
+DO I=25,30 [IF (MEDLINE(I:I) ~= ' ') MEDLEN=1;]
+DO I=55,70+$max_medium_name_length [IF (MEDLINE(I:I) ~= ' ') MEDLEN=1;]
+DO I=65,70 [IF (MEDLINE(I:I) ~= ' ') MEDLEN=2;]
+IF (MEDLEN=2) [
+    write(6,'(a)') ' Medium name exceeds maximum length of 64 characters';
+    $CALL_EXIT(1);
+]
+IF (MEDLEN=1) [
+    READ(MEDLINE,'(64A1,6X,64A1)') MEDIUM,IDSTRN;
+]
+ELSE [
+    DO I=25,$max_medium_name_length [
+      MEDIUM(I)=' ';
+      IDSTRN(I)=BLKW;
+    ]
+        READ(MEDLINE,'(24A1,6X,24A1)')
+            (MEDIUM(I),I=1,24),(IDSTRN(I),I=1,24);
+]
 INPUT (ASYM(I),I=1,NE); (24(A2,1X));
-IF (IDSTRN(1).EQ.BLKW) [DO I=1,LMED [IDSTRN(I)=MEDIUM(I);]  ]
+IF (IDSTRN(1).EQ.BLKW) [
+  DO I=1,$max_medium_name_length [IDSTRN(I)=MEDIUM(I);]
+]
 OUTPUT MEDIUM,IDSTRN,(ASYM(I),I=1,NE);
-(1X,60('-')/' MEDIUM=',24A1,',STERNHEIMER ID=',24A1,/1X,60('-')//
+(1X,60('-')/' MEDIUM=',64A1,',STERNHEIMER ID=',64A1,/1X,60('-')//
 ,' ATOMIC SYMBOLS ARE: ',(1X,24(A2,1X) ) );
 IF(IUNRST.EQ.1)[OUTPUT;(/T10,'***CALCULATES UNRESTRICTED COLLISION',
 ' STOPPING POWER***  IUNRST=1'//);]
@@ -1818,7 +1849,7 @@ $INTEGER lnblnk1;
 COMIN/BREMPR,MIXDAT,RAYLEI,RSLTS,THRESH,MOLVAR,EPSTAR,FileNames/;
 "          NRC MOD DEC 2,1988                  ======"
 
-character fn*512,line*80;
+character fn*$max_path_length,line*80;
 logical   is_there;
 ;
 :INT:FORMAT(1X,14I5);
@@ -1826,7 +1857,7 @@ logical   is_there;
 IP=7;IUECHO=6;
 "   PUT OUT HEADING, AND COMPOSITION CARDS"
 $ECHOWRITE(IP,:FMT1:) MEDIUM,IDSTRN;
-:FMT1: FORMAT(' MEDIUM=',24A1,',STERNCID=',24A1);
+:FMT1: FORMAT(' MEDIUM=',64A1,',STERNCID=',64A1);
 IF(GASP.NE.0.0) [$ECHOWRITE(IP,:FMT2:) MTYP,RHO,NE,GASP,
 IUNRST,EPSTFL,IAPRIM; "  NRC MODS DEC 2 1988"
 :FMT2: FORMAT(1X,4A1,',RHO=',1P,E11.4,',NE=',I2,',GASP=',
@@ -1873,7 +1904,7 @@ IF( is_there ) [ "File present, open and go to end"
 ]
 DO i=1,len(line) [ line(i:i) = '-'; ]
 write(33,'(a)') line;
-write(33,'(a,24a1)') 'medium = ',medium;
+write(33,'(a,64a1)') 'medium = ',medium;
 write(33,'(a,$)') 'data generated on: ';
 call egs_fdate(33); write(33,*);
 write(33,'(a,4a1,a,1pe11.4,a,i2,a,i1,a,i1,a,i1)') 'type=',mtyp,
@@ -2682,7 +2713,8 @@ $REAL IMEV;
 " IK: Variable declarations for implicit none"
 $INTEGER IM,J,IZ,IE,I,ICHECK,IESPEL,IPEGEL;
 $REAL    VPLASM,ALIADG,EDENL,ALGASP,EPSTRH,V2930,V2950,V2970,V2990,
-         V3050,V3070,V3090,TLRNCE,EPSTWT,V3010,V3030;
+         V3050,V3070,V3090,TLRNCE,EPSTWT,V3010,V3030,V2960,V2980,
+         V3000,V3020,V3040,V3060,V3080;
 
 TOLN10=2.0*ALOG(10.0);IM=-100;
 
@@ -2722,6 +2754,8 @@ $CALL_EXIT(21);
 "STERNHEIMER-SELTZER-BERGER (SSB) LOOKUP TABLE SECTION:"
 :TRY: DO IM=1,NMED [DO J=1,LMED
 [IF (IDSTRN(J).NE.MEDTBL(J,IM)) NEXT :TRY:;]
+DO J=LMED+1,$max_medium_name_length
+[IF (IDSTRN(J).NE.' ') NEXT :TRY:;]
 "CALCULATION FOLLOWS IF A MATCH IS FOUND"
 AFACT=STDATA(1,IM); SK=STDATA(2,IM); X0=STDATA(3,IM);
 X1=STDATA(4,IM); IEV=STDATA(5,IM); CBAR=STDATA(6,IM);
@@ -5485,7 +5519,8 @@ implicit none;
 integer narg, iargc;
 integer i,lnblnk1,l,l1;
 logical have_arg,is_there;
-character arg*256,arg1*256,inp_file*256,fn*512,hen_house*128;
+character arg*$max_path_length,arg1*256,inp_file*$max_path_length,
+          fn*$max_path_length,hen_house*$max_path_length;
 logical egs_isdir,append;
 
 narg = iargc();
@@ -5592,7 +5627,7 @@ DO i=1,narg-1 [
            inp_file(:l1-9) = arg(:l1-9);
        ]
        ELSE [
-           IF( l1 > 248 ) [
+           IF( l1 > $max_path_length-9 ) [
                write(6,*) ' Input file name is too long! ';
                $CALL_EXIT(1);
            ]

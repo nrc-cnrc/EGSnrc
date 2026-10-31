@@ -415,7 +415,7 @@ REPLACE {$MXMDSH} WITH {200}
 "
 "CARD M1
 "
-"  MEDIA                  (M)   TYPE OF MATERIAL (FMT='24A1')
+"  MEDIA                  (M)   TYPE OF MATERIAL (FMT='64A1')
 "                               BY CONVENTION THE PRIMARY WALL
 "                               MATERIAL IS FIRST, THE CAVITY MATERIAL
 "                               IS SECOND AND THE REST FOLLOWS
@@ -4619,24 +4619,27 @@ IF (ITERSE = 2) [
    CAVLNG=VALUE(NUM_CAVLNG,1);
    ELERAD=VALUE(NUM_ELERAD,1);
    SLENGHT=LNBLNK1(CHAR_VALUE(NUM_WALMAT,1));
-   READ (CHAR_VALUE(NUM_WALMAT,1),FMT='(24A1)')
-        (MEDIA(J,1),J=1,SLENGHT);
-   DO J=SLENGHT+1, 24 [MEDIA(J,1)=' ';]
+   IF (SLENGHT > $max_medium_name_length) [
+     write(6,*) ' Medium name exceeds maximum length of 64 characters';
+     STOP;
+   ]
+   READ (CHAR_VALUE(NUM_WALMAT,1),FMT='(64A1)')
+       (MEDIA(J,1),J=1,$max_medium_name_length);
 
    IF (ELERAD=0.0) [ "ITERSE=0 AND NO ELECTRODE"
       "***************"
       "* CARD CAV1-A *"
       "***************"
       OUTPUT;(' *** INPUT CARD CAV1-A ***');
-      OUTPUT WALLTH,(MEDIA(J,1),J=1,24),CAVRAD,CAVLNG;
+    OUTPUT WALLTH,(MEDIA(J,1),J=1,$max_medium_name_length),CAVRAD,CAVLNG;
       (' WALL THICKNESS',T60,F10.4,' cms'/
-       ' WALL MATERIAL',T64,24A1/
+    ' WALL MATERIAL',T64,64A1/
        ' GAS CAVITY RADIUS',T60,F10.4,' cms'/
        ' GAS CAVITY LENGTH',T60,F10.4,' cms'/);
 
        "SECOND MATERIAL IS GAS (AIR)"
       MEDIA(1,2)='A';MEDIA(2,2)='I';MEDIA(3,2)='R';
-      DO J=4,24 [MEDIA(J,2)=' ';]
+    DO J=4,$max_medium_name_length [MEDIA(J,2)=' ';]
 
       "FILL THE GEOMETRY WITH THE MATERIALS"
       NMED=2; "TWO MEDIA"
@@ -4676,22 +4679,26 @@ IF (ITERSE = 2) [
       DELIMETER='CAVITY INPUTS';
       $GET_INPUT(NUM_ELEMAT);
       SLENGHT=LNBLNK1(CHAR_VALUE(NUM_ELEMAT,1));
-      READ (CHAR_VALUE(NUM_ELEMAT,1),FMT='(24A1)')
-           (MEDIA(J,3),J=1,SLENGHT);
-      DO J=SLENGHT+1, 24 [MEDIA(J,3)=' ';]
+     IF (SLENGHT > $max_medium_name_length) [
+        write(6,*) ' Medium name exceeds maximum length of 64 characters';
+        STOP;
+     ]
+     READ (CHAR_VALUE(NUM_ELEMAT,1),FMT='(64A1)')
+         (MEDIA(J,3),J=1,$max_medium_name_length);
 
-      OUTPUT WALLTH,(MEDIA(J,1),J=1,24),CAVRAD,CAVLNG,ELERAD,
-                    (MEDIA(J,3),J=1,24);
+    OUTPUT WALLTH,(MEDIA(J,1),J=1,$max_medium_name_length),
+              CAVRAD,CAVLNG,ELERAD,
+              (MEDIA(J,3),J=1,$max_medium_name_length);
         (' WALL THICKNESS',T60,F10.4,' cms'/
-        ' WALL MATERIAL',T64,24A1/
+        ' WALL MATERIAL',T64,64A1/
         ' GAS CAVITY RADIUS',T60,F10.4,' cms'/
         ' GAS CAVITY LENGTH',T60,F10.4,' cms'/
         ' ELECTRODE RADIUS',T60,F10.4,' cms'/
-        ' ELECTRODE MATERIAL',T64,24A1/);
+        ' ELECTRODE MATERIAL',T64,64A1/);
 
       "SECOND MATERIAL IS GAS"
       MEDIA(1,2)='A';MEDIA(2,2)='I';MEDIA(3,2)='R';
-      DO J=4,24 [MEDIA(J,2)=' ';]
+    DO J=4,$max_medium_name_length [MEDIA(J,2)=' ';]
 
       "FILL THE GEOMETRY WITH THE MATERIALS"
       MED(1)=0; "VACUUM ENVELOPE"
@@ -4702,7 +4709,7 @@ IF (ITERSE = 2) [
       LOOP[
          J=J+1;
          IF(MEDIA(J,1).NE.MEDIA(J,3)) [ISSAME=1;EXIT;]
-      ] WHILE(J.LT.24);
+    ] WHILE(J.LT.$max_medium_name_length);
 
       IF (ISSAME = 0) [ "WALL AND ELECTRODE ARE THE SAME MATERIAL"
          NMED=2;

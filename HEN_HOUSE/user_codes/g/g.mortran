@@ -366,7 +366,8 @@ write(*,'(//)');
 write(*,*) '************************************';
 write(*,*) '* Start g calculation: Version '//$VERSION//' *';
 write(*,*) '************************************';
-OUTPUT (media(j,1),j=1,24);(/'          MEDIUM is: ',24A1/);
+OUTPUT (media(j,1),j=1,$max_medium_name_length);
+(/'          MEDIUM is: ',64A1/);
 ;OUTPUT AE(1)-PRM, AP(1);
 (' knock-on electrons can be created and any electron followed down to'
 /T40,F8.3,' MeV kinetic energy'/
@@ -1140,8 +1141,12 @@ IF( nmed > $MXMED ) [
     stop;
 ]
 DO i=1,nmed [
-  DO j=1,24 [ media(j,i) = ' '; ]
-  read(char_value(ival,i),'(24a1)') (media(j,i),j=1,lnblnk(char_value(ival,i)));
+  IF (lnblnk(char_value(ival,i)) > $max_medium_name_length) [
+    write(6,*) ' Medium name exceeds maximum length of 64 characters';
+    stop;
+  ]
+  read(char_value(ival,i),'(64a1)')
+    (media(j,i),j=1,$max_medium_name_length);
 ]
 
 "Set medium 1 everywhere"
@@ -1488,7 +1493,7 @@ $INTEGER itimes;
 save     mono,nensrc,mode,ensrcd,srcpdf,srcpdf_at,srcbin_at,eave,sum,
          esum,esum2,ecount,ei,iqi,ui,vi,wi,eik;
 
-character*256 spec_file;
+character*$max_path_length spec_file;
 
 ival = 0;
 
@@ -1617,10 +1622,10 @@ ELSE [
 
     ival                   = ival + 1;
     values_sought(ival)    = 'SPECTRUM FILE';
-    type(ival)             = 2;
+    type(ival)             = 4;
     nvalue(ival)           = 1;
     $GET_INPUT(ival);
-    read(char_value(ival,1),'(a)') spec_file;
+    spec_file=long_path_value(ival);
     call replace_env(spec_file);
     open(9,file=spec_file,status='old');
     read(9,*); "i.e. ignore the title"

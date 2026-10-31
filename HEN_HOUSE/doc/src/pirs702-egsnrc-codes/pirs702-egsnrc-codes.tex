@@ -786,7 +786,7 @@ are entered as reals separated by commas for a {\tt value\_sought} called
 Each geometrical region needs a material to be associated with it.
 The names of the materials must be entered through the ``\verb+MEDIA+''
 input. The material name must match that in the PEGS4 dataset EXACTLY,
-including case. 24 characters are maximum allowed per medium and
+including case. The maximum medium-name length is configured, and names
 are ended by , or ;
 
 The assignment of the media to the geometrical
@@ -829,7 +829,8 @@ names are shown in brackets \verb+[ ]+.
 
   MEDIA              (M)   material name which must match that in the
                            pegs4 data set EXACTLY, including case.
-                           24 characters max per medium, ended by , or ;
+                           configured maximum characters per medium name,
+                           ended by , or ;
 
   Define which media in which regions, numbering in order given above.
 

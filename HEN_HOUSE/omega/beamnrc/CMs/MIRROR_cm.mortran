@@ -191,7 +191,7 @@
 "I>          DOSE_ZONE:   Dose scoring flag in layer I.
 "I>     IREGION_TO_BIT:   bit to associate local region of layer I with
 "I>
-"I>   7  MED_IN (24A1):  Medium of layer I, used to set MED_INDEX.
+"I>   7  MED_IN:  Medium of layer I, used to set MED_INDEX.
 "I>
 "I>   8  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in region behind mirror
 "I>                                                       (2F15.0,2I5):
@@ -200,7 +200,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
 "I>    IREGION_TO_BIT:   bit to associate local region with
 "I>
-"I>   9  MED_IN (24A1):  Medium of local region behind the mirror,
+"I>   9  MED_IN:  Medium of local region behind the mirror,
 "I>                      used to set MED_INDEX.
 "I>
 "I>   10  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in region in front of
@@ -210,7 +210,7 @@
 "I>         DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
 "I>    IREGION_TO_BIT:   bit to associate local region with
 "I>
-"I>   11  MED_IN (24A1): Medium of region in front of mirror,
+"I>   11  MED_IN: Medium of region in front of mirror,
 "I>                      used to set MED_INDEX.
 "I>
 "I>
@@ -789,7 +789,7 @@ DO IR_$MIRROR = 1,N_$MIRROR+2["loop through regions to get information"
    ELSE[
       OUTPUT IR_$MIRROR;(' Material of layer ',I3,' ',$);]
    ;$MED_INPUT($MIRROR); " inputs character array MED_IN from unit 5, loops
-  "through array MEDIA(24,I) to check if medium was previously input.
+   "through MEDIA($max_medium_name_length,I) to check if already input.
   "If so, sets MED_INDEX to index of previous medium.  If not,
   "increments NMED and sets MED_INDEX to NMED.
    MED(IRA) = MED_INDEX; " medium of the planar slab

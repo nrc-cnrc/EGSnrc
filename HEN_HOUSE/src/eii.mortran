@@ -65,7 +65,7 @@ $REAL    dedx,e,sig,sigm,wbrem,sum_a,sum_z,sum_pz,sum_wa,Ec,Ecc;
 $REAL    sum_sh,sum_occn,U,sum_sigma,sum_dedx;
 $INTEGER lloge;
 $LOGICAL check_it;
-character eii_file*128;
+character eii_file*$max_path_length;
 $INTEGER occn_numbers(4);
 $REAL    cons;
 parameter (cons = 0.153536); " 2*Pi*Re^2*rm/u "
