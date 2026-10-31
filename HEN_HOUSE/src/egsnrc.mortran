@@ -7689,7 +7689,7 @@ DO imed = 1,nmed [
                         av_E = (ss_1 + sh_1)/(ss_0 + sh_0);
                           "av_E is the average energy lost in a collision"
                           "with this shell"
-                        i = eii_a(jjj)*loge + eii_b(jjj);
+                        i = eii_a(jj)*loge + eii_b(jj);
                         i = (jj-1)*$N_EII_BINS + i;
                         sig_j = eii_xsection_a(i)*loge + eii_xsection_b(i);
                         sig_j = sig_j*pz(imed,iele)*con_med;
