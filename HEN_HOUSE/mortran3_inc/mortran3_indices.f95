@@ -22,6 +22,7 @@ integer, parameter :: ox_iset_base = 589
 integer, parameter :: ox_oset_base = 689
 integer, parameter :: ox_morf_base = 789
 integer, parameter :: ox_trt_base = 889
+! ct0..ct7 mark consecutive 120-entry table regions; ox_base tracks the active base.
 integer, parameter :: ox_ct0_base = 1145
 integer, parameter :: ox_ct1_base = 1265
 integer, parameter :: ox_ct2_base = 1385
