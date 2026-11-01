@@ -155,7 +155,7 @@ program mortran3
 
     call open_units
 
-    write(o_e,'(a,T55,$)') 'Mortran 3.2',' '
+    write(o_e,'(a,1x)',advance='no') 'Mortran 3.2'
     call egs_fdate(o_e)
     write(o_e,*)
 
@@ -166,273 +166,287 @@ program mortran3
     o_x=o_w
     first_pass=.true.
     translator_cycle: do
-        if (first_pass) then
-            first_pass=.false.
-            go to 10
-        end if
-        if (o_s>o_u) then
-            if (o(ox_nest)>0) then
-                call expand(-1)
-                cycle translator_cycle
-            end if
-            o_s=ox_home_base
-            o_u=o_s-1
-            go to 10
-        end if
-        o_m=o(ox_base)+o(o_s)
-        macro_scan: do
-            if(o(o_m)==0)exit
-            o_m=o(o_m)
-            d=o_m+4
-            mxd=o(o_m+3)
-            kd=0
-            o(ox_sq)=0
-            mq=0
-            f=0
-            a=0
-            t=o_s
-            o_v=o_s
-            if(o(ox_mtrc)>=4) call mactrc(2,d,mxd)
-            if(o(ox_mtrc)>=4) call mactrc(5,o_v,o_u+1)
-            token_scan: do
-                if(o_v>o_u)exit token_scan
-                if (o(o_v)==o(ox_ldq)) then
-                    o_v=o_v+o(o_v+1)+3
-                    cycle token_scan
-                end if
-                if (mq/= 0) go to 140
-                if (o(d)==o(ox_lcb)) then
-                    if (o(d+1)<=100.and.o(ox_base)>ox_ct3_base) then
-                        o(o_s-2*(a+1)-1)=o_v
-                        o(o_s-2*(a+1)-2)=o_v
-                        d=d+1
-                        mq=1
-                        if(o(d-3)/= o(ox_ga))f=0
-                        ip=d
-                        iq=d
-                        do
-                            if(o(iq)==o(ox_rcb))exit
-                            iq=iq+1
-                            if(iq<=mxd)cycle
-                            call mesage(14, 20, 0,0)
-                            cycle macro_scan
-                        end do
-                        cycle token_scan
-                    end if
-                end if
-                if (o(d)/= o(o_v).or.o(o_v)>=o(ox_ga)) go to 230
-                if( o(ox_lq) ==o(d))o(ox_sq)=o(ox_sq)+1
-                if( o(ox_rq) ==o(d))o(ox_sq)=o(ox_sq)-1
-                if(o(d)==o(ox_lmb))kd=1
-                if(o(d)==o(ox_rmb))kd=0
-                o_v=o_v+1
-                t=o_v
-240             d=d+1
-                if(d>=mxd) then
-                    call cout()
-                    call expand(a)
+        if (.not.first_pass) then
+            if (o_s>o_u) then
+                if (o(ox_nest)>0) then
+                    call expand(-1)
                     cycle translator_cycle
                 end if
-                cycle token_scan
-230             continue
-                if (o(o_v)==o(ox_bla).and.o(ox_sq)+kd==0) then
-                    o_v=o_v+1
-                    cycle token_scan
-                end if
-                if (o(d)==o(ox_ga)) then
-                    d=d+1
-                    n=o(d)
-                    n1=n/4
-                    n2=(n-4*n1)/2
-                    n3=n-4*n1-2*n2
-                else if (o(d)==o(ox_gp)) then
-                    n1=1
-                    n2=1
-                    n3=o(ox_mode)
-                else
-                    go to 130
-                end if
-                t=o_v
-                o(o_s-2*(a+1)-1)=o_v
-                o(o_s-2*(a+1)-2)=o_v
-                a=a+1
-                d=d+1
-                f=d
-                kc=0
-                kb=0
-                kp=0
-                cycle token_scan
-140             p=ip
-                q=iq
-                ia=o_v
-                if(o(ox_sq)/= 0)ia=0
-                ire=ispec(p,q,o_v,o_u,ia)
-                if(ire==1)exit token_scan
-                if (ire==3) then
-                    a=a+1
-                    if(f/= 0)o(o_s-2*(a-1)-2)=t
-                    if(ia/= 0)o(o_s-2*(a)-1)=ia
-                    o(o_s-2*(a)-2)=o_v
-                    d=q
-                    mq=0
-                    go to 240
-                end if
-130             continue
-                if (o(o_v)==o(ox_bla).and.mq==1) then
-                    o_v=o_v+1
-                    cycle token_scan
-                end if
-                if(f==0)cycle macro_scan
-                do
-                    if(o(t)==o(ox_rq))cycle macro_scan
-                    if (kd>0) then
-                        do
-                            if( o(ox_lmb) ==o(t))kd=kd+1
-                            if( o(ox_rmb) ==o(t))kd=kd-1
-                            if(kd==0)exit
-                            t=t+1
-                            if(t>o_u)cycle macro_scan
-                        end do
-                        exit
-                    end if
-                    if (o(t)==o(ox_lq)) then
-                        nb=1
-                        do
-                            if(nb==0)exit
-                            t=t+1
-                            if(t>o_u)cycle macro_scan
-                            if( o(ox_lq) ==o(t))nb=nb+1
-                            if( o(ox_rq) ==o(t))nb=nb-1
-                        end do
-                    end if
-                    if (o(ox_sq)==0) then
-                        if( o(ox_lcb) ==o(t))kc=kc+1
-                        if( o(ox_rcb) ==o(t))kc=kc-1
-                        if(kc<0)cycle macro_scan
-                        if (n1==1) then
-                            if(38==o(t))kp=kp+1
-                            if(46==o(t))kp=kp-1
-                            if(kp<0)cycle macro_scan
-                        end if
-                        if (n2==1) then
-                            if( o(ox_lsb) ==o(t))kb=kb+1
-                            if( o(ox_rsb) ==o(t))kb=kb-1
-                            if(kb<0)cycle macro_scan
-                        end if
-                        if (o(t)==o(ox_trm).and.n3>0)cycle macro_scan
-                    end if
-                    t=t+1
-                    if (t>o_u) then
-                        if(o(ox_frt)==1)cycle macro_scan
-                        go to 10
-                    end if
-                    if (kc+kp+kb/= 0) cycle
-                    if(mq==0)d=f
-                    exit
-                end do
-                o_v=t
-                o(o_s-2*(a)-2)=o_v
-            end do token_scan
-            if(o(ox_frt)==1)cycle macro_scan
-            if (o_s==o_u) then
                 o_s=ox_home_base
-                o(o_s)=o(o_u)
-                o_u=o_s
+                o_u=o_s-1
+                first_pass=.true.
+            else
+                o_m=o(ox_base)+o(o_s)
             end if
-10          o(ox_qfl)=o(ox_bla)
-            kx=0
-            do
-                o_u=o_u+1
-                if(o_u>ox_capacity)call mesage(15, 1, 0,0)
-                o(o_u)=o(o_c)
-                o_c=o_c+1
-                if(o_c>o(ox_sigt))call nxtcrd()
-                if (o(o_u)==o(ox_lcb)) then
-                    o(ox_qfl)=o(o_u)
-                    kx=1
-                    do
-                        if(kx==0)exit
-                        o_u=o_u+1
-                        if(o_u>ox_capacity)call mesage(15, 1, 0,0)
-                        o(o_u)=o(o_c)
-                        o_c=o_c+1
-                        if(o_c>o(ox_sigt))call nxtcrd()
-                        if( o(ox_lcb) ==o(o_u))kx=kx+1
-                        if( o(ox_rcb) ==o(o_u))kx=kx-1
-                    end do
-                    o(ox_qfl)=o(ox_bla)
-                end if
-                if (o(o_u)==o(ox_dq)) then
-                    do
-                        if(o(ox_lazy)/= 1)o(ox_qfl)=o(ox_dq)
-                        o(o_u)=o(ox_ldq)
-                        o_u=o_u+1
-                        y=o_u
+        end if
+        macro_scan: do
+            if (.not.first_pass) then
+                macro_match: block
+                    if(o(o_m)==0)exit
+                    o_m=o(o_m)
+                    d=o_m+4
+                    mxd=o(o_m+3)
+                    kd=0
+                    o(ox_sq)=0
+                    mq=0
+                    f=0
+                    a=0
+                    t=o_s
+                    o_v=o_s
+                    if(o(ox_mtrc)>=4) call mactrc(2,d,mxd)
+                    if(o(ox_mtrc)>=4) call mactrc(5,o_v,o_u+1)
+                    token_scan: do
+                        if(o_v>o_u)exit token_scan
+                        if (o(o_v)==o(ox_ldq)) then
+                            o_v=o_v+o(o_v+1)+3
+                            cycle token_scan
+                        end if
+                        if (mq==0) then
+                            if (o(d)==o(ox_lcb)) then
+                                if (o(d+1)<=100.and.o(ox_base)>ox_ct3_base) then
+                                    o(o_s-2*(a+1)-1)=o_v
+                                    o(o_s-2*(a+1)-2)=o_v
+                                    d=d+1
+                                    mq=1
+                                    if(o(d-3)/= o(ox_ga))f=0
+                                    ip=d
+                                    iq=d
+                                    do
+                                        if(o(iq)==o(ox_rcb))exit
+                                        iq=iq+1
+                                        if(iq<=mxd)cycle
+                                        call mesage(14, 20, 0,0)
+                                        cycle macro_scan
+                                    end do
+                                    cycle token_scan
+                                end if
+                            end if
+                            if (o(d)==o(o_v).and.o(o_v)<o(ox_ga)) then
+                                if( o(ox_lq) ==o(d))o(ox_sq)=o(ox_sq)+1
+                                if( o(ox_rq) ==o(d))o(ox_sq)=o(ox_sq)-1
+                                if(o(d)==o(ox_lmb))kd=1
+                                if(o(d)==o(ox_rmb))kd=0
+                                o_v=o_v+1
+                                t=o_v
+                                d=d+1
+                                if(d>=mxd) then
+                                    call cout()
+                                    call expand(a)
+                                    cycle translator_cycle
+                                end if
+                                cycle token_scan
+                            end if
+                            if (o(o_v)==o(ox_bla).and.o(ox_sq)+kd==0) then
+                                o_v=o_v+1
+                                cycle token_scan
+                            end if
+                            if (o(d)==o(ox_ga).or.o(d)==o(ox_gp)) then
+                                if (o(d)==o(ox_ga)) then
+                                    d=d+1
+                                    n=o(d)
+                                    n1=n/4
+                                    n2=(n-4*n1)/2
+                                    n3=n-4*n1-2*n2
+                                else
+                                    n1=1
+                                    n2=1
+                                    n3=o(ox_mode)
+                                end if
+                                t=o_v
+                                o(o_s-2*(a+1)-1)=o_v
+                                o(o_s-2*(a+1)-2)=o_v
+                                a=a+1
+                                d=d+1
+                                f=d
+                                kc=0
+                                kb=0
+                                kp=0
+                                cycle token_scan
+                            end if
+                        end if
+                        if (mq/=0) then
+                            p=ip
+                            q=iq
+                            ia=o_v
+                            if(o(ox_sq)/= 0)ia=0
+                            ire=ispec(p,q,o_v,o_u,ia)
+                            if(ire==1)exit token_scan
+                            if (ire==3) then
+                                a=a+1
+                                if(f/= 0)o(o_s-2*(a-1)-2)=t
+                                if(ia/= 0)o(o_s-2*(a)-1)=ia
+                                o(o_s-2*(a)-2)=o_v
+                                d=q
+                                mq=0
+                                d=d+1
+                                if(d>=mxd) then
+                                    call cout()
+                                    call expand(a)
+                                    cycle translator_cycle
+                                end if
+                                cycle token_scan
+                            end if
+                        end if
+                        if (o(o_v)==o(ox_bla).and.mq==1) then
+                            o_v=o_v+1
+                            cycle token_scan
+                        end if
+                        if(f==0)cycle macro_scan
                         do
-                            if(o(o_c)==o(ox_dq).or.o_c>o(ox_sigt))exit
+                            if(o(t)==o(ox_rq))cycle macro_scan
+                            if (kd>0) then
+                                do
+                                    if( o(ox_lmb) ==o(t))kd=kd+1
+                                    if( o(ox_rmb) ==o(t))kd=kd-1
+                                    if(kd==0)exit
+                                    t=t+1
+                                    if(t>o_u)cycle macro_scan
+                                end do
+                                exit
+                            end if
+                            if (o(t)==o(ox_lq)) then
+                                nb=1
+                                do
+                                    if(nb==0)exit
+                                    t=t+1
+                                    if(t>o_u)cycle macro_scan
+                                    if( o(ox_lq) ==o(t))nb=nb+1
+                                    if( o(ox_rq) ==o(t))nb=nb-1
+                                end do
+                            end if
+                            if (o(ox_sq)==0) then
+                                if( o(ox_lcb) ==o(t))kc=kc+1
+                                if( o(ox_rcb) ==o(t))kc=kc-1
+                                if(kc<0)cycle macro_scan
+                                if (n1==1) then
+                                    if(38==o(t))kp=kp+1
+                                    if(46==o(t))kp=kp-1
+                                    if(kp<0)cycle macro_scan
+                                end if
+                                if (n2==1) then
+                                    if( o(ox_lsb) ==o(t))kb=kb+1
+                                    if( o(ox_rsb) ==o(t))kb=kb-1
+                                    if(kb<0)cycle macro_scan
+                                end if
+                                if (o(t)==o(ox_trm).and.n3>0)cycle macro_scan
+                            end if
+                            t=t+1
+                            if (t>o_u) then
+                                if(o(ox_frt)==1)cycle macro_scan
+                                exit macro_match
+                            end if
+                            if (kc+kp+kb/= 0) cycle
+                            if(mq==0)d=f
+                            exit
+                        end do
+                        o_v=t
+                        o(o_s-2*(a)-2)=o_v
+                    end do token_scan
+                    if(o(ox_frt)==1)cycle macro_scan
+                    if (o_s==o_u) then
+                        o_s=ox_home_base
+                        o(o_s)=o(o_u)
+                        o_u=o_s
+                    end if
+                end block macro_match
+            end if
+            first_pass=.false.
+            input_restart: do
+                o(ox_qfl)=o(ox_bla)
+                kx=0
+                do
+                    o_u=o_u+1
+                    if(o_u>ox_capacity)call mesage(15, 1, 0,0)
+                    o(o_u)=o(o_c)
+                    o_c=o_c+1
+                    if(o_c>o(ox_sigt))call nxtcrd()
+                    if (o(o_u)==o(ox_lcb)) then
+                        o(ox_qfl)=o(o_u)
+                        kx=1
+                        do
+                            if(kx==0)exit
                             o_u=o_u+1
                             if(o_u>ox_capacity)call mesage(15, 1, 0,0)
                             o(o_u)=o(o_c)
                             o_c=o_c+1
+                            if(o_c>o(ox_sigt))call nxtcrd()
+                            if( o(ox_lcb) ==o(o_u))kx=kx+1
+                            if( o(ox_rcb) ==o(o_u))kx=kx-1
                         end do
-                        o_u=o_u+1
-                        o(o_u)=o(ox_rdq)
-                        o(y)=o_u-y-1
-                        if (o(y)==0) then
-                            o_u=o_u-2
-                            o(o_u)=o(ox_bla)
-                        end if
-                        if (o_c<=o_mxc) then
-                            o(ox_qfl)=o(ox_bla)
-                            o_c=o_c+1
-                            if(o_c>o(ox_sigt))call nxtcrd()
-                            go to 10
-                        else if (o(ox_lazy)==1) then
-                            o(ox_qfl)=o(ox_bla)
-                            call nxtcrd()
-                            go to 10
-                        else
-                            call nxtcrd()
-                            o_u=o_u+1
-                            cycle
-                        end if
-                    end do
-                end if
-                if (o(o_u)==o(ox_bq).and.o(ox_stng)>0) then
-                    o(ox_qfl)=o(o_u)
-                    o(o_u)=o(ox_lq)
-                    do
-                        o_u=o_u+1
-                        if(o_u>ox_capacity)call mesage(15, 1, 0,0)
-                        o(o_u)=o(o_c)
-                        o_c=o_c+1
-                        if(o_c>o(ox_sigt))call nxtcrd()
-                        if (o(o_u)/= o(ox_bq))cycle
-                        if (o(o_c)==o(ox_bq)) then
-                            o_c=o_c+1
-                            if(o_c>o(ox_sigt))call nxtcrd()
-                            cycle
-                        end if
-                        o(o_u)=o(ox_rq)
                         o(ox_qfl)=o(ox_bla)
-                        exit
-                    end do
-                end if
-                if (o(o_u)==o(ox_bla)) then
-                    if (o_s/=o_u) then
-                        if(o(o_u-1)==o(ox_bla))o_u=o_u-1
                     end if
-                    do
-                        if(o_c==o_mxc .or.o(o_c)/= o(ox_bla))exit
-                        o_c=o_c+1
-                    end do
-                end if
-                if (kx==0) then
-                    if(o(o_u)==o(ox_trm))cycle translator_cycle
-                    if( o(ox_lsb) ==o(o_u))o(ox_lvl)=o(ox_lvl)+1
-                    if( o(ox_rsb) ==o(o_u))o(ox_lvl)=o(ox_lvl)-1
-                end if
-            end do
+                    if (o(o_u)==o(ox_dq)) then
+                        do
+                            if(o(ox_lazy)/= 1)o(ox_qfl)=o(ox_dq)
+                            o(o_u)=o(ox_ldq)
+                            o_u=o_u+1
+                            y=o_u
+                            do
+                                if(o(o_c)==o(ox_dq).or.o_c>o(ox_sigt))exit
+                                o_u=o_u+1
+                                if(o_u>ox_capacity)call mesage(15, 1, 0,0)
+                                o(o_u)=o(o_c)
+                                o_c=o_c+1
+                            end do
+                            o_u=o_u+1
+                            o(o_u)=o(ox_rdq)
+                            o(y)=o_u-y-1
+                            if (o(y)==0) then
+                                o_u=o_u-2
+                                o(o_u)=o(ox_bla)
+                            end if
+                            if (o_c<=o_mxc) then
+                                o(ox_qfl)=o(ox_bla)
+                                o_c=o_c+1
+                                if(o_c>o(ox_sigt))call nxtcrd()
+                                cycle input_restart
+                            else if (o(ox_lazy)==1) then
+                                o(ox_qfl)=o(ox_bla)
+                                call nxtcrd()
+                                cycle input_restart
+                            else
+                                call nxtcrd()
+                                o_u=o_u+1
+                                cycle
+                            end if
+                        end do
+                    end if
+                    if (o(o_u)==o(ox_bq).and.o(ox_stng)>0) then
+                        o(ox_qfl)=o(o_u)
+                        o(o_u)=o(ox_lq)
+                        do
+                            o_u=o_u+1
+                            if(o_u>ox_capacity)call mesage(15, 1, 0,0)
+                            o(o_u)=o(o_c)
+                            o_c=o_c+1
+                            if(o_c>o(ox_sigt))call nxtcrd()
+                            if (o(o_u)/= o(ox_bq))cycle
+                            if (o(o_c)==o(ox_bq)) then
+                                o_c=o_c+1
+                                if(o_c>o(ox_sigt))call nxtcrd()
+                                cycle
+                            end if
+                            o(o_u)=o(ox_rq)
+                            o(ox_qfl)=o(ox_bla)
+                            exit
+                        end do
+                    end if
+                    if (o(o_u)==o(ox_bla)) then
+                        if (o_s/=o_u) then
+                            if(o(o_u-1)==o(ox_bla))o_u=o_u-1
+                        end if
+                        do
+                            if(o_c==o_mxc .or.o(o_c)/= o(ox_bla))exit
+                            o_c=o_c+1
+                        end do
+                    end if
+                    if (kx==0) then
+                        if(o(o_u)==o(ox_trm))cycle translator_cycle
+                        if( o(ox_lsb) ==o(o_u))o(ox_lvl)=o(ox_lvl)+1
+                        if( o(ox_rsb) ==o(o_u))o(ox_lvl)=o(ox_lvl)-1
+                    end if
+                end do
+            end do input_restart
         end do macro_scan
         if (o(ox_nest)>0) then
             o_x=o_x+1
@@ -585,7 +599,6 @@ integer function ispec(p,q,iv,u,t)
                 o(ox_ksk)=o(ox_ksk)-1
                 c=o(o(ox_ksk))
                 o(ox_ksk)=o(ox_ksk)-1
-                go to 1300
             case (2)
                 p=p+2
                 m=0
@@ -597,7 +610,6 @@ integer function ispec(p,q,iv,u,t)
                         return
                     end if
                 end if
-                go to 1300
             case (5)
                 w=v
                 m=1
@@ -617,7 +629,7 @@ integer function ispec(p,q,iv,u,t)
                 p=p+1
                 if(m==1)v=w
             end select
-1300        if(m==1)cycle ispec_scan
+            if(m==1)cycle ispec_scan
             if(o(p)/= o(ox_alt) .and. o(p)/= o(ox_rip))then
                 ispec=2
                 return
@@ -698,201 +710,197 @@ subroutine expand (f)
     save    kgn,t,sef,k,j,jv,p,q,nul,jmp,a,n,krap,kraq,z,y
 !CDGHILM
     t=0
-    if (f>=0) go to 1440
-    o(ox_nest)=o(ox_nest)-1
-    if(o(ox_nest)==0)o(ox_frt)=sef
-    do k = 1,6
-        o(k)=o(6+o_u+1-k)
-    end do
-    j=o(o(o(ox_ysk)))
-    if (j>=11 .and. j<=12) then
-        jv=lexp(o_w+1,o_x)
-        if (o(ox_ifl)==0) then
-            if (j==12) then
-                o_x=o_w+llong(o_w,jv,10,0)
-            end if
-            if (j==11) then
-                o_x=o_w+1
-                o(o_x)=jv
-            end if
-        else
-            o_x=o_w
-            o(ox_ifl)=o(ox_ifl)-1
-            if (jv==0) then
-                p=o(ox_kfb)
-                q=o(ox_kfe)
-            else
-                p=o(ox_ktb)
-                q=o(ox_kte)
-            end if
-            o(ox_isk)=o(ox_isk)+1
-            o(o(ox_isk))=o(ox_kfe)+1
-            o(ox_isk)=o(ox_isk)+1
-            o(o(ox_isk))=o_e
-            if(o(ox_isk)>2154)call mesage(15, 18, 0,0)
-            o_b=p
-            o_e=q
-        end if
-    end if
-    nul=o(o(ox_ysk))
-    o(ox_ysk)=o(ox_ysk)-1
-    o_w=o(o(ox_ysk))
-    o(ox_ysk)=o(ox_ysk)-1
-    o(ox_base)=o(o(ox_ysk))
-    o(ox_ysk)=o(ox_ysk)-1
-    go to 1430
-1440 o(o_s-1)=f
-    o(ox_mxx)=o_s-2*f-3
-    o_r=o(o(ox_mcom)+2)
-    o_b=o_r+4
-    o_e=o(o_r+3)
-    o_r=o(o_r)
-    o(ox_mcnt)=o(ox_mcnt)+1
-    if (o(ox_mcnt)>1000) then
-        call mesage(14, 4, 0,0)
-        o(ox_mtrc)=2
-    end if
-    if(o(ox_mtrc)>=2) call mactrc(22,o(ox_mcom),o_s)
-    if( o(ox_nest)==0 )o_x=o_w
-1430 continue
-1580 continue
-    do while (o_b<o_e)
-        if (o(o_b)<o(ox_ga)) then
-            o_x=o_x+1
-            if(o_x>o(ox_mxx))call mesage(15, 3, 0,0)
-            o(o_x)=o(o_b)
-            o_b=o_b+1
-            cycle
-        end if
-        o_b=o_b+1
-        jmp=o(o_b-1)-o(ox_rq)
-        select case (jmp)
-        case (1)
-            go to 1620
-        case (2)
-            go to 1630
-        case (3)
-            go to 1640
-        case (4)
-            go to 1650
-        case default
-            go to 1630
-        end select
-1630    if (o(o_b)>=1 .and. o(o_b)<=o(o_s-1)) then
-            a=o(o_s-2*(o(o_b))-1)
-            n=o(o_s-2*(o(o_b))-2)
-            do while (a<n)
-                o_x=o_x+1
-                if(o_x>o(ox_mxx))call mesage(15, 3, 0,0)
-                o(o_x)=o(a)
-                a=a+1
-            end do
-            go to 1690
-        else
-            call mesage(15, 4, o_b,o_e)
-        end if
-1620    if (o(o_b)==12) then
-            o_b=o_b+1
-            if (o(o_b)==23) then
-                if (o(ox_ngn)==0) then
-                    kgn=1
-                    o(ox_ngn)=1
-                else
-                    kgn=kgn+1
+    if (f<0) then
+        o(ox_nest)=o(ox_nest)-1
+        if(o(ox_nest)==0)o(ox_frt)=sef
+        do k = 1,6
+            o(k)=o(6+o_u+1-k)
+        end do
+        j=o(o(o(ox_ysk)))
+        if (j>=11 .and. j<=12) then
+            jv=lexp(o_w+1,o_x)
+            if (o(ox_ifl)==0) then
+                if (j==12) then
+                    o_x=o_w+llong(o_w,jv,10,0)
                 end if
-            else if (o(o_b)==16) then
-                if (o(ox_ngn)==1) kgn=kgn+1
-            else if (o(o_b)==14) then
-                kgn=kgn-1
-                if(kgn<=0)o(ox_ngn)=0
+                if (j==11) then
+                    o_x=o_w+1
+                    o(o_x)=jv
+                end if
+            else
+                o_x=o_w
+                o(ox_ifl)=o(ox_ifl)-1
+                if (jv==0) then
+                    p=o(ox_kfb)
+                    q=o(ox_kfe)
+                else
+                    p=o(ox_ktb)
+                    q=o(ox_kte)
+                end if
+                o(ox_isk)=o(ox_isk)+1
+                o(o(ox_isk))=o(ox_kfe)+1
+                o(ox_isk)=o(ox_isk)+1
+                o(o(ox_isk))=o_e
+                if(o(ox_isk)>2154)call mesage(15, 18, 0,0)
+                o_b=p
+                o_e=q
             end if
-            if (o(ox_geo)/=0) then
-                if(o(ox_ngn)==0)o(ox_base)=ox_ct4_base
-                if(o(ox_ngn)/= 0)o(ox_base)=ox_ct0_base
-            end if
-        else
-            if(o(ox_ngn)==0)call kat
         end if
-        go to 1690
-1640    if (o(o_b)==10) then
-            o_b=o_b+1
-            if(1>o(o_b).or.o(o_b)>o(o_s-1) )call mesage(15, 4, o_b,o_e)
-            o_x=o_x+llong(o_x,o(o_s-2*(o(o_b))-2)-o(o_s-2*(o(o_b))-1),10,0)
-            if(o_x>o(ox_mxx))call mesage(15, 3, 0,0)
-            o_b=o_b+2
-            cycle
-        else if (o(o_b)==13) then
-            o_b=o_b+1
-            t=1
-            do
-                if( o(ox_lgb) ==o(o_b))t=t+1
-                if( o(ox_rgb) ==o(o_b))t=t-1
-                if(t==0)exit
+        nul=o(o(ox_ysk))
+        o(ox_ysk)=o(ox_ysk)-1
+        o_w=o(o(ox_ysk))
+        o(ox_ysk)=o(ox_ysk)-1
+        o(ox_base)=o(o(ox_ysk))
+        o(ox_ysk)=o(ox_ysk)-1
+    else
+        o(o_s-1)=f
+        o(ox_mxx)=o_s-2*f-3
+        o_r=o(o(ox_mcom)+2)
+        o_b=o_r+4
+        o_e=o(o_r+3)
+        o_r=o(o_r)
+        o(ox_mcnt)=o(ox_mcnt)+1
+        if (o(ox_mcnt)>1000) then
+            call mesage(14, 4, 0,0)
+            o(ox_mtrc)=2
+        end if
+        if(o(ox_mtrc)>=2) call mactrc(22,o(ox_mcom),o_s)
+        if( o(ox_nest)==0 )o_x=o_w
+    end if
+    expansion_restart: do
+        do while (o_b<o_e)
+            if (o(o_b)<o(ox_ga)) then
                 o_x=o_x+1
                 if(o_x>o(ox_mxx))call mesage(15, 3, 0,0)
                 o(o_x)=o(o_b)
                 o_b=o_b+1
-            end do
-            go to 1690
-        else if (o(o_b)==15) then
-            o_x=o_x+1
-            o(o_x)=o(ox_ldq)
-            o_x=o_x+1
-            krap=o_x
-            kraq=o(ox_nest)
-            go to 1690
-        else
-            o(ox_nest)=o(ox_nest)+1
-            if(o(ox_nest)==1)sef=o(ox_frt)
-            o(ox_frt)=1
-            o(ox_ysk)=o(ox_ysk)+1
-            o(o(ox_ysk))=o(ox_base)
-            o(ox_ysk)=o(ox_ysk)+1
-            o(o(ox_ysk))=o_w
-            o(ox_ysk)=o(ox_ysk)+1
-            o(o(ox_ysk))=o_b
-            if(o(ox_ysk)>2554)call mesage(15, 34, 0,0)
-            o_w=o_x
-            go to 1690
-        end if
-1650    if (krap/=0 .and. kraq==o(ox_nest)) then
-            o_x=o_x+1
-            o(o_s)=o(ox_rdq)
-            o(krap)=o_x-krap-1
-            krap=0
-            cycle
-        end if
-        do k = 1,6
-            o(o(ox_mxx)-k)=o(k)
-        end do
-        o_u=o(ox_mxx)-7
-        o_v=o_u+1
-        z=o(o(ox_ysk))
-        y=o(z)
-        if(o(z+2)==o(ox_lq))y=0
-        if((9<y).and.(y<15))y=o(ox_dflt)
-        if( 0>y.or.y>=8 )call mesage(15, 17, o_b,o_e)
-        o(ox_base)=y*120+ox_ct0_base
-        exit
-1690    o_b=o_b+1
-        cycle
-    end do
-    if (o(ox_nest)<=0) then
-        if (o(ox_isk)==ox_isk_base) then
-            if (o_r>0) then
-                o_b=o_r+4
-                o_e=o(o_r+3)
-                o_r=o(o_r)
-                go to 1580
+                cycle
             end if
-        else
-            o_e=o(o(ox_isk))
-            o(ox_isk)=o(ox_isk)-1
-            o_b=o(o(ox_isk))
-            o(ox_isk)=o(ox_isk)-1
-            go to 1580
+            o_b=o_b+1
+            jmp=o(o_b-1)-o(ox_rq)
+            expansion_dispatch: block
+                if (jmp==4) exit expansion_dispatch
+                if (jmp/=3) then
+                    if (jmp/=1) then
+                        if (o(o_b)>=1 .and. o(o_b)<=o(o_s-1)) then
+                            a=o(o_s-2*(o(o_b))-1)
+                            n=o(o_s-2*(o(o_b))-2)
+                            do while (a<n)
+                                o_x=o_x+1
+                                if(o_x>o(ox_mxx))call mesage(15, 3, 0,0)
+                                o(o_x)=o(a)
+                                a=a+1
+                            end do
+                            o_b=o_b+1
+                            cycle
+                        else
+                            call mesage(15, 4, o_b,o_e)
+                        end if
+                    end if
+                    if (o(o_b)==12) then
+                        o_b=o_b+1
+                        if (o(o_b)==23) then
+                            if (o(ox_ngn)==0) then
+                                kgn=1
+                                o(ox_ngn)=1
+                            else
+                                kgn=kgn+1
+                            end if
+                        else if (o(o_b)==16) then
+                            if (o(ox_ngn)==1) kgn=kgn+1
+                        else if (o(o_b)==14) then
+                            kgn=kgn-1
+                            if(kgn<=0)o(ox_ngn)=0
+                        end if
+                        if (o(ox_geo)/=0) then
+                            if(o(ox_ngn)==0)o(ox_base)=ox_ct4_base
+                            if(o(ox_ngn)/= 0)o(ox_base)=ox_ct0_base
+                        end if
+                    else
+                        if(o(ox_ngn)==0)call kat
+                    end if
+                    o_b=o_b+1
+                    cycle
+                end if
+                if (o(o_b)==10) then
+                    o_b=o_b+1
+                    if(1>o(o_b).or.o(o_b)>o(o_s-1) )call mesage(15, 4, o_b,o_e)
+                    o_x=o_x+llong(o_x,o(o_s-2*(o(o_b))-2)-o(o_s-2*(o(o_b))-1),10,0)
+                    if(o_x>o(ox_mxx))call mesage(15, 3, 0,0)
+                    o_b=o_b+2
+                    cycle
+                else if (o(o_b)==13) then
+                    o_b=o_b+1
+                    t=1
+                    do
+                        if( o(ox_lgb) ==o(o_b))t=t+1
+                        if( o(ox_rgb) ==o(o_b))t=t-1
+                        if(t==0)exit
+                        o_x=o_x+1
+                        if(o_x>o(ox_mxx))call mesage(15, 3, 0,0)
+                        o(o_x)=o(o_b)
+                        o_b=o_b+1
+                    end do
+                else if (o(o_b)==15) then
+                    o_x=o_x+1
+                    o(o_x)=o(ox_ldq)
+                    o_x=o_x+1
+                    krap=o_x
+                    kraq=o(ox_nest)
+                else
+                    o(ox_nest)=o(ox_nest)+1
+                    if(o(ox_nest)==1)sef=o(ox_frt)
+                    o(ox_frt)=1
+                    o(ox_ysk)=o(ox_ysk)+1
+                    o(o(ox_ysk))=o(ox_base)
+                    o(ox_ysk)=o(ox_ysk)+1
+                    o(o(ox_ysk))=o_w
+                    o(ox_ysk)=o(ox_ysk)+1
+                    o(o(ox_ysk))=o_b
+                    if(o(ox_ysk)>2554)call mesage(15, 34, 0,0)
+                    o_w=o_x
+                end if
+                o_b=o_b+1
+                cycle
+                end block expansion_dispatch
+                if (krap/=0 .and. kraq==o(ox_nest)) then
+                o_x=o_x+1
+                o(o_s)=o(ox_rdq)
+                o(krap)=o_x-krap-1
+                krap=0
+                cycle
+            end if
+            do k = 1,6
+                o(o(ox_mxx)-k)=o(k)
+            end do
+            o_u=o(ox_mxx)-7
+            o_v=o_u+1
+            z=o(o(ox_ysk))
+            y=o(z)
+            if(o(z+2)==o(ox_lq))y=0
+            if((9<y).and.(y<15))y=o(ox_dflt)
+            if( 0>y.or.y>=8 )call mesage(15, 17, o_b,o_e)
+            o(ox_base)=y*120+ox_ct0_base
+            exit
+        end do
+        if (o(ox_nest)<=0) then
+            if (o(ox_isk)==ox_isk_base) then
+                if (o_r>0) then
+                    o_b=o_r+4
+                    o_e=o(o_r+3)
+                    o_r=o(o_r)
+                    cycle expansion_restart
+                end if
+            else
+                o_e=o(o(ox_isk))
+                o(ox_isk)=o(ox_isk)-1
+                o_b=o(o(ox_isk))
+                o(ox_isk)=o(ox_isk)-1
+                cycle expansion_restart
+            end if
         end if
-    end if
+        exit expansion_restart
+    end do expansion_restart
     if(o(ox_mtrc)>=2) call mactrc(33,o_w,o_x)
     do while (o_x>o_w)
         o_v=o_v-1
@@ -2089,26 +2097,28 @@ subroutine find(l,n,v)
     a=ox_wbf_base
     c=a+9
     q=ox_ct6_base+l
-680 if (o(q)==0) go to 4610
-    q=o(q)
-    if(o(q+5)/= n)go to 680
-    r=o(q+2)+4
-    s=o(o(q+2)+3)
-4620 if(r>=s)go to 4621
-    c=c+1
-    o(c)=o(r)
-    r=r+1
-    go to 4620
-4621 continue
-    go to 4600
-4610 c=c+llong(c,n,10,0)
-4600 continue
+    do
+        if (o(q)==0) then
+            c=c+llong(c,n,10,0)
+            exit
+        end if
+        q=o(q)
+        if(o(q+5)/=n)cycle
+        r=o(q+2)+4
+        s=o(o(q+2)+3)
+        do while (r<s)
+            c=c+1
+            o(c)=o(r)
+            r=r+1
+        end do
+        exit
+    end do
     if(l==15) call dumdum(ox_wbf_base,90,45,45,45,15,10,29,10,21,90)
     if(l==14) call dumdum(ox_wbf_base,90,45,32,10,27,23,18,23,16,90)
-    if (l/= 13.and.l/= 16) go to 4640
-    call dumdum(ox_wbf_base,90,90,90,90,90,90,90,90,90,90)
-    if(v/= 0) nerd=llong(a,v,10,0)
-4640 continue
+    if (l==13.or.l==16) then
+        call dumdum(ox_wbf_base,90,90,90,90,90,90,90,90,90,90)
+        if(v/= 0) nerd=llong(a,v,10,0)
+    end if
     call rw(33,o(ox_mlst),a,c)
     if (o(ox_merr)>0) call rw(23,o(ox_flst),a,c)
     do k = a,c
@@ -2551,7 +2561,7 @@ subroutine rw(n,i,j,k)
 !        NRC PATCH TO PUT DATE AND TIME AT EACH PAGE THROW
 !
     if( ch(1)=='1' .and. i==6 ) then
-        write(i,'(T55,$)') ' '
+        write(i,'(T55)',advance='no')
         call egs_fdate(i)
         write(i,*)
     end if
@@ -2726,9 +2736,9 @@ subroutine open_units
     common/junk/verbose
     logical verbose
     character*4096 arg,next_file
-    logical  next,ignore_missing,is_there
+    logical  ignore_missing,is_there
 
-    integer iargc,narg,nd,nfs,nfe,nc,no7,no8,i,j,lnblnk1
+    integer iargc,narg,nd,nfs,nfe,nc,no7,no8,i,j,lnblnk1,open_status
 
     narg = iargc()
     verbose = .true.
@@ -2738,34 +2748,33 @@ subroutine open_units
         ! no arguments -> assume program is called from a script
         ! making all necessary links and hope for the best
 
-        open(unit=1,file='fort.1',status='OLD',err=11)
-        go to 12
-11      call getarg(0,arg)
-        write(6,'(a,a)') arg(1:lnblnk1(arg)),' called without arguments'
-        write(6,'(a)') '  but file fort.1 does not exist! '
-        write(6,'(a)') '  quiting now.'
-        call exit(1) !stop 1
-12      continue
-        open(unit=5,file='fort.5',status='OLD',err=6)
-6       open(unit=6,file='fort.6',status='UNKNOWN')
+        open(unit=1,file='fort.1',status='OLD',iostat=open_status)
+        if (open_status/=0) then
+            call getarg(0,arg)
+            write(6,'(a,a)') arg(1:lnblnk1(arg)),' called without arguments'
+            write(6,'(a)') '  but file fort.1 does not exist! '
+            write(6,'(a)') '  quiting now.'
+            call exit(1) !stop 1
+        end if
+        open(unit=5,file='fort.5',status='OLD',iostat=open_status)
+        open(unit=6,file='fort.6',status='UNKNOWN')
         open(unit=7,file='fort.7',status='UNKNOWN')
-        open(unit=2,file='fort.2',status='OLD',err=3)
-3       open(unit=3,file='fort.3',status='OLD',err=4)
-4       open(unit=4,file='fort.4',status='OLD',err=8)
-8       open(unit=8,file='fort.8',status='OLD',err=9)
-9       continue
+        open(unit=2,file='fort.2',status='OLD',iostat=open_status)
+        open(unit=3,file='fort.3',status='OLD',iostat=open_status)
+        open(unit=4,file='fort.4',status='OLD',iostat=open_status)
+        open(unit=8,file='fort.8',status='OLD',iostat=open_status)
         o_b=1   ! hex/raw data unit number
         o_e=6   ! listing unit number
         o_r=7   ! fortran/hex output unit number
         oflag = 6
         if( verbose ) then
             write(6,'(a)') 'mortran3.exe: using standard fort.* units'
-            write(6,'(/a,$)') '  Mortran compiling ... '
+            write(6,'(/a)',advance='no') '  Mortran compiling ... '
         end if
 !        call getarg(0,arg)
 !        write(6,'(a,a)') arg(1:lnblnk1(arg)),
 !     &    ': using standard fort.* units'
-!        write(6,'(/a,$)') '  Mortran compiling ... '
+!        write(6,'(/a)',advance='no') '  Mortran compiling ... '
         return
 
     end if
@@ -2844,12 +2853,9 @@ subroutine open_units
             nfs=i+1
             do j=i+1,narg
                 call getarg(j,arg)
-                if( arg(1:1)=='-' ) then
-                    go to 88
-                end if
+                if( arg(1:1)=='-' ) exit
                 nfe=j
             end do
-88          continue
         else if( arg(1:2)=='-d' ) then
             if( i<narg ) then
                 call getarg(i+1,arg)
@@ -2878,7 +2884,8 @@ subroutine open_units
         if( verbose ) then
             write(6,'(a,a)') '  raw/hex data file: ',arg(1:lnblnk1(arg))
         end if
-        open(1,file=arg(1:lnblnk1(arg)),status='old',err=101)
+        open(1,file=arg(1:lnblnk1(arg)),status='old',iostat=open_status)
+        if (open_status/=0) call open_error()
     else
         write(6,'(a)') '  raw/hex data file must be specified using'
         write(6,'(a,a,a)') '   ',arg(1:lnblnk1(arg)),' -d data_file '
@@ -2892,10 +2899,11 @@ subroutine open_units
             if( verbose ) then
                 write(6,'(a,a)') '  configuration file: ',arg(1:lnblnk1(arg))
             end if
-            open(11,file=arg(1:lnblnk1(arg)),status='old',err=101)
-            next = .true.
-            do while (next)
-                read(11,'(a)',end=102,err=102) next_file
+            open(11,file=arg(1:lnblnk1(arg)),status='old',iostat=open_status)
+            if (open_status/=0) call open_error()
+            do
+                read(11,'(a)',iostat=open_status) next_file
+                if (open_status/=0) exit
                 if( lnblnk1(next_file)>0 ) then
                     inquire(file=next_file,exist=is_there)
                     if( is_there ) then
@@ -2915,15 +2923,13 @@ subroutine open_units
                         end if
                     end if
                 end if
-                go to 104
-102             next = .false.
-104             continue
             end do
             close(11)
             write(12,'(/a)') '%%'
             close(12)
             arg = 'mortjob.mortran'
-            open(5,file=arg,status='old',err=101)
+            open(5,file=arg,status='old',iostat=open_status)
+            if (open_status/=0) call open_error()
         else
             if( nfs==nfe ) then ! a single command line file
                 call getarg(nfs,next_file)
@@ -2931,7 +2937,8 @@ subroutine open_units
                     write(6,'(a,a)') '  command line file: ', &
                         next_file(1:lnblnk1(next_file))
                 end if
-                open(5,file=next_file,status='old',err=101)
+                open(5,file=next_file,status='old',iostat=open_status)
+                if (open_status/=0) call open_error()
             else
                 if( verbose ) then
                     write(6,'(a,a)') '  command line files: '
@@ -2962,7 +2969,8 @@ subroutine open_units
                 close(12)
                 if( verbose ) write(6,'(a)') '  generated mortjob.mortran'
                 arg = 'mortjob.mortran'
-                open(5,file=arg,status='old',err=101)
+                open(5,file=arg,status='old',iostat=open_status)
+                if (open_status/=0) call open_error()
             end if
         end if
     end if
@@ -2979,7 +2987,8 @@ subroutine open_units
         call getarg(no8,arg)
         if( verbose )write(6,'(a,a)') '  mortlst output: ', &
             arg(1:lnblnk1(arg))
-        open(8,file=arg(1:lnblnk1(arg)),err=101)
+        open(8,file=arg(1:lnblnk1(arg)),iostat=open_status)
+        if (open_status/=0) call open_error()
     else
         if( verbose )write(6,'(a)') '  mortlst output: fort.8'
         open(8,file='fort.8',status='unknown')
@@ -2987,24 +2996,35 @@ subroutine open_units
     o_b=1   ! hex/raw data unit number
     o_e=8   ! listing unit number
     o_r=7   ! fortran/hex output unit number
-    if( verbose ) write(6,'(/a,$)') '  Mortran compiling ... '
+    if( verbose ) write(6,'(/a)',advance='no') '  Mortran compiling ... '
     oflag = 8
     return
 
-101 write(6,'(a,a,a)') ' file ',arg(1:lnblnk1(arg)),' does not exist!'
-    call exit(3) !stop 3
+contains
+    subroutine open_error()
+        write(6,'(a,a,a)') ' file ',arg(1:lnblnk1(arg)),' does not exist!'
+        call exit(3) !stop 3
+    end subroutine open_error
 end
 
 subroutine add_file(iu,the_file)
+    implicit none
     integer*4  iu
+    integer read_status,lineno,j
+    integer*4 lnblnk1
     character*(*) the_file
-    logical next_line
     character*250 line
-    open(99,file=the_file,status='old',err=100)
-    next_line = .true.
+    open(99,file=the_file,status='old',iostat=read_status)
+    if (read_status/=0) then
+        write(6,'(a,a)') 'add_file: could not open file ', &
+            the_file(1:lnblnk1(the_file))
+        call exit(4) !stop 4
+        return
+    end if
     lineno = 0
-    do while (next_line)
-        read(99,'(a)',err=101,end=101) line
+    do
+        read(99,'(a)',iostat=read_status) line
+        if (read_status/=0) exit
         lineno = lineno + 1
         if( lnblnk1(line)>80 ) then
             write(6,'(a,i5,a,a,a)') &
@@ -3023,17 +3043,12 @@ subroutine add_file(iu,the_file)
             write(iu,*)
         end if
     end do
-101 continue
     close(99)
     return
-
-100 continue
-    write(6,'(a,a)') 'add_file: could not open file ', &
-        the_file(1:lnblnk1(the_file))
-    call exit(4) !stop 4
 end
 
 integer*4 function lnblnk1(c)
+    implicit none
     character c*(*)
     integer*4 j
     do j=len(c),1,-1

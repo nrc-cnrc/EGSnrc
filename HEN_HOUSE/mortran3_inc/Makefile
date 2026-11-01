@@ -1,5 +1,5 @@
 FC = gfortran
-FFLAGS = -std=legacy
+FFLAGS = -std=legacy -O2
 MACHINE_SOURCE ?= ../lib/linux/machine.f
 BUILD_DIR ?= build
 MORTRAN_EXE ?= ../bin/linux/mortran3_inc.exe
