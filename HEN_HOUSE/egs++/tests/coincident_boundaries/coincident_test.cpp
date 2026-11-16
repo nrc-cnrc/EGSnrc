@@ -77,7 +77,13 @@ struct TraceResult {
     int n_zero;        // steps of exactly zero length
     int max_zero_run;  // longest run of consecutive zero-length steps
     bool stuck;        // gave up after too many steps
-    TraceResult() : n_flagged(0), n_zero(0), max_zero_run(0), stuck(false) {}
+    int n_cross;       // boundary crossings
+    int n_normal_unset;   // crossings where howfar did not return a unit normal
+    int n_normal_wrong;   // crossings where the normal does not face the particle
+    int n_normal_wrong_zero; // ... of which at a zero-length step
+    int n_newmed_wrong;   // crossings where newmed is not the medium of the new region
+    TraceResult() : n_flagged(0), n_zero(0), max_zero_run(0), stuck(false), n_cross(0),
+        n_normal_unset(0), n_normal_wrong(0), n_normal_wrong_zero(0), n_newmed_wrong(0) {}
 };
 
 static map<string,long long> warning_count;
@@ -113,7 +119,26 @@ static TraceResult trace(EGS_BaseGeometry *g, const EGS_Vector &x0,
         }
         int newmed = -1;
         EGS_BaseGeometry::resetErrorFlag();
-        int inew = g->howfar(ireg, x, u, t, &newmed);
+        // The normal is only used by the viewer (a transport run passes null).
+        // By convention it points towards the particle: normal*u <= 0.
+        EGS_Vector nrm(0,0,0);
+        int inew = g->howfar(ireg, x, u, t, &newmed, &nrm);
+        if (inew != ireg) {
+            r.n_cross++;
+            EGS_Float n2 = nrm.length2();
+            if (fabs(n2 - 1) > 1e-6) {
+                r.n_normal_unset++;
+            }
+            else if (nrm*u > 1e-9) {
+                r.n_normal_wrong++;
+                if (t == 0) {
+                    r.n_normal_wrong_zero++;
+                }
+            }
+            if (inew >= 0 && newmed != g->medium(inew)) {
+                r.n_newmed_wrong++;
+            }
+        }
         bool flagged = EGS_BaseGeometry::getLastError();
         if (flagged) {
             r.n_flagged++;
@@ -283,6 +308,7 @@ int main(int argc, char **argv) {
 
     long long n_flag_rays = 0, n_flag_calls = 0, n_wrong = 0, n_wrong_silent = 0;
     long long n_zero_rays = 0, n_stuck = 0;
+    long long n_cross = 0, n_nunset = 0, n_nwrong = 0, n_nwrong_zero = 0, n_medwrong = 0;
     int max_zero_run = 0;
     EGS_Float max_diff = 0, sum_abs_diff = 0;
     vector<EGS_Float> net_diff(nmed, 0.);
@@ -338,6 +364,11 @@ int main(int argc, char **argv) {
         if (r.n_zero) {
             n_zero_rays++;
         }
+        n_cross += r.n_cross;
+        n_nunset += r.n_normal_unset;
+        n_nwrong += r.n_normal_wrong;
+        n_nwrong_zero += r.n_normal_wrong_zero;
+        n_medwrong += r.n_newmed_wrong;
         if (r.max_zero_run > max_zero_run) {
             max_zero_run = r.max_zero_run;
         }
@@ -364,6 +395,10 @@ int main(int argc, char **argv) {
     printf("rays with a zero-length step          %lld  (longest run %d)\n",
            n_zero_rays, max_zero_run);
     printf("rays that never finished              %lld\n", n_stuck);
+    printf("boundary crossings                    %lld\n", n_cross);
+    printf("  normal not set                      %lld\n", n_nunset);
+    printf("  normal facing away from particle    %lld  (at a zero-length step: %lld)\n", n_nwrong, n_nwrong_zero);
+    printf("  newmed not medium of new region     %lld\n", n_medwrong);
     printf("net path error by medium, composite - reference (cm, wrong rays only):\n");
     for (int m = 0; m < nmed; ++m) {
         if (net_diff[m] != 0) {
@@ -376,5 +411,5 @@ int main(int argc, char **argv) {
     }
 
     // a non-zero exit status makes this usable as a regression test
-    return (n_flag_rays || n_wrong || n_stuck) ? 1 : 0;
+    return (n_flag_rays || n_wrong || n_stuck || n_nunset || n_nwrong || n_medwrong) ? 1 : 0;
 }
