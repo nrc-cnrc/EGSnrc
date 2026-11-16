@@ -1,0 +1,96 @@
+:start geometry definition:
+
+    :start geometry:
+        name = the_planes
+        library = egs_planes
+        type = EGS_Zplanes
+        positions = -0.475 0.175 0.23
+    :stop geometry:
+
+    :start geometry:
+        name = end_sphere
+        library = egs_spheres
+        midpoint = 0 0 0.175
+        radii = 0.055
+        :start media input:
+            media = SS_AISI316L
+            set medium = 0 0
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name    = cladding_and_source
+        library = egs_cones
+        type    = EGS_ConeStack
+        axis    = 0 0 -0.475 0 0 1
+        :start layer:
+            thickness =  0.205
+            top radii    = 0.055
+            bottom radii = 0.055
+            media = SS_AISI304
+        :stop layer:
+        
+        :start layer:
+            thickness = 0.095
+            top radii    = 0.055
+            bottom radii = 0.055
+            media = SS_AISI316L
+        :stop layer:
+                
+        :start layer:
+            thickness = 0.35
+            top radii    = 0.030001 0.055
+            bottom radii = 0.030001 0.055
+            media = Ir SS_AISI316L
+        :stop layer:
+        
+        
+    :stop geometry:
+
+    :start geometry:
+        name = the_seed
+        library = egs_cdgeometry
+        base geometry = the_planes
+        set geometry = 0 cladding_and_source
+        set geometry = 1 end_sphere
+    :stop geometry:
+
+    :start geometry:
+        name = phantom
+        library = egs_ndgeometry
+        type = EGS_XYZGeometry
+        x-slabs = -2 0.1 40
+        y-slabs = -2 0.1 40
+        z-slabs = -2 0.1 40
+        :start media input:
+            media = WATER
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = seed_placed
+        library = egs_gtransformed
+        my geometry = the_seed
+        :start transformation:
+            translation = 0.0123 0.0371 -0.075
+        :stop transformation:
+    :stop geometry:
+    :start geometry:
+        name = final
+        library = egs_genvelope
+        base geometry = phantom
+        inscribed geometries = seed_placed
+    :stop geometry:
+    simulation geometry = final
+:stop geometry definition:
+:start test:
+    layers = seed_placed phantom
+    n rays = 1000000
+    seed = 1
+    centre = 0.0123 0.0371 0.1
+    target box = 0.07 0.07 0.12
+    start radius = 1.0
+    max distance = 3.0
+    inside fraction = 0.5
+    tolerance = 1e-7
+    dump = 2
+:stop test:

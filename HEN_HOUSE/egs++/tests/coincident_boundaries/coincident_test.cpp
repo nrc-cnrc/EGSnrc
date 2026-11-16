@@ -344,7 +344,7 @@ int main(int argc, char **argv) {
         if (r.stuck) {
             n_stuck++;
         }
-        if ((wrong || r.stuck) && dumped < ndump) {
+        if ((wrong || r.stuck || r.n_flagged) && dumped < ndump) {
             ++dumped;
             printf("FAIL ray = %.17g %.17g %.17g %.17g %.17g %.17g  flagged=%d worst=%.3g%s\n",
                    x.x, x.y, x.z, u.x, u.y, u.z, r.n_flagged, worst, r.stuck ? " STUCK" : "");
