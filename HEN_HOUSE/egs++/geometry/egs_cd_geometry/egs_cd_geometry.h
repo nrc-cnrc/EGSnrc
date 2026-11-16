@@ -500,6 +500,16 @@ public:
                     EGS_Vector tmp(x + u*t);
                     int icd_new = g[ibase_new]->isWhere(tmp);
                     if (icd_new < 0) {
+                        // isWhere() says no, but tmp is on the boundary between
+                        // two base regions and the geometry inscribed in the new
+                        // one may start exactly there, in which case the answer
+                        // of isWhere() is decided by round-off. Let the direction
+                        // of motion decide: if we enter that geometry within
+                        // boundaryTolerance, we are entering it now.
+                        EGS_Float tin = boundaryTolerance;
+                        icd_new = g[ibase_new]->howfar(-1,tmp,u,tin);
+                    }
+                    if (icd_new < 0) {
                         return icd_new;
                     }
                     // above: no, we are not => we exit the entire geometry.
