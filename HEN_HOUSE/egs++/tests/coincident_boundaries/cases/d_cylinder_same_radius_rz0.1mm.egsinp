@@ -1,0 +1,51 @@
+:start geometry definition:
+    :start geometry:
+        name = phantom
+        library = egs_rz
+        number of shells = 1, 101, 1
+        shell thickness = 0.005, 0.01, 20
+        first plane = -40.
+        number of slabs = 1, 203, 1
+        slab thickness = 38.985, 0.01, 38.985
+        :start media input:
+            media = WATER
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = seed
+        axis = 0 0 0.2 0 0 -1
+        :start layer:
+            thickness = 0.1
+            top radii = 0.055
+            bottom radii = 0.055
+            media = STEEL
+        :stop layer:
+        :start layer:
+            thickness = 0.3
+            top radii = 0.03 0.055
+            bottom radii = 0.03 0.055
+            media = CORE STEEL
+        :stop layer:
+    :stop geometry:
+    :start geometry:
+        name = final
+        library = egs_genvelope
+        base geometry = phantom
+        inscribed geometries = seed
+    :stop geometry:
+    simulation geometry = final
+:stop geometry definition:
+:start test:
+    layers = seed phantom
+    n rays = 400000
+    seed = 1
+    centre = 0 0 0
+    target box = 0.08 0.08 0.3
+    start radius = 1.0
+    max distance = 3.0
+    inside fraction = 0.5
+    tolerance = 1e-7
+    dump = 3
+:stop test:

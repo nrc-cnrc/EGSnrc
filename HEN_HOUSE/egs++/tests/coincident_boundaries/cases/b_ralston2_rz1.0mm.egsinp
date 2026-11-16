@@ -1,0 +1,96 @@
+:start geometry definition:
+    :start geometry:
+        name = phantom
+        library = egs_rz
+        number of shells = 1, 101, 1
+        shell thickness = 0.05, 0.1, 20
+        first plane = -40.
+        number of slabs = 1, 203, 1
+        slab thickness = 29.85, 0.1, 29.85
+        :start media input:
+            media = WATER
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name = the_planes    
+        library = egs_planes
+        type = EGS_Zplanes
+        positions = -0.8 0.25 0.40
+    :stop geometry:
+
+    :start geometry:
+        name = end_cap
+        library = egs_spheres
+        midpoint = 0 0 0.25
+        type = EGS_cSpheres
+        radii = 0.15
+        :start media input:
+            media = SS_SUS316_p8.02
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name    = cladding_and_source
+        library = egs_cones
+        type    = EGS_ConeStack 
+        axis    = 0 0 -0.9  0 0 1
+
+        :start layer:
+            thickness = 0.8
+            top radii = 0.15
+            bottom radii = 0.15
+            media = SS_SUS316_p8.02
+        :stop layer:
+
+        :start layer:
+            thickness = 0.1
+            top radii = 0.05 0.075 0.15
+            bottom radii = 0.05 0.075 0.15
+            media = Co , AIR_TG43, SS_SUS316_p8.02
+        :stop layer:
+		
+		 :start layer:
+            thickness = 0.1
+            top radii = 0.05 0.075 0.15
+            bottom radii = 0.05 0.075 0.15
+            media =  Co , AIR_TG43, SS_SUS316_p8.02
+        :stop layer:
+		
+		:start layer:
+            thickness = 0.15
+            top radii = 0.15
+            bottom radii = 0.15
+            media = SS_SUS316_p8.02 
+        :stop layer:
+      
+    :stop geometry:
+
+	:start geometry:
+		name = the_source
+		library = egs_cdgeometry
+		base geometry = the_planes
+		set geometry = 0 cladding_and_source
+		set geometry = 1 end_cap
+	:stop geometry:
+
+    :start geometry:
+        name = final
+        library = egs_genvelope
+        base geometry = phantom
+        inscribed geometries = the_source
+    :stop geometry:
+    simulation geometry = final
+:stop geometry definition:
+:start test:
+    layers = the_source phantom
+    n rays = 400000
+    seed = 1
+    centre = 0 0 -0.25
+    target box = 0.2 0.2 0.75
+    start radius = 1.0
+    max distance = 3.0
+    inside fraction = 0.5
+    tolerance = 1e-7
+    dump = 3
+:stop test:
