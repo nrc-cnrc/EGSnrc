@@ -609,7 +609,12 @@ public:
                 // The distance looking back is compared against boundaryTolerance,
                 // like every other on-the-boundary test in this function: epsilon
                 // is far smaller than the round-off of a grazing intersection.
-                if (ixnew_neg < 0 && tb_neg <= boundaryTolerance) {                   // (b) is true
+                // A particle that also leaves within boundaryTolerance going
+                // forward (a glancing hit thinner than the tolerance) is not
+                // entering: letting it in would make it step in and out of the
+                // geometry forever with zero-length steps.
+                bool leaving = ixnew < 0 && tb <= boundaryTolerance;
+                if (!leaving && ixnew_neg < 0 && tb_neg <= boundaryTolerance) {       // (b) is true
                     t = 0;
                     if (newmed) {
                         *newmed = g[ibase] ? g[ibase]->medium(icd) : bg->medium(ibase);
