@@ -468,6 +468,12 @@ public:
                         }
                         EGS_Vector tmp(x + u*t);
                         int icd_next = g[ibase_new]->isWhere(tmp);
+                        if (icd_next < 0) {
+                            // on a boundary the answer of isWhere() is decided by
+                            // round-off: see if we enter within boundaryTolerance.
+                            EGS_Float tin = boundaryTolerance;
+                            icd_next = g[ibase_new]->howfar(-1,tmp,u,tin);
+                        }
                         if (icd_next >= 0) {
                             if (newmed) {
                                 *newmed = g[ibase_new]->medium(icd_next);
