@@ -44,6 +44,7 @@
  *       inside fraction = 0.5  # fraction of rays started inside the box
  *       max distance = 3.0
  *       tolerance    = 1e-7    # path-length mismatch that counts as wrong
+ *       first layer shift = dx dy dz   # optional: trace the first layer from x - shift
  *       dump         = 5       # print this many failing rays
  *       ray          = x y z u v w     # optional: trace one ray verbosely
  *   :stop test:
@@ -185,6 +186,12 @@ static void accumulate(const vector<Segment> &segs, vector<EGS_Float> &len) {
     }
 }
 
+// If not zero, the first layer is traced from x0 - first_layer_shift. This lets the
+// reference use the un-translated copy of an inscribed geometry (layers[0]) while the
+// composite contains a translated one, so that the reference does not share round-off
+// that depends on the translation.
+static EGS_Vector first_layer_shift(0,0,0);
+
 static void reference(const vector<EGS_BaseGeometry *> &layers, const EGS_Vector &x0,
                       const EGS_Vector &u, EGS_Float tmax, vector<EGS_Float> &len) {
     vector< vector<Segment> > tr(layers.size());
@@ -192,7 +199,7 @@ static void reference(const vector<EGS_BaseGeometry *> &layers, const EGS_Vector
     brk.push_back(0);
     brk.push_back(tmax);
     for (size_t l = 0; l < layers.size(); ++l) {
-        tr[l] = trace(layers[l], x0, u, tmax).segs;
+        tr[l] = trace(layers[l], l == 0 ? x0 - first_layer_shift : x0, u, tmax).segs;
         for (size_t i = 0; i < tr[l].size(); ++i) {
             brk.push_back(tr[l][i].t0);
             brk.push_back(tr[l][i].t1);
@@ -274,6 +281,10 @@ int main(int argc, char **argv) {
     ti->getInput("max distance", tmax);
     ti->getInput("tolerance", tol);
     ti->getInput("inside fraction", f_inside);
+    vector<EGS_Float> shift;
+    if (!ti->getInput("first layer shift", shift) && shift.size() == 3) {
+        first_layer_shift = EGS_Vector(shift[0], shift[1], shift[2]);
+    }
     int ndump = 5;
     ti->getInput("dump", ndump);
     vector<EGS_Float> one_ray;
