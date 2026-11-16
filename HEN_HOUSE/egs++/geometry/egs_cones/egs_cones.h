@@ -1824,6 +1824,29 @@ public:
                     EGS_Float tc = veryFar;
                     int isc_new = cones[il][nr[il]-1]->howfar(0,x,u,tc);
                     if (!(isc_new < 0 && tc < boundaryTolerance)) {
+                        // The position is inside and the particle is not about to
+                        // leave. If the position is on the surface of the conestack
+                        // (looking back along the direction of motion we are outside
+                        // within boundaryTolerance) then the particle is entering:
+                        // the caller stopped it on a surface that coincides with
+                        // ours, e.g. a boundary of the envelope we are inscribed in.
+                        // Enter here with a zero step.
+                        int ir_in = isWhere(il,x);
+                        if (ir_in >= 0) {
+                            EGS_Float tback = veryFar;
+                            EGS_Vector nback;
+                            int iback = howfar(il*nmax+ir_in,x,u*(-1),tback,0,&nback);
+                            if (iback < 0 && tback <= boundaryTolerance) {
+                                t = 0;
+                                if (newmed) {
+                                    *newmed = cones[il][ir_in]->medium(0);
+                                }
+                                if (normal) {
+                                    *normal = nback*(-1);
+                                }
+                                return il*nmax+ir_in;
+                            }
+                        }
                         egsWarning("EGS_ConeStack::howfar: called from the outside"
                                    " but I find x=(%g,%g,%g) to be inside\n", x.x,x.y,x.z);
                         egsWarning("layer=%d distance to planes=%g\n",il,tp);

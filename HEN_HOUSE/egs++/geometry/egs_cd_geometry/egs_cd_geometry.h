@@ -448,8 +448,34 @@ public:
                 // *** There is another geometry in this base geometry region.
                 //     See if will hit one of its boundaries first.
                 //
+                EGS_Float tbase = t;
                 int icd_new = g[ibase]->howfar(icd,x,u,t,newmed,normal);
                 if (icd_new < 0) {
+                    // We leave the inscribed geometry. If its surface coincides
+                    // with the boundary of the base region (we would have
+                    // crossed into the next base region within boundaryTolerance
+                    // of this point) we must not conclude that we leave the
+                    // entire geometry: we may be entering whatever occupies
+                    // the next base region.
+                    if (ibase_new != ibase && ibase_new >= 0 &&
+                            tbase - t <= boundaryTolerance) {
+                        if (!g[ibase_new]) {
+                            if (newmed) {
+                                *newmed = bg->medium(ibase_new);
+                            }
+                            return new_indexing ? local_start[ibase_new] :
+                                   ibase_new*nmax;
+                        }
+                        EGS_Vector tmp(x + u*t);
+                        int icd_next = g[ibase_new]->isWhere(tmp);
+                        if (icd_next >= 0) {
+                            if (newmed) {
+                                *newmed = g[ibase_new]->medium(icd_next);
+                            }
+                            return new_indexing ? local_start[ibase_new] + icd_next :
+                                   ibase_new*nmax + icd_next;
+                        }
+                    }
                     return icd_new;
                 }
                 // above: yes we do but the new region is outside
@@ -580,7 +606,10 @@ public:
                 // if we just entered the geometry (the previous checks fail to catch this case).
                 EGS_Float tb_neg = veryFar;
                 int ixnew_neg = howfar(ixold,x,u*(-1),tb_neg,0,pn);
-                if (ixnew_neg < 0 && tb_neg <= epsilon) {                             // (b) is true
+                // The distance looking back is compared against boundaryTolerance,
+                // like every other on-the-boundary test in this function: epsilon
+                // is far smaller than the round-off of a grazing intersection.
+                if (ixnew_neg < 0 && tb_neg <= boundaryTolerance) {                   // (b) is true
                     t = 0;
                     if (newmed) {
                         *newmed = g[ibase] ? g[ibase]->medium(icd) : bg->medium(ibase);
