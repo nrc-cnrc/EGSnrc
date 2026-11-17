@@ -474,6 +474,13 @@ public:
                             EGS_Float tin = boundaryTolerance;
                             icd_next = g[ibase_new]->howfar(-1,tmp,u,tin);
                         }
+                        // The exit from the inscribed geometry may be through its
+                        // own outer surface, only near the base boundary. Then the
+                        // particle also leaves the geometry of the next base region
+                        // at once and is really leaving the CD geometry.
+                        if (icd_next >= 0 && leavesAtOnce(g[ibase_new],icd_next,tmp,u)) {
+                            icd_next = -1;
+                        }
                         if (icd_next >= 0) {
                             if (newmed) {
                                 *newmed = g[ibase_new]->medium(icd_next);
@@ -514,6 +521,10 @@ public:
                         // boundaryTolerance, we are entering it now.
                         EGS_Float tin = boundaryTolerance;
                         icd_new = g[ibase_new]->howfar(-1,tmp,u,tin);
+                        // ... unless we would also leave it again at once
+                        if (icd_new >= 0 && leavesAtOnce(g[ibase_new],icd_new,tmp,u)) {
+                            icd_new = -1;
+                        }
                     }
                     if (icd_new < 0) {
                         return icd_new;
@@ -983,6 +994,13 @@ do_checks:
     virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
+
+    /*! \brief Does a particle at \a x in local region \a icd of the inscribed
+     * geometry \a gi, moving along \a u, leave \a gi within boundaryTolerance? */
+    bool leavesAtOnce(EGS_BaseGeometry *gi, int icd, const EGS_Vector &x, const EGS_Vector &u) {
+        EGS_Float tl = boundaryTolerance;
+        return gi->howfar(icd,x,u,tl) < 0;
+    }
 
     EGS_BaseGeometry *bg;
     EGS_BaseGeometry **g;
