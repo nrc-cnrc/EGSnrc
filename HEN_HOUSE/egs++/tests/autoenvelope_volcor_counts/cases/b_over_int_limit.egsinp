@@ -1,0 +1,49 @@
+# 4.4e9 points and 2.3e9 hits in one region, both above 2^31 - 1.
+# Base: one sphere of radius 5 cm. Inscribed: a sphere of radius 1 cm at the origin.
+# Bounding box 2 cm on a side (8 cm^3); 4.4e+09 random points, about 2.3e+09 of them in the
+# inscribed sphere, all in base region 0.
+:start geometry definition:
+    :start geometry:
+        name = base
+        library = egs_spheres
+        radii = 5
+        :start media input:
+            media = WATER
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = ball
+        library = egs_spheres
+        radii = 1
+        :start media input:
+            media = BALL
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = final
+        library = egs_autoenvelope
+        base geometry = base
+        :start inscribed geometry:
+            inscribed geometry name = ball
+            :start region discovery:
+                action = discover and correct volume
+                density of random points (cm^-3) = 5.5E8
+                :start shape:
+                    type = box
+                    box size = 2
+                :stop shape:
+                :start rng definition:
+                    type = ranmar
+                    initial seeds = 11 22
+                :stop rng definition:
+            :stop region discovery:
+        :stop inscribed geometry:
+    :stop geometry:
+    simulation geometry = final
+:stop geometry definition:
+
+:start test:
+    inscribed volume = 4.188790
+    corrected volume = 519.409985
+    tolerance = 2e-4
+:stop test:
