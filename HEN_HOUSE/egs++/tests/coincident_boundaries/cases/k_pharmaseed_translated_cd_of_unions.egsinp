@@ -1,0 +1,215 @@
+:start geometry definition:
+
+    :start geometry:
+        library = egs_spheres
+        name = end_sphere_1
+        type = EGS_cSpheres
+        radii = 0.04
+        midpoint = 0 0 -0.185
+
+        :start media input:
+            media = Ti
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        library = egs_spheres
+        name = end_sphere_2
+        type = EGS_cSpheres
+        radii = 0.040001
+        midpoint = 0 0 0.185
+
+        :start media input:
+            media = Ti
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        library = egs_spheres
+        name = end_inner_sphere_1
+        type = EGS_cSpheres
+        radii = 0.035
+        midpoint = 0 0 -0.166
+        :start media input:
+            media = AIR_TG43
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        library = egs_spheres
+        name = end_inner_sphere_2
+        type = EGS_cSpheres
+        radii = 0.035
+        midpoint = 0 0 0.166
+
+        :start media input:
+            media = AIR_TG43
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        library = egs_spheres
+        name = source_1
+        type = EGS_cSpheres
+        radii = 0.0275 0.02755
+        midpoint = 0 0 -0.16
+
+        :start media input:
+            media = PolySty Pd
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        library = egs_spheres
+        name = source_2
+        type = EGS_cSpheres
+        radii = 0.0275 0.02755
+        midpoint = 0 0 -0.095
+
+        :start media input:
+            media = PolySty Pd
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        library = egs_spheres
+        name = source_3
+        type = EGS_cSpheres
+        radii = 0.0275 0.02755
+        midpoint = 0 0 0.095
+
+        :start media input:
+            media = PolySty Pd
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+
+    :start geometry:
+        library = egs_spheres
+        name = source_4
+        type = EGS_cSpheres
+        radii = 0.0275 0.02755
+        midpoint = 0 0 0.16
+
+        :start media input:
+            media = PolySty Pd
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+  
+    :start geometry:
+        library = egs_rz
+        name = cylinders
+        radii = 0.025001 0.035 0.040001
+        z-planes = -0.185 -0.166 -0.055 0.055 0.166 0.185
+
+        :start media input:
+            media = Ti AIR_TG43 Au
+            set medium = 0 1 1
+            set medium = 2 2
+            set medium = 3 4 1
+            set medium = 5 9 1
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name = end_cyl
+        library = egs_rz
+        radii = 0.040001
+        z-planes = -0.185, 0.185
+        :start media input:
+           media = Ti
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name = outer_end1
+        library = egs_gunion
+        geometries = source_1 end_inner_sphere_1 end_cyl end_sphere_1
+    :stop geometry:
+
+    :start geometry:
+        name = inner_end1
+        library = egs_gunion
+        geometries = source_1 end_inner_sphere_1 end_cyl
+    :stop geometry:
+
+    :start geometry:
+        name = centre
+        library = egs_gunion
+        geometries = source_1 source_2 source_3 source_4 cylinders
+    :stop geometry:
+    
+    :start geometry:
+        name = inner_end2
+        library = egs_gunion
+        geometries = source_4 end_inner_sphere_2 end_cyl
+    :stop geometry:
+   
+    :start geometry:
+        name = outer_end2
+        library = egs_gunion
+        geometries = source_4 end_inner_sphere_2 end_cyl end_sphere_2
+    :stop geometry:
+
+    :start geometry:
+        name = the_planes
+        library = egs_planes
+        type = EGS_Zplanes
+        positions = -0.225001 -0.185 -0.166 0.166 0.185 0.225001
+    :stop geometry:
+
+	:start geometry:
+		name = the_seed
+		library = egs_cdgeometry
+		base geometry = the_planes
+		set geometry = 0 outer_end1
+		set geometry = 1 inner_end1
+		set geometry = 2 centre
+		set geometry = 3 inner_end2
+		set geometry = 4 outer_end2		
+	:stop geometry:
+	
+    :start geometry:
+        name = phantom
+        library = egs_ndgeometry
+        type = EGS_XYZGeometry
+        x-slabs = -1.6 0.1 32
+        y-slabs = -1.6 0.1 32
+        z-slabs = -2.3 0.1 46
+        :start media input:
+            media = WATER
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = seed_placed
+        library = egs_gtransformed
+        my geometry = the_seed
+        :start transformation:
+            translation = -1 -1 -1.5
+        :stop transformation:
+    :stop geometry:
+    :start geometry:
+        name = final
+        library = egs_genvelope
+        base geometry = phantom
+        inscribed geometries = seed_placed
+    :stop geometry:
+    simulation geometry = final
+:stop geometry definition:
+:start test:
+    layers = the_seed phantom
+    first layer shift = -1 -1 -1.5
+    n rays = 300000
+    seed = 1
+    centre = -1 -1 -1.5
+    target box = 0.05 0.05 0.25
+    start radius = 0.4
+    max distance = 1.0
+    inside fraction = 0.5
+    tolerance = 1e-7
+    dump = 2
+:stop test:

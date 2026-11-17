@@ -1,0 +1,112 @@
+:start geometry definition:
+
+    :start geometry:
+
+        library = egs_cones
+        type    = EGS_ConeStack
+        axis    = 0 0 0.271 0 0 -1
+        name    = capsule_and_source
+
+        :start layer:
+            thickness    = 0.0143
+            top radii    = 0.0
+            bottom radii = 0.055
+            media        = SS_AISI316L
+        :stop layer:
+
+        :start layer:
+           thickness    = 0.0717
+           top radii    = 0.055
+           bottom radii = 0.055
+           media        = SS_AISI316L
+        :stop layer:
+
+        :start layer:
+           thickness    = 0.01
+           top radii    = 0.035 0.055
+           bottom radii    = 0.035 0.055
+           media        = AIR_TG43 SS_AISI316L
+        :stop layer:
+
+        :start layer:
+           thickness    = 0.35
+           top radii    = 0.03 0.035 0.055
+           bottom radii = 0.03 0.035 0.055
+           media        = Ir AIR_TG43 SS_AISI316L
+        :stop layer:
+
+        :start layer:
+           thickness    = 0.05
+           top radii    = 0.055
+           bottom radii = 0.055
+           media        = SS_AISI316L
+        :stop layer:
+
+        :start layer:
+           thickness    = 6.
+           top radii    = 0.055
+           bottom radii = 0.055
+           media        = SS_AISI304_p5.6
+        :stop layer:
+
+    :stop geometry:
+
+    :start geometry:
+        name = xyz
+        library = egs_ndgeometry
+        type = EGS_XYZGeometry
+        x-slabs = -0.6 0.1 12
+        y-slabs = -0.6 0.1 13
+        z-slabs = -10.3 0.1 146
+        :start media input:
+            media = WATER
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = cath_planes
+        library = egs_planes
+        type = EGS_Zplanes
+        positions = -9.723015 3.769005
+    :stop geometry:
+    :start geometry:
+        name = cath_cyl
+        library = egs_cylinders
+        type = EGS_ZCylinders
+        midpoint = 0 0 0
+        radii = 0.055 0.085
+    :stop geometry:
+    :start geometry:
+        name = catheter
+        library = egs_ndgeometry
+        dimensions = cath_planes cath_cyl
+        :start media input:
+            media = AIR PMMA
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = catheter_with_seed
+        library = egs_genvelope
+        base geometry = catheter
+        inscribed geometries = capsule_and_source
+    :stop geometry:
+    :start geometry:
+        name = final
+        library = egs_genvelope
+        base geometry = xyz
+        inscribed geometries = catheter_with_seed
+    :stop geometry:
+    simulation geometry = final
+:stop geometry definition:
+:start test:
+    layers = capsule_and_source catheter xyz
+    n rays = 400000
+    seed = 1
+    centre = 0 0 0
+    target box = 0.1 0.1 0.4
+    start radius = 1.0
+    max distance = 3.0
+    inside fraction = 0.5
+    tolerance = 1e-7
+    dump = 3
+:stop test:

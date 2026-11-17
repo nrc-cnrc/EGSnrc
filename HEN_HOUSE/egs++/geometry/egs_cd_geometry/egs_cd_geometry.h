@@ -448,8 +448,47 @@ public:
                 // *** There is another geometry in this base geometry region.
                 //     See if will hit one of its boundaries first.
                 //
+                EGS_Float tbase = t;
                 int icd_new = g[ibase]->howfar(icd,x,u,t,newmed,normal);
                 if (icd_new < 0) {
+                    // We leave the inscribed geometry. If its surface coincides
+                    // with the boundary of the base region (we would have
+                    // crossed into the next base region within boundaryTolerance
+                    // of this point) we must not conclude that we leave the
+                    // entire geometry: we may be entering whatever occupies
+                    // the next base region.
+                    if (ibase_new != ibase && ibase_new >= 0 &&
+                            tbase - t <= boundaryTolerance) {
+                        if (!g[ibase_new]) {
+                            if (newmed) {
+                                *newmed = bg->medium(ibase_new);
+                            }
+                            return new_indexing ? local_start[ibase_new] :
+                                   ibase_new*nmax;
+                        }
+                        EGS_Vector tmp(x + u*t);
+                        int icd_next = g[ibase_new]->isWhere(tmp);
+                        if (icd_next < 0) {
+                            // on a boundary the answer of isWhere() is decided by
+                            // round-off: see if we enter within boundaryTolerance.
+                            EGS_Float tin = boundaryTolerance;
+                            icd_next = g[ibase_new]->howfar(-1,tmp,u,tin);
+                        }
+                        // The exit from the inscribed geometry may be through its
+                        // own outer surface, only near the base boundary. Then the
+                        // particle also leaves the geometry of the next base region
+                        // at once and is really leaving the CD geometry.
+                        if (icd_next >= 0 && leavesAtOnce(g[ibase_new],icd_next,tmp,u)) {
+                            icd_next = -1;
+                        }
+                        if (icd_next >= 0) {
+                            if (newmed) {
+                                *newmed = g[ibase_new]->medium(icd_next);
+                            }
+                            return new_indexing ? local_start[ibase_new] + icd_next :
+                                   ibase_new*nmax + icd_next;
+                        }
+                    }
                     return icd_new;
                 }
                 // above: yes we do but the new region is outside
@@ -473,6 +512,20 @@ public:
                     // are we already inside?
                     EGS_Vector tmp(x + u*t);
                     int icd_new = g[ibase_new]->isWhere(tmp);
+                    if (icd_new < 0) {
+                        // isWhere() says no, but tmp is on the boundary between
+                        // two base regions and the geometry inscribed in the new
+                        // one may start exactly there, in which case the answer
+                        // of isWhere() is decided by round-off. Let the direction
+                        // of motion decide: if we enter that geometry within
+                        // boundaryTolerance, we are entering it now.
+                        EGS_Float tin = boundaryTolerance;
+                        icd_new = g[ibase_new]->howfar(-1,tmp,u,tin);
+                        // ... unless we would also leave it again at once
+                        if (icd_new >= 0 && leavesAtOnce(g[ibase_new],icd_new,tmp,u)) {
+                            icd_new = -1;
+                        }
+                    }
                     if (icd_new < 0) {
                         return icd_new;
                     }
@@ -580,7 +633,15 @@ public:
                 // if we just entered the geometry (the previous checks fail to catch this case).
                 EGS_Float tb_neg = veryFar;
                 int ixnew_neg = howfar(ixold,x,u*(-1),tb_neg,0,pn);
-                if (ixnew_neg < 0 && tb_neg <= epsilon) {                             // (b) is true
+                // The distance looking back is compared against boundaryTolerance,
+                // like every other on-the-boundary test in this function: epsilon
+                // is far smaller than the round-off of a grazing intersection.
+                // A particle that also leaves within boundaryTolerance going
+                // forward (a glancing hit thinner than the tolerance) is not
+                // entering: letting it in would make it step in and out of the
+                // geometry forever with zero-length steps.
+                bool leaving = ixnew < 0 && tb <= boundaryTolerance;
+                if (!leaving && ixnew_neg < 0 && tb_neg <= boundaryTolerance) {       // (b) is true
                     t = 0;
                     if (newmed) {
                         *newmed = g[ibase] ? g[ibase]->medium(icd) : bg->medium(ibase);
@@ -933,6 +994,13 @@ do_checks:
     virtual void getLabelRegions(const string &str, vector<int> &regs, bool sanitize=true);
 
 protected:
+
+    /*! \brief Does a particle at \a x in local region \a icd of the inscribed
+     * geometry \a gi, moving along \a u, leave \a gi within boundaryTolerance? */
+    bool leavesAtOnce(EGS_BaseGeometry *gi, int icd, const EGS_Vector &x, const EGS_Vector &u) {
+        EGS_Float tl = boundaryTolerance;
+        return gi->howfar(icd,x,u,tl) < 0;
+    }
 
     EGS_BaseGeometry *bg;
     EGS_BaseGeometry **g;
