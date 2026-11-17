@@ -514,7 +514,7 @@ vector<EGS_Float> applyVolumeCorrections(VCOptions *opts, HitCounterT hit_counte
             continue;
         }
 
-        int hits = hi->second;
+        EGS_I64 hits = hi->second;
         EGS_Float corrected = uncorrected[base_reg] - bounds_vol*double(hits)/npoints;
         corrected_vols[base_reg] = zero ? 0 : corrected;
     }
@@ -603,7 +603,7 @@ VCResults findRegionsWithInscribed(VCOptions *opts, EGS_BaseGeometry *base,
         }
     }
 
-    results.inscribed_volume = opts->bounds_volume*(double)n_in_inscribed/(int)opts->npoints;
+    results.inscribed_volume = opts->bounds_volume*(double)n_in_inscribed/opts->npoints;
 
     if (opts->mode != DISCOVERY_ONLY) {
         results.corrected_volumes = applyVolumeCorrections(opts, hit_counter, results.uncorrected_volumes);
