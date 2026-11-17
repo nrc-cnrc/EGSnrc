@@ -1,0 +1,68 @@
+# Bounding box shorter than the seed: warned about, and the part outside is missed.
+:start geometry definition:
+    :start geometry:
+        name = seed
+        library = egs_rz
+        radii = 0.04
+        z-planes = -0.225 0.225
+        :start media input:
+            media = SEED
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = phantom
+        library = egs_ndgeometry
+        type = EGS_XYZGeometry
+        x-slabs = -1 0.1 20
+        y-slabs = -1 0.1 20
+        z-slabs = -1 0.1 20
+        :start media input:
+            media = WATER
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = copy1
+        library = egs_gtransformed
+        my geometry = seed
+        :start transformation:
+            translation = 0.05 0.05 0.0751
+        :stop transformation:
+    :stop geometry:
+    :start geometry:
+        name = final
+        library = egs_autoenvelope
+        base geometry = phantom
+        :start inscribed geometry:
+            inscribed geometry name = seed
+            :start transformations:
+            :start transformation:
+                translation = 0.05 0.05 0.0751
+            :stop transformation:
+            :stop transformations:
+            :start region discovery:
+                action = discover
+                density of random points (cm^-3) = 1E4
+                superset = yes
+                :start shape:
+                    type = box
+                    box size = 0.082 0.082 0.40
+                    :start transformation:
+                        translation = 0 0 0
+                    :stop transformation:
+                :stop shape:
+            :stop region discovery:
+        :stop inscribed geometry:
+    :stop geometry:
+    simulation geometry = final
+:stop geometry definition:
+
+:start test:
+    base geometry = phantom
+    layers = copy1
+    probe = 0 0 0.3 0.1 0.1 0.3001
+    probe = -0.2 -0.2 -0.4 0.3 0.3 0.6
+    n points = 200000
+    seed = 1
+    expect missed = yes
+    expect leak warning = yes
+:stop test:

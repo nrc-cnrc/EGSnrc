@@ -190,6 +190,28 @@ for step = 1 to n_total_points
 
 \endverbatim
 
+A base region is only found if a random point lands in the part of the
+inscribed geometry that lies in it, so a region holding a thin sliver of the
+inscribed geometry can be missed at any density. A particle in a missed region
+is never tested against the inscribed geometry: it crosses the inscribed
+geometry as if it were base medium, or is caught later as a geometry error.
+Therefore, before sampling, every base region that the box around the bounding
+shape touches is registered at every location (`superset = yes`, the default):
+
+- EGS_XYZGeometry: the voxels within the extent of the (possibly rotated) box,
+  less those whose bounding sphere does not reach it;
+- EGS_RZ: every ring from the axis out to the farthest corner of the box, in
+  the slabs the box spans;
+- EGS_cSpheres: every shell from the centre out to the farthest corner of the
+  box;
+- any base geometry with at most 64 regions: all of its regions.
+
+For other base geometries the superset is not used and discovery relies on the
+random points alone; the log says which method was used. Registering a region
+that does not contain the inscribed geometry only costs a howfar call there.
+The random points are still sampled as above and are what volume corrections
+are computed from, so corrected volumes do not depend on the superset.
+
 Geometry Definition Format
 --------------------------
 
@@ -232,12 +254,21 @@ There is an example geometry included in the examples/seeds_in_xyz_aenv.geom fil
 
             density of random points (cm^-3) = 1E7 # optional random point sampling density defaults to 1E8
 
+            # optional: yes (default) or no. With yes, every base region that the box
+            # around the bounding shape touches is registered, at every location, so
+            # that no region holding a thin sliver of the inscribed geometry is missed.
+            # Used for EGS_XYZGeometry, EGS_RZ and EGS_cSpheres base geometries, and for
+            # any base geometry with at most 64 regions; the bounding shape must be a
+            # box, a cylinder or a sphere and must enclose the geometry.
+            superset = yes
+
             # bounding shape definition. Note only volumetric shapes make sense here!
+            # It must enclose the whole inscribed geometry. A box is preferred:
+            # the Sobol sequence is only used for box shapes.
             :start shape:
 
-                type = cylinder
-                radius = 0.04
-                height = 0.45
+                type = box
+                box size = 0.082 0.082 0.452
 
             :stop shape:
 
@@ -291,18 +322,24 @@ then reuse the volume correction file in future runs.
 Points to consider
 ------------------
 
-For performance reasons, the bounding shape should be made to just cover the
-inscribed geometry (this minimizes the total number of random points used).
+The bounding shape must enclose the whole inscribed geometry: the base regions
+holding a part outside it can be found neither by the random points nor by
+the superset. At start-up a grid of points just outside each face of the
+box around the bounding shape is checked, and a warning naming the faces is
+printed if the inscribed geometry sticks out. Within that constraint the
+bounding shape should just cover the inscribed geometry, which minimizes the
+number of random points used.
 
-Due to the nature of region discovery algorithm, it is possible that not all
-regions containing inscribed geometries will be discovered.  This would
-generally happen if your bounding shape is too small to cover the entire
-insribed geometry or you choose a density of points that is too low.
+With the superset, the density of random points only needs to be high enough
+for the volume corrections, unless the base geometry is not one the superset
+handles; then a voxel holding only a thin sliver of the inscribed geometry can
+still be missed if the density is too low.
 
-By default a Sobol quasi-random number generator (if available, see
-    `Optional Features` below) is used for volume correction/region
-discovery but that can be overridden by including an `rng definition`
-block (see example input above)
+For box bounding shapes a Sobol quasi-random number generator (if available,
+see `Optional Features` below) is used by default for volume
+correction/region discovery; other shapes use the default RANMAR generator.
+This can be overridden by including an `rng definition` block (see example
+input above).
 
 
 EGS_ASwitchedEnvelope
