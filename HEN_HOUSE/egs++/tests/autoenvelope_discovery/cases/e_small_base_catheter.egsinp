@@ -1,0 +1,88 @@
+# Base geometry with few regions (catheter lumen equal to the seed radius): all regions registered.
+:start geometry definition:
+    :start geometry:
+        name = seed
+        library = egs_rz
+        radii = 0.04
+        z-planes = -0.225 0.225
+        :start media input:
+            media = SEED
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = cath_planes
+        library = egs_planes
+        type = EGS_Zplanes
+        positions = -1 1
+    :stop geometry:
+    :start geometry:
+        name = cath_cyl
+        library = egs_cylinders
+        type = EGS_ZCylinders
+        radii = 0.04 0.07
+    :stop geometry:
+    :start geometry:
+        name = phantom
+        library = egs_ndgeometry
+        dimensions = cath_planes cath_cyl
+        :start media input:
+            media = AIR PMMA
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = copy1
+        library = egs_gtransformed
+        my geometry = seed
+        :start transformation:
+            translation = 0 0 0.3
+        :stop transformation:
+    :stop geometry:
+    :start geometry:
+        name = copy2
+        library = egs_gtransformed
+        my geometry = seed
+        :start transformation:
+            translation = 0 0 -0.4
+        :stop transformation:
+    :stop geometry:
+    :start geometry:
+        name = final
+        library = egs_autoenvelope
+        base geometry = phantom
+        :start inscribed geometry:
+            inscribed geometry name = seed
+            :start transformations:
+            :start transformation:
+                translation = 0 0 0.3
+            :stop transformation:
+            :start transformation:
+                translation = 0 0 -0.4
+            :stop transformation:
+            :stop transformations:
+            :start region discovery:
+                action = discover
+                density of random points (cm^-3) = 1E4
+                superset = yes
+                :start shape:
+                    type = box
+                    box size = 0.082 0.082 0.452
+                    :start transformation:
+                        translation = 0 0 0
+                    :stop transformation:
+                :stop shape:
+            :stop region discovery:
+        :stop inscribed geometry:
+    :stop geometry:
+    simulation geometry = final
+:stop geometry definition:
+
+:start test:
+    base geometry = phantom
+    layers = copy1 copy2
+    probe = -0.08 -0.08 -0.7 0.08 0.08 0.6
+    n points = 200000
+    seed = 1
+    expect missed = no
+    expect leak warning = no
+:stop test:

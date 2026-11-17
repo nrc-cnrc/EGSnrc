@@ -1,0 +1,94 @@
+# XYZ phantom: three copies, two rotated, at sparse density.
+:start geometry definition:
+    :start geometry:
+        name = seed
+        library = egs_rz
+        radii = 0.04
+        z-planes = -0.225 0.225
+        :start media input:
+            media = SEED
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = phantom
+        library = egs_ndgeometry
+        type = EGS_XYZGeometry
+        x-slabs = -1 0.1 20
+        y-slabs = -1 0.1 20
+        z-slabs = -1 0.1 20
+        :start media input:
+            media = WATER
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name = copy1
+        library = egs_gtransformed
+        my geometry = seed
+        :start transformation:
+            translation = 0.05 0.05 0.0751
+        :stop transformation:
+    :stop geometry:
+    :start geometry:
+        name = copy2
+        library = egs_gtransformed
+        my geometry = seed
+        :start transformation:
+            translation = -0.33 0.21 -0.17
+            rotation = 0.3 0.5 0
+        :stop transformation:
+    :stop geometry:
+    :start geometry:
+        name = copy3
+        library = egs_gtransformed
+        my geometry = seed
+        :start transformation:
+            translation = 0.41 -0.38 0.12
+            rotation = 1.2 0 0.7
+        :stop transformation:
+    :stop geometry:
+    :start geometry:
+        name = final
+        library = egs_autoenvelope
+        base geometry = phantom
+        :start inscribed geometry:
+            inscribed geometry name = seed
+            :start transformations:
+            :start transformation:
+                translation = 0.05 0.05 0.0751
+            :stop transformation:
+            :start transformation:
+                translation = -0.33 0.21 -0.17
+                rotation = 0.3 0.5 0
+            :stop transformation:
+            :start transformation:
+                translation = 0.41 -0.38 0.12
+                rotation = 1.2 0 0.7
+            :stop transformation:
+            :stop transformations:
+            :start region discovery:
+                action = discover
+                density of random points (cm^-3) = 1E4
+                superset = yes
+                :start shape:
+                    type = box
+                    box size = 0.082 0.082 0.452
+                    :start transformation:
+                        translation = 0 0 0
+                    :stop transformation:
+                :stop shape:
+            :stop region discovery:
+        :stop inscribed geometry:
+    :stop geometry:
+    simulation geometry = final
+:stop geometry definition:
+
+:start test:
+    base geometry = phantom
+    layers = copy1 copy2 copy3
+    probe = -0.7 -0.7 -0.6 0.7 0.7 0.6
+    probe = 0 0 0.3 0.1 0.1 0.3001
+    n points = 2000000
+    seed = 1
+    expect missed = no
+    expect leak warning = no
+:stop test:
