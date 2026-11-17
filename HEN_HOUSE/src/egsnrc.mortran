@@ -7762,6 +7762,11 @@ DO imed = 1,nmed [
                 sigma_max,' monotone = ',is_monotone);
         sig_ismonotone(0,imed) = is_monotone;
         esig_e(imed) = sigma_max;
+        "The range and step size tables were calculated in mscati from the"
+        "stopping power before the EII correction above: recalculate them."
+        "Otherwise the energy loss of steps that cross an interpolation bin"
+        "uses the old stopping power."
+        call egs_init_range_tmxs(imed);
     ]
 ]
 return;
