@@ -232,6 +232,14 @@ There is an example geometry included in the examples/seeds_in_xyz_aenv.geom fil
 
             density of random points (cm^-3) = 1E7 # optional random point sampling density defaults to 1E8
 
+            # optional: yes (default) or no. With yes, every base region that the box
+            # around the bounding shape touches is registered, at every location, so
+            # that no region holding a thin sliver of the inscribed geometry is missed.
+            # Used for EGS_XYZGeometry, EGS_RZ and EGS_cSpheres base geometries, and for
+            # any base geometry with at most 64 regions; the bounding shape must be a
+            # box, a cylinder or a sphere and must enclose the geometry.
+            superset = yes
+
             # bounding shape definition. Note only volumetric shapes make sense here!
             :start shape:
 
