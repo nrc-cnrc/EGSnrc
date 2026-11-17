@@ -2876,103 +2876,125 @@ $egs_info(*,' Initializing tmxs for estepe = ',estepe,' and ximax = ',ximax);
 $egs_info(*,' ');
 
 "Determine upper limit in step size for multiple scattering
-DO medium = 1,nmed
+DO i = 1,nmed [ call egs_init_range_tmxs(i); ]
+
+return;
+end;
+
+subroutine egs_init_range_tmxs(imed);
+"**********************************************************************"
+" Calculates the range tables range_ep and the maximum step sizes tmxs "
+" of medium imed from the current restricted stopping powers. Called   "
+" by mscati for every medium, and again by eii_init for media whose    "
+" stopping powers it changes, so that the energy loss of a step is     "
+" consistent with the stopping power used in the rest of the transport."
+"**********************************************************************"
+
+implicit none;
+
+$INTEGER imed;
+
+$REAL ededx,ei,eil,eip1,eip1l,si,sip1,eke,elke,aux;
+$REAL p2,beta2,dedx0,ekef,elkef,estepx,ektmp,elktmp,chi_a2;
+$INTEGER i,leil,leip1l,neke,lelke,lelkef,lelktmp;
+
+$COMIN-MSCATI;
+
+medium = imed;
+
+" Calculate range array first "
+" =========================== "
+ei   = exp((1 - eke0(medium))/eke1(medium)); "Energy of first table entry
+eil  = log(ei);
+leil = 1;
+E_array(1,medium) = ei;
+expeke1(medium) = Exp(1./eke1(medium))-1;
+range_ep(0,1,medium) = 0; range_ep(1,1,medium) = 0;
+neke = meke(medium); "Number of elements in storage array
+DO i = 1,neke - 1
 [
-    " Calculate range array first "
-    " =========================== "
-    ei   = exp((1 - eke0(medium))/eke1(medium)); "Energy of first table entry
-    eil  = log(ei);
-    leil = 1;
-    E_array(1,medium) = ei;
-    expeke1(medium) = Exp(1./eke1(medium))-1;
-    range_ep(0,1,medium) = 0; range_ep(1,1,medium) = 0;
-    neke = meke(medium); "Number of elements in storage array
-    DO i = 1,neke - 1
-    [
-        eip1   = exp((float(i + 1) - eke0(medium))/eke1(medium)); "Energy at i+1
-        E_array(i+1,medium) = eip1;
-        " Calculate range. The following expressions result from the"
-        " logarithmic interpolation for the (restricted) stopping power "
-        " and a power power series expansion of the integral "
-        eke = 0.5*(eip1+ei); elke = Log(eke);
-        $SET INTERVAL elke,eke;
-        $EVALUATE ededx USING pdedx(elke);
-        aux = pdedx1(i,medium)/ededx;
-        range_ep(1,i+1,medium) = range_ep(1,i,medium) +
-          (eip1-ei)/ededx*(1+aux*(1+2*aux)*((eip1-ei)/eke)**2/24);
-        $EVALUATE ededx USING ededx(elke);
-        aux = ededx1(i,medium)/ededx;
-        range_ep(0,i+1,medium) = range_ep(0,i,medium) +
-          (eip1-ei)/ededx*(1+aux*(1+2*aux)*((eip1-ei)/eke)**2/24);
-        ei = eip1;
-    ]
+    eip1   = exp((float(i + 1) - eke0(medium))/eke1(medium)); "Energy at i+1
+    E_array(i+1,medium) = eip1;
+    " Calculate range. The following expressions result from the"
+    " logarithmic interpolation for the (restricted) stopping power "
+    " and a power power series expansion of the integral "
+    eke = 0.5*(eip1+ei); elke = Log(eke);
+    $SET INTERVAL elke,eke;
+    $EVALUATE ededx USING pdedx(elke);
+    aux = pdedx1(i,medium)/ededx;
+    range_ep(1,i+1,medium) = range_ep(1,i,medium) +
+      (eip1-ei)/ededx*(1+aux*(1+2*aux)*((eip1-ei)/eke)**2/24);
+    $EVALUATE ededx USING ededx(elke);
+    aux = ededx1(i,medium)/ededx;
+    range_ep(0,i+1,medium) = range_ep(0,i,medium) +
+      (eip1-ei)/ededx*(1+aux*(1+2*aux)*((eip1-ei)/eke)**2/24);
+    ei = eip1;
+]
 
-    " Now tmxs "
-    " ======== "
+" Now tmxs "
+" ======== "
 
-    eil = (1 - eke0(medium))/eke1(medium);
-    ei  = Exp(eil); leil = 1; " As in $SET INTERVAL but avoids roundoff
-    p2  = ei*(ei+2*rm); beta2 = p2/(p2+rm*rm);
+eil = (1 - eke0(medium))/eke1(medium);
+ei  = Exp(eil); leil = 1; " As in $SET INTERVAL but avoids roundoff
+p2  = ei*(ei+2*rm); beta2 = p2/(p2+rm*rm);
+chi_a2 = Xcc(medium)/(4*p2*blcc(medium));
+$EVALUATE dedx0 USING ededx(eil);
+estepx = 2*p2*beta2*dedx0/ei/Xcc(medium)/(Log(1+1./chi_a2)*(1+chi_a2)-1);
+estepx = estepx*ximax;
+IF( estepx > estepe ) [ estepx = estepe; ]
+si = estepx*ei/dedx0;
+
+DO i = 1,neke - 1
+[
+
+    elke = (i + 1 - eke0(medium))/eke1(medium);
+    eke  = Exp(elke); lelke = i+1;
+    p2  = eke*(eke+2*rm); beta2 = p2/(p2+rm*rm);
     chi_a2 = Xcc(medium)/(4*p2*blcc(medium));
-    $EVALUATE dedx0 USING ededx(eil);
-    estepx = 2*p2*beta2*dedx0/ei/Xcc(medium)/(Log(1+1./chi_a2)*(1+chi_a2)-1);
+    $EVALUATE ededx USING ededx(elke);
+    estepx = 2*p2*beta2*ededx/eke/
+              Xcc(medium)/(Log(1+1./chi_a2)*(1+chi_a2)-1);
     estepx = estepx*ximax;
     IF( estepx > estepe ) [ estepx = estepe; ]
-    si = estepx*ei/dedx0;
-
-    DO i = 1,neke - 1
+    ekef = (1-estepx)*eke;
+    IF( ekef <= E_array(1,medium) )
     [
-
-        elke = (i + 1 - eke0(medium))/eke1(medium);
-        eke  = Exp(elke); lelke = i+1;
-        p2  = eke*(eke+2*rm); beta2 = p2/(p2+rm*rm);
-        chi_a2 = Xcc(medium)/(4*p2*blcc(medium));
-        $EVALUATE ededx USING ededx(elke);
-        estepx = 2*p2*beta2*ededx/eke/
-                  Xcc(medium)/(Log(1+1./chi_a2)*(1+chi_a2)-1);
-        estepx = estepx*ximax;
-        IF( estepx > estepe ) [ estepx = estepe; ]
-        ekef = (1-estepx)*eke;
-        IF( ekef <= E_array(1,medium) )
-        [
-            sip1 = (E_array(1,medium) - ekef)/dedx0;
-            ekef = E_array(1,medium);
-            elkef = (1 - eke0(medium))/eke1(medium);
-            lelkef = 1;
-        ]
-        ELSE
-        [
-            elkef = Log(ekef);
-            $SET INTERVAL elkef,eke;
-            leip1l = lelkef + 1;
-            eip1l  = (leip1l - eke0(medium))/eke1(medium);
-            eip1   = E_array(leip1l,medium);
-            aux    = (eip1 - ekef)/eip1;
-            elktmp = 0.5*(elkef+eip1l+0.25*aux*aux*(1+aux*(1+0.875*aux)));
-            ektmp  = 0.5*(ekef+eip1);
-            lelktmp = lelkef;
-            $EVALUATE ededx USING ededx(elktmp);
-            aux = ededx1(lelktmp,medium)/ededx;
-            sip1 = (eip1 - ekef)/ededx*(
-                     1+aux*(1+2*aux)*((eip1-ekef)/ektmp)**2/24);
-        ]
-        sip1 = sip1 + range_ep(0,lelke,medium) - range_ep(0,lelkef+1,medium);
-
-        "Now solve these equations
-        "  si   = tmxs1 * eil   + tmxs0
-        "  sip1 = tmxs1 * eip1l + tmxs0
-
-        tmxs1(i,medium) = (sip1 - si)*eke1(medium);
-        tmxs0(i,medium) = sip1 - tmxs1(i,medium)*elke;
-
-        si  = sip1;
+        sip1 = (E_array(1,medium) - ekef)/dedx0;
+        ekef = E_array(1,medium);
+        elkef = (1 - eke0(medium))/eke1(medium);
+        lelkef = 1;
     ]
+    ELSE
+    [
+        elkef = Log(ekef);
+        $SET INTERVAL elkef,eke;
+        leip1l = lelkef + 1;
+        eip1l  = (leip1l - eke0(medium))/eke1(medium);
+        eip1   = E_array(leip1l,medium);
+        aux    = (eip1 - ekef)/eip1;
+        elktmp = 0.5*(elkef+eip1l+0.25*aux*aux*(1+aux*(1+0.875*aux)));
+        ektmp  = 0.5*(ekef+eip1);
+        lelktmp = lelkef;
+        $EVALUATE ededx USING ededx(elktmp);
+        aux = ededx1(lelktmp,medium)/ededx;
+        sip1 = (eip1 - ekef)/ededx*(
+                 1+aux*(1+2*aux)*((eip1-ekef)/ektmp)**2/24);
+    ]
+    sip1 = sip1 + range_ep(0,lelke,medium) - range_ep(0,lelkef+1,medium);
 
-    "Now pick up last table entry which applies only to last energy
-    tmxs0(neke,medium) = tmxs0(neke - 1,medium);
-    tmxs1(neke,medium) = tmxs1(neke - 1,medium);
+    "Now solve these equations
+    "  si   = tmxs1 * eil   + tmxs0
+    "  sip1 = tmxs1 * eip1l + tmxs0
 
+    tmxs1(i,medium) = (sip1 - si)*eke1(medium);
+    tmxs0(i,medium) = sip1 - tmxs1(i,medium)*elke;
+
+    si  = sip1;
 ]
+
+"Now pick up last table entry which applies only to last energy
+tmxs0(neke,medium) = tmxs0(neke - 1,medium);
+tmxs1(neke,medium) = tmxs1(neke - 1,medium);
 
 return;
 end;
