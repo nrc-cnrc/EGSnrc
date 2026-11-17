@@ -407,6 +407,16 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
     x.z = p.z;
     u.x = p.u;
     u.y = p.v, u.z = p.w;
+    // The direction is stored in single precision (and the IAEA reader computes
+    // w from u and v in single precision), so it is off unit length by up to
+    // ~1e-7. Geometry distances assume a unit direction: left as read,
+    // intersections computed by different geometries disagree by ~1e-7 of the
+    // step length, enough to cause geometry errors where surfaces coincide.
+    // Renormalize in double precision.
+    EGS_Float ulen2 = u.length2();
+    if (ulen2 > 0) {
+        u *= 1/sqrt(ulen2);
+    }
     wt=p.wt;
     if (rejectParticle()) {
         wt = 0;
