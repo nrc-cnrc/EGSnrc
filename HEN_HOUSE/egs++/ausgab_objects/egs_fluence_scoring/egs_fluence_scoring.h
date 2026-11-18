@@ -78,11 +78,17 @@ using namespace std;
 /*! Field type */
 enum FieldType { circle=0, rectangle=1 };
 
+/*! Spherical scoring direction filter */
+enum SphereDir { sph_inward = -1, sph_both = 0, sph_outward = 1 };
+
 /*! Particle type */
 enum ParticleType { electron = -1, photon = 0, positron = 1, unknown = -99 };
 
 /*! Charged particle fluence calculation type */
 enum eFluType { flurz=0, stpwr=1, stpwrO5=2 };
+
+/*! Estimator choice: boundary-crossing, Forced Detection, or both */
+enum ScoringMethod { score_crossing = 0, score_FD = 1, score_both = 2 };
 
 /*! \brief Base class for fluence scoring.
 
@@ -214,6 +220,16 @@ protected:
     int          active_region;    // Region showing calculation progress
     bool score_in_all_regions;
     bool source_in_all_regions;
+
+    ScoringMethod     m_scoring_method;  // crossing, FD, or both
+    EGS_Interpolator *m_i_gmfp;         // photon MFP interpolator (one per medium)
+    EGS_Interpolator *m_i_cohe;         // Rayleigh correction interpolator
+    bool              m_rayleigh_on;    // whether Rayleigh scattering is enabled
+    EGS_Float         m_cos_min;        // |u·n̂| floor for grazing cap (0 = no cap)
+    EGS_I64           m_n_clipped;      // events where |u·n̂| was capped
+
+    EGS_Float m_tot_FD;      // FD estimator hit counter (score_both mode only)
+    EGS_Float m_primary_FD;  // FD primary hit counter  (score_both mode only)
 
     EGS_Float norm_u;              // User normalization
 
@@ -367,13 +383,17 @@ public:
                 if (ixy >= 0) {
                     x0 = app->top_p.x;
                     hits_field = true;
+                    if (m_scoring_method != score_crossing) {
+                        scoreFD(app->top_p, ixy, distance);
+                    }
                 }
                 else {
                     hits_field = false;
                 }
             }
 
-            if (iarg == EGS_Application::AfterTransport && hits_field) {
+            if (iarg == EGS_Application::AfterTransport && hits_field
+                    && m_scoring_method != score_FD) {
                 EGS_Vector xstep = app->top_p.x - x0;
                 if (xstep.length() >= distance) { // crossed scoring field
                     //if (!app->top_p.latch ) m_primary += app->top_p.wt;
@@ -404,20 +424,33 @@ public:
     void setCurrentCase(EGS_I64 ncase) {
         if (ncase != current_ncase) {
             current_ncase = ncase;
-
             fluT->setHistory(ncase);
-
             if (score_spe) {
                 for (int j = 0; j < Nx*Ny; j++) {
                     flu[j]->setHistory(ncase);
                 }
             }
-
             if (score_primaries) {
                 fluT_p->setHistory(ncase);
                 if (score_spe) {
                     for (int j = 0; j < Nx*Ny; j++) {
                         flu_p[j]->setHistory(ncase);
+                    }
+                }
+            }
+            if (m_scoring_method == score_both && fluT_FD) {
+                fluT_FD->setHistory(ncase);
+                if (score_spe) {
+                    for (int j = 0; j < Nx*Ny; j++) {
+                        flu_FD[j]->setHistory(ncase);
+                    }
+                }
+                if (score_primaries) {
+                    fluT_FD_p->setHistory(ncase);
+                    if (score_spe) {
+                        for (int j = 0; j < Nx*Ny; j++) {
+                            flu_FD_p[j]->setHistory(ncase);
+                        }
                     }
                 }
             }
@@ -437,6 +470,22 @@ public:
             if (score_spe) {
                 for (int j = 0; j < Nx*Ny; j++) {
                     flu_p[j]->reset();
+                }
+            }
+        }
+        if (m_scoring_method == score_both && fluT_FD) {
+            fluT_FD->reset();
+            if (flu_FD) {
+                for (int j = 0; j < Nx*Ny; j++) {
+                    flu_FD[j]->reset();
+                }
+            }
+            if (score_primaries) {
+                fluT_FD_p->reset();
+                if (score_spe) {
+                    for (int j = 0; j < Nx*Ny; j++) {
+                        flu_FD_p[j]->reset();
+                    }
                 }
             }
         }
@@ -465,6 +514,14 @@ private:
     EGS_Float distance; // distance to scoring field along particle's direction
     bool      hits_field;
 
+    void scoreFD(const EGS_Particle &p, int ixy, EGS_Float dist);
+    void outputSpectrum(EGS_ScoringArray **fl_set, EGS_ScoringArray **flp_set,
+                        double norm, const string &suffix) const;
+
+    EGS_ScoringArray  *fluT_FD;    // FD total fluence (score_both only)
+    EGS_ScoringArray  *fluT_FD_p;  // FD primary total fluence (score_both only)
+    EGS_ScoringArray **flu_FD;     // FD differential fluence (score_both only)
+    EGS_ScoringArray **flu_FD_p;   // FD primary differential fluence (score_both only)
 };
 
 /*! \brief Ausgab object for scoring fluence in arbitrary geometry regions
@@ -1125,6 +1182,187 @@ private:
     EGS_I32 n_step_bins;
 #endif
 
+};
+
+/*! \brief Ausgab object for scoring fluence at one or more concentric spherical surfaces
+
+  \ingroup AusgabObjects
+
+  A crossing estimator in the zero-thickness limit scores fluence at one or more
+  concentric spherical surfaces. For each crossing the contribution w/|cosθ| is
+  accumulated, where θ is the angle between the particle direction and the outward
+  normal at the crossing point. Both the entry and exit crossing of a sphere are
+  scored by default; either can be selected via the \c scoring direction input.
+
+  Multiple concentric spheres sharing the same center are handled by a single AO.
+  An optional angular distribution bins the sphere surface into (N_theta × N_phi)
+  cells. The polar axis and binning mode — equal-area in cosθ (default) or equal θ
+  — are user-configurable.
+
+  To define an EGS_SphericalFluence AO use the syntax below:
+  \verbatim
+:start ausgab object:
+    name    = id-string
+    library = egs_fluence_scoring
+    type    = spherical
+    scoring particle = photon           # or electron / positron
+    source particle  = photon           # optional, only for primary scoring
+    score primaries  = no               # yes or no; default no
+    score spectrum   = no               # yes or no; default no
+    verbose          = no               # yes or no; default no
+    normalization    = 1.0              # user normalization; default 1
+    :start energy grid:                 # required only when score spectrum = yes
+        number of bins         = 128
+        minimum kinetic energy = 0.001
+        maximum kinetic energy = 1.0
+        scale                  = linear # linear or logarithmic
+    :stop energy grid:
+    :start spherical scoring:
+        scoring sphere center  = 0 0 0       # cm; default origin
+        scoring sphere radii   = 5 10 20     # cm; one or more concentric radii
+        scoring direction      = both        # both | inward | outward; default both
+        N theta bins           = 1           # polar bins; default 1 (total only)
+        N phi bins             = 1           # azimuthal bins; default 1
+        polar axis             = 0 0 1       # default z-axis
+        theta binning          = cos_theta   # cos_theta (equal area) | theta
+        contributing regions   = 0 1 2       # optional; default all regions
+    :stop spherical scoring:
+:stop ausgab object:
+  \endverbatim
+*/
+class EGS_FLUENCE_SCORING_EXPORT EGS_SphericalFluence : public EGS_FluenceScoring {
+
+public:
+    EGS_SphericalFluence(const string &Name="", EGS_ObjectFactory *f = 0);
+    ~EGS_SphericalFluence();
+
+    bool needsCall(EGS_Application::AusgabCall iarg) const {
+        if (iarg == EGS_Application::BeforeTransport ||
+                iarg == EGS_Application::AfterTransport) {
+            return true;
+        }
+        else if (score_primaries &&
+                 (iarg == EGS_Application::AfterPair        ||
+                  iarg == EGS_Application::AfterCompton     ||
+                  iarg == EGS_Application::AfterPhoto       ||
+                  iarg == EGS_Application::AfterRayleigh    ||
+                  iarg == EGS_Application::AfterBrems       ||
+                  iarg == EGS_Application::AfterMoller      ||
+                  iarg == EGS_Application::AfterBhabha      ||
+                  iarg == EGS_Application::AfterAnnihFlight ||
+                  iarg == EGS_Application::AfterAnnihRest)) {
+            return true;
+        }
+        return false;
+    };
+
+    void describeMe();
+    void initScoring(EGS_Input *inp);
+    void setApplication(EGS_Application *App);
+    void ouputSphericalFluence(EGS_ScoringArray *fT, const double &norma, int isph);
+    void ouputResults();
+    void reportResults();
+
+    int processEvent(EGS_Application::AusgabCall iarg);
+
+    void setCurrentCase(EGS_I64 ncase) {
+        if (ncase != current_ncase) {
+            flushHistoryCrossTerms();
+            current_ncase = ncase;
+            int n_total = n_sph * N_ang;
+            fluT->setHistory(ncase);
+            if (score_spe) {
+                for (int k = 0; k < n_total; k++) {
+                    flu[k]->setHistory(ncase);
+                }
+            }
+            if (score_primaries) {
+                fluT_p->setHistory(ncase);
+                if (score_spe) {
+                    for (int k = 0; k < n_total; k++) {
+                        flu_p[k]->setHistory(ncase);
+                    }
+                }
+                if (fluT_x_p) {
+                    fluT_x_p->setHistory(ncase);
+                }
+            }
+        }
+    };
+
+    void resetCounter() {
+        current_ncase = 0;
+        int n_total = n_sph * N_ang;
+        fluT->reset();
+        if (score_spe) {
+            for (int k = 0; k < n_total; k++) {
+                flu[k]->reset();
+            }
+        }
+        if (score_primaries) {
+            fluT_p->reset();
+            if (score_spe) {
+                for (int k = 0; k < n_total; k++) {
+                    flu_p[k]->reset();
+                }
+            }
+            if (fluT_x_p) {
+                fluT_x_p->reset();
+            }
+        }
+        fill(m_hist_T.begin(), m_hist_T.end(), 0.0);
+        fill(m_hist_P.begin(), m_hist_P.end(), 0.0);
+        m_hist_dirty = false;
+    };
+
+    bool storeState(ostream &data) const;
+    bool setState(istream &data);
+    bool addState(istream &data);
+
+private:
+
+    struct CrossInfo {
+        int        isph;        // sphere index
+        EGS_Float  t;           // distance along step to crossing point
+        int        iang;        // angular bin index (itheta * N_phi + iphi)
+        bool       is_outward;  // true if u·n̂ > 0
+        EGS_Vector n_hat;       // outward unit normal at the crossing point
+    };
+
+    EGS_Vector        m_center;        // common center for all spheres
+    int               n_sph;           // number of spheres
+    vector<EGS_Float> m_R;             // radii, sorted ascending
+    vector<EGS_Float> m_R2;            // squared radii (precomputed)
+
+    EGS_Vector        m_axis;          // polar axis for angular binning
+    EGS_Vector        m_perp1;         // first orthogonal basis vector
+    EGS_Vector        m_perp2;         // second orthogonal basis vector (axis × perp1)
+    int               N_theta;         // number of polar bins
+    int               N_phi;           // number of azimuthal bins
+    int               N_ang;           // N_theta * N_phi
+    bool              cos_theta_bins;  // true = equal-area cosθ bins
+
+    SphereDir         dir_filter;      // which crossings to score
+
+    vector<EGS_Float> m_ang_area;      // solid-angle area per bin divided by R²
+                                       // (multiply by R_k² for sphere k)
+
+    vector<CrossInfo> m_crossings;     // crossings found at BeforeTransport
+    bool              m_has_crossings;
+    EGS_Vector        m_x0;            // particle position at BeforeTransport
+
+    void findCrossings(const EGS_Particle &p);
+    int  getAngularBin(const EGS_Vector &n_hat) const;
+    void scoreAtCrossing(const CrossInfo &ci, const EGS_Particle &p);
+    void outputSphericalSpectrum(EGS_ScoringArray **fl_set, EGS_ScoringArray **flp_set,
+                                 double norm_spe, const string &infix) const;
+    void flushHistoryCrossTerms() const;
+
+    EGS_ScoringArray  *fluT_x_p;        // cross-term Σ_i T_i·P_i per bin (correlated tot/pri)
+
+    mutable vector<double>  m_hist_T;    // per-history crossing total per bin
+    mutable vector<double>  m_hist_P;    // per-history crossing primary per bin
+    mutable bool            m_hist_dirty;
 };
 
 #endif
