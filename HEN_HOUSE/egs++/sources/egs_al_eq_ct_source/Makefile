@@ -1,7 +1,7 @@
 ###############################################################################
 #
-#  EGSnrc egs++ makefile to build collimated source
-#  Copyright (C) 2015 National Research Council Canada
+#  EGSnrc egs++ makefile to build egs_al_eq_ct_source
+#  Copyright (C) 2026 Marie-Luise Kuhlmann
 #
 #  This file is part of EGSnrc.
 #

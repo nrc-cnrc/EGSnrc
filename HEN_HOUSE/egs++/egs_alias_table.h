@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Marc Chamberland
+#                   Marie-Luise Kuhlmann
 #
 ###############################################################################
 */
