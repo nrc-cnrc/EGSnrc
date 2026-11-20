@@ -59,6 +59,7 @@
 #include <cstdarg>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 
 using namespace std;
 
@@ -968,6 +969,10 @@ int EGS_AdvancedApplication::outputData() {
     EGS_Float *array = new EGS_Float [np];
     egsGetRNGArray(array);
     (*data_out) << "  " << np << "  " << ip << endl;
+    // Write with enough digits to round-trip exactly
+    // The default stream precision (6 digits) breaks reproducibility of resumed runs
+    streamsize old_prec =
+    data_out->precision(numeric_limits<EGS_Float>::max_digits10);
     for (int j=0; j<np; j++) {
         (*data_out) << array[j] << " ";
     }
@@ -975,6 +980,7 @@ int EGS_AdvancedApplication::outputData() {
     double ch_steps, all_steps;
     egsGetSteps(&ch_steps,&all_steps);
     (*data_out) << ch_steps << "  " << all_steps << endl;
+    data_out->precision(old_prec);
     delete [] array;
     return data_out->good() ? 0 : 13;
 }
