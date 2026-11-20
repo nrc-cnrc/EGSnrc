@@ -3402,7 +3402,8 @@ $INTEGER ix,jy,kz,i,j,k,
          irin, "region of incident particle"
          latchi, "input latch value"
          ibit;
-$LONG_INT n_hist_dum;
+$LONG_INT n_hist_dum,
+         npart_end; "last phsp particle in this partition (IPARALLEL>1)"
 
 save wsrc; "in case of phsp particle recycling"
 
@@ -3411,6 +3412,12 @@ iaea_SAD = 0;
 IF(i_iaea_in = 1)[
    iaea_SAD = -dsource; "save SAD for iaea phsp sources"
 ]
+
+"Partition end is computed separately because Fortran does not guarantee"
+"short-circuit evaluation of .AND.; avoids integer division by zero when"
+"IPARALLEL=0"
+IF(IPARALLEL>1 & PARNUM>0)[ npart_end = INT(PARNUM*nshist/IPARALLEL); ]
+ELSE[ npart_end = nshist; ]
 
 "----------------------------------------------------------------"
 IF(isource = 0)[ "Frontal parallel beam source"
@@ -3604,7 +3611,7 @@ ELSEIF(isource = 2 | isource=8)[ "Full phase space for each particle"
            ]
 
        ]
-       ELSEIF(IPARALLEL>1 & PARNUM>0 & nnphsp > INT(PARNUM*nshist/IPARALLEL))[
+       ELSEIF(IPARALLEL>1 & PARNUM>0 & nnphsp > npart_end)[
            NofREPEAT = NofREPEAT + 1;
            OUTCNT=OUTCNT+1;
            OUTPUT61;
@@ -3849,7 +3856,7 @@ ELSEIF( isource = 20 ) [ "Phase Space Incident from multiple settings"
                 $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);
            ]
       ]
-      ELSEIF(IPARALLEL>1 & PARNUM>0 & nnphsp > INT(PARNUM*nshist/IPARALLEL))[
+      ELSEIF(IPARALLEL>1 & PARNUM>0 & nnphsp > npart_end)[
            NofREPEAT = NofREPEAT + 1;
            OUTCNT=OUTCNT+1;
            OUTPUT61;
