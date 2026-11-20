@@ -72,15 +72,6 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
     if (!egsIsAbsolutePath(fname)) {
         fname = egsJoinPath(app->getAppDir(),fname);
     }
-    int i_parallel = -1;
-    if (app->getNparallel() > 1) {
-        i_parallel = app->getIparallel();
-    }
-    if (i_parallel >= 0) {
-        char buf[16];
-        sprintf(buf,"_w%d",i_parallel);
-        fname += buf;
-    }
 
     fname += ".ptracks";
 
@@ -138,7 +129,7 @@ extern "C" {
 
         setBaseAusgabObjectInputs();
 
-        ausBlockInput->getSingleInput("library")->setValues({"EGS_Track_Scoring"});
+        ausBlockInput->getSingleInput("library")->setValues({"egs_track_scoring"});
 
         // Format: name, isRequired, description, vector string of allowed values
         ausBlockInput->addSingleInput("score photons", false, "Score photons? Default is yes.", {"yes", "no"});

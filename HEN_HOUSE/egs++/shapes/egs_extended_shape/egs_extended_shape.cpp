@@ -45,7 +45,7 @@ extern "C" {
 
     static void setInputs() {
         inputSet = true;
-        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Extended_Shape"});
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"egs_extended_shape"});
         shapeBlockInput->addSingleInput("extension", true, "Adds delta z to the z-component of the position vector (z1, z2)");
 
         auto shapePtr = shapeBlockInput->addBlockInput("shape");

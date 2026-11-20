@@ -131,14 +131,14 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_GStack"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_gstack"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("geometries", true, "A list of names of previously defined geometries");
         geomBlockInput->addSingleInput("tolerance", false, "A small floating number boundaryTolerance");
     }
 
-    EGS_STACKG_EXPORT string getExample(string type) {
+    EGS_STACKG_EXPORT string getExample() {
         string example;
         example = {
             R"(

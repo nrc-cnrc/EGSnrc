@@ -688,14 +688,14 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Spheres"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_spheres"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("radii", true, "A list of sphere radii, in increasing order.");
         geomBlockInput->addSingleInput("midpoint", false, "The position of the middle of the spheres (x, y, z)");
     }
 
-    EGS_SPHERES_EXPORT string getExample(string type) {
+    EGS_SPHERES_EXPORT string getExample() {
         string example;
         example = {
             R"(

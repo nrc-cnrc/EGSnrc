@@ -50,7 +50,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Space"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_space"});
     }
 
     EGS_SPACE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {

@@ -46,7 +46,7 @@ void EGS_Box::printInfo() const {
     egsInformation("=======================================================\n");
 }
 
-static string EGS_BOX_LOCAL typeStr("EGS_Box");
+static string EGS_BOX_LOCAL typeStr("egs_box");
 string EGS_Box::type(typeStr);
 
 static char EGS_BOX_LOCAL ebox_message1[] = "createGeometry(box): %s\n";

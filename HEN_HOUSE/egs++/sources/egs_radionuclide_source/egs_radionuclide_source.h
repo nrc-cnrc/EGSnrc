@@ -208,13 +208,18 @@ public:
             // Write the spectrum to a file
             if (outputBetaSpectra == "yes") {
 
-                ostringstream ostr;
-                ostr << decays->radionuclide << "_" << emax << ".spec";
+                string fname(app->getOutputFile());
+                fname += "_" + decays->radionuclide + "_" + std::to_string(emax);
+                if (!egsIsAbsolutePath(fname)) {
+                    fname = egsJoinPath(app->getAppDir(),fname);
+                }
+                fname += ".spec";
 
-                egsInformation("EGS_RadionuclideBetaSpectrum: Outputting beta spectrum to file: %s\n", ostr.str().c_str());
+
+                egsInformation("EGS_RadionuclideBetaSpectrum: Outputting beta spectrum to file: %s\n", fname.c_str());
 
                 ofstream specStream;
-                specStream.open(ostr.str().c_str());
+                specStream.open(fname.c_str());
                 for (int ib=0; ib<nbin; ib++) {
                     spec[ib]=1/de*(spec_y[ib]/s_y);
                     specStream << e[ib] << " " << spec[ib] << endl;

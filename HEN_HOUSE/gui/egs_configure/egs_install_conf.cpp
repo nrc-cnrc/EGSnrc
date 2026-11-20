@@ -1552,6 +1552,14 @@ void QInstallPage::finalize_cpp(){
 
      append2file(the_iaea.toLatin1(),specFile.toLatin1());
 
+    QString egspp_lib;
+    egspp_lib = QString(EGSPP_VARS);
+    egspp_lib.replace(QString("$lib_link1"), cpp->dsoPath());
+    egspp_lib.replace((QString)"$link2_prefix_", cpp->LinkPrefix() );
+    egspp_lib.replace((QString)"$link2_suffix", cpp->LinkSuffix() );
+
+    append2file(egspp_lib.toLatin1(),specFile.toLatin1());
+
     //configCPPProgressBar->setProgress( configCPPProgressBar->totalSteps() );
     emit cppBuildFinalized();
 }
