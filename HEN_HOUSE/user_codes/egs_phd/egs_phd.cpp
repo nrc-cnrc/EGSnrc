@@ -297,9 +297,6 @@ void phd_app::getCurrentResult(double &sum,
 // startNewShower
 int phd_app::startNewShower() {
 
-    Etot += p.E*p.wt;
-    initial_weight = p.wt;
-
     int res = EGS_Application::startNewShower();
     if (res) {
         return res;
@@ -331,6 +328,12 @@ int phd_app::startNewShower() {
         score->setHistory(current_case);
         spectrum->setHistory(current_case);
         last_case = current_case;
+    }
+
+    // Update after scoring the previous history, so its weight is used
+    Etot += p.E*p.wt;
+    if (p.wt > 0) {
+        initial_weight = p.wt;
     }
 
     return 0;
