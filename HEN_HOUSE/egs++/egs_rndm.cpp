@@ -25,6 +25,7 @@
 #
 #  Contributors:    Hubert Ho
 #                   Reid Townson
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -34,8 +35,7 @@
  *  \brief EGS_RandomGenerator implementation
  *  \IK
  *
- *  Also provides implementation of RANMAR and should offer
- *  implementation of RANLUX in a future release
+ *  Provides ranmar in low and high resolution modes, and xoshiro256++.
  */
 
 #include "egs_rndm.h"
@@ -45,6 +45,7 @@
 #include <iostream>
 #include <string>
 #include <cstdint>
+#include <limits>
 using namespace std;
 
 void EGS_RandomGenerator::allocate(int n) {
@@ -76,6 +77,7 @@ void EGS_RandomGenerator::copyBaseState(const EGS_RandomGenerator &r) {
 EGS_RandomGenerator::EGS_RandomGenerator(int n) : count(0), np(0) {
     allocate(n);
     have_x = false;
+    the_x = 0;
     for (int j=0; j<np; j++) {
         rarray[j] = 0;
     }
@@ -86,10 +88,17 @@ bool EGS_RandomGenerator::storeState(ostream &data) {
         return false;
     }
     data << " " << np << "  " << ip << endl;
+    // Write floating point values with enough digits to round-trip exactly.
+    // The default stream precision (6 digits) truncates the unused numbers
+    // in rarray, so a resumed run would not reproduce an uninterrupted one.
+    streamsize old_prec = data.precision(numeric_limits<EGS_Float>::max_digits10);
     for (int j=0; j<np; j++) {
         data << rarray[j] << " ";
     }
     data << endl;
+    // The cached second Gaussian from getGaussian() is also part of the state
+    data << have_x << " " << (have_x ? the_x : 0) << endl;
+    data.precision(old_prec);
     if (!data.good()) {
         return false;
     }
@@ -116,6 +125,7 @@ bool EGS_RandomGenerator::setState(istream &data) {
     for (int j=0; j<np; j++) {
         data >> rarray[j];
     }
+    data >> have_x >> the_x;
     if (!data.good()) {
         return false;
     }
