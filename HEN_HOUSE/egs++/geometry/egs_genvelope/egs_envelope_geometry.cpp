@@ -367,7 +367,7 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_GEnvelope"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_genvelope"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", false, "The type of envelope", {"EGS_FastEnvelope"});
@@ -375,7 +375,7 @@ extern "C" {
         geomBlockInput->addSingleInput("inscribed geometries", true, "A list of names of previously defined geometries, must be stictly inside the envelope");
     }
 
-    EGS_ENVELOPEG_EXPORT string getExample(string type) {
+    EGS_ENVELOPEG_EXPORT string getExample() {
         string example;
         example = {
             R"(

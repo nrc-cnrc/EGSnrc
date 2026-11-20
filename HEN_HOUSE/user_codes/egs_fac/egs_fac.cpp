@@ -310,7 +310,15 @@ int EGS_FACApplication::ausgab(int iarg) {
 int EGS_FACApplication::simulateSingleShower() {
     last_case = current_case;
     EGS_Vector x,u;
+
+    setTimeIndex(-1);
+
     current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
+
+    // For dynamic geometries, update positions according to the current
+    // time index, which may have been set by getNextParticle
+    geometry->getNextGeom(rndm);
+
     if( p.q ) egsFatal("Got particle with q=%d.\n"
         "This application only works for photons\n",p.q);
     int err = startNewShower(); if( err ) return err;

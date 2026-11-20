@@ -56,7 +56,7 @@ public:
     void lineNumberAreaPaintEvent(QPaintEvent *event);
     int lineNumberAreaWidth();
     void setInputStruct(shared_ptr<EGS_InputStruct> inp);
-    void validateEntireInput();
+    void validateVisibleLines();
     void setDarkMode(bool isDarkMode);
 
 protected:
@@ -80,12 +80,12 @@ private:
     shared_ptr<EGS_BlockInput> getBlockInput(QString &blockTitle, QTextCursor cursor = QTextCursor());
     QString getBlockTitle(QTextCursor cursor = QTextCursor());
     QString getParentBlockTitle(QTextCursor cursor = QTextCursor());
-    QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream = false);
+    QString getInputValue(QString inp, QTextBlock currentBlock, bool &foundTag, bool searchUpstream = false, int depth = 0);
     QTextBlock getBlockEnd(QTextBlock currentBlock);
     template <typename T>
-    bool inputHasDependency(const shared_ptr<T>& inp);
+    bool inputHasDependency(const shared_ptr<T> &inp);
     template <typename T>
-    bool inputDependencySatisfied(const shared_ptr<T>& inp, QTextCursor cursor = QTextCursor());
+    bool inputDependencySatisfied(const shared_ptr<T> &inp, QTextCursor cursor = QTextCursor());
     QTextBlock findSiblingBlock(QString title, QTextBlock currentBlock);
     int countStartingWhitespace(const QString &s);
     void indentSelection(bool unindent);
@@ -97,6 +97,7 @@ private:
     bool popupGrabbing;
     bool isDarkMode = false;
     static constexpr int indentWidth = 4;
+    QTimer *validationDebounceTimer = nullptr;
 
     QDialog           *findDialog = nullptr;
     QLineEdit         *findEdit   = nullptr;

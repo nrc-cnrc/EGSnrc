@@ -91,7 +91,7 @@ typedef EGS_AusgabObject *(*createAusgabObjectFunction)();
 typedef shared_ptr<EGS_InputStruct> (*getAppInputsFunction)();
 typedef shared_ptr<EGS_InputStruct> (*getAppSpecificInputsFunction)();
 typedef shared_ptr<EGS_BlockInput> (*getInputsFunction)();
-typedef string (*getExampleFunction)();
+typedef string(*getExampleFunction)();
 
 #ifdef WIN32
     #ifdef CYGWIN
@@ -137,9 +137,14 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(applyPosition, &QPushButton::clicked, this, &GeometryViewControl::setLookPosition);
 
     // On clicking the region tab, load the list of regions
-    connect(tabWidget, &QTabWidget::currentChanged, this, [this](int index){
+    connect(tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
         if (tabWidget->widget(index) == regionTab && !allowRegionSelection) {
             QTimer::singleShot(0, this, &GeometryViewControl::loadRegions);
+        }
+        // On clicking the editor tab, load and validate the file content
+        // (deferred from loadInput to avoid blocking on large files)
+        if (tabWidget->widget(index) == tab && !editorLoaded) {
+            QTimer::singleShot(0, this, &GeometryViewControl::ensureEditorLoaded);
         }
     });
 
@@ -217,7 +222,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(actionOpen_dose, &QAction::triggered,
             this, &GeometryViewControl::loadDose);
 
-    connect(actionOpen_settings, &QAction::triggered, this, [this](){
+    connect(actionOpen_settings, &QAction::triggered, this, [this]() {
         loadConfig();
     });
 
@@ -434,6 +439,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     positronColor = QColor(0,0,255);
     doseTransparency = EGS_Float(this->slider_dose->value()/100.);
     energyScaling = this->energyScalingCheckbox->isChecked();
+    editorLoaded = false;
     initColorSwatches();
 
     // Create gview as child (splitter will manage it)
@@ -604,8 +610,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
         //egsInformation("Trying %s\n", libName.toLatin1().data());
 
         // Check if the application has the getAppSpecificInputs, and only add it to the drop-down menu if it does
-        EGS_Library* app_lib = new EGS_Library(libName.toLatin1().data(), lib_dir.c_str());
-        if(!existingApp) {
+        EGS_Library *app_lib = new EGS_Library(libName.toLatin1().data(), lib_dir.c_str());
+        if (!existingApp) {
             existingApp = app_lib;
         }
         if (app_lib->load()) {
@@ -626,9 +632,9 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // ============
     // Application level inputs (but not app specific)
-    if(existingApp) {
+    if (existingApp) {
         getAppInputsFunction getAppInputs = (getAppInputsFunction) existingApp->resolve("getAppInputs");
-        if(getAppInputs) {
+        if (getAppInputs) {
 
             // before this was a BlockInput, now it is a InputStruct
             shared_ptr<EGS_InputStruct> app = getAppInputs();
@@ -636,28 +642,28 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             if (app) {
                 inputStruct->addBlockInputs(app->getBlockInputs());
 
-    //                     vector<shared_ptr<EGS_SingleInput>> singleInputs = app->getSingleInputs();
-    //                     for (auto &inp : singleInputs) {
-    //                         const vector<string> vals = inp->getValues();
-    // //                         egsInformation("  single %s\n", inp->getTag().c_str());
-    // //                         for (auto&& val : vals) {
-    // //                             egsInformation("      %s\n", val.c_str());
-    // //                         }
-    //                     }
+                //                     vector<shared_ptr<EGS_SingleInput>> singleInputs = app->getSingleInputs();
+                //                     for (auto &inp : singleInputs) {
+                //                         const vector<string> vals = inp->getValues();
+                // //                         egsInformation("  single %s\n", inp->getTag().c_str());
+                // //                         for (auto&& val : vals) {
+                // //                             egsInformation("      %s\n", val.c_str());
+                // //                         }
+                //                     }
 
-    //                 vector<shared_ptr<EGS_BlockInput>> inputBlocks = app->getBlockInputs();
-    //                 for (auto &block : inputBlocks) {
-    //                     egsInformation("  block %s\n", block->getTitle().c_str());
-    //                     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-    //                     inputStruct->addBlockInput(block);
-    //                     for (auto &inp : singleInputs) {
-    //                         const vector<string> vals = inp->getValues();
-    //                         egsInformation("   single %s\n", inp->getTag().c_str());
-    //                         for (auto&& val : vals) {
-    //                             egsInformation("      %s\n", val.c_str());
-    //                         }
-    //                     }
-    //                 }
+                //                 vector<shared_ptr<EGS_BlockInput>> inputBlocks = app->getBlockInputs();
+                //                 for (auto &block : inputBlocks) {
+                //                     egsInformation("  block %s\n", block->getTitle().c_str());
+                //                     vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                //                     inputStruct->addBlockInput(block);
+                //                     for (auto &inp : singleInputs) {
+                //                         const vector<string> vals = inp->getValues();
+                //                         egsInformation("   single %s\n", inp->getTag().c_str());
+                //                         for (auto&& val : vals) {
+                //                             egsInformation("      %s\n", val.c_str());
+                //                         }
+                //                     }
+                //                 }
             }
         }
         //     getAppInputs(inputStruct);
@@ -755,43 +761,46 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
             continue;
         }
 
+        // For each library, call getInputs() once and use the returned block title to determine the library type
+        getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
+        shared_ptr<EGS_BlockInput> inputBlock;
+        if (getInputs) {
+            inputBlock = getInputs();
+        }
+        const string blockTitle = inputBlock ? inputBlock->getTitle() : "";
+
         // Geometries
         createGeomFunction isGeom = (createGeomFunction) egs_lib.resolve("createGeometry");
-        if (isGeom) {
+        if (isGeom && egsEquivStr(blockTitle, "geometry")) {
 #ifdef EDITOR_DEBUG
             egsInformation(" Geometry %s\n",libName.toLatin1().data());
 #endif
+            geomDefPtr->addBlockInput(inputBlock);
 
-            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
-            if (getInputs) {
-
-                shared_ptr<EGS_BlockInput> geom = getInputs();
-                if (geom) {
-                    geomDefPtr->addBlockInput(geom);
-
-                    vector<shared_ptr<EGS_SingleInput>> singleInputs = geom->getSingleInputs();
-                    for (auto &inp : singleInputs) {
-                        const vector<string> vals = inp->getValues();
-//                         egsInformation("  single %s\n", inp->getTag().c_str());
-//                         for (auto&& val : vals) {
-//                             egsInformation("      %s\n", val.c_str());
-//                         }
-                    }
-
-                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = geom->getBlockInputs();
-                    for (auto &block : inputBlocks) {
-                        //egsInformation("  block %s\n", block->getTitle().c_str());
-                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-                        for (auto &inp : singleInputs) {
-                            const vector<string> vals = inp->getValues();
-//                             egsInformation("   single %s\n", inp->getTag().c_str());
-//                             for (auto&& val : vals) {
-//                                 egsInformation("      %s\n", val.c_str());
-//                             }
-                        }
-                    }
+            /*
+            vector<shared_ptr<EGS_SingleInput>> singleInputs = inputBlock->getSingleInputs();
+            for (auto &inp : singleInputs) {
+                const vector<string> vals = inp->getValues();
+                egsInformation("  single %s\n", inp->getTag().c_str());
+                for (auto&& val : vals) {
+                    egsInformation("      %s\n", val.c_str());
                 }
             }
+
+            vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputBlock->getBlockInputs();
+            for (auto &block : inputBlocks) {
+                egsInformation("  block %s\n", block->getTitle().c_str());
+                vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                for (auto &inp : singleInputs) {
+                    const vector<string> vals = inp->getValues();
+                     egsInformation("   single %s\n", inp->getTag().c_str());
+                     for (auto&& val : vals) {
+                         egsInformation("      %s\n", val.c_str());
+                     }
+                }
+            }
+            */
+
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = geomMenu->addAction(libName);
@@ -802,41 +811,35 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
         // Sources
         createSourceFunction isSource = (createSourceFunction) egs_lib.resolve("createSource");
-        if (isSource) {
+        if (isSource && egsEquivStr(blockTitle, "source")) {
 #ifdef EDITOR_DEBUG
             egsInformation(" Source %s\n",libName.toLatin1().data());
 #endif
+            srcDefPtr->addBlockInput(inputBlock);
 
-            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
-            if (getInputs) {
+            /*
+            vector<shared_ptr<EGS_SingleInput>> singleInputs = inputBlock->getSingleInputs();
+            for (auto &inp : singleInputs) {
+                const vector<string> vals = inp->getValues();
+                egsInformation("  single %s\n", inp->getTag().c_str());
+                for (auto&& val : vals) {
+                    egsInformation("      %s\n", val.c_str());
+                }
+            }
 
-                shared_ptr<EGS_BlockInput> src = getInputs();
-                if (src) {
-                    srcDefPtr->addBlockInput(src);
-
-                    vector<shared_ptr<EGS_SingleInput>> singleInputs = src->getSingleInputs();
-                    for (auto &inp : singleInputs) {
-                        const vector<string> vals = inp->getValues();
-//                         egsInformation("  single %s\n", inp->getTag().c_str());
-//                         for (auto&& val : vals) {
-//                             egsInformation("      %s\n", val.c_str());
-//                         }
-                    }
-
-                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = src->getBlockInputs();
-                    for (auto &block : inputBlocks) {
-                        //egsInformation("  block %s\n", block->getTitle().c_str());
-                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-                        for (auto &inp : singleInputs) {
-                            const vector<string> vals = inp->getValues();
-//                             egsInformation("   single %s\n", inp->getTag().c_str());
-//                             for (auto&& val : vals) {
-//                                 egsInformation("      %s\n", val.c_str());
-//                             }
-                        }
+            vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputBlock->getBlockInputs();
+            for (auto &block : inputBlocks) {
+                egsInformation("  block %s\n", block->getTitle().c_str());
+                vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                for (auto &inp : singleInputs) {
+                    const vector<string> vals = inp->getValues();
+                    egsInformation("   single %s\n", inp->getTag().c_str());
+                    for (auto&& val : vals) {
+                        egsInformation("      %s\n", val.c_str());
                     }
                 }
             }
+            */
 
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
@@ -848,41 +851,35 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
         // Shapes
         createShapeFunction isShape = (createShapeFunction) egs_lib.resolve("createShape");
-        if (isShape) {
+        if (isShape && egsEquivStr(blockTitle, "shape")) {
 #ifdef EDITOR_DEBUG
             egsInformation(" Shape %s\n",libName.toLatin1().data());
 #endif
+            inputStruct->addBlockInput(inputBlock);
 
-            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
-            if (getInputs) {
+            /*
+            vector<shared_ptr<EGS_SingleInput>> singleInputs = inputBlock->getSingleInputs();
+            for (auto &inp : singleInputs) {
+                const vector<string> vals = inp->getValues();
+                egsInformation("  single %s\n", inp->getTag().c_str());
+                for (auto&& val : vals) {
+                    egsInformation("      %s\n", val.c_str());
+                }
+            }
 
-                shared_ptr<EGS_BlockInput> shape = getInputs();
-                if (shape) {
-                    inputStruct->addBlockInput(shape);
-
-                    vector<shared_ptr<EGS_SingleInput>> singleInputs = shape->getSingleInputs();
-                    for (auto &inp : singleInputs) {
-                        const vector<string> vals = inp->getValues();
-//                         egsInformation("  single %s\n", inp->getTag().c_str());
-//                         for (auto&& val : vals) {
-//                             egsInformation("      %s\n", val.c_str());
-//                         }
-                    }
-
-                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = shape->getBlockInputs();
-                    for (auto &block : inputBlocks) {
-                        //egsInformation("  block %s\n", block->getTitle().c_str());
-                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-                        for (auto &inp : singleInputs) {
-                            const vector<string> vals = inp->getValues();
-//                             egsInformation("   single %s\n", inp->getTag().c_str());
-//                             for (auto&& val : vals) {
-//                                 egsInformation("      %s\n", val.c_str());
-//                             }
-                        }
+            vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputBlock->getBlockInputs();
+            for (auto &block : inputBlocks) {
+                egsInformation("  block %s\n", block->getTitle().c_str());
+                vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                for (auto &inp : singleInputs) {
+                    const vector<string> vals = inp->getValues();
+                    egsInformation("   single %s\n", inp->getTag().c_str());
+                    for (auto&& val : vals) {
+                        egsInformation("      %s\n", val.c_str());
                     }
                 }
             }
+            */
 
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
@@ -894,41 +891,36 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
         // Ausgab Objects
         createAusgabObjectFunction isAusgabObject = (createAusgabObjectFunction) egs_lib.resolve("createAusgabObject");
-        if (isAusgabObject) {
+        if (isAusgabObject && egsEquivStr(blockTitle, "ausgab object")) {
 #ifdef EDITOR_DEBUG
             egsInformation(" Ausgab %s\n",libName.toLatin1().data());
 #endif
+            ausDefPtr->addBlockInput(inputBlock);
 
-            getInputsFunction getInputs = (getInputsFunction) egs_lib.resolve("getInputs");
-            if (getInputs) {
+            /*
+            vector<shared_ptr<EGS_SingleInput>> singleInputs = inputBlock->getSingleInputs();
+            for (auto &inp : singleInputs) {
+                const vector<string> vals = inp->getValues();
+                egsInformation("   single %s\n", inp->getTag().c_str());
+                for (auto&& val : vals) {
+                    egsInformation("      %s\n", val.c_str());
+                }
+            }
 
-                shared_ptr<EGS_BlockInput> aus = getInputs();
-                if (aus) {
-                    ausDefPtr->addBlockInput(aus);
-
-                    vector<shared_ptr<EGS_SingleInput>> singleInputs = aus->getSingleInputs();
-                    for (auto &inp : singleInputs) {
-                        const vector<string> vals = inp->getValues();
-//                         egsInformation("   single %s\n", inp->getTag().c_str());
-//                         for (auto&& val : vals) {
-//                             egsInformation("      %s\n", val.c_str());
-//                         }
-                    }
-
-                    vector<shared_ptr<EGS_BlockInput>> inputBlocks = aus->getBlockInputs();
-                    for (auto &block : inputBlocks) {
-                        //egsInformation("  block %s\n", block->getTitle().c_str());
-                        vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
-                        for (auto &inp : singleInputs) {
-                            const vector<string> vals = inp->getValues();
-//                             egsInformation("   single %s\n", inp->getTag().c_str());
-//                             for (auto&& val : vals) {
-//                                 egsInformation("      %s\n", val.c_str());
-//                             }
-                        }
+            vector<shared_ptr<EGS_BlockInput>> inputBlocks = inputBlock->getBlockInputs();
+            for (auto &block : inputBlocks) {
+                egsInformation("  block %s\n", block->getTitle().c_str());
+                vector<shared_ptr<EGS_SingleInput>> singleInputs = block->getSingleInputs();
+                for (auto &inp : singleInputs) {
+                    const vector<string> vals = inp->getValues();
+                    egsInformation("   single %s\n", inp->getTag().c_str());
+                    for (auto&& val : vals) {
+                        egsInformation("      %s\n", val.c_str());
                     }
                 }
             }
+            */
+
             getExampleFunction getExample = (getExampleFunction) egs_lib.resolve("getExample");
             if (getExample) {
                 QAction *action = ausgabMenu->addAction(libName);
@@ -1081,12 +1073,12 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
             QMessageBox::critical(this, "Geometry error",
-                          "The geometry is not correctly defined. Edit the input file and reload.",
-                          QMessageBox::StandardButton::Ok);
+                                  "The geometry is not correctly defined. Edit the input file and reload.",
+                                  QMessageBox::StandardButton::Ok);
 #else
             QMessageBox::critical(this, "Geometry error",
-                          "The geometry is not correctly defined. Edit the input file and reload.",
-                          QMessageBox::Ok, 0, 0);
+                                  "The geometry is not correctly defined. Edit the input file and reload.",
+                                  QMessageBox::Ok, 0, 0);
 #endif
 
             return false;
@@ -1198,10 +1190,13 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     // See if any of the dose checkboxes are checked
     doseCheckbox_toggled();
 
-    // Load the egsinp file into the editor
-    if (file.open(QFile::ReadOnly | QFile::Text)) {
-        egsinpEdit->setPlainText(file.readAll());
-        egsinpEdit->validateEntireInput();
+    // Defer loading the egsinp file into the editor until the user first opens the editor tab
+    editorLoaded = false;
+    egsinpEdit->clear();
+
+    // If already on the editor tab, repopulate immediately since currentChanged won't fire
+    if (tabWidget->currentWidget() == tab) {
+        QTimer::singleShot(0, this, &GeometryViewControl::ensureEditorLoaded);
     }
 
     updateMainWindowTitle("egs_view ("+fileBasename+")");
@@ -1245,6 +1240,19 @@ void GeometryViewControl::reloadInput() {
     if (!loadInput(true)) {
         egsWarning("GeometryViewControl::reloadInput: Error: The geometry is not correctly defined\n");
     }
+}
+
+void GeometryViewControl::ensureEditorLoaded() {
+    if (editorLoaded) {
+        return;
+    }
+
+    QFile file(filename);
+    if (file.open(QFile::ReadOnly | QFile::Text)) {
+        egsinpEdit->setPlainText(file.readAll());
+        egsinpEdit->validateVisibleLines();
+    }
+    editorLoaded = true;
 }
 
 void GeometryViewControl::saveConfig() {
@@ -1435,12 +1443,12 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         if (input->setContentFromFile(configFilename.toLatin1().data())) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
             QMessageBox::critical(this, "Config file read error",
-                          "Failed to open the config file for reading.",
-                          QMessageBox::StandardButton::Ok);
+                                  "Failed to open the config file for reading.",
+                                  QMessageBox::StandardButton::Ok);
 #else
             QMessageBox::critical(this, "Config file read error",
-                          "Failed to open the config file for reading.",
-                          QMessageBox::Ok, 0, 0);
+                                  "Failed to open the config file for reading.",
+                                  QMessageBox::Ok, 0, 0);
 #endif
             delete input;
             return;
@@ -1922,6 +1930,11 @@ void GeometryViewControl::saveEgsinp() {
 #ifdef VIEW_DEBUG
     egsWarning("In saveEgsinp()\n");
 #endif
+
+    // Make sure the editor has been populated before we read its content.
+    // If the user saves without ever opening the editor tab the text would
+    // otherwise be empty.
+    ensureEditorLoaded();
 
     // Prompt the user for a filename and open the file for writing
     QString newFilename = QFileDialog::getSaveFileName(this, "Save input file as...", filename);
@@ -2980,12 +2993,12 @@ int GeometryViewControl::setGeometry(
     if (nmed < 1) {
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         QMessageBox::critical(this, "Geometry error",
-                          "The geometry defines no media",
-                          QMessageBox::StandardButton::Ok);
+                              "The geometry defines no media",
+                              QMessageBox::StandardButton::Ok);
 #else
         QMessageBox::critical(this, "Geometry error",
-                          "The geometry defines no media",
-                          QMessageBox::Ok, 0, 0);
+                              "The geometry defines no media",
+                              QMessageBox::Ok, 0, 0);
 #endif
         delete [] saveColors;
         delete [] saveName;
@@ -3167,12 +3180,12 @@ int GeometryViewControl::setGeometry(
             qApp->processEvents();
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
             QMessageBox::critical(this, "Geometry error",
-                          "Failed to find a point that is inside the geometry",
-                          QMessageBox::StandardButton::Ok);
+                                  "Failed to find a point that is inside the geometry",
+                                  QMessageBox::StandardButton::Ok);
 #else
             QMessageBox::critical(this, "Geometry error",
-                          "Failed to find a point that is inside the geometry",
-                          QMessageBox::Ok, 0, 0);
+                                  "Failed to find a point that is inside the geometry",
+                                  QMessageBox::Ok, 0, 0);
 #endif
             return 3;
         }
@@ -4317,8 +4330,8 @@ void GeometryViewControl::setApplication() {
         inputStruct->removeBlockInputByApp(selectedApplication);
 
         // Delete the previous application example
-        QList<QAction*> actions = appMenu->actions();
-        for (QAction* action : actions) {
+        QList<QAction *> actions = appMenu->actions();
+        for (QAction *action : actions) {
             //if (action->text() == "egs_current_app") {
             appMenu->removeAction(action);
             delete action;
@@ -4335,7 +4348,8 @@ void GeometryViewControl::setApplication() {
         EGS_Library app_lib(newlySelectedApp.c_str(),lib_dir.c_str());
         if (!app_lib.load()) {
             egsWarning("Failed to load inputs and example for application\n");
-        } else {
+        }
+        else {
             getAppInputsFunction getAppInputs = (getAppInputsFunction) app_lib.resolve("getAppSpecificInputs");
 
             if (getAppInputs) {
@@ -4343,7 +4357,8 @@ void GeometryViewControl::setApplication() {
                 if (app) {
                     inputStruct->addBlockInputs(app->getBlockInputs());
                 }
-            } else {
+            }
+            else {
                 egsInformation("  The selected application doesn't support input autocompletion.\n");
             }
 
@@ -4358,9 +4373,9 @@ void GeometryViewControl::setApplication() {
     }
 
     // Update the "Application: ..." menu bar title
-    QList<QAction*> menuBarActions = editorLayout->menuBar()->actions();
-    for (QAction* action : menuBarActions) {
-        QMenu* retrievedMenu = action->menu();
+    QList<QAction *> menuBarActions = editorLayout->menuBar()->actions();
+    for (QAction *action : menuBarActions) {
+        QMenu *retrievedMenu = action->menu();
         if (retrievedMenu && retrievedMenu->title() == QString::fromStdString("Application (" + selectedApplication) + ") ▸") {
             retrievedMenu->setTitle(QString::fromStdString("Application (" + newlySelectedApp) + ") ▸");
         }
@@ -4368,7 +4383,10 @@ void GeometryViewControl::setApplication() {
 
     selectedApplication = newlySelectedApp;
     egsinpEdit->setInputStruct(inputStruct);
-    egsinpEdit->validateEntireInput();
+    // Only re-validate if the editor has already been loaded; if not, the correct inputStruct will be used when it is lazily loaded later.
+    if (editorLoaded) {
+        egsinpEdit->validateVisibleLines();
+    }
 }
 
 vector<string> findDensityCorrectionInputs(string compound_dir) {
@@ -4396,7 +4414,8 @@ vector<string> findDensityCorrectionInputs(string compound_dir) {
             }
         }
         closedir(dir);
-    } else {
+    }
+    else {
         egsInformation("Failed to open density correction files directory\n");
     }
 

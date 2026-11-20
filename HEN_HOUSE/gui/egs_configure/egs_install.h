@@ -523,6 +523,8 @@ static const char spec_file[]={
 #define NO_IAEA_VARS "IAEA_LIB = \n"\
 "IAEA_PHSP_MACROS = \n"
 
+#define EGSPP_VARS "EGSPP_LIB = $lib_link1 $link2_prefix_egspp$link2_suffix \n"
+
 static const char egspp_spec_file[]={
 "#*************************************************************************\n"\
 "#\n"\

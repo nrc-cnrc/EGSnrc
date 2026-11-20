@@ -367,7 +367,7 @@ extern "C" {
 
         setBaseSourceInputs(false, false);
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Beam_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_beam_source"});
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("beam code", true, "The name of the BEAMnrc user code. Note that it must be compiled as a shared library, which is not done by default.");

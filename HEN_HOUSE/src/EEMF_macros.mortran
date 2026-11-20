@@ -287,7 +287,6 @@ REPLACE{$EMFIELD_INITIATE_SET_TUSTEP;}WITH{;
   E_amp = r0_em;
 
   "Adjust the electric field to be in V/m instead of the V/cm"
-  Ex = Ex*100.;Ey = Ey*100.;Ez = Ez*100.;
   E_amp = E_amp*100.;
 
   "activate the transport for the rest of the calculation"

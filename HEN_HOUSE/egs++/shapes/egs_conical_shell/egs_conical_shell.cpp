@@ -198,7 +198,7 @@ extern "C" {
         inputSet = true;
 
         setShapeInputs(shapeBlockInput);
-        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Conical_Shell"});
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_conical_shell"});
 
         shapeBlockInput->addSingleInput("midpoint", false, "The midpoint of the conical shell, (x, y, z). Defaults to '0 0 0'.");
 

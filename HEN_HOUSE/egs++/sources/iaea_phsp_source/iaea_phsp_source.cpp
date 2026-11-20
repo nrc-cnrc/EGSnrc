@@ -558,7 +558,7 @@ extern "C" {
 
         setBaseSourceInputs(false, false);
 
-        srcBlockInput->getSingleInput("library")->setValues({"IAEA_Phsp_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"iaea_phsp_source"});
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("iaea phase space file", true, "The path to and name of the phase-space file, no extension. Both the .IAEAphsp and .IAEAheader file must be in the same directory.");

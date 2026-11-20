@@ -1833,7 +1833,7 @@ extern "C" {
 
         setBaseAusgabObjectInputs();
 
-        ausBlockInput->getSingleInput("library")->setValues({"EGS_Fluence_Scoring"});
+        ausBlockInput->getSingleInput("library")->setValues({"egs_fluence_scoring"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = ausBlockInput->addSingleInput("type", true, "Whether to score volumetric or planar fluence", {"planar", "volumetric"});

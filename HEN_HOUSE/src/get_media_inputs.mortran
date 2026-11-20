@@ -1666,6 +1666,8 @@ DO i=1,NMED[
          ipot(i) = ipot_tmp;
        ]
 
+       iscompound(i) = 0;
+
        IF(~mixture_specified)[
         DO j=1,nne_tmp[
             inpasym(i,j)=asym_tmp(j);
@@ -1695,17 +1697,18 @@ DO i=1,NMED[
             ]
         ]
 
-        iscompound(i) = 0;
+        "Check if the elements make up a compound"
         IF(spec_by_pz)[
             IF (nne(i)>1) ["check if there are > 1 elements"
-            iscompound(i) = 1;
-            "is_compound(i) is 1 only if medium is specified"
-            "with number of atoms."
-            "(From PIRS-701 page 269)"
+                iscompound(i) = 1;
+                "is_compound(i) is 1 only if medium is specified"
+                "with number of atoms."
+                "(From PIRS-701 page 269)"
             ]
         ]
        ] ELSE [
 
+        "This is a mixture of elements or compounds"
         ncomp(i)=nne_tmp;
 
         DO j=1,nne_tmp[
@@ -1714,8 +1717,8 @@ DO i=1,NMED[
         ]
 
         "Get the atomic data from the compounds"
-        CALL compoundstoelements(compoundList_tmp, compoundFractions_tmp,
-            asym_tmp, rhoz_tmp, z_tmp, ncomp(i), nne_tmp);
+        CALL egs_compoundstoelements(compoundList_tmp, compoundFractions_tmp,
+            localDensity(i), asym_tmp, rhoz_tmp, z_tmp, ncomp(i), nne_tmp);
 
         "nne_tmp will now have been updated with actual number of elements"
         nne(i)=nne_tmp;

@@ -528,7 +528,7 @@ extern "C" {
 
         setBaseAusgabObjectInputs();
 
-        ausBlockInput->getSingleInput("library")->setValues({"EGS_Phsp_Scoring"});
+        ausBlockInput->getSingleInput("library")->setValues({"egs_phsp_scoring"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto formatPtr = ausBlockInput->addSingleInput("output format", false, "The phase-space format to output. Defaults to EGSnrc", {"EGSnrc", "IAEA"});

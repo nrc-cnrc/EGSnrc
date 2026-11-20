@@ -38,7 +38,7 @@
 #include "egs_input.h"
 #include "egs_functions.h"
 
-static string EGS_CIRCLE_LOCAL typeStr("EGS_Circle");
+static string EGS_CIRCLE_LOCAL typeStr("egs_circle");
 static bool EGS_CIRCLE_LOCAL inputSet = false;
 static shared_ptr<EGS_BlockInput> EGS_CIRCLE_LOCAL shapeBlockInput = make_shared<EGS_BlockInput>("shape");
 
