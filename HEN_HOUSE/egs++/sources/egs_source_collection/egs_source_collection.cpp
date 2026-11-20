@@ -162,7 +162,7 @@ extern "C" {
 
         setBaseSourceInputs(false, false);
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Source_Collection"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_source_collection"});
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("source names", true, "A list of names of previously defined sources.");

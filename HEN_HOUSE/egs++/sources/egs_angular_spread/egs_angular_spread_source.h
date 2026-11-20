@@ -78,11 +78,13 @@ This source is defined as follows:
     name = some_name
     source name = the name of a previously defined source
     sigma = angular_spread_in_degrees
+    # or alternatively:
+    fwhm = angular_spread_fwhm_in_degrees
 :stop source:
 \endverbatim
-The \c sigma input can be positive or negative.
-If it is positive, it is considered to be the sigma of the Gaussian distribution
-in degrees, if negative, the FWHM of the distribution.
+The angular spread can be specified either as the \c sigma (standard deviation)
+or the \c fwhm (full width at half maximum) of the Gaussian distribution, both
+in degrees. Only one of these inputs should be provided.
 
 A simple example:
 \verbatim

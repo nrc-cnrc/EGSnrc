@@ -997,7 +997,7 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_AutoEnvelope"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_autoenvelope"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("type", false, "The type of auto envelope. A switched envelope only provides extra functionality in applications that specifically utilize it.", {"EGS_AEnvelope", "EGS_ASwitchedEnvelope"});

@@ -43,7 +43,7 @@
 #include "egs_input.h"
 #include "egs_math.h"
 
-static string EGS_ISOTROPIC_SOURCE_LOCAL typeStr("EGS_Isotropic_Source");
+static string EGS_ISOTROPIC_SOURCE_LOCAL typeStr("egs_isotropic_source");
 static bool EGS_ISOTROPIC_SOURCE_LOCAL inputSet = false;
 
 EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,

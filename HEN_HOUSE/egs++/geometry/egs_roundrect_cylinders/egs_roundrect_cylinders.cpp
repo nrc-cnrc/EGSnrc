@@ -49,7 +49,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_RoundRect_Cylinders"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_roundrect_cylinders"});
 
         // Format: name, isRequired, description, vector string of allowed inputs
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of rounded rectangle cylinder", {"EGS_RoundRectCylinders", "EGS_RoundRectCylindersXY", "EGS_RoundRectCylindersYZ", "EGS_RoundRectCylindersXZ"});
@@ -66,7 +66,7 @@ extern "C" {
         yinpPtr->addDependency(typePtr, "EGS_RoundRectCylinders");
     }
 
-    EGS_ROUNDRECT_CYLINDERS_EXPORT string getExample(string type) {
+    EGS_ROUNDRECT_CYLINDERS_EXPORT string getExample() {
         string example;
         example = {
             R"(

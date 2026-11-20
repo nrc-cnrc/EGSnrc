@@ -46,7 +46,7 @@ extern "C" {
     static void setInputs() {
         inputSet = true;
 
-        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"EGS_Gaussian_Shape"});
+        shapeBlockInput->addSingleInput("library", true, "The type of shape, loaded by shared library in egs++/dso.", {"egs_gaussian_shape"});
         shapeBlockInput->addSingleInput("sigma", true, "1 or 2 or 3 inputs, the sigma for Gaussian spread along x, y and z, respectively.");
 
         auto shapePtr = shapeBlockInput->addBlockInput("shape");
@@ -57,13 +57,14 @@ extern "C" {
         string example;
         example = {
             R"(
-    # Example of egs_gaussiam_shape
+    # Example of egs_gaussian_shape
     #:start shape:
         library = egs_gaussian_shape
         :start shape:
             definition of the shape to be smeared
         :stop shape:
         sigma = 1, 2 or 3 inputs
+    :stop shape:
 )"};
         return example;
     }

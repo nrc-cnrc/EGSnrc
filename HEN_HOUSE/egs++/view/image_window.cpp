@@ -632,7 +632,8 @@ void ImageWindow::wheelEvent(QWheelEvent *event) {
     if (stepSize == 0) {
         if (event->angleDelta().y() < 0) {
             stepSize = -1;
-        } else {
+        }
+        else {
             stepSize = 1;
         }
     }
@@ -641,7 +642,8 @@ void ImageWindow::wheelEvent(QWheelEvent *event) {
     if (stepSize == 0) {
         if (event->delta() < 0) {
             stepSize = -1;
-        } else {
+        }
+        else {
             stepSize = 1;
         }
     }

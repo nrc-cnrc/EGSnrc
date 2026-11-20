@@ -266,7 +266,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_IPlanes"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_iplanes"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", false, "The type of iplane", {"EGS_RadialRepeater"});
@@ -299,7 +299,7 @@ extern "C" {
         firstanglePtr->addDependency(firstangleRadPtr, "", true);
     }
 
-    EGS_IPLANES_EXPORT string getExample(string type) {
+    EGS_IPLANES_EXPORT string getExample() {
         string example;
         example = {
             R"(

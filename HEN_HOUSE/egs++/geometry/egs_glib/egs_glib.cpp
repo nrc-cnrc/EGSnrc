@@ -60,13 +60,13 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Glib"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_glib"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("include file", true, "The path to some geometry.");
     }
 
-    EGS_GLIB_EXPORT string getExample(string type) {
+    EGS_GLIB_EXPORT string getExample() {
         string example;
         example = {
             R"(

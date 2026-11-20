@@ -57,7 +57,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Prism"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_prism"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of prism", {"EGS_PrismX", "EGS_PrismY", "EGS_PrismZ", "EGS_Prism"});
@@ -66,7 +66,7 @@ extern "C" {
         geomBlockInput->addSingleInput("points", true, "A list of 2D or 3D (for type=EGS_Prism) positions. For 3D points, they must reside on a plane. These create a polygon that define the base of the prism.");
     }
 
-    EGS_PRISM_EXPORT string getExample(string type) {
+    EGS_PRISM_EXPORT string getExample() {
         string example;
         example = {
             R"(

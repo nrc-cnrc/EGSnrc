@@ -84,7 +84,7 @@ extern "C" {
 
         setBaseSourceInputs();
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Point_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_point_source"});
 
         // Format: name, isRequired, description, vector string of allowed values
         srcBlockInput->addSingleInput("position", true, "The position of the point source: 'x y z'");
