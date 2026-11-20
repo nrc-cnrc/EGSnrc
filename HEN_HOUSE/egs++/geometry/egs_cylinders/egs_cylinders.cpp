@@ -49,7 +49,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Cylinders"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_cylinders"});
 
         // Format: name, isRequired, description, vector string of allowd values
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of cylinder.", {"EGS_XCylinders", "EGS_YCylinders", "EGS_ZCylinders", "EGS_Cylinders"});
@@ -62,7 +62,7 @@ extern "C" {
         inpPtr->addDependency(typePtr, "EGS_Cylinders");
     }
 
-    EGS_CYLINDERS_EXPORT string getExample(string type) {
+    EGS_CYLINDERS_EXPORT string getExample() {
         string example;
         example = {
             R"(

@@ -79,7 +79,7 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Dynamic_Geometry"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_dynamic_geometry"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("base geometry", true, "The name of a previously defined geometry");
@@ -87,7 +87,7 @@ extern "C" {
         motionBlock->addSingleInput("control point", true, "Parameters to define motion: timeIndex xtrans ytrans ztrans xrot yrot zrot");
     }
 
-    EGS_DYNAMIC_GEOMETRY_EXPORT string getExample(string type) {
+    EGS_DYNAMIC_GEOMETRY_EXPORT string getExample() {
         string example;
         example = {
             R"(

@@ -54,7 +54,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_EllipticCylinders"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_elliptic_cylinders"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of elliptic cylinder", {"EGS_EllipticCylindersXY", "EGS_EllipticCylindersXZ", "EGS_EllipticCylindersYZ", "EGS_EllipticCylinders"});

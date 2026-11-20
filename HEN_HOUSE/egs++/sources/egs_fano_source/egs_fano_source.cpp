@@ -152,7 +152,7 @@ extern "C" {
 
         setBaseSourceInputs();
 
-        srcBlockInput->getSingleInput("library")->setValues({"EGS_Fano_Source"});
+        srcBlockInput->getSingleInput("library")->setValues({"egs_fano_source"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto shapePtr = srcBlockInput->addBlockInput("shape");

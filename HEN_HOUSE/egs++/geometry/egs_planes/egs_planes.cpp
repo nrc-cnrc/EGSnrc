@@ -97,7 +97,7 @@ extern "C" {
 
         setBaseGeometryInputs();
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_Planes"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_planes"});
 
         // Format: name, isRequired, description, vector string of allowed values
         auto typePtr = geomBlockInput->addSingleInput("type", true, "The type of plane.", {"EGS_XPlanes", "EGS_YPlanes", "EGS_ZPlanes", "EGS_Planes", "EGS_PlaneCollection"});
@@ -126,7 +126,7 @@ extern "C" {
         posPtr->addDependency(numPtr, "", true);
     }
 
-    EGS_PLANES_EXPORT string getExample(string type) {
+    EGS_PLANES_EXPORT string getExample() {
         string example;
         example = {
             R"(

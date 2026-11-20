@@ -59,15 +59,17 @@ bool EGS_Highlighter::isDarkMode() const {
         process.start("gsettings", {"get", "org.gnome.desktop.interface", "color-scheme"});
         process.waitForFinished(100);
         QString output = process.readAllStandardOutput();
-        if (output.contains("dark", Qt::CaseInsensitive))
+        if (output.contains("dark", Qt::CaseInsensitive)) {
             return true;
+        }
     }
     // Try KDE
     {
         QSettings kdeSettings(QDir::homePath() + "/.config/kdeglobals", QSettings::IniFormat);
         QString colorScheme = kdeSettings.value("General/ColorScheme", "").toString();
-        if (colorScheme.contains("dark", Qt::CaseInsensitive))
+        if (colorScheme.contains("dark", Qt::CaseInsensitive)) {
             return true;
+        }
     }
     // Fallback heuristic: check app palette brightness
     QColor bg = QApplication::palette().color(QPalette::Base);
@@ -83,8 +85,7 @@ bool EGS_Highlighter::isDarkMode() const {
 }
 
 EGS_Highlighter::EGS_Highlighter(QTextDocument *parent)
-    : QSyntaxHighlighter(parent)
-{
+    : QSyntaxHighlighter(parent) {
     bool dark = isDarkMode();
 
     // ---------- Define color palettes ----------

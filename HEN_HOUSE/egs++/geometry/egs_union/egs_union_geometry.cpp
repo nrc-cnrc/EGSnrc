@@ -176,14 +176,14 @@ extern "C" {
 
         setBaseGeometryInputs(false);
 
-        geomBlockInput->getSingleInput("library")->setValues({"EGS_gunion"});
+        geomBlockInput->getSingleInput("library")->setValues({"egs_gunion"});
 
         // Format: name, isRequired, description, vector string of allowed values
         geomBlockInput->addSingleInput("geometries", true, "A list of names of previously defined geometries");
         geomBlockInput->addSingleInput("priorities", false, "A list of integers defining the geometry priorities. If neglected, the priority decreases when moving from the first to the last of the geometry list.");
     }
 
-    EGS_UNIONG_EXPORT string getExample(string type) {
+    EGS_UNIONG_EXPORT string getExample() {
         string example;
         example = {
             R"(

@@ -104,7 +104,7 @@ extern "C" {
         inputSet = true;
 
         setShapeInputs(shapeBlockInput);
-        shapeBlockInput->getSingleInput("library")->setValues({"EGS_Rectangle"});
+        shapeBlockInput->getSingleInput("library")->setValues({"egs_rectangle"});
 
         shapeBlockInput->addSingleInput("rectangle", true, "Two 2D coordinates to define a rectangle: x1 y1 x2 y2. By default these are in the x-y plane at z=0; use a transformation to adjust.");
         shapeBlockInput->addSingleInput("inner rectangle", false, "Two 2D coordinates to define an inner rectangle, and create a 'rectangular ring': xp1 yp1 xp2 yp2");
