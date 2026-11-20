@@ -528,8 +528,32 @@ public:
         /* Ray-trace from current position to CV and keep track of path to
          * CV and path in the CV
          */
+        /* Iteration guard: this ray-trace terminates only via howfar()
+         * eventually returning inew<0 (leaves the geometry) or the CV-exit
+         * check finding no re-entry. A malformed/degenerate geometry, or a
+         * bug in the CV re-entry bookkeeping (see re_enters_cv below), can
+         * defeat both -- see 2026-09-03 civadot investigation. 10 million
+         * is far beyond any legitimate ray-trace in geometries this project
+         * has used (the pathological civadot case tripped a 100k guard
+         * near-instantly with a frozen ireg/x, confirming genuine non-
+         * termination rather than a merely-long trace). */
+        long long loop_guard = 0;
         while (navigating) {
             while (1) {
+                if (++loop_guard > 10000000) {
+                    egsFatal("\nscoreInCV: ray-trace loop guard tripped after %lld "
+                             "iterations -- likely non-terminating ray trace.\n"
+                             " x = (%.10g, %.10g, %.10g)\n"
+                             " u = (%.10g, %.10g, %.10g)\n"
+                             " ireg = %d, newmed = %d, imed = %d, tstep(last) = %.10g\n"
+                             " Lambda = %.10g\n"
+                             " inside_cv = %d, n_ir_sc = %d\n",
+                             loop_guard,
+                             x.x, x.y, x.z, u.x, u.y, u.z,
+                             ireg, newmed, imed, tstep,
+                             Lambda,
+                             (int)inside_cv, n_ir_sc);
+                }
                 if (is_excluded[ig][ireg]) {
                     break;
                 }
@@ -654,6 +678,18 @@ public:
                     t_sc_tot = 0;
                     n_ir_sc = 0;
                     inside_cv = false;
+                    /* Consume the flag: it reflects the *last* "Leaves CV?"
+                     * evaluation only. If a later outer-loop pass exits the
+                     * inner loop through a different path -- e.g. the
+                     * FD_LAMBDA_CUTOFF early exit a few lines up, which
+                     * breaks on inew<0 before ever reaching the "Leaves
+                     * CV?" check -- a stale re_enters_cv=true here forces
+                     * an infinite outer loop: ireg/x never advance (the
+                     * cutoff keeps firing before "ireg = inew" runs), so
+                     * this branch keeps re-triggering forever. Reset so
+                     * re-entry always requires a fresh, current "Leaves
+                     * CV?" evaluation. See 2026-09-03 civadot hang. */
+                    re_enters_cv = false;
                 }
                 else {
                     navigating = false;
