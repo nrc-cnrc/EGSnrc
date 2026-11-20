@@ -137,7 +137,7 @@ $(DSO1)egs_alias_table.$(obje): egs_alias_table.cpp egs_alias_table.h \
 $(DSO1)egs_object_factory.$(obje): egs_object_factory.cpp egs_object_factory.h \
     egs_library.h egs_input.h $(config1h)
 
-$(DSO1)egs_spectra.$(obje): egs_spectra.cpp egs_base_source.h $(config1h) \
+$(DSO1)egs_spectra.$(obje): egs_spectra.cpp egs_spectra.h egs_base_source.h $(config1h) \
     egs_rndm.h egs_object_factory.h egs_alias_table.h egs_vector.h \
     egs_input.h egs_math.h egs_ensdf.h
 

@@ -35,8 +35,8 @@ DEFS = $(DEF1) -DBUILD_AL_EQ_CT_SOURCE_DLL
 
 library = egs_al_eq_ct_source
 lib_files = egs_al_eq_ct_source
-my_deps = $(common_source_deps)
-extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
+my_deps = $(common_source_deps) egs_spectra.h egs_alias_table.h egs_interpolator.h
+extra_dep = $(addprefix $(DSOLIBS), $(my_deps)) smooth_array.h locate_in_array.h
 
 include $(SPEC_DIR)egspp_libs.spec
 

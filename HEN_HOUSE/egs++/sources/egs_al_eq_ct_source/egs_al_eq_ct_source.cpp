@@ -40,7 +40,7 @@
 #include "egs_alias_table.h"
 #include "egs_base_source.h"
 #include "smooth_array.h"
-#include "egs_spectra.cpp"
+#include "egs_spectra.h"
 #include <map>
 // Interpolators
 #include "egs_interpolator.h"
@@ -58,6 +58,8 @@
 #include <complex>
 #include <limits>
 #include <iostream>
+
+static bool EGS_AL_EQ_CT_SOURCE_LOCAL inputSet = false;
 
 EGS_AlEqCtSource::EGS_AlEqCtSource(EGS_Input *input,
                                    EGS_ObjectFactory *f): EGS_BaseSimpleSource(input,f), ctry(0), dist(1), collimation(1), valid(true), table(0) {
@@ -86,8 +88,14 @@ EGS_AlEqCtSource::EGS_AlEqCtSource(EGS_Input *input,
 
     // Get basespectrum in the middle of the bowtie filter
     EGS_AliasTable *basespec;
-    EGS_TabulatedSpectrum *spectrum;
-    spectrum = static_cast<EGS_TabulatedSpectrum *>(s);
+    EGS_TabulatedSpectrum *spectrum = dynamic_cast<EGS_TabulatedSpectrum *>(s);
+    if (!spectrum) {
+        egsWarning("EGS_AlEqCtSource: the spectrum must be of type "
+                   "'tabulated spectrum'\n");
+        valid = false;
+        setUp();
+        return;
+    }
     basespec = new EGS_AliasTable(spectrum->get_length(),spectrum->getX(),spectrum->getF(),1);
 
 
@@ -119,6 +127,49 @@ void EGS_AlEqCtSource::setUp() {
 };
 
 extern "C" {
+
+    static void setInputs() {
+        inputSet = true;
+
+        setBaseSourceInputs(false, false);
+
+        srcBlockInput->getSingleInput("library")->setValues({"egs_al_eq_ct_source"});
+
+        // Format: name, isRequired, description, vector string of allowed values
+        srcBlockInput->addSingleInput("distance", true, "The distance between the x-ray source and the middle of the CT gantry in cm.");
+        srcBlockInput->addSingleInput("collimation", true, "The collimation of the CT fan beam in the center of the gantry along the patient axis in cm.");
+        srcBlockInput->addSingleInput("bowtie distribution", true, "The filename of a file containing the bowtie angular distribution.");
+        srcBlockInput->addSingleInput("al equivalent bowtie", true, "The filename of a file containing the bowtie shape in terms of aluminum equivalent thickness.");
+    }
+
+    EGS_AL_EQ_CT_SOURCE_EXPORT string getExample() {
+        string example;
+        example = {
+            R"(
+    # Example of egs_al_eq_ct_source
+    #:start source:
+        library = egs_al_eq_ct_source
+        name = some_name
+
+        distance = the distance between the x-ray source and the middle of the CT gantry in cm
+        collimation = the collimation of the CT fan beam in the center of the gantry along the patient axis in cm
+        bowtie distribution = filename of a file containing the bowtie angular distribution
+        al equivalent bowtie = filename of a file containing the bowtie shape in terms of aluminum equivalent thickness
+
+        :start spectrum:
+            definition of the spectrum
+        :stop spectrum:
+    :stop source:
+)"};
+        return example;
+    }
+
+    EGS_AL_EQ_CT_SOURCE_EXPORT shared_ptr<EGS_BlockInput> getInputs() {
+        if(!inputSet) {
+            setInputs();
+        }
+        return srcBlockInput;
+    }
 
     EGS_AL_EQ_CT_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
             EGS_ObjectFactory *f) {
@@ -177,7 +228,7 @@ EGS_AliasTable *EGS_AlEqCtSource::calculate_filtered_spectrum(EGS_AliasTable *ba
     //save_spectrum_file(energy_spec,new_prob_array, num_values, file_name);
     EGS_AliasTable *filtered_spec;
     filtered_spec = new EGS_AliasTable(nb,energy_spec,new_prob_array,itype);
-    delete new_prob_array;
+    delete [] new_prob_array;
 
     return filtered_spec;
 

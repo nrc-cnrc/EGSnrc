@@ -50,7 +50,7 @@
 
 #ifdef WIN32
 
-    #ifdef BUILD_COLLIMATED_SOURCE_DLL
+    #ifdef BUILD_AL_EQ_CT_SOURCE_DLL
         #define EGS_AL_EQ_CT_SOURCE_EXPORT __declspec(dllexport)
     #else
         #define EGS_AL_EQ_CT_SOURCE_EXPORT __declspec(dllimport)
