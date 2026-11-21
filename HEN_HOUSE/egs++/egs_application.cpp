@@ -55,6 +55,7 @@
 #include <cstdlib>
 #include <vector>
 #include <fstream>
+#include <limits>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -497,6 +498,9 @@ int EGS_Application::outputData() {
                    "for writing\n",ofile.c_str());
         return 1;
     }
+    // Write floating point values with enough digits to round-trip exactly,
+    // so that resumed and combined runs reproduce the uninterrupted result
+    data_out->precision(numeric_limits<double>::max_digits10);
     if (!run->storeState(*data_out)) {
         return 2;
     }
