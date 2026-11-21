@@ -44,6 +44,11 @@ static EGS_LOCAL EGS_TypedObjectFactory<EGS_AusgabObject>
 ausgab_object_creator(string("egs++/dso/")+CONFIG_NAME,"EGS_AusgabObject");
 
 void EGS_AusgabObject::createAusgabObjects(EGS_Input *i) {
+    if (!i) return;
+    if (!i->isA("ausgab object definition") &&
+        !i->getInputItem("ausgab object definition")) {
+        return;
+    }
     ausgab_object_creator.createObjects(i,"ausgab object definition",
                                         "ausgab object","__no__key__","createAusgabObject",true);
 }
