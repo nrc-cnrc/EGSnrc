@@ -1,0 +1,286 @@
+##############################################################################
+#
+# Exposure BuildUp calculation for 1 MeV gammas in Fe
+# Exponential importance sampling: I(eta) = exp(eta)
+# ----------------------------------------------------
+#
+# Same geometry as BUF_Fe_1MeV_xcom_PCUT-10keV-air-det-eTLE_xoshiro256pp.egsinp
+# but with I(eta) = exp(eta), which exactly compensates for pure exponential
+# attenuation and maintains a constant particle population at every depth.
+#
+# Theory: expected particle count at depth eta with importance sampling is
+#   N(eta) = N0 * exp(-eta) * I(eta) = N0 * exp(-eta) * exp(eta) = N0
+# i.e., constant — independent of depth.
+#
+# PRACTICAL LIMITS
+# ----------------
+# Fine section (0-10 mfp, 0.5-mfp steps): split factor exp(0.5) ~ 1.65 per
+# step. A straight track from 0 to 10 mfp accumulates at most ~22000 copies
+# total. Safe — well below MXSTACK = 2,000,000.
+#
+# Coarse section (10-100 mfp, 5-mfp steps): split factor exp(5) ~ 148 per
+# step. A track that crosses 3 coarse steps without absorption spawns
+# 148^3 ~ 3.2e6 copies, exceeding MXSTACK and crashing the simulation.
+#
+# In practice this scheme is reliable only up to ~20-25 mfp (2-3 coarse
+# steps beyond the fine section). Beyond that, use the x2-per-5mfp scheme
+# (BUF_Fe_1MeV_xoshiro256pp_IS-x2per5mfp.egsinp) instead.
+#
+# EMH, Jul 2026
+#
+##############################################################################
+
+
+##############################################################################
+### Run control
+##############################################################################
+:start run control:
+    ncase = 100e6
+    rco type = uniform
+    check jobs completed = yes
+    interval wait time = 6000
+    number of intervals = 60
+:stop run control:
+
+##############################################################################
+### Geometry
+##############################################################################
+:start geometry definition:
+
+    ### Gamma Mean Free Path Data
+    #
+    # EGSnrc
+    # ------
+    # Total XSection = 5.990370E-02 cm**2/g (NIST XCOM)
+    #
+    # Density = 7.874 g/cm**3
+    # Fe GMFP = 2.12007 cm
+    #
+    #
+    :start geometry:
+        name     = iron_sphere
+        library  = egs_spheres
+        radii = 1.059985 1.060085 2.120020 2.120120 3.180055 3.180155 4.240090 4.240190 5.300125 5.300225 \
+                6.360160 6.360260 7.420195 7.420295 8.480230 8.480330 9.540265 9.540365 10.60030 10.60040 \
+                11.660335	11.660435 12.720370	12.720470 13.780405 13.780505 14.840440 14.840540 15.900475 15.900575 \
+                16.960510 16.960610 18.020545 18.020645 19.080580 19.080680 20.140615 20.140715 21.200650 21.200750 \
+                31.801000 31.801100 42.401350 42.401450 53.001700 53.001800 63.602050 63.602150 74.202400 74.202500 \
+                84.802750 84.802850 95.403100 95.403200 106.003450 106.003550 116.603800 116.603900 127.204150 127.204250 \
+                137.804500 137.804600 148.404850 148.404950 159.005200 159.005300 169.605550 169.605650 \
+                180.205900 180.206000 190.806250 190.806350 201.406600 201.406700 212.006950 212.007050 \
+                233.2077
+
+        :start media input:
+            media = iron air
+            set medium = 1	1
+            set medium = 3	1
+            set medium = 5	1
+            set medium = 7	1
+            set medium = 9	1
+            set medium = 11	1
+            set medium = 13	1
+            set medium = 15	1
+            set medium = 17	1
+            set medium = 19	1
+            set medium = 21	1
+            set medium = 23	1
+            set medium = 25	1
+            set medium = 27	1
+            set medium = 29	1
+            set medium = 31	1
+            set medium = 33	1
+            set medium = 35	1
+            set medium = 37	1
+            set medium = 39	1
+            set medium = 41	1
+            set medium = 43	1
+            set medium = 45	1
+            set medium = 47	1
+            set medium = 49	1
+            set medium = 51	1
+            set medium = 53	1
+            set medium = 55	1
+            set medium = 57	1
+            set medium = 59	1
+            set medium = 61	1
+            set medium = 63	1
+            set medium = 65	1
+            set medium = 67	1
+            set medium = 69	1
+            set medium = 71	1
+            set medium = 73	1
+            set medium = 75	1
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name     = fd_sphere
+        library  = egs_spheres
+        radii = 212.007050
+        :start media input:
+            media = air
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = iron_sphere
+
+:stop geometry definition:
+
+##############################################################################
+### Media
+##############################################################################
+:start media definition:
+
+    ae =  0.521
+    ue = 2.511
+
+    ap = 0.010
+    up = 2.0
+
+    :start iron:
+        density correction file = iron
+    :stop iron:
+
+    :start ironX:
+        density correction file = iron
+    :stop ironX:
+
+    :start air:
+        density correction file = air_dry_nearsealevel
+    :stop air:
+
+:stop media definition:
+
+
+##############################################################################
+### Source
+##############################################################################
+:start source definition:
+
+    :start source:
+        name      = point_source_at_origin
+        library   = egs_isotropic_source
+        charge    = 0
+        :start spectrum:
+            type = monoenergetic
+            energy = 1
+        :stop spectrum:
+        :start shape:
+            type     = point
+            position = 0 0 0
+        :stop shape:
+    :stop source:
+
+    simulation source = point_source_at_origin
+
+:stop source definition:
+
+:start rng definition:
+    type = xoshiro256++
+    initial seeds = 7 12
+:stop rng definition:
+
+###############################################################################
+### Scoring options
+###############################################################################
+:start scoring options:
+
+    score primaries = yes
+    verbose = yes
+
+    :start calculation geometry:
+        geometry name         = iron_sphere
+        scoring regions       = 1 3 5 7	9 11 13	15 17 19 21	23 25 27 29	31 33 35 \
+                                37 39 41 43 45	47 49 51 53	55 57 59 61	63 65 67 69	71 73 75
+
+        # Air shell volumes [cm3] = mass[g] / rho_air (1.20479E-03 g/cm3)
+        scoring region volumes = 1.412030E-03 5.648204E-03 1.270844E-02 2.259315E-02 3.530159E-02 5.083376E-02 6.919048E-02 \
+                                 9.037260E-02 1.143768E-01 1.412030E-01 1.708597E-01 2.033383E-01 2.386391E-01 2.767619E-01 \
+                                 3.177151E-01 3.614821E-01 4.080794E-01 4.575071E-01 5.097486E-01 5.648204E-01 1.270844E+00 \
+                                 2.259315E+00 3.530159E+00 5.083376E+00 6.919048E+00 9.037260E+00 1.143768E+01 1.412030E+01 \
+                                 1.708597E+01 2.033383E+01 2.386391E+01 2.767619E+01 3.177151E+01 3.614821E+01 4.080794E+01 \
+                                 4.575071E+01 5.097486E+01 5.648204E+01
+
+        #
+        # Exponential importance: I = exp(eta) where eta is the mfp depth at
+        # the inner boundary of each region.
+        #
+        # Region layout:
+        #   Regions 2k+1, 2k+2 (k=1..19): thin shell + bulk at k*0.5 mfp
+        #     -> I = exp(k*0.5), split factor exp(0.5) ~ 1.65 per crossing
+        #   Regions 39, 40: shell at 10 mfp + bulk 10-15 mfp
+        #     -> I = exp(10) ~ 2.2e4
+        #   Regions 41, 42: shell at 15 mfp + bulk 15-20 mfp
+        #     -> I = exp(15) ~ 3.3e6, split factor exp(5) ~ 148  <-- AGGRESSIVE
+        #   ... same factor-148 step at every subsequent 5-mfp boundary ...
+        #   Region 75: thin shell at 100 mfp -> I = exp(100) ~ 2.7e43
+        #   Region 76: beyond 100 mfp -> I = 1 (aggressive roulette outward)
+        #
+        # WARNING: the coarse section (regions 40+) uses split factor ~148 at
+        # every 5-mfp boundary.  Three unimpeded coarse crossings produce
+        # 148^3 ~ 3.2e6 copies, which exceeds MXSTACK = 2,000,000 and will
+        # crash the simulation.  This scheme is safe only up to ~20-25 mfp.
+        # Beyond that depth use the x2-per-5mfp scheme instead.
+        #
+        importance region ranges = \
+             0   0    1.0      \
+             1   2    1.649    \
+             3   4    2.718    \
+             5   6    4.482    \
+             7   8    7.389    \
+             9  10   12.18     \
+            11  12   20.09     \
+            13  14   33.12     \
+            15  16   54.60     \
+            17  18   90.02     \
+            19  20  148.4      \
+            21  22  244.7      \
+            23  24  403.4      \
+            25  26  665.1      \
+            27  28  1096.6     \
+            29  30  1808.0     \
+            31  32  2981.0     \
+            33  34  4914.8     \
+            35  36  8103.1     \
+            37  38  1.336e4    \
+            39  40  2.203e4    \
+            41  42  3.269e6    \
+            43  44  4.852e8    \
+            45  46  7.200e10   \
+            47  48  1.069e13   \
+            49  50  1.586e15   \
+            51  52  2.353e17   \
+            53  54  3.493e19   \
+            55  56  5.185e21   \
+            57  58  7.694e23   \
+            59  60  1.142e26   \
+            61  62  1.695e28   \
+            63  64  2.515e30   \
+            65  66  3.732e32   \
+            67  68  5.540e34   \
+            69  70  8.223e36   \
+            71  72  1.221e39   \
+            73  74  1.812e41   \
+            75  75  2.688e43   \
+            76  76  1.0
+
+    :stop calculation geometry:
+
+    emuen file = $EGS_HOME/data/emuen_rho_air_xcom_ik_1keV-1.5MeV.data
+
+    Default FD geometry = fd_sphere
+
+:stop scoring options:
+
+
+:start MC transport parameter:
+  #Photonuclear attenuation = ON
+:stop MC transport parameter:
+
+
+##############################################################################
+### Viewer control
+##############################################################################
+:start view control:
+    set color = iron  200 100 100 150
+:stop view control:

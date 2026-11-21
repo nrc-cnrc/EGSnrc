@@ -145,7 +145,8 @@
      :start calculation geometry:
         geometry name          = the_phantom
         scoring regions        = 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
-        scoring region masses  = 0.0041804126 0.029263 0.079428 0.154675 0.255005 0.380418 0.530912 \
+        # Water shell volumes [cm3] (water density ~1.0 g/cm3, so V ≈ m/g in cm3)
+        scoring region volumes = 0.0041804126 0.029263 0.079428 0.154675 0.255005 0.380418 0.530912 \
                                  0.70649 0.90715 1.132892 1.383717 1.659624 1.960614 2.286686 \
                                  2.63784 3.014078 3.415397 3.841799 4.293284 4.769851
         FD geometry            = fd_g

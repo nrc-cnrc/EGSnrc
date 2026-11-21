@@ -140,7 +140,8 @@
     :start calculation geometry:
         geometry name         = shield
         scoring regions       = 1       # outer air shell
-        scoring region masses = 0.49326 # mass in g for each region
+        # Air shell volume [cm3] = mass[g] / rho_air (1.20479E-03 g/cm3)
+        scoring region volumes = 4.09416E+02
     :stop calculation geometry:
 
     ### fluence scoring requested (common to all calculation geometries)
