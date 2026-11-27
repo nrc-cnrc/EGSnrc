@@ -37,7 +37,7 @@
 #
 #  - modify the compilation options, e.g.,
 #    FCFLAS = -fno-automatic -finit-local-zero
-#    to make all local variables static with G77.
+#    to make all local variables static with gfortran.
 #
 #  - Pass C preprocessor directive on the command line, e.g.,
 #    FCFLAGS = $(FCFLAGS) -Dmy_code

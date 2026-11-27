@@ -592,48 +592,10 @@ void QInstallPage::createSystemFiles(){
   specfile.replace(QString("$std.spec"),  stdfile );
   specfile.replace(QString("$F77"),  fc->name() );
 
-  /* ************** IK: changes needed for new config version
-                        required to accommodate Darwin
-                        once I'm at making changes, let's also
-                        try to find libg2c.a and put it in
-                        SHLIB_LIBS
-  */
-  bool is_generic = true;
-  if( fc->name() == "g77" && cc->name() == "gcc" ) {
-      if( canonical().contains("darwin") ) {
-          is_generic = false;
-          specfile.replace((QString)"$EGS_F77_LINK",(QString)"gcc");
-          specfile.replace((QString)"$EGS_SHLIB_FLAGS",(QString)"-bundle");
-          specfile.replace((QString)"$EGS_SHLIB_LIBS",(QString)"-lg2c");
-      }
-      else if( canonical().contains("linux") ||
-               canonical().contains("unix")) {
-          is_generic = false;
-          QStringList plist;
-          plist += "/lib64/";
-          plist += "/usr/lib64/";
-          plist += "/usr/local/lib64/";
-          plist += "/lib/";
-          plist += "/usr/lib/";
-          plist += "/usr/local/lib/";
-          QString shlib_libs = " ";
-          for ( QStringList::Iterator it=plist.begin(); it!=plist.end();++it) {
-              QString file = *it + "libg2c.a";
-              QFileInfo fi(file);
-              if( fi.exists() ) { shlib_libs = file; break; }
-          }
-          specfile.replace((QString)"$EGS_F77_LINK","$(F77)");
-          specfile.replace((QString)"$EGS_SHLIB_FLAGS",
-              (QString)"-shared -Wl,-Bsymbolic");
-          specfile.replace((QString)"$EGS_SHLIB_LIBS",shlib_libs);
-      }
-  }
-  if( is_generic ) {
-      specfile.replace(QString("$EGS_F77_LINK"),QString("$(F77)"));
-      specfile.replace(QString("$EGS_SHLIB_FLAGS"),
-              QString("-shared -Wl,-Bsymbolic"));
-      specfile.replace(QString("$EGS_SHLIB_LIBS"),QString(" "));
-  }
+  specfile.replace(QString("$EGS_F77_LINK"),QString("$(F77)"));
+  specfile.replace(QString("$EGS_SHLIB_FLAGS"),
+          QString("-shared -Wl,-Bsymbolic"));
+  specfile.replace(QString("$EGS_SHLIB_LIBS"),QString(" "));
 #ifdef WIN32
   specfile.replace(QString("$EGS_FOBJE"),QString("obj"));
 #else

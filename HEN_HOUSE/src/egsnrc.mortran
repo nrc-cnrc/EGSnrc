@@ -1883,6 +1883,9 @@ $INIT-PEGS4-VARIABLES;
 IF (I1ST.NE.0)[ I1ST=0;"RESET FIRST TIME FLAG"
 "   DO FIRST TIME INITIALIZATION"
 
+"   Check that RECL-FACTOR in machine.macros matches the compiled code"
+call egs_check_recl_factor;
+
 $HATCH-USER-INPUT-INIT;
 
 "   NOW CONSTRUCT PIECEWISE LINEAR FIT TO SINE FUNCTION OVER THE"
@@ -3369,6 +3372,8 @@ spin_unit = egs_get_unit(want_spin_unit);
 IF( spin_unit < 1 ) [
     $egs_fatal(*,'init_spin: failed to get a free fortran unit');
 ]
+" 276 = record size in 4-byte units (1104 bytes). RECL-FACTOR converts it"
+" to the compiler's RECL units. Do NOT hard-code a byte count here.     "
 rec_length = 276*$RECL-FACTOR;
 open(spin_unit,file=spin_file,form='unformatted',access='direct',
      status='old',recl=rec_length,err=:spin-open-error:);
@@ -5353,8 +5358,11 @@ pe_sw_unit = egs_get_unit(0);
 IF( pe_sw_unit < 1 ) [
   $egs_fatal(*,'egs_init_shellwise_pe: failed to get a free Fortran I/O unit');
 ]
+" Byte-addressed C binary file: stream access, so positions are in bytes "
+" regardless of the compiler's RECL units (see egs_read_* in            "
+" egs_utilities.mortran)                                                "
 open(pe_sw_unit,file=pe_sw_file,status='old',
-     form='UNFORMATTED',ACCESS='direct',recl=1,
+     form='UNFORMATTED',ACCESS='stream',
      err=:no-pe-sw-file:);
 GOTO :read-pe-sw:;
 :no-pe-sw-file:
@@ -5888,6 +5896,7 @@ relax_unit = egs_get_unit(0);
 IF( relax_unit < 1 ) [
    $egs_fatal(*,'egs_init_relax: failed to get a free Fortran I/O unit');
 ]
+" One 4-byte scalar per record, in the compiler's RECL units "
 open(relax_unit,file=relax_file,status='old',
      form='UNFORMATTED',ACCESS='direct',recl=$RECL-FACTOR,
      err=:no-relax-file:);

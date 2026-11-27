@@ -520,7 +520,6 @@ private:
 
     fcompiler << "gfortran" << "mingw32-gfortran" // GNU Fortran 95
               << "x86_64-w64-mingw32-gfortran" << "i686-w64-mingw32-gfortran"
-              <<  "g77"     << "mingw32-g77"      // GNU Fortran 77
               << "f77"             // LAHEY Fortran 77
               << "lf95"            // LAHEY Fortran 95
               << "df"              // DEC Compaq Fortran 90/95
@@ -547,8 +546,7 @@ private:
     makeprog << "make"
              << "gmake";
 
-    fcompiler << "g77"        // GNU Fortran 77 compiler
-              << "g95"        // GNU Fortran 95 Compiler
+    fcompiler << "g95"        // GNU Fortran 95 Compiler
               << "gfortran"   // GNU Fortran 95 Compiler
               << "f77"        // LAHEY Fortran 77 Compiler
               << "lf95"       // LAHEY Fortran 95 Compiler
@@ -556,6 +554,7 @@ private:
               << "pgf90"      // Portland Group Fortran 90 Compiler
               << "pgfortran"  // Portland Group Fortran 2003 Compiler
               << "ifort"      // Intel Fortran >= 8.0
+              << "ifx"        // Intel Fortran (LLVM-based)
               << "xlf"
               << "frt" << "af77"
               << "fort77" << "f90" << "xlf90" << "epcf90"

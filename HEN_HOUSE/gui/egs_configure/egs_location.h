@@ -243,15 +243,9 @@ public slots:
               return true;
 
     }
-    else if ( MCompiler(F,"mingw32-g77" ).exists() ){
-              MCompiler f(F,"mingw32-g77");
-             *fc = f;
-              return true;
-
-    }
 #else
-    else if ( MCompiler(F,"g77").exists() ){
-              MCompiler f(F,"g77");
+    else if ( MCompiler(F,"gfortran").exists() ){
+              MCompiler f(F,"gfortran");
              *fc = f;
               return true;
 

@@ -2215,9 +2215,9 @@ return; end;
 
 /***********************************************************************
    Tools for reading C/C++ binary files (byte-oriented) in Fortran.
-   Note that with gfortran one could use access=stream, but this is not
-   available in GNU g77. So, to preserve backwards compatibility we have
-   created these tools.
+   The unit must be opened with form='unformatted', access='stream'.
+   jrec is a 1-based byte position (Fortran POS=), so reads do not
+   depend on the compiler's RECL units (bytes or 4-byte words).
  ************************************************************************/
 
 "================================================================="
@@ -2225,12 +2225,12 @@ return; end;
 "================================================================="
 " Reads one byte from a C/C++ binary file at jrec position        "
  implicit none;
- integer iunit, jrec, i, j, ierr;
+ integer iunit, jrec, ierr;
  integer*1 i_1;
  character c_1;
  equivalence (i_1,c_1);
 ;COMIN/EGS-IO/;
- read(iunit,rec=jrec,IOSTAT=ierr) c_1;
+ read(iunit,pos=jrec,IOSTAT=ierr) c_1;
  IF (ierr.ne.0) [
     $egs_warning(*,' *** egs_read_byte: ERROR READING A byte *** ');
     $egs_info(*,' From unit ',iunit,' position ',jrec,' bytes');
@@ -2244,20 +2244,16 @@ return; end;
 "================================================================="
 " Reads short int from a C/C++ binary file at jrec position        "
  implicit none;
- integer iunit, jrec, i, j, ierr;
+ integer iunit, jrec, ierr;
  integer*2 i_2;
  character c_2(2);
  equivalence (i_2,c_2);
 ;COMIN/EGS-IO/;
- j = 0;
- DO i=jrec,jrec+1[
-  j = j + 1;
-  read(iunit,rec=i,IOSTAT=ierr) c_2(j);
-  IF (ierr.ne.0) [
+ read(iunit,pos=jrec,IOSTAT=ierr) c_2;
+ IF (ierr.ne.0) [
     $egs_warning(*,' *** egs_read_short: ERROR READING short integer *** ');
     $egs_info(*,' From unit ',iunit,' position ',jrec,' bytes');
     egs_read_short = -1; return;
-  ]
  ]
  jrec = jrec + 2; egs_read_short = i_2;
  return; end;
@@ -2267,20 +2263,16 @@ return; end;
 "================================================================="
 " Reads integer from a C/C++ binary file at jrec position        "
  implicit none;
- integer iunit, jrec, i, j, ierr;
+ integer iunit, jrec, ierr;
  integer*4 i_4;
  character c_4(4);
  equivalence (i_4,c_4);
 ;COMIN/EGS-IO/;
- j = 0;
- DO i=jrec,jrec+3[
-  j = j + 1;
-  read(iunit,rec=i,IOSTAT=ierr) c_4(j);
-  IF (ierr.ne.0) [
+ read(iunit,pos=jrec,IOSTAT=ierr) c_4;
+ IF (ierr.ne.0) [
     $egs_warning(*,' *** egs_read_int: ERROR READING integer *** ');
     $egs_info(*,' From unit ',iunit,' position ',jrec,' bytes');
     egs_read_int = -1; return;
-  ]
  ]
  jrec = jrec + 4; egs_read_int = i_4;
  return; end;
@@ -2291,22 +2283,39 @@ return; end;
 "================================================================="
 " Reads float from a C/C++ binary file at jrec position        "
  implicit none;
- integer iunit, jrec, i, j, ierr;
+ integer iunit, jrec, ierr;
  real*4 r_4;
  character c_4(4);
  equivalence (r_4,c_4);
 ;COMIN/EGS-IO/;
- j = 0;
- DO i=jrec,jrec+3[
-  j = j + 1;
-  read(iunit,rec=i,IOSTAT=ierr) c_4(j);
-  IF (ierr.ne.0) [
+ read(iunit,pos=jrec,IOSTAT=ierr) c_4;
+ IF (ierr.ne.0) [
     $egs_warning(*,' *** egs_read_real: ERROR READING float *** ');
     $egs_info(*,' From unit ',iunit,' position ',jrec,' bytes');
     egs_read_real = -1; return;
-  ]
  ]
  jrec = jrec + 4; egs_read_real = r_4;
+ return; end;
+
+"=================================================================="
+ subroutine egs_check_recl_factor;
+"=================================================================="
+" Verify RECL-FACTOR from machine.macros (number of RECL units per "
+" 4 bytes) against the compiled code. A mismatch happens if Fortran"
+" flags affecting RECL units (e.g. ifort -assume byterecl) are     "
+" changed after configuration; direct-access data files would then "
+" be read at the wrong offsets.                                    "
+ implicit none;
+ real*4  r4;
+ integer n;
+;COMIN/EGS-IO/;
+ inquire(iolength=n) r4;
+ IF( n ~= $RECL-FACTOR ) [
+   $egs_fatal('(a,i2,a,i2,/,a)',
+     ' machine.macros has RECL-FACTOR = ',$RECL-FACTOR,
+     ' but this executable uses ',n,
+     ' Fortran flags changed after configuration? Re-run the configuration.');
+ ]
  return; end;
 
 "****************************************************************
