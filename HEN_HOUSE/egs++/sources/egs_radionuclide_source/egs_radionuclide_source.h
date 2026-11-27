@@ -211,7 +211,7 @@ public:
                 string fname(app->getOutputFile());
                 fname += "_" + decays->radionuclide + "_" + std::to_string(emax);
                 if (!egsIsAbsolutePath(fname)) {
-                    fname = egsJoinPath(app->getAppDir(),fname);
+                    fname = egsJoinPath(app->getOutputDir(),fname);
                 }
                 fname += ".spec";
 

@@ -53,6 +53,13 @@ function help {
 
         $(basename $0) --batch cpu -q short -n12 -v -c 'egs_chamber -i slab -p 521icru'
 
+    notes:
+
+        The run command should include -i/--input.
+        If the run command includes -d/--output-dir, job logs/lock files are
+        managed in that directory. Otherwise they are managed beside the
+        resolved input file (current/path first, then \$EGS_HOME/app fallback).
+
 EOF
 }
 
@@ -168,16 +175,19 @@ fi
 ### check run command and its arguments for input file and first job index
 set -- $opt_cmd
 cmd_app=$1
+cmd_app_name=$(basename "$cmd_app")
 cmd_input=""
 cmd_first="1"
+cmd_outdir=""
 if ! [ -x "$(command -v $cmd_app)" ]; then
     quit $LINENO "no such egsnrc executable found: $cmd_app"
 fi
 while [[ "$#" -gt 0 ]]; do
     opt=$1; shift
     case $opt in
-        -i) arg=$1; cmd_input=$1; shift;;
-        -f) arg=$1; cmd_first=$1; shift;;
+        -i|--input) arg=$1; cmd_input=$1; shift;;
+        -f|--first-job) arg=$1; cmd_first=$1; shift;;
+        -d|--output-dir) arg=$1; cmd_outdir=$1; shift;;
         *)  arg="skip";;
     esac
     if [ -z "$arg" ] || [ "${arg:0:1}" = "-" ]; then
@@ -198,24 +208,47 @@ fi
 ### set simulation basename from input file
 basename="$(basename "$cmd_input" .egsinp)"
 
-### check that the egs input file exists and is readable
-egsinp=$egs_home/$cmd_app/$basename.egsinp
-if ! [ -r $egsinp ]; then
-    quit $LINENO "cannot access input file: $egsinp.egsinp"
+### resolve input file path: local/path first, then EGS_HOME/app fallback
+if [ "${cmd_input##*/}" != "$cmd_input" ] || [ "${cmd_input##*\\}" != "$cmd_input" ]; then
+    has_path="yes"
+else
+    has_path="no"
+fi
+if [[ "$cmd_input" == *.egsinp ]]; then
+    input_arg="$cmd_input"
+else
+    input_arg="${cmd_input}.egsinp"
+fi
+if [ -r "$input_arg" ]; then
+    egsinp="$input_arg"
+elif [ "$has_path" = "no" ] && [ -r "$egs_home/$cmd_app_name/$input_arg" ]; then
+    egsinp="$egs_home/$cmd_app_name/$input_arg"
+else
+    quit $LINENO "cannot access input file: $input_arg"
+fi
+
+### determine run directory for lock/egsjob/log files
+if [ -n "$cmd_outdir" ]; then
+    run_dir="$cmd_outdir"
+else
+    run_dir="$(dirname "$egsinp")"
+fi
+if ! [ -d "$run_dir" ]; then
+    /bin/mkdir -p "$run_dir" || quit $LINENO "cannot create run directory: $run_dir"
 fi
 
 ### prevent the run if lock file or egsjob file present (unless forced)
 if [ "$opt_force" == "no" ]; then
 
     # check lock file
-    lock=$egs_home/$cmd_app/$basename.lock
+    lock=$run_dir/$basename.lock
     if [ -e $lock ]; then
         log "existing lock file: $lock"
         quit $LINENO "prevent erasing lock file (override with --force)"
     fi
 
     # check egsjob file
-    egsjob=$egs_home/$cmd_app/$basename.egsjob
+    egsjob=$run_dir/$basename.egsjob
     if [ -e $egsjob ]; then
         log  "existing egsjob file: $egsjob"
         quit $LINENO "prevent erasing egsjob file (override with --force)"
@@ -232,17 +265,19 @@ log "    delay      = $opt_delay"
 log "    command    = $opt_cmd"
 log "    basename   = $basename"
 log "    first job  = $cmd_first"
+log "    input file = $egsinp"
+log "    run dir    = $run_dir"
 log "    options    = $opt_options"
 
-### redirect egs-parallel log file to application directory
-logfile=$egs_home/$cmd_app/$basename.egsparallel
+### redirect egs-parallel log file to run directory
+logfile=$run_dir/$basename.egsparallel
 /bin/mv egs-parallel-$$.log $logfile
 exec 3>>$logfile
 log "log file: $logfile"
 
-### go to egs application directory
-log "cd $egs_home/$cmd_app"
-cd $egs_home/$cmd_app
+### go to run directory
+log "cd $run_dir"
+cd "$run_dir"
 
 ### log script specific for this batch system
 log "EXEC egs-parallel-$opt_batch $opt_queue $opt_nthread $opt_delay $cmd_first $basename '$opt_cmd' '$opt_options' $verbosity"

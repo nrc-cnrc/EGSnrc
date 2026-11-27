@@ -70,7 +70,7 @@ void EGS_TrackScoring::setApplication(EGS_Application *App) {
     string fname(app->getOutputFile());
     fname += m_fnExtra;
     if (!egsIsAbsolutePath(fname)) {
-        fname = egsJoinPath(app->getAppDir(),fname);
+        fname = egsJoinPath(app->getOutputDir(),fname);
     }
 
     fname += ".ptracks";

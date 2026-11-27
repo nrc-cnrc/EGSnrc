@@ -339,7 +339,7 @@ int EGS_UniformRunControl::startSimulation() {
     if (check_egsdat) {
         char buf[512];
         sprintf(buf,"%s_w%d.egsdat",app->getFinalOutputFile().c_str(), ipar);
-        string datFile = egsJoinPath(app->getAppDir(),buf);
+        string datFile = egsJoinPath(app->getOutputDir(),buf);
         if (remove(datFile.c_str()) == 0) {
             egsWarning("EGS_UniformRunControl: %s deleted\n",
                        datFile.c_str());
@@ -585,7 +585,7 @@ EGS_JCFControl::EGS_JCFControl(EGS_Application *a, int Nbuf) :
 }
 
 bool EGS_JCFControl::createControlFile() {
-    string cfile = egsJoinPath(app->getAppDir(),app->getFinalOutputFile());
+    string cfile = egsJoinPath(app->getOutputDir(),app->getFinalOutputFile());
     cfile += ".lock";
     if (!p->createControlFile(cfile.c_str())) {
         egsWarning("EGS_JCFControl: failed to create or lock the "
@@ -605,7 +605,7 @@ bool EGS_JCFControl::createControlFile() {
 }
 
 bool EGS_JCFControl::openControlFile() {
-    string cfile = egsJoinPath(app->getAppDir(),app->getFinalOutputFile());
+    string cfile = egsJoinPath(app->getOutputDir(),app->getFinalOutputFile());
     cfile += ".lock";
     if (!p->openControlFile(cfile.c_str())) {
         egsWarning("EGS_JCFControl: failed to open the "
@@ -904,7 +904,7 @@ int EGS_JCFControl::finishSimulation() {
     if (njob > 0 || removed_jcf) {
         return 0;
     }
-    string cfile = egsJoinPath(app->getAppDir(),app->getFinalOutputFile());
+    string cfile = egsJoinPath(app->getOutputDir(),app->getFinalOutputFile());
     cfile += ".lock";
 #ifdef WIN32
     int res = _unlink(cfile.c_str());

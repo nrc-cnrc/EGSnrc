@@ -273,7 +273,8 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     //
     // *** check if there is an input file specified on the command line
     //
-    getArgument(argc,argv,"-i","--input",input_file);
+    string input_arg;
+    getArgument(argc,argv,"-i","--input",input_arg);
     //egsFatal("%s\n  no input file specified\n",__egs_app_msg1);
     //
     // *** create the name of the working directory
@@ -281,15 +282,14 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     char buf[512];
     sprintf(buf,"egsrun_%d_",egsGetPid());
     run_dir = buf;
-    if (input_file.size() > 0) {
-
-        // Remove the .egsinp extension if it was included
-        size_t ext = input_file.rfind(".egsinp");
+    if (input_arg.size() > 0) {
+        // Remove the .egsinp extension if it was included.
+        size_t ext = input_arg.rfind(".egsinp");
         if (ext != std::string::npos) {
-            input_file = input_file.substr(0,ext);
+            input_arg = input_arg.substr(0,ext);
         }
 
-        run_dir += input_file;
+        run_dir += egsStripPath(input_arg);
         run_dir += '_';
     }
     else {
@@ -324,14 +324,45 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     // *** check if the input file exists.
     //
     string ifile;
-    if (input_file.size() > 0) {
-        ifile = egsJoinPath(app_dir,input_file);
-        if (ifile.find(".egsinp") == string::npos) {
-            ifile += ".egsinp";
+    output_dir = ".";
+    if (input_arg.size() > 0) {
+        bool has_path = input_arg.find('/') != string::npos ||
+                        input_arg.find('\\') != string::npos;
+        auto with_ext = [](const string &s) -> string {
+            return s.find(".egsinp") == string::npos ? s + ".egsinp" : s;
+        };
+        string local_ifile = with_ext(input_arg);
+        if (!EGS_ACCESS(local_ifile.c_str(),R_OK)) {
+            ifile = local_ifile;
         }
-        if (EGS_ACCESS(ifile.c_str(),R_OK))
+        else if (has_path || egsIsAbsolutePath(input_arg)) {
             egsFatal("%s\n  the input file %s does not exist or is not "
-                     "readable\n",__egs_app_msg1,ifile.c_str());
+                     "readable\n",__egs_app_msg1,local_ifile.c_str());
+        }
+        else {
+            string egs_home_ifile = with_ext(egsJoinPath(app_dir,input_arg));
+            if (!EGS_ACCESS(egs_home_ifile.c_str(),R_OK)) {
+                ifile = egs_home_ifile;
+            }
+            else {
+                egsFatal("%s\n  the input file %s does not exist in the "
+                         "current directory or in %s\n",__egs_app_msg1,
+                         local_ifile.c_str(),app_dir.c_str());
+            }
+        }
+
+        input_file = egsStripPath(ifile);
+        size_t ext = input_file.rfind(".egsinp");
+        if (ext != std::string::npos) {
+            input_file = input_file.substr(0,ext);
+        }
+        size_t slash = ifile.find_last_of("/\\");
+        if (slash != string::npos) {
+            output_dir = ifile.substr(0,slash);
+            if (!output_dir.size()) {
+                output_dir = ".";
+            }
+        }
     }
 
     //
@@ -342,6 +373,11 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     }
     if (!output_file.size()) {
         output_file = "test";
+    }
+    string output_dir_arg;
+    if (getArgument(argc,argv,"-d","--output-dir",output_dir_arg) &&
+            output_dir_arg.size()) {
+        output_dir = output_dir_arg;
     }
     //
     // *** see if a batch run.
@@ -472,7 +508,7 @@ bool EGS_Application::getArgument(int &argc, char **argv,
 
 string EGS_Application::constructIOFileName(const char *extension,
         bool with_run_dir) const {
-    string iofile = with_run_dir ? egsJoinPath(app_dir,run_dir) : app_dir;
+    string iofile = with_run_dir ? egsJoinPath(output_dir,run_dir) : output_dir;
     iofile = egsJoinPath(iofile,output_file);
     if (extension) {
         iofile += extension;
@@ -601,7 +637,7 @@ int EGS_Application::howManyJobsDone() {
 
     for (int i = first_parallel; i < first_parallel + n_parallel; i++) {
         sprintf(buf,"%s_w%d.egsdat",final_output_file.c_str(),i);
-        string dfile = egsJoinPath(app_dir,buf);
+        string dfile = egsJoinPath(output_dir,buf);
         if (fileExists(dfile)) {
             n_of_egsdat++;
         }
@@ -642,7 +678,7 @@ int EGS_Application::combineResults() {
     }
     for (int j=first_parallel; j < first_parallel + n_parallel; j++) {
         sprintf(buf,"%s_w%d.egsdat",final_output_file.c_str(),j);
-        string dfile = egsJoinPath(app_dir,buf);
+        string dfile = egsJoinPath(output_dir,buf);
         ifstream data(dfile.c_str());
         if (data) {
             int err = addState(data);

@@ -106,38 +106,38 @@
   The mortran common block can be accessed via #the_stack.
  */
 struct EGS_Stack {
-  /*! Array with particle energies in MeV including rest energy */
-  double    E[MXSTACK];
-  /*! Arrays with particle x-positions in cartesian coordinates */
-  EGS_Float x[MXSTACK];
-  /*! Arrays with particle y-positions in cartesian coordinates */
-  EGS_Float y[MXSTACK];
-  /*! Arrays with particle z-positions in cartesian coordinates */
-  EGS_Float z[MXSTACK];
-  /*! Arrays with particle x- direction cosines */
-  EGS_Float u[MXSTACK];
-  /*! Arrays with particle y- direction cosines */
-  EGS_Float v[MXSTACK];
-  /*! Arrays with particle z- direction cosines */
-  EGS_Float w[MXSTACK];
-  /*! Array with nearest distances to a boundary */
-  EGS_Float dnear[MXSTACK];
-  /*! Array with statistical weights */
-  EGS_Float wt[MXSTACK];
-  /*! Particle charges */
-  EGS_I32   iq[MXSTACK];
-  /*! Particle geometry regions */
-  EGS_I32   ir[MXSTACK];
-  /*! Latch variables. Can be used to store some additional information
-      about the particles used at run time
-   */
-  EGS_I32   latch[MXSTACK];
-  /*! The initial particle latch variable */
-  EGS_I32   latchi;
-  /*! Number of particles currently on the stack */
-  EGS_I32   np;
-  /*! Number of particles on the stack before the last interaction occured */
-  EGS_I32   npold;
+    /*! Array with particle energies in MeV including rest energy */
+    double    E[MXSTACK];
+    /*! Arrays with particle x-positions in cartesian coordinates */
+    EGS_Float x[MXSTACK];
+    /*! Arrays with particle y-positions in cartesian coordinates */
+    EGS_Float y[MXSTACK];
+    /*! Arrays with particle z-positions in cartesian coordinates */
+    EGS_Float z[MXSTACK];
+    /*! Arrays with particle x- direction cosines */
+    EGS_Float u[MXSTACK];
+    /*! Arrays with particle y- direction cosines */
+    EGS_Float v[MXSTACK];
+    /*! Arrays with particle z- direction cosines */
+    EGS_Float w[MXSTACK];
+    /*! Array with nearest distances to a boundary */
+    EGS_Float dnear[MXSTACK];
+    /*! Array with statistical weights */
+    EGS_Float wt[MXSTACK];
+    /*! Particle charges */
+    EGS_I32   iq[MXSTACK];
+    /*! Particle geometry regions */
+    EGS_I32   ir[MXSTACK];
+    /*! Latch variables. Can be used to store some additional information
+        about the particles used at run time
+     */
+    EGS_I32   latch[MXSTACK];
+    /*! The initial particle latch variable */
+    EGS_I32   latchi;
+    /*! Number of particles currently on the stack */
+    EGS_I32   np;
+    /*! Number of particles on the stack before the last interaction occured */
+    EGS_I32   npold;
 };
 
 /*! \brief A structure corresponding to the EGSnrc transport threshold
@@ -230,55 +230,55 @@ struct EGS_Thresh {
     for user scoring and for interacting with the user geometry
  */
 struct EGS_Epcont {
-  /*! Energy being deposited locally (may be several depositions) */
-  double    edep;
-  /*! A single sub-threshold energy deposition */
-  double    edep_local;
-  /*! Step length to an interaction */
-  EGS_Float tstep;
-  /*! Step length after step-size restrictions */
-  EGS_Float tustep;
-  /*! Straight line distance between initial and final position without
-      geometry constraints */
-  EGS_Float ustep;
-  /*! Curved transport distance after geometry constraints */
-  EGS_Float tvstep;
-  /*! Straight line transport distance after geometry constraints */
-  EGS_Float vstep;
-  /*! Ratio of mass density in current region to the default mass density
-      of the medium filling the region */
-  EGS_Float rhof;
-  /*! Old particle energy */
-  EGS_Float eold;
-  /*! New particle energy */
-  EGS_Float enew;
-  /*! Electron kinetic energy */
-  EGS_Float eke;
-  /*! ln(eke) */
-  EGS_Float elke;
-  /*! ln(photon energy) */
-  EGS_Float gle;
-  /*! Electron range to \c AE in the current medium */
-  EGS_Float e_range;
-  /*! Position of the particle after the step */
-  EGS_Float x_final, y_final, z_final;
-  /*! Direction of the particle after the step,
-      only set for electrons/positrons */
-  EGS_Float u_final, v_final, w_final;
-  /*! Should the particle be discarded ?
-      - 0 means no discard
-      - >0 means discard immediately
-      - <0 means discard after the step.
+    /*! Energy being deposited locally (may be several depositions) */
+    double    edep;
+    /*! A single sub-threshold energy deposition */
+    double    edep_local;
+    /*! Step length to an interaction */
+    EGS_Float tstep;
+    /*! Step length after step-size restrictions */
+    EGS_Float tustep;
+    /*! Straight line distance between initial and final position without
+        geometry constraints */
+    EGS_Float ustep;
+    /*! Curved transport distance after geometry constraints */
+    EGS_Float tvstep;
+    /*! Straight line transport distance after geometry constraints */
+    EGS_Float vstep;
+    /*! Ratio of mass density in current region to the default mass density
+        of the medium filling the region */
+    EGS_Float rhof;
+    /*! Old particle energy */
+    EGS_Float eold;
+    /*! New particle energy */
+    EGS_Float enew;
+    /*! Electron kinetic energy */
+    EGS_Float eke;
+    /*! ln(eke) */
+    EGS_Float elke;
+    /*! ln(photon energy) */
+    EGS_Float gle;
+    /*! Electron range to \c AE in the current medium */
+    EGS_Float e_range;
+    /*! Position of the particle after the step */
+    EGS_Float x_final, y_final, z_final;
+    /*! Direction of the particle after the step,
+        only set for electrons/positrons */
+    EGS_Float u_final, v_final, w_final;
+    /*! Should the particle be discarded ?
+        - 0 means no discard
+        - >0 means discard immediately
+        - <0 means discard after the step.
 
-      Typically set by the geometry routines.
-  */
-  EGS_I32   idisc;
-  /*! Old geometry region */
-  EGS_I32   irold;
-  /*! New geometry region */
-  EGS_I32   irnew;
-  /*! Array of flags for calls to \c %ausgab() */
-  EGS_I32   iausfl[MXAUS];
+        Typically set by the geometry routines.
+    */
+    EGS_I32   idisc;
+    /*! Old geometry region */
+    EGS_I32   irold;
+    /*! New geometry region */
+    EGS_I32   irnew;
+    /*! Array of flags for calls to \c %ausgab() */
+    EGS_I32   iausfl[MXAUS];
 };
 
 /*! \brief A structure corresponding to the \c ET_control common block.
@@ -349,15 +349,15 @@ struct EGS_Rayleigh {
   index, etc.
 */
 struct EGS_Useful {
-  double    pzero,      //!< Precise zero
-            prm,        //!< Precise electron rest energy in MeV
-            prmt2;      //!< 2*prm
-  EGS_Float rm,         //!< Electron rest energy
-            rhor,       //!< Mass density ratio
-            rhor_new;   //!< Mass density ratio in the new region
-  EGS_I32   medium,     //!< Current medium
-            medium_new, //!< Medium in the new region
-            medold;     //!< Old medium
+    double    pzero,      //!< Precise zero
+              prm,        //!< Precise electron rest energy in MeV
+              prmt2;      //!< 2*prm
+    EGS_Float rm,         //!< Electron rest energy
+              rhor,       //!< Mass density ratio
+              rhor_new;   //!< Mass density ratio in the new region
+    EGS_I32   medium,     //!< Current medium
+              medium_new, //!< Medium in the new region
+              medold;     //!< Old medium
 };
 
 /*! \brief A structure corresponding to the \c xsection_options common block
@@ -389,156 +389,156 @@ struct EGS_Useful {
 */
 struct EGS_XOptions {
 
-  /*! Determines the angular distribution of bremstrahlung. If set to
-    2, Eq. 2BS of the review article by Koch and Motz will be used. If set
-    to 1, the leading term of 2BS will be used (the default).
-    If set to zero, the photons
-    will inherit the direction of the electron so that the user can
-    implement their own angular distribution by calling \c %ausgab() after
-    the bremsstrahlung event and setting the angles of the photons.
-
-    Can be set in the input file using
-    \verbatim
-    Brems angular sampling= Simple or KM
-    \endverbatim
-  */
-  EGS_I32   ibrdst;
-
-  /*! Determines the angular distribution of pair particles. If set to 2,
-    the Schiff formula will be used (Eq. 3D-2003 of the review article by
-    Motz, Olsen and Koch), if set to 1 the leading term of the Schiff formula
-    will be used (the default), if set to 0 the original EGS4 approach
-    of polar angle = ratio of rest energy to total energy is employed.
-
-    Can be set in the input file using
-    \verbatim
-    Pair angular sampling= Off or Simple or KM
-    \endverbatim
-  */
-  EGS_I32   iprdst;
-
-  /*! Determines the bremsstrahlung cross sections differential in the
-    photon energy to be used for sampling the photon energy.
-    If set to 0, the Bethe-Heitler high energy approximation will be
-    used. If set to 1, the NIST tabulations provided by Steve Seltzer
-    will be employed. If set to 2, the NRC brems data will be used,
-    which is a modified version of the NIST data with corrected
-    electron-electron brems contributions. Default is 0.
-
-    Can be set in the input file using
-    \verbatim
-    Brems cross sections= BH or NIST or NRC
-    \endverbatim
-  */
-  EGS_I32   ibr_nist;
-
-  /*! Determines if spin effects will be taken into account in electron
-    and positron elastic scattering (1=yes, the default, 0=no)
-
-    Can be set in the input file using
-    \verbatim
-    Spin effects= On or Off
-    \endverbatim
-   */
-  EGS_I32   spin_effects;
-
-  /*! Bound Compton scattering flag. If set to 0, Compton scattering will
-    be modeled according to Klein-Nishina, if set to 1 (the default),
-    Compton scattering will be modeled according to the relativistic
-    impulse approximation that takes into account binding and
-    Doppler broadenning.
-
-    Can be set in the input file using
-    \verbatim
-    Bound Compton scattering= On or Off
-    \endverbatim
-  */
-  EGS_I32   ibcmp;
-
-  /*! Reyleigh scattering flag. If set to 0 (the default), no
-    Reyleigh scattering will be done. Note that if you turn on
-    Reyleigh scattering by setting this flag to 1, all PEGS4 data
-    sets must include Reyleigh data
-
-    Can be set in the input file using
-    \verbatim
-    Reyleigh scattering= On or Off
-    \endverbatim
-  */
-  EGS_I32 iraylr;
-
-  /*! Atomic relaxations flag. If set to 1 (the default), vacancies
-   created in shells with binding energies above 1 keV will be relaxed
-   by fluorescent, Auger and Coster-Kronig transitions. Vacancies
-   can be currently created after photo-absorption, bound Compton scattering
-   and electron inelastic scattering (if eii_flag is not 0).
-   If set to 0, the binding energy will be given to the photo-electron
-   or deposited locally.
-   */
-  EGS_I32   iedgfl;
-
-  /*! Determines the angular distribution of photo-electrons. If set to
-    1 (the default), the angle of photo-electrons will be sampled from
-    the Sauter distribution. If set to 0, photo-electrons inherit the
-    direction of the incident photon.
-
-    Can be set in the input file using
-    \verbatim
-    Atomic relaxations= On or Off
-    \endverbatim
-  */
-  EGS_I32   iphter;
-
-  /*! Pair cross sections flag. If set to 0 (the default), the energy
-    of the pair particles will be sampled from the first Born approximation
-    cross section in its high-energy appoximation derived by Bethe-Heitler.
-    If set to 1, energies will be sampled from the NRC tabulations
-    based on the exact cross sections (tabulations are available
-    up to 85 MeV, above 85 MeV the Bethe-Heitler cross sections are
-    very close to the exact cross sections).
-
-    Can be set in the input file using
-    \verbatim
-    Pair cross sections= BH or NRC
-    \endverbatim
-  */
-  EGS_I32   pair_nrc;
-
-  /*! Triplet production flag. If set to 0 (the default), triplet events
-    will be simulated as pair events. If set to 1, triplet event will
-    be explicitely simulated using the Borsellino cross section
-
-    Can be set in the input file using
-    \verbatim
-    Triplet production= On or Off
-    \endverbatim
-  */
-  EGS_I32   itriplet;
-
-  /*! Flag for radiative corrections for Compton scattering.
-      If set to 0 (the default), Compton scattering is modelled according
-      to Klein-Nishina or RIA, depending on ibcmp. If set to 1 and
-      rad_compton.mortran is compiled with the other EGSnrc mortran sources,
-      radiative corrections are taken into account in next-to-leading
-      order.
+    /*! Determines the angular distribution of bremstrahlung. If set to
+      2, Eq. 2BS of the review article by Koch and Motz will be used. If set
+      to 1, the leading term of 2BS will be used (the default).
+      If set to zero, the photons
+      will inherit the direction of the electron so that the user can
+      implement their own angular distribution by calling \c %ausgab() after
+      the bremsstrahlung event and setting the angles of the photons.
 
       Can be set in the input file using
       \verbatim
-      Radiative Compton corrections= On or Off
+      Brems angular sampling= Simple or KM
       \endverbatim
-                    */
-  EGS_I32   radc_flag;
+    */
+    EGS_I32   ibrdst;
 
-  /*! Electron impact ionization (EII) flag. If set to 0 (the default),
-   no EII occurs. If set to 1, EII is simulated using cross sections
-   based on unpublished work by Kawrakow
+    /*! Determines the angular distribution of pair particles. If set to 2,
+      the Schiff formula will be used (Eq. 3D-2003 of the review article by
+      Motz, Olsen and Koch), if set to 1 the leading term of the Schiff formula
+      will be used (the default), if set to 0 the original EGS4 approach
+      of polar angle = ratio of rest energy to total energy is employed.
 
-    Can be set in the input file using
-    \verbatim
-    Electron Impact Ionization= On or Off
-    \endverbatim
-   */
-  EGS_I32   eii_flag;
+      Can be set in the input file using
+      \verbatim
+      Pair angular sampling= Off or Simple or KM
+      \endverbatim
+    */
+    EGS_I32   iprdst;
+
+    /*! Determines the bremsstrahlung cross sections differential in the
+      photon energy to be used for sampling the photon energy.
+      If set to 0, the Bethe-Heitler high energy approximation will be
+      used. If set to 1, the NIST tabulations provided by Steve Seltzer
+      will be employed. If set to 2, the NRC brems data will be used,
+      which is a modified version of the NIST data with corrected
+      electron-electron brems contributions. Default is 0.
+
+      Can be set in the input file using
+      \verbatim
+      Brems cross sections= BH or NIST or NRC
+      \endverbatim
+    */
+    EGS_I32   ibr_nist;
+
+    /*! Determines if spin effects will be taken into account in electron
+      and positron elastic scattering (1=yes, the default, 0=no)
+
+      Can be set in the input file using
+      \verbatim
+      Spin effects= On or Off
+      \endverbatim
+     */
+    EGS_I32   spin_effects;
+
+    /*! Bound Compton scattering flag. If set to 0, Compton scattering will
+      be modeled according to Klein-Nishina, if set to 1 (the default),
+      Compton scattering will be modeled according to the relativistic
+      impulse approximation that takes into account binding and
+      Doppler broadenning.
+
+      Can be set in the input file using
+      \verbatim
+      Bound Compton scattering= On or Off
+      \endverbatim
+    */
+    EGS_I32   ibcmp;
+
+    /*! Reyleigh scattering flag. If set to 0 (the default), no
+      Reyleigh scattering will be done. Note that if you turn on
+      Reyleigh scattering by setting this flag to 1, all PEGS4 data
+      sets must include Reyleigh data
+
+      Can be set in the input file using
+      \verbatim
+      Reyleigh scattering= On or Off
+      \endverbatim
+    */
+    EGS_I32 iraylr;
+
+    /*! Atomic relaxations flag. If set to 1 (the default), vacancies
+     created in shells with binding energies above 1 keV will be relaxed
+     by fluorescent, Auger and Coster-Kronig transitions. Vacancies
+     can be currently created after photo-absorption, bound Compton scattering
+     and electron inelastic scattering (if eii_flag is not 0).
+     If set to 0, the binding energy will be given to the photo-electron
+     or deposited locally.
+     */
+    EGS_I32   iedgfl;
+
+    /*! Determines the angular distribution of photo-electrons. If set to
+      1 (the default), the angle of photo-electrons will be sampled from
+      the Sauter distribution. If set to 0, photo-electrons inherit the
+      direction of the incident photon.
+
+      Can be set in the input file using
+      \verbatim
+      Atomic relaxations= On or Off
+      \endverbatim
+    */
+    EGS_I32   iphter;
+
+    /*! Pair cross sections flag. If set to 0 (the default), the energy
+      of the pair particles will be sampled from the first Born approximation
+      cross section in its high-energy appoximation derived by Bethe-Heitler.
+      If set to 1, energies will be sampled from the NRC tabulations
+      based on the exact cross sections (tabulations are available
+      up to 85 MeV, above 85 MeV the Bethe-Heitler cross sections are
+      very close to the exact cross sections).
+
+      Can be set in the input file using
+      \verbatim
+      Pair cross sections= BH or NRC
+      \endverbatim
+    */
+    EGS_I32   pair_nrc;
+
+    /*! Triplet production flag. If set to 0 (the default), triplet events
+      will be simulated as pair events. If set to 1, triplet event will
+      be explicitely simulated using the Borsellino cross section
+
+      Can be set in the input file using
+      \verbatim
+      Triplet production= On or Off
+      \endverbatim
+    */
+    EGS_I32   itriplet;
+
+    /*! Flag for radiative corrections for Compton scattering.
+        If set to 0 (the default), Compton scattering is modelled according
+        to Klein-Nishina or RIA, depending on ibcmp. If set to 1 and
+        rad_compton.mortran is compiled with the other EGSnrc mortran sources,
+        radiative corrections are taken into account in next-to-leading
+        order.
+
+        Can be set in the input file using
+        \verbatim
+        Radiative Compton corrections= On or Off
+        \endverbatim
+                      */
+    EGS_I32   radc_flag;
+
+    /*! Electron impact ionization (EII) flag. If set to 0 (the default),
+     no EII occurs. If set to 1, EII is simulated using cross sections
+     based on unpublished work by Kawrakow
+
+      Can be set in the input file using
+      \verbatim
+      Electron Impact Ionization= On or Off
+      \endverbatim
+     */
+    EGS_I32   eii_flag;
 
     /*! Photonuclear attenuation flag. OFF if set to 0 (the default).
 
@@ -546,12 +546,12 @@ struct EGS_XOptions {
     \verbatim
     Photonuclear attenuation= On or Off
     \endverbatim
-  */
-  EGS_I32 iphotonuc;
+    */
+    EGS_I32 iphotonuc;
 
-  EGS_I32 eadl_relax;
+    EGS_I32 eadl_relax;
 
-  EGS_I32 mcdf_pe_xsections;
+    EGS_I32 mcdf_pe_xsections;
 
 };
 
@@ -623,6 +623,7 @@ struct EGS_IO {
     char pegs_file[256];
     char hen_house[128];
     char egs_home[128];
+    char output_dir[256];
     char work_dir[128];
     char host_name[64];
     EGS_I32 n_parallel, i_parallel, first_parallel, n_max_parallel,
@@ -639,7 +640,7 @@ struct EGS_IO {
 struct EGS_emfInputs {
     /*! Input values for static electric and magnetic fields */
     EGS_Float ExIN, EyIN, EzIN, EMLMTIN,
-    BxIN, ByIN, BzIN, Bx, By, Bz, Bx_new, By_new, Bz_new;
+              BxIN, ByIN, BzIN, Bx, By, Bz, Bx_new, By_new, Bz_new;
     bool emfield_on;
 };
 
