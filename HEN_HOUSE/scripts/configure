@@ -180,7 +180,7 @@ echo >&2;
 printf $format "Looking for available fortran compilers ... " >&2
 f_compilers=
 f_first=
-for fc_prog in gfortran g77 f77 xlf cf77 cft77 frt pgf77 fl32 af77 fort77 f90 xlf90 pgf90 epcf90 f95 fort xlf95 lf95 g95 asf77 ifort; do
+for fc_prog in gfortran f77 xlf cf77 cft77 frt pgf77 fl32 af77 fort77 f90 xlf90 pgf90 epcf90 f95 fort xlf95 lf95 g95 asf77 ifort ifx; do
     save_IFS=$IFS; IFS=$path_separator;
     dummy="$PATH"
     for fc_dir in $dummy; do
@@ -357,19 +357,6 @@ for test_arg in -v; do
                 fi
                 break
             fi
-            junk=$(echo $f_test_output | grep "GNU F77 version")
-            if test "x$junk" != x; then
-                junk=$(echo $junk | sed 's/.*GNU F77 version//g' | awk '{print $1}')
-                f_version="GNU F77 version $junk"
-                #f_fflags="-fno-automatic -finit-local-zero"
-                # don't need this with new EGSnrc
-                f_oflags="-O2 -mtune=native -std=legacy"
-                f_dflags="-g"
-                if test ! x$is_x86_64 = x; then
-                    f_fflags="-fPIC"
-                fi
-                break
-            fi
             junk=$(echo $f_test_output | grep "GNU F95 version")
             if test "x$junk" != x; then
                 junk=$(echo $junk | sed 's/.*GNU F95 version//g' | awk '{print $1}')
@@ -467,20 +454,20 @@ assume that local variables have static storage.  While this was the
 default in early FORTRAN implementations, many modern compilers set by
 default local variables to automatic. To guarantee proper execution of
 such codes, you have to use a compilation flag that tells the compiler
-to use static storage for local variables. For the GNU g77 compiler this
-is '-fno-automatic -finit-local-zero', whereas for the IBM compiler
+to use static storage for local variables. For the GNU gfortran compiler
+this is '-fno-automatic -finit-local-zero', whereas for the IBM compiler
 you need '-qsave' and '-K' for the HP compiler. Many others require
 '-static'.  You may also want to turn off annoying warnings by using
 the appropriate compiler flag. If you intend to use EGSnrc with other
 languages (e.g., C), you may want to turn off function name decoration
 (also known as mangling) that is used by default by many compilers. For
-GNU g77 you need '-fno-underscoring' for this. Some compiler may also
+GNU gfortran you need '-fno-underscoring' for this. Some compiler may also
 require switches for date and time routines (e.g., the HP compiler needs
 '+E1 +U77').  Best is to check the documentation of your compiler and
 input the proper compiler flags here. For the various flags, if the script
 recognizes your compiler, it will put in the default appropriate for the NRC
 user codes.  If not recognized, the default will be blank (which also may
-be the recommendation, eg for the g77 compiler).
+be the recommendation).
 
 _ACEOF
 elif test "x$response" = x$none; then
@@ -1181,6 +1168,9 @@ cat >&5 <<EOF
 EOF
 printf $format "Checking for record length ... " >&2
 know_recl=no
+# Compile with FOPT too: the build uses $(FOPT) $(FCFLAGS), and flags that
+# change the RECL units may have been entered at either prompt
+recl_compile='$F77 $FFLAGS $FOPT $LDFLAGS -o conftest$test_exeext conftest.$test_ext $FLIBS >&5'
 for recl in 4 1; do
   rm -f junk_file
   cat >conftest.$test_ext <<_ACEOF
@@ -1199,7 +1189,7 @@ for recl in 4 1; do
 200   continue
       end
 _ACEOF
-  if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+  if { (eval $recl_compile) 2>&5; test_status=$?; (exit $test_status); }; then
     test_run=$(./conftest$test_exeext)
     if test "x$test_run" = xyes; then
       junk_size=$(printf %d $(wc -c <junk_file))
@@ -1804,80 +1794,22 @@ _ACEOF
    fi
 fi
 
-# g77 on Darwin can not produce library bundles, one must use the C compiler
-# with -bundle
+# On Darwin, library bundles are built with the C compiler and -bundle
 F77_LINK=$F77
 SHLIB_FLAGS="-shared -Wl,-Bsymbolic"
 SHLIB_LIBS=""
-if test x$F77 = xg77 || test x$F77 = xgfortran; then
+if test x$F77 = xgfortran; then
     if test x$CC = xgcc; then
         is_darwin=$(echo $canonical_system | grep -i darwin)
         if test ! x$is_darwin = x; then
             F77_LINK=$CC
             SHLIB_FLAGS="-bundle"
-            if test x$F77 = xg77; then
-                SHLIB_LIBS="-lg2c"
-            else
-                SHLIB_LIBS="-lgfortran -lquadmath"
-            fi
+            SHLIB_LIBS="-lgfortran -lquadmath"
             printf $format "An OS X system with $F77 and $CC ... " >&2
             echo "using $SHLIB_FLAGS and $SHLIB_LIBS to build shared libraries" >&2
         fi
     fi
 fi
-# We no longer need a static Fortran run time library
-#if test x$F77 = xg77 || test x$F77 = xgfortran; then
-#    echo >&5
-#    echo "*********************************************************" >&5
-#    echo "Looking for static fortran library and/or a Darwin system" >&5
-#    echo "*********************************************************" >&5
-#    if test x$CC = xgcc; then
-#        is_darwin=$(echo $canonical_system | grep -i darwin)
-#        is_linux=$(echo $canonical_system | grep -i linux)
-#        echo "is_darwin='$is_darwin' is_linux='$is_linux'" >&5
-#        if test ! x$is_darwin = x; then
-#            F77_LINK=$CC
-#            SHLIB_FLAGS="-bundle"
-#            if test x$F77 = xg77; then
-#                SHLIB_LIBS="-lg2c"
-#            else
-#                SHLIB_LIBS="-lgfortran"
-#            fi
-#            echo "A Darwin system with $F77 and $CC " >&2
-#            echo "-> using $SHLIB_FLAGS and $SHLIB_LIBS when building shared libraries" >&2
-#        elif test ! x$is_linux = x; then
-#            printf $format "Looking for a static fortran run time library ... " >&2
-#            for libdir in /lib64 /usr/lib64 /usr/local/lib64 /lib /usr/lib /usr/local/lib; do
-#                if test x$F77 = xg77; then
-#                    the_lib=$libdir/libg2c.a
-#                else
-#                    the_lib=$libdir/libgfortran.a
-#                fi
-#                echo "  Looking for $the_lib" >&5
-#                #the_lib=$libdir/libg2c.a
-#                if test -f $the_lib; then
-#                    SHLIB_LIBS="$the_lib"
-#                    echo "Found $the_lib" >&5
-#                    break;
-#                fi
-#            done
-#            if test x$SHLIB_LIBS = x; then
-#                echo "not found" >&2
-#                cat >&2 <<_ACEOF
-#
-#Did not find a static fortran run time library.
-#This implies that you will not be able to use BEAMnrc simulation
-#sources. To remedy this problem, install a static library
-#(libg2c.a or libgfortran.a) and rerun the configuration.
-#
-#_ACEOF
-#            else
-#                echo "OK ($SHLIB_LIBS)"
-#            fi
-#        fi
-#    fi
-#    echo >&5
-#fi
 
 printf $format "Creating config file $conf_file ... " >&2
 if test "x$F77" = xpgf77; then
@@ -1957,14 +1889,8 @@ cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
 #
 SHLIB_FLAGS = $SHLIB_FLAGS
 
-# When using the GNU compiler on Linux, one must link against the static
-# g2c library, otherwise I/O is shared between the
-# main process and the library => the library process fails
-# because units that it wants to open are already opened
-# by the main process.
-# The following variable is set to be empty, but if you use
-# the GNU compiler set it to /usr/lib/libg2c.a (or wherever your
-# static g2c library is installed).
+# Extra libraries to link when building a DSO (normally empty, except
+# on OS X with gfortran, see above).
 #
 SHLIB_LIBS = $SHLIB_LIBS
 
@@ -2121,6 +2047,7 @@ REPLACE {\$BYTE_ORDER} WITH {'$endianess'};
 _ACEOF
 if test "x$know_recl" = xyes; then
 cat >>$machine_macros <<_ACEOF
+" RECL-FACTOR: RECL units per 4 bytes (4: RECL in bytes, 1: 4-byte words) "
 REPLACE {\$RECL-FACTOR} WITH {$recl_size};
 ;
 _ACEOF

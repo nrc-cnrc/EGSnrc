@@ -1007,9 +1007,7 @@ QString MCompiler::getFlibs2LinkCPP( const QString &f_name, const QString &a_pat
   QString flibs = QString(),
           path = a_path;
 #ifdef WIN32
-    if ( f_name.contains("g77") && name().contains("g++"))
-        flibs= QString("-lg2c");
-    else if ( f_name.contains("gfortran") && name().contains("g++"))
+    if ( f_name.contains("gfortran") && name().contains("g++"))
         flibs= QString("-lgfortran -lquadmath");
     else if ( f_name.contains("ifort") && name().contains("icpc"))
         flibs= QString("-lifport -lifcore");
@@ -1017,15 +1015,11 @@ QString MCompiler::getFlibs2LinkCPP( const QString &f_name, const QString &a_pat
         if (!path.isEmpty()) path = path.replace( "bin", "lib" );
         if ( f_name.contains("gfortran") )// MS C++ compiler
            flibs = path + QString("libgfortran.a");
-        else
-           flibs = path + QString("libg2c.a");
     }
 #else
   // Setting an initial guess
   if      ( f_name.contains("gfortran") && name().contains("g++") )
           flibs="-lgfortran -lquadmath";
-  else if ( f_name.contains("g77") )
-          flibs="-lg2c";
   else if ( f_name.contains("ifort") && name().contains("icpc"))
           flibs= QString("-lifport -lifcore");
   else if (!getTheHen().isEmpty()){
@@ -1064,8 +1058,7 @@ void MCompiler::setUpFortranCompiler(){
 
 #if defined(WIN32) || defined(Q_OS_WIN32)
     oext = "obj";
-    if ( the_name.contains("gfortran") || // GNU Fortran
-         the_name.contains("g77")      ){
+    if ( the_name.contains("gfortran") ){ // GNU Fortran
         vopt = "--version";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
         optimiz = "-O2 -mtune=native -mcmodel=medium";
@@ -1111,7 +1104,7 @@ void MCompiler::setUpFortranCompiler(){
     }
     _version = getVersion(); _version = _version.split("\r\n").takeFirst();
 #elif defined(Q_OS_MAC) || defined(Q_OS_DARWIN)
-    if ( the_name.contains("gfortran") || the_name == "g95" || the_name.contains("g77") ){ // GNU Fortran
+    if ( the_name.contains("gfortran") || the_name == "g95" ){ // GNU Fortran
         vopt = "-v --version";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
         optimiz = "-O2 -mtune=native -mcmodel=medium";
@@ -1134,11 +1127,11 @@ void MCompiler::setUpFortranCompiler(){
     deb = "-g -C";
     _version = getVersion(); _version = _version.split("\n").takeFirst();
 #elif defined(Q_OS_LINUX) || defined(Q_OS_UNIX)
-    if ( the_name.contains("gfortran") || the_name == "g95" || the_name.contains("g77")){ // GNU Fortran
+    if ( the_name.contains("gfortran") || the_name == "g95" ){ // GNU Fortran
         vopt = "--version"; optimiz = "-O2 -mtune=native -mcmodel=medium"; deb = "-g";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
     }
-    else if (the_name == "ifort"){
+    else if (the_name == "ifort" || the_name == "ifx"){
         vopt = "-logo"; optimiz = "-O2"; deb = "-g -CB";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers;
     }

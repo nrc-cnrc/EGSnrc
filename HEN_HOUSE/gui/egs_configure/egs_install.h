@@ -471,14 +471,7 @@ static const char spec_file[]={
 "#SHLIB_FLAGS = -shared -Wl,-Bsymbolic                           \n"\
 "SHLIB_FLAGS = $EGS_SHLIB_FLAGS                                 \n"\
 "\n"\
-"# When using the GNU compiler, one must link against the static\n"\
-"# g2c library, otherwise I/O is shared between the             \n"\
-"# main process and the library => the library process fails    \n"\
-"# because units that it wants to open are already opened       \n"\
-"# by the main process.                                         \n"\
-"# The following variable is set to be empty, but if you use    \n"\
-"# the GNU compiler set it to /usr/lib/libg2c.a (or wherever    \n"\
-"# your static g2c library is installed).                       \n"\
+"# Extra libraries to link when building a DSO (normally empty). \n"\
 "#\n"\
 "SHLIB_LIBS = $EGS_SHLIB_LIBS\n"\
 "\n"\
@@ -687,6 +680,7 @@ static const char machine_macros[]={
 "REPLACE {$BYTE_ORDER} WITH {'Endianess'};\n"\
 ";\n"\
 "$NO_REC_LEN"\
+"\" RECL-FACTOR: RECL units per 4 bytes (4: RECL in bytes, 1: 4-byte words) \"\n"\
 "REPLACE {$RECL-FACTOR} WITH {recLen};\n"\
 ";\n"\
 "$FLUSH_FUN"\
